@@ -1,0 +1,24 @@
+/* Vue JSON Pretty Styles - Custom Overrides */
+.vjs-tree {
+  font-size: 14px !important;
+}
+
+.vjs-tree .vjs-value__string {
+  color: #98d982 !important;
+}
+
+.vjs-tree .vjs-value__number {
+  color: #fc9403 !important;
+}
+
+.vjs-tree .vjs-value__boolean {
+  color: #ff8c94 !important;
+}
+
+.vjs-tree .vjs-key {
+  color: #66c2cd !important;
+}
+
+.vjs-tree .vjs-tree__brackets {
+  color: #a8a8a2 !important;
+}

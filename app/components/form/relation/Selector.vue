@@ -1,0 +1,332 @@
+<script setup lang="ts">
+// useEnfyraApi is auto-imported in Nuxt
+
+const props = defineProps<{
+  relationMeta: any;
+  selectedIds: any[];
+  multiple?: boolean;
+  disabled?: boolean;
+  open?: boolean;
+}>();
+
+const emit = defineEmits(["apply", "update:open"]);
+
+// Local state for drawer open/close
+const isDrawerOpen = computed({
+  get: () => props.open || false,
+  set: (value) => emit("update:open", value),
+});
+
+const selected = ref<any[]>([...props.selectedIds]);
+const page = ref(1);
+const limit = 10;
+const showCreateDrawer = ref(false);
+const showFilterDrawer = ref(false);
+const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
+const currentFilter = ref(createEmptyFilter());
+const { schemas } = useSchema();
+const targetTable = computed(() => {
+  const targetId = props.relationMeta?.targetTable?.id;
+  return (Object.values(schemas.value).find(
+    (schema: any) => schema.id === targetId
+  ) || null) as any;
+});
+
+// Get schema for the target table - computed to handle reactive props
+const targetTableName = computed(() => targetTable.value?.name || "");
+const { getIncludeFields, definition } = useSchema(targetTableName);
+
+const detailModal = ref(false);
+const detailRecord = ref<Record<string, any>>({});
+
+const { isMounted } = useMounted();
+
+watch(
+  () => props.selectedIds,
+  () => {
+    selected.value = [...props.selectedIds];
+  }
+);
+
+const {
+  data: apiData,
+  pending: loading,
+  execute: fetchData,
+  error: apiError,
+} = useEnfyraApi(() => `/${targetTable.value?.name}`, {
+  query: computed(() => {
+    const filterQuery = hasActiveFilters(currentFilter.value)
+      ? buildQuery(currentFilter.value)
+      : {};
+
+    const query = {
+      fields: getIncludeFields(),
+      page: page.value,
+      limit,
+      meta: "totalCount,filterCount",
+      sort: "-createdAt",
+      ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
+    };
+
+    return query;
+  }),
+  errorContext: "Fetch Relation Data",
+});
+
+const data = computed(() => {
+  return apiData.value?.data || [];
+});
+
+const total = computed(() => {
+  // Use filterCount when there are active filters, otherwise use totalCount
+  const hasFilters = hasActiveFilters(currentFilter.value);
+  return hasFilters
+    ? apiData.value?.meta?.filterCount || apiData.value?.meta?.totalCount || 0
+    : apiData.value?.meta?.totalCount || 0;
+});
+
+// Ensure page is valid when total changes
+watch(total, (newTotal) => {
+  const maxPage = Math.ceil(newTotal / limit);
+  if (page.value > maxPage && maxPage > 0) {
+    page.value = maxPage;
+  }
+});
+
+function toggle(id: any) {
+  if (props.disabled) return;
+  if (props.multiple) {
+    const found = selected.value.find((s) => s.id === id);
+    selected.value = found
+      ? selected.value.filter((s) => s.id !== id)
+      : [...selected.value, { id }];
+  } else {
+    // For single select: if already selected, deselect; otherwise select
+    const isCurrentlySelected = selected.value.some((s) => s.id === id);
+    selected.value = isCurrentlySelected ? [] : [{ id }];
+  }
+}
+
+function apply() {
+  if (props.disabled) return;
+  emit("apply", selected.value);
+}
+
+function viewDetails(item: any) {
+  detailRecord.value = item;
+  detailModal.value = true;
+}
+
+// Handle filter apply from FilterDrawer
+async function handleFilterApply(filter: FilterGroup) {
+  currentFilter.value = filter;
+  page.value = 1; // Reset to first page when filter changes
+  await fetchDataWithValidation();
+}
+
+async function clearFilter() {
+  currentFilter.value = createEmptyFilter();
+  page.value = 1; // Reset to first page when clearing filters
+  await fetchDataWithValidation();
+}
+
+function openFilterDrawer() {
+  showFilterDrawer.value = true;
+}
+
+async function fetchDataWithValidation() {
+  try {
+    await fetchData();
+
+    // Validate page after fetch
+    const maxPage = Math.ceil(total.value / limit);
+    if (page.value > maxPage && maxPage > 0) {
+      page.value = maxPage;
+    }
+  } catch (error) {
+    console.error("Error fetching relation data:", error);
+    // Reset to page 1 on error
+    if (page.value > 1) {
+      page.value = 1;
+    }
+  }
+}
+
+// onMounted(
+//   fetchDataWithValidation
+// );
+
+watch(
+  () => props.open,
+  async (newVal) => {
+    if (newVal) await fetchDataWithValidation();
+  }
+);
+
+watch(page, async (newPage, oldPage) => {
+  if (newPage >= 1 && newPage !== oldPage) {
+    await fetchDataWithValidation();
+  }
+});
+</script>
+
+<template>
+  <!-- Main Drawer -->
+  <Teleport to="body">
+    <UDrawer
+      v-model:open="isDrawerOpen"
+      direction="right"
+      class="min-w-xl"
+      :ui="{
+        header:
+          'border-b border-muted text-muted pb-2 flex items-center justify-between',
+      }"
+    >
+      <template #header>
+        <h2>
+          {{ props.relationMeta.propertyName }}
+        </h2>
+        <UButton
+          @click="emit('update:open', false)"
+          icon="lucide:x"
+          color="error"
+          variant="ghost"
+          size="xl"
+        />
+      </template>
+      <template #body>
+        <div class="space-y-6">
+          <!-- Header Section -->
+          <div
+            class="rounded-xl border border-muted/30 p-6 shadow-sm bg-gray-800/50"
+          >
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-lg bg-gradient-to-br from-info to-success flex items-center justify-center shadow-md"
+                >
+                  <UIcon name="lucide:git-fork" class="text-xs text-white" />
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-foreground">
+                    Relations
+                  </h3>
+                  <p class="text-sm text-muted-foreground">
+                    {{ targetTable?.name || "Unknown" }} records
+                  </p>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <FormRelationActions
+                :has-active-filters="hasActiveFilters(currentFilter)"
+                :filter-count="currentFilter.conditions.length"
+                :disabled="props.disabled"
+                @open-filter="openFilterDrawer"
+                @open-create="showCreateDrawer = true"
+              />
+            </div>
+
+            <!-- Selected Count -->
+            <div v-if="selected.length > 0" class="flex items-center gap-2">
+              <UBadge variant="soft" color="primary" size="sm">
+                {{ selected.length }} selected
+              </UBadge>
+              <span class="text-xs text-muted-foreground">
+                {{
+                  props.multiple
+                    ? "Multiple selection enabled"
+                    : "Single selection"
+                }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Content Section -->
+          <div
+            class="bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-muted/30 p-6 bg-gray-800/50"
+          >
+            <!-- Loading State -->
+            <CommonLoadingState
+              v-if="!isMounted || loading"
+              type="form"
+              context="inline"
+              size="md"
+            />
+
+            <!-- Empty State -->
+            <CommonEmptyState
+              v-else-if="isMounted && !loading && data.length === 0"
+              :title="
+                hasActiveFilters(currentFilter)
+                  ? 'No relations found'
+                  : 'No relations available'
+              "
+              :description="
+                hasActiveFilters(currentFilter)
+                  ? 'Try adjusting your filters'
+                  : 'No relations have been created yet'
+              "
+              icon="lucide:database"
+              size="sm"
+              :action="
+                hasActiveFilters(currentFilter)
+                  ? {
+                      label: 'Clear filters',
+                      onClick: clearFilter,
+                      icon: 'lucide:x',
+                    }
+                  : undefined
+              "
+            />
+
+            <!-- Data List -->
+            <FormRelationList
+              v-else
+              :data="data"
+              :selected="selected"
+              :multiple="props.multiple"
+              :disabled="props.disabled"
+              @toggle="toggle"
+              @view-details="viewDetails"
+            />
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <div class="rounded-xl border border-muted/30 p-4 bg-gray-800/50">
+          <FormRelationPagination
+            :page="page"
+            :total="total"
+            :limit="limit"
+            :loading="loading"
+            :disabled="props.disabled"
+            @update:page="page = $event"
+            @apply="apply"
+          />
+        </div>
+      </template>
+    </UDrawer>
+  </Teleport>
+
+  <FormRelationCreateDrawer
+    v-model="showCreateDrawer"
+    :relation-meta="props.relationMeta"
+    @created="() => fetchData()"
+    v-model:selected="selected"
+  />
+
+  <FormRelationDetailDrawer
+    v-model="detailModal"
+    :record="detailRecord"
+    :table-name="targetTable?.name"
+  />
+
+  <!-- Filter Drawer -->
+  <FilterDrawerLazy
+    v-model="showFilterDrawer"
+    :table-name="targetTable?.name || ''"
+    :current-filter="currentFilter"
+    @apply="handleFilterApply"
+  />
+</template>

@@ -1,0 +1,98 @@
+<template>
+  <div class="space-y-6">
+    <!-- Header -->
+    <CommonPageHeader
+      title="Create New User"
+      title-size="lg"
+      show-background
+      background-gradient="from-blue-500/6 via-indigo-400/4 to-transparent"
+      padding-y="py-6"
+    />
+
+    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+        <UForm :state="form" @submit="handleCreate">
+          <FormEditorLazy
+            v-model="form"
+            v-model:errors="errors"
+            :table-name="tableName"
+            :excluded="['allowedRoutePermissions']"
+          />
+        </UForm>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+// useEnfyraApi is auto-imported in Nuxt
+const toast = useToast();
+
+const tableName = "user_definition";
+
+const form = ref<Record<string, any>>({});
+const errors = ref<Record<string, string>>({});
+
+const { generateEmptyForm, validate } = useSchema(tableName);
+
+const {
+  data: createData,
+  pending: createLoading,
+  execute: createUser,
+  error: createError,
+} = useEnfyraApi(() => `/${tableName}`, {
+  method: "post",
+  errorContext: "Create User",
+});
+
+useHeaderActionRegistry({
+  id: "save-user",
+  label: "Save",
+  icon: "lucide:save",
+  variant: "solid",
+  color: "primary",
+  loading: computed(() => createLoading.value),
+  submit: handleCreate,
+  permission: {
+    and: [
+      {
+        route: "/user_definition",
+        actions: ["create"],
+      },
+    ],
+  },
+});
+
+onMounted(() => {
+  form.value = generateEmptyForm();
+});
+
+async function handleCreate() {
+  const { isValid, errors: validationErrors } = validate(form.value);
+  errors.value = validationErrors;
+
+  if (!isValid) {
+    toast.add({
+      title: "Invalid data",
+      description: "Please check the fields with errors.",
+      color: "error",
+    });
+    return;
+  }
+
+  await createUser({ body: form.value });
+
+  if (createError.value) {
+    return;
+  }
+
+  toast.add({
+    title: "User created successfully",
+    color: "success",
+  });
+
+  await navigateTo(`/settings/users/${createData.value?.data[0]?.id}`, {
+    replace: true,
+  });
+}
+</script>

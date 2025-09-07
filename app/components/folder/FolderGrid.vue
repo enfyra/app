@@ -1,0 +1,129 @@
+<template>
+  <div class="space-y-4">
+    <!-- Grid View -->
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+    >
+      <!-- Folder Items Container -->
+      <div v-if="transformedFolders.length > 0" class="contents">
+        <FolderGridCard
+          v-for="folder in transformedFolders"
+          :key="folder.id"
+          :folder="folder"
+          :is-selection-mode="isSelectionMode"
+          :selected-items="selectedItems"
+          :move-mode="moveState.moveMode"
+          :is-folder-disabled="isFolderDisabled(folder.id)"
+          @folder-click="$emit('folder-click', $event)"
+          @toggle-selection="$emit('toggle-selection', $event)"
+          @refresh-folders="$emit('refresh-folders')"
+          @delete-folder="deleteFolder"
+          @copy-folder-url="() => {}"
+        />
+      </div>
+
+      <!-- Empty State -->
+      <div v-else class="col-span-full text-center py-12">
+        <UIcon
+          :name="getDefaultFolderIcon()"
+          class="w-16 h-16 text-muted-foreground mx-auto mb-4"
+        />
+        <p class="text-lg font-medium text-muted-foreground">
+          {{ emptyTitle }}
+        </p>
+        <p class="text-sm text-muted-foreground mt-1">
+          {{ emptyDescription }}
+        </p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+// useEnfyraApi is auto-imported in Nuxt
+import { formatDate } from "~/utils/common/filter/filter-helpers";
+import {
+  getFolderIcon,
+  getDefaultFolderIcon,
+} from "~/utils/file-management/folder-icons";
+
+interface Props {
+  folders: any[];
+  emptyTitle?: string;
+  emptyDescription?: string;
+  isSelectionMode?: boolean;
+  selectedItems?: string[];
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  emptyTitle: "No folders",
+  emptyDescription: "No folders in this location",
+  isSelectionMode: false,
+  selectedItems: () => [],
+});
+
+// Transform folders data for display
+const transformedFolders = computed(() => {
+  return props.folders.map((folder: any) => ({
+    ...folder,
+    displayName: folder.name || "Untitled",
+    icon: getFolderIcon(folder).name,
+    iconColor: getFolderIcon(folder).color,
+    fileCount: folder.children?.length || folder.files?.length || 0,
+    modifiedAt: formatDate(folder.createdAt || folder.updatedAt),
+    itemCount: `${folder.children?.length || folder.files?.length || 0} items`,
+  }));
+});
+
+// Access global move state to disable folders under move
+const { moveState } = useFileManagerMove();
+
+function isFolderDisabled(folderId: string) {
+  return !!(
+    moveState.value.moveMode &&
+    moveState.value.selectedFolderIds?.includes(folderId)
+  );
+}
+
+const emit = defineEmits<{
+  "folder-click": [folder: any];
+  "toggle-selection": [folderId: string];
+  "refresh-folders": [];
+}>();
+
+const { confirm } = useConfirm();
+const toast = useToast();
+
+// Delete folder API at setup level
+const { execute: executeDeleteFolder } = useEnfyraApi(
+  () => `/folder_definition`,
+  {
+    method: "delete",
+    errorContext: "Delete Folder",
+  }
+);
+
+// Delete folder function
+async function deleteFolder(folder: any) {
+  const isConfirmed = await confirm({
+    title: "Delete Folder",
+    content: `Are you sure you want to delete "${
+      folder.name || folder.displayName
+    }"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+
+  if (!isConfirmed) return;
+
+  await executeDeleteFolder({ id: folder.id });
+
+  toast.add({
+    title: "Success",
+    color: "success",
+    description: "Folder deleted successfully!",
+  });
+
+  emit("refresh-folders");
+}
+</script>

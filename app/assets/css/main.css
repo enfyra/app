@@ -1,0 +1,44 @@
+@config "../../../tailwind.config.js";
+@import "tailwindcss";
+@import "@nuxt/ui";
+@import "./transitions.css";
+@import "./scrollbars.css";
+@import "./codemirror.css";
+@import "./vue-json-pretty.css";
+
+@layer base {
+  /* Force dark mode on html element */
+  html {
+    font-family: 'Manrope', system-ui, sans-serif;
+    background: #111827;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  :root {
+    --color-primary: #3b82f6;
+    --color-primary-dark: #1d4ed8;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+}
+
+@layer utilities {
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s ease-in-out infinite;
+    background-size: 200% 100% !important;
+  }
+}
+

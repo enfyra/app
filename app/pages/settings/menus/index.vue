@@ -1,0 +1,378 @@
+<script setup lang="ts">
+// useEnfyraApi is auto-imported in Nuxt
+
+const toast = useToast();
+const { confirm } = useConfirm();
+const page = ref(1);
+const pageLimit = 9;
+const route = useRoute();
+const router = useRouter();
+const tableName = "menu_definition";
+const { getIncludeFields } = useSchema(tableName);
+const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
+const menus = computed(() => apiData.value?.data || []);
+const { createLoader } = useLoader();
+const { isTablet } = useScreen();
+const { isMounted } = useMounted();
+const showFilterDrawer = ref(false);
+const currentFilter = ref(createEmptyFilter());
+
+const filterLabel = computed(() => {
+  const activeCount = currentFilter.value.conditions.length;
+  return activeCount > 0 ? `Filters (${activeCount})` : "Filter";
+});
+
+const filterVariant = computed(() => {
+  return hasActiveFilters(currentFilter.value) ? "solid" : "outline";
+});
+
+const filterColor = computed(() => {
+  return hasActiveFilters(currentFilter.value) ? "secondary" : "neutral";
+});
+
+const {
+  data: apiData,
+  pending: loading,
+  execute: fetchMenus,
+} = useEnfyraApi(() => "/menu_definition", {
+  query: computed(() => {
+    const filterQuery = hasActiveFilters(currentFilter.value)
+      ? buildQuery(currentFilter.value)
+      : {};
+
+    return {
+      fields: getIncludeFields(),
+      sort: "-createdAt",
+      meta: "*",
+      page: page.value,
+      limit: pageLimit,
+      ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
+    };
+  }),
+  errorContext: "Fetch Menus",
+});
+
+const menusData = computed(() => apiData.value?.data || []);
+const total = computed(() => {
+  // Use filterCount when there are active filters, otherwise use totalCount
+  const hasFilters = hasActiveFilters(currentFilter.value);
+  return hasFilters
+    ? apiData.value?.meta?.filterCount || apiData.value?.meta?.totalCount || 0
+    : apiData.value?.meta?.totalCount || 0;
+});
+
+useHeaderActionRegistry([
+  {
+    id: "filter-menus",
+    icon: "lucide:filter",
+    get label() {
+      return filterLabel.value;
+    },
+    get variant() {
+      return filterVariant.value;
+    },
+    get color() {
+      return filterColor.value;
+    },
+    get key() {
+      return `filter-${
+        currentFilter.value.conditions.length
+      }-${hasActiveFilters(currentFilter.value)}`;
+    },
+    size: "md",
+    onClick: () => {
+      showFilterDrawer.value = true;
+    },
+    permission: {
+      and: [
+        {
+          route: "/menu_definition",
+          actions: ["read"],
+        },
+      ],
+    },
+  },
+  {
+    id: "create-menu",
+    label: "Create Menu",
+    icon: "lucide:plus",
+    variant: "solid",
+    color: "primary",
+    size: "md",
+    to: "/settings/menus/create",
+    permission: {
+      and: [
+        {
+          route: "/menu_definition",
+          actions: ["create"],
+        },
+      ],
+    },
+  },
+]);
+
+// Watch for page changes in URL
+
+// Create loaders for each menu toggle button
+const menuLoaders = ref<Record<string, any>>({});
+
+function getMenuLoader(menuId: string) {
+  if (!menuLoaders.value[menuId]) {
+    menuLoaders.value[menuId] = createLoader();
+  }
+  return menuLoaders.value[menuId];
+}
+
+// Handle filter apply from FilterDrawer
+async function handleFilterApply(filter: FilterGroup) {
+  currentFilter.value = filter;
+  
+  if (page.value === 1) {
+    // Already on page 1 → fetch directly
+    await fetchMenus();
+  } else {
+    // On other page → go to page 1, watch will trigger
+    const newQuery = { ...route.query };
+    delete newQuery.page;
+    
+    await router.replace({
+      query: newQuery,
+    });
+  }
+}
+
+async function toggleEnabled(menuItem: any, value?: boolean) {
+  const loader = getMenuLoader(menuItem.id);
+  const newEnabled = value !== undefined ? value : !menuItem.isEnabled;
+
+  // Optimistic update - change UI immediately
+  // Update directly in apiData to trigger reactivity
+  if (apiData.value?.data) {
+    const menuIndex = apiData.value.data.findIndex(
+      (m: any) => m.id === menuItem.id
+    );
+    if (menuIndex !== -1) {
+      apiData.value.data[menuIndex].isEnabled = newEnabled;
+    }
+  }
+
+  // Create a specific instance for this menu update
+  const { execute: updateSpecificMenu, error: updateError } = useEnfyraApi(
+    () => `/menu_definition/${menuItem.id}`,
+    {
+      method: "patch",
+      errorContext: "Toggle Menu",
+    }
+  );
+
+  await loader.withLoading(() =>
+    updateSpecificMenu({ body: { isEnabled: newEnabled } })
+  );
+
+  if (updateError.value) {
+    // Revert optimistic update on error
+    if (apiData.value?.data) {
+      const menuIndex = apiData.value.data.findIndex(
+        (m: any) => m.id === menuItem.id
+      );
+      if (menuIndex !== -1) {
+        apiData.value.data[menuIndex].isEnabled = !newEnabled;
+      }
+    }
+    return;
+  }
+
+  // Reregister all menus after successful update
+  const { reregisterAllMenus } = useMenuRegistry();
+  const { fetchMenuDefinitions } = useMenuApi();
+  await reregisterAllMenus(fetchMenuDefinitions as any);
+
+  toast.add({
+    title: "Success",
+    description: `Menu ${newEnabled ? "enabled" : "disabled"} successfully`,
+    color: "success",
+  });
+}
+
+async function deleteMenu(menuItem: any) {
+  const isConfirmed = await confirm({
+    title: "Delete Menu",
+    content: `Are you sure you want to delete menu "${menuItem.label}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+
+  if (isConfirmed) {
+    const { execute: deleteMenuApi, error: deleteError } = useEnfyraApi(
+      () => `/menu_definition/${menuItem.id}`,
+      {
+        method: "delete",
+        errorContext: "Delete Menu",
+      }
+    );
+
+    await deleteMenuApi();
+
+    if (deleteError.value) {
+      return;
+    }
+
+    await fetchMenus();
+
+    // Reregister all menus after successful delete
+    const { reregisterAllMenus } = useMenuRegistry();
+    const { fetchMenuDefinitions } = useMenuApi();
+    await reregisterAllMenus(fetchMenuDefinitions as any);
+
+    toast.add({
+      title: "Success",
+      description: `Menu "${menuItem.label}" has been deleted successfully!`,
+      color: "success",
+    });
+  }
+}
+
+watch(
+  () => route.query.page,
+  async (newVal) => {
+    page.value = newVal ? Number(newVal) : 1;
+    await fetchMenus();
+  },
+  { immediate: true }
+);
+</script>
+
+<template>
+  <div class="space-y-6">
+    <!-- Header -->
+    <CommonPageHeader
+      title="Menu Manager"
+      title-size="md"
+      show-background
+      background-gradient="from-violet-500/8 via-purple-400/5 to-transparent"
+      padding-y="py-6"
+    />
+    <Transition name="loading-fade" mode="out-in">
+      <CommonLoadingState
+        v-if="loading || !isMounted"
+        title="Loading menus..."
+        description="Fetching menu configuration"
+        size="sm"
+        type="card"
+        context="page"
+      />
+
+      <div v-else-if="menus.length" class="space-y-6">
+        <div
+          class="grid gap-4"
+          :class="
+            isTablet
+              ? 'grid-cols-2'
+              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+          "
+        >
+          <CommonSettingsCard
+            v-for="menu in menus"
+            :key="menu.id"
+            :title="menu.label"
+            :description="menu.path"
+            :icon="menu.icon || 'lucide:circle'"
+            icon-color="primary"
+            :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
+            @click="navigateTo(`/settings/menus/${menu.id}`)"
+            :stats="[
+              {
+                label: 'Type',
+                component: 'UBadge',
+                props: {
+                  variant: 'soft',
+                  color: menu.type === 'Mini Sidebar' ? 'primary' 
+                    : menu.type === 'Dropdown Menu' ? 'secondary'
+                    : 'neutral',
+                },
+                value: menu.type === 'Mini Sidebar' ? 'Mini Sidebar'
+                  : menu.type === 'Dropdown Menu' ? 'Dropdown Menu'
+                  : menu.type === 'Menu' ? 'Menu'
+                  : 'Unknown',
+              },
+              {
+                label: 'Status',
+                component: 'UBadge',
+                props: {
+                  variant: 'soft',
+                  color: menu.isEnabled ? 'success' : 'warning',
+                },
+                value: menu.isEnabled ? 'Enabled' : 'Disabled',
+              },
+              {
+                label: 'System',
+                component: menu.isSystem ? 'UBadge' : undefined,
+                props: menu.isSystem ? { variant: 'soft', color: 'info' } : undefined,
+                value: menu.isSystem ? 'System' : '-'
+              },
+            ]"
+            :actions="[]"
+            :header-actions="[
+              ...(menu.isSystem ? [] : [{
+                component: 'USwitch',
+                props: {
+                  'model-value': menu.isEnabled,
+                  disabled: getMenuLoader(menu.id).isLoading
+                },
+                onClick: (e?: Event) => e?.stopPropagation(),
+                onUpdate: (value: boolean) => toggleEnabled(menu, value)
+              }]),
+              ...(menu.isSystem ? [] : [{
+                component: 'UButton',
+                props: {
+                  icon: 'i-heroicons-trash',
+                  variant: 'outline',
+                  color: 'error'
+                },
+                onClick: (e?: Event) => {
+                  e?.stopPropagation();
+                  deleteMenu(menu);
+                }
+              }])
+            ]"
+          />
+        </div>
+
+        <!-- Pagination - chỉ hiện khi có nhiều trang -->
+        <div class="flex justify-center mt-6" v-if="total > pageLimit">
+          <UPagination
+            v-model:page="page"
+            :items-per-page="pageLimit"
+            :total="total"
+            show-edges
+            :sibling-count="1"
+            :to="
+              (p) => ({
+                path: route.path,
+                query: { ...route.query, page: p },
+              })
+            "
+            color="secondary"
+            active-color="secondary"
+          />
+        </div>
+      </div>
+
+      <CommonEmptyState
+        v-else
+        title="No menus found"
+        description="No menu configurations have been created yet"
+        icon="lucide:navigation"
+        size="sm"
+      />
+    </Transition>
+  </div>
+
+  <!-- Filter Drawer -->
+  <FilterDrawerLazy
+    v-model="showFilterDrawer"
+    :table-name="tableName"
+    :current-filter="currentFilter"
+    @apply="handleFilterApply"
+  />
+</template>
