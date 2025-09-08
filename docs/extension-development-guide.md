@@ -170,7 +170,7 @@ const showWidget = ref(true);
 
 // Composables (automatically available)
 const toast = useToast();
-const { me } = useAuth();
+const { me } = useEnfyraAuth();  // From @enfyra/sdk-nuxt
 const router = useRouter();
 const route = useRoute();
 
@@ -371,30 +371,29 @@ console.log(me.value); // User object or null
 console.log(isLoggedIn.value); // boolean
 ```
 
-#### useApi() / useApiLazy()
+#### useEnfyraApi() / useEnfyraAuth()
 
-> **📖 See:** [API Composables Guide](./api-composables.md) for complete documentation
+> **📖 See:** [Official SDK Documentation](https://github.com/dothinh115/enfyra-sdk-nuxt) for complete documentation
 
 ```typescript
-// Auto-executing API call
-const { data, pending, error, execute } = useApi(() => '/extension_definition', {
+// API requests using @enfyra/sdk-nuxt
+const { data, pending, error } = useEnfyraApi('/extension_definition', {
   query: { limit: 10 },
-  errorContext: 'Fetch Extensions',
+  key: 'extensions-list'
 });
 
-// Manual execution
-const { data, pending, error, execute } = useApiLazy(() => '/extension_definition', {
-  method: 'post',
-  errorContext: 'Create Extension',
-});
+// For complete API documentation:
+// 👉 https://github.com/dothinh115/enfyra-sdk-nuxt#api-usage
 
-await execute({ 
-  body: { 
-    extensionId: 'my-extension',
-    name: 'My Extension',
-    type: 'page'
-  } 
-});
+// Authentication - Official SDK
+const { me, login, logout, isLoggedIn } = useEnfyraAuth();
+
+// For complete authentication documentation:
+// 👉 https://github.com/dothinh115/enfyra-sdk-nuxt#authentication
+
+// Current user data
+console.log(me.value); // User object or null
+console.log(isLoggedIn.value); // boolean
 ```
 
 #### usePermissions()
@@ -627,7 +626,7 @@ const props = defineProps({
 });
 
 const { Widget } = props.components;
-const { me } = useAuth();
+const { me } = useEnfyraAuth();
 
 // Widget IDs (found in Extensions Manager)
 const selectedWidgetId = ref(5);
@@ -860,7 +859,7 @@ const fieldOptions = ref([
 ]);
 
 // API integration with filters
-const { data: apiData, execute: fetchData } = useApiLazy(() => `/${tableName}`, {
+const { data: apiData, execute: fetchData } = useEnfyraApi(`/${tableName}`, {
   query: computed(() => {
     const baseQuery = {
       limit: pageSize,
@@ -1007,7 +1006,7 @@ onMounted(() => {
 ```vue
 <script setup lang="ts">
 // Fetching data
-const { data: extensions, pending: loading, execute: refetch } = useApi(
+const { data: extensions, pending: loading, execute: refetch } = useEnfyraApi(
   () => '/extension_definition',
   {
     query: {
@@ -1019,7 +1018,7 @@ const { data: extensions, pending: loading, execute: refetch } = useApi(
 );
 
 // Creating data
-const { execute: createExtension, error: createError } = useApiLazy(
+const { execute: createExtension, error: createError } = useEnfyraApi(
   () => '/extension_definition',
   {
     method: 'post',
@@ -1336,7 +1335,7 @@ if (!UButton) {
 }
 
 // Check API connectivity
-const { data, error } = useApi(() => '/extension_definition');
+const { data, error } = useEnfyraApi('/extension_definition');
 watch(error, (err) => {
   if (err) {
     console.error('API Error:', err);
@@ -1369,7 +1368,7 @@ if (!UButton) {
 #### 3. Permission Issues
 ```vue
 <script setup lang="ts">
-const { me } = useAuth();
+const { me } = useEnfyraAuth();
 const { hasPermission, checkPermissionCondition } = usePermissions();
 
 // Debug permissions
@@ -1391,7 +1390,7 @@ console.log('Has access via condition:', hasAccess);
 ```vue
 <script setup lang="ts">
 // Monitor API calls
-const { data, error, pending, execute } = useApiLazy(
+const { data, error, pending, execute } = useEnfyraApi(
   () => '/extension_definition',
   {
     errorContext: 'Extension API',

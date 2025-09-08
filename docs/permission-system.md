@@ -4,6 +4,14 @@ The Enfyra App permission system provides comprehensive role-based access contro
 
 ## Core Concepts
 
+### Permission System Architecture
+
+Enfyra uses a two-tier permission system:
+1. **Direct User Permissions**: Database-level permissions that bypass role checks
+2. **Role-Based Permissions**: Traditional role-based access control
+
+**Permission Priority**: Direct user permissions are checked first. If found, role permissions are ignored for that route/method.
+
 ### Permission Types
 
 | Action   | HTTP Method | Description             |
@@ -79,7 +87,9 @@ The `PermissionGate` component provides declarative permission-based rendering:
 
 ### usePermissions Composable
 
-The `usePermissions` composable provides programmatic permission checking:
+The `usePermissions` composable provides programmatic permission checking and integrates with `useEnfyraAuth()`:
+
+> **🔗 SDK Integration**: This composable uses `useEnfyraAuth()` from @enfyra/sdk-nuxt for user data access.
 
 ```vue
 <script setup lang="ts">
@@ -483,7 +493,7 @@ async function deleteUser(id: string) {
 
 ```vue
 <script setup lang="ts">
-const { me } = useAuth();
+const { me } = useEnfyraAuth(); // From @enfyra/sdk-nuxt
 const { hasPermission } = usePermissions();
 
 // Debug current user
@@ -549,7 +559,7 @@ console.log('Role read permission:', hasPermission('/role_definition', 'GET'));
 
 ```vue
 <script setup lang="ts">
-const { me, fetchUser } = useAuth();
+const { me, fetchUser } = useEnfyraAuth(); // From @enfyra/sdk-nuxt
 
 // Force refresh user permissions
 async function refreshPermissions() {

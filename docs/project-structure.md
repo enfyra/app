@@ -110,15 +110,17 @@ components/
 ### `/composables/` - Vue Composables
 Business logic and state management:
 
+> **🔗 SDK Integration**: API and authentication composables have been moved to **@enfyra/sdk-nuxt**. This application uses `useEnfyraApi()` and `useEnfyraAuth()` from the official SDK instead of local composables.
+
 ```
 composables/
-├── useApi.ts                    # API calls and error handling
-├── useApiLazy.ts                # Lazy API calls
+├── [MOVED TO SDK] useApi.ts                    # → Now useEnfyraApi() from @enfyra/sdk-nuxt
+├── [MOVED TO SDK] useApiLazy.ts                # → Now useEnfyraApi() from @enfyra/sdk-nuxt
+├── [MOVED TO SDK] useAuth.ts                   # → Now useEnfyraAuth() from @enfyra/sdk-nuxt
 ├── useDynamicComponent.ts       # Dynamic component loading
-├── useAuth.ts                   # Authentication state
 ├── useMenuRegistry.ts           # Dynamic menu system
 ├── useHeaderActionRegistry.ts   # Header actions management
-├── usePermissions.ts           # Permission checking
+├── usePermissions.ts           # Permission checking (integrates with SDK)
 ├── useSchema.ts                # Schema operations
 ├── useFilterQuery.ts           # Filter query building
 ├── useScreen.ts                # Screen size detection
@@ -127,6 +129,8 @@ composables/
 ├── useMounted.ts               # Mount state tracking
 └── useGlobalState.ts           # Global app state
 ```
+
+**SDK Documentation**: https://github.com/dothinh115/enfyra-sdk-nuxt
 
 ### `/pages/` - Route Pages
 File-based routing following Nuxt conventions:
@@ -244,23 +248,24 @@ docs/
 
 ### 1. Dynamic Component Loading
 - `DynamicComponent.vue` - Loads components based on path
-- Extension system cho plugins
-- File-based routing với `[sidebar].vue` và `[sidebar]/[page].vue`
+- Extension system for plugins
+- File-based routing with `[sidebar].vue` and `[sidebar]/[page].vue`
 
 ### 2. Registry Systems
-- **Menu Registry**: Dynamic menu generation từ tables
+- **Menu Registry**: Dynamic menu generation from tables
 - **Header Action Registry**: Dynamic header buttons
 - **Permission System**: Role-based access control
 
 ### 3. Component Patterns
-- **SettingsCard**: Standardized card component với props-based actions
-- **DataTable**: Responsive table với tablet cards
+- **SettingsCard**: Standardized card component with props-based actions
+- **DataTable**: Responsive table with tablet cards
 - **Filter System**: Advanced querying capabilities
 
 ### 4. State Management
 - Vue 3 Composition API
-- Composables cho business logic
-- Global state với `useGlobalState`
+- Composables for business logic
+- Global state with `useGlobalState`
+- **SDK Integration**: `useEnfyraAuth()` for authentication state
 
 ### 5. Form System
 - Dynamic field rendering
@@ -269,10 +274,11 @@ docs/
 - Rich text editing
 
 ### 6. API Integration
-- Proxy-based API calls
-- Error handling
-- Loading states
-- Token refresh
+- **@enfyra/sdk-nuxt**: Official SDK for all API operations
+- `useEnfyraApi()` composable for data fetching
+- Built-in error handling and reactive state management
+- Automatic authentication and token refresh
+- TypeScript integration with context-aware autocompletion
 
 ## Development Guidelines
 

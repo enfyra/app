@@ -194,10 +194,10 @@ const counter = ref(0)
 // Enfyra composables (auto-available)
 const toast = useToast()
 
-// API integration
-const { data: userData, execute: fetchUser } = useApiLazy(() => '/me', {
+// API integration with @enfyra/sdk-nuxt
+const { data: userData, execute: fetchUser } = useEnfyraApi('/me', {
   query: { fields: '*,role.*' },
-  errorContext: 'Fetch Current User'
+  lazy: true
 })
 
 // Watch for user data
@@ -317,7 +317,7 @@ function formatTime(dateString) {
 **🔧 Technical Features Used:**
 - Vue 3 Composition API
 - Enfyra UI components (UCard, UButton, UIcon)
-- useApiLazy for data fetching
+- `useEnfyraApi()` from @enfyra/sdk-nuxt for data fetching
 - useToast for notifications
 - Real-time state updates
 - Responsive design
@@ -341,7 +341,7 @@ function formatTime(dateString) {
 ### Advanced Learning
 
 - **[Extension Development Guide](./extension-development-guide.md)** - Deep dive into patterns
-- **[API Composables](./api-composables.md)** - Master data fetching
+- **[API Guide](./api-composables.md)** - Master data fetching with @enfyra/sdk-nuxt
 - **[Permission System](./permission-system.md)** - Secure your features
 - **[Filter System](./filter-query.md)** - Build advanced queries
 
