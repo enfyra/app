@@ -6,7 +6,7 @@ The Enfyra App Form Field System provides dynamic form generation, validation, a
 
 ### useSchema(tableName)
 
-> **📖 See also:** [API Composables Guide](./api-composables.md) for useApi integration examples
+> **📖 See also:** [API Guide](./api-composables.md) for @enfyra/sdk-nuxt integration examples
 
 The main composable for schema-based form operations:
 

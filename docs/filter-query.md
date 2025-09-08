@@ -6,7 +6,7 @@ The Enfyra App Filter System provides a comprehensive solution for building comp
 
 ### useFilterQuery Composable
 
-> **📖 See also:** [API Composables Guide](./api-composables.md) for useApi integration
+> **📖 See also:** [API Guide](./api-composables.md) for @enfyra/sdk-nuxt integration
 
 The main composable for handling filter operations:
 

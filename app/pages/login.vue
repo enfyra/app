@@ -88,8 +88,8 @@ const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const { login } = useEnfyraAuth();
 const toast = useToast();
 const form = reactive({
-  email: "enfyra@admin.com",
-  password: "1234",
+  email: "",
+  password: "",
   remember: true,
 });
 const error = reactive<{ email: string | null; password: string | null }>({
