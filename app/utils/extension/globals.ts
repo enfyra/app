@@ -74,7 +74,7 @@ export const NUXT_GLOBALS = {
 // Enfyra custom composables
 export const ENFYRA_GLOBALS = {
   // API
-  useEnfyraApi: true,
+  useApi: true,
   
   // Schema & Forms
   useSchema: true,
@@ -116,7 +116,7 @@ export const EXTENSION_GLOBALS = {
 // List of composables to inject into extension runtime
 export const EXTENSION_COMPOSABLES = {
   // Enfyra API composables
-  useEnfyraApi: 'useEnfyraApi',
+  useApi: 'useApi',
   useHeaderActionRegistry: 'useHeaderActionRegistry',
   useSubHeaderActionRegistry: 'useSubHeaderActionRegistry',
   useSchema: 'useSchema',

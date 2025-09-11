@@ -19,7 +19,7 @@ export const useGlobalState = () => {
     data: settingsData,
     pending: settingsPending,
     execute: executeFetchSettings,
-  } = useEnfyraApi(() => "/setting_definition", {
+  } = useApi(() => "/setting_definition", {
     query: {
       fields: ["*", "methods.*"].join(","),
       limit: 0,

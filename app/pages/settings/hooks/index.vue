@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const toast = useToast();
 const { confirm } = useConfirm();
 const page = ref(1);
@@ -15,7 +15,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchHooks,
-} = useEnfyraApi(() => "/hook_definition", {
+} = useApi(() => "/hook_definition", {
   query: computed(() => ({
     fields: getIncludeFields(),
     sort: "-createdAt",
@@ -27,7 +27,7 @@ const {
 });
 
 // Update API at setup level
-const { execute: updateHookApi, error: updateError } = useEnfyraApi(
+const { execute: updateHookApi, error: updateError } = useApi(
   () => `/hook_definition`,
   {
     method: "patch",
@@ -36,7 +36,7 @@ const { execute: updateHookApi, error: updateError } = useEnfyraApi(
 );
 
 // Delete API at setup level
-const { execute: deleteHookApi, error: deleteError } = useEnfyraApi(
+const { execute: deleteHookApi, error: deleteError } = useApi(
   () => `/hook_definition`,
   {
     method: "delete",

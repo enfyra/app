@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 definePageMeta({
   layout: "default",
   title: "Extension Detail",
@@ -158,7 +158,7 @@ const {
   data: extensionData,
   pending: loading,
   execute: executeGetExtension,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   query: {
     fields: getIncludeFields(),
     filter: { id: { _eq: route.params.id } },
@@ -170,7 +170,7 @@ const {
   error: updateError,
   execute: executeUpdateExtension,
   pending: updateLoading,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   method: "patch",
   errorContext: "Update Extension",
 });
@@ -179,7 +179,7 @@ const {
   error: deleteError,
   execute: executeDeleteExtension,
   pending: deleteLoading,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   method: "delete",
   errorContext: "Delete Extension",
 });

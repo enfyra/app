@@ -14,7 +14,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRouteHandlers,
-} = useEnfyraApi(() => "/route_handler_definition", {
+} = useApi(() => "/route_handler_definition", {
   query: computed(() => ({
     fields: getIncludeFields(),
     sort: "-createdAt",
@@ -25,7 +25,7 @@ const {
   errorContext: "Fetch Route Handlers",
 });
 
-const { execute: removeHandler, error: removeHandlerError } = useEnfyraApi(
+const { execute: removeHandler, error: removeHandlerError } = useApi(
   () => `/route_handler_definition`,
   {
     method: "delete",

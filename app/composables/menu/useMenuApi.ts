@@ -3,7 +3,7 @@ export const useMenuApi = () => {
     data: menuDefinitions,
     pending: menuDefinitionsPending,
     execute: fetchMenuDefinitions,
-  } = useEnfyraApi<{ data: MenuApiItem[] }>(() => "/menu_definition", {
+  } = useApi<{ data: MenuApiItem[] }>(() => "/menu_definition", {
     query: computed(() => ({
       limit: 0,
       fields: "*,parent.*,children.*,sidebar.*",

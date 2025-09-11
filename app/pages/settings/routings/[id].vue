@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 
 const route = useRoute();
 const toast = useToast();
@@ -121,7 +121,7 @@ const {
   data: routeData,
   pending: loading,
   execute: executeGetRoute,
-} = useEnfyraApi(`/${tableName}`, {
+} = useApi(`/${tableName}`, {
   query: {
     fields: getIncludeFields(),
     filter: { id: { _eq: route.params.id } },
@@ -133,7 +133,7 @@ const {
   error: updateError,
   execute: executeUpdateRoute,
   pending: updateLoading,
-} = useEnfyraApi(`/${tableName}`, {
+} = useApi(`/${tableName}`, {
   method: "patch",
   errorContext: "Update Route",
 });
@@ -142,7 +142,7 @@ const {
   error: deleteError,
   execute: executeDeleteRoute,
   pending: deleteLoading,
-} = useEnfyraApi(`/${tableName}`, {
+} = useApi(`/${tableName}`, {
   method: "delete",
   errorContext: "Delete Route",
 });

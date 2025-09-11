@@ -99,7 +99,7 @@ const {
   data: handlerData,
   pending: loading,
   execute: executeGetHandler,
-} = useEnfyraApi(`/${tableName}`, {
+} = useApi(`/${tableName}`, {
   query: { fields: getIncludeFields(), filter: { id: { _eq: id } } },
   errorContext: "Fetch Handler",
 });
@@ -108,7 +108,7 @@ const {
   error: saveError,
   execute: executeSaveHandler,
   pending: saveLoading,
-} = useEnfyraApi(`/${tableName}`, {
+} = useApi(`/${tableName}`, {
   method: "patch",
   errorContext: "Save Handler",
 });
@@ -117,7 +117,7 @@ const {
   error: deleteError,
   execute: executeDeleteHandler,
   pending: deleteLoading,
-} = useEnfyraApi(`/${tableName}`, {
+} = useApi(`/${tableName}`, {
   method: "delete",
   errorContext: "Delete Handler",
 });

@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const toast = useToast();
 
 const tableName = "user_definition";
@@ -40,7 +40,7 @@ const {
   pending: createLoading,
   execute: createUser,
   error: createError,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create User",
 });

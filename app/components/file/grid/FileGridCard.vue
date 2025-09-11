@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 import type { FileItem } from "~/utils/types";
 import Preview from "./FileGridPreview.vue";
 import EditableName from "./FileGridEditableName.vue";
@@ -184,7 +184,7 @@ async function saveEdit() {
   editingLoading.value = true;
 
   try {
-    const { execute: updateFile, error } = useEnfyraApi(
+    const { execute: updateFile, error } = useApi(
       () => `file_definition/${props.file.id}`,
       {
         method: "patch",
