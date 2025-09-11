@@ -14,7 +14,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRecord,
-} = useEnfyraApi(() => `/${route.params.table}`, {
+} = useApi(() => `/${route.params.table}`, {
   query: computed(() => ({
     fields: "*",
     filter: {
@@ -77,7 +77,7 @@ const {
   pending: updateLoading,
   execute: updateRecord,
   error: updateError,
-} = useEnfyraApi(() => `/${route.params.table}`, {
+} = useApi(() => `/${route.params.table}`, {
   method: "patch",
   errorContext: "Update Record",
 });
@@ -86,7 +86,7 @@ const {
   error: deleteError,
   execute: executeDeleteRecord,
   pending: deleteLoading,
-} = useEnfyraApi(() => `/${route.params.table}`, {
+} = useApi(() => `/${route.params.table}`, {
   method: "delete",
   errorContext: "Delete Record",
 });

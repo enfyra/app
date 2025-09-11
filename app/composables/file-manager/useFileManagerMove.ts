@@ -1,4 +1,4 @@
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 
 export function useFileManagerMove() {
   // File Manager Move State
@@ -24,7 +24,7 @@ export function useFileManagerMove() {
     execute: patchFiles,
     error: patchFilesError,
     pending: patchFilesPending,
-  } = useEnfyraApi(() => "/file_definition", {
+  } = useApi(() => "/file_definition", {
     method: "patch",
     errorContext: "Move Files",
   });
@@ -33,7 +33,7 @@ export function useFileManagerMove() {
     execute: patchFolders,
     error: patchFoldersError,
     pending: patchFoldersPending,
-  } = useEnfyraApi(() => "/folder_definition", {
+  } = useApi(() => "/folder_definition", {
     method: "patch",
     errorContext: "Move Folders",
   });

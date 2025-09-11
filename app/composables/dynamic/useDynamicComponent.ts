@@ -45,7 +45,7 @@ import {
   usePermissions,
   useFilterQuery,
   useDataTableColumns,
-  useEnfyraApi,
+  useApi,
   // Nuxt composables
   useToast,
   useState,
@@ -234,7 +234,7 @@ export const useDynamicComponent = () => {
       // Direct injection - no need for createComposableMap filtering
       const composables = {
         // Enfyra composables
-        useEnfyraApi,
+        useApi,
         useHeaderActionRegistry,
         useSubHeaderActionRegistry,
         useSchema,

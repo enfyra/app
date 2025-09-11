@@ -54,13 +54,13 @@ useHeaderActionRegistry([
   },
 ]);
 
-// Setup useEnfyraApi composable at top level
+// Setup useApi composable at top level
 const {
   data: createData,
   error: createError,
   execute: executeCreateHandler,
   pending: createLoading,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Handler",
 });

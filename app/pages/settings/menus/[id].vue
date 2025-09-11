@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const route = useRoute();
 
 const toast = useToast();
@@ -20,7 +20,7 @@ const {
   data: menuData,
   pending: loading,
   execute: executeFetchMenu,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   query: {
     fields: getIncludeFields(),
     filter: { id: { _eq: Number(route.params.id) } },
@@ -32,7 +32,7 @@ const {
   execute: executeUpdateMenu,
   pending: updateLoading,
   error: updateError,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   method: "patch",
   errorContext: "Update Menu",
 });
@@ -41,7 +41,7 @@ const {
   execute: executeDeleteMenu,
   pending: deleteLoading,
   error: deleteError,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   method: "delete",
   errorContext: "Delete Menu",
 });

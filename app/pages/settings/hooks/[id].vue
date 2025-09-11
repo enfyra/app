@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const route = useRoute();
 
 const toast = useToast();
@@ -108,7 +108,7 @@ const {
   data: hookData,
   pending: loading,
   execute: executeGetHook,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   query: { fields: getIncludeFields(), filter: { id: { _eq: id } } },
   errorContext: "Fetch Hook",
 });
@@ -117,7 +117,7 @@ const {
   error: updateError,
   execute: executeUpdateHook,
   pending: updateLoading,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   method: "patch",
   errorContext: "Update Hook",
 });
@@ -126,7 +126,7 @@ const {
   error: deleteError,
   execute: executeDeleteHook,
   pending: deleteLoading,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   method: "delete",
   errorContext: "Delete Hook",
 });

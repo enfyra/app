@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 
 const props = defineProps<{
   relationMeta: any;
@@ -53,7 +53,7 @@ const {
   pending: loading,
   execute: fetchData,
   error: apiError,
-} = useEnfyraApi(() => `/${targetTable.value?.name}`, {
+} = useApi(() => `/${targetTable.value?.name}`, {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)

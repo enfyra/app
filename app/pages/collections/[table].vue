@@ -15,7 +15,7 @@ const {
   data: tableData,
   pending: loading,
   execute: fetchTableData,
-} = useEnfyraApi(() => "/table_definition", {
+} = useApi(() => "/table_definition", {
   query: computed(() => ({
     fields: getIncludeFields(),
     filter: {
@@ -31,7 +31,7 @@ const {
   pending: saving,
   execute: executePatchTable,
   error: updateError,
-} = useEnfyraApi(() => `/table_definition`, {
+} = useApi(() => `/table_definition`, {
   method: "patch",
   body: computed(() => table.value),
   errorContext: "Update Table",
@@ -41,7 +41,7 @@ const {
   pending: deleting,
   execute: executeDeleteTable,
   error: deleteError,
-} = useEnfyraApi(() => `/table_definition`, {
+} = useApi(() => `/table_definition`, {
   method: "delete",
   errorContext: "Delete Table",
 });
@@ -133,7 +133,7 @@ async function patchTable() {
   await executePatchTable({ id: table.value?.id });
 
   if (updateError.value) {
-    return; // Error already handled by useEnfyraApi
+    return; // Error already handled by useApi
   }
 
   await fetchSchema();
@@ -162,7 +162,7 @@ async function deleteTable() {
   await executeDeleteTable({ id: table.value?.id });
 
   if (deleteError.value) {
-    return; // Error already handled by useEnfyraApi
+    return; // Error already handled by useApi
   }
 
   await fetchSchema();

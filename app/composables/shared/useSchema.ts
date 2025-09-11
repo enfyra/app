@@ -16,7 +16,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     data: tablesData,
     pending: tablesPending,
     execute: executeFetchTables,
-  } = useEnfyraApi(() => "/table_definition", {
+  } = useApi(() => "/table_definition", {
     query: {
       fields: ["*", "columns.*", "relations.*"].join(","),
       limit: 0,

@@ -13,7 +13,7 @@ export function useDataTableActions(
   const { createLoader } = useLoader();
 
   // Delete single record composable
-  const { execute: executeDelete, error: deleteError } = useEnfyraApi(
+  const { execute: executeDelete, error: deleteError } = useApi(
     () => `/${tableName}`,
     {
       method: "delete",

@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const toast = useToast();
 
 const tableName = "route_definition";
@@ -55,13 +55,13 @@ useHeaderActionRegistry([
   },
 ]);
 
-// Setup useEnfyraApi composable at top level
+// Setup useApi composable at top level
 const {
   data: createData,
   error: createError,
   execute: executeCreateRoute,
   pending: createLoading,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Route",
 });

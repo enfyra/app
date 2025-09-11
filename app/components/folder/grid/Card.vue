@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 
 interface Props {
   folder: any;
@@ -177,7 +177,7 @@ async function saveEdit() {
   editingLoading.value = true;
 
   try {
-    const { execute: updateFolder, error } = useEnfyraApi(
+    const { execute: updateFolder, error } = useApi(
       () => `folder_definition/${props.folder.id}`,
       {
         method: "patch",

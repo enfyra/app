@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 import { formatDate } from "~/utils/common/filter/filter-helpers";
 import {
   getFolderIcon,
@@ -95,7 +95,7 @@ const { confirm } = useConfirm();
 const toast = useToast();
 
 // Delete folder API at setup level
-const { execute: executeDeleteFolder } = useEnfyraApi(
+const { execute: executeDeleteFolder } = useApi(
   () => `/folder_definition`,
   {
     method: "delete",

@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 
 const props = defineProps<{
   modelValue: boolean;
@@ -210,7 +210,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRoutes,
-} = useEnfyraApi(() => "/route_definition", {
+} = useApi(() => "/route_definition", {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)

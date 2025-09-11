@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const showCreateModal = ref(false);
 const showUploadModal = ref(false);
 
@@ -14,7 +14,7 @@ const {
   data: rootFolders,
   pending: rootPending,
   execute: fetchRootFolders,
-} = useEnfyraApi(() => `folder_definition`, {
+} = useApi(() => `folder_definition`, {
   query: computed(() => ({
     limit,
     page: folderPage.value,
@@ -35,7 +35,7 @@ const {
   data: rootFiles,
   pending: filesPending,
   execute: fetchRootFiles,
-} = useEnfyraApi(() => `file_definition`, {
+} = useApi(() => `file_definition`, {
   query: computed(() => ({
     limit,
     page: filePage.value,
@@ -57,7 +57,7 @@ const {
   execute: uploadFilesApi,
   error: uploadError,
   pending: uploadPending,
-} = useEnfyraApi(() => `file_definition`, {
+} = useApi(() => `file_definition`, {
   method: "post",
   errorContext: "Upload Files",
 });
@@ -161,7 +161,7 @@ async function handleFileUpload(files: File | File[]) {
 
   // Check for errors
   if (uploadError.value) {
-    return; // Error already handled by useEnfyraApi
+    return; // Error already handled by useApi
   }
 
   // Refresh files list after successful upload

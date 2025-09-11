@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const props = defineProps<{
   modelValue: boolean;
   parentId?: string;
@@ -19,7 +19,7 @@ const {
   pending: createLoading,
   execute: createFolder,
   error: createError,
-} = useEnfyraApi(() => "/folder_definition", {
+} = useApi(() => "/folder_definition", {
   method: "post",
   errorContext: "Create Folder",
 });

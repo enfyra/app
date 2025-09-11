@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const toast = useToast();
 const page = ref(1);
 const pageLimit = 9;
@@ -33,7 +33,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRoutes,
-} = useEnfyraApi(() => "/route_definition", {
+} = useApi(() => "/route_definition", {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
@@ -136,7 +136,7 @@ watch(
 );
 
 // Update API at setup level
-const { execute: updateRouteApi, error: updateError } = useEnfyraApi(
+const { execute: updateRouteApi, error: updateError } = useApi(
   () => `/route_definition`,
   {
     method: "patch",
@@ -145,7 +145,7 @@ const { execute: updateRouteApi, error: updateError } = useEnfyraApi(
 );
 
 // Delete API at setup level
-const { execute: deleteRouteApi, error: deleteError } = useEnfyraApi(
+const { execute: deleteRouteApi, error: deleteError } = useApi(
   () => `/route_definition`,
   {
     method: "delete",

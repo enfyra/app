@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
@@ -96,7 +96,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRole,
-} = useEnfyraApi(() => `/${tableName}`, {
+} = useApi(() => `/${tableName}`, {
   query: computed(() => ({
     fields: getIncludeFields(),
     filter: { id: { _eq: id } },
@@ -119,7 +119,7 @@ const {
   execute: updateRole,
   pending: updateLoading,
   error: updateError,
-} = useEnfyraApi(() => `/${tableName}/${id}`, {
+} = useApi(() => `/${tableName}/${id}`, {
   method: "patch",
   errorContext: "Update Role",
 });
@@ -128,7 +128,7 @@ const {
   execute: deleteRoleApi,
   pending: deleteLoading,
   error: deleteError,
-} = useEnfyraApi(() => `/${tableName}/${id}`, {
+} = useApi(() => `/${tableName}/${id}`, {
   method: "delete",
   errorContext: "Delete Role",
 });

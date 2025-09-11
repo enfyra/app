@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// useEnfyraApi is auto-imported in Nuxt
+// useApi is auto-imported in Nuxt
 const toast = useToast();
 const errors = ref<Record<string, string>>({});
 
@@ -35,7 +35,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadSetting,
-} = useEnfyraApi(() => `/setting_definition`, {
+} = useApi(() => `/setting_definition`, {
   query: {
     fields: "*",
     limit: 1,
@@ -56,7 +56,7 @@ const {
   execute: saveSetting,
   pending: saveLoading,
   error: saveError,
-} = useEnfyraApi(() => `/setting_definition/${setting.value.id}`, {
+} = useApi(() => `/setting_definition/${setting.value.id}`, {
   method: "patch",
   errorContext: "Save Settings",
 });
