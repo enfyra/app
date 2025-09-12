@@ -3,15 +3,26 @@ const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
 const newRecord = ref<Record<string, any>>({});
-const { generateEmptyForm, validate } = useSchema(route.params.table as string);
+const tableName = route.params.table as string;
+const { generateEmptyForm, validate } = useSchema(tableName);
 const createErrors = ref<Record<string, string>>({});
+
+// Get the correct route for this table
+const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
+
+
+// Load routes on mount
+onMounted(async () => {
+  await ensureRoutesLoaded();
+  newRecord.value = generateEmptyForm();
+});
 
 const {
   data: createData,
   pending: createLoading,
   execute: createRecord,
   error: createError,
-} = useApi(() => `/${route.params.table}`, {
+} = useApi(() => getRouteForTableName(tableName), {
   method: "post",
   errorContext: "Create Record",
 });
@@ -29,17 +40,13 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: `/${route.params.table}`,
+          route: computed(() => getRouteForTableName(tableName)),
           actions: ["create"],
         },
       ],
     },
   },
 ]);
-
-onMounted(() => {
-  newRecord.value = generateEmptyForm();
-});
 
 async function handleCreate() {
   const { isValid, errors } = validate(newRecord.value);

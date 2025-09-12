@@ -63,15 +63,12 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
-
 const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
+const { loadRoutes } = useRoutes();
 
 const tableName = "route_definition";
-
-// Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 
@@ -151,7 +148,6 @@ const form = ref<Record<string, any>>({});
 
 const errors = ref<Record<string, string>>({});
 
-// Initialize form data
 async function initializeForm() {
   await executeGetRoute();
   const data = routeData.value?.data?.[0];
@@ -190,7 +186,8 @@ async function updateRoute() {
   });
   errors.value = {};
 
-  // Confirm form changes as new baseline
+  await loadRoutes();
+
   formEditorRef.value?.confirmChanges();
 }
 
@@ -212,6 +209,9 @@ async function deleteRoute() {
     description: "Route deleted successfully", 
     color: "success" 
   });
+
+  await loadRoutes();
+  
   await navigateTo("/settings/routings");
 }
 

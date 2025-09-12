@@ -19,11 +19,23 @@ const targetTable = Object.values(schemas.value).find(
 ) as any;
 const { generateEmptyForm, validate } = useSchema(targetTable?.name);
 
+// Get the correct route for the target table
+const { getRouteForTableId, ensureRoutesLoaded } = useRoutes();
+const targetRoute = ref<string>('');
+
+// Load routes and set target route
+watchEffect(async () => {
+  if (targetTable?.id) {
+    await ensureRoutesLoaded();
+    targetRoute.value = getRouteForTableId(targetTable.id);
+  }
+});
+
 const {
   data: createData,
   pending: creating,
   execute: createRecord,
-} = useApi(() => `/${targetTable?.name}`, {
+} = useApi(() => targetRoute.value || `/${targetTable?.name}`, {
   method: "post",
   errorContext: "Create Relation Record",
 });

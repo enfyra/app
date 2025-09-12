@@ -9,13 +9,14 @@ export default defineNuxtPlugin(async () => {
   const { schemas, fetchSchema } = useSchema();
   const { fetchSetting } = useGlobalState();
   const { confirm } = useConfirm();
+  const { loadRoutes } = useRoutes();
 
   const { fetchMenuDefinitions } = useMenuApi();
 
-  // Fetch schema, settings, and menu definitions in parallel for better performance
-  const [, , menuResponse] = await Promise.all([
+  const [, , , menuResponse] = await Promise.all([
     fetchSchema(),
     fetchSetting(),
+    loadRoutes(),
     fetchMenuDefinitions(),
   ]);
 
@@ -33,7 +34,6 @@ export default defineNuxtPlugin(async () => {
     await registerTableMenusWithSidebarIds(schemaValues);
   }
 
-  // Register logout button as bottom mini sidebar
   registerMiniSidebar({
     id: "logout",
     label: "Logout",

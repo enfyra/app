@@ -41,6 +41,18 @@ const detailRecord = ref<Record<string, any>>({});
 
 const { isMounted } = useMounted();
 
+// Get the correct route for the target table
+const { getRouteForTableId, ensureRoutesLoaded } = useRoutes();
+const targetRoute = ref<string>('');
+
+// Load routes and set target route
+watchEffect(async () => {
+  if (targetTable.value?.id) {
+    await ensureRoutesLoaded();
+    targetRoute.value = getRouteForTableId(targetTable.value.id);
+  }
+});
+
 watch(
   () => props.selectedIds,
   () => {
@@ -53,7 +65,7 @@ const {
   pending: loading,
   execute: fetchData,
   error: apiError,
-} = useApi(() => `/${targetTable.value?.name}`, {
+} = useApi(() => targetRoute.value || `/${targetTable.value?.name}`, {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
