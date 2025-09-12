@@ -46,6 +46,7 @@ import {
   useFilterQuery,
   useDataTableColumns,
   useApi,
+  useEnfyraApi,
   // Nuxt composables
   useToast,
   useState,
@@ -235,6 +236,7 @@ export const useDynamicComponent = () => {
       const composables = {
         // Enfyra composables
         useApi,
+        useEnfyraApi,
         useHeaderActionRegistry,
         useSubHeaderActionRegistry,
         useSchema,
