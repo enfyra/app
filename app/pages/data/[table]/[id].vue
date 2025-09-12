@@ -2,7 +2,8 @@
 const route = useRoute();
 
 const toast = useToast();
-const { validate } = useSchema(route.params.table as string);
+const tableName = route.params.table as string;
+const { validate } = useSchema(tableName);
 const updateErrors = ref<Record<string, string>>({});
 
 const { confirm } = useConfirm();
@@ -10,11 +11,21 @@ const { confirm } = useConfirm();
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 
+// Get the correct route for this table
+const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
+
+
+// Load routes on mount
+onMounted(async () => {
+  await ensureRoutesLoaded();
+  await initializeForm();
+});
+
 const {
   data: apiData,
   pending: loading,
   execute: fetchRecord,
-} = useApi(() => `/${route.params.table}`, {
+} = useApi(() => getRouteForTableName(tableName), {
   query: computed(() => ({
     fields: "*",
     filter: {
@@ -36,9 +47,7 @@ async function initializeForm() {
   }
 }
 
-onMounted(() => {
-  initializeForm();
-});
+// Already handled in the onMounted above
 
 async function handleUpdate() {
   const { isValid, errors } = validate(currentRecord.value);
@@ -77,7 +86,7 @@ const {
   pending: updateLoading,
   execute: updateRecord,
   error: updateError,
-} = useApi(() => `/${route.params.table}`, {
+} = useApi(() => getRouteForTableName(tableName), {
   method: "patch",
   errorContext: "Update Record",
 });
@@ -86,7 +95,7 @@ const {
   error: deleteError,
   execute: executeDeleteRecord,
   pending: deleteLoading,
-} = useApi(() => `/${route.params.table}`, {
+} = useApi(() => getRouteForTableName(tableName), {
   method: "delete",
   errorContext: "Delete Record",
 });
@@ -125,7 +134,7 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: `/${route.params.table}`,
+          route: computed(() => getRouteForTableName(tableName)),
           actions: ["update"],
         },
       ],
@@ -143,7 +152,7 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: `/${route.params.table}`,
+          route: computed(() => getRouteForTableName(tableName)),
           actions: ["delete"],
         },
       ],

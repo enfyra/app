@@ -18,6 +18,15 @@ const { isMounted } = useMounted();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 
+// Get the correct route for this table
+const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
+
+// Ensure routes are loaded on mount
+onMounted(async () => {
+  await ensureRoutesLoaded();
+  await fetchData(); // Fetch data after routes are loaded
+});
+
 const filterLabel = computed(() => {
   const activeCount = currentFilter.value.conditions.length;
   return activeCount > 0 ? `Filters (${activeCount})` : "Filter";
@@ -35,7 +44,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchData,
-} = useApi(() => `/${tableName}`, {
+} = useApi(() => getRouteForTableName(tableName), {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
@@ -90,7 +99,7 @@ useSubHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: `/${route.params.table}`,
+          route: computed(() => getRouteForTableName(tableName)),
           actions: ["delete"],
         },
       ],
@@ -110,7 +119,7 @@ useSubHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: `/${route.params.table}`,
+          route: computed(() => getRouteForTableName(tableName)),
           actions: ["delete"],
         },
       ],
@@ -132,7 +141,7 @@ useSubHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: `/${route.params.table}`,
+          route: computed(() => getRouteForTableName(tableName)),
           actions: ["read"],
         },
       ],
@@ -192,7 +201,7 @@ const columns = computed(() => {
           const hasDeletePermission = checkPermissionCondition({
             and: [
               {
-                route: `/${route.params.table}`,
+                route: computed(() => getRouteForTableName(tableName)),
                 actions: ["delete"],
               },
             ],
@@ -280,7 +289,7 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: `/${route.params.table}`,
+          route: computed(() => getRouteForTableName(tableName)),
           actions: ["read"],
         },
       ],
@@ -297,7 +306,7 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: `/${route.params.table}`,
+          route: computed(() => getRouteForTableName(tableName)),
           actions: ["create"],
         },
       ],

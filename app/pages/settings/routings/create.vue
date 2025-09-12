@@ -24,8 +24,8 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const toast = useToast();
+const { loadRoutes } = useRoutes();
 
 const tableName = "route_definition";
 
@@ -55,7 +55,6 @@ useHeaderActionRegistry([
   },
 ]);
 
-// Setup useApi composable at top level
 const {
   data: createData,
   error: createError,
@@ -93,6 +92,8 @@ async function handleCreate() {
     title: "Route created successfully",
     color: "success",
   });
+
+  await loadRoutes();
 
   await navigateTo(`/settings/routings/${createData.value.data[0].id}`, {
     replace: true,
