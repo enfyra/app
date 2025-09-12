@@ -87,60 +87,35 @@ Unlike typical no-code platforms that limit you to predefined features, **Enfyra
 
 ## 📚 Documentation
 
-### 🚀 **Quick Start**
+For complete documentation, please visit our dedicated documentation repository:
 
-**New to Enfyra App? Start here!**
+**🔗 [Enfyra Documentation](https://github.com/dothinh115/enfyra-docs)**
 
-- **[📖 Getting Started Guide](./docs/getting-started.md)** - **Complete step-by-step tutorial from setup to building your first features** (30 min → productivity)
+### 📖 **What's Covered:**
 
-### 🏗️ **Architecture & Core Systems**
+**🚀 Getting Started**
+- Complete setup and installation guide
+- Your first Enfyra project walkthrough
+- Data management basics
 
-- **[Project Structure](./docs/project-structure.md)** - Complete codebase organization and architecture patterns
-- **[API Composables Guide](./docs/api-composables.md)** - Data fetching, error handling, and API integration patterns
-- **[Permission System](./docs/permission-system.md)** - Role-based access control with PermissionGate and usePermissions
-- **[Filter System](./docs/filter-query.md)** - Advanced data filtering with visual query builder
-- **[Form Field System](./docs/form-field.md)** - Dynamic form generation, validation, and schema integration
+**🏗️ Architecture & Development**
+- Extension system with live compilation
+- API integration and composables
+- Permission system and security
+- Custom handlers and hooks
+- Filter system and querying
 
-### ⚡ **UI & Interaction**
+**⚡ Advanced Features**
+- Header actions and UI registry
+- Form systems and components
+- Routing and menu management
+- Real-time features
 
-- **[DataTable Component](./docs/data-table.md)** - Feature-rich table component with sorting, selection, and context menus
-- **[Image Component](./docs/image.md)** - Optimized image component with lazy loading, format optimization, and error handling
-- **[Header Action Registry](./docs/header-action-registry.md)** - Dynamic header buttons and interactive controls
-- **[Settings Card](./docs/settings-card.md)** - Consistent settings UI component patterns
+**📚 Complete Learning Path**
+- Structured progression from beginner to advanced
+- Goal-oriented paths for specific use cases
+- Cross-referenced documentation
 
-### 🔧 **Advanced Development**
-
-- **[Extension Development Guide](./docs/extension-development-guide.md)** - Create custom extensions with full feature integration
-
----
-
-## 📋 **Learning Path**
-
-### **🔰 Beginner (First Day)**
-
-```
-1. 📖 Getting Started Guide → Build your first features (30 min)
-2. 🏗️ Project Structure → Understand the codebase (10 min)
-3. 🔧 API Composables → Learn data patterns (15 min)
-```
-
-### **🎯 Intermediate (First Week)**
-
-```
-4. 🛡️ Permission System → Secure your UI (20 min)
-5. 📝 Form Fields → Dynamic forms (30 min)
-6. 🔍 Filter System → Advanced search (30 min)
-```
-
-### **🚀 Advanced (Production Ready)**
-
-```
-7. ⚡ Header Actions → Interactive UI (15 min)
-8. 🎨 Settings Cards → Consistent layouts (15 min)
-9. 🧩 Extension Development → Custom features (2-4 hours)
-```
-
-**Total Time to Productivity: ~6 hours of focused learning**
 
 ## Development
 
@@ -178,7 +153,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- 📖 [Documentation](./docs/)
+- 📖 [Documentation](https://github.com/dothinh115/enfyra-docs)
 - 🐛 [Issues](https://github.com/dothinh115/dynamiq_cms/issues)
 - 💬 [Discussions](https://github.com/dothinh115/dynamiq_cms/discussions)
 
