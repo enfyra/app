@@ -35,7 +35,7 @@
             v-model:errors="errors"
             v-model:has-changes="hasFormChanges"
             :table-name="tableName"
-            :excluded="['routePermissions']"
+            :excluded="['routePermissions', 'mainTable']"
             :loading="loading"
           />
         </UForm>

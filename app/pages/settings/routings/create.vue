@@ -16,6 +16,7 @@
             v-model="createForm"
             :table-name="tableName"
             v-model:errors="createErrors"
+            :excluded="['mainTable']"
           />
         </UForm>
       </div>
