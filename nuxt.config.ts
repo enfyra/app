@@ -21,6 +21,16 @@ export default defineNuxtConfig({
       method: "get",
     },
     {
+      route: "/enfyra/api/extension_definition",
+      handler: "server/api/extension_definition.post.ts",
+      method: "post",
+    },
+    {
+      route: "/enfyra/api/extension_definition/**",
+      handler: "server/api/extension_definition/[id].patch.ts",
+      method: "patch",
+    },
+    {
       route: "**",
       handler: "server/middleware/server-id.ts",
       middleware: true,
