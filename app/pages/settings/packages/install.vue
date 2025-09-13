@@ -38,24 +38,22 @@
             </button>
 
             <button
-              @click="packageType = 'App'"
+              disabled
               :class="[
-                'p-4 rounded-lg border-2 transition-all',
-                packageType === 'App'
-                  ? 'border-primary bg-primary/10'
-                  : 'border-gray-600 hover:border-gray-500',
+                'p-4 rounded-lg border-2 transition-all opacity-50 cursor-not-allowed',
+                'border-gray-600',
               ]"
             >
               <UIcon
                 name="lucide:package-2"
-                class="w-8 h-8 mb-2"
-                :class="
-                  packageType === 'App' ? 'text-primary' : 'text-gray-400'
-                "
+                class="w-8 h-8 mb-2 text-gray-500"
               />
-              <div class="font-semibold">App Package</div>
-              <div class="text-sm text-gray-400">
+              <div class="font-semibold text-gray-500">App Package</div>
+              <div class="text-sm text-gray-500">
                 Frontend packages for your application
+              </div>
+              <div class="text-xs text-gray-600 mt-1">
+                Coming soon
               </div>
             </button>
           </div>
@@ -68,12 +66,30 @@
           title="Usage in Handlers & Hooks"
           description="Installed packages will be available as $ctx.$pkgs.packageName in your custom handlers and hooks."
           color="warning"
-          class="my-6"
+          class="mb-6"
           :ui="{
             icon: 'text-[35px]',
           }"
           variant="soft"
         />
+
+        <!-- NPM Package Search (Backend only) -->
+        <div v-if="packageType === 'Backend'" class="mb-6">
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-gray-300">
+              Search NPM Package
+            </label>
+
+            <div class="relative">
+              <NpmPackageSearch
+                v-model="selectedNpmPackage"
+                @select="handlePackageSelect"
+                :disabled="createLoading"
+                placeholder="Type to search packages (e.g., axios, lodash, express...)"
+              />
+            </div>
+          </div>
+        </div>
 
         <!-- Form -->
         <UForm :state="form" @submit="handleCreate">
@@ -81,7 +97,13 @@
             v-model="form"
             v-model:errors="errors"
             :table-name="tableName"
-            :excluded="['type', 'installedBy']"
+            :excluded="[
+              'type',
+              'installedBy',
+              ...(packageType === 'Backend' && selectedNpmPackage
+                ? ['name']
+                : []),
+            ]"
           />
         </UForm>
       </div>
@@ -95,6 +117,7 @@ const { me } = useEnfyraAuth();
 
 const tableName = "package_definition";
 const packageType = ref<"App" | "Backend">("Backend");
+const selectedNpmPackage = ref<any>(null);
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -143,9 +166,29 @@ function initializeForm() {
   }
 }
 
+// Handle NPM package selection
+function handlePackageSelect(pkg: any) {
+  if (!pkg) return;
+
+  // Auto-fill form fields
+  form.value.name = pkg.name;
+  form.value.version = pkg.version;
+  form.value.description = pkg.description || "";
+
+  // Store additional metadata if needed
+  if (pkg.keywords && pkg.keywords.length > 0) {
+    form.value.flags = pkg.keywords.slice(0, 3).join(", ");
+  }
+}
+
+
 // Watch package type changes to update form
 watch(packageType, () => {
   form.value.type = packageType.value;
+  // Clear NPM selection when switching to App type
+  if (packageType.value === "App") {
+    selectedNpmPackage.value = null;
+  }
 });
 
 async function handleCreate() {
