@@ -45,7 +45,12 @@
             v-model:errors="errors"
             :table-name="tableName"
             :loading="loading"
-            :excluded="['installedBy']"
+            :excluded="['installedBy', 'type']"
+            :type-map="{
+              name: {
+                disabled: true,
+              },
+            }"
           />
         </UForm>
       </div>
@@ -125,7 +130,7 @@ useHeaderActionRegistry({
   id: "uninstall-package",
   label: "Uninstall",
   icon: "lucide:trash-2",
-  variant: "outline",
+  variant: "solid",
   color: "error",
   loading: computed(() => deleting.value),
   submit: handleUninstall,

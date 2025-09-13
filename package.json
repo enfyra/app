@@ -80,6 +80,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.10",
     "@types/lodash": "^4.17.20",
+    "@types/lodash-es": "^4.17.12",
     "@vitest/coverage-v8": "^2.1.2",
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^15.7.4",

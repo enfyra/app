@@ -14,6 +14,18 @@ export default defineNuxtConfig({
     "@enfyra/sdk-nuxt",
     // "../enfyra-sdk-nuxt/dist/module.mjs",
   ],
+  serverHandlers: [
+    {
+      route: "/enfyra/api/npm-search",
+      handler: "server/api/npm-search.get.ts",
+      method: "get",
+    },
+    {
+      route: "**",
+      handler: "server/middleware/server-id.ts",
+      middleware: true,
+    },
+  ],
   colorMode: {
     preference: "dark",
     fallback: "dark",
