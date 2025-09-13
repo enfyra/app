@@ -161,7 +161,7 @@ const visibleMenuItems = computed(() => {
               class="bg-muted/10 pl-3 pb-3 space-y-1"
             >
               <PermissionGate
-                v-for="child in item.children"
+                v-for="child in item.children?.sort((a, b) => (a.order || 0) - (b.order || 0))"
                 :key="child.id"
                 :condition="child.permission as any"
               >
