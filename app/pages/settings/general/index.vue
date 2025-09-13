@@ -81,10 +81,10 @@ async function handleSaveSetting() {
     return;
   }
 
-  toast.add({ 
+  toast.add({
     title: "Success",
-    description: "Configuration saved successfully", 
-    color: "success" 
+    description: "Configuration saved successfully",
+    color: "success",
   });
   errors.value = {};
 
@@ -119,6 +119,7 @@ onMounted(() => {
             v-model:errors="errors"
             v-model:has-changes="hasFormChanges"
             :loading="loading"
+            :excluded="['isInit']"
           />
         </UForm>
       </div>

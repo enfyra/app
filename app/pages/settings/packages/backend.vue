@@ -64,7 +64,7 @@
               component: 'code',
               props: {
                 class:
-                  'text-xs font-mono text-green-600 bg-green-50 px-2 py-1 rounded',
+                  'text-xs font-mono text-green-600 bg-green-50 px-2 py-1 rounded hover:text-white',
               },
             },
           ]"
@@ -154,7 +154,7 @@ const {
 const packages = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
-// Delete API setup  
+// Delete API setup
 const { execute: removePackage, error: removePackageError } = useApi(
   "/package_definition",
   {
@@ -223,5 +223,4 @@ watch(
   },
   { immediate: true }
 );
-
 </script>
