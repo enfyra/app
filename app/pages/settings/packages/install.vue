@@ -84,6 +84,7 @@
               <NpmPackageSearch
                 v-model="selectedNpmPackage"
                 @select="handlePackageSelect"
+                @clear="handlePackageClear"
                 :disabled="createLoading"
                 placeholder="Type to search packages (e.g., axios, lodash, express...)"
               />
@@ -97,13 +98,7 @@
             v-model="form"
             v-model:errors="errors"
             :table-name="tableName"
-            :excluded="[
-              'type',
-              'installedBy',
-              ...(packageType === 'Backend' && selectedNpmPackage
-                ? ['name']
-                : []),
-            ]"
+            :excluded="['type', 'installedBy', 'name']"
           />
         </UForm>
       </div>
@@ -181,6 +176,10 @@ function handlePackageSelect(pkg: any) {
   }
 }
 
+// Handle NPM package clear
+function handlePackageClear() {
+  initializeForm();
+}
 
 // Watch package type changes to update form
 watch(packageType, () => {

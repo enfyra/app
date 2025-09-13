@@ -204,6 +204,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   "update:modelValue": [value: NpmPackage | null];
   select: [pkg: NpmPackage];
+  clear: [];
 }>();
 
 const searchTerm = ref("");
@@ -318,5 +319,6 @@ const clearSelection = () => {
   selectedPackage.value = null;
   searchTerm.value = "";
   packages.value = [];
+  emit("clear");
 };
 </script>
