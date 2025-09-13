@@ -70,7 +70,19 @@ export function useMenuRegistry() {
     const items = menuItems.value.filter(
       (item) => item.sidebarId === sidebarId
     );
-    return items;
+    // Sort by order field, then by type (Dropdown Menu first, then Menu)
+    return items.sort((a, b) => {
+      // First sort by order
+      const orderDiff = (a.order || 0) - (b.order || 0);
+      if (orderDiff !== 0) return orderDiff;
+      
+      // If same order, prioritize by type: Dropdown Menu first, then Menu
+      const typeOrder = { 'Dropdown Menu': 0, 'Menu': 1 };
+      const aTypeOrder = typeOrder[a.type] ?? 2;
+      const bTypeOrder = typeOrder[b.type] ?? 2;
+      
+      return aTypeOrder - bTypeOrder;
+    });
   };
 
   const clearAllMenus = () => {
