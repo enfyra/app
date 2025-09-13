@@ -52,9 +52,7 @@
               <div class="text-sm text-gray-500">
                 Frontend packages for your application
               </div>
-              <div class="text-xs text-gray-600 mt-1">
-                Coming soon
-              </div>
+              <div class="text-xs text-gray-600 mt-1">Coming soon</div>
             </button>
           </div>
         </div>
@@ -169,11 +167,6 @@ function handlePackageSelect(pkg: any) {
   form.value.name = pkg.name;
   form.value.version = pkg.version;
   form.value.description = pkg.description || "";
-
-  // Store additional metadata if needed
-  if (pkg.keywords && pkg.keywords.length > 0) {
-    form.value.flags = pkg.keywords.slice(0, 3).join(", ");
-  }
 }
 
 // Handle NPM package clear
