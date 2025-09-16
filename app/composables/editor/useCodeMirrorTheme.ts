@@ -33,6 +33,10 @@ export function useCodeMirrorTheme(height?: string) {
     { tag: tags.special(tags.string), color: "#D7BA7D" },                 
     { tag: tags.meta, color: "#569CD6" },                                 
     { tag: tags.invalid, color: "#F44747", textDecoration: "underline" }, 
+    // HTML/XML tags for Vue templates
+    { tag: tags.tagName, color: "#4FC1FF" },
+    { tag: tags.content, color: "#D4D4D4" },
+    { tag: tags.typeName, color: "#4EC9B0" },
   ]);
 
   // VS Code-style dark theme

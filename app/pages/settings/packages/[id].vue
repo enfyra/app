@@ -13,10 +13,10 @@
       padding-y="py-6"
     />
 
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full" v-if="packageData">
+    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <!-- Usage Instructions (Backend only) -->
       <UAlert
-        v-if="packageData.type === 'Backend'"
+        v-if="packageData?.type === 'Backend'"
         icon="lucide:code-2"
         title="Usage in Handlers & Hooks"
         color="info"
@@ -31,7 +31,7 @@
             <code
               class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
             >
-              $ctx.$pkgs.{{ packageData.name.replace(/[@\/\-]/g, "") }}
+              $ctx.$pkgs.{{ packageData?.name.replace(/[@\/\-]/g, "") }}
             </code>
           </div>
         </template>
