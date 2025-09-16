@@ -1,9 +1,9 @@
 {
   "name": "enfyra-app",
-  "version": "1.0.0",
-  "description": "A modern, extensible CMS built with Nuxt.js featuring plugin system and dynamic content management",
+  "version": "0.1.0-beta",
+  "description": "Dynamic admin interface for Enfyra backend - auto-generates management UI from database schemas",
   "license": "MIT",
-  "author": "Enfyra App Team",
+  "author": "dothinh115 <dothinh115@gmail.com>",
   "repository": {
     "type": "git",
     "url": "https://github.com/dothinh115/dynamiq_cms.git"

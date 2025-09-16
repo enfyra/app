@@ -19,9 +19,11 @@ import {
   history,
   defaultKeymap,
   historyKeymap,
+  insertNewlineAndIndent,
 } from "@codemirror/commands";
 import {
   closeBrackets,
+  closeBracketsKeymap,
   autocompletion,
   completionKeymap,
 } from "@codemirror/autocomplete";
@@ -98,7 +100,7 @@ export function useCodeMirrorExtensions() {
   });
 
   // Language extension - Only JavaScript, no TypeScript
-  function getLanguageExtension(language?: "javascript" | "vue" | "json" | "html") {
+  function getLanguageExtension(language?: "javascript" | "vue" | "json" | "html" | "typescript") {
     switch (language) {
       case "vue":
         return vue();
@@ -110,8 +112,8 @@ export function useCodeMirrorExtensions() {
     }
   }
 
-  // Create linter based on language  
-  const createLinter = (language?: "javascript" | "vue" | "json" | "html", onDiagnostics?: (diags: any[]) => void) => {
+  // Create linter based on language
+  const createLinter = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
     return linter((view) => {
       const diagnostics: any[] = [];
       const text = view.state.doc.toString();
@@ -211,7 +213,7 @@ export function useCodeMirrorExtensions() {
   };
 
   // Basic setup function that takes language parameter
-  const getBasicSetup = (language?: "javascript" | "vue" | "json" | "html", onDiagnostics?: (diags: any[]) => void) => {
+  const getBasicSetup = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
     const setup = [
       lineNumbers(),
       highlightActiveLine(),
@@ -229,7 +231,70 @@ export function useCodeMirrorExtensions() {
       createLinter(language, onDiagnostics),
       lintGutter(),
       keymap.of([
+        {
+          key: "Enter",
+          run: (view) => {
+            // Check if cursor is between brackets
+            const state = view.state;
+            const pos = state.selection.main.head;
+            const before = state.doc.sliceString(pos - 1, pos);
+            const after = state.doc.sliceString(pos, pos + 1);
+
+            const pairs = [
+              { open: '{', close: '}' },
+              { open: '[', close: ']' },
+              { open: '(', close: ')' },
+            ];
+
+            for (const pair of pairs) {
+              if (before === pair.open && after === pair.close) {
+                // Insert newline with proper indentation
+                view.dispatch({
+                  changes: {
+                    from: pos,
+                    to: pos,
+                    insert: '\n  \n'
+                  },
+                  selection: { anchor: pos + 3 }
+                });
+                return true;
+              }
+            }
+
+            return insertNewlineAndIndent(view);
+          },
+        },
+        {
+          key: "Backspace",
+          run: (view) => {
+            const state = view.state;
+            const pos = state.selection.main.head;
+            const line = state.doc.lineAt(pos);
+
+            // Only handle indented empty lines (has whitespace but cursor at end of line)
+            if (line.text.trim() === '' && line.text.length > 0 && pos === line.to && line.number > 1) {
+              const prevLine = state.doc.line(line.number - 1);
+              const nextLine = line.number < state.doc.lines ? state.doc.line(line.number + 1) : null;
+
+              if (prevLine && nextLine) {
+                const prevTrimmed = prevLine.text.trim();
+                const nextTrimmed = nextLine.text.trim();
+
+                if ((prevTrimmed.endsWith('{') && nextTrimmed === '}') ||
+                    (prevTrimmed.endsWith('[') && nextTrimmed === ']') ||
+                    (prevTrimmed.endsWith('(') && nextTrimmed === ')')) {
+                  view.dispatch({
+                    changes: { from: prevLine.to, to: nextLine.from, insert: '' }
+                  });
+                  return true;
+                }
+              }
+            }
+            return false;
+          },
+        },
         indentWithTab,
+        ...closeBracketsKeymap,
         ...defaultKeymap,
         ...historyKeymap,
         ...foldKeymap,
@@ -254,6 +319,6 @@ export function useCodeMirrorExtensions() {
     getLanguageExtension,
     createLinter,
     getBasicSetup,
-    basicSetup: getBasicSetup(), // Default for backward compatibility
+    basicSetup: getBasicSetup("javascript"), // Default for backward compatibility
   };
 }
