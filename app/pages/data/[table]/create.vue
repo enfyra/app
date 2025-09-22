@@ -40,7 +40,7 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: computed(() => getRouteForTableName(tableName)),
+          route: getRouteForTableName(tableName),
           actions: ["create"],
         },
       ],
