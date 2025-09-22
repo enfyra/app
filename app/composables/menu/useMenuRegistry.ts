@@ -77,9 +77,9 @@ export function useMenuRegistry() {
       if (orderDiff !== 0) return orderDiff;
       
       // If same order, prioritize by type: Dropdown Menu first, then Menu
-      const typeOrder = { 'Dropdown Menu': 0, 'Menu': 1 };
-      const aTypeOrder = typeOrder[a.type] ?? 2;
-      const bTypeOrder = typeOrder[b.type] ?? 2;
+      const typeOrder: Record<string, number> = { 'Dropdown Menu': 0, 'Menu': 1 };
+      const aTypeOrder = a.type ? (typeOrder[a.type] ?? 2) : 2;
+      const bTypeOrder = b.type ? (typeOrder[b.type] ?? 2) : 2;
       
       return aTypeOrder - bTypeOrder;
     });
@@ -220,6 +220,9 @@ export function useMenuRegistry() {
       return;
     }
 
+    // Get route mapping for tables
+    const { getRouteForTableName } = useRoutes();
+
     // Filter tables that can be modified in collections
     const modifiableTables = tables.filter((table) => {
       // User tables (non-system) can always be modified
@@ -262,12 +265,21 @@ export function useMenuRegistry() {
       nonSystemTables.forEach((table) => {
         const tableName = table.name || table.table_name;
         if (!tableName) return;
+
+        // Get the dynamic route for this table
+        const dynamicRoute = getRouteForTableName(tableName);
+
         registerMenuItem({
           id: `data-${tableName}`,
           label: table.label || table.display_name || tableName,
           route: `/data/${tableName}`,
           icon: table.icon || "lucide:database",
           sidebarId: dataSidebarId,
+          permission: {
+            or: [
+              { route: dynamicRoute, actions: ["read"] }
+            ]
+          }
         });
       });
     }

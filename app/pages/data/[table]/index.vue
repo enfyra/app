@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { ColumnDef } from "@tanstack/vue-table";
 import ColumnSelector from "~/components/data-table/ColumnSelector.vue";
 
 const route = useRoute();
@@ -24,7 +23,6 @@ const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
 // Ensure routes are loaded on mount
 onMounted(async () => {
   await ensureRoutesLoaded();
-  await fetchData(); // Fetch data after routes are loaded
 });
 
 const filterLabel = computed(() => {
@@ -61,12 +59,8 @@ const {
   errorContext: "Fetch Data",
 });
 
-const {
-  hiddenColumns,
-  visibleColumns,
-  toggleColumnVisibility,
-  columnDropdownItems,
-} = useDataTableVisibility(tableName, schemas);
+const { hiddenColumns, visibleColumns, columnDropdownItems } =
+  useDataTableVisibility(tableName, schemas);
 
 const {
   selectedRows,
@@ -99,7 +93,7 @@ useSubHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: computed(() => getRouteForTableName(tableName)),
+          route: getRouteForTableName(tableName),
           actions: ["delete"],
         },
       ],
@@ -119,7 +113,7 @@ useSubHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: computed(() => getRouteForTableName(tableName)),
+          route: getRouteForTableName(tableName),
           actions: ["delete"],
         },
       ],
@@ -141,7 +135,7 @@ useSubHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: computed(() => getRouteForTableName(tableName)),
+          route: getRouteForTableName(tableName),
           actions: ["read"],
         },
       ],
@@ -158,12 +152,14 @@ const columns = computed(() => {
   const dataColumns = schema.definition
     .filter(
       (field) =>
-        field.fieldType === "column" && field.name && visibleColumns.value.has(field.name)
+        field.fieldType === "column" &&
+        field.name &&
+        visibleColumns.value.has(field.name)
     )
     .map((field) => {
       let config: DataTableColumnConfig = {
         id: field.name!,
-        header: field.label || field.name || '',
+        header: field.label || field.name || "",
       };
 
       if (field.type === "timestamp") {
@@ -201,7 +197,7 @@ const columns = computed(() => {
           const hasDeletePermission = checkPermissionCondition({
             and: [
               {
-                route: computed(() => getRouteForTableName(tableName)),
+                route: getRouteForTableName(tableName),
                 actions: ["delete"],
               },
             ],
@@ -254,7 +250,6 @@ async function clearFilters() {
   await handleFilterApply(createEmptyFilter());
 }
 
-
 watch(
   () => route.query.page,
   async (newVal) => {
@@ -289,7 +284,7 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: computed(() => getRouteForTableName(tableName)),
+          route: getRouteForTableName(tableName),
           actions: ["read"],
         },
       ],
@@ -306,14 +301,13 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: computed(() => getRouteForTableName(tableName)),
+          route: getRouteForTableName(tableName),
           actions: ["create"],
         },
       ],
     },
   },
 ]);
-
 </script>
 
 <template>

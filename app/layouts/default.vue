@@ -115,7 +115,7 @@
         <div
           class="min-h-full bg-gradient-to-b from-background/50 to-transparent rounded-xl backdrop-blur-sm"
         >
-          <div class="p-6">
+          <div class="px-6 pt-6 pb-6 md:pb-20">
             <slot />
           </div>
         </div>
@@ -126,19 +126,14 @@
   <!-- Confirm Modal -->
   <div id="others-overlay"></div>
 
-
   <CommonGlobalConfirm />
   <CommonMobileWarning />
   <RouteLoading :show="routeLoading" message="Navigating..." />
 </template>
 
 <script setup lang="ts">
-const {
-  sidebarVisible,
-  routeLoading,
-  toggleSidebar,
-  setSidebarVisible,
-} = useGlobalState();
+const { sidebarVisible, routeLoading, toggleSidebar, setSidebarVisible } =
+  useGlobalState();
 const { isMobile, isTablet } = useScreen();
 
 // Layout logic moved to LayoutSubHeader component
