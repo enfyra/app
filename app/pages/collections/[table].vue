@@ -77,6 +77,7 @@ useHeaderActionRegistry([
     icon: "lucide:trash",
     variant: "solid",
     color: "error",
+    loading: computed(() => deleting.value),
     disabled: computed(
       () =>
         (table.value?.isSystem &&
