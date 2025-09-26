@@ -78,6 +78,13 @@ async function handleUpdate() {
   });
   updateErrors.value = {};
 
+  // Refresh the current record data
+  await fetchRecord();
+  const data = apiData.value?.data?.[0];
+  if (data) {
+    currentRecord.value = { ...data };
+  }
+
   formEditorRef.value?.confirmChanges();
 }
 
