@@ -122,6 +122,7 @@ async function initializeForm() {
 
 async function save() {
   const ok = await confirm({
+    title: "Save Confirm",
     content: "Are you sure you want to modify table structure?",
   });
   if (!ok) {
