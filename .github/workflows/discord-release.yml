@@ -18,6 +18,3 @@ jobs:
           content: "🚀 **New Release Available!**"
           footer_title: "Release Notes"
           reduce_headings: true
-          show_author: true
-          show_commit_count: true
-          show_files_changed: true
