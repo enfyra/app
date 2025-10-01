@@ -10,9 +10,19 @@ watch(
 
 <template>
   <Teleport to="body">
-    <UModal v-model:open="isVisible" prevent-close>
+    <UModal 
+      v-model:open="isVisible" 
+      prevent-close
+      :close="{
+        color: 'error',
+        variant: 'solid',
+        size: 'lg',
+      }"
+    >
       <template #title>
-        <div class="text-lg font-semibold">{{ options.title }}</div>
+        <div class="flex items-center justify-between w-full">
+          <div class="text-lg font-semibold">{{ options.title }}</div>
+        </div>
       </template>
       <template #body>
         <div class="space-y-4">

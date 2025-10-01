@@ -16,6 +16,40 @@ const relationErrors = ref<Record<number, Record<string, string>>>({});
 
 const { generateEmptyForm, validate } = useSchema("relation_definition");
 
+// Modal state
+const showCloseConfirm = ref(false);
+const hasFormChanges = ref(false);
+const formEditorRef = ref();
+
+// Handle drawer close
+function handleDrawerClose() {
+  // Check if there are unsaved changes
+  if (hasFormChanges.value) {
+    showCloseConfirm.value = true;
+    // Reopen drawer to show modal
+    isEditing.value = true;
+  }
+}
+
+function cancelDrawer() {
+  // Close drawer (same as click outside)
+  isEditing.value = false;
+}
+
+function discardChanges() {
+  // Reset form changes
+  formEditorRef.value?.confirmChanges();
+  // Reset errors
+  relationErrors.value = {};
+  // Close modal
+  showCloseConfirm.value = false;
+  // Close drawer
+  isEditing.value = false;
+  isNew.value = false;
+  currentRelation.value = null;
+  editingIndex.value = null;
+}
+
 function createEmptyRelation(): any {
   return generateEmptyForm();
 }
@@ -61,6 +95,9 @@ function saveRelation() {
   } else if (editingIndex.value != null) {
     relations.value.splice(editingIndex.value, 1, newRel);
   }
+
+  // Reset form changes before closing
+  formEditorRef.value?.confirmChanges();
 
   isEditing.value = false;
   currentRelation.value = null;
@@ -128,6 +165,7 @@ function saveRelation() {
       v-model:open="isEditing"
       direction="right"
       class="min-w-xl"
+      @update:open="(open) => { if (!open) handleDrawerClose() }"
       :ui="{
         header:
           'border-b border-muted text-muted pb-2 flex items-center justify-between',
@@ -178,9 +216,11 @@ function saveRelation() {
               </h3>
             </div>
             <FormEditorLazy
+              ref="formEditorRef"
               v-model="currentRelation"
               v-model:errors="currentRelationErrors"
               tableName="relation_definition"
+              @has-changed="(hasChanged) => hasFormChanges = hasChanged"
               :excluded="[
                 'id',
                 'createdAt',
@@ -225,7 +265,7 @@ function saveRelation() {
               <UButton
                 variant="ghost"
                 color="neutral"
-                @click="isEditing = false"
+                @click="cancelDrawer"
                 :disabled="false"
               >
                 Cancel
@@ -243,5 +283,37 @@ function saveRelation() {
         </div>
       </template>
     </UDrawer>
+
+    <!-- Close Confirmation Modal -->
+    <UModal 
+      v-model:open="showCloseConfirm" 
+      prevent-close
+      :close="{
+        color: 'error',
+        variant: 'solid',
+        size: 'lg',
+      }"
+    >
+      <template #title>
+        <div class="text-lg font-semibold">Unsaved Changes</div>
+      </template>
+      <template #body>
+        <div class="space-y-4">
+          <p class="text-sm text-gray-300 text-center">
+            You have unsaved changes to this relation. Are you sure you want to close? All changes will be lost.
+          </p>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2 w-full">
+          <UButton variant="ghost" @click="showCloseConfirm = false">
+            Cancel
+          </UButton>
+          <UButton @click="discardChanges">
+            Discard Changes
+          </UButton>
+        </div>
+      </template>
+    </UModal>
   </Teleport>
 </template>

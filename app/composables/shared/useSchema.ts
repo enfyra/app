@@ -261,7 +261,10 @@ export function useSchema(tableName?: string | Ref<string>) {
     return result;
   }
 
-  function validate(record: Record<string, any>): FormValidationResult {
+  function validate(
+    record: Record<string, any>,
+    customValidators?: Record<string, (value: any) => string | null>
+  ): FormValidationResult {
     const errors: Record<string, string> = {};
     let isValid = true;
 
@@ -272,6 +275,16 @@ export function useSchema(tableName?: string | Ref<string>) {
       const isRelation = field.fieldType === "relation";
       const isInverse = isRelation && !!field.inversePropertyName;
       if (isInverse) continue;
+
+      // Check custom validator first
+      if (customValidators && customValidators[key]) {
+        const customError = customValidators[key](value);
+        if (customError) {
+          errors[key] = customError;
+          isValid = false;
+          continue; // Skip default validation if custom validator fails
+        }
+      }
 
       const nullable = field.isNullable ?? true;
       const isGenerated = field.isGenerated === true;
@@ -316,10 +329,16 @@ export function useSchema(tableName?: string | Ref<string>) {
       return original !== current;
     }
 
+    function discardChanges(currentData: Record<string, any>): Record<string, any> {
+      // Return a deep copy of the original data
+      return JSON.parse(JSON.stringify(originalData.value));
+    }
+
     return {
       originalData: readonly(originalData),
       update,
       checkChanges,
+      discardChanges,
     };
   }
 

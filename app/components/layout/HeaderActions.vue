@@ -68,6 +68,18 @@ const visibleActions = computed(() => {
       return false;
     }
 
+    // Check show property
+    const showValue =
+      action.show === undefined
+        ? true
+        : isRef(action.show)
+        ? unref(action.show)
+        : action.show;
+
+    if (!showValue) {
+      return false;
+    }
+
     return true;
   });
 

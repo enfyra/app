@@ -10,6 +10,8 @@ const { confirm } = useConfirm();
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
+const { useFormChanges } = useSchema();
+const formChanges = useFormChanges();
 
 // Get the correct route for this table
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
@@ -44,6 +46,7 @@ async function initializeForm() {
   const data = apiData.value?.data?.[0];
   if (data) {
     currentRecord.value = { ...data };
+    formChanges.update(data);
   }
 }
 
@@ -85,7 +88,9 @@ async function handleUpdate() {
     currentRecord.value = { ...data };
   }
 
+  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
+  formChanges.update(currentRecord.value);
 }
 
 const {
@@ -127,7 +132,38 @@ async function deleteRecord() {
   await navigateTo(`/data/${route.params.table}`);
 }
 
+async function handleReset() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) {
+    return;
+  }
+
+  if (formChanges.originalData.value) {
+    currentRecord.value = formChanges.discardChanges(currentRecord.value);
+    hasFormChanges.value = false;
+    
+    toast.add({
+      title: "Reset Complete",
+      color: "success",
+      description: "All changes have been discarded.",
+    });
+  }
+}
+
 useHeaderActionRegistry([
+  {
+    id: "reset-data-entry",
+    label: "Reset",
+    icon: "lucide:rotate-ccw",
+    variant: "outline",
+    color: "warning",
+    disabled: computed(() => !hasFormChanges.value),
+    onClick: handleReset,
+    show: computed(() => hasFormChanges.value),
+  },
   {
     id: "save-data-entry",
     label: "Save",

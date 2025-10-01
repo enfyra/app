@@ -39,6 +39,7 @@ defineExpose({
       @update:model-value="(value) => emit('update:modelValue', value)"
       @update:errors="(errors) => emit('update:errors', errors)"
       @has-changed="(hasChanged) => emit('hasChanged', hasChanged)"
+      @confirm-changes="() => emit('confirm-changes')"
     />
     <template #fallback>
       <CommonLoadingState

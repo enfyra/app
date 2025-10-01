@@ -10,7 +10,41 @@ const columns = useModel(props, "modelValue");
 const isNew = ref(false);
 const errors = ref<Record<string, string>>({});
 
-const { generateEmptyForm } = useSchema("column_definition");
+const { generateEmptyForm, validate } = useSchema("column_definition");
+
+// Modal state
+const showCloseConfirm = ref(false);
+const hasFormChanges = ref(false);
+const formEditorRef = ref();
+
+// Handle drawer close
+function handleDrawerClose() {
+  // Check if there are unsaved changes
+  if (hasFormChanges.value) {
+    showCloseConfirm.value = true;
+    // Reopen drawer to show modal
+    isEditing.value = true;
+  }
+}
+
+function cancelDrawer() {
+  // Close drawer (same as click outside)
+  isEditing.value = false;
+}
+
+function discardChanges() {
+  // Reset form changes
+  formEditorRef.value?.confirmChanges();
+  // Reset errors
+  errors.value = {};
+  // Close modal
+  showCloseConfirm.value = false;
+  // Close drawer
+  isEditing.value = false;
+  isNew.value = false;
+  currentColumn.value = null;
+  editingIndex.value = null;
+}
 
 // Centralized UUID logic
 function handleUuidType(column: any): any {
@@ -37,8 +71,29 @@ function editColumn(col: any, index: number) {
 }
 
 function saveColumn() {
-  validate(); // Single validation call
-  if (Object.keys(errors.value).length > 0) return;
+  const customValidators = {
+    name: (value: string) => {
+      if (!value?.trim()) {
+        return "Column name is required";
+      }
+      if (!TABLE_NAME_FIELD_REGEX.test(value)) {
+        return "Only letters, numbers, _ allowed and cannot start with number or _!";
+      }
+      return null;
+    },
+    type: (value: string) => {
+      if (!value) {
+        return "Must select data type";
+      }
+      return null;
+    }
+  };
+
+  const { isValid, errors: validationErrors } = validate(currentColumn.value, customValidators);
+  if (!isValid) {
+    errors.value = validationErrors;
+    return;
+  }
 
   const newCol = { ...currentColumn.value };
 
@@ -51,6 +106,9 @@ function saveColumn() {
     columns.value.splice(editingIndex.value, 1, newCol);
   }
 
+  // Reset form changes before closing
+  formEditorRef.value?.confirmChanges();
+  
   isEditing.value = false;
   isNew.value = false;
   currentColumn.value = null;
@@ -70,31 +128,6 @@ function addNewColumn() {
   handleUuidType(currentColumn.value);
 }
 
-function validate(property?: string) {
-  if (property === "name") {
-    if (!currentColumn.value?.name?.trim()) {
-      errors.value.name = "Column name is required";
-    } else if (!TABLE_NAME_FIELD_REGEX.test(currentColumn.value?.name)) {
-      errors.value.name =
-        "Only letters, numbers, _ allowed and cannot start with number or _!";
-    } else {
-      delete errors.value.name;
-    }
-    return;
-  }
-
-  if (!currentColumn.value?.type) {
-    errors.value.type = "Must select data type";
-  } else delete errors.value.type;
-
-  if (
-    !currentColumn.value?.isNullable &&
-    !currentColumn.value?.isGenerated &&
-    !currentColumn.value?.defaultValue
-  ) {
-    errors.value.defaultValue = "Cannot be empty!";
-  } else delete errors.value.defaultValue;
-}
 
 // Extract UUID type mapping
 function getUuidTypeMap() {
@@ -335,6 +368,7 @@ watch(
       v-model:open="isEditing"
       direction="right"
       class="min-w-xl"
+      @update:open="(open) => { if (!open) handleDrawerClose() }"
       :ui="{
         header:
           'border-b border-muted text-muted pb-2 flex items-center justify-between',
@@ -388,9 +422,11 @@ watch(
               </h3>
             </div>
             <FormEditorLazy
+              ref="formEditorRef"
               v-model="currentColumn"
               tableName="column_definition"
               v-model:errors="errors"
+              @has-changed="(hasChanged) => hasFormChanges = hasChanged"
               :includes="
                 currentColumn.name === 'id' ? ['name', 'type'] : undefined
               "
@@ -430,10 +466,7 @@ watch(
               <UButton
                 variant="ghost"
                 color="neutral"
-                @click="
-                  isEditing = false;
-                  currentColumn = null;
-                "
+                @click="cancelDrawer"
                 :disabled="false"
               >
                 Cancel
@@ -451,5 +484,37 @@ watch(
         </div>
       </template>
     </UDrawer>
+
+    <!-- Close Confirmation Modal -->
+    <UModal 
+      v-model:open="showCloseConfirm" 
+      prevent-close
+      :close="{
+        color: 'error',
+        variant: 'solid',
+        size: 'lg',
+      }"
+    >
+      <template #title>
+        <div class="text-lg font-semibold">Unsaved Changes</div>
+      </template>
+      <template #body>
+        <div class="space-y-4">
+          <p class="text-sm text-gray-300 text-center">
+            You have unsaved changes to this column. Are you sure you want to close? All changes will be lost.
+          </p>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2 w-full">
+          <UButton variant="ghost" @click="showCloseConfirm = false">
+            Cancel
+          </UButton>
+          <UButton @click="discardChanges">
+            Discard Changes
+          </UButton>
+        </div>
+      </template>
+    </UModal>
   </Teleport>
 </template>

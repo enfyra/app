@@ -29,6 +29,8 @@ const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
+const { useFormChanges } = useSchema();
+const formChanges = useFormChanges();
 
 const {
   error: updateError,
@@ -50,8 +52,39 @@ const {
 
 const showReplaceModal = ref(false);
 
+async function handleReset() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) {
+    return;
+  }
+
+  if (formChanges.originalData.value) {
+    form.value = formChanges.discardChanges(form.value);
+    hasFormChanges.value = false;
+    
+    toast.add({
+      title: "Reset Complete",
+      color: "success",
+      description: "All changes have been discarded.",
+    });
+  }
+}
+
 // Header actions
 useHeaderActionRegistry([
+  {
+    id: "reset-file",
+    label: "Reset",
+    icon: "lucide:rotate-ccw",
+    variant: "outline",
+    color: "warning",
+    disabled: computed(() => !hasFormChanges.value),
+    onClick: handleReset,
+    show: computed(() => hasFormChanges.value),
+  },
   {
     id: "save-file",
     label: "Save",
@@ -118,6 +151,7 @@ async function initializeForm() {
   const data = file.value?.data?.[0];
   if (data) {
     form.value = { ...data };
+    formChanges.update(data);
   }
 }
 
@@ -147,8 +181,9 @@ async function saveFile() {
     color: "success",
   });
 
-  // Confirm form changes as new baseline
+  // Reset form changes
   formEditorRef.value?.confirmChanges();
+  formChanges.update(form.value);
 }
 
 // Handle file delete
