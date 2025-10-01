@@ -192,7 +192,7 @@ const title = computed(() => {
           mode="edit"
           v-model="currentRecord"
           v-model:errors="updateErrors"
-          v-model:has-changes="hasFormChanges"
+          @has-changed="(hasChanged) => hasFormChanges = hasChanged"
           :loading="loading"
         />
       </div>

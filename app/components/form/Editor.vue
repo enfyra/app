@@ -40,7 +40,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   "update:modelValue": [value: Record<string, any>];
   "update:errors": [errors: Record<string, string>];
-  "update:hasChanges": [hasChanges: boolean];
+  "hasChanged": [hasChanged: boolean];
 }>();
 
 const { definition, fieldMap, sortFieldsByOrder, useFormChanges } = useSchema(
@@ -146,7 +146,7 @@ watch(
   { immediate: true, deep: true }
 );
 
-// Watch for form changes and emit hasChanges
+// Watch for form changes and emit hasChanged
 watch(
   () => props.modelValue,
   (newValue) => {
@@ -155,8 +155,8 @@ watch(
       Object.keys(newValue).length > 0 &&
       Object.keys(originalData.value).length > 0
     ) {
-      formChanges.checkChanges(newValue);
-      emit("update:hasChanges", formChanges.hasChanges.value);
+      const hasChanged = formChanges.checkChanges(newValue);
+      emit("hasChanged", hasChanged);
     }
   },
   { deep: true }
@@ -168,7 +168,7 @@ defineExpose({
     if (props.modelValue && Object.keys(props.modelValue).length > 0) {
       originalData.value = JSON.parse(JSON.stringify(props.modelValue));
       formChanges.update(props.modelValue);
-      emit("update:hasChanges", false);
+      emit("hasChanged", false);
     }
   },
 });
