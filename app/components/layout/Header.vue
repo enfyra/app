@@ -7,9 +7,15 @@
     <div class="flex items-center gap-3 min-w-0 flex-1">
       <!-- Component actions -->
       <component
-        v-for="action in headerActions.filter(
-          (a) => a.component && a.side === 'left'
-        )"
+        v-for="action in headerActions.filter((a) => {
+          const showValue =
+            a.show === undefined
+              ? true
+              : isRef(a.show)
+              ? unref(a.show)
+              : a.show;
+          return a && a.component && a.side === 'left' && showValue;
+        })"
         :key="action.key || action.id"
         :is="action.component"
         v-bind="action.props"
@@ -17,9 +23,15 @@
 
       <!-- Regular button actions -->
       <UButton
-        v-for="action in headerActions.filter(
-          (a) => !a.component && a.side === 'left'
-        )"
+        v-for="action in headerActions.filter((a) => {
+          const showValue =
+            a.show === undefined
+              ? true
+              : isRef(a.show)
+              ? unref(a.show)
+              : a.show;
+          return a && !a.component && a.side === 'left' && showValue;
+        })"
         :key="action.id"
         :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
         :label="isRef(action.label) ? unref(action.label) : action.label"

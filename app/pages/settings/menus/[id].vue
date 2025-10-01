@@ -10,6 +10,8 @@ const tableName = "menu_definition";
 // Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
+const { useFormChanges } = useSchema();
+const formChanges = useFormChanges();
 
 const { validate, getIncludeFields } = useSchema(tableName);
 
@@ -102,6 +104,7 @@ async function initializeForm() {
   const data = menuData.value?.data?.[0];
   if (data) {
     form.value = { ...data };
+    formChanges.update(data);
   }
 }
 
@@ -185,7 +188,38 @@ watch(
   }
 );
 
+async function handleReset() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) {
+    return;
+  }
+
+  if (formChanges.originalData.value) {
+    form.value = formChanges.discardChanges(form.value);
+    hasFormChanges.value = false;
+    
+    toast.add({
+      title: "Reset Complete",
+      color: "success",
+      description: "All changes have been discarded.",
+    });
+  }
+}
+
 useHeaderActionRegistry([
+  {
+    id: "reset-menu",
+    label: "Reset",
+    icon: "lucide:rotate-ccw",
+    variant: "outline",
+    color: "warning",
+    disabled: computed(() => !hasFormChanges.value),
+    onClick: handleReset,
+    show: computed(() => hasFormChanges.value),
+  },
   {
     id: "save-menu",
     label: "Save Changes",
@@ -257,6 +291,7 @@ async function updateMenuDetail() {
 
   // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
+  formChanges.update(form.value);
 }
 
 async function deleteMenuDetail() {

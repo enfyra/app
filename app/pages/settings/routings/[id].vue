@@ -188,6 +188,7 @@ async function updateRoute() {
 
   await loadRoutes();
 
+  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
 }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // useApi is auto-imported in Nuxt
 const toast = useToast();
+const { confirm } = useConfirm();
 const errors = ref<Record<string, string>>({});
 
 const { validate } = useSchema("setting_definition");
@@ -8,8 +9,41 @@ const { validate } = useSchema("setting_definition");
 // Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
+const { useFormChanges } = useSchema();
+const formChanges = useFormChanges();
+
+async function handleReset() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) {
+    return;
+  }
+
+  if (formChanges.originalData.value) {
+    setting.value = formChanges.discardChanges(setting.value);
+    hasFormChanges.value = false;
+    
+    toast.add({
+      title: "Reset Complete",
+      color: "success",
+      description: "All changes have been discarded.",
+    });
+  }
+}
 
 useHeaderActionRegistry([
+  {
+    id: "reset-settings",
+    label: "Reset",
+    icon: "lucide:rotate-ccw",
+    variant: "outline",
+    color: "warning",
+    disabled: computed(() => !hasFormChanges.value),
+    onClick: handleReset,
+    show: computed(() => hasFormChanges.value),
+  },
   {
     id: "save-settings",
     label: "Save",
@@ -50,6 +84,9 @@ async function initializeForm() {
   await loadSetting();
   const data = apiData.value?.data?.[0];
   setting.value = data ? { ...data } : {};
+  if (data) {
+    formChanges.update(data);
+  }
 }
 
 const {
@@ -88,7 +125,9 @@ async function handleSaveSetting() {
   });
   errors.value = {};
 
+  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
+  formChanges.update(setting.value);
 }
 
 onMounted(() => {

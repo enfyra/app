@@ -49,8 +49,41 @@ const { getIncludeFields } = useSchema(tableName);
 // Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
+const { useFormChanges } = useSchema();
+const formChanges = useFormChanges();
+
+async function handleReset() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) {
+    return;
+  }
+
+  if (formChanges.originalData.value) {
+    form.value = formChanges.discardChanges(form.value);
+    hasFormChanges.value = false;
+    
+    toast.add({
+      title: "Reset Complete",
+      color: "success",
+      description: "All changes have been discarded.",
+    });
+  }
+}
 
 useHeaderActionRegistry([
+  {
+    id: "reset-role",
+    label: "Reset",
+    icon: "lucide:rotate-ccw",
+    variant: "outline",
+    color: "warning",
+    disabled: computed(() => !hasFormChanges.value),
+    onClick: handleReset,
+    show: computed(() => hasFormChanges.value),
+  },
   {
     id: "save-role",
     label: "Save",
@@ -112,6 +145,7 @@ async function initializeForm() {
   const data = apiData.value?.data?.[0];
   if (data) {
     form.value = { ...data };
+    formChanges.update(data);
   }
 }
 
@@ -162,6 +196,7 @@ async function save() {
 
   // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
+  formChanges.update(form.value);
 }
 
 async function deleteRole() {
