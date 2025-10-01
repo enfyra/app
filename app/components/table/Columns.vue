@@ -186,6 +186,13 @@ const typeMap = computed(() => {
     ...(["array-select", "enum"].includes(currentType) &&
       getArrayEnumTypeMap(currentType, currentColumn.value?.options)),
 
+    // Hide defaultValue for text type
+    ...(currentType === "text" && {
+      defaultValue: {
+        excluded: true,
+      },
+    }),
+
     // Exclude options field for other types
     ...(!["array-select", "enum"].includes(currentType) &&
       currentType !== "uuid" && {

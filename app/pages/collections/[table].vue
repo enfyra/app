@@ -10,6 +10,9 @@ const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 
 const table = ref<any>();
+const hasFormChanges = ref(false);
+const { useFormChanges } = useSchema();
+const formChanges = useFormChanges();
 
 const {
   data: tableData,
@@ -59,7 +62,8 @@ useHeaderActionRegistry([
         (table.value?.isSystem &&
           !isSystemTableModifiable(table.value?.name)) ||
         schemaLoading.value ||
-        deleting.value
+        deleting.value ||
+        !hasFormChanges.value
     ),
     submit: save,
     permission: {
@@ -117,6 +121,8 @@ async function initializeForm() {
   const data = tableData.value?.data?.[0];
   if (data) {
     table.value = data;
+    formChanges.update(data);
+    hasFormChanges.value = false;
   }
 }
 
@@ -146,6 +152,10 @@ async function patchTable() {
     color: "success",
     description: "Table structure updated!",
   });
+
+  // Reset form changes after successful save
+  formChanges.update(table.value);
+  hasFormChanges.value = false;
 }
 
 async function handleDelete() {
@@ -177,6 +187,21 @@ async function deleteTable() {
   });
   return navigateTo(`/collections`);
 }
+
+// Watch for form changes
+watch(
+  () => table.value,
+  (newValue) => {
+    if (
+      newValue &&
+      Object.keys(newValue).length > 0 &&
+      Object.keys(formChanges.originalData.value).length > 0
+    ) {
+      hasFormChanges.value = formChanges.checkChanges(newValue);
+    }
+  },
+  { deep: true }
+);
 
 onMounted(() => {
   initializeForm();

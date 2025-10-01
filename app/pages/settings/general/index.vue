@@ -117,7 +117,7 @@ onMounted(() => {
             mode="edit"
             v-model="setting"
             v-model:errors="errors"
-            v-model:has-changes="hasFormChanges"
+            @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :loading="loading"
             :excluded="['isInit']"
           />
