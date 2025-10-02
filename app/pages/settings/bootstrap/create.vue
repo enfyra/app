@@ -2,10 +2,10 @@
   <div class="space-y-6">
     <!-- Header -->
     <CommonPageHeader
-      title="Create New Handler"
+      title="Create New Bootstrap Script"
       title-size="lg"
       show-background
-      background-gradient="from-emerald-500/6 via-teal-400/4 to-transparent"
+      background-gradient="from-amber-500/6 via-orange-400/4 to-transparent"
       padding-y="py-6"
     />
 
@@ -27,7 +27,7 @@
 <script setup lang="ts">
 const toast = useToast();
 
-const tableName = "route_handler_definition";
+const tableName = "bootstrap_script_definition";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -36,7 +36,7 @@ const { generateEmptyForm, validate } = useSchema(tableName);
 
 useHeaderActionRegistry([
   {
-    id: "save-handler",
+    id: "save-bootstrap",
     label: "Save",
     icon: "lucide:save",
     variant: "solid",
@@ -47,7 +47,7 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: "/route_handler_definition",
+          route: "/bootstrap_script_definition",
           actions: ["create"],
         },
       ],
@@ -59,11 +59,11 @@ useHeaderActionRegistry([
 const {
   data: createData,
   error: createError,
-  execute: executeCreateHandler,
+  execute: executeCreateScript,
   pending: createLoading,
 } = useApi(() => `/${tableName}`, {
   method: "post",
-  errorContext: "Create Handler",
+  errorContext: "Create Bootstrap Script",
 });
 
 onMounted(() => {
@@ -88,18 +88,18 @@ async function handleCreate() {
     return;
   }
 
-  await executeCreateHandler({ body: createForm.value });
+  await executeCreateScript({ body: createForm.value });
 
   if (createError.value) {
     return;
   }
 
   toast.add({
-    title: "Handler created successfully",
+    title: "Bootstrap script created successfully",
     color: "success",
   });
 
-  await navigateTo(`/settings/handlers/${createData.value.data[0].id}`, {
+  await navigateTo(`/settings/bootstrap/${createData.value.data[0].id}`, {
     replace: true,
   });
 }

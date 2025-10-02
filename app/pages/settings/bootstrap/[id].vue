@@ -3,10 +3,10 @@
     <div class="space-y-6">
       <!-- Header - Full width -->
       <CommonPageHeader
-        title="Handler Details"
+        title="Bootstrap Script Details"
         title-size="lg"
         show-background
-        background-gradient="from-emerald-500/6 via-teal-400/4 to-transparent"
+        background-gradient="from-amber-500/6 via-orange-400/4 to-transparent"
         padding-y="py-6"
       />
 
@@ -29,10 +29,10 @@
     </div>
 
     <CommonEmptyState
-      v-if="!loading && !handlerData?.data?.[0]"
-      title="Handler not found"
-      description="The requested handler could not be loaded"
-      icon="lucide:command-x"
+      v-if="!loading && !scriptData?.data?.[0]"
+      title="Bootstrap script not found"
+      description="The requested bootstrap script could not be loaded"
+      icon="lucide:rocket-x"
       size="sm"
     />
   </div>
@@ -45,7 +45,7 @@ const toast = useToast();
 const { confirm } = useConfirm();
 
 const id = route.params.id as string;
-const tableName = "route_handler_definition";
+const tableName = "bootstrap_script_definition";
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
@@ -80,7 +80,7 @@ async function handleReset() {
 
 useHeaderActionRegistry([
   {
-    id: "reset-handler",
+    id: "reset-bootstrap",
     label: "Reset",
     icon: "lucide:rotate-ccw",
     variant: "outline",
@@ -90,7 +90,7 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
-    id: "save-handler",
+    id: "save-bootstrap",
     label: "Save",
     icon: "lucide:save",
     variant: "solid",
@@ -102,26 +102,26 @@ useHeaderActionRegistry([
     permission: {
       and: [
         {
-          route: "/route_handler_definition",
+          route: "/bootstrap_script_definition",
           actions: ["update"],
         },
       ],
     },
   },
   {
-    id: "delete-handler",
+    id: "delete-bootstrap",
     label: "Delete",
     icon: "lucide:trash",
     variant: "solid",
     color: "error",
     size: "md",
-    onClick: deleteHandler,
+    onClick: deleteScript,
     loading: computed(() => deleteLoading.value),
     disabled: computed(() => form.value?.isSystem || false),
     permission: {
       and: [
         {
-          route: "/route_handler_definition",
+          route: "/bootstrap_script_definition",
           actions: ["delete"],
         },
       ],
@@ -130,36 +130,36 @@ useHeaderActionRegistry([
 ]);
 
 const {
-  data: handlerData,
+  data: scriptData,
   pending: loading,
-  execute: executeGetHandler,
+  execute: executeGetScript,
 } = useApi(`/${tableName}`, {
   query: { fields: getIncludeFields(), filter: { id: { _eq: id } } },
-  errorContext: "Fetch Handler",
+  errorContext: "Fetch Bootstrap Script",
 });
 
 const {
   error: saveError,
-  execute: executeSaveHandler,
+  execute: executeSaveScript,
   pending: saveLoading,
 } = useApi(`/${tableName}`, {
   method: "patch",
-  errorContext: "Save Handler",
+  errorContext: "Save Bootstrap Script",
 });
 
 const {
   error: deleteError,
-  execute: executeDeleteHandler,
+  execute: executeDeleteScript,
   pending: deleteLoading,
 } = useApi(`/${tableName}`, {
   method: "delete",
-  errorContext: "Delete Handler",
+  errorContext: "Delete Bootstrap Script",
 });
 
 // Initialize form data
 async function initializeForm() {
-  await executeGetHandler();
-  const data = handlerData.value?.data?.[0];
+  await executeGetScript();
+  const data = scriptData.value?.data?.[0];
   if (data) {
     form.value = { ...data };
     formChanges.update(data);
@@ -186,7 +186,7 @@ async function save() {
     return;
   }
 
-  await executeSaveHandler({ id, body: form.value });
+  await executeSaveScript({ id, body: form.value });
 
   if (saveError.value) {
     return;
@@ -195,7 +195,7 @@ async function save() {
   toast.add({
     title: "Success",
     color: "success",
-    description: "Handler updated!",
+    description: "Bootstrap script updated!",
   });
   errors.value = {};
 
@@ -204,14 +204,14 @@ async function save() {
   formChanges.update(form.value);
 }
 
-async function deleteHandler() {
+async function deleteScript() {
   const ok = await confirm({
     title: "Are you sure?",
     content: "This action cannot be undone.",
   });
   if (!ok) return;
 
-  await executeDeleteHandler({ id });
+  await executeDeleteScript({ id });
 
   if (deleteError.value) {
     return;
@@ -219,10 +219,10 @@ async function deleteHandler() {
 
   toast.add({ 
     title: "Success",
-    description: "Handler deleted successfully", 
+    description: "Bootstrap script deleted successfully", 
     color: "success" 
   });
-  await navigateTo("/settings/handlers");
+  await navigateTo("/settings/bootstrap");
 }
 
 onMounted(() => {
