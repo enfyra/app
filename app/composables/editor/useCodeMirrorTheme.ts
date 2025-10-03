@@ -150,13 +150,18 @@ export function useCodeMirrorTheme(height?: string) {
 
     // Enfyra custom syntax highlighting
     ".cm-enfyra-template": {
-      color: "#4EC9B0", // Teal color for @ templates
-      fontWeight: "bold",
+      color: "#4EC9B0 !important", // Teal color for @ templates
+      fontWeight: "bold !important",
     },
     
     ".cm-enfyra-table": {
-      color: "#DCDCAA", // Yellow color for # table access
-      fontWeight: "bold",
+      color: "#DCDCAA !important", // Yellow color for # table access
+      fontWeight: "bold !important",
+    },
+    
+    ".cm-enfyra-percentage": {
+      color: "#F44747 !important", // Red color for % percentage syntax
+      fontWeight: "bold !important",
     },
   }));
 

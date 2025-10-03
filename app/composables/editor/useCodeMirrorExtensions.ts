@@ -69,6 +69,10 @@ export function useCodeMirrorExtensions() {
       const tableAccessDecoration = Decoration.mark({
         class: "cm-enfyra-table",
       })
+      
+      const percentageDecoration = Decoration.mark({
+        class: "cm-enfyra-percentage",
+      })
 
       for (let { from, to } of view.visibleRanges) {
         const text = doc.sliceString(from, to)
@@ -84,6 +88,12 @@ export function useCodeMirrorExtensions() {
         const tableRegex = /#([a-z_]+)\b/g
         while ((match = tableRegex.exec(text)) !== null) {
           builder.add(from + match.index, from + match.index + match[0].length, tableAccessDecoration)
+        }
+        
+        // Match % percentage syntax (e.g., %ABC, %DEF, etc.)
+        const percentageRegex = /%([A-Z_]+)\b/g
+        while ((match = percentageRegex.exec(text)) !== null) {
+          builder.add(from + match.index, from + match.index + match[0].length, percentageDecoration)
         }
       }
       
@@ -193,7 +203,8 @@ export function useCodeMirrorExtensions() {
       
       // Check if code contains Enfyra syntax - if so, skip linting entirely
       const hasEnfyraSyntax = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|SHARE|API|UPLOADED|THROW)\b/.test(codeToLint) || 
-                             /#[a-z_]+\b/.test(codeToLint);
+                             /#[a-z_]+\b/.test(codeToLint) ||
+                             /%[A-Z_]+\b/.test(codeToLint);
       
       if (hasEnfyraSyntax) {
         // Skip linting for code with Enfyra syntax
