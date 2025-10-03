@@ -80,8 +80,10 @@
       :class="isTablet ? 'fixed inset-y-0 left-16 w-80 z-50 shadow-xl' : 'w-60'"
       aria-label="Secondary navigation"
     >
-      <CommonFull class="mb-4" />
-      <SidebarMenu />
+      <CommonFull class="mb-4 flex-shrink-0" />
+      <div class="flex-1 overflow-y-auto sidebar-scroll">
+        <SidebarMenu />
+      </div>
     </aside>
 
     <!-- Overlay for tablet -->
@@ -157,3 +159,27 @@ watch(
   { immediate: true }
 );
 </script>
+
+<style scoped>
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(75 85 99) rgb(55 65 81);
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: rgb(55 65 81);
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgb(75 85 99);
+  border-radius: 3px;
+}
+
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background: rgb(107 114 128);
+}
+</style>
