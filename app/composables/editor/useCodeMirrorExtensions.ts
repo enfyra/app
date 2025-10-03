@@ -13,7 +13,12 @@ import {
   dropCursor,
   rectangularSelection,
   crosshairCursor,
+  Decoration,
+  ViewPlugin,
+  ViewUpdate,
 } from "@codemirror/view";
+import type { DecorationSet } from "@codemirror/view";
+import { RangeSetBuilder } from "@codemirror/state";
 import {
   indentWithTab,
   history,
@@ -38,6 +43,56 @@ import {
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
 
 export function useCodeMirrorExtensions() {
+  // Enfyra syntax highlighting plugin
+  const enfyraSyntaxPlugin = ViewPlugin.fromClass(class {
+    decorations: DecorationSet
+
+    constructor(view: EditorView) {
+      this.decorations = this.buildDecorations(view)
+    }
+
+    update(update: ViewUpdate) {
+      if (update.docChanged || update.viewportChanged) {
+        this.decorations = this.buildDecorations(update.view)
+      }
+    }
+
+    buildDecorations(view: EditorView): DecorationSet {
+      const builder = new RangeSetBuilder<Decoration>()
+      const doc = view.state.doc
+      
+      // Define decoration types for Enfyra syntax
+      const templateDecoration = Decoration.mark({
+        class: "cm-enfyra-template",
+      })
+      
+      const tableAccessDecoration = Decoration.mark({
+        class: "cm-enfyra-table",
+      })
+
+      for (let { from, to } of view.visibleRanges) {
+        const text = doc.sliceString(from, to)
+        
+        // Match @ templates (e.g., @CACHE, @REPOS, etc.)
+        const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|SHARE|API|UPLOADED|THROW)\b/g
+        let match
+        while ((match = templateRegex.exec(text)) !== null) {
+          builder.add(from + match.index, from + match.index + match[0].length, templateDecoration)
+        }
+        
+        // Match # table access (e.g., #users, #posts, etc.)
+        const tableRegex = /#([a-z_]+)\b/g
+        while ((match = tableRegex.exec(text)) !== null) {
+          builder.add(from + match.index, from + match.index + match[0].length, tableAccessDecoration)
+        }
+      }
+      
+      return builder.finish()
+    }
+  }, {
+    decorations: v => v.decorations,
+  })
+
   // Smart Vue indent service - disable indent only at script root level
   const vueIndentService = indentService.of((context, pos) => {
     const doc = context.state.doc;
@@ -136,6 +191,42 @@ export function useCodeMirrorExtensions() {
         offset = text.indexOf(scriptMatch[1] || '');
       }
       
+      // Pre-process code to replace Enfyra syntax before parsing
+      let processedCodeToLint = codeToLint;
+      
+      // Template replacement map for Enfyra syntax (same as runner.ts)
+      const templateMap = {
+        '@CACHE': '$ctx.$cache',
+        '@REPOS': '$ctx.$repos', 
+        '@HELPERS': '$ctx.$helpers',
+        '@LOGS': '$ctx.$logs',
+        '@ERRORS': '$ctx.$errors',
+        '@BODY': '$ctx.$body',
+        '@DATA': '$ctx.$data',
+        '@STATUS': '$ctx.$statusCode',
+        '@PARAMS': '$ctx.$params',
+        '@QUERY': '$ctx.$query',
+        '@USER': '$ctx.$user',
+        '@REQ': '$ctx.$req',
+        '@SHARE': '$ctx.$share',
+        '@API': '$ctx.$api',
+        '@UPLOADED': '$ctx.$uploadedFile',
+        '@THROW': '$ctx.$throw',
+      };
+      
+      // Add direct table access syntax (#table_name)
+      processedCodeToLint = processedCodeToLint.replace(/#([a-z_]+)/g, '$ctx.$repos.$1');
+      
+      // Replace @ templates
+      for (const [template, replacement] of Object.entries(templateMap)) {
+        const escapedTemplate = template.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedTemplate, 'g');
+        processedCodeToLint = processedCodeToLint.replace(regex, replacement);
+      }
+      
+      // Add $ctx declaration at the beginning to prevent undefined variable errors
+      processedCodeToLint = `const $ctx = {};\n${processedCodeToLint}`;
+      
       try {
         // Parse với acorn - allow return at root level for JavaScript
         const parseOptions: any = {
@@ -152,7 +243,7 @@ export function useCodeMirrorExtensions() {
           parseOptions.allowReturnOutsideFunction = true;
         }
         
-        const ast = acorn.parse(codeToLint, parseOptions);
+        const ast = acorn.parse(processedCodeToLint, parseOptions);
         
         // Track const variables
         const constVars = new Set<string>();
@@ -170,9 +261,12 @@ export function useCodeMirrorExtensions() {
           },
           AssignmentExpression(node: any) {
             if (node.left.type === 'Identifier' && constVars.has(node.left.name)) {
+              // Adjust position to account for added $ctx declaration line
+              const adjustedStart = Math.max(0, node.left.start - 14); // 14 chars for "const $ctx = {};\n"
+              const adjustedEnd = Math.max(1, node.left.end - 14);
               diagnostics.push({
-                from: node.left.start + offset,
-                to: node.left.end + offset,
+                from: adjustedStart + offset,
+                to: adjustedEnd + offset,
                 severity: 'error',
                 message: `Cannot assign to const variable '${node.left.name}'`,
               });
@@ -180,9 +274,12 @@ export function useCodeMirrorExtensions() {
           },
           UpdateExpression(node: any) {
             if (node.argument.type === 'Identifier' && constVars.has(node.argument.name)) {
+              // Adjust position to account for added $ctx declaration line
+              const adjustedStart = Math.max(0, node.start - 14);
+              const adjustedEnd = Math.max(1, node.end - 14);
               diagnostics.push({
-                from: node.start + offset,
-                to: node.end + offset,
+                from: adjustedStart + offset,
+                to: adjustedEnd + offset,
                 severity: 'error',
                 message: `Cannot update const variable '${node.argument.name}'`,
               });
@@ -191,9 +288,15 @@ export function useCodeMirrorExtensions() {
         });
         
       } catch (error: any) {
-        // Parse errors
+        // Parse errors - adjust position to account for added $ctx declaration line
         if (error.loc) {
-          const errorPos = offset + (error.pos || 0);
+          let errorPos = offset + (error.pos || 0);
+          // Adjust error position if it's after our injected line
+          if (error.pos && error.pos >= 14) {
+            errorPos = errorPos - 14; // Subtract the length of "const $ctx = {};\n"
+          }
+          errorPos = Math.max(offset, errorPos); // Ensure position is not negative
+          
           diagnostics.push({
             from: errorPos,
             to: errorPos + 1,
@@ -230,6 +333,7 @@ export function useCodeMirrorExtensions() {
       indentUnit.of("  "),
       createLinter(language, onDiagnostics),
       lintGutter(),
+      enfyraSyntaxPlugin, // Add Enfyra syntax highlighting
       keymap.of([
         {
           key: "Enter",
