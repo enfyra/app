@@ -191,41 +191,25 @@ export function useCodeMirrorExtensions() {
         offset = text.indexOf(scriptMatch[1] || '');
       }
       
-      // Pre-process code to replace Enfyra syntax before parsing
+      // For linting, we need to handle Enfyra syntax without transforming the original code
+      // We'll create a version for parsing that won't cause errors, but won't change the editor content
       let processedCodeToLint = codeToLint;
       
-      // Template replacement map for Enfyra syntax (same as runner.ts)
-      const templateMap = {
-        '@CACHE': '$ctx.$cache',
-        '@REPOS': '$ctx.$repos', 
-        '@HELPERS': '$ctx.$helpers',
-        '@LOGS': '$ctx.$logs',
-        '@ERRORS': '$ctx.$errors',
-        '@BODY': '$ctx.$body',
-        '@DATA': '$ctx.$data',
-        '@STATUS': '$ctx.$statusCode',
-        '@PARAMS': '$ctx.$params',
-        '@QUERY': '$ctx.$query',
-        '@USER': '$ctx.$user',
-        '@REQ': '$ctx.$req',
-        '@SHARE': '$ctx.$share',
-        '@API': '$ctx.$api',
-        '@UPLOADED': '$ctx.$uploadedFile',
-        '@THROW': '$ctx.$throw',
-      };
+      // Replace Enfyra syntax with valid JavaScript identifiers just for parsing
+      // This is only for linting - the original code in editor stays unchanged
+      processedCodeToLint = processedCodeToLint.replace(/@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|SHARE|API|UPLOADED|THROW)\b/g, 'enfyra_$1');
+      processedCodeToLint = processedCodeToLint.replace(/#([a-z_]+)/g, 'enfyra_table_$1');
       
-      // Add direct table access syntax (#table_name)
-      processedCodeToLint = processedCodeToLint.replace(/#([a-z_]+)/g, '$ctx.$repos.$1');
-      
-      // Replace @ templates
-      for (const [template, replacement] of Object.entries(templateMap)) {
-        const escapedTemplate = template.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escapedTemplate, 'g');
-        processedCodeToLint = processedCodeToLint.replace(regex, replacement);
-      }
-      
-      // Add $ctx declaration at the beginning to prevent undefined variable errors
-      processedCodeToLint = `const $ctx = {};\n${processedCodeToLint}`;
+      // Add dummy declarations to prevent undefined variable errors during parsing
+      const enfyraDeclarations = `
+const enfyra_CACHE = {}, enfyra_REPOS = {}, enfyra_HELPERS = {}, enfyra_LOGS = {};
+const enfyra_ERRORS = {}, enfyra_BODY = {}, enfyra_DATA = {}, enfyra_STATUS = {};
+const enfyra_PARAMS = {}, enfyra_QUERY = {}, enfyra_USER = {}, enfyra_REQ = {};
+const enfyra_SHARE = {}, enfyra_API = {}, enfyra_UPLOADED = {}, enfyra_THROW = {};
+// Dynamic table declarations (these would be replaced by actual table names in practice)
+const enfyra_table_users = {}, enfyra_table_posts = {}, enfyra_table_orders = {};
+`;
+      processedCodeToLint = enfyraDeclarations + processedCodeToLint;
       
       try {
         // Parse với acorn - allow return at root level for JavaScript
