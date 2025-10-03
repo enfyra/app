@@ -191,25 +191,14 @@ export function useCodeMirrorExtensions() {
         offset = text.indexOf(scriptMatch[1] || '');
       }
       
-      // For linting, we need to handle Enfyra syntax without transforming the original code
-      // We'll create a version for parsing that won't cause errors, but won't change the editor content
-      let processedCodeToLint = codeToLint;
+      // Check if code contains Enfyra syntax - if so, skip linting entirely
+      const hasEnfyraSyntax = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|SHARE|API|UPLOADED|THROW)\b/.test(codeToLint) || 
+                             /#[a-z_]+\b/.test(codeToLint);
       
-      // Replace Enfyra syntax with valid JavaScript identifiers just for parsing
-      // This is only for linting - the original code in editor stays unchanged
-      processedCodeToLint = processedCodeToLint.replace(/@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|SHARE|API|UPLOADED|THROW)\b/g, 'enfyra_$1');
-      processedCodeToLint = processedCodeToLint.replace(/#([a-z_]+)/g, 'enfyra_table_$1');
-      
-      // Add dummy declarations to prevent undefined variable errors during parsing
-      const enfyraDeclarations = `
-const enfyra_CACHE = {}, enfyra_REPOS = {}, enfyra_HELPERS = {}, enfyra_LOGS = {};
-const enfyra_ERRORS = {}, enfyra_BODY = {}, enfyra_DATA = {}, enfyra_STATUS = {};
-const enfyra_PARAMS = {}, enfyra_QUERY = {}, enfyra_USER = {}, enfyra_REQ = {};
-const enfyra_SHARE = {}, enfyra_API = {}, enfyra_UPLOADED = {}, enfyra_THROW = {};
-// Dynamic table declarations (these would be replaced by actual table names in practice)
-const enfyra_table_users = {}, enfyra_table_posts = {}, enfyra_table_orders = {};
-`;
-      processedCodeToLint = enfyraDeclarations + processedCodeToLint;
+      if (hasEnfyraSyntax) {
+        // Skip linting for code with Enfyra syntax
+        return diagnostics;
+      }
       
       try {
         // Parse với acorn - allow return at root level for JavaScript
@@ -227,7 +216,7 @@ const enfyra_table_users = {}, enfyra_table_posts = {}, enfyra_table_orders = {}
           parseOptions.allowReturnOutsideFunction = true;
         }
         
-        const ast = acorn.parse(processedCodeToLint, parseOptions);
+        const ast = acorn.parse(codeToLint, parseOptions);
         
         // Track const variables
         const constVars = new Set<string>();
@@ -245,12 +234,9 @@ const enfyra_table_users = {}, enfyra_table_posts = {}, enfyra_table_orders = {}
           },
           AssignmentExpression(node: any) {
             if (node.left.type === 'Identifier' && constVars.has(node.left.name)) {
-              // Adjust position to account for added $ctx declaration line
-              const adjustedStart = Math.max(0, node.left.start - 14); // 14 chars for "const $ctx = {};\n"
-              const adjustedEnd = Math.max(1, node.left.end - 14);
               diagnostics.push({
-                from: adjustedStart + offset,
-                to: adjustedEnd + offset,
+                from: node.left.start + offset,
+                to: node.left.end + offset,
                 severity: 'error',
                 message: `Cannot assign to const variable '${node.left.name}'`,
               });
@@ -258,12 +244,9 @@ const enfyra_table_users = {}, enfyra_table_posts = {}, enfyra_table_orders = {}
           },
           UpdateExpression(node: any) {
             if (node.argument.type === 'Identifier' && constVars.has(node.argument.name)) {
-              // Adjust position to account for added $ctx declaration line
-              const adjustedStart = Math.max(0, node.start - 14);
-              const adjustedEnd = Math.max(1, node.end - 14);
               diagnostics.push({
-                from: adjustedStart + offset,
-                to: adjustedEnd + offset,
+                from: node.start + offset,
+                to: node.end + offset,
                 severity: 'error',
                 message: `Cannot update const variable '${node.argument.name}'`,
               });
@@ -272,15 +255,9 @@ const enfyra_table_users = {}, enfyra_table_posts = {}, enfyra_table_orders = {}
         });
         
       } catch (error: any) {
-        // Parse errors - adjust position to account for added $ctx declaration line
+        // Parse errors
         if (error.loc) {
-          let errorPos = offset + (error.pos || 0);
-          // Adjust error position if it's after our injected line
-          if (error.pos && error.pos >= 14) {
-            errorPos = errorPos - 14; // Subtract the length of "const $ctx = {};\n"
-          }
-          errorPos = Math.max(offset, errorPos); // Ensure position is not negative
-          
+          const errorPos = offset + (error.pos || 0);
           diagnostics.push({
             from: errorPos,
             to: errorPos + 1,
