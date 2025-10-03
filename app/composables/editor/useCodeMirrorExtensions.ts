@@ -191,41 +191,14 @@ export function useCodeMirrorExtensions() {
         offset = text.indexOf(scriptMatch[1] || '');
       }
       
-      // Pre-process code to replace Enfyra syntax before parsing
-      let processedCodeToLint = codeToLint;
+      // Check if code contains Enfyra syntax - if so, skip linting entirely
+      const hasEnfyraSyntax = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|SHARE|API|UPLOADED|THROW)\b/.test(codeToLint) || 
+                             /#[a-z_]+\b/.test(codeToLint);
       
-      // Template replacement map for Enfyra syntax (same as runner.ts)
-      const templateMap = {
-        '@CACHE': '$ctx.$cache',
-        '@REPOS': '$ctx.$repos', 
-        '@HELPERS': '$ctx.$helpers',
-        '@LOGS': '$ctx.$logs',
-        '@ERRORS': '$ctx.$errors',
-        '@BODY': '$ctx.$body',
-        '@DATA': '$ctx.$data',
-        '@STATUS': '$ctx.$statusCode',
-        '@PARAMS': '$ctx.$params',
-        '@QUERY': '$ctx.$query',
-        '@USER': '$ctx.$user',
-        '@REQ': '$ctx.$req',
-        '@SHARE': '$ctx.$share',
-        '@API': '$ctx.$api',
-        '@UPLOADED': '$ctx.$uploadedFile',
-        '@THROW': '$ctx.$throw',
-      };
-      
-      // Add direct table access syntax (#table_name)
-      processedCodeToLint = processedCodeToLint.replace(/#([a-z_]+)/g, '$ctx.$repos.$1');
-      
-      // Replace @ templates
-      for (const [template, replacement] of Object.entries(templateMap)) {
-        const escapedTemplate = template.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escapedTemplate, 'g');
-        processedCodeToLint = processedCodeToLint.replace(regex, replacement);
+      if (hasEnfyraSyntax) {
+        // Skip linting for code with Enfyra syntax
+        return diagnostics;
       }
-      
-      // Add $ctx declaration at the beginning to prevent undefined variable errors
-      processedCodeToLint = `const $ctx = {};\n${processedCodeToLint}`;
       
       try {
         // Parse với acorn - allow return at root level for JavaScript
@@ -243,7 +216,7 @@ export function useCodeMirrorExtensions() {
           parseOptions.allowReturnOutsideFunction = true;
         }
         
-        const ast = acorn.parse(processedCodeToLint, parseOptions);
+        const ast = acorn.parse(codeToLint, parseOptions);
         
         // Track const variables
         const constVars = new Set<string>();
@@ -261,12 +234,9 @@ export function useCodeMirrorExtensions() {
           },
           AssignmentExpression(node: any) {
             if (node.left.type === 'Identifier' && constVars.has(node.left.name)) {
-              // Adjust position to account for added $ctx declaration line
-              const adjustedStart = Math.max(0, node.left.start - 14); // 14 chars for "const $ctx = {};\n"
-              const adjustedEnd = Math.max(1, node.left.end - 14);
               diagnostics.push({
-                from: adjustedStart + offset,
-                to: adjustedEnd + offset,
+                from: node.left.start + offset,
+                to: node.left.end + offset,
                 severity: 'error',
                 message: `Cannot assign to const variable '${node.left.name}'`,
               });
@@ -274,12 +244,9 @@ export function useCodeMirrorExtensions() {
           },
           UpdateExpression(node: any) {
             if (node.argument.type === 'Identifier' && constVars.has(node.argument.name)) {
-              // Adjust position to account for added $ctx declaration line
-              const adjustedStart = Math.max(0, node.start - 14);
-              const adjustedEnd = Math.max(1, node.end - 14);
               diagnostics.push({
-                from: adjustedStart + offset,
-                to: adjustedEnd + offset,
+                from: node.start + offset,
+                to: node.end + offset,
                 severity: 'error',
                 message: `Cannot update const variable '${node.argument.name}'`,
               });
@@ -288,15 +255,9 @@ export function useCodeMirrorExtensions() {
         });
         
       } catch (error: any) {
-        // Parse errors - adjust position to account for added $ctx declaration line
+        // Parse errors
         if (error.loc) {
-          let errorPos = offset + (error.pos || 0);
-          // Adjust error position if it's after our injected line
-          if (error.pos && error.pos >= 14) {
-            errorPos = errorPos - 14; // Subtract the length of "const $ctx = {};\n"
-          }
-          errorPos = Math.max(offset, errorPos); // Ensure position is not negative
-          
+          const errorPos = offset + (error.pos || 0);
           diagnostics.push({
             from: errorPos,
             to: errorPos + 1,
