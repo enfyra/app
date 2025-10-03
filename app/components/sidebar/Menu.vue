@@ -67,7 +67,7 @@ const visibleMenuItems = computed(() => {
 
 <template>
   <nav
-    class="flex flex-col space-y-1 bg-gradient-to-b from-background to-muted/5"
+    class="flex flex-col space-y-1 bg-gradient-to-b from-background to-muted/5 p-2"
   >
     <!-- Empty state when no menu items available -->
     <template v-if="visibleMenuItems.length === 0">
