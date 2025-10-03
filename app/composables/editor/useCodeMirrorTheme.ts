@@ -147,6 +147,17 @@ export function useCodeMirrorTheme(height?: string) {
       padding: "4px 8px",
       borderRadius: "4px",
     },
+
+    // Enfyra custom syntax highlighting
+    ".cm-enfyra-template": {
+      color: "#4EC9B0", // Teal color for @ templates
+      fontWeight: "bold",
+    },
+    
+    ".cm-enfyra-table": {
+      color: "#DCDCAA", // Yellow color for # table access
+      fontWeight: "bold",
+    },
   }));
 
   return {
