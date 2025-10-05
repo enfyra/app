@@ -42,16 +42,45 @@ const isItemActive = (itemRoute: string) => {
     return currentPath === "/collections";
   }
 
-  // For other routes, check if current path starts with item route
-  return currentPath.startsWith(itemRoute);
+  // For exact matches
+  if (currentPath === itemRoute) {
+    return true;
+  }
+
+  // For routes that should match sub-paths, ensure proper boundary matching
+  // Only match if the next character after the route is '/' or end of string
+  if (currentPath.startsWith(itemRoute)) {
+    const nextChar = currentPath[itemRoute.length];
+    return nextChar === '/' || nextChar === undefined;
+  }
+
+  return false;
 };
 
 // Get current sidebar based on registered mini sidebars
 const currentSidebar = computed(() => {
   const path = route.path;
-  const matchingSidebar = miniSidebars.value.find((sidebar) => {
-    return sidebar.route && path.startsWith(sidebar.route);
+  
+  // Sort by route length (longest first) to prioritize more specific routes
+  const sortedSidebars = [...miniSidebars.value].sort((a, b) => 
+    (b.route?.length || 0) - (a.route?.length || 0)
+  );
+  
+  const matchingSidebar = sortedSidebars.find((sidebar) => {
+    if (!sidebar.route) return false;
+    
+    // Exact match
+    if (path === sidebar.route) return true;
+    
+    // Sub-path match with proper boundary
+    if (path.startsWith(sidebar.route)) {
+      const nextChar = path[sidebar.route.length];
+      return nextChar === '/' || nextChar === undefined;
+    }
+    
+    return false;
   });
+  
   return matchingSidebar?.id ? Number(matchingSidebar.id) : null;
 });
 
