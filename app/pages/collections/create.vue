@@ -22,10 +22,10 @@ watch(
   (newVal) => {
     // Only validate when user has interacted with the input
     const name = newVal.trim();
-    if (name === "") nameError.value = "Cannot be empty!";
+    if (name === "") nameError.value = "Table name is required";
     else if (!TABLE_NAME_FIELD_REGEX.test(name))
       nameError.value =
-        "Only letters, numbers, _ allowed. Cannot start with number or _!";
+        "Use lowercase letters (a-z), numbers and underscore. Must start with a letter.";
     else if (name === "table") nameError.value = "Table name cannot be `table`";
     else nameError.value = "";
   }
@@ -78,9 +78,9 @@ function validateAll() {
   // Validate table name
   const name = table.name.trim();
   if (name === "") {
-    errors.value["name"] = "Cannot be empty!";
+    errors.value["name"] = "Table name is required";
   } else if (!TABLE_NAME_FIELD_REGEX.test(name)) {
-    errors.value["name"] = "Invalid name";
+    errors.value["name"] = "Use lowercase letters (a-z), numbers and underscore. Must start with a letter.";
   } else if (name === "table") {
     errors.value["name"] = "Table name cannot be `table`";
   }
