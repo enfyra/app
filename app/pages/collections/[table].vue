@@ -31,7 +31,6 @@ const {
 });
 
 const {
-  pending: saving,
   execute: executePatchTable,
   error: updateError,
 } = useApi(() => `/table_definition`, {
@@ -41,7 +40,6 @@ const {
 });
 
 const {
-  pending: deleting,
   execute: executeDeleteTable,
   error: deleteError,
 } = useApi(() => `/table_definition`, {
@@ -59,8 +57,7 @@ useHeaderActionRegistry([
     disabled: computed(
       () =>
         schemaLoading.value ||
-        saving.value ||
-        deleting.value ||
+        activeOperation.value !== 'none' ||
         !hasFormChanges.value
     ),
     onClick: handleReset,
@@ -72,13 +69,13 @@ useHeaderActionRegistry([
     icon: "lucide:save",
     variant: "solid",
     color: "primary",
-    loading: computed(() => saving.value || schemaLoading.value),
+    loading: computed(() => activeOperation.value === 'saving'),
     disabled: computed(
       () =>
         (table.value?.isSystem &&
           !isSystemTableModifiable(table.value?.name)) ||
         schemaLoading.value ||
-        deleting.value ||
+        activeOperation.value !== 'none' ||
         !hasFormChanges.value
     ),
     submit: save,
@@ -97,13 +94,13 @@ useHeaderActionRegistry([
     icon: "lucide:trash",
     variant: "solid",
     color: "error",
-    loading: computed(() => deleting.value),
+    loading: computed(() => activeOperation.value === 'deleting'),
     disabled: computed(
       () =>
         (table.value?.isSystem &&
           !isSystemTableModifiable(table.value?.name)) ||
         schemaLoading.value ||
-        saving.value
+        activeOperation.value !== 'none'
     ),
     onClick: handleDelete,
     permission: {
@@ -143,6 +140,11 @@ async function initializeForm() {
 }
 
 async function save() {
+  // Prevent save if another operation is in progress
+  if (activeOperation.value !== 'none') {
+    return;
+  }
+
   const ok = await confirm({
     content: "Are you sure you want to modify table structure?",
   });
@@ -153,25 +155,29 @@ async function save() {
 }
 
 async function patchTable() {
-  await executePatchTable({ id: table.value?.id });
+  try {
+    activeOperation.value = 'saving';
+    await executePatchTable({ id: table.value?.id });
 
-  if (updateError.value) {
-    return; // Error already handled by useApi
+    if (updateError.value) {
+      return; // Error already handled by useApi
+    }
+
+    await fetchSchema();
+    registerTableMenusWithSidebarIds(Object.values(schemas.value));
+
+    toast.add({
+      title: "Success",
+      color: "success",
+      description: "Table structure updated!",
+    });
+
+    // Reset form changes after successful save
+    formChanges.update(table.value);
+    hasFormChanges.value = false;
+  } finally {
+    activeOperation.value = 'none';
   }
-
-  await fetchSchema();
-
-  registerTableMenusWithSidebarIds(Object.values(schemas.value));
-
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Table structure updated!",
-  });
-
-  // Reset form changes after successful save
-  formChanges.update(table.value);
-  hasFormChanges.value = false;
 }
 
 async function handleReset() {
@@ -196,7 +202,19 @@ async function handleReset() {
   }
 }
 
+// Track the active operation
+const activeOperation = ref<'none' | 'saving' | 'deleting'>('none');
+
+// Update computed properties to use activeOperation
+const isDeleting = computed(() => activeOperation.value === 'deleting');
+const isSaving = computed(() => activeOperation.value === 'saving');
+
 async function handleDelete() {
+  // Prevent delete if another operation is in progress
+  if (activeOperation.value !== 'none') {
+    return;
+  }
+
   const ok = await confirm({
     content: `Are you sure you want to delete table ${table.value.name}?`,
   });
@@ -208,22 +226,27 @@ async function handleDelete() {
 }
 
 async function deleteTable() {
-  await executeDeleteTable({ id: table.value?.id });
+  try {
+    activeOperation.value = 'deleting';
+    await executeDeleteTable({ id: table.value?.id });
 
-  if (deleteError.value) {
-    return; // Error already handled by useApi
+    if (deleteError.value) {
+      return; // Error already handled by useApi
+    }
+
+    await fetchSchema();
+    registerTableMenusWithSidebarIds(Object.values(schemas.value));
+
+    toast.add({
+      title: "Success",
+      color: "success",
+      description: "Table deleted!",
+    });
+    
+    return navigateTo(`/collections`);
+  } finally {
+    activeOperation.value = 'none';
   }
-
-  await fetchSchema();
-
-  registerTableMenusWithSidebarIds(Object.values(schemas.value));
-
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Table deleted!",
-  });
-  return navigateTo(`/collections`);
 }
 
 // Watch for form changes
