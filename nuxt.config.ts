@@ -92,6 +92,7 @@ export default defineNuxtConfig({
     },
   },
   enfyraSDK: {
-    apiUrl: process.env.API_URL,
+    // Normalize to avoid trailing slash causing double // in requests
+    apiUrl: (process.env.API_URL || "").replace(/\/+$/, ""),
   },
 });
