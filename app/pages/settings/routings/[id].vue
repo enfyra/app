@@ -36,6 +36,7 @@
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
             :excluded="['routePermissions', 'mainTable']"
+            :type-map="typeMap"
             :loading="loading"
           />
         </UForm>
@@ -73,6 +74,24 @@ const hasFormChanges = ref(false);
 const formEditorRef = ref();
 
 const { validate, getIncludeFields } = useSchema(tableName);
+
+// Check if route has associated table to disable isEnabled field
+const hasAssociatedTable = computed(() => {
+  const currentRoute = routeData.value?.data?.[0];
+  if (!currentRoute?.mainTable?.id) return false;
+  
+  const { schemas } = useSchema();
+  return Object.values(schemas.value).some(
+    (table: any) => table.id === currentRoute.mainTable.id
+  );
+});
+
+// Type map to disable isEnabled field if route has associated table
+const typeMap = computed(() => ({
+  isEnabled: {
+    disabled: hasAssociatedTable.value
+  }
+}));
 
 useHeaderActionRegistry([
   {
@@ -188,6 +207,11 @@ async function updateRoute() {
 
   await loadRoutes();
 
+  // Reregister menus after route update
+  const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { schemas } = useSchema();
+  await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+
   // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
 }
@@ -212,6 +236,11 @@ async function deleteRoute() {
   });
 
   await loadRoutes();
+
+  // Reregister menus after route deletion
+  const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { schemas } = useSchema();
+  await registerTableMenusWithSidebarIds(Object.values(schemas.value));
   
   await navigateTo("/settings/routings");
 }

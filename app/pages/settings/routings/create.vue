@@ -96,6 +96,11 @@ async function handleCreate() {
 
   await loadRoutes();
 
+  // Reregister menus after route creation
+  const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { schemas } = useSchema();
+  await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+
   await navigateTo(`/settings/routings/${createData.value.data[0].id}`, {
     replace: true,
   });

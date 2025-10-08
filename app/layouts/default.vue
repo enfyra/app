@@ -17,8 +17,9 @@
       <div class="py-4 w-full flex justify-center">
         <UTooltip
           :text="sidebarVisible ? 'Hide Menu' : 'Show Menu'"
-          placement="right"
+          :content="{ side: 'right', sideOffset: 8 }"
           :delay-duration="0"
+          arrow
         >
           <div
             class="relative group"

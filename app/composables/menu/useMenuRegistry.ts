@@ -262,25 +262,36 @@ export function useMenuRegistry() {
 
     // Register non-system tables in data sidebar (if found)
     if (dataSidebarId) {
+      const { getRouteForTableName } = useRoutes();
+      const routes = useState<any[]>('routes:all', () => []);
+      
       nonSystemTables.forEach((table) => {
         const tableName = table.name || table.table_name;
         if (!tableName) return;
 
         // Get the dynamic route for this table
         const dynamicRoute = getRouteForTableName(tableName);
-
-        registerMenuItem({
-          id: `data-${tableName}`,
-          label: table.label || table.display_name || tableName,
-          route: `/data/${tableName}`,
-          icon: table.icon || "lucide:database",
-          sidebarId: dataSidebarId,
-          permission: {
-            or: [
-              { route: dynamicRoute, actions: ["read"] }
-            ]
-          }
-        });
+        
+        // Check if the route exists and is enabled
+        const routeExists = routes.value.some((route: any) => 
+          route.path === dynamicRoute && route.isEnabled !== false
+        );
+        
+        // Only register menu if route exists and is enabled
+        if (routeExists) {
+          registerMenuItem({
+            id: `data-${tableName}`,
+            label: table.label || table.display_name || tableName,
+            route: `/data/${tableName}`,
+            icon: table.icon || "lucide:database",
+            sidebarId: dataSidebarId,
+            permission: {
+              or: [
+                { route: dynamicRoute, actions: ["read"] }
+              ]
+            }
+          });
+        }
       });
     }
   };
