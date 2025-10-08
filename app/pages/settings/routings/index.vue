@@ -168,27 +168,39 @@ function getRouteHeaderActions(routeItem: any) {
     return [];
   }
 
+  // Check if route has associated table
+  const hasAssociatedTable = routeItem.mainTable?.id;
+  const { schemas } = useSchema();
+  const tableExists = hasAssociatedTable && Object.values(schemas.value).some(
+    (table: any) => table.id === routeItem.mainTable.id
+  );
+
   return [
     {
       component: 'USwitch',
       props: {
         'model-value': routeItem.isEnabled,
-        disabled: getRouteLoader(routeItem.id).isLoading
+        disabled: getRouteLoader(routeItem.id).isLoading || tableExists
       },
       onClick: (e?: Event) => e?.stopPropagation(),
-      onUpdate: () => toggleEnabled(routeItem)
+      onUpdate: () => toggleEnabled(routeItem),
+      tooltip: tableExists ? 'Cannot disable route with associated table' : undefined
     },
     {
       component: 'UButton',
       props: {
         icon: 'i-heroicons-trash',
         variant: 'outline',
-        color: 'error'
+        color: 'error',
+        disabled: tableExists
       },
       onClick: (e?: Event) => {
         e?.stopPropagation();
-        deleteRoute(routeItem);
-      }
+        if (!tableExists) {
+          deleteRoute(routeItem);
+        }
+      },
+      tooltip: tableExists ? 'Cannot delete route with associated table' : undefined
     }
   ];
 }
@@ -222,6 +234,14 @@ async function toggleEnabled(routeItem: any) {
     return;
   }
 
+  // Reload routes and reregister menus after route toggle
+  const { loadRoutes } = useRoutes();
+  const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { schemas } = useSchema();
+  
+  await loadRoutes();
+  await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+
   toast.add({
     title: "Success",
     description: `Route ${newEnabled ? "enabled" : "disabled"} successfully`,
@@ -245,6 +265,14 @@ async function deleteRoute(routeItem: any) {
     }
 
     await fetchRoutes();
+
+    // Reload routes and reregister menus after route deletion
+    const { loadRoutes } = useRoutes();
+    const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+    const { schemas } = useSchema();
+    
+    await loadRoutes();
+    await registerTableMenusWithSidebarIds(Object.values(schemas.value));
 
     toast.add({
       title: "Success",

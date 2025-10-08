@@ -83,8 +83,9 @@ const handleItemClick = (item: any) => {
         v-for="item in items.filter((item) => item.show)"
         :key="item.icon"
         :text="item.label"
-        placement="right"
+        :content="{ side: 'right', sideOffset: 8 }"
         :delay-duration="0"
+        arrow
       >
         <div
           class="relative group"
@@ -132,8 +133,9 @@ const handleItemClick = (item: any) => {
           v-for="item in bottomItems.filter((item) => item.show)"
           :key="item.icon"
           :text="item.label"
-          placement="right"
+          :content="{ side: 'right', sideOffset: 8 }"
           :delay-duration="0"
+          arrow
         >
           <div
             class="relative group"
