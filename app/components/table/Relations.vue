@@ -229,6 +229,9 @@ function saveRelation() {
                 'isEager',
                 'isInverseEager',
                 'sourceTable',
+                'junctionTableName',
+                'junctionSourceColumn',
+                'junctionTargetColumn'
               ]"
               :type-map="{
                 type: {
