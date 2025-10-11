@@ -5,6 +5,7 @@ const { schemas, fetchSchema, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const toast = useToast();
 const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+const { loadRoutes } = useRoutes();
 const errors = ref<Record<string, string>>({});
 const table = reactive<any>({
   name: "",
@@ -154,6 +155,9 @@ async function save() {
 
   // Fetch schema first to get updated tables
   await fetchSchema();
+
+  // Reload routes to include the new table's route
+  await loadRoutes();
 
   // Wait a bit to ensure schemas.value is updated
   await nextTick();
