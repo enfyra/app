@@ -4,6 +4,7 @@ const { schemas, fetchSchema, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const toast = useToast();
 const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+const { loadRoutes } = useRoutes();
 const tableName = "table_definition";
 const { getIncludeFields } = useSchema(tableName);
 const { isTablet } = useScreen();
@@ -161,6 +162,9 @@ async function patchTable() {
 
   await fetchSchema();
 
+  // Reload routes to include updated table routes
+  await loadRoutes();
+
   registerTableMenusWithSidebarIds(Object.values(schemas.value));
 
   toast.add({
@@ -215,6 +219,9 @@ async function deleteTable() {
   }
 
   await fetchSchema();
+
+  // Reload routes to remove deleted table routes
+  await loadRoutes();
 
   registerTableMenusWithSidebarIds(Object.values(schemas.value));
 
