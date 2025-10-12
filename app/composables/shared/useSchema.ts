@@ -10,8 +10,10 @@ import type {
 
 export function useSchema(tableName?: string | Ref<string>) {
   const schemas = useState<SchemaCollection>("schemas:data", () => ({}));
+  const { getId } = useDatabase();
 
   // API for fetching tables
+  const { getIdFieldName } = useDatabase();
   const {
     data: tablesData,
     pending: tablesPending,
@@ -20,7 +22,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     query: {
       fields: ["*", "columns.*", "relations.*"].join(","),
       limit: 0,
-      sort: ["id"].join(","),
+      sort: [getIdFieldName()].join(","),
     },
     errorContext: "Fetch Tables",
   });
@@ -39,7 +41,7 @@ export function useSchema(tableName?: string | Ref<string>) {
       schema[t.name] = {
         ...t,
         definition: [],
-      };
+      } as TableSchema;
       delete schema[t.name]?.columns;
       delete schema[t.name]?.relations;
     }
@@ -49,7 +51,7 @@ export function useSchema(tableName?: string | Ref<string>) {
         schema[t.name]?.definition.push({
           ...col,
           fieldType: "column",
-        });
+        } as TableDefinitionField);
       }
     }
 
@@ -89,7 +91,10 @@ export function useSchema(tableName?: string | Ref<string>) {
     for (const t of input) {
       for (const rel of t.relations || []) {
         const sourceTable = t.name;
-        if (!rel.propertyName || !rel.targetTable || !rel.sourceTable) continue;
+        
+        // Backend returns targetTableId/sourceTableId instead of targetTable/sourceTable objects
+        // We need propertyName and either targetTableId or targetTable
+        if (!rel.propertyName) continue;
 
         const directKey = `${sourceTable}:${rel.propertyName}`;
         if (!seenRelationKeys.has(directKey)) {
@@ -97,21 +102,25 @@ export function useSchema(tableName?: string | Ref<string>) {
             ...rel,
             name: rel.propertyName,
             fieldType: "relation",
-          });
+          } as TableDefinitionField);
           seenRelationKeys.add(directKey);
         }
 
         if (rel.inversePropertyName) {
+          // Use targetTableId (MongoDB) or targetTable.id (SQL)
+          const targetTableId = (rel as any).targetTableId ?? getId(rel.targetTable);
+          
           const targetTableName = input.find(
-            (t) => t.id === rel.targetTable.id
+            (t) => getId(t) === targetTableId
           )?.name;
           
           if (targetTableName) {
             const inverseKey = `${targetTableName}:${rel.inversePropertyName}`;
             if (!seenRelationKeys.has(inverseKey)) {
-              const inverseRel: TableDefinitionField = {
+              const inverseRel = {
                 ...rel,
                 id: undefined,  // set undefined thay vì delete
+                _id: undefined, // also clear MongoDB _id
                 name: rel.inversePropertyName,
                 propertyName: rel.inversePropertyName,
                 inversePropertyName: rel.propertyName,
@@ -120,7 +129,7 @@ export function useSchema(tableName?: string | Ref<string>) {
                 type: inverseRelationType(rel.type),
                 fieldType: "relation",
                 isNullable: true,
-              };
+              } as TableDefinitionField;
               schema[targetTableName]?.definition.push(inverseRel);
               seenRelationKeys.add(inverseKey);
             }
@@ -202,11 +211,12 @@ export function useSchema(tableName?: string | Ref<string>) {
   }): Record<string, any> {
     const { excluded = [] } = options || {};
     const result: Record<string, any> = {};
+    const { getIdFieldName } = useDatabase();
 
     const defaultExcluded = [
       "createdAt",
       "updatedAt",
-      "id",
+      getIdFieldName(), // Use dynamic ID field name (id or _id)
       "isSystem",
       "isRootAdmin",
     ];
@@ -309,7 +319,11 @@ export function useSchema(tableName?: string | Ref<string>) {
 
     const relations = definition.value
       .filter((field) => field.fieldType === "relation")
-      .map((field) => `${field.propertyName}.*`);
+      .map((field) => {
+        const fieldName = field.propertyName || field.name;
+        return fieldName ? `${fieldName}.*` : null;
+      })
+      .filter((field): field is string => field !== null);
 
     return ["*", ...relations].join(",");
   }

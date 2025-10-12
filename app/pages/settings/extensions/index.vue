@@ -106,6 +106,7 @@ const toast = useToast();
 const { confirm } = useConfirm();
 const { createLoader } = useLoader();
 const { checkPermissionCondition } = usePermissions();
+const { getId } = useDatabase();
 
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
@@ -181,7 +182,7 @@ function getExtensionTypeLabel(type: string) {
 }
 
 function navigateToDetail(extension: ExtensionDefinition) {
-  navigateTo(`/settings/extensions/${extension.id}`);
+  navigateTo(`/settings/extensions/${getId(extension)}`);
 }
 
 function getHeaderActions(extension: ExtensionDefinition) {

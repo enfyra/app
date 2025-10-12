@@ -12,6 +12,7 @@ const data = ref([]);
 const table = computed(() => schemas.value[tableName]);
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
+const { getId } = useDatabase();
 
 const { isMounted } = useMounted();
 const showFilterDrawer = ref(false);
@@ -343,7 +344,7 @@ useHeaderActionRegistry([
         :page-size="pageLimit"
         :selectable="isSelectionMode"
         @selection-change="handleSelectionChange"
-        @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${row.id}`)"
+        @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
       >
         <template #header-actions>
           <div

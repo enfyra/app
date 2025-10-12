@@ -14,6 +14,7 @@ const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 
 const { validate, getIncludeFields } = useSchema(tableName);
+const { getIdFieldName } = useDatabase();
 
 const { fetchMenuDefinitions } = useMenuApi();
 const { reregisterAllMenus } = useMenuRegistry();
@@ -25,7 +26,7 @@ const {
 } = useApi(() => `/${tableName}`, {
   query: {
     fields: getIncludeFields(),
-    filter: { id: { _eq: Number(route.params.id) } },
+    filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: "Fetch Menu",
 });

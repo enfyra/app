@@ -5,6 +5,7 @@ export function useMenuRegistry() {
     "bottom-mini-sidebars",
     () => []
   );
+  const { getId } = useDatabase();
 
   const registerMenuItem = (item: MenuItem) => {
     const existingIndex = menuItems.value.findIndex((m) => m.id === item.id);
@@ -66,9 +67,11 @@ export function useMenuRegistry() {
     }
   };
 
-  const getMenuItemsBySidebar = (sidebarId: number) => {
+  const getMenuItemsBySidebar = (sidebarId: number | string) => {
+    // Normalize sidebarId for comparison
+    const normalizedId = String(sidebarId);
     const items = menuItems.value.filter(
-      (item) => item.sidebarId === sidebarId
+      (item) => String(item.sidebarId) === normalizedId
     );
     // Sort by order field, then by type (Dropdown Menu first, then Menu)
     return items.sort((a, b) => {
@@ -101,14 +104,16 @@ export function useMenuRegistry() {
       .sort((a, b) => a.order - b.order);
 
     if (miniSidebarsData.length > 0) {
-      const sidebarsToRegister = miniSidebarsData.map((sidebar) => ({
-        id: sidebar.id.toString(),
-        label: sidebar.label,
-        icon: sidebar.icon,
-        route: sidebar.path,
-        permission: sidebar.permission || undefined,
-        position: "top" as const, // Default to top for API registered sidebars
-      }));
+      const sidebarsToRegister = miniSidebarsData
+        .filter((sidebar) => getId(sidebar)) // Filter out items without id
+        .map((sidebar) => ({
+          id: String(getId(sidebar)),
+          label: sidebar.label,
+          icon: sidebar.icon,
+          route: sidebar.path,
+          permission: sidebar.permission || undefined,
+          position: "top" as const, // Default to top for API registered sidebars
+        }));
       registerMiniSidebar(sidebarsToRegister);
     }
 
@@ -120,13 +125,14 @@ export function useMenuRegistry() {
     if (dropdownMenusData.length > 0) {
       dropdownMenusData.forEach((item) => {
         // Dropdown menus must have a sidebar
-        const sidebarId = item.sidebar?.id;
-        if (sidebarId) {
+        const sidebarId = getId(item.sidebar);
+        const itemId = getId(item);
+        if (sidebarId && itemId) {
           // Copy entire API object to registry for full compatibility
           registerMenuItem({
             ...item,
-            id: item.id.toString(),
-            sidebarId: sidebarId,
+            id: String(itemId),
+            sidebarId: String(sidebarId),
             route: item.path || "", // Dropdown menus don't have path, use empty string
           } as any);
         }
@@ -141,13 +147,14 @@ export function useMenuRegistry() {
     if (regularMenuItems.length > 0) {
       regularMenuItems.forEach((item) => {
         // item.sidebar.id is the ID of the sidebar this menu belongs to
-        const sidebarId = item.sidebar?.id;
-        if (sidebarId) {
+        const sidebarId = getId(item.sidebar);
+        const itemId = getId(item);
+        if (sidebarId && itemId) {
           // Copy entire API object to registry for full compatibility
           registerMenuItem({
             ...item,
-            id: item.id.toString(),
-            sidebarId: sidebarId,
+            id: String(itemId),
+            sidebarId: String(sidebarId),
             route: item.path, // Keep both path and route for compatibility
           } as any);
         }
@@ -170,14 +177,15 @@ export function useMenuRegistry() {
   };
 
   // Function to find sidebar ID by path
-  const findSidebarIdByPath = (path: string): number | null => {
+  const findSidebarIdByPath = (path: string): string | number | null => {
     // Look through registered mini sidebars to find one with matching route
     const sidebar =
       miniSidebars.value.find((s) => s.route === path) ||
       bottomMiniSidebars.value.find((s) => s.route === path);
 
     if (sidebar) {
-      return parseInt(sidebar.id);
+      // Return as-is (string for MongoDB, string/number for SQL)
+      return sidebar.id;
     }
 
     // If not found in mini sidebars, check if there are any registered menu items
@@ -214,9 +222,6 @@ export function useMenuRegistry() {
 
     // If we can't find the sidebars, don't register table menus
     if (!collectionsSidebarId) {
-      console.warn(
-        "Collections sidebar not found, skipping table menu registration"
-      );
       return;
     }
 

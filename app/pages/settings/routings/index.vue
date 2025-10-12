@@ -13,6 +13,9 @@ const { createLoader } = useLoader();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 
+// Helper to get id from both SQL (id) and MongoDB (_id)
+const { getId } = useDatabase();
+
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 
@@ -169,10 +172,10 @@ function getRouteHeaderActions(routeItem: any) {
   }
 
   // Check if route has associated table
-  const hasAssociatedTable = routeItem.mainTable?.id;
+  const hasAssociatedTable = getId(routeItem.mainTable);
   const { schemas } = useSchema();
   const tableExists = hasAssociatedTable && Object.values(schemas.value).some(
-    (table: any) => table.id === routeItem.mainTable.id
+    (table: any) => getId(table) === getId(routeItem.mainTable)
   );
 
   return [
@@ -180,7 +183,7 @@ function getRouteHeaderActions(routeItem: any) {
       component: 'USwitch',
       props: {
         'model-value': routeItem.isEnabled,
-        disabled: getRouteLoader(routeItem.id).isLoading || tableExists
+        disabled: getRouteLoader(getId(routeItem)).isLoading || tableExists
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleEnabled(routeItem),
@@ -212,20 +215,20 @@ async function toggleEnabled(routeItem: any) {
   // Update directly in apiData to trigger reactivity
   if (apiData.value?.data) {
     const routeIndex = apiData.value.data.findIndex(
-      (r: any) => r.id === routeItem.id
+      (r: any) => getId(r) === getId(routeItem)
     );
     if (routeIndex !== -1) {
       apiData.value.data[routeIndex].isEnabled = newEnabled;
     }
   }
 
-  await updateRouteApi({ id: routeItem.id, body: { isEnabled: newEnabled } });
+  await updateRouteApi({ id: getId(routeItem), body: { isEnabled: newEnabled } });
 
   if (updateError.value) {
     // Revert optimistic update on error
     if (apiData.value?.data) {
       const routeIndex = apiData.value.data.findIndex(
-        (r: any) => r.id === routeItem.id
+        (r: any) => getId(r) === getId(routeItem)
       );
       if (routeIndex !== -1) {
         apiData.value.data[routeIndex].isEnabled = !newEnabled;
@@ -258,7 +261,7 @@ async function deleteRoute(routeItem: any) {
   });
 
   if (isConfirmed) {
-    await deleteRouteApi({ id: routeItem.id });
+    await deleteRouteApi({ id: getId(routeItem) });
 
     if (deleteError.value) {
       return;
@@ -317,13 +320,13 @@ async function deleteRoute(routeItem: any) {
           >
             <CommonSettingsCard
               v-for="routeItem in routesData"
-              :key="routeItem.id"
+              :key="getId(routeItem)"
               :title="routeItem.path"
               :description="routeItem.mainTable?.name"
               :icon="routeItem.icon || 'lucide:circle'"
               icon-color="primary"
               :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
-              @click="navigateTo(`/settings/routings/${routeItem.id}`)"
+              @click="navigateTo(`/settings/routings/${getId(routeItem)}`)"
               :stats="[
                 {
                   label: 'Status',
@@ -344,15 +347,17 @@ async function deleteRoute(routeItem: any) {
                   label: 'Methods',
                   component: routeItem.publishedMethods?.length ? 'UBadge' : undefined,
                   values: routeItem.publishedMethods?.length ? 
-                    routeItem.publishedMethods.map((m: any) => ({
-                      value: m.method.toUpperCase(),
-                      props: {
-                        color: m.method === 'GET' ? 'info' : 
-                               m.method === 'POST' ? 'success' : 
-                               m.method === 'PATCH' ? 'warning' : 
-                               m.method === 'DELETE' ? 'error' : undefined
-                      }
-                    })) : undefined,
+                    routeItem.publishedMethods
+                      .filter((m: any) => m?.method)
+                      .map((m: any) => ({
+                        value: m.method.toUpperCase(),
+                        props: {
+                          color: m.method === 'GET' ? 'info' : 
+                                 m.method === 'POST' ? 'success' : 
+                                 m.method === 'PATCH' ? 'warning' : 
+                                 m.method === 'DELETE' ? 'error' : undefined
+                        }
+                      })) : undefined,
                   value: !routeItem.publishedMethods?.length ? '-' : undefined
                 }
               ]"

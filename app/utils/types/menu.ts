@@ -2,7 +2,8 @@ import type { PermissionCondition } from "./permissions";
 
 // API Response Interface from /menu_definition endpoint
 export interface MenuDefinition {
-  id: number;
+  id?: number; // SQL databases
+  _id?: string; // MongoDB
   description: string;
   icon: string;
   isEnabled: boolean;
@@ -12,12 +13,12 @@ export interface MenuDefinition {
   path: string;
   permission: PermissionCondition | null;
   type: "Mini Sidebar" | "Dropdown Menu" | "Menu";
-  parent: number | null;
-  sidebar: { id: number } | null;
+  parent: number | string | null;
+  sidebar: { id?: number; _id?: string } | null;
   children: any[];
   menus: any[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Internal Interface for Menu Items in useMenuRegistry
@@ -26,7 +27,7 @@ export interface MenuItem {
   label: string;
   route: string;
   icon?: string;
-  sidebarId: number;
+  sidebarId: number | string; // Support both SQL (number) and MongoDB (string)
   permission?: PermissionCondition;
   // Additional fields from API for full compatibility
   path?: string;
@@ -58,7 +59,8 @@ export interface MiniSidebar {
 
 // API Response Interface from useMenuApi (different from MenuDefinition)
 export interface MenuApiItem {
-  id: number;
+  id?: number; // SQL databases
+  _id?: string; // MongoDB
   description: string;
   icon: string;
   isEnabled: boolean;
@@ -68,11 +70,11 @@ export interface MenuApiItem {
   path: string;
   permission: any;
   type: "Mini Sidebar" | "Dropdown Menu" | "Menu";
-  parent: number | null;
-  sidebar: { id: number } | null;
+  parent: number | string | null;
+  sidebar: { id?: number; _id?: string } | null;
   children: any[];
   menus: any[];
-  extension: any;
-  createdAt: string;
-  updatedAt: string;
+  extension?: any;
+  createdAt?: string;
+  updatedAt?: string;
 }

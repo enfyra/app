@@ -1,11 +1,11 @@
 <script setup lang="ts">
 const route = useRoute();
 const toast = useToast();
-const { confirm } = useConfirm();
 const newRecord = ref<Record<string, any>>({});
 const tableName = route.params.table as string;
 const { generateEmptyForm, validate } = useSchema(tableName);
 const createErrors = ref<Record<string, string>>({});
+const { getId } = useDatabase();
 
 // Get the correct route for this table
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
@@ -74,7 +74,7 @@ async function handleCreate() {
   });
 
   await navigateTo(
-    `/data/${route.params.table}/${createData.value?.data[0]?.id}`,
+    `/data/${route.params.table}/${getId(createData.value?.data[0])}`,
     { replace: true }
   );
 }

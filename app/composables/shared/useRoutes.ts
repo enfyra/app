@@ -1,6 +1,7 @@
 export function useRoutes() {
   const routes = useState<any[]>('routes:all', () => [])
   const tableRoutesMap = useState<Record<string, string>>('routes:table:map', () => ({}))
+  const { getId } = useDatabase();
   
   const {
     data: routesData,
@@ -21,8 +22,9 @@ export function useRoutes() {
     
     const mapping: Record<string, string> = {}
     for (const route of allRoutes) {
-      if (route.mainTable?.id) {
-        mapping[route.mainTable.id] = route.path
+      const tableId = getId(route.mainTable);
+      if (tableId) {
+        mapping[tableId] = route.path
       }
     }
     
@@ -40,7 +42,10 @@ export function useRoutes() {
     
     const { schemas } = useSchema()
     const table = Object.values(schemas.value).find(
-      (schema: any) => String(schema.id) === id
+      (schema: any) => {
+        const schemaId = getId(schema);
+        return schemaId === id;
+      }
     )
     
     return table?.name ? `/${table.name}` : `/${id}`
@@ -50,8 +55,9 @@ export function useRoutes() {
     const { schemas } = useSchema()
     const table = schemas.value[tableName]
     
-    if (table?.id) {
-      return getRouteForTableId(table.id)
+    const tableId = getId(table);
+    if (tableId) {
+      return getRouteForTableId(tableId)
     }
     
     return `/${tableName}`

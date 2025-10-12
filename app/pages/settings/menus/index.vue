@@ -14,6 +14,7 @@ const menus = computed(() => apiData.value?.data || []);
 const { createLoader } = useLoader();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
+const { getId } = useDatabase();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 
@@ -279,7 +280,7 @@ watch(
             :icon="menu.icon || 'lucide:circle'"
             icon-color="primary"
             :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
-            @click="navigateTo(`/settings/menus/${menu.id}`)"
+            @click="navigateTo(`/settings/menus/${getId(menu)}`)"
             :stats="[
               {
                 label: 'Type',
