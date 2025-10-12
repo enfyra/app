@@ -11,6 +11,7 @@ const isNew = ref(false);
 const errors = ref<Record<string, string>>({});
 
 const { generateEmptyForm, validate } = useSchema("column_definition");
+const { deleteIds, getIdFieldName, isMongoDB } = useDatabase();
 
 // Modal state
 const showCloseConfirm = ref(false);
@@ -66,6 +67,11 @@ function editColumn(col: any, index: number) {
   editingIndex.value = index;
   currentColumn.value = { ...toRaw(col) };
 
+  // For MongoDB _id, force type to uuid (override any existing type)
+  if (isMongoDB.value && currentColumn.value.name === getIdFieldName()) {
+    currentColumn.value.type = "uuid";
+  }
+
   // Use centralized UUID logic
   handleUuidType(currentColumn.value);
 }
@@ -90,6 +96,7 @@ function saveColumn() {
   };
 
   const { isValid, errors: validationErrors } = validate(currentColumn.value, customValidators);
+  
   if (!isValid) {
     errors.value = validationErrors;
     return;
@@ -121,8 +128,16 @@ function addNewColumn() {
   currentColumn.value = createEmptyColumn();
   currentColumn.value.isNullable = true;
   currentColumn.value.isUpdatable = true;
+  currentColumn.value.isPrimary = false; // New columns are never primary by default
+  currentColumn.value.isGenerated = false; // User-defined columns are not auto-generated
+  currentColumn.value.isSystem = false; // User-created columns are not system columns
   editingIndex.value = null;
-  delete currentColumn.value.id;
+  deleteIds(currentColumn.value);
+
+  // Set default type based on database
+  if (!currentColumn.value.type) {
+    currentColumn.value.type = isMongoDB.value ? "uuid" : "varchar";
+  }
 
   // Use centralized UUID logic
   handleUuidType(currentColumn.value);
@@ -198,19 +213,21 @@ function getDefaultValueType(columnType: string) {
 
 const typeMap = computed(() => {
   const currentType = currentColumn.value?.type;
+  const isPrimaryColumn = currentColumn.value?.name === getIdFieldName();
 
   return {
     type: {
       type: "enum",
       options:
-        currentColumn.value?.name === "id"
-          ? columnTypes.filter((colType) =>
-              ["uuid", "int"].includes(colType.value)
-            )
+        isPrimaryColumn
+          ? isMongoDB.value
+            ? columnTypes.filter((colType) => colType.value === "uuid") // MongoDB _id only supports uuid
+            : columnTypes.filter((colType) => ["uuid", "int"].includes(colType.value)) // SQL id supports uuid or int
           : columnTypes,
+      default: isPrimaryColumn && isMongoDB.value ? "uuid" : undefined, // Default to uuid for MongoDB _id
     },
     name: {
-      disabled: currentColumn.value?.name === "id",
+      disabled: currentColumn.value?.name === getIdFieldName(),
     },
     defaultValue: getDefaultValueType(currentType),
     // Apply UUID type mapping
@@ -238,12 +255,13 @@ const typeMap = computed(() => {
 
 onMounted(() => {
   const primaryColumn = createEmptyColumn();
-  primaryColumn.name = "id";
-  primaryColumn.type = "int";
+  const { getIdFieldName, isMongoDB } = useDatabase();
+  primaryColumn.name = getIdFieldName();
+  primaryColumn.type = isMongoDB.value ? "uuid" : "int"; // MongoDB uses uuid, SQL can use int
   primaryColumn.isPrimary = true;
   primaryColumn.isGenerated = true;
   primaryColumn.isNullable = false;
-  delete primaryColumn.id;
+  deleteIds(primaryColumn);
   if (!columns.value.length) columns.value.push(primaryColumn);
 });
 
@@ -428,7 +446,7 @@ watch(
               v-model:errors="errors"
               @has-changed="(hasChanged) => hasFormChanges = hasChanged"
               :includes="
-                currentColumn.name === 'id' ? ['name', 'type'] : undefined
+                currentColumn.name === getIdFieldName() ? ['name', 'type'] : undefined
               "
               :excluded="[
                 'isSystem',

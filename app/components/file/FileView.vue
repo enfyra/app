@@ -32,6 +32,7 @@ const { moveState } = useFileManagerMove();
 
 // Import permissions
 const { checkPermissionCondition } = usePermissions();
+const { getId } = useDatabase();
 
 // Check delete permission for files
 const canDeleteFile = checkPermissionCondition({

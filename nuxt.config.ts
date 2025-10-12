@@ -91,6 +91,11 @@ export default defineNuxtConfig({
       },
     },
   },
+  runtimeConfig: {
+    public: {
+      dbType: process.env.DB_TYPE || 'mysql',
+    },
+  },
   enfyraSDK: {
     // Normalize to avoid trailing slash causing double // in requests
     apiUrl: (process.env.API_URL || "").replace(/\/+$/, ""),

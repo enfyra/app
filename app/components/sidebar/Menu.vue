@@ -81,15 +81,21 @@ const currentSidebar = computed(() => {
     return false;
   });
   
-  return matchingSidebar?.id ? Number(matchingSidebar.id) : null;
+  // Return as-is (support both number for SQL and string for MongoDB)
+  return matchingSidebar?.id || null;
 });
 
 // Get visible menu items for current sidebar
 const visibleMenuItems = computed(() => {
-  if (!currentSidebar.value) return [];
+  if (!currentSidebar.value) {
+    console.log('[Menu] No current sidebar found for path:', route.path);
+    return [];
+  }
 
+  console.log('[Menu] Current sidebar:', currentSidebar.value, 'for path:', route.path);
   // Use registry data (now includes children)
   const items = getMenuItemsBySidebar(currentSidebar.value);
+  console.log('[Menu] Visible menu items:', items.length, 'items');
   return items;
 });
 </script>

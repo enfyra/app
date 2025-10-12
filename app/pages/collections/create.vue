@@ -6,6 +6,7 @@ const { confirm } = useConfirm();
 const toast = useToast();
 const { registerTableMenusWithSidebarIds } = useMenuRegistry();
 const { loadRoutes } = useRoutes();
+const { getId } = useDatabase();
 const errors = ref<Record<string, string>>({});
 const table = reactive<any>({
   name: "",
@@ -84,6 +85,16 @@ function validateAll() {
     errors.value["name"] = "Use lowercase letters (a-z), numbers and underscore. Must start with a letter.";
   } else if (name === "table") {
     errors.value["name"] = "Table name cannot be `table`";
+  }
+
+  // Validate at least one column or relation exists
+  if (table.columns.length === 0 && table.relations.length === 0) {
+    errors.value["fields"] = "At least one column or relation is required";
+    toast.add({
+      title: "Validation Error",
+      color: "error",
+      description: "Please add at least one column or relation to the table",
+    });
   }
 
   // Call validate for each column and relation
@@ -221,7 +232,7 @@ async function save() {
               :table-options="
                 Object.values(schemas).map((schema: any) => ({ 
                   label: schema.name, 
-                  value: schema.id 
+                  value: getId(schema)
                 }))
               "
             />

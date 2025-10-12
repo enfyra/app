@@ -6,6 +6,7 @@ const route = useRoute();
 const tableName = "route_handler_definition";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
+const { getId } = useDatabase();
 
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
@@ -121,7 +122,7 @@ watch(
           icon="lucide:command"
           icon-color="primary"
           :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
-          @click="navigateTo(`/settings/handlers/${handler.id}`)"
+          @click="navigateTo(`/settings/handlers/${getId(handler)}`)"
           :stats="[
             {
               label: 'Type',

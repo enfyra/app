@@ -11,6 +11,7 @@ export function useDataTableActions(
   const toast = useToast();
   const { confirm } = useConfirm();
   const { createLoader } = useLoader();
+  const { getId } = useDatabase();
 
   // Delete single record composable
   const { execute: executeDelete, error: deleteError } = useApi(
@@ -75,7 +76,7 @@ export function useDataTableActions(
 
     await deleteLoader.withLoading(async () => {
       // Extract IDs from selected rows
-      const ids = rows.map((row) => row.id);
+      const ids = rows.map((row) => getId(row));
 
       // Use batch delete with ids parameter
       await executeDelete({ ids });

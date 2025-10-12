@@ -25,10 +25,12 @@ const showFilterDrawer = ref(false);
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
 const { schemas } = useSchema();
+const { getId } = useDatabase();
+
 const targetTable = computed(() => {
-  const targetId = props.relationMeta?.targetTable?.id;
+  const targetId = getId(props.relationMeta?.targetTable);
   return (Object.values(schemas.value).find(
-    (schema: any) => schema.id === targetId
+    (schema: any) => getId(schema) === targetId
   ) || null) as any;
 });
 
@@ -47,9 +49,10 @@ const targetRoute = ref<string>('');
 
 // Load routes and set target route
 watchEffect(async () => {
-  if (targetTable.value?.id) {
+  const tableId = getId(targetTable.value);
+  if (tableId) {
     await ensureRoutesLoaded();
-    targetRoute.value = getRouteForTableId(targetTable.value.id);
+    targetRoute.value = getRouteForTableId(tableId);
   }
 });
 
@@ -108,14 +111,14 @@ watch(total, (newTotal) => {
 function toggle(id: any) {
   if (props.disabled) return;
   if (props.multiple) {
-    const found = selected.value.find((s) => s.id === id);
+    const found = selected.value.find((s) => getId(s) === id);
     selected.value = found
-      ? selected.value.filter((s) => s.id !== id)
-      : [...selected.value, { id }];
+      ? selected.value.filter((s) => getId(s) !== id)
+      : [...selected.value, { [getIdFieldName()]: id }];
   } else {
     // For single select: if already selected, deselect; otherwise select
-    const isCurrentlySelected = selected.value.some((s) => s.id === id);
-    selected.value = isCurrentlySelected ? [] : [{ id }];
+    const isCurrentlySelected = selected.value.some((s) => getId(s) === id);
+    selected.value = isCurrentlySelected ? [] : [{ [getIdFieldName()]: id }];
   }
 }
 

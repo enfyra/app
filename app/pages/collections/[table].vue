@@ -5,6 +5,7 @@ const { confirm } = useConfirm();
 const toast = useToast();
 const { registerTableMenusWithSidebarIds } = useMenuRegistry();
 const { loadRoutes } = useRoutes();
+const { getId } = useDatabase();
 const tableName = "table_definition";
 const { getIncludeFields } = useSchema(tableName);
 const { isTablet } = useScreen();
@@ -154,7 +155,7 @@ async function save() {
 }
 
 async function patchTable() {
-  await executePatchTable({ id: table.value?.id });
+  await executePatchTable({ id: getId(table.value) });
 
   if (updateError.value) {
     return; // Error already handled by useApi
@@ -212,7 +213,7 @@ async function handleDelete() {
 }
 
 async function deleteTable() {
-  await executeDeleteTable({ id: table.value?.id });
+  await executeDeleteTable({ id: getId(table.value) });
 
   if (deleteError.value) {
     return; // Error already handled by useApi
@@ -290,7 +291,7 @@ onMounted(() => {
                   :table-options="
                     Object.values(schemas).map((schema: any) => ({
                       label: schema?.name,
-                      value: { id: schema.id },
+                      value: getId(schema),
                     }))
                   "
                 />

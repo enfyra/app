@@ -49,12 +49,13 @@ const {
   clearFileManagerState,
 } = useFileManagerMove();
 const { confirm } = useConfirm();
+const { getId } = useDatabase();
 
 function handleFolderClick(folder: any) {
   // When in move mode, prevent navigating into a folder that is being moved
   if (
     moveState.value.moveMode &&
-    (moveState.value.selectedFolderIds || []).includes(folder.id)
+    (moveState.value.selectedFolderIds || []).includes(getId(folder))
   ) {
     const toast = useToast();
     toast.add({
@@ -64,7 +65,7 @@ function handleFolderClick(folder: any) {
     });
     return;
   }
-  navigateTo(`/files/management/${folder.id}`);
+  navigateTo(`/files/management/${getId(folder)}`);
 }
 
 function handleFileClick(file: any) {
@@ -80,7 +81,7 @@ function handleFileClick(file: any) {
   }
 
   // Navigate to file detail page
-  navigateTo(`/files/${file.id}`);
+  navigateTo(`/files/${getId(file)}`);
 }
 
 // Wrapper for toggleItemSelection to handle auto-enable logic

@@ -6,6 +6,7 @@ const route = useRoute();
 const tableName = "bootstrap_script_definition";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
+const { getId } = useDatabase();
 
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
@@ -121,7 +122,7 @@ watch(
           icon="lucide:rocket"
           icon-color="warning"
           :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-warning/20 transition-all'"
-          @click="navigateTo(`/settings/bootstrap/${script.id}`)"
+          @click="navigateTo(`/settings/bootstrap/${getId(script)}`)"
           :stats="[
             {
               label: 'Type',

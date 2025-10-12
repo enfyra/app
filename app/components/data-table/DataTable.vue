@@ -24,6 +24,8 @@ const emit = defineEmits<{
   "selection-change": [selectedRows: any[]];
 }>();
 
+const { getId } = useDatabase();
+
 function handleRowClick(row: any) {
   emit("row-click", row);
 }
@@ -242,7 +244,7 @@ watch(
               <tr
                 :class="[
                   'cursor-pointer lg:hover:bg-gray-50 dark:lg:hover:bg-gray-800/30',
-                  selectedRows.some((selectedRow: any) => selectedRow.id === row.original.id)
+                  selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
                     ? 'border-r-4 border-r-primary-500'
                     : '',
                 ]"
@@ -276,7 +278,7 @@ watch(
               v-else
               :class="[
                 'cursor-pointer lg:hover:bg-gray-50 dark:lg:hover:bg-gray-800/30',
-                selectedRows.some((selectedRow: any) => selectedRow.id === row.original.id)
+                selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
                   ? 'border-r-4 border-r-primary-500'
                   : '',
               ]"

@@ -35,7 +35,7 @@
           icon="lucide:server"
           icon-color="success"
           :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-success/20 transition-all'"
-          @click="navigateTo(`/settings/packages/${pkg.id}`)"
+          @click="navigateTo(`/settings/packages/${getId(pkg)}`)"
           :stats="[
             {
               label: 'Version',
@@ -116,6 +116,7 @@ const toast = useToast();
 const route = useRoute();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
+const { getId } = useDatabase();
 
 // Header actions
 useHeaderActionRegistry({

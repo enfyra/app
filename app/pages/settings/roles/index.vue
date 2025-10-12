@@ -7,6 +7,7 @@ const route = useRoute();
 const tableName = "role_definition";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
+const { getId } = useDatabase();
 
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
@@ -123,7 +124,7 @@ watch(
           icon="lucide:shield-check"
           icon-color="primary"
           :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
-          @click="navigateTo(`/settings/roles/${role.id}`)"
+          @click="navigateTo(`/settings/roles/${getId(role)}`)"
           :stats="[
             {
               label: 'Created',

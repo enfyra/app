@@ -2,6 +2,7 @@
 // useApi is auto-imported in Nuxt
 const toast = useToast();
 const { confirm } = useConfirm();
+const { getId } = useDatabase();
 const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
@@ -98,7 +99,7 @@ async function deleteHook(hook: any) {
   });
 
   if (isConfirmed) {
-    await deleteHookApi({ id: hook.id });
+    await deleteHookApi({ id: getId(hook) });
 
     if (deleteError.value) {
       return;
@@ -153,7 +154,7 @@ async function deleteHook(hook: any) {
           icon="lucide:link"
           icon-color="primary"
           :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
-          @click="navigateTo(`/settings/hooks/${hook.id}`)"
+          @click="navigateTo(`/settings/hooks/${getId(hook)}`)"
           :stats="[
             {
               label: 'Route',

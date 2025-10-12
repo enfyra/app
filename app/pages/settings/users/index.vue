@@ -33,7 +33,7 @@
           icon="lucide:user"
           icon-color="primary"
           :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
-          @click="navigateTo(`/settings/users/${user.id}`)"
+          @click="navigateTo(`/settings/users/${getId(user)}`)"
           :stats="[
             {
               label: 'Role',
@@ -104,6 +104,7 @@ const route = useRoute();
 const router = useRouter();
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
+const { getId } = useDatabase();
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
@@ -274,7 +275,7 @@ async function deleteUser(user: any) {
 
   if (isConfirmed) {
     const { execute: deleteUserApi, error: deleteError } = useApi(
-      () => `/${tableName}/${user.id}`,
+      () => `/${tableName}/${getId(user)}`,
       {
         method: "delete",
         errorContext: "Delete User",

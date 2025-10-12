@@ -69,6 +69,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Use file URL composable
 const { getFileUrl, getPreviewUrl } = useFileUrl();
+const { getId } = useDatabase();
 
 // Transform files data for display
 const transformedFiles = computed(() => {
@@ -82,8 +83,8 @@ const transformedFiles = computed(() => {
       iconBackground: iconConfig.background,
       size: formatFileSize(parseInt(file.filesize || "0")),
       modifiedAt: formatDate(file.updatedAt || file.createdAt || ""),
-      assetUrl: getFileUrl(file.id),
-      previewUrl: getPreviewUrl(file.id),
+      assetUrl: getFileUrl(getId(file)),
+      previewUrl: getPreviewUrl(getId(file)),
     };
   });
 });
@@ -125,7 +126,7 @@ function handleCopyFileUrl(file: any) {
 }
 
 function viewFileDetails(file: any) {
-  navigateTo(`/files/${file.id}`);
+  navigateTo(`/files/${getId(file)}`);
 }
 
 // Delete file function
