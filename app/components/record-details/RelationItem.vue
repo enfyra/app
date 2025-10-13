@@ -11,7 +11,7 @@
             {{ getPrimaryLabel(item) }}
           </h4>
           <UBadge variant="outline" size="xs" color="neutral" class="mt-1">
-            ID: {{ item.id }}
+            ID: {{ getId(item) }}
           </UBadge>
         </div>
       </div>
@@ -69,13 +69,14 @@ const props = defineProps<{
   item: any;
 }>();
 
+const { getId } = useDatabase();
 const expanded = ref(false);
 
 // Priority fields that should be shown first
 const priorityFields = ['name', 'title', 'label', 'email', 'type', 'status', 'description'];
 
 // Fields to exclude from display
-const excludedFields = ['id', 'createdAt', 'updatedAt', 'isSystem', 'isRootAdmin'];
+const excludedFields = ['id', '_id', 'createdAt', 'updatedAt', 'isSystem', 'isRootAdmin'];
 
 const keyFields = computed(() => {
   const fields: [string, any][] = [];
@@ -96,7 +97,7 @@ const keyFields = computed(() => {
 
 const additionalFields = computed(() => {
   const fields: [string, any][] = [];
-  const usedKeys = new Set([...keyFields.value.map(([key]) => key), ...excludedFields, 'id']);
+  const usedKeys = new Set([...keyFields.value.map(([key]) => key), ...excludedFields]);
   
   Object.entries(props.item).forEach(([key, value]) => {
     if (!usedKeys.has(key) && value !== null && value !== undefined) {

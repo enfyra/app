@@ -16,13 +16,49 @@ const emit = defineEmits<{
   "view-details": [item: any];
 }>();
 
+const { getId } = useDatabase();
+const expandedItems = ref<Set<any>>(new Set());
+const itemRefs = ref<Record<string, HTMLElement>>({});
+const itemWidths = ref<Record<string, string>>({});
+
 function toggle(id: any) {
   if (props.disabled) return;
   emit("toggle", id);
 }
 
 function isSelected(id: any) {
-  return props.selected.some((sel) => sel.id === id);
+  return props.selected.some((sel) => getId(sel) === id);
+}
+
+function isExpanded(id: any) {
+  return expandedItems.value.has(id);
+}
+
+function toggleExpand(id: any) {
+  // Capture width before toggling
+  const el = itemRefs.value[id];
+  if (el && !expandedItems.value.has(id)) {
+    // Only capture width when expanding
+    itemWidths.value[id] = `${el.offsetWidth}px`;
+  }
+  
+  if (expandedItems.value.has(id)) {
+    expandedItems.value.delete(id);
+  } else {
+    expandedItems.value.add(id);
+  }
+  // Trigger reactivity
+  expandedItems.value = new Set(expandedItems.value);
+}
+
+function setItemRef(id: any, el: any) {
+  if (el) {
+    itemRefs.value[id] = el;
+  }
+}
+
+function getItemWidth(id: any): string {
+  return itemWidths.value[id] || '100%';
 }
 
 function viewDetails(item: any) {
@@ -37,7 +73,30 @@ function getDisplayLabel(
 ): string {
   if (!item || typeof item !== "object") return "";
 
-  const MAX_LABEL_LENGTH = 50;
+  const MAX_LABEL_LENGTH = 60;
+
+  // Helper: check if a string looks like a UUID
+  const isUUID = (str: string): boolean => {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+  };
+
+  // Helper: check if a string looks like a MongoDB ObjectId
+  const isObjectId = (str: string): boolean => {
+    return /^[0-9a-f]{24}$/i.test(str);
+  };
+
+  // Helper: shorten UUID or ObjectId
+  const shortenIdentifier = (str: string): string => {
+    if (isUUID(str)) {
+      // UUID: show first 8 chars
+      return str.slice(0, 8) + "…";
+    }
+    if (isObjectId(str)) {
+      // ObjectId: show first 6 and last 4
+      return str.slice(0, 6) + "…" + str.slice(-4);
+    }
+    return str;
+  };
 
   // Helper: safely get a non-empty string from any field
   const getValueAsString = (
@@ -50,8 +109,11 @@ function getDisplayLabel(
     return str === "" ? null : str;
   };
 
-  // Helper: truncate string to fit within limit
-  const truncateString = (str: string, maxLength: number): string => {
+  // Helper: smart truncate - shorter for UUIDs, normal for text
+  const smartTruncate = (str: string, maxLength: number): string => {
+    if (isUUID(str) || isObjectId(str)) {
+      return shortenIdentifier(str);
+    }
     return str.length > maxLength ? `${str.slice(0, maxLength - 1)}…` : str;
   };
 
@@ -62,69 +124,106 @@ function getDisplayLabel(
       .map((def) => def.propertyName)
   );
 
-  // Filter out fields that are not relations
+  // Filter out fields: not relations, not ID fields, not UUID-only fields
   const nonRelationKeys: string[] = Object.keys(item).filter(
     (key) => !relationKeys.has(key)
   );
 
-  // Prioritize common keys but only in non-relation
+  // Prioritize meaningful human-readable keys
   const preferredKeys: string[] = [
     "name",
     "title",
     "propertyName",
     "label",
+    "email",
+    "username",
+    "displayName",
     "path",
     "method",
-    "description",
+    "type",
+    "status",
   ];
 
-  const foundFields: string[] = [];
-
-  // Tìm 2 fields đầu tiên từ preferred keys
-  for (const key of preferredKeys) {
-    if (!nonRelationKeys.includes(key) || foundFields.length >= 2) continue;
-    const str = getValueAsString(item, key);
-    if (str) foundFields.push(str);
+  interface FieldValue {
+    key: string;
+    value: string;
+    isIdentifier: boolean;
   }
 
-  // Nếu chưa đủ 2 fields, tìm thêm từ các fields còn lại (bỏ id)
+  const allFields: FieldValue[] = [];
+
+  // Collect all non-relation fields with their values
   for (const key of nonRelationKeys) {
-    if (key === "id" || foundFields.length >= 2) continue;
+    if (key === "id" || key === "_id" || key === "createdAt" || key === "updatedAt") continue;
+    
     const str = getValueAsString(item, key);
-    if (str) foundFields.push(str);
-  }
-
-  // Kết hợp 2 fields với giới hạn ký tự
-  let result: string;
-  if (foundFields.length === 0) {
-    const idStr = getValueAsString(item, "id");
-    result = idStr ? `ID: ${idStr}` : "";
-  } else if (foundFields.length === 1) {
-    result = foundFields[0]!;
-  } else {
-    const firstField = foundFields[0]!;
-    const secondField = foundFields[1]!;
-    const combined = `${firstField} - ${secondField}`;
-
-    if (combined.length > MAX_LABEL_LENGTH) {
-      // Nếu quá dài, ưu tiên field đầu tiên và cắt ngắn field thứ hai
-      const separator = " - ";
-      const remainingLength =
-        MAX_LABEL_LENGTH - firstField.length - separator.length - 1; // -1 for ellipsis
-
-      if (remainingLength > 5) {
-        const truncatedSecond = truncateString(secondField, remainingLength);
-        result = `${firstField}${separator}${truncatedSecond}`;
-      } else {
-        // Nếu field đầu quá dài, chỉ dùng field đầu
-        result = truncateString(firstField, MAX_LABEL_LENGTH);
-      }
-    } else {
-      result = combined;
+    if (str) {
+      const isIdentifier = isUUID(str) || isObjectId(str);
+      allFields.push({ key, value: str, isIdentifier });
     }
   }
 
-  return truncateString(result, MAX_LABEL_LENGTH);
+  // Sort fields: preferred non-identifiers first, then other non-identifiers, then identifiers
+  allFields.sort((a, b) => {
+    const aIsPreferred = preferredKeys.includes(a.key);
+    const bIsPreferred = preferredKeys.includes(b.key);
+    
+    if (aIsPreferred && !bIsPreferred) return -1;
+    if (!aIsPreferred && bIsPreferred) return 1;
+    
+    if (!a.isIdentifier && b.isIdentifier) return -1;
+    if (a.isIdentifier && !b.isIdentifier) return 1;
+    
+    return 0;
+  });
+
+  // Build display label
+  let result: string;
+  
+  // Try to use top 2 non-identifier fields
+  const nonIdentifierFields = allFields.filter(f => !f.isIdentifier);
+  
+  if (nonIdentifierFields.length >= 2) {
+    // Use 2 meaningful fields
+    const first = nonIdentifierFields[0];
+    const second = nonIdentifierFields[1];
+    if (first && second) {
+      result = `${smartTruncate(first.value, 25)} • ${smartTruncate(second.value, 25)}`;
+    } else {
+      result = first ? smartTruncate(first.value, 30) : "No data";
+    }
+  } else if (nonIdentifierFields.length === 1) {
+    // Use 1 meaningful field + 1 identifier if available
+    const first = nonIdentifierFields[0];
+    if (first) {
+      const firstValue = smartTruncate(first.value, 30);
+      const identifierFields = allFields.filter(f => f.isIdentifier);
+      
+      if (identifierFields.length > 0 && identifierFields[0]) {
+        const second = shortenIdentifier(identifierFields[0].value);
+        result = `${firstValue} • ${second}`;
+      } else {
+        result = firstValue;
+      }
+    } else {
+      result = "No data";
+    }
+  } else if (allFields.length > 0) {
+    // Only identifiers available - show shortened version
+    const shortened = allFields.map(f => shortenIdentifier(f.value)).slice(0, 2);
+    result = shortened.join(" • ");
+  } else {
+    // Fallback to ID
+    const idStr = getValueAsString(item, "id") || getValueAsString(item, "_id");
+    result = idStr ? shortenIdentifier(idStr) : "No data";
+  }
+
+  // Final truncation if still too long
+  if (result.length > MAX_LABEL_LENGTH) {
+    result = result.slice(0, MAX_LABEL_LENGTH - 1) + "…";
+  }
+
+  return result;
 }
 
 function shortenId(id: string | number): string {
@@ -133,39 +232,157 @@ function shortenId(id: string | number): string {
   // Ngắn hơn nữa: 4 ký tự đầu + … + 3 ký tự cuối
   return str.length > 12 ? `${str.slice(0, 4)}…${str.slice(-3)}` : str;
 }
+
+// Get all non-relation fields for expanded view
+function getExpandedFields(item: any): Array<{ key: string; value: any; type: string }> {
+  if (!item || typeof item !== "object") return [];
+  
+  const fields: Array<{ key: string; value: any; type: string }> = [];
+  const excludeKeys = new Set(["id", "_id", "createdAt", "updatedAt"]);
+  
+  Object.entries(item).forEach(([key, value]) => {
+    if (excludeKeys.has(key)) return;
+    if (value === null || value === undefined) return;
+    
+    // Skip relations (objects with id/_id)
+    if (typeof value === "object" && !Array.isArray(value)) {
+      if (getId(value)) return; // It's a relation
+    }
+    
+    // Skip array relations
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === "object") {
+      return;
+    }
+    
+    let type = "text";
+    if (typeof value === "boolean") type = "boolean";
+    else if (typeof value === "number") type = "number";
+    else if (Array.isArray(value)) type = "array";
+    
+    fields.push({ key, value, type });
+  });
+  
+  return fields;
+}
+
+function formatFieldValue(value: any, type: string): string {
+  if (value === null || value === undefined) return "—";
+  
+  if (type === "boolean") {
+    return value ? "Yes" : "No";
+  }
+  
+  if (type === "array") {
+    return Array.isArray(value) ? value.join(", ") : String(value);
+  }
+  
+  const str = String(value);
+  
+  // Check if it's a UUID - show shortened version
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)) {
+    return str.slice(0, 8) + "…";
+  }
+  
+  // Check if it's a MongoDB ObjectId
+  if (/^[0-9a-f]{24}$/i.test(str)) {
+    return str.slice(0, 6) + "…" + str.slice(-4);
+  }
+  
+  return str;
+}
 </script>
 
 <template>
-  <div class="space-y-1">
-    <UButton
+  <div class="space-y-2">
+    <div
       v-for="item in data"
-      :key="item.id"
-      class="w-full px-4 py-3 lg:hover:bg-muted flex items-center justify-between"
-      @click.stop="toggle(item.id)"
-      variant="outline"
-      :color="isSelected(item.id) ? 'primary' : 'neutral'"
+      :key="getId(item)"
+      class="border rounded-lg overflow-hidden"
+      :class="isSelected(getId(item)) ? 'border-primary' : 'border-muted'"
     >
-      <div
-        class="flex items-center gap-2 min-w-0 flex-1"
-        :title="`${shortenId(item.id)} - ${getDisplayLabel(item)}`"
+      <!-- Main Row -->
+      <div 
+        :ref="(el) => setItemRef(getId(item), el)"
+        class="flex items-center"
       >
-        <UIcon
-          v-if="isSelected(item.id)"
-          name="lucide:check"
-          class="w-4 h-4 flex-shrink-0"
-        />
-        <span class="truncate"
-          >{{ shortenId(item.id) }} - {{ getDisplayLabel(item) }}</span
+        <!-- Select Area (clickable) -->
+        <button
+          @click.stop="toggle(getId(item))"
+          class="flex-1 px-4 py-3 flex items-center gap-2 lg:hover:bg-muted transition-colors text-left"
         >
+          <UIcon
+            v-if="isSelected(getId(item))"
+            name="lucide:check-circle"
+            class="w-5 h-5 flex-shrink-0 text-primary"
+          />
+          <UIcon
+            v-else
+            name="lucide:circle"
+            class="w-5 h-5 flex-shrink-0 text-muted-foreground"
+          />
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-muted-foreground mb-0.5">
+              ID: {{ shortenId(getId(item)) }}
+            </div>
+            <div class="font-medium truncate">
+              {{ getDisplayLabel(item) }}
+            </div>
+          </div>
+        </button>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-1 px-2 border-l border-muted">
+          <UButton
+            :icon="isExpanded(getId(item)) ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+            size="sm"
+            variant="ghost"
+            color="neutral"
+            @click.stop="toggleExpand(getId(item))"
+            :title="isExpanded(getId(item)) ? 'Hide details' : 'Show details'"
+          />
+          <UButton
+            icon="lucide:info"
+            size="sm"
+            variant="ghost"
+            color="neutral"
+            @click.stop="viewDetails(item)"
+            title="View full details"
+          />
+        </div>
       </div>
-      <div class="flex gap-1 flex-shrink-0">
-        <UButton
-          icon="lucide:info"
-          size="md"
-          variant="outline"
-          @click.stop="viewDetails(item)"
-        />
+
+      <!-- Expanded Details -->
+      <div
+        v-if="isExpanded(getId(item))"
+        class="border-t border-muted bg-muted/20 px-4 py-3"
+        :style="{ maxWidth: getItemWidth(getId(item)) }"
+      >
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div
+            v-for="field in getExpandedFields(item)"
+            :key="field.key"
+            class="min-w-0"
+          >
+            <div 
+              class="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1 overflow-hidden text-ellipsis whitespace-nowrap"
+              :title="field.key"
+            >
+              {{ field.key }}
+            </div>
+            <div
+              class="font-mono text-foreground overflow-hidden text-ellipsis whitespace-nowrap"
+              :class="{
+                'text-green-500': field.type === 'boolean' && field.value,
+                'text-red-500': field.type === 'boolean' && !field.value,
+              }"
+              :title="String(field.value)"
+            >
+              {{ formatFieldValue(field.value, field.type) }}
+            </div>
+          </div>
+        </div>
       </div>
-    </UButton>
+    </div>
   </div>
 </template>
+
