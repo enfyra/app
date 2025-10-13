@@ -52,7 +52,7 @@
     "@codemirror/matchbrackets": "^0.19.4",
     "@codemirror/search": "^6.5.11",
     "@codemirror/view": "^6.38.0",
-    "@enfyra/sdk-nuxt": "^0.3.7",
+    "@enfyra/sdk-nuxt": "^0.3.8",
     "@iconify-json/lucide": "^1.2.49",
     "@nuxt/icon": "^2.0.0",
     "@nuxt/ui": "^3.3.2",
