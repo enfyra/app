@@ -37,7 +37,7 @@
           0,
           showAll ? value.length : maxItems
         )"
-        :key="item.id || index"
+        :key="getId(item) || index"
         class="border border-muted/50 rounded-lg p-4 bg-gradient-to-r from-background to-muted/20 lg:hover:shadow-md transition-all duration-200 lg:hover:border-primary/50"
       >
         <RecordDetailsRelationItem :item="item" />
@@ -65,6 +65,7 @@ const props = defineProps<{
   value: any;
 }>();
 
+const { getId } = useDatabase();
 const showAll = ref(false);
 const maxItems = 3;
 </script>

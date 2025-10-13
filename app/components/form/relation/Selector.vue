@@ -25,7 +25,7 @@ const showFilterDrawer = ref(false);
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
 const { schemas } = useSchema();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 
 const targetTable = computed(() => {
   const targetId = getId(props.relationMeta?.targetTable);

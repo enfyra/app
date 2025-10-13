@@ -9,6 +9,8 @@ defineOptions({ inheritAttrs: false });
 const emit = defineEmits(["update:modelValue"]);
 const showModal = ref(false);
 const selectedIds = ref<any[]>([]);
+const { getId } = useDatabase();
+
 watch(
   () => props.modelValue,
   () => {
@@ -17,10 +19,10 @@ watch(
       props.relationMeta.type === "many-to-one"
     ) {
       selectedIds.value =
-        props.modelValue && props.modelValue.id ? [props.modelValue] : [];
+        props.modelValue && getId(props.modelValue) ? [props.modelValue] : [];
     } else {
       selectedIds.value = Array.isArray(props.modelValue)
-        ? props.modelValue.filter((item) => item && item.id)
+        ? props.modelValue.filter((item) => item && getId(item))
         : [];
     }
   },
@@ -59,7 +61,7 @@ function removeId(id: any) {
     emit("update:modelValue", null);
     selectedIds.value = [];
   } else {
-    const updated = selectedIds.value.filter((i) => i.id !== id);
+    const updated = selectedIds.value.filter((i) => getId(i) !== id);
     emit("update:modelValue", updated);
     selectedIds.value = updated;
   }
@@ -79,16 +81,16 @@ function shortenId(id: string | number): string {
   <div class="flex flex-wrap gap-2 items-center">
     <UBadge
       v-for="item in selectedIds"
-      :key="item.id"
+      :key="getId(item)"
       size="lg"
-      :color="item.id ? 'primary' : 'error'"
+      :color="getId(item) ? 'primary' : 'error'"
       variant="soft"
       class="flex items-center gap-1"
-      :title="item.id ? String(item.id) : 'Invalid ID'"
+      :title="getId(item) ? String(getId(item)) : 'Invalid ID'"
     >
-      {{ item.id ? shortenId(item.id) : "Invalid ID" }}
+      {{ getId(item) ? shortenId(getId(item)) : "Invalid ID" }}
       <button
-        @click.stop="removeId(item.id)"
+        @click.stop="removeId(getId(item))"
         class="ml-1 text-xs lg:hover:text-red-500 cursor-pointer"
         title="Delete"
         v-if="!props.disabled"

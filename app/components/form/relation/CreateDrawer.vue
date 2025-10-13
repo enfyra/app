@@ -14,6 +14,7 @@ const show = computed({
 });
 
 const { schemas } = useSchema();
+const { getId, getIdFieldName } = useDatabase();
 const targetTable = Object.values(schemas.value).find(
   (schema: any) => schema.id === props.relationMeta.targetTable.id
 ) as any;
@@ -61,9 +62,10 @@ async function createNewRecord() {
   }
 
   await createRecord({ body: createForm.value });
+  const createdRecord = createData.value?.data[0];
   emit("update:selected", [
     ...props.selected,
-    { id: createData.value?.data[0]?.id },
+    { [getIdFieldName()]: getId(createdRecord) },
   ]);
   emit("created");
   show.value = false;
