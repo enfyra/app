@@ -95,22 +95,30 @@ function openModal(mode?: 'from' | 'to') {
       tempValue.value = props.modelValue?.[1];
     }
   }
-  
+
   showModal.value = true;
 }
 
 function applyValue() {
+  // Convert Date object to ISO string (YYYY-MM-DD) for consistency
+  const formatToISO = (date: any) => {
+    if (!date) return '';
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0]; // Get only date part (YYYY-MM-DD)
+  };
+
   if (props.mode === 'single') {
-    emit('update:modelValue', tempValue.value);
+    emit('update:modelValue', formatToISO(tempValue.value));
   } else if (props.mode === 'range') {
     const currentValue = props.modelValue || ['', ''];
     if (rangeMode.value === 'from') {
-      emit('update:modelValue', [tempValue.value, currentValue[1]]);
+      emit('update:modelValue', [formatToISO(tempValue.value), currentValue[1]]);
     } else {
-      emit('update:modelValue', [currentValue[0], tempValue.value]);
+      emit('update:modelValue', [currentValue[0], formatToISO(tempValue.value)]);
     }
   }
-  
+
   showModal.value = false;
 }
 </script>

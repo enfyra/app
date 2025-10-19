@@ -81,14 +81,7 @@ async function handleUpdate() {
   });
   updateErrors.value = {};
 
-  // Refresh the current record data
-  await fetchRecord();
-  const data = apiData.value?.data?.[0];
-  if (data) {
-    currentRecord.value = { ...data };
-  }
-
-  // Confirm form changes as new baseline
+  // Confirm form changes as new baseline (like settings pages do)
   formEditorRef.value?.confirmChanges();
   formChanges.update(currentRecord.value);
 }
