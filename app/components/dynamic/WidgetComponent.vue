@@ -110,9 +110,8 @@ const loadMatchingWidget = async () => {
       }
     }
   }
-  
+
   // No cache or component not cached - fetch API
-  console.log('📡 Fetching widget API...');
   componentLoading.value = true;
   await fetchAndLoadWidget();
 };

@@ -147,7 +147,6 @@ useHeaderActionRegistry({
 // Initialize form when data loads
 watch(packageData, (data) => {
   if (data) {
-    console.log(data);
     form.value = { ...data };
   }
 });

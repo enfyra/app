@@ -138,11 +138,4 @@ function getRelationBadgeColor(relationType: string): "primary" | "secondary" | 
   }
 }
 
-// Debug
-watchEffect(() => {
-  console.log('RecordDetailsViewer - record:', props.record);
-  console.log('RecordDetailsViewer - tableName:', props.tableName);
-  console.log('RecordDetailsViewer - definition:', definition.value);
-  console.log('RecordDetailsViewer - visibleFields:', visibleFields.value);
-});
 </script>

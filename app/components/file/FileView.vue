@@ -194,16 +194,8 @@ function handleSelectionChange(selectedRows: any[]) {
     props.files.some((file) => file.id === id)
   );
 
-  console.log(
-    "FileView handleSelectionChange - DataTable selectedIds:",
-    selectedIds,
-    "currentFileSelections:",
-    currentFileSelections
-  );
-
   currentFileSelections.forEach((itemId) => {
     if (!selectedIds.includes(itemId)) {
-      console.log("Emitting toggle-selection to remove file:", itemId);
       emit("toggle-selection", itemId);
     }
   });
@@ -211,7 +203,6 @@ function handleSelectionChange(selectedRows: any[]) {
   // Add newly selected items
   selectedIds.forEach((itemId) => {
     if (!currentFileSelections.includes(itemId)) {
-      console.log("Emitting toggle-selection to add file:", itemId);
       emit("toggle-selection", itemId);
     }
   });
