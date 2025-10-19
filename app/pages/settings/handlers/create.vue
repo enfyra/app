@@ -68,11 +68,6 @@ const {
 
 onMounted(() => {
   createForm.value = generateEmptyForm();
-  // Set createdBy to current user
-  const { me } = useEnfyraAuth();
-  if (me.value?.id) {
-    createForm.value.createdBy = { id: me.value.id };
-  }
 });
 
 async function handleCreate() {

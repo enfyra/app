@@ -169,12 +169,6 @@ async function initializeForm() {
 async function save() {
   if (!form.value) return;
 
-  // Set updatedBy to current user
-  const { me } = useEnfyraAuth();
-  if (me.value?.id) {
-    form.value.updatedBy = { id: me.value.id };
-  }
-
   const { isValid, errors: validationErrors } = validate(form.value);
   if (!isValid) {
     errors.value = validationErrors;
