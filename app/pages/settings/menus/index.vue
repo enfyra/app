@@ -57,9 +57,11 @@ const menusData = computed(() => apiData.value?.data || []);
 const total = computed(() => {
   // Use filterCount when there are active filters, otherwise use totalCount
   const hasFilters = hasActiveFilters(currentFilter.value);
-  return hasFilters
-    ? apiData.value?.meta?.filterCount || apiData.value?.meta?.totalCount || 0
-    : apiData.value?.meta?.totalCount || 0;
+  if (hasFilters) {
+    // When filtering, use filterCount even if it's 0
+    return apiData.value?.meta?.filterCount ?? 0;
+  }
+  return apiData.value?.meta?.totalCount || 0;
 });
 
 useHeaderActionRegistry([
