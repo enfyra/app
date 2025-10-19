@@ -224,9 +224,12 @@ watch(
     if (newData?.data) {
       data.value = newData.data;
       const hasFilters = hasActiveFilters(currentFilter.value);
-      total.value = hasFilters
-        ? newData.meta?.filterCount || newData.meta?.totalCount || 0
-        : newData.meta?.totalCount || 0;
+      if (hasFilters) {
+        // When filtering, use filterCount even if it's 0
+        total.value = newData.meta?.filterCount ?? 0;
+      } else {
+        total.value = newData.meta?.totalCount || 0;
+      }
     }
   },
   { immediate: true }
