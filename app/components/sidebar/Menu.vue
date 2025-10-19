@@ -88,14 +88,11 @@ const currentSidebar = computed(() => {
 // Get visible menu items for current sidebar
 const visibleMenuItems = computed(() => {
   if (!currentSidebar.value) {
-    console.log('[Menu] No current sidebar found for path:', route.path);
     return [];
   }
 
-  console.log('[Menu] Current sidebar:', currentSidebar.value, 'for path:', route.path);
   // Use registry data (now includes children)
   const items = getMenuItemsBySidebar(currentSidebar.value);
-  console.log('[Menu] Visible menu items:', items.length, 'items');
   return items;
 });
 </script>

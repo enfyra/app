@@ -162,10 +162,6 @@ watch(
   () => showModal.value,
   (isOpen) => {
     if (isOpen) {
-      console.log(
-        "🚀 Modal opened, cloning permissionGroups:",
-        permissionGroups.value
-      );
       // Reset apply flag
       hasApplied.value = false;
       // Make deep copies when opening modal
@@ -176,7 +172,6 @@ watch(
         JSON.stringify(permissionGroups.value)
       );
     } else if (!hasApplied.value) {
-      console.log("🚀 Modal closed without apply, reverting to original state");
       // When modal closes without apply, ensure we haven't emitted unwanted changes
       // Reset local state to original (this prevents accidental emit)
       localFormPermissionGroups.value = JSON.parse(
@@ -191,10 +186,6 @@ watch(
   permissionGroups,
   (newGroups) => {
     if (!showModal.value) {
-      console.log(
-        "🚀 External permissionGroups changed, updating local state:",
-        newGroups
-      );
       // Only update when modal is closed to reflect external changes
       originalPermissionGroups.value = JSON.parse(JSON.stringify(newGroups));
       localFormPermissionGroups.value = JSON.parse(JSON.stringify(newGroups));
@@ -208,7 +199,6 @@ watch(
 // Reset local state when modal opens
 watch(showModal, (isOpen) => {
   if (isOpen) {
-    console.log("🚀 Modal opening, initializing local state");
     // Reset hasApplied flag
     hasApplied.value = false;
     // Initialize local state from current model value
@@ -222,10 +212,6 @@ watch(showModal, (isOpen) => {
 });
 
 function updateModelValue() {
-  console.log(
-    "🔧 updateModelValue called with localFormPermissionGroups:",
-    localFormPermissionGroups.value
-  );
   // Convert groups back to PermissionCondition format
   let result;
 
@@ -247,12 +233,10 @@ function updateModelValue() {
     result = { and: andGroups };
   }
 
-  console.log("🔧 Emitting update:modelValue with result:", result);
   emit("update:modelValue", result);
 }
 
 function updateLocalPermissionGroups(data: any) {
-  console.log("🔧 updateLocalPermissionGroups called with:", data);
   // Update local state when user makes changes in the selector
   if (data?.allowAll === true) {
     // Set local allowAll flag
@@ -267,38 +251,29 @@ function updateLocalPermissionGroups(data: any) {
 }
 
 function applyFormPermissionGroups() {
-  console.log("🔧 applyFormPermissionGroups called, localAllowAll:", localAllowAll.value);
   // Mark that user has applied changes
   hasApplied.value = true;
 
   // Apply based on the local allowAll state
   if (localAllowAll.value) {
     // User explicitly selected allowAll
-    console.log("🔧 Emitting allowAll:", { allowAll: true });
     emit("update:modelValue", { allowAll: true });
   } else if (localFormPermissionGroups.value.length > 0) {
     // User has configured permission groups
-    console.log(
-      "🔧 Calling updateModelValue with localFormPermissionGroups:",
-      localFormPermissionGroups.value
-    );
     updateModelValue();
   } else {
     // No permissions configured - emit null
-    console.log("🔧 No permissions configured, emitting null");
     emit("update:modelValue", null);
   }
   showModal.value = false;
 }
 
 function closeModal() {
-  console.log("🚀 closeModal called, hasApplied:", hasApplied.value);
   // Just close modal - revert logic is handled in watch
   showModal.value = false;
 }
 
 function cancelChanges() {
-  console.log("🚀 cancelChanges called");
   // Revert local changes to original state
   localFormPermissionGroups.value = JSON.parse(
     JSON.stringify(originalPermissionGroups.value)
