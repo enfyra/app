@@ -226,8 +226,7 @@ function saveRelation() {
                 'createdAt',
                 'updatedAt',
                 'isSystem',
-                'isEager',
-                'isInverseEager',
+              
                 'sourceTable',
                 'junctionTableName',
                 'junctionSourceColumn',
