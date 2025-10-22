@@ -171,8 +171,10 @@ async function save() {
 
   // Set updatedBy to current user
   const { me } = useEnfyraAuth();
-  if (me.value?.id) {
-    form.value.updatedBy = { id: me.value.id };
+  const { getId } = useDatabase();
+  const userId = getId(me.value);
+  if (userId) {
+    form.value.updatedBy = { id: userId };
   }
 
   const { isValid, errors: validationErrors } = validate(form.value);

@@ -78,11 +78,15 @@ const { validate, getIncludeFields } = useSchema(tableName);
 // Check if route has associated table to disable isEnabled field
 const hasAssociatedTable = computed(() => {
   const currentRoute = routeData.value?.data?.[0];
-  if (!currentRoute?.mainTable?.id) return false;
-  
+  if (!currentRoute?.mainTable) return false;
+
   const { schemas } = useSchema();
+  const { getId } = useDatabase();
+  const mainTableId = getId(currentRoute.mainTable);
+  if (!mainTableId) return false;
+
   return Object.values(schemas.value).some(
-    (table: any) => table.id === currentRoute.mainTable.id
+    (table: any) => String(getId(table)) === String(mainTableId)
   );
 });
 

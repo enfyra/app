@@ -122,30 +122,57 @@ export function useMenuRegistry() {
       .filter((item) => item.type === "Dropdown Menu" && item.isEnabled)
       .sort((a, b) => a.order - b.order);
 
+    // THIRD: Get all regular menu items to build parent-child relationships
+    const regularMenuItems = menuDefinitions
+      .filter((item) => item.type === "Menu" && item.isEnabled)
+      .sort((a, b) => a.order - b.order);
+
     if (dropdownMenusData.length > 0) {
       dropdownMenusData.forEach((item) => {
         // Dropdown menus must have a sidebar
         const sidebarId = getId(item.sidebar);
         const itemId = getId(item);
         if (sidebarId && itemId) {
+          // Build children array from menu items that have this dropdown as parent
+          const children = regularMenuItems
+            .filter((menuItem) => {
+              const parentId = getId(menuItem.parent);
+              return parentId && String(parentId) === String(itemId);
+            })
+            .map((child) => ({
+              ...child,
+              id: String(getId(child)),
+              sidebarId: String(sidebarId),
+              route: child.path,
+            }));
+
           // Copy entire API object to registry for full compatibility
           registerMenuItem({
             ...item,
             id: String(itemId),
             sidebarId: String(sidebarId),
             route: item.path || "", // Dropdown menus don't have path, use empty string
+            children, // Add built children array
           } as any);
         }
       });
     }
 
-    // THIRD: Register regular menu items (type: "Menu") - after sidebars and dropdowns are registered, sorted by order
-    const regularMenuItems = menuDefinitions
-      .filter((item) => item.type === "Menu" && item.isEnabled)
-      .sort((a, b) => a.order - b.order);
-
+    // FOURTH: Register regular menu items that are NOT children of dropdown menus
     if (regularMenuItems.length > 0) {
       regularMenuItems.forEach((item) => {
+        // Skip if this item is a child of a dropdown menu
+        const parentId = getId(item.parent);
+        if (parentId) {
+          // Check if parent is a dropdown menu
+          const isChildOfDropdown = dropdownMenusData.some(
+            (dropdown) => String(getId(dropdown)) === String(parentId)
+          );
+          if (isChildOfDropdown) {
+            return; // Skip this item as it's already registered as a child
+          }
+        }
+
         // item.sidebar.id is the ID of the sidebar this menu belongs to
         const sidebarId = getId(item.sidebar);
         const itemId = getId(item);

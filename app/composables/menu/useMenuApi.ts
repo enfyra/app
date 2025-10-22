@@ -36,12 +36,13 @@ export const useMenuApi = () => {
     return (sidebarId: string) => {
       // Get both regular menus and dropdown menus for the sidebar
       const allMenus = menuDefinitions.value?.data || [];
+      const { getId } = useDatabase();
       const sidebarMenus = allMenus
         .filter(
           (item: any) =>
             (item.type === "Menu" || item.type === "Dropdown Menu") &&
             item.isEnabled &&
-            item.sidebar?.id?.toString() === sidebarId
+            String(getId(item.sidebar)) === sidebarId
         )
         .sort((a: any, b: any) => a.order - b.order);
       return sidebarMenus;

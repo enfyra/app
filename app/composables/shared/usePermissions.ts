@@ -19,11 +19,13 @@ export function usePermissions() {
 
     // First, check direct user route permissions (bypasses role check)
     if (me.value.allowedRoutePermissions) {
+      const { getId } = useDatabase();
+      const myId = getId(me.value);
       const directPermissions = me.value.allowedRoutePermissions.filter(
         (permission: any) =>
-          permission.route?.path === normalizedRoutePath && 
+          permission.route?.path === normalizedRoutePath &&
           permission.isEnabled &&
-          permission.allowedUsers?.some((user: any) => user.id === me.value.id)
+          permission.allowedUsers?.some((user: any) => getId(user) === myId)
       );
 
       if (directPermissions.length > 0) {
@@ -66,13 +68,15 @@ export function usePermissions() {
 
     // If method permission exists, check if user is in allowedUsers
     if (hasMethodPermission) {
+      const { getId } = useDatabase();
+      const myId = getId(me.value);
       return routePermissions.some((permission: any) => {
         // If no allowedUsers specified, permission applies to all users with role
         if (!permission.allowedUsers || permission.allowedUsers.length === 0) {
           return true;
         }
         // Check if current user is in allowedUsers list
-        return permission.allowedUsers.includes(me.value.id);
+        return permission.allowedUsers.some((userId: any) => String(userId) === String(myId));
       });
     }
 

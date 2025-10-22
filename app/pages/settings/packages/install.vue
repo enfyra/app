@@ -152,9 +152,11 @@ onMounted(() => {
 function initializeForm() {
   form.value = generateEmptyForm();
 
-  if (me.value?.id) {
+  const { getId } = useDatabase();
+  const userId = getId(me.value);
+  if (userId) {
     form.value.installedBy = {
-      id: me.value.id,
+      id: userId,
     };
   }
 }
