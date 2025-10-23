@@ -207,7 +207,8 @@ async function handleCreate() {
     return;
   }
 
-  const packageId = createData.value?.data?.[0].id;
+  const { getId } = useDatabase();
+  const packageId = getId(createData.value?.data?.[0]);
 
   toast.add({
     title: "Package installed successfully",

@@ -1,23 +1,19 @@
 export function usePermissions() {
   const { me } = useEnfyraAuth();
 
-  // Helper function to check if user has permission for a specific route and method
   const hasPermission = (routePath: string, method: string): boolean => {
     if (!me.value) {
       return false;
     }
 
-    // Root admin has all permissions
     if (me.value.isRootAdmin) {
       return true;
     }
 
-    // Normalize route path - ensure it starts with /
     const normalizedRoutePath = routePath.startsWith("/")
       ? routePath
       : `/${routePath}`;
 
-    // First, check direct user route permissions (bypasses role check)
     if (me.value.allowedRoutePermissions) {
       const { getId } = useDatabase();
       const myId = getId(me.value);
@@ -29,31 +25,19 @@ export function usePermissions() {
       );
 
       if (directPermissions.length > 0) {
-        // Check if any direct permission has the required method
         const hasDirectMethodPermission = directPermissions.some((permission: any) => {
-          // If methods array exists and has items, check for the specific method
           if (permission.methods && permission.methods.length > 0) {
-            const hasMethod = permission.methods.some((methodObj: any) => methodObj.method === method);
-            return hasMethod;
+            return permission.methods.some((methodObj: any) => methodObj.method === method);
           }
-          // If methods is empty or doesn't exist, this permission doesn't grant the requested method
           return false;
         });
-        
-        // Only return true if the method is explicitly allowed
-        if (hasDirectMethodPermission) {
-          return true;
-        }
-        // If user has direct permission but not for this method, return false
-        // Don't fall through to role check
-        return false;
+
+        return hasDirectMethodPermission;
       }
     }
 
-    // If no direct permission, check role-based permissions
     if (!me.value.role?.routePermissions) return false;
 
-    // Find all route permissions that match the route path
     const routePermissions = me.value.role.routePermissions.filter(
       (permission: any) =>
         permission.route?.path === normalizedRoutePath && permission.isEnabled
@@ -61,21 +45,17 @@ export function usePermissions() {
 
     if (!routePermissions.length) return false;
 
-    // Check if any permission has the required method
     const hasMethodPermission = routePermissions.some((permission: any) =>
       permission.methods.some((methodObj: any) => methodObj.method === method)
     );
 
-    // If method permission exists, check if user is in allowedUsers
     if (hasMethodPermission) {
       const { getId } = useDatabase();
       const myId = getId(me.value);
       return routePermissions.some((permission: any) => {
-        // If no allowedUsers specified, permission applies to all users with role
         if (!permission.allowedUsers || permission.allowedUsers.length === 0) {
           return true;
         }
-        // Check if current user is in allowedUsers list
         return permission.allowedUsers.some((userId: any) => String(userId) === String(myId));
       });
     }

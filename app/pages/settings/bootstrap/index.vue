@@ -151,7 +151,7 @@ watch(
             },
             onClick: (e?: Event) => {
               e?.stopPropagation();
-              deleteScript(script.id);
+              deleteScript(getId(script));
             }
           }] : []"
         />

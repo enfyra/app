@@ -151,7 +151,7 @@ watch(
             },
             onClick: (e?: Event) => {
               e?.stopPropagation();
-              deleteHandler(handler.id);
+              deleteHandler(getId(handler));
             }
           }] : []"
         />
