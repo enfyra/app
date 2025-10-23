@@ -94,7 +94,8 @@ async function handleCreate() {
     color: "success",
   });
 
-  await navigateTo(`/settings/handlers/${createData.value.data[0].id}`, {
+  const { getId } = useDatabase();
+  await navigateTo(`/settings/handlers/${getId(createData.value.data[0])}`, {
     replace: true,
   });
 }

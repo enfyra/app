@@ -145,7 +145,8 @@ async function handleCreate() {
     color: "success",
   });
 
-  await navigateTo(`/settings/extensions/${createData.value.data[0].id}`, {
+  const { getId } = useDatabase();
+  await navigateTo(`/settings/extensions/${getId(createData.value.data[0])}`, {
     replace: true,
   });
 }

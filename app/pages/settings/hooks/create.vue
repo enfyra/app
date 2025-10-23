@@ -91,7 +91,8 @@ async function handleCreate() {
     color: "success",
   });
 
-  await navigateTo(`/settings/hooks/${createData.value.data[0].id}`, {
+  const { getId } = useDatabase();
+  await navigateTo(`/settings/hooks/${getId(createData.value.data[0])}`, {
     replace: true,
   });
 }
