@@ -151,7 +151,7 @@ watch(
             },
             onClick: (e?: Event) => {
               e?.stopPropagation();
-              deleteRole(role.id);
+              deleteRole(getId(role));
             }
           }] : []"
         />

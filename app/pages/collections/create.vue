@@ -87,8 +87,8 @@ function validateAll() {
     errors.value["name"] = "Table name cannot be `table`";
   }
 
-  // Validate at least one column or relation exists
-  if (table.columns.length === 0 && table.relations.length === 0) {
+  const { isMongoDB } = useDatabase();
+  if (!isMongoDB.value && table.columns.length === 0 && table.relations.length === 0) {
     errors.value["fields"] = "At least one column or relation is required";
     toast.add({
       title: "Validation Error",
