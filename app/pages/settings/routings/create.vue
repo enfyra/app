@@ -101,7 +101,8 @@ async function handleCreate() {
   const { schemas } = useSchema();
   await registerTableMenusWithSidebarIds(Object.values(schemas.value));
 
-  await navigateTo(`/settings/routings/${createData.value.data[0].id}`, {
+  const { getId } = useDatabase();
+  await navigateTo(`/settings/routings/${getId(createData.value.data[0])}`, {
     replace: true,
   });
 }

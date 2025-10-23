@@ -91,7 +91,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     for (const t of input) {
       for (const rel of t.relations || []) {
         const sourceTable = t.name;
-        
+
         // Backend returns targetTableId/sourceTableId instead of targetTable/sourceTable objects
         // We need propertyName and either targetTableId or targetTable
         if (!rel.propertyName) continue;
@@ -107,9 +107,16 @@ export function useSchema(tableName?: string | Ref<string>) {
         }
 
         if (rel.inversePropertyName) {
-          // Use targetTableId (MongoDB) or targetTable.id (SQL)
-          const targetTableId = (rel as any).targetTableId ?? getId(rel.targetTable);
-          
+          // Handle targetTable as string ID (MongoDB) or object (SQL)
+          let targetTableId;
+          if (typeof rel.targetTable === 'string') {
+            // MongoDB: targetTable is already a string ID
+            targetTableId = rel.targetTable;
+          } else {
+            // SQL: targetTable is an object, extract ID
+            targetTableId = getId(rel.targetTable);
+          }
+
           const targetTableName = input.find(
             (t) => getId(t) === targetTableId
           )?.name;

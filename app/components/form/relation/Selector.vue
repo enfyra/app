@@ -28,10 +28,23 @@ const { schemas } = useSchema();
 const { getId, getIdFieldName } = useDatabase();
 
 const targetTable = computed(() => {
-  const targetId = getId(props.relationMeta?.targetTable);
-  return (Object.values(schemas.value).find(
+  const targetTableRef = props.relationMeta?.targetTable;
+
+  // Handle both cases: targetTable as object or as string ID
+  let targetId;
+  if (typeof targetTableRef === 'string') {
+    // targetTable is already a string ID (MongoDB case)
+    targetId = targetTableRef;
+  } else {
+    // targetTable is an object, extract ID
+    targetId = getId(targetTableRef);
+  }
+
+  const found = Object.values(schemas.value).find(
     (schema: any) => getId(schema) === targetId
-  ) || null) as any;
+  ) || null;
+
+  return found as any;
 });
 
 // Get schema for the target table - computed to handle reactive props
