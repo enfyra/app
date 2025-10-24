@@ -29,7 +29,7 @@
 
       <template #body>
         <div class="p-4">
-          <UCalendar v-model="tempValue as any" />
+          <UCalendar v-model="tempValue" />
         </div>
       </template>
 
@@ -59,7 +59,7 @@ const emit = defineEmits<{
 const showModal = ref(false);
 // Initialize with current date
 const today = new Date();
-const tempValue = ref<CalendarDate>(
+const tempValue = ref<CalendarDate | any>(
   new CalendarDate(today.getFullYear(), today.getMonth() + 1, today.getDate())
 );
 
