@@ -36,6 +36,8 @@ watch(
 function validateColumn(col: any) {
   if (!col.name?.trim()) {
     errors.value["name"] = "Column name is required";
+  } else if (col.name.trim() === '_id') {
+    delete errors.value["name"];
   } else if (!TABLE_NAME_FIELD_REGEX.test(col.name.trim())) {
     errors.value["name"] = "Invalid name";
   } else {
