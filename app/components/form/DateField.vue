@@ -29,7 +29,7 @@
 
       <template #body>
         <div class="p-4">
-          <UCalendar v-model="tempValue as any" />
+          <UCalendar v-model="(tempValue as any)" />
         </div>
       </template>
 
