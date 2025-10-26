@@ -81,7 +81,7 @@ async function toggleEnabled(hook: any, value?: boolean) {
   const originalEnabled = hook.isEnabled;
   hook.isEnabled = value !== undefined ? value : !hook.isEnabled;
 
-  await updateHookApi({ id: hook.id, body: { isEnabled: hook.isEnabled } });
+  await updateHookApi({ id: getId(hook), body: { isEnabled: hook.isEnabled } });
 
   if (updateError.value) {
     hook.isEnabled = originalEnabled;
