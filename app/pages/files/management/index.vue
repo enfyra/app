@@ -150,7 +150,7 @@ async function handleFileUpload(files: File | File[]) {
   const formDataArray = fileArray.map((file) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("folder", "null"); // null for root files
+    // Don't append folder field for root files (null)
     return formData;
   });
 
