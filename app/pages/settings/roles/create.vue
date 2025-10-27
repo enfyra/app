@@ -16,6 +16,8 @@
             v-model="createForm"
             :table-name="tableName"
             v-model:errors="createErrors"
+            :excluded="['routePermissions']"
+
           />
         </UForm>
       </div>
@@ -33,6 +35,7 @@ const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
 const { generateEmptyForm, validate } = useSchema(tableName);
+const { getId } = useDatabase();
 
 // Setup useApi composable at top level
 const {
@@ -91,7 +94,6 @@ async function handleCreate() {
     color: "success",
   });
 
-  const { getId } = useDatabase();
   await navigateTo(`/settings/roles/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
