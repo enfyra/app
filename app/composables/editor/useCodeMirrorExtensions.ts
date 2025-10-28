@@ -199,6 +199,9 @@ export function useCodeMirrorExtensions() {
       
       // Skip linting for json and html
       if (language === 'json' || language === 'html') {
+        if (onDiagnostics) {
+          onDiagnostics(diagnostics);
+        }
         return diagnostics;
       }
       
@@ -208,8 +211,13 @@ export function useCodeMirrorExtensions() {
       // For Vue files, extract script content
       if (language === 'vue') {
         const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/);
-        if (!scriptMatch) return diagnostics;
-        
+        if (!scriptMatch) {
+          if (onDiagnostics) {
+            onDiagnostics(diagnostics);
+          }
+          return diagnostics;
+        }
+
         codeToLint = scriptMatch[1] || '';
         // Calculate offset to the start of script content
         offset = text.indexOf(scriptMatch[1] || '');
@@ -223,6 +231,10 @@ export function useCodeMirrorExtensions() {
 
       if (hasEnfyraSyntax) {
         // Skip linting for code with Enfyra syntax
+        // Emit empty diagnostics to clear any previous errors
+        if (onDiagnostics) {
+          onDiagnostics(diagnostics);
+        }
         return diagnostics;
       }
       
