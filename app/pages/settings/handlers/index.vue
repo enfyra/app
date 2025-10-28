@@ -125,10 +125,14 @@ watch(
           @click="navigateTo(`/settings/handlers/${getId(handler)}`)"
           :stats="[
             {
-              label: 'Type',
+              label: 'Route',
+              value: handler.route?.path || '-',
+            },
+            {
+              label: 'Method',
               component: 'UBadge',
               props: { variant: 'soft', color: 'primary' },
-              value: handler.type || 'Unknown',
+              value: handler.method?.method || '-',
             },
             {
               label: 'System',
