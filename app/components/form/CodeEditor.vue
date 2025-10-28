@@ -9,7 +9,7 @@ const emit = defineEmits(["update:modelValue", "diagnostics"]);
 
 // Use composables for clean separation of concerns
 const { customTheme, syntaxHighlighting: syntaxHighlightingExtension } = useCodeMirrorTheme(props.height);
-const { getLanguageExtension, getBasicSetup } = useCodeMirrorExtensions();
+const { getLanguageExtension, getBasicSetup, enfyraSyntaxPlugin } = useCodeMirrorExtensions();
 const { editorRef, createEditor, watchExtensions, destroyEditor } = useCodeMirrorEditor({
   modelValue: props.modelValue,
   language: props.language,
@@ -25,12 +25,13 @@ const onDiagnostics = (diags: any[]) => {
   emit("diagnostics", diags);
 };
 
-// Editor extensions - now includes language-specific linting
+// Editor extensions - Enfyra plugin MUST be last for proper precedence
 const extensions = computed(() => [
   ...getBasicSetup(props.language, onDiagnostics),
   languageExtension.value,
   syntaxHighlightingExtension(),
   customTheme.value,
+  enfyraSyntaxPlugin, // Add AFTER syntax highlighting to override colors
 ]);
 
 onMounted(() => {
