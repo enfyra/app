@@ -324,14 +324,19 @@ export function useCodeMirrorExtensions() {
 
             for (const pair of pairs) {
               if (before === pair.open && after === pair.close) {
+                // Get current line's indentation
+                const line = state.doc.lineAt(pos);
+                const currentIndent = /^\s*/.exec(line.text)?.[0] || '';
+                const indent = currentIndent + '  '; // Add 2 spaces
+
                 // Insert newline with proper indentation
                 view.dispatch({
                   changes: {
                     from: pos,
                     to: pos,
-                    insert: '\n  \n'
+                    insert: '\n' + indent + '\n' + currentIndent
                   },
-                  selection: { anchor: pos + 3 }
+                  selection: { anchor: pos + 1 + indent.length }
                 });
                 return true;
               }
