@@ -150,17 +150,35 @@ export function useCodeMirrorTheme(height?: string) {
 
     // Enfyra custom syntax highlighting
     ".cm-enfyra-template": {
-      color: "#4EC9B0 !important", // Teal color for @ templates
+      color: "#4EC9B0 !important", // Teal color for @ templates (@QUERY, @REQ, @RES, etc.)
+      fontWeight: "bold !important",
+      backgroundColor: "transparent !important",
+      textDecoration: "none !important",
+    },
+    ".cm-enfyra-template *": {
+      color: "#4EC9B0 !important",
       fontWeight: "bold !important",
     },
-    
+
     ".cm-enfyra-table": {
       color: "#DCDCAA !important", // Yellow color for # table access
       fontWeight: "bold !important",
+      backgroundColor: "transparent !important",
+      textDecoration: "none !important",
     },
-    
+    ".cm-enfyra-table *": {
+      color: "#DCDCAA !important",
+      fontWeight: "bold !important",
+    },
+
     ".cm-enfyra-percentage": {
-      color: "#F44747 !important", // Red color for % percentage syntax
+      color: "#C586C0 !important", // Purple color for % percentage syntax
+      fontWeight: "bold !important",
+      backgroundColor: "transparent !important",
+      textDecoration: "none !important",
+    },
+    ".cm-enfyra-percentage *": {
+      color: "#C586C0 !important",
       fontWeight: "bold !important",
     },
   }));

@@ -18,7 +18,7 @@ import {
   ViewUpdate,
 } from "@codemirror/view";
 import type { DecorationSet } from "@codemirror/view";
-import { RangeSetBuilder } from "@codemirror/state";
+import { RangeSetBuilder, StateField, StateEffect } from "@codemirror/state";
 import {
   indentWithTab,
   history,
@@ -43,64 +43,78 @@ import {
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
 
 export function useCodeMirrorExtensions() {
-  // Enfyra syntax highlighting plugin
-  const enfyraSyntaxPlugin = ViewPlugin.fromClass(class {
-    decorations: DecorationSet
+  // Helper function to build Enfyra decorations
+  function buildEnfyraDecorations(view: EditorView): DecorationSet {
+    const builder = new RangeSetBuilder<Decoration>()
+    const doc = view.state.doc
 
-    constructor(view: EditorView) {
-      this.decorations = this.buildDecorations(view)
-    }
+    // Define decoration types for Enfyra syntax
+    const templateDecoration = Decoration.mark({
+      tagName: "span",
+      class: "cm-enfyra-template",
+      attributes: {
+        style: "color: #4EC9B0 !important; font-weight: bold !important; background: transparent !important;"
+      }
+    })
 
-    update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged) {
-        this.decorations = this.buildDecorations(update.view)
+    const tableAccessDecoration = Decoration.mark({
+      tagName: "span",
+      class: "cm-enfyra-table",
+      attributes: {
+        style: "color: #DCDCAA !important; font-weight: bold !important; background: transparent !important;"
+      }
+    })
+
+    const percentageDecoration = Decoration.mark({
+      tagName: "span",
+      class: "cm-enfyra-percentage",
+      attributes: {
+        style: "color: #C586C0 !important; font-weight: bold !important; background: transparent !important;"
+      }
+    })
+
+    // Iterate through entire document
+    for (let i = 1; i <= doc.lines; i++) {
+      const line = doc.line(i)
+      const text = line.text
+
+      // Match @ templates (e.g., @CACHE, @REPOS, etc.)
+      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED|THROW)\b/g
+      let match
+      while ((match = templateRegex.exec(text)) !== null) {
+        builder.add(line.from + match.index, line.from + match.index + match[0].length, templateDecoration)
+      }
+
+      // Match # table access (e.g., #users, #posts, #Table_Name, etc.)
+      const tableRegex = /#([a-zA-Z_][a-zA-Z0-9_]*)\b/g
+      while ((match = tableRegex.exec(text)) !== null) {
+        builder.add(line.from + match.index, line.from + match.index + match[0].length, tableAccessDecoration)
+      }
+
+      // Match % variable syntax (e.g., %ABC, %stream, %myVar, etc.)
+      const percentageRegex = /%([a-zA-Z_][a-zA-Z0-9_]*)\b/g
+      while ((match = percentageRegex.exec(text)) !== null) {
+        builder.add(line.from + match.index, line.from + match.index + match[0].length, percentageDecoration)
       }
     }
 
-    buildDecorations(view: EditorView): DecorationSet {
-      const builder = new RangeSetBuilder<Decoration>()
-      const doc = view.state.doc
-      
-      // Define decoration types for Enfyra syntax
-      const templateDecoration = Decoration.mark({
-        class: "cm-enfyra-template",
-      })
-      
-      const tableAccessDecoration = Decoration.mark({
-        class: "cm-enfyra-table",
-      })
-      
-      const percentageDecoration = Decoration.mark({
-        class: "cm-enfyra-percentage",
-      })
+    return builder.finish()
+  }
 
-      for (let { from, to } of view.visibleRanges) {
-        const text = doc.sliceString(from, to)
-        
-        // Match @ templates (e.g., @CACHE, @REPOS, etc.)
-        const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|SHARE|API|UPLOADED|THROW)\b/g
-        let match
-        while ((match = templateRegex.exec(text)) !== null) {
-          builder.add(from + match.index, from + match.index + match[0].length, templateDecoration)
-        }
-        
-        // Match # table access (e.g., #users, #posts, etc.)
-        const tableRegex = /#([a-z_]+)\b/g
-        while ((match = tableRegex.exec(text)) !== null) {
-          builder.add(from + match.index, from + match.index + match[0].length, tableAccessDecoration)
-        }
-        
-        // Match % percentage syntax (e.g., %ABC, %DEF, etc.)
-        const percentageRegex = /%([A-Z_]+)\b/g
-        while ((match = percentageRegex.exec(text)) !== null) {
-          builder.add(from + match.index, from + match.index + match[0].length, percentageDecoration)
-        }
+  // Enfyra syntax highlighting using StateField (properly handles document changes)
+  const enfyraSyntaxPlugin = StateField.define<DecorationSet>({
+    create(state) {
+      return buildEnfyraDecorations({ state } as any)
+    },
+    update(decorations, transaction) {
+      // If document changed, rebuild decorations completely
+      if (transaction.docChanged) {
+        return buildEnfyraDecorations({ state: transaction.state } as any)
       }
-      
-      return builder.finish()
-    }
-  }, {
-    decorations: v => v.decorations,
+      // Otherwise, map existing decorations through changes
+      return decorations.map(transaction.changes)
+    },
+    provide: f => EditorView.decorations.from(f)
   })
 
   // Smart Vue indent service - disable indent only at script root level
@@ -202,10 +216,11 @@ export function useCodeMirrorExtensions() {
       }
       
       // Check if code contains Enfyra syntax - if so, skip linting entirely
-      const hasEnfyraSyntax = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|SHARE|API|UPLOADED|THROW)\b/.test(codeToLint) || 
-                             /#[a-z_]+\b/.test(codeToLint) ||
-                             /%[A-Z_]+\b/.test(codeToLint);
-      
+      // Skip if contains ANY @, #, or % character (even if incomplete keyword)
+      const hasEnfyraSyntax = /@/.test(codeToLint) ||
+                             /#/.test(codeToLint) ||
+                             /%/.test(codeToLint);
+
       if (hasEnfyraSyntax) {
         // Skip linting for code with Enfyra syntax
         return diagnostics;
@@ -305,7 +320,6 @@ export function useCodeMirrorExtensions() {
       indentUnit.of("  "),
       createLinter(language, onDiagnostics),
       lintGutter(),
-      enfyraSyntaxPlugin, // Add Enfyra syntax highlighting
       keymap.of([
         {
           key: "Enter",
@@ -400,6 +414,7 @@ export function useCodeMirrorExtensions() {
     getLanguageExtension,
     createLinter,
     getBasicSetup,
+    enfyraSyntaxPlugin, // Export plugin separately for proper ordering
     basicSetup: getBasicSetup("javascript"), // Default for backward compatibility
   };
 }
