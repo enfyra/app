@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="form" @submit="updateRoute">
           <FormEditorLazy
             ref="formEditorRef"
@@ -15,17 +15,17 @@
             :loading="loading"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
 
       <!-- Route Permissions Section -->
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <PermissionManager
           table-name="route_permission_definition"
           :current-field-id="{ field: 'route', value: route.params.id as string }"
           icon="lucide:shield"
           title="Route Permissions"
         />
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 

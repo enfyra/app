@@ -274,7 +274,7 @@ async function saveMenu() {
 <template>
   <div class="space-y-6">
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="form" @submit="saveMenu">
           <FormEditorLazy
             v-model="form"
@@ -284,7 +284,7 @@ async function saveMenu() {
             :type-map="typeMap"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>

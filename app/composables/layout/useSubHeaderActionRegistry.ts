@@ -3,12 +3,21 @@ import { resolveComponent, markRaw } from 'vue';
 export function useSubHeaderActionRegistry(
   actions?: HeaderAction | HeaderAction[]
 ) {
-  const subHeaderActions = useState<HeaderAction[]>("sub-header-actions", () => []);
+  const subHeaderActionsRaw = useState<HeaderAction[]>("sub-header-actions", () => []);
   const route = useRoute();
   const routeActions = useState<Map<string, HeaderAction[]>>(
     "sub-route-actions",
     () => new Map()
   );
+
+  // Computed sorted actions by order (lower numbers first)
+  const subHeaderActions = computed(() => {
+    return [...subHeaderActionsRaw.value].sort((a, b) => {
+      const orderA = a.order ?? 0;
+      const orderB = b.order ?? 0;
+      return orderA - orderB;
+    });
+  });
 
   const registerSubHeaderAction = (action: HeaderAction) => {
     // Process component while preserving getters
@@ -41,15 +50,15 @@ export function useSubHeaderActionRegistry(
       }
     }
 
-    const existingIndex = subHeaderActions.value.findIndex(
+    const existingIndex = subHeaderActionsRaw.value.findIndex(
       (a) => a.id === action.id
     );
     if (existingIndex > -1) {
       // Update existing action
-      subHeaderActions.value[existingIndex] = processedAction;
+      subHeaderActionsRaw.value[existingIndex] = processedAction;
     } else {
       // Add new action
-      subHeaderActions.value.push(processedAction);
+      subHeaderActionsRaw.value.push(processedAction);
     }
   };
 
@@ -58,9 +67,9 @@ export function useSubHeaderActionRegistry(
   };
 
   const unregisterSubHeaderAction = (id: string) => {
-    const index = subHeaderActions.value.findIndex((a) => a.id === id);
+    const index = subHeaderActionsRaw.value.findIndex((a) => a.id === id);
     if (index > -1) {
-      subHeaderActions.value.splice(index, 1);
+      subHeaderActionsRaw.value.splice(index, 1);
     }
   };
 
@@ -69,7 +78,7 @@ export function useSubHeaderActionRegistry(
   };
 
   const clearSubHeaderActions = () => {
-    subHeaderActions.value = [];
+    subHeaderActionsRaw.value = [];
   };
 
   const getSubHeaderActions = () => {
@@ -125,8 +134,8 @@ export function useSubHeaderActionRegistry(
     () => route.path,
     (newPath, oldPath) => {
       // Keep global actions, clear only route-specific actions
-      const globalActions = subHeaderActions.value.filter(action => action.global);
-      subHeaderActions.value = globalActions;
+      const globalActions = subHeaderActionsRaw.value.filter(action => action.global);
+      subHeaderActionsRaw.value = globalActions;
 
       // Re-register all actions for new route if exist
       const routeActionsForPath = routeActions.value.get(newPath);

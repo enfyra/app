@@ -300,7 +300,7 @@ watch(
             :description="menu.path"
             :icon="menu.icon || 'lucide:circle'"
             icon-color="primary"
-            :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
+            :card-class="'cursor-pointer transition-all'"
             @click="navigateTo(`/settings/menus/${getId(menu)}`)"
             :stats="[
               {
@@ -308,7 +308,7 @@ watch(
                 component: 'UBadge',
                 props: {
                   variant: 'soft',
-                  color: menu.type === 'Mini Sidebar' ? 'primary' 
+                  color: menu.type === 'Mini Sidebar' ? 'primary'
                     : menu.type === 'Dropdown Menu' ? 'secondary'
                     : 'neutral',
                 },
@@ -333,7 +333,22 @@ watch(
                 value: menu.isSystem ? 'System' : '-'
               },
             ]"
-            :actions="[]"
+            :actions="[
+              {
+                label: 'Delete',
+                props: {
+                  icon: 'i-lucide-trash-2',
+                  variant: 'solid',
+                  color: 'error',
+                  size: 'sm',
+                },
+                disabled: menu.isSystem,
+                onClick: (e?: Event) => {
+                  e?.stopPropagation();
+                  deleteMenu(menu);
+                },
+              }
+            ]"
             :header-actions="[
               ...(menu.isSystem ? [] : [{
                 component: 'USwitch',
@@ -343,25 +358,16 @@ watch(
                 },
                 onClick: (e?: Event) => e?.stopPropagation(),
                 onUpdate: (value: boolean) => toggleEnabled(menu, value)
-              }]),
-              ...(menu.isSystem ? [] : [{
-                component: 'UButton',
-                props: {
-                  icon: 'i-heroicons-trash',
-                  variant: 'outline',
-                  color: 'error'
-                },
-                onClick: (e?: Event) => {
-                  e?.stopPropagation();
-                  deleteMenu(menu);
-                }
               }])
             ]"
           />
         </div>
 
-        <!-- Pagination - chỉ hiện khi có nhiều trang -->
-        <div class="flex justify-center mt-6" v-if="total > pageLimit">
+        <!-- Premium Pagination -->
+        <div
+          v-if="!loading && menus.length > 0 && total > pageLimit"
+          class="flex items-center justify-between mt-6"
+        >
           <UPagination
             v-model:page="page"
             :items-per-page="pageLimit"
@@ -374,9 +380,16 @@ watch(
                 query: { ...route.query, page: p },
               })
             "
-            color="secondary"
-            active-color="secondary"
+            :ui="{
+              wrapper: 'flex items-center gap-2',
+              base: 'h-9 w-9 rounded-xl transition-all duration-300',
+              active: 'bg-gradient-to-br from-blue-600 to-purple-600 border-transparent shadow-lg shadow-purple-600/30 text-white',
+              inactive: 'hover:border-purple-600/30',
+            }"
           />
+          <p class="text-sm text-gray-400">
+            Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of <span class="text-gray-200">{{ total }}</span> results
+          </p>
         </div>
       </div>
 

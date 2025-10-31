@@ -3,17 +3,19 @@
     <div class="space-y-6">
       <!-- Content - Limited width -->
       <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-        <UForm :state="form" @submit="save">
-          <FormEditorLazy
-            ref="formEditorRef"
-            v-model="form"
-            v-model:errors="errors"
-            @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            :table-name="tableName"
-            :excluded="['routePermissions']"
-            :loading="loading"
-          />
-        </UForm>
+        <CommonFormCard>
+          <UForm :state="form" @submit="save">
+            <FormEditorLazy
+              ref="formEditorRef"
+              v-model="form"
+              v-model:errors="errors"
+              @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+              :table-name="tableName"
+              :excluded="['routePermissions']"
+              :loading="loading"
+            />
+          </UForm>
+        </CommonFormCard>
       </div>
     </div>
 

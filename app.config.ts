@@ -20,14 +20,79 @@ export default defineAppConfig({
     },
     input: {
       slots: {
-        base: "rounded-xl transition-all duration-300",
+        base: [
+          // Base styling from Figma
+          "rounded-xl",
+          "h-10",
+          "px-4 py-2",
+          "text-base md:text-sm",
+          "transition-all duration-300",
+          "outline-none",
+          // Background and border
+          "bg-[var(--bg-input)] border border-[var(--border-input)]",
+          // Placeholder
+          "placeholder:text-[var(--text-tertiary)]",
+          // Focus state
+          "focus:border-[var(--color-primary-500)] focus:ring-[3px] focus:ring-[var(--color-primary-500)]/20",
+          // Error state
+          "aria-[invalid=true]:border-red-500 aria-[invalid=true]:ring-red-500/20",
+        ].join(" "),
       },
       compoundVariants: [
         {
           class:
-            "disabled:bg-gray-50 dark:disabled:bg-gray-800/50 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:border-gray-200 dark:disabled:border-gray-700 disabled:placeholder-gray-300 dark:disabled:placeholder-gray-600",
+            "disabled:bg-gray-50 dark:disabled:bg-gray-800/50 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:border-gray-200 dark:disabled:border-gray-700 disabled:placeholder-gray-300 dark:disabled:placeholder-gray-600 disabled:cursor-not-allowed disabled:opacity-50",
         },
       ],
+    },
+    textarea: {
+      slots: {
+        base: [
+          // Base styling from Figma
+          "rounded-xl",
+          "min-h-16",
+          "px-4 py-2",
+          "text-base md:text-sm",
+          "transition-all duration-300",
+          "outline-none",
+          "resize-none",
+          // Background and border
+          "bg-[var(--bg-input)] border border-[var(--border-input)]",
+          // Placeholder
+          "placeholder:text-[var(--text-tertiary)]",
+          // Focus state
+          "focus:border-[var(--color-primary-500)] focus:ring-[3px] focus:ring-[var(--color-primary-500)]/20",
+          // Error state
+          "aria-[invalid=true]:border-red-500 aria-[invalid=true]:ring-red-500/20",
+        ].join(" "),
+      },
+      compoundVariants: [
+        {
+          class: "disabled:cursor-not-allowed disabled:opacity-50",
+        },
+      ],
+    },
+    select: {
+      slots: {
+        base: [
+          "rounded-xl",
+          "h-10",
+          "px-4 py-2",
+          "text-base md:text-sm",
+          "transition-all duration-300",
+          "outline-none",
+          "bg-[var(--bg-input)] border border-[var(--border-input)]",
+          "focus:border-[var(--color-primary-500)] focus:ring-[3px] focus:ring-[var(--color-primary-500)]/20",
+        ].join(" "),
+      },
+    },
+    formField: {
+      slots: {
+        root: "space-y-2",
+        label: "text-sm font-medium text-[var(--text-primary)]",
+        description: "text-xs text-[var(--text-tertiary)]",
+        error: "text-xs text-red-500",
+      },
     },
     card: {
       slots: {

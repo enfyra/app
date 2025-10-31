@@ -19,7 +19,7 @@ export function useMenuRegistry() {
     });
 
     // Convert to menu group format and rebuild children
-    return topLevelItems
+    const groups = topLevelItems
       .map(item => {
         // Find all children of this item (including dynamically added tables)
         const children = menuItems.value.filter(child => {
@@ -49,6 +49,8 @@ export function useMenuRegistry() {
         // Then by order
         return (a.order || 0) - (b.order || 0);
       });
+
+    return groups;
   });
 
   const registerMenuItem = (item: MenuItem) => {
@@ -254,12 +256,20 @@ export function useMenuRegistry() {
       unregisterMenuItem(item.id);
     });
 
-    // Find the collections and data parent menu IDs dynamically
-    const collectionsParentId = findParentMenuIdByPath("/collections");
-    const dataParentId = findParentMenuIdByPath("/data");
-
-    // If we can't find the parent menus, don't register table menus
+    // Find the collections and data parent menu IDs
+    // First try to find by ID (most reliable), then fallback to path
+    let collectionsParentId = menuItems.value.find((m) => m.id === "collections")?.id;
     if (!collectionsParentId) {
+      collectionsParentId = findParentMenuIdByPath("/collections");
+    }
+
+    let dataParentId = menuItems.value.find((m) => m.id === "data")?.id;
+    if (!dataParentId) {
+      dataParentId = findParentMenuIdByPath("/data");
+    }
+
+    // If we can't find any parent menus, don't register table menus
+    if (!collectionsParentId && !dataParentId) {
       return;
     }
 
@@ -277,50 +287,52 @@ export function useMenuRegistry() {
     // Filter out system tables for data sidebar
     const nonSystemTables = tables.filter((table) => !table.isSystem);
 
-    // Register modifiable tables in collections sidebar
-    modifiableTables.forEach((table) => {
-      const tableName = table.name || table.table_name;
-      if (!tableName) return;
+    // Register modifiable tables in collections sidebar (if parent exists)
+    if (collectionsParentId) {
+      modifiableTables.forEach((table) => {
+        const tableName = table.name || table.table_name;
+        if (!tableName) return;
 
-      registerMenuItem({
-        id: `collections-${tableName}`,
-        label: table.label || table.display_name || tableName,
-        route: `/collections/${tableName}`,
-        icon: table.icon || "lucide:table",
-        parent: collectionsParentId, // Set as child of Collections menu
-        type: "Menu",
-        permission: {
-          and: [
-            { route: `/table_definition`, actions: ["read"] },
-            {
-              or: [
-                { route: `/table_definition`, actions: ["create"] },
-                { route: `/table_definition`, actions: ["update"] },
-                { route: `/table_definition`, actions: ["delete"] },
-              ],
-            },
-          ],
-        },
+        registerMenuItem({
+          id: `collections-${tableName}`,
+          label: table.label || table.display_name || tableName,
+          route: `/collections/${tableName}`,
+          icon: table.icon || "lucide:table",
+          parent: collectionsParentId, // Set as child of Collections menu
+          type: "Menu",
+          permission: {
+            and: [
+              { route: `/table_definition`, actions: ["read"] },
+              {
+                or: [
+                  { route: `/table_definition`, actions: ["create"] },
+                  { route: `/table_definition`, actions: ["update"] },
+                  { route: `/table_definition`, actions: ["delete"] },
+                ],
+              },
+            ],
+          },
+        });
       });
-    });
+    }
 
     // Register non-system tables in data menu (if found)
     if (dataParentId) {
       const { getRouteForTableName } = useRoutes();
       const routes = useState<any[]>('routes:all', () => []);
-      
+
       nonSystemTables.forEach((table) => {
         const tableName = table.name || table.table_name;
         if (!tableName) return;
 
         // Get the dynamic route for this table
         const dynamicRoute = getRouteForTableName(tableName);
-        
+
         // Check if the route exists and is enabled
-        const routeExists = routes.value.some((route: any) => 
+        const routeExists = routes.value.some((route: any) =>
           route.path === dynamicRoute && route.isEnabled !== false
         );
-        
+
         // Only register menu if route exists and is enabled
         if (routeExists) {
           registerMenuItem({

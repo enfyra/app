@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
           <FormEditorLazy
             v-model="createForm"
@@ -11,7 +11,7 @@
 
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>

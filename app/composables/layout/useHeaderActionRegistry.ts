@@ -3,12 +3,22 @@ import { resolveComponent, markRaw } from 'vue';
 export function useHeaderActionRegistry(
   actions?: HeaderAction | HeaderAction[]
 ) {
-  const headerActions = useState<HeaderAction[]>("header-actions", () => []);
+  const headerActionsRaw = useState<HeaderAction[]>("header-actions", () => []);
   const route = useRoute();
   const routeActions = useState<Map<string, HeaderAction[]>>(
     "route-actions",
     () => new Map()
   );
+
+  // Computed sorted actions by order (lower numbers first)
+  const headerActions = computed<HeaderAction[]>(() => {
+    const sorted = [...headerActionsRaw.value].sort((a, b) => {
+      const orderA = a.order ?? 0;
+      const orderB = b.order ?? 0;
+      return orderA - orderB;
+    });
+    return sorted;
+  });
 
   const registerHeaderAction = (action: HeaderAction) => {
     // Process component while preserving getters
@@ -50,15 +60,15 @@ export function useHeaderActionRegistry(
       }
     }
 
-    const existingIndex = headerActions.value.findIndex(
+    const existingIndex = headerActionsRaw.value.findIndex(
       (a) => a.id === action.id
     );
     if (existingIndex > -1) {
       // Update existing action
-      headerActions.value[existingIndex] = processedAction;
+      headerActionsRaw.value[existingIndex] = processedAction;
     } else {
       // Add new action
-      headerActions.value.push(processedAction);
+      headerActionsRaw.value.push(processedAction);
     }
   };
 
@@ -67,9 +77,9 @@ export function useHeaderActionRegistry(
   };
 
   const unregisterHeaderAction = (id: string) => {
-    const index = headerActions.value.findIndex((a) => a.id === id);
+    const index = headerActionsRaw.value.findIndex((a) => a.id === id);
     if (index > -1) {
-      headerActions.value.splice(index, 1);
+      headerActionsRaw.value.splice(index, 1);
     }
   };
 
@@ -78,7 +88,7 @@ export function useHeaderActionRegistry(
   };
 
   const clearHeaderActions = () => {
-    headerActions.value = [];
+    headerActionsRaw.value = [];
   };
 
   const getHeaderActions = () => {
@@ -134,8 +144,8 @@ export function useHeaderActionRegistry(
     () => route.path,
     (newPath, oldPath) => {
       // Keep global actions, clear only route-specific actions
-      const globalActions = headerActions.value.filter(action => action.global);
-      headerActions.value = globalActions;
+      const globalActions = headerActionsRaw.value.filter(action => action.global);
+      headerActionsRaw.value = globalActions;
 
       // Re-register all actions for new route if exist
       const routeActionsForPath = routeActions.value.get(newPath);

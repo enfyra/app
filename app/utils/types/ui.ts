@@ -135,6 +135,7 @@ export interface HeaderAction {
   side?: "left" | "right"; // Position in sub-header, default: "right"
   global?: boolean; // If true, persist across route changes
   show?: boolean | Ref<boolean> | Readonly<Ref<boolean>> | ComputedRef<boolean>; // For conditional visibility
+  order?: number; // Display order (lower numbers appear first), default: 0
 }
 
 // Settings Card Component

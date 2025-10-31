@@ -50,6 +50,13 @@
     --border-strong: rgba(255, 255, 255, 0.12);
     --border-accent: rgba(124, 58, 237, 0.3);
 
+    /* Form Input Borders */
+    --border-input: rgba(255, 255, 255, 0.1);
+
+    /* === FORM INPUT BACKGROUNDS === */
+    /* Based on Figma design - slightly transparent with subtle depth */
+    --bg-input: rgba(21, 27, 46, 0.3);
+
     /* === GRADIENT DEFINITIONS === */
     /* Primary Gradient - Blue to Purple */
     --gradient-primary: linear-gradient(135deg, #0066FF 0%, #7C3AED 100%);

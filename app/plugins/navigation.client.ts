@@ -25,29 +25,24 @@ export default defineNuxtPlugin(() => {
   };
 
   // Register global actions once with reactive props (persistent across routes)
-  useSubHeaderActionRegistry([
+  useHeaderActionRegistry([
     {
       id: "navigation-back-button",
-      label: "Back",
       icon: "lucide:arrow-left",
       variant: "soft",
       color: "primary",
-      get size() {
-        return isTablet.value ? "sm" : "md";
-      },
+      size: 'lg',
       side: "left",
       get disabled() {
         return !canGoBack.value;
       },
       onClick: goBack,
-      global: true, // Persist across route changes
+      global: true,
       permission: {
-        allowAll: true, // Always show back button
+        allowAll: true, 
       },
+      order: 0
     },
-  ]);
-
-  useHeaderActionRegistry([
     {
       id: "navigation-breadcrumbs",
       component: CommonBreadCrumbs,
@@ -60,10 +55,11 @@ export default defineNuxtPlugin(() => {
       get key() {
         return `breadcrumbs-${route.path}`;
       },
-      global: true, // Persist across route changes
+      global: true,
       permission: {
-        allowAll: true, // Always show breadcrumbs
+        allowAll: true, 
       },
+      order: 1
     },
   ]);
 });

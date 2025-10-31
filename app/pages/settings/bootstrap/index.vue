@@ -119,7 +119,7 @@ watch(
           :description="script.description || 'No description'"
           icon="lucide:rocket"
           icon-color="warning"
-          :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-warning/20 transition-all'"
+          :card-class="'cursor-pointer transition-all'"
           @click="navigateTo(`/settings/bootstrap/${getId(script)}`)"
           :stats="[
             {
@@ -139,19 +139,22 @@ watch(
               value: new Date(script.createdAt).toLocaleDateString(),
             },
           ]"
-          :actions="[]"
-          :header-actions="!script.isSystem ? [{
-            component: 'UButton',
-            props: {
-              icon: 'i-heroicons-trash',
-              variant: 'outline',
-              color: 'error'
-            },
-            onClick: (e?: Event) => {
-              e?.stopPropagation();
-              deleteScript(getId(script));
+          :actions="[
+            {
+              label: 'Delete',
+              props: {
+                icon: 'i-lucide-trash-2',
+                variant: 'solid',
+                color: 'error',
+                size: 'sm',
+              },
+              disabled: script.isSystem,
+              onClick: (e?: Event) => {
+                e?.stopPropagation();
+                deleteScript(getId(script));
+              },
             }
-          }] : []"
+          ]"
         />
       </div>
 
@@ -164,12 +167,12 @@ watch(
       />
     </Transition>
 
+    <!-- Premium Pagination -->
     <div
-      class="flex justify-center"
-      v-if="!loading && bootstrapScripts.length > 0"
+      v-if="!loading && bootstrapScripts.length > 0 && total > pageLimit"
+      class="flex items-center justify-between mt-6"
     >
       <UPagination
-        v-if="total > pageLimit"
         v-model:page="page"
         :items-per-page="pageLimit"
         :total="total"
@@ -181,9 +184,16 @@ watch(
             query: { ...route.query, page: p },
           })
         "
-        color="secondary"
-        active-color="secondary"
+        :ui="{
+          wrapper: 'flex items-center gap-2',
+          base: 'h-9 w-9 rounded-xl transition-all duration-300',
+          active: 'bg-gradient-to-br from-blue-600 to-purple-600 border-transparent shadow-lg shadow-purple-600/30 text-white',
+          inactive: 'hover:border-purple-600/30',
+        }"
       />
+      <p class="text-sm text-gray-400">
+        Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of <span class="text-gray-200">{{ total }}</span> results
+      </p>
     </div>
   </div>
 </template>
