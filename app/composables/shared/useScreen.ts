@@ -31,7 +31,6 @@ export function useScreen() {
     return "desktop";
   });
 
-  // Chỉ gọi lifecycle hooks khi có component instance
   const instance = getCurrentInstance();
   if (instance) {
     onMounted(async () => {

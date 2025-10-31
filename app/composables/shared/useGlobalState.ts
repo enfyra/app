@@ -12,13 +12,11 @@ export const useGlobalState = () => {
   );
   const routeLoading = useState<boolean>("global:route:loading", () => false);
   
-  // Global file update tracker for cache busting
   const fileUpdateTimestamp = useState<Record<string, number>>(
     "global:file:update:timestamp",
     () => ({})
   );
 
-  // API composable for fetching settings
   const {
     data: settingsData,
     pending: settingsPending,

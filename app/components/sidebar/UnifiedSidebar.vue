@@ -185,10 +185,8 @@ const visibleGroups = computed(() => {
 
 <template>
   <nav class="flex flex-col h-full relative">
-    <!-- Gradient accent on left edge -->
     <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#0066FF] via-[#7C3AED] to-[#D946EF] opacity-50 z-10"></div>
 
-    <!-- Logo/Brand Section -->
     <div class="h-16 flex items-center justify-between px-6 border-b relative" style="border-color: var(--border-subtle)">
       <transition
         enter-active-class="transition-all duration-300"
@@ -200,7 +198,6 @@ const visibleGroups = computed(() => {
       >
         <div v-if="!isCollapsed" class="flex items-center gap-3">
           <div class="relative">
-            <!-- Glow effect behind logo -->
             <div class="absolute inset-0 bg-gradient-to-br from-[#0066FF] to-[#7C3AED] rounded-xl blur-md opacity-60"></div>
             <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-[#0066FF] to-[#7C3AED] flex items-center justify-center">
               <UIcon name="lucide:database" class="w-5 h-5 text-white" />
@@ -213,7 +210,6 @@ const visibleGroups = computed(() => {
         </div>
       </transition>
 
-      <!-- Toggle Button (only on desktop) -->
       <button
         v-if="!isMobile && !isTablet"
         @click="setSidebarCollapsed(!isCollapsed)"
@@ -231,7 +227,6 @@ const visibleGroups = computed(() => {
       </button>
     </div>
 
-    <!-- Search Input -->
     <div v-if="!isCollapsed" class="px-3 pt-4 pb-2">
       <UInput
         v-model="searchQuery"
@@ -242,9 +237,7 @@ const visibleGroups = computed(() => {
       />
     </div>
 
-    <!-- Navigation Groups -->
     <div class="flex-1 overflow-y-auto scrollbar-custom py-3">
-      <!-- Empty state when no results -->
       <div
         v-if="visibleGroups.filter(g => g.position !== 'bottom').length === 0"
         class="flex flex-col items-center justify-center py-12 px-4 text-center"
@@ -258,7 +251,6 @@ const visibleGroups = computed(() => {
         </p>
       </div>
 
-      <!-- COLLAPSED MODE: Show all items as icon-only -->
       <template v-if="isCollapsed">
         <div class="space-y-1 px-3">
           <div
@@ -283,13 +275,11 @@ const visibleGroups = computed(() => {
               ]"
               :style="{ color: (isItemActive(group.route) || isGroupActive(group)) ? 'white' : 'var(--text-secondary)' }"
             >
-              <!-- Active background gradient -->
               <div
                 v-if="isItemActive(group.route) || isGroupActive(group)"
                 class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-300"
               ></div>
 
-              <!-- Hover glow effect -->
               <div
                 v-if="isItemActive(group.route) || isGroupActive(group)"
                 class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-opacity duration-300"
@@ -304,61 +294,49 @@ const visibleGroups = computed(() => {
         </div>
       </template>
 
-      <!-- EXPANDED MODE: Show full navigation with groups -->
       <template v-else>
-        <!-- Single container for all navigation items -->
         <div class="space-y-6">
-          <!-- Main navigation items (no children) - exclude dropdown menus -->
-          <div
-            v-if="visibleGroups.filter(g => g.position !== 'bottom' && g.type !== 'Dropdown Menu' && (!g.items || g.items.length === 0)).length > 0"
-            class="space-y-1 px-3"
-          >
-            <div
-              v-for="group in visibleGroups.filter(g => g.position !== 'bottom' && g.type !== 'Dropdown Menu' && (!g.items || g.items.length === 0))"
-              :key="group.id"
-            >
-            <button
-              @click="() => { if (group.route) navigateTo(group.route); handleMenuClick(); }"
-              :class="[
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 relative group',
-                isItemActive(group.route) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
-              ]"
-              :style="{ color: isItemActive(group.route) ? 'white' : 'var(--text-secondary)' }"
-            >
-              <!-- Active background gradient -->
-              <div
-                v-if="isItemActive(group.route)"
-                class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-300"
-              ></div>
-
-              <!-- Hover glow effect -->
-              <div
-                v-if="isItemActive(group.route)"
-                class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-opacity duration-300"
-              ></div>
-
-              <UIcon
-                :name="group.icon"
-                class="w-5 h-5 flex-shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300"
-              />
-
-              <span class="text-sm relative z-10 font-medium">{{ group.label }}</span>
-
-              <!-- Active indicator -->
-              <div
-                v-if="isItemActive(group.route)"
-                class="ml-auto w-1.5 h-1.5 rounded-full bg-white relative z-10"
-              ></div>
-            </button>
-          </div>
-        </div>
-
-          <!-- Groups with children (Dropdown Menus) -->
-          <div
-            v-for="group in visibleGroups.filter(g => g.position !== 'bottom' && g.type === 'Dropdown Menu')"
+          <template
+            v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
             :key="group.id"
           >
-        <!-- Group Label -->
+            <div
+              v-if="!group.items || group.items.length === 0"
+              class="space-y-1 px-3"
+            >
+              <button
+                @click="() => { if (group.route) navigateTo(group.route); handleMenuClick(); }"
+                :class="[
+                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 relative group',
+                  isItemActive(group.route) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
+                ]"
+                :style="{ color: isItemActive(group.route) ? 'white' : 'var(--text-secondary)' }"
+              >
+                <div
+                  v-if="isItemActive(group.route)"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-300"
+                ></div>
+
+                <div
+                  v-if="isItemActive(group.route)"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-opacity duration-300"
+                ></div>
+
+                <UIcon
+                  :name="group.icon"
+                  class="w-5 h-5 flex-shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300"
+                />
+
+                <span class="text-sm relative z-10 font-medium">{{ group.label }}</span>
+
+                <div
+                  v-if="isItemActive(group.route)"
+                  class="ml-auto w-1.5 h-1.5 rounded-full bg-white relative z-10"
+                ></div>
+              </button>
+            </div>
+
+            <div v-else>
         <button
           @click="group.items && group.items.length > 0 ? toggleGroup(group.id) : null"
           :disabled="!group.items || group.items.length === 0"
@@ -376,7 +354,6 @@ const visibleGroups = computed(() => {
           />
         </button>
 
-        <!-- Group Items - only show if has items -->
         <transition
           enter-active-class="transition-all duration-300 ease-out"
           enter-from-class="opacity-0 max-h-0"
@@ -391,17 +368,14 @@ const visibleGroups = computed(() => {
           >
             <template v-for="item in group.items" :key="item.id">
               <PermissionGate :condition="item.permission as any">
-                <!-- Item with children (Dropdown Menu) -->
                 <div
                   v-if="item.children && item.children.length > 0"
                   class="space-y-1"
                 >
-                  <!-- Parent Item -->
                   <div class="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     {{ item.label }}
                   </div>
 
-                  <!-- Children -->
                   <PermissionGate
                     v-for="child in item.children"
                     :key="child.id"
@@ -415,13 +389,11 @@ const visibleGroups = computed(() => {
                       ]"
                       :style="{ color: isItemActive(child.path || child.route) ? 'white' : 'var(--text-tertiary)' }"
                     >
-                      <!-- Active background with purple-fuchsia gradient -->
                       <div
                         v-if="isItemActive(child.path || child.route)"
                         class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
                       ></div>
 
-                      <!-- Hover glow effect -->
                       <div
                         v-if="isItemActive(child.path || child.route)"
                         class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-opacity duration-300"
@@ -436,7 +408,6 @@ const visibleGroups = computed(() => {
                   </PermissionGate>
                 </div>
 
-                <!-- Regular item (no children) -->
                 <button
                   v-else
                   @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
@@ -446,13 +417,11 @@ const visibleGroups = computed(() => {
                   ]"
                   :style="{ color: isItemActive(item.path || item.route) ? 'white' : 'var(--text-tertiary)' }"
                 >
-                  <!-- Active background with purple-fuchsia gradient -->
                   <div
                     v-if="isItemActive(item.path || item.route)"
                     class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
                   ></div>
 
-                  <!-- Hover glow effect -->
                   <div
                     v-if="isItemActive(item.path || item.route)"
                     class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-opacity duration-300"
@@ -468,14 +437,13 @@ const visibleGroups = computed(() => {
             </template>
           </div>
         </transition>
-          </div>
+            </div>
+          </template>
         </div>
       </template>
     </div>
 
-    <!-- Bottom Actions (Logout, etc.) -->
     <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="p-4 border-t relative" style="border-color: var(--border-subtle)">
-      <!-- Gradient accent at top -->
       <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7C3AED] to-transparent opacity-50"></div>
 
       <template v-for="group in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">

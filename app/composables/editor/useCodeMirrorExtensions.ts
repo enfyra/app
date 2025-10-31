@@ -43,12 +43,10 @@ import {
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
 
 export function useCodeMirrorExtensions() {
-  // Helper function to build Enfyra decorations
   function buildEnfyraDecorations(view: EditorView): DecorationSet {
     const builder = new RangeSetBuilder<Decoration>()
     const doc = view.state.doc
 
-    // Define decoration types for Enfyra syntax
     const templateDecoration = Decoration.mark({
       tagName: "span",
       class: "cm-enfyra-template",
@@ -73,25 +71,21 @@ export function useCodeMirrorExtensions() {
       }
     })
 
-    // Iterate through entire document
     for (let i = 1; i <= doc.lines; i++) {
       const line = doc.line(i)
       const text = line.text
 
-      // Match @ templates (e.g., @CACHE, @REPOS, etc.)
       const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED|THROW)\b/g
       let match
       while ((match = templateRegex.exec(text)) !== null) {
         builder.add(line.from + match.index, line.from + match.index + match[0].length, templateDecoration)
       }
 
-      // Match # table access (e.g., #users, #posts, #Table_Name, etc.)
       const tableRegex = /#([a-zA-Z_][a-zA-Z0-9_]*)\b/g
       while ((match = tableRegex.exec(text)) !== null) {
         builder.add(line.from + match.index, line.from + match.index + match[0].length, tableAccessDecoration)
       }
 
-      // Match % variable syntax (e.g., %ABC, %stream, %myVar, etc.)
       const percentageRegex = /%([a-zA-Z_][a-zA-Z0-9_]*)\b/g
       while ((match = percentageRegex.exec(text)) !== null) {
         builder.add(line.from + match.index, line.from + match.index + match[0].length, percentageDecoration)
@@ -101,32 +95,26 @@ export function useCodeMirrorExtensions() {
     return builder.finish()
   }
 
-  // Enfyra syntax highlighting using StateField (properly handles document changes)
   const enfyraSyntaxPlugin = StateField.define<DecorationSet>({
     create(state) {
       return buildEnfyraDecorations({ state } as any)
     },
     update(decorations, transaction) {
-      // If document changed, rebuild decorations completely
       if (transaction.docChanged) {
         return buildEnfyraDecorations({ state: transaction.state } as any)
       }
-      // Otherwise, map existing decorations through changes
       return decorations.map(transaction.changes)
     },
     provide: f => EditorView.decorations.from(f)
   })
 
-  // Smart Vue indent service - disable indent only at script root level
   const vueIndentService = indentService.of((context, pos) => {
     const doc = context.state.doc;
     
-    // Find the actual line that contains content before cursor
     let checkPos = pos - 1;
     let prevLineText = '';
     let actualPrevLine = null;
     
-    // Walk backwards to find non-empty line
     while (checkPos > 0) {
       const lineAtPos = doc.lineAt(checkPos);
       const lineText = lineAtPos.text.trim();
@@ -139,12 +127,10 @@ export function useCodeMirrorExtensions() {
       checkPos = lineAtPos.from - 1;
     }
     
-    // Check if we're right after opening <script> tag
     if (prevLineText.trim().match(/^<script[^>]*>$/)) {
       return 0; // No indent after <script>
     }
     
-    // Check if previous line looks like it's at script root level
     const trimmedPrev = prevLineText.trim();
     const rootLevelPatterns = [
       /^(import|export|const|let|var|function|class)\b/,
@@ -161,10 +147,8 @@ export function useCodeMirrorExtensions() {
       return 0; // No indent for root level statements
     }
     
-    // Use standard JavaScript indentation logic
     const baseIndent = /^\s*/.exec(prevLineText)?.[0]?.length || 0;
     
-    // Check for patterns that should indent next line
     const trimmed = prevLineText.trim();
     const shouldIndent = trimmed.endsWith('{') || 
                          trimmed.endsWith('(') ||
@@ -178,7 +162,6 @@ export function useCodeMirrorExtensions() {
     return baseIndent; // Keep same level
   });
 
-  // Language extension - Only JavaScript, no TypeScript
   function getLanguageExtension(language?: "javascript" | "vue" | "json" | "html" | "typescript") {
     switch (language) {
       case "vue":
@@ -191,13 +174,11 @@ export function useCodeMirrorExtensions() {
     }
   }
 
-  // Create linter based on language
   const createLinter = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
     return linter((view) => {
       const diagnostics: any[] = [];
       const text = view.state.doc.toString();
       
-      // Skip linting for json and html
       if (language === 'json' || language === 'html') {
         if (onDiagnostics) {
           onDiagnostics(diagnostics);
@@ -208,7 +189,6 @@ export function useCodeMirrorExtensions() {
       let codeToLint = text;
       let offset = 0;
       
-      // For Vue files, extract script content
       if (language === 'vue') {
         const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/);
         if (!scriptMatch) {
@@ -219,19 +199,14 @@ export function useCodeMirrorExtensions() {
         }
 
         codeToLint = scriptMatch[1] || '';
-        // Calculate offset to the start of script content
         offset = text.indexOf(scriptMatch[1] || '');
       }
       
-      // Check if code contains Enfyra syntax - if so, skip linting entirely
-      // Skip if contains ANY @, #, or % character (even if incomplete keyword)
       const hasEnfyraSyntax = /@/.test(codeToLint) ||
                              /#/.test(codeToLint) ||
                              /%/.test(codeToLint);
 
       if (hasEnfyraSyntax) {
-        // Skip linting for code with Enfyra syntax
-        // Emit empty diagnostics to clear any previous errors
         if (onDiagnostics) {
           onDiagnostics(diagnostics);
         }
@@ -239,7 +214,6 @@ export function useCodeMirrorExtensions() {
       }
       
       try {
-        // Parse với acorn - allow return at root level for JavaScript
         const parseOptions: any = {
           ecmaVersion: 2022,
           sourceType: "module",
@@ -248,7 +222,6 @@ export function useCodeMirrorExtensions() {
           allowAwaitOutsideFunction: true,
         };
         
-        // For JavaScript, allow return statements at root level (for function expressions)
         if (language === 'javascript') {
           parseOptions.sourceType = "script"; // script mode allows return at root
           parseOptions.allowReturnOutsideFunction = true;
@@ -256,10 +229,8 @@ export function useCodeMirrorExtensions() {
         
         const ast = acorn.parse(codeToLint, parseOptions);
         
-        // Track const variables
         const constVars = new Set<string>();
         
-        // Walk through AST
         walk.simple(ast, {
           VariableDeclaration(node: any) {
             if (node.kind === 'const') {
@@ -293,7 +264,6 @@ export function useCodeMirrorExtensions() {
         });
         
       } catch (error: any) {
-        // Parse errors
         if (error.loc) {
           const errorPos = offset + (error.pos || 0);
           diagnostics.push({
@@ -305,7 +275,6 @@ export function useCodeMirrorExtensions() {
         }
       }
       
-      // Emit diagnostics if callback provided
       if (onDiagnostics) {
         onDiagnostics(diagnostics);
       }
@@ -314,7 +283,6 @@ export function useCodeMirrorExtensions() {
     });
   };
 
-  // Basic setup function that takes language parameter
   const getBasicSetup = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
     const setup = [
       lineNumbers(),
@@ -336,7 +304,6 @@ export function useCodeMirrorExtensions() {
         {
           key: "Enter",
           run: (view) => {
-            // Check if cursor is between brackets
             const state = view.state;
             const pos = state.selection.main.head;
             const before = state.doc.sliceString(pos - 1, pos);
@@ -350,12 +317,10 @@ export function useCodeMirrorExtensions() {
 
             for (const pair of pairs) {
               if (before === pair.open && after === pair.close) {
-                // Get current line's indentation
                 const line = state.doc.lineAt(pos);
                 const currentIndent = /^\s*/.exec(line.text)?.[0] || '';
                 const indent = currentIndent + '  '; // Add 2 spaces
 
-                // Insert newline with proper indentation
                 view.dispatch({
                   changes: {
                     from: pos,
@@ -378,7 +343,6 @@ export function useCodeMirrorExtensions() {
             const pos = state.selection.main.head;
             const line = state.doc.lineAt(pos);
 
-            // Only handle indented empty lines (has whitespace but cursor at end of line)
             if (line.text.trim() === '' && line.text.length > 0 && pos === line.to && line.number > 1) {
               const prevLine = state.doc.line(line.number - 1);
               const nextLine = line.number < state.doc.lines ? state.doc.line(line.number + 1) : null;
@@ -410,12 +374,9 @@ export function useCodeMirrorExtensions() {
       ]),
     ];
     
-    // Add language-specific indentation
     if (language === 'vue') {
-      // Use custom indent service for Vue to disable auto-indent
       setup.push(vueIndentService);
     } else if (language === 'javascript' || language === 'html' || language === 'json') {
-      // Use default auto-indent for other languages
       setup.push(indentOnInput());
     }
     

@@ -11,12 +11,10 @@ interface UseCodeMirrorEditorOptions {
 export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
   const { modelValue, language, height, emit } = options;
 
-  // Ensure modelValue is always a string to prevent CodeMirror errors
   const code = ref(ensureString(modelValue));
   const editorRef = ref<HTMLDivElement>();
   const editorView = ref<EditorView>();
 
-  // Watch for changes in props.modelValue and ensure it's a string
   watch(
     () => modelValue,
     (newValue) => {
@@ -31,7 +29,6 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     emit("update:modelValue", val);
   });
 
-  // Create editor with extensions
   function createEditor(extensions: any[]) {
     if (editorRef.value) {
       editorView.value = new EditorView({
@@ -49,7 +46,6 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     }
   }
 
-  // Watch for extension changes
   function watchExtensions(extensions: ComputedRef<any[]>) {
     watch(
       extensions,
@@ -64,7 +60,6 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     );
   }
 
-  // Watch for external code changes
   watch(code, (newCode) => {
     if (editorView.value) {
       const currentCode = editorView.value.state.doc.toString();
@@ -80,7 +75,6 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     }
   });
 
-  // Cleanup
   function destroyEditor() {
     editorView.value?.destroy();
   }

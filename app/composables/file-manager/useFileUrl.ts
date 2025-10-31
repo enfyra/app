@@ -11,18 +11,14 @@ export const useFileUrl = () => {
   }): string {
     if (!fileId) return '';
     
-    // Build base URL
     let url = `/assets/${fileId}`;
     
-    // Add query parameters
     const params = new URLSearchParams();
     
-    // Add format
     if (options?.format) {
       params.set('format', options.format);
     }
     
-    // Add dimensions
     if (options?.width) {
       params.set('width', options.width.toString());
     }
@@ -30,13 +26,11 @@ export const useFileUrl = () => {
       params.set('height', options.height.toString());
     }
     
-    // Add cache buster based on file update timestamp
     const timestamp = getFileTimestamp(fileId);
     if (timestamp) {
       params.set('t', timestamp.toString());
     }
     
-    // Append params if any
     const queryString = params.toString();
     if (queryString) {
       url += `?${queryString}`;

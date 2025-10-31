@@ -127,7 +127,6 @@ const isBooleanField = computed(() => {
 </script>
 
 <template>
-  <!-- Boolean Field: Horizontal layout with subtle top/bottom border -->
   <div
     v-if="isBooleanField"
     v-bind="fieldProps"
@@ -136,7 +135,6 @@ const isBooleanField = computed(() => {
       borderColor: 'var(--border-subtle)',
     }"
   >
-    <!-- Left: Label and description -->
     <div class="space-y-0.5">
       <label
         :for="`field-${keyName}`"
@@ -166,9 +164,7 @@ const isBooleanField = computed(() => {
     />
   </div>
 
-  <!-- Other Fields: Vertical layout (Figma style) -->
   <div v-else v-bind="fieldProps" class="space-y-2">
-    <!-- Label -->
     <div class="flex items-center justify-between">
       <label
         :for="`field-${keyName}`"
@@ -189,9 +185,7 @@ const isBooleanField = computed(() => {
         >
       </label>
 
-      <!-- Utility buttons (hidden, shown on hover) -->
       <div class="flex items-center gap-2 opacity-0 lg:group-hover:opacity-100 transition-opacity">
-        <!-- Copy Status Indicator -->
         <Transition name="fade">
           <UIcon
             v-if="copyStatus === 'success'"
@@ -205,7 +199,6 @@ const isBooleanField = computed(() => {
           />
         </Transition>
 
-        <!-- Dropdown Menu for non-relation fields -->
         <UDropdownMenu
           v-if="!isRelationField"
           :items="dropdownItems"
@@ -221,7 +214,6 @@ const isBooleanField = computed(() => {
       </div>
     </div>
 
-    <!-- Input Field -->
     <FormFieldRenderer
       :key-name="keyName"
       :form-data="formData"
@@ -233,7 +225,6 @@ const isBooleanField = computed(() => {
       :loading="props.loading"
     />
 
-    <!-- Error Message -->
     <p
       v-if="errors?.[keyName]"
       class="text-xs text-red-500"
@@ -241,7 +232,6 @@ const isBooleanField = computed(() => {
       {{ errors[keyName] }}
     </p>
 
-    <!-- Helper Text / Description -->
     <p
       v-else-if="column?.description"
       class="text-xs"

@@ -34,7 +34,6 @@ export const useMenuApi = () => {
 
   const getMenuItemsBySidebar = computed(() => {
     return (sidebarId: string) => {
-      // Get both regular menus and dropdown menus for the sidebar
       const allMenus = menuDefinitions.value?.data || [];
       const { getId } = useDatabase();
       const sidebarMenus = allMenus

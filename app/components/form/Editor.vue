@@ -1,5 +1,4 @@
 <template>
-  <!-- Figma-style form: single column with space-y-6 between fields -->
   <div class="space-y-6">
     <FormField
       v-for="field in visibleFields"

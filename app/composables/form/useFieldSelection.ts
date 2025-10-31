@@ -19,7 +19,6 @@ export function useFieldSelection(
     if (!selectedOption) return;
 
     if (selectedOption.fieldCategory === "column") {
-      // Set field path - include relation prefix if in relation context
       const fieldPath = parentGroup.relationContext
         ? `${parentGroup.relationContext}.${selectedValue}`
         : selectedValue;
@@ -34,12 +33,10 @@ export function useFieldSelection(
       
       emit("update:condition", { ...condition });
     } else if (selectedOption.fieldCategory === "relation") {
-      // Emit event to convert to group
       const newRelationContext = parentGroup.relationContext
         ? `${parentGroup.relationContext}.${selectedValue}`
         : selectedValue;
 
-      // Get target table name and its first field
       const targetTableName = selectedOption.targetTable || tableName;
       const targetOptions = getCombinedOptionsForContext(targetTableName, schemas);
       const firstField = targetOptions.find((opt) => opt.fieldCategory === "column");
@@ -59,7 +56,6 @@ export function useFieldSelection(
         ],
       };
 
-      // This will be handled differently in each component
       return { convertToGroup: true, newGroup };
     }
 

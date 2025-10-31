@@ -10,7 +10,6 @@ export function useSubHeaderActionRegistry(
     () => new Map()
   );
 
-  // Computed sorted actions by order (lower numbers first)
   const subHeaderActions = computed(() => {
     return [...subHeaderActionsRaw.value].sort((a, b) => {
       const orderA = a.order ?? 0;
@@ -20,15 +19,12 @@ export function useSubHeaderActionRegistry(
   });
 
   const registerSubHeaderAction = (action: HeaderAction) => {
-    // Process component while preserving getters
     const processedAction = Object.create(Object.getPrototypeOf(action));
     
-    // Copy all properties including getters
     for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(action))) {
       Object.defineProperty(processedAction, key, descriptor);
     }
     
-    // Set default side to "right" if not specified
     if (!processedAction.side) {
       processedAction.side = "right";
     }
@@ -45,7 +41,6 @@ export function useSubHeaderActionRegistry(
           console.warn(`Failed to resolve component: ${processedAction.component}`, error);
         }
       } else {
-        // Already imported component, just markRaw it
         processedAction.component = markRaw(processedAction.component as any);
       }
     }
@@ -54,10 +49,8 @@ export function useSubHeaderActionRegistry(
       (a) => a.id === action.id
     );
     if (existingIndex > -1) {
-      // Update existing action
       subHeaderActionsRaw.value[existingIndex] = processedAction;
     } else {
-      // Add new action
       subHeaderActionsRaw.value.push(processedAction);
     }
   };
@@ -85,12 +78,10 @@ export function useSubHeaderActionRegistry(
     return subHeaderActions.value;
   };
 
-  // Register single action for current route
   const register = (action: HeaderAction) => {
     const currentRoute = route.path;
     const existingActions = routeActions.value.get(currentRoute) || [];
 
-    // Add or update action in route actions
     const existingIndex = existingActions.findIndex((a) => a.id === action.id);
     if (existingIndex > -1) {
       existingActions[existingIndex] = action;
@@ -102,12 +93,10 @@ export function useSubHeaderActionRegistry(
     registerSubHeaderAction(action);
   };
 
-  // Register multiple actions for current route
   const registerMultiple = (actions: HeaderAction[]) => {
     const currentRoute = route.path;
     const existingActions = routeActions.value.get(currentRoute) || [];
 
-    // Merge new actions with existing ones
     actions.forEach((action) => {
       const existingIndex = existingActions.findIndex(
         (a) => a.id === action.id
@@ -123,21 +112,17 @@ export function useSubHeaderActionRegistry(
     registerSubHeaderActions(actions);
   };
 
-  // If actions are provided, register them immediately
   if (actions) {
     const actionsArray = Array.isArray(actions) ? actions : [actions];
     registerMultiple(actionsArray);
   }
 
-  // Clear actions when route changes and re-register for new route
   watch(
     () => route.path,
     (newPath, oldPath) => {
-      // Keep global actions, clear only route-specific actions
       const globalActions = subHeaderActionsRaw.value.filter(action => action.global);
       subHeaderActionsRaw.value = globalActions;
 
-      // Re-register all actions for new route if exist
       const routeActionsForPath = routeActions.value.get(newPath);
       if (routeActionsForPath && routeActionsForPath.length > 0) {
         registerSubHeaderActions(routeActionsForPath);

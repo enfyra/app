@@ -6,10 +6,8 @@ export function useDataTableVisibility(
   tableName: string,
   schemas: Ref<SchemaCollection> | any
 ) {
-  // Column visibility state with localStorage support - save hidden columns instead of visible
   const hiddenColumns = ref<Set<string>>(new Set());
 
-  // Computed to get visible columns from hidden columns
   const visibleColumns = computed(() => {
     if (!isRefSchemaCollection(schemas)) return new Set();
     
@@ -21,13 +19,11 @@ export function useDataTableVisibility(
       .map((field: TableDefinitionField) => field.name)
       .filter((name: string | undefined): name is string => !!name);
 
-    // Visible = all columns minus hidden columns
     return new Set(
       columnFields.filter((field: string) => !hiddenColumns.value.has(field))
     );
   });
 
-  // Load saved column visibility from localStorage
   const loadColumnVisibility = (
     tableName: string,
     columnFields: string[]
@@ -36,7 +32,6 @@ export function useDataTableVisibility(
       const saved = localStorage.getItem(`columnVisibility_${tableName}`);
       if (saved) {
         const savedHiddenColumns = JSON.parse(saved);
-        // Only include hidden columns that still exist in the schema
         const validHiddenColumns = savedHiddenColumns.filter((col: string) =>
           columnFields.includes(col)
         );
@@ -48,11 +43,9 @@ export function useDataTableVisibility(
         error
       );
     }
-    // Default: no columns hidden (all visible)
     return new Set();
   };
 
-  // Save column visibility to localStorage
   const saveColumnVisibility = (tableName: string, hiddenCols: Set<string>) => {
     try {
       localStorage.setItem(
@@ -64,7 +57,6 @@ export function useDataTableVisibility(
     }
   };
 
-  // Initialize visible columns when schema changes
   watch(
     () => isRefSchemaCollection(schemas) ? schemas.value[tableName] : null,
     (schema) => {
@@ -74,14 +66,12 @@ export function useDataTableVisibility(
           .map((field: TableDefinitionField) => field.name)
           .filter((name: string | undefined): name is string => !!name);
 
-        // Load from localStorage or default to no hidden columns (all visible)
         hiddenColumns.value = loadColumnVisibility(tableName, columnFields);
       }
     },
     { immediate: true }
   );
 
-  // Toggle column visibility (called when user clicks Apply)
   function toggleColumnVisibility(columnName: string) {
     if (hiddenColumns.value.has(columnName)) {
       hiddenColumns.value.delete(columnName); // Show column
@@ -89,14 +79,11 @@ export function useDataTableVisibility(
       hiddenColumns.value.add(columnName); // Hide column
     }
 
-    // Trigger reactivity
     hiddenColumns.value = new Set(hiddenColumns.value);
 
-    // Save to localStorage
     saveColumnVisibility(tableName, hiddenColumns.value);
   }
 
-  // Column visibility dropdown items
   const columnDropdownItems = computed(() => {
     if (!isRefSchemaCollection(schemas)) return [];
     

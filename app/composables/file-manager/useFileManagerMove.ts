@@ -1,7 +1,6 @@
 // useApi is auto-imported in Nuxt
 
 export function useFileManagerMove() {
-  // File Manager Move State
   const moveState = useState("file-manager:move:state", () => ({
     moveMode: false as boolean,
     sourceFolderId: null as string | null,
@@ -19,7 +18,6 @@ export function useFileManagerMove() {
   const { confirm } = useConfirm();
   const toast = useToast();
 
-  // API instances for moving
   const {
     execute: patchFiles,
     error: patchFilesError,
@@ -44,14 +42,12 @@ export function useFileManagerMove() {
   function startMoveMode(selectedItems: string[], folders: any[], files: any[], parentId?: string) {
     if (selectedItems.length === 0) return;
     
-    // Capture current folder as source
     if (!moveState.value.sourceFolderId) {
       moveState.value.sourceFolderId = parentId || (route.params.id as string);
     }
     
     moveState.value.selectedItems = [...selectedItems];
     
-    // Split ids by type for stable counts display across navigation
     moveState.value.selectedFolderIds = selectedItems.filter((id) =>
       folders.find((f) => f.id === id)
     );
@@ -96,7 +92,6 @@ export function useFileManagerMove() {
     
     if (!isConfirmed) return;
 
-    // Prevent moving folder into itself
     if (destinationId && folderIds.includes(destinationId)) {
       toast.add({
         title: "Invalid move",
@@ -108,14 +103,12 @@ export function useFileManagerMove() {
 
     let hasError = false;
 
-    // Move files
     if (fileIds.length > 0) {
       const fileBody = destinationId ? { folder: { id: destinationId } } : { folder: null };
       await patchFiles({ ids: fileIds, body: fileBody });
       if (patchFilesError.value) hasError = true;
     }
 
-    // Move folders
     if (folderIds.length > 0 && !hasError) {
       const folderBody = destinationId ? { parent: { id: destinationId } } : { parent: null };
       await patchFolders({ ids: folderIds, body: folderBody });

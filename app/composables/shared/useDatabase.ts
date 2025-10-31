@@ -20,10 +20,8 @@ export function useDatabase() {
   const getId = (item: any): any => {
     if (!item) return null;
     
-    // Get the raw value first
     let rawId = isMongoDB.value ? item._id ?? item.id : item.id ?? item._id;
     
-    // If rawId is an object (nested), unwrap it
     while (rawId && typeof rawId === 'object') {
       rawId = isMongoDB.value ? rawId._id ?? rawId.id : rawId.id ?? rawId._id;
     }
