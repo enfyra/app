@@ -259,11 +259,12 @@ const visibleGroups = computed(() => {
           >
             <button
               @click="() => {
-                if (group.route) {
+                // Only navigate if it's a standalone menu (type = Menu)
+                if (group.type === 'Menu' && group.route) {
                   navigateTo(group.route);
                   handleMenuClick();
-                } else if (group.items && group.items.length > 0 && group.items[0]) {
-                  // If it's a dropdown group without route, go to first child
+                } else if (group.type === 'Dropdown Menu' && group.items && group.items.length > 0 && group.items[0]) {
+                  // If it's a dropdown group with children, go to first child
                   const firstChild = group.items[0];
                   navigateTo(firstChild.route || firstChild.path);
                   handleMenuClick();
@@ -301,7 +302,7 @@ const visibleGroups = computed(() => {
             :key="group.id"
           >
             <div
-              v-if="!group.items || group.items.length === 0"
+              v-if="group.type === 'Menu' && (!group.items || group.items.length === 0)"
               class="space-y-1 px-3"
             >
               <button
@@ -339,12 +340,14 @@ const visibleGroups = computed(() => {
             <div v-else>
         <button
           @click="group.items && group.items.length > 0 ? toggleGroup(group.id) : null"
-          :disabled="!group.items || group.items.length === 0"
           :class="[
-            'w-full flex items-center justify-between px-6 py-2 text-xs uppercase tracking-wider transition-colors group',
-            (!group.items || group.items.length === 0) ? 'cursor-not-allowed opacity-50' : ''
+            'w-full flex items-center justify-between px-6 py-2 text-xs uppercase tracking-wider transition-colors group cursor-pointer',
+            isGroupActive(group) ? 'text-gradient-primary' : ''
           ]"
-          :style="{ color: 'var(--text-quaternary)' }"
+          :style="{
+            color: isGroupActive(group) ? 'var(--color-primary-500)' : 'var(--text-quaternary)',
+            opacity: (!group.items || group.items.length === 0) ? 0.5 : 1
+          }"
         >
           <span class="group-hover:text-gradient-primary transition-all">{{ group.label }}</span>
           <UIcon
