@@ -2,45 +2,35 @@ import type { ColumnDef } from "@tanstack/vue-table";
 import { UBadge, UDropdownMenu, UButton } from "#components";
 
 export interface DataTableColumnConfig {
-  // Basic column properties
   id: string;
   accessorKey?: string;
   header: string;
 
-  // Column behaviors
   sortable?: boolean;
   hideable?: boolean;
   resizable?: boolean;
 
-  // Size constraints
   width?: number;
   minWidth?: number;
   maxWidth?: number;
 
-  // Custom cell renderer
   cell?: (props: { row: any; getValue: () => any }) => any;
 
-  // Format helpers for common types
   format?: "date" | "datetime" | "currency" | "filesize" | "badge" | "custom";
   formatOptions?: {
-    // Date/datetime options
     dateFormat?: Intl.DateTimeFormatOptions;
 
-    // Currency options
     currency?: string;
 
-    // Badge options
     badgeColor?: (value: any) => string;
     badgeVariant?: "soft" | "solid" | "outline";
     badgeMap?: Record<string, string>;
 
-    // Custom formatter function
     formatter?: (value: any, row: any) => string;
   };
 }
 
 export interface DataTableActionsConfig {
-  // Dropdown actions
   actions?: Array<{
     label: string;
     icon: string;
@@ -50,7 +40,6 @@ export interface DataTableActionsConfig {
     onSelect: (row: any) => void;
   }>;
 
-  // Inline editing
   inlineEdit?: {
     enabled: boolean;
     field: string;
@@ -58,12 +47,10 @@ export interface DataTableActionsConfig {
     validation?: (value: string) => string | null;
   };
 
-  // Column width
   width?: number;
 }
 
 export function useDataTableColumns() {
-  // Build column from config
   function buildColumn(config: DataTableColumnConfig): ColumnDef<any> {
     const column: ColumnDef<any> = {
       id: config.id,
@@ -74,12 +61,10 @@ export function useDataTableColumns() {
       enableResizing: config.resizable !== false,
     };
 
-    // Size constraints
     if (config.width) column.size = config.width;
     if (config.minWidth) column.minSize = config.minWidth;
     if (config.maxWidth) column.maxSize = config.maxWidth;
 
-    // Custom cell renderer
     if (config.cell) {
       column.cell = config.cell;
     } else if (config.format) {
@@ -97,7 +82,6 @@ export function useDataTableColumns() {
     return column;
   }
 
-  // Build actions column
   function buildActionsColumn(config: DataTableActionsConfig): ColumnDef<any> {
     return {
       id: "__actions",
@@ -146,7 +130,6 @@ export function useDataTableColumns() {
     };
   }
 
-  // Format cell value based on type
   function formatCellValue(
     value: any,
     row: any,

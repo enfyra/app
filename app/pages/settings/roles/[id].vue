@@ -1,7 +1,6 @@
 <template>
   <div class="space-y-6">
     <div class="space-y-6">
-      <!-- Content - Limited width -->
       <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
         <CommonFormCard>
           <UForm :state="form" @submit="save">

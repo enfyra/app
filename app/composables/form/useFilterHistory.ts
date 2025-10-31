@@ -13,7 +13,6 @@ export interface FilterHistoryItem {
 export function useFilterHistory(tableName: string) {
   const storageKey = `filterHistory_${tableName}`;
 
-  // Generate auto name for filter
   const generateFilterName = (filter: any): string => {
     if (!filter?.conditions?.length) {
       return 'Empty Filter';
@@ -27,7 +26,6 @@ export function useFilterHistory(tableName: string) {
       const operator = firstCondition.operator || 'filter';
       const value = firstCondition.value;
       
-      // Format operator display (all operators have underscore prefix)
       const operatorDisplayMap: Record<string, string> = {
         '_eq': '=',
         '_ne': '≠',
@@ -45,7 +43,6 @@ export function useFilterHistory(tableName: string) {
       
       const displayOperator = operatorDisplayMap[operator] || operator;
       
-      // Format value display
       if (!value && (operator === 'null' || operator === 'nnull')) {
         return `${field} ${displayOperator}`;
       }
@@ -57,7 +54,6 @@ export function useFilterHistory(tableName: string) {
         return `${field} ${displayOperator} ${displayValue}`;
       }
       
-      // Truncate long values
       let displayValue = String(value || '');
       if (displayValue.length > 20) {
         displayValue = displayValue.slice(0, 20) + '...';
@@ -66,7 +62,6 @@ export function useFilterHistory(tableName: string) {
       return `${field} ${displayOperator} "${displayValue}"`;
     }
     
-    // Multiple conditions - show summary
     const fieldCount = new Set(filter.conditions.map((c: any) => c.field).filter(Boolean)).size;
     const operatorType = filter.operator || 'and';
     
@@ -78,7 +73,6 @@ export function useFilterHistory(tableName: string) {
     return `${fieldCount} fields (${conditionCount} ${operatorType} conditions)`;
   };
 
-  // Get all filter history for this table
   const getFilterHistory = (): FilterHistoryItem[] => {
     try {
       const stored = localStorage.getItem(storageKey);
@@ -86,9 +80,7 @@ export function useFilterHistory(tableName: string) {
       
       const history = JSON.parse(stored);
       
-      // Fix old filter names that don't have proper display names
       const fixedHistory = history.map((item: FilterHistoryItem) => {
-        // If name looks like "field_operator" pattern or contains "_eq", "_ne", etc., regenerate it
         const hasOldPattern = item.name && (
           /^[a-zA-Z_]+_(_?eq|_?ne|_?gt|_?gte|_?lt|_?lte|_?like|_?ilike|_?in|_?nin|_?null|_?nnull)(\s|$)/.test(item.name) ||
           item.name.includes(' _eq ') ||
@@ -108,7 +100,6 @@ export function useFilterHistory(tableName: string) {
         return item;
       });
       
-      // Save back the fixed history
       if (JSON.stringify(fixedHistory) !== JSON.stringify(history)) {
         localStorage.setItem(storageKey, JSON.stringify(fixedHistory));
       }
@@ -120,16 +111,13 @@ export function useFilterHistory(tableName: string) {
     }
   };
 
-  // Add filter to history
   const addToHistory = (filter: any, customName?: string): void => {
     try {
       const history = getFilterHistory();
       const now = new Date().toISOString();
       
-      // Generate auto name if not provided
       const name = customName || generateFilterName(filter);
       
-      // Check for duplicates (same filter structure + tableName, ignoring all id fields)
       const normalizeFilter = (filter: any, tableName: string): string => {
         const removeIds = (obj: any): any => {
           if (Array.isArray(obj)) {
@@ -146,7 +134,6 @@ export function useFilterHistory(tableName: string) {
           return obj;
         };
         
-        // Include tableName in the normalized key to ensure filters are table-specific
         return `${tableName}:${JSON.stringify(removeIds(filter))}`;
       };
       
@@ -155,7 +142,6 @@ export function useFilterHistory(tableName: string) {
       );
       
       if (existingIndex >= 0) {
-        // Update existing filter
         const existingItem = history[existingIndex];
         if (existingItem) {
           existingItem.lastUsed = now;
@@ -165,7 +151,6 @@ export function useFilterHistory(tableName: string) {
           }
         }
       } else {
-        // Add new filter
         const newItem: FilterHistoryItem = {
           id: generateId(),
           name,
@@ -178,7 +163,6 @@ export function useFilterHistory(tableName: string) {
         history.unshift(newItem);
       }
       
-      // Keep only last 20 filters (FIFO - remove oldest when full)
       if (history.length > 20) {
         history.splice(20);
       }
@@ -189,7 +173,6 @@ export function useFilterHistory(tableName: string) {
     }
   };
 
-  // Remove filter from history
   const removeFromHistory = (filterId: string): void => {
     try {
       const history = getFilterHistory();
@@ -200,7 +183,6 @@ export function useFilterHistory(tableName: string) {
     }
   };
 
-  // Update filter name
   const updateFilterName = (filterId: string, newName: string): void => {
     try {
       const history = getFilterHistory();
@@ -214,7 +196,6 @@ export function useFilterHistory(tableName: string) {
     }
   };
 
-  // Increment use count when filter is applied
   const incrementUseCount = (filterId: string): void => {
     try {
       const history = getFilterHistory();
@@ -229,7 +210,6 @@ export function useFilterHistory(tableName: string) {
     }
   };
 
-  // Clear all history
   const clearHistory = (): void => {
     try {
       localStorage.removeItem(storageKey);
@@ -238,7 +218,6 @@ export function useFilterHistory(tableName: string) {
     }
   };
 
-  // Get popular filters (most used)
   const getPopularFilters = (limit: number = 5): FilterHistoryItem[] => {
     try {
       const history = getFilterHistory();
@@ -251,7 +230,6 @@ export function useFilterHistory(tableName: string) {
     }
   };
 
-  // Generate unique ID
   const generateId = (): string => {
     return generateFilterId();
   };

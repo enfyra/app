@@ -1,6 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
       <CommonFormCard>
         <UForm :state="form" @submit="updateRoute">
@@ -17,7 +16,6 @@
         </UForm>
       </CommonFormCard>
 
-      <!-- Route Permissions Section -->
       <CommonFormCard>
         <PermissionManager
           table-name="route_permission_definition"
@@ -51,37 +49,14 @@ const formEditorRef = ref();
 const { validate, getIncludeFields } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Register page header with dynamic title
-watch(() => routeData.value?.data?.[0]?.path, (path) => {
-  if (path) {
-    registerPageHeader({
-      title: `Route: ${path}`,
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
-
-// Check if route has associated table to disable isEnabled field
-const hasAssociatedTable = computed(() => {
-  const currentRoute = routeData.value?.data?.[0];
-  if (!currentRoute?.mainTable) return false;
-
-  const { schemas } = useSchema();
-  const { getId } = useDatabase();
-  const mainTableId = getId(currentRoute.mainTable);
-  if (!mainTableId) return false;
-
-  return Object.values(schemas.value).some(
-    (table: any) => String(getId(table)) === String(mainTableId)
-  );
+// Register page header with fallback title
+registerPageHeader({
+  title: "Route Details",
+  gradient: "cyan",
 });
 
-// Type map to disable isEnabled field if route has associated table
-const typeMap = computed(() => ({
-  isEnabled: {
-    disabled: hasAssociatedTable.value
-  }
-}));
+// Init typeMap with default value (will be updated after routeData loads)
+const typeMap = ref<Record<string, any>>({});
 
 useHeaderActionRegistry([
   {
@@ -134,6 +109,41 @@ const {
   },
   errorContext: "Fetch Route",
 });
+
+// Update page header when route data loads
+watch(() => routeData.value?.data?.[0]?.path, (path) => {
+  if (path) {
+    registerPageHeader({
+      title: `Route: ${path}`,
+      gradient: "cyan",
+    });
+  }
+}, { immediate: true });
+
+// Update typeMap when route data changes
+watch(() => routeData.value?.data?.[0], (currentRoute) => {
+  if (!currentRoute) return;
+
+  // Check if route has associated table
+  let hasAssociatedTable = false;
+  if (currentRoute.mainTable) {
+    const { schemas } = useSchema();
+    const { getId } = useDatabase();
+    const mainTableId = getId(currentRoute.mainTable);
+    if (mainTableId) {
+      hasAssociatedTable = Object.values(schemas.value).some(
+        (table: any) => String(getId(table)) === String(mainTableId)
+      );
+    }
+  }
+
+  // Update typeMap to disable isEnabled if has associated table
+  typeMap.value = {
+    isEnabled: {
+      disabled: hasAssociatedTable
+    }
+  };
+}, { immediate: true });
 
 const {
   error: updateError,

@@ -11,10 +11,8 @@ export function useFilterQuery() {
     const conditions = group.conditions
       .map((condition) => {
         if ("field" in condition) {
-          // It's a FilterCondition
           return buildConditionObject(condition);
         } else {
-          // It's a FilterGroup (nested)
           return buildFilterObject(condition);
         }
       })
@@ -26,7 +24,6 @@ export function useFilterQuery() {
       return conditions[0] as Record<string, any>;
     }
 
-    // Multiple conditions - use _and/_or
     if (group.operator === "or") {
       return { _or: conditions };
     } else {
@@ -41,7 +38,6 @@ export function useFilterQuery() {
 
     if (!field || !operator) return null;
 
-    // Handle nested field paths (e.g., "user.profile.name")
     const buildNestedObject = (
       path: string,
       operatorObj: Record<string, any>
@@ -55,27 +51,22 @@ export function useFilterQuery() {
       return { [first!]: buildNestedObject(rest.join("."), operatorObj) };
     };
 
-    // Handle _is_null special case
     if (operator === "_is_null") {
       return buildNestedObject(field, { [operator]: true });
     }
 
-    // Handle operators that need values
     if (!value && value !== 0 && value !== false) return null;
 
-    // For _between, value should be an array of 2 elements
     if (operator === "_between") {
       if (!Array.isArray(value) || value.length !== 2) return null;
       return buildNestedObject(field, { [operator]: value });
     }
 
-    // For _in and _not_in, ensure value is an array
     if (["_in", "_not_in"].includes(operator)) {
       const arrayValue = Array.isArray(value) ? value : [value];
       return buildNestedObject(field, { [operator]: arrayValue });
     }
 
-    // Standard operators
     return buildNestedObject(field, { [operator]: value });
   }
 
@@ -108,8 +99,6 @@ export function useFilterQuery() {
   function hasActiveFilters(filter: FilterGroup): boolean {
     return filter.conditions.some((condition) => {
       if ("field" in condition) {
-        // Only consider active if field, operator AND value are set
-        // Special case: _null and _nnull operators don't need values
         if (!condition.field || !condition.operator) return false;
         if (condition.operator === "_null" || condition.operator === "_nnull") return true;
         return condition.value !== null && condition.value !== undefined && condition.value !== "";

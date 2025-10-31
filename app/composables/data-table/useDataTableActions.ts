@@ -13,7 +13,6 @@ export function useDataTableActions(
   const { createLoader } = useLoader();
   const { getId } = useDatabase();
 
-  // Delete single record composable
   const { execute: executeDelete, error: deleteError } = useApi(
     () => `/${tableName}`,
     {
@@ -35,11 +34,9 @@ export function useDataTableActions(
     const deleteLoader = createLoader();
 
     await deleteLoader.withLoading(async () => {
-      // Set the id and execute pre-defined composable
       deleteId.value = id;
       await executeDelete({ id });
 
-      // Check if there was an error
       if (deleteError.value) {
         return;
       }
@@ -56,7 +53,6 @@ export function useDataTableActions(
   function handleSelectionChange(rows: any[]) {
     selectedRows.value = rows;
 
-    // Auto-exit selection mode if no data available
     if (isSelectionMode.value && data.value.length === 0) {
       isSelectionMode.value = false;
     }
@@ -75,13 +71,10 @@ export function useDataTableActions(
     const deleteLoader = createLoader();
 
     await deleteLoader.withLoading(async () => {
-      // Extract IDs from selected rows
       const ids = rows.map((row) => getId(row));
 
-      // Use batch delete with ids parameter
       await executeDelete({ ids });
 
-      // Check if there was an error
       if (deleteError.value) {
         return;
       }
@@ -92,7 +85,6 @@ export function useDataTableActions(
         color: "success",
       });
 
-      // Clear selection after successful delete
       selectedRows.value = [];
       await fetchData();
     });

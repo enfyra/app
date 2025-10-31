@@ -63,14 +63,11 @@ export function usePermissions() {
     return false;
   };
 
-  // Check if user has permission for a single rule
   const checkPermissionRule = (rule: PermissionRule): boolean => {
-    // If allowAll is explicitly set to true, allow access
     if (rule.allowAll === true) {
       return true;
     }
     
-    // Check actions using normal permission system
     return rule.actions.every((action) => {
       switch (action) {
         case "read":
@@ -87,16 +84,13 @@ export function usePermissions() {
     });
   };
 
-  // Check if user has permission for a condition
   const checkPermissionCondition = (
     condition: PermissionCondition
   ): boolean => {
-    // Global allowAll bypass
     if (condition.allowAll === true) {
       return true;
     }
 
-    // AND logic: ALL conditions must pass
     if (condition.and) {
       return condition.and.every((item) => {
         if ("route" in item) {
@@ -107,7 +101,6 @@ export function usePermissions() {
       });
     }
 
-    // OR logic: ANY condition can pass (early return on first true)
     if (condition.or) {
       return condition.or.some((item) => {
         if ("route" in item) {
@@ -121,7 +114,6 @@ export function usePermissions() {
     return false;
   };
 
-  // Legacy methods for backward compatibility
   const hasAnyPermission = (routes: string[], actions: string[]): boolean => {
     return routes.some((routePath) => {
       return actions.some((action) => {

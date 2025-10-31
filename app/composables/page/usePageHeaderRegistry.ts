@@ -23,10 +23,8 @@ export interface PageHeaderConfig {
 export const usePageHeaderRegistry = () => {
   const route = useRoute();
 
-  // Global state (shared across all instances)
   const pageHeaderConfig = useState<PageHeaderConfig | null>("page-header", () => null);
 
-  // Route-specific headers storage
   const routeHeaders = useState<Map<string, PageHeaderConfig>>(
     "route-page-headers",
     () => new Map()
@@ -38,10 +36,8 @@ export const usePageHeaderRegistry = () => {
   const registerPageHeader = (config: PageHeaderConfig) => {
     const currentRoute = route.path;
 
-    // Store in route-specific map
     routeHeaders.value.set(currentRoute, config);
 
-    // Set as current header
     pageHeaderConfig.value = config;
   };
 
@@ -57,14 +53,11 @@ export const usePageHeaderRegistry = () => {
    */
   const hasPageHeader = computed(() => pageHeaderConfig.value !== null);
 
-  // Auto-clear and restore on route change
   watch(
     () => route.path,
     (newPath, oldPath) => {
-      // Clear current header
       pageHeaderConfig.value = null;
 
-      // Restore header for new route if it exists
       const routeHeader = routeHeaders.value.get(newPath);
       if (routeHeader) {
         pageHeaderConfig.value = routeHeader;
@@ -74,11 +67,9 @@ export const usePageHeaderRegistry = () => {
   );
 
   return {
-    // State
     pageHeader: readonly(pageHeaderConfig),
     hasPageHeader,
 
-    // Actions
     registerPageHeader,
     clearPageHeader,
   };

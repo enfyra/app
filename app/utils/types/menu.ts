@@ -27,7 +27,7 @@ export interface MenuItem {
   label: string;
   route: string;
   icon?: string;
-  sidebarId: number | string; // Support both SQL (number) and MongoDB (string)
+  sidebarId?: number | string; // Support both SQL (number) and MongoDB (string) - optional for special items like logout
   permission?: PermissionCondition;
   // Additional fields from API for full compatibility
   path?: string;
@@ -43,6 +43,9 @@ export interface MenuItem {
   extension?: any;
   createdAt?: string;
   updatedAt?: string;
+  // Optional handlers for special items (e.g., logout button)
+  onClick?: () => void | Promise<void>;
+  class?: string;
 }
 
 // Internal Interface for Mini Sidebars in useMenuRegistry

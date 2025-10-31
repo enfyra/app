@@ -3,7 +3,6 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 
 export function useCodeMirrorTheme(height?: string) {
-  // VS Code Dark+ theme syntax highlighting
   const vscodeHighlightStyle = HighlightStyle.define([
     { tag: tags.keyword, color: "#569CD6" },                              
     { tag: tags.controlKeyword, color: "#C586C0" },                       
@@ -33,13 +32,11 @@ export function useCodeMirrorTheme(height?: string) {
     { tag: tags.special(tags.string), color: "#D7BA7D" },                 
     { tag: tags.meta, color: "#569CD6" },                                 
     { tag: tags.invalid, color: "#F44747", textDecoration: "underline" }, 
-    // HTML/XML tags for Vue templates
     { tag: tags.tagName, color: "#4FC1FF" },
     { tag: tags.content, color: "#D4D4D4" },
     { tag: tags.typeName, color: "#4EC9B0" },
   ]);
 
-  // VS Code-style dark theme
   const customTheme = computed(() => EditorView.baseTheme({
     "&": {
       backgroundColor: "#1e1e1e",
@@ -92,7 +89,6 @@ export function useCodeMirrorTheme(height?: string) {
       borderLeft: "2px solid white",
     },
 
-    // Autocomplete dropdown styles
     ".cm-tooltip": {
       backgroundColor: "#252526",
       color: "#d4d4d4",
@@ -132,7 +128,6 @@ export function useCodeMirrorTheme(height?: string) {
       },
     },
 
-    // Hover info tooltip
     ".cm-tooltip-hover": {
       backgroundColor: "#1e1e1e",
       border: "1px solid #454545",
@@ -140,7 +135,6 @@ export function useCodeMirrorTheme(height?: string) {
       maxWidth: "500px",
     },
 
-    // Diagnostic tooltips
     ".cm-diagnostic": {
       backgroundColor: "#252526",
       border: "1px solid #454545",
@@ -148,7 +142,6 @@ export function useCodeMirrorTheme(height?: string) {
       borderRadius: "4px",
     },
 
-    // Enfyra custom syntax highlighting
     ".cm-enfyra-template": {
       color: "#4EC9B0 !important", // Teal color for @ templates (@QUERY, @REQ, @RES, etc.)
       fontWeight: "bold !important",

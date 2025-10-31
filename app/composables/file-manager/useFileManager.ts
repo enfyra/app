@@ -1,6 +1,5 @@
 
 export function useFileManager(parentFilter?: any) {
-  // API call for folders (only if parentFilter is provided)
   const apiCall = parentFilter
     ? useApi(() => "folder_definition", {
         query: computed(() => ({
@@ -17,7 +16,6 @@ export function useFileManager(parentFilter?: any) {
   const toast = useToast();
   const { confirm } = useConfirm();
 
-  // API calls at setup level (following best practices)
   const { execute: deleteFolderApi, error: deleteFolderError } = useApi(
     () => "/folder_definition",
     {
@@ -34,15 +32,12 @@ export function useFileManager(parentFilter?: any) {
     }
   );
 
-  // Use useState for global state sharing across components
   const showDetailModal = useState("folder-detail-modal", () => false);
   const selectedFolder = useState<any>("folder-selected", () => null);
 
-  // Multi-select state
   const selectedFolders = useState<string[]>("folder-selected-list", () => []);
   const isSelectionMode = useState("folder-selection-mode", () => false);
 
-  // Multi-select functions
   function toggleFolderSelection(folderId: string) {
     const index = selectedFolders.value.indexOf(folderId);
     if (index > -1) {
@@ -62,10 +57,8 @@ export function useFileManager(parentFilter?: any) {
 
   function toggleSelectAll(totalCount: number = 0, folderList?: any[]) {
     if (selectedFolders.value.length === totalCount) {
-      // All selected, deselect all
       selectedFolders.value = [];
     } else {
-      // Not all selected, select all
       selectedFolders.value = [];
       const foldersToUse = folderList || folders.value?.data || [];
       foldersToUse.forEach((folder: any) => {
@@ -114,7 +107,6 @@ export function useFileManager(parentFilter?: any) {
         return;
       }
 
-      // Call refresh callback if provided, otherwise use internal one
       if (refreshCallback) {
         refreshCallback();
       } else if (refreshFolders) {
@@ -152,14 +144,12 @@ export function useFileManager(parentFilter?: any) {
     });
 
     if (isConfirmed) {
-      // Use batch operations as per docs recommendation
       await deleteFolderApi({ ids: selectedFolders.value });
 
       if (deleteFolderError.value) {
         return;
       }
 
-      // Call refresh callback if provided, otherwise use internal one
       if (refreshCallback) {
         refreshCallback();
       } else if (refreshFolders) {
@@ -215,7 +205,6 @@ export function useFileManager(parentFilter?: any) {
     });
 
     if (isConfirmed) {
-      // Use batch operations as per docs recommendation
       await deleteFileApi({ ids: fileIds });
 
       if (deleteFileError.value) {
@@ -235,20 +224,16 @@ export function useFileManager(parentFilter?: any) {
   }
 
   return {
-    // Data (only used when API call is made)
     folders,
     pending,
     refreshFolders,
 
-    // Modal state
     showDetailModal,
     selectedFolder,
 
-    // Selection state
     selectedFolders,
     isSelectionMode,
 
-    // Functions
     toggleFolderSelection,
     toggleSelectionMode,
     toggleSelectAll,

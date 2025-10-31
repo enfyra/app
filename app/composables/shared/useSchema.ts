@@ -12,7 +12,6 @@ export function useSchema(tableName?: string | Ref<string>) {
   const schemas = useState<SchemaCollection>("schemas:data", () => ({}));
   const { getId } = useDatabase();
 
-  // API for fetching tables
   const { getIdFieldName } = useDatabase();
   const {
     data: tablesData,
@@ -154,7 +153,6 @@ export function useSchema(tableName?: string | Ref<string>) {
     schemas.value = convertToEnfyraSchema(tables);
   }
 
-  // Table-specific functionality (only when tableName is provided)
   const tableNameRef = tableName
     ? isRef(tableName)
       ? tableName
@@ -284,7 +282,6 @@ export function useSchema(tableName?: string | Ref<string>) {
       const isInverse = isRelation && !!field.inversePropertyName;
       if (isInverse) continue;
 
-      // Check custom validator first
       if (customValidators && customValidators[key]) {
         const customError = customValidators[key](value);
         if (customError) {
@@ -302,7 +299,6 @@ export function useSchema(tableName?: string | Ref<string>) {
         value === undefined ||
         (typeof value === "string" && value.trim() === "");
 
-      // Only validate as required if field is not nullable AND not auto-generated
       if (!nullable && !isGenerated && empty) {
         errors[key] = "This field is required";
         isValid = false;
@@ -326,7 +322,6 @@ export function useSchema(tableName?: string | Ref<string>) {
     return ["*", ...relations].join(",");
   }
 
-  // Form change detection
   function useFormChanges(): FormChangesState {
     const originalData = ref<Record<string, any>>({});
 
@@ -335,14 +330,12 @@ export function useSchema(tableName?: string | Ref<string>) {
     }
 
     function checkChanges(currentData: Record<string, any>): boolean {
-      // Deep comparison between original and current data
       const original = JSON.stringify(originalData.value);
       const current = JSON.stringify(currentData);
       return original !== current;
     }
 
     function discardChanges(currentData: Record<string, any>): Record<string, any> {
-      // Return a deep copy of the original data
       return JSON.parse(JSON.stringify(originalData.value));
     }
 
@@ -354,21 +347,18 @@ export function useSchema(tableName?: string | Ref<string>) {
     };
   }
 
-  // If tableName provided, return single table schema
   const tableSchema = computed<TableSchema | null>(() => {
     if (!tableName) return null;
     return schemas.value[tableNameRef.value] || null;
   });
 
   return {
-    // Schema data and management
     schemas: readonly(schemas),
     schema: tableSchema,
     fetchSchema,
     schemaLoading: tablesPending,
     updateSchemas,
 
-    // Table-specific functions (only useful when tableName is provided)
     definition,
     fieldMap,
     generateEmptyForm,

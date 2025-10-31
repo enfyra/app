@@ -1,6 +1,5 @@
 export const useLoader = () => {
   const createLoader = () => {
-    // Sử dụng local ref thay vì useState để tránh circular dependency
     const loadingState = ref(false);
 
     const isLoading = computed(() => loadingState.value);
