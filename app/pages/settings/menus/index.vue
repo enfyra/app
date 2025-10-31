@@ -9,6 +9,7 @@ const route = useRoute();
 const router = useRouter();
 const tableName = "menu_definition";
 const { getIncludeFields } = useSchema(tableName);
+const { schemas } = useSchema();
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const menus = computed(() => apiData.value?.data || []);
 const { createLoader } = useLoader();
@@ -17,6 +18,20 @@ const { isMounted } = useMounted();
 const { getId } = useDatabase();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
+
+// Register page header
+const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Menu Manager",
+  description: "Configure and manage navigation menus for your application",
+  variant: "default",
+  gradient: "purple",
+});
+
+onBeforeUnmount(() => {
+  clearPageHeader();
+});
 
 const filterLabel = computed(() => {
   const activeCount = currentFilter.value.conditions.length;
@@ -186,9 +201,15 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
   }
 
   // Reregister all menus after successful update
-  const { reregisterAllMenus } = useMenuRegistry();
+  const { reregisterAllMenus, registerTableMenusWithSidebarIds } = useMenuRegistry();
   const { fetchMenuDefinitions } = useMenuApi();
   await reregisterAllMenus(fetchMenuDefinitions as any);
+
+  // Also reregister table menus to restore them
+  const schemaValues = Object.values(schemas.value);
+  if (schemaValues.length > 0) {
+    await registerTableMenusWithSidebarIds(schemaValues);
+  }
 
   toast.add({
     title: "Success",
@@ -223,9 +244,15 @@ async function deleteMenu(menuItem: any) {
     await fetchMenus();
 
     // Reregister all menus after successful delete
-    const { reregisterAllMenus } = useMenuRegistry();
+    const { reregisterAllMenus, registerTableMenusWithSidebarIds } = useMenuRegistry();
     const { fetchMenuDefinitions } = useMenuApi();
     await reregisterAllMenus(fetchMenuDefinitions as any);
+
+    // Also reregister table menus to restore them
+    const schemaValues = Object.values(schemas.value);
+    if (schemaValues.length > 0) {
+      await registerTableMenusWithSidebarIds(schemaValues);
+    }
 
     toast.add({
       title: "Success",
@@ -247,14 +274,6 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Menu Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-violet-500/8 via-purple-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="loading || !isMounted"

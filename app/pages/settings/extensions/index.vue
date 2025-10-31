@@ -1,14 +1,5 @@
 <template>
   <div class="extension-manager-page">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Extension Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-purple-500/6 via-violet-400/3 to-transparent"
-      padding-y="py-6"
-    />
-
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -111,6 +102,12 @@ const { getId } = useDatabase();
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const route = useRoute();
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Extension Manager",
+  gradient: "purple",
+});
 const {
   data: apiData,
   pending: loading,

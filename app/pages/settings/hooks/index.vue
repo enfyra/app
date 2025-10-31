@@ -12,6 +12,14 @@ const { getIncludeFields } = useSchema(tableName);
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Hook Manager",
+  gradient: "purple",
+});
+
 const {
   data: apiData,
   pending: loading,
@@ -121,14 +129,6 @@ async function deleteHook(hook: any) {
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Hook Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-red-500/8 via-orange-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"

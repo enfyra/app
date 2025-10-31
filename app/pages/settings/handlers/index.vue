@@ -9,6 +9,14 @@ const { getIncludeFields } = useSchema(tableName);
 const { getId } = useDatabase();
 
 const { isMounted } = useMounted();
+
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Handler Manager",
+  gradient: "purple",
+});
 const { isTablet } = useScreen();
 
 const {
@@ -89,14 +97,6 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Handler Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-rose-500/8 via-pink-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"

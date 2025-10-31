@@ -15,6 +15,17 @@ const table = ref<any>();
 const hasFormChanges = ref(false);
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
+const { registerPageHeader } = usePageHeaderRegistry();
+
+// Register page header with dynamic table name
+watch(() => table.value?.name, (name) => {
+  if (name) {
+    registerPageHeader({
+      title: `Edit Table: ${name}`,
+      gradient: "purple",
+    });
+  }
+}, { immediate: true });
 
 const {
   data: tableData,
@@ -258,14 +269,6 @@ onMounted(() => {
 
 <template>
   <div class="relative">
-    <!-- Header -->
-    <CommonPageHeader
-      :title="table ? `Edit Table: ${table.name}` : 'Table Editor'"
-      title-size="lg"
-      show-background
-      background-gradient="from-indigo-500/8 via-purple-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"

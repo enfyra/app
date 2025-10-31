@@ -1,13 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="User Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-blue-500/8 via-indigo-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -109,6 +101,15 @@ const { getId } = useDatabase();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 const toast = useToast();
+
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "User Manager",
+  variant: "default",
+  gradient: "blue",
+});
 
 const {
   data: apiData,

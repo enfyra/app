@@ -12,6 +12,12 @@ const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const { createLoader } = useLoader();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Routing Manager",
+  gradient: "cyan",
+});
 
 // Helper to get id from both SQL (id) and MongoDB (_id)
 const { getId } = useDatabase();
@@ -291,14 +297,6 @@ async function deleteRoute(routeItem: any) {
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Routing Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-lime-500/8 via-green-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <div v-if="loading || !isMounted">
         <CommonLoadingState

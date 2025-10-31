@@ -9,6 +9,18 @@ const showUploadModal = ref(false);
 const folderPage = ref(Number(route.query.folderPage) || 1);
 const filePage = ref(Number(route.query.filePage) || 1);
 const pageLimit = 20; // Show 20 items per page
+const { registerPageHeader } = usePageHeaderRegistry();
+
+// Register page header with dynamic folder name
+watch(() => folder.value?.data?.[0]?.name, (name) => {
+  if (name) {
+    registerPageHeader({
+      title: `${name} - Files Manager`,
+      description: "Manage files and subfolders in this directory",
+      gradient: "cyan",
+    });
+  }
+}, { immediate: true });
 
 const {
   data: folder,
@@ -217,17 +229,6 @@ useHeaderActionRegistry([
 
 <template>
   <div class="space-y-8">
-    <!-- Page Header -->
-    <CommonPageHeader
-      :title="pageTitle"
-      description="Manage files and subfolders in this directory"
-      :stats="pageStats"
-      title-size="md"
-      show-background
-      background-gradient="from-blue-500/8 via-cyan-400/5 to-transparent"
-      padding-y="py-6"
-    />
-
     <!-- Content -->
     <FileManager
       :parent-id="route.params.id as string"

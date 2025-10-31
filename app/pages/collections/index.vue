@@ -1,20 +1,20 @@
 <script setup lang="ts">
 // Collections index page - overview only
 // Individual table management features are accessed through sidebar navigation
+
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Table Collections",
+  description: "Manage your database table structures and schemas. Create, modify, and organize your data models. Select a table from the sidebar to get started.",
+  variant: "minimal",
+  gradient: "purple",
+});
 </script>
 
 <template>
   <div class="w-full">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Table Collections"
-      title-size="md"
-      variant="minimal"
-      show-background
-      background-gradient="from-primary-500/5 via-primary-400/3 to-transparent"
-      padding-y="py-4"
-    />
-
     <CommonEmptyState
       title="Table Collections"
       description="Manage your database table structures and schemas. Create, modify, and organize your data models. Select a table from the sidebar to get started."

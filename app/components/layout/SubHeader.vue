@@ -1,8 +1,14 @@
 <template>
   <div
-    class="h-12 border-b border-gray-700 flex items-center justify-between bg-background shrink-0"
-    :class="isTablet ? 'px-4' : 'px-6'"
+    class="h-12 border-b flex items-center shrink-0 relative overflow-hidden backdrop-blur-sm"
+    :class="[isTablet ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
+    :style="{
+      borderColor: 'var(--border-subtle)',
+      background: 'rgba(15, 20, 33, 0.6)'
+    }"
   >
+    <!-- Blue gradient accent at top -->
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#0066FF]/30 to-transparent"></div>
     <div class="flex items-center gap-3">
       <template
         v-for="action in subHeaderActions.filter((a) => {
@@ -128,4 +134,13 @@
 const route = useRoute();
 const { isTablet } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
+
+// Check if there are any right-side actions
+const hasRightActions = computed(() => {
+  return subHeaderActions.value.some((a) => {
+    const showValue =
+      a.show === undefined ? true : isRef(a.show) ? unref(a.show) : a.show;
+    return a.side === "right" && showValue;
+  });
+});
 </script>

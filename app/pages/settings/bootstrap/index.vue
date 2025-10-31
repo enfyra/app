@@ -10,6 +10,12 @@ const { getId } = useDatabase();
 
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Bootstrap Manager",
+  gradient: "purple",
+});
 
 const {
   data: apiData,
@@ -89,14 +95,6 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Bootstrap Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-amber-500/8 via-orange-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"

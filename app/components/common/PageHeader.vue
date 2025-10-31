@@ -1,151 +1,133 @@
 <script setup lang="ts">
+/**
+ * PAGE HEADER (CommonPageHeader) - Page-specific hero section
+ *
+ * Position: Below UnifiedHeader
+ * Shows: Page title, description, optional stats cards
+ * Background: Radial gradient backgrounds (modern design)
+ *
+ * USAGE RULES:
+ * - NO breadcrumbs here (use UnifiedHeader via useBreadcrumbRegistry)
+ * - NO action buttons here (use UnifiedHeader via registry)
+ * - Focus on: Title, Description, Stats/KPIs
+ */
+
 interface StatCard {
-  icon: string;
-  iconColor: string;
-  iconBg: string;
-  value: string | number;
   label: string;
+  value: string | number;
 }
 
 interface Props {
   title: string;
   description?: string;
   stats?: StatCard[];
-  // Layout customization
-  size?: "sm" | "md" | "lg";
-  variant?: "default" | "simple" | "minimal";
-  // Background customization
-  showBackground?: boolean;
-  backgroundGradient?: string;
-  backgroundOpacity?: number;
-  // Title customization
-  titleSize?: "sm" | "md" | "lg" | "xl";
-  titleColor?: string;
-  showGradientText?: boolean;
-  // Spacing customization
-  paddingY?: string;
-  paddingX?: string;
-  marginBottom?: string;
-  // Stats customization
-  statsPosition?: "right" | "bottom";
-  hideStatsOnMobile?: boolean;
+  variant?: "default" | "minimal" | "stats-focus";
+  gradient?: "purple" | "blue" | "cyan" | "none";
 }
 
 const props = withDefaults(defineProps<Props>(), {
   description: undefined,
   stats: () => [],
-  size: "lg",
   variant: "default",
-  showBackground: true,
-  backgroundGradient: "from-primary-500/10 via-primary-400/5 to-transparent",
-  backgroundOpacity: 100,
-  titleSize: "xl",
-  titleColor: "",
-  showGradientText: true,
-  paddingY: "py-10",
-  paddingX: "px-6",
-  marginBottom: "mb-8",
-  statsPosition: "right",
-  hideStatsOnMobile: true,
+  gradient: "none",
 });
 
-// Computed styles
-const containerClasses = computed(() => {
-  const base = "relative";
-  const overflow = props.showBackground ? "overflow-hidden" : "";
-  const margin = props.marginBottom;
-  return `${base} ${overflow} ${margin}`.trim();
-});
-
-const backgroundClasses = computed(() => {
-  if (!props.showBackground) return "";
-  return `absolute inset-0 bg-gradient-to-br ${props.backgroundGradient} rounded-2xl opacity-${props.backgroundOpacity}`;
-});
-
-const contentClasses = computed(() => {
-  return `relative ${props.paddingY} ${props.paddingX}`;
-});
-
-const headerLayoutClasses = computed(() => {
-  const direction = props.statsPosition === "bottom" ? "flex-col" : "flex-row";
-  const justify =
-    props.statsPosition === "right" ? "justify-between" : "justify-start";
-  const items =
-    props.statsPosition === "bottom" ? "items-start" : "items-center";
-  const gap = props.statsPosition === "bottom" ? "gap-6" : "gap-4";
-  return `flex ${direction} ${justify} ${items} ${gap}`.trim();
-});
-
-const titleClasses = computed(() => {
-  const sizes = {
-    sm: "text-xl",
-    md: "text-2xl",
-    lg: "text-3xl",
-    xl: "text-4xl",
+// Radial gradient backgrounds (modern, subtle)
+const gradientStyle = computed(() => {
+  const gradients = {
+    purple: "radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0%, transparent 50%)",
+    blue: "radial-gradient(at 100% 0%, rgba(0, 102, 255, 0.15) 0%, transparent 50%)",
+    cyan: "radial-gradient(at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 50%)",
+    none: undefined,
   };
 
-  const sizeClass = sizes[props.titleSize];
-  const gradientClass = props.showGradientText
-    ? "bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent"
-    : props.titleColor || "text-gray-900 dark:text-white";
-
-  return `${sizeClass} font-bold ${gradientClass}`;
+  return gradients[props.gradient];
 });
 
-const statsClasses = computed(() => {
-  const hiddenClass = props.hideStatsOnMobile ? "hidden lg:flex" : "flex";
-  const direction = props.statsPosition === "bottom" ? "flex-wrap" : "flex-row";
-  return `${hiddenClass} items-center gap-4 ${direction}`;
+const isMinimal = computed(() => props.variant === "minimal");
+const isStatsFocus = computed(() => props.variant === "stats-focus");
+
+// Animation state
+const isVisible = ref(false);
+
+onMounted(() => {
+  nextTick(() => {
+    isVisible.value = true;
+  });
 });
 </script>
 
 <template>
-  <div :class="containerClasses">
-    <!-- Background Gradient -->
-    <div v-if="showBackground" :class="backgroundClasses" />
+  <div
+    class="border-b relative overflow-hidden transition-all duration-400"
+    :style="{
+      borderColor: 'var(--border-subtle)',
+      background: 'var(--bg-elevated)',
+      backgroundImage: gradientStyle,
+      opacity: isVisible ? 1 : 0,
+      transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+    }"
+  >
+    <!-- Subtle gradient accent at top -->
+    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7C3AED]/30 to-transparent" />
 
     <!-- Content -->
-    <div :class="contentClasses">
-      <div :class="headerLayoutClasses">
-        <div>
-          <h1 :class="titleClasses">
-            {{ title }}
-          </h1>
-          <p v-if="description" class="mt-2 text-gray-600 dark:text-gray-400">
-            {{ description }}
-          </p>
-          <!-- Badges Slot -->
-          <div v-if="$slots.badges" class="mt-3 flex items-center gap-3">
-            <slot name="badges" />
-          </div>
-        </div>
+    <div class="relative px-6" :class="isMinimal ? 'py-4' : 'py-5'">
+      <!-- Title & Description -->
+      <div
+        class="space-y-1 transition-all duration-400"
+        :style="{
+          opacity: isVisible ? 1 : 0,
+          transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+          transitionDelay: '100ms',
+        }"
+      >
+        <h1
+          class="font-semibold tracking-tight"
+          :class="isMinimal ? 'text-2xl' : isStatsFocus ? 'text-4xl' : 'text-3xl'"
+          :style="{ color: 'var(--text-primary)' }"
+        >
+          {{ title }}
+        </h1>
+        <p v-if="description" class="text-sm" :style="{ color: 'var(--text-tertiary)' }">
+          {{ description }}
+        </p>
+      </div>
 
-        <!-- Stats Cards -->
-        <div v-if="stats.length > 0" :class="statsClasses">
+      <!-- Stats Cards -->
+      <div
+        v-if="stats && stats.length > 0"
+        class="grid grid-cols-2 md:grid-cols-4 gap-4"
+        :class="isStatsFocus ? 'mt-8' : 'mt-6'"
+      >
+        <div
+          v-for="(stat, index) in stats"
+          :key="index"
+          class="rounded-xl border relative overflow-hidden group transition-all duration-300 hover:-translate-y-1"
+          :class="isStatsFocus ? 'p-6' : 'p-4'"
+          :style="{
+            background: 'var(--bg-surface)',
+            borderColor: 'var(--border-default)',
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+            transitionDelay: `${200 + index * 50}ms`,
+          }"
+        >
+          <!-- Gradient glow on hover -->
           <div
-            v-for="stat in stats"
-            :key="stat.label"
-            class="bg-white dark:bg-gray-800 rounded-xl px-6 py-4 border border-gray-200 dark:border-gray-700 shadow-sm"
-          >
-            <div class="flex items-center gap-3">
-              <div
-                class="w-10 h-10 rounded-lg flex items-center justify-center"
-                :class="stat.iconBg"
-              >
-                <UIcon
-                  :name="stat.icon"
-                  class="w-5 h-5"
-                  :class="stat.iconColor"
-                />
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                  {{ stat.value }}
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ stat.label }}
-                </p>
-              </div>
+            class="absolute inset-0 bg-gradient-to-br from-[#0066FF]/5 to-[#7C3AED]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          />
+
+          <div class="relative">
+            <div
+              class="font-semibold"
+              :class="isStatsFocus ? 'text-3xl' : 'text-2xl'"
+              :style="{ color: 'var(--text-primary)' }"
+            >
+              {{ stat.value }}
+            </div>
+            <div class="text-sm mt-1" :style="{ color: 'var(--text-tertiary)' }">
+              {{ stat.label }}
             </div>
           </div>
         </div>

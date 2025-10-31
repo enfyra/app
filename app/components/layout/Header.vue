@@ -1,8 +1,5 @@
 <template>
-  <header
-    class="h-16 border-b border-gray-600 flex items-center justify-between bg-background shrink-0"
-    :class="isMobile ? 'px-3' : 'px-6'"
-  >
+  <div class="flex items-center justify-between w-full">
     <!-- Left side: Left actions from registry -->
     <div class="flex items-center gap-3 min-w-0 flex-1">
       <!-- Component actions -->
@@ -56,7 +53,7 @@
 
     <!-- Right Side Action Buttons -->
     <LayoutHeaderActions />
-  </header>
+  </div>
 </template>
 
 <script setup lang="ts">

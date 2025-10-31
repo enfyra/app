@@ -12,6 +12,15 @@ const { getId } = useDatabase();
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Role Manager",
+  variant: "default",
+  gradient: "purple",
+});
+
 const {
   data: apiData,
   pending: loading,
@@ -91,14 +100,6 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Role Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-amber-500/8 via-orange-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"

@@ -8,89 +8,28 @@
       Skip to main content
     </a>
 
-    <!-- Mini Sidebar -->
+    <!-- Unified Sidebar -->
     <aside
-      class="w-16 bg-gray-800 flex flex-col items-center flex-shrink-0"
+      v-if="sidebarVisible || !isTabletOrMobile"
+      class="border-r flex flex-col flex-shrink-0 transition-all duration-500 ease-out"
+      :class="[
+        isTabletOrMobile
+          ? 'fixed inset-y-0 left-0 w-72 z-50 shadow-2xl backdrop-blur-xl'
+          : (sidebarCollapsed ? 'w-20' : 'w-72')
+      ]"
+      :style="{
+        background: 'var(--bg-surface)',
+        borderColor: 'var(--border-subtle)',
+      }"
       aria-label="Primary navigation"
     >
-      <!-- Toggle Button -->
-      <div class="py-4 w-full flex justify-center">
-        <UTooltip
-          :text="sidebarVisible ? 'Hide Menu' : 'Show Menu'"
-          :content="{ side: 'right', sideOffset: 8 }"
-          :delay-duration="0"
-          arrow
-        >
-          <div
-            class="relative group"
-            :class="[
-              sidebarVisible
-                ? 'bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl p-1 shadow-lg border border-orange-500/30'
-                : `lg:hover:bg-gradient-to-br lg:hover:from-orange-500/10 lg:hover:to-red-500/10 rounded-xl p-1 border border-transparent lg:hover:border-orange-500/20 ${
-                    isTablet ? '' : 'transition-colors duration-200'
-                  }`,
-            ]"
-          >
-            <UButton
-              variant="ghost"
-              :icon="sidebarVisible ? 'lucide:chevron-left' : 'lucide:menu'"
-              @click="toggleSidebar"
-              class="transition-transform duration-200"
-              :class="[
-                'w-10 h-10 flex justify-center items-center rounded-lg',
-                isTablet
-                  ? ''
-                  : 'transition-colors duration-200 lg:group-hover:scale-110',
-                sidebarVisible
-                  ? 'bg-gradient-to-br from-orange-500/30 to-red-500/30 text-orange-600 shadow-md'
-                  : 'text-muted-foreground lg:hover:text-orange-600 bg-gradient-to-br lg:hover:from-background lg:hover:to-muted/20',
-              ]"
-              :aria-label="
-                sidebarVisible ? 'Hide navigation menu' : 'Show navigation menu'
-              "
-              :aria-expanded="sidebarVisible"
-            />
-            <!-- Active indicator -->
-            <div
-              v-if="sidebarVisible"
-              class="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-gradient-to-b from-orange-500 to-red-500 rounded-full"
-            />
-            <!-- Menu indicator dots when collapsed -->
-            <div
-              v-if="!sidebarVisible"
-              class="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 flex gap-0.5"
-            >
-              <div class="w-1 h-1 bg-orange-500/60 rounded-full"></div>
-              <div class="w-1 h-1 bg-orange-500/60 rounded-full"></div>
-              <div class="w-1 h-1 bg-orange-500/60 rounded-full"></div>
-            </div>
-          </div>
-        </UTooltip>
-      </div>
-
-      <!-- Navigation -->
-      <div class="flex-1 w-full">
-        <SidebarMiniSidebar />
-      </div>
+      <SidebarUnifiedSidebar />
     </aside>
 
-    <!-- Sidebar -->
-    <aside
-      v-if="sidebarVisible"
-      class="bg-gray-700 p-2 flex flex-col border-l border-gray-600 flex-shrink-0"
-      :class="isTablet ? 'fixed inset-y-0 left-16 w-80 z-50 shadow-xl' : 'w-60'"
-      aria-label="Secondary navigation"
-    >
-      <CommonFull class="mb-4 flex-shrink-0" />
-      <div class="flex-1 overflow-y-auto sidebar-scroll">
-        <SidebarMenu />
-      </div>
-    </aside>
-
-    <!-- Overlay for tablet -->
+    <!-- Overlay for tablet/mobile -->
     <div
-      v-if="sidebarVisible && isTablet"
-      class="fixed inset-0 left-16 bg-black/20 backdrop-blur-sm z-40"
+      v-if="sidebarVisible && isTabletOrMobile"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
       @click="setSidebarVisible(false)"
       role="presentation"
       aria-hidden="true"
@@ -98,29 +37,60 @@
 
     <!-- Main Content -->
     <main
-      class="flex-1 flex flex-col min-h-0 bg-gradient-to-br from-background via-muted/5 to-muted/10 relative"
+      class="flex-1 flex flex-col min-h-0 relative"
+      :style="{ background: 'var(--bg-app)' }"
       id="main-content"
     >
-      <!-- Subtle pattern overlay -->
-      <div
-        class="absolute inset-0 opacity-30 bg-gradient-to-tr from-transparent via-primary/5 to-secondary/5 pointer-events-none"
-      ></div>
+      <!-- Layout Header (Breadcrumbs OR Actions) - Styled via useHeaderStyleRegistry -->
+      <header
+        :class="headerContainerClasses"
+        :style="headerContainerStyle"
+      >
+        <!-- Accent line (gradient line on top/bottom of header) -->
+        <div
+          v-if="headerAccentLine?.enabled"
+          class="absolute left-0 right-0"
+          :class="headerAccentLine.position === 'bottom' ? 'bottom-0' : 'top-0'"
+          :style="{
+            height: headerAccentLine.height || '1px',
+            background: headerAccentLine.gradient || 'linear-gradient(90deg, transparent 0%, rgba(124, 58, 237, 0.4) 50%, transparent 100%)'
+          }"
+        ></div>
 
-      <!-- Header -->
-      <LayoutHeader />
+        <div :class="headerContentClasses" :style="headerContentStyle">
+          <!-- Mobile menu toggle -->
+          <UButton
+            v-if="isTabletOrMobile"
+            variant="ghost"
+            icon="lucide:menu"
+            @click="toggleSidebar"
+            size="sm"
+            class="lg:hidden flex-shrink-0"
+            aria-label="Toggle navigation menu"
+          />
 
-      <!-- Sub Header -->
-      <LayoutSubHeader />
+          <!-- Header Content (Breadcrumbs/Actions from LayoutHeader) -->
+          <LayoutHeader />
+        </div>
+      </header>
+
+      <!-- Page Header (optional - registered by pages) -->
+      <CommonPageHeader
+        v-if="hasPageHeader"
+        :title="pageHeader!.title"
+        :description="pageHeader?.description"
+        :stats="pageHeader?.stats"
+        :variant="pageHeader?.variant"
+        :gradient="pageHeader?.gradient"
+      />
+
+      <!-- Sub Header (optional secondary toolbar) -->
+      <LayoutSubHeader v-if="hasSubHeaderActions" />
 
       <!-- Page Content -->
-      <section class="flex-1 min-h-0 overflow-auto relative z-10 pb-7">
-        <!-- Content background with subtle styling -->
-        <div
-          class="min-h-full bg-gradient-to-b from-background/50 to-transparent rounded-xl backdrop-blur-sm"
-        >
-          <div class="px-6 pt-6 pb-6 md:pb-20">
-            <slot />
-          </div>
+      <section class="flex-1 min-h-0 overflow-auto scrollbar-thin relative z-10">
+        <div class="p-6 md:pb-20">
+          <slot />
         </div>
       </section>
     </main>
@@ -135,18 +105,32 @@
 </template>
 
 <script setup lang="ts">
-const { sidebarVisible, routeLoading, toggleSidebar, setSidebarVisible } =
+const { sidebarVisible, sidebarCollapsed, routeLoading, toggleSidebar, setSidebarVisible } =
   useGlobalState();
 const { isMobile, isTablet } = useScreen();
+const { subHeaderActions } = useSubHeaderActionRegistry();
 
-// Layout logic moved to LayoutSubHeader component
+// Header style registry
+const {
+  containerStyle: headerContainerStyle,
+  containerClasses: headerContainerClasses,
+  contentStyle: headerContentStyle,
+  contentClasses: headerContentClasses,
+  accentLineConfig: headerAccentLine,
+} = useHeaderStyleRegistry();
 
-// Tablet sidebar behavior: default hidden, user can toggle
+// Page header registry
+const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
+
+const isTabletOrMobile = computed(() => isMobile.value || isTablet.value);
+const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
+
+// Sidebar behavior
 watch(
-  isTablet,
-  (tablet) => {
-    if (tablet) {
-      // On tablet: default to hidden, user can control
+  isTabletOrMobile,
+  (isMobileOrTablet) => {
+    if (isMobileOrTablet) {
+      // On mobile/tablet: default to hidden
       if (sidebarVisible.value) {
         setSidebarVisible(false);
       }
@@ -162,25 +146,5 @@ watch(
 </script>
 
 <style scoped>
-.sidebar-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(75 85 99) rgb(55 65 81);
-}
-
-.sidebar-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar-scroll::-webkit-scrollbar-track {
-  background: rgb(55 65 81);
-}
-
-.sidebar-scroll::-webkit-scrollbar-thumb {
-  background: rgb(75 85 99);
-  border-radius: 3px;
-}
-
-.sidebar-scroll:hover::-webkit-scrollbar-thumb {
-  background: rgb(107 114 128);
-}
+/* No custom styles needed - using Tailwind */
 </style>

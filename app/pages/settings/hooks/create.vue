@@ -1,14 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Create New Hook"
-      title-size="lg"
-      show-background
-      background-gradient="from-red-500/6 via-orange-400/4 to-transparent"
-      padding-y="py-6"
-    />
-
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
         <UForm :state="createForm" @submit="handleCreate">
@@ -61,6 +52,14 @@ const {
 } = useApi(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Hook",
+});
+
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Create New Hook",
+  gradient: "purple",
 });
 
 onMounted(() => {
