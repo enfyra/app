@@ -12,6 +12,12 @@ const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const { createLoader } = useLoader();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Routing Manager",
+  gradient: "cyan",
+});
 
 // Helper to get id from both SQL (id) and MongoDB (_id)
 const { getId } = useDatabase();
@@ -190,22 +196,32 @@ function getRouteHeaderActions(routeItem: any) {
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleEnabled(routeItem),
       tooltip: tableExists ? 'Cannot disable route with associated table' : undefined
-    },
+    }
+  ];
+}
+
+function getRouteFooterActions(routeItem: any) {
+  // Check if route has associated table
+  const hasAssociatedTable = getId(routeItem.mainTable);
+  const { schemas } = useSchema();
+  const tableExists = hasAssociatedTable && Object.values(schemas.value).some(
+    (table: any) => getId(table) === getId(routeItem.mainTable)
+  );
+
+  return [
     {
-      component: 'UButton',
+      label: 'Delete',
       props: {
-        icon: 'i-heroicons-trash',
-        variant: 'outline',
+        icon: 'i-lucide-trash-2',
+        variant: 'solid',
         color: 'error',
-        disabled: tableExists
+        size: 'sm',
       },
+      disabled: routeItem.isSystem || tableExists,
       onClick: (e?: Event) => {
         e?.stopPropagation();
-        if (!tableExists) {
-          deleteRoute(routeItem);
-        }
+        deleteRoute(routeItem);
       },
-      tooltip: tableExists ? 'Cannot delete route with associated table' : undefined
     }
   ];
 }
@@ -291,14 +307,6 @@ async function deleteRoute(routeItem: any) {
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Routing Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-lime-500/8 via-green-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <div v-if="loading || !isMounted">
         <CommonLoadingState
@@ -327,14 +335,14 @@ async function deleteRoute(routeItem: any) {
               :description="routeItem.mainTable?.name"
               :icon="routeItem.icon || 'lucide:circle'"
               icon-color="primary"
-              :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
+              :card-class="'cursor-pointer transition-all'"
               @click="navigateTo(`/settings/routings/${getId(routeItem)}`)"
               :stats="[
                 {
                   label: 'Status',
                   component: 'UBadge',
-                  props: { 
-                    variant: 'soft', 
+                  props: {
+                    variant: 'soft',
                     color: routeItem.isEnabled ? 'success' : 'warning',
                   },
                   value: routeItem.isEnabled ? 'Enabled' : 'Disabled'
@@ -348,22 +356,22 @@ async function deleteRoute(routeItem: any) {
                 {
                   label: 'Methods',
                   component: routeItem.publishedMethods?.length ? 'UBadge' : undefined,
-                  values: routeItem.publishedMethods?.length ? 
+                  values: routeItem.publishedMethods?.length ?
                     routeItem.publishedMethods
                       .filter((m: any) => m?.method)
                       .map((m: any) => ({
                         value: m.method.toUpperCase(),
                         props: {
-                          color: m.method === 'GET' ? 'info' : 
-                                 m.method === 'POST' ? 'success' : 
-                                 m.method === 'PATCH' ? 'warning' : 
+                          color: m.method === 'GET' ? 'info' :
+                                 m.method === 'POST' ? 'success' :
+                                 m.method === 'PATCH' ? 'warning' :
                                  m.method === 'DELETE' ? 'error' : undefined
                         }
                       })) : undefined,
                   value: !routeItem.publishedMethods?.length ? '-' : undefined
                 }
               ]"
-              :actions="[]"
+              :actions="getRouteFooterActions(routeItem)"
               :header-actions="getRouteHeaderActions(routeItem)"
             </CommonSettingsCard>
           </div>
@@ -377,7 +385,11 @@ async function deleteRoute(routeItem: any) {
           size="sm"
         />
 
-        <div class="flex justify-center mt-6" v-if="total > pageLimit">
+        <!-- Premium Pagination -->
+        <div
+          v-if="!loading && routesData.length > 0 && total > pageLimit"
+          class="flex items-center justify-between mt-6"
+        >
           <UPagination
             v-model:page="page"
             :items-per-page="pageLimit"
@@ -390,9 +402,16 @@ async function deleteRoute(routeItem: any) {
                 query: { ...route.query, page: p },
               })
             "
-            color="secondary"
-            active-color="secondary"
+            :ui="{
+              wrapper: 'flex items-center gap-2',
+              base: 'h-9 w-9 rounded-xl transition-all duration-300',
+              active: 'bg-gradient-to-br from-blue-600 to-purple-600 border-transparent shadow-lg shadow-purple-600/30 text-white',
+              inactive: 'hover:border-purple-600/30',
+            }"
           />
+          <p class="text-sm text-gray-400">
+            Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of <span class="text-gray-200">{{ total }}</span> results
+          </p>
         </div>
       </div>
     </Transition>

@@ -1,30 +1,8 @@
 <template>
   <div class="space-y-6">
-    <!-- Header - Full width -->
-    <CommonPageHeader
-      :title="`Extension: ${extensionData?.data?.[0]?.name}`"
-      title-size="lg"
-      show-background
-      background-gradient="from-purple-500/6 via-violet-400/4 to-transparent"
-      padding-y="py-6"
-    >
-      <template #badges>
-        <!-- Extension Status Badges -->
-        <div class="flex items-center gap-3">
-          <UBadge color="primary" v-if="extensionData?.data?.[0]?.isSystem"
-            >System Extension</UBadge
-          >
-          <UBadge color="secondary" v-if="extensionData?.data?.[0]?.isEnabled"
-            >Enabled</UBadge
-          >
-          <UBadge color="info">{{ extensionData?.data?.[0]?.type }}</UBadge>
-        </div>
-      </template>
-    </CommonPageHeader>
-
     <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="form" @submit="updateExtension">
           <FormEditorLazy
             ref="formEditorRef"
@@ -39,7 +17,7 @@
             :loading="loading"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 
@@ -92,6 +70,17 @@ const showUploadModal = ref(false);
 const uploadLoading = ref(false);
 
 const { validate, getIncludeFields } = useSchema(tableName);
+const { registerPageHeader } = usePageHeaderRegistry();
+
+// Register page header with dynamic title
+watch(() => extensionData.value?.data?.[0]?.name, (name) => {
+  if (name) {
+    registerPageHeader({
+      title: `Extension: ${name}`,
+      gradient: "purple",
+    });
+  }
+}, { immediate: true });
 
 // Form changes tracking via FormEditor
 const hasFormChanges = ref(false);

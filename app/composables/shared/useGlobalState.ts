@@ -6,6 +6,10 @@ export const useGlobalState = () => {
     "global:sidebar:visible",
     () => true
   );
+  const sidebarCollapsed = useState<boolean>(
+    "global:sidebar:collapsed",
+    () => false
+  );
   const routeLoading = useState<boolean>("global:route:loading", () => false);
   
   // Global file update tracker for cache busting
@@ -41,6 +45,14 @@ export const useGlobalState = () => {
     sidebarVisible.value = visible;
   }
 
+  function toggleSidebarCollapsed() {
+    sidebarCollapsed.value = !sidebarCollapsed.value;
+  }
+
+  function setSidebarCollapsed(collapsed: boolean) {
+    sidebarCollapsed.value = collapsed;
+  }
+
   function setRouteLoading(loading: boolean) {
     routeLoading.value = loading;
   }
@@ -60,9 +72,12 @@ export const useGlobalState = () => {
     settings,
     fetchSetting,
     sidebarVisible,
+    sidebarCollapsed,
     routeLoading,
     toggleSidebar,
     setSidebarVisible,
+    toggleSidebarCollapsed,
+    setSidebarCollapsed,
     setRouteLoading,
     fileUpdateTimestamp,
     updateFileTimestamp,

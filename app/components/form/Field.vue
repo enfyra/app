@@ -35,20 +35,8 @@ const fieldProps = computed(() => {
       ? { type: manualConfig }
       : manualConfig || {};
 
-  // Get field type from schema
-  const field = props.columnMap.get(props.keyName);
-  const fieldType = config.type || field?.type;
-
-  // Add col-span-2 for specific field types
-  const baseProps = config.fieldProps || {};
-  if (["richtext", "code", "simple-json", "text"].includes(fieldType)) {
-    return {
-      ...baseProps,
-      class: `${baseProps.class || ""} col-span-2`.trim(),
-    };
-  }
-
-  return baseProps;
+  // Return field props without col-span (no longer using grid)
+  return config.fieldProps || {};
 });
 
 // Check if field is a relation (exclude from dropdown)
@@ -127,71 +115,45 @@ const dropdownItems = computed(() => [
     onSelect: copyRawValue,
   },
 ]);
+
+// Check if field is boolean type
+const isBooleanField = computed(() => {
+  const field = props.columnMap.get(props.keyName);
+  const manualConfig = props.typeMap?.[props.keyName];
+  const configType = typeof manualConfig === "string" ? manualConfig : manualConfig?.type;
+
+  return field?.type === "boolean" || configType === "boolean";
+});
 </script>
 
 <template>
-  <UFormField
+  <!-- Boolean Field: Horizontal layout with subtle top/bottom border -->
+  <div
+    v-if="isBooleanField"
     v-bind="fieldProps"
-    :label="keyName"
-    class="rounded-lg border border-muted p-4"
-    :error="errors?.[keyName]"
+    class="flex items-center justify-between py-4 border-t border-b"
+    :style="{
+      borderColor: 'var(--border-subtle)',
+    }"
   >
-    <template #label>
-      <div class="flex items-center justify-between w-full">
-        <span class="flex items-center gap-1">
-          {{ keyName }}
-          <span
-            v-if="
-              column?.isNullable === false &&
-              column?.isGenerated !== true &&
-              column?.type !== 'boolean' &&
-              keyName !== 'createdAt' &&
-              keyName !== 'updatedAt'
-            "
-            class="text-red-500"
-            >*</span
-          >
-        </span>
+    <!-- Left: Label and description -->
+    <div class="space-y-0.5">
+      <label
+        :for="`field-${keyName}`"
+        class="text-sm font-medium"
+        :style="{ color: 'var(--text-primary)' }"
+      >
+        {{ keyName }}
+      </label>
+      <p
+        v-if="column?.description"
+        class="text-xs"
+        :style="{ color: 'var(--text-tertiary)' }"
+        v-html="column?.description"
+      />
+    </div>
 
-        <div class="flex items-center gap-2">
-          <!-- Copy Status Indicator -->
-          <div class="flex items-center">
-            <Transition name="fade">
-              <UIcon
-                v-if="copyStatus === 'success'"
-                name="i-lucide-check"
-                class="w-4 h-4 text-green-600 ml-2"
-              />
-              <UIcon
-                v-else-if="copyStatus === 'error'"
-                name="i-lucide-x"
-                class="w-4 h-4 text-red-600"
-              />
-            </Transition>
-          </div>
-
-          <!-- Dropdown Menu for non-relation fields -->
-          <UDropdownMenu
-            v-if="!isRelationField"
-            :items="dropdownItems"
-            class="opacity-0 lg:group-hover:opacity-100 transition-opacity"
-          >
-            <UButton
-              icon="i-lucide-chevron-down"
-              size="xs"
-              variant="ghost"
-              color="neutral"
-              @click.stop
-            />
-          </UDropdownMenu>
-        </div>
-      </div>
-    </template>
-
-    <template #description v-if="column?.description">
-      <div v-html="column?.description" />
-    </template>
-
+    <!-- Right: Switch/Toggle -->
     <FormFieldRenderer
       :key-name="keyName"
       :form-data="formData"
@@ -202,5 +164,89 @@ const dropdownItems = computed(() => [
       @update:errors="updateErrors"
       :loading="props.loading"
     />
-  </UFormField>
+  </div>
+
+  <!-- Other Fields: Vertical layout (Figma style) -->
+  <div v-else v-bind="fieldProps" class="space-y-2">
+    <!-- Label -->
+    <div class="flex items-center justify-between">
+      <label
+        :for="`field-${keyName}`"
+        class="text-sm font-medium flex items-center gap-1"
+        :style="{ color: 'var(--text-primary)' }"
+      >
+        {{ keyName }}
+        <span
+          v-if="
+            column?.isNullable === false &&
+            column?.isGenerated !== true &&
+            column?.type !== 'boolean' &&
+            keyName !== 'createdAt' &&
+            keyName !== 'updatedAt'
+          "
+          class="text-red-500"
+          >*</span
+        >
+      </label>
+
+      <!-- Utility buttons (hidden, shown on hover) -->
+      <div class="flex items-center gap-2 opacity-0 lg:group-hover:opacity-100 transition-opacity">
+        <!-- Copy Status Indicator -->
+        <Transition name="fade">
+          <UIcon
+            v-if="copyStatus === 'success'"
+            name="i-lucide-check"
+            class="w-4 h-4 text-green-600"
+          />
+          <UIcon
+            v-else-if="copyStatus === 'error'"
+            name="i-lucide-x"
+            class="w-4 h-4 text-red-600"
+          />
+        </Transition>
+
+        <!-- Dropdown Menu for non-relation fields -->
+        <UDropdownMenu
+          v-if="!isRelationField"
+          :items="dropdownItems"
+        >
+          <UButton
+            icon="i-lucide-chevron-down"
+            size="xs"
+            variant="ghost"
+            color="neutral"
+            @click.stop
+          />
+        </UDropdownMenu>
+      </div>
+    </div>
+
+    <!-- Input Field -->
+    <FormFieldRenderer
+      :key-name="keyName"
+      :form-data="formData"
+      :column-map="columnMap"
+      :type-map="typeMap"
+      :errors="errors"
+      @update:form-data="updateFormData"
+      @update:errors="updateErrors"
+      :loading="props.loading"
+    />
+
+    <!-- Error Message -->
+    <p
+      v-if="errors?.[keyName]"
+      class="text-xs text-red-500"
+    >
+      {{ errors[keyName] }}
+    </p>
+
+    <!-- Helper Text / Description -->
+    <p
+      v-else-if="column?.description"
+      class="text-xs"
+      :style="{ color: 'var(--text-tertiary)' }"
+      v-html="column?.description"
+    />
+  </div>
 </template>

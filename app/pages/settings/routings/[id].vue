@@ -1,33 +1,8 @@
 <template>
   <div class="space-y-6">
-    <!-- Header - Full width -->
-    <CommonPageHeader
-      :title="`Route: ${routeData?.data?.[0]?.path}`"
-      title-size="lg"
-      show-background
-      background-gradient="from-lime-500/6 via-green-400/4 to-transparent"
-      padding-y="py-6"
-    >
-      <template #badges>
-        <!-- Route Status Badges -->
-        <div class="flex items-center gap-3">
-          <UIcon
-            :name="routeData?.data?.[0]?.icon || 'lucide:circle'"
-            class="text-xl text-primary mr-2"
-          />
-          <UBadge color="primary" v-if="routeData?.data?.[0].isSystem"
-            >System Route</UBadge
-          >
-          <UBadge color="secondary" v-if="routeData?.data?.[0].isEnabled"
-            >Enabled</UBadge
-          >
-        </div>
-      </template>
-    </CommonPageHeader>
-
     <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="form" @submit="updateRoute">
           <FormEditorLazy
             ref="formEditorRef"
@@ -40,17 +15,17 @@
             :loading="loading"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
 
       <!-- Route Permissions Section -->
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <PermissionManager
           table-name="route_permission_definition"
           :current-field-id="{ field: 'route', value: route.params.id as string }"
           icon="lucide:shield"
           title="Route Permissions"
         />
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 
@@ -74,6 +49,17 @@ const hasFormChanges = ref(false);
 const formEditorRef = ref();
 
 const { validate, getIncludeFields } = useSchema(tableName);
+const { registerPageHeader } = usePageHeaderRegistry();
+
+// Register page header with dynamic title
+watch(() => routeData.value?.data?.[0]?.path, (path) => {
+  if (path) {
+    registerPageHeader({
+      title: `Route: ${path}`,
+      gradient: "cyan",
+    });
+  }
+}, { immediate: true });
 
 // Check if route has associated table to disable isEnabled field
 const hasAssociatedTable = computed(() => {

@@ -14,10 +14,11 @@ const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 
 const { validate, getIncludeFields } = useSchema(tableName);
+const { schemas } = useSchema();
 const { getIdFieldName } = useDatabase();
 
 const { fetchMenuDefinitions } = useMenuApi();
-const { reregisterAllMenus } = useMenuRegistry();
+const { reregisterAllMenus, registerTableMenusWithSidebarIds } = useMenuRegistry();
 
 const {
   data: menuData,
@@ -283,6 +284,12 @@ async function updateMenuDetail() {
   await fetchMenuDefinitions();
   await reregisterAllMenus(fetchMenuDefinitions as any);
 
+  // Also reregister table menus to restore them
+  const schemaValues = Object.values(schemas.value);
+  if (schemaValues.length > 0) {
+    await registerTableMenusWithSidebarIds(schemaValues);
+  }
+
   toast.add({
     title: "Success",
     color: "success",
@@ -311,13 +318,31 @@ async function deleteMenuDetail() {
   await fetchMenuDefinitions();
   await reregisterAllMenus(fetchMenuDefinitions as any);
 
-  toast.add({ 
+  // Also reregister table menus to restore them
+  const schemaValues = Object.values(schemas.value);
+  if (schemaValues.length > 0) {
+    await registerTableMenusWithSidebarIds(schemaValues);
+  }
+
+  toast.add({
     title: "Success",
-    description: "Menu deleted successfully", 
-    color: "success" 
+    description: "Menu deleted successfully",
+    color: "success"
   });
   await navigateTo("/settings/menus");
 }
+
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+watch(menuData, (data) => {
+  if (data?.data?.[0]) {
+    registerPageHeader({
+      title: `Menu: ${data.data[0].label || 'Loading...'}`,
+      gradient: "purple",
+    });
+  }
+}, { immediate: true });
 
 onMounted(() => {
   initializeForm();
@@ -326,34 +351,9 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <!-- Header - Full width -->
-    <CommonPageHeader
-      :title="`Menu: ${menuData?.data?.[0]?.label || 'Loading...'}`"
-      title-size="lg"
-      show-background
-      background-gradient="from-violet-500/6 via-purple-400/4 to-transparent"
-      padding-y="py-6"
-    >
-      <template #badges>
-        <!-- Menu Status Badges -->
-        <div class="flex items-center gap-3">
-          <UIcon
-            :name="menuData?.data?.[0]?.icon || 'lucide:circle'"
-            class="text-xl text-primary mr-2"
-          />
-          <UBadge color="primary" v-if="menuData?.data?.[0]?.isSystem"
-            >System Menu</UBadge
-          >
-          <UBadge color="secondary" v-if="menuData?.data?.[0]?.isEnabled"
-            >Enabled</UBadge
-          >
-        </div>
-      </template>
-    </CommonPageHeader>
-
     <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <FormEditorLazy
           ref="formEditorRef"
           v-model="form"
@@ -364,7 +364,7 @@ onMounted(() => {
           :type-map="typeMap"
           :loading="loading"
         />
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>

@@ -1,14 +1,5 @@
 <template>
   <div class="extension-manager-page">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Extension Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-purple-500/6 via-violet-400/3 to-transparent"
-      padding-y="py-6"
-    />
-
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -35,7 +26,7 @@
           :description="extension.description"
           :icon="getExtensionIcon(extension)"
           icon-color="primary"
-          :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
+          :card-class="'cursor-pointer transition-all'"
           :stats="[
             {
               label: 'Type',
@@ -63,6 +54,7 @@
           ]"
           @click="navigateToDetail(extension)"
           :header-actions="getHeaderActions(extension)"
+          :actions="getFooterActions(extension)"
         </CommonSettingsCard>
       </div>
 
@@ -75,9 +67,12 @@
       />
     </Transition>
 
-    <div class="flex justify-center mt-4" v-if="!loading && extensions.length > 0">
+    <!-- Premium Pagination -->
+    <div
+      v-if="!loading && extensions.length > 0 && total > limit"
+      class="flex items-center justify-between mt-6"
+    >
       <UPagination
-        v-if="total > limit"
         v-model:page="page"
         :items-per-page="limit"
         :total="total"
@@ -89,9 +84,16 @@
             query: { ...route.query, page: p },
           })
         "
-        color="secondary"
-        active-color="secondary"
+        :ui="{
+          wrapper: 'flex items-center gap-2',
+          base: 'h-9 w-9 rounded-xl transition-all duration-300',
+          active: 'bg-gradient-to-br from-blue-600 to-purple-600 border-transparent shadow-lg shadow-purple-600/30 text-white',
+          inactive: 'hover:border-purple-600/30',
+        }"
       />
+      <p class="text-sm text-gray-400">
+        Showing <span class="text-gray-200">{{ (page - 1) * limit + 1 }}-{{ Math.min(page * limit, total) }}</span> of <span class="text-gray-200">{{ total }}</span> results
+      </p>
     </div>
   </div>
 </template>
@@ -111,6 +113,12 @@ const { getId } = useDatabase();
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const route = useRoute();
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Extension Manager",
+  gradient: "purple",
+});
 const {
   data: apiData,
   pending: loading,
@@ -200,22 +208,28 @@ function getHeaderActions(extension: ExtensionDefinition) {
     });
   }
 
-  if (checkPermissionCondition({ or: [{ route: '/extension_definition', actions: ['delete'] }] })) {
-    actions.push({
-      component: 'UButton',
+  return actions;
+}
+
+function getFooterActions(extension: ExtensionDefinition) {
+  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/extension_definition', actions: ['delete'] }] });
+
+  return [
+    {
+      label: 'Delete',
       props: {
-        icon: 'i-heroicons-trash',
-        variant: 'outline',
-        color: 'error'
+        icon: 'i-lucide-trash-2',
+        variant: 'solid',
+        color: 'error',
+        size: 'sm',
       },
+      disabled: !hasDeletePermission,
       onClick: (e?: Event) => {
         e?.stopPropagation();
         deleteExtension(extension);
-      }
-    });
-  }
-
-  return actions;
+      },
+    }
+  ];
 }
 
 function getExtensionLoader(extensionId: string) {

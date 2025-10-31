@@ -10,6 +10,17 @@ const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
+const { registerPageHeader } = usePageHeaderRegistry();
+
+// Register page header with dynamic title
+watch(() => apiData.value?.data?.[0]?.email, (email) => {
+  if (email) {
+    registerPageHeader({
+      title: email,
+      gradient: "blue",
+    });
+  }
+}, { immediate: true });
 
 const {
   data: apiData,
@@ -194,20 +205,9 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <!-- Header - Full width -->
-    <CommonPageHeader
-      :title="
-        loading ? 'Loading...' : apiData?.data?.[0]?.email || 'User Details'
-      "
-      title-size="lg"
-      show-background
-      background-gradient="from-blue-500/6 via-indigo-400/4 to-transparent"
-      padding-y="py-6"
-    />
-
     <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="form" @submit="saveUser">
           <FormEditorLazy
             ref="formEditorRef"
@@ -219,7 +219,7 @@ onMounted(() => {
             :loading="loading"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 

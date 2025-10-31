@@ -12,6 +12,15 @@ const { getId } = useDatabase();
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Role Manager",
+  variant: "default",
+  gradient: "purple",
+});
+
 const {
   data: apiData,
   pending: loading,
@@ -91,14 +100,6 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Role Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-amber-500/8 via-orange-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -123,7 +124,7 @@ watch(
           :description="role.description || 'No description'"
           icon="lucide:shield-check"
           icon-color="primary"
-          :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
+          :card-class="'cursor-pointer transition-all'"
           @click="navigateTo(`/settings/roles/${getId(role)}`)"
           :stats="[
             {
@@ -141,19 +142,22 @@ watch(
               value: '-'
             }
           ]"
-          :actions="[]"
-          :header-actions="!role.isSystem ? [{
-            component: 'UButton',
-            props: {
-              icon: 'i-heroicons-trash',
-              variant: 'outline',
-              color: 'error'
-            },
-            onClick: (e?: Event) => {
-              e?.stopPropagation();
-              deleteRole(getId(role));
+          :actions="[
+            {
+              label: 'Delete',
+              props: {
+                icon: 'i-lucide-trash-2',
+                variant: 'solid',
+                color: 'error',
+                size: 'sm',
+              },
+              disabled: role.isSystem,
+              onClick: (e?: Event) => {
+                e?.stopPropagation();
+                deleteRole(getId(role));
+              },
             }
-          }] : []"
+          ]"
         />
       </div>
 
@@ -166,9 +170,12 @@ watch(
       />
     </Transition>
 
-    <div class="flex justify-center" v-if="!loading && roles.length > 0">
+    <!-- Premium Pagination -->
+    <div
+      v-if="!loading && roles.length > 0 && total > pageLimit"
+      class="flex items-center justify-between mt-6"
+    >
       <UPagination
-        v-if="total > pageLimit"
         v-model:page="page"
         :items-per-page="pageLimit"
         :total="total"
@@ -180,9 +187,16 @@ watch(
             query: { ...route.query, page: p },
           })
         "
-        color="secondary"
-        active-color="secondary"
+        :ui="{
+          wrapper: 'flex items-center gap-2',
+          base: 'h-9 w-9 rounded-xl transition-all duration-300',
+          active: 'bg-gradient-to-br from-blue-600 to-purple-600 border-transparent shadow-lg shadow-purple-600/30 text-white',
+          inactive: 'hover:border-purple-600/30',
+        }"
       />
+      <p class="text-sm text-gray-400">
+        Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of <span class="text-gray-200">{{ total }}</span> results
+      </p>
     </div>
   </div>
 </template>

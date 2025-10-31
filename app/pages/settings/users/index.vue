@@ -1,13 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="User Manager"
-      title-size="md"
-      show-background
-      background-gradient="from-blue-500/8 via-indigo-400/5 to-transparent"
-      padding-y="py-6"
-    />
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -32,7 +24,7 @@
           :description="user.email || 'No email'"
           icon="lucide:user"
           icon-color="primary"
-          :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
+          :card-class="'cursor-pointer transition-all'"
           @click="navigateTo(`/settings/users/${getId(user)}`)"
           :stats="[
             {
@@ -51,7 +43,22 @@
               value: new Date(user.createdAt).toLocaleDateString(),
             },
           ]"
-          :actions="[]"
+          :actions="[
+            {
+              label: 'Delete',
+              props: {
+                icon: 'i-lucide-trash-2',
+                variant: 'solid',
+                color: 'error',
+                size: 'sm',
+              },
+              disabled: user.isRootAdmin,
+              onClick: (e?: Event) => {
+                e?.stopPropagation();
+                deleteUser(user);
+              },
+            }
+          ]"
           :header-actions="getHeaderActions(user)"
         />
       </div>
@@ -65,9 +72,12 @@
       />
     </Transition>
 
-    <div class="flex justify-center mt-4" v-if="!loading && users.length > 0">
+    <!-- Premium Pagination -->
+    <div
+      v-if="!loading && users.length > 0 && total > limit"
+      class="flex items-center justify-between mt-6"
+    >
       <UPagination
-        v-if="total > limit"
         v-model:page="page"
         :items-per-page="limit"
         :total="total"
@@ -79,9 +89,16 @@
             query: { ...route.query, page: p },
           })
         "
-        color="secondary"
-        active-color="secondary"
+        :ui="{
+          wrapper: 'flex items-center gap-2',
+          base: 'h-9 w-9 rounded-xl transition-all duration-300',
+          active: 'bg-gradient-to-br from-blue-600 to-purple-600 border-transparent shadow-lg shadow-purple-600/30 text-white',
+          inactive: 'hover:border-purple-600/30',
+        }"
       />
+      <p class="text-sm text-gray-400">
+        Showing <span class="text-gray-200">{{ (page - 1) * limit + 1 }}-{{ Math.min(page * limit, total) }}</span> of <span class="text-gray-200">{{ total }}</span> results
+      </p>
     </div>
 
     <FilterDrawerLazy
@@ -109,6 +126,15 @@ const { getId } = useDatabase();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 const toast = useToast();
+
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "User Manager",
+  variant: "default",
+  gradient: "blue",
+});
 
 const {
   data: apiData,
@@ -213,7 +239,7 @@ async function handleFilterApply(filter: FilterGroup) {
 function getHeaderActions(user: any) {
   const actions = [];
 
-  // Avatar
+  // Avatar only
   if (user.avatar) {
     actions.push({
       component: "UAvatar",
@@ -231,22 +257,6 @@ function getHeaderActions(user: any) {
         size: "xs",
       },
       label: user.email?.charAt(0)?.toUpperCase() || "?",
-    });
-  }
-
-  // Delete button
-  if (!user.isRootAdmin) {
-    actions.push({
-      component: "UButton",
-      props: {
-        icon: "i-heroicons-trash",
-        variant: "outline",
-        color: "error",
-      },
-      onClick: (e?: Event) => {
-        e?.stopPropagation();
-        deleteUser(user);
-      },
     });
   }
 

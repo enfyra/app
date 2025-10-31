@@ -20,11 +20,22 @@ const currentFilter = ref(createEmptyFilter());
 
 // Get the correct route for this table
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
+const { registerPageHeader } = usePageHeaderRegistry();
 
 // Ensure routes are loaded on mount
 onMounted(async () => {
   await ensureRoutesLoaded();
 });
+
+// Register page header with dynamic table name
+watch(() => table.value?.name, (name) => {
+  if (name) {
+    registerPageHeader({
+      title: name,
+      gradient: "cyan",
+    });
+  }
+}, { immediate: true });
 
 const filterLabel = computed(() => {
   const activeCount = currentFilter.value.conditions.length;
@@ -315,15 +326,28 @@ useHeaderActionRegistry([
 </script>
 
 <template>
-  <div class="space-y-4">
-    <!-- Header -->
-    <CommonPageHeader
-      :title="table?.name || 'Data Records'"
-      title-size="md"
-      show-background
-      background-gradient="from-cyan-500/8 via-blue-400/5 to-transparent"
-      padding-y="py-6"
-    />
+  <div class="space-y-6">
+    <!-- Active Filters Badge -->
+    <div
+      v-if="hasActiveFilters(currentFilter)"
+      class="flex items-center gap-2 p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30"
+    >
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
+        <UIcon name="i-lucide-filter" class="w-4 h-4 text-white" />
+      </div>
+      <span class="font-medium text-gray-200">
+        {{ currentFilter.conditions.length }} active filter{{ currentFilter.conditions.length > 1 ? 's' : '' }}
+      </span>
+      <UButton
+        icon="i-lucide-x"
+        size="xs"
+        variant="ghost"
+        @click="clearFilters"
+        class="ml-auto"
+      >
+        Clear
+      </UButton>
+    </div>
 
     <!-- Data Table -->
     <Transition name="loading-fade" mode="out-in">
@@ -348,26 +372,7 @@ useHeaderActionRegistry([
         :selectable="isSelectionMode"
         @selection-change="handleSelectionChange"
         @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
-      >
-        <template #header-actions>
-          <div
-            v-if="hasActiveFilters(currentFilter)"
-            class="flex items-center gap-2"
-          >
-            <UBadge color="primary" variant="soft">
-              {{ currentFilter.conditions.length }} active filters
-            </UBadge>
-            <UButton
-              icon="i-lucide-x"
-              size="xs"
-              variant="ghost"
-              @click="clearFilters"
-            >
-              Clear
-            </UButton>
-          </div>
-        </template>
-      </DataTableLazy>
+      />
 
       <!-- Empty State: khi đã mounted, không loading và không có data -->
       <div v-else class="w-full py-8">
@@ -380,23 +385,35 @@ useHeaderActionRegistry([
       </div>
     </Transition>
 
-    <!-- Pagination - only show when more than 1 page -->
-    <UPagination
+    <!-- Premium Pagination -->
+    <div
       v-if="!loading && Math.ceil(total / pageLimit) > 1"
-      v-model:page="page"
-      :items-per-page="pageLimit"
-      :total="total"
-      show-edges
-      :sibling-count="1"
-      :to="
-        (p) => ({
-          path: route.path,
-          query: { ...route.query, page: p },
-        })
-      "
-      color="secondary"
-      active-color="secondary"
-    />
+      class="flex items-center justify-between"
+    >
+      <p class="text-sm text-gray-400">
+        Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of{" "}
+        <span class="text-gray-200">{{ total }}</span> results
+      </p>
+      <UPagination
+        v-model:page="page"
+        :items-per-page="pageLimit"
+        :total="total"
+        show-edges
+        :sibling-count="1"
+        :to="
+          (p) => ({
+            path: route.path,
+            query: { ...route.query, page: p },
+          })
+        "
+        :ui="{
+          wrapper: 'flex items-center gap-2',
+          base: 'h-9 w-9 rounded-xl transition-all duration-300',
+          active: 'bg-gradient-to-br from-blue-600 to-purple-600 border-transparent shadow-lg shadow-purple-600/30 text-white',
+          inactive: 'hover:border-purple-600/30',
+        }"
+      />
+    </div>
 
     <!-- Filter Drawer - use existing component -->
     <FilterDrawerLazy

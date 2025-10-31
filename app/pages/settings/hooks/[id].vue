@@ -1,29 +1,8 @@
 <template>
   <div class="space-y-6">
-    <!-- Header - Full width -->
-    <CommonPageHeader
-      :title="`Hook: ${hookData?.data?.[0]?.name || '(no name)'}`"
-      title-size="lg"
-      show-background
-      background-gradient="from-red-500/6 via-orange-400/4 to-transparent"
-      padding-y="py-6"
-    >
-      <template #badges>
-        <!-- Hook Status Badges -->
-        <div class="flex items-center gap-3">
-          <UBadge color="primary" v-if="hookData?.data?.[0]?.isSystem"
-            >System Hook</UBadge
-          >
-          <UBadge color="secondary" v-if="hookData?.data?.[0]?.isEnabled"
-            >Enabled</UBadge
-          >
-        </div>
-      </template>
-    </CommonPageHeader>
-
     <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="form" @submit="updateHook">
           <FormEditorLazy
             ref="formEditorRef"
@@ -35,7 +14,7 @@
             :loading="loading"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 
@@ -195,6 +174,18 @@ async function deleteHook() {
   });
   await navigateTo("/settings/hooks");
 }
+
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+watch(hookData, (data) => {
+  if (data?.data?.[0]) {
+    registerPageHeader({
+      title: `Hook: ${data.data[0].name || '(no name)'}`,
+      gradient: "purple",
+    });
+  }
+}, { immediate: true });
 
 onMounted(() => {
   initializeForm();

@@ -176,77 +176,112 @@ watch(
       <CommonLoadingState type="table" size="md" context="page" />
     </div>
 
-    <!-- Table View (Desktop & Tablet) -->
+    <!-- Premium Table Container -->
     <div
-      class="overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out"
+      class="overflow-hidden rounded-2xl border border-gray-700/50 transition-all duration-300 bg-gray-900/30 backdrop-blur-sm"
     >
-      <table class="w-full table-fixed" aria-label="Data table">
-        <thead class="bg-gray-50 dark:bg-gray-800/50">
-          <tr>
-            <th
-              v-for="header in table.getFlatHeaders()"
-              :key="header.id"
-              :class="[
-                'px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100',
-                header.id === '__actions' ? 'text-center' : 'text-left',
-                header.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
-                header.id === '__actions' ? 'w-12 min-w-12 max-w-12' : '',
-                header.column.getCanSort() &&
-                  'cursor-pointer select-none lg:hover:bg-gray-100 dark:lg:hover:bg-gray-800',
-              ]"
-              @click="header.column.getToggleSortingHandler()?.($event)"
-              scope="col"
-              :aria-sort="
-                header.column.getIsSorted() === 'asc'
-                  ? 'ascending'
-                  : header.column.getIsSorted() === 'desc'
-                  ? 'descending'
-                  : 'none'
-              "
-            >
-              <div
+      <div class="overflow-x-auto">
+        <table class="w-full table-fixed" aria-label="Data table">
+          <thead class="bg-gray-800/50 border-b border-gray-700/50">
+            <tr>
+              <th
+                v-for="header in table.getFlatHeaders()"
+                :key="header.id"
                 :class="[
-                  'flex items-center gap-2',
-                  header.id === '__actions' ? 'justify-center' : '',
+                  'px-4 py-3.5 text-sm font-medium text-gray-400',
+                  header.id === '__actions' ? 'text-center' : 'text-left',
+                  header.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
+                  header.id === '__actions' ? 'w-12 min-w-12 max-w-12' : '',
+                  header.column.getCanSort() &&
+                    'cursor-pointer select-none lg:hover:bg-gray-800 transition-colors',
                 ]"
+                @click="header.column.getToggleSortingHandler()?.($event)"
+                scope="col"
+                :aria-sort="
+                  header.column.getIsSorted() === 'asc'
+                    ? 'ascending'
+                    : header.column.getIsSorted() === 'desc'
+                    ? 'descending'
+                    : 'none'
+                "
               >
-                <span v-if="typeof header.column.columnDef.header === 'string'">
-                  {{ header.column.columnDef.header }}
-                </span>
-                <component
-                  v-else
-                  :is="header.column.columnDef.header"
-                  v-bind="header.getContext()"
-                />
-                <UIcon
-                  v-if="header.column.getCanSort()"
-                  :name="
-                    header.column.getIsSorted() === 'asc'
-                      ? 'i-lucide-chevron-up'
-                      : header.column.getIsSorted() === 'desc'
-                      ? 'i-lucide-chevron-down'
-                      : 'i-lucide-chevrons-up-down'
-                  "
-                  class="w-4 h-4 text-gray-400"
-                />
-              </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-          <template v-for="row in table.getRowModel().rows" :key="row.id">
-            <!-- With Context Menu -->
-            <UContextMenu
-              v-if="props.contextMenuItems"
-              :items="props.contextMenuItems(row.original)"
-              :disabled="props.contextMenuItems(row.original).length === 0"
-            >
+                <div
+                  :class="[
+                    'flex items-center gap-2',
+                    header.id === '__actions' ? 'justify-center' : '',
+                  ]"
+                >
+                  <span v-if="typeof header.column.columnDef.header === 'string'">
+                    {{ header.column.columnDef.header }}
+                  </span>
+                  <component
+                    v-else
+                    :is="header.column.columnDef.header"
+                    v-bind="header.getContext()"
+                  />
+                  <UIcon
+                    v-if="header.column.getCanSort()"
+                    :name="
+                      header.column.getIsSorted() === 'asc'
+                        ? 'i-lucide-chevron-up'
+                        : header.column.getIsSorted() === 'desc'
+                        ? 'i-lucide-chevron-down'
+                        : 'i-lucide-chevrons-up-down'
+                    "
+                    class="w-4 h-4 text-gray-500"
+                  />
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-800/30">
+            <template v-for="(row, index) in table.getRowModel().rows" :key="row.id">
+              <!-- With Context Menu -->
+              <UContextMenu
+                v-if="props.contextMenuItems"
+                :items="props.contextMenuItems(row.original)"
+                :disabled="props.contextMenuItems(row.original).length === 0"
+              >
+                <tr
+                  :class="[
+                    'group cursor-pointer transition-all duration-200',
+                    selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
+                      ? 'bg-gray-800/60'
+                      : 'lg:hover:bg-gray-800/30',
+                  ]"
+                  @click="handleRowClick(row.original)"
+                >
+                  <td
+                    v-for="cell in row.getVisibleCells()"
+                    :key="cell.id"
+                    :class="[
+                      'px-4 py-3.5 text-sm text-gray-200',
+                      cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
+                      cell.column.id === '__actions'
+                        ? 'w-12 min-w-12 max-w-12'
+                        : '',
+                    ]"
+                  >
+                    <span v-if="typeof cell.column.columnDef.cell !== 'function'">
+                      {{ cell.getValue() }}
+                    </span>
+                    <component
+                      v-else
+                      :is="cell.column.columnDef.cell"
+                      v-bind="cell.getContext()"
+                    />
+                  </td>
+                </tr>
+              </UContextMenu>
+
+              <!-- Without Context Menu -->
               <tr
+                v-else
                 :class="[
-                  'cursor-pointer lg:hover:bg-gray-50 dark:lg:hover:bg-gray-800/30',
+                  'group cursor-pointer transition-all duration-200',
                   selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
-                    ? 'border-r-4 border-r-primary-500'
-                    : '',
+                    ? 'bg-gray-800/60'
+                    : 'lg:hover:bg-gray-800/30',
                 ]"
                 @click="handleRowClick(row.original)"
               >
@@ -254,7 +289,7 @@ watch(
                   v-for="cell in row.getVisibleCells()"
                   :key="cell.id"
                   :class="[
-                    'px-4 py-3 text-sm text-gray-900 dark:text-gray-100',
+                    'px-4 py-3.5 text-sm text-gray-200',
                     cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                     cell.column.id === '__actions'
                       ? 'w-12 min-w-12 max-w-12'
@@ -271,56 +306,23 @@ watch(
                   />
                 </td>
               </tr>
-            </UContextMenu>
-
-            <!-- Without Context Menu -->
-            <tr
-              v-else
-              :class="[
-                'cursor-pointer lg:hover:bg-gray-50 dark:lg:hover:bg-gray-800/30',
-                selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
-                  ? 'border-r-4 border-r-primary-500'
-                  : '',
-              ]"
-              @click="handleRowClick(row.original)"
-            >
+            </template>
+            <tr v-if="!loading && props.data.length === 0">
               <td
-                v-for="cell in row.getVisibleCells()"
-                :key="cell.id"
-                :class="[
-                  'px-4 py-3 text-sm text-gray-900 dark:text-gray-100',
-                  cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
-                  cell.column.id === '__actions'
-                    ? 'w-12 min-w-12 max-w-12'
-                    : '',
-                ]"
+                :colspan="table.getFlatHeaders().length"
+                class="px-4 py-8 text-center"
               >
-                <span v-if="typeof cell.column.columnDef.cell !== 'function'">
-                  {{ cell.getValue() }}
-                </span>
-                <component
-                  v-else
-                  :is="cell.column.columnDef.cell"
-                  v-bind="cell.getContext()"
+                <CommonEmptyState
+                  title="No data available"
+                  description="There are no records to display"
+                  icon="lucide:database"
+                  size="sm"
                 />
               </td>
             </tr>
-          </template>
-          <tr v-if="!loading && props.data.length === 0">
-            <td
-              :colspan="table.getFlatHeaders().length"
-              class="px-4 py-8 text-center"
-            >
-              <CommonEmptyState
-                title="No data available"
-                description="There are no records to display"
-                icon="lucide:database"
-                size="sm"
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>

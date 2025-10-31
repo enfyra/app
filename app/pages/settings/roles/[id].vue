@@ -1,28 +1,21 @@
 <template>
   <div class="space-y-6">
     <div class="space-y-6">
-      <!-- Header - Full width -->
-      <CommonPageHeader
-        title="Role Details"
-        title-size="md"
-        show-background
-        background-gradient="from-amber-500/6 via-yellow-400/4 to-transparent"
-        padding-y="py-4"
-      />
-
       <!-- Content - Limited width -->
       <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-        <UForm :state="form" @submit="save">
-          <FormEditorLazy
-            ref="formEditorRef"
-            v-model="form"
-            v-model:errors="errors"
-            @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            :table-name="tableName"
-            :excluded="['routePermissions']"
-            :loading="loading"
-          />
-        </UForm>
+        <CommonFormCard>
+          <UForm :state="form" @submit="save">
+            <FormEditorLazy
+              ref="formEditorRef"
+              v-model="form"
+              v-model:errors="errors"
+              @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+              :table-name="tableName"
+              :excluded="['routePermissions']"
+              :loading="loading"
+            />
+          </UForm>
+        </CommonFormCard>
       </div>
     </div>
 
@@ -90,7 +83,7 @@ useHeaderActionRegistry([
     icon: "lucide:save",
     variant: "solid",
     color: "primary",
-    submit: save,
+    onClick: save,
     loading: computed(() => updateLoading.value),
     disabled: computed(() => !hasFormChanges.value),
     permission: {
@@ -219,6 +212,14 @@ async function deleteRole() {
   });
   await navigateTo("/settings/roles");
 }
+
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Role Details",
+  gradient: "purple",
+});
 
 onMounted(() => {
   initializeForm();

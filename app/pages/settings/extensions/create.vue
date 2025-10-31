@@ -1,16 +1,7 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Create New Extension"
-      title-size="lg"
-      show-background
-      background-gradient="from-purple-500/6 via-violet-400/4 to-transparent"
-      padding-y="py-6"
-    />
-
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
           <FormEditorLazy
             v-model="createForm"
@@ -23,7 +14,7 @@
             @update:errors="(errors) => (createErrors = errors)"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
 
     <!-- Upload Modal -->
@@ -70,6 +61,12 @@ const showUploadModal = ref(false);
 const uploadLoading = ref(false);
 
 const { generateEmptyForm, validate } = useSchema(tableName);
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Create New Extension",
+  gradient: "purple",
+});
 
 useHeaderActionRegistry({
   id: "save-extension",

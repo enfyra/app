@@ -9,7 +9,12 @@ const { getId } = useDatabase();
 
 // Get the correct route for this table
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
+const { registerPageHeader } = usePageHeaderRegistry();
 
+registerPageHeader({
+  title: `Create New ${route.params.table} Record`,
+  gradient: "cyan",
+});
 
 // Load routes on mount
 onMounted(async () => {
@@ -82,18 +87,9 @@ async function handleCreate() {
 
 <template>
   <div class="space-y-6">
-    <!-- Header - Full width -->
-    <CommonPageHeader
-      :title="`Create New ${route.params.table} Record`"
-      title-size="lg"
-      show-background
-      background-gradient="from-cyan-500/6 via-blue-400/4 to-transparent"
-      padding-y="py-6"
-    />
-
     <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="newRecord" @submit="handleCreate">
           <FormEditorLazy
             :table-name="(route.params.table as string)"
@@ -102,7 +98,7 @@ async function handleCreate() {
             v-model:errors="createErrors"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>

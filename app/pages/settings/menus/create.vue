@@ -7,6 +7,12 @@ const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
 const { validate, generateEmptyForm } = useSchema(tableName);
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Create New Menu",
+  gradient: "purple",
+});
 
 // Dynamic excluded fields based on form state
 const excludedFields = computed(() => {
@@ -267,17 +273,8 @@ async function saveMenu() {
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Create New Menu"
-      title-size="lg"
-      show-background
-      background-gradient="from-violet-500/6 via-purple-400/4 to-transparent"
-      padding-y="py-6"
-    />
-
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="form" @submit="saveMenu">
           <FormEditorLazy
             v-model="form"
@@ -287,7 +284,7 @@ async function saveMenu() {
             :type-map="typeMap"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>

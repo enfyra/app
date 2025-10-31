@@ -1,18 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      :title="packageData?.name || 'Package Details'"
-      title-size="lg"
-      show-background
-      :background-gradient="
-        packageData?.type === 'Backend'
-          ? 'from-emerald-500/8 via-green-400/5 to-transparent'
-          : 'from-indigo-500/8 via-purple-400/5 to-transparent'
-      "
-      padding-y="py-6"
-    />
-
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <!-- Usage Instructions (Backend only) -->
       <UAlert
@@ -212,10 +199,22 @@ async function handleUninstall() {
 
   // Navigate back to the appropriate package list
   const packageType = packageData.value?.type;
-  await navigateTo(`/settings/packages/${packageType.toLowerCase()}`, {
+  await navigateTo(`/packages/${packageType.toLowerCase()}`, {
     replace: true,
   });
 }
+
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+watch(packageData, (data) => {
+  if (data) {
+    registerPageHeader({
+      title: data.name || 'Package Details',
+      gradient: data.type === 'Backend' ? 'cyan' : 'blue',
+    });
+  }
+}, { immediate: true });
 
 onMounted(() => {
   loadPackage();

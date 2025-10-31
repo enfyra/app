@@ -1,20 +1,19 @@
 <template>
+  <!-- Figma-style form: single column with space-y-6 between fields -->
   <div class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <FormField
-        v-for="field in visibleFields"
-        :key="field.name || field.propertyName"
-        :key-name="(field.name || field.propertyName) as string"
-        :form-data="modelValue"
-        :column-map="fieldMap"
-        :type-map="typeMapWithGenerated"
-        :errors="errors"
-        :loading="props.loading"
-        @update:form-data="updateFormData"
-        @update:errors="updateErrors"
-        class="relative group"
-      />
-    </div>
+    <FormField
+      v-for="field in visibleFields"
+      :key="field.name || field.propertyName"
+      :key-name="(field.name || field.propertyName) as string"
+      :form-data="modelValue"
+      :column-map="fieldMap"
+      :type-map="typeMapWithGenerated"
+      :errors="errors"
+      :loading="props.loading"
+      @update:form-data="updateFormData"
+      @update:errors="updateErrors"
+      class="relative group"
+    />
   </div>
 </template>
 

@@ -7,6 +7,52 @@ export function useMenuRegistry() {
   );
   const { getId } = useDatabase();
 
+  // Computed property to create unified menu groups from menu items
+  const menuGroups = computed(() => {
+    // Get all top-level menu items (Dropdown Menu and standalone Menu without parent)
+    const topLevelItems = menuItems.value.filter(item => {
+      // Include Dropdown Menu type
+      if (item.type === 'Dropdown Menu') return true;
+      // Include Menu type without parent or with null parent
+      if (item.type === 'Menu' && (!item.parent || item.parent === null)) return true;
+      return false;
+    });
+
+    // Convert to menu group format and rebuild children
+    const groups = topLevelItems
+      .map(item => {
+        // Find all children of this item (including dynamically added tables)
+        const children = menuItems.value.filter(child => {
+          if (!child.parent) return false;
+          // Match by ID (string comparison for safety)
+          return String(child.parent) === String(item.id) ||
+                 (typeof child.parent === 'object' && String((child.parent as any).id || child.parent) === String(item.id));
+        });
+
+        return {
+          id: item.id,
+          label: item.label,
+          icon: item.icon || 'lucide:circle',
+          route: item.route || item.path,
+          permission: item.permission,
+          position: (item as any).position || 'top' as const,
+          items: children.length > 0 ? children : (item.children || []),
+          order: item.order || 0,
+          type: item.type,
+        };
+      })
+      .sort((a, b) => {
+        // Sort by position first (top before bottom)
+        if (a.position !== b.position) {
+          return a.position === 'top' ? -1 : 1;
+        }
+        // Then by order
+        return (a.order || 0) - (b.order || 0);
+      });
+
+    return groups;
+  });
+
   const registerMenuItem = (item: MenuItem) => {
     const existingIndex = menuItems.value.findIndex((m) => m.id === item.id);
     if (existingIndex > -1) {
@@ -97,24 +143,7 @@ export function useMenuRegistry() {
   const registerAllMenusFromApi = async (menuDefinitions: MenuDefinition[]) => {
     if (!menuDefinitions || menuDefinitions.length === 0) return;
 
-    const miniSidebarsData = menuDefinitions
-      .filter((item) => item.type === "Mini Sidebar" && item.isEnabled)
-      .sort((a, b) => a.order - b.order);
-
-    if (miniSidebarsData.length > 0) {
-      const sidebarsToRegister = miniSidebarsData
-        .filter((sidebar) => getId(sidebar))
-        .map((sidebar) => ({
-          id: String(getId(sidebar)),
-          label: sidebar.label,
-          icon: sidebar.icon,
-          route: sidebar.path,
-          permission: sidebar.permission || undefined,
-          position: "top" as const,
-        }));
-      registerMiniSidebar(sidebarsToRegister);
-    }
-
+    // NEW SYSTEM: No more Mini Sidebar! Only Dropdown Menu and Menu
     const dropdownMenusData = menuDefinitions
       .filter((item) => item.type === "Dropdown Menu" && item.isEnabled)
       .sort((a, b) => a.order - b.order);
@@ -123,11 +152,12 @@ export function useMenuRegistry() {
       .filter((item) => item.type === "Menu" && item.isEnabled)
       .sort((a, b) => a.order - b.order);
 
+    // Register Dropdown Menus (top-level groups with children)
     if (dropdownMenusData.length > 0) {
       dropdownMenusData.forEach((item) => {
-        const sidebarId = getId(item.sidebar);
         const itemId = getId(item);
-        if (sidebarId && itemId) {
+        if (itemId) {
+          // Find children of this dropdown
           const children = regularMenuItems
             .filter((menuItem) => {
               const parentId = getId(menuItem.parent);
@@ -136,14 +166,12 @@ export function useMenuRegistry() {
             .map((child) => ({
               ...child,
               id: String(getId(child)),
-              sidebarId: String(sidebarId),
               route: child.path,
             }));
 
           registerMenuItem({
             ...item,
             id: String(itemId),
-            sidebarId: String(sidebarId),
             route: item.path || "",
             children,
           } as any);
@@ -151,28 +179,28 @@ export function useMenuRegistry() {
       });
     }
 
+    // Register standalone Menu items (without parent)
     if (regularMenuItems.length > 0) {
       regularMenuItems.forEach((item) => {
         const parentId = getId(item.parent);
+
+        // Skip if it's a child of a dropdown (already registered as children)
         if (parentId) {
           const isChildOfDropdown = dropdownMenusData.some(
             (dropdown) => String(getId(dropdown)) === String(parentId)
           );
           if (isChildOfDropdown) {
-            return;
+            return; // Skip children, they're already added
           }
         }
 
-        // item.sidebar.id is the ID of the sidebar this menu belongs to
-        const sidebarId = getId(item.sidebar);
+        // Register standalone menu items (no parent)
         const itemId = getId(item);
-        if (sidebarId && itemId) {
-          // Copy entire API object to registry for full compatibility
+        if (itemId) {
           registerMenuItem({
             ...item,
             id: String(itemId),
-            sidebarId: String(sidebarId),
-            route: item.path, // Keep both path and route for compatibility
+            route: item.path,
           } as any);
         }
       });
@@ -193,20 +221,15 @@ export function useMenuRegistry() {
     }
   };
 
-  // Function to find sidebar ID by path
-  const findSidebarIdByPath = (path: string): string | number | null => {
-    // Look through registered mini sidebars to find one with matching route
-    const sidebar =
-      miniSidebars.value.find((s) => s.route === path) ||
-      bottomMiniSidebars.value.find((s) => s.route === path);
+  // Function to find parent menu ID by path (for table registration)
+  const findParentMenuIdByPath = (path: string): string | number | null => {
+    // Look through menu items to find one with matching route
+    const parentMenu = menuItems.value.find((m) => m.route === path || m.path === path);
 
-    if (sidebar) {
-      // Return as-is (string for MongoDB, string/number for SQL)
-      return sidebar.id;
+    if (parentMenu) {
+      return parentMenu.id;
     }
 
-    // If not found in mini sidebars, check if there are any registered menu items
-    // that might indicate the sidebar structure
     return null;
   };
 
@@ -233,12 +256,20 @@ export function useMenuRegistry() {
       unregisterMenuItem(item.id);
     });
 
-    // Find the collections and data sidebar IDs dynamically
-    const collectionsSidebarId = findSidebarIdByPath("/collections");
-    const dataSidebarId = findSidebarIdByPath("/data");
+    // Find the collections and data parent menu IDs
+    // First try to find by ID (most reliable), then fallback to path
+    let collectionsParentId = menuItems.value.find((m) => m.id === "collections")?.id;
+    if (!collectionsParentId) {
+      collectionsParentId = findParentMenuIdByPath("/collections");
+    }
 
-    // If we can't find the sidebars, don't register table menus
-    if (!collectionsSidebarId) {
+    let dataParentId = menuItems.value.find((m) => m.id === "data")?.id;
+    if (!dataParentId) {
+      dataParentId = findParentMenuIdByPath("/data");
+    }
+
+    // If we can't find any parent menus, don't register table menus
+    if (!collectionsParentId && !dataParentId) {
       return;
     }
 
@@ -256,49 +287,52 @@ export function useMenuRegistry() {
     // Filter out system tables for data sidebar
     const nonSystemTables = tables.filter((table) => !table.isSystem);
 
-    // Register modifiable tables in collections sidebar
-    modifiableTables.forEach((table) => {
-      const tableName = table.name || table.table_name;
-      if (!tableName) return;
+    // Register modifiable tables in collections sidebar (if parent exists)
+    if (collectionsParentId) {
+      modifiableTables.forEach((table) => {
+        const tableName = table.name || table.table_name;
+        if (!tableName) return;
 
-      registerMenuItem({
-        id: `collections-${tableName}`,
-        label: table.label || table.display_name || tableName,
-        route: `/collections/${tableName}`,
-        icon: table.icon || "lucide:table",
-        sidebarId: collectionsSidebarId,
-        permission: {
-          and: [
-            { route: `/table_definition`, actions: ["read"] },
-            {
-              or: [
-                { route: `/table_definition`, actions: ["create"] },
-                { route: `/table_definition`, actions: ["update"] },
-                { route: `/table_definition`, actions: ["delete"] },
-              ],
-            },
-          ],
-        },
+        registerMenuItem({
+          id: `collections-${tableName}`,
+          label: table.label || table.display_name || tableName,
+          route: `/collections/${tableName}`,
+          icon: table.icon || "lucide:table",
+          parent: collectionsParentId, // Set as child of Collections menu
+          type: "Menu",
+          permission: {
+            and: [
+              { route: `/table_definition`, actions: ["read"] },
+              {
+                or: [
+                  { route: `/table_definition`, actions: ["create"] },
+                  { route: `/table_definition`, actions: ["update"] },
+                  { route: `/table_definition`, actions: ["delete"] },
+                ],
+              },
+            ],
+          },
+        });
       });
-    });
+    }
 
-    // Register non-system tables in data sidebar (if found)
-    if (dataSidebarId) {
+    // Register non-system tables in data menu (if found)
+    if (dataParentId) {
       const { getRouteForTableName } = useRoutes();
       const routes = useState<any[]>('routes:all', () => []);
-      
+
       nonSystemTables.forEach((table) => {
         const tableName = table.name || table.table_name;
         if (!tableName) return;
 
         // Get the dynamic route for this table
         const dynamicRoute = getRouteForTableName(tableName);
-        
+
         // Check if the route exists and is enabled
-        const routeExists = routes.value.some((route: any) => 
+        const routeExists = routes.value.some((route: any) =>
           route.path === dynamicRoute && route.isEnabled !== false
         );
-        
+
         // Only register menu if route exists and is enabled
         if (routeExists) {
           registerMenuItem({
@@ -306,7 +340,8 @@ export function useMenuRegistry() {
             label: table.label || table.display_name || tableName,
             route: `/data/${tableName}`,
             icon: table.icon || "lucide:database",
-            sidebarId: dataSidebarId,
+            parent: dataParentId, // Set as child of Data menu
+            type: "Menu",
             permission: {
               or: [
                 { route: dynamicRoute, actions: ["read"] }
@@ -334,6 +369,7 @@ export function useMenuRegistry() {
     menuItems,
     miniSidebars,
     bottomMiniSidebars,
+    menuGroups,
 
     // Registration functions
     registerMenuItem,

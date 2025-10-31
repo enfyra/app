@@ -178,6 +178,15 @@ async function handleFileUpload(files: File | File[]) {
   });
 }
 
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Files Manager",
+  description: "Organize your files and documents efficiently",
+  gradient: "cyan",
+});
+
 useHeaderActionRegistry([
   {
     id: "upload-files",
@@ -220,17 +229,6 @@ useHeaderActionRegistry([
 
 <template>
   <div class="space-y-8">
-    <!-- Page Header -->
-    <CommonPageHeader
-      title="Files Manager"
-      description="Organize your files and documents efficiently"
-      :stats="pageStats"
-      title-size="md"
-      show-background
-      background-gradient="from-blue-500/8 via-cyan-400/5 to-transparent"
-      padding-y="py-6"
-    />
-
     <!-- Integrated File Manager -->
     <FileManager
       :folders="folders"

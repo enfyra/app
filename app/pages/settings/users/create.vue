@@ -1,16 +1,7 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Create New User"
-      title-size="lg"
-      show-background
-      background-gradient="from-blue-500/6 via-indigo-400/4 to-transparent"
-      padding-y="py-6"
-    />
-
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm :state="form" @submit="handleCreate">
           <FormEditorLazy
             v-model="form"
@@ -19,7 +10,7 @@
             :excluded="['allowedRoutePermissions']"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>
@@ -34,6 +25,12 @@ const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
 const { generateEmptyForm, validate } = useSchema(tableName);
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Create New User",
+  gradient: "blue",
+});
 
 const {
   data: createData,

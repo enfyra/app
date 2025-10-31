@@ -6,6 +6,16 @@ const errors = ref<Record<string, string>>({});
 
 const { validate } = useSchema("setting_definition");
 
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "General Settings",
+  description: "Configure system-wide settings and preferences",
+  variant: "default",
+  gradient: "cyan",
+});
+
 // Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -137,18 +147,9 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <!-- Header - Full width -->
-    <CommonPageHeader
-      title="General Settings"
-      title-size="md"
-      show-background
-      background-gradient="from-teal-500/8 via-emerald-400/5 to-transparent"
-      padding-y="py-6"
-    />
-
     <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <UForm @submit="handleSaveSetting" :state="setting">
           <FormEditorLazy
             ref="formEditorRef"
@@ -161,7 +162,7 @@ onMounted(() => {
             :excluded="['isInit']"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>

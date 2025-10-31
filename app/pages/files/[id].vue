@@ -9,6 +9,18 @@ const { isMounted } = useMounted();
 const { updateFileTimestamp } = useGlobalState();
 const { getPreviewUrl } = useFileUrl();
 const fileId = route.params.id as string;
+const { registerPageHeader } = usePageHeaderRegistry();
+
+// Register page header with dynamic title
+watch(() => file.value?.data?.[0]?.filename, (filename) => {
+  if (filename) {
+    registerPageHeader({
+      title: filename,
+      description: "View and edit file information",
+      gradient: "cyan",
+    });
+  }
+}, { immediate: true });
 const {
   data: file,
   pending,
@@ -309,26 +321,6 @@ function getFileIconAndColor(mimetype: string): {
 
 <template>
   <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
-    <!-- Page Header -->
-    <CommonPageHeader
-      :title="pageTitle"
-      :description="`View and edit file information`"
-      title-size="xl"
-      show-background
-      background-gradient="from-blue-500/8 via-cyan-400/4 to-transparent"
-      padding-y="py-8"
-    >
-      <template #actions>
-        <UButton
-          variant="outline"
-          icon="lucide:arrow-left"
-          @click="router.back()"
-        >
-          Back
-        </UButton>
-      </template>
-    </CommonPageHeader>
-
     <!-- File Content -->
     <div class="space-y-6">
       <!-- File Preview -->

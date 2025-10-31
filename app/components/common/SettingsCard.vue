@@ -1,75 +1,68 @@
 <template>
   <div
-    class="relative group transition-all duration-300 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 h-full flex flex-col overflow-hidden shadow-lg lg:hover:shadow-2xl lg:hover:border-primary-300 dark:lg:hover:border-primary-600"
-    :class="cardClass"
+    class="relative group transition-all duration-300 rounded-xl border p-5 overflow-hidden cursor-pointer backdrop-blur-xl h-full flex flex-col"
+    :class="[cardClass, 'hover:shadow-md hover:-translate-y-0.5']"
+    :style="{
+      background: 'var(--bg-elevated)',
+      borderColor: 'var(--border-default)',
+    }"
   >
-    <!-- Header -->
-    <div
-      class="px-5 py-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700"
-    >
-      <div class="flex items-center gap-3">
-        <!-- Icon -->
-        <div
-          class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
-          :class="iconBgClass"
-        >
-          <UIcon :name="icon" class="w-5 h-5" :class="iconClass" />
-        </div>
+    <!-- Gradient overlay on hover -->
+    <div class="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-purple-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-        <!-- Title & Description -->
-        <div class="flex-1 min-w-0">
-          <div
-            class="font-semibold text-gray-900 dark:text-gray-100 truncate"
-            :title="title"
-          >
-            {{ title }}
-          </div>
-          <div
-            v-if="description"
-            class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5"
-            :title="description"
-          >
-            {{ description }}
-          </div>
-        </div>
+    <!-- Header with icon + title -->
+    <div class="relative flex items-center gap-4 mb-3">
+      <!-- Icon with gradient -->
+      <div
+        class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 self-start"
+        style="background: linear-gradient(135deg, #0066FF 0%, #7C3AED 100%)"
+      >
+        <UIcon :name="icon" class="w-5 h-5 text-white" />
+      </div>
 
-        <!-- Card Header Actions -->
-        <div
-          v-if="headerActions && headerActions.length > 0"
-          class="flex items-center gap-2"
+      <!-- Title & Description -->
+      <div class="flex-1 min-w-0 self-start">
+        <h3 class="text-sm mb-1 font-semibold text-gray-100">
+          {{ title }}
+        </h3>
+        <p v-if="description" class="text-xs text-gray-400">
+          {{ description }}
+        </p>
+      </div>
+
+      <!-- Card Header Actions -->
+      <div
+        v-if="headerActions && headerActions.length > 0"
+        class="flex items-center gap-2 flex-shrink-0"
+      >
+        <component
+          v-for="(action, index) in headerActions"
+          :key="index"
+          :is="getComponent(action.component)"
+          v-bind="{ ...getDefaultProps(action.component, 'header'), ...(action.props || {}) }"
+          @click="action.onClick"
+          @update:model-value="action.onUpdate"
         >
-          <component
-            v-for="(action, index) in headerActions"
-            :key="index"
-            :is="getComponent(action.component)"
-            v-bind="{ ...getDefaultProps(action.component, 'header'), ...(action.props || {}) }"
-            @click="action.onClick"
-            @update:model-value="action.onUpdate"
-          >
-            <template v-if="action.label">{{ action.label }}</template>
-          </component>
-        </div>
+          <template v-if="action.label">{{ action.label }}</template>
+        </component>
       </div>
     </div>
 
-    <!-- Body Content - This will grow -->
-    <div class="flex-1 px-5 py-4 space-y-3">
-      <!-- Custom body content -->
-      <slot />
-
-      <!-- Stats -->
-      <div v-if="stats && stats.length" class="space-y-2">
+    <!-- Content wrapper with flex-1 to push footer down -->
+    <div class="flex-1">
+      <!-- Stats List (Figma Performance Card Style) -->
+      <div v-if="stats && stats.length && statsLayout === 'list'" class="relative p-3 rounded-lg mb-3" :style="{ background: 'rgba(10, 15, 22, 0.3)' }">
         <div
-          v-for="stat in stats"
+          v-for="(stat, index) in stats"
           :key="stat.label"
-          class="flex items-center justify-between text-sm py-1.5 border-b border-gray-50 dark:border-gray-800 last:border-0"
+          class="flex items-center justify-between"
+          :class="{ 'mt-2.5': index > 0 }"
         >
-          <span
-            class="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider"
-            >{{ stat.label }}</span
-          >
-          <span class="text-gray-900 dark:text-gray-100 font-medium">
-            <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap">
+          <span class="text-xs text-gray-400">
+            {{ stat.label }}
+          </span>
+          <div class="text-xs font-medium text-gray-100">
+            <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-end">
               <component
                 v-for="(item, idx) in stat.values"
                 :key="idx"
@@ -87,21 +80,61 @@
               {{ stat.value }}
             </component>
             <template v-else>{{ stat.value }}</template>
-          </span>
+          </div>
         </div>
+      </div>
+
+      <!-- Stats Grid (Figma Security Card Style) -->
+      <div v-else-if="stats && stats.length && statsLayout === 'grid'" class="relative grid grid-cols-2 gap-2.5 mb-3">
+        <div
+          v-for="stat in stats"
+          :key="stat.label"
+          class="text-center p-3 rounded-lg"
+          :style="{ background: 'rgba(10, 15, 22, 0.6)' }"
+        >
+          <div class="text-base font-medium text-gray-100 mb-1">
+            <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-center">
+              <component
+                v-for="(item, idx) in stat.values"
+                :key="idx"
+                :is="getComponent(stat.component)"
+                v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...(stat.props || {}), ...(item.props || {}) }"
+              >
+                {{ item.value }}
+              </component>
+            </div>
+            <component
+              v-else-if="stat.component"
+              :is="getComponent(stat.component)"
+              v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...(stat.props || {}) }"
+            >
+              {{ stat.value }}
+            </component>
+            <template v-else>{{ stat.value }}</template>
+          </div>
+          <div class="text-xs text-gray-400">
+            {{ stat.label }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom body content -->
+      <div v-if="$slots.default" class="relative mb-3">
+        <slot />
       </div>
     </div>
 
-    <!-- Footer - Always at bottom -->
+    <!-- Footer -->
     <div
       v-if="$slots.footer || (actions && actions.length > 0)"
-      class="px-5 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 mt-auto"
+      class="relative pt-3 mt-3 border-t"
+      :style="{ borderColor: 'rgba(255, 255, 255, 0.06)' }"
     >
       <!-- Custom footer content -->
       <slot name="footer" />
 
       <!-- Action Buttons -->
-      <div v-if="actions && actions.length" class="flex gap-2">
+      <div v-if="actions && actions.length" class="flex justify-end gap-2">
         <UButton
           v-for="action in actions"
           :key="action.label"
@@ -111,9 +144,9 @@
           :disabled="action.disabled"
           @click="action.onClick"
           :class="[
-            action.block ? 'flex-1' : '',
             action.onClick || action.to ? 'cursor-pointer' : '',
           ]"
+          class="h-9 px-4 justify-center"
         >
           {{ action.label }}
         </UButton>
@@ -158,6 +191,7 @@ interface Props {
   icon: string;
   iconColor?: "primary" | "success" | "warning" | "error" | "neutral";
   stats?: Stat[];
+  statsLayout?: "list" | "grid";
   actions?: Action[];
   headerActions?: HeaderAction[];
   cardClass?: string;
@@ -165,6 +199,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   iconColor: "primary",
+  statsLayout: "list",
   cardClass: "",
 });
 
@@ -209,25 +244,25 @@ const getDefaultProps = (componentName?: string, context: 'header' | 'stats' = '
   return defaults[context]?.[componentName as keyof typeof defaults[typeof context]] || {};
 };
 
-// Computed styles based on icon color
+// Computed styles based on icon color with gradients
 const iconBgClass = computed(() => {
   const colorMap = {
-    primary: "bg-primary/10 dark:bg-primary/20",
-    success: "bg-green-100 dark:bg-green-900/30",
-    warning: "bg-amber-100 dark:bg-amber-900/30",
-    error: "bg-red-100 dark:bg-red-900/30",
-    neutral: "bg-gray-100 dark:bg-gray-800",
+    primary: "bg-gradient-to-br from-blue-600 to-purple-600",
+    success: "bg-gradient-to-br from-green-600 to-teal-600",
+    warning: "bg-gradient-to-br from-amber-600 to-orange-600",
+    error: "bg-gradient-to-br from-red-600 to-pink-600",
+    neutral: "bg-gradient-to-br from-gray-600 to-gray-700",
   };
   return colorMap[props.iconColor];
 });
 
-const iconClass = computed(() => {
+const iconGradientClass = computed(() => {
   const colorMap = {
-    primary: "text-primary-600 dark:text-primary-400",
-    success: "text-green-600 dark:text-green-400",
-    warning: "text-amber-600 dark:text-amber-400",
-    error: "text-red-600 dark:text-red-400",
-    neutral: "text-gray-600 dark:text-gray-400",
+    primary: "from-blue-400 to-purple-400",
+    success: "from-green-400 to-teal-400",
+    warning: "from-amber-400 to-orange-400",
+    error: "from-red-400 to-pink-400",
+    neutral: "from-gray-400 to-gray-500",
   };
   return colorMap[props.iconColor];
 });

@@ -16,6 +16,12 @@ const table = reactive<any>({
   uniques: [],
   indexes: [],
 });
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Create New Table",
+  gradient: "purple",
+});
 
 const nameError = ref<string | null>(null);
 
@@ -196,15 +202,6 @@ async function save() {
 
 <template>
   <div class="relative">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Create New Table"
-      title-size="lg"
-      show-background
-      background-gradient="from-indigo-500/8 via-purple-400/5 to-transparent"
-      padding-y="py-6"
-    />
-
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
         <TableForm v-model="table" :new="true">

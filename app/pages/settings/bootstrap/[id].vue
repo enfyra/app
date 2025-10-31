@@ -1,18 +1,9 @@
 <template>
   <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
     <div class="space-y-6">
-      <!-- Header - Full width -->
-      <CommonPageHeader
-        title="Bootstrap Script Details"
-        title-size="lg"
-        show-background
-        background-gradient="from-amber-500/6 via-orange-400/4 to-transparent"
-        padding-y="py-6"
-      />
-
       <!-- Content - Limited width -->
       <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-        <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+        <CommonFormCard>
           <UForm :state="form" @submit="save">
             <FormEditorLazy
               ref="formEditorRef"
@@ -24,7 +15,7 @@
               :excluded="['createdBy', 'updatedBy']"
             />
           </UForm>
-        </div>
+        </CommonFormCard>
       </div>
     </div>
 
@@ -56,6 +47,12 @@ const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 
 const { validate, getIncludeFields } = useSchema(tableName);
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Bootstrap Script Details",
+  gradient: "purple",
+});
 
 async function handleReset() {
   const ok = await confirm({

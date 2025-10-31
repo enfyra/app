@@ -15,13 +15,26 @@ const formChanges = useFormChanges();
 
 // Get the correct route for this table
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
+const { registerPageHeader } = usePageHeaderRegistry();
 
+// Initialize currentRecord ref early
+const currentRecord = ref<Record<string, any>>({});
 
 // Load routes on mount
 onMounted(async () => {
   await ensureRoutesLoaded();
   await initializeForm();
 });
+
+// Register page header with dynamic title
+watch(() => currentRecord.value.id, (id) => {
+  if (id) {
+    registerPageHeader({
+      title: `${route.params.table}: ${id}`,
+      gradient: "cyan",
+    });
+  }
+}, { immediate: true });
 
 const {
   data: apiData,
@@ -38,8 +51,6 @@ const {
   })),
   errorContext: "Fetch Record",
 });
-
-const currentRecord = ref<Record<string, any>>({});
 
 async function initializeForm() {
   await fetchRecord();
@@ -203,18 +214,9 @@ const title = computed(() => {
 
 <template>
   <div class="space-y-6">
-    <!-- Header - Full width -->
-    <CommonPageHeader
-      :title
-      show-background
-      background-gradient="from-cyan-500/6 via-blue-400/4 to-transparent"
-      padding-y="py-6"
-      title-size="md"
-    />
-
     <!-- Content - Limited width -->
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <CommonFormCard>
         <FormEditorLazy
           ref="formEditorRef"
           :table-name="(route.params.table as string)"
@@ -224,7 +226,7 @@ const title = computed(() => {
           @has-changed="(hasChanged) => hasFormChanges = hasChanged"
           :loading="loading"
         />
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>

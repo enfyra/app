@@ -1,14 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Backend Packages"
-      title-size="md"
-      show-background
-      background-gradient="from-emerald-500/8 via-green-400/5 to-transparent"
-      padding-y="py-6"
-    />
-
     <!-- Packages List -->
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
@@ -35,7 +26,7 @@
           icon="lucide:server"
           icon-color="success"
           :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-success/20 transition-all'"
-          @click="navigateTo(`/settings/packages/${getId(pkg)}`)"
+          @click="navigateTo(`/packages/${getId(pkg)}`)"
           :stats="[
             {
               label: 'Version',
@@ -118,6 +109,14 @@ const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
 
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Backend Packages",
+  gradient: "cyan",
+});
+
 // Header actions
 useHeaderActionRegistry({
   id: "create-backend-package",
@@ -126,7 +125,7 @@ useHeaderActionRegistry({
   variant: "solid",
   color: "primary",
   size: "md",
-  to: "/settings/packages/install",
+  to: "/packages/install",
   permission: {
     and: [
       {

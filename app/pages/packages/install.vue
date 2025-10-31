@@ -1,14 +1,5 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <CommonPageHeader
-      title="Install Package"
-      title-size="lg"
-      show-background
-      background-gradient="from-indigo-500/8 via-purple-400/5 to-transparent"
-      padding-y="py-6"
-    />
-
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
         <!-- Package Type Selector -->
@@ -145,6 +136,14 @@ useHeaderActionRegistry({
   },
 });
 
+// Register page header
+const { registerPageHeader } = usePageHeaderRegistry();
+
+registerPageHeader({
+  title: "Install Package",
+  gradient: "blue",
+});
+
 onMounted(() => {
   initializeForm();
 });
@@ -217,7 +216,7 @@ async function handleCreate() {
   });
 
   // Navigate to the package detail page
-  await navigateTo(`/settings/packages/${packageId}`, {
+  await navigateTo(`/packages/${packageId}`, {
     replace: true,
   });
 }
