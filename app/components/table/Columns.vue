@@ -383,6 +383,7 @@ watch(
   <!-- Edit Column Drawer -->
   <Teleport to="body">
     <UDrawer
+      :handle="false"
       v-model:open="isEditing"
       direction="right"
       class="min-w-xl"
@@ -506,7 +507,7 @@ watch(
     <!-- Close Confirmation Modal -->
     <UModal 
       v-model:open="showCloseConfirm" 
-      prevent-close
+      :handle="false"
       :close="{
         color: 'error',
         variant: 'solid',

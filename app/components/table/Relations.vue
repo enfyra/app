@@ -162,6 +162,7 @@ function saveRelation() {
   <!-- Edit Relation Drawer -->
   <Teleport to="body">
     <UDrawer
+      :handle="false"
       v-model:open="isEditing"
       direction="right"
       class="min-w-xl"
@@ -289,7 +290,7 @@ function saveRelation() {
     <!-- Close Confirmation Modal -->
     <UModal 
       v-model:open="showCloseConfirm" 
-      prevent-close
+      :handle="false"
       :close="{
         color: 'error',
         variant: 'solid',

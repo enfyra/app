@@ -28,6 +28,7 @@
     <!-- Permission Configuration Drawer -->
     <Teleport to="body">
       <UDrawer
+      :handle="false"
         v-model:open="showModal"
         direction="right"
         class="w-full max-w-3xl"

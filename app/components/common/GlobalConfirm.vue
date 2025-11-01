@@ -12,7 +12,7 @@ watch(
   <Teleport to="body">
     <UModal 
       v-model:open="isVisible" 
-      prevent-close
+      :handle="false"
       :close="{
         color: 'error',
         variant: 'solid',

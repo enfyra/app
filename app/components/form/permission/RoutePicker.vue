@@ -1,6 +1,7 @@
 <template>
   <Teleport to="body">
     <UDrawer
+      :handle="false"
       v-model:open="isOpen"
       direction="right"
       class="w-full max-w-2xl"
