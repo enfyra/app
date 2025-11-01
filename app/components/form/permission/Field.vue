@@ -21,6 +21,7 @@
     <!-- Permission Configuration Drawer -->
     <Teleport to="body">
       <UDrawer
+      :handle="false"
         v-model:open="showDrawer"
         direction="right"
         class="min-w-xl"

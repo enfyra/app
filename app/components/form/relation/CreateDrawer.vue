@@ -75,6 +75,7 @@ async function createNewRecord() {
 <template>
   <Teleport to="body">
     <UDrawer
+      :handle="false"
       v-model:open="show"
       direction="right"
       :class="isTablet ? 'w-full' : 'min-w-xl'"

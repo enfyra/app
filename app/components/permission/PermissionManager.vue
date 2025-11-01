@@ -154,6 +154,7 @@
     <!-- Permission Editor Drawer -->
     <Teleport to="body">
       <UDrawer
+      :handle="false"
         v-model:open="showDrawer"
         direction="right"
         :class="isTablet ? 'w-full' : 'min-w-xl'"

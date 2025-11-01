@@ -20,6 +20,7 @@ const { isTablet } = useScreen();
 <template>
   <Teleport to="body">
     <UDrawer
+      :handle="false"
       v-model:open="open"
       direction="right"
       :class="isTablet ? 'w-full' : 'min-w-xl'"
