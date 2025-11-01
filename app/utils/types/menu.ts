@@ -12,7 +12,7 @@ export interface MenuDefinition {
   order: number;
   path: string;
   permission: PermissionCondition | null;
-  type: "Mini Sidebar" | "Dropdown Menu" | "Menu";
+  type: "Dropdown Menu" | "Menu";
   parent: number | string | null;
   sidebar: { id?: number; _id?: string } | null;
   children: any[];
@@ -48,18 +48,6 @@ export interface MenuItem {
   class?: string;
 }
 
-// Internal Interface for Mini Sidebars in useMenuRegistry
-export interface MiniSidebar {
-  id: string;
-  label: string;
-  icon: string;
-  route?: string; // Optional for action buttons like logout
-  onClick?: () => void | Promise<void>; // Optional click handler for action buttons
-  class?: string; // Optional custom CSS classes
-  permission?: PermissionCondition;
-  position?: "top" | "bottom"; // Position in the mini sidebar
-}
-
 // API Response Interface from useMenuApi (different from MenuDefinition)
 export interface MenuApiItem {
   id?: number; // SQL databases
@@ -72,7 +60,7 @@ export interface MenuApiItem {
   order: number;
   path: string;
   permission: any;
-  type: "Mini Sidebar" | "Dropdown Menu" | "Menu";
+  type: "Dropdown Menu" | "Menu";
   parent: number | string | null;
   sidebar: { id?: number; _id?: string } | null;
   children: any[];

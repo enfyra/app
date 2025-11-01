@@ -3,7 +3,7 @@ import CommonBreadCrumbs from "~/components/common/BreadCrumbs.vue";
 export default defineNuxtPlugin(() => {
   const route = useRoute();
   const router = useRouter();
-  const { isTablet } = useScreen();
+  const { isMobile } = useScreen();
 
   // Calculate breadcrumb segments from route
   const breadcrumbSegments = computed(() => {
@@ -24,15 +24,15 @@ export default defineNuxtPlugin(() => {
     router.back();
   };
 
-  // Register global actions once with reactive props (persistent across routes)
   useHeaderActionRegistry([
     {
       id: "navigation-back-button",
       icon: "lucide:arrow-left",
       variant: "soft",
-      color: "primary",
-      size: 'lg',
+      color: "secondary",
+      size: isMobile ? 'lg' : 'md',
       side: "left",
+      class: 'cursor-pointer !aspect-square',
       get disabled() {
         return !canGoBack.value;
       },
@@ -41,7 +41,7 @@ export default defineNuxtPlugin(() => {
       permission: {
         allowAll: true, 
       },
-      order: 0
+      order: 1
     },
     {
       id: "navigation-breadcrumbs",
@@ -59,7 +59,7 @@ export default defineNuxtPlugin(() => {
       permission: {
         allowAll: true, 
       },
-      order: 1
+      order: 2
     },
   ]);
 });

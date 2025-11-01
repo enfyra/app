@@ -100,7 +100,7 @@ function shortenId(id: string | number): string {
     </UBadge>
 
     <UButton
-      icon="lucide:pencil"
+      icon="lucide:square-pen"
       size="md"
       variant="outline"
       color="secondary"
