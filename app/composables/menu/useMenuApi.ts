@@ -11,13 +11,6 @@ export const useMenuApi = () => {
     errorContext: "Fetch Menu Definitions",
   });
 
-  const getMiniSidebars = computed(() => {
-    const miniSidebars = menuDefinitions.value?.data || [];
-    return miniSidebars
-      .filter((menu: any) => menu.type === "Mini Sidebar" && menu.isEnabled)
-      .sort((a: any, b: any) => a.order - b.order);
-  });
-
   const getDropdownMenus = computed(() => {
     const dropdownMenus = menuDefinitions.value?.data || [];
     return dropdownMenus
@@ -52,7 +45,6 @@ export const useMenuApi = () => {
     fetchMenuDefinitions,
     menuDefinitionsPending,
     menuDefinitions,
-    getMiniSidebars,
     getDropdownMenus,
     getMenus,
     getMenuItemsBySidebar,

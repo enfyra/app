@@ -14,7 +14,7 @@
       class="border-r flex flex-col flex-shrink-0 transition-all duration-500 ease-out"
       :class="[
         isTabletOrMobile
-          ? 'fixed inset-y-0 left-0 w-72 z-50 shadow-2xl backdrop-blur-xl'
+          ? 'fixed inset-y-0 left-0 w-72 z-[70] shadow-2xl backdrop-blur-xl'
           : (sidebarCollapsed ? 'w-20' : 'w-72')
       ]"
       :style="{
@@ -29,7 +29,7 @@
     <!-- Overlay for tablet/mobile -->
     <div
       v-if="sidebarVisible && isTabletOrMobile"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300"
       @click="setSidebarVisible(false)"
       role="presentation"
       aria-hidden="true"
@@ -58,17 +58,6 @@
         ></div>
 
         <div :class="headerContentClasses" :style="headerContentStyle">
-          <!-- Mobile menu toggle -->
-          <UButton
-            v-if="isTabletOrMobile"
-            variant="ghost"
-            icon="lucide:menu"
-            @click="toggleSidebar"
-            size="sm"
-            class="lg:hidden flex-shrink-0"
-            aria-label="Toggle navigation menu"
-          />
-
           <!-- Header Content (Breadcrumbs/Actions from LayoutHeader) -->
           <LayoutHeader />
         </div>
@@ -104,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-const { sidebarVisible, sidebarCollapsed, routeLoading, toggleSidebar, setSidebarVisible } =
+const { sidebarVisible, sidebarCollapsed, routeLoading, setSidebarVisible } =
   useGlobalState();
 const { isMobile, isTablet } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();

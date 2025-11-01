@@ -1,10 +1,5 @@
 export function useMenuRegistry() {
   const menuItems = useState<MenuItem[]>("menu-items", () => []);
-  const miniSidebars = useState<MiniSidebar[]>("mini-sidebars", () => []);
-  const bottomMiniSidebars = useState<MiniSidebar[]>(
-    "bottom-mini-sidebars",
-    () => []
-  );
   const { getId } = useDatabase();
 
   const menuGroups = computed(() => {
@@ -50,46 +45,10 @@ export function useMenuRegistry() {
     }
   };
 
-  const registerMiniSidebar = (sidebar: MiniSidebar | MiniSidebar[]) => {
-    if (Array.isArray(sidebar)) {
-      sidebar.forEach((s) => registerSingleMiniSidebar(s));
-      return;
-    }
-
-    registerSingleMiniSidebar(sidebar);
-  };
-
-  const registerSingleMiniSidebar = (sidebar: MiniSidebar) => {
-    const targetArray =
-      sidebar.position === "bottom" ? bottomMiniSidebars : miniSidebars;
-
-    const existingIndex = targetArray.value.findIndex(
-      (s) => s.id === sidebar.id
-    );
-    if (existingIndex > -1) {
-      targetArray.value[existingIndex] = sidebar;
-    } else {
-      targetArray.value.push(sidebar);
-    }
-  };
-
   const unregisterMenuItem = (id: string) => {
     const index = menuItems.value.findIndex((m) => m.id === id);
     if (index > -1) {
       menuItems.value.splice(index, 1);
-    }
-  };
-
-  const unregisterMiniSidebar = (id: string) => {
-    let index = miniSidebars.value.findIndex((s) => s.id === id);
-    if (index > -1) {
-      miniSidebars.value.splice(index, 1);
-      return;
-    }
-
-    index = bottomMiniSidebars.value.findIndex((s) => s.id === id);
-    if (index > -1) {
-      bottomMiniSidebars.value.splice(index, 1);
     }
   };
 
@@ -112,8 +71,6 @@ export function useMenuRegistry() {
 
   const clearAllMenus = () => {
     menuItems.value = [];
-    miniSidebars.value = [];
-    bottomMiniSidebars.value = [];
   };
 
   const registerAllMenusFromApi = async (menuDefinitions: MenuDefinition[]) => {
@@ -330,14 +287,10 @@ export function useMenuRegistry() {
 
   return {
     menuItems,
-    miniSidebars,
-    bottomMiniSidebars,
     menuGroups,
 
     registerMenuItem,
-    registerMiniSidebar,
     unregisterMenuItem,
-    unregisterMiniSidebar,
 
     getMenuItemsBySidebar,
     clearAllMenus,
