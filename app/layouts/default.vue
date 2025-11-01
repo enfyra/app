@@ -89,7 +89,7 @@
 
       <!-- Page Content -->
       <section class="flex-1 min-h-0 overflow-auto scrollbar-thin relative z-10">
-        <div class="p-6 md:pb-20">
+        <div class="p-3 md:p-6 md:pb-20">
           <slot />
         </div>
       </section>
@@ -100,7 +100,6 @@
   <div id="others-overlay"></div>
 
   <CommonGlobalConfirm />
-  <CommonMobileWarning />
   <RouteLoading :show="routeLoading" message="Navigating..." />
 </template>
 

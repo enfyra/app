@@ -55,6 +55,8 @@ onMounted(() => {
     isVisible.value = true;
   });
 });
+
+const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
@@ -72,10 +74,11 @@ onMounted(() => {
     <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7C3AED]/30 to-transparent" />
 
     <!-- Content -->
-    <div class="relative px-6" :class="isMinimal ? 'py-4' : 'py-5'">
+    <div class="relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', isMinimal ? ((isMobile || isTablet) ? 'py-3' : 'py-4') : ((isMobile || isTablet) ? 'py-4' : 'py-5')]">
       <!-- Title & Description -->
       <div
-        class="space-y-1 transition-all duration-400"
+        :class="(isMobile || isTablet) ? 'space-y-0.5' : 'space-y-1'"
+        class="transition-all duration-400"
         :style="{
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
@@ -84,12 +87,12 @@ onMounted(() => {
       >
         <h1
           class="font-semibold tracking-tight"
-          :class="isMinimal ? 'text-2xl' : isStatsFocus ? 'text-4xl' : 'text-3xl'"
+          :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-xl') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-4xl' : 'text-3xl')"
           :style="{ color: 'var(--text-primary)' }"
         >
           {{ title }}
         </h1>
-        <p v-if="description" class="text-sm" :style="{ color: 'var(--text-tertiary)' }">
+        <p v-if="description" :class="(isMobile || isTablet) ? 'text-xs' : 'text-sm'" :style="{ color: 'var(--text-tertiary)' }">
           {{ description }}
         </p>
       </div>
@@ -97,14 +100,20 @@ onMounted(() => {
       <!-- Stats Cards -->
       <div
         v-if="stats && stats.length > 0"
-        class="grid grid-cols-2 md:grid-cols-4 gap-4"
-        :class="isStatsFocus ? 'mt-8' : 'mt-6'"
+        :class="[
+          'grid grid-cols-2 md:grid-cols-4',
+          (isMobile || isTablet) ? 'gap-2' : 'gap-4',
+          isStatsFocus ? ((isMobile || isTablet) ? 'mt-4' : 'mt-8') : ((isMobile || isTablet) ? 'mt-3' : 'mt-6')
+        ]"
       >
         <div
           v-for="(stat, index) in stats"
           :key="index"
-          class="rounded-xl border relative overflow-hidden group transition-all duration-300 hover:-translate-y-1"
-          :class="isStatsFocus ? 'p-6' : 'p-4'"
+          :class="[
+            'border relative overflow-hidden group transition-all duration-300 hover:-translate-y-1',
+            (isMobile || isTablet) ? 'rounded-lg' : 'rounded-xl',
+            isStatsFocus ? ((isMobile || isTablet) ? 'p-3' : 'p-6') : ((isMobile || isTablet) ? 'p-2.5' : 'p-4')
+          ]"
           :style="{
             background: 'var(--bg-surface)',
             borderColor: 'var(--border-default)',
@@ -121,12 +130,12 @@ onMounted(() => {
           <div class="relative">
             <div
               class="font-semibold"
-              :class="isStatsFocus ? 'text-3xl' : 'text-2xl'"
+              :class="(isMobile || isTablet) ? (isStatsFocus ? 'text-xl' : 'text-lg') : (isStatsFocus ? 'text-3xl' : 'text-2xl')"
               :style="{ color: 'var(--text-primary)' }"
             >
               {{ stat.value }}
             </div>
-            <div class="text-sm mt-1" :style="{ color: 'var(--text-tertiary)' }">
+            <div :class="(isMobile || isTablet) ? 'text-xs mt-0.5' : 'text-sm mt-1'" :style="{ color: 'var(--text-tertiary)' }">
               {{ stat.label }}
             </div>
           </div>

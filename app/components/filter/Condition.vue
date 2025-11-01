@@ -52,14 +52,20 @@ const enumOptions = computed(() => {
   }
   return [];
 });
+
+const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
   <div
-    class="flex items-center gap-2 p-3 border border-muted rounded-lg bg-gray-800/50"
+    :class="[
+      'border border-muted rounded-lg bg-gray-800/50',
+      (isMobile || isTablet) ? 'p-2 space-y-2' : 'flex items-center gap-2 p-3'
+    ]"
   >
     <!-- Field Select -->
-    <div v-if="!readonly" class="flex items-center gap-2">
+    <div v-if="!readonly" :class="(isMobile || isTablet) ? 'w-full' : 'flex items-center gap-2'">
+      <label v-if="isMobile || isTablet" class="text-xs text-gray-400 mb-1 block">Field</label>
       <USelect
         :model-value="
           condition.field.includes('.')
@@ -73,7 +79,8 @@ const enumOptions = computed(() => {
             ? 'Select field from ' + parentGroup.relationContext
             : 'Select field or relation'
         "
-        class="min-w-40 min-h-8"
+        :class="(isMobile || isTablet) ? 'w-full' : 'min-w-40 min-h-8'"
+        :size="(isMobile || isTablet) ? 'sm' : 'md'"
       />
     </div>
     <span v-else class="text-sm font-medium min-w-32">{{
@@ -81,49 +88,56 @@ const enumOptions = computed(() => {
     }}</span>
 
     <!-- Operator Select -->
-    <USelect
-      v-if="!readonly"
-      v-model="condition.operator"
-      :items="getOperatorsByType(condition.type || 'string')"
-      @update:model-value="updateCondition"
-      class="min-w-32 min-h-8"
-    />
-    <span v-else class="text-sm min-w-32">
-      {{
-        getOperatorsByType(condition.type || "string").find(
-          (op) => op.value === condition.operator
-        )?.label
-      }}
-    </span>
+    <div :class="(isMobile || isTablet) ? 'w-full' : ''">
+      <label v-if="(isMobile || isTablet) && !readonly" class="text-xs text-gray-400 mb-1 block">Operator</label>
+      <USelect
+        v-if="!readonly"
+        v-model="condition.operator"
+        :items="getOperatorsByType(condition.type || 'string')"
+        @update:model-value="updateCondition"
+        :class="(isMobile || isTablet) ? 'w-full' : 'min-w-32 min-h-8'"
+        :size="(isMobile || isTablet) ? 'sm' : 'md'"
+      />
+      <span v-else class="text-sm min-w-32">
+        {{
+          getOperatorsByType(condition.type || "string").find(
+            (op) => op.value === condition.operator
+          )?.label
+        }}
+      </span>
+    </div>
 
     <!-- Value Input -->
     <template
       v-if="needsValue(condition.operator) || condition.operator === '_is_null'"
     >
-      <FilterValueInput
-        v-if="!readonly"
-        :model-value="condition.value"
-        @update:model-value="updateValue"
-        :operator="condition.operator"
-        :field-type="condition.type || 'string'"
-        :enum-options="enumOptions"
-      />
+      <div :class="(isMobile || isTablet) ? 'w-full' : 'flex-1'">
+        <label v-if="(isMobile || isTablet) && !readonly" class="text-xs text-gray-400 mb-1 block">Value</label>
+        <FilterValueInput
+          v-if="!readonly"
+          :model-value="condition.value"
+          @update:model-value="updateValue"
+          :operator="condition.operator"
+          :field-type="condition.type || 'string'"
+          :enum-options="enumOptions"
+        />
 
-      <!-- Readonly Value Display -->
-      <span v-else class="text-sm">
-        <template v-if="condition.operator === '_is_null'">
-          {{ condition.value ? "Is empty" : "Is not empty" }}
-        </template>
-        <template v-else-if="needsTwoValues(condition.operator)">
-          {{ condition.value?.[0] }} - {{ condition.value?.[1] }}
-        </template>
-        <template v-else-if="Array.isArray(condition.value)">
-          {{ condition.value.join(", ") }}
-        </template>
-        <template v-else>
-          {{ condition.value }}
-        </template>
-      </span>
+        <!-- Readonly Value Display -->
+        <span v-else class="text-sm">
+          <template v-if="condition.operator === '_is_null'">
+            {{ condition.value ? "Is empty" : "Is not empty" }}
+          </template>
+          <template v-else-if="needsTwoValues(condition.operator)">
+            {{ condition.value?.[0] }} - {{ condition.value?.[1] }}
+          </template>
+          <template v-else-if="Array.isArray(condition.value)">
+            {{ condition.value.join(", ") }}
+          </template>
+          <template v-else>
+            {{ condition.value }}
+          </template>
+        </span>
+      </div>
     </template>
 
     <!-- Remove Button -->
@@ -134,6 +148,9 @@ const enumOptions = computed(() => {
       size="xs"
       color="error"
       variant="ghost"
-    />
+      :class="(isMobile || isTablet) ? 'w-full' : ''"
+    >
+      <span v-if="isMobile || isTablet">Remove</span>
+    </UButton>
   </div>
 </template>

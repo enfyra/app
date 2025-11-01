@@ -27,7 +27,7 @@ const rootIcon = computed(() => props.icon || "lucide:home");
 <template>
   <nav
     aria-label="breadcrumb"
-    class="flex items-center gap-2.5 text-sm"
+    class="hidden md:flex items-center gap-2.5 text-sm"
     :style="{ color: 'var(--text-quaternary)' }"
   >
     <!-- Home Link with Icon -->

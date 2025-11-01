@@ -267,33 +267,35 @@ function getExpandedFields(item: any): Array<{ key: string; value: any; type: st
 
 function formatFieldValue(value: any, type: string): string {
   if (value === null || value === undefined) return "—";
-  
+
   if (type === "boolean") {
     return value ? "Yes" : "No";
   }
-  
+
   if (type === "array") {
     return Array.isArray(value) ? value.join(", ") : String(value);
   }
-  
+
   const str = String(value);
-  
+
   // Check if it's a UUID - show shortened version
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)) {
     return str.slice(0, 8) + "…";
   }
-  
+
   // Check if it's a MongoDB ObjectId
   if (/^[0-9a-f]{24}$/i.test(str)) {
     return str.slice(0, 6) + "…" + str.slice(-4);
   }
-  
+
   return str;
 }
+
+const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
-  <div class="space-y-2">
+  <div :class="(isMobile || isTablet) ? 'space-y-1.5' : 'space-y-2'">
     <div
       v-for="item in data"
       :key="getId(item)"
@@ -301,40 +303,40 @@ function formatFieldValue(value: any, type: string): string {
       :class="isSelected(getId(item)) ? 'border-primary' : 'border-muted'"
     >
       <!-- Main Row -->
-      <div 
+      <div
         :ref="(el) => setItemRef(getId(item), el)"
         class="flex items-center"
       >
         <!-- Select Area (clickable) -->
         <button
           @click.stop="toggle(getId(item))"
-          class="flex-1 px-4 py-3 flex items-center gap-2 lg:hover:bg-muted transition-colors text-left"
+          :class="(isMobile || isTablet) ? 'flex-1 px-2 py-2 flex items-center gap-1.5 lg:hover:bg-muted transition-colors text-left' : 'flex-1 px-4 py-3 flex items-center gap-2 lg:hover:bg-muted transition-colors text-left'"
         >
           <UIcon
             v-if="isSelected(getId(item))"
             name="lucide:check-circle"
-            class="w-5 h-5 flex-shrink-0 text-primary"
+            :class="(isMobile || isTablet) ? 'w-4 h-4 flex-shrink-0 text-primary' : 'w-5 h-5 flex-shrink-0 text-primary'"
           />
           <UIcon
             v-else
             name="lucide:circle"
-            class="w-5 h-5 flex-shrink-0 text-muted-foreground"
+            :class="(isMobile || isTablet) ? 'w-4 h-4 flex-shrink-0 text-muted-foreground' : 'w-5 h-5 flex-shrink-0 text-muted-foreground'"
           />
           <div class="flex-1 min-w-0">
-            <div class="text-xs text-muted-foreground mb-0.5">
+            <div v-if="!isMobile && !isTablet" class="text-xs text-muted-foreground mb-0.5">
               ID: {{ shortenId(getId(item)) }}
             </div>
-            <div class="font-medium truncate">
+            <div :class="(isMobile || isTablet) ? 'text-sm truncate' : 'font-medium truncate'">
               {{ getDisplayLabel(item) }}
             </div>
           </div>
         </button>
 
         <!-- Action Buttons -->
-        <div class="flex items-center gap-1 px-2 border-l border-muted">
+        <div :class="(isMobile || isTablet) ? 'flex items-center gap-0.5 px-1 border-l border-muted' : 'flex items-center gap-1 px-2 border-l border-muted'">
           <UButton
             :icon="isExpanded(getId(item)) ? 'lucide:chevron-up' : 'lucide:chevron-down'"
-            size="sm"
+            :size="(isMobile || isTablet) ? 'xs' : 'sm'"
             variant="ghost"
             color="neutral"
             @click.stop="toggleExpand(getId(item))"
@@ -342,7 +344,7 @@ function formatFieldValue(value: any, type: string): string {
           />
           <UButton
             icon="lucide:info"
-            size="sm"
+            :size="(isMobile || isTablet) ? 'xs' : 'sm'"
             variant="ghost"
             color="neutral"
             @click.stop="viewDetails(item)"
@@ -354,10 +356,10 @@ function formatFieldValue(value: any, type: string): string {
       <!-- Expanded Details -->
       <div
         v-if="isExpanded(getId(item))"
-        class="border-t border-muted bg-muted/20 px-4 py-3"
+        :class="(isMobile || isTablet) ? 'border-t border-muted bg-muted/20 px-2 py-2' : 'border-t border-muted bg-muted/20 px-4 py-3'"
         :style="{ maxWidth: getItemWidth(getId(item)) }"
       >
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        <div :class="(isMobile || isTablet) ? 'grid grid-cols-1 gap-2 text-xs' : 'grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm'">
           <div
             v-for="field in getExpandedFields(item)"
             :key="field.key"

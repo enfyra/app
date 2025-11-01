@@ -15,7 +15,7 @@
       <PermissionGate :condition="action.permission">
         <UButton
           :label="
-            isTablet
+            (isMobile || isTablet)
               ? undefined
               : isRef(action.label)
               ? unref(action.label)
@@ -30,13 +30,13 @@
             (isRef(action.color) ? unref(action.color) : action.color) ||
             'primary'
           "
-          :size="isTablet ? 'sm' : action.size || 'md'"
+          :size="(isMobile || isTablet) ? 'sm' : action.size || 'md'"
           :loading="unref(action.loading)"
           :disabled="unref(action.disabled)"
           :to="unref(action.to)"
           :replace="unref(action.replace)"
           :aria-label="action.label || action.id"
-          :class="action.class"
+          :class="[(isMobile || isTablet) && action.icon ? 'rounded-full !aspect-square' : '', action.class]"
           @click="handleActionClick(action)"
           class="cursor-pointer"
         />
@@ -48,7 +48,7 @@
 <script setup lang="ts">
 const route = useRoute();
 const { headerActions } = useHeaderActionRegistry();
-const { isTablet } = useScreen();
+const { isMobile, isTablet } = useScreen();
 
 const visibleActions = computed(() => {
   const filtered = headerActions.value.filter((action) => {
