@@ -100,7 +100,7 @@ function hasActiveFiltersLocal(group: FilterGroup): boolean {
   });
 }
 
-const { isTablet } = useScreen();
+const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
@@ -109,15 +109,15 @@ const { isTablet } = useScreen();
       :open="modelValue"
       @update:open="(value) => (value ? null : handleClose())"
       direction="right"
-      :class="isTablet ? 'w-full' : 'min-w-2xl'"
+      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-2xl max-w-2xl'"
     >
       <template #header>
-        <div class="flex items-start justify-between">
-          <div class="flex items-start gap-3">
-            <UIcon name="i-lucide-filter" class="w-8 h-8 mt-1" />
-            <div>
-              <h3 class="text-lg font-semibold">Filter {{ tableName }}</h3>
-              <p class="text-sm text-gray-500 mt-1">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-start gap-2 md:gap-3 min-w-0 flex-1">
+            <UIcon name="i-lucide-filter" :class="(isMobile || isTablet) ? 'w-6 h-6' : 'w-8 h-8 mt-1'" />
+            <div class="min-w-0 flex-1">
+              <h3 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg font-semibold'">Filter {{ tableName }}</h3>
+              <p class="text-xs md:text-sm text-gray-500 mt-1">
                 {{
                   hasActiveConditions
                     ? `${localFilter.conditions.length} condition(s) configured`
@@ -129,12 +129,13 @@ const { isTablet } = useScreen();
 
           <UButton
             icon="i-lucide-x"
-            size="md"
+            :size="(isMobile || isTablet) ? 'sm' : 'md'"
             color="error"
             variant="soft"
             @click="handleClose"
+            :class="(isMobile || isTablet) ? 'flex-shrink-0 rounded-full !aspect-square' : 'flex-shrink-0'"
           >
-            Close
+            <span v-if="!isMobile && !isTablet">Close</span>
           </UButton>
         </div>
       </template>
@@ -164,7 +165,7 @@ const { isTablet } = useScreen();
 
       <template #footer>
         <div class="flex items-center justify-between">
-          <div class="text-sm text-gray-500">
+          <div class="hidden md:block text-sm text-gray-500">
             {{
               hasActiveConditions
                 ? "Ready to apply filters"
@@ -172,15 +173,17 @@ const { isTablet } = useScreen();
             }}
           </div>
 
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5 md:gap-3" :class="(isMobile || isTablet) ? 'w-full justify-end' : ''">
             <UButton
               variant="soft"
               @click="handleClear"
               :disabled="!hasActiveConditions"
               icon="i-lucide-x"
               color="neutral"
+              :size="(isMobile || isTablet) ? 'sm' : 'md'"
+              :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
             >
-              Clear All
+              <span v-if="!isMobile && !isTablet">Clear All</span>
             </UButton>
 
             <UButton
@@ -188,18 +191,21 @@ const { isTablet } = useScreen();
               variant="outline"
               icon="i-lucide-x-circle"
               color="error"
+              :size="(isMobile || isTablet) ? 'sm' : 'md'"
+              :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
             >
-              Cancel
+              <span v-if="!isMobile && !isTablet">Cancel</span>
             </UButton>
 
             <UButton
               @click="handleApply"
               :disabled="!hasActiveConditions"
-              class="min-w-[100px]"
+              :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : 'min-w-[100px]'"
               icon="i-lucide-check"
               color="primary"
+              :size="(isMobile || isTablet) ? 'sm' : 'md'"
             >
-              Apply Filters
+              <span v-if="!isMobile && !isTablet">Apply Filters</span>
             </UButton>
           </div>
         </div>

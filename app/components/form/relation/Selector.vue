@@ -189,6 +189,8 @@ watch(page, async (newPage, oldPage) => {
     await fetchDataWithValidation();
   }
 });
+
+const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
@@ -197,14 +199,14 @@ watch(page, async (newPage, oldPage) => {
     <UDrawer
       v-model:open="isDrawerOpen"
       direction="right"
-      class="min-w-xl"
+      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-xl max-w-xl'"
       :ui="{
         header:
           'border-b border-muted text-muted pb-2 flex items-center justify-between',
       }"
     >
       <template #header>
-        <h2>
+        <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg'">
           {{ props.relationMeta.propertyName }}
         </h2>
         <UButton
@@ -212,27 +214,28 @@ watch(page, async (newPage, oldPage) => {
           icon="lucide:x"
           color="error"
           variant="ghost"
-          size="xl"
+          :size="(isMobile || isTablet) ? 'md' : 'xl'"
+          :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
         />
       </template>
       <template #body>
-        <div class="space-y-6">
+        <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
           <!-- Header Section -->
           <div
-            class="rounded-xl border border-muted/30 p-6 shadow-sm bg-gray-800/50"
+            :class="(isMobile || isTablet) ? 'rounded-lg border border-muted/30 p-3 shadow-sm bg-gray-800/50' : 'rounded-xl border border-muted/30 p-6 shadow-sm bg-gray-800/50'"
           >
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center gap-3">
+            <div :class="(isMobile || isTablet) ? 'flex items-center justify-between mb-3' : 'flex items-center justify-between mb-4'">
+              <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
                 <div
-                  class="w-8 h-8 rounded-lg bg-gradient-to-br from-info to-success flex items-center justify-center shadow-md"
+                  :class="(isMobile || isTablet) ? 'w-6 h-6 rounded-lg bg-gradient-to-br from-info to-success flex items-center justify-center shadow-md flex-shrink-0' : 'w-8 h-8 rounded-lg bg-gradient-to-br from-info to-success flex items-center justify-center shadow-md'"
                 >
-                  <UIcon name="lucide:git-fork" class="text-xs text-white" />
+                  <UIcon name="lucide:git-fork" :class="(isMobile || isTablet) ? 'text-xs text-white' : 'text-xs text-white'" />
                 </div>
-                <div>
-                  <h3 class="text-lg font-semibold text-foreground">
+                <div class="min-w-0 flex-1">
+                  <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-foreground truncate' : 'text-lg font-semibold text-foreground'">
                     Relations
                   </h3>
-                  <p class="text-sm text-muted-foreground">
+                  <p :class="(isMobile || isTablet) ? 'text-xs text-muted-foreground truncate' : 'text-sm text-muted-foreground'">
                     {{ targetTable?.name || "Unknown" }} records
                   </p>
                 </div>
@@ -248,9 +251,9 @@ watch(page, async (newPage, oldPage) => {
               />
             </div>
 
-            <!-- Selected Count -->
-            <div v-if="selected.length > 0" class="flex items-center gap-2">
-              <UBadge variant="soft" color="primary" size="sm">
+            <!-- Selection Mode & Count -->
+            <div class="flex items-center gap-2">
+              <UBadge v-if="selected.length > 0" variant="soft" color="primary" size="sm">
                 {{ selected.length }} selected
               </UBadge>
               <span class="text-xs text-muted-foreground">
@@ -265,7 +268,7 @@ watch(page, async (newPage, oldPage) => {
 
           <!-- Content Section -->
           <div
-            class="bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-muted/30 p-6 bg-gray-800/50"
+            :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-muted/30 p-3 bg-gray-800/50' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-muted/30 p-6 bg-gray-800/50'"
           >
             <!-- Loading State -->
             <CommonLoadingState
@@ -315,7 +318,7 @@ watch(page, async (newPage, oldPage) => {
         </div>
       </template>
       <template #footer>
-        <div class="rounded-xl border border-muted/30 p-4 bg-gray-800/50">
+        <div :class="(isMobile || isTablet) ? '' : 'rounded-xl border border-muted/30 p-4 bg-gray-800/50'">
           <FormRelationPagination
             :page="page"
             :total="total"

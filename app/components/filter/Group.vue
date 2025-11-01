@@ -75,6 +75,8 @@ function isCondition(
 ): item is FilterCondition {
   return "field" in item;
 }
+
+const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
@@ -97,7 +99,7 @@ function isCondition(
       </span>
     </div>
 
-    <div class="space-y-2 pl-4 border-l-2 border-muted">
+    <div :class="(isMobile || isTablet) ? 'space-y-2 pl-2 border-l-2 border-muted' : 'space-y-2 pl-4 border-l-2 border-muted'">
       <template v-for="(item, index) in group.conditions" :key="item.id">
         <!-- Filter Condition -->
         <FilterCondition
@@ -114,7 +116,7 @@ function isCondition(
         />
 
         <!-- Nested Filter Group -->
-        <div v-else class="border border-muted rounded-lg p-3">
+        <div v-else :class="(isMobile || isTablet) ? 'border border-muted rounded-lg p-2' : 'border border-muted rounded-lg p-3'">
           <!-- Show relation context if this is a relation group -->
           <div
             v-if="item.relationContext"

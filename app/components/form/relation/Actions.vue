@@ -17,29 +17,33 @@ function openFilterDrawer() {
 function openCreateDrawer() {
   emit("open-create");
 }
+
+const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
-  <div class="flex gap-2 justify-between">
+  <div :class="(isMobile || isTablet) ? 'flex gap-1.5 justify-between flex-shrink-0' : 'flex gap-2 justify-between'">
     <UButton
       icon="i-lucide-filter"
       :variant="hasActiveFilters ? 'solid' : 'outline'"
       :color="hasActiveFilters ? 'primary' : 'neutral'"
       @click="openFilterDrawer"
-      size="sm"
+      :size="(isMobile || isTablet) ? 'xs' : 'sm'"
+      :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
     >
-      {{ hasActiveFilters ? `Filtered (${filterCount})` : "Filter" }}
+      <span v-if="!isMobile && !isTablet">{{ hasActiveFilters ? `Filtered (${filterCount})` : "Filter" }}</span>
     </UButton>
 
     <UButton
       icon="lucide:plus"
       variant="soft"
       color="primary"
-      size="sm"
+      :size="(isMobile || isTablet) ? 'xs' : 'sm'"
       @click="openCreateDrawer"
       :disabled="disabled"
+      :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
     >
-      Add New
+      <span v-if="!isMobile && !isTablet">Add New</span>
     </UButton>
   </div>
 </template>

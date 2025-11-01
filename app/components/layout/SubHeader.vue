@@ -1,7 +1,7 @@
 <template>
   <div
     class="h-12 border-b flex items-center shrink-0 relative overflow-hidden backdrop-blur-sm"
-    :class="[isTablet ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
+    :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
     :style="{
       borderColor: 'var(--border-subtle)',
       background: 'rgba(15, 20, 33, 0.6)'
@@ -9,7 +9,7 @@
   >
     <!-- Blue gradient accent at top -->
     <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#0066FF]/30 to-transparent"></div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-1.5 md:gap-3">
       <template v-for="action in leftActions" :key="action.key || action.id">
         <PermissionGate :condition="action.permission">
           <!-- Component actions -->
@@ -23,7 +23,7 @@
           <UButton
             v-else
             :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
-            :label="isRef(action.label) ? unref(action.label) : action.label"
+            :label="(isMobile || isTablet) ? undefined : (isRef(action.label) ? unref(action.label) : action.label)"
             :variant="
               (isRef(action.variant)
                 ? unref(action.variant)
@@ -33,7 +33,7 @@
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'
             "
-            :size="action.size || (isTablet ? 'sm' : 'md')"
+            :size="action.size || ((isMobile || isTablet) ? 'sm' : 'md')"
             :disabled="
               typeof action.disabled === 'boolean'
                 ? action.disabled
@@ -61,7 +61,7 @@
           <UButton
             v-else
             :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
-            :label="isRef(action.label) ? unref(action.label) : action.label"
+            :label="(isMobile || isTablet) ? undefined : (isRef(action.label) ? unref(action.label) : action.label)"
             :variant="
               (isRef(action.variant)
                 ? unref(action.variant)
@@ -71,7 +71,7 @@
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'
             "
-            :size="action.size || (isTablet ? 'sm' : 'md')"
+            :size="action.size || ((isMobile || isTablet) ? 'sm' : 'md')"
             :disabled="
               typeof action.disabled === 'boolean'
                 ? action.disabled
@@ -91,7 +91,7 @@
 
 <script setup lang="ts">
 const route = useRoute();
-const { isTablet } = useScreen();
+const { isMobile, isTablet } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
 
 // Filter and sort left actions

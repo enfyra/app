@@ -409,7 +409,7 @@ async function deleteRoute(routeItem: any) {
               inactive: 'hover:border-purple-600/30',
             }"
           />
-          <p class="text-sm text-gray-400">
+          <p class="hidden md:block text-sm text-gray-400">
             Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of <span class="text-gray-200">{{ total }}</span> results
           </p>
         </div>

@@ -390,7 +390,7 @@ useHeaderActionRegistry([
       v-if="!loading && Math.ceil(total / pageLimit) > 1"
       class="flex items-center justify-between"
     >
-      <p class="text-sm text-gray-400">
+      <p class="hidden md:block text-sm text-gray-400">
         Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of{" "}
         <span class="text-gray-200">{{ total }}</span> results
       </p>
