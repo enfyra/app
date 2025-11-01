@@ -198,6 +198,7 @@ const { isMobile, isTablet } = useScreen();
   <Teleport to="body">
     <UDrawer
       :handle="false"
+      handle-only
       v-model:open="isDrawerOpen"
       direction="right"
       :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-xl max-w-xl'"

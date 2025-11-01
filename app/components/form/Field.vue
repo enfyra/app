@@ -124,13 +124,15 @@ const isBooleanField = computed(() => {
 
   return field?.type === "boolean" || configType === "boolean";
 });
+
+const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
   <div
     v-if="isBooleanField"
     v-bind="fieldProps"
-    class="flex items-center justify-between py-4 border-t border-b"
+    :class="(isMobile || isTablet) ? 'flex items-center justify-between py-4 border-t' : 'flex items-center justify-between py-4 border-t border-b'"
     :style="{
       borderColor: 'var(--border-subtle)',
     }"

@@ -244,6 +244,20 @@ export function useMenuRegistry() {
     const nonSystemTables = tables.filter((table) => !table.isSystem);
 
     if (collectionsParentId) {
+      // Register "Create Collection" menu item first
+      registerMenuItem({
+        id: "collections-create",
+        label: "Create Collection",
+        route: "/collections/create",
+        icon: "lucide:plus",
+        parent: collectionsParentId,
+        type: "Menu",
+        order: -1, // Show at top
+        permission: {
+          and: [{ route: "/table_definition", actions: ["create"] }],
+        },
+      });
+
       modifiableTables.forEach((table) => {
         const tableName = table.name || table.table_name;
         if (!tableName) return;

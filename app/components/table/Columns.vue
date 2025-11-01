@@ -179,6 +179,8 @@ function getArrayEnumTypeMap(currentType: string, options: any[]) {
   };
 }
 
+const { isMobile, isTablet } = useScreen();
+
 function getDefaultValueType(columnType: string) {
   switch (columnType) {
     case "boolean":
@@ -376,7 +378,12 @@ watch(
 
     <!-- Add column -->
     <div class="flex justify-end pt-2">
-      <UButton icon="lucide:plus" label="Add Column" @click="addNewColumn()" />
+      <UButton
+        icon="lucide:plus"
+        label="Add Column"
+        @click="addNewColumn()"
+        :size="(isMobile || isTablet) ? 'sm' : 'md'"
+      />
     </div>
   </div>
 
@@ -384,9 +391,10 @@ watch(
   <Teleport to="body">
     <UDrawer
       :handle="false"
+      handle-only
       v-model:open="isEditing"
       direction="right"
-      class="min-w-xl"
+      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-xl max-w-xl'"
       @update:open="(open) => { if (!open) handleDrawerClose() }"
       :ui="{
         header:
@@ -398,17 +406,17 @@ watch(
           class="bg-gradient-to-r from-background/90 to-muted/20 rounded-t-xl w-full"
         >
           <div class="flex items-center justify-between w-full">
-            <div class="flex items-center gap-3">
+            <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
               <div
-                class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg"
+                :class="(isMobile || isTablet) ? 'w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg flex-shrink-0' : 'w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg'"
               >
-                <UIcon name="lucide:columns" class="text-sm text-white" />
+                <UIcon name="lucide:columns" :class="(isMobile || isTablet) ? 'text-xs text-white' : 'text-sm text-white'" />
               </div>
-              <div>
-                <h2 class="text-xl font-semibold text-foreground">
+              <div class="min-w-0 flex-1">
+                <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold text-foreground truncate' : 'text-xl font-semibold text-foreground'">
                   {{ editingIndex !== null ? "Edit Column" : "New Column" }}
                 </h2>
-                <p class="text-sm text-muted-foreground">
+                <p :class="(isMobile || isTablet) ? 'text-xs text-muted-foreground truncate' : 'text-sm text-muted-foreground'">
                   {{ currentColumn?.name || "Configure column properties" }}
                 </p>
               </div>
@@ -421,22 +429,22 @@ watch(
               "
               variant="soft"
               color="error"
-              size="lg"
-              class="lg:hover:bg-error/10 lg:hover:text-error transition-colors duration-200"
+              :size="(isMobile || isTablet) ? 'sm' : 'lg'"
+              :class="(isMobile || isTablet) ? 'rounded-full !aspect-square flex-shrink-0' : 'lg:hover:bg-error/10 lg:hover:text-error transition-colors duration-200'"
             />
           </div>
         </div>
       </template>
 
       <template #body>
-        <div class="space-y-6 bg-gray-800/50" v-if="currentColumn">
+        <div :class="(isMobile || isTablet) ? 'space-y-3 bg-gray-800/50' : 'space-y-6 bg-gray-800/50'" v-if="currentColumn">
           <!-- Form Section -->
           <div
-            class="bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-muted/30 p-6"
+            :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-muted/30 p-3' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-muted/30 p-6'"
           >
-            <div class="flex items-center gap-2 mb-4">
-              <UIcon name="lucide:edit-3" class="text-info" size="18" />
-              <h3 class="text-lg font-semibold text-foreground">
+            <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
+              <UIcon name="lucide:edit-3" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />
+              <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-foreground' : 'text-lg font-semibold text-foreground'">
                 Column Properties
               </h3>
             </div>
@@ -465,9 +473,9 @@ watch(
 
       <template #footer>
         <!-- Actions Section -->
-        <div class="bg-gray-800/50 rounded-xl border border-muted/30 p-4">
+        <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-4'">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
+            <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
               <UIcon
                 name="lucide:info"
                 class="text-muted-foreground"
@@ -481,22 +489,27 @@ watch(
                 }}
               </span>
             </div>
-            <div class="flex gap-3">
+            <div :class="(isMobile || isTablet) ? 'flex gap-1.5 w-full justify-end' : 'flex gap-3'">
               <UButton
                 variant="ghost"
                 color="neutral"
                 @click="cancelDrawer"
                 :disabled="false"
+                :size="(isMobile || isTablet) ? 'sm' : 'md'"
+                :icon="(isMobile || isTablet) ? 'lucide:x' : undefined"
+                :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
               >
-                Cancel
+                <span v-if="!isMobile && !isTablet">Cancel</span>
               </UButton>
               <UButton
                 icon="lucide:check"
                 @click="saveColumn()"
                 color="primary"
                 :loading="false"
+                :size="(isMobile || isTablet) ? 'sm' : 'md'"
+                :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
               >
-                {{ editingIndex !== null ? "Update Column" : "Create Column" }}
+                <span v-if="!isMobile && !isTablet">{{ editingIndex !== null ? "Update Column" : "Create Column" }}</span>
               </UButton>
             </div>
           </div>
