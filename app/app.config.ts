@@ -107,7 +107,7 @@ export default defineAppConfig({
           "transition-all duration-300",
           "outline-none",
           "bg-[var(--bg-input)] border border-[var(--border-input)]",
-          "focus:border-[var(--color-primary-500)] focus:ring-[3px] focus:ring-[var(--color-primary-500)]/20",
+          "focus:border-primary focus:ring-[3px] focus:ring-primary/20",
         ].join(" "),
       },
     },
