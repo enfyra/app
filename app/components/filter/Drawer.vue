@@ -107,6 +107,7 @@ const { isMobile, isTablet } = useScreen();
   <Teleport to="body">
     <UDrawer
       :handle="false"
+      handle-only
       :open="modelValue"
       @update:open="(value) => (value ? null : handleClose())"
       direction="right"

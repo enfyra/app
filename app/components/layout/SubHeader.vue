@@ -33,7 +33,7 @@
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'
             "
-            :size="action.size || ((isMobile || isTablet) ? 'sm' : 'md')"
+            :size="action.size || ((isMobile || isTablet) ? 'md' : 'md')"
             :disabled="
               typeof action.disabled === 'boolean'
                 ? action.disabled
@@ -71,7 +71,7 @@
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'
             "
-            :size="action.size || ((isMobile || isTablet) ? 'sm' : 'md')"
+            :size="action.size || ((isMobile || isTablet) ? 'md' : 'md')"
             :disabled="
               typeof action.disabled === 'boolean'
                 ? action.disabled

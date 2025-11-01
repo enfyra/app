@@ -30,7 +30,7 @@
             (isRef(action.color) ? unref(action.color) : action.color) ||
             'primary'
           "
-          :size="(isMobile || isTablet) ? 'sm' : action.size || 'md'"
+          :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
           :loading="unref(action.loading)"
           :disabled="unref(action.disabled)"
           :to="unref(action.to)"
