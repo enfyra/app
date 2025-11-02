@@ -345,7 +345,7 @@ const { isMobile, isTablet } = useScreen();
   <FormRelationDetailDrawer
     v-model="detailModal"
     :record="detailRecord"
-    :table-name="targetTable?.name"
+    :table-name="targetTable?.name || ''"
   />
 
   <!-- Filter Drawer -->

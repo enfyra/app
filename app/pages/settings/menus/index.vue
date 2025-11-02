@@ -290,7 +290,7 @@ watch(
           :class="
             isTablet
               ? 'grid-cols-2'
-              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
           "
         >
           <CommonSettingsCard
@@ -381,10 +381,7 @@ watch(
               })
             "
             :ui="{
-              wrapper: 'flex items-center gap-2',
-              base: 'h-9 w-9 rounded-xl transition-all duration-300',
-              active: 'bg-gradient-to-br from-blue-600 to-purple-600 border-transparent shadow-lg shadow-purple-600/30 text-white',
-              inactive: 'hover:border-purple-600/30',
+              item: 'h-9 w-9 rounded-xl transition-all duration-300',
             }"
           />
           <p class="hidden md:block text-sm text-gray-400">
