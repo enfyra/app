@@ -65,7 +65,7 @@ export default defineAppConfig({
           "selection:bg-purple-500 selection:text-white",
           "focus:border-purple-500 focus:ring-[3px] focus:ring-purple-500/20",
           "aria-[invalid=true]:border-red-500 aria-[invalid=true]:ring-red-500/20",
-          "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+          "disabled:cursor-not-allowed disabled:opacity-50",
           "file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-[var(--text-primary)]",
         ].join(" "),
       },
@@ -84,15 +84,11 @@ export default defineAppConfig({
           "resize-none",
           "transition-all duration-300",
           "outline-none",
-          // Text and placeholder
           "text-[var(--text-primary)]",
           "placeholder:text-[var(--text-tertiary)]",
           "selection:bg-purple-500 selection:text-white",
-          // Focus state
           "focus:border-purple-500 focus:ring-[3px] focus:ring-purple-500/20",
-          // Error/invalid state
           "aria-[invalid=true]:border-red-500 aria-[invalid=true]:ring-red-500/20",
-          // Disabled state
           "disabled:cursor-not-allowed disabled:opacity-50",
         ].join(" "),
       },
@@ -107,7 +103,8 @@ export default defineAppConfig({
           "transition-all duration-300",
           "outline-none",
           "bg-[var(--bg-input)] border border-[var(--border-input)]",
-          "focus:border-primary focus:ring-[3px] focus:ring-primary/20",
+          "focus:border-purple-500 focus:ring-[3px] focus:ring-purple-500/20",
+          "disabled:cursor-not-allowed disabled:opacity-50",
         ].join(" "),
       },
     },
@@ -121,7 +118,7 @@ export default defineAppConfig({
     },
     card: {
       slots: {
-        base: "rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] transition-all duration-300 card-float hover:border-[var(--border-strong)] overflow-hidden relative group",
+        root: "rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] transition-all duration-300 card-float hover:border-[var(--border-strong)] overflow-hidden relative group",
       },
     },
     drawer: {

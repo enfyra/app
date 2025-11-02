@@ -11,7 +11,7 @@ const isCollapsed = computed(() => {
   return sidebarCollapsed.value;
 });
 
-// Track expanded groups (use localStorage to persist)
+// Track expanded groups - shared state for both desktop and collapsed views (use localStorage to persist)
 const expandedGroups = ref<Set<string>>(new Set());
 
 // Load states from localStorage on mount
@@ -20,6 +20,11 @@ onMounted(() => {
   const collapsedState = localStorage.getItem('sidebar-collapsed');
   if (collapsedState) {
     setSidebarCollapsed(collapsedState === 'true');
+  } else {
+    // Default: auto collapse on lg (desktop) breakpoint
+    if (!isMobile.value && !isTablet.value) {
+      setSidebarCollapsed(true);
+    }
   }
 
   // Load expanded groups
@@ -49,7 +54,7 @@ watch(expandedGroups, (newVal) => {
   localStorage.setItem('sidebar-expanded-groups', JSON.stringify([...newVal]));
 }, { deep: true });
 
-// Toggle group expansion
+// Toggle group expansion - shared for both desktop and collapsed views
 function toggleGroup(groupId: string) {
   if (expandedGroups.value.has(groupId)) {
     expandedGroups.value.delete(groupId);
@@ -58,7 +63,7 @@ function toggleGroup(groupId: string) {
   }
 }
 
-// Check if group is expanded
+// Check if group is expanded - shared for both desktop and collapsed views
 function isGroupExpanded(groupId: string) {
   return expandedGroups.value.has(groupId);
 }
@@ -221,7 +226,7 @@ const visibleGroups = computed(() => {
           class="w-4 h-4 transition-transform duration-300"
           :style="{
             color: 'var(--text-tertiary)',
-            transform: isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)'
+            transform: isCollapsed ? 'rotate(90deg)' : 'rotate(0deg)'
           }"
         />
       </button>
@@ -256,41 +261,118 @@ const visibleGroups = computed(() => {
           <div
             v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
             :key="group.id"
+            class="space-y-1"
           >
-            <button
-              @click="() => {
-                // Only navigate if it's a standalone menu (type = Menu)
-                if (group.type === 'Menu' && group.route) {
-                  navigateTo(group.route);
-                  handleMenuClick();
-                } else if (group.type === 'Dropdown Menu' && group.items && group.items.length > 0 && group.items[0]) {
-                  // If it's a dropdown group with children, go to first child
-                  const firstChild = group.items[0];
-                  navigateTo(firstChild.route || firstChild.path);
-                  handleMenuClick();
-                }
-              }"
-              :class="[
-                'w-full flex items-center justify-center px-3 py-2.5 rounded-xl transition-all duration-300 relative group',
-                isItemActive(group.route) || isGroupActive(group) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
-              ]"
-              :style="{ color: (isItemActive(group.route) || isGroupActive(group)) ? 'white' : 'var(--text-secondary)' }"
+            <div class="relative flex items-center gap-1 px-3">
+              <button
+                @click="() => {
+                  // Only navigate if it's a standalone menu (type = Menu)
+                  if (group.type === 'Menu' && group.route) {
+                    navigateTo(group.route);
+                    handleMenuClick();
+                  } else if (group.type === 'Dropdown Menu') {
+                    // Toggle dropdown (even if no children - icon will rotate but nothing expands)
+                    toggleGroup(group.id);
+                  }
+                }"
+                :class="[
+                  'flex-1 aspect-square flex items-center justify-center rounded-xl transition-all duration-300 relative group',
+                  group.type === 'Menu' && (isItemActive(group.route) || isGroupActive(group)) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
+                ]"
+                :style="{ color: group.type === 'Menu' && (isItemActive(group.route) || isGroupActive(group)) ? 'white' : 'var(--text-secondary)' }"
+              >
+                <div
+                  v-if="group.type === 'Menu' && (isItemActive(group.route) || isGroupActive(group))"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-300"
+                ></div>
+
+                <div
+                  v-if="group.type === 'Menu' && (isItemActive(group.route) || isGroupActive(group))"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-opacity duration-300"
+                ></div>
+
+                <UIcon
+                  :name="group.icon"
+                  class="w-5 h-5 flex-shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300"
+                />
+              </button>
+
+              <!-- Chevron button for dropdowns -->
+              <button
+                v-if="group.type === 'Dropdown Menu'"
+                @click.stop="toggleGroup(group.id)"
+                :class="[
+                  'w-6 h-6 aspect-square flex items-center justify-center rounded-lg transition-all duration-300',
+                  'hover:bg-[var(--bg-elevated)] text-[var(--text-tertiary)]'
+                ]"
+              >
+                <UIcon
+                  name="lucide:chevron-right"
+                  :class="[
+                    'w-4 h-4 transition-transform duration-300',
+                    isGroupExpanded(group.id) ? 'rotate-90' : ''
+                  ]"
+                />
+              </button>
+            </div>
+
+            <!-- Expanded dropdown items (icon-only) -->
+            <transition
+              enter-active-class="transition-all duration-200 ease-out"
+              enter-from-class="opacity-0 -translate-y-2 max-h-0"
+              enter-to-class="opacity-100 translate-y-0 max-h-96"
+              leave-active-class="transition-all duration-200 ease-in"
+              leave-from-class="opacity-100 translate-y-0 max-h-96"
+              leave-to-class="opacity-0 -translate-y-2 max-h-0"
             >
               <div
-                v-if="isItemActive(group.route) || isGroupActive(group)"
-                class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-300"
-              ></div>
+                v-if="isGroupExpanded(group.id) && group.items"
+                class="space-y-1 px-3 overflow-hidden"
+              >
+                <template v-for="item in group.items" :key="item.id">
+                  <PermissionGate :condition="item.permission as any">
+                    <!-- Dropdown with children -->
+                    <template v-if="item.children && item.children.length > 0">
+                      <PermissionGate
+                        v-for="child in item.children"
+                        :key="child.id"
+                        :condition="child.permission as any"
+                      >
+                        <button
+                          @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
+                          :class="[
+                            'w-full aspect-square flex items-center justify-center rounded-lg transition-all duration-300 relative group',
+                            isItemActive(child.path || child.route) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
+                          ]"
+                          :style="{ color: isItemActive(child.path || child.route) ? 'white' : 'var(--text-tertiary)' }"
+                        >
+                          <UIcon
+                            :name="child.icon || 'lucide:circle'"
+                            class="w-4 h-4 flex-shrink-0 relative z-10"
+                          />
+                        </button>
+                      </PermissionGate>
+                    </template>
 
-              <div
-                v-if="isItemActive(group.route) || isGroupActive(group)"
-                class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-opacity duration-300"
-              ></div>
-
-              <UIcon
-                :name="group.icon"
-                class="w-5 h-5 flex-shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300"
-              />
-            </button>
+                    <!-- Regular item -->
+                    <button
+                      v-else
+                      @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
+                      :class="[
+                        'w-full aspect-square flex items-center justify-center rounded-lg transition-all duration-300 relative group',
+                        isItemActive(item.path || item.route) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
+                      ]"
+                      :style="{ color: isItemActive(item.path || item.route) ? 'white' : 'var(--text-tertiary)' }"
+                    >
+                      <UIcon
+                        :name="item.icon || 'lucide:circle'"
+                        class="w-4 h-4 flex-shrink-0 relative z-10"
+                      />
+                    </button>
+                  </PermissionGate>
+                </template>
+              </div>
+            </transition>
           </div>
         </div>
       </template>
@@ -339,14 +421,12 @@ const visibleGroups = computed(() => {
 
             <div v-else>
         <button
-          @click="group.items && group.items.length > 0 ? toggleGroup(group.id) : null"
+          @click="toggleGroup(group.id)"
           :class="[
-            'w-full flex items-center justify-between px-6 py-2 text-xs uppercase tracking-wider transition-colors group cursor-pointer',
-            isGroupActive(group) ? 'text-gradient-primary' : ''
+            'w-full flex items-center justify-between px-6 py-2 text-xs uppercase tracking-wider transition-colors group cursor-pointer'
           ]"
           :style="{
-            color: isGroupActive(group) ? 'var(--color-primary-500)' : 'var(--text-quaternary)',
-            opacity: (!group.items || group.items.length === 0) ? 0.5 : 1
+            color: 'var(--text-quaternary)'
           }"
         >
           <span class="group-hover:text-gradient-primary transition-all">{{ group.label }}</span>

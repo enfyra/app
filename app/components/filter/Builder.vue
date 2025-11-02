@@ -19,7 +19,7 @@ function updateFilter(group: typeof props.modelValue) {
     :schemas="schemas"
     :table-name="tableName"
     :root-table-name="rootTableName"
-    :readonly="readonly"
+    :readonly="!!readonly"
     @update:group="updateFilter"
   />
 </template>

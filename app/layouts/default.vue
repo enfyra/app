@@ -68,7 +68,7 @@
         v-if="hasPageHeader"
         :title="pageHeader!.title"
         :description="pageHeader?.description"
-        :stats="pageHeader?.stats"
+        :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
         :variant="pageHeader?.variant"
         :gradient="pageHeader?.gradient"
       />

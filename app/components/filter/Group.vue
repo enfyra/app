@@ -109,7 +109,7 @@ const { isMobile, isTablet } = useScreen();
           :condition-index="index"
           :schemas="schemas"
           :table-name="tableName"
-          :readonly="readonly"
+          :readonly="!!readonly"
           @update:condition="(condition) => onConditionUpdate(condition, index)"
           @convert-to-group="(newGroup, idx) => onConvertToGroup(newGroup, idx)"
           @remove="removeItem"
@@ -146,7 +146,7 @@ const { isMobile, isTablet } = useScreen();
               )
             "
             :root-table-name="rootTableName || tableName"
-            :readonly="readonly"
+            :readonly="!!readonly"
             @update:group="(g) => onNestedGroupUpdate(g, index)"
             @remove="() => removeItem(index)"
           />
