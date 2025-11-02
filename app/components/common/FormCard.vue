@@ -1,6 +1,5 @@
 <template>
   <UiModernCard variant="form" :size="size" :class="className">
-    <!-- Title/Description Header (optional) -->
     <div
       v-if="title || description || $slots.header"
       class="mb-6 pb-4 border-b"
@@ -30,12 +29,6 @@
 </template>
 
 <script setup lang="ts">
-/**
- * FORM CARD - Specialized card for forms and editors
- *
- * Based on Figma design - Clean container for forms
- * Usage: Wrap FormEditor or form fields in this component
- */
 
 interface Props {
   title?: string;

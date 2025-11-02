@@ -11,16 +11,6 @@ const { getPreviewUrl } = useFileUrl();
 const fileId = route.params.id as string;
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Register page header with dynamic title
-watch(() => file.value?.data?.[0]?.filename, (filename) => {
-  if (filename) {
-    registerPageHeader({
-      title: filename,
-      description: "View and edit file information",
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
 const {
   data: file,
   pending,
@@ -36,6 +26,17 @@ const {
   },
   errorContext: "Fetch File",
 });
+
+// Register page header with dynamic title
+watch(() => file.value?.data?.[0]?.filename, (filename) => {
+  if (filename) {
+    registerPageHeader({
+      title: filename,
+      description: "View and edit file information",
+      gradient: "cyan",
+    });
+  }
+}, { immediate: true });
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -325,18 +326,18 @@ function getFileIconAndColor(mimetype: string): {
     <div class="space-y-6">
       <!-- File Preview -->
       <div
-        class="bg-gray-800/50 rounded-xl border border-gray-700/50 shadow-xl"
+        class="bg-gray-800/50 rounded-xl border border-gray-700/50 shadow-xl overflow-hidden"
         v-if="!pending || !isMounted"
       >
-        <div class="flex justify-center">
+        <div class="flex justify-center p-4">
           <div
             v-if="form.mimetype?.startsWith('image/')"
-            class="max-w-132 max-h-132"
+            class="max-w-full max-h-132 w-full"
           >
             <CommonImage
               :src="getPreviewUrl(fileId)"
               :alt="form.filename"
-              class="object-contain h-full w-132 h-132"
+              class="object-contain h-full w-full max-w-132 max-h-132 mx-auto rounded-lg"
               loading-area="custom"
               custom-loading-size="300px"
             />

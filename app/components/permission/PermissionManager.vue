@@ -157,7 +157,7 @@
       :handle="false"
         v-model:open="showDrawer"
         direction="right"
-        :class="isTablet ? 'w-full' : 'min-w-xl'"
+        :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-3xl'"
         :ui="{
           header:
             'border-b border-muted text-muted pb-2 flex items-center justify-between',
@@ -208,7 +208,7 @@ const toast = useToast();
 const { confirm } = useConfirm();
 const { checkPermissionCondition } = usePermissions();
 const { isMounted } = useMounted();
-const { isTablet } = useScreen();
+const { isMobile, isTablet } = useScreen();
 
 interface Permission {
   id: string;
