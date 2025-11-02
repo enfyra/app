@@ -33,7 +33,7 @@
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'
             "
-            :size="action.size || ((isMobile || isTablet) ? 'md' : 'md')"
+            :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
             :disabled="
               typeof action.disabled === 'boolean'
                 ? action.disabled
@@ -71,7 +71,7 @@
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'
             "
-            :size="action.size || ((isMobile || isTablet) ? 'md' : 'md')"
+            :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
             :disabled="
               typeof action.disabled === 'boolean'
                 ? action.disabled
@@ -90,7 +90,6 @@
 </template>
 
 <script setup lang="ts">
-const route = useRoute();
 const { isMobile, isTablet } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
 

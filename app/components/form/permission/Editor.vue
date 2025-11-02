@@ -4,7 +4,7 @@
       :handle="false"
       v-model:open="isOpen"
       direction="right"
-      class="w-full max-w-2xl"
+      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-2xl'"
       :ui="{
         header:
           'border-b border-muted text-muted pb-2 flex items-center justify-between',
@@ -124,6 +124,8 @@
 </template>
 
 <script setup lang="ts">
+const { isMobile, isTablet } = useScreen();
+
 const props = defineProps<{
   modelValue: boolean;
   permission?: any;

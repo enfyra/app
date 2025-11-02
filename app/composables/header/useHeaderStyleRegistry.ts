@@ -136,10 +136,14 @@ export const useHeaderStyleRegistry = () => {
    * Get computed content style (padding)
    */
   const contentStyle = computed(() => {
+    const { isMobile, isTablet } = useScreen();
     const style: Record<string, string> = {};
     const config = headerStyleConfig.value;
 
-    if (config.paddingX) style.paddingLeft = style.paddingRight = config.paddingX;
+    // Responsive padding: px-4 on mobile/tablet, px-6 on desktop
+    const responsivePaddingX = (isMobile.value || isTablet.value) ? '1rem' : (config.paddingX || '1.5rem');
+
+    style.paddingLeft = style.paddingRight = responsivePaddingX;
     if (config.paddingY) style.paddingTop = style.paddingBottom = config.paddingY;
 
     return style;

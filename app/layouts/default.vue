@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen text-sm bg-background text-foreground">
+  <div class="flex h-screen text-sm bg-background text-foreground overflow-x-hidden">
     <!-- Skip Link for Keyboard Navigation -->
     <a
       href="#main-content"
@@ -37,7 +37,7 @@
 
     <!-- Main Content -->
     <main
-      class="flex-1 flex flex-col min-h-0 relative"
+      class="flex-1 flex flex-col min-h-0 relative overflow-x-hidden"
       :style="{ background: 'var(--bg-app)' }"
       id="main-content"
     >
@@ -77,7 +77,7 @@
       <LayoutSubHeader v-if="hasSubHeaderActions" />
 
       <!-- Page Content -->
-      <section class="flex-1 min-h-0 overflow-auto scrollbar-thin relative z-10">
+      <section class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin relative z-10">
         <div class="p-3 pb-32 md:p-6 md:pb-20">
           <slot />
         </div>

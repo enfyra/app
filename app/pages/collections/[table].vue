@@ -8,7 +8,7 @@ const { loadRoutes } = useRoutes();
 const { getId } = useDatabase();
 const tableName = "table_definition";
 const { getIncludeFields } = useSchema(tableName);
-const { isTablet } = useScreen();
+const { isMobile, isTablet } = useScreen();
 const { isMounted } = useMounted();
 
 const table = ref<any>();
@@ -317,7 +317,7 @@ onMounted(() => {
     <Teleport to="body">
       <UModal
         v-model:open="showSchemaViewer"
-        :class="isTablet ? 'w-full' : 'min-w-2xl'"
+        :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-2xl max-w-4xl'"
       >
         <template #header>
           <div class="flex items-center justify-between w-full">
