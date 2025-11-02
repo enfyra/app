@@ -33,7 +33,7 @@ export interface MenuItem {
   path?: string;
   children?: any[];
   order?: number;
-  type?: "Mini Sidebar" | "Dropdown Menu" | "Menu";
+  type?: "Dropdown Menu" | "Menu";
   parent?: any;
   sidebar?: any;
   description?: string;

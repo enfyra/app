@@ -19,7 +19,7 @@ export default defineAppConfig({
           "text-sm font-medium",
           "transition-all duration-300",
           "outline-none",
-          "disabled:pointer-events-none disabled:opacity-50",
+          "disabled:cursor-not-allowed disabled:opacity-50",
           "focus-visible:ring-[3px] focus-visible:ring-purple-500/20",
           "[&_svg]:pointer-events-none",
           "[&_svg:not([class*='size-'])]:size-4",
@@ -124,6 +124,11 @@ export default defineAppConfig({
     drawer: {
       slots: {
         body: "flex-1 pb-4",
+      },
+    },
+    switch: {
+      slots: {
+        thumb: "data-[state=unchecked]:bg-gray-300 bg-white",
       },
     },
   },
