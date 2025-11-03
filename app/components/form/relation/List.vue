@@ -300,7 +300,7 @@ const { isMobile, isTablet } = useScreen();
       v-for="item in data"
       :key="getId(item)"
       class="border rounded-lg overflow-hidden"
-      :class="isSelected(getId(item)) ? 'border-primary' : 'border-muted'"
+      :class="isSelected(getId(item)) ? 'border-primary-400' : 'border-muted'"
     >
       <!-- Main Row -->
       <div
@@ -315,7 +315,7 @@ const { isMobile, isTablet } = useScreen();
           <UIcon
             v-if="isSelected(getId(item))"
             name="lucide:check-circle"
-            :class="(isMobile || isTablet) ? 'w-4 h-4 flex-shrink-0 text-primary' : 'w-5 h-5 flex-shrink-0 text-primary'"
+            :class="(isMobile || isTablet) ? 'w-4 h-4 flex-shrink-0 text-primary-400' : 'w-5 h-5 flex-shrink-0 text-primary-400'"
           />
           <UIcon
             v-else

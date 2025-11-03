@@ -163,7 +163,7 @@
 
       <template #footer>
         <div class="flex justify-end">
-          <UButton variant="outline" @click="close"> Cancel </UButton>
+          <UButton variant="outline" color="error" @click="close"> Cancel </UButton>
         </div>
       </template>
     </UDrawer>

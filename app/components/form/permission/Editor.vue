@@ -102,7 +102,7 @@
 
           <!-- Buttons -->
           <div class="flex justify-end gap-2 pt-4 border-t border-muted">
-            <UButton variant="outline" @click="close"> Cancel </UButton>
+            <UButton variant="outline" color="error" @click="close"> Cancel </UButton>
             <UButton
               color="primary"
               @click="apply"
