@@ -55,6 +55,10 @@ export default defineAppConfig({
           color: "primary",
           variant: "soft",
           class: "text-primary-400"
+        },
+        {
+          color: "primary",
+          class: "text-gray-200"
         }
       ]
     },

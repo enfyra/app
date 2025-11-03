@@ -63,7 +63,7 @@
             <UButton
               @click="closeModal"
               variant="outline"
-              color="neutral"
+              color="error"
               :disabled="props.disabled"
             >
               Cancel
