@@ -5,8 +5,8 @@ const props = withDefaults(defineProps<{
   type?: 'ring' | 'crescent' | 'dashed';
 }>(), {
   size: 'md',
-  color: '#3B82F6',
-  type: 'ring'
+  color: '#7C3AED',
+  type: 'crescent'
 });
 
 const spinnerSize = computed(() => {

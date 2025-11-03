@@ -8,11 +8,13 @@ interface Props {
   }>;
   size?: "sm" | "md" | "lg" | "xl";
   variant?: "solid" | "outline" | "ghost" | "soft";
+  color?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   size: "md",
   variant: "soft",
+  color: "neutral",
 });
 
 const isOpen = ref(false);
@@ -66,6 +68,7 @@ const cancelChanges = () => {
       icon="i-lucide-columns"
       :size="size"
       :variant="variant"
+      :color="color"
       @click="isOpen = true"
     >
       Columns

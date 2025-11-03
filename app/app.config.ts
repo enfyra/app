@@ -141,5 +141,17 @@ export default defineAppConfig({
         thumb: "data-[state=unchecked]:bg-gray-300 bg-white",
       },
     },
+    checkbox: {
+      slots: {
+        base: [
+          "rounded",
+          "transition-all duration-300",
+          "border-2 border-gray-300 dark:border-gray-600",
+          "data-[state=checked]:bg-primary data-[state=checked]:border-primary",
+          "focus-visible:ring-[3px] focus-visible:ring-purple-500/20",
+        ].join(" "),
+        icon: "text-white",
+      },
+    },
   },
 });

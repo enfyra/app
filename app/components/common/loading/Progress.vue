@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<{
   value: 0,
   size: 'md',
   type: 'linear',
-  color: 'blue-500',
+  color: 'purple-500',
   indeterminate: false
 });
 
@@ -76,7 +76,7 @@ const strokeDashoffset = computed(() =>
         cx="50%"
         cy="50%"
         :r="radius"
-        :stroke="color === 'blue-500' ? '#3B82F6' : color"
+        :stroke="color === 'purple-500' ? '#7C3AED' : color"
         stroke-width="2"
         fill="none"
         :stroke-dasharray="circumference"

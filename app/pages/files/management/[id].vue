@@ -11,17 +11,6 @@ const filePage = ref(Number(route.query.filePage) || 1);
 const pageLimit = 20; // Show 20 items per page
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Register page header with dynamic folder name
-watch(() => folder.value?.data?.[0]?.name, (name) => {
-  if (name) {
-    registerPageHeader({
-      title: `${name} - Files Manager`,
-      description: "Manage files and subfolders in this directory",
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
-
 const {
   data: folder,
   pending: folderPending,
@@ -52,6 +41,17 @@ const {
   })),
   errorContext: "Load Folder Info",
 });
+
+// Register page header with dynamic folder name
+watch(() => folder.value?.data?.[0]?.name, (name) => {
+  if (name) {
+    registerPageHeader({
+      title: `${name} - Files Manager`,
+      description: "Manage files and subfolders in this directory",
+      gradient: "cyan",
+    });
+  }
+}, { immediate: true });
 
 // Prepare folders data from deep query
 const folders = computed(() => folder.value?.data?.[0]?.children || []);

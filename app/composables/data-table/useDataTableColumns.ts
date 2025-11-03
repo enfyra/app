@@ -117,7 +117,7 @@ export function useDataTableColumns() {
                 {
                   default: () =>
                     h(UButton, {
-                      icon: "i-lucide-more-vertical",
+                      icon: "lucide:ellipsis-vertical",
                       size: "lg",
                       variant: "ghost",
                       color: "neutral",

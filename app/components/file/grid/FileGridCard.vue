@@ -9,32 +9,87 @@
       :disabled="moveState.moveMode"
     >
       <div
-        class="relative bg-white dark:bg-gray-800 rounded-xl border transition-all duration-300 overflow-hidden"
-        :class="[
-          selectedItems.includes(file.id)
-            ? 'border-primary-500 shadow-lg shadow-primary-500/20 scale-[1.02]'
+        class="relative rounded-xl border transition-all duration-300 overflow-hidden"
+        :style="{
+          background: 'rgba(21, 27, 46, 0.8)',
+          backdropFilter: 'blur(20px)',
+          borderColor: selectedItems.includes(file.id)
+            ? '#7C3AED'
             : hoveredFileId === file.id
-            ? 'border-primary-300 dark:border-primary-600 shadow-xl transform -translate-y-1'
-            : 'border-gray-200 dark:border-gray-700 shadow-sm lg:hover:shadow-lg',
-          moveState.moveMode
-            ? 'opacity-60 cursor-not-allowed'
-            : 'cursor-pointer',
-        ]"
+            ? '#7C3AED'
+            : 'rgba(255, 255, 255, 0.08)',
+          borderWidth: selectedItems.includes(file.id) ? '2px' : '1px',
+          boxShadow: selectedItems.includes(file.id)
+            ? '0 8px 32px rgba(124, 58, 237, 0.3), 0 0 0 1px rgba(124, 58, 237, 0.2)'
+            : hoveredFileId === file.id
+            ? '0 8px 32px rgba(124, 58, 237, 0.2), 0 4px 16px rgba(0, 0, 0, 0.4)'
+            : '0 2px 8px rgba(0, 0, 0, 0.4)',
+          transform: `translateY(${hoveredFileId === file.id ? '-2px' : '0'}) scale(${selectedItems.includes(file.id) ? '1.02' : '1'})`,
+          opacity: moveState.moveMode ? '0.6' : '1',
+          cursor: moveState.moveMode ? 'not-allowed' : 'pointer'
+        }"
         @click="handleFileClick"
       >
+        <!-- Accent gradient line at top -->
         <div
-          v-if="isSelectionMode"
-          class="absolute top-3 right-3 z-20 bg-white dark:bg-gray-800 rounded-lg p-1 shadow-md"
-          @click.stop
+          class="absolute top-0 left-0 right-0 h-px opacity-60"
+          style="background: linear-gradient(90deg, transparent, #7C3AED, transparent)"
+        />
+        <!-- Selection Checkbox - appears on hover or when selected -->
+        <Transition
+          enter-active-class="transition duration-200"
+          enter-from-class="opacity-0 scale-75"
+          enter-to-class="opacity-100 scale-100"
+          leave-active-class="transition duration-200"
+          leave-from-class="opacity-100 scale-100"
+          leave-to-class="opacity-0 scale-75"
         >
-          <UCheckbox
-            :model-value="selectedItems.includes(file.id)"
-            @update:model-value="() => $emit('toggle-selection', file.id)"
-            size="lg"
-          />
-        </div>
+          <div
+            v-if="(hoveredFileId === file.id || selectedItems.includes(file.id)) && isSelectionMode"
+            class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-white dark:bg-gray-800"
+            style="box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)"
+            @click.stop="$emit('toggle-selection', file.id)"
+          >
+            <UCheckbox
+              :model-value="selectedItems.includes(file.id)"
+              @update:model-value="() => $emit('toggle-selection', file.id)"
+            />
+          </div>
+        </Transition>
 
-        <Preview :file="file" :hovered="hoveredFileId === file.id" />
+        <!-- Preview Area with hover overlay -->
+        <div class="relative h-32 overflow-hidden cursor-pointer">
+          <div
+            class="w-full h-full transition-all duration-300"
+            :style="{ filter: hoveredFileId === file.id ? 'blur(4px)' : 'blur(0)' }"
+          >
+            <Preview :file="file" :hovered="hoveredFileId === file.id" />
+          </div>
+
+          <!-- Hover overlay with View icon -->
+          <Transition
+            enter-active-class="transition duration-300"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-300"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+          >
+            <div
+              v-if="hoveredFileId === file.id"
+              class="absolute inset-0 flex items-center justify-center"
+              style="background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px)"
+            >
+              <div
+                class="w-12 h-12 rounded-full flex items-center justify-center transform transition-transform duration-300"
+                :class="hoveredFileId === file.id ? 'scale-100' : 'scale-0'"
+                style="background: linear-gradient(135deg, #7C3AED, #8B5CF6); box-shadow: 0 4px 16px rgba(124, 58, 237, 0.5)"
+              >
+                <UIcon name="lucide:eye" class="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </Transition>
+        </div>
 
         <div class="p-4 space-y-3">
           <EditableName
@@ -49,25 +104,48 @@
             @cancel-edit="cancelEdit"
           />
 
-          <div
-            class="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500"
-          >
-            <div class="flex items-center gap-1">
+          <!-- Metadata Row -->
+          <div class="flex items-center justify-between text-xs" style="color: #94A3B8">
+            <div class="flex items-center gap-1.5">
               <UIcon name="lucide:calendar" class="w-3 h-3" />
               <span>{{ file.modifiedAt }}</span>
             </div>
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1.5">
               <UIcon name="lucide:file" class="w-3 h-3" />
               <span>{{ file.size }}</span>
             </div>
           </div>
 
-          <Actions
-            :file="file"
-            :move-mode="moveState.moveMode"
-            :dropdown-items="getDropdownMenuItems()"
-            @view-file="$emit('view-file', file)"
-          />
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-2 pt-1">
+            <!-- Primary View Button -->
+            <UButton
+              @click="(e) => {
+                if (!isSelectionMode) {
+                  e.stopPropagation();
+                  $emit('view-file', file);
+                }
+              }"
+              class="flex-1 h-8 text-xs font-medium text-white transition-all duration-300"
+              style="background: linear-gradient(135deg, #7C3AED, #8B5CF6); box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3)"
+            >
+              <UIcon name="lucide:eye" class="w-3.5 h-3.5 mr-1.5" />
+              View
+            </UButton>
+
+            <!-- Dropdown Menu -->
+            <div @click="(e) => !isSelectionMode && e.stopPropagation()">
+              <UDropdownMenu :items="getDropdownMenuItems()">
+                <UButton
+                  variant="ghost"
+                  class="h-8 w-8 p-0 hover:bg-white/10"
+                  :disabled="moveState.moveMode"
+                >
+                  <UIcon name="lucide:ellipsis-vertical" class="w-4 h-4" style="color: #94A3B8" />
+                </UButton>
+              </UDropdownMenu>
+            </div>
+          </div>
         </div>
       </div>
     </UContextMenu>

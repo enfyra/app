@@ -92,7 +92,7 @@ useSubHeaderActionRegistry([
       isSelectionMode.value ? "lucide:x" : "lucide:check-square"
     ),
     variant: computed(() => (isSelectionMode.value ? "ghost" : "outline")),
-    color: computed(() => (isSelectionMode.value ? "secondary" : "primary")),
+    color: computed(() => (isSelectionMode.value ? "error" : "primary")),
     onClick: () => {
       const wasSelectionMode = isSelectionMode.value;
       isSelectionMode.value = !wasSelectionMode;
@@ -141,6 +141,7 @@ useSubHeaderActionRegistry([
       return {
         items: columnDropdownItems.value,
         variant: "soft",
+        color: "secondary",
       };
     },
     side: "right",
@@ -203,8 +204,8 @@ const columns = computed(() => {
     actions: [
       {
         label: "Delete",
-        icon: "i-lucide-trash-2",
-        class: "text-red-500",
+        icon: "lucide:trash-2",
+        color: "error",
         show: () => {
           const hasDeletePermission = checkPermissionCondition({
             and: [
