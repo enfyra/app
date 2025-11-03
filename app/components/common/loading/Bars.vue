@@ -5,7 +5,7 @@ const props = withDefaults(defineProps<{
   count?: number;
 }>(), {
   size: 'md',
-  color: 'blue-500',
+  color: 'purple-500',
   count: 5
 });
 

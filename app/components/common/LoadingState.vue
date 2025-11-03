@@ -41,18 +41,18 @@ const showTitle = computed(() =>
     aria-live="polite"
     :aria-label="title || defaultTitle"
   >
-    <CommonLoadingDots 
-      v-if="loadingType === 'dots'" 
-      type="bounce" 
-      :size="size" 
-      color="blue-500" 
+    <CommonLoadingDots
+      v-if="loadingType === 'dots'"
+      type="bounce"
+      :size="size"
+      color="purple-500"
     />
-    
-    <CommonLoadingSpinner 
-      v-else-if="loadingType === 'spinner'" 
-      type="crescent" 
-      :size="size" 
-      color="#007AFF" 
+
+    <CommonLoadingSpinner
+      v-else-if="loadingType === 'spinner'"
+      type="crescent"
+      :size="size"
+      color="#7C3AED"
     />
     
     <CommonLoadingSkeleton 

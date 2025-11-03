@@ -47,11 +47,12 @@
       <h3
         class="font-semibold text-gray-900 dark:text-white truncate flex-1"
         :title="file.displayName"
-        @dblclick="$emit('start-rename')"
+        @dblclick="!isSelectionMode && $emit('start-rename')"
       >
         {{ file.displayName }}
       </h3>
       <UButton
+        v-if="!isSelectionMode"
         icon="lucide:edit-3"
         size="xs"
         variant="ghost"

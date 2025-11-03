@@ -292,6 +292,26 @@
     animation: shimmer 3s infinite;
   }
 
+  /* Skeleton shimmer effect */
+  .skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skeleton-shimmer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+    z-index: 1;
+  }
+
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }

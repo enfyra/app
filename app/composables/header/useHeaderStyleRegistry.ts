@@ -69,6 +69,9 @@ const headerStyleConfig = ref<HeaderStyleConfig>({ ...defaultHeaderStyle });
  * Composable for managing header styles
  */
 export const useHeaderStyleRegistry = () => {
+  // Get screen size reactively at the composable level
+  const { isMobile, isTablet } = useScreen();
+
   /**
    * Update header style configuration
    */
@@ -136,7 +139,6 @@ export const useHeaderStyleRegistry = () => {
    * Get computed content style (padding)
    */
   const contentStyle = computed(() => {
-    const { isMobile, isTablet } = useScreen();
     const style: Record<string, string> = {};
     const config = headerStyleConfig.value;
 

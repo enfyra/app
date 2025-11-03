@@ -1,56 +1,55 @@
 <template>
-  <div
-    class="relative h-32 p-6 flex items-center justify-center overflow-hidden"
-    :class="[
-      !isImageFile(file)
-        ? 'bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20'
-        : '',
-    ]"
-  >
-    <div class="absolute inset-0 opacity-10">
-      <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-        <pattern
-          id="grid"
-          width="20"
-          height="20"
-          patternUnits="userSpaceOnUse"
-        >
-          <circle cx="10" cy="10" r="1" fill="currentColor" />
-        </pattern>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-      </svg>
-    </div>
-
+  <div class="relative w-full h-full">
+    <!-- Image preview -->
     <div
       v-if="isImageFile(file)"
       class="absolute inset-0 w-full h-full"
     >
       <CommonImage
-        :src="file.assetUrl"
+        :src="getImageUrl(file.assetUrl)"
         class="w-full h-full object-cover"
         @error="handleImageError"
       />
       <div class="absolute inset-0 bg-black/20" />
     </div>
 
+    <!-- For files and folders - show icon with dotted grid pattern -->
     <div
       v-if="!isImageFile(file)"
-      class="flex justify-center items-center p-4 relative z-10"
+      class="relative w-full h-full flex items-center justify-center overflow-hidden"
     >
-      <UIcon
-        :name="file.icon"
-        :size="96"
-        class="transition-all duration-300"
-        :class="[
-          file.iconColor,
-          hovered ? 'scale-110 rotate-3' : '',
-        ]"
+      <!-- Dotted grid pattern background -->
+      <div
+        class="absolute inset-0 opacity-20"
+        style="
+          background-image: radial-gradient(circle, rgba(124, 58, 237, 0.3) 1px, transparent 1px);
+          background-size: 16px 16px;
+        "
       />
-    </div>
 
-    <div
-      class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300"
-    />
+      <!-- Gradient backdrop for depth -->
+      <div
+        class="absolute inset-0 opacity-30"
+        :style="{
+          background: `radial-gradient(circle at center, ${getIconColor()}20 0%, transparent 70%)`
+        }"
+      />
+
+      <!-- Large centered icon -->
+      <div
+        class="relative z-10 transition-all duration-300"
+        :class="hovered ? 'scale-110 rotate-3' : ''"
+      >
+        <UIcon
+          :name="file.icon"
+          :size="96"
+          :style="{
+            color: getIconColor(),
+            filter: 'drop-shadow(0 4px 12px rgba(124, 58, 237, 0.3))'
+          }"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -77,9 +76,26 @@ function isImageFile(file: FileItem): boolean {
   return false;
 }
 
+// Add quality parameter to image URL for faster loading
+function getImageUrl(url: string): string {
+  if (!url) return url;
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}quality=70`;
+}
+
 // Handle image loading errors
 function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement;
   img.style.display = "none";
+}
+
+// Get icon color based on file type
+function getIconColor(): string {
+  // Check if it's a folder
+  if (props.file.mimetype?.startsWith("folder/") || props.file.icon?.includes("folder")) {
+    return "#7C3AED"; // Purple for folders
+  }
+  // Default color for files
+  return "#0066FF"; // Blue for files
 }
 </script>
