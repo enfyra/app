@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const toast = useToast();
 const { confirm } = useConfirm();
 const { getId } = useDatabase();
@@ -12,7 +11,6 @@ const { getIncludeFields } = useSchema(tableName);
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -44,7 +42,6 @@ const { execute: updateHookApi, error: updateError } = useApi(
   }
 );
 
-// Delete API at setup level
 const { execute: deleteHookApi, error: deleteError } = useApi(
   () => `/hook_definition`,
   {

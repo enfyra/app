@@ -40,7 +40,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 import { formatDate } from "~/utils/common/filter/filter-helpers";
 import {
   getFolderIcon,
@@ -94,7 +93,6 @@ const emit = defineEmits<{
 const { confirm } = useConfirm();
 const toast = useToast();
 
-// Delete folder API at setup level
 const { execute: executeDeleteFolder } = useApi(
   () => `/folder_definition`,
   {
@@ -103,7 +101,6 @@ const { execute: executeDeleteFolder } = useApi(
   }
 );
 
-// Delete folder function
 async function deleteFolder(folder: any) {
   const isConfirmed = await confirm({
     title: "Delete Folder",

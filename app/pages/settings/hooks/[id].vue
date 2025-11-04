@@ -27,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const route = useRoute();
 
 const toast = useToast();
@@ -36,7 +35,6 @@ const { confirm } = useConfirm();
 
 const id = route.params.id as string;
 
-// Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 
@@ -113,7 +111,6 @@ const form = ref<Record<string, any>>({});
 
 const errors = ref<Record<string, string>>({});
 
-// Initialize form data
 async function initializeForm() {
   await executeGetHook();
   const data = hookData.value?.data?.[0];
@@ -174,7 +171,6 @@ async function deleteHook() {
   await navigateTo("/settings/hooks");
 }
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 watch(hookData, (data) => {

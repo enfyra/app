@@ -26,7 +26,6 @@ onMounted(async () => {
   await initializeForm();
 });
 
-// Register page header with dynamic title
 watch(() => currentRecord.value.id, (id) => {
   if (id) {
     registerPageHeader({

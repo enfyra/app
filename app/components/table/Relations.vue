@@ -17,7 +17,6 @@ const relationErrors = ref<Record<number, Record<string, string>>>({});
 const { generateEmptyForm, validate } = useSchema("relation_definition");
 const { isMobile, isTablet } = useScreen();
 
-// Modal state
 const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -33,7 +32,6 @@ function handleDrawerClose() {
 }
 
 function cancelDrawer() {
-  // Close drawer (same as click outside)
   isEditing.value = false;
 }
 
@@ -42,9 +40,7 @@ function discardChanges() {
   formEditorRef.value?.confirmChanges();
   // Reset errors
   relationErrors.value = {};
-  // Close modal
   showCloseConfirm.value = false;
-  // Close drawer
   isEditing.value = false;
   isNew.value = false;
   currentRelation.value = null;

@@ -10,10 +10,6 @@
 </template>
 
 <script setup lang="ts">
-// Dashboard page - overview only
-// Content and widgets will be provided by extensions
-
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

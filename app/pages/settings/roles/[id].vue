@@ -29,7 +29,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
@@ -38,7 +37,6 @@ const id = route.params.id as string;
 const tableName = "role_definition";
 const { getIncludeFields } = useSchema(tableName);
 
-// Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
@@ -131,7 +129,6 @@ const {
 
 const form = ref<Record<string, any>>({});
 
-// Initialize form data
 async function initializeForm() {
   await fetchRole();
   const data = apiData.value?.data?.[0];
@@ -212,7 +209,6 @@ async function deleteRole() {
   await navigateTo("/settings/roles");
 }
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

@@ -16,7 +16,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const toast = useToast();
 
 const tableName = "user_definition";

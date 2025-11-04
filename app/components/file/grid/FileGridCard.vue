@@ -153,7 +153,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 import type { FileItem } from "~/utils/types";
 import Preview from "./FileGridPreview.vue";
 import EditableName from "./FileGridEditableName.vue";
@@ -287,7 +286,6 @@ async function saveEdit() {
     originalName.value = "";
     editingLoading.value = false;
 
-    // Show success toast
     const toast = useToast();
     toast.add({
       title: "Success",

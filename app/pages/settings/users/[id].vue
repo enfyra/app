@@ -1,18 +1,15 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
 const { validate } = useSchema("user_definition");
 
-// Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Register page header with dynamic title
 watch(() => apiData.value?.data?.[0]?.email, (email) => {
   if (email) {
     registerPageHeader({
@@ -42,7 +39,6 @@ const form = ref<Record<string, any>>({});
 
 const errors = ref<Record<string, string>>({});
 
-// Initialize form data
 async function initializeForm() {
   await fetchUser();
   const data = apiData.value?.data?.[0];

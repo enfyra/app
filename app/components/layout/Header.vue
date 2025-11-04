@@ -45,7 +45,6 @@ const route = useRoute();
 const { isMobile } = useScreen();
 const { headerActions } = useHeaderActionRegistry();
 
-// Filter and sort left actions
 const leftActions = computed(() => {
   return headerActions.value.filter((a) => {
     const showValue =

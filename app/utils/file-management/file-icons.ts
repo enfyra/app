@@ -103,7 +103,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Default fallback
   return {
     icon: "lucide:file",
     color: "text-gray-300",

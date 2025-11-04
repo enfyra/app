@@ -13,7 +13,6 @@ const errors = ref<Record<string, string>>({});
 const { generateEmptyForm, validate } = useSchema("column_definition");
 const { deleteIds, getIdFieldName, isMongoDB } = useDatabase();
 
-// Modal state
 const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -29,7 +28,6 @@ function handleDrawerClose() {
 }
 
 function cancelDrawer() {
-  // Close drawer (same as click outside)
   isEditing.value = false;
 }
 
@@ -38,9 +36,7 @@ function discardChanges() {
   formEditorRef.value?.confirmChanges();
   // Reset errors
   errors.value = {};
-  // Close modal
   showCloseConfirm.value = false;
-  // Close drawer
   isEditing.value = false;
   isNew.value = false;
   currentColumn.value = null;
@@ -144,7 +140,6 @@ function addNewColumn() {
 }
 
 
-// Extract UUID type mapping
 function getUuidTypeMap() {
   return {
     defaultValue: {
@@ -163,7 +158,6 @@ function getUuidTypeMap() {
   };
 }
 
-// Extract array/enum type mapping
 function getArrayEnumTypeMap(currentType: string, options: any[]) {
   return {
     options: {
@@ -238,7 +232,6 @@ const typeMap = computed(() => {
     ...(["array-select", "enum"].includes(currentType) &&
       getArrayEnumTypeMap(currentType, currentColumn.value?.options)),
 
-    // Hide defaultValue for text type
     ...(currentType === "text" && {
       defaultValue: {
         excluded: true,

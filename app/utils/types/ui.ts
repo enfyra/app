@@ -1,7 +1,6 @@
 import type { ComputedRef, Ref } from "vue";
 import type { PermissionCondition } from "./permissions";
 
-// Data Table Types
 export interface DataTableProps {
   data: any[];
   columns: any[]; // Using any for @tanstack/vue-table ColumnDef compatibility
@@ -48,7 +47,6 @@ export interface UploadModalEmits {
   error: [message: string];
 }
 
-// Loading Component
 export interface LoadingProps {
   show?: boolean;
   message?: string;
@@ -67,7 +65,6 @@ export interface RouteLoadingProps {
   message?: string;
 }
 
-// Permission Gate Component
 export interface PermissionGateProps {
   // Legacy props for backward compatibility
   actions?: string[];

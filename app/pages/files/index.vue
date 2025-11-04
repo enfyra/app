@@ -10,10 +10,6 @@
 </template>
 
 <script setup lang="ts">
-// Files index page - overview only
-// Individual file management features are accessed through sidebar navigation
-
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

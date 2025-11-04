@@ -54,7 +54,6 @@ watch(expandedGroups, (newVal) => {
   localStorage.setItem('sidebar-expanded-groups', JSON.stringify([...newVal]));
 }, { deep: true });
 
-// Toggle group expansion - shared for both desktop and collapsed views
 function toggleGroup(groupId: string) {
   if (expandedGroups.value.has(groupId)) {
     expandedGroups.value.delete(groupId);
@@ -125,7 +124,6 @@ watch(searchQuery, (newQuery) => {
   }
 });
 
-// Filter groups by permission and search
 const visibleGroups = computed(() => {
   const query = searchQuery.value.toLowerCase().trim();
 
@@ -138,7 +136,6 @@ const visibleGroups = computed(() => {
       return true;
     })
     .map(group => {
-      // Filter items by permission first
       const permittedItems = group.items?.filter((item: any) => {
         if (!item.permission) return true;
         return checkPermissionCondition(item.permission);
@@ -160,7 +157,6 @@ const visibleGroups = computed(() => {
         };
       }
 
-      // Filter items by search query
       const matchedItems = permittedItems.filter((item: any) => {
         // Search in item label
         if (item.label.toLowerCase().includes(query)) return true;
@@ -271,7 +267,6 @@ const visibleGroups = computed(() => {
                     navigateTo(group.route);
                     handleMenuClick();
                   } else if (group.type === 'Dropdown Menu') {
-                    // Toggle dropdown (even if no children - icon will rotate but nothing expands)
                     toggleGroup(group.id);
                   }
                 }"

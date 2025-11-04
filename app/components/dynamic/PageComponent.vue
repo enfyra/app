@@ -66,7 +66,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 interface Props {
   path: string;
 }

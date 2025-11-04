@@ -27,7 +27,6 @@ onMounted(async () => {
   await ensureRoutesLoaded();
 });
 
-// Register page header with dynamic table name
 watch(() => table.value?.name, (name) => {
   if (name) {
     registerPageHeader({

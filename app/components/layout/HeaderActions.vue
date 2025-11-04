@@ -83,7 +83,6 @@ const visibleActions = computed(() => {
     return true;
   });
 
-  // Filter for right side only (header actions are on the right by default)
   return filtered.filter((action) => action.side === "right" || !action.side);
 });
 

@@ -136,7 +136,6 @@ useHeaderActionRegistry({
   },
 });
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

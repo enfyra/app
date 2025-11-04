@@ -12,7 +12,6 @@ export class AcornLinter {
 
   constructor(globals: Record<string, boolean> = {}) {
     this.globals = {
-      // Default browser globals
       window: true,
       document: true,
       console: true,

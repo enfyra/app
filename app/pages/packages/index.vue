@@ -67,7 +67,6 @@ definePageMeta({
   layout: "default",
 });
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

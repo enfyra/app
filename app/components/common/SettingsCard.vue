@@ -169,7 +169,6 @@
 <script setup lang="ts">
 import { UAvatar, UBadge, UButton, USwitch, UChip, UIcon, UKbd, UTooltip } from "#components";
 
-// Component interfaces
 interface Stat {
   label: string;
   value?: string | number;
@@ -214,7 +213,6 @@ const props = withDefaults(defineProps<Props>(), {
   cardClass: "",
 });
 
-// Component mapping for dynamic component resolution
 const componentMap = {
   UButton,
   USwitch,
@@ -231,7 +229,6 @@ const getComponent = (componentName?: string) => {
   return componentMap[componentName as keyof typeof componentMap] || UButton;
 };
 
-// Default props for components based on context
 const getDefaultProps = (componentName?: string, context: 'header' | 'stats' = 'header') => {
   const defaults = {
     header: {
@@ -255,7 +252,6 @@ const getDefaultProps = (componentName?: string, context: 'header' | 'stats' = '
   return defaults[context]?.[componentName as keyof typeof defaults[typeof context]] || {};
 };
 
-// Computed styles based on icon color with gradients
 const iconBgClass = computed(() => {
   const colorMap = {
     primary: "bg-gradient-to-br from-blue-600 to-purple-600",

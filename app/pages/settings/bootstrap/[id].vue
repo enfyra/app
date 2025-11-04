@@ -39,7 +39,6 @@ const tableName = "bootstrap_script_definition";
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
-// Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
@@ -152,7 +151,6 @@ const {
   errorContext: "Delete Bootstrap Script",
 });
 
-// Initialize form data
 async function initializeForm() {
   await executeGetScript();
   const data = scriptData.value?.data?.[0];

@@ -1,12 +1,10 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const toast = useToast();
 const { confirm } = useConfirm();
 const errors = ref<Record<string, string>>({});
 
 const { validate } = useSchema("setting_definition");
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -16,7 +14,6 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-// Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
@@ -89,7 +86,6 @@ const {
 
 const setting = ref<Record<string, any>>({});
 
-// Initialize form data
 async function initializeForm() {
   await loadSetting();
   const data = apiData.value?.data?.[0];

@@ -93,7 +93,6 @@ function handleInput(event: Event) {
 }
 
 function handlePermissionUpdate(value: any) {
-  // Convert permission object back to string for storage
   const permissionString = value ? JSON.stringify(value) : "";
   emit("update:modelValue", permissionString);
 }

@@ -15,7 +15,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const toast = useToast();
 
 const tableName = "hook_definition";
@@ -54,7 +53,6 @@ const {
   errorContext: "Create Hook",
 });
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

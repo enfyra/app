@@ -25,7 +25,6 @@ export const VUE_GLOBALS = {
   watch: true,
   watchEffect: true,
   
-  // Component composition
   defineProps: true,
   defineEmits: true,
   defineExpose: true,
@@ -50,11 +49,9 @@ export const NUXT_GLOBALS = {
   useRouter: true,
   navigateTo: true,
   
-  // State management
   useState: true,
   useCookie: true,
   
-  // Data fetching
   useFetch: true,
   useAsyncData: true,
   useLazyFetch: true,
@@ -113,7 +110,6 @@ export const EXTENSION_GLOBALS = {
   $ctx: true,
 };
 
-// List of composables to inject into extension runtime
 export const EXTENSION_COMPOSABLES = {
   // Enfyra API composables
   useApi: 'useApi',

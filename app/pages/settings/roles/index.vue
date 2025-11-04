@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const toast = useToast();
 const page = ref(1);
 const pageLimit = 10;
@@ -12,7 +11,6 @@ const { getId } = useDatabase();
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

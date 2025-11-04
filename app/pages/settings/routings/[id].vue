@@ -49,7 +49,6 @@ const formEditorRef = ref();
 const { validate, getIncludeFields } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Register page header with fallback title
 registerPageHeader({
   title: "Route Details",
   gradient: "cyan",

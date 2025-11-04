@@ -106,7 +106,6 @@ function parseDateString(dateInput: Date | string): { year: number; month: numbe
   }
 }
 
-// Format date to display string
 function formatDateDisplay(dateInput: Date | string): string {
   const parsed = parseDateString(dateInput);
   if (!parsed) return '';
@@ -122,7 +121,6 @@ const normalizedValue = computed(() => {
   const parsed = parseDateString(props.modelValue);
   if (!parsed) return null;
 
-  // Format as YYYY-MM-DD
   const year = parsed.year;
   const month = String(parsed.month + 1).padStart(2, '0');
   const day = String(parsed.day).padStart(2, '0');
@@ -130,19 +128,16 @@ const normalizedValue = computed(() => {
   return `${year}-${month}-${day}`;
 });
 
-// Display value for button label
 const displayValue = computed(() => {
   if (!normalizedValue.value) return "Select date";
   return formatDateDisplay(normalizedValue.value);
 });
 
-// Button class binding
 const buttonClass = computed(() => {
   return ["justify-start", props.class || ""];
 });
 
 function openModal() {
-  // Convert Date to CalendarDate for UCalendar
   if (normalizedValue.value) {
     try {
       // Parse YYYY-MM-DD format
@@ -184,7 +179,6 @@ function openModal() {
 function applyValue() {
   if (tempValue.value) {
     try {
-      // Format as YYYY-MM-DD for backend (date-only format)
       const year = tempValue.value.year;
       const month = String(tempValue.value.month).padStart(2, '0');
       const day = String(tempValue.value.day).padStart(2, '0');

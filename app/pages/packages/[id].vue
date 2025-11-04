@@ -84,7 +84,6 @@ const {
   errorContext: "Update Package",
 });
 
-// Delete API
 const {
   execute: removePackage,
   pending: deleting,
@@ -94,7 +93,6 @@ const {
   errorContext: "Uninstall Package",
 });
 
-// Header actions
 useHeaderActionRegistry({
   id: "save-package",
   label: "Save",
@@ -204,7 +202,6 @@ async function handleUninstall() {
   });
 }
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 watch(packageData, (data) => {

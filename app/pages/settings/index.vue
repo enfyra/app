@@ -2,7 +2,6 @@
 // Settings index page - overview only
 // Individual settings are accessed through sidebar navigation with permission checks
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

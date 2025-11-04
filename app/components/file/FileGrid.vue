@@ -47,7 +47,6 @@ import { formatFileSize } from "~/utils/file-management/file-utils";
 import type { FileItem } from "~/utils/types";
 import FileGridCard from "./grid/FileGridCard.vue";
 import { useFileUrl } from "~/composables/file-manager/useFileUrl";
-// useApi is auto-imported in Nuxt
 
 interface Props {
   files: FileItem[];
@@ -98,7 +97,6 @@ const emit = defineEmits<{
 const { confirm } = useConfirm();
 const toast = useToast();
 
-// Delete file API
 const { execute: executeDeleteFile } = useApi(() => `/file_definition`, {
   method: "delete",
   errorContext: "Delete File",
@@ -129,7 +127,6 @@ function viewFileDetails(file: any) {
   navigateTo(`/files/${getId(file)}`);
 }
 
-// Delete file function
 async function deleteFile(file: any) {
   const isConfirmed = await confirm({
     title: "Delete File",

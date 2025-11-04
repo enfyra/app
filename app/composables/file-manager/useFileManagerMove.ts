@@ -1,4 +1,3 @@
-// useApi is auto-imported in Nuxt
 
 export function useFileManagerMove() {
   const moveState = useState("file-manager:move:state", () => ({

@@ -4,7 +4,6 @@ import { getFolderIconName, getFolderIconColor } from "~/utils/file-management/f
 // Use useState to get global state from composable
 const showDetailModal = useState("folder-detail-modal", () => false);
 const selectedFolder = useState<any>("folder-selected", () => null);
-// Format date
 function formatDate(dateString: string) {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleDateString("en-US", {

@@ -215,7 +215,6 @@ watch(showModal, (isOpen) => {
 });
 
 function updateModelValue() {
-  // Convert groups back to PermissionCondition format
   let result;
 
   if (localFormPermissionGroups.value.length === 0) {
@@ -291,7 +290,6 @@ function getTotalPermissions(): number {
   }, 0);
 }
 
-// Computed properties for UInput
 const displayValue = computed(() => {
   if (isAllowAll.value) {
     return "Allow All Access";

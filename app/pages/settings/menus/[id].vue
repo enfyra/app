@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const route = useRoute();
 
 const toast = useToast();
@@ -7,7 +6,6 @@ const { confirm } = useConfirm();
 
 const tableName = "menu_definition";
 
-// Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
@@ -100,7 +98,6 @@ const typeMap = {
   },
 };
 
-// Initialize form data
 async function initializeForm() {
   await executeFetchMenu();
   const data = menuData.value?.data?.[0];
@@ -332,7 +329,6 @@ async function deleteMenuDetail() {
   await navigateTo("/settings/menus");
 }
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 watch(menuData, (data) => {
