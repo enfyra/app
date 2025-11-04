@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const props = defineProps<{
   modelValue: boolean;
   parentId?: string;
@@ -71,7 +70,6 @@ async function handleCreate() {
   // Emit created event
   emit("created");
 
-  // Close modal
   isOpen.value = false;
 }
 </script>

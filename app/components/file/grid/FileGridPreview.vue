@@ -95,7 +95,6 @@ function getIconColor(): string {
   if (props.file.mimetype?.startsWith("folder/") || props.file.icon?.includes("folder")) {
     return "#7C3AED"; // Purple for folders
   }
-  // Default color for files
   return "#0066FF"; // Blue for files
 }
 </script>

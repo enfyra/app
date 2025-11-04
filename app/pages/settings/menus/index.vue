@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 
 const toast = useToast();
 const { confirm } = useConfirm();
@@ -19,7 +18,6 @@ const { getId } = useDatabase();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 
-// Register page header
 const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -129,7 +127,6 @@ useHeaderActionRegistry([
   },
 ]);
 
-// Watch for page changes in URL
 
 // Create loaders for each menu toggle button
 const menuLoaders = ref<Record<string, any>>({});

@@ -90,7 +90,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const page = ref(1);
 const limit = 9;
 const { confirm } = useConfirm();
@@ -100,7 +99,6 @@ const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -108,7 +106,6 @@ registerPageHeader({
   gradient: "blue",
 });
 
-// Header actions
 useHeaderActionRegistry({
   id: "create-package",
   label: "Install Package",
@@ -127,7 +124,6 @@ useHeaderActionRegistry({
   },
 });
 
-// Fetch packages
 const {
   data: apiData,
   pending: loading,
@@ -149,7 +145,6 @@ const {
 const packages = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
-// Delete API setup
 const { execute: removePackage, error: removePackageError } = useApi(
   "/package_definition",
   {
@@ -160,7 +155,6 @@ const { execute: removePackage, error: removePackageError } = useApi(
 
 const deletingPackages = ref(new Set<string>());
 
-// Delete package
 async function deletePackage(pkg: any) {
   const isConfirmed = await confirm({
     title: "Uninstall Package",
@@ -192,7 +186,6 @@ async function deletePackage(pkg: any) {
   }
 }
 
-// Get header actions for each package
 function getHeaderActions(pkg: any) {
   return [
     {
@@ -211,7 +204,6 @@ function getHeaderActions(pkg: any) {
   ];
 }
 
-// Watch for page changes
 watch(
   page,
   () => {

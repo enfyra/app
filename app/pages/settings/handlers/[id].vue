@@ -39,7 +39,6 @@ const tableName = "route_handler_definition";
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
-// Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
@@ -152,7 +151,6 @@ const {
   errorContext: "Delete Handler",
 });
 
-// Initialize form data
 async function initializeForm() {
   await executeGetHandler();
   const data = handlerData.value?.data?.[0];

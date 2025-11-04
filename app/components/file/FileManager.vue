@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 interface Props {
   parentId?: string;
   folders?: any[];
@@ -33,7 +32,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>();
 
-// Use composables for better organization
 const { viewMode, toggleViewMode } = useFileManagerViewMode();
 const { isSelectionMode, selectedItems, toggleItemSelection, clearSelection } =
   useFileManagerSelection();
@@ -52,7 +50,6 @@ const { confirm } = useConfirm();
 const { getId } = useDatabase();
 
 function handleFolderClick(folder: any) {
-  // When in move mode, prevent navigating into a folder that is being moved
   if (
     moveState.value.moveMode &&
     (moveState.value.selectedFolderIds || []).includes(getId(folder))
@@ -69,7 +66,6 @@ function handleFolderClick(folder: any) {
 }
 
 function handleFileClick(file: any) {
-  // Prevent file navigation in move mode
   if (moveState.value.moveMode) {
     const toast = useToast();
     toast.add({
@@ -80,15 +76,12 @@ function handleFileClick(file: any) {
     return;
   }
 
-  // Navigate to file detail page
   navigateTo(`/files/${getId(file)}`);
 }
 
-// Wrapper for toggleItemSelection to handle auto-enable logic
 function handleToggleItemSelection(itemId: string) {
   toggleItemSelection(itemId);
 
-  // Auto-enable selection mode when items are selected (only in grid view)
   if (
     selectedItems.value.length > 0 &&
     !isSelectionMode.value &&
@@ -97,11 +90,8 @@ function handleToggleItemSelection(itemId: string) {
   ) {
     isSelectionMode.value = true;
   }
-  // Note: We don't auto-disable selection mode when no items selected
-  // User should manually disable it via "Cancel Selection" button
 }
 
-// Ensure selection is restored when returning while in move mode
 onMounted(() => {
   if (moveState.value.moveMode && moveState.value.selectedItems.length > 0) {
     selectedItems.value = [...moveState.value.selectedItems];
@@ -109,13 +99,11 @@ onMounted(() => {
   }
 });
 
-// Clear all file manager state (global + local)
 function clearAllState() {
   clearFileManagerState();
   clearSelection();
 }
 
-// Wrapper for move functions with proper parameters
 function handleStartMoveMode() {
   startMoveMode(
     selectedItems.value,
@@ -141,9 +129,7 @@ async function handleMoveHereWrapper() {
   }
 }
 
-// Clear state when leaving file management area
 onBeforeRouteLeave((to, from) => {
-  // Only clear if leaving /files/management routes
   if (
     from.path.includes("/files/management") &&
     !to.path.includes("/files/management")

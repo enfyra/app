@@ -179,7 +179,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const { isMobile, isTablet } = useScreen();
 
 const props = defineProps<{
@@ -202,7 +201,6 @@ const limit = 7;
 // Get schema fields for route_definition
 const { getIncludeFields } = useSchema("route_definition");
 
-// Filter system
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
 const showFilterDrawer = ref(false);

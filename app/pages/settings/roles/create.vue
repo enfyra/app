@@ -17,7 +17,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const toast = useToast();
 
 const tableName = "role_definition";
@@ -57,7 +56,6 @@ useHeaderActionRegistry({
   },
 });
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

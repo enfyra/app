@@ -10,7 +10,6 @@ const { getId } = useDatabase();
 
 const { isMounted } = useMounted();
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

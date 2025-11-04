@@ -93,7 +93,6 @@
 const { isMobile, isTablet } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
 
-// Filter and sort left actions
 const leftActions = computed(() => {
   return subHeaderActions.value.filter((a) => {
     const showValue =
@@ -102,7 +101,6 @@ const leftActions = computed(() => {
   });
 });
 
-// Filter and sort right actions
 const rightActions = computed(() => {
   return subHeaderActions.value.filter((a) => {
     const showValue =

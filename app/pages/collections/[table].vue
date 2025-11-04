@@ -17,7 +17,6 @@ const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Register page header with dynamic table name
 watch(() => table.value?.name, (name) => {
   if (name) {
     registerPageHeader({
@@ -144,7 +143,6 @@ useSubHeaderActionRegistry([
   },
 ]);
 
-// Initialize form data
 async function initializeForm() {
   await fetchTableData();
   const data = tableData.value?.data?.[0];

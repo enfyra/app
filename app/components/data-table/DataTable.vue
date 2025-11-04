@@ -30,7 +30,6 @@ function handleRowClick(row: any) {
   emit("row-click", row);
 }
 
-// Table state
 const sorting = ref<SortingState>([]);
 const columnVisibility = ref<VisibilityState>({});
 const rowSelection = ref({});
@@ -123,7 +122,6 @@ const table = useVueTable({
   },
 });
 
-// Selected rows for bulk operations
 const selectedRows = computed(() => {
   return table.getSelectedRowModel().rows.map((row) => row.original);
 });

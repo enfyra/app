@@ -45,7 +45,6 @@ const canDeleteFolder = checkPermissionCondition({
   ],
 });
 
-// Data table columns for list view
 const { buildColumn, buildActionsColumn } = useDataTableColumns();
 
 // Folder actions

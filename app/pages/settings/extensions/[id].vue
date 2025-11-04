@@ -53,7 +53,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 definePageMeta({
   layout: "default",
   title: "Extension Detail",
@@ -71,7 +70,6 @@ const uploadLoading = ref(false);
 const { validate, getIncludeFields } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Register page header with dynamic title
 watch(() => extensionData.value?.data?.[0]?.name, (name) => {
   if (name) {
     registerPageHeader({
@@ -81,7 +79,6 @@ watch(() => extensionData.value?.data?.[0]?.name, (name) => {
   }
 }, { immediate: true });
 
-// Form changes tracking via FormEditor
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
@@ -291,7 +288,6 @@ async function handleUpload(files: File | File[]) {
   }
 }
 
-// Initialize form data
 async function initializeForm() {
   await executeGetExtension();
   const data = extensionData.value?.data?.[0];

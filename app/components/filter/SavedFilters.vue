@@ -18,7 +18,6 @@ const {
   clearHistory,
 } = useFilterHistory(props.tableName);
 
-// State
 const savedFilters = ref<FilterHistoryItem[]>([]);
 const showRenameDialog = ref(false);
 const newFilterName = ref("");
@@ -34,7 +33,6 @@ const loadSavedFilters = () => {
   savedFilters.value = getFilterHistory();
 };
 
-// Computed
 const filteredSavedFilters = computed(() => {
   if (!searchQuery.value.trim()) {
     return savedFilters.value;

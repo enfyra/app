@@ -107,7 +107,6 @@
   </div>
 </template>
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const page = ref(1);
 const limit = 9;
 const tableName = "user_definition";
@@ -124,7 +123,6 @@ const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 const toast = useToast();
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

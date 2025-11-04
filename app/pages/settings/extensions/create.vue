@@ -43,7 +43,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 definePageMeta({
   layout: "default",
   title: "Create Extension",

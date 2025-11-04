@@ -96,7 +96,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 
 const page = ref(1);
 const limit = 9;

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 
 const route = useRoute();
 const router = useRouter();
@@ -27,7 +26,6 @@ const {
   errorContext: "Fetch File",
 });
 
-// Register page header with dynamic title
 watch(() => file.value?.data?.[0]?.filename, (filename) => {
   if (filename) {
     registerPageHeader({
@@ -86,7 +84,6 @@ async function handleReset() {
   }
 }
 
-// Header actions
 useHeaderActionRegistry([
   {
     id: "reset-file",
@@ -158,7 +155,6 @@ useSubHeaderActionRegistry([
   },
 ]);
 
-// Initialize form data
 async function initializeForm() {
   await execute();
   const data = file.value?.data?.[0];
@@ -172,7 +168,6 @@ onMounted(() => {
   initializeForm();
 });
 
-// Handle file update
 async function saveFile() {
   await executeUpdateFile({
     id: fileId,
@@ -183,10 +178,8 @@ async function saveFile() {
     return;
   }
 
-  // Refresh file data
   await execute();
 
-  // Show success message
   const toast = useToast();
   toast.add({
     title: "Success",
@@ -199,7 +192,6 @@ async function saveFile() {
   formChanges.update(form.value);
 }
 
-// Handle file delete
 async function deleteFile() {
   const ok = await confirm({
     title: "Are you sure?",
@@ -221,7 +213,6 @@ async function deleteFile() {
   await navigateTo("/files");
 }
 
-// Handle replace file success
 async function handleReplaceFileSuccess(files: File | File[]) {
   const fileArray = Array.isArray(files) ? files : [files];
   if (fileArray.length === 0) return;
@@ -246,10 +237,8 @@ async function handleReplaceFileSuccess(files: File | File[]) {
   showReplaceModal.value = false;
   await initializeForm();
 
-  // Update global timestamp to bust cache everywhere
   updateFileTimestamp(fileId);
 
-  // Show success message
   toast.add({
     title: "Success",
     description: "File replaced successfully!",
@@ -257,13 +246,11 @@ async function handleReplaceFileSuccess(files: File | File[]) {
   });
 }
 
-// Page title computation
 const pageTitle = computed(() => {
   if (pending.value) return "Loading...";
   return file.value?.data?.[0]?.filename || "File Details";
 });
 
-// Get file icon and color based on mimetype
 function getFileIconAndColor(mimetype: string): {
   icon: string;
   color: string;

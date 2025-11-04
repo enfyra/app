@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const toast = useToast();
 const page = ref(1);
 const pageLimit = 9;
@@ -155,7 +154,6 @@ const { execute: updateRouteApi, error: updateError } = useApi(
   }
 );
 
-// Delete API at setup level
 const { execute: deleteRouteApi, error: deleteError } = useApi(
   () => `/route_definition`,
   {

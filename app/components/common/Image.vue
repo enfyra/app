@@ -157,7 +157,6 @@ const aspectRatioStyle = computed(() => {
 
 const imageClass = computed(() => props.class);
 
-// Loading style: nếu có customLoadingSize thì dùng, không thì để trống (sẽ theo container)
 const loadingStyle = computed(() => {
   if (props.customLoadingSize) {
     return {

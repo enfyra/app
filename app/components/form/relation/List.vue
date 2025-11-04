@@ -124,7 +124,6 @@ function getDisplayLabel(
       .map((def) => def.propertyName)
   );
 
-  // Filter out fields: not relations, not ID fields, not UUID-only fields
   const nonRelationKeys: string[] = Object.keys(item).filter(
     (key) => !relationKeys.has(key)
   );

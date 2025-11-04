@@ -164,7 +164,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 
 interface Props {
   folder: any;
@@ -279,7 +278,6 @@ async function saveEdit() {
     originalName.value = "";
     editingLoading.value = false;
 
-    // Show success toast
     const toast = useToast();
     toast.add({
       title: "Success",

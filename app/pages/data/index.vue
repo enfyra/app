@@ -1,8 +1,4 @@
 <script setup lang="ts">
-// Data index page - overview only
-// Individual table data management features are accessed through sidebar navigation
-
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

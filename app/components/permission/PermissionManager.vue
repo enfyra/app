@@ -201,7 +201,6 @@
 </template>
 
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 import { UIcon } from "#components";
 
 const toast = useToast();
@@ -227,7 +226,6 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// State
 const showDrawer = ref(false);
 const isEditing = ref(false);
 const currentPermission = ref<Permission | null>(null);
@@ -235,7 +233,6 @@ const permissionForm = ref<Record<string, any>>({});
 const permissionErrors = ref<Record<string, string>>({});
 const deleting = ref<string | number | null>(null);
 
-// Computed
 const permissionTableName = computed(() => props.tableName);
 
 // Schema composable
@@ -284,7 +281,6 @@ const {
   errorContext: "Delete Permission",
 });
 
-// Computed
 const permissions = computed(() => permissionsData.value?.data || []);
 const saving = computed(() => creating.value || updating.value);
 
@@ -351,10 +347,8 @@ async function savePermission() {
   // Refresh permissions list
   await fetchPermissions();
 
-  // Close drawer
   closeDrawer();
 
-  // Show success message
   const toast = useToast();
   toast.add({
     title: "Success",

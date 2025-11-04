@@ -351,7 +351,6 @@ function getComponentConfigByKey(key: string) {
         fieldProps,
       };
 
-    // Default case for text input
     default:
       return {
         component: UInput,

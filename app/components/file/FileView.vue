@@ -56,7 +56,6 @@ const transformedFiles = computed(() => {
   }));
 });
 
-// Data table columns for list view
 const { buildColumn, buildActionsColumn } = useDataTableColumns();
 
 // File actions

@@ -1,15 +1,13 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 const showCreateModal = ref(false);
 const showUploadModal = ref(false);
 
-// Pagination state
 const route = useRoute();
 const router = useRouter();
 const folderPage = ref(Number(route.query.folderPage) || 1);
 const filePage = ref(Number(route.query.filePage) || 1);
 const limit = 20;
-// Get root folders (folders without parent)
+
 const {
   data: rootFolders,
   pending: rootPending,
@@ -52,7 +50,6 @@ const {
   errorContext: "Load Root Files",
 });
 
-// Upload files API
 const {
   execute: uploadFilesApi,
   error: uploadError,
@@ -62,15 +59,12 @@ const {
   errorContext: "Upload Files",
 });
 
-// Prepare folders data
 const folders = computed(() => rootFolders.value?.data || []);
 const folderTotal = computed(() => rootFolders.value?.meta?.filterCount || 0);
 
-// Prepare files data
 const files = computed(() => rootFiles.value?.data || []);
 const fileTotal = computed(() => rootFiles.value?.meta?.filterCount || 0);
 
-// Stats for PageHeader
 const pageStats = computed(() => {
   const totalFolders = rootFolders.value?.meta?.filterCount || 0;
   const totalFiles = rootFiles.value?.meta?.filterCount || 0;
@@ -111,66 +105,52 @@ watch(
   { immediate: true }
 );
 
-// Handle folder created - refresh both folders and files
 function handleFolderCreated() {
   fetchRootFolders();
   fetchRootFiles();
 }
 
-// Handle refresh items
 async function handleRefreshItems() {
   await Promise.all([fetchRootFolders(), fetchRootFiles()]);
 
   let newQuery = { ...route.query };
 
-  // Check folders independently
   if (folders.value.length === 0 && folderPage.value > 1) {
     folderPage.value = 1;
     delete newQuery.folderPage;
   }
 
-  // Check files independently
   if (files.value.length === 0 && filePage.value > 1) {
     filePage.value = 1;
     delete newQuery.filePage;
   }
 
-  // Update URL if any pagination changed
-  // Watchers will handle the refetch automatically
   if (newQuery !== route.query) {
     await router.replace({ query: newQuery });
   }
 }
 
-// Handle file upload
 async function handleFileUpload(files: File | File[]) {
   const fileArray = Array.isArray(files) ? files : [files];
 
-  // Create array of FormData objects for batch upload
   const formDataArray = fileArray.map((file) => {
     const formData = new FormData();
     formData.append("file", file);
-    // Don't append folder field for root files (null)
     return formData;
   });
 
-  // Upload to /file_definition with batch support
   await uploadFilesApi({
     files: formDataArray,
   });
 
-  // Check for errors
   if (uploadError.value) {
-    return; // Error already handled by useApi
+    return;
   }
 
-  // Refresh files list after successful upload
   await fetchRootFiles();
 
-  // Close modal
   showUploadModal.value = false;
 
-  // Show success message
   useToast().add({
     title: "Success",
     description: `${fileArray.length} file(s) uploaded successfully`,
@@ -178,7 +158,6 @@ async function handleFileUpload(files: File | File[]) {
   });
 }
 
-// Register page header
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

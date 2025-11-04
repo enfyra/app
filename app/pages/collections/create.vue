@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// useApi is auto-imported in Nuxt
 
 const { schemas, fetchSchema, schemaLoading } = useSchema();
 const { confirm } = useConfirm();

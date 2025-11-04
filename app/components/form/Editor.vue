@@ -44,7 +44,6 @@ const emit = defineEmits<{
 const { definition, fieldMap, sortFieldsByOrder, useFormChanges } = useSchema(
   props.tableName
 );
-// Form change tracking
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
 
@@ -74,7 +73,6 @@ const typeMapWithGenerated = computed(() => {
 const visibleFields = computed(() => {
   let fields = definition.value;
 
-  // Filter by includes
   if (props.includes.length > 0) {
     fields = fields.filter((field: any) => {
       const key = field.name || field.propertyName;
@@ -82,7 +80,6 @@ const visibleFields = computed(() => {
     });
   }
 
-  // Filter by excluded props
   fields = fields.filter((field: any) => {
     const key = field.name || field.propertyName;
     if (!key) return false;
@@ -91,7 +88,6 @@ const visibleFields = computed(() => {
     return true;
   });
 
-  // Filter by form data existence - but always show fields when loading
   fields = fields.filter((field: any) => {
     const key = field.name || field.propertyName;
     if (!key) return false;
@@ -102,7 +98,6 @@ const visibleFields = computed(() => {
     return hasKey;
   });
 
-  // Filter by excluded in typeMap
   fields = fields.filter((field: any) => {
     const key = field.name || field.propertyName;
     if (!key) return false;

@@ -100,7 +100,6 @@ function openModal(mode?: 'from' | 'to') {
 }
 
 function applyValue() {
-  // Convert Date object to ISO string (YYYY-MM-DD) for consistency
   const formatToISO = (date: any) => {
     if (!date) return '';
     const d = date instanceof Date ? date : new Date(date);
