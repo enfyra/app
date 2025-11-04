@@ -33,7 +33,7 @@ watch(
       </template>
       <template #footer>
         <div class="flex justify-end gap-2 w-full">
-          <UButton variant="ghost" @click="onCancel">
+          <UButton variant="ghost" color="error" @click="onCancel">
             {{ options.cancelText }}
           </UButton>
           <UButton @click="onConfirm">

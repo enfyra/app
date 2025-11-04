@@ -154,7 +154,7 @@ onMounted(() => {
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :loading="loading"
-            :excluded="['isInit']"
+            :excluded="['isInit', 'id', 'createdAt', 'updatedAt']"
           />
         </UForm>
       </CommonFormCard>
