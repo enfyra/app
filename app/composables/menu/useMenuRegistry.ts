@@ -155,124 +155,60 @@ export function useMenuRegistry() {
     return null;
   };
 
-  const registerTableMenusWithSidebarIds = async (tables: any[]) => {
-    if (!tables || tables.length === 0) {
-      const tableMenuItems = menuItems.value.filter(
-        (item) =>
-          item.id.startsWith("collections-") || item.id.startsWith("data-")
-      );
-      tableMenuItems.forEach((item) => {
-        unregisterMenuItem(item.id);
-      });
-      return;
-    }
-
-    const tableMenuItems = menuItems.value.filter(
-      (item) =>
-        item.id.startsWith("collections-") || item.id.startsWith("data-")
-    );
-    tableMenuItems.forEach((item) => {
-      unregisterMenuItem(item.id);
-    });
-
-    let collectionsParentId = menuItems.value.find((m) => m.id === "collections")?.id;
-    if (!collectionsParentId) {
-      const foundId = findParentMenuIdByPath("/collections");
-      collectionsParentId = foundId ? String(foundId) : undefined;
-    }
-
+  const registerDataMenuItems = async (tables: any[]) => {
+    // Find Data parent menu
     let dataParentId = menuItems.value.find((m) => m.id === "data")?.id;
     if (!dataParentId) {
       const foundId = findParentMenuIdByPath("/data");
       dataParentId = foundId ? String(foundId) : undefined;
     }
 
-    if (!collectionsParentId && !dataParentId) {
+    if (!dataParentId) {
+      return;
+    }
+
+    // Clear existing data menu items
+    const tableMenuItems = menuItems.value.filter(
+      (item) => item.id.startsWith("data-")
+    );
+    tableMenuItems.forEach((item) => {
+      unregisterMenuItem(item.id);
+    });
+
+    if (!tables || tables.length === 0) {
       return;
     }
 
     const { getRouteForTableName } = useRoutes();
-
-    const modifiableTables = tables.filter((table) => {
-      if (!table.isSystem) return true;
-      return isSystemTableModifiable(table.name || table.table_name);
-    });
-
+    const routes = useState<any[]>('routes:all', () => []);
     const nonSystemTables = tables.filter((table) => !table.isSystem);
 
-    if (collectionsParentId) {
-      // Register "Create Collection" menu item first
-      registerMenuItem({
-        id: "collections-create",
-        label: "Create Collection",
-        route: "/collections/create",
-        icon: "lucide:plus",
-        parent: collectionsParentId,
-        type: "Menu",
-        order: -1, // Show at top
-        permission: {
-          and: [{ route: "/table_definition", actions: ["create"] }],
-        },
-      });
+    nonSystemTables.forEach((table) => {
+      const tableName = table.name || table.table_name;
+      if (!tableName) return;
 
-      modifiableTables.forEach((table) => {
-        const tableName = table.name || table.table_name;
-        if (!tableName) return;
+      const dynamicRoute = getRouteForTableName(tableName);
 
+      const routeExists = routes.value.some((route: any) =>
+        route.path === dynamicRoute && route.isEnabled !== false
+      );
+
+      if (routeExists) {
         registerMenuItem({
-          id: `collections-${tableName}`,
+          id: `data-${tableName}`,
           label: table.label || table.display_name || tableName,
-          route: `/collections/${tableName}`,
-          icon: table.icon || "lucide:table",
-          parent: collectionsParentId, // Set as child of Collections menu
+          route: `/data/${tableName}`,
+          icon: table.icon || "lucide:database",
+          parent: dataParentId,
           type: "Menu",
           permission: {
-            and: [
-              { route: `/table_definition`, actions: ["read"] },
-              {
-                or: [
-                  { route: `/table_definition`, actions: ["create"] },
-                  { route: `/table_definition`, actions: ["update"] },
-                  { route: `/table_definition`, actions: ["delete"] },
-                ],
-              },
-            ],
-          },
+            or: [
+              { route: dynamicRoute, actions: ["read"] }
+            ]
+          }
         });
-      });
-    }
-
-    if (dataParentId) {
-      const { getRouteForTableName } = useRoutes();
-      const routes = useState<any[]>('routes:all', () => []);
-
-      nonSystemTables.forEach((table) => {
-        const tableName = table.name || table.table_name;
-        if (!tableName) return;
-
-        const dynamicRoute = getRouteForTableName(tableName);
-
-        const routeExists = routes.value.some((route: any) =>
-          route.path === dynamicRoute && route.isEnabled !== false
-        );
-
-        if (routeExists) {
-          registerMenuItem({
-            id: `data-${tableName}`,
-            label: table.label || table.display_name || tableName,
-            route: `/data/${tableName}`,
-            icon: table.icon || "lucide:database",
-            parent: dataParentId,
-            type: "Menu",
-            permission: {
-              or: [
-                { route: dynamicRoute, actions: ["read"] }
-              ]
-            }
-          });
-        }
-      });
-    }
+      }
+    });
   };
 
   const reregisterExtensionMenus = async () => {
@@ -297,7 +233,7 @@ export function useMenuRegistry() {
     registerAllMenusFromApi,
     reregisterAllMenus,
 
-    registerTableMenusWithSidebarIds,
+    registerDataMenuItems,
     reregisterExtensionMenus,
   };
 }

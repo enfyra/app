@@ -198,14 +198,14 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
   }
 
   // Reregister all menus after successful update
-  const { reregisterAllMenus, registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
   const { fetchMenuDefinitions } = useMenuApi();
   await reregisterAllMenus(fetchMenuDefinitions as any);
 
   // Also reregister table menus to restore them
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
-    await registerTableMenusWithSidebarIds(schemaValues);
+    await registerDataMenuItems(schemaValues);
   }
 
   toast.add({
@@ -241,14 +241,14 @@ async function deleteMenu(menuItem: any) {
     await fetchMenus();
 
     // Reregister all menus after successful delete
-    const { reregisterAllMenus, registerTableMenusWithSidebarIds } = useMenuRegistry();
+    const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
     const { fetchMenuDefinitions } = useMenuApi();
     await reregisterAllMenus(fetchMenuDefinitions as any);
 
     // Also reregister table menus to restore them
     const schemaValues = Object.values(schemas.value);
     if (schemaValues.length > 0) {
-      await registerTableMenusWithSidebarIds(schemaValues);
+      await registerDataMenuItems(schemaValues);
     }
 
     toast.add({

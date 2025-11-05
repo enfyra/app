@@ -255,11 +255,11 @@ async function toggleEnabled(routeItem: any) {
 
   // Reload routes and reregister menus after route toggle
   const { loadRoutes } = useRoutes();
-  const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { registerDataMenuItems } = useMenuRegistry();
   const { schemas } = useSchema();
-  
+
   await loadRoutes();
-  await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+  await registerDataMenuItems(Object.values(schemas.value));
 
   toast.add({
     title: "Success",
@@ -287,11 +287,11 @@ async function deleteRoute(routeItem: any) {
 
     // Reload routes and reregister menus after route deletion
     const { loadRoutes } = useRoutes();
-    const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+    const { registerDataMenuItems } = useMenuRegistry();
     const { schemas } = useSchema();
-    
+
     await loadRoutes();
-    await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+    await registerDataMenuItems(Object.values(schemas.value));
 
     toast.add({
       title: "Success",

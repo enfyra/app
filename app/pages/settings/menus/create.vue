@@ -67,7 +67,7 @@ const typeMap = {
 
 // Menu registry composables for reregistering after changes
 const { fetchMenuDefinitions } = useMenuApi();
-const { reregisterAllMenus, registerTableMenusWithSidebarIds } =
+const { reregisterAllMenus, registerDataMenuItems } =
   useMenuRegistry();
 const { schemas } = useSchema();
 
@@ -256,7 +256,7 @@ async function saveMenu() {
   // Also reregister table menus to ensure consistency
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
-    await registerTableMenusWithSidebarIds(schemaValues);
+    await registerDataMenuItems(schemaValues);
   }
 
   toast.add({

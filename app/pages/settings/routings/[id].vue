@@ -45,6 +45,8 @@ const { loadRoutes } = useRoutes();
 const tableName = "route_definition";
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
+const { useFormChanges } = useSchema();
+const formChanges = useFormChanges();
 
 const { validate, getIncludeFields } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -59,12 +61,25 @@ const typeMap = ref<Record<string, any>>({});
 
 useHeaderActionRegistry([
   {
+    id: "reset-routing",
+    label: "Reset",
+    icon: "lucide:rotate-ccw",
+    variant: "outline",
+    color: "warning",
+    size: "md",
+    order: 1,
+    disabled: computed(() => !hasFormChanges.value),
+    onClick: handleReset,
+    show: computed(() => hasFormChanges.value),
+  },
+  {
     id: "save-routing",
     label: "Save",
     icon: "lucide:save",
     variant: "solid",
     color: "primary",
     size: "md",
+    order: 2,
     submit: updateRoute,
     loading: computed(() => updateLoading.value),
     disabled: computed(() => !hasFormChanges.value),
@@ -84,6 +99,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "error",
     size: "md",
+    order: 3,
     onClick: deleteRoute,
     loading: computed(() => deleteLoading.value),
     permission: {
@@ -171,6 +187,7 @@ async function initializeForm() {
   const data = routeData.value?.data?.[0];
   if (data) {
     form.value = { ...data };
+    formChanges.update(data);
   }
 }
 
@@ -207,12 +224,34 @@ async function updateRoute() {
   await loadRoutes();
 
   // Reregister menus after route update
-  const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { registerDataMenuItems } = useMenuRegistry();
   const { schemas } = useSchema();
-  await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+  await registerDataMenuItems(Object.values(schemas.value));
 
   // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
+  formChanges.update(form.value);
+}
+
+async function handleReset() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) {
+    return;
+  }
+
+  if (formChanges.originalData.value) {
+    form.value = formChanges.discardChanges(form.value);
+    hasFormChanges.value = false;
+
+    toast.add({
+      title: "Reset Complete",
+      color: "success",
+      description: "All changes have been discarded.",
+    });
+  }
 }
 
 async function deleteRoute() {
@@ -237,9 +276,9 @@ async function deleteRoute() {
   await loadRoutes();
 
   // Reregister menus after route deletion
-  const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { registerDataMenuItems } = useMenuRegistry();
   const { schemas } = useSchema();
-  await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+  await registerDataMenuItems(Object.values(schemas.value));
   
   await navigateTo("/settings/routings");
 }

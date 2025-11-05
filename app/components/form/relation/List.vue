@@ -68,8 +68,7 @@ function viewDetails(item: any) {
 const { checkPermissionCondition } = usePermissions();
 
 function getDisplayLabel(
-  item: Record<string, any>,
-  tableMeta?: { definition: { fieldType: string; propertyName: string }[] }
+  item: Record<string, any>
 ): string {
   if (!item || typeof item !== "object") return "";
 
@@ -98,6 +97,23 @@ function getDisplayLabel(
     return str;
   };
 
+  // Helper: check if a value is a relation (object or array of objects)
+  const isRelationValue = (value: unknown): boolean => {
+    if (value === null || value === undefined) return false;
+
+    // Check if it's an object with id/_id (single relation)
+    if (typeof value === "object" && !Array.isArray(value)) {
+      return getId(value as any) !== undefined;
+    }
+
+    // Check if it's an array of objects (many relation)
+    if (Array.isArray(value) && value.length > 0) {
+      return typeof value[0] === "object" && value[0] !== null;
+    }
+
+    return false;
+  };
+
   // Helper: safely get a non-empty string from any field
   const getValueAsString = (
     obj: Record<string, any>,
@@ -105,6 +121,10 @@ function getDisplayLabel(
   ): string | null => {
     const raw: unknown = obj[key as keyof typeof obj];
     if (raw === undefined || raw === null) return null;
+
+    // Skip relation values
+    if (isRelationValue(raw)) return null;
+
     const str = String(raw).trim();
     return str === "" ? null : str;
   };
@@ -117,16 +137,7 @@ function getDisplayLabel(
     return str.length > maxLength ? `${str.slice(0, maxLength - 1)}…` : str;
   };
 
-  // Get list of relation keys
-  const relationKeys = new Set(
-    (tableMeta?.definition || [])
-      .filter((def) => def.fieldType === "relation")
-      .map((def) => def.propertyName)
-  );
-
-  const nonRelationKeys: string[] = Object.keys(item).filter(
-    (key) => !relationKeys.has(key)
-  );
+  const nonRelationKeys: string[] = Object.keys(item);
 
   // Prioritize meaningful human-readable keys
   const preferredKeys: string[] = [

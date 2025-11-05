@@ -11,6 +11,85 @@ const isCollapsed = computed(() => {
   return sidebarCollapsed.value;
 });
 
+// Memoize active routes to prevent flicker on route change
+const activeRoutes = computed(() => {
+  const active = new Set<string>();
+  const currentPath = route.path;
+
+  // Check all menu groups and their items
+  visibleGroups.value.forEach(group => {
+    // Check main group route
+    if (group.route) {
+      if (currentPath === group.route ||
+          (currentPath.startsWith(group.route) &&
+           (currentPath[group.route.length] === '/' || currentPath[group.route.length] === undefined))) {
+        active.add(group.route);
+      }
+    }
+
+    // Check group items
+    group.items?.forEach((item: any) => {
+      const itemRoute = item.route || item.path;
+      if (itemRoute) {
+        if (currentPath === itemRoute ||
+            (currentPath.startsWith(itemRoute) &&
+             (currentPath[itemRoute.length] === '/' || currentPath[itemRoute.length] === undefined))) {
+          active.add(itemRoute);
+        }
+      }
+
+      // Check nested children
+      item.children?.forEach((child: any) => {
+        const childRoute = child.route || child.path;
+        if (childRoute) {
+          if (currentPath === childRoute ||
+              (currentPath.startsWith(childRoute) &&
+               (currentPath[childRoute.length] === '/' || currentPath[childRoute.length] === undefined))) {
+            active.add(childRoute);
+          }
+        }
+      });
+    });
+  });
+
+  return active;
+});
+
+// Memoize active groups to prevent flicker
+const activeGroups = computed(() => {
+  const active = new Set<string>();
+
+  visibleGroups.value.forEach(group => {
+    // Check if group route is active
+    if (group.route && activeRoutes.value.has(group.route)) {
+      active.add(group.id);
+    }
+
+    // Check if any item in group is active
+    if (group.items && group.items.length > 0) {
+      const hasActiveItem = group.items.some((item: any) => {
+        const itemRoute = item.route || item.path;
+        if (itemRoute && activeRoutes.value.has(itemRoute)) return true;
+
+        // Check children
+        if (item.children && item.children.length > 0) {
+          return item.children.some((child: any) => {
+            const childRoute = child.route || child.path;
+            return childRoute && activeRoutes.value.has(childRoute);
+          });
+        }
+        return false;
+      });
+
+      if (hasActiveItem) {
+        active.add(group.id);
+      }
+    }
+  });
+
+  return active;
+});
+
 // Track expanded groups - shared state for both desktop and collapsed views (use localStorage to persist)
 const expandedGroups = ref<Set<string>>(new Set());
 
@@ -65,41 +144,6 @@ function toggleGroup(groupId: string) {
 // Check if group is expanded - shared for both desktop and collapsed views
 function isGroupExpanded(groupId: string) {
   return expandedGroups.value.has(groupId);
-}
-
-// Check if item or any of its children is active
-function isItemActive(itemRoute: string | undefined) {
-  if (!itemRoute) return false;
-
-  const currentPath = route.path;
-
-  // Exact match
-  if (currentPath === itemRoute) return true;
-
-  // For routes that should match sub-paths
-  if (currentPath.startsWith(itemRoute)) {
-    const nextChar = currentPath[itemRoute.length];
-    return nextChar === '/' || nextChar === undefined;
-  }
-
-  return false;
-}
-
-// Check if any child in the group is active (to highlight parent)
-function isGroupActive(group: any) {
-  if (group.route && isItemActive(group.route)) return true;
-
-  if (group.items && group.items.length > 0) {
-    return group.items.some((item: any) => {
-      if (isItemActive(item.route)) return true;
-      if (item.children && item.children.length > 0) {
-        return item.children.some((child: any) => isItemActive(child.route || child.path));
-      }
-      return false;
-    });
-  }
-
-  return false;
 }
 
 // Handle menu click - close sidebar on mobile/tablet
@@ -238,7 +282,7 @@ const visibleGroups = computed(() => {
       />
     </div>
 
-    <div class="flex-1 overflow-y-auto scrollbar-custom py-3">
+    <div class="flex-1 overflow-y-auto py-3">
       <div
         v-if="visibleGroups.filter(g => g.position !== 'bottom').length === 0"
         class="flex flex-col items-center justify-center py-12 px-4 text-center"
@@ -272,17 +316,17 @@ const visibleGroups = computed(() => {
                 }"
                 :class="[
                   'flex-1 aspect-square flex items-center justify-center rounded-xl transition-all duration-300 relative group',
-                  group.type === 'Menu' && (isItemActive(group.route) || isGroupActive(group)) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
+                  group.type === 'Menu' && ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
                 ]"
-                :style="{ color: group.type === 'Menu' && (isItemActive(group.route) || isGroupActive(group)) ? 'white' : 'var(--text-secondary)' }"
+                :style="{ color: group.type === 'Menu' && ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'white' : 'var(--text-secondary)' }"
               >
                 <div
-                  v-if="group.type === 'Menu' && (isItemActive(group.route) || isGroupActive(group))"
+                  v-if="group.type === 'Menu' && ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id))"
                   class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-300"
                 ></div>
 
                 <div
-                  v-if="group.type === 'Menu' && (isItemActive(group.route) || isGroupActive(group))"
+                  v-if="group.type === 'Menu' && ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id))"
                   class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-opacity duration-300"
                 ></div>
 
@@ -337,9 +381,9 @@ const visibleGroups = computed(() => {
                           @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
                           :class="[
                             'w-full aspect-square flex items-center justify-center rounded-lg transition-all duration-300 relative group',
-                            isItemActive(child.path || child.route) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
+                            ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
                           ]"
-                          :style="{ color: isItemActive(child.path || child.route) ? 'white' : 'var(--text-tertiary)' }"
+                          :style="{ color: ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'white' : 'var(--text-tertiary)' }"
                         >
                           <UIcon
                             :name="child.icon || 'lucide:circle'"
@@ -355,9 +399,9 @@ const visibleGroups = computed(() => {
                       @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
                       :class="[
                         'w-full aspect-square flex items-center justify-center rounded-lg transition-all duration-300 relative group',
-                        isItemActive(item.path || item.route) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
+                        ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
                       ]"
-                      :style="{ color: isItemActive(item.path || item.route) ? 'white' : 'var(--text-tertiary)' }"
+                      :style="{ color: ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'white' : 'var(--text-tertiary)' }"
                     >
                       <UIcon
                         :name="item.icon || 'lucide:circle'"
@@ -386,20 +430,18 @@ const visibleGroups = computed(() => {
                 @click="() => { if (group.route) navigateTo(group.route); handleMenuClick(); }"
                 :class="[
                   'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 relative group',
-                  isItemActive(group.route) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
+                  (group.route && activeRoutes.has(group.route)) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
                 ]"
-                :style="{ color: isItemActive(group.route) ? 'white' : 'var(--text-secondary)' }"
+                :style="{ color: (group.route && activeRoutes.has(group.route)) ? 'white' : 'var(--text-secondary)' }"
               >
                 <div
-                  v-if="isItemActive(group.route)"
-                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-500"
-                  style="view-transition-name: active-main-bg"
+                  v-if="group.route && activeRoutes.has(group.route)"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-300"
                 ></div>
 
                 <div
-                  v-if="isItemActive(group.route)"
-                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-all duration-500"
-                  style="view-transition-name: active-main-glow"
+                  v-if="group.route && activeRoutes.has(group.route)"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-all duration-300"
                 ></div>
 
                 <UIcon
@@ -410,7 +452,7 @@ const visibleGroups = computed(() => {
                 <span class="text-sm relative z-10 font-medium">{{ group.label }}</span>
 
                 <div
-                  v-if="isItemActive(group.route)"
+                  v-if="group.route && activeRoutes.has(group.route)"
                   class="ml-auto w-1.5 h-1.5 rounded-full bg-white relative z-10"
                 ></div>
               </button>
@@ -465,20 +507,18 @@ const visibleGroups = computed(() => {
                       @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
                       :class="[
                         'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 relative group',
-                        isItemActive(child.path || child.route) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
+                        ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
                       ]"
-                      :style="{ color: isItemActive(child.path || child.route) ? 'white' : 'var(--text-tertiary)' }"
+                      :style="{ color: ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'white' : 'var(--text-tertiary)' }"
                     >
                       <div
-                        v-if="isItemActive(child.path || child.route)"
-                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-500"
-                        style="view-transition-name: active-sub-bg"
+                        v-if="(child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))"
+                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
                       ></div>
 
                       <div
-                        v-if="isItemActive(child.path || child.route)"
-                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-500"
-                        style="view-transition-name: active-sub-glow"
+                        v-if="(child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))"
+                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-300"
                       ></div>
 
                       <UIcon
@@ -495,20 +535,18 @@ const visibleGroups = computed(() => {
                   @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
                   :class="[
                     'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 relative group',
-                    isItemActive(item.path || item.route) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
+                    ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
                   ]"
-                  :style="{ color: isItemActive(item.path || item.route) ? 'white' : 'var(--text-tertiary)' }"
+                  :style="{ color: ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'white' : 'var(--text-tertiary)' }"
                 >
                   <div
-                    v-if="isItemActive(item.path || item.route)"
-                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-500"
-                    style="view-transition-name: active-sub-bg"
+                    v-if="(item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))"
+                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
                   ></div>
 
                   <div
-                    v-if="isItemActive(item.path || item.route)"
-                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-500"
-                    style="view-transition-name: active-sub-glow"
+                    v-if="(item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))"
+                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-300"
                   ></div>
 
                   <UIcon
@@ -549,42 +587,3 @@ const visibleGroups = computed(() => {
     </div>
   </nav>
 </template>
-
-<style scoped>
-.scrollbar-custom::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-.scrollbar-custom::-webkit-scrollbar-track {
-  background: var(--bg-surface);
-  border-radius: 10px;
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb {
-  background: var(--bg-elevated-high);
-  border-radius: 10px;
-  border: 2px solid var(--bg-surface);
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 58, 237, 0.5);
-}
-
-/* Spring-like view transition animation */
-::view-transition-old(active-main-bg),
-::view-transition-new(active-main-bg),
-::view-transition-old(active-sub-bg),
-::view-transition-new(active-sub-bg) {
-  animation-duration: 0.5s;
-  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-::view-transition-old(active-main-glow),
-::view-transition-new(active-main-glow),
-::view-transition-old(active-sub-glow),
-::view-transition-new(active-sub-glow) {
-  animation-duration: 0.5s;
-  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-</style>

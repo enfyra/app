@@ -3,7 +3,7 @@ export default defineNuxtPlugin(async () => {
 
   const {
     registerAllMenusFromApi,
-    registerTableMenusWithSidebarIds,
+    registerDataMenuItems,
     registerMenuItem,
   } = useMenuRegistry();
   const { schemas, fetchSchema } = useSchema();
@@ -38,7 +38,7 @@ export default defineNuxtPlugin(async () => {
       label: "Collections",
       icon: "lucide:table",
       route: "/collections",
-      type: "Dropdown Menu",
+      type: "Menu",
       order: 1,
       position: "top" as any,
       permission: {
@@ -67,7 +67,7 @@ export default defineNuxtPlugin(async () => {
 
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
-    await registerTableMenusWithSidebarIds(schemaValues);
+    await registerDataMenuItems(schemaValues);
   }
 
   // Register logout as a special menu item

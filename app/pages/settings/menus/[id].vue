@@ -16,7 +16,7 @@ const { schemas } = useSchema();
 const { getIdFieldName } = useDatabase();
 
 const { fetchMenuDefinitions } = useMenuApi();
-const { reregisterAllMenus, registerTableMenusWithSidebarIds } = useMenuRegistry();
+const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
 
 const {
   data: menuData,
@@ -284,7 +284,7 @@ async function updateMenuDetail() {
   // Also reregister table menus to restore them
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
-    await registerTableMenusWithSidebarIds(schemaValues);
+    await registerDataMenuItems(schemaValues);
   }
 
   toast.add({
@@ -318,7 +318,7 @@ async function deleteMenuDetail() {
   // Also reregister table menus to restore them
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
-    await registerTableMenusWithSidebarIds(schemaValues);
+    await registerDataMenuItems(schemaValues);
   }
 
   toast.add({

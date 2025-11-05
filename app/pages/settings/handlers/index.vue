@@ -116,7 +116,7 @@ watch(
         <CommonSettingsCard
           v-for="handler in routeHandlers"
           :key="handler.id"
-          :title="handler.name"
+          :title="handler.name || 'Untitled Handler'"
           :description="handler.description || 'No description'"
           icon="lucide:command"
           icon-color="primary"

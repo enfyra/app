@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   experimental: {
     viewTransition: true
   },
-  modules: [
+    modules: [
     "@nuxt/icon",
     "@nuxt/ui",
     "@nuxtjs/tailwindcss",

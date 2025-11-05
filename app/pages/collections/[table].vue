@@ -3,7 +3,7 @@ const route = useRoute();
 const { schemas, fetchSchema, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const toast = useToast();
-const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+const { registerDataMenuItems } = useMenuRegistry();
 const { loadRoutes } = useRoutes();
 const { getId } = useDatabase();
 const tableName = "table_definition";
@@ -175,7 +175,7 @@ async function patchTable() {
   // Reload routes to include updated table routes
   await loadRoutes();
 
-  registerTableMenusWithSidebarIds(Object.values(schemas.value));
+  registerDataMenuItems(Object.values(schemas.value));
 
   toast.add({
     title: "Success",
@@ -233,7 +233,7 @@ async function deleteTable() {
   // Reload routes to remove deleted table routes
   await loadRoutes();
 
-  registerTableMenusWithSidebarIds(Object.values(schemas.value));
+  registerDataMenuItems(Object.values(schemas.value));
 
   toast.add({
     title: "Success",
