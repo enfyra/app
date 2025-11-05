@@ -392,12 +392,14 @@ const visibleGroups = computed(() => {
               >
                 <div
                   v-if="isItemActive(group.route)"
-                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-300"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] transition-all duration-500"
+                  style="view-transition-name: active-main-bg"
                 ></div>
 
                 <div
                   v-if="isItemActive(group.route)"
-                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-opacity duration-300"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#0066FF] to-[#7C3AED] blur-xl opacity-30 transition-all duration-500"
+                  style="view-transition-name: active-main-glow"
                 ></div>
 
                 <UIcon
@@ -469,12 +471,14 @@ const visibleGroups = computed(() => {
                     >
                       <div
                         v-if="isItemActive(child.path || child.route)"
-                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
+                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-500"
+                        style="view-transition-name: active-sub-bg"
                       ></div>
 
                       <div
                         v-if="isItemActive(child.path || child.route)"
-                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-opacity duration-300"
+                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-500"
+                        style="view-transition-name: active-sub-glow"
                       ></div>
 
                       <UIcon
@@ -497,12 +501,14 @@ const visibleGroups = computed(() => {
                 >
                   <div
                     v-if="isItemActive(item.path || item.route)"
-                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
+                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-500"
+                    style="view-transition-name: active-sub-bg"
                   ></div>
 
                   <div
                     v-if="isItemActive(item.path || item.route)"
-                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-opacity duration-300"
+                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-500"
+                    style="view-transition-name: active-sub-glow"
                   ></div>
 
                   <UIcon
@@ -529,7 +535,7 @@ const visibleGroups = computed(() => {
           <button
             @click="group.onClick"
             :class="[
-              'w-full flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--bg-elevated)] transition-all duration-300 cursor-pointer group hover:scale-[1.02]',
+              'w-full flex items-center gap-3 p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 transition-all duration-300 cursor-pointer group hover:scale-[1.02]',
               isCollapsed ? 'justify-center' : ''
             ]"
           >
@@ -563,5 +569,22 @@ const visibleGroups = computed(() => {
 
 .scrollbar-custom::-webkit-scrollbar-thumb:hover {
   background: rgba(124, 58, 237, 0.5);
+}
+
+/* Spring-like view transition animation */
+::view-transition-old(active-main-bg),
+::view-transition-new(active-main-bg),
+::view-transition-old(active-sub-bg),
+::view-transition-new(active-sub-bg) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+::view-transition-old(active-main-glow),
+::view-transition-new(active-main-glow),
+::view-transition-old(active-sub-glow),
+::view-transition-new(active-sub-glow) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 </style>

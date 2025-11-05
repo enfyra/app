@@ -262,7 +262,7 @@ export function useMenuRegistry() {
             label: table.label || table.display_name || tableName,
             route: `/data/${tableName}`,
             icon: table.icon || "lucide:database",
-            parent: dataParentId, // Set as child of Data menu
+            parent: dataParentId,
             type: "Menu",
             permission: {
               or: [
