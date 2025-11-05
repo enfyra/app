@@ -3,7 +3,7 @@
 const { schemas, fetchSchema, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const toast = useToast();
-const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+const { registerDataMenuItems } = useMenuRegistry();
 const { loadRoutes } = useRoutes();
 const { getId } = useDatabase();
 const errors = ref<Record<string, string>>({});
@@ -181,7 +181,7 @@ async function save() {
   await nextTick();
 
   // Re-register all table menus to ensure sync
-  await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+  await registerDataMenuItems(Object.values(schemas.value));
 
   toast.add({
     title: "Success",

@@ -124,7 +124,7 @@ function handleCopyFileUrl(file: any) {
 }
 
 function viewFileDetails(file: any) {
-  navigateTo(`/files/${getId(file)}`);
+  navigateTo(`/files/management/${getId(file)}`);
 }
 
 async function deleteFile(file: any) {

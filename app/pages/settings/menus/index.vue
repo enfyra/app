@@ -20,6 +20,9 @@ const currentFilter = ref(createEmptyFilter());
 
 const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
 
+// Fixed color for navigation structure
+const pageIconColor = 'primary';
+
 registerPageHeader({
   title: "Menu Manager",
   description: "Configure and manage navigation menus for your application",
@@ -198,14 +201,14 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
   }
 
   // Reregister all menus after successful update
-  const { reregisterAllMenus, registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
   const { fetchMenuDefinitions } = useMenuApi();
   await reregisterAllMenus(fetchMenuDefinitions as any);
 
   // Also reregister table menus to restore them
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
-    await registerTableMenusWithSidebarIds(schemaValues);
+    await registerDataMenuItems(schemaValues);
   }
 
   toast.add({
@@ -241,14 +244,14 @@ async function deleteMenu(menuItem: any) {
     await fetchMenus();
 
     // Reregister all menus after successful delete
-    const { reregisterAllMenus, registerTableMenusWithSidebarIds } = useMenuRegistry();
+    const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
     const { fetchMenuDefinitions } = useMenuApi();
     await reregisterAllMenus(fetchMenuDefinitions as any);
 
     // Also reregister table menus to restore them
     const schemaValues = Object.values(schemas.value);
     if (schemaValues.length > 0) {
-      await registerTableMenusWithSidebarIds(schemaValues);
+      await registerDataMenuItems(schemaValues);
     }
 
     toast.add({
@@ -296,7 +299,7 @@ watch(
             :title="menu.label"
             :description="menu.path"
             :icon="menu.icon || 'lucide:circle'"
-            icon-color="primary"
+            :icon-color="pageIconColor"
             :card-class="'cursor-pointer transition-all'"
             @click="navigateTo(`/settings/menus/${getId(menu)}`)"
             :stats="[

@@ -13,6 +13,9 @@ const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { registerPageHeader } = usePageHeaderRegistry();
 
+// Fixed color for routing infrastructure
+const pageIconColor = 'primary';
+
 registerPageHeader({
   title: "Routing Manager",
   gradient: "cyan",
@@ -255,11 +258,11 @@ async function toggleEnabled(routeItem: any) {
 
   // Reload routes and reregister menus after route toggle
   const { loadRoutes } = useRoutes();
-  const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+  const { registerDataMenuItems } = useMenuRegistry();
   const { schemas } = useSchema();
-  
+
   await loadRoutes();
-  await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+  await registerDataMenuItems(Object.values(schemas.value));
 
   toast.add({
     title: "Success",
@@ -287,11 +290,11 @@ async function deleteRoute(routeItem: any) {
 
     // Reload routes and reregister menus after route deletion
     const { loadRoutes } = useRoutes();
-    const { registerTableMenusWithSidebarIds } = useMenuRegistry();
+    const { registerDataMenuItems } = useMenuRegistry();
     const { schemas } = useSchema();
-    
+
     await loadRoutes();
-    await registerTableMenusWithSidebarIds(Object.values(schemas.value));
+    await registerDataMenuItems(Object.values(schemas.value));
 
     toast.add({
       title: "Success",
@@ -332,7 +335,7 @@ async function deleteRoute(routeItem: any) {
               :title="routeItem.path"
               :description="routeItem.mainTable?.name"
               :icon="routeItem.icon || 'lucide:circle'"
-              icon-color="primary"
+              :icon-color="pageIconColor"
               :card-class="'cursor-pointer transition-all'"
               @click="navigateTo(`/settings/routings/${getId(routeItem)}`)"
               :stats="[

@@ -25,7 +25,7 @@
           :title="extension.name"
           :description="extension.description"
           :icon="getExtensionIcon(extension)"
-          icon-color="primary"
+          :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
           :stats="[
             {
@@ -115,6 +115,10 @@ registerPageHeader({
   title: "Extension Manager",
   gradient: "purple",
 });
+
+// Fixed color for system extensions
+const pageIconColor = 'primary';
+
 const {
   data: apiData,
   pending: loading,

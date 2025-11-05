@@ -76,7 +76,7 @@ function handleFileClick(file: any) {
     return;
   }
 
-  navigateTo(`/files/${getId(file)}`);
+  navigateTo(`/files/management/${getId(file)}`);
 }
 
 function handleToggleItemSelection(itemId: string) {

@@ -10,15 +10,6 @@ const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 const { registerPageHeader } = usePageHeaderRegistry();
 
-watch(() => apiData.value?.data?.[0]?.email, (email) => {
-  if (email) {
-    registerPageHeader({
-      title: email,
-      gradient: "blue",
-    });
-  }
-}, { immediate: true });
-
 const {
   data: apiData,
   pending: loading,
@@ -34,6 +25,15 @@ const {
   })),
   errorContext: "Fetch User",
 });
+
+watch(() => apiData.value?.data?.[0]?.email, (email) => {
+  if (email) {
+    registerPageHeader({
+      title: email,
+      gradient: "blue",
+    });
+  }
+}, { immediate: true });
 
 const form = ref<Record<string, any>>({});
 

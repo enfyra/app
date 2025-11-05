@@ -159,7 +159,7 @@ const fileColumns = computed(() => [
       {
         label: "Details",
         icon: "i-lucide-info",
-        onSelect: (file) => navigateTo(`/files/${file.id}`),
+        onSelect: (file) => navigateTo(`/files/management/${file.id}`),
       },
       // Only show delete action if user has permission
       ...(canDeleteFile
@@ -236,7 +236,7 @@ function getContextMenuItems(file: any) {
         label: "Details",
         icon: "lucide:info",
         onSelect: () => {
-          navigateTo(`/files/${file.id}`);
+          navigateTo(`/files/management/${file.id}`);
         },
       },
     ],

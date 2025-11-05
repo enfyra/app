@@ -6,10 +6,7 @@ export default defineNuxtConfig({
   devServer: {
     port: parseInt(process.env.PORT || "3000"),
   },
-  experimental: {
-    viewTransition: true
-  },
-  modules: [
+    modules: [
     "@nuxt/icon",
     "@nuxt/ui",
     "@nuxtjs/tailwindcss",

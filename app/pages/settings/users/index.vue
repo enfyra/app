@@ -23,7 +23,7 @@
           :title="user.name || user.email || 'Unnamed User'"
           :description="user.email || 'No email'"
           icon="lucide:user"
-          icon-color="primary"
+          :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
           @click="navigateTo(`/settings/users/${getId(user)}`)"
           :stats="[
@@ -130,6 +130,9 @@ registerPageHeader({
   variant: "default",
   gradient: "blue",
 });
+
+// Fixed color for user management
+const pageIconColor = 'warning';
 
 const {
   data: apiData,
