@@ -233,27 +233,18 @@ const visibleGroups = computed(() => {
     <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#0066FF] via-[#7C3AED] to-[#D946EF] opacity-50 z-10"></div>
 
     <div class="h-16 flex items-center justify-between px-6 border-b relative" style="border-color: var(--border-subtle)">
-      <transition
-        enter-active-class="transition-all duration-300"
-        enter-from-class="opacity-0 -translate-x-4"
-        enter-to-class="opacity-100 translate-x-0"
-        leave-active-class="transition-all duration-300"
-        leave-from-class="opacity-100 translate-x-0"
-        leave-to-class="opacity-0 -translate-x-4"
-      >
-        <div v-if="!isCollapsed" class="flex items-center gap-3">
-          <div class="relative">
-            <div class="absolute inset-0 bg-gradient-to-br from-[#0066FF] to-[#7C3AED] rounded-xl blur-md opacity-60"></div>
-            <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-[#0066FF] to-[#7C3AED] flex items-center justify-center">
-              <UIcon name="lucide:database" class="w-5 h-5 text-white" />
-            </div>
-          </div>
-          <div>
-            <span class="font-bold text-gradient-primary text-lg tracking-tight">Enfyra</span>
-            <p class="text-xs" style="color: var(--text-quaternary)">CMS</p>
+      <div v-if="!isCollapsed" class="flex items-center gap-3">
+        <div class="relative">
+          <div class="absolute inset-0 bg-gradient-to-br from-[#0066FF] to-[#7C3AED] rounded-xl blur-md opacity-60"></div>
+          <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-[#0066FF] to-[#7C3AED] flex items-center justify-center">
+            <UIcon name="lucide:database" class="w-5 h-5 text-white" />
           </div>
         </div>
-      </transition>
+        <div>
+          <span class="font-bold text-gradient-primary text-lg tracking-tight">Enfyra</span>
+          <p class="text-xs" style="color: var(--text-quaternary)">CMS</p>
+        </div>
+      </div>
 
       <button
         v-if="!isMobile && !isTablet"
@@ -356,62 +347,53 @@ const visibleGroups = computed(() => {
             </div>
 
             <!-- Expanded dropdown items (icon-only) -->
-            <transition
-              enter-active-class="transition-all duration-200 ease-out"
-              enter-from-class="opacity-0 -translate-y-2 max-h-0"
-              enter-to-class="opacity-100 translate-y-0 max-h-96"
-              leave-active-class="transition-all duration-200 ease-in"
-              leave-from-class="opacity-100 translate-y-0 max-h-96"
-              leave-to-class="opacity-0 -translate-y-2 max-h-0"
+            <div
+              v-if="isGroupExpanded(group.id) && group.items"
+              class="space-y-1 px-3 overflow-hidden"
             >
-              <div
-                v-if="isGroupExpanded(group.id) && group.items"
-                class="space-y-1 px-3 overflow-hidden"
-              >
-                <template v-for="item in group.items" :key="item.id">
-                  <PermissionGate :condition="item.permission as any">
-                    <!-- Dropdown with children -->
-                    <template v-if="item.children && item.children.length > 0">
-                      <PermissionGate
-                        v-for="child in item.children"
-                        :key="child.id"
-                        :condition="child.permission as any"
-                      >
-                        <button
-                          @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
-                          :class="[
-                            'w-full aspect-square flex items-center justify-center rounded-lg transition-all duration-300 relative group',
-                            ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
-                          ]"
-                          :style="{ color: ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'white' : 'var(--text-tertiary)' }"
-                        >
-                          <UIcon
-                            :name="child.icon || 'lucide:circle'"
-                            class="w-4 h-4 flex-shrink-0 relative z-10"
-                          />
-                        </button>
-                      </PermissionGate>
-                    </template>
-
-                    <!-- Regular item -->
-                    <button
-                      v-else
-                      @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
-                      :class="[
-                        'w-full aspect-square flex items-center justify-center rounded-lg transition-all duration-300 relative group',
-                        ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
-                      ]"
-                      :style="{ color: ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'white' : 'var(--text-tertiary)' }"
+              <template v-for="item in group.items" :key="item.id">
+                <PermissionGate :condition="item.permission as any">
+                  <!-- Dropdown with children -->
+                  <template v-if="item.children && item.children.length > 0">
+                    <PermissionGate
+                      v-for="child in item.children"
+                      :key="child.id"
+                      :condition="child.permission as any"
                     >
-                      <UIcon
-                        :name="item.icon || 'lucide:circle'"
-                        class="w-4 h-4 flex-shrink-0 relative z-10"
-                      />
-                    </button>
-                  </PermissionGate>
-                </template>
-              </div>
-            </transition>
+                      <button
+                        @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
+                        :class="[
+                          'w-full aspect-square flex items-center justify-center rounded-lg transition-all duration-300 relative group',
+                          ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
+                        ]"
+                        :style="{ color: ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'white' : 'var(--text-tertiary)' }"
+                      >
+                        <UIcon
+                          :name="child.icon || 'lucide:circle'"
+                          class="w-4 h-4 flex-shrink-0 relative z-10"
+                        />
+                      </button>
+                    </PermissionGate>
+                  </template>
+
+                  <!-- Regular item -->
+                  <button
+                    v-else
+                    @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
+                    :class="[
+                      'w-full aspect-square flex items-center justify-center rounded-lg transition-all duration-300 relative group',
+                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'hover:bg-[var(--bg-elevated)]'
+                    ]"
+                    :style="{ color: ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'white' : 'var(--text-tertiary)' }"
+                  >
+                    <UIcon
+                      :name="item.icon || 'lucide:circle'"
+                      class="w-4 h-4 flex-shrink-0 relative z-10"
+                    />
+                  </button>
+                </PermissionGate>
+              </template>
+            </div>
           </div>
         </div>
       </template>
@@ -476,89 +458,80 @@ const visibleGroups = computed(() => {
           />
         </button>
 
-        <transition
-          enter-active-class="transition-all duration-300 ease-out"
-          enter-from-class="opacity-0 max-h-0"
-          enter-to-class="opacity-100 max-h-screen"
-          leave-active-class="transition-all duration-300 ease-in"
-          leave-from-class="opacity-100 max-h-screen"
-          leave-to-class="opacity-0 max-h-0"
+        <div
+          v-if="isGroupExpanded(group.id) && group.items && group.items.length > 0"
+          class="space-y-1 px-3 mt-2 overflow-hidden"
         >
-          <div
-            v-if="isGroupExpanded(group.id) && group.items && group.items.length > 0"
-            class="space-y-1 px-3 mt-2 overflow-hidden"
-          >
-            <template v-for="item in group.items" :key="item.id">
-              <PermissionGate :condition="item.permission as any">
-                <div
-                  v-if="item.children && item.children.length > 0"
-                  class="space-y-1"
-                >
-                  <div class="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    {{ item.label }}
-                  </div>
-
-                  <PermissionGate
-                    v-for="child in item.children"
-                    :key="child.id"
-                    :condition="child.permission as any"
-                  >
-                    <button
-                      @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
-                      :class="[
-                        'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 relative group',
-                        ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
-                      ]"
-                      :style="{ color: ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'white' : 'var(--text-tertiary)' }"
-                    >
-                      <div
-                        v-if="(child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))"
-                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
-                      ></div>
-
-                      <div
-                        v-if="(child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))"
-                        class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-300"
-                      ></div>
-
-                      <UIcon
-                        :name="child.icon || 'lucide:circle'"
-                        class="w-5 h-5 flex-shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <span class="text-sm relative z-10">{{ child.label }}</span>
-                    </button>
-                  </PermissionGate>
+          <template v-for="item in group.items" :key="item.id">
+            <PermissionGate :condition="item.permission as any">
+              <div
+                v-if="item.children && item.children.length > 0"
+                class="space-y-1"
+              >
+                <div class="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {{ item.label }}
                 </div>
 
-                <button
-                  v-else
-                  @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
-                  :class="[
-                    'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 relative group',
-                    ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
-                  ]"
-                  :style="{ color: ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'white' : 'var(--text-tertiary)' }"
+                <PermissionGate
+                  v-for="child in item.children"
+                  :key="child.id"
+                  :condition="child.permission as any"
                 >
-                  <div
-                    v-if="(item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))"
-                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
-                  ></div>
+                  <button
+                    @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
+                    :class="[
+                      'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 relative group',
+                      ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
+                    ]"
+                    :style="{ color: ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'white' : 'var(--text-tertiary)' }"
+                  >
+                    <div
+                      v-if="(child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))"
+                      class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
+                    ></div>
 
-                  <div
-                    v-if="(item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))"
-                    class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-300"
-                  ></div>
+                    <div
+                      v-if="(child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))"
+                      class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-300"
+                    ></div>
 
-                  <UIcon
-                    :name="item.icon || 'lucide:circle'"
-                    class="w-5 h-5 flex-shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <span class="text-sm relative z-10">{{ item.label }}</span>
-                </button>
-              </PermissionGate>
-            </template>
-          </div>
-        </transition>
+                    <UIcon
+                      :name="child.icon || 'lucide:circle'"
+                      class="w-5 h-5 flex-shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <span class="text-sm relative z-10">{{ child.label }}</span>
+                  </button>
+                </PermissionGate>
+              </div>
+
+              <button
+                v-else
+                @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
+                :class="[
+                  'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 relative group',
+                  ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white' : 'hover:bg-[var(--bg-elevated)]'
+                ]"
+                :style="{ color: ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'white' : 'var(--text-tertiary)' }"
+              >
+                <div
+                  v-if="(item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] transition-all duration-300"
+                ></div>
+
+                <div
+                  v-if="(item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))"
+                  class="absolute inset-0 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#D946EF] blur-xl opacity-30 transition-all duration-300"
+                ></div>
+
+                <UIcon
+                  :name="item.icon || 'lucide:circle'"
+                  class="w-5 h-5 flex-shrink-0 relative z-10 group-hover:scale-110 transition-transform duration-300"
+                />
+                <span class="text-sm relative z-10">{{ item.label }}</span>
+              </button>
+            </PermissionGate>
+          </template>
+        </div>
             </div>
           </template>
         </div>
