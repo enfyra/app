@@ -19,6 +19,9 @@ registerPageHeader({
   gradient: "purple",
 });
 
+// Fixed color for security/permissions
+const pageIconColor = 'warning';
+
 const {
   data: apiData,
   pending: loading,
@@ -121,7 +124,7 @@ watch(
           :title="role.name"
           :description="role.description || 'No description'"
           icon="lucide:shield-check"
-          icon-color="primary"
+          :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
           @click="navigateTo(`/settings/roles/${getId(role)}`)"
           :stats="[

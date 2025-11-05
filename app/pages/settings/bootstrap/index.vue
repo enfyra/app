@@ -17,6 +17,9 @@ registerPageHeader({
   gradient: "purple",
 });
 
+// Fixed color for initialization scripts
+const pageIconColor = 'success';
+
 const {
   data: apiData,
   pending: loading,
@@ -118,7 +121,7 @@ watch(
           :title="script.name"
           :description="script.description || 'No description'"
           icon="lucide:rocket"
-          icon-color="warning"
+          :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
           @click="navigateTo(`/settings/bootstrap/${getId(script)}`)"
           :stats="[

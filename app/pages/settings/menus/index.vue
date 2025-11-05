@@ -20,6 +20,9 @@ const currentFilter = ref(createEmptyFilter());
 
 const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
 
+// Fixed color for navigation structure
+const pageIconColor = 'primary';
+
 registerPageHeader({
   title: "Menu Manager",
   description: "Configure and manage navigation menus for your application",
@@ -296,7 +299,7 @@ watch(
             :title="menu.label"
             :description="menu.path"
             :icon="menu.icon || 'lucide:circle'"
-            icon-color="primary"
+            :icon-color="pageIconColor"
             :card-class="'cursor-pointer transition-all'"
             @click="navigateTo(`/settings/menus/${getId(menu)}`)"
             :stats="[

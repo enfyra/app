@@ -18,6 +18,9 @@ registerPageHeader({
 });
 const { isTablet } = useScreen();
 
+// Fixed color for processing/actions
+const pageIconColor = 'success';
+
 const {
   data: apiData,
   pending: loading,
@@ -119,7 +122,7 @@ watch(
           :title="handler.name || 'Untitled Handler'"
           :description="handler.description || 'No description'"
           icon="lucide:command"
-          icon-color="primary"
+          :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
           @click="navigateTo(`/settings/handlers/${getId(handler)}`)"
           :stats="[

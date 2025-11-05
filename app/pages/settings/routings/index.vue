@@ -13,6 +13,9 @@ const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { registerPageHeader } = usePageHeaderRegistry();
 
+// Fixed color for routing infrastructure
+const pageIconColor = 'primary';
+
 registerPageHeader({
   title: "Routing Manager",
   gradient: "cyan",
@@ -332,7 +335,7 @@ async function deleteRoute(routeItem: any) {
               :title="routeItem.path"
               :description="routeItem.mainTable?.name"
               :icon="routeItem.icon || 'lucide:circle'"
-              icon-color="primary"
+              :icon-color="pageIconColor"
               :card-class="'cursor-pointer transition-all'"
               @click="navigateTo(`/settings/routings/${getId(routeItem)}`)"
               :stats="[

@@ -27,14 +27,12 @@ const rootIcon = computed(() => props.icon || "lucide:home");
 <template>
   <nav
     aria-label="breadcrumb"
-    class="hidden md:flex items-center gap-2.5 text-sm"
-    :style="{ color: 'var(--text-quaternary)' }"
+    class="hidden md:flex items-center gap-2.5 text-sm text-gray-500"
   >
     <!-- Home Link with Icon -->
     <NuxtLink
       to="/"
-      class="transition-colors duration-200 flex items-center gap-1.5 hover:text-[var(--text-secondary)]"
-      :style="{ color: 'var(--text-quaternary)' }"
+      class="transition-colors duration-200 flex items-center gap-1.5 text-gray-500 hover:text-gray-300"
     >
       <UIcon
         :name="rootIcon"
@@ -47,23 +45,20 @@ const rootIcon = computed(() => props.icon || "lucide:home");
       <!-- Separator -->
       <UIcon
         name="lucide:chevron-right"
-        class="w-3.5 h-3.5 shrink-0"
-        :style="{ color: 'var(--text-quaternary)' }"
+        class="w-3.5 h-3.5 shrink-0 text-gray-500"
       />
 
       <!-- Link or Current Page -->
       <NuxtLink
         v-if="i < segments.length - 1"
         :to="seg.to"
-        class="transition-colors duration-200 hover:text-[var(--text-secondary)]"
-        :style="{ color: 'var(--text-quaternary)' }"
+        class="transition-colors duration-200 text-gray-500 hover:text-gray-300"
       >
         {{ seg.label }}
       </NuxtLink>
       <span
         v-else
-        class="font-medium"
-        :style="{ color: 'var(--text-secondary)' }"
+        class="font-medium text-gray-300"
       >
         {{ seg.label }}
       </span>

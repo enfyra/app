@@ -18,6 +18,9 @@ registerPageHeader({
   gradient: "purple",
 });
 
+// Fixed color for event handling
+const pageIconColor = 'success';
+
 const {
   data: apiData,
   pending: loading,
@@ -149,7 +152,7 @@ async function deleteHook(hook: any) {
           :title="hook.name || 'Unnamed'"
           :description="hook.description || 'No description'"
           icon="lucide:link"
-          icon-color="primary"
+          :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
           @click="navigateTo(`/settings/hooks/${getId(hook)}`)"
           :stats="[

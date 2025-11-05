@@ -72,12 +72,12 @@ function getFieldCount(collectionName: string): number {
 
 // List of gradient colors for random assignment
 const gradients = [
-  "from-[#0066FF] to-[#06B6D4]", // blue to cyan
-  "from-[#7C3AED] to-[#D946EF]", // purple to fuchsia
-  "from-[#06B6D4] to-[#14B8A6]", // cyan to teal
-  "from-[#F97316] to-[#EC4899]", // orange to pink
-  "from-[#8B5CF6] to-[#D946EF]", // purple to fuchsia
-  "from-[#06B6D4] to-[#0066FF]", // cyan to blue
+  "from-blue-500 to-cyan-500", // blue to cyan
+  "from-purple-500 to-fuchsia-500", // purple to fuchsia
+  "from-cyan-500 to-teal-500", // cyan to teal
+  "from-orange-500 to-pink-500", // orange to pink
+  "from-violet-500 to-fuchsia-500", // violet to fuchsia
+  "from-cyan-500 to-blue-500", // cyan to blue
 ];
 
 function getGradientForCollection(id: any): string | undefined {
@@ -116,8 +116,7 @@ function getGradientForCollection(id: any): string | undefined {
           v-for="collection in collections"
           :key="collection.id"
           @click="navigateTo(`/collections/${collection.name}`)"
-          class="p-6 rounded-xl border border-[var(--border-default)] hover:border-[var(--border-strong)] bg-[var(--bg-elevated)] cursor-pointer group relative overflow-hidden transition-all duration-300 flex flex-col"
-          style="box-shadow: var(--shadow-lg)"
+          class="p-6 rounded-xl border border-gray-700 hover:border-gray-600 bg-gray-800/50 cursor-pointer group relative overflow-hidden transition-all duration-300 flex flex-col shadow-lg"
         >
           <!-- Gradient glow on hover -->
           <div
@@ -141,14 +140,12 @@ function getGradientForCollection(id: any): string | undefined {
 
             <!-- Title & Description -->
             <h3
-              class="text-xl font-semibold mb-2 tracking-tight transition-all duration-300"
-              style="color: var(--text-primary)"
+              class="text-xl font-semibold mb-2 tracking-tight transition-all duration-300 text-gray-100"
             >
               {{ collection.name || "Untitled Collection" }}
             </h3>
             <p
-              class="text-sm mb-4 truncate"
-              style="color: var(--text-tertiary)"
+              class="text-sm mb-4 truncate text-gray-400"
             >
               {{ collection.description || "No description" }}
             </p>
@@ -162,15 +159,14 @@ function getGradientForCollection(id: any): string | undefined {
                 >
                   <UIcon
                     name="lucide:layers"
-                    class="w-4 h-4"
-                    style="color: var(--text-primary)"
+                    class="w-4 h-4 text-gray-100"
                   />
                 </div>
                 <div>
-                  <div class="text-sm font-medium" style="color: var(--text-primary)">
+                  <div class="text-sm font-medium text-gray-100">
                     {{ getFieldCount(collection.name) }}
                   </div>
-                  <div class="text-xs" style="color: var(--text-quaternary)">
+                  <div class="text-xs text-gray-500">
                     fields
                   </div>
                 </div>
@@ -183,15 +179,14 @@ function getGradientForCollection(id: any): string | undefined {
                 >
                   <UIcon
                     :name="collection.isSystem ? 'lucide:shield-check' : 'lucide:box'"
-                    class="w-4 h-4"
-                    style="color: var(--text-primary)"
+                    class="w-4 h-4 text-gray-100"
                   />
                 </div>
                 <div>
-                  <div class="text-sm font-medium" style="color: var(--text-primary)">
+                  <div class="text-sm font-medium text-gray-100">
                     {{ collection.isSystem ? "System" : "Custom" }}
                   </div>
-                  <div class="text-xs" style="color: var(--text-quaternary)">
+                  <div class="text-xs text-gray-500">
                     type
                   </div>
                 </div>
@@ -201,16 +196,14 @@ function getGradientForCollection(id: any): string | undefined {
 
             <!-- Footer -->
             <div
-              class="flex items-center justify-between pt-4 border-t mt-auto"
-              style="border-color: var(--border-subtle)"
+              class="flex items-center justify-between pt-4 border-t border-gray-800 mt-auto"
             >
-              <span class="text-xs" style="color: var(--text-quaternary)">
+              <span class="text-xs text-gray-500">
                 {{ new Date(collection.createdAt).toLocaleDateString() }}
               </span>
               <UIcon
                 name="lucide:arrow-right"
-                class="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all duration-300"
-                style="color: var(--text-tertiary)"
+                class="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all duration-300 text-gray-400"
               />
             </div>
           </div>

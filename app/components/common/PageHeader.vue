@@ -61,10 +61,8 @@ const { isMobile, isTablet } = useScreen();
 
 <template>
   <div
-    class="border-b relative overflow-hidden transition-all duration-400"
+    class="border-b border-gray-800 bg-gray-800/50 relative overflow-hidden transition-all duration-400"
     :style="{
-      borderColor: 'var(--border-subtle)',
-      background: 'var(--bg-elevated)',
       backgroundImage: gradientStyle,
       opacity: isVisible ? 1 : 0,
       transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
@@ -86,13 +84,12 @@ const { isMobile, isTablet } = useScreen();
         }"
       >
         <h1
-          class="font-semibold tracking-tight"
+          class="font-semibold tracking-tight text-gray-100"
           :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-xl') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-4xl' : 'text-3xl')"
-          :style="{ color: 'var(--text-primary)' }"
         >
           {{ title }}
         </h1>
-        <p v-if="description" :class="(isMobile || isTablet) ? 'text-xs' : 'text-sm'" :style="{ color: 'var(--text-tertiary)' }">
+        <p v-if="description" :class="[(isMobile || isTablet) ? 'text-xs' : 'text-sm', 'text-gray-400']">
           {{ description }}
         </p>
       </div>
@@ -110,13 +107,11 @@ const { isMobile, isTablet } = useScreen();
           v-for="(stat, index) in stats"
           :key="index"
           :class="[
-            'border relative overflow-hidden group transition-all duration-300 hover:-translate-y-1',
+            'border border-gray-700 bg-gray-900/50 relative overflow-hidden group transition-all duration-300 hover:-translate-y-1',
             (isMobile || isTablet) ? 'rounded-lg' : 'rounded-xl',
             isStatsFocus ? ((isMobile || isTablet) ? 'p-3' : 'p-6') : ((isMobile || isTablet) ? 'p-2.5' : 'p-4')
           ]"
           :style="{
-            background: 'var(--bg-surface)',
-            borderColor: 'var(--border-default)',
             opacity: isVisible ? 1 : 0,
             transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
             transitionDelay: `${200 + index * 50}ms`,
@@ -124,18 +119,17 @@ const { isMobile, isTablet } = useScreen();
         >
           <!-- Gradient glow on hover -->
           <div
-            class="absolute inset-0 bg-gradient-to-br from-[#0066FF]/5 to-[#7C3AED]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           />
 
           <div class="relative">
             <div
-              class="font-semibold"
+              class="font-semibold text-gray-100"
               :class="(isMobile || isTablet) ? (isStatsFocus ? 'text-xl' : 'text-lg') : (isStatsFocus ? 'text-3xl' : 'text-2xl')"
-              :style="{ color: 'var(--text-primary)' }"
             >
               {{ stat.value }}
             </div>
-            <div :class="(isMobile || isTablet) ? 'text-xs mt-0.5' : 'text-sm mt-1'" :style="{ color: 'var(--text-tertiary)' }">
+            <div :class="[(isMobile || isTablet) ? 'text-xs mt-0.5' : 'text-sm mt-1', 'text-gray-400']">
               {{ stat.label }}
             </div>
           </div>
