@@ -1,13 +1,13 @@
 export default defineAppConfig({
-  toaster: {
-    position: "top-right" as const,
-    expand: true,
-    duration: 8000,
-  },
   ui: {
     colors: {
       primary: "purple",
+      secondary: "cyan",
       neutral: "slate",
+      success: "success",
+      warning: "warning",
+      error: "error",
+      info: "info",
     },
     button: {
       slots: {
