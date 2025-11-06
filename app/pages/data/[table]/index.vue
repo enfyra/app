@@ -386,15 +386,10 @@ useHeaderActionRegistry([
     </Transition>
 
     <!-- Premium Pagination -->
-    <Transition
-      name="pagination-fade"
-      mode="out-in"
+    <div
+      v-if="isMounted && !loading && data.length > 0 && Math.ceil(total / pageLimit) > 1"
+      class="flex items-center justify-between"
     >
-      <div
-        v-if="isMounted && !loading && Math.ceil(total / pageLimit) > 1"
-        key="pagination"
-        class="flex items-center justify-between"
-      >
       <p class="hidden md:block text-sm text-gray-400">
         Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of{" "}
         <span class="text-gray-200">{{ total }}</span> results
@@ -415,8 +410,7 @@ useHeaderActionRegistry([
           item: 'h-9 w-9 rounded-xl transition-all duration-300',
         }"
       />
-      </div>
-    </Transition>
+    </div>
 
     <!-- Filter Drawer - use existing component -->
     <FilterDrawerLazy
@@ -428,24 +422,3 @@ useHeaderActionRegistry([
     />
   </div>
 </template>
-
-<style scoped>
-/* Pagination fade transition with delay */
-.pagination-fade-enter-active {
-  transition: opacity 0.3s ease 0.2s, transform 0.3s ease 0.2s;
-}
-
-.pagination-fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.pagination-fade-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.pagination-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-</style>
