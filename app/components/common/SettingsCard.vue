@@ -59,7 +59,7 @@
     <!-- Content wrapper with flex-1 to push footer down -->
     <div class="flex-1">
       <!-- Stats List (Figma Performance Card Style) -->
-      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-2 rounded-lg mb-2' : 'relative p-3 rounded-lg mb-3', 'bg-gray-900/30']">
+      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-2 rounded-lg mb-2' : 'relative p-3 rounded-lg mb-3', 'bg-gray-900']">
         <div
           v-for="(stat, index) in stats"
           :key="stat.label"
@@ -97,7 +97,7 @@
         <div
           v-for="stat in stats"
           :key="stat.label"
-          :class="[(isMobile || isTablet) ? 'text-center p-2 rounded-lg' : 'text-center p-3 rounded-lg', 'bg-gray-900/60']"
+          :class="[(isMobile || isTablet) ? 'text-center p-2 rounded-lg' : 'text-center p-3 rounded-lg', 'bg-gray-900/70']"
         >
           <div :class="(isMobile || isTablet) ? 'text-sm font-medium text-gray-100 mb-0.5' : 'text-base font-medium text-gray-100 mb-1'">
             <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-center">

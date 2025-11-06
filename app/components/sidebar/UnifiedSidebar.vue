@@ -19,14 +19,10 @@ function setMenuItemRef(key: string, el: HTMLElement | null) {
   }
 }
 
-let updateTimeout: ReturnType<typeof setTimeout> | null = null;
 function updateBackgroundPosition() {
-  if (updateTimeout) clearTimeout(updateTimeout);
-  updateTimeout = setTimeout(() => {
-    nextTick(() => {
-      let found = false;
+  let found = false;
 
-      for (const group of visibleGroups.value) {
+  for (const group of visibleGroups.value) {
         if (found) break;
 
         let activeEl = null;
@@ -90,11 +86,9 @@ function updateBackgroundPosition() {
         }
       }
 
-      if (!found) {
-        activeBgStyle.value = { ...activeBgStyle.value, opacity: '0' };
-      }
-    });
-  }, 16);
+  if (!found) {
+    activeBgStyle.value = { ...activeBgStyle.value, opacity: '0' };
+  }
 }
 
 const isCollapsed = computed(() => {
@@ -310,7 +304,7 @@ const visibleGroups = computed(() => {
         <div class="space-y-1 px-3 relative" v-auto-animate>
           <!-- Shared active background -->
           <div
-            class="absolute pointer-events-none rounded-xl transition-all duration-500 ease-out"
+            class="absolute pointer-events-none rounded-xl transition-all duration-200 ease-out"
             :class="isMainMenu ? 'bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'bg-gradient-to-r from-[#7C3AED] to-[#D946EF]'"
             :style="activeBgStyle"
           ></div>
@@ -421,7 +415,7 @@ const visibleGroups = computed(() => {
         <div class="space-y-6 relative" v-auto-animate>
           <!-- Shared active background -->
           <div
-            class="absolute pointer-events-none rounded-xl transition-all duration-500 ease-out z-0"
+            class="absolute pointer-events-none rounded-xl transition-all duration-200 ease-out z-0"
             :class="isMainMenu ? 'bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'bg-gradient-to-r from-[#7C3AED] to-[#D946EF]'"
             :style="activeBgStyle"
           ></div>
