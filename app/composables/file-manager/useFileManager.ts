@@ -32,9 +32,6 @@ export function useFileManager(parentFilter?: any) {
     }
   );
 
-  const showDetailModal = useState("folder-detail-modal", () => false);
-  const selectedFolder = useState<any>("folder-selected", () => null);
-
   const selectedFolders = useState<string[]>("folder-selected-list", () => []);
   const isSelectionMode = useState("folder-selection-mode", () => false);
 
@@ -68,8 +65,7 @@ export function useFileManager(parentFilter?: any) {
   }
 
   function showFolderDetail(folder: any) {
-    selectedFolder.value = folder;
-    showDetailModal.value = true;
+    navigateTo(`/files/management/folders/${folder.id}`);
   }
 
   function getContextMenuItems(folder: any, refreshCallback?: () => void) {
@@ -227,9 +223,6 @@ export function useFileManager(parentFilter?: any) {
     folders,
     pending,
     refreshFolders,
-
-    showDetailModal,
-    selectedFolder,
 
     selectedFolders,
     isSelectionMode,

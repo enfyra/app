@@ -1,54 +1,86 @@
 <script setup lang="ts">
+const route = useRoute();
+const router = useRouter();
 const showCreateModal = ref(false);
 const showUploadModal = ref(false);
 
-const route = useRoute();
-const router = useRouter();
 const folderPage = ref(Number(route.query.folderPage) || 1);
 const filePage = ref(Number(route.query.filePage) || 1);
-const limit = 20;
+const pageLimit = 20;
+const { registerPageHeader } = usePageHeaderRegistry();
 
 const {
-  data: rootFolders,
-  pending: rootPending,
-  execute: fetchRootFolders,
-} = useApi(() => `folder_definition`, {
+  data: folder,
+  pending: folderPending,
+  execute: fetchFolder,
+} = useApi(() => `/folder_definition`, {
   query: computed(() => ({
-    limit,
+    filter: {
+      id: {
+        _eq: route.params.id,
+      },
+    },
+  })),
+  errorContext: "Load Folder Info",
+});
+
+const {
+  data: childFolders,
+  pending: childFoldersPending,
+  execute: fetchChildFolders,
+} = useApi(() => `/folder_definition`, {
+  query: computed(() => ({
+    limit: pageLimit,
     page: folderPage.value,
     meta: "*",
     sort: "-order,-createdAt",
     filter: {
       parent: {
         id: {
-          _is_null: true,
+          _eq: route.params.id,
         },
       },
     },
   })),
-  errorContext: "Load Root Folders",
+  errorContext: "Load Child Folders",
 });
 
 const {
-  data: rootFiles,
+  data: folderFiles,
   pending: filesPending,
-  execute: fetchRootFiles,
-} = useApi(() => `file_definition`, {
+  execute: fetchFiles,
+} = useApi(() => `/file_definition`, {
   query: computed(() => ({
-    limit,
+    limit: pageLimit,
     page: filePage.value,
     meta: "*",
     sort: "-createdAt",
     filter: {
       folder: {
         id: {
-          _is_null: true,
+          _eq: route.params.id,
         },
       },
     },
   })),
-  errorContext: "Load Root Files",
+  errorContext: "Load Files",
 });
+
+watch(() => folder.value?.data?.[0]?.name, (name) => {
+  if (name) {
+    registerPageHeader({
+      title: `${name} - Files Manager`,
+      description: "Manage files and subfolders in this directory",
+      gradient: "cyan",
+    });
+  }
+}, { immediate: true });
+
+const folders = computed(() => childFolders.value?.data || []);
+const folderTotal = computed(() => childFolders.value?.meta?.filterCount || 0);
+
+const files = computed(() => folderFiles.value?.data || []);
+const fileTotal = computed(() => folderFiles.value?.meta?.filterCount || 0);
 
 const {
   execute: uploadFilesApi,
@@ -59,59 +91,35 @@ const {
   errorContext: "Upload Files",
 });
 
-const folders = computed(() => rootFolders.value?.data || []);
-const folderTotal = computed(() => rootFolders.value?.meta?.filterCount || 0);
-
-const files = computed(() => rootFiles.value?.data || []);
-const fileTotal = computed(() => rootFiles.value?.meta?.filterCount || 0);
+const pageTitle = computed(() => {
+  if (folderPending.value) return "Loading...";
+  return `${folder.value?.data?.[0]?.name || "Unknown Folder"} - Files Manager`;
+});
 
 const pageStats = computed(() => {
-  const totalFolders = rootFolders.value?.meta?.filterCount || 0;
-  const totalFiles = rootFiles.value?.meta?.filterCount || 0;
+  const totalChildFolders = folderTotal.value;
+  const totalChildFiles = fileTotal.value;
 
   return [
     {
       icon: "lucide:folder",
       iconColor: "text-primary",
       iconBg: "bg-primary/10",
-      value: totalFolders,
-      label: "Root Folders",
+      value: totalChildFolders,
+      label: "Child Folders",
     },
     {
       icon: "lucide:file",
       iconColor: "text-blue-600 dark:text-blue-400",
       iconBg: "bg-blue-100 dark:bg-blue-900/30",
-      value: totalFiles,
-      label: "Root Files",
+      value: totalChildFiles,
+      label: "Child Files",
     },
   ];
 });
 
-watch(
-  () => route.query.folderPage,
-  async (newPage) => {
-    folderPage.value = Number(newPage) || 1;
-    await fetchRootFolders();
-  },
-  { immediate: true }
-);
-
-watch(
-  () => route.query.filePage,
-  async (newPage) => {
-    filePage.value = Number(newPage) || 1;
-    await fetchRootFiles();
-  },
-  { immediate: true }
-);
-
-function handleFolderCreated() {
-  fetchRootFolders();
-  fetchRootFiles();
-}
-
 async function handleRefreshItems() {
-  await Promise.all([fetchRootFolders(), fetchRootFiles()]);
+  await Promise.all([fetchChildFolders(), fetchFiles()]);
 
   let newQuery = { ...route.query };
 
@@ -130,12 +138,20 @@ async function handleRefreshItems() {
   }
 }
 
+function handleFolderCreated() {
+  folderPage.value = 1;
+  filePage.value = 1;
+  fetchChildFolders();
+  fetchFiles();
+}
+
 async function handleFileUpload(files: File | File[]) {
   const fileArray = Array.isArray(files) ? files : [files];
 
   const formDataArray = fileArray.map((file) => {
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("folder", route.params.id as string);
     return formData;
   });
 
@@ -147,7 +163,7 @@ async function handleFileUpload(files: File | File[]) {
     return;
   }
 
-  await fetchRootFiles();
+  await fetchFiles();
 
   showUploadModal.value = false;
 
@@ -158,13 +174,36 @@ async function handleFileUpload(files: File | File[]) {
   });
 }
 
-const { registerPageHeader } = usePageHeaderRegistry();
+watch(
+  () => route.query.folderPage,
+  async (newPage) => {
+    folderPage.value = Number(newPage) || 1;
+    await fetchChildFolders();
+  }
+);
 
-registerPageHeader({
-  title: "Files Manager",
-  description: "Organize your files and documents efficiently",
-  gradient: "cyan",
-});
+watch(
+  () => route.query.filePage,
+  async (newPage) => {
+    filePage.value = Number(newPage) || 1;
+    await fetchFiles();
+  }
+);
+
+watch(
+  () => route.params.id,
+  async () => {
+    folderPage.value = Number(route.query.folderPage) || 1;
+    filePage.value = Number(route.query.filePage) || 1;
+
+    await Promise.all([
+      fetchFolder(),
+      fetchChildFolders(),
+      fetchFiles()
+    ]);
+  },
+  { immediate: true }
+);
 
 useHeaderActionRegistry([
   {
@@ -208,32 +247,33 @@ useHeaderActionRegistry([
 
 <template>
   <div class="space-y-8">
-    <!-- Integrated File Manager -->
+    <!-- Content -->
     <FileManager
+      :parent-id="route.params.id as string"
       :folders="folders"
       :files="files"
-      :folders-loading="rootPending"
+      :folders-loading="childFoldersPending"
       :files-loading="filesPending"
-      empty-title="No items yet"
-      empty-description="Create folders or upload files to get started organizing your content."
+      empty-title="No items found"
+      empty-description="This folder doesn't contain any files or subfolders"
       :show-create-button="true"
       @refresh-items="handleRefreshItems"
-      @refresh-folders="fetchRootFolders"
-      @refresh-files="fetchRootFiles"
+      @refresh-folders="fetchChildFolders"
+      @refresh-files="fetchFiles"
       @create-folder="showCreateModal = true"
     />
 
     <!-- Pagination -->
     <div
       class="flex justify-center gap-4 mt-6"
-      v-if="!rootPending && !filesPending"
+      v-if="!childFoldersPending && !filesPending"
     >
       <!-- Folder Pagination -->
-      <div v-if="folderTotal > limit" class="flex items-center gap-2">
+      <div v-if="folderTotal > pageLimit" class="flex items-center gap-2">
         <span class="text-sm text-gray-600 dark:text-gray-400">Folders:</span>
         <UPagination
           v-model:page="folderPage"
-          :items-per-page="limit"
+          :items-per-page="pageLimit"
           :total="folderTotal"
           show-edges
           :sibling-count="1"
@@ -249,11 +289,11 @@ useHeaderActionRegistry([
       </div>
 
       <!-- File Pagination -->
-      <div v-if="fileTotal > limit" class="flex items-center gap-2">
+      <div v-if="fileTotal > pageLimit" class="flex items-center gap-2">
         <span class="text-sm text-gray-600 dark:text-gray-400">Files:</span>
         <UPagination
           v-model:page="filePage"
-          :items-per-page="limit"
+          :items-per-page="pageLimit"
           :total="fileTotal"
           show-edges
           :sibling-count="1"
@@ -284,6 +324,7 @@ useHeaderActionRegistry([
     <FolderCreateModal
       v-model="showCreateModal"
       @created="handleFolderCreated"
+      :parent-id="route.params.id as string"
     />
   </div>
 </template>

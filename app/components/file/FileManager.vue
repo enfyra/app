@@ -62,7 +62,7 @@ function handleFolderClick(folder: any) {
     });
     return;
   }
-  navigateTo(`/files/management/${getId(folder)}`);
+  navigateTo(`/files/management/folders/${getId(folder)}`);
 }
 
 function handleFileClick(file: any) {
