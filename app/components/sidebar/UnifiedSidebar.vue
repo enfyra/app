@@ -7,90 +7,6 @@ const { checkPermissionCondition } = usePermissions();
 const { isMobile, isTablet } = useScreen();
 const { setSidebarVisible, sidebarCollapsed, setSidebarCollapsed } = useGlobalState();
 
-const menuItemRefs = ref<Record<string, HTMLElement>>({});
-const activeBgStyle = ref<any>({ opacity: '0' });
-const isMainMenu = ref(false);
-
-function setMenuItemRef(key: string, el: HTMLElement | null) {
-  if (el) {
-    menuItemRefs.value[key] = el;
-  } else {
-    delete menuItemRefs.value[key];
-  }
-}
-
-function updateBackgroundPosition() {
-  let found = false;
-
-  for (const group of visibleGroups.value) {
-        if (found) break;
-
-        let activeEl = null;
-        let isSubmenu = false;
-
-        if (group.items) {
-          for (const item of group.items) {
-            if (found) break;
-
-            const itemRoute = item.route || item.path;
-            if (itemRoute && activeRoutes.value.has(itemRoute)) {
-              activeEl = menuItemRefs.value[`sub-${item.id}`];
-              if (activeEl) {
-                isSubmenu = true;
-                found = true;
-                break;
-              }
-            }
-
-            if (item.children) {
-              for (const child of item.children) {
-                const childRoute = child.route || child.path;
-                if (childRoute && activeRoutes.value.has(childRoute)) {
-                  activeEl = menuItemRefs.value[`sub-${child.id}`];
-                  if (activeEl) {
-                    isSubmenu = true;
-                    found = true;
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        if (activeEl) {
-          const rect = activeEl.getBoundingClientRect();
-          activeBgStyle.value = {
-            opacity: '1',
-            transform: `translate(${activeEl.offsetLeft}px, ${activeEl.offsetTop}px)`,
-            width: `${rect.width}px`,
-            height: `${rect.height}px`,
-          };
-          isMainMenu.value = !isSubmenu;
-          break;
-        }
-
-        if (!found && !isSubmenu && group.type === 'Menu' && group.route && activeRoutes.value.has(group.route)) {
-          const el = menuItemRefs.value[`main-${group.id}`];
-          if (el) {
-            const rect = el.getBoundingClientRect();
-            activeBgStyle.value = {
-              opacity: '1',
-              transform: `translate(${el.offsetLeft}px, ${el.offsetTop}px)`,
-              width: `${rect.width}px`,
-              height: `${rect.height}px`,
-            };
-            isMainMenu.value = true;
-            found = true;
-          }
-        }
-      }
-
-  if (!found) {
-    activeBgStyle.value = { ...activeBgStyle.value, opacity: '0' };
-  }
-}
-
 const isCollapsed = computed(() => {
   if (isMobile.value || isTablet.value) return false;
   return sidebarCollapsed.value;
@@ -181,7 +97,6 @@ onMounted(() => {
     menuGroups.value.forEach(group => expandedGroups.value.add(group.id));
   }
 
-  updateBackgroundPosition();
 });
 
 watch(sidebarCollapsed, (newVal) => {
@@ -190,11 +105,7 @@ watch(sidebarCollapsed, (newVal) => {
 
 watch(expandedGroups, (newVal) => {
   localStorage.setItem('sidebar-expanded-groups', JSON.stringify([...newVal]));
-  updateBackgroundPosition();
 }, { deep: true });
-
-watch(() => route.path, updateBackgroundPosition);
-watch(isCollapsed, updateBackgroundPosition);
 
 watch(searchQuery, (newQuery) => {
   if (newQuery.trim()) {
@@ -286,7 +197,7 @@ const visibleGroups = computed(() => {
       />
     </div>
 
-    <div class="flex-1 overflow-y-auto py-3">
+    <div class="flex-1 overflow-y-auto py-3 scrollbar-hide">
       <div
         v-if="visibleGroups.filter(g => g.position !== 'bottom').length === 0"
         class="flex flex-col items-center justify-center py-12 px-4 text-center"
@@ -301,105 +212,82 @@ const visibleGroups = computed(() => {
       </div>
 
       <template v-if="isCollapsed">
-        <div class="space-y-1 px-3 relative" v-auto-animate>
-          <!-- Shared active background -->
-          <div
-            class="absolute pointer-events-none rounded-xl transition-all duration-200 ease-out"
-            :class="isMainMenu ? 'bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'bg-gradient-to-r from-[#7C3AED] to-[#D946EF]'"
-            :style="activeBgStyle"
-          ></div>
-
-          <div
+        <div class="space-y-3 px-3 relative">
+          <template
             v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
             :key="group.id"
-            class="space-y-1"
           >
-            <div class="relative flex items-center gap-1 px-3">
-              <button
-                :ref="(el) => setMenuItemRef(`main-${group.id}`, el as HTMLElement)"
-                @click="() => {
-                  if (group.type === 'Menu' && group.route) {
-                    navigateTo(group.route);
-                    if (isMobile || isTablet) setSidebarVisible(false);
-                  } else if (group.type === 'Dropdown Menu') {
-                    toggleGroup(group.id);
-                  }
-                }"
+            <div class="space-y-1" :class="{
+              'bg-gray-800/60 rounded-xl': group.type === 'Dropdown Menu'
+            }">
+              <div class="relative flex items-center">
+                <button
+                  @click="() => {
+                    if (group.type === 'Menu' && group.route) {
+                      navigateTo(group.route);
+                      if (isMobile || isTablet) setSidebarVisible(false);
+                    } else if (group.type === 'Dropdown Menu') {
+                      toggleGroup(group.id);
+                    }
+                  }"
+                  :class="[
+                    'flex-1 aspect-square flex items-center justify-center rounded-xl transition-colors duration-150 p-2',
+                    group.type === 'Menu' && ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-white bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'text-gray-300 hover:bg-gray-800/50'
+                  ]"
+                >
+                  <UIcon
+                    :name="group.icon"
+                    class="w-5 h-5 flex-shrink-0"
+                  />
+                </button>
+
+                <!-- Chevron button for dropdowns -->
+                <button
+                  v-if="group.type === 'Dropdown Menu'"
+                  @click.stop="toggleGroup(group.id)"
+                  class="w-6 h-6 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 text-gray-400 hover:bg-gray-800/50"
+                >
+                  <UIcon
+                    name="lucide:chevron-right"
+                    :class="[
+                      'w-4 h-4 transition-transform duration-300 ease-out',
+                      isGroupExpanded(group.id) ? 'rotate-90' : ''
+                    ]"
+                  />
+                </button>
+
+                <!-- Invisible spacer for standalone menu to match dropdown width -->
+                <div v-else class="w-6 h-6"></div>
+              </div>
+
+              <!-- Expanded dropdown items (icon-only) -->
+              <div
+                v-if="group.type === 'Dropdown Menu'"
                 :class="[
-                  'flex-1 aspect-square flex items-center justify-center rounded-xl transition-colors duration-150 relative group',
-                  group.type === 'Menu' && ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-white' : 'text-gray-300 hover:bg-gray-800/50'
+                  'grid transition-all duration-300 ease-out',
+                  isGroupExpanded(group.id) ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
                 ]"
               >
-                <UIcon
-                  :name="group.icon"
-                  class="w-5 h-5 flex-shrink-0 relative z-10"
-                />
-              </button>
-
-              <!-- Chevron button for dropdowns -->
-              <button
-                v-if="group.type === 'Dropdown Menu'"
-                @click.stop="toggleGroup(group.id)"
-                class="w-6 h-6 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 text-gray-400 hover:bg-gray-800/50"
-              >
-                <UIcon
-                  name="lucide:chevron-right"
-                  :class="[
-                    'w-4 h-4 transition-transform duration-300 ease-out',
-                    isGroupExpanded(group.id) ? 'rotate-90' : ''
-                  ]"
-                />
-              </button>
-            </div>
-
-            <!-- Expanded dropdown items (icon-only) -->
-            <div
-              :class="[
-                'grid transition-all duration-300 ease-out',
-                isGroupExpanded(group.id) ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-              ]"
-            >
-              <div class="overflow-hidden">
-                <div
-                  v-if="group.items"
-                  class="space-y-1 px-3"
-                >
+                <div class="overflow-hidden">
+                  <div
+                    v-if="group.items"
+                    class="space-y-1 pl-1.5"
+                  >
               <template v-for="item in group.items" :key="item.id">
                 <PermissionGate :condition="item.permission as any">
-                  <!-- Dropdown with children -->
-                  <template v-if="item.children && item.children.length > 0">
-                    <PermissionGate
-                      v-for="child in item.children"
-                      :key="child.id"
-                      :condition="child.permission as any"
-                    >
-                      <button
-                        @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
-                        :class="[
-                          'w-full aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 relative group',
-                          ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'text-gray-400 hover:bg-gray-800/50'
-                        ]"
-                      >
-                        <UIcon
-                          :name="child.icon || 'lucide:circle'"
-                          class="w-4 h-4 flex-shrink-0 relative z-10"
-                        />
-                      </button>
-                    </PermissionGate>
-                  </template>
+                  
 
                   <!-- Regular item -->
                   <button
-                    v-else
                     @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
                     :class="[
-                      'w-full aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 relative group',
-                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED]/20 to-[#D946EF]/20' : 'text-gray-400 hover:bg-gray-800/50'
+                      'w-8 h-8 flex items-center justify-center rounded-xl transition-colors duration-15',
+                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED] to-[#D946EF]' : 'text-gray-400 hover:bg-gray-800/50'
                     ]"
                   >
                     <UIcon
                       :name="item.icon || 'lucide:circle'"
-                      class="w-4 h-4 flex-shrink-0 relative z-10"
+                      class="w-8 h-8 flex-shrink-0"
                     />
                   </button>
                 </PermissionGate>
@@ -407,19 +295,13 @@ const visibleGroups = computed(() => {
                 </div>
               </div>
             </div>
-          </div>
+            </div>
+          </template>
         </div>
       </template>
 
       <template v-else>
         <div class="space-y-6 relative" v-auto-animate>
-          <!-- Shared active background -->
-          <div
-            class="absolute pointer-events-none rounded-xl transition-all duration-200 ease-out z-0"
-            :class="isMainMenu ? 'bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'bg-gradient-to-r from-[#7C3AED] to-[#D946EF]'"
-            :style="activeBgStyle"
-          ></div>
-
           <template
             v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
             :key="group.id"
@@ -429,19 +311,18 @@ const visibleGroups = computed(() => {
               class="space-y-1 px-3"
             >
               <button
-                :ref="(el) => setMenuItemRef(`main-${group.id}`, el as HTMLElement)"
                 @click="() => { if (group.route) navigateTo(group.route); handleMenuClick(); }"
                 :class="[
-                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150 relative group',
-                  (group.route && activeRoutes.has(group.route)) ? 'text-white' : 'text-gray-300 hover:bg-gray-800/50'
+                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150',
+                  (group.route && activeRoutes.has(group.route)) ? 'text-white bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'text-gray-300 hover:bg-gray-800/50'
                 ]"
               >
                 <UIcon
                   :name="group.icon"
-                  class="w-5 h-5 flex-shrink-0 relative z-10"
+                  class="w-5 h-5 flex-shrink-0"
                 />
 
-                <span class="text-sm relative z-10 font-medium">{{ group.label }}</span>
+                <span class="text-sm font-medium">{{ group.label }}</span>
               </button>
             </div>
 
@@ -467,7 +348,7 @@ const visibleGroups = computed(() => {
           <div class="overflow-hidden">
             <div
               v-if="group.items && group.items.length > 0"
-              class="space-y-1 px-3 mt-2"
+              class="space-y-1.5 px-3 mt-2"
             >
           <template v-for="item in group.items" :key="item.id">
             <PermissionGate :condition="item.permission as any">
@@ -485,36 +366,34 @@ const visibleGroups = computed(() => {
                   :condition="child.permission as any"
                 >
                   <button
-                    :ref="(el) => setMenuItemRef(`sub-${child.id}`, el as HTMLElement)"
                     @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
                     :class="[
-                      'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150 relative group',
-                      ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white' : 'text-gray-400 hover:bg-gray-800/50'
+                      'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150',
+                      ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED] to-[#D946EF]' : 'text-gray-400 hover:bg-gray-800/50'
                     ]"
                   >
                     <UIcon
                       :name="child.icon || 'lucide:circle'"
-                      class="w-5 h-5 flex-shrink-0 relative z-10"
+                      class="w-5 h-5 flex-shrink-0"
                     />
-                    <span class="text-sm relative z-10">{{ child.label }}</span>
+                    <span class="text-sm">{{ child.label }}</span>
                   </button>
                 </PermissionGate>
               </div>
 
               <button
                 v-else
-                :ref="(el) => setMenuItemRef(`sub-${item.id}`, el as HTMLElement)"
                 @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
                 :class="[
-                  'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150 relative group',
-                  ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white' : 'text-gray-400 hover:bg-gray-800/50'
+                  'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150',
+                  ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED] to-[#D946EF]' : 'text-gray-400 hover:bg-gray-800/50'
                 ]"
               >
                 <UIcon
                   :name="item.icon || 'lucide:circle'"
-                  class="w-5 h-5 flex-shrink-0 relative z-10"
+                  class="w-5 h-5 flex-shrink-0"
                 />
-                <span class="text-sm relative z-10">{{ item.label }}</span>
+                <span class="text-sm">{{ item.label }}</span>
               </button>
             </PermissionGate>
           </template>
