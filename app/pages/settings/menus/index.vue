@@ -363,7 +363,6 @@ watch(
           />
         </div>
 
-        <!-- Premium Pagination -->
         <div
           v-if="!loading && menus.length > 0 && total > pageLimit"
           class="flex items-center justify-between mt-6"

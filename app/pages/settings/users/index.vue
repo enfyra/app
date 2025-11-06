@@ -70,9 +70,8 @@
         icon="lucide:users"
         size="sm"
       />
+      
     </Transition>
-
-    <!-- Premium Pagination -->
     <div
       v-if="!loading && users.length > 0 && total > limit"
       class="flex items-center justify-between mt-6"
@@ -97,6 +96,7 @@
         Showing <span class="text-gray-200">{{ (page - 1) * limit + 1 }}-{{ Math.min(page * limit, total) }}</span> of <span class="text-gray-200">{{ total }}</span> results
       </p>
     </div>
+  
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
