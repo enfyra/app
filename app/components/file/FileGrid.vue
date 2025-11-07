@@ -97,7 +97,7 @@ const emit = defineEmits<{
 const { confirm } = useConfirm();
 const toast = useToast();
 
-const { execute: executeDeleteFile } = useApi(() => `/file_definition`, {
+const { execute: executeDeleteFile, error: deleteError } = useApi(() => `/file_definition`, {
   method: "delete",
   errorContext: "Delete File",
 });
@@ -140,6 +140,10 @@ async function deleteFile(file: any) {
   if (!isConfirmed) return;
 
   await executeDeleteFile({ id: file.id });
+
+  if (deleteError.value) {
+    return;
+  }
 
   toast.add({
     title: "Success",

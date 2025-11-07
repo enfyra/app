@@ -7,15 +7,16 @@ export default defineNuxtPlugin(async () => {
     registerMenuItem,
   } = useMenuRegistry();
   const { schemas, fetchSchema } = useSchema();
-  const { fetchSetting } = useGlobalState();
+  const { fetchSetting, fetchStorageConfigs } = useGlobalState();
   const { confirm } = useConfirm();
   const { loadRoutes } = useRoutes();
 
   const { fetchMenuDefinitions } = useMenuApi();
 
-  const [, , , menuResponse] = await Promise.all([
+  const [, , , , menuResponse] = await Promise.all([
     fetchSchema(),
     fetchSetting(),
+    fetchStorageConfigs(),
     loadRoutes(),
     fetchMenuDefinitions(),
   ]);

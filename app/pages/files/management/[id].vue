@@ -371,6 +371,7 @@ function getFileIconAndColor(mimetype: string): {
               'permissions',
               'uploaded_by',
               'folder',
+              'storageConfig',
             ]"
             :loading="pending"
           />

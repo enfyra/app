@@ -1,6 +1,7 @@
 
 export const useGlobalState = () => {
   const settings = useState<any>("global:settings", () => {});
+  const storageConfigs = useState<any[]>("global:storage:configs", () => []);
 
   const sidebarVisible = useState<boolean>(
     "global:sidebar:visible",
@@ -11,7 +12,7 @@ export const useGlobalState = () => {
     () => false
   );
   const routeLoading = useState<boolean>("global:route:loading", () => false);
-  
+
   const fileUpdateTimestamp = useState<Record<string, number>>(
     "global:file:update:timestamp",
     () => ({})
@@ -29,9 +30,31 @@ export const useGlobalState = () => {
     errorContext: "Fetch Settings",
   });
 
+  const {
+    data: storageConfigsData,
+    execute: executeFetchStorageConfigs,
+  } = useApi(() => "/storage_config_definition", {
+    query: {
+      fields: "*",
+      limit: -1,
+      sort: "-createdAt",
+      filter: {
+        isEnabled: {
+          _eq: true,
+        },
+      }
+    },
+    errorContext: "Fetch Storage Configs",
+  });
+
   async function fetchSetting() {
     await executeFetchSettings();
     settings.value = settingsData.value?.data[0] || {};
+  }
+
+  async function fetchStorageConfigs() {
+    await executeFetchStorageConfigs();
+    storageConfigs.value = storageConfigsData.value?.data || [];
   }
 
 
@@ -69,6 +92,8 @@ export const useGlobalState = () => {
   return {
     settings,
     fetchSetting,
+    storageConfigs,
+    fetchStorageConfigs,
     sidebarVisible,
     sidebarCollapsed,
     routeLoading,
