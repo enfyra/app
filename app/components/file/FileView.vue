@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { UIcon } from "#components";
+import { UIcon, UBadge } from "#components";
 
 interface Props {
   files: any[];
@@ -123,6 +123,39 @@ const fileColumns = computed(() => [
           ),
         ]),
       ]);
+    },
+  }),
+  buildColumn({
+    id: "storage",
+    header: "Storage",
+    cell: ({ row }) => {
+      const file = row.original;
+      const storageType = file.storageConfig?.type || "local";
+      const storageName = file.storageConfig?.name || "Local";
+
+      const iconMap: Record<string, string> = {
+        s3: "lucide:cloud",
+        gcs: "lucide:cloud",
+        local: "lucide:hard-drive",
+      };
+
+      const colorMap: Record<string, "primary" | "info" | "neutral"> = {
+        s3: "primary",
+        gcs: "info",
+        local: "neutral",
+      };
+
+      return h(UBadge, {
+        size: "md",
+        variant: "subtle",
+        color: colorMap[storageType] || "neutral",
+      }, {
+        leading: () => h(UIcon, {
+          name: iconMap[storageType] || "lucide:database",
+          class: "w-4 h-4",
+        }),
+        default: () => storageName,
+      });
     },
   }),
   buildColumn({

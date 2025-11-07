@@ -105,14 +105,28 @@
           />
 
           <!-- Metadata Row -->
-          <div class="flex items-center justify-between text-xs" style="color: #94A3B8">
-            <div class="flex items-center gap-1.5">
-              <UIcon name="lucide:calendar" class="w-3 h-3" />
-              <span>{{ file.modifiedAt }}</span>
+          <div class="flex flex-col gap-2.5 text-xs" style="color: #94A3B8">
+            <div class="flex items-baseline justify-between">
+              <div class="flex items-center gap-1.5">
+                <UIcon name="lucide:calendar" class="w-3 h-3 flex-shrink-0" />
+                <span class="leading-none">{{ file.modifiedAt }}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <UIcon name="lucide:file" class="w-3 h-3 flex-shrink-0" />
+                <span class="leading-none">{{ file.size }}</span>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <UIcon name="lucide:file" class="w-3 h-3" />
-              <span>{{ file.size }}</span>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <UBadge
+                size="lg"
+                variant="subtle"
+                :color="getStorageColor(file)"
+              >
+                <template #leading>
+                  <UIcon :name="getStorageIcon(file)" class="w-4 h-4" />
+                </template>
+                {{ getStorageName(file) }}
+              </UBadge>
             </div>
           </div>
 
@@ -411,5 +425,32 @@ function getDropdownMenuItems() {
   }
 
   return menuItems;
+}
+
+// Get storage icon based on type
+function getStorageIcon(file: any) {
+  const storageType = file.storageConfig?.type || "local";
+  const iconMap: Record<string, string> = {
+    s3: "lucide:cloud",
+    gcs: "lucide:cloud",
+    local: "lucide:hard-drive",
+  };
+  return iconMap[storageType] || "lucide:database";
+}
+
+// Get storage name
+function getStorageName(file: any) {
+  return file.storageConfig?.name || "Local";
+}
+
+// Get storage color based on type
+function getStorageColor(file: any) {
+  const storageType = file.storageConfig?.type || "local";
+  const colorMap: Record<string, "primary" | "secondary" | "info" | "success" | "warning" | "error" | "neutral"> = {
+    s3: "primary",
+    gcs: "info",
+    local: "neutral",
+  };
+  return colorMap[storageType] || "neutral";
 }
 </script>

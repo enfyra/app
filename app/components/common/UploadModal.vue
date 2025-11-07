@@ -19,6 +19,7 @@
 
       <template #body>
         <div class="space-y-3">
+          <slot name="header-content" />
           <div
             ref="dropZone"
             class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-10 text-center transition-all duration-200 lg:hover:border-primary-400"

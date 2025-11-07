@@ -1,12 +1,17 @@
 <script setup lang="ts">
 const showCreateModal = ref(false);
 const showUploadModal = ref(false);
+const selectedStorage = ref<{ label: string; value: string; icon: string }>();
 
 const route = useRoute();
+const { storageConfigs } = useGlobalState();
 const router = useRouter();
+const { getId } = useDatabase();
 const folderPage = ref(Number(route.query.folderPage) || 1);
 const filePage = ref(Number(route.query.filePage) || 1);
 const limit = 20;
+
+const { getIncludeFields: getFileFields } = useSchema("file_definition");
 
 const {
   data: rootFolders,
@@ -35,6 +40,7 @@ const {
   execute: fetchRootFiles,
 } = useApi(() => `file_definition`, {
   query: computed(() => ({
+    fields: getFileFields(),
     limit,
     page: filePage.value,
     meta: "*",
@@ -64,6 +70,17 @@ const folderTotal = computed(() => rootFolders.value?.meta?.filterCount || 0);
 
 const files = computed(() => rootFiles.value?.data || []);
 const fileTotal = computed(() => rootFiles.value?.meta?.filterCount || 0);
+
+const storageOptions = computed(() => {
+  return storageConfigs.value.map((config) => {
+    const isCloudStorage = config.driver === 's3' || config.driver === 'gcs';
+    return {
+      label: config.name,
+      value: getId(config),
+      icon: isCloudStorage ? 'lucide:cloud' : 'lucide:hard-drive',
+    };
+  });
+});
 
 const pageStats = computed(() => {
   const totalFolders = rootFolders.value?.meta?.filterCount || 0;
@@ -136,6 +153,9 @@ async function handleFileUpload(files: File | File[]) {
   const formDataArray = fileArray.map((file) => {
     const formData = new FormData();
     formData.append("file", file);
+    if (selectedStorage.value) {
+      formData.append("storageConfig", selectedStorage.value.value);
+    }
     return formData;
   });
 
@@ -150,6 +170,7 @@ async function handleFileUpload(files: File | File[]) {
   await fetchRootFiles();
 
   showUploadModal.value = false;
+  selectedStorage.value = undefined;
 
   useToast().add({
     title: "Success",
@@ -278,7 +299,22 @@ useHeaderActionRegistry([
       :max-size="50 * 1024 * 1024"
       :loading="uploadPending"
       @upload="handleFileUpload"
-    />
+    >
+      <template #header-content>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Storage Location
+          </label>
+          <USelectMenu
+            v-model="selectedStorage"
+            :items="storageOptions"
+            placeholder="Select storage (optional)"
+            size="lg"
+            class="w-full"
+          />
+        </div>
+      </template>
+    </CommonUploadModal>
 
     <!-- Create Folder Modal -->
     <FolderCreateModal
