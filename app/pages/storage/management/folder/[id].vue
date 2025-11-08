@@ -14,7 +14,6 @@ const pageLimit = 20;
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const { getIncludeFields: getFileFields } = useSchema("file_definition");
-const { getIncludeFields: getFolderFields } = useSchema("folder_definition");
 
 const {
   data: folder,
@@ -108,33 +107,6 @@ const {
 } = useApi(() => `file_definition`, {
   method: "post",
   errorContext: "Upload Files",
-});
-
-const pageTitle = computed(() => {
-  if (folderPending.value) return "Loading...";
-  return `${folder.value?.data?.[0]?.name || "Unknown Folder"} - Files Manager`;
-});
-
-const pageStats = computed(() => {
-  const totalChildFolders = folderTotal.value;
-  const totalChildFiles = fileTotal.value;
-
-  return [
-    {
-      icon: "lucide:folder",
-      iconColor: "text-primary",
-      iconBg: "bg-primary/10",
-      value: totalChildFolders,
-      label: "Child Folders",
-    },
-    {
-      icon: "lucide:file",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      iconBg: "bg-blue-100 dark:bg-blue-900/30",
-      value: totalChildFiles,
-      label: "Child Files",
-    },
-  ];
 });
 
 async function handleRefreshItems() {

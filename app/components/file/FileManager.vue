@@ -43,9 +43,9 @@ const {
   cancelMoveMode,
   isMoveHereDisabled,
   handleMoveHere,
-  selectedFoldersForDelete: selectedFolders,
   clearFileManagerState,
 } = useFileManagerMove();
+const { deleteSelectedFolders, deleteSelectedFiles } = useFileManager();
 const { confirm } = useConfirm();
 const { getId } = useDatabase();
 
@@ -148,72 +148,18 @@ async function handleBulkDelete() {
     props.files.find((file) => file.id === id)
   );
 
-  const folderNames = folderIds
-    .map((id) => props.folders.find((f) => f.id === id)?.name)
-    .filter(Boolean);
-  const fileNames = fileIds
-    .map(
-      (id) =>
-        props.files.find((f) => f.id === id)?.filename ||
-        props.files.find((f) => f.id === id)?.displayName
-    )
-    .filter(Boolean);
-
-  const allNames = [...folderNames, ...fileNames];
-  const totalCount = selectedItems.value.length;
-
-  const isConfirmed = await confirm({
-    title: "Delete Multiple Items",
-    content: `Are you sure you want to delete ${totalCount} item(s)? This includes: ${allNames
-      .slice(0, 3)
-      .join(", ")}${
-      allNames.length > 3 ? ` and ${allNames.length - 3} more` : ""
-    }. This action cannot be undone.`,
-    confirmText: "Delete",
-    cancelText: "Cancel",
-  });
-
-  if (!isConfirmed) return;
-
-  let deletionErrors = false;
+  const folderList = folderIds.map((id) => props.folders.find((f) => f.id === id)).filter(Boolean);
 
   if (folderIds.length > 0) {
-    selectedFolders.value = folderIds;
-    const { execute: deleteFolderApi, error: deleteFolderError } = useApi(
-      () => "/folder_definition",
-      { method: "delete", errorContext: "Delete Folder" }
-    );
-
-    await deleteFolderApi({ ids: folderIds });
-    if (deleteFolderError.value) {
-      deletionErrors = true;
-    }
+    await deleteSelectedFolders(folderList, () => emit("refreshItems"));
   }
 
-  if (fileIds.length > 0 && !deletionErrors) {
-    const { execute: deleteFileApi, error: deleteFileError } = useApi(
-      () => "/file_definition",
-      { method: "delete", errorContext: "Delete File" }
-    );
-
-    await deleteFileApi({ ids: fileIds });
-    if (deleteFileError.value) {
-      deletionErrors = true;
-    }
+  if (fileIds.length > 0) {
+    await deleteSelectedFiles(fileIds, () => emit("refreshItems"));
   }
 
-  if (!deletionErrors) {
-    emit("refreshItems");
-    selectedItems.value = [];
-    isSelectionMode.value = false;
-
-    const toast = useToast();
-    toast.add({
-      title: "Success",
-      description: `${totalCount} item(s) deleted successfully!`,
-      color: "success",
-    });
-  }
+  selectedItems.value = [];
+  isSelectionMode.value = false;
 }
 
 useSubHeaderActionRegistry([

@@ -66,7 +66,7 @@ const props = withDefaults(defineProps<Props>(), {
   selectedItems: () => [],
 });
 
-const { getFileUrl, getPreviewUrl } = useFileUrl();
+const { getFileUrl } = useFileUrl();
 const { getId } = useDatabase();
 
 const transformedFiles = computed(() => {
@@ -81,7 +81,6 @@ const transformedFiles = computed(() => {
       size: formatFileSize(parseInt(file.filesize || "0")),
       modifiedAt: formatDate(file.updatedAt || file.createdAt || ""),
       assetUrl: getFileUrl(getId(file)),
-      previewUrl: getPreviewUrl(getId(file)),
     };
   });
 });
@@ -91,14 +90,6 @@ const emit = defineEmits<{
   "toggle-selection": [fileId: string];
   "refresh-files": [];
 }>();
-
-const { confirm } = useConfirm();
-const toast = useToast();
-
-const { execute: executeDeleteFile, error: deleteError } = useApi(() => `/file_definition`, {
-  method: "delete",
-  errorContext: "Delete File",
-});
 
 function viewFile(file: any) {
   if (file.assetUrl) {
@@ -125,30 +116,8 @@ function viewFileDetails(file: any) {
   navigateTo(`/storage/management/file/${getId(file)}`);
 }
 
-async function deleteFile(file: any) {
-  const isConfirmed = await confirm({
-    title: "Delete File",
-    content: `Are you sure you want to delete "${
-      file.filename || file.displayName
-    }"? This action cannot be undone.`,
-    confirmText: "Delete",
-    cancelText: "Cancel",
-  });
-
-  if (!isConfirmed) return;
-
-  await executeDeleteFile({ id: file.id });
-
-  if (deleteError.value) {
-    return;
-  }
-
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "File deleted successfully!",
-  });
-
-  emit("refresh-files");
+function deleteFile(file: any) {
+  const { deleteFile: deleteFileFromManager } = useFileManager();
+  deleteFileFromManager(file, () => emit("refresh-files"));
 }
 </script>
