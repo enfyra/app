@@ -293,13 +293,14 @@ export function useSchema(tableName?: string | Ref<string>) {
 
       const nullable = field.isNullable ?? true;
       const isGenerated = field.isGenerated === true;
+      const isHidden = field.isHidden === true;
 
       const empty =
         value === null ||
         value === undefined ||
         (typeof value === "string" && value.trim() === "");
 
-      if (!nullable && !isGenerated && empty) {
+      if (!nullable && !isGenerated && !isHidden && empty) {
         errors[key] = "This field is required";
         isValid = false;
       }

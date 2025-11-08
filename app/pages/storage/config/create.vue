@@ -11,6 +11,7 @@
             :excluded="excludedFields"
             :includes="includedFields.length > 0 ? includedFields : undefined"
             :type-map="typeMap"
+            mode="create"
           />
         </UForm>
       </CommonFormCard>

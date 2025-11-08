@@ -281,6 +281,7 @@ async function saveMenu() {
             :table-name="tableName"
             :excluded="excludedFields"
             :type-map="typeMap"
+            mode="create"
           />
         </UForm>
       </CommonFormCard>

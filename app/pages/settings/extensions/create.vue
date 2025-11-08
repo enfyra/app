@@ -12,6 +12,7 @@
               code: { type: 'code', language: 'vue', height: '400px' },
             }"
             @update:errors="(errors) => (createErrors = errors)"
+            mode="create"
           />
         </UForm>
       </CommonFormCard>

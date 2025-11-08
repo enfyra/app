@@ -7,6 +7,7 @@
             v-model="createForm"
             :table-name="tableName"
             v-model:errors="createErrors"
+            mode="create"
           />
         </UForm>
       </CommonFormCard>

@@ -26,6 +26,23 @@ const emit = defineEmits<{
 }>();
 
 function updateFormData(key: string, value: any) {
+  const column = props.columnMap.get(key);
+  const manualConfig = props.typeMap?.[key];
+  const config =
+    typeof manualConfig === "string"
+      ? { type: manualConfig }
+      : manualConfig || {};
+  const finalType = config.type || column?.type;
+
+  // Convert empty string to null for string fields (input/textarea)
+  if (typeof value === "string" && value.trim() === "") {
+    const stringTypes = ["varchar", "text", "uuid", "richtext", "code", "simple-json"];
+    // If field type is string type or undefined (defaults to varchar), convert to null
+    if (!finalType || stringTypes.includes(finalType)) {
+      value = null;
+    }
+  }
+
   emit("update:formData", key, value);
 }
 
