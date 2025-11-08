@@ -187,7 +187,6 @@ async function saveFile() {
     color: "success",
   });
 
-  // Reset form changes
   formEditorRef.value?.confirmChanges();
   formChanges.update(form.value);
 }
@@ -210,7 +209,7 @@ async function deleteFile() {
     description: "File deleted successfully",
     color: "success",
   });
-  await navigateTo("/files/management");
+  await navigateTo("/storage/management");
 }
 
 async function handleReplaceFileSuccess(files: File | File[]) {
@@ -220,11 +219,9 @@ async function handleReplaceFileSuccess(files: File | File[]) {
   const newFile = fileArray[0];
   if (!newFile) return;
 
-  // Create FormData with only the file field
   const formData = new FormData();
   formData.append("file", newFile);
 
-  // Patch to file_definition with FormData
   await executeUpdateFile({
     id: fileId,
     body: formData,

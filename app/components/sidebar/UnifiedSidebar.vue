@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { vAutoAnimate } from '@formkit/auto-animate/vue'
-
 const route = useRoute();
 const { menuGroups } = useMenuRegistry();
 const { checkPermissionCondition } = usePermissions();
@@ -301,7 +299,7 @@ const visibleGroups = computed(() => {
       </template>
 
       <template v-else>
-        <div class="space-y-6 relative" v-auto-animate>
+        <div class="space-y-6 relative">
           <template
             v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
             :key="group.id"

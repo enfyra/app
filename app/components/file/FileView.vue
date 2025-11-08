@@ -27,14 +27,10 @@ const emit = defineEmits<{
 
 const { isMounted } = useMounted();
 
-// Get move state to disable selection during move mode
 const { moveState } = useFileManagerMove();
-
-// Import permissions
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
-// Check delete permission for files
 const canDeleteFile = checkPermissionCondition({
   and: [
     {
@@ -44,10 +40,8 @@ const canDeleteFile = checkPermissionCondition({
   ],
 });
 
-// Use file URL composable
 const { getFileUrl } = useFileUrl();
 
-// Transform files data to include assetUrl
 const transformedFiles = computed(() => {
   return props.files.map((file: any) => ({
     ...file,
@@ -58,7 +52,6 @@ const transformedFiles = computed(() => {
 
 const { buildColumn, buildActionsColumn } = useDataTableColumns();
 
-// File actions
 function viewFile(file: any) {
   if (file.assetUrl) {
     window.open(file.assetUrl, "_blank");
@@ -91,7 +84,6 @@ function deleteFile(file: any) {
   deleteFile(file, () => emit("refresh-files"));
 }
 
-// Build file columns for DataTable
 const fileColumns = computed(() => [
   buildColumn({
     id: "filename",
@@ -192,9 +184,8 @@ const fileColumns = computed(() => [
       {
         label: "Details",
         icon: "i-lucide-info",
-        onSelect: (file) => navigateTo(`/files/management/${file.id}`),
+        onSelect: (file) => navigateTo(`/storage/management/file/${file.id}`),
       },
-      // Only show delete action if user has permission
       ...(canDeleteFile
         ? [
             {
@@ -221,7 +212,6 @@ function handleSelectionChange(selectedRows: any[]) {
   const selectedIds = selectedRows.map((row) => row.id);
   const currentSelected = [...props.selectedItems];
 
-  // Only sync file selections, don't touch folder selections
   const currentFileSelections = currentSelected.filter((id) =>
     props.files.some((file) => file.id === id)
   );
@@ -232,7 +222,6 @@ function handleSelectionChange(selectedRows: any[]) {
     }
   });
 
-  // Add newly selected items
   selectedIds.forEach((itemId) => {
     if (!currentFileSelections.includes(itemId)) {
       emit("toggle-selection", itemId);
@@ -240,7 +229,6 @@ function handleSelectionChange(selectedRows: any[]) {
   });
 }
 
-// Get context menu items for files (similar to FileGrid)
 function getContextMenuItems(file: any) {
   const menuItems: any = [
     [
@@ -269,13 +257,12 @@ function getContextMenuItems(file: any) {
         label: "Details",
         icon: "lucide:info",
         onSelect: () => {
-          navigateTo(`/files/management/${file.id}`);
+          navigateTo(`/storage/management/file/${file.id}`);
         },
       },
     ],
   ];
 
-  // Only show delete action if user has permission
   if (canDeleteFile) {
     menuItems.push([
       {

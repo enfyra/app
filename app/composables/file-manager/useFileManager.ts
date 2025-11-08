@@ -65,7 +65,7 @@ export function useFileManager(parentFilter?: any) {
   }
 
   function showFolderDetail(folder: any) {
-    navigateTo(`/files/management/folders/${folder.id}`);
+    navigateTo(`/storage/management/folder/${folder.id}`);
   }
 
   function getContextMenuItems(folder: any, refreshCallback?: () => void) {
