@@ -8,7 +8,9 @@
             :table-name="tableName"
             :errors="createErrors"
             @update:errors="(errors) => (createErrors = errors)"
-            :excluded="['createdBy', 'updatedBy']"
+            :excluded="excludedFields"
+            :includes="includedFields.length > 0 ? includedFields : undefined"
+            :type-map="typeMap"
           />
         </UForm>
       </CommonFormCard>
@@ -32,8 +34,43 @@ const tableName = "storage_config_definition";
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
-const { generateEmptyForm, validate } = useSchema(tableName);
+const { generateEmptyForm, validate, definition } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
+
+const typeMap = computed(() => {
+  return {
+    type: {
+      excludedOptions: ['Local Storage'],
+    },
+  };
+});
+
+const excludedFields = computed(() => {
+  const baseExcluded = ['createdBy', 'updatedBy', 'isEnabled'];
+  const selectedType = createForm.value.type;
+  
+  if (!selectedType) {
+    return baseExcluded;
+  }
+  
+  const typeFieldMap: Record<string, string[]> = {
+    'Google Cloud Storage': ['accessKeyId', 'secretAccessKey', 'accountId', 'region'],
+    'Cloudflare R2': ['credentials', 'region'],
+    'Amazon S3': ['credentials', 'accountId'],
+    'Local Storage': ['accessKeyId', 'secretAccessKey', 'accountId', 'region', 'credentials', 'bucket'],
+  };
+  
+  const fieldsToExclude = typeFieldMap[selectedType] || [];
+  return [...baseExcluded, ...fieldsToExclude];
+});
+
+const includedFields = computed(() => {
+  const selectedType = createForm.value.type;
+  if (!selectedType) {
+    return ['name', 'bucket', 'description', 'type'];
+  }
+  return [];
+});
 
 registerPageHeader({
   title: "Create Storage Configuration",
@@ -85,7 +122,6 @@ async function handleCreate() {
     return;
   }
 
-  // Add createdBy field with current user id (support both MongoDB and PostgreSQL)
   const idField = getIdFieldName();
   const body = {
     ...createForm.value,
@@ -98,7 +134,6 @@ async function handleCreate() {
     return;
   }
 
-  // Reload global storage configs
   await fetchGlobalStorageConfigs();
 
   toast.add({

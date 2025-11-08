@@ -90,6 +90,14 @@ function getComponentConfigByKey(key: string) {
       };
     case "enum": {
       let items = config.options || column?.options || [];
+      
+      if (config.excludedOptions && Array.isArray(config.excludedOptions)) {
+        items = items.filter((item: any) => !config.excludedOptions.includes(item));
+      }
+      
+      if (config.includedOptions && Array.isArray(config.includedOptions)) {
+        items = items.filter((item: any) => config.includedOptions.includes(item));
+      }
 
       return {
         component: USelect,
@@ -106,6 +114,14 @@ function getComponentConfigByKey(key: string) {
     }
     case "array-select": {
       let items = config.options || column?.options || [];
+      
+      if (config.excludedOptions && Array.isArray(config.excludedOptions)) {
+        items = items.filter((item: any) => !config.excludedOptions.includes(item));
+      }
+      
+      if (config.includedOptions && Array.isArray(config.includedOptions)) {
+        items = items.filter((item: any) => config.includedOptions.includes(item));
+      }
 
       return {
         component: USelect,

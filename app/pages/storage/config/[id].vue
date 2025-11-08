@@ -9,7 +9,9 @@
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
-            :excluded="['createdAt', 'updatedAt']"
+            :excluded="excludedFields"
+            :includes="includedFields.length > 0 ? includedFields : undefined"
+            :type-map="typeMap"
             :loading="loading"
           />
         </UForm>
@@ -50,6 +52,39 @@ const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
+
+const excludedFields = computed(() => {
+  const baseExcluded = ['createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'isEnabled'];
+  const selectedType = form.value.type;
+  
+  if (!selectedType) {
+    return baseExcluded;
+  }
+  
+  const typeFieldMap: Record<string, string[]> = {
+    'Google Cloud Storage': ['accessKeyId', 'secretAccessKey', 'accountId', 'region'],
+    'Cloudflare R2': ['credentials', 'region'],
+    'Amazon S3': ['credentials', 'accountId'],
+    'Local Storage': ['accessKeyId', 'secretAccessKey', 'accountId', 'region', 'credentials', 'bucket'],
+  };
+  
+  const fieldsToExclude = typeFieldMap[selectedType] || [];
+  return [...baseExcluded, ...fieldsToExclude];
+});
+
+const includedFields = computed(() => {
+  const selectedType = form.value.type;
+  if (!selectedType) {
+    return ['name', 'bucket', 'description', 'type'];
+  }
+  return [];
+});
+
+const typeMap = computed(() => ({
+  type: {
+    disabled: true,
+  },
+}));
 
 async function handleReset() {
   const ok = await confirm({

@@ -429,11 +429,12 @@ function getDropdownMenuItems() {
 
 // Get storage icon based on type
 function getStorageIcon(file: any) {
-  const storageType = file.storageConfig?.type || "local";
+  const storageType = file.storageConfig?.type || "Local Storage";
   const iconMap: Record<string, string> = {
-    s3: "lucide:cloud",
-    gcs: "lucide:cloud",
-    local: "lucide:hard-drive",
+    "Amazon S3": "lucide:cloud",
+    "Google Cloud Storage": "lucide:cloud",
+    "Cloudflare R2": "lucide:cloud",
+    "Local Storage": "lucide:hard-drive",
   };
   return iconMap[storageType] || "lucide:database";
 }
@@ -445,11 +446,12 @@ function getStorageName(file: any) {
 
 // Get storage color based on type
 function getStorageColor(file: any) {
-  const storageType = file.storageConfig?.type || "local";
+  const storageType = file.storageConfig?.type || "Local Storage";
   const colorMap: Record<string, "primary" | "secondary" | "info" | "success" | "warning" | "error" | "neutral"> = {
-    s3: "primary",
-    gcs: "info",
-    local: "neutral",
+    "Amazon S3": "primary",
+    "Google Cloud Storage": "info",
+    "Cloudflare R2": "warning",
+    "Local Storage": "neutral",
   };
   return colorMap[storageType] || "neutral";
 }

@@ -8,7 +8,7 @@ const { loadRoutes } = useRoutes();
 const { getId } = useDatabase();
 const tableName = "table_definition";
 const { getIncludeFields } = useSchema(tableName);
-const { isTablet } = useScreen();
+const { isMobile, isTablet } = useScreen();
 const { isMounted } = useMounted();
 
 const table = ref<any>();

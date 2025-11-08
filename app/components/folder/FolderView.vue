@@ -208,7 +208,6 @@ function getContextMenuItems(folder: any) {
       </div>
 
       <div v-else-if="!loading && folders.length > 0" key="content">
-        <!-- Grid View -->
         <FolderGrid
           v-if="viewMode === 'grid'"
           :folders="folders"
@@ -221,7 +220,6 @@ function getContextMenuItems(folder: any) {
           @refresh-folders="() => emit('refresh-folders')"
         />
 
-        <!-- List View -->
         <DataTableLazy
           v-else-if="viewMode === 'list'"
           :data="folders"
@@ -236,7 +234,6 @@ function getContextMenuItems(folder: any) {
         />
       </div>
 
-      <!-- Empty State -->
       <div
         v-else-if="!loading && folders.length === 0"
         key="empty"
