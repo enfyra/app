@@ -10,7 +10,8 @@
           :key="i"
           class="border border-gray-700 rounded-lg p-4 bg-gray-900"
         >
-          <div class="flex items-start justify-between gap-4">
+          <!-- Desktop Skeleton -->
+          <div class="hidden md:flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-2">
                 <USkeleton class="w-5 h-5 rounded" />
@@ -25,6 +26,27 @@
               <USkeleton class="w-20 h-8 rounded" />
             </div>
           </div>
+          <!-- Mobile Skeleton -->
+          <div class="md:hidden space-y-3">
+            <div class="flex items-start gap-3">
+              <USkeleton class="w-6 h-6 rounded flex-shrink-0" />
+              <div class="flex-1 min-w-0">
+                <USkeleton class="h-5 w-32 rounded mb-2" />
+                <div class="flex gap-1.5 mb-2">
+                  <USkeleton class="h-5 w-20 rounded" />
+                  <USkeleton class="h-5 w-16 rounded" />
+                </div>
+                <USkeleton class="h-4 w-full rounded" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-gray-700">
+              <div class="flex items-center gap-2">
+                <USkeleton class="h-3 w-12 rounded" />
+                <USkeleton class="w-10 h-6 rounded-full" />
+              </div>
+              <USkeleton class="w-16 h-8 rounded" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -35,10 +57,11 @@
         <div
           v-for="config in storageConfigs"
           :key="config.id"
-          class="group border border-gray-700 rounded-lg p-4 hover:border-primary/50 hover:bg-gray-800/50 transition-all duration-200 bg-gray-900 cursor-pointer"
+          class="group border border-gray-700 rounded-lg p-4 md:p-4 hover:border-primary/50 hover:bg-gray-800/50 transition-all duration-200 bg-gray-900 cursor-pointer"
           @click="navigateToDetail(config)"
         >
-          <div class="flex items-start justify-between gap-4">
+          <!-- Desktop Layout -->
+          <div class="hidden md:flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-2">
                 <UIcon :name="getStorageIcon(config)" class="w-5 h-5 text-primary flex-shrink-0" />
@@ -74,6 +97,52 @@
                 @click="deleteConfig(config)"
               >
                 Delete
+              </UButton>
+            </div>
+          </div>
+
+          <!-- Mobile Layout -->
+          <div class="md:hidden space-y-3">
+            <div class="flex items-start gap-3">
+              <UIcon :name="getStorageIcon(config)" class="w-6 h-6 text-primary flex-shrink-0 mt-0.5" />
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-white text-base mb-1.5">{{ config.name }}</h3>
+                <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                  <UBadge variant="subtle" :color="getStorageBadgeColor(config)" size="sm">
+                    {{ config.type || config.driver }}
+                  </UBadge>
+                  <UBadge
+                    variant="subtle"
+                    :color="config.isEnabled ? 'success' : 'neutral'"
+                    size="sm"
+                  >
+                    {{ config.isEnabled ? 'Active' : 'Inactive' }}
+                  </UBadge>
+                </div>
+                <p class="text-sm text-gray-400 leading-relaxed">
+                  {{ config.description || 'No description provided' }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-gray-700" @click.stop>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-400">Status:</span>
+                <USwitch
+                  v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['update'] }] })"
+                  :model-value="config.isEnabled"
+                  :disabled="getConfigLoader(config.id.toString()).isLoading"
+                  @update:model-value="toggleConfigStatus(config)"
+                />
+              </div>
+              <UButton
+                v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['delete'] }] })"
+                icon="i-lucide-trash-2"
+                variant="outline"
+                color="error"
+                size="sm"
+                @click="deleteConfig(config)"
+              >
+                <span class="hidden sm:inline">Delete</span>
               </UButton>
             </div>
           </div>
@@ -130,7 +199,6 @@ const { getId } = useDatabase();
 const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
 
 const { isMounted } = useMounted();
-const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 
