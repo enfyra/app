@@ -200,7 +200,6 @@ async function updateConfig() {
     description: "Storage configuration updated!",
   });
   errors.value = {};
-  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
   formChanges.update(form.value);
 }
@@ -226,7 +225,7 @@ async function deleteConfig() {
     description: "Storage configuration deleted successfully",
     color: "success"
   });
-  await navigateTo("/files/storage-config");
+  await navigateTo("/storage/config");
 }
 
 async function initializeForm() {

@@ -62,7 +62,7 @@ function handleFolderClick(folder: any) {
     });
     return;
   }
-  navigateTo(`/files/management/folders/${getId(folder)}`);
+  navigateTo(`/storage/management/folder/${getId(folder)}`);
 }
 
 function handleFileClick(file: any) {
@@ -76,7 +76,7 @@ function handleFileClick(file: any) {
     return;
   }
 
-  navigateTo(`/files/management/${getId(file)}`);
+  navigateTo(`/storage/management/file/${getId(file)}`);
 }
 
 function handleToggleItemSelection(itemId: string) {
@@ -131,8 +131,8 @@ async function handleMoveHereWrapper() {
 
 onBeforeRouteLeave((to, from) => {
   if (
-    from.path.includes("/files/management") &&
-    !to.path.includes("/files/management")
+    from.path.includes("/storage/management") &&
+    !to.path.includes("/storage/management")
   ) {
     clearAllState();
   }
@@ -216,7 +216,6 @@ async function handleBulkDelete() {
   }
 }
 
-// Register subheader actions
 useSubHeaderActionRegistry([
   {
     id: "page-view-mode",
@@ -335,10 +334,8 @@ useSubHeaderActionRegistry([
         (props.folders?.length || 0) + (props.files?.length || 0);
 
       if (selectedItems.value.length === totalCount) {
-        // Clear all selections but keep selection mode active
         selectedItems.value = [];
       } else {
-        // Select all items
         const allItems = [...props.folders, ...props.files];
         selectedItems.value = allItems.map((item) => item.id);
       }

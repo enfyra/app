@@ -58,7 +58,6 @@ useHeaderActionRegistry({
   },
 });
 
-// Setup useApi composable at top level
 const {
   data: createData,
   error: createError,
@@ -108,7 +107,7 @@ async function handleCreate() {
   });
 
   const { getId } = useDatabase();
-  await navigateTo(`/files/storage-config/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/storage/config/${getId(createData.value.data[0])}`, {
     replace: true,
   });
 }

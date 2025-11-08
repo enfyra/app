@@ -139,7 +139,6 @@ registerPageHeader({
   gradient: "blue",
 });
 
-// Fixed color for storage configs
 const pageIconColor = 'primary';
 
 const {
@@ -178,7 +177,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     size: "md",
-    to: "/files/storage-config/create",
+    to: "/storage/config/create",
     permission: {
       and: [
         {
@@ -204,7 +203,7 @@ function getStorageIcon(config: any) {
 }
 
 function navigateToDetail(config: any) {
-  navigateTo(`/files/storage-config/${getId(config)}`);
+  navigateTo(`/storage/config/${getId(config)}`);
 }
 
 function getConfigLoader(configId: string) {

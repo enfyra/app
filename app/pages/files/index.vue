@@ -1,5 +1,5 @@
 <script setup lang="ts">
-await navigateTo('/files/management', { replace: true });
+await navigateTo('/storage/management', { replace: true });
 </script>
 
 <template>

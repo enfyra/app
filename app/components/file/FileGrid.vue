@@ -66,11 +66,9 @@ const props = withDefaults(defineProps<Props>(), {
   selectedItems: () => [],
 });
 
-// Use file URL composable
 const { getFileUrl, getPreviewUrl } = useFileUrl();
 const { getId } = useDatabase();
 
-// Transform files data for display
 const transformedFiles = computed(() => {
   return props.files.map((file: any) => {
     const iconConfig = getFileIconAndColor(file.mimetype);
@@ -124,7 +122,7 @@ function handleCopyFileUrl(file: any) {
 }
 
 function viewFileDetails(file: any) {
-  navigateTo(`/files/management/${getId(file)}`);
+  navigateTo(`/storage/management/file/${getId(file)}`);
 }
 
 async function deleteFile(file: any) {
