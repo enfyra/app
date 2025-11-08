@@ -25,8 +25,8 @@ watch(
         </div>
       </template>
       <template #body>
-        <div class="space-y-4">
-          <p class="text-sm text-gray-300 text-center">
+        <div class="space-y-4 min-w-0">
+          <p class="text-sm text-gray-300 text-center break-words min-w-0" :title="options.content">
             {{ options.content }}
           </p>
         </div>

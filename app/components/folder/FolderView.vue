@@ -65,7 +65,7 @@ const folderColumns = computed(() => [
     header: "Name",
     cell: ({ row }) => {
       const folder = row.original;
-      return h("div", { class: "flex items-center gap-3" }, [
+      return h("div", { class: "flex items-center gap-3 min-w-0" }, [
         h(
           "div",
           {
