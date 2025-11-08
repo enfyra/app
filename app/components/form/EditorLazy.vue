@@ -3,15 +3,21 @@ defineOptions({
   inheritAttrs: false,
 });
 
-const props = defineProps<{
-  modelValue: Record<string, any>;
-  errors: Record<string, string>;
-  tableName: string;
-  excluded?: string[];
-  includes?: string[];
-  typeMap?: Record<string, any>;
-  loading?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    modelValue: Record<string, any>;
+    errors: Record<string, string>;
+    tableName: string;
+    excluded?: string[];
+    includes?: string[];
+    typeMap?: Record<string, any>;
+    loading?: boolean;
+    mode?: 'create' | 'update';
+  }>(),
+  {
+    mode: 'update',
+  }
+);
 
 const emit = defineEmits<{
   "update:modelValue": [value: Record<string, any>];

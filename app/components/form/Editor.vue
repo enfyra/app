@@ -9,6 +9,7 @@
       :type-map="typeMapWithGenerated"
       :errors="errors"
       :loading="props.loading"
+      :mode="props.mode"
       @update:form-data="updateFormData"
       @update:errors="updateErrors"
       class="relative group"
@@ -26,12 +27,14 @@ const props = withDefaults(
     includes?: string[];
     typeMap?: Record<string, any>;
     loading?: boolean;
+    mode?: 'create' | 'update';
   }>(),
   {
     excluded: () => [],
     includes: () => [],
     typeMap: () => ({}),
     loading: false,
+    mode: 'update',
   }
 );
 

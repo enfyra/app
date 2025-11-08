@@ -1,14 +1,20 @@
 <script setup lang="ts">
 // Vue functions are auto-imported
 
-const props = defineProps<{
-  keyName: string;
-  formData: Record<string, any>;
-  columnMap: Map<string, any>;
-  typeMap?: Record<string, any>;
-  errors: Record<string, string>;
-  loading?: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    keyName: string;
+    formData: Record<string, any>;
+    columnMap: Map<string, any>;
+    typeMap?: Record<string, any>;
+    errors: Record<string, string>;
+    loading?: boolean;
+    mode?: 'create' | 'update';
+  }>(),
+  {
+    mode: 'update',
+  }
+);
 
 const emit = defineEmits<{
   "update:formData": [key: string, value: any];
@@ -178,6 +184,7 @@ const { isMobile, isTablet } = useScreen();
           v-if="
             column?.isNullable === false &&
             column?.isGenerated !== true &&
+            (props.mode === 'create' || column?.isHidden !== true) &&
             column?.type !== 'boolean' &&
             keyName !== 'createdAt' &&
             keyName !== 'updatedAt'

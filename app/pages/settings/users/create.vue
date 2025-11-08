@@ -8,6 +8,7 @@
             v-model:errors="errors"
             :table-name="tableName"
             :excluded="['allowedRoutePermissions']"
+            mode="create"
           />
         </UForm>
       </CommonFormCard>

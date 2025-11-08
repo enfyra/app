@@ -8,6 +8,7 @@
             :table-name="tableName"
             v-model:errors="createErrors"
             :excluded="['mainTable']"
+            mode="create"
           />
         </UForm>
       </CommonFormCard>
