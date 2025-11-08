@@ -76,19 +76,20 @@
               :key="index"
               class="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-2"
             >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
+              <div class="flex items-center justify-between min-w-0">
+                <div class="flex items-center space-x-4 min-w-0 flex-1">
                   <div
-                    class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center"
+                    class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center flex-shrink-0"
                   >
                     <UIcon
                       name="i-heroicons-document-check"
                       class="w-5 h-5 text-green-600 dark:text-green-400"
                     />
                   </div>
-                  <div>
+                  <div class="min-w-0 flex-1">
                     <p
-                      class="text-base font-medium text-gray-900 dark:text-gray-100"
+                      class="text-base font-medium text-gray-900 dark:text-gray-100 truncate"
+                      :title="file.name"
                     >
                       {{ file.name }}
                     </p>

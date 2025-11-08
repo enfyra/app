@@ -157,5 +157,13 @@ export default defineAppConfig({
         icon: "text-white",
       },
     },
+    notification: {
+      slots: {
+        root: "min-w-0 max-w-full",
+        title: "min-w-0 break-words overflow-wrap-anywhere",
+        description: "min-w-0 break-words overflow-wrap-anywhere",
+        wrapper: "min-w-0",
+      },
+    },
   },
 });

@@ -42,10 +42,10 @@
 
     <div
       v-else
-      class="flex items-center justify-between gap-2 flex-1"
+      class="flex items-center justify-between gap-2 flex-1 min-w-0"
     >
       <h3
-        class="font-semibold text-gray-900 dark:text-white truncate flex-1"
+        class="font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0"
         :title="file.displayName"
         @dblclick="!isSelectionMode && $emit('start-rename')"
       >

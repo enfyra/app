@@ -91,7 +91,7 @@ const fileColumns = computed(() => [
     header: "Name",
     cell: ({ row }) => {
       const file = row.original;
-      return h("div", { class: "flex items-center gap-2" }, [
+      return h("div", { class: "flex items-center gap-2 min-w-0" }, [
         h(
           "div",
           {
