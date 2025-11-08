@@ -1,5 +1,4 @@
 <script setup lang="ts">
-const toast = useToast();
 const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
@@ -33,9 +32,7 @@ const {
 });
 
 const collections = computed(() => apiData.value?.data || []);
-const total = computed(() => {
-  return apiData.value?.meta?.totalCount || 0;
-});
+const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 useHeaderActionRegistry({
   id: "create-collection",
@@ -67,7 +64,10 @@ watch(
 function getFieldCount(collectionName: string): number {
   const schema = schemas.value[collectionName];
   if (!schema?.definition) return 0;
-  return schema.definition.length;
+  // Exclude default fields: createdAt and updatedAt
+  return schema.definition.filter(
+    (field: any) => field.name !== 'createdAt' && field.name !== 'updatedAt'
+  ).length;
 }
 
 // List of gradient colors for random assignment

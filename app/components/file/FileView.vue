@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { UIcon, UBadge } from "#components";
+import { getFileIconAndColor } from "~/utils/file-management/file-icons";
 
 interface Props {
   files: any[];

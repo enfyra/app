@@ -9,7 +9,6 @@ const total = ref(1);
 const page = ref(1);
 const pageLimit = 10;
 const data = ref([]);
-const table = computed(() => schemas.value[tableName]);
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();

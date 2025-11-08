@@ -6,7 +6,6 @@ export function useDataTableActions(
 ) {
   const selectedRows = ref<any[]>([]);
   const isSelectionMode = ref(false);
-  const deleteId = ref<string>("");
 
   const toast = useToast();
   const { confirm } = useConfirm();
@@ -34,7 +33,6 @@ export function useDataTableActions(
     const deleteLoader = createLoader();
 
     await deleteLoader.withLoading(async () => {
-      deleteId.value = id;
       await executeDelete({ id });
 
       if (deleteError.value) {

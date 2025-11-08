@@ -18,7 +18,6 @@
           @toggle-selection="$emit('toggle-selection', $event)"
           @refresh-folders="$emit('refresh-folders')"
           @delete-folder="deleteFolder"
-          @copy-folder-url="() => {}"
         />
       </div>
 
@@ -90,37 +89,8 @@ const emit = defineEmits<{
   "refresh-folders": [];
 }>();
 
-const { confirm } = useConfirm();
-const toast = useToast();
-
-const { execute: executeDeleteFolder } = useApi(
-  () => `/folder_definition`,
-  {
-    method: "delete",
-    errorContext: "Delete Folder",
-  }
-);
-
-async function deleteFolder(folder: any) {
-  const isConfirmed = await confirm({
-    title: "Delete Folder",
-    content: `Are you sure you want to delete "${
-      folder.name || folder.displayName
-    }"? This action cannot be undone.`,
-    confirmText: "Delete",
-    cancelText: "Cancel",
-  });
-
-  if (!isConfirmed) return;
-
-  await executeDeleteFolder({ id: folder.id });
-
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Folder deleted successfully!",
-  });
-
-  emit("refresh-folders");
+function deleteFolder(folder: any) {
+  const { deleteFolder: deleteFolderFromManager } = useFileManager();
+  deleteFolderFromManager(folder, () => emit("refresh-folders"));
 }
 </script>

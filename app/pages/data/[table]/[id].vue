@@ -97,7 +97,6 @@ async function handleUpdate() {
 }
 
 const {
-  data: updateData,
   pending: updateLoading,
   execute: updateRecord,
   error: updateError,
@@ -205,10 +204,6 @@ useHeaderActionRegistry([
     },
   },
 ]);
-const title = computed(() => {
-  if (loading.value) return "Loading...";
-  return `${route.params.table}: ${currentRecord.value.id}`;
-});
 </script>
 
 <template>

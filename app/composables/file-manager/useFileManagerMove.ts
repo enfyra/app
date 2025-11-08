@@ -8,11 +8,6 @@ export function useFileManagerMove() {
     selectedFolderIds: [] as string[],
   }));
   
-  const selectedFoldersForDelete = useState<string[]>(
-    "file-manager:folder:selected:list",
-    () => []
-  );
-  
   const route = useRoute();
   const { confirm } = useConfirm();
   const toast = useToast();
@@ -140,14 +135,12 @@ export function useFileManagerMove() {
       selectedFileIds: [],
       selectedFolderIds: [],
     };
-    selectedFoldersForDelete.value = [];
   }
 
   return {
     isMoveMode,
     isAnyMovePending,
     moveState,
-    selectedFoldersForDelete,
     startMoveMode,
     cancelMoveMode,
     isMoveHereDisabled,

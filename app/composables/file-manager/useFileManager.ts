@@ -32,37 +32,6 @@ export function useFileManager(parentFilter?: any) {
     }
   );
 
-  const selectedFolders = useState<string[]>("folder-selected-list", () => []);
-  const isSelectionMode = useState("folder-selection-mode", () => false);
-
-  function toggleFolderSelection(folderId: string) {
-    const index = selectedFolders.value.indexOf(folderId);
-    if (index > -1) {
-      selectedFolders.value.splice(index, 1);
-    } else {
-      selectedFolders.value.push(folderId);
-    }
-  }
-
-  function toggleSelectionMode() {
-    isSelectionMode.value = !isSelectionMode.value;
-
-    if (!isSelectionMode.value) {
-      selectedFolders.value = [];
-    }
-  }
-
-  function toggleSelectAll(totalCount: number = 0, folderList?: any[]) {
-    if (selectedFolders.value.length === totalCount) {
-      selectedFolders.value = [];
-    } else {
-      selectedFolders.value = [];
-      const foldersToUse = folderList || folders.value?.data || [];
-      foldersToUse.forEach((folder: any) => {
-        selectedFolders.value.push(folder.id);
-      });
-    }
-  }
 
   function showFolderDetail(folder: any) {
     navigateTo(`/storage/management/folder/${folder.id}`);
@@ -118,20 +87,18 @@ export function useFileManager(parentFilter?: any) {
   }
 
   async function deleteSelectedFolders(
-    folderList?: any[],
+    folderList: any[],
     refreshCallback?: () => void
   ) {
-    if (selectedFolders.value.length === 0) return;
+    if (!folderList || folderList.length === 0) return;
 
-    const currentFolders = folderList || folders.value?.data || [];
-    const folderNames = selectedFolders.value
-      .map((id) => currentFolders.find((f: any) => f.id === id)?.name)
-      .filter(Boolean);
+    const folderIds = folderList.map((f) => f.id);
+    const folderNames = folderList.map((f) => f.name).filter(Boolean);
 
     const isConfirmed = await confirm({
       title: "Delete Multiple Folders",
       content: `Are you sure you want to delete ${
-        selectedFolders.value.length
+        folderList.length
       } folder(s)? This includes: ${folderNames.slice(0, 3).join(", ")}${
         folderNames.length > 3 ? ` and ${folderNames.length - 3} more` : ""
       }. This action cannot be undone.`,
@@ -140,7 +107,7 @@ export function useFileManager(parentFilter?: any) {
     });
 
     if (isConfirmed) {
-      await deleteFolderApi({ ids: selectedFolders.value });
+      await deleteFolderApi({ ids: folderIds });
 
       if (deleteFolderError.value) {
         return;
@@ -154,12 +121,9 @@ export function useFileManager(parentFilter?: any) {
 
       toast.add({
         title: "Success",
-        description: `${selectedFolders.value.length} folder(s) deleted successfully!`,
+        description: `${folderList.length} folder(s) deleted successfully!`,
         color: "success",
       });
-
-      selectedFolders.value = [];
-      isSelectionMode.value = false;
     }
   }
 
@@ -223,13 +187,6 @@ export function useFileManager(parentFilter?: any) {
     folders,
     pending,
     refreshFolders,
-
-    selectedFolders,
-    isSelectionMode,
-
-    toggleFolderSelection,
-    toggleSelectionMode,
-    toggleSelectAll,
     showFolderDetail,
     getContextMenuItems,
     deleteFolder,

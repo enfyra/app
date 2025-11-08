@@ -22,14 +22,6 @@ export function useHeaderActionRegistry(
   const registerHeaderAction = (action: HeaderAction) => {
     const processedAction = Object.create(Object.getPrototypeOf(action));
     
-    Object.getOwnPropertyNames(action).forEach(prop => {
-      const descriptor = Object.getOwnPropertyDescriptor(action, prop);
-      if (descriptor) {
-        Object.defineProperty(processedAction, prop, descriptor);
-      }
-    });
-    
-    Object.getOwnPropertyDescriptors(action);
     for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(action))) {
       Object.defineProperty(processedAction, key, descriptor);
     }
