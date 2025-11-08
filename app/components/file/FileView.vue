@@ -123,19 +123,21 @@ const fileColumns = computed(() => [
     header: "Storage",
     cell: ({ row }) => {
       const file = row.original;
-      const storageType = file.storageConfig?.type || "local";
+      const storageType = file.storageConfig?.type || "Local Storage";
       const storageName = file.storageConfig?.name || "Local";
 
       const iconMap: Record<string, string> = {
-        s3: "lucide:cloud",
-        gcs: "lucide:cloud",
-        local: "lucide:hard-drive",
+        "Amazon S3": "lucide:cloud",
+        "Google Cloud Storage": "lucide:cloud",
+        "Cloudflare R2": "lucide:cloud",
+        "Local Storage": "lucide:hard-drive",
       };
 
-      const colorMap: Record<string, "primary" | "info" | "neutral"> = {
-        s3: "primary",
-        gcs: "info",
-        local: "neutral",
+      const colorMap: Record<string, "primary" | "info" | "warning" | "neutral"> = {
+        "Amazon S3": "primary",
+        "Google Cloud Storage": "info",
+        "Cloudflare R2": "warning",
+        "Local Storage": "neutral",
       };
 
       return h(UBadge, {
@@ -284,7 +286,6 @@ function getContextMenuItems(file: any) {
 <template>
   <div>
     <Transition name="loading-fade" mode="out-in">
-      <!-- Loading State - chỉ hiển thị khi loading và chưa có data -->
       <div
         v-if="(loading && files.length === 0) || !isMounted"
         class="col-span-full"
@@ -292,9 +293,7 @@ function getContextMenuItems(file: any) {
         <CommonLoadingState type="card" />
       </div>
 
-      <!-- Content - hiển thị ngay khi có data, không cần đợi isMounted -->
       <div v-else-if="transformedFiles.length > 0" key="content">
-        <!-- Grid View -->
         <FileGrid
           v-if="viewMode === 'grid'"
           :files="transformedFiles"
@@ -310,7 +309,6 @@ function getContextMenuItems(file: any) {
           @refresh-files="() => emit('refresh-files')"
         />
 
-        <!-- List View -->
         <DataTableLazy
           v-else-if="viewMode === 'list'"
           :data="transformedFiles"
@@ -329,7 +327,6 @@ function getContextMenuItems(file: any) {
         />
       </div>
 
-      <!-- Empty State - chỉ hiển thị khi không loading, không có data và đã mount -->
       <div
         v-else-if="!loading && transformedFiles.length === 0 && isMounted"
         key="empty"

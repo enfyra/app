@@ -26,7 +26,7 @@ onMounted(async () => {
   await ensureRoutesLoaded();
 });
 
-watch(() => table.value?.name, (name) => {
+watch(() => schemas.value[tableName]?.name || tableName, (name) => {
   if (name) {
     registerPageHeader({
       title: name,

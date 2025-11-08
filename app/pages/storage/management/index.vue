@@ -73,7 +73,8 @@ const fileTotal = computed(() => rootFiles.value?.meta?.filterCount || 0);
 
 const storageOptions = computed(() => {
   return storageConfigs.value.map((config) => {
-    const isCloudStorage = config.driver === 's3' || config.driver === 'gcs';
+    const storageType = config.type || "Local Storage";
+    const isCloudStorage = storageType === 'Amazon S3' || storageType === 'Google Cloud Storage' || storageType === 'Cloudflare R2';
     return {
       label: config.name,
       value: getId(config),

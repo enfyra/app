@@ -43,8 +43,8 @@
               <div class="flex items-center gap-2 mb-2">
                 <UIcon :name="getStorageIcon(config)" class="w-5 h-5 text-primary flex-shrink-0" />
                 <h3 class="font-semibold text-white">{{ config.name }}</h3>
-                <UBadge variant="subtle" color="primary" size="sm">
-                  {{ config.driver }}
+                <UBadge variant="subtle" :color="getStorageBadgeColor(config)" size="sm">
+                  {{ config.type || config.driver }}
                 </UBadge>
                 <UBadge
                   variant="subtle"
@@ -190,16 +190,25 @@ useHeaderActionRegistry([
 ]);
 
 function getStorageIcon(config: any) {
-  switch (config.driver?.toLowerCase()) {
-    case "s3":
-      return "lucide:cloud";
-    case "local":
-      return "lucide:hard-drive";
-    case "gcs":
-      return "lucide:cloud";
-    default:
-      return "lucide:database";
-  }
+  const storageType = config.type || "Local Storage";
+  const iconMap: Record<string, string> = {
+    "Amazon S3": "lucide:cloud",
+    "Google Cloud Storage": "lucide:cloud",
+    "Cloudflare R2": "lucide:cloud",
+    "Local Storage": "lucide:hard-drive",
+  };
+  return iconMap[storageType] || "lucide:database";
+}
+
+function getStorageBadgeColor(config: any) {
+  const storageType = config.type || "Local Storage";
+  const colorMap: Record<string, "primary" | "info" | "warning" | "neutral"> = {
+    "Amazon S3": "primary",
+    "Google Cloud Storage": "info",
+    "Cloudflare R2": "warning",
+    "Local Storage": "neutral",
+  };
+  return colorMap[storageType] || "neutral";
 }
 
 function navigateToDetail(config: any) {
