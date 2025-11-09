@@ -89,6 +89,7 @@
   <div id="others-overlay"></div>
 
   <CommonGlobalConfirm />
+  <FolderDetailModal />
   <RouteLoading :show="routeLoading" message="Navigating..." />
 </template>
 

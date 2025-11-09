@@ -6,32 +6,18 @@
   >
     <UContextMenu :items="getContextMenuItems()" :disabled="isFolderDisabled">
       <div
-        class="relative rounded-xl border transition-all duration-300 cursor-pointer overflow-hidden h-full flex flex-col"
+        class="relative rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden"
         :style="{
-          background: 'rgba(21, 27, 46, 0.8)',
-          backdropFilter: 'blur(20px)',
-          borderColor: selectedItems.includes(folder.id)
-            ? '#7C3AED'
-            : hoveredFolderId === folder.id
-            ? '#7C3AED'
-            : 'rgba(255, 255, 255, 0.08)',
-          borderWidth: selectedItems.includes(folder.id) ? '2px' : '1px',
-          boxShadow: selectedItems.includes(folder.id)
-            ? '0 8px 32px rgba(124, 58, 237, 0.3), 0 0 0 1px rgba(124, 58, 237, 0.2)'
-            : hoveredFolderId === folder.id
-            ? '0 8px 32px rgba(124, 58, 237, 0.2), 0 4px 16px rgba(0, 0, 0, 0.4)'
-            : '0 2px 8px rgba(0, 0, 0, 0.4)',
-          transform: `translateY(${hoveredFolderId === folder.id ? '-2px' : '0'}) scale(${selectedItems.includes(folder.id) ? '1.02' : '1'})`,
+          backgroundColor: hoverBgColor,
+          borderColor: hoverBorderColor,
+          borderWidth: props.selectedItems.includes(props.folder.id) ? '2px' : '1px',
+          boxShadow: hoverShadow,
+          transform: props.selectedItems.includes(props.folder.id) ? 'scale(1.01)' : 'scale(1)',
           opacity: isFolderDisabled ? '0.6' : '1',
           cursor: isFolderDisabled ? 'not-allowed' : 'pointer'
         }"
         @click="handleFolderClick"
       >
-        <!-- Accent gradient line at top -->
-        <div
-          class="absolute top-0 left-0 right-0 h-px opacity-60"
-          style="background: linear-gradient(90deg, transparent, #7C3AED, transparent)"
-        />
         <div
           v-if="isFolderDisabled"
           class="absolute inset-0 z-10 bg-black/20 flex items-center justify-center"
@@ -46,7 +32,6 @@
           </span>
         </div>
 
-        <!-- Selection Checkbox - appears on hover or when selected -->
         <Transition
           enter-active-class="transition duration-200"
           enter-from-class="opacity-0 scale-75"
@@ -68,41 +53,12 @@
           </div>
         </Transition>
 
-        <!-- Preview Area with hover overlay -->
-        <div class="relative h-32 overflow-hidden cursor-pointer">
-          <div
-            class="w-full h-full transition-all duration-300"
-            :style="{ filter: hoveredFolderId === folder.id ? 'blur(4px)' : 'blur(0)' }"
-          >
-            <FolderGridPreview :folder="folder" :hovered="hoveredFolderId === folder.id" />
+        <div class="p-4 flex items-start gap-4">
+          <div class="flex-shrink-0">
+            <FolderGridIconSquare :folder="folder" :hovered="hoveredFolderId === folder.id" />
           </div>
 
-          <!-- Hover overlay with View icon -->
-          <Transition
-            enter-active-class="transition duration-300"
-            enter-from-class="opacity-0"
-            enter-to-class="opacity-100"
-            leave-active-class="transition duration-300"
-            leave-from-class="opacity-100"
-            leave-to-class="opacity-0"
-          >
-            <div
-              v-if="hoveredFolderId === folder.id"
-              class="absolute inset-0 flex items-center justify-center"
-              style="background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(8px)"
-            >
-              <div
-                class="w-12 h-12 rounded-full flex items-center justify-center transform transition-transform duration-300"
-                :class="hoveredFolderId === folder.id ? 'scale-100' : 'scale-0'"
-                style="background: linear-gradient(135deg, #7C3AED, #8B5CF6); box-shadow: 0 4px 16px rgba(124, 58, 237, 0.5)"
-              >
-                <UIcon name="lucide:folder-open" class="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </Transition>
-        </div>
-
-        <div class="p-4 space-y-3 flex-1 flex flex-col">
+          <div class="flex-1 min-w-0 space-y-1">
           <FolderGridEditableName
             :folder="folder"
             :editing-folder-id="editingFolderId"
@@ -115,46 +71,12 @@
             @cancel-edit="cancelEdit"
           />
 
-          <!-- Metadata Row -->
-          <div class="flex items-center justify-between text-xs" style="color: #94A3B8">
-            <div class="flex items-center gap-1.5">
-              <UIcon name="lucide:calendar" class="w-3 h-3" />
-              <span>{{ folder.modifiedAt }}</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <UIcon name="lucide:folder" class="w-3 h-3" />
-              <span>{{ folder.itemCount }}</span>
-            </div>
+            <div class="text-xs text-gray-400">
+              {{ folder.itemCount }}
           </div>
 
-          <!-- Action Buttons -->
-          <div class="flex items-center gap-2 pt-1">
-            <!-- Primary Open Button -->
-            <UButton
-              @click="(e) => {
-                if (!isSelectionMode) {
-                  e.stopPropagation();
-                  $emit('folder-click', folder);
-                }
-              }"
-              class="flex-1 h-8 text-xs font-medium text-white transition-all duration-300"
-              style="background: linear-gradient(135deg, #7C3AED, #8B5CF6); box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3)"
-            >
-              <UIcon name="lucide:folder-open" class="w-3.5 h-3.5 mr-1.5" />
-              Open
-            </UButton>
-
-            <!-- Dropdown Menu -->
-            <div @click="(e) => !isSelectionMode && e.stopPropagation()">
-              <UDropdownMenu :items="getDropdownMenuItems()">
-                <UButton
-                  variant="ghost"
-                  class="h-8 w-8 p-0 hover:bg-white/10"
-                  :disabled="moveMode"
-                >
-                  <UIcon name="lucide:ellipsis-vertical" class="w-4 h-4" style="color: #94A3B8" />
-                </UButton>
-              </UDropdownMenu>
+            <div class="text-xs text-gray-400">
+              Updated {{ folder.modifiedAt }}
             </div>
           </div>
         </div>
@@ -187,19 +109,66 @@ const emit = defineEmits<{
   "copy-folder-url": [folder: any];
 }>();
 
-// Hover state
 const hoveredFolderId = ref<string | null>(null);
 
-// Inline editing state
 const editingFolderId = ref<string | null>(null);
 const editingName = ref("");
 const originalName = ref("");
 const editingLoading = ref(false);
 
-// Access permissions
+const folderHoverBgColor = computed(() => {
+  if (!props.folder) return "#7C3AED";
+  
+  if (props.folder.color) {
+    return props.folder.color;
+  }
+  
+  const colors = ["#3B82F6", "#7C3AED", "#F59E0B", "#14B8A6"];
+  const folderId = props.folder.id || props.folder.name || "";
+  
+  let hash = 0;
+  for (let i = 0; i < folderId.length; i++) {
+    hash = folderId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  
+  return colors[index];
+});
+
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+const hoverBgColor = computed(() => {
+  if (hoveredFolderId.value === props.folder.id) {
+    return hexToRgba(folderHoverBgColor.value, 0.08);
+  }
+  return 'rgba(21, 27, 46, 0.6)';
+});
+
+const hoverBorderColor = computed(() => {
+  if (props.selectedItems.includes(props.folder.id)) return '#7C3AED';
+  if (hoveredFolderId.value === props.folder.id) {
+    return hexToRgba(folderHoverBgColor.value, 0.25);
+  }
+  return 'rgba(255, 255, 255, 0.06)';
+});
+
+const hoverShadow = computed(() => {
+  if (props.selectedItems.includes(props.folder.id)) {
+    return '0 4px 16px rgba(124, 58, 237, 0.2)';
+  }
+  if (hoveredFolderId.value === props.folder.id) {
+    return `0 2px 8px ${hexToRgba(folderHoverBgColor.value, 0.12)}`;
+  }
+  return '0 1px 3px rgba(0, 0, 0, 0.2)';
+});
+
 const { checkPermissionCondition } = usePermissions();
 
-// Check delete permission for folders
 const canDeleteFolder = checkPermissionCondition({
   and: [
     {
@@ -213,13 +182,12 @@ function handleFolderClick() {
   if (props.isSelectionMode) {
     emit("toggle-selection", props.folder.id);
   } else if (props.isFolderDisabled) {
-    return; // Disabled folder, don't navigate
+    return;
   } else {
     emit("folder-click", props.folder);
   }
 }
 
-// Inline rename functions
 function startRename() {
   if (props.isSelectionMode) return;
   editingFolderId.value = props.folder.id;
@@ -291,8 +259,8 @@ async function saveEdit() {
   }
 }
 
-// Get context menu items for folders
 function getContextMenuItems() {
+  const { showFolderDetail } = useFileManager();
   const menuItems: any = [
     [
       {
@@ -300,6 +268,13 @@ function getContextMenuItems() {
         icon: "lucide:folder-open",
         onSelect: () => {
           emit("folder-click", props.folder);
+        },
+      },
+      {
+        label: "View Details",
+        icon: "lucide:info",
+        onSelect: () => {
+          showFolderDetail(props.folder);
         },
       },
       {
@@ -319,7 +294,6 @@ function getContextMenuItems() {
     ],
   ];
 
-  // Only show delete option if user has permission
   if (canDeleteFolder) {
     menuItems.push([
       {
@@ -336,14 +310,21 @@ function getContextMenuItems() {
   return menuItems;
 }
 
-// Get dropdown menu items (flat array)
 function getDropdownMenuItems() {
+  const { showFolderDetail } = useFileManager();
   const menuItems: any = [
     {
       label: "Open",
       icon: "lucide:folder-open",
       onSelect: () => {
         emit("folder-click", props.folder);
+      },
+    },
+    {
+      label: "View Details",
+      icon: "lucide:info",
+      onSelect: () => {
+        showFolderDetail(props.folder);
       },
     },
     {
@@ -362,7 +343,6 @@ function getDropdownMenuItems() {
     },
   ];
 
-  // Only show delete option if user has permission
   if (canDeleteFolder) {
     menuItems.push({
       label: "Delete",

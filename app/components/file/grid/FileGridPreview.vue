@@ -1,6 +1,5 @@
 <template>
   <div class="relative w-full h-full">
-    <!-- Image preview -->
     <div
       v-if="isImageFile(file)"
       class="absolute inset-0 w-full h-full"
@@ -13,39 +12,23 @@
       <div class="absolute inset-0 bg-black/20" />
     </div>
 
-    <!-- For files and folders - show icon with dotted grid pattern -->
     <div
       v-if="!isImageFile(file)"
-      class="relative w-full h-full flex items-center justify-center overflow-hidden"
+      class="relative w-full h-full flex items-center justify-center overflow-hidden rounded-t-xl"
+      :style="{
+        background: fileTypeBackground,
+      }"
     >
-      <!-- Dotted grid pattern background -->
       <div
-        class="absolute inset-0 opacity-20"
-        style="
-          background-image: radial-gradient(circle, rgba(124, 58, 237, 0.3) 1px, transparent 1px);
-          background-size: 16px 16px;
-        "
-      />
-
-      <!-- Gradient backdrop for depth -->
-      <div
-        class="absolute inset-0 opacity-30"
-        :style="{
-          background: `radial-gradient(circle at center, ${getIconColor()}20 0%, transparent 70%)`
-        }"
-      />
-
-      <!-- Large centered icon -->
-      <div
-        class="relative z-10 transition-all duration-300"
-        :class="hovered ? 'scale-110 rotate-3' : ''"
+        class="relative z-10 transition-all duration-200"
+        :class="hovered ? 'scale-105' : ''"
       >
         <UIcon
           :name="file.icon"
-          :size="96"
+          class="w-12 h-12"
           :style="{
-            color: getIconColor(),
-            filter: 'drop-shadow(0 4px 12px rgba(124, 58, 237, 0.3))'
+            color: fileTypeIconColor,
+            filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))',
           }"
         />
       </div>
@@ -68,7 +51,6 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// Check if file is an image using mimetype for accuracy
 function isImageFile(file: FileItem): boolean {
   if (file?.mimetype) {
     return file.mimetype.startsWith("image/");
@@ -76,25 +58,28 @@ function isImageFile(file: FileItem): boolean {
   return false;
 }
 
-// Add quality parameter to image URL for faster loading
 function getImageUrl(url: string): string {
   if (!url) return url;
   const separator = url.includes('?') ? '&' : '?';
   return `${url}${separator}quality=70`;
 }
 
-// Handle image loading errors
 function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement;
   img.style.display = "none";
 }
 
-// Get icon color based on file type
-function getIconColor(): string {
-  // Check if it's a folder
-  if (props.file.mimetype?.startsWith("folder/") || props.file.icon?.includes("folder")) {
-    return "#7C3AED"; // Purple for folders
+const fileTypeBackground = computed(() => {
+  if (isImageFile(props.file)) {
+    return 'linear-gradient(135deg, rgba(0, 102, 255, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)';
   }
-  return "#0066FF"; // Blue for files
-}
+  return 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(217, 70, 239, 0.1) 100%)';
+});
+
+const fileTypeIconColor = computed(() => {
+  if (isImageFile(props.file)) {
+    return '#94A3B8';
+  }
+  return '#94A3B8';
+});
 </script>

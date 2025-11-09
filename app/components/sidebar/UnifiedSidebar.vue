@@ -219,18 +219,26 @@ const visibleGroups = computed(() => {
               'bg-gray-800/60 rounded-xl': group.type === 'Dropdown Menu'
             }">
               <div class="relative flex items-center">
-                <button
-                  @click="() => {
-                    if (group.type === 'Menu' && group.route) {
-                      navigateTo(group.route);
-                      if (isMobile || isTablet) setSidebarVisible(false);
-                    } else if (group.type === 'Dropdown Menu') {
-                      toggleGroup(group.id);
-                    }
-                  }"
+                <NuxtLink
+                  v-if="group.type === 'Menu' && group.route"
+                  :to="group.route"
+                  @click="handleMenuClick"
                   :class="[
                     'flex-1 aspect-square flex items-center justify-center rounded-xl transition-colors duration-150 p-2',
-                    group.type === 'Menu' && ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-white bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'text-gray-300 hover:bg-gray-800/50'
+                    ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-white bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'text-gray-300 hover:bg-gray-800/50'
+                  ]"
+                >
+                  <UIcon
+                    :name="group.icon"
+                    class="w-5 h-5 flex-shrink-0"
+                  />
+                </NuxtLink>
+                <button
+                  v-else-if="group.type === 'Dropdown Menu'"
+                  @click="toggleGroup(group.id)"
+                  :class="[
+                    'flex-1 aspect-square flex items-center justify-center rounded-xl transition-colors duration-150 p-2',
+                    'text-gray-300 hover:bg-gray-800/50'
                   ]"
                 >
                   <UIcon
@@ -273,11 +281,10 @@ const visibleGroups = computed(() => {
                   >
               <template v-for="item in group.items" :key="item.id">
                 <PermissionGate :condition="item.permission as any">
-                  
-
-                  <!-- Regular item -->
-                  <button
-                    @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
+                  <NuxtLink
+                    v-if="item.path || item.route"
+                    :to="item.path || item.route"
+                    @click="handleMenuClick"
                     :class="[
                       'w-8 h-8 flex items-center justify-center rounded-xl transition-colors duration-15',
                       ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED] to-[#D946EF]' : 'text-gray-400 hover:bg-gray-800/50'
@@ -287,7 +294,7 @@ const visibleGroups = computed(() => {
                       :name="item.icon || 'lucide:circle'"
                       class="w-8 h-8 flex-shrink-0"
                     />
-                  </button>
+                  </NuxtLink>
                 </PermissionGate>
               </template>
                 </div>
@@ -308,8 +315,10 @@ const visibleGroups = computed(() => {
               v-if="group.type === 'Menu' && (!group.items || group.items.length === 0)"
               class="space-y-1 px-3"
             >
-              <button
-                @click="() => { if (group.route) navigateTo(group.route); handleMenuClick(); }"
+              <NuxtLink
+                v-if="group.route"
+                :to="group.route"
+                @click="handleMenuClick"
                 :class="[
                   'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150',
                   (group.route && activeRoutes.has(group.route)) ? 'text-white bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'text-gray-300 hover:bg-gray-800/50'
@@ -321,7 +330,7 @@ const visibleGroups = computed(() => {
                 />
 
                 <span class="text-sm font-medium">{{ group.label }}</span>
-              </button>
+              </NuxtLink>
             </div>
 
             <div v-else>
@@ -363,8 +372,10 @@ const visibleGroups = computed(() => {
                   :key="child.id"
                   :condition="child.permission as any"
                 >
-                  <button
-                    @click="() => { navigateTo(child.path || child.route); handleMenuClick(); }"
+                  <NuxtLink
+                    v-if="child.path || child.route"
+                    :to="child.path || child.route"
+                    @click="handleMenuClick"
                     :class="[
                       'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150',
                       ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED] to-[#D946EF]' : 'text-gray-400 hover:bg-gray-800/50'
@@ -375,13 +386,14 @@ const visibleGroups = computed(() => {
                       class="w-5 h-5 flex-shrink-0"
                     />
                     <span class="text-sm">{{ child.label }}</span>
-                  </button>
+                  </NuxtLink>
                 </PermissionGate>
               </div>
 
-              <button
-                v-else
-                @click="() => { navigateTo(item.path || item.route); handleMenuClick(); }"
+              <NuxtLink
+                v-else-if="item.path || item.route"
+                :to="item.path || item.route"
+                @click="handleMenuClick"
                 :class="[
                   'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150',
                   ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED] to-[#D946EF]' : 'text-gray-400 hover:bg-gray-800/50'
@@ -392,7 +404,7 @@ const visibleGroups = computed(() => {
                   class="w-5 h-5 flex-shrink-0"
                 />
                 <span class="text-sm">{{ item.label }}</span>
-              </button>
+              </NuxtLink>
             </PermissionGate>
           </template>
             </div>

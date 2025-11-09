@@ -34,7 +34,10 @@ export function useFileManager(parentFilter?: any) {
 
 
   function showFolderDetail(folder: any) {
-    navigateTo(`/storage/management/folder/${folder.id}`);
+    const showDetailModal = useState("folder-detail-modal", () => false);
+    const selectedFolder = useState<any>("folder-selected", () => null);
+    selectedFolder.value = folder;
+    showDetailModal.value = true;
   }
 
   function getContextMenuItems(folder: any, refreshCallback?: () => void) {

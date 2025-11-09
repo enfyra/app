@@ -3,12 +3,12 @@
 
 const props = withDefaults(
   defineProps<{
-    keyName: string;
-    formData: Record<string, any>;
-    columnMap: Map<string, any>;
-    typeMap?: Record<string, any>;
-    errors: Record<string, string>;
-    loading?: boolean;
+  keyName: string;
+  formData: Record<string, any>;
+  columnMap: Map<string, any>;
+  typeMap?: Record<string, any>;
+  errors: Record<string, string>;
+  loading?: boolean;
     mode?: 'create' | 'update';
   }>(),
   {
