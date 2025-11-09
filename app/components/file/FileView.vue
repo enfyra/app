@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { UIcon, UBadge } from "#components";
 import { getFileIconAndColor } from "~/utils/file-management/file-icons";
+import { formatFileSize } from "~/utils/file-management/file-utils";
+import { formatDate } from "~/utils/common/filter/filter-helpers";
 
 interface Props {
   files: any[];
@@ -48,6 +50,7 @@ const transformedFiles = computed(() => {
     ...file,
     assetUrl: getFileUrl(file.id),
     displayName: file.filename || file.title || "Untitled",
+    formattedUpdatedAt: formatDate(file.updatedAt || ""),
   }));
 });
 
@@ -154,17 +157,21 @@ const fileColumns = computed(() => [
     },
   }),
   buildColumn({
-    id: "size",
+    id: "filesize",
     header: "Size",
-    cell: ({ getValue }) => {
-      const size = getValue() as string | number;
-      return size ? `${size}` : "-";
+    cell: ({ row }) => {
+      const file = row.original;
+      const filesize = file.filesize || file.size || 0;
+      return formatFileSize(parseInt(filesize.toString()));
     },
   }),
   buildColumn({
-    id: "updatedAt",
+    id: "formattedUpdatedAt",
     header: "Modified",
-    format: "datetime",
+    cell: ({ getValue }) => {
+      const value = getValue() as string;
+      return value || "-";
+    },
   }),
   buildActionsColumn({
     width: 60,
@@ -290,7 +297,7 @@ function getContextMenuItems(file: any) {
         v-if="(loading && files.length === 0) || !isMounted"
         class="col-span-full"
       >
-        <CommonLoadingState type="card" />
+        <CommonLoadingState type="file-card" />
       </div>
 
       <div v-else-if="transformedFiles.length > 0" key="content">

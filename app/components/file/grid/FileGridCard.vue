@@ -36,20 +36,20 @@
             v-if="isSelectionMode || selectedItems.includes(file.id)"
             class="absolute top-3 left-3 z-30 cursor-pointer"
             @click.stop="handleCheckboxClick"
-          >
-            <div 
+        >
+          <div
               class="w-5 h-5 rounded bg-gray-900/90 border border-gray-700 flex items-center justify-center p-1"
               @click.stop="handleCheckboxClick"
-            >
-              <UCheckbox
-                :model-value="selectedItems.includes(file.id)"
+          >
+            <UCheckbox
+              :model-value="selectedItems.includes(file.id)"
                 @update:model-value="handleCheckboxClick"
                 @click.stop="handleCheckboxClick"
                 class="!m-0 pointer-events-auto"
-              />
-            </div>
+            />
           </div>
-          
+          </div>
+
           <div 
             v-if="!moveState.moveMode"
             class="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -64,9 +64,9 @@
                 <UIcon name="lucide:more-vertical" class="w-4 h-4 text-gray-400" />
               </UButton>
             </UDropdownMenu>
-          </div>
+            </div>
         </div>
-        
+
         <div class="p-3 space-y-2">
           <EditableName
             :file="file"
@@ -83,19 +83,19 @@
           <div class="flex items-center justify-between text-xs text-gray-400">
             <span>{{ file.size }}</span>
             <span>{{ file.modifiedAt }}</span>
-          </div>
+              </div>
 
           <div v-if="file.storageConfig" class="flex items-center">
-            <UBadge
+              <UBadge
               size="sm"
-              variant="subtle"
-              :color="getStorageColor(file)"
-            >
-              <template #leading>
+                variant="subtle"
+                :color="getStorageColor(file)"
+              >
+                <template #leading>
                 <UIcon :name="getStorageIcon(file)" class="w-3.5 h-3.5" />
-              </template>
-              {{ getStorageName(file) }}
-            </UBadge>
+                </template>
+                {{ getStorageName(file) }}
+              </UBadge>
           </div>
         </div>
       </div>

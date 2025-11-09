@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
-  type?: 'text' | 'avatar' | 'card' | 'table' | 'form' | 'folder';
+  type?: 'text' | 'avatar' | 'card' | 'table' | 'form' | 'folder' | 'file-card';
   lines?: number;
   animated?: boolean;
   shimmer?: boolean;
@@ -53,7 +53,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     </div>
   </div>
 
-  <!-- Card Skeleton -->
+  <!-- Card Skeleton (Original) -->
   <div v-else-if="type === 'card'" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
     <div
       v-for="i in 8"
@@ -66,7 +66,6 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         borderColor: 'rgba(255, 255, 255, 0.08)',
       }"
     >
-      <!-- Avatar + Name -->
       <div class="flex items-center gap-3">
         <div
           class="w-10 h-10 rounded-full flex-shrink-0"
@@ -90,7 +89,6 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         </div>
       </div>
 
-      <!-- Content lines -->
       <div class="space-y-2">
         <div
           class="h-3 rounded w-full"
@@ -106,7 +104,6 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         ></div>
       </div>
 
-      <!-- Actions -->
       <div class="flex gap-2 justify-end">
         <div
           class="h-8 w-20 rounded-lg"
@@ -120,6 +117,76 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
           }"
         ></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File Card Skeleton -->
+  <div v-else-if="type === 'file-card'" class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
+    <div
+      v-for="i in 8"
+      :key="i"
+      class="group relative"
+    >
+      <div
+        class="relative rounded-xl border transition-all duration-200 overflow-hidden"
+        :class="[animationClass, shimmerClass]"
+        :style="{
+          background: 'rgba(21, 27, 46, 0.6)',
+          borderColor: 'rgba(255, 255, 255, 0.06)',
+          borderWidth: '1px',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
+        }"
+      >
+        <div class="h-28 relative overflow-hidden rounded-t-xl">
+          <div
+            class="w-full h-full"
+            :style="{
+              background: i % 2 === 0 
+                ? 'linear-gradient(135deg, rgba(0, 102, 255, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)'
+                : 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(217, 70, 239, 0.1) 100%)',
+            }"
+          >
+            <div class="w-full h-full flex items-center justify-center">
+              <div
+                class="w-12 h-12 rounded"
+                :style="{
+                  background: 'rgba(148, 163, 184, 0.2)',
+                }"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-3 space-y-2">
+          <div
+            class="h-3.5 rounded"
+            :style="{
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
+              width: `${70 + (i % 3) * 10}%`
+            }"
+          />
+          <div class="flex items-center justify-between">
+            <div
+              class="h-3 w-12 rounded"
+              :style="{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
+              }"
+            />
+            <div
+              class="h-3 w-16 rounded"
+              :style="{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
+              }"
+            />
+          </div>
+          <div
+            class="h-5 w-16 rounded-full"
+            :style="{
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(124, 58, 237, 0.15))',
+            }"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -255,69 +322,36 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     <div
       v-for="i in 8"
       :key="i"
-      class="group flex flex-col h-full"
+      class="group relative"
     >
-      <!-- Card Container -->
       <div
-        class="relative rounded-xl border transition-all duration-300 overflow-hidden h-full flex flex-col"
+        class="relative rounded-xl border transition-all duration-200 overflow-hidden"
         :class="[animationClass, shimmerClass]"
         :style="{
-          background: 'rgba(21, 27, 46, 0.8)',
-          backdropFilter: 'blur(20px)',
-          borderColor: 'rgba(255, 255, 255, 0.08)',
+          backgroundColor: 'rgba(21, 27, 46, 0.6)',
+          borderColor: 'rgba(255, 255, 255, 0.06)',
           borderWidth: '1px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
         }"
       >
-        <!-- Accent gradient line at top -->
-        <div
-          class="absolute top-0 left-0 right-0 h-px opacity-60"
-          style="background: linear-gradient(90deg, transparent, #7C3AED, transparent)"
-        />
-
-        <!-- Preview Area -->
-        <div class="relative h-32 overflow-hidden">
-          <div class="relative w-full h-full flex items-center justify-center overflow-hidden">
-            <!-- Dotted grid pattern background -->
+        <div class="p-4 flex items-start gap-4">
+          <div class="flex-shrink-0">
             <div
-              class="absolute inset-0 opacity-20"
-              style="
-                background-image: radial-gradient(circle, rgba(124, 58, 237, 0.3) 1px, transparent 1px);
-                background-size: 16px 16px;
-              "
+              class="w-12 h-12 rounded-lg"
+              :style="{
+                background: ['#3B82F6', '#7C3AED', '#F59E0B', '#14B8A6'][i % 4],
+              }"
             />
-
-            <!-- Gradient backdrop for depth -->
-            <div
-              class="absolute inset-0 opacity-30"
-              style="background: radial-gradient(circle at center, #7C3AED20 0%, transparent 70%)"
-            />
-
-            <!-- Large centered icon placeholder -->
-            <div class="relative z-10">
-              <div
-                class="w-24 h-24 rounded-lg"
-                :style="{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
-                }"
-              />
-            </div>
           </div>
-        </div>
 
-        <!-- Content Area -->
-        <div class="p-4 space-y-3 flex-1 flex flex-col">
-          <!-- Name -->
-          <div
-            class="h-5 rounded"
-            :style="{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
-              width: `${Math.random() * 40 + 60}%`
-            }"
-          />
-
-          <!-- Metadata Row -->
-          <div class="flex items-center justify-between">
+          <div class="flex-1 min-w-0 space-y-1">
+            <div
+              class="h-4 rounded"
+              :style="{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
+                width: `${60 + (i % 3) * 15}%`
+              }"
+            />
             <div
               class="h-3 w-16 rounded"
               :style="{
@@ -325,23 +359,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
               }"
             />
             <div
-              class="h-3 w-12 rounded"
-              :style="{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
-              }"
-            />
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex items-center gap-2 pt-1">
-            <div
-              class="flex-1 h-8 rounded-lg"
-              :style="{
-                background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(139, 92, 246, 0.3))',
-              }"
-            />
-            <div
-              class="h-8 w-8 rounded-lg"
+              class="h-3 w-24 rounded"
               :style="{
                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
               }"
