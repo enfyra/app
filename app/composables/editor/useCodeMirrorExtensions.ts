@@ -43,6 +43,30 @@ import {
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
 
 export function useCodeMirrorExtensions() {
+  function isInComment(doc: any, absolutePos: number): boolean {
+    const fullText = doc.toString()
+    const beforePos = fullText.substring(0, absolutePos)
+    
+    const lineCommentIndex = beforePos.lastIndexOf('//')
+    if (lineCommentIndex !== -1) {
+      const afterComment = fullText.substring(lineCommentIndex + 2, absolutePos)
+      if (!afterComment.includes('\n')) {
+        return true
+      }
+    }
+    
+    const blockCommentStart = beforePos.lastIndexOf('/*')
+    if (blockCommentStart !== -1) {
+      const afterStart = fullText.substring(blockCommentStart + 2)
+      const blockCommentEnd = afterStart.indexOf('*/')
+      if (blockCommentEnd === -1 || blockCommentStart + 2 + blockCommentEnd >= absolutePos) {
+        return true
+      }
+    }
+    
+    return false
+  }
+
   function buildEnfyraDecorations(view: EditorView): DecorationSet {
     const builder = new RangeSetBuilder<Decoration>()
     const doc = view.state.doc
@@ -78,17 +102,26 @@ export function useCodeMirrorExtensions() {
       const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|THROW)\b/g
       let match
       while ((match = templateRegex.exec(text)) !== null) {
-        builder.add(line.from + match.index, line.from + match.index + match[0].length, templateDecoration)
+        const absolutePos = line.from + match.index
+        if (!isInComment(doc, absolutePos)) {
+          builder.add(absolutePos, absolutePos + match[0].length, templateDecoration)
+        }
       }
 
       const tableRegex = /#([a-zA-Z_][a-zA-Z0-9_]*)\b/g
       while ((match = tableRegex.exec(text)) !== null) {
-        builder.add(line.from + match.index, line.from + match.index + match[0].length, tableAccessDecoration)
+        const absolutePos = line.from + match.index
+        if (!isInComment(doc, absolutePos)) {
+          builder.add(absolutePos, absolutePos + match[0].length, tableAccessDecoration)
+        }
       }
 
       const percentageRegex = /%([a-zA-Z_][a-zA-Z0-9_]*)\b/g
       while ((match = percentageRegex.exec(text)) !== null) {
-        builder.add(line.from + match.index, line.from + match.index + match[0].length, percentageDecoration)
+        const absolutePos = line.from + match.index
+        if (!isInComment(doc, absolutePos)) {
+          builder.add(absolutePos, absolutePos + match[0].length, percentageDecoration)
+        }
       }
     }
 

@@ -362,11 +362,9 @@ function getFileIconAndColor(mimetype: string): {
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             table-name="file_definition"
             :excluded="[
-              'id',
               'createdAt',
               'updatedAt',
               'permissions',
-              'uploaded_by',
               'folder',
               'storageConfig',
             ]"
