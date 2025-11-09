@@ -2,8 +2,6 @@ import { javascript } from "@codemirror/lang-javascript";
 import { vue } from "@codemirror/lang-vue";
 import { html } from "@codemirror/lang-html";
 import { linter, lintGutter } from "@codemirror/lint";
-import * as acorn from "acorn";
-import * as walk from "acorn-walk";
 import {
   lineNumbers,
   highlightActiveLine,
@@ -14,8 +12,6 @@ import {
   rectangularSelection,
   crosshairCursor,
   Decoration,
-  ViewPlugin,
-  ViewUpdate,
 } from "@codemirror/view";
 import type { DecorationSet } from "@codemirror/view";
 import { RangeSetBuilder, StateField, StateEffect } from "@codemirror/state";
@@ -43,6 +39,30 @@ import {
 import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
 
 export function useCodeMirrorExtensions() {
+  function isInComment(doc: any, absolutePos: number): boolean {
+    const fullText = doc.toString()
+    const beforePos = fullText.substring(0, absolutePos)
+    
+    const lineCommentIndex = beforePos.lastIndexOf('//')
+    if (lineCommentIndex !== -1) {
+      const afterComment = fullText.substring(lineCommentIndex + 2, absolutePos)
+      if (!afterComment.includes('\n')) {
+        return true
+      }
+    }
+    
+    const blockCommentStart = beforePos.lastIndexOf('/*')
+    if (blockCommentStart !== -1) {
+      const afterStart = fullText.substring(blockCommentStart + 2)
+      const blockCommentEnd = afterStart.indexOf('*/')
+      if (blockCommentEnd === -1 || blockCommentStart + 2 + blockCommentEnd >= absolutePos) {
+        return true
+      }
+    }
+    
+    return false
+  }
+
   function buildEnfyraDecorations(view: EditorView): DecorationSet {
     const builder = new RangeSetBuilder<Decoration>()
     const doc = view.state.doc
@@ -52,6 +72,14 @@ export function useCodeMirrorExtensions() {
       class: "cm-enfyra-template",
       attributes: {
         style: "color: #4EC9B0 !important; font-weight: bold !important; background: transparent !important;"
+      }
+    })
+
+    const throwDecoration = Decoration.mark({
+      tagName: "span",
+      class: "cm-enfyra-throw",
+      attributes: {
+        style: "color: #F48771 !important; font-weight: bold !important; background: transparent !important;"
       }
     })
 
@@ -75,20 +103,38 @@ export function useCodeMirrorExtensions() {
       const line = doc.line(i)
       const text = line.text
 
-      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|THROW)\b/g
+      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE)\b/g
+      const throwRegex = /@THROW\d*/g
       let match
+      
       while ((match = templateRegex.exec(text)) !== null) {
-        builder.add(line.from + match.index, line.from + match.index + match[0].length, templateDecoration)
+        const absolutePos = line.from + match.index
+        if (!isInComment(doc, absolutePos)) {
+          builder.add(absolutePos, absolutePos + match[0].length, templateDecoration)
+        }
+      }
+      
+      while ((match = throwRegex.exec(text)) !== null) {
+        const absolutePos = line.from + match.index
+        if (!isInComment(doc, absolutePos)) {
+          builder.add(absolutePos, absolutePos + match[0].length, throwDecoration)
+        }
       }
 
       const tableRegex = /#([a-zA-Z_][a-zA-Z0-9_]*)\b/g
       while ((match = tableRegex.exec(text)) !== null) {
-        builder.add(line.from + match.index, line.from + match.index + match[0].length, tableAccessDecoration)
+        const absolutePos = line.from + match.index
+        if (!isInComment(doc, absolutePos)) {
+          builder.add(absolutePos, absolutePos + match[0].length, tableAccessDecoration)
+        }
       }
 
       const percentageRegex = /%([a-zA-Z_][a-zA-Z0-9_]*)\b/g
       while ((match = percentageRegex.exec(text)) !== null) {
-        builder.add(line.from + match.index, line.from + match.index + match[0].length, percentageDecoration)
+        const absolutePos = line.from + match.index
+        if (!isInComment(doc, absolutePos)) {
+          builder.add(absolutePos, absolutePos + match[0].length, percentageDecoration)
+        }
       }
     }
 
@@ -175,14 +221,13 @@ export function useCodeMirrorExtensions() {
   }
 
   const createLinter = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
-    return linter((view) => {
+    return linter(async (view) => {
+      console.log('Linter called for language:', language);
       const diagnostics: any[] = [];
       const text = view.state.doc.toString();
+      console.log('Code to lint:', text.substring(0, 100));
       
       if (language === 'json' || language === 'html') {
-        if (onDiagnostics) {
-          onDiagnostics(diagnostics);
-        }
         return diagnostics;
       }
       
@@ -192,9 +237,6 @@ export function useCodeMirrorExtensions() {
       if (language === 'vue') {
         const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/);
         if (!scriptMatch) {
-          if (onDiagnostics) {
-            onDiagnostics(diagnostics);
-          }
           return diagnostics;
         }
 
@@ -202,81 +244,156 @@ export function useCodeMirrorExtensions() {
         offset = text.indexOf(scriptMatch[1] || '');
       }
       
-      const hasEnfyraSyntax = /@/.test(codeToLint) ||
-                             /#/.test(codeToLint) ||
-                             /%/.test(codeToLint);
-
-      if (hasEnfyraSyntax) {
-        if (onDiagnostics) {
-          onDiagnostics(diagnostics);
+      try {
+        const jshintModule: any = await import('jshint');
+        const JSHINT = jshintModule.JSHINT || jshintModule.default?.JSHINT || jshintModule.default;
+        
+        if (!JSHINT) {
+          return diagnostics;
         }
-        return diagnostics;
+        
+        const enfyraPatterns = [
+          { pattern: /@[A-Z_]+\d*/g, replacement: '__ENFYRA__' },
+          { pattern: /#[a-zA-Z_][a-zA-Z0-9_]*/g, replacement: '__ENFYRA_TABLE__' },
+          { pattern: /%[a-zA-Z_][a-zA-Z0-9_]*/g, replacement: '__ENFYRA_PERCENT__' },
+        ];
+        
+        let normalizedCode = codeToLint;
+        for (const { pattern, replacement } of enfyraPatterns) {
+          normalizedCode = normalizedCode.replace(pattern, replacement);
       }
       
-      try {
-        const parseOptions: any = {
-          ecmaVersion: 2022,
-          sourceType: "module",
-          locations: true,
-          onComment: undefined,
-          allowAwaitOutsideFunction: true,
+        const options = {
+          esversion: 2022,
+          undef: true,
+          unused: false,
+          browser: true,
+          node: false,
+          strict: false,
+          eqeqeq: false,
+          curly: false,
+          asi: true,
+          laxbreak: true,
         };
         
-        if (language === 'javascript') {
-          parseOptions.sourceType = "script"; // script mode allows return at root
-          parseOptions.allowReturnOutsideFunction = true;
+        const globals: any = {
+          window: false,
+          console: false,
+          document: false,
+          __ENFYRA__: false,
+          __ENFYRA_TABLE__: false,
+          __ENFYRA_PERCENT__: false,
+        };
+        
+        JSHINT(normalizedCode, options, globals);
+        
+        if (JSHINT.errors) {
+          const lines = codeToLint.split('\n');
+          const normalizedLines = normalizedCode.split('\n');
+          
+          for (const error of JSHINT.errors) {
+            if (!error) continue;
+        
+            if (error.code === 'E003' || error.code === 'E001') {
+              continue;
+            }
+            
+            if (error.code === 'W117' && error.reason && error.reason.includes('await')) {
+              continue;
+            }
+            
+            const normalizedLineNum = (error.line || 1) - 1;
+            const normalizedCol = (error.character || 1) - 1;
+            
+            if (normalizedLineNum >= 0 && normalizedLineNum < normalizedLines.length) {
+              const normalizedLine = normalizedLines[normalizedLineNum] || '';
+              const originalLineNum = normalizedLineNum;
+              
+              if (originalLineNum < lines.length) {
+                const originalLine = lines[originalLineNum] || '';
+                
+                if (error.code === 'W033' || (error.reason && error.reason.includes('Missing semicolon'))) {
+                  if (normalizedLine.includes('await') || originalLine.includes('@') || originalLine.includes('#') || originalLine.includes('%')) {
+                    continue;
+                  }
         }
         
-        const ast = acorn.parse(codeToLint, parseOptions);
-        
-        const constVars = new Set<string>();
-        
-        walk.simple(ast, {
-          VariableDeclaration(node: any) {
-            if (node.kind === 'const') {
-              for (const decl of node.declarations) {
-                if (decl.id.type === 'Identifier') {
-                  constVars.add(decl.id.name);
-                }
+                const lineStart = codeToLint.split('\n').slice(0, originalLineNum).join('\n').length + (originalLineNum > 0 ? 1 : 0);
+                
+                let from = lineStart + normalizedCol + offset;
+                let to = from + 1;
+                let message = error.reason || 'Syntax error';
+                
+                if (error.code === 'W020') {
+                  const assignmentMatch = normalizedLine.substring(normalizedCol).match(/^[a-zA-Z_][a-zA-Z0-9_]*\s*=/);
+                  if (assignmentMatch) {
+                    const varName = assignmentMatch[0].trim().replace(/\s*=.*$/, '');
+                    
+                    if (varName.startsWith('__ENFYRA')) {
+                      continue;
+                    }
+                    
+                    const originalAssignmentMatch = originalLine.match(new RegExp(`\\b${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*=`));
+                    if (originalAssignmentMatch) {
+                      const constDeclMatch = originalLine.match(new RegExp(`\\bconst\\s+${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*=`));
+                      
+                      if (!constDeclMatch || constDeclMatch.index !== originalAssignmentMatch.index) {
+                        const col = originalAssignmentMatch.index || 0;
+                        from = lineStart + col + offset;
+                        to = from + varName.length + offset;
+                        message = `Cannot assign to const variable '${varName}'`;
+                      } else {
+                        continue;
               }
             }
-          },
-          AssignmentExpression(node: any) {
-            if (node.left.type === 'Identifier' && constVars.has(node.left.name)) {
+                  }
+                } else {
+                  const match = normalizedLine.substring(normalizedCol).match(/^[a-zA-Z_][a-zA-Z0-9_]*/);
+                  if (match) {
+                    const varName = match[0];
+                    if (!varName.startsWith('__ENFYRA')) {
+                      const originalMatch = originalLine.substring(normalizedCol).match(/^[a-zA-Z_][a-zA-Z0-9_]*/);
+                      if (originalMatch) {
+                        from = lineStart + normalizedCol + offset;
+                        to = from + originalMatch[0].length + offset;
+                      }
+                    } else {
+                      continue;
+                    }
+                  }
+                }
+                
               diagnostics.push({
-                from: node.left.start + offset,
-                to: node.left.end + offset,
-                severity: 'error',
-                message: `Cannot assign to const variable '${node.left.name}'`,
-              });
-            }
-          },
-          UpdateExpression(node: any) {
-            if (node.argument.type === 'Identifier' && constVars.has(node.argument.name)) {
-              diagnostics.push({
-                from: node.start + offset,
-                to: node.end + offset,
-                severity: 'error',
-                message: `Cannot update const variable '${node.argument.name}'`,
+                  from,
+                  to,
+                  severity: error.code?.startsWith('E') ? 'error' : 'warning',
+                  message,
               });
             }
           }
-        });
-        
-      } catch (error: any) {
-        if (error.loc) {
-          const errorPos = offset + (error.pos || 0);
-          diagnostics.push({
-            from: errorPos,
-            to: errorPos + 1,
-            severity: 'error',
-            message: error.message.replace(/\s*\(\d+:\d+\)$/, ''),
-          });
+          }
         }
+      } catch (error: any) {
+        console.warn('JSHint linter error:', error);
+      }
+      
+      console.log('Returning diagnostics:', diagnostics);
+      
+      let finalDiagnostics = diagnostics;
+      
+      if (diagnostics.length > 0) {
+        const firstError = diagnostics[0];
+        finalDiagnostics = [{
+          from: firstError.from,
+          to: firstError.to,
+            severity: 'error',
+          message: 'Syntax error',
+        }];
       }
       
       if (onDiagnostics) {
-        onDiagnostics(diagnostics);
+        console.log('Calling onDiagnostics callback with:', finalDiagnostics);
+        onDiagnostics(finalDiagnostics);
       }
       
       return diagnostics;
@@ -385,9 +502,8 @@ export function useCodeMirrorExtensions() {
 
   return {
     getLanguageExtension,
-    createLinter,
     getBasicSetup,
-    enfyraSyntaxPlugin, // Export plugin separately for proper ordering
-    basicSetup: getBasicSetup("javascript"), // Default for backward compatibility
+    enfyraSyntaxPlugin,
+    basicSetup: getBasicSetup("javascript"),
   };
 }

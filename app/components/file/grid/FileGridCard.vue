@@ -118,6 +118,10 @@ interface Props {
     size: string;
     modifiedAt: string;
     assetUrl: string;
+    storageConfig?: {
+      type?: string;
+      name?: string;
+    };
   };
   isSelectionMode?: boolean;
   selectedItems: string[];

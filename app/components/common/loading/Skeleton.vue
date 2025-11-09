@@ -338,20 +338,20 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
           <div class="flex-shrink-0">
             <div
               class="w-12 h-12 rounded-lg"
-              :style="{
+                :style="{
                 background: ['#3B82F6', '#7C3AED', '#F59E0B', '#14B8A6'][i % 4],
-              }"
-            />
-          </div>
+                }"
+              />
+        </div>
 
           <div class="flex-1 min-w-0 space-y-1">
-            <div
+          <div
               class="h-4 rounded"
-              :style="{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
+            :style="{
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
                 width: `${60 + (i % 3) * 15}%`
-              }"
-            />
+            }"
+          />
             <div
               class="h-3 w-16 rounded"
               :style="{
