@@ -222,10 +222,8 @@ export function useCodeMirrorExtensions() {
 
   const createLinter = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
     return linter(async (view) => {
-      console.log('Linter called for language:', language);
       const diagnostics: any[] = [];
       const text = view.state.doc.toString();
-      console.log('Code to lint:', text.substring(0, 100));
       
       if (language === 'json' || language === 'html') {
         return diagnostics;
@@ -374,10 +372,8 @@ export function useCodeMirrorExtensions() {
           }
         }
       } catch (error: any) {
-        console.warn('JSHint linter error:', error);
+        // JSHint linter error - silently fail
       }
-      
-      console.log('Returning diagnostics:', diagnostics);
       
       let finalDiagnostics = diagnostics;
       
@@ -392,7 +388,6 @@ export function useCodeMirrorExtensions() {
       }
       
       if (onDiagnostics) {
-        console.log('Calling onDiagnostics callback with:', finalDiagnostics);
         onDiagnostics(finalDiagnostics);
       }
       

@@ -85,7 +85,7 @@
             <span>{{ file.modifiedAt }}</span>
               </div>
 
-          <div v-if="file.storageConfig" class="flex items-center">
+          <div class="flex items-center">
               <UBadge
               size="sm"
                 variant="subtle"
