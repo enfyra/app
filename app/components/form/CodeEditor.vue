@@ -20,7 +20,6 @@ const languageExtension = computed(() => getLanguageExtension(props.language));
 
 const extensions = computed(() => [
   ...getBasicSetup(props.language, (diags) => {
-    console.log('CodeEditor emitting diagnostics:', diags);
     emit("diagnostics", diags);
   }),
   languageExtension.value,
@@ -39,15 +38,8 @@ onUnmounted(() => {
 });
 
 watch(() => props.language, () => {
-  console.log('Language changed, emitting empty diagnostics');
   emit("diagnostics", []);
 });
-
-watch(() => editorView.value, (view) => {
-  if (view) {
-    console.log('EditorView created, setting up diagnostics watch');
-  }
-}, { immediate: true });
 </script>
 
 <template>
