@@ -75,7 +75,7 @@ export function useCodeMirrorExtensions() {
       const line = doc.line(i)
       const text = line.text
 
-      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED|THROW)\b/g
+      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|THROW)\b/g
       let match
       while ((match = templateRegex.exec(text)) !== null) {
         builder.add(line.from + match.index, line.from + match.index + match[0].length, templateDecoration)
