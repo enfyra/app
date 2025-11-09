@@ -149,7 +149,7 @@ onMounted(() => {
           <FormEditorLazy
             ref="formEditorRef"
             table-name="setting_definition"
-            mode="edit"
+            mode="update"
             v-model="setting"
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"

@@ -265,12 +265,18 @@ function getComponentConfigByKey(key: string) {
             updateFormData(key, val);
           },
           onDiagnostics: (diags: any[]) => {
+            console.log('FieldRenderer received diagnostics for', key, ':', diags);
             const updated = { ...props.errors };
             if (diags?.length > 0) {
-              updated[key] = "Code syntax error";
+              const errorMessages = diags
+                .filter((d: any) => d.severity === 'error')
+                .map((d: any) => d.message)
+                .join('; ');
+              updated[key] = errorMessages || "Code syntax error";
             } else {
               delete updated[key];
             }
+            console.log('Updating errors:', updated);
             updateErrors(updated);
           },
         },

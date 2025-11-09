@@ -22,7 +22,7 @@
       v-if="!loading && !handlerData?.data?.[0]"
       title="Handler not found"
       description="The requested handler could not be loaded"
-      icon="lucide:command-x"
+      icon="lucide:x-circle"
       size="sm"
     />
   </div>
@@ -162,6 +162,15 @@ async function initializeForm() {
 
 async function save() {
   if (!form.value) return;
+
+  if (Object.keys(errors.value).length > 0) {
+    toast.add({
+      title: "Validation errors",
+      description: "Please fix all errors before saving.",
+      color: "error",
+    });
+    return;
+  }
 
   const { isValid, errors: validationErrors } = validate(form.value);
   if (!isValid) {

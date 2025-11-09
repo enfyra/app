@@ -1,42 +1,7 @@
 import { EditorView } from "@codemirror/view";
-import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
-import { tags } from "@lezer/highlight";
+import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 
 export function useCodeMirrorTheme(height?: string) {
-  const vscodeHighlightStyle = HighlightStyle.define([
-    { tag: tags.keyword, color: "#569CD6" },                              
-    { tag: tags.controlKeyword, color: "#C586C0" },                       
-    { tag: tags.operatorKeyword, color: "#569CD6" },                      
-    { tag: tags.modifier, color: "#569CD6" },                             
-    { tag: tags.string, color: "#CE9178" },                               
-    { tag: tags.number, color: "#B5CEA8" },                               
-    { tag: tags.bool, color: "#569CD6" },                                 
-    { tag: tags.null, color: "#569CD6" },                                 
-    { tag: tags.variableName, color: "#9CDCFE" },                         
-    { tag: tags.function(tags.variableName), color: "#DCDCAA" },          
-    { tag: tags.definition(tags.function(tags.variableName)), color: "#DCDCAA" }, 
-    { tag: tags.propertyName, color: "#9CDCFE" },                         
-    { tag: tags.attributeName, color: "#92C5F8" },                        
-    { tag: tags.comment, color: "#6A9955", fontStyle: "italic" },         
-    { tag: tags.lineComment, color: "#6A9955", fontStyle: "italic" },     
-    { tag: tags.blockComment, color: "#6A9955", fontStyle: "italic" },    
-    { tag: tags.operator, color: "#D4D4D4" },                             
-    { tag: tags.bracket, color: "#FFD700" },                              
-    { tag: tags.punctuation, color: "#D4D4D4" },                          
-    { tag: tags.angleBracket, color: "#808080" },                         
-    { tag: tags.squareBracket, color: "#FFD700" },                        
-    { tag: tags.paren, color: "#FFD700" },                                
-    { tag: tags.brace, color: "#FFD700" },                                
-    { tag: tags.regexp, color: "#D16969" },                               
-    { tag: tags.escape, color: "#D7BA7D" },                               
-    { tag: tags.special(tags.string), color: "#D7BA7D" },                 
-    { tag: tags.meta, color: "#569CD6" },                                 
-    { tag: tags.invalid, color: "#F44747", textDecoration: "underline" }, 
-    { tag: tags.tagName, color: "#4FC1FF" },
-    { tag: tags.content, color: "#D4D4D4" },
-    { tag: tags.typeName, color: "#4EC9B0" },
-  ]);
-
   const customTheme = computed(() => EditorView.baseTheme({
     "&": {
       backgroundColor: "#1e1e1e",
@@ -174,11 +139,21 @@ export function useCodeMirrorTheme(height?: string) {
       color: "#C586C0 !important",
       fontWeight: "bold !important",
     },
+
+    ".cm-enfyra-throw": {
+      color: "#F48771 !important",
+      fontWeight: "bold !important",
+      backgroundColor: "transparent !important",
+      textDecoration: "none !important",
+    },
+    ".cm-enfyra-throw *": {
+      color: "#F48771 !important",
+      fontWeight: "bold !important",
+    },
   }));
 
   return {
-    vscodeHighlightStyle,
     customTheme,
-    syntaxHighlighting: () => syntaxHighlighting(vscodeHighlightStyle, { fallback: true })
+    vscodeTheme: vscodeDark,
   };
 }

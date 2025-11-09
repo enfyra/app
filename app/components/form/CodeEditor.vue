@@ -7,30 +7,26 @@ const props = defineProps<{
 
 const emit = defineEmits(["update:modelValue", "diagnostics"]);
 
-const { customTheme, syntaxHighlighting: syntaxHighlightingExtension } = useCodeMirrorTheme(props.height);
+const { customTheme, vscodeTheme } = useCodeMirrorTheme(props.height);
 const { getLanguageExtension, getBasicSetup, enfyraSyntaxPlugin } = useCodeMirrorExtensions();
-const { editorRef, createEditor, watchExtensions, destroyEditor } = useCodeMirrorEditor({
+const { editorRef, createEditor, watchExtensions, destroyEditor, editorView } = useCodeMirrorEditor({
   modelValue: props.modelValue,
   language: props.language,
   height: props.height,
   emit
 });
 
-// Language extension
 const languageExtension = computed(() => getLanguageExtension(props.language));
 
-// Diagnostics callback
-const onDiagnostics = (diags: any[]) => {
-  emit("diagnostics", diags);
-};
-
-// Editor extensions - Enfyra plugin MUST be last for proper precedence
 const extensions = computed(() => [
-  ...getBasicSetup(props.language, onDiagnostics),
+  ...getBasicSetup(props.language, (diags) => {
+    console.log('CodeEditor emitting diagnostics:', diags);
+    emit("diagnostics", diags);
+  }),
   languageExtension.value,
-  syntaxHighlightingExtension(),
+  vscodeTheme,
   customTheme.value,
-  enfyraSyntaxPlugin, // Add AFTER syntax highlighting to override colors
+  enfyraSyntaxPlugin,
 ]);
 
 onMounted(() => {
@@ -42,10 +38,16 @@ onUnmounted(() => {
   destroyEditor();
 });
 
-// Emit empty diagnostics for compatibility
 watch(() => props.language, () => {
+  console.log('Language changed, emitting empty diagnostics');
   emit("diagnostics", []);
 });
+
+watch(() => editorView.value, (view) => {
+  if (view) {
+    console.log('EditorView created, setting up diagnostics watch');
+  }
+}, { immediate: true });
 </script>
 
 <template>

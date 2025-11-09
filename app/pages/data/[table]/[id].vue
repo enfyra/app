@@ -214,7 +214,7 @@ useHeaderActionRegistry([
         <FormEditorLazy
           ref="formEditorRef"
           :table-name="(route.params.table as string)"
-          mode="edit"
+          mode="update"
           v-model="currentRecord"
           v-model:errors="updateErrors"
           @has-changed="(hasChanged) => hasFormChanges = hasChanged"

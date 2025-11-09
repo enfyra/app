@@ -8,7 +8,7 @@ interface Props {
   }>;
   size?: "sm" | "md" | "lg" | "xl";
   variant?: "solid" | "outline" | "ghost" | "soft";
-  color?: string;
+  color?: "error" | "info" | "success" | "secondary" | "primary" | "warning" | "neutral";
 }
 
 const props = withDefaults(defineProps<Props>(), {
