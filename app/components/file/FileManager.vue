@@ -158,8 +158,8 @@ async function handleBulkDelete() {
     await deleteSelectedFiles(fileIds, () => emit("refreshItems"));
   }
 
-  selectedItems.value = [];
-  isSelectionMode.value = false;
+    selectedItems.value = [];
+    isSelectionMode.value = false;
 }
 
 useSubHeaderActionRegistry([

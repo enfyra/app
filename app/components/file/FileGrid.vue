@@ -1,10 +1,8 @@
 <template>
   <div class="space-y-4">
-    <!-- Grid View -->
     <div
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4"
     >
-      <!-- File Items Container -->
       <div v-if="transformedFiles.length > 0" class="contents">
         <FileGridCard
           v-for="file in transformedFiles"
@@ -23,7 +21,6 @@
         />
       </div>
 
-      <!-- Empty State -->
       <div v-else class="col-span-full text-center py-12">
         <UIcon
           name="lucide:file"

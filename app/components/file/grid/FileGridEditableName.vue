@@ -10,7 +10,7 @@
         @keyup.escape="!editingLoading && $emit('cancel-edit')"
         :disabled="editingLoading"
         :data-editing-id="file.id"
-        class="flex-1 text-sm font-semibold bg-white dark:bg-gray-700 border border-primary rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary text-gray-900 dark:text-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="flex-1 text-xs font-medium bg-gray-800 border border-primary rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
         @click.stop
       />
       <div v-if="editingLoading" class="flex items-center">
@@ -35,7 +35,7 @@
           color="error"
           variant="solid"
           @click.stop="$emit('cancel-edit')"
-          class="!p-1 !min-w-[24px] !w-6 !h-6 flex items-center justify-center"
+          class="!p-1 !min-w-[24px] !w-6 !h-6 flex items-center justify-center [&_svg]:text-white"
         />
       </div>
     </div>
@@ -45,7 +45,7 @@
       class="flex items-center justify-between gap-2 flex-1 min-w-0"
     >
       <h3
-        class="font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0"
+        class="text-sm font-medium text-white truncate flex-1 min-w-0"
         :title="file.displayName"
         @dblclick="!isSelectionMode && $emit('start-rename')"
       >
@@ -58,7 +58,7 @@
         variant="ghost"
         color="neutral"
         @click.stop="$emit('start-rename')"
-        class="opacity-0 lg:group-hover:opacity-100 transition-opacity ml-1"
+        class="opacity-0 lg:group-hover:opacity-100 transition-opacity ml-1 hover:bg-white/10"
       />
     </div>
   </div>
