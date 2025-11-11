@@ -283,7 +283,7 @@ const stopStreaming = () => {
             <UButton
               color="neutral"
               variant="ghost"
-              size="sm"
+              size="lg"
               icon="lucide:settings"
               square
               @click="showConfigDrawer = true"

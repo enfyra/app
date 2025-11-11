@@ -48,7 +48,7 @@
               icon="lucide:trash-2"
               variant="ghost"
               color="error"
-              size="sm"
+              size="md"
               square
               :loading="getDeleteLoader(conversation.id).isLoading"
               @click.stop="deleteConversation(conversation)"

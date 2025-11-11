@@ -4,7 +4,8 @@ import hljs from 'highlight.js'
 
 const route = useRoute()
 const conversationId = computed(() => route.params.id)
-const { getIdFieldName } = useDatabase()
+const { getIdFieldName, getId } = useDatabase()
+const toast = useToast()
 
 // Configure marked options
 marked.setOptions({
@@ -52,13 +53,70 @@ const { isMounted } = useMounted()
 // Config drawer
 const showConfigDrawer = ref(false)
 const selectedAiConfig = ref<any>(null)
-const { aiConfig } = useGlobalState()
+const conversationConfig = ref<{ id: string } | null>(null)
+const { aiConfig, aiConfigs } = useGlobalState()
+
+// Handle config selection
+const handleConfigSelect = async (config: any) => {
+  selectedAiConfig.value = config
+
+  // Update conversation with new config
+  const { execute: updateConversation, error: updateError } = useApi(() => '/ai_conversation_definition', {
+    method: 'patch',
+    errorContext: 'Update Conversation Config',
+  })
+
+  const idField = getIdFieldName()
+  const configId = getId(config)
+  await updateConversation({
+    id: conversationId.value,
+    body: {
+      config: { [idField]: configId }
+    }
+  })
+
+  if (!updateError.value) {
+    toast.add({
+      title: 'Success',
+      description: `AI configuration updated to "${config.name || config.provider}"`,
+      color: 'success',
+    })
+  }
+}
 
 // Pagination for chat history
 const historyPage = ref(1)
 const historyLimit = 20
 const hasMoreHistory = ref(false)
 const isLoadingMore = ref(false)
+
+// Load conversation data
+const {
+  data: conversationData,
+  execute: loadConversation,
+} = useApi(() => '/ai_conversation_definition', {
+  query: computed(() => {
+    const idField = getIdFieldName()
+    return {
+      fields: ['*'].join(','),
+      filter: {
+        [idField]: {
+          _eq: conversationId.value,
+        },
+      },
+    }
+  }),
+  errorContext: 'Load Conversation',
+})
+
+// Watch conversation data and update config
+watch(conversationData, (data) => {
+  const record = data?.data?.[0]
+  if (record?.config) {
+    conversationConfig.value = record.config
+    selectedAiConfig.value = record.config
+  } 
+}, { immediate: true })
 
 // Load chat history for this conversation
 const {
@@ -184,6 +242,11 @@ const copyCode = async (code: string) => {
 // Send message with streaming
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || isTyping.value) return
+  if (!selectedAiConfig.value) {
+    // Show error toast or open config drawer
+    showConfigDrawer.value = true
+    return
+  }
 
   const userMsg = inputMessage.value
   inputMessage.value = ''
@@ -224,7 +287,7 @@ const sendMessage = async () => {
       },
       body: JSON.stringify({
         message: userMsg,
-        config: 1,
+        config: selectedAiConfig.value ? getId(selectedAiConfig.value) : undefined,
         conversation: conversationId.value,
       }),
       streamOptions: {
@@ -307,6 +370,14 @@ const formatTime = (date: Date) => {
 }
 
 onMounted(async () => {
+  // Initialize with global config as fallback
+  if (aiConfig.value && Object.keys(aiConfig.value).length > 0) {
+    selectedAiConfig.value = aiConfig.value
+  }
+
+  // Load conversation data (will override selectedAiConfig if conversation has a config)
+  await loadConversation()
+
   await loadChatHistory()
 
   // Disable parent section scroll
@@ -342,8 +413,14 @@ onMounted(async () => {
             <div>
               <h1 class="text-lg font-semibold text-gray-100">AI Assistant</h1>
               <div class="flex items-center gap-1.5 text-xs text-gray-400">
-                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span>Online</span>
+                <template v-if="selectedAiConfig">
+                  <div class="w-2 h-2 rounded-full bg-green-500" />
+                  <span>{{ selectedAiConfig.name || 'AI Config' }}</span>
+                </template>
+                <template v-else>
+                  <div class="w-2 h-2 rounded-full bg-orange-500" />
+                  <span class="text-orange-400">No config selected</span>
+                </template>
               </div>
             </div>
           </div>
@@ -353,9 +430,10 @@ onMounted(async () => {
             <UButton
               color="neutral"
               variant="ghost"
-              size="sm"
+              size="lg"
               icon="lucide:settings"
               square
+              @click="showConfigDrawer = true"
             />
           </div>
         </div>
@@ -516,6 +594,13 @@ onMounted(async () => {
       </div>
     </div>
   </div>
+
+  <!-- Config Drawer -->
+  <AiConfigDrawer
+    v-model="showConfigDrawer"
+    :current-config="selectedAiConfig"
+    @select="handleConfigSelect"
+  />
 </template>
 
 <style scoped>
