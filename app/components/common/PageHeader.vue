@@ -50,11 +50,22 @@ const isStatsFocus = computed(() => props.variant === "stats-focus");
 // Animation state
 const isVisible = ref(false);
 
+function triggerAnimation() {
+  isVisible.value = false;
+  setTimeout(() => {
+    nextTick(() => {
+      isVisible.value = true;
+    });
+  }, 50);
+}
+
 onMounted(() => {
-  nextTick(() => {
-    isVisible.value = true;
-  });
+  triggerAnimation();
 });
+
+watch(() => [props.title, props.description, props.variant, props.gradient, props.stats], () => {
+  triggerAnimation();
+}, { deep: true });
 
 const { isMobile, isTablet } = useScreen();
 </script>

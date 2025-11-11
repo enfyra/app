@@ -42,7 +42,7 @@ export default defineNuxtConfig({
     storageKey: "nuxt-color-mode",
   },
   ssr: false,
-  css: ["./app/assets/css/main.css"],
+  css: ["./app/assets/css/main.css", "./app/assets/css/highlight.css"],
   app: {
     head: {
       htmlAttrs: {
@@ -82,7 +82,7 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
     optimizeDeps: {
-      exclude: ['console-browserify', 'jshint'],
+      exclude: ['console-browserify'],
     },
     build: {
       rollupOptions: {

@@ -265,7 +265,6 @@ function getComponentConfigByKey(key: string) {
             updateFormData(key, val);
           },
           onDiagnostics: (diags: any[]) => {
-            console.log('FieldRenderer received diagnostics for', key, ':', diags);
             const updated = { ...props.errors };
             if (diags?.length > 0) {
               const errorMessages = diags
@@ -276,7 +275,6 @@ function getComponentConfigByKey(key: string) {
             } else {
               delete updated[key];
             }
-            console.log('Updating errors:', updated);
             updateErrors(updated);
           },
         },

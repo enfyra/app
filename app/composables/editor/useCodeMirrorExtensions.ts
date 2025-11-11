@@ -99,18 +99,29 @@ export function useCodeMirrorExtensions() {
       }
     })
 
+    const standaloneAtDecoration = Decoration.mark({
+      tagName: "span",
+      class: "cm-enfyra-standalone-at",
+      attributes: {
+        style: "color: inherit !important; background: transparent !important; position: relative; z-index: 10;"
+      }
+    })
+
     for (let i = 1; i <= doc.lines; i++) {
       const line = doc.line(i)
       const text = line.text
 
       const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE)\b/g
       const throwRegex = /@THROW\d*/g
+      
+      const matchedRanges: Array<{ from: number; to: number }> = []
       let match
       
       while ((match = templateRegex.exec(text)) !== null) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
           builder.add(absolutePos, absolutePos + match[0].length, templateDecoration)
+          matchedRanges.push({ from: absolutePos, to: absolutePos + match[0].length })
         }
       }
       
@@ -118,6 +129,30 @@ export function useCodeMirrorExtensions() {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
           builder.add(absolutePos, absolutePos + match[0].length, throwDecoration)
+          matchedRanges.push({ from: absolutePos, to: absolutePos + match[0].length })
+        }
+      }
+
+      const allAtRegex = /@/g
+      while ((match = allAtRegex.exec(text)) !== null) {
+        const absolutePos = line.from + match.index
+        if (!isInComment(doc, absolutePos)) {
+          const isMatched = matchedRanges.some(range => 
+            absolutePos >= range.from && absolutePos < range.to
+          )
+          if (!isMatched) {
+            const nextChar = text[match.index + 1]
+            if (!nextChar || !/[A-Z_]/.test(nextChar)) {
+              let endPos = absolutePos + 1
+              if (nextChar && /[a-zA-Z_]/.test(nextChar)) {
+                const identifierMatch = text.substring(match.index + 1).match(/^[a-zA-Z_][a-zA-Z0-9_]*/)
+                if (identifierMatch) {
+                  endPos = absolutePos + 1 + identifierMatch[0].length
+                }
+              }
+              builder.add(absolutePos, endPos, standaloneAtDecoration)
+            }
+          }
         }
       }
 
@@ -223,172 +258,9 @@ export function useCodeMirrorExtensions() {
   const createLinter = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
     return linter(async (view) => {
       const diagnostics: any[] = [];
-      const text = view.state.doc.toString();
-      
-      if (language === 'json' || language === 'html') {
-        return diagnostics;
-      }
-      
-      let codeToLint = text;
-      let offset = 0;
-      
-      if (language === 'vue') {
-        const scriptMatch = text.match(/<script[^>]*>([\s\S]*?)<\/script>/);
-        if (!scriptMatch) {
-          return diagnostics;
-        }
-
-        codeToLint = scriptMatch[1] || '';
-        offset = text.indexOf(scriptMatch[1] || '');
-      }
-      
-      try {
-        const jshintModule: any = await import('jshint');
-        const JSHINT = jshintModule.JSHINT || jshintModule.default?.JSHINT || jshintModule.default;
-        
-        if (!JSHINT) {
-          return diagnostics;
-        }
-        
-        const enfyraPatterns = [
-          { pattern: /@[A-Z_]+\d*/g, replacement: '__ENFYRA__' },
-          { pattern: /#[a-zA-Z_][a-zA-Z0-9_]*/g, replacement: '__ENFYRA_TABLE__' },
-          { pattern: /%[a-zA-Z_][a-zA-Z0-9_]*/g, replacement: '__ENFYRA_PERCENT__' },
-        ];
-        
-        let normalizedCode = codeToLint;
-        for (const { pattern, replacement } of enfyraPatterns) {
-          normalizedCode = normalizedCode.replace(pattern, replacement);
-      }
-      
-        const options = {
-          esversion: 2022,
-          undef: true,
-          unused: false,
-          browser: true,
-          node: false,
-          strict: false,
-          eqeqeq: false,
-          curly: false,
-          asi: true,
-          laxbreak: true,
-        };
-        
-        const globals: any = {
-          window: false,
-          console: false,
-          document: false,
-          __ENFYRA__: false,
-          __ENFYRA_TABLE__: false,
-          __ENFYRA_PERCENT__: false,
-        };
-        
-        JSHINT(normalizedCode, options, globals);
-        
-        if (JSHINT.errors) {
-          const lines = codeToLint.split('\n');
-          const normalizedLines = normalizedCode.split('\n');
-          
-          for (const error of JSHINT.errors) {
-            if (!error) continue;
-        
-            if (error.code === 'E003' || error.code === 'E001') {
-              continue;
-            }
-            
-            if (error.code === 'W117' && error.reason && error.reason.includes('await')) {
-              continue;
-            }
-            
-            const normalizedLineNum = (error.line || 1) - 1;
-            const normalizedCol = (error.character || 1) - 1;
-            
-            if (normalizedLineNum >= 0 && normalizedLineNum < normalizedLines.length) {
-              const normalizedLine = normalizedLines[normalizedLineNum] || '';
-              const originalLineNum = normalizedLineNum;
-              
-              if (originalLineNum < lines.length) {
-                const originalLine = lines[originalLineNum] || '';
-                
-                if (error.code === 'W033' || (error.reason && error.reason.includes('Missing semicolon'))) {
-                  if (normalizedLine.includes('await') || originalLine.includes('@') || originalLine.includes('#') || originalLine.includes('%')) {
-                    continue;
-                  }
-        }
-        
-                const lineStart = codeToLint.split('\n').slice(0, originalLineNum).join('\n').length + (originalLineNum > 0 ? 1 : 0);
-                
-                let from = lineStart + normalizedCol + offset;
-                let to = from + 1;
-                let message = error.reason || 'Syntax error';
-                
-                if (error.code === 'W020') {
-                  const assignmentMatch = normalizedLine.substring(normalizedCol).match(/^[a-zA-Z_][a-zA-Z0-9_]*\s*=/);
-                  if (assignmentMatch) {
-                    const varName = assignmentMatch[0].trim().replace(/\s*=.*$/, '');
-                    
-                    if (varName.startsWith('__ENFYRA')) {
-                      continue;
-                    }
-                    
-                    const originalAssignmentMatch = originalLine.match(new RegExp(`\\b${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*=`));
-                    if (originalAssignmentMatch) {
-                      const constDeclMatch = originalLine.match(new RegExp(`\\bconst\\s+${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*=`));
-                      
-                      if (!constDeclMatch || constDeclMatch.index !== originalAssignmentMatch.index) {
-                        const col = originalAssignmentMatch.index || 0;
-                        from = lineStart + col + offset;
-                        to = from + varName.length + offset;
-                        message = `Cannot assign to const variable '${varName}'`;
-                      } else {
-                        continue;
-              }
-            }
-                  }
-                } else {
-                  const match = normalizedLine.substring(normalizedCol).match(/^[a-zA-Z_][a-zA-Z0-9_]*/);
-                  if (match) {
-                    const varName = match[0];
-                    if (!varName.startsWith('__ENFYRA')) {
-                      const originalMatch = originalLine.substring(normalizedCol).match(/^[a-zA-Z_][a-zA-Z0-9_]*/);
-                      if (originalMatch) {
-                        from = lineStart + normalizedCol + offset;
-                        to = from + originalMatch[0].length + offset;
-                      }
-                    } else {
-                      continue;
-                    }
-                  }
-                }
-                
-              diagnostics.push({
-                  from,
-                  to,
-                  severity: error.code?.startsWith('E') ? 'error' : 'warning',
-                  message,
-              });
-            }
-          }
-          }
-        }
-      } catch (error: any) {
-        // JSHint linter error - silently fail
-      }
-      
-      let finalDiagnostics = diagnostics;
-      
-      if (diagnostics.length > 0) {
-        const firstError = diagnostics[0];
-        finalDiagnostics = [{
-          from: firstError.from,
-          to: firstError.to,
-            severity: 'error',
-          message: 'Syntax error',
-        }];
-      }
       
       if (onDiagnostics) {
-        onDiagnostics(finalDiagnostics);
+        onDiagnostics(diagnostics);
       }
       
       return diagnostics;

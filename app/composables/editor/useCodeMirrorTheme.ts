@@ -1,7 +1,12 @@
 import { EditorView } from "@codemirror/view";
 import { vscodeDark } from "@uiw/codemirror-theme-vscode";
 
-export function useCodeMirrorTheme(height?: string) {
+export function useCodeMirrorTheme(height?: string | Ref<string>) {
+  const heightValue = computed(() => {
+    if (!height) return "400px";
+    return typeof height === "string" ? height : height.value;
+  });
+
   const customTheme = computed(() => EditorView.baseTheme({
     "&": {
       backgroundColor: "#1e1e1e",
@@ -11,7 +16,7 @@ export function useCodeMirrorTheme(height?: string) {
       borderRadius: "8px",
       border: "1px solid #3c3c3c",
       overflow: "hidden",
-      height: height || "400px",
+      height: "100%",
     },
 
     ".cm-content": {
