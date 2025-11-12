@@ -34,6 +34,9 @@ interface Message {
   timestamp: Date
   isMarkdown?: boolean
   isStreaming?: boolean
+  toolCall?: {
+    name: string
+  }
 }
 
 // Messages list (empty for new chat)
@@ -166,6 +169,17 @@ const sendMessage = async () => {
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
                 botMessage.content += json.data.delta
+                // Clear tool call state when receiving text
+                botMessage.toolCall = undefined
+                scrollToBottom(true)
+              }
+            } else if (json.type === 'tool_call') {
+              // Tool call in progress
+              const botMessage = messages.value.find(m => m.id === botMessageId)
+              if (botMessage) {
+                botMessage.toolCall = {
+                  name: json.data?.name || 'unknown'
+                }
                 scrollToBottom(true)
               }
             } else if (json.type === 'error') {
@@ -358,10 +372,22 @@ const stopStreaming = () => {
                   <!-- Bot message - always render markdown -->
                   <div
                     v-else
-                    class="prose prose-invert prose-sm max-w-none text-gray-200"
+                    class="space-y-3"
                   >
-                    <div v-html="renderMarkdown(message.content)" />
-                    <span v-if="message.isStreaming" class="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
+                    <!-- Tool Call Indicator -->
+                    <div
+                      v-if="message.toolCall"
+                      class="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-xs text-gray-400"
+                    >
+                      <Icon name="lucide:loader-2" class="w-3.5 h-3.5 animate-spin" />
+                      <span>{{ message.toolCall.name }}</span>
+                    </div>
+
+                    <!-- Message Content -->
+                    <div class="prose prose-invert prose-sm max-w-none text-gray-200">
+                      <div v-html="renderMarkdown(message.content)" />
+                      <span v-if="message.isStreaming && !message.toolCall" class="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
+                    </div>
                   </div>
 
                   <!-- Timestamp -->
