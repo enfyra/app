@@ -79,7 +79,7 @@
 
       <!-- Page Content -->
       <section class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin relative z-10">
-        <div class="p-3 md:p-6 pb-32 md:pb-32 lg:pb-6">
+        <div class="p-3 md:p-6 pb-32 md:pb-32 lg:pb-6 h-full overflow-y-auto">
           <slot />
         </div>
       </section>

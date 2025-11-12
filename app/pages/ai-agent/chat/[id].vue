@@ -46,13 +46,32 @@ const messages = ref<Message[]>([])
 const inputMessage = ref('')
 const isTyping = ref(false)
 const messagesContainer = ref<HTMLElement | null>(null)
-const { isMobile, isTablet } = useScreen()
 const { fetchStream } = useStreamingAPI()
 const { isMounted } = useMounted()
 
 const showConfigDrawer = ref(false)
 const selectedAiConfig = ref<any>(null)
 const { aiConfig, aiConfigs } = useGlobalState()
+
+const { registerPageHeader } = usePageHeaderRegistry()
+
+registerPageHeader({
+  title: 'AI Assistant',
+  gradient: 'blue',
+})
+
+useHeaderActionRegistry({
+  id: 'ai-config',
+  label: 'AI Configuration',
+  icon: 'lucide:settings',
+  variant: 'soft',
+  color: 'primary',
+  size: 'lg',
+  onClick: () => {
+    showConfigDrawer.value = true
+  },
+})
+
 const handleConfigSelect = async (config: any) => {
   selectedAiConfig.value = config
 
@@ -399,57 +418,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    class="flex flex-col bg-gray-950 overflow-hidden -m-3 md:-m-6"
-    :style="{
-      height: 'calc(100vh - 60px)',
-      marginBottom: isMobile || isTablet ? '-8rem' : '-1.5rem'
-    }"
-  >
-    <!-- Header -->
-    <div class="bg-gray-900/80 backdrop-blur-sm flex-shrink-0 border-b border-gray-800">
-      <div :class="[(isMobile || isTablet) ? 'px-4 py-3' : 'px-6 py-4']">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <!-- Bot Avatar -->
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <Icon name="lucide:bot" class="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 class="text-lg font-semibold text-gray-100">AI Assistant</h1>
-              <div class="flex items-center gap-1.5 text-xs text-gray-400">
-                <template v-if="selectedAiConfig">
-                  <div class="w-2 h-2 rounded-full bg-green-500" />
-                  <span>{{ selectedAiConfig.name || 'AI Config' }}</span>
-                </template>
-                <template v-else>
-                  <div class="w-2 h-2 rounded-full bg-orange-500" />
-                  <span class="text-orange-400">No config selected</span>
-                </template>
-              </div>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex items-center gap-2">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="lg"
-              icon="lucide:settings"
-              square
-              @click="showConfigDrawer = true"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-
+  <div class="flex flex-col -mx-3 md:-mx-6 h-full">
     <!-- Messages Area -->
     <div
       ref="messagesContainer"
-      class="flex-1 overflow-y-auto"
-      :class="[(isMobile || isTablet) ? 'px-4 py-4' : 'px-6 py-6']"
+      class="flex-1 overflow-y-auto px-6 py-6"
     >
       <div class="max-w-4xl mx-auto space-y-6">
         <Transition name="ai-chat-fade" mode="out-in">
@@ -570,8 +543,8 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Input Area -->
-    <div class="border-t border-gray-800 bg-gray-900/80 backdrop-blur-sm flex-shrink-0">
-      <div :class="[(isMobile || isTablet) ? 'px-4 py-3' : 'px-6 py-4']">
+    <div class="border-t border-gray-800 bg-gray-900/80 backdrop-blur-sm flex-shrink-0 lg:-mb-6 -mb-32">
+      <div class="px-6 py-4">
         <div class="max-w-4xl mx-auto">
           <form @submit.prevent="sendMessage">
             <!-- Wrapper with border (looks like single input) -->
