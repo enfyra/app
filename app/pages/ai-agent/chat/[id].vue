@@ -7,17 +7,13 @@ const conversationId = computed(() => route.params.id)
 const { getIdFieldName, getId } = useDatabase()
 const toast = useToast()
 
-// Get schema fields for conversation
 const conversationTableName = 'ai_conversation_definition'
 const { getIncludeFields: getConversationFields } = useSchema(conversationTableName)
-
-// Configure marked options
 marked.setOptions({
   breaks: true,
   gfm: true,
 })
 
-// Setup syntax highlighting renderer
 const renderer = new marked.Renderer()
 renderer.code = function({ text, lang }: { text: string; lang?: string }): string {
   if (lang && hljs.getLanguage(lang)) {
@@ -46,27 +42,20 @@ interface Message {
   }
 }
 
-// Messages list
 const messages = ref<Message[]>([])
-
 const inputMessage = ref('')
 const isTyping = ref(false)
 const messagesContainer = ref<HTMLElement | null>(null)
 const { isMobile, isTablet } = useScreen()
 const { fetchStream } = useStreamingAPI()
-const abortController = ref<AbortController | null>(null)
 const { isMounted } = useMounted()
 
-// Config drawer
 const showConfigDrawer = ref(false)
 const selectedAiConfig = ref<any>(null)
 const { aiConfig, aiConfigs } = useGlobalState()
-
-// Handle config selection
 const handleConfigSelect = async (config: any) => {
   selectedAiConfig.value = config
 
-  // Update conversation with new config
   const { execute: updateConversation, error: updateError } = useApi(() => '/ai_conversation_definition', {
     method: 'patch',
     errorContext: 'Update Conversation Config',
@@ -89,13 +78,11 @@ const handleConfigSelect = async (config: any) => {
   }
 }
 
-// Pagination for chat history
 const historyPage = ref(1)
 const historyLimit = 20
 const hasMoreHistory = ref(false)
 const isLoadingMore = ref(false)
 
-// Load conversation data
 const {
   data: conversationData,
   execute: loadConversation,
@@ -114,7 +101,6 @@ const {
   errorContext: 'Load Conversation',
 })
 
-// Watch conversation data and update config
 watch(conversationData, (data) => {
   const record = data?.data?.[0]
   if (record?.config) {
@@ -122,7 +108,6 @@ watch(conversationData, (data) => {
   }
 }, { immediate: true })
 
-// Load chat history for this conversation
 const {
   data: historyData,
   pending: loadingHistory,
@@ -148,7 +133,6 @@ const {
   errorContext: 'Load Chat History',
 })
 
-// Watch history data and update messages
 watch(historyData, (data) => {
   if (data?.data) {
     if (data.data.length > 0) {
@@ -160,28 +144,22 @@ watch(historyData, (data) => {
         isMarkdown: item.role === 'assistant',
       })).reverse()
 
-      // If first page, replace all messages
       if (historyPage.value === 1) {
         messages.value = newMessages
       } else {
-        // If loading more, prepend to existing messages
         messages.value = [...newMessages, ...messages.value]
       }
     }
 
-    // Reset loading more flag
     if (historyPage.value > 1) {
       isLoadingMore.value = false
     }
 
-    // Always check if there are more messages based on meta
     const total = data.meta?.totalCount || 0
     const currentCount = historyPage.value * historyLimit
     hasMoreHistory.value = currentCount < total
   }
 }, { immediate: true })
-
-// Load more history
 const loadMoreHistory = async () => {
   if (loadingHistory.value || !hasMoreHistory.value || isLoadingMore.value) return
 
@@ -193,7 +171,6 @@ const loadMoreHistory = async () => {
   try {
     await loadChatHistory()
 
-    // Maintain scroll position after loading more
     nextTick(() => {
       if (messagesContainer.value) {
         const scrollHeightAfter = messagesContainer.value.scrollHeight
@@ -206,17 +183,14 @@ const loadMoreHistory = async () => {
   }
 }
 
-// Watch loading state and scroll when done (only for initial load, not for load more)
 watch(loadingHistory, (isLoading) => {
   if (!isLoading && messages.value.length > 0 && !isLoadingMore.value && historyPage.value === 1) {
-    // Wait for DOM to fully render
     setTimeout(() => {
       scrollToBottom(true)
     }, 150)
   }
 })
 
-// Auto scroll to bottom when new message
 const scrollToBottom = (smooth = false) => {
   nextTick(() => {
     if (messagesContainer.value) {
@@ -228,26 +202,22 @@ const scrollToBottom = (smooth = false) => {
   })
 }
 
-// Render markdown to HTML
 const renderMarkdown = (content: string) => {
+  if (!content) return ''
   return marked(content)
 }
 
-// Copy code to clipboard
 const copyCode = async (code: string) => {
   try {
     await navigator.clipboard.writeText(code)
-    // TODO: Show toast notification
   } catch (err) {
     console.error('Failed to copy:', err)
   }
 }
 
-// Send message with streaming
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || isTyping.value) return
   if (!selectedAiConfig.value) {
-    // Show error toast or open config drawer
     showConfigDrawer.value = true
     return
   }
@@ -255,7 +225,6 @@ const sendMessage = async () => {
   const userMsg = inputMessage.value
   inputMessage.value = ''
 
-  // Add user message
   messages.value.push({
     id: Date.now().toString(),
     type: 'user',
@@ -263,7 +232,6 @@ const sendMessage = async () => {
     timestamp: new Date(),
   })
 
-  // Create bot message placeholder
   const botMessageId = (Date.now() + 1).toString()
   messages.value.push({
     id: botMessageId,
@@ -277,11 +245,7 @@ const sendMessage = async () => {
   isTyping.value = true
   scrollToBottom()
 
-  // Create abort controller for cancellation
-  abortController.value = new AbortController()
-
   try {
-    // API endpoint
     const apiUrl = '/enfyra/api/ai-agent/chat/stream'
 
     await fetchStream(apiUrl, {
@@ -295,22 +259,20 @@ const sendMessage = async () => {
         conversation: conversationId.value,
       }),
       streamOptions: {
-        signal: abortController.value.signal,
         onMessage: (chunk: string) => {
           try {
             const json = JSON.parse(chunk)
 
-            // Handle different event types
-            if (json.type === 'text' && json.data?.delta) {
+            if (json.type === 'ping') {
+              return
+            } else if (json.type === 'text' && json.data?.delta) {
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
                 botMessage.content += json.data.delta
-                // Clear tool call state when receiving text
                 botMessage.toolCall = undefined
                 scrollToBottom(true)
               }
             } else if (json.type === 'tool_call') {
-              // Tool call in progress
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
                 botMessage.toolCall = {
@@ -319,16 +281,14 @@ const sendMessage = async () => {
                 scrollToBottom(true)
               }
             } else if (json.type === 'error') {
-              // Streaming error from backend
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
                 botMessage.isStreaming = false
-                botMessage.content = json.data?.error || 'Xin lỗi, có lỗi xảy ra khi xử lý yêu cầu.'
+                botMessage.content = json.data?.error || 'An error occurred while processing your request.'
               }
               isTyping.value = false
               scrollToBottom(true)
             } else if (json.type === 'done') {
-              // Streaming done
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
                 botMessage.isStreaming = false
@@ -349,12 +309,17 @@ const sendMessage = async () => {
           scrollToBottom(true)
         },
         onError: (error: Error) => {
-          console.error('Streaming error:', error)
+          const isAborted = error.name === 'AbortError'
+
+          if (!isAborted) {
+            console.error('Streaming error:', error)
+          }
+
           const botMessage = messages.value.find(m => m.id === botMessageId)
           if (botMessage) {
             botMessage.isStreaming = false
-            if (!botMessage.content) {
-              botMessage.content = 'Xin lỗi, có lỗi xảy ra khi xử lý yêu cầu.'
+            if (!isAborted && !botMessage.content) {
+              botMessage.content = 'An error occurred while processing your request.'
             }
           }
           isTyping.value = false
@@ -367,16 +332,32 @@ const sendMessage = async () => {
   }
 }
 
-// Stop streaming
-const stopStreaming = () => {
-  if (abortController.value) {
-    abortController.value.abort()
-    abortController.value = null
-    isTyping.value = false
+const { execute: cancelStream } = useApi(() => '/ai-agent/cancel', {
+  method: 'post',
+  errorContext: 'Cancel Stream',
+})
+
+const stopStreaming = async () => {
+  if (conversationId.value) {
+    await cancelStream({
+      body: {
+        conversation: conversationId.value,
+      },
+    })
   }
+
+  const streamingBotMessage = messages.value.find(m => m.type === 'bot' && m.isStreaming)
+  if (streamingBotMessage) {
+    streamingBotMessage.isStreaming = false
+    streamingBotMessage.toolCall = undefined
+    if (!streamingBotMessage.content) {
+      streamingBotMessage.content = 'Request cancelled.'
+    }
+  }
+
+  isTyping.value = false
 }
 
-// Format timestamp
 const formatTime = (date: Date) => {
   return new Intl.DateTimeFormat('vi-VN', {
     hour: '2-digit',
@@ -384,26 +365,35 @@ const formatTime = (date: Date) => {
   }).format(date)
 }
 
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && isTyping.value) {
+    event.preventDefault()
+    stopStreaming()
+  }
+}
+
 onMounted(async () => {
-  // Initialize with global config as fallback
   if (aiConfig.value && Object.keys(aiConfig.value).length > 0) {
     selectedAiConfig.value = aiConfig.value
   }
 
-  // Load conversation data (will override selectedAiConfig if conversation has a config)
   await loadConversation()
-
   await loadChatHistory()
 
-  // Disable parent section scroll
   const section = document.querySelector('section.overflow-y-auto')
   if (section) {
     section.classList.add('!overflow-hidden')
   }
 
+  window.addEventListener('keydown', handleKeyDown)
+
   setTimeout(() => {
     scrollToBottom(true)
   }, 500)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeyDown)
 })
 
 </script>
@@ -462,7 +452,7 @@ onMounted(async () => {
       :class="[(isMobile || isTablet) ? 'px-4 py-4' : 'px-6 py-6']"
     >
       <div class="max-w-4xl mx-auto space-y-6">
-        <Transition name="loading-fade" mode="out-in">
+        <Transition name="ai-chat-fade" mode="out-in">
           <!-- Loading -->
           <CommonLoadingState
             v-if="!isMounted || (loadingHistory && historyPage === 1)"
@@ -542,8 +532,7 @@ onMounted(async () => {
                       <span>{{ message.toolCall.name }}</span>
                     </div>
 
-                    <!-- Message Content -->
-                    <div class="prose prose-invert prose-sm max-w-none text-gray-200">
+                    <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
                       <div v-html="renderMarkdown(message.content)" />
                       <span v-if="message.isStreaming && !message.toolCall" class="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
                     </div>
@@ -569,9 +558,9 @@ onMounted(async () => {
               </div>
               <div class="bg-gray-900 border border-gray-800 rounded-2xl px-5 py-4">
                 <div class="flex gap-1.5">
-                  <div class="w-2 h-2 rounded-full bg-gray-600 animate-bounce" style="animation-delay: 0ms" />
-                  <div class="w-2 h-2 rounded-full bg-gray-600 animate-bounce" style="animation-delay: 150ms" />
-                  <div class="w-2 h-2 rounded-full bg-gray-600 animate-bounce" style="animation-delay: 300ms" />
+                  <div class="w-2 h-2 rounded-full bg-gray-600 ai-chat-bounce" style="animation-delay: 0ms" />
+                  <div class="w-2 h-2 rounded-full bg-gray-600 ai-chat-bounce" style="animation-delay: 150ms" />
+                  <div class="w-2 h-2 rounded-full bg-gray-600 ai-chat-bounce" style="animation-delay: 300ms" />
                 </div>
               </div>
             </div>
@@ -602,10 +591,19 @@ onMounted(async () => {
                 }"
               />
 
-              <!-- Send Button - inside wrapper -->
+              <!-- Send/Stop Button - inside wrapper -->
               <button
+                v-if="isTyping"
+                type="button"
+                @click="stopStreaming"
+                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+              >
+                <Icon name="lucide:square" class="w-3.5 h-3.5" />
+              </button>
+              <button
+                v-else
                 type="submit"
-                :disabled="!inputMessage.trim() || isTyping"
+                :disabled="!inputMessage.trim()"
                 class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
               >
                 <Icon name="lucide:send" class="w-4 h-4" />
@@ -629,167 +627,3 @@ onMounted(async () => {
     @select="handleConfigSelect"
   />
 </template>
-
-<style scoped>
-/* Custom scrollbar */
-:deep(*) {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
-}
-
-/* Markdown content styling */
-.prose :deep(h1),
-.prose :deep(h2),
-.prose :deep(h3),
-.prose :deep(h4) {
-  color: rgb(243, 244, 246);
-  font-weight: 600;
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-}
-
-.prose :deep(h3) {
-  font-size: 1.125rem;
-}
-
-.prose :deep(p) {
-  margin: 0.75em 0;
-  line-height: 1.7;
-}
-
-.prose :deep(strong) {
-  color: rgb(243, 244, 246);
-  font-weight: 600;
-}
-
-.prose :deep(code) {
-  color: rgb(134, 239, 172);
-  background-color: rgba(0, 0, 0, 0.3);
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  font-size: 0.875em;
-}
-
-.prose :deep(code)::before,
-.prose :deep(code)::after {
-  content: '';
-}
-
-.prose :deep(pre) {
-  background-color: rgb(17, 24, 39) !important;
-  border: 1px solid rgb(55, 65, 81);
-  border-radius: 0.75rem;
-  padding: 1rem;
-  margin: 1em 0;
-  overflow-x: auto;
-}
-
-.prose :deep(pre code) {
-  background-color: transparent;
-  color: inherit;
-  padding: 0;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-.prose :deep(ul),
-.prose :deep(ol) {
-  margin: 0.75em 0;
-  padding-left: 1.5em;
-}
-
-.prose :deep(li) {
-  margin: 0.25em 0;
-}
-
-.prose :deep(blockquote) {
-  border-left: 4px solid rgb(59, 130, 246);
-  background-color: rgba(0, 0, 0, 0.2);
-  padding: 0.5rem 1rem;
-  margin: 1em 0;
-  font-style: normal;
-}
-
-.prose :deep(a) {
-  color: rgb(96, 165, 250);
-  text-decoration: none;
-}
-
-.prose :deep(a:hover) {
-  text-decoration: underline;
-}
-
-:deep(*::-webkit-scrollbar) {
-  width: 6px;
-}
-
-:deep(*::-webkit-scrollbar-track) {
-  background: transparent;
-}
-
-:deep(*::-webkit-scrollbar-thumb) {
-  background-color: rgba(75, 85, 99, 0.5);
-  border-radius: 3px;
-}
-
-:deep(*::-webkit-scrollbar-thumb:hover) {
-  background-color: rgba(75, 85, 99, 0.8);
-}
-
-/* Code block styling */
-:deep(pre) {
-  position: relative;
-}
-
-:deep(pre code) {
-  display: block;
-  padding: 1rem;
-  overflow-x: auto;
-  line-height: 1.6;
-  font-size: 0.875rem;
-}
-
-/* Copy button for code blocks */
-:deep(pre)::before {
-  content: '';
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 1.5rem;
-  height: 1.5rem;
-  background: rgba(55, 65, 81, 0.8);
-  border-radius: 0.375rem;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-:deep(pre:hover)::before {
-  opacity: 1;
-}
-
-/* Animations */
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-.animate-bounce {
-  animation: bounce 1s infinite;
-}
-
-/* Loading fade transition */
-.loading-fade-enter-active,
-.loading-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.loading-fade-enter-from,
-.loading-fade-leave-to {
-  opacity: 0;
-}
-</style>

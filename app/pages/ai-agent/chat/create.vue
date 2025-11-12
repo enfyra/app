@@ -4,13 +4,11 @@ import hljs from 'highlight.js'
 
 const router = useRouter()
 
-// Configure marked options
 marked.setOptions({
   breaks: true,
   gfm: true,
 })
 
-// Setup syntax highlighting renderer
 const renderer = new marked.Renderer()
 renderer.code = function({ text, lang }: { text: string; lang?: string }): string {
   if (lang && hljs.getLanguage(lang)) {
@@ -39,39 +37,33 @@ interface Message {
   }
 }
 
-// Messages list (empty for new chat)
 const messages = ref<Message[]>([])
-
 const inputMessage = ref('')
 const isTyping = ref(false)
 const messagesContainer = ref<HTMLElement | null>(null)
 const { isMobile, isTablet } = useScreen()
 const { fetchStream } = useStreamingAPI()
-const abortController = ref<AbortController | null>(null)
 const { isMounted } = useMounted()
 
-// Config drawer
+const conversationId = ref<string | null>(null)
+
 const showConfigDrawer = ref(false)
 const selectedAiConfig = ref<any>(null)
 const { aiConfig, aiConfigs } = useGlobalState()
 
-// Check if any configs available
 const hasConfigs = computed(() => aiConfigs.value && aiConfigs.value.length > 0)
 
-// Initialize with global config
 onMounted(() => {
   if (aiConfig.value && Object.keys(aiConfig.value).length > 0) {
     selectedAiConfig.value = aiConfig.value
   }
 
-  // Disable parent section scroll
   const section = document.querySelector('section.overflow-y-auto')
   if (section) {
     section.classList.add('!overflow-hidden')
   }
 })
 
-// Auto scroll to bottom when new message
 const scrollToBottom = (smooth = false) => {
   nextTick(() => {
     if (messagesContainer.value) {
@@ -83,21 +75,18 @@ const scrollToBottom = (smooth = false) => {
   })
 }
 
-// Render markdown to HTML
 const renderMarkdown = (content: string) => {
+  if (!content) return ''
   return marked(content)
 }
 
-// Handle config selection
 const handleConfigSelect = (config: any) => {
   selectedAiConfig.value = config
 }
 
-// Send message
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || isTyping.value) return
   if (!selectedAiConfig.value) {
-    // Show error toast or open config drawer
     showConfigDrawer.value = true
     return
   }
@@ -105,7 +94,6 @@ const sendMessage = async () => {
   const userMsg = inputMessage.value
   inputMessage.value = ''
 
-  // Add user message
   messages.value.push({
     id: Date.now().toString(),
     type: 'user',
@@ -113,7 +101,6 @@ const sendMessage = async () => {
     timestamp: new Date(),
   })
 
-  // Create bot message placeholder
   const botMessageId = (Date.now() + 1).toString()
   messages.value.push({
     id: botMessageId,
@@ -127,16 +114,7 @@ const sendMessage = async () => {
   isTyping.value = true
   scrollToBottom()
 
-  // Create abort controller for cancellation
-  abortController.value = new AbortController()
-
-  // Track conversation ID to navigate
-  let conversationId: string | null = null
-  let isDone = false
-  let hasError = false
-
   try {
-    // API endpoint
     const apiUrl = '/enfyra/api/ai-agent/chat/stream'
 
     await fetchStream(apiUrl, {
@@ -147,34 +125,28 @@ const sendMessage = async () => {
       body: JSON.stringify({
         message: userMsg,
         config: selectedAiConfig.value.id,
-        // No conversation ID - will create new conversation
       }),
       streamOptions: {
-        signal: abortController.value.signal,
         onMessage: (chunk: string) => {
           try {
             const json = JSON.parse(chunk)
 
-            // Check for conversation ID in metadata (first response) or in done event
-            if (!conversationId) {
+            if (!conversationId.value) {
               const convId = json.data?.metadata?.conversation || json.data?.conversation
               if (convId) {
-                conversationId = convId.toString()
-                console.log('✅ Got conversation ID:', conversationId)
+                conversationId.value = convId.toString()
+                console.log('✅ Got conversation ID:', conversationId.value)
               }
             }
 
-            // Handle different event types
             if (json.type === 'text' && json.data?.delta) {
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
                 botMessage.content += json.data.delta
-                // Clear tool call state when receiving text
                 botMessage.toolCall = undefined
                 scrollToBottom(true)
               }
             } else if (json.type === 'tool_call') {
-              // Tool call in progress
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
                 botMessage.toolCall = {
@@ -183,18 +155,14 @@ const sendMessage = async () => {
                 scrollToBottom(true)
               }
             } else if (json.type === 'error') {
-              // Streaming error from backend
-              hasError = true
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
                 botMessage.isStreaming = false
-                botMessage.content = json.data?.error || 'Xin lỗi, có lỗi xảy ra khi xử lý yêu cầu.'
+                botMessage.content = json.data?.error || 'An error occurred while processing your request.'
               }
               isTyping.value = false
               scrollToBottom(true)
             } else if (json.type === 'done') {
-              // Streaming done
-              isDone = true
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
                 botMessage.isStreaming = false
@@ -214,22 +182,25 @@ const sendMessage = async () => {
           isTyping.value = false
           scrollToBottom(true)
 
-          // Navigate to detail page if conversation ID exists (regardless of success or error)
-          if (conversationId) {
-            // Wait a bit to ensure UI has updated
+          if (conversationId.value) {
             setTimeout(() => {
-              console.log('🚀 Streaming complete, navigating to:', conversationId)
-              router.replace(`/ai-agent/chat/${conversationId}`)
+              console.log('🚀 Streaming complete, navigating to:', conversationId.value)
+              router.replace(`/ai-agent/chat/${conversationId.value}`)
             }, 300)
           }
         },
         onError: (error: Error) => {
-          console.error('Streaming error:', error)
+          const isAborted = error.name === 'AbortError'
+
+          if (!isAborted) {
+            console.error('Streaming error:', error)
+          }
+
           const botMessage = messages.value.find(m => m.id === botMessageId)
           if (botMessage) {
             botMessage.isStreaming = false
-            if (!botMessage.content) {
-              botMessage.content = 'Xin lỗi, có lỗi xảy ra khi xử lý yêu cầu.'
+            if (!isAborted && !botMessage.content) {
+              botMessage.content = 'An error occurred while processing your request.'
             }
           }
           isTyping.value = false
@@ -242,21 +213,11 @@ const sendMessage = async () => {
   }
 }
 
-// Format time
 const formatTime = (date: Date) => {
   return new Intl.DateTimeFormat('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date)
-}
-
-// Stop streaming
-const stopStreaming = () => {
-  if (abortController.value) {
-    abortController.value.abort()
-    abortController.value = null
-  }
-  isTyping.value = false
 }
 </script>
 
@@ -314,7 +275,7 @@ const stopStreaming = () => {
       :class="[(isMobile || isTablet) ? 'px-4 py-4' : 'px-6 py-6']"
     >
       <div class="max-w-4xl mx-auto space-y-6">
-        <Transition name="loading-fade" mode="out-in">
+        <Transition name="ai-chat-fade" mode="out-in">
           <!-- Empty state when no messages -->
           <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full py-12 text-center">
             <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 flex items-center justify-center mb-4">
@@ -383,8 +344,7 @@ const stopStreaming = () => {
                       <span>{{ message.toolCall.name }}</span>
                     </div>
 
-                    <!-- Message Content -->
-                    <div class="prose prose-invert prose-sm max-w-none text-gray-200">
+                    <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
                       <div v-html="renderMarkdown(message.content)" />
                       <span v-if="message.isStreaming && !message.toolCall" class="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
                     </div>
@@ -461,15 +421,3 @@ const stopStreaming = () => {
     @select="handleConfigSelect"
   />
 </template>
-
-<style scoped>
-.loading-fade-enter-active,
-.loading-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.loading-fade-enter-from,
-.loading-fade-leave-to {
-  opacity: 0;
-}
-</style>

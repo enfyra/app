@@ -1,0 +1,146 @@
+*::-webkit-scrollbar {
+  width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(75, 85, 99, 0.8);
+}
+
+.ai-chat-prose {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+}
+
+.ai-chat-prose h1,
+.ai-chat-prose h2,
+.ai-chat-prose h3,
+.ai-chat-prose h4 {
+  color: rgb(243, 244, 246);
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.ai-chat-prose h3 {
+  font-size: 1.125rem;
+}
+
+.ai-chat-prose p {
+  margin: 0.75em 0;
+  line-height: 1.7;
+}
+
+.ai-chat-prose strong {
+  color: rgb(243, 244, 246);
+  font-weight: 600;
+}
+
+.ai-chat-prose code {
+  color: rgb(134, 239, 172);
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.ai-chat-prose code::before,
+.ai-chat-prose code::after {
+  content: '';
+}
+
+.ai-chat-prose pre {
+  background-color: rgb(17, 24, 39) !important;
+  border: 1px solid rgb(55, 65, 81);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin: 1em 0;
+  overflow-x: auto;
+  position: relative;
+}
+
+.ai-chat-prose pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  display: block;
+  overflow-x: auto;
+}
+
+.ai-chat-prose ul,
+.ai-chat-prose ol {
+  margin: 0.75em 0;
+  padding-left: 1.5em;
+}
+
+.ai-chat-prose li {
+  margin: 0.25em 0;
+}
+
+.ai-chat-prose blockquote {
+  border-left: 4px solid rgb(59, 130, 246);
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 1rem;
+  margin: 1em 0;
+  font-style: normal;
+}
+
+.ai-chat-prose a {
+  color: rgb(96, 165, 250);
+  text-decoration: none;
+}
+
+.ai-chat-prose a:hover {
+  text-decoration: underline;
+}
+
+.ai-chat-prose pre::before {
+  content: '';
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: rgba(55, 65, 81, 0.8);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.ai-chat-prose pre:hover::before {
+  opacity: 1;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.ai-chat-bounce {
+  animation: bounce 1s infinite;
+}
+
+.ai-chat-fade-enter-active,
+.ai-chat-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.ai-chat-fade-enter-from,
+.ai-chat-fade-leave-to {
+  opacity: 0;
+}
