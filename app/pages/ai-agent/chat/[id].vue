@@ -55,6 +55,10 @@ interface Message {
   toolCall?: {
     name: string
   }
+  tokens?: {
+    inputTokens: number
+    outputTokens: number
+  }
 }
 
 const messages = ref<Message[]>([])
@@ -120,11 +124,16 @@ const isLoadingMore = ref(false)
 const {
   data: conversationData,
   execute: loadConversation,
+  pending: loadingConversation,
 } = useApi(() => '/ai_conversation_definition', {
   query: computed(() => {
+    if (!conversationId.value) {
+      return null
+    }
     const idField = getIdFieldName()
+    const fields = getConversationFields() || '*'
     return {
-      fields: getConversationFields(),
+      fields,
       filter: {
         [idField]: {
           _eq: conversationId.value,
@@ -132,8 +141,9 @@ const {
       },
     }
   }),
+  immediate: false,
   errorContext: 'Load Conversation',
-})
+});
 
 watch(conversationData, (data) => {
   const record = data?.data?.[0]
@@ -176,6 +186,10 @@ watch(historyData, (data) => {
         content: item.content,
         timestamp: new Date(item.createdAt),
         isMarkdown: item.role === 'assistant',
+        tokens: item.inputTokens || item.outputTokens ? {
+          inputTokens: item.inputTokens || 0,
+          outputTokens: item.outputTokens || 0,
+        } : undefined,
       })).reverse()
 
       if (historyPage.value === 1) {
@@ -352,6 +366,14 @@ const sendMessage = async () => {
                 }
                 scrollToBottom(true)
               }
+            } else if (json.type === 'tokens' && json.data) {
+              const botMessage = messages.value.find(m => m.id === botMessageId)
+              if (botMessage) {
+                botMessage.tokens = {
+                  inputTokens: json.data.inputTokens || 0,
+                  outputTokens: json.data.outputTokens || 0,
+                }
+              }
             } else if (json.type === 'error') {
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
@@ -444,12 +466,15 @@ const handleKeyDown = (event: KeyboardEvent) => {
   }
 }
 
+watch(conversationId, async (newId, oldId) => {
+    await loadConversation()
+}, {immediate: true})
+
 onMounted(async () => {
   if (aiConfig.value && Object.keys(aiConfig.value).length > 0) {
     selectedAiConfig.value = aiConfig.value
   }
 
-  await loadConversation()
   await loadChatHistory()
 
   const section = document.querySelector('section.overflow-y-auto')
@@ -566,16 +591,29 @@ onBeforeUnmount(() => {
 
                     <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
                       <div v-html="renderMarkdown(message.content)" />
-                      <span v-if="message.isStreaming && !message.toolCall" class="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
+                      <div
+                        v-if="message.isStreaming && !message.toolCall"
+                        class="inline-flex items-center gap-0.5 mt-1"
+                      >
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 0ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 120ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 240ms" />
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Timestamp -->
+                  <!-- Timestamp and Tokens -->
                   <div
-                    class="text-xs mt-2 opacity-60"
+                    class="text-xs mt-2 opacity-60 flex items-center gap-2"
                     :class="message.type === 'user' ? 'text-blue-100' : 'text-gray-500'"
                   >
-                    {{ formatTime(message.timestamp) }}
+                    <span>{{ formatTime(message.timestamp) }}</span>
+                    <span
+                      v-if="message.type === 'bot' && message.tokens"
+                      class="text-[10px] opacity-50"
+                    >
+                      • {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
+                    </span>
                   </div>
                 </div>
               </div>

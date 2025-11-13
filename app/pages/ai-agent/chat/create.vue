@@ -10,17 +10,32 @@ marked.setOptions({
 })
 
 const renderer = new marked.Renderer()
+const encodeCopyData = (value: string) => encodeURIComponent(value)
+const decodeCopyData = (value: string) => decodeURIComponent(value)
+const renderCopyButton = (raw: string) => {
+  const encoded = encodeCopyData(raw)
+  return `<button type="button" class="absolute top-3 right-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-700 bg-gray-900/80 text-gray-300 transition hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 copy-code-trigger" data-copy-code="${encoded}">
+    <svg class="h-4 w-4 copy-icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+    <svg class="hidden h-4 w-4 text-emerald-400 copy-icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </button>`
+}
+const wrapCodeWithCopy = (content: string, copyButton: string) => `<div class="relative">${copyButton}${content}</div>`
 renderer.code = function({ text, lang }: { text: string; lang?: string }): string {
   if (lang && hljs.getLanguage(lang)) {
     try {
       const highlighted = hljs.highlight(text, { language: lang }).value
-      return `<pre><code class="hljs language-${lang}">${highlighted}</code></pre>`
+      return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`, renderCopyButton(text))
     } catch (err) {
       console.error('Highlight error:', err)
     }
   }
   const highlighted = hljs.highlightAuto(text).value
-  return `<pre><code class="hljs">${highlighted}</code></pre>`
+  return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs">${highlighted}</code></pre>`, renderCopyButton(text))
 }
 
 marked.use({ renderer })
@@ -34,6 +49,10 @@ interface Message {
   isStreaming?: boolean
   toolCall?: {
     name: string
+  }
+  tokens?: {
+    inputTokens: number
+    outputTokens: number
   }
 }
 
@@ -80,6 +99,15 @@ onMounted(() => {
   if (section) {
     section.classList.add('!overflow-hidden')
   }
+  if (messagesContainer.value) {
+    messagesContainer.value.addEventListener('click', handleCopyButtonClick)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (messagesContainer.value) {
+    messagesContainer.value.removeEventListener('click', handleCopyButtonClick)
+  }
 })
 
 const scrollToBottom = (smooth = false) => {
@@ -100,6 +128,54 @@ const renderMarkdown = (content: string) => {
 
 const handleConfigSelect = (config: any) => {
   selectedAiConfig.value = config
+}
+
+const copyCode = async (code: string) => {
+  try {
+    await navigator.clipboard.writeText(code)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
+
+const copyFeedbackTimers = new WeakMap<HTMLElement, number>()
+
+const handleCopyButtonClick = async (event: MouseEvent) => {
+  const target = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-copy-code]')
+  if (!target) {
+    return
+  }
+  const encoded = target.getAttribute('data-copy-code')
+  if (!encoded) {
+    return
+  }
+  const iconCopy = target.querySelector<HTMLElement>('.copy-icon-copy')
+  const iconCheck = target.querySelector<HTMLElement>('.copy-icon-check')
+  try {
+    await copyCode(decodeCopyData(encoded))
+    if (iconCopy) {
+      iconCopy.classList.add('hidden')
+    }
+    if (iconCheck) {
+      iconCheck.classList.remove('hidden')
+    }
+    const existingTimer = copyFeedbackTimers.get(target)
+    if (existingTimer) {
+      window.clearTimeout(existingTimer)
+    }
+    const timeout = window.setTimeout(() => {
+      if (iconCopy) {
+        iconCopy.classList.remove('hidden')
+      }
+      if (iconCheck) {
+        iconCheck.classList.add('hidden')
+      }
+      copyFeedbackTimers.delete(target)
+    }, 1600)
+    copyFeedbackTimers.set(target, timeout)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
 }
 
 const sendMessage = async () => {
@@ -172,6 +248,14 @@ const sendMessage = async () => {
                 }
                 scrollToBottom(true)
               }
+            } else if (json.type === 'tokens' && json.data) {
+              const botMessage = messages.value.find(m => m.id === botMessageId)
+              if (botMessage) {
+                botMessage.tokens = {
+                  inputTokens: json.data.inputTokens || 0,
+                  outputTokens: json.data.outputTokens || 0,
+                }
+              }
             } else if (json.type === 'error') {
               const botMessage = messages.value.find(m => m.id === botMessageId)
               if (botMessage) {
@@ -204,7 +288,7 @@ const sendMessage = async () => {
             setTimeout(() => {
               console.log('🚀 Streaming complete, navigating to:', conversationId.value)
               router.replace(`/ai-agent/chat/${conversationId.value}`)
-            }, 300)
+            }, 1000)
           }
         },
         onError: (error: Error) => {
@@ -270,7 +354,6 @@ const formatTime = (date: Date) => {
               class="flex gap-3 group"
               :class="message.type === 'user' ? 'flex-row-reverse' : ''"
             >
-              <!-- Avatar -->
               <div class="flex-shrink-0">
                 <div
                   v-if="message.type === 'bot'"
@@ -286,28 +369,25 @@ const formatTime = (date: Date) => {
                 </div>
               </div>
 
-              <!-- Message content -->
-              <div class="flex-1 min-w-0">
+              <div class="flex-1 min-w-0" :class="message.type === 'user' ? 'flex justify-end' : ''">
                 <div
-                  class="inline-block max-w-full rounded-2xl px-4 py-3"
-                  :class="message.type === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-100'"
+                  class="inline-block rounded-2xl transition-all duration-200"
+                  :class="[
+                    message.type === 'user'
+                      ? 'bg-blue-600 text-white px-4 py-3 max-w-[80%]'
+                      : 'bg-gray-900 border border-gray-800 px-4 py-3 w-full',
+                  ]"
                 >
-                  <!-- User message - plain text -->
                   <div
                     v-if="message.type === 'user'"
                     class="text-sm leading-relaxed whitespace-pre-wrap"
                   >
                     {{ message.content }}
                   </div>
-
-                  <!-- Bot message - always render markdown -->
                   <div
                     v-else
                     class="space-y-3"
                   >
-                    <!-- Tool Call Indicator -->
                     <div
                       v-if="message.toolCall"
                       class="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-xs text-gray-400"
@@ -318,16 +398,28 @@ const formatTime = (date: Date) => {
 
                     <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
                       <div v-html="renderMarkdown(message.content)" />
-                      <span v-if="message.isStreaming && !message.toolCall" class="inline-block w-2 h-4 ml-1 bg-blue-500 animate-pulse" />
+                      <div
+                        v-if="message.isStreaming && !message.toolCall"
+                        class="inline-flex items-center gap-0.5 mt-1"
+                      >
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 0ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 120ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 240ms" />
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Timestamp -->
                   <div
-                    class="text-xs mt-2 opacity-60"
+                    class="text-xs mt-2 opacity-60 flex items-center gap-2"
                     :class="message.type === 'user' ? 'text-blue-100' : 'text-gray-500'"
                   >
-                    {{ formatTime(message.timestamp) }}
+                    <span>{{ formatTime(message.timestamp) }}</span>
+                    <span
+                      v-if="message.type === 'bot' && message.tokens"
+                      class="text-[10px] opacity-50"
+                    >
+                      • {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
+                    </span>
                   </div>
                 </div>
               </div>
