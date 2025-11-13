@@ -15,17 +15,32 @@ marked.setOptions({
 })
 
 const renderer = new marked.Renderer()
+const encodeCopyData = (value: string) => encodeURIComponent(value)
+const decodeCopyData = (value: string) => decodeURIComponent(value)
+const renderCopyButton = (raw: string) => {
+  const encoded = encodeCopyData(raw)
+  return `<button type="button" class="absolute top-3 right-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-700 bg-gray-900/80 text-gray-300 transition hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 copy-code-trigger" data-copy-code="${encoded}">
+    <svg class="h-4 w-4 copy-icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+    <svg class="hidden h-4 w-4 text-emerald-400 copy-icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </button>`
+}
+const wrapCodeWithCopy = (content: string, copyButton: string) => `<div class="relative">${copyButton}${content}</div>`
 renderer.code = function({ text, lang }: { text: string; lang?: string }): string {
   if (lang && hljs.getLanguage(lang)) {
     try {
       const highlighted = hljs.highlight(text, { language: lang }).value
-      return `<pre><code class="hljs language-${lang}">${highlighted}</code></pre>`
+      return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`, renderCopyButton(text))
     } catch (err) {
       console.error('Highlight error:', err)
     }
   }
   const highlighted = hljs.highlightAuto(text).value
-  return `<pre><code class="hljs">${highlighted}</code></pre>`
+  return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs">${highlighted}</code></pre>`, renderCopyButton(text))
 }
 
 marked.use({ renderer })
@@ -233,6 +248,44 @@ const copyCode = async (code: string) => {
     console.error('Failed to copy:', err)
   }
 }
+const copyFeedbackTimers = new WeakMap<HTMLElement, number>()
+const handleCopyButtonClick = async (event: MouseEvent) => {
+  const target = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-copy-code]')
+  if (!target) {
+    return
+  }
+  const encoded = target.getAttribute('data-copy-code')
+  if (!encoded) {
+    return
+  }
+  const iconCopy = target.querySelector<HTMLElement>('.copy-icon-copy')
+  const iconCheck = target.querySelector<HTMLElement>('.copy-icon-check')
+  try {
+    await copyCode(decodeCopyData(encoded))
+    if (iconCopy) {
+      iconCopy.classList.add('hidden')
+    }
+    if (iconCheck) {
+      iconCheck.classList.remove('hidden')
+    }
+    const existingTimer = copyFeedbackTimers.get(target)
+    if (existingTimer) {
+      window.clearTimeout(existingTimer)
+    }
+    const timeout = window.setTimeout(() => {
+      if (iconCopy) {
+        iconCopy.classList.remove('hidden')
+      }
+      if (iconCheck) {
+        iconCheck.classList.add('hidden')
+      }
+      copyFeedbackTimers.delete(target)
+    }, 1600)
+    copyFeedbackTimers.set(target, timeout)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
 
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || isTyping.value) return
@@ -405,6 +458,9 @@ onMounted(async () => {
   }
 
   window.addEventListener('keydown', handleKeyDown)
+  if (messagesContainer.value) {
+    messagesContainer.value.addEventListener('click', handleCopyButtonClick)
+  }
 
   setTimeout(() => {
     scrollToBottom(true)
@@ -413,6 +469,9 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeyDown)
+  if (messagesContainer.value) {
+    messagesContainer.value.removeEventListener('click', handleCopyButtonClick)
+  }
 })
 
 </script>
