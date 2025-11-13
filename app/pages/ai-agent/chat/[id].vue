@@ -580,15 +580,6 @@ onBeforeUnmount(() => {
                     v-else
                     class="space-y-3"
                   >
-                    <!-- Tool Call Indicator -->
-                    <div
-                      v-if="message.toolCall"
-                      class="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-xs text-gray-400"
-                    >
-                      <Icon name="lucide:loader-2" class="w-3.5 h-3.5 animate-spin" />
-                      <span>{{ message.toolCall.name }}</span>
-                    </div>
-
                     <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
                       <div v-html="renderMarkdown(message.content)" />
                       <div
@@ -599,6 +590,15 @@ onBeforeUnmount(() => {
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 120ms" />
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 240ms" />
                       </div>
+                    </div>
+
+                    <!-- Tool Call Indicator -->
+                    <div
+                      v-if="message.toolCall"
+                      class="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-xs text-gray-400"
+                    >
+                      <Icon name="lucide:loader-2" class="w-3.5 h-3.5 animate-spin" />
+                      <span>{{ message.toolCall.name }}</span>
                     </div>
                   </div>
 
