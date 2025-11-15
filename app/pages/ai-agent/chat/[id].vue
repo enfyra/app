@@ -65,8 +65,10 @@ const messages = ref<Message[]>([])
 const inputMessage = ref('')
 const isTyping = ref(false)
 const messagesContainer = ref<HTMLElement | null>(null)
-const { fetchStream } = useStreamingAPI()
+const { connectSSE } = useStreamingAPI()
 const { isMounted } = useMounted()
+const currentEventSource = ref<EventSource | null>(null)
+const isStreamCompleted = ref(false)
 
 const showConfigDrawer = ref(false)
 const selectedAiConfig = ref<any>(null)
@@ -308,6 +310,12 @@ const sendMessage = async () => {
     return
   }
 
+  if (currentEventSource.value) {
+    currentEventSource.value.close()
+    currentEventSource.value = null
+  }
+  isStreamCompleted.value = false
+
   const userMsg = inputMessage.value
   inputMessage.value = ''
 
@@ -334,95 +342,108 @@ const sendMessage = async () => {
   try {
     const apiUrl = '/enfyra/api/ai-agent/chat/stream'
 
-    await fetchStream(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const queryParams: Record<string, string> = {
+      message: userMsg,
+    }
+
+    if (conversationId.value) {
+      const convId = Array.isArray(conversationId.value) 
+        ? conversationId.value[0] 
+        : conversationId.value
+      if (convId) {
+        queryParams.conversation = convId
+      }
+    }
+
+    if (selectedAiConfig.value) {
+      queryParams.config = getId(selectedAiConfig.value)
+    }
+
+    const eventSource = connectSSE(apiUrl, {
+      queryParams,
+      onMessage: (chunk: string) => {
+        try {
+          const json = JSON.parse(chunk)
+
+          if (json.type === 'ping') {
+            return
+          } else if (json.type === 'text' && json.data?.delta) {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.content += json.data.delta
+              botMessage.toolCall = undefined
+              scrollToBottom(true)
+            }
+          } else if (json.type === 'tool_call') {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.toolCall = {
+                name: json.data?.name || 'unknown'
+              }
+              scrollToBottom(true)
+            }
+          } else if (json.type === 'tokens' && json.data) {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.tokens = {
+                inputTokens: json.data.inputTokens || 0,
+                outputTokens: json.data.outputTokens || 0,
+              }
+            }
+          } else if (json.type === 'error') {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.isStreaming = false
+              botMessage.content = json.data?.error || 'An error occurred while processing your request.'
+            }
+            isTyping.value = false
+            scrollToBottom(true)
+          } else if (json.type === 'done') {
+            isStreamCompleted.value = true
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.isStreaming = false
+            }
+            isTyping.value = false
+            scrollToBottom(true)
+          }
+        } catch (err) {
+          console.error('Parse chunk error:', err, chunk)
+        }
       },
-      body: JSON.stringify({
-        message: userMsg,
-        config: selectedAiConfig.value ? getId(selectedAiConfig.value) : undefined,
-        conversation: conversationId.value,
-      }),
-      streamOptions: {
-        onMessage: (chunk: string) => {
-          try {
-            const json = JSON.parse(chunk)
+      onComplete: () => {
+        isStreamCompleted.value = true
+        const botMessage = messages.value.find(m => m.id === botMessageId)
+        if (botMessage) {
+          botMessage.isStreaming = false
+        }
+        isTyping.value = false
+        currentEventSource.value = null
+        scrollToBottom(true)
+      },
+      onError: (error: Error) => {
+        if (isStreamCompleted.value) {
+          return
+        }
 
-            if (json.type === 'ping') {
-              return
-            } else if (json.type === 'text' && json.data?.delta) {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.content += json.data.delta
-                botMessage.toolCall = undefined
-                scrollToBottom(true)
-              }
-            } else if (json.type === 'tool_call') {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.toolCall = {
-                  name: json.data?.name || 'unknown'
-                }
-                scrollToBottom(true)
-              }
-            } else if (json.type === 'tokens' && json.data) {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.tokens = {
-                  inputTokens: json.data.inputTokens || 0,
-                  outputTokens: json.data.outputTokens || 0,
-                }
-              }
-            } else if (json.type === 'error') {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.isStreaming = false
-                botMessage.content = json.data?.error || 'An error occurred while processing your request.'
-              }
-              isTyping.value = false
-              scrollToBottom(true)
-            } else if (json.type === 'done') {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.isStreaming = false
-              }
-              isTyping.value = false
-              scrollToBottom(true)
-            }
-          } catch (err) {
-            console.error('Parse chunk error:', err, chunk)
-          }
-        },
-        onComplete: () => {
-          const botMessage = messages.value.find(m => m.id === botMessageId)
-          if (botMessage) {
-            botMessage.isStreaming = false
-          }
-          isTyping.value = false
-          scrollToBottom(true)
-        },
-        onError: (error: Error) => {
-          const isAborted = error.name === 'AbortError'
+        console.error('Streaming error:', error)
 
-          if (!isAborted) {
-            console.error('Streaming error:', error)
-          }
-
-          const botMessage = messages.value.find(m => m.id === botMessageId)
-          if (botMessage) {
-            botMessage.isStreaming = false
-            if (!isAborted && !botMessage.content) {
-              botMessage.content = 'An error occurred while processing your request.'
-            }
-          }
-          isTyping.value = false
-        },
+        const botMessage = messages.value.find(m => m.id === botMessageId)
+        if (botMessage) {
+          botMessage.isStreaming = false
+          botMessage.toolCall = undefined
+          botMessage.content = error.message || 'Stream connection lost'
+        }
+        isTyping.value = false
+        currentEventSource.value = null
       },
     })
+
+    currentEventSource.value = eventSource
   } catch (error) {
     console.error('Send message error:', error)
     isTyping.value = false
+    currentEventSource.value = null
   }
 }
 
@@ -432,24 +453,46 @@ const { execute: cancelStream } = useApi(() => '/ai-agent/cancel', {
 })
 
 const stopStreaming = async () => {
+  if (!currentEventSource.value && !isTyping.value) {
+    return
+  }
+
   if (conversationId.value) {
-    await cancelStream({
-      body: {
-        conversation: conversationId.value,
-      },
-    })
+    const convId = Array.isArray(conversationId.value) 
+      ? conversationId.value[0] 
+      : conversationId.value
+    if (convId) {
+      try {
+        console.log('[stopStreaming] Calling cancel API with conversation:', convId)
+        await cancelStream({
+          body: {
+            conversation: convId,
+          },
+        })
+        console.log('[stopStreaming] Cancel API called successfully')
+      } catch (error) {
+        console.error('[stopStreaming] Error calling cancel stream:', error)
+      }
+    } else {
+      console.warn('[stopStreaming] No valid conversation ID')
+    }
+  } else {
+    console.warn('[stopStreaming] No conversationId.value')
+  }
+
+  if (currentEventSource.value) {
+    currentEventSource.value.close()
+    currentEventSource.value = null
   }
 
   const streamingBotMessage = messages.value.find(m => m.type === 'bot' && m.isStreaming)
   if (streamingBotMessage) {
     streamingBotMessage.isStreaming = false
     streamingBotMessage.toolCall = undefined
-    if (!streamingBotMessage.content) {
-      streamingBotMessage.content = 'Request cancelled.'
-    }
   }
 
   isTyping.value = false
+  isStreamCompleted.value = false
 }
 
 const formatTime = (date: Date) => {
@@ -492,7 +535,18 @@ onMounted(async () => {
   }, 500)
 })
 
-onBeforeUnmount(() => {
+onBeforeUnmount(async () => {
+  if (currentEventSource.value) {
+    if (conversationId.value) {
+      await cancelStream({
+        body: {
+          conversation: conversationId.value,
+        },
+      })
+    }
+    currentEventSource.value.close()
+    currentEventSource.value = null
+  }
   window.removeEventListener('keydown', handleKeyDown)
   if (messagesContainer.value) {
     messagesContainer.value.removeEventListener('click', handleCopyButtonClick)

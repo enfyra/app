@@ -2,7 +2,6 @@
 import { marked } from 'marked'
 import hljs from 'highlight.js'
 
-const router = useRouter()
 
 marked.setOptions({
   breaks: true,
@@ -60,10 +59,13 @@ const messages = ref<Message[]>([])
 const inputMessage = ref('')
 const isTyping = ref(false)
 const messagesContainer = ref<HTMLElement | null>(null)
-const { fetchStream } = useStreamingAPI()
+const { connectSSE } = useStreamingAPI()
 const { isMounted } = useMounted()
+const currentEventSource = ref<EventSource | null>(null)
+const isStreamCompleted = ref(false)
 
 const conversationId = ref<string | null>(null)
+const { getId } = useDatabase()
 
 const showConfigDrawer = ref(false)
 const selectedAiConfig = ref<any>(null)
@@ -105,6 +107,10 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  if (currentEventSource.value) {
+    currentEventSource.value.close()
+    currentEventSource.value = null
+  }
   if (messagesContainer.value) {
     messagesContainer.value.removeEventListener('click', handleCopyButtonClick)
   }
@@ -185,6 +191,12 @@ const sendMessage = async () => {
     return
   }
 
+  if (currentEventSource.value) {
+    currentEventSource.value.close()
+    currentEventSource.value = null
+  }
+  isStreamCompleted.value = false
+
   const userMsg = inputMessage.value
   inputMessage.value = ''
 
@@ -211,107 +223,119 @@ const sendMessage = async () => {
   try {
     const apiUrl = '/enfyra/api/ai-agent/chat/stream'
 
-    await fetchStream(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const queryParams: Record<string, string> = {
+      message: userMsg,
+    }
+
+    if (selectedAiConfig.value) {
+      queryParams.config = getId(selectedAiConfig.value)
+    }
+
+    const eventSource = connectSSE(apiUrl, {
+      queryParams,
+      onMessage: (chunk: string) => {
+        try {
+          const json = JSON.parse(chunk)
+
+          if (!conversationId.value) {
+            const convId = json.data?.metadata?.conversation || json.data?.conversation
+            if (convId) {
+              conversationId.value = convId.toString()
+              if (currentEventSource.value) {
+                currentEventSource.value.close()
+                currentEventSource.value = null
+              }
+              navigateTo(`/ai-agent/chat/${conversationId.value}`, { replace: true })
+              return
+            }
+          }
+
+          if (json.type === 'ping') {
+            return
+          } else if (json.type === 'text' && json.data?.delta) {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.content += json.data.delta
+              botMessage.toolCall = undefined
+              scrollToBottom(true)
+            }
+          } else if (json.type === 'tool_call') {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.toolCall = {
+                name: json.data?.name || 'unknown'
+              }
+              scrollToBottom(true)
+            }
+          } else if (json.type === 'tokens' && json.data) {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.tokens = {
+                inputTokens: json.data.inputTokens || 0,
+                outputTokens: json.data.outputTokens || 0,
+              }
+            }
+          } else if (json.type === 'error') {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.isStreaming = false
+              botMessage.content = json.data?.error || 'An error occurred while processing your request.'
+            }
+            isTyping.value = false
+            scrollToBottom(true)
+          } else if (json.type === 'done') {
+            isStreamCompleted.value = true
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.isStreaming = false
+            }
+            isTyping.value = false
+            if (currentEventSource.value) {
+              currentEventSource.value.close()
+              currentEventSource.value = null
+            }
+            scrollToBottom(true)
+          }
+        } catch (err) {
+          console.error('Parse chunk error:', err, chunk)
+        }
       },
-      body: JSON.stringify({
-        message: userMsg,
-        config: selectedAiConfig.value.id,
-      }),
-      streamOptions: {
-        onMessage: (chunk: string) => {
-          try {
-            const json = JSON.parse(chunk)
+      onComplete: () => {
+        isStreamCompleted.value = true
+        const botMessage = messages.value.find(m => m.id === botMessageId)
+        if (botMessage) {
+          botMessage.isStreaming = false
+        }
+        isTyping.value = false
+        if (currentEventSource.value) {
+          currentEventSource.value.close()
+          currentEventSource.value = null
+        }
+        scrollToBottom(true)
+      },
+      onError: (error: Error) => {
+        if (isStreamCompleted.value) {
+          return
+        }
 
-            if (!conversationId.value) {
-              const convId = json.data?.metadata?.conversation || json.data?.conversation
-              if (convId) {
-                conversationId.value = convId.toString()
-                console.log('✅ Got conversation ID:', conversationId.value)
-              }
-            }
+        console.error('Streaming error:', error)
 
-            if (json.type === 'text' && json.data?.delta) {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.content += json.data.delta
-                botMessage.toolCall = undefined
-                scrollToBottom(true)
-              }
-            } else if (json.type === 'tool_call') {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.toolCall = {
-                  name: json.data?.name || 'unknown'
-                }
-                scrollToBottom(true)
-              }
-            } else if (json.type === 'tokens' && json.data) {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.tokens = {
-                  inputTokens: json.data.inputTokens || 0,
-                  outputTokens: json.data.outputTokens || 0,
-                }
-              }
-            } else if (json.type === 'error') {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.isStreaming = false
-                botMessage.content = json.data?.error || 'An error occurred while processing your request.'
-              }
-              isTyping.value = false
-              scrollToBottom(true)
-            } else if (json.type === 'done') {
-              const botMessage = messages.value.find(m => m.id === botMessageId)
-              if (botMessage) {
-                botMessage.isStreaming = false
-              }
-              isTyping.value = false
-              scrollToBottom(true)
-            }
-          } catch (err) {
-            console.error('Parse chunk error:', err, chunk)
-          }
-        },
-        onComplete: () => {
-          const botMessage = messages.value.find(m => m.id === botMessageId)
-          if (botMessage) {
-            botMessage.isStreaming = false
-          }
-          isTyping.value = false
-          scrollToBottom(true)
-
-          if (conversationId.value) {
-            setTimeout(() => {
-              console.log('🚀 Streaming complete, navigating to:', conversationId.value)
-              router.replace(`/ai-agent/chat/${conversationId.value}`)
-            }, 1000)
-          }
-        },
-        onError: (error: Error) => {
-          const isAborted = error.name === 'AbortError'
-
-          if (!isAborted) {
-            console.error('Streaming error:', error)
-          }
-
-          const botMessage = messages.value.find(m => m.id === botMessageId)
-          if (botMessage) {
-            botMessage.isStreaming = false
-            if (!isAborted && !botMessage.content) {
-              botMessage.content = 'An error occurred while processing your request.'
-            }
-          }
-          isTyping.value = false
-        },
+        const botMessage = messages.value.find(m => m.id === botMessageId)
+        if (botMessage) {
+          botMessage.isStreaming = false
+          botMessage.toolCall = undefined
+          botMessage.content = error.message || 'Stream connection lost'
+        }
+        isTyping.value = false
+        currentEventSource.value = null
       },
     })
+
+    currentEventSource.value = eventSource
   } catch (error) {
     console.error('Send message error:', error)
     isTyping.value = false
+    currentEventSource.value = null
   }
 }
 
@@ -389,10 +413,11 @@ const formatTime = (date: Date) => {
                     class="space-y-3"
                   >
                     <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
-                      <div v-html="renderMarkdown(message.content)" />
+                      <div v-if="message.content" v-html="renderMarkdown(message.content)" />
                       <div
                         v-if="message.isStreaming && !message.toolCall"
-                        class="inline-flex items-center gap-0.5 mt-1"
+                        class="inline-flex items-center gap-0.5"
+                        :class="message.content ? 'mt-1' : ''"
                       >
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 0ms" />
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 120ms" />

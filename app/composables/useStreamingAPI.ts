@@ -131,32 +131,70 @@ export const useStreamingAPI = () => {
     }
   }
 
-  /**
-   * Server-Sent Events (SSE)
-   * Alternative approach using EventSource
-   */
-  const connectSSE = (url: string, options: StreamOptions) => {
-    const eventSource = new EventSource(url)
+  const connectSSE = (url: string, options: StreamOptions & { queryParams?: Record<string, string> }) => {
+    const { queryParams, ...streamOptions } = options
+    
+    let fullUrl = url
+    if (queryParams && Object.keys(queryParams).length > 0) {
+      const params = new URLSearchParams()
+      Object.entries(queryParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value))
+        }
+      })
+      fullUrl = `${url}?${params.toString()}`
+    }
+
+    const eventSource = new EventSource(fullUrl)
+    let isCompleted = false
+    let hasErrorBeenReported = false
 
     eventSource.onmessage = (event) => {
+      if (isCompleted) {
+        return
+      }
+      
       try {
         const data = JSON.parse(event.data)
-        const content = data.content || data.text || event.data
-        options.onMessage(content)
+        if (data.type === 'done') {
+          isCompleted = true
+          hasErrorBeenReported = true
+          eventSource.close()
+          streamOptions.onComplete?.()
+          return
+        }
       } catch {
-        options.onMessage(event.data)
+      }
+      
+      streamOptions.onMessage(event.data)
+    }
+    
+    eventSource.onerror = (error) => {
+      if (isCompleted || hasErrorBeenReported) {
+        return
+      }
+      
+      if (eventSource.readyState === EventSource.CLOSED) {
+        hasErrorBeenReported = true
+        eventSource.close()
+        if (!isCompleted) {
+          streamOptions.onError?.(new Error('SSE connection closed'))
+        }
+      } else if (eventSource.readyState === EventSource.CONNECTING) {
+        return
+      } else {
+        hasErrorBeenReported = true
+        streamOptions.onError?.(new Error('SSE connection error'))
       }
     }
 
-    eventSource.onerror = () => {
-      eventSource.close()
-      options.onError?.(new Error('SSE connection error'))
-    }
-
-    // Listen for completion event
     eventSource.addEventListener('done', () => {
-      eventSource.close()
-      options.onComplete?.()
+      if (!isCompleted) {
+        isCompleted = true
+        hasErrorBeenReported = true
+        eventSource.close()
+        streamOptions.onComplete?.()
+      }
     })
 
     return eventSource
