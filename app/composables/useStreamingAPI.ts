@@ -154,23 +154,16 @@ export const useStreamingAPI = () => {
         return
       }
       
-      try {
-        const data = JSON.parse(event.data)
-        if (data.type === 'done') {
-          isCompleted = true
-          hasErrorBeenReported = true
-          eventSource.close()
-          streamOptions.onComplete?.()
-          return
-        }
-      } catch {
-      }
-      
       streamOptions.onMessage(event.data)
     }
     
     eventSource.onerror = (error) => {
-      if (isCompleted || hasErrorBeenReported) {
+      if (isCompleted) {
+        eventSource.close()
+        return
+      }
+      
+      if (hasErrorBeenReported) {
         return
       }
       

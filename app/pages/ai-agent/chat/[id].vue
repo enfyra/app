@@ -405,6 +405,10 @@ const sendMessage = async () => {
               botMessage.isStreaming = false
             }
             isTyping.value = false
+            if (currentEventSource.value) {
+              currentEventSource.value.close()
+              currentEventSource.value = null
+            }
             scrollToBottom(true)
           }
         } catch (err) {
@@ -412,13 +416,20 @@ const sendMessage = async () => {
         }
       },
       onComplete: () => {
+        if (isStreamCompleted.value) {
+          return
+        }
+        
         isStreamCompleted.value = true
         const botMessage = messages.value.find(m => m.id === botMessageId)
         if (botMessage) {
           botMessage.isStreaming = false
         }
         isTyping.value = false
-        currentEventSource.value = null
+        if (currentEventSource.value) {
+          currentEventSource.value.close()
+          currentEventSource.value = null
+        }
         scrollToBottom(true)
       },
       onError: (error: Error) => {
