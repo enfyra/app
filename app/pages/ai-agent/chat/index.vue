@@ -17,28 +17,28 @@
         <div
           v-for="conversation in conversations"
           :key="conversation.id"
-          class="group border border-gray-700 rounded-lg p-4 hover:border-primary/50 hover:bg-gray-800/50 transition-colors duration-200 bg-gray-900 cursor-pointer"
+          class="group border border-gray-700 rounded-lg p-3 md:p-4 hover:border-primary/50 hover:bg-gray-800/50 transition-colors duration-200 bg-gray-900 cursor-pointer"
           @click="navigateToChat(conversation)"
         >
-          <div class="flex items-start gap-4">
+          <div class="flex items-start gap-2 md:gap-4">
             <!-- Avatar -->
-            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-              <Icon name="lucide:message-circle" class="w-6 h-6 text-white" />
+            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+              <Icon name="lucide:message-circle" class="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
 
             <!-- Content -->
             <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-white mb-2 truncate">
+              <h3 class="font-semibold text-white mb-1.5 md:mb-2 truncate text-sm md:text-base">
                 {{ conversation.title || `Conversation #${conversation.id}` }}
               </h3>
-              <div class="flex items-center gap-3 text-xs text-gray-500">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-xs text-gray-500">
                 <span class="flex items-center gap-1">
-                  <Icon name="lucide:calendar" class="w-3 h-3" />
-                  {{ formatDate(conversation.createdAt) }}
+                  <Icon name="lucide:calendar" class="w-3 h-3 flex-shrink-0" />
+                  <span class="truncate">{{ formatDate(conversation.createdAt) }}</span>
                 </span>
                 <span class="flex items-center gap-1" v-if="conversation.messageCount">
-                  <Icon name="lucide:message-square" class="w-3 h-3" />
-                  {{ conversation.messageCount }} messages
+                  <Icon name="lucide:message-square" class="w-3 h-3 flex-shrink-0" />
+                  <span>{{ conversation.messageCount }} messages</span>
                 </span>
               </div>
             </div>
@@ -48,8 +48,19 @@
               icon="lucide:trash-2"
               variant="ghost"
               color="error"
+              size="sm"
+              square
+              class="flex-shrink-0 md:hidden"
+              :loading="getDeleteLoader(conversation.id).isLoading"
+              @click.stop="deleteConversation(conversation)"
+            />
+            <UButton
+              icon="lucide:trash-2"
+              variant="ghost"
+              color="error"
               size="md"
               square
+              class="flex-shrink-0 hidden md:flex"
               :loading="getDeleteLoader(conversation.id).isLoading"
               @click.stop="deleteConversation(conversation)"
             />

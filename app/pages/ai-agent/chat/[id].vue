@@ -675,7 +675,8 @@ onBeforeUnmount(async () => {
                     <span>{{ formatTime(message.timestamp) }}</span>
                     <span
                       v-if="message.type === 'bot' && message.tokens"
-                      class="text-[10px] opacity-50"
+                      class="text-[10px] opacity-50 token-info select-text"
+                      style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
                     >
                       • {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
                     </span>
@@ -762,3 +763,4 @@ onBeforeUnmount(async () => {
     @select="handleConfigSelect"
   />
 </template>
+
