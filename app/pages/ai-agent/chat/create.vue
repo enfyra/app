@@ -237,19 +237,6 @@ const sendMessage = async () => {
         try {
           const json = JSON.parse(chunk)
 
-          if (!conversationId.value) {
-            const convId = json.data?.metadata?.conversation || json.data?.conversation
-            if (convId) {
-              conversationId.value = convId.toString()
-              if (currentEventSource.value) {
-                currentEventSource.value.close()
-                currentEventSource.value = null
-              }
-              navigateTo(`/ai-agent/chat/${conversationId.value}`, { replace: true })
-              return
-            }
-          }
-
           if (json.type === 'ping') {
             return
           } else if (json.type === 'text' && json.data?.delta) {
@@ -290,17 +277,32 @@ const sendMessage = async () => {
               botMessage.isStreaming = false
             }
             isTyping.value = false
+            
+            const convId = json.data?.metadata?.conversation || json.data?.conversation
+            if (convId) {
+              conversationId.value = convId.toString()
+            }
+            
             if (currentEventSource.value) {
               currentEventSource.value.close()
               currentEventSource.value = null
             }
-            scrollToBottom(true)
+            
+            if (conversationId.value) {
+              navigateTo(`/ai-agent/chat/${conversationId.value}`, { replace: true })
+            } else {
+              scrollToBottom(true)
+            }
           }
         } catch (err) {
           console.error('Parse chunk error:', err, chunk)
         }
       },
       onComplete: () => {
+        if (isStreamCompleted.value) {
+          return
+        }
+        
         isStreamCompleted.value = true
         const botMessage = messages.value.find(m => m.id === botMessageId)
         if (botMessage) {
@@ -311,7 +313,12 @@ const sendMessage = async () => {
           currentEventSource.value.close()
           currentEventSource.value = null
         }
-        scrollToBottom(true)
+        
+        if (conversationId.value) {
+          navigateTo(`/ai-agent/chat/${conversationId.value}`, { replace: true })
+        } else {
+          scrollToBottom(true)
+        }
       },
       onError: (error: Error) => {
         if (isStreamCompleted.value) {
