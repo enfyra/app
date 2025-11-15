@@ -65,6 +65,7 @@ const messages = ref<Message[]>([])
 const inputMessage = ref('')
 const isTyping = ref(false)
 const messagesContainer = ref<HTMLElement | null>(null)
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const { connectSSE } = useStreamingAPI()
 const { isMounted } = useMounted()
 const currentEventSource = ref<EventSource | null>(null)
@@ -543,6 +544,11 @@ onMounted(async () => {
 
   setTimeout(() => {
     scrollToBottom(true)
+    nextTick(() => {
+      if (textareaRef.value) {
+        textareaRef.value.focus()
+      }
+    })
   }, 500)
 })
 
@@ -675,7 +681,8 @@ onBeforeUnmount(async () => {
                     <span>{{ formatTime(message.timestamp) }}</span>
                     <span
                       v-if="message.type === 'bot' && message.tokens"
-                      class="text-[10px] opacity-50"
+                      class="text-[10px] opacity-50 token-info select-text"
+                      style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
                     >
                       • {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
                     </span>
@@ -713,6 +720,7 @@ onBeforeUnmount(async () => {
             <div class="relative flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-2xl hover:border-gray-600 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
               <!-- Text Input - no border, no padding -->
               <textarea
+                ref="textareaRef"
                 v-model="inputMessage"
                 rows="1"
                 class="flex-1 bg-transparent text-gray-100 placeholder-gray-500 resize-none outline-none max-h-[150px] py-1"
@@ -762,3 +770,4 @@ onBeforeUnmount(async () => {
     @select="handleConfigSelect"
   />
 </template>
+

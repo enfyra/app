@@ -144,3 +144,19 @@
 .ai-chat-fade-leave-to {
   opacity: 0;
 }
+
+.token-info.select-text::selection {
+  background-color: rgba(59, 130, 246, 0.6) !important;
+  color: rgba(255, 255, 255, 1) !important;
+}
+
+.token-info.select-text::-moz-selection {
+  background-color: rgba(59, 130, 246, 0.6) !important;
+  color: rgba(255, 255, 255, 1) !important;
+}
+
+.token-info.select-text {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}
