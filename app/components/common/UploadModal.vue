@@ -2,8 +2,8 @@
   <Teleport to="body">
     <UModal v-model:open="isOpen">
       <template #header>
-        <div class="flex justify-between items-center w-full">
-          <div class="text-base font-semibold">
+        <div class="flex justify-between items-center w-full gap-3">
+          <div class="text-base font-semibold min-w-0 flex-1 truncate" :title="title">
             {{ title }}
           </div>
           <UButton
@@ -11,6 +11,7 @@
             color="error"
             variant="soft"
             @click="closeModal"
+            class="flex-shrink-0"
           >
             Cancel
           </UButton>

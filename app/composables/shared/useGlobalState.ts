@@ -2,6 +2,8 @@
 export const useGlobalState = () => {
   const settings = useState<any>("global:settings", () => {});
   const storageConfigs = useState<any[]>("global:storage:configs", () => []);
+  const aiConfigs = useState<any[]>("global:ai:configs", () => []);
+  const aiConfig = useState<any>("global:ai:config", () => {});
 
   const sidebarVisible = useState<boolean>(
     "global:sidebar:visible",
@@ -47,6 +49,24 @@ export const useGlobalState = () => {
     errorContext: "Fetch Storage Configs",
   });
 
+  const {
+    data: aiConfigData,
+    execute: executeFetchAiConfig,
+  } = useApi(() => "/ai_config_definition", {
+    query: {
+      fields: "*",
+      limit: -1,
+      sort: "-createdAt",
+      filter: {
+        isEnabled: {
+          _eq: true,
+        },
+      }
+    },
+
+    errorContext: "Fetch AI Config",
+  });
+
   async function fetchSetting() {
     await executeFetchSettings();
     settings.value = settingsData.value?.data[0] || {};
@@ -57,6 +77,12 @@ export const useGlobalState = () => {
     storageConfigs.value = storageConfigsData.value?.data || [];
   }
 
+  async function fetchAiConfig() {
+    await executeFetchAiConfig();
+    const data = aiConfigData.value?.data || [];
+    aiConfigs.value = data;
+    aiConfig.value = data[0] || {};
+  }
 
   function toggleSidebar() {
     sidebarVisible.value = !sidebarVisible.value;
@@ -94,6 +120,9 @@ export const useGlobalState = () => {
     fetchSetting,
     storageConfigs,
     fetchStorageConfigs,
+    aiConfigs,
+    aiConfig,
+    fetchAiConfig,
     sidebarVisible,
     sidebarCollapsed,
     routeLoading,

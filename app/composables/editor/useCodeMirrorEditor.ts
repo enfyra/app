@@ -43,6 +43,13 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
         ],
         parent: editorRef.value,
       });
+      
+      if (editorRef.value.parentElement) {
+        const parent = editorRef.value.parentElement;
+        if (parent.style.height) {
+          editorRef.value.style.height = parent.style.height;
+        }
+      }
     }
   }
 
@@ -79,12 +86,25 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     editorView.value?.destroy();
   }
 
+  function updateEditorSize() {
+    if (editorView.value && editorRef.value) {
+      if (editorRef.value.parentElement) {
+        const parent = editorRef.value.parentElement;
+        if (parent.style.height) {
+          editorRef.value.style.height = "100%";
+        }
+      }
+      editorView.value.requestMeasure();
+    }
+  }
+
   return {
     code,
     editorRef,
     editorView,
     createEditor,
     watchExtensions,
-    destroyEditor
+    destroyEditor,
+    updateEditorSize
   };
 }

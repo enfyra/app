@@ -1,0 +1,512 @@
+<script setup lang="ts">
+import { marked } from 'marked'
+import hljs from 'highlight.js'
+
+
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+})
+
+const renderer = new marked.Renderer()
+const encodeCopyData = (value: string) => encodeURIComponent(value)
+const decodeCopyData = (value: string) => decodeURIComponent(value)
+const renderCopyButton = (raw: string) => {
+  const encoded = encodeCopyData(raw)
+  return `<button type="button" class="absolute top-3 right-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-700 bg-gray-900/80 text-gray-300 transition hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 copy-code-trigger" data-copy-code="${encoded}">
+    <svg class="h-4 w-4 copy-icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+    <svg class="hidden h-4 w-4 text-emerald-400 copy-icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </button>`
+}
+const wrapCodeWithCopy = (content: string, copyButton: string) => `<div class="relative">${copyButton}${content}</div>`
+renderer.code = function({ text, lang }: { text: string; lang?: string }): string {
+  if (lang && hljs.getLanguage(lang)) {
+    try {
+      const highlighted = hljs.highlight(text, { language: lang }).value
+      return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`, renderCopyButton(text))
+    } catch (err) {
+      console.error('Highlight error:', err)
+    }
+  }
+  const highlighted = hljs.highlightAuto(text).value
+  return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs">${highlighted}</code></pre>`, renderCopyButton(text))
+}
+
+marked.use({ renderer })
+
+interface Message {
+  id: string
+  type: 'user' | 'bot'
+  content: string
+  timestamp: Date
+  isMarkdown?: boolean
+  isStreaming?: boolean
+  toolCall?: {
+    name: string
+  }
+  tokens?: {
+    inputTokens: number
+    outputTokens: number
+  }
+}
+
+const messages = ref<Message[]>([])
+const inputMessage = ref('')
+const isTyping = ref(false)
+const messagesContainer = ref<HTMLElement | null>(null)
+const { connectSSE } = useStreamingAPI()
+const { isMounted } = useMounted()
+const currentEventSource = ref<EventSource | null>(null)
+const isStreamCompleted = ref(false)
+
+const conversationId = ref<string | null>(null)
+const { getId } = useDatabase()
+
+const showConfigDrawer = ref(false)
+const selectedAiConfig = ref<any>(null)
+const { aiConfig, aiConfigs } = useGlobalState()
+
+const hasConfigs = computed(() => aiConfigs.value && aiConfigs.value.length > 0)
+
+const { registerPageHeader } = usePageHeaderRegistry()
+
+registerPageHeader({
+  title: 'AI Assistant',
+  gradient: 'blue',
+})
+
+useHeaderActionRegistry({
+  id: 'ai-config',
+  label: 'AI Configuration',
+  icon: 'lucide:settings',
+  variant: 'soft',
+  color: 'primary',
+  size: 'lg',
+  onClick: () => {
+    showConfigDrawer.value = true
+  },
+})
+
+onMounted(() => {
+  if (aiConfig.value && Object.keys(aiConfig.value).length > 0) {
+    selectedAiConfig.value = aiConfig.value
+  }
+
+  const section = document.querySelector('section.overflow-y-auto')
+  if (section) {
+    section.classList.add('!overflow-hidden')
+  }
+  if (messagesContainer.value) {
+    messagesContainer.value.addEventListener('click', handleCopyButtonClick)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (currentEventSource.value) {
+    currentEventSource.value.close()
+    currentEventSource.value = null
+  }
+  if (messagesContainer.value) {
+    messagesContainer.value.removeEventListener('click', handleCopyButtonClick)
+  }
+})
+
+const scrollToBottom = (smooth = false) => {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTo({
+        top: messagesContainer.value.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto'
+      })
+    }
+  })
+}
+
+const renderMarkdown = (content: string) => {
+  if (!content) return ''
+  return marked(content)
+}
+
+const handleConfigSelect = (config: any) => {
+  selectedAiConfig.value = config
+}
+
+const copyCode = async (code: string) => {
+  try {
+    await navigator.clipboard.writeText(code)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
+
+const copyFeedbackTimers = new WeakMap<HTMLElement, number>()
+
+const handleCopyButtonClick = async (event: MouseEvent) => {
+  const target = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-copy-code]')
+  if (!target) {
+    return
+  }
+  const encoded = target.getAttribute('data-copy-code')
+  if (!encoded) {
+    return
+  }
+  const iconCopy = target.querySelector<HTMLElement>('.copy-icon-copy')
+  const iconCheck = target.querySelector<HTMLElement>('.copy-icon-check')
+  try {
+    await copyCode(decodeCopyData(encoded))
+    if (iconCopy) {
+      iconCopy.classList.add('hidden')
+    }
+    if (iconCheck) {
+      iconCheck.classList.remove('hidden')
+    }
+    const existingTimer = copyFeedbackTimers.get(target)
+    if (existingTimer) {
+      window.clearTimeout(existingTimer)
+    }
+    const timeout = window.setTimeout(() => {
+      if (iconCopy) {
+        iconCopy.classList.remove('hidden')
+      }
+      if (iconCheck) {
+        iconCheck.classList.add('hidden')
+      }
+      copyFeedbackTimers.delete(target)
+    }, 1600)
+    copyFeedbackTimers.set(target, timeout)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
+
+const sendMessage = async () => {
+  if (!inputMessage.value.trim() || isTyping.value) return
+  if (!selectedAiConfig.value) {
+    showConfigDrawer.value = true
+    return
+  }
+
+  if (currentEventSource.value) {
+    currentEventSource.value.close()
+    currentEventSource.value = null
+  }
+  isStreamCompleted.value = false
+
+  const userMsg = inputMessage.value
+  inputMessage.value = ''
+
+  messages.value.push({
+    id: Date.now().toString(),
+    type: 'user',
+    content: userMsg,
+    timestamp: new Date(),
+  })
+
+  const botMessageId = (Date.now() + 1).toString()
+  messages.value.push({
+    id: botMessageId,
+    type: 'bot',
+    content: '',
+    timestamp: new Date(),
+    isMarkdown: true,
+    isStreaming: true,
+  })
+
+  isTyping.value = true
+  scrollToBottom()
+
+  try {
+    const apiUrl = '/enfyra/api/ai-agent/chat/stream'
+
+    const queryParams: Record<string, string> = {
+      message: userMsg,
+    }
+
+    if (selectedAiConfig.value) {
+      queryParams.config = getId(selectedAiConfig.value)
+    }
+
+    const eventSource = connectSSE(apiUrl, {
+      queryParams,
+      onMessage: (chunk: string) => {
+        try {
+          const json = JSON.parse(chunk)
+
+          if (!conversationId.value) {
+            const convId = json.data?.metadata?.conversation || json.data?.conversation
+            if (convId) {
+              conversationId.value = convId.toString()
+              if (currentEventSource.value) {
+                currentEventSource.value.close()
+                currentEventSource.value = null
+              }
+              navigateTo(`/ai-agent/chat/${conversationId.value}`, { replace: true })
+              return
+            }
+          }
+
+          if (json.type === 'ping') {
+            return
+          } else if (json.type === 'text' && json.data?.delta) {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.content += json.data.delta
+              botMessage.toolCall = undefined
+              scrollToBottom(true)
+            }
+          } else if (json.type === 'tool_call') {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.toolCall = {
+                name: json.data?.name || 'unknown'
+              }
+              scrollToBottom(true)
+            }
+          } else if (json.type === 'tokens' && json.data) {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.tokens = {
+                inputTokens: json.data.inputTokens || 0,
+                outputTokens: json.data.outputTokens || 0,
+              }
+            }
+          } else if (json.type === 'error') {
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.isStreaming = false
+              botMessage.content = json.data?.error || 'An error occurred while processing your request.'
+            }
+            isTyping.value = false
+            scrollToBottom(true)
+          } else if (json.type === 'done') {
+            isStreamCompleted.value = true
+            const botMessage = messages.value.find(m => m.id === botMessageId)
+            if (botMessage) {
+              botMessage.isStreaming = false
+            }
+            isTyping.value = false
+            if (currentEventSource.value) {
+              currentEventSource.value.close()
+              currentEventSource.value = null
+            }
+            scrollToBottom(true)
+          }
+        } catch (err) {
+          console.error('Parse chunk error:', err, chunk)
+        }
+      },
+      onComplete: () => {
+        isStreamCompleted.value = true
+        const botMessage = messages.value.find(m => m.id === botMessageId)
+        if (botMessage) {
+          botMessage.isStreaming = false
+        }
+        isTyping.value = false
+        if (currentEventSource.value) {
+          currentEventSource.value.close()
+          currentEventSource.value = null
+        }
+        scrollToBottom(true)
+      },
+      onError: (error: Error) => {
+        if (isStreamCompleted.value) {
+          return
+        }
+
+        console.error('Streaming error:', error)
+
+        const botMessage = messages.value.find(m => m.id === botMessageId)
+        if (botMessage) {
+          botMessage.isStreaming = false
+          botMessage.toolCall = undefined
+          botMessage.content = error.message || 'Stream connection lost'
+        }
+        isTyping.value = false
+        currentEventSource.value = null
+      },
+    })
+
+    currentEventSource.value = eventSource
+  } catch (error) {
+    console.error('Send message error:', error)
+    isTyping.value = false
+    currentEventSource.value = null
+  }
+}
+
+const formatTime = (date: Date) => {
+  return new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+</script>
+
+<template>
+  <div class="flex flex-col -m-3 md:-m-6 h-full">
+    <!-- Messages Area -->
+    <div
+      ref="messagesContainer"
+      class="flex-1 overflow-y-auto px-6 py-6"
+    >
+      <div class="max-w-4xl mx-auto space-y-6">
+        <Transition name="ai-chat-fade" mode="out-in">
+          <!-- Empty state when no messages -->
+          <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full py-12 text-center">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 flex items-center justify-center mb-4">
+              <Icon name="lucide:message-circle" class="w-10 h-10 text-cyan-400" />
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">Start a New Conversation</h3>
+            <p class="text-gray-400 max-w-md">
+              Type your message below to begin chatting with the AI assistant.
+              <span v-if="!selectedAiConfig" class="block mt-2 text-orange-400">
+                Don't forget to select an AI configuration first!
+              </span>
+            </p>
+          </div>
+
+          <!-- Messages -->
+          <div v-else class="space-y-6">
+            <div
+              v-for="message in messages"
+              :key="message.id"
+              class="flex gap-3 group"
+              :class="message.type === 'user' ? 'flex-row-reverse' : ''"
+            >
+              <div class="flex-shrink-0">
+                <div
+                  v-if="message.type === 'bot'"
+                  class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+                >
+                  <Icon name="lucide:bot" class="w-5 h-5 text-white" />
+                </div>
+                <div
+                  v-else
+                  class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center"
+                >
+                  <Icon name="lucide:user" class="w-5 h-5 text-white" />
+                </div>
+              </div>
+
+              <div class="flex-1 min-w-0" :class="message.type === 'user' ? 'flex justify-end' : ''">
+                <div
+                  class="inline-block rounded-2xl transition-all duration-200"
+                  :class="[
+                    message.type === 'user'
+                      ? 'bg-blue-600 text-white px-4 py-3 max-w-[80%]'
+                      : 'bg-gray-900 border border-gray-800 px-4 py-3 w-full',
+                  ]"
+                >
+                  <div
+                    v-if="message.type === 'user'"
+                    class="text-sm leading-relaxed whitespace-pre-wrap"
+                  >
+                    {{ message.content }}
+                  </div>
+                  <div
+                    v-else
+                    class="space-y-3"
+                  >
+                    <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
+                      <div v-if="message.content" v-html="renderMarkdown(message.content)" />
+                      <div
+                        v-if="message.isStreaming && !message.toolCall"
+                        class="inline-flex items-center gap-0.5"
+                        :class="message.content ? 'mt-1' : ''"
+                      >
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 0ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 120ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 240ms" />
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="message.toolCall"
+                      class="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-xs text-gray-400"
+                    >
+                      <Icon name="lucide:loader-2" class="w-3.5 h-3.5 animate-spin" />
+                      <span>{{ message.toolCall.name }}</span>
+                    </div>
+                  </div>
+
+                  <div
+                    class="text-xs mt-2 opacity-60 flex items-center gap-2"
+                    :class="message.type === 'user' ? 'text-blue-100' : 'text-gray-500'"
+                  >
+                    <span>{{ formatTime(message.timestamp) }}</span>
+                    <span
+                      v-if="message.type === 'bot' && message.tokens"
+                      class="text-[10px] opacity-50"
+                    >
+                      • {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="border-t border-gray-800 bg-gray-900/80 backdrop-blur-sm flex-shrink-0">
+      <div class="px-6 py-4">
+        <div class="max-w-4xl mx-auto">
+          <form @submit.prevent="sendMessage">
+            <!-- Wrapper with border (looks like single input) -->
+            <div class="relative flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-2xl hover:border-gray-600 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
+              <!-- Text Input - no border, no padding -->
+              <textarea
+                v-model="inputMessage"
+                rows="1"
+                class="flex-1 bg-transparent text-gray-100 placeholder-gray-500 resize-none outline-none max-h-[150px] py-1"
+                style="field-sizing: content;"
+                :placeholder="hasConfigs ? 'Type your message...' : 'Please select an AI configuration first'"
+                :disabled="!hasConfigs || isTyping"
+                @keydown.enter.exact.prevent="sendMessage"
+                @input="(e) => {
+                  const target = e.target as HTMLTextAreaElement
+                  target.style.height = 'auto'
+                  target.style.height = Math.min(target.scrollHeight, 150) + 'px'
+                }"
+              />
+
+              <!-- Send Button - inside wrapper -->
+              <button
+                v-if="hasConfigs"
+                type="submit"
+                :disabled="!inputMessage.trim() || isTyping"
+                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
+              >
+                <Icon name="lucide:send" class="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+
+          <!-- Helper Text -->
+          <div class="text-xs text-gray-500 mt-2 text-center">
+            <template v-if="hasConfigs">
+              Press Enter to send • Shift + Enter for new line
+            </template>
+            <template v-else>
+              <span class="text-orange-400">No AI configuration available. Please create one first.</span>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Config Drawer -->
+  <AiConfigDrawer
+    v-model="showConfigDrawer"
+    :current-config="selectedAiConfig"
+    @select="handleConfigSelect"
+  />
+</template>

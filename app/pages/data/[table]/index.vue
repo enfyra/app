@@ -62,6 +62,7 @@ const {
       limit: pageLimit,
       page: page.value,
       fields: "*",
+      sort: "-createdAt",
       meta: "*",
       ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
     };
