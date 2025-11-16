@@ -486,7 +486,7 @@ const formatTime = (date: Date) => {
                     <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
                       <div v-if="message.content" v-html="renderMarkdown(message.content)" />
                       <div
-                        v-if="message.isStreaming && (!message.toolCalls || message.toolCalls.length === 0)"
+                        v-if="message.isStreaming"
                         class="inline-flex items-center gap-0.5"
                         :class="message.content ? 'mt-1' : ''"
                       >
