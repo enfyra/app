@@ -36,7 +36,6 @@ renderer.code = function({ text, lang }: { text: string; lang?: string }): strin
       const highlighted = hljs.highlight(text, { language: lang }).value
       return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`, renderCopyButton(text))
     } catch (err) {
-      console.error('Highlight error:', err)
     }
   }
   const highlighted = hljs.highlightAuto(text).value
@@ -319,6 +318,15 @@ const sendMessage = async () => {
 
   const userMsg = inputMessage.value
   inputMessage.value = ''
+  
+  nextTick(() => {
+    if (textareaRef.value) {
+      textareaRef.value.style.height = 'auto'
+      const lineHeight = parseInt(getComputedStyle(textareaRef.value).lineHeight) || 24
+      textareaRef.value.style.height = lineHeight + 'px'
+      textareaRef.value.style.overflowY = 'hidden'
+    }
+  })
 
   messages.value.push({
     id: Date.now().toString(),
@@ -410,10 +418,17 @@ const sendMessage = async () => {
               currentEventSource.value.close()
               currentEventSource.value = null
             }
+            nextTick(() => {
+              if (textareaRef.value) {
+                textareaRef.value.style.height = 'auto'
+                const lineHeight = parseInt(getComputedStyle(textareaRef.value).lineHeight) || 24
+                textareaRef.value.style.height = lineHeight + 'px'
+                textareaRef.value.style.overflowY = 'hidden'
+              }
+            })
             scrollToBottom(true)
           }
         } catch (err) {
-          console.error('Parse chunk error:', err, chunk)
         }
       },
       onComplete: () => {
@@ -431,14 +446,20 @@ const sendMessage = async () => {
           currentEventSource.value.close()
           currentEventSource.value = null
         }
+        nextTick(() => {
+          if (textareaRef.value) {
+            textareaRef.value.style.height = 'auto'
+            const lineHeight = parseInt(getComputedStyle(textareaRef.value).lineHeight) || 24
+            textareaRef.value.style.height = lineHeight + 'px'
+            textareaRef.value.style.overflowY = 'hidden'
+          }
+        })
         scrollToBottom(true)
       },
       onError: (error: Error) => {
         if (isStreamCompleted.value) {
           return
         }
-
-        console.error('Streaming error:', error)
 
         const botMessage = messages.value.find(m => m.id === botMessageId)
         if (botMessage) {
@@ -453,7 +474,6 @@ const sendMessage = async () => {
 
     currentEventSource.value = eventSource
   } catch (error) {
-    console.error('Send message error:', error)
     isTyping.value = false
     currentEventSource.value = null
   }
@@ -475,21 +495,14 @@ const stopStreaming = async () => {
       : conversationId.value
     if (convId) {
       try {
-        console.log('[stopStreaming] Calling cancel API with conversation:', convId)
         await cancelStream({
           body: {
             conversation: convId,
           },
         })
-        console.log('[stopStreaming] Cancel API called successfully')
       } catch (error) {
-        console.error('[stopStreaming] Error calling cancel stream:', error)
       }
-    } else {
-      console.warn('[stopStreaming] No valid conversation ID')
     }
-  } else {
-    console.warn('[stopStreaming] No conversationId.value')
   }
 
   if (currentEventSource.value) {
@@ -501,6 +514,9 @@ const stopStreaming = async () => {
   if (streamingBotMessage) {
     streamingBotMessage.isStreaming = false
     streamingBotMessage.toolCall = undefined
+    if (!streamingBotMessage.content || streamingBotMessage.content.trim() === '') {
+      streamingBotMessage.content = 'Error: Request aborted by client'
+    }
   }
 
   isTyping.value = false
@@ -730,7 +746,15 @@ onBeforeUnmount(async () => {
                 @input="(e) => {
                   const target = e.target as HTMLTextAreaElement
                   target.style.height = 'auto'
-                  target.style.height = Math.min(target.scrollHeight, 150) + 'px'
+                  if (target.value.trim()) {
+                    const newHeight = Math.min(target.scrollHeight, 150)
+                    target.style.height = newHeight + 'px'
+                    target.style.overflowY = newHeight >= 150 ? 'auto' : 'hidden'
+                  } else {
+                    const lineHeight = parseInt(getComputedStyle(target).lineHeight) || 24
+                    target.style.height = lineHeight + 'px'
+                    target.style.overflowY = 'hidden'
+                  }
                 }"
               />
 

@@ -30,7 +30,6 @@ renderer.code = function({ text, lang }: { text: string; lang?: string }): strin
       const highlighted = hljs.highlight(text, { language: lang }).value
       return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`, renderCopyButton(text))
     } catch (err) {
-      console.error('Highlight error:', err)
     }
   }
   const highlighted = hljs.highlightAuto(text).value
@@ -206,6 +205,15 @@ const sendMessage = async () => {
 
   const userMsg = inputMessage.value
   inputMessage.value = ''
+  
+  nextTick(() => {
+    if (textareaRef.value) {
+      textareaRef.value.style.height = 'auto'
+      const lineHeight = parseInt(getComputedStyle(textareaRef.value).lineHeight) || 24
+      textareaRef.value.style.height = lineHeight + 'px'
+      textareaRef.value.style.overflowY = 'hidden'
+    }
+  })
 
   messages.value.push({
     id: Date.now().toString(),
@@ -295,6 +303,15 @@ const sendMessage = async () => {
               currentEventSource.value = null
             }
             
+            nextTick(() => {
+              if (textareaRef.value) {
+                textareaRef.value.style.height = 'auto'
+                const lineHeight = parseInt(getComputedStyle(textareaRef.value).lineHeight) || 24
+                textareaRef.value.style.height = lineHeight + 'px'
+                textareaRef.value.style.overflowY = 'hidden'
+              }
+            })
+            
             if (conversationId.value) {
               navigateTo(`/ai-agent/chat/${conversationId.value}`, { replace: true })
             } else {
@@ -302,7 +319,6 @@ const sendMessage = async () => {
             }
           }
         } catch (err) {
-          console.error('Parse chunk error:', err, chunk)
         }
       },
       onComplete: () => {
@@ -321,6 +337,15 @@ const sendMessage = async () => {
           currentEventSource.value = null
         }
         
+        nextTick(() => {
+          if (textareaRef.value) {
+            textareaRef.value.style.height = 'auto'
+            const lineHeight = parseInt(getComputedStyle(textareaRef.value).lineHeight) || 24
+            textareaRef.value.style.height = lineHeight + 'px'
+            textareaRef.value.style.overflowY = 'hidden'
+          }
+        })
+        
         if (conversationId.value) {
           navigateTo(`/ai-agent/chat/${conversationId.value}`, { replace: true })
         } else {
@@ -331,8 +356,6 @@ const sendMessage = async () => {
         if (isStreamCompleted.value) {
           return
         }
-
-        console.error('Streaming error:', error)
 
         const botMessage = messages.value.find(m => m.id === botMessageId)
         if (botMessage) {
@@ -347,7 +370,6 @@ const sendMessage = async () => {
 
     currentEventSource.value = eventSource
   } catch (error) {
-    console.error('Send message error:', error)
     isTyping.value = false
     currentEventSource.value = null
   }
@@ -489,15 +511,31 @@ const formatTime = (date: Date) => {
                 @input="(e) => {
                   const target = e.target as HTMLTextAreaElement
                   target.style.height = 'auto'
-                  target.style.height = Math.min(target.scrollHeight, 150) + 'px'
+                  if (target.value.trim()) {
+                    const newHeight = Math.min(target.scrollHeight, 150)
+                    target.style.height = newHeight + 'px'
+                    target.style.overflowY = newHeight >= 150 ? 'auto' : 'hidden'
+                  } else {
+                    const lineHeight = parseInt(getComputedStyle(target).lineHeight) || 24
+                    target.style.height = lineHeight + 'px'
+                    target.style.overflowY = 'hidden'
+                  }
                 }"
               />
 
-              <!-- Send Button - inside wrapper -->
+              <!-- Send/Stop Button - inside wrapper -->
               <button
-                v-if="hasConfigs"
+                v-if="isTyping"
+                type="button"
+                disabled
+                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-red-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
+              >
+                <Icon name="lucide:square" class="w-3.5 h-3.5" />
+              </button>
+              <button
+                v-else-if="hasConfigs"
                 type="submit"
-                :disabled="!inputMessage.trim() || isTyping"
+                :disabled="!inputMessage.trim()"
                 class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
               >
                 <Icon name="lucide:send" class="w-4 h-4" />
