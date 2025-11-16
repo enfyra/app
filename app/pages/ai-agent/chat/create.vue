@@ -45,9 +45,11 @@ interface Message {
   timestamp: Date
   isMarkdown?: boolean
   isStreaming?: boolean
-  toolCall?: {
+  toolCalls?: Array<{
+    id: string
     name: string
-  }
+    status: 'pending' | 'success' | 'error'
+  }>
   tokens?: {
     inputTokens: number
     outputTokens: number
@@ -209,7 +211,7 @@ const sendMessage = async () => {
   nextTick(() => {
     if (textareaRef.value) {
       textareaRef.value.style.height = 'auto'
-      const lineHeight = parseInt(getComputedStyle(textareaRef.value).lineHeight) || 24
+      const lineHeight = parseInt(window.getComputedStyle(textareaRef.value).lineHeight) || 24
       textareaRef.value.style.height = lineHeight + 'px'
       textareaRef.value.style.overflowY = 'hidden'
     }
@@ -258,14 +260,25 @@ const sendMessage = async () => {
             const botMessage = messages.value.find(m => m.id === botMessageId)
             if (botMessage) {
               botMessage.content += json.data.delta
-              botMessage.toolCall = undefined
               scrollToBottom(true)
             }
           } else if (json.type === 'tool_call') {
             const botMessage = messages.value.find(m => m.id === botMessageId)
             if (botMessage) {
-              botMessage.toolCall = {
-                name: json.data?.name || 'unknown'
+              if (!botMessage.toolCalls) {
+                botMessage.toolCalls = []
+              }
+              const toolCallId = json.data?.id
+              const existingIndex = botMessage.toolCalls.findIndex(tc => tc.id === toolCallId)
+              const toolCallData = {
+                id: toolCallId || Date.now().toString(),
+                name: json.data?.name || 'unknown',
+                status: (json.data?.status || 'pending') as 'pending' | 'success' | 'error'
+              }
+              if (existingIndex >= 0) {
+                botMessage.toolCalls[existingIndex] = toolCallData
+              } else {
+                botMessage.toolCalls.push(toolCallData)
               }
               scrollToBottom(true)
             }
@@ -306,7 +319,7 @@ const sendMessage = async () => {
             nextTick(() => {
               if (textareaRef.value) {
                 textareaRef.value.style.height = 'auto'
-                const lineHeight = parseInt(getComputedStyle(textareaRef.value).lineHeight) || 24
+                const lineHeight = parseInt(window.getComputedStyle(textareaRef.value).lineHeight) || 24
                 textareaRef.value.style.height = lineHeight + 'px'
                 textareaRef.value.style.overflowY = 'hidden'
               }
@@ -360,7 +373,6 @@ const sendMessage = async () => {
         const botMessage = messages.value.find(m => m.id === botMessageId)
         if (botMessage) {
           botMessage.isStreaming = false
-          botMessage.toolCall = undefined
           botMessage.content = error.message || 'Stream connection lost'
         }
         isTyping.value = false
@@ -373,6 +385,29 @@ const sendMessage = async () => {
     isTyping.value = false
     currentEventSource.value = null
   }
+}
+
+const expandedToolCalls = ref<Record<string, boolean>>({})
+
+const toggleToolCalls = (messageId: string) => {
+  expandedToolCalls.value[messageId] = !expandedToolCalls.value[messageId]
+}
+
+const getDisplayToolCall = (toolCalls: Array<{ id: string; name: string; status: 'pending' | 'success' | 'error' }>) => {
+  const pending = toolCalls.find(tc => tc.status === 'pending')
+  return pending || toolCalls[toolCalls.length - 1]
+}
+
+const getSortedToolCalls = (toolCalls: Array<{ id: string; name: string; status: 'pending' | 'success' | 'error' }>) => {
+  return [...toolCalls].sort((a, b) => {
+    if (a.status === 'pending' && b.status !== 'pending') return -1
+    if (a.status !== 'pending' && b.status === 'pending') return 1
+    return 0
+  })
+}
+
+const getLineHeight = (element: HTMLElement) => {
+  return parseInt(window.getComputedStyle(element).lineHeight) || 24
 }
 
 const formatTime = (date: Date) => {
@@ -431,16 +466,16 @@ const formatTime = (date: Date) => {
 
               <div class="flex-1 min-w-0" :class="message.type === 'user' ? 'flex justify-end' : ''">
                 <div
-                  class="inline-block rounded-2xl transition-all duration-200"
+                  class="rounded-2xl transition-all duration-200 overflow-hidden"
                   :class="[
                     message.type === 'user'
-                      ? 'bg-blue-600 text-white px-4 py-3 max-w-[80%]'
-                      : 'bg-gray-900 border border-gray-800 px-4 py-3 w-full',
+                      ? 'bg-blue-600 text-white px-4 py-3 max-w-[80%] inline-block'
+                      : 'bg-gray-900 border border-gray-800 px-4 py-3 inline-block',
                   ]"
                 >
                   <div
                     v-if="message.type === 'user'"
-                    class="text-sm leading-relaxed whitespace-pre-wrap"
+                    class="text-sm leading-relaxed whitespace-pre-wrap break-words"
                   >
                     {{ message.content }}
                   </div>
@@ -451,7 +486,7 @@ const formatTime = (date: Date) => {
                     <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
                       <div v-if="message.content" v-html="renderMarkdown(message.content)" />
                       <div
-                        v-if="message.isStreaming && !message.toolCall"
+                        v-if="message.isStreaming && (!message.toolCalls || message.toolCalls.length === 0)"
                         class="inline-flex items-center gap-0.5"
                         :class="message.content ? 'mt-1' : ''"
                       >
@@ -459,14 +494,6 @@ const formatTime = (date: Date) => {
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 120ms" />
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 240ms" />
                       </div>
-                    </div>
-
-                    <div
-                      v-if="message.toolCall"
-                      class="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-xs text-gray-400"
-                    >
-                      <Icon name="lucide:loader-2" class="w-3.5 h-3.5 animate-spin" />
-                      <span>{{ message.toolCall.name }}</span>
                     </div>
                   </div>
 
@@ -482,6 +509,93 @@ const formatTime = (date: Date) => {
                     >
                       • {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
                     </span>
+                  </div>
+
+                  <div
+                    v-if="message.type === 'bot' && message.toolCalls && message.toolCalls.length > 0"
+                    class="mt-2"
+                  >
+                    <template v-if="message.toolCalls[0]?.status !== undefined">
+                      <div
+                        class="bg-gray-800/50 border border-gray-700 rounded overflow-hidden"
+                        :class="{
+                          'cursor-pointer hover:bg-gray-800/70 transition-colors': message.toolCalls.length > 1
+                        }"
+                        @click="message.toolCalls.length > 1 && toggleToolCalls(message.id)"
+                      >
+                        <div
+                          v-if="message.toolCalls.length === 1 || expandedToolCalls[message.id]"
+                          class="space-y-px"
+                        >
+                          <div
+                            v-for="(toolCall, index) in getSortedToolCalls(message.toolCalls)"
+                            :key="toolCall.id"
+                            class="flex items-center gap-1.5 px-2 py-1 text-xs"
+                            :class="{
+                              'text-gray-400': toolCall.status === 'pending',
+                              'text-green-400': toolCall.status === 'success',
+                              'text-red-400': toolCall.status === 'error',
+                              'border-b border-gray-700/50': index < getSortedToolCalls(message.toolCalls).length - 1
+                            }"
+                          >
+                            <Icon
+                              v-if="toolCall.status === 'pending'"
+                              name="lucide:loader-2"
+                              class="w-3.5 h-3.5 animate-spin flex-shrink-0"
+                            />
+                            <Icon
+                              v-else-if="toolCall.status === 'success'"
+                              name="lucide:check-circle"
+                              class="w-3.5 h-3.5 flex-shrink-0"
+                            />
+                            <Icon
+                              v-else-if="toolCall.status === 'error'"
+                              name="lucide:x-circle"
+                              class="w-3.5 h-3.5 flex-shrink-0"
+                            />
+                            <span class="flex-1">{{ toolCall.name }}</span>
+                          </div>
+                        </div>
+                        <div
+                          v-else
+                          class="flex items-center gap-1.5 px-2 py-1 text-xs"
+                        >
+                          <template v-if="getDisplayToolCall(message.toolCalls)">
+                            <Icon
+                              v-if="getDisplayToolCall(message.toolCalls)!.status === 'pending'"
+                              name="lucide:loader-2"
+                              class="w-3.5 h-3.5 animate-spin flex-shrink-0"
+                            />
+                            <Icon
+                              v-else-if="getDisplayToolCall(message.toolCalls)!.status === 'success'"
+                              name="lucide:check-circle"
+                              class="w-3.5 h-3.5 flex-shrink-0"
+                            />
+                            <Icon
+                              v-else-if="getDisplayToolCall(message.toolCalls)!.status === 'error'"
+                              name="lucide:x-circle"
+                              class="w-3.5 h-3.5 flex-shrink-0"
+                            />
+                            <span
+                              class="flex-1"
+                              :class="{
+                                'text-gray-400': getDisplayToolCall(message.toolCalls)!.status === 'pending',
+                                'text-green-400': getDisplayToolCall(message.toolCalls)!.status === 'success',
+                                'text-red-400': getDisplayToolCall(message.toolCalls)!.status === 'error',
+                              }"
+                            >{{ getDisplayToolCall(message.toolCalls)!.name }}</span>
+                            <span class="text-[10px] opacity-50">+{{ message.toolCalls.length - 1 }}</span>
+                          </template>
+                        </div>
+                      </div>
+                    </template>
+                    <div
+                      v-else
+                      class="flex items-center gap-1.5 px-2 py-1 bg-gray-800/50 border border-gray-700 rounded text-xs text-gray-400"
+                    >
+                      <Icon name="lucide:wrench" class="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>{{ message.toolCalls.length }} tool call{{ message.toolCalls.length > 1 ? 's' : '' }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -516,7 +630,7 @@ const formatTime = (date: Date) => {
                     target.style.height = newHeight + 'px'
                     target.style.overflowY = newHeight >= 150 ? 'auto' : 'hidden'
                   } else {
-                    const lineHeight = parseInt(getComputedStyle(target).lineHeight) || 24
+                    const lineHeight = getLineHeight(target)
                     target.style.height = lineHeight + 'px'
                     target.style.overflowY = 'hidden'
                   }
