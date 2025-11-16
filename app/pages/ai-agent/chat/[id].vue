@@ -720,7 +720,7 @@ onBeforeUnmount(async () => {
                     <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
                       <div v-html="renderMarkdown(message.content)" />
                       <div
-                        v-if="message.isStreaming && (!message.toolCalls || message.toolCalls.length === 0)"
+                        v-if="message.isStreaming"
                         class="inline-flex items-center gap-0.5 mt-1"
                       >
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 0ms" />
