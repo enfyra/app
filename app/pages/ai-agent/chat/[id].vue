@@ -576,6 +576,10 @@ const getSortedToolCalls = (toolCalls: Array<{ id: string; name: string; status:
   })
 }
 
+const getLineHeight = (element: HTMLElement) => {
+  return parseInt(window.getComputedStyle(element).lineHeight) || 24
+}
+
 const handleKeyDown = (event: KeyboardEvent) => {
   if (event.key === 'Escape' && isTyping.value) {
     event.preventDefault()
@@ -743,11 +747,11 @@ onBeforeUnmount(async () => {
 
                   <div
                     v-if="message.type === 'bot' && message.toolCalls && message.toolCalls.length > 0"
-                    class="mt-2"
+                    class="mt-3"
                   >
                     <template v-if="message.toolCalls[0]?.status !== undefined">
                       <div
-                        class="bg-gray-800/50 border border-gray-700 rounded overflow-hidden"
+                        class="bg-gray-800/50 border border-gray-700 rounded overflow-hidden w-fit"
                         :class="{
                           'cursor-pointer hover:bg-gray-800/70 transition-colors': message.toolCalls.length > 1
                         }"
@@ -821,7 +825,7 @@ onBeforeUnmount(async () => {
                     </template>
                     <div
                       v-else
-                      class="flex items-center gap-1.5 px-2 py-1 bg-gray-800/50 border border-gray-700 rounded text-xs text-gray-400"
+                      class="flex items-center gap-1.5 px-2 py-1 bg-gray-800/50 border border-gray-700 rounded text-xs text-gray-400 w-fit"
                     >
                       <Icon name="lucide:wrench" class="w-3.5 h-3.5 flex-shrink-0" />
                       <span>{{ message.toolCalls.length }} tool call{{ message.toolCalls.length > 1 ? 's' : '' }}</span>
@@ -875,7 +879,7 @@ onBeforeUnmount(async () => {
                     target.style.height = newHeight + 'px'
                     target.style.overflowY = newHeight >= 150 ? 'auto' : 'hidden'
                   } else {
-                    const lineHeight = parseInt(getComputedStyle(target).lineHeight) || 24
+                    const lineHeight = getLineHeight(target)
                     target.style.height = lineHeight + 'px'
                     target.style.overflowY = 'hidden'
                   }

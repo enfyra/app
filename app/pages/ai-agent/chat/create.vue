@@ -513,11 +513,11 @@ const formatTime = (date: Date) => {
 
                   <div
                     v-if="message.type === 'bot' && message.toolCalls && message.toolCalls.length > 0"
-                    class="mt-2"
+                    class="mt-3"
                   >
                     <template v-if="message.toolCalls[0]?.status !== undefined">
                       <div
-                        class="bg-gray-800/50 border border-gray-700 rounded overflow-hidden"
+                        class="bg-gray-800/50 border border-gray-700 rounded overflow-hidden w-fit"
                         :class="{
                           'cursor-pointer hover:bg-gray-800/70 transition-colors': message.toolCalls.length > 1
                         }"
@@ -591,7 +591,7 @@ const formatTime = (date: Date) => {
                     </template>
                     <div
                       v-else
-                      class="flex items-center gap-1.5 px-2 py-1 bg-gray-800/50 border border-gray-700 rounded text-xs text-gray-400"
+                      class="flex items-center gap-1.5 px-2 py-1 bg-gray-800/50 border border-gray-700 rounded text-xs text-gray-400 w-fit"
                     >
                       <Icon name="lucide:wrench" class="w-3.5 h-3.5 flex-shrink-0" />
                       <span>{{ message.toolCalls.length }} tool call{{ message.toolCalls.length > 1 ? 's' : '' }}</span>
