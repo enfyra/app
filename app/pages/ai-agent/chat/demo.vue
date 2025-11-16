@@ -291,28 +291,28 @@ registerPageHeader({
                       >
                         <template v-if="getDisplayToolCall(message.toolCalls)">
                           <Icon
-                            v-if="getDisplayToolCall(message.toolCalls).status === 'pending'"
+                            v-if="getDisplayToolCall(message.toolCalls)!.status === 'pending'"
                             name="lucide:loader-2"
                             class="w-3.5 h-3.5 animate-spin flex-shrink-0"
                           />
                           <Icon
-                            v-else-if="getDisplayToolCall(message.toolCalls).status === 'success'"
+                            v-else-if="getDisplayToolCall(message.toolCalls)!.status === 'success'"
                             name="lucide:check-circle"
                             class="w-3.5 h-3.5 flex-shrink-0"
                           />
                           <Icon
-                            v-else-if="getDisplayToolCall(message.toolCalls).status === 'error'"
+                            v-else-if="getDisplayToolCall(message.toolCalls)!.status === 'error'"
                             name="lucide:x-circle"
                             class="w-3.5 h-3.5 flex-shrink-0"
                           />
                           <span
                             class="flex-1"
                             :class="{
-                              'text-gray-400': getDisplayToolCall(message.toolCalls).status === 'pending',
-                              'text-green-400': getDisplayToolCall(message.toolCalls).status === 'success',
-                              'text-red-400': getDisplayToolCall(message.toolCalls).status === 'error',
+                              'text-gray-400': getDisplayToolCall(message.toolCalls)!.status === 'pending',
+                              'text-green-400': getDisplayToolCall(message.toolCalls)!.status === 'success',
+                              'text-red-400': getDisplayToolCall(message.toolCalls)!.status === 'error',
                             }"
-                          >{{ getDisplayToolCall(message.toolCalls).name }}</span>
+                          >{{ getDisplayToolCall(message.toolCalls)!.name }}</span>
                           <span class="text-[10px] opacity-50">+{{ message.toolCalls.length - 1 }}</span>
                         </template>
                       </div>
