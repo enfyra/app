@@ -18,6 +18,9 @@
 .ai-chat-prose {
   scrollbar-width: thin;
   scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
 }
 
 .ai-chat-prose h1,

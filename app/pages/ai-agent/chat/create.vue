@@ -431,16 +431,16 @@ const formatTime = (date: Date) => {
 
               <div class="flex-1 min-w-0" :class="message.type === 'user' ? 'flex justify-end' : ''">
                 <div
-                  class="inline-block rounded-2xl transition-all duration-200"
+                  class="rounded-2xl transition-all duration-200 overflow-hidden"
                   :class="[
                     message.type === 'user'
-                      ? 'bg-blue-600 text-white px-4 py-3 max-w-[80%]'
-                      : 'bg-gray-900 border border-gray-800 px-4 py-3 w-full',
+                      ? 'bg-blue-600 text-white px-4 py-3 max-w-[80%] inline-block'
+                      : 'bg-gray-900 border border-gray-800 px-4 py-3 inline-block',
                   ]"
                 >
                   <div
                     v-if="message.type === 'user'"
-                    class="text-sm leading-relaxed whitespace-pre-wrap"
+                    class="text-sm leading-relaxed whitespace-pre-wrap break-words"
                   >
                     {{ message.content }}
                   </div>
