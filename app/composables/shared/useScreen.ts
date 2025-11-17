@@ -9,8 +9,8 @@ import {
 } from "vue";
 
 export function useScreen() {
-  const width = ref(0);
-  const height = ref(0);
+  const width = ref(typeof window !== "undefined" ? window.innerWidth : 0);
+  const height = ref(typeof window !== "undefined" ? window.innerHeight : 0);
 
   const updateDimensions = () => {
     if (typeof window !== "undefined") {
@@ -31,14 +31,15 @@ export function useScreen() {
     return "desktop";
   });
 
+  if (typeof window !== "undefined") {
+    window.addEventListener("resize", updateDimensions);
+  }
+
   const instance = getCurrentInstance();
   if (instance) {
     onMounted(async () => {
       await nextTick();
-      if (typeof window !== "undefined") {
-        updateDimensions();
-        window.addEventListener("resize", updateDimensions);
-      }
+      updateDimensions();
     });
 
     onUnmounted(() => {
@@ -49,8 +50,8 @@ export function useScreen() {
   }
 
   return {
-    width: readonly(width),
-    height: readonly(height),
+    width: computed(() => width.value),
+    height: computed(() => height.value),
     isMobile,
     isTablet,
     isDesktop,

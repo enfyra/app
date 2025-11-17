@@ -1,6 +1,6 @@
 export default defineNuxtPlugin(() => {
   const { toggleSidebar } = useGlobalState();
-  const { isMobile, isTablet } = useScreen();
+  const { width } = useScreen();
 
   useHeaderActionRegistry([
     {
@@ -10,11 +10,11 @@ export default defineNuxtPlugin(() => {
       size: "lg",
       side: "left",
       color: "secondary",
-      class: "lg:hidden flex-shrink-0",
+      class: " flex-shrink-0",
       onClick: toggleSidebar,
       global: true,
       get show() {
-        return isMobile.value || isTablet.value;
+        return width.value <= 1024;
       },
       permission: {
         allowAll: true,

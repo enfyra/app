@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, onBeforeUnmount } from 'vue';
 import {
   useVueTable,
   getCoreRowModel,
@@ -33,6 +34,7 @@ function handleRowClick(row: any) {
 const sorting = ref<SortingState>([]);
 const columnVisibility = ref<VisibilityState>({});
 const rowSelection = ref({});
+
 
 // Enhanced columns with checkbox if selectable
 const enhancedColumns = computed(() => {
@@ -165,6 +167,110 @@ watch(
   },
   { deep: true }
 );
+
+// Helper functions for card view
+function getPrimaryFieldValue(row: any) {
+  const cells = row.getVisibleCells()
+  const nameCell = cells.find((cell: any) => 
+    ['name', 'title', 'fullName', 'user'].includes(cell.column.id?.toLowerCase() || '')
+  )
+  if (nameCell) {
+    return nameCell.getValue()
+  }
+  const firstCell = cells.find((cell: any) => 
+    cell.column.id !== 'select' && cell.column.id !== '__actions'
+  )
+  return firstCell ? String(firstCell.getValue()) : 'N/A'
+}
+
+function getStatusField(row: any) {
+  const cells = row.getVisibleCells()
+  const statusCell = cells.find((cell: any) => 
+    ['status', 'isActive', 'state'].includes(cell.column.id?.toLowerCase() || '')
+  )
+  if (statusCell) {
+    const value = statusCell.getValue()
+    if (typeof value === 'boolean') {
+      return value ? 'Active' : 'Inactive'
+    }
+    return String(value)
+  }
+  return null
+}
+
+function getStatusClass(status: string | null) {
+  if (!status) return ''
+  const lowerStatus = status.toLowerCase()
+  if (lowerStatus.includes('active') || lowerStatus === 'yes') {
+    return 'bg-green-500/15 border border-green-500/30 text-green-400'
+  }
+  if (lowerStatus.includes('inactive') || lowerStatus === 'no') {
+    return 'bg-gray-500/15 border border-gray-500/30 text-gray-400'
+  }
+  if (lowerStatus.includes('pending')) {
+    return 'bg-yellow-500/15 border border-yellow-500/30 text-yellow-400'
+  }
+  if (lowerStatus.includes('completed')) {
+    return 'bg-blue-500/15 border border-blue-500/30 text-blue-400'
+  }
+  return 'bg-gray-500/15 border border-gray-500/30 text-gray-400'
+}
+
+function getVisibleCellsForCard(row: any) {
+  return row.getVisibleCells().filter((cell: any) => 
+    cell.column.id !== 'select' && 
+    cell.column.id !== '__actions' &&
+    !['name', 'title', 'fullName', 'user', 'status', 'isActive', 'state', 'id', 'createdAt', 'updatedAt'].includes(cell.column.id?.toLowerCase() || '')
+  )
+}
+
+function getCreatedAtValue(row: any) {
+  const cell = row.getVisibleCells().find((cell: any) => 
+    cell.column.id?.toLowerCase() === 'createdat'
+  )
+  if (cell) return cell.getValue()
+  return row.original?.createdAt || row.original?.created_at || null
+}
+
+function getUpdatedAtValue(row: any) {
+  const cell = row.getVisibleCells().find((cell: any) => 
+    cell.column.id?.toLowerCase() === 'updatedat'
+  )
+  if (cell) return cell.getValue()
+  return row.original?.updatedAt || row.original?.updated_at || null
+}
+
+function formatDateTime(value: any) {
+  if (!value) return null
+  if (typeof value === 'string') {
+    try {
+      const date = new Date(value)
+      const dateStr = date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })
+      const timeStr = date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: date.getSeconds() > 0 ? '2-digit' : undefined,
+        hour12: true
+      })
+      return `${dateStr}, ${timeStr}`
+    } catch {
+      return value
+    }
+  }
+  return String(value)
+}
+
+function getColumnLabel(columnId: string) {
+  const header = table.getFlatHeaders().find((h: any) => h.id === columnId)
+  if (header && typeof header.column.columnDef.header === 'string') {
+    return header.column.columnDef.header
+  }
+  return columnId.charAt(0).toUpperCase() + columnId.slice(1).replace(/([A-Z])/g, ' $1')
+}
 </script>
 
 <template>
@@ -174,9 +280,82 @@ watch(
       <CommonLoadingState type="table" size="md" context="page" />
     </div>
 
-    <!-- Premium Table Container -->
+    <!-- Mobile & Tablet Card View -->
+    <div v-if="!loading" class="lg:hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div
+          v-for="(row, index) in table.getRowModel().rows"
+          :key="row.id"
+          class="rounded-2xl p-4 cursor-pointer transition-all border border-gray-700/50 bg-gray-900/30 backdrop-blur-sm hover:bg-gray-800/40"
+          @click="handleRowClick(row.original)"
+        >
+          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-700/50">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs text-gray-500">
+                  ID: {{ getId(row.original) }}
+                </span>
+              </div>
+              <h4 class="text-base font-semibold text-gray-200">
+                {{ getPrimaryFieldValue(row) }}
+              </h4>
+            </div>
+            <div
+              v-if="getStatusField(row)"
+              class="px-2.5 py-1 rounded-full text-xs flex-shrink-0"
+              :class="getStatusClass(getStatusField(row))"
+            >
+              {{ getStatusField(row) }}
+            </div>
+          </div>
+
+          <div class="space-y-2.5 mb-3">
+            <div
+              v-for="cell in getVisibleCellsForCard(row)"
+              :key="cell.id"
+              class="flex items-center justify-between text-sm"
+            >
+              <span class="text-gray-400">{{ getColumnLabel(cell.column.id) }}</span>
+              <span class="text-gray-200 font-medium text-right flex-1 ml-4 truncate" :title="String(cell.getValue())">
+                <component
+                  v-if="typeof cell.column.columnDef.cell === 'function'"
+                  :is="cell.column.columnDef.cell"
+                  v-bind="cell.getContext()"
+                />
+                <span v-else>{{ cell.getValue() }}</span>
+              </span>
+            </div>
+          </div>
+
+          <div
+            v-if="getCreatedAtValue(row) || getUpdatedAtValue(row)"
+            class="flex items-center gap-4 pt-3 border-t border-gray-700/50 text-xs text-gray-500"
+          >
+            <span v-if="getCreatedAtValue(row)">
+              Created: {{ formatDateTime(getCreatedAtValue(row)) }}
+            </span>
+            <span v-if="getCreatedAtValue(row) && getUpdatedAtValue(row)">•</span>
+            <span v-if="getUpdatedAtValue(row)">
+              Updated: {{ formatDateTime(getUpdatedAtValue(row)) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="!loading && props.data.length === 0" class="py-8 text-center">
+        <CommonEmptyState
+          title="No data available"
+          description="There are no records to display"
+          icon="lucide:database"
+          size="sm"
+        />
+      </div>
+    </div>
+
+    <!-- Desktop Table View -->
     <div
-      class="overflow-hidden rounded-2xl border border-gray-700/50 transition-all duration-300 bg-gray-900/30 backdrop-blur-sm"
+      v-if="!loading"
+      class="hidden lg:block overflow-hidden rounded-2xl border border-gray-700/50 transition-all duration-300 bg-gray-900/30 backdrop-blur-sm"
     >
       <div class="overflow-x-auto">
         <table class="w-full table-fixed" aria-label="Data table">
@@ -190,6 +369,7 @@ watch(
                   header.id === '__actions' ? 'text-center' : 'text-left',
                   header.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                   header.id === '__actions' ? 'w-12 min-w-12 max-w-12' : '',
+                  header.id?.toLowerCase() === 'id' ? 'w-20 min-w-20 max-w-20' : '',
                   header.column.getCanSort() &&
                     'cursor-pointer select-none lg:hover:bg-gray-800 transition-colors',
                 ]"
@@ -257,12 +437,20 @@ watch(
                       cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                       cell.column.id === '__actions'
                         ? 'w-12 min-w-12 max-w-12'
+                        : cell.column.id?.toLowerCase() === 'id'
+                        ? 'w-20 min-w-20 max-w-20'
+                        : cell.column.id !== 'select' && cell.column.id !== '__actions'
+                        ? 'max-w-0 overflow-hidden'
                         : '',
                     ]"
                   >
-                    <span v-if="typeof cell.column.columnDef.cell !== 'function'">
+                    <div
+                      v-if="typeof cell.column.columnDef.cell !== 'function'"
+                      class="truncate"
+                      :title="String(cell.getValue())"
+                    >
                       {{ cell.getValue() }}
-                    </span>
+                    </div>
                     <component
                       v-else
                       :is="cell.column.columnDef.cell"
@@ -291,12 +479,20 @@ watch(
                     cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                     cell.column.id === '__actions'
                       ? 'w-12 min-w-12 max-w-12'
+                      : cell.column.id?.toLowerCase() === 'id'
+                      ? 'w-20 min-w-20 max-w-20'
+                      : cell.column.id !== 'select' && cell.column.id !== '__actions'
+                      ? 'max-w-0 overflow-hidden'
                       : '',
                   ]"
                 >
-                  <span v-if="typeof cell.column.columnDef.cell !== 'function'">
+                  <div
+                    v-if="typeof cell.column.columnDef.cell !== 'function'"
+                    class="truncate"
+                    :title="String(cell.getValue())"
+                  >
                     {{ cell.getValue() }}
-                  </span>
+                  </div>
                   <component
                     v-else
                     :is="cell.column.columnDef.cell"
