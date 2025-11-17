@@ -2,7 +2,7 @@
 const route = useRoute();
 const { menuGroups } = useMenuRegistry();
 const { checkPermissionCondition } = usePermissions();
-const { isMobile, isTablet } = useScreen();
+const { isMobile, isTablet, width } = useScreen();
 const { setSidebarVisible, sidebarCollapsed, setSidebarCollapsed } = useGlobalState();
 
 const isCollapsed = computed(() => {
@@ -123,7 +123,7 @@ function toggleGroup(groupId: string) {
 
 const isGroupExpanded = (groupId: string) => expandedGroups.value.has(groupId);
 const handleMenuClick = () => {
-  if (isMobile.value || isTablet.value) setSidebarVisible(false);
+  if (width.value <= 1024) setSidebarVisible(false);
 };
 
 const visibleGroups = computed(() => {

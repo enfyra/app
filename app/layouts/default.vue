@@ -79,7 +79,7 @@
 
       <!-- Page Content -->
       <section class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin relative z-10">
-        <div class="p-3 md:p-6 pb-32 md:pb-32 lg:pb-6 h-full overflow-y-auto">
+        <div class="p-3 md:p-6 pb-32 lg:pb-6 h-full overflow-y-auto">
           <slot />
         </div>
       </section>
@@ -97,7 +97,7 @@
 <script setup lang="ts">
 const { sidebarVisible, sidebarCollapsed, routeLoading, setSidebarVisible } =
   useGlobalState();
-const { isMobile, isTablet } = useScreen();
+const { width } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
 
 // Header style registry
@@ -109,10 +109,9 @@ const {
   accentLineConfig: headerAccentLine,
 } = useHeaderStyleRegistry();
 
-// Page header registry
 const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
 
-const isTabletOrMobile = computed(() => isMobile.value || isTablet.value);
+const isTabletOrMobile = computed(() => width.value <= 1024);
 const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
 
 // Sidebar behavior
@@ -120,12 +119,10 @@ watch(
   isTabletOrMobile,
   (isMobileOrTablet) => {
     if (isMobileOrTablet) {
-      // On mobile/tablet: default to hidden
       if (sidebarVisible.value) {
         setSidebarVisible(false);
       }
     } else {
-      // On desktop: default to visible
       if (!sidebarVisible.value) {
         setSidebarVisible(true);
       }

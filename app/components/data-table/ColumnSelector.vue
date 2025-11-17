@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted, onBeforeUnmount } from 'vue';
 
 interface Props {
   items: Array<{
@@ -18,6 +19,20 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const isOpen = ref(false);
+const showButton = ref(true);
+
+function checkScreenSize() {
+  showButton.value = window.innerWidth >= 1440;
+}
+
+onMounted(() => {
+  checkScreenSize();
+  window.addEventListener('resize', checkScreenSize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', checkScreenSize);
+});
 
 // Simple local state for checkbox values
 const localCheckedState = ref<Record<string, boolean>>({});
@@ -63,7 +78,7 @@ const cancelChanges = () => {
 </script>
 
 <template>
-  <div>
+  <div v-if="showButton">
     <UButton
       icon="i-lucide-columns"
       :size="size"
