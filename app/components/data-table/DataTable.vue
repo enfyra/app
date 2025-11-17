@@ -435,21 +435,21 @@ function getColumnLabel(columnId: string) {
                   <td
                     v-for="cell in row.getVisibleCells()"
                     :key="cell.id"
-                    :class="[
-                      'px-4 py-3.5 text-sm text-gray-200',
+                :class="[
+                  'px-4 py-3.5 text-sm text-gray-200 align-middle',
                       cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                       cell.column.id === '__actions'
                         ? 'w-12 min-w-12 max-w-12'
                         : cell.column.id?.toLowerCase() === 'id'
                         ? 'w-20 min-w-20 max-w-20'
                         : cell.column.id !== 'select' && cell.column.id !== '__actions'
-                        ? 'max-w-0 overflow-hidden'
+                    ? 'overflow-hidden whitespace-nowrap text-ellipsis'
                         : '',
                     ]"
                   >
                     <div
-                      v-if="typeof cell.column.columnDef.cell !== 'function'"
-                      class="truncate"
+                  v-if="typeof cell.column.columnDef.cell !== 'function'"
+                  class="w-full truncate"
                       :title="String(cell.getValue())"
                     >
                       {{ cell.getValue() }}
@@ -478,20 +478,20 @@ function getColumnLabel(columnId: string) {
                   v-for="cell in row.getVisibleCells()"
                   :key="cell.id"
                   :class="[
-                    'px-4 py-3.5 text-sm text-gray-200',
+                    'px-4 py-3.5 text-sm text-gray-200 align-middle',
                     cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                     cell.column.id === '__actions'
                       ? 'w-12 min-w-12 max-w-12'
                       : cell.column.id?.toLowerCase() === 'id'
                       ? 'w-20 min-w-20 max-w-20'
                       : cell.column.id !== 'select' && cell.column.id !== '__actions'
-                      ? 'max-w-0 overflow-hidden'
+                      ? 'overflow-hidden whitespace-nowrap text-ellipsis'
                       : '',
                   ]"
                 >
                   <div
                     v-if="typeof cell.column.columnDef.cell !== 'function'"
-                    class="truncate"
+                    class="w-full truncate"
                     :title="String(cell.getValue())"
                   >
                     {{ cell.getValue() }}
