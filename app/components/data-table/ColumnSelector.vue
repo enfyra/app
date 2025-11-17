@@ -22,7 +22,7 @@ const isOpen = ref(false);
 const showButton = ref(true);
 
 function checkScreenSize() {
-  showButton.value = window.innerWidth >= 1440;
+  showButton.value = window.innerWidth >= 1024;
 }
 
 onMounted(() => {
