@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue';
+import { onMounted } from 'vue';
 import ColumnSelector from "~/components/data-table/ColumnSelector.vue";
 
 const route = useRoute();
@@ -71,49 +71,8 @@ const {
   errorContext: "Fetch Data",
 });
 
-const { hiddenColumns, visibleColumns, columnDropdownItems, toggleColumnVisibility } =
+const { hiddenColumns, visibleColumns, columnDropdownItems } =
   useDataTableVisibility(tableName, schemas);
-
-const isMobile = ref(false);
-const isScreenBelow1440 = ref(false);
-
-function checkScreenSize() {
-  const width = window.innerWidth;
-  isMobile.value = width < 768;
-  isScreenBelow1440.value = width < 1440;
-  
-  if (isMobile.value) {
-    if (hiddenColumns.value.has('createdAt')) {
-      toggleColumnVisibility('createdAt');
-    }
-    if (hiddenColumns.value.has('updatedAt')) {
-      toggleColumnVisibility('updatedAt');
-    }
-  } else if (isScreenBelow1440.value) {
-    if (!hiddenColumns.value.has('createdAt')) {
-      toggleColumnVisibility('createdAt');
-    }
-    if (!hiddenColumns.value.has('updatedAt')) {
-      toggleColumnVisibility('updatedAt');
-    }
-  } else {
-    if (hiddenColumns.value.has('createdAt')) {
-      toggleColumnVisibility('createdAt');
-    }
-    if (hiddenColumns.value.has('updatedAt')) {
-      toggleColumnVisibility('updatedAt');
-    }
-  }
-}
-
-onMounted(() => {
-  checkScreenSize();
-  window.addEventListener('resize', checkScreenSize);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', checkScreenSize);
-});
 
 const {
   selectedRows,

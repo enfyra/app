@@ -24,27 +24,27 @@ export function useDataTableVisibility(
     );
   });
 
-const loadColumnVisibility = (
-  tableName: string,
-  columnFields: string[]
-): { hidden: Set<string>; hasSavedState: boolean } => {
-  try {
-    const saved = localStorage.getItem(`columnVisibility_${tableName}`);
-    if (saved !== null) {
-      const savedHiddenColumns = JSON.parse(saved);
-      const validHiddenColumns = savedHiddenColumns.filter((col: string) =>
-        columnFields.includes(col)
+  const loadColumnVisibility = (
+    tableName: string,
+    columnFields: string[]
+  ): { hidden: Set<string>; hasSavedState: boolean } => {
+    try {
+      const saved = localStorage.getItem(`columnVisibility_${tableName}`);
+      if (saved !== null) {
+        const savedHiddenColumns = JSON.parse(saved);
+        const validHiddenColumns = savedHiddenColumns.filter((col: string) =>
+          columnFields.includes(col)
+        );
+        return { hidden: new Set(validHiddenColumns), hasSavedState: true };
+      }
+    } catch (error) {
+      console.warn(
+        "Failed to load column visibility from localStorage:",
+        error
       );
-      return { hidden: new Set(validHiddenColumns), hasSavedState: true };
     }
-  } catch (error) {
-    console.warn(
-      "Failed to load column visibility from localStorage:",
-      error
-    );
-  }
-  return { hidden: new Set(), hasSavedState: false };
-};
+    return { hidden: new Set(), hasSavedState: false };
+  };
 
   const saveColumnVisibility = (tableName: string, hiddenCols: Set<string>) => {
     try {
@@ -66,22 +66,21 @@ const loadColumnVisibility = (
           .map((field: TableDefinitionField) => field.name)
           .filter((name: string | undefined): name is string => !!name);
 
-        const { hidden, hasSavedState } = loadColumnVisibility(
-          tableName,
-          columnFields
-        );
+        const { hidden } = loadColumnVisibility(tableName, columnFields);
         const nextHidden = new Set(hidden);
-        let appliedDefault = false;
-        if (!hasSavedState && columnFields.length >= 7) {
+
+        let needsSave = false;
+        if (columnFields.length >= 7) {
           ["createdAt", "updatedAt"].forEach((fieldName) => {
-            if (columnFields.includes(fieldName)) {
+            if (columnFields.includes(fieldName) && !nextHidden.has(fieldName)) {
               nextHidden.add(fieldName);
-              appliedDefault = true;
+              needsSave = true;
             }
           });
         }
+
         hiddenColumns.value = nextHidden;
-        if (appliedDefault) {
+        if (needsSave) {
           saveColumnVisibility(tableName, nextHidden);
         }
       }
