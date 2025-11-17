@@ -217,11 +217,14 @@ function getStatusClass(status: string | null) {
 }
 
 function getVisibleCellsForCard(row: any) {
-  return row.getVisibleCells().filter((cell: any) => 
-    cell.column.id !== 'select' && 
-    cell.column.id !== '__actions' &&
-    !['name', 'title', 'fullName', 'user', 'status', 'isActive', 'state', 'id', 'createdAt', 'updatedAt'].includes(cell.column.id?.toLowerCase() || '')
-  )
+  return row.getVisibleCells().filter((cell: any) => {
+    const columnId = cell.column.id?.toLowerCase() || ''
+    return cell.column.id !== 'select' && 
+      cell.column.id !== '__actions' &&
+      !['name', 'title', 'fullName', 'user', 'status', 'isActive', 'state', 'id'].includes(columnId) &&
+      !columnId.includes('createdat') &&
+      !columnId.includes('updatedat')
+  })
 }
 
 function getCreatedAtValue(row: any) {

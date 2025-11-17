@@ -75,7 +75,7 @@
       />
 
       <!-- Sub Header (optional secondary toolbar) -->
-      <LayoutSubHeader v-if="hasSubHeaderActions" />
+      <LayoutSubHeader v-if="hasSubHeaderActions && width >= 1024" />
 
       <!-- Page Content -->
       <section class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin relative z-10">
