@@ -392,8 +392,8 @@ useHeaderActionRegistry([
       class="flex items-center justify-between"
     >
       <p class="hidden md:block text-sm text-gray-400">
-        Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of{" "}
-        <span class="text-gray-200">{{ total }}</span> results
+        Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span>
+        of <span class="text-gray-200">{{ total }}</span> results
       </p>
       <UPagination
         v-model:page="page"
