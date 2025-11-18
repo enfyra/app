@@ -132,7 +132,7 @@ export default defineAppConfig({
     },
     card: {
       slots: {
-        root: "rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] transition-all duration-300 card-float hover:border-[var(--border-strong)] overflow-hidden relative group",
+        root: "rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] transition-all duration-300 card-static overflow-hidden relative group",
       },
     },
     drawer: {
