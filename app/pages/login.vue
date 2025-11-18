@@ -2,7 +2,7 @@
   <div
     class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-900 px-4"
   >
-    <UCard class="w-full max-w-md lg:p-6 p-2 sm:p-8 shadow-2xl rounded-2xl hover:!translate-y-0 hover:!-translate-y-0">
+    <UCard class="w-full max-w-md lg:p-6 p-2 sm:p-8">
       <!-- Branding -->
       <template #header>
         <div class="text-center space-y-2">

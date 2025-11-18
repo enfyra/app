@@ -195,6 +195,15 @@
     box-shadow: var(--shadow-primary-lg);
   }
 
+  .card-static {
+    box-shadow: var(--shadow-xl);
+    transition: box-shadow 0.3s var(--ease-smooth);
+  }
+
+  .card-static:hover {
+    box-shadow: var(--shadow-xl);
+  }
+
   /* === TEXT GRADIENTS === */
   .text-gradient-primary {
     background: var(--gradient-primary);
