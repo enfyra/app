@@ -2,7 +2,7 @@
   <div
     :class="[
       'relative group transition-all duration-300 overflow-hidden cursor-pointer backdrop-blur-xl h-full flex flex-col',
-      'bg-[var(--bg-surface)]',
+      'bg-[var(--bg-surface)] border border-white/[0.06]',
       (isMobile || isTablet) ? 'rounded-lg p-2' : 'rounded-lg p-3',
       cardClass,
       'hover:shadow-md hover:-translate-y-0.5'

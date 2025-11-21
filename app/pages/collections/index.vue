@@ -106,7 +106,7 @@ function getGradientForCollection(id: any): string | undefined {
       />
       <div v-else-if="collections.length">
         <div
-          class="grid gap-2"
+          class="grid gap-4"
           :class="
             isTablet
               ? 'grid-cols-2'
@@ -117,7 +117,7 @@ function getGradientForCollection(id: any): string | undefined {
             v-for="collection in collections"
             :key="collection.id"
             @click="navigateTo(`/collections/${collection.name}`)"
-            class="rounded-lg bg-[var(--bg-surface)] cursor-pointer group relative overflow-hidden transition-all duration-300 flex flex-col"
+            class="rounded-lg bg-[var(--bg-surface)] border border-white/[0.06] cursor-pointer group relative overflow-hidden transition-all duration-300 flex flex-col hover:shadow-md hover:-translate-y-0.5"
             :class="isTablet ? 'p-2' : 'p-3'"
           >
             <!-- Gradient glow on hover -->
