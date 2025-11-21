@@ -1,10 +1,9 @@
 <template>
   <div
-    class="h-12 border-b flex items-center shrink-0 relative overflow-hidden backdrop-blur-sm"
+    class="h-12 flex items-center shrink-0 relative overflow-hidden backdrop-blur-sm"
     :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
     :style="{
-      borderColor: 'var(--border-subtle)',
-      background: 'rgba(15, 20, 33, 0.6)'
+      background: 'var(--bg-elevated)'
     }"
   >
     <!-- Blue gradient accent at top -->
