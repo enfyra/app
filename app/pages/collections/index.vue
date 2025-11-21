@@ -106,7 +106,7 @@ function getGradientForCollection(id: any): string | undefined {
       />
       <div v-else-if="collections.length">
         <div
-          class="grid gap-5"
+          class="grid gap-2"
           :class="
             isTablet
               ? 'grid-cols-2'
@@ -117,7 +117,8 @@ function getGradientForCollection(id: any): string | undefined {
             v-for="collection in collections"
             :key="collection.id"
             @click="navigateTo(`/collections/${collection.name}`)"
-            class="p-6 rounded-xl border border-gray-700 hover:border-gray-600 bg-gray-800/50 cursor-pointer group relative overflow-hidden transition-all duration-300 flex flex-col shadow-lg"
+            class="rounded-lg bg-[var(--bg-surface)] cursor-pointer group relative overflow-hidden transition-all duration-300 flex flex-col"
+            :class="isTablet ? 'p-2' : 'p-3'"
           >
             <!-- Gradient glow on hover -->
             <div
@@ -135,7 +136,7 @@ function getGradientForCollection(id: any): string | undefined {
               <!-- Content wrapper -->
               <div class="flex-1">
                 <!-- Header with Icon -->
-                <div class="flex items-start justify-between mb-4">
+                <div class="flex items-start justify-between mb-2">
                   <div
                     :class="`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${getGradientForCollection(
                       getId(collection)
@@ -147,16 +148,16 @@ function getGradientForCollection(id: any): string | undefined {
 
                 <!-- Title & Description -->
                 <h3
-                  class="text-xl font-semibold mb-2 tracking-tight transition-all duration-300 text-gray-100"
+                  class="text-xl font-semibold mb-1 tracking-tight transition-all duration-300 text-gray-100"
                 >
                   {{ collection.name || "Untitled Collection" }}
                 </h3>
-                <p class="text-sm mb-4 truncate text-gray-400">
+                <p class="text-sm mb-2 truncate text-gray-400">
                   {{ collection.description || "No description" }}
                 </p>
 
                 <!-- Stats -->
-                <div class="flex items-center gap-4 mb-4">
+                <div class="flex items-center gap-4 mb-2">
                   <!-- Fields Count -->
                   <div class="flex items-center gap-2">
                     <div
@@ -205,7 +206,7 @@ function getGradientForCollection(id: any): string | undefined {
 
               <!-- Footer -->
               <div
-                class="flex items-center justify-between pt-4 border-t border-gray-800 mt-auto"
+                class="flex items-center justify-between pt-2 border-t border-white/[0.06] mt-auto"
               >
                 <span class="text-xs text-gray-500">
                   {{ new Date(collection.createdAt).toLocaleDateString() }}

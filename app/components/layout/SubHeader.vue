@@ -3,11 +3,14 @@
     class="h-12 flex items-center shrink-0 relative overflow-hidden backdrop-blur-sm"
     :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
     :style="{
-      background: 'var(--bg-elevated)'
+      background: 'rgba(21, 27, 46, 0.5)'
     }"
   >
-    <!-- Blue gradient accent at top -->
-    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#0066FF]/30 to-transparent"></div>
+    <!-- Blue gradient accent line -->
+    <div 
+      class="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#0066FF]/30 to-transparent"
+      :class="props.accentPosition === 'top' ? 'top-0' : 'bottom-0'"
+    ></div>
     <div class="flex items-center gap-1.5 md:gap-3">
       <template v-for="action in leftActions" :key="action.key || action.id">
         <PermissionGate :condition="action.permission">
@@ -89,6 +92,14 @@
 </template>
 
 <script setup lang="ts">
+interface Props {
+  accentPosition?: 'top' | 'bottom';
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  accentPosition: 'bottom',
+});
+
 const { isMobile, isTablet } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
 

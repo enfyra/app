@@ -72,7 +72,7 @@ const { isMobile, isTablet } = useScreen();
 
 <template>
   <div
-    class="bg-gray-800/50 relative overflow-hidden"
+    class="bg-gray-800/30 relative overflow-hidden"
     :style="{
       backgroundImage: gradientStyle,
     }"

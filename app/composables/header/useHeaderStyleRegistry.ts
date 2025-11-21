@@ -34,7 +34,7 @@ export interface HeaderStyleConfig {
  * Default header style matching Figma design
  */
 const defaultHeaderStyle: HeaderStyleConfig = {
-  background: "rgba(21, 27, 46, 0.8)",
+  background: "rgba(21, 27, 46, 0.5)",
   borderColor: "var(--border-subtle)",
   borderWidth: "1px",
 

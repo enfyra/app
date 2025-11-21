@@ -14,11 +14,11 @@
       class="flex flex-col flex-shrink-0 transition-all duration-500 ease-out"
       :class="[
         isTabletOrMobile
-          ? 'fixed inset-y-0 left-0 w-72 z-[70] shadow-2xl backdrop-blur-xl m-3 rounded-2xl'
-          : (sidebarCollapsed ? 'w-20 m-3 rounded-2xl' : 'w-72 m-3 rounded-2xl')
+          ? 'fixed inset-y-0 left-0 w-72 z-[70] shadow-2xl backdrop-blur-xl my-2 ml-3 mr-1 rounded-lg'
+          : (sidebarCollapsed ? 'w-20 my-2 ml-2 mr-1 rounded-lg' : 'w-72 my-2 ml-3 mr-1 rounded-lg')
       ]"
       :style="{
-        background: 'var(--bg-surface)',
+        background: 'rgba(15, 20, 33, 0.6)',
       }"
       aria-label="Primary navigation"
     >
@@ -42,7 +42,7 @@
     >
       <!-- Layout Header (Breadcrumbs OR Actions) - Styled via useHeaderStyleRegistry -->
       <header
-        :class="[headerContainerClasses, 'mx-3 mt-3 rounded-2xl']"
+        :class="[headerContainerClasses, 'mx-2 mt-2 rounded-lg']"
         :style="headerContainerStyle"
       >
         <!-- Accent line (gradient line on top/bottom of header) -->
@@ -71,11 +71,11 @@
             :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
             :variant="pageHeader?.variant"
             :gradient="pageHeader?.gradient"
-            class="mx-3 mt-3 rounded-2xl"
+            class="mx-2 mt-2 rounded-lg"
           />
 
       <!-- Sub Header (optional secondary toolbar) -->
-      <div v-if="hasSubHeaderActions && width >= 1024" class="mx-3 mt-3 rounded-2xl overflow-hidden">
+      <div v-if="hasSubHeaderActions && width >= 1024" class="mx-2 mt-2 rounded-lg overflow-hidden">
         <LayoutSubHeader />
       </div>
 
