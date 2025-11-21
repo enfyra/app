@@ -1,49 +1,65 @@
 <template>
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
+      <div
         v-if="!isMounted || loading"
-        title="Loading conversations..."
-        description="Fetching your AI conversations"
-        size="sm"
-        type="card"
-        context="page"
-      />
+        class="space-y-3"
+      >
+        <div
+          v-for="i in 5"
+          :key="i"
+          class="bg-[var(--bg-surface)] border border-white/[0.06] rounded-lg p-3 md:p-4"
+        >
+          <div class="flex items-start gap-2 md:gap-4">
+            <!-- Avatar skeleton -->
+            <USkeleton class="w-10 h-10 md:w-12 md:h-12 rounded-full flex-shrink-0" />
+            
+            <!-- Content skeleton -->
+            <div class="flex-1 min-w-0">
+              <USkeleton class="h-4 md:h-5 w-32 md:w-48 rounded mb-1.5 md:mb-2" />
+              <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3">
+                <div class="flex items-center gap-1">
+                  <USkeleton class="w-3 h-3 rounded" />
+                  <USkeleton class="h-3 w-20 rounded" />
+                </div>
+                <div class="flex items-center gap-1">
+                  <USkeleton class="w-3 h-3 rounded" />
+                  <USkeleton class="h-3 w-16 rounded" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Action button skeleton -->
+            <USkeleton class="w-8 h-8 md:w-10 md:h-10 rounded flex-shrink-0" />
+          </div>
+        </div>
+      </div>
 
       <div
         v-else-if="conversations.length > 0"
         class="space-y-3"
       >
-        <div
+        <CommonListItem
           v-for="conversation in conversations"
           :key="conversation.id"
-          class="group border border-gray-700 rounded-lg p-3 md:p-4 hover:border-primary/50 hover:bg-gray-800/50 transition-colors duration-200 bg-gray-900 cursor-pointer"
+          :title="conversation.title || `Conversation #${conversation.id}`"
+          avatar="lucide:message-circle"
+          avatar-class="bg-gradient-to-br from-blue-500 to-purple-600"
           @click="navigateToChat(conversation)"
         >
-          <div class="flex items-start gap-2 md:gap-4">
-            <!-- Avatar -->
-            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
-              <Icon name="lucide:message-circle" class="w-5 h-5 md:w-6 md:h-6 text-white" />
+          <template #metadata>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-xs text-gray-500 mt-1.5">
+              <span class="flex items-center gap-1">
+                <Icon name="lucide:calendar" class="w-3 h-3 flex-shrink-0" />
+                <span class="truncate">{{ formatDate(conversation.createdAt) }}</span>
+              </span>
+              <span class="flex items-center gap-1" v-if="conversation.messageCount">
+                <Icon name="lucide:message-square" class="w-3 h-3 flex-shrink-0" />
+                <span>{{ conversation.messageCount }} messages</span>
+              </span>
             </div>
-
-            <!-- Content -->
-            <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-white mb-1.5 md:mb-2 truncate text-sm md:text-base">
-                {{ conversation.title || `Conversation #${conversation.id}` }}
-              </h3>
-              <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-xs text-gray-500">
-                <span class="flex items-center gap-1">
-                  <Icon name="lucide:calendar" class="w-3 h-3 flex-shrink-0" />
-                  <span class="truncate">{{ formatDate(conversation.createdAt) }}</span>
-                </span>
-                <span class="flex items-center gap-1" v-if="conversation.messageCount">
-                  <Icon name="lucide:message-square" class="w-3 h-3 flex-shrink-0" />
-                  <span>{{ conversation.messageCount }} messages</span>
-                </span>
-              </div>
-            </div>
-
-            <!-- Action Button -->
+          </template>
+          <template #actions>
             <UButton
               icon="lucide:trash-2"
               variant="ghost"
@@ -52,7 +68,7 @@
               square
               class="flex-shrink-0 md:hidden"
               :loading="getDeleteLoader(conversation.id).isLoading"
-              @click.stop="deleteConversation(conversation)"
+              @click="deleteConversation(conversation)"
             />
             <UButton
               icon="lucide:trash-2"
@@ -62,10 +78,10 @@
               square
               class="flex-shrink-0 hidden md:flex"
               :loading="getDeleteLoader(conversation.id).isLoading"
-              @click.stop="deleteConversation(conversation)"
+              @click="deleteConversation(conversation)"
             />
-          </div>
-        </div>
+          </template>
+        </CommonListItem>
       </div>
 
       <CommonEmptyState
