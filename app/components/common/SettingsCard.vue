@@ -1,9 +1,9 @@
 <template>
   <div
     :class="[
-      'relative group transition-all duration-300 border overflow-hidden cursor-pointer backdrop-blur-xl h-full flex flex-col',
-      'bg-gray-800/50 border-gray-700 hover:border-gray-600',
-      (isMobile || isTablet) ? 'rounded-lg p-3' : 'rounded-xl p-5',
+      'relative group transition-all duration-300 overflow-hidden cursor-pointer backdrop-blur-xl h-full flex flex-col',
+      'bg-[var(--bg-surface)]',
+      (isMobile || isTablet) ? 'rounded-lg p-2' : 'rounded-lg p-3',
       cardClass,
       'hover:shadow-md hover:-translate-y-0.5'
     ]"
@@ -12,7 +12,7 @@
     <div :class="`absolute inset-0 bg-gradient-to-br ${hoverGradientClass} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`" />
 
     <!-- Header with icon + title -->
-    <div :class="(isMobile || isTablet) ? 'relative flex items-center gap-2 mb-2' : 'relative flex items-center gap-4 mb-3'">
+    <div :class="(isMobile || isTablet) ? 'relative flex items-center gap-2 mb-1.5' : 'relative flex items-center gap-3 mb-2'">
       <!-- Icon with gradient -->
       <div
         :class="[
@@ -26,7 +26,7 @@
 
       <!-- Title & Description -->
       <div class="flex-1 min-w-0 self-start">
-        <h3 :class="(isMobile || isTablet) ? 'text-xs mb-0.5 font-semibold text-gray-100' : 'text-sm mb-1 font-semibold text-gray-100'">
+        <h3 :class="(isMobile || isTablet) ? 'text-xs mb-0 font-semibold text-gray-100' : 'text-sm mb-0.5 font-semibold text-gray-100'">
           {{ title }}
         </h3>
         <p v-if="description && !isMobile && !isTablet" class="text-xs text-gray-400">
@@ -59,12 +59,12 @@
     <!-- Content wrapper with flex-1 to push footer down -->
     <div class="flex-1">
       <!-- Stats List (Figma Performance Card Style) -->
-      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-2 rounded-lg mb-2' : 'relative p-3 rounded-lg mb-3', 'bg-gray-900']">
+      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 rounded-lg mb-1.5' : 'relative p-2 rounded-lg mb-2', 'bg-gray-900']">
         <div
           v-for="(stat, index) in stats"
           :key="stat.label"
           class="flex items-center justify-between"
-          :class="(isMobile || isTablet) ? { 'mt-1.5': index > 0 } : { 'mt-2.5': index > 0 }"
+          :class="(isMobile || isTablet) ? { 'mt-1': index > 0 } : { 'mt-1.5': index > 0 }"
         >
           <span :class="(isMobile || isTablet) ? 'text-2xs text-gray-400' : 'text-xs text-gray-400'">
             {{ stat.label }}
@@ -93,13 +93,13 @@
       </div>
 
       <!-- Stats Grid (Figma Security Card Style) -->
-      <div v-else-if="stats && stats.length && statsLayout === 'grid'" :class="(isMobile || isTablet) ? 'relative grid grid-cols-2 gap-1.5 mb-2' : 'relative grid grid-cols-2 gap-2.5 mb-3'">
+      <div v-else-if="stats && stats.length && statsLayout === 'grid'" :class="(isMobile || isTablet) ? 'relative grid grid-cols-2 gap-1.5 mb-1.5' : 'relative grid grid-cols-2 gap-2 mb-2'">
         <div
           v-for="stat in stats"
           :key="stat.label"
-          :class="[(isMobile || isTablet) ? 'text-center p-2 rounded-lg' : 'text-center p-3 rounded-lg', 'bg-gray-900/70']"
+          :class="[(isMobile || isTablet) ? 'text-center p-1.5 rounded-lg' : 'text-center p-2 rounded-lg', 'bg-gray-900/70']"
         >
-          <div :class="(isMobile || isTablet) ? 'text-sm font-medium text-gray-100 mb-0.5' : 'text-base font-medium text-gray-100 mb-1'">
+          <div :class="(isMobile || isTablet) ? 'text-sm font-medium text-gray-100 mb-0' : 'text-base font-medium text-gray-100 mb-0.5'">
             <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-center">
               <component
                 v-for="(item, idx) in stat.values"
@@ -126,7 +126,7 @@
       </div>
 
       <!-- Custom body content -->
-      <div v-if="$slots.default" :class="(isMobile || isTablet) ? 'relative mb-2' : 'relative mb-3'">
+      <div v-if="$slots.default" :class="(isMobile || isTablet) ? 'relative mb-1.5' : 'relative mb-2'">
         <slot />
       </div>
     </div>
@@ -134,7 +134,7 @@
     <!-- Footer -->
     <div
       v-if="$slots.footer || (actions && actions.length > 0)"
-      :class="[(isMobile || isTablet) ? 'relative pt-2 mt-2 border-t' : 'relative pt-3 mt-3 border-t', 'border-white/[0.06]']"
+      :class="[(isMobile || isTablet) ? 'relative pt-1.5 mt-1.5 border-t' : 'relative pt-2 mt-2 border-t', 'border-white/[0.06]']"
     >
       <!-- Custom footer content -->
       <slot name="footer" />

@@ -45,15 +45,6 @@
 </template>
 
 <script setup lang="ts">
-/**
- * MODERN CARD DESIGN SYSTEM - Base Card Component
- *
- * Variants:
- * - form: Clean container for forms and editors (most common)
- * - settings: Feature cards with hover effects
- * - stats: Metrics/KPI cards
- * - simple: Basic content container
- */
 
 type CardVariant = "form" | "settings" | "stats" | "simple";
 type CardSize = "compact" | "default" | "spacious";
@@ -92,10 +83,8 @@ const sizeClasses = {
 const variantClasses = computed(() => {
   const variants = {
     form: [
-      "bg-[var(--bg-elevated)]",
-      "border-[var(--border-default)]",
-      "hover:border-[var(--border-strong)]",
-      "hover:shadow-sm",
+      "bg-[var(--bg-surface)]",
+      "border-0",
     ].join(" "),
     settings: [
       "bg-[var(--bg-elevated)]",

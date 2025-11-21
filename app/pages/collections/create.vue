@@ -202,7 +202,7 @@ async function save() {
 <template>
   <div class="relative">
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <div class="bg-[var(--bg-surface)] rounded-lg p-6">
         <TableForm v-model="table" :new="true">
           <template #tableName>
             <div class="mb-6">
