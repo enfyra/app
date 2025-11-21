@@ -11,15 +11,14 @@
     <!-- Unified Sidebar -->
     <aside
       v-if="sidebarVisible || !isTabletOrMobile"
-      class="border-r flex flex-col flex-shrink-0 transition-all duration-500 ease-out"
+      class="flex flex-col flex-shrink-0 transition-all duration-500 ease-out"
       :class="[
         isTabletOrMobile
-          ? 'fixed inset-y-0 left-0 w-72 z-[70] shadow-2xl backdrop-blur-xl'
-          : (sidebarCollapsed ? 'w-20' : 'w-72')
+          ? 'fixed inset-y-0 left-0 w-72 z-[70] shadow-2xl backdrop-blur-xl m-3 rounded-2xl'
+          : (sidebarCollapsed ? 'w-20 m-3 rounded-2xl' : 'w-72 m-3 rounded-2xl')
       ]"
       :style="{
         background: 'var(--bg-surface)',
-        borderColor: 'var(--border-subtle)',
       }"
       aria-label="Primary navigation"
     >
@@ -43,7 +42,7 @@
     >
       <!-- Layout Header (Breadcrumbs OR Actions) - Styled via useHeaderStyleRegistry -->
       <header
-        :class="headerContainerClasses"
+        :class="[headerContainerClasses, 'mx-3 mt-3 rounded-2xl']"
         :style="headerContainerStyle"
       >
         <!-- Accent line (gradient line on top/bottom of header) -->
@@ -63,23 +62,29 @@
         </div>
       </header>
 
-      <!-- Page Header (optional - registered by pages) -->
-      <CommonPageHeader
-        v-if="hasPageHeader"
-        :key="`${pageHeader!.title}-${pageHeader?.description || ''}-${pageHeader?.variant || 'default'}-${pageHeader?.gradient || 'none'}`"
-        :title="pageHeader!.title"
-        :description="pageHeader?.description"
-        :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
-        :variant="pageHeader?.variant"
-        :gradient="pageHeader?.gradient"
-      />
+       <!-- Page Header (optional - registered by pages) -->
+       <CommonPageHeader
+            v-if="hasPageHeader"
+            :key="`${pageHeader!.title}-${pageHeader?.description || ''}-${pageHeader?.variant || 'default'}-${pageHeader?.gradient || 'none'}`"
+            :title="pageHeader!.title"
+            :description="pageHeader?.description"
+            :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
+            :variant="pageHeader?.variant"
+            :gradient="pageHeader?.gradient"
+            class="mx-3 mt-3 rounded-2xl"
+          />
 
       <!-- Sub Header (optional secondary toolbar) -->
-      <LayoutSubHeader v-if="hasSubHeaderActions && width >= 1024" />
+      <div v-if="hasSubHeaderActions && width >= 1024" class="mx-3 mt-3 rounded-2xl overflow-hidden">
+        <LayoutSubHeader />
+      </div>
+
+     
 
       <!-- Page Content -->
       <section class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin relative z-10">
-        <div class="p-3 md:p-6 pb-32 lg:pb-6 h-full overflow-y-auto">
+        <div class="p-3 pb-32 lg:pb-6 h-full overflow-y-auto">
+          
           <slot />
         </div>
       </section>

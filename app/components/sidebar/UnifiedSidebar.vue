@@ -153,7 +153,6 @@ const visibleGroups = computed(() => {
 
 <template>
   <nav class="flex flex-col h-full relative">
-    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#0066FF] via-[#7C3AED] to-[#D946EF] opacity-50 z-10"></div>
 
     <div class="h-16 flex items-center justify-between px-6 border-b border-gray-800 relative">
       <div v-if="!isCollapsed" class="flex items-center gap-3">

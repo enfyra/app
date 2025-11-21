@@ -72,11 +72,9 @@ const { isMobile, isTablet } = useScreen();
 
 <template>
   <div
-    class="border-b border-gray-800 bg-gray-800/50 relative overflow-hidden transition-all duration-400"
+    class="bg-gray-800/50 relative overflow-hidden"
     :style="{
       backgroundImage: gradientStyle,
-      opacity: isVisible ? 1 : 0,
-      transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
     }"
   >
     <!-- Subtle gradient accent at top -->
