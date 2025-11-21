@@ -49,15 +49,15 @@
         >
           <template #metadata>
             <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 text-xs text-gray-500 mt-1.5">
-              <span class="flex items-center gap-1">
-                <Icon name="lucide:calendar" class="w-3 h-3 flex-shrink-0" />
-                <span class="truncate">{{ formatDate(conversation.createdAt) }}</span>
-              </span>
-              <span class="flex items-center gap-1" v-if="conversation.messageCount">
-                <Icon name="lucide:message-square" class="w-3 h-3 flex-shrink-0" />
-                <span>{{ conversation.messageCount }} messages</span>
-              </span>
-            </div>
+                <span class="flex items-center gap-1">
+                  <Icon name="lucide:calendar" class="w-3 h-3 flex-shrink-0" />
+                  <span class="truncate">{{ formatDate(conversation.createdAt) }}</span>
+                </span>
+                <span class="flex items-center gap-1" v-if="conversation.messageCount">
+                  <Icon name="lucide:message-square" class="w-3 h-3 flex-shrink-0" />
+                  <span>{{ conversation.messageCount }} messages</span>
+                </span>
+              </div>
           </template>
           <template #actions>
             <UButton

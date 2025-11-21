@@ -63,18 +63,18 @@
         >
           <template #title>
             <div class="flex items-center gap-2">
-              <h3 class="font-semibold text-white">{{ config.provider || 'AI Provider' }}</h3>
-              <UBadge variant="subtle" color="primary" size="sm">
-                {{ config.model || 'N/A' }}
-              </UBadge>
-              <UBadge
-                variant="subtle"
-                :color="config.isEnabled ? 'success' : 'neutral'"
-                size="sm"
-              >
-                {{ config.isEnabled ? 'Active' : 'Inactive' }}
-              </UBadge>
-            </div>
+                <h3 class="font-semibold text-white">{{ config.provider || 'AI Provider' }}</h3>
+                <UBadge variant="subtle" color="primary" size="sm">
+                  {{ config.model || 'N/A' }}
+                </UBadge>
+                <UBadge
+                  variant="subtle"
+                  :color="config.isEnabled ? 'success' : 'neutral'"
+                  size="sm"
+                >
+                  {{ config.isEnabled ? 'Active' : 'Inactive' }}
+                </UBadge>
+              </div>
           </template>
           <template #footer>
             <div class="flex items-center justify-between w-full">
