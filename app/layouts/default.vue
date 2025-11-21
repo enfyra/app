@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen text-sm bg-background text-foreground overflow-x-hidden">
+  <div ref="rootContainerRef" class="flex h-screen text-sm bg-background text-foreground overflow-x-hidden">
     <!-- Skip Link for Keyboard Navigation -->
     <a
       href="#main-content"
@@ -118,6 +118,9 @@ const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
 
 const isTabletOrMobile = computed(() => width.value <= 1024);
 const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
+
+const rootContainerRef = ref<HTMLElement | null>(null);
+const { isKeyboardOpen } = useMobileKeyboard(rootContainerRef);
 
 // Sidebar behavior
 watch(
