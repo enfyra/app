@@ -122,6 +122,7 @@
 
   body,
   #__nuxt {
+    height: var(--app-viewport-height, 100dvh);
     min-height: var(--app-viewport-height, 100dvh);
   }
 
