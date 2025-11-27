@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootContainerRef" class="flex app-viewport-container text-sm bg-background text-foreground overflow-x-hidden overflow-y-hidden">
+  <div ref="rootContainerRef" class="flex app-viewport-container text-sm bg-background text-foreground overflow-x-hidden" style="height: 100dvh">
     <!-- Skip Link for Keyboard Navigation -->
     <a
       href="#main-content"
@@ -120,7 +120,6 @@ const isTabletOrMobile = computed(() => width.value <= 1024);
 const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
 
 const rootContainerRef = ref<HTMLElement | null>(null);
-const { isKeyboardOpen } = useMobileKeyboard(rootContainerRef);
 
 // Sidebar behavior
 watch(

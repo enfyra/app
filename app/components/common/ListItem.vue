@@ -5,7 +5,7 @@
       clickable ? 'cursor-pointer' : '',
       (isMobile || isTablet) ? 'p-3' : 'p-4'
     ]"
-    @click="clickable && onClick ? onClick() : undefined"
+    @click="handleClick"
   >
     <div class="flex items-start gap-2 md:gap-4">
       <!-- Icon/Avatar -->
@@ -52,13 +52,13 @@
       </div>
 
       <!-- Actions -->
-      <div v-if="$slots.actions" class="flex items-center gap-2 flex-shrink-0" @click.stop>
+      <div v-if="$slots.actions" class="flex items-center gap-2 flex-shrink-0">
         <slot name="actions" />
       </div>
     </div>
 
     <!-- Footer -->
-    <div v-if="$slots.footer" class="flex items-center justify-between gap-2 pt-2 mt-2 border-t border-white/[0.06]" @click.stop>
+    <div v-if="$slots.footer" class="flex items-center justify-between gap-2 pt-2 mt-2 border-t border-white/[0.06]">
       <slot name="footer" />
     </div>
   </div>
@@ -76,7 +76,7 @@ interface Props {
   onClick?: () => void;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   title: undefined,
   description: undefined,
   icon: undefined,
@@ -87,6 +87,20 @@ withDefaults(defineProps<Props>(), {
   onClick: undefined,
 });
 
+const emit = defineEmits<{
+  click: [event: MouseEvent];
+}>();
+
 const { isMobile, isTablet } = useScreen();
+
+const handleClick = (event: MouseEvent) => {
+  if (!props.clickable) return;
+  
+  if (props.onClick) {
+    props.onClick();
+  }
+  
+  emit('click', event);
+};
 </script>
 
