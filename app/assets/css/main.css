@@ -117,13 +117,14 @@
     background: var(--bg-app);
     height: var(--app-viewport-height, 100dvh);
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden;
   }
 
   body,
   #__nuxt {
     height: var(--app-viewport-height, 100dvh);
     min-height: var(--app-viewport-height, 100dvh);
+    overflow: hidden;
   }
 
   body {
