@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootContainerRef" class="flex app-viewport-container text-sm bg-background text-foreground overflow-x-hidden">
+  <div ref="rootContainerRef" class="flex app-viewport-container text-sm bg-background text-foreground overflow-x-hidden overflow-y-hidden">
     <!-- Skip Link for Keyboard Navigation -->
     <a
       href="#main-content"
@@ -82,7 +82,7 @@
      
 
       <!-- Page Content -->
-      <section class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin relative z-10">
+      <section class="flex-1 min-h-0 overflow-hidden relative z-10">
         <div class="p-2.5 h-full overflow-y-auto">
           
           <slot />
