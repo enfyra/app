@@ -68,7 +68,7 @@
               square
               class="flex-shrink-0 md:hidden"
               :loading="getDeleteLoader(conversation.id).isLoading"
-              @click="deleteConversation(conversation)"
+              @click.stop="deleteConversation(conversation)"
             />
             <UButton
               icon="lucide:trash-2"
@@ -78,7 +78,7 @@
               square
               class="flex-shrink-0 hidden md:flex"
               :loading="getDeleteLoader(conversation.id).isLoading"
-              @click="deleteConversation(conversation)"
+              @click.stop="deleteConversation(conversation)"
             />
           </template>
         </CommonListItem>

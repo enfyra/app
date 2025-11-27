@@ -85,6 +85,7 @@
                   :model-value="config.isEnabled"
                   :disabled="getConfigLoader(config.id.toString()).isLoading"
                   @update:model-value="toggleConfigStatus(config)"
+                  @click.stop
                 />
               </div>
               <UButton
@@ -93,7 +94,7 @@
                 variant="outline"
                 color="error"
                 size="sm"
-                @click="deleteConfig(config)"
+                @click.stop="deleteConfig(config)"
               >
                 <span class="hidden sm:inline">Delete</span>
               </UButton>
