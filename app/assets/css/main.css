@@ -115,17 +115,20 @@
   html {
     font-family: 'Manrope', system-ui, sans-serif;
     background: var(--bg-app);
-    height: var(--app-viewport-height, 100dvh);
-    overflow-x: hidden;
-    overflow-y: hidden;
+    height: var(--app-viewport-height, 100dvh) !important;
+    max-height: var(--app-viewport-height, 100dvh) !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
     overscroll-behavior: none;
+    position: relative;
   }
 
   body,
   #__nuxt {
-    height: var(--app-viewport-height, 100dvh);
-    min-height: var(--app-viewport-height, 100dvh);
-    overflow: hidden;
+    height: var(--app-viewport-height, 100dvh) !important;
+    min-height: var(--app-viewport-height, 100dvh) !important;
+    max-height: var(--app-viewport-height, 100dvh) !important;
+    overflow: hidden !important;
     overscroll-behavior: none;
   }
 
