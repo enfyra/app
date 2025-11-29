@@ -3,7 +3,17 @@ const route = useRoute();
 const { menuGroups } = useMenuRegistry();
 const { checkPermissionCondition } = usePermissions();
 const { isMobile, isTablet, width } = useScreen();
-const { setSidebarVisible, sidebarCollapsed, setSidebarCollapsed } = useGlobalState();
+const { setSidebarVisible, sidebarCollapsed, setSidebarCollapsed, settings } = useGlobalState();
+const { getFileUrl } = useFileUrl();
+
+const faviconUrl = computed(() => {
+  if (!settings.value?.projectFavicon) return null;
+  const favicon = settings.value.projectFavicon;
+  if (favicon.startsWith('http://') || favicon.startsWith('https://') || favicon.startsWith('/')) {
+    return favicon;
+  }
+  return getFileUrl(favicon);
+});
 
 const isCollapsed = computed(() => {
   if (isMobile.value || isTablet.value) return false;
@@ -158,13 +168,14 @@ const visibleGroups = computed(() => {
       <div v-if="!isCollapsed" class="flex items-center gap-3">
         <div class="relative">
           <div class="absolute inset-0 bg-gradient-to-br from-[#0066FF] to-[#7C3AED] rounded-xl blur-md opacity-60"></div>
-          <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-[#0066FF] to-[#7C3AED] flex items-center justify-center">
-            <UIcon name="lucide:database" class="w-5 h-5 text-white" />
+          <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-[#0066FF] to-[#7C3AED] flex items-center justify-center overflow-hidden">
+            <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
+            <UIcon v-else name="lucide:database" class="w-5 h-5 text-white" />
           </div>
         </div>
         <div>
-          <span class="font-bold text-gradient-primary text-lg tracking-tight">Enfyra</span>
-          <p class="text-xs text-gray-500">CMS</p>
+          <span class="font-bold text-gradient-primary text-lg tracking-tight">{{ settings?.projectName || 'Enfyra' }}</span>
+          <p class="text-xs text-gray-500">{{ settings?.projectDescription || 'CMS' }}</p>
         </div>
       </div>
 
