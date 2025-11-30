@@ -32,7 +32,7 @@ watch(
     if (name === "") nameError.value = "Table name is required";
     else if (!TABLE_NAME_FIELD_REGEX.test(name))
       nameError.value =
-        "Use lowercase letters (a-z), numbers and underscore. Must start with a letter.";
+        "Use letters (a-z, A-Z), numbers and underscore. Must start with a letter.";
     else if (name === "table") nameError.value = "Table name cannot be `table`";
     else nameError.value = "";
   }
@@ -89,7 +89,7 @@ function validateAll() {
   if (name === "") {
     errors.value["name"] = "Table name is required";
   } else if (!TABLE_NAME_FIELD_REGEX.test(name)) {
-    errors.value["name"] = "Use lowercase letters (a-z), numbers and underscore. Must start with a letter.";
+    errors.value["name"] = "Use letters (a-z, A-Z), numbers and underscore. Must start with a letter.";
   } else if (name === "table") {
     errors.value["name"] = "Table name cannot be `table`";
   }
