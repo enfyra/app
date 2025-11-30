@@ -8,6 +8,7 @@ export const columnTypes = [
   { label: "Text", value: "text", icon: "mdi:file-document-outline" },
   { label: "Rich Text", value: "richtext", icon: "mdi:format-text" },
   { label: "Code", value: "code", icon: "mdi:code-braces-box" },
+  { label: "JSON", value: "simple-json", icon: "mdi:code-json" },
   {
     label: "Array Select",
     value: "array-select",
