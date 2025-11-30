@@ -194,6 +194,7 @@ function getDefaultValueType(columnType: string) {
       return "text";
 
     case "code":
+    case "simple-json":
       return "code";
 
     case "array-select":
@@ -235,6 +236,15 @@ const typeMap = computed(() => {
     ...(currentType === "text" && {
       defaultValue: {
         excluded: true,
+      },
+    }),
+
+    ...(currentType === "simple-json" && {
+      defaultValue: {
+        type: "code",
+        componentProps: {
+          language: "json",
+        },
       },
     }),
 

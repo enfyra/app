@@ -469,10 +469,10 @@ function getComponentType(): string {
           v-if="isCustomComponent && hasError"
           class="rounded-md border-2 border-red-500"
         >
-          <component
-            :is="componentConfig.component"
-            v-bind="componentConfig.componentProps"
-          />
+      <component
+        :is="componentConfig.component"
+        v-bind="componentConfig.componentProps"
+      />
         </div>
         <component
           v-else
