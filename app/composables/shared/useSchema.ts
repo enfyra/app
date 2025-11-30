@@ -169,6 +169,13 @@ export function useSchema(tableName?: string | Ref<string>) {
     return [...fields].sort((a, b) => {
       if (a.fieldType === "column" && b.fieldType === "relation") return -1;
       if (a.fieldType === "relation" && b.fieldType === "column") return 1;
+      
+      if (a.fieldType === b.fieldType) {
+        const aId = a.id ?? Number.MAX_SAFE_INTEGER;
+        const bId = b.id ?? Number.MAX_SAFE_INTEGER;
+        return aId - bId;
+      }
+      
       return 0;
     });
   }
