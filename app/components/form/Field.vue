@@ -235,14 +235,7 @@ const { isMobile, isTablet } = useScreen();
     />
 
     <p
-      v-if="errors?.[keyName]"
-      class="text-xs text-red-500"
-    >
-      {{ errors[keyName] }}
-    </p>
-
-    <p
-      v-else-if="column?.description"
+      v-if="!errors?.[keyName] && column?.description"
       class="text-xs"
       :style="{ color: 'var(--text-tertiary)' }"
       v-html="column?.description"

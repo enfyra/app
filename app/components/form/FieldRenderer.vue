@@ -6,6 +6,7 @@ import {
   USwitch,
   FormDateField,
   USelect,
+  UFormField,
 } from "#components";
 
 import FieldLoadingSkeleton from "./FieldLoadingSkeleton.vue";
@@ -63,6 +64,7 @@ function getComponentConfigByKey(key: string) {
   const finalType = config.type || column?.type;
   const isSystemField = key === "createdAt" || key === "updatedAt";
   const disabled = config.disabled ?? isSystemField;
+  const hasError = !!props.errors?.[key];
 
   const fieldProps = {
     ...config.fieldProps,
@@ -73,6 +75,7 @@ function getComponentConfigByKey(key: string) {
     placeholder: config.placeholder || column?.placeholder || key,
     class: "w-full",
     ...config.componentProps,
+    ...(hasError && { error: props.errors[key] }),
   };
 
   // Handle special cases first
@@ -86,6 +89,7 @@ function getComponentConfigByKey(key: string) {
         "onUpdate:modelValue": (val: any) => {
           updateFormData(key, val);
         },
+        ...(hasError && { error: props.errors[key] }),
       },
       fieldProps,
     };
@@ -194,6 +198,7 @@ function getComponentConfigByKey(key: string) {
             }
             updateErrors(updated);
           },
+          ...(hasError && { error: props.errors[key] }),
         },
         fieldProps: {
           ...fieldProps,
@@ -277,6 +282,7 @@ function getComponentConfigByKey(key: string) {
             }
             updateErrors(updated);
           },
+          ...(hasError && { error: props.errors[key] }),
         },
         fieldProps: {
           ...fieldProps,
@@ -293,6 +299,7 @@ function getComponentConfigByKey(key: string) {
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },
+          ...(hasError && { error: props.errors[key] }),
         },
         fieldProps,
       };
@@ -326,6 +333,7 @@ function getComponentConfigByKey(key: string) {
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },
+          ...(hasError && { error: props.errors[key] }),
         },
         fieldProps: {
           ...fieldProps,
@@ -343,6 +351,7 @@ function getComponentConfigByKey(key: string) {
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },
+          ...(hasError && { error: props.errors[key] }),
         },
         fieldProps,
       };
@@ -356,6 +365,7 @@ function getComponentConfigByKey(key: string) {
           "onUpdate:modelValue": (val: any) => {
             updateFormData(key, val);
           },
+          ...(hasError && { error: props.errors[key] }),
         },
         fieldProps,
       };
@@ -369,6 +379,7 @@ function getComponentConfigByKey(key: string) {
           "onUpdate:modelValue": (val: Date | null) => {
             updateFormData(key, val);
           },
+          ...(hasError && { error: props.errors[key] }),
         },
         fieldProps,
       };
@@ -405,6 +416,31 @@ function getComponentConfigByKey(key: string) {
 }
 
 const componentConfig = computed(() => getComponentConfigByKey(props.keyName));
+const errorMessage = computed(() => props.errors?.[props.keyName]);
+const hasError = computed(() => !!errorMessage.value);
+
+const isCustomComponent = computed(() => {
+  const column = props.columnMap.get(props.keyName);
+  const manualConfig = props.typeMap?.[props.keyName];
+  const config =
+    typeof manualConfig === "string"
+      ? { type: manualConfig }
+      : manualConfig || {};
+  const finalType = config.type || column?.type;
+  const isRelation = column?.fieldType === "relation";
+  
+  const customTypes = [
+    'richtext',
+    'code',
+    'simple-json',
+    'uuid',
+    'permission',
+    'date',
+    'array-tags',
+  ];
+  
+  return isRelation || (finalType && customTypes.includes(finalType));
+});
 
 // Get component type for loading skeleton
 function getComponentType(): string {
@@ -428,10 +464,22 @@ function getComponentType(): string {
 
     <!-- Component chính -->
     <div v-else class="field-input">
-      <component
-        :is="componentConfig.component"
-        v-bind="componentConfig.componentProps"
-      />
+      <UFormField :error="errorMessage">
+        <div
+          v-if="isCustomComponent && hasError"
+          class="rounded-md border-2 border-red-500"
+        >
+          <component
+            :is="componentConfig.component"
+            v-bind="componentConfig.componentProps"
+          />
+        </div>
+        <component
+          v-else
+          :is="componentConfig.component"
+          v-bind="componentConfig.componentProps"
+        />
+      </UFormField>
     </div>
   </div>
 </template>
