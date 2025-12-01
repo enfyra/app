@@ -13,7 +13,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   toggle: [id: any];
-  "view-details": [item: any];
+  "navigate-detail": [item: any];
 }>();
 
 const { getId } = useDatabase();
@@ -61,8 +61,8 @@ function getItemWidth(id: any): string {
   return itemWidths.value[id] || '100%';
 }
 
-function viewDetails(item: any) {
-  emit("view-details", item);
+function navigateToDetail(item: any) {
+  emit("navigate-detail", item);
 }
 
 const { checkPermissionCondition } = usePermissions();
@@ -315,12 +315,12 @@ const { isMobile, isTablet } = useScreen();
       <!-- Main Row -->
       <div
         :ref="(el) => setItemRef(getId(item), el)"
-        class="flex items-center"
+        class="flex items-center min-w-0"
       >
         <!-- Select Area (clickable) -->
         <button
           @click.stop="toggle(getId(item))"
-          :class="(isMobile || isTablet) ? 'flex-1 px-2 py-2 flex items-center gap-1.5 lg:hover:bg-muted transition-colors text-left' : 'flex-1 px-4 py-3 flex items-center gap-2 lg:hover:bg-muted transition-colors text-left'"
+          :class="(isMobile || isTablet) ? 'flex-1 px-2 py-2 flex items-center gap-1.5 lg:hover:bg-muted transition-colors text-left min-w-0' : 'flex-1 px-4 py-3 flex items-center gap-2 lg:hover:bg-muted transition-colors text-left min-w-0'"
         >
           <UIcon
             v-if="isSelected(getId(item))"
@@ -332,8 +332,8 @@ const { isMobile, isTablet } = useScreen();
             name="lucide:circle"
             :class="(isMobile || isTablet) ? 'w-4 h-4 flex-shrink-0 text-muted-foreground' : 'w-5 h-5 flex-shrink-0 text-muted-foreground'"
           />
-          <div class="flex-1 min-w-0">
-            <div v-if="!isMobile && !isTablet" class="text-xs text-muted-foreground mb-0.5">
+          <div class="flex-1 min-w-0 overflow-hidden">
+            <div v-if="!isMobile && !isTablet" class="text-xs text-muted-foreground mb-0.5 truncate">
               ID: {{ shortenId(getId(item)) }}
             </div>
             <div :class="(isMobile || isTablet) ? 'text-sm truncate' : 'font-medium truncate'">
@@ -343,7 +343,7 @@ const { isMobile, isTablet } = useScreen();
         </button>
 
         <!-- Action Buttons -->
-        <div :class="(isMobile || isTablet) ? 'flex items-center gap-0.5 px-1 border-l border-muted' : 'flex items-center gap-1 px-2 border-l border-muted'">
+        <div :class="(isMobile || isTablet) ? 'flex items-center gap-0.5 px-1 border-l border-muted flex-shrink-0' : 'flex items-center gap-1 px-2 border-l border-muted flex-shrink-0'">
           <UButton
             :icon="isExpanded(getId(item)) ? 'lucide:chevron-up' : 'lucide:chevron-down'"
             :size="(isMobile || isTablet) ? 'xs' : 'sm'"
@@ -351,14 +351,16 @@ const { isMobile, isTablet } = useScreen();
             color="neutral"
             @click.stop="toggleExpand(getId(item))"
             :title="isExpanded(getId(item)) ? 'Hide details' : 'Show details'"
+            class="flex-shrink-0"
           />
           <UButton
-            icon="lucide:info"
+            icon="lucide:external-link"
             :size="(isMobile || isTablet) ? 'xs' : 'sm'"
             variant="ghost"
             color="neutral"
-            @click.stop="viewDetails(item)"
-            title="View full details"
+            @click.stop="navigateToDetail(item)"
+            title="Navigate to detail page"
+            class="flex-shrink-0"
           />
         </div>
       </div>
@@ -367,7 +369,6 @@ const { isMobile, isTablet } = useScreen();
       <div
         v-if="isExpanded(getId(item))"
         :class="(isMobile || isTablet) ? 'border-t border-muted bg-muted/20 px-2 py-2' : 'border-t border-muted bg-muted/20 px-4 py-3'"
-        :style="{ maxWidth: getItemWidth(getId(item)) }"
       >
         <div :class="(isMobile || isTablet) ? 'grid grid-cols-1 gap-2 text-xs' : 'grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm'">
           <div

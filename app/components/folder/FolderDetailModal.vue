@@ -32,16 +32,12 @@ const folderIconColor = computed(() => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <UModal
-      v-model:open="showDetailModal"
-      :close="{
-        icon: 'lucide:x',
-        color: 'error',
-        variant: 'soft',
-      }"
-      title="Folder Details"
-    >
+  <CommonModal
+    v-model="showDetailModal"
+  >
+    <template #title>
+      Folder Details
+    </template>
       <template #body>
         <div v-if="selectedFolder" class="space-y-8">
           <!-- Folder Identity Section -->
@@ -220,6 +216,5 @@ const folderIconColor = computed(() => {
           </div>
         </div>
       </template>
-    </UModal>
-  </Teleport>
+    </CommonModal>
 </template>

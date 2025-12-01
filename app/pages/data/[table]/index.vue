@@ -169,6 +169,16 @@ const columns = computed(() => {
         field.name &&
         visibleColumns.value.has(field.name)
     )
+    .sort((a, b) => {
+      // Always put id first if it exists
+      if (a.name?.toLowerCase() === 'id') return -1;
+      if (b.name?.toLowerCase() === 'id') return 1;
+      
+      // Sort by createdAt if available, otherwise by id
+      const aCreatedAt = a.createdAt ? new Date(a.createdAt).getTime() : (a.id ?? 0);
+      const bCreatedAt = b.createdAt ? new Date(b.createdAt).getTime() : (b.id ?? 0);
+      return aCreatedAt - bCreatedAt;
+    })
     .map((field) => {
       let config: DataTableColumnConfig = {
         id: field.name!,
@@ -364,16 +374,44 @@ useHeaderActionRegistry([
       </div>
 
       <!-- Data Table: khi có data -->
-      <DataTableLazy
-        v-else-if="data && data.length > 0"
-        :data="data"
-        :columns="columns"
-        :loading="false"
-        :page-size="pageLimit"
-        :selectable="isSelectionMode"
-        @selection-change="handleSelectionChange"
-        @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
-      />
+      <div v-else-if="data && data.length > 0" class="space-y-6">
+        <DataTableLazy
+          :data="data"
+          :columns="columns"
+          :loading="false"
+          :page-size="pageLimit"
+          :selectable="isSelectionMode"
+          @selection-change="handleSelectionChange"
+          @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
+        />
+
+        <!-- Premium Pagination -->
+        <div
+          v-if="Math.ceil(total / pageLimit) > 1"
+          class="flex items-center justify-between"
+        >
+          <UPagination
+            v-model:page="page"
+            :items-per-page="pageLimit"
+            :total="total"
+            show-edges
+            :sibling-count="1"
+            :to="
+              (p) => ({
+                path: route.path,
+                query: { ...route.query, page: p },
+              })
+            "
+            :ui="{
+              item: 'h-9 w-9 rounded-xl transition-all duration-300',
+            }"
+          />
+          <p class="hidden md:block text-sm text-gray-400">
+            Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span>
+            of <span class="text-gray-200">{{ total }}</span> results
+          </p>
+        </div>
+      </div>
 
       <!-- Empty State: khi đã mounted, không loading và không có data -->
       <div v-else class="w-full py-8">
@@ -385,33 +423,6 @@ useHeaderActionRegistry([
         />
       </div>
     </Transition>
-
-    <!-- Premium Pagination -->
-    <div
-      v-if="isMounted && !loading && data.length > 0 && Math.ceil(total / pageLimit) > 1"
-      class="flex items-center justify-between"
-    >
-      <UPagination
-        v-model:page="page"
-        :items-per-page="pageLimit"
-        :total="total"
-        show-edges
-        :sibling-count="1"
-        :to="
-          (p) => ({
-            path: route.path,
-            query: { ...route.query, page: p },
-          })
-        "
-        :ui="{
-          item: 'h-9 w-9 rounded-xl transition-all duration-300',
-        }"
-      />
-      <p class="hidden md:block text-sm text-gray-400">
-        Showing <span class="text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span>
-        of <span class="text-gray-200">{{ total }}</span> results
-      </p>
-    </div>
 
     <!-- Filter Drawer - use existing component -->
     <FilterDrawerLazy

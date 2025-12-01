@@ -19,26 +19,15 @@
     </UButton>
 
     <!-- Permission Configuration Drawer -->
-    <Teleport to="body">
-      <UDrawer
+    <CommonDrawer
       :handle="false"
-        v-model:open="showDrawer"
-        direction="right"
-        :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-xl'"
-        :ui="{
-          header:
-            'border-b border-muted text-muted pb-2 flex items-center justify-between',
-        }"
-      >
-        <template #header>
-          <h2 class="text-lg font-semibold">Permission Configuration</h2>
-          <UButton
-            icon="lucide:x"
-            variant="ghost"
-            color="error"
-            @click="showDrawer = false"
-          />
-        </template>
+      v-model="showDrawer"
+      direction="right"
+      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-xl'"
+    >
+      <template #header>
+        <h2 class="text-lg font-semibold">Permission Configuration</h2>
+      </template>
 
         <template #body>
           <div class="p-4 max-h-[80vh] overflow-y-auto">
@@ -48,9 +37,8 @@
               @update:model-value="handlePermissionUpdate"
             />
           </div>
-        </template>
-      </UDrawer>
-    </Teleport>
+      </template>
+    </CommonDrawer>
   </div>
 </template>
 

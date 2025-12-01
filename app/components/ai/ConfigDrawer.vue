@@ -67,43 +67,29 @@ const closeDrawer = () => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <UDrawer
-      :handle="false"
-      handle-only
-      v-model:open="isOpen"
-      direction="right"
-      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-xl max-w-xl'"
-    >
-      <template #header>
-        <div class="bg-gradient-to-r from-background/90 to-muted/20 rounded-t-xl">
-          <div class="flex items-center justify-between">
-            <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
-              <div
-                :class="(isMobile || isTablet) ? 'w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg flex-shrink-0' : 'w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg'"
-              >
-                <Icon name="lucide:brain" :class="(isMobile || isTablet) ? 'text-xs text-white' : 'text-sm text-white'" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold text-foreground truncate' : 'text-xl font-semibold text-foreground'">
-                  AI Configuration
-                </h2>
-                <p :class="(isMobile || isTablet) ? 'text-xs text-muted-foreground truncate' : 'text-sm text-muted-foreground'">
-                  Select configuration for your conversation
-                </p>
-              </div>
-            </div>
-            <UButton
-              icon="lucide:x"
-              @click="closeDrawer"
-              variant="soft"
-              color="error"
-              :size="(isMobile || isTablet) ? 'sm' : 'lg'"
-              :class="(isMobile || isTablet) ? 'rounded-full !aspect-square flex-shrink-0' : 'lg:hover:bg-error/10 lg:hover:text-error transition-colors duration-200'"
-            />
-          </div>
+  <CommonDrawer
+    :handle="false"
+    handle-only
+    v-model="isOpen"
+    direction="right"
+  >
+    <template #header>
+      <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
+        <div
+          :class="(isMobile || isTablet) ? 'w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg flex-shrink-0' : 'w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg'"
+        >
+          <Icon name="lucide:brain" :class="(isMobile || isTablet) ? 'text-xs text-white' : 'text-sm text-white'" />
         </div>
-      </template>
+        <div class="min-w-0 flex-1">
+          <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold text-foreground truncate' : 'text-xl font-semibold text-foreground'">
+            AI Configuration
+          </h2>
+          <p :class="(isMobile || isTablet) ? 'text-xs text-muted-foreground truncate' : 'text-sm text-muted-foreground'">
+            Select configuration for your conversation
+          </p>
+        </div>
+      </div>
+    </template>
 
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
@@ -233,8 +219,7 @@ const closeDrawer = () => {
           </div>
         </div>
       </template>
-    </UDrawer>
-  </Teleport>
+    </CommonDrawer>
 </template>
 
 <style scoped>

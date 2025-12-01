@@ -12,19 +12,9 @@
     />
 
     <!-- Date Picker Modal -->
-    <UModal v-model:open="showModal">
-      <template #header>
-        <div class="flex justify-between items-center w-full">
-          <div class="text-base font-semibold">Select Date</div>
-          <UButton
-            icon="lucide:x"
-            color="error"
-            variant="soft"
-            @click="showModal = false"
-          >
-            Close
-          </UButton>
-        </div>
+    <CommonModal v-model="showModal">
+      <template #title>
+        Select Date
       </template>
 
       <template #body>
@@ -38,7 +28,7 @@
           <UButton @click="applyValue" color="primary"> Apply </UButton>
         </div>
       </template>
-    </UModal>
+    </CommonModal>
   </div>
 </template>
 
