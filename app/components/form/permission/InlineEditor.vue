@@ -26,27 +26,15 @@
     </UInput>
 
     <!-- Permission Configuration Drawer -->
-    <Teleport to="body">
-      <UDrawer
+    <CommonDrawer
       :handle="false"
-        v-model:open="showModal"
-        direction="right"
-        :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-3xl'"
-        :ui="{
-          header:
-            'border-b border-muted text-muted pb-2 flex items-center justify-between',
-        }"
-      >
-        <template #header>
-          <h2 class="text-lg font-semibold">Permission Configuration</h2>
-          <UButton
-            @click="closeModal"
-            icon="lucide:x"
-            color="error"
-            variant="ghost"
-            size="lg"
-          />
-        </template>
+      v-model="showModal"
+      direction="right"
+      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-3xl'"
+    >
+      <template #header>
+        <h2 class="text-lg font-semibold">Permission Configuration</h2>
+      </template>
 
         <template #body>
           <FormPermissionSelector
@@ -61,14 +49,6 @@
             class="flex justify-end gap-3 rounded-xl border border-muted/30 p-4 bg-gray-800/50"
           >
             <UButton
-              @click="closeModal"
-              variant="outline"
-              color="error"
-              :disabled="props.disabled"
-            >
-              Cancel
-            </UButton>
-            <UButton
               icon="lucide:check"
               variant="solid"
               color="primary"
@@ -78,9 +58,8 @@
               Apply
             </UButton>
           </div>
-        </template>
-      </UDrawer>
-    </Teleport>
+      </template>
+    </CommonDrawer>
   </div>
 </template>
 

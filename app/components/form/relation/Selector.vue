@@ -41,8 +41,6 @@ const targetTable = computed(() => {
 const targetTableName = computed(() => targetTable.value?.name || "");
 const { getIncludeFields, definition } = useSchema(targetTableName);
 
-const detailModal = ref(false);
-const detailRecord = ref<Record<string, any>>({});
 
 const { isMounted } = useMounted();
 
@@ -132,9 +130,11 @@ function apply() {
   emit("apply", selected.value);
 }
 
-function viewDetails(item: any) {
-  detailRecord.value = item;
-  detailModal.value = true;
+function navigateToDetail(item: any) {
+  const itemId = getId(item);
+  if (!itemId || !targetTableName.value) return;
+  const url = `/data/${targetTableName.value}/${itemId}`;
+  window.open(url, '_blank');
 }
 
 // Handle filter apply from FilterDrawer
@@ -194,31 +194,17 @@ const { isMobile, isTablet } = useScreen();
 
 <template>
   <!-- Main Drawer -->
-  <Teleport to="body">
-    <UDrawer
-      :handle="false"
-      handle-only
-      v-model:open="isDrawerOpen"
-      direction="right"
-      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-xl max-w-xl'"
-      :ui="{
-        header:
-          'border-b border-muted text-muted pb-2 flex items-center justify-between',
-      }"
-    >
-      <template #header>
-        <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg'">
-          {{ props.relationMeta.propertyName }}
-        </h2>
-        <UButton
-          @click="emit('update:open', false)"
-          icon="lucide:x"
-          color="error"
-          variant="ghost"
-          :size="(isMobile || isTablet) ? 'md' : 'xl'"
-          :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-        />
-      </template>
+  <CommonDrawer
+    :handle="false"
+    handle-only
+    v-model="isDrawerOpen"
+    direction="right"
+  >
+    <template #header>
+      <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg'">
+        {{ props.relationMeta.propertyName }}
+      </h2>
+    </template>
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
           <!-- Header Section -->
@@ -313,7 +299,7 @@ const { isMobile, isTablet } = useScreen();
               :multiple="props.multiple"
               :disabled="props.disabled"
               @toggle="toggle"
-              @view-details="viewDetails"
+              @navigate-detail="navigateToDetail"
             />
           </div>
         </div>
@@ -331,8 +317,7 @@ const { isMobile, isTablet } = useScreen();
           />
         </div>
       </template>
-    </UDrawer>
-  </Teleport>
+    </CommonDrawer>
 
   <FormRelationCreateDrawer
     v-model="showCreateDrawer"
@@ -341,11 +326,6 @@ const { isMobile, isTablet } = useScreen();
     v-model:selected="selected"
   />
 
-  <FormRelationDetailDrawer
-    v-model="detailModal"
-    :record="detailRecord"
-    :table-name="targetTable?.name || ''"
-  />
 
   <!-- Filter Drawer -->
   <FilterDrawerLazy

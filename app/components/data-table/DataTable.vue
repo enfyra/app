@@ -373,6 +373,9 @@ function getColumnLabel(columnId: string) {
                   header.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                   header.id === '__actions' ? 'w-12 min-w-12 max-w-12' : '',
                   header.id?.toLowerCase() === 'id' ? 'w-20 min-w-20 max-w-20' : '',
+                  header.id !== 'select' && header.id !== '__actions' && header.id?.toLowerCase() !== 'id'
+                    ? 'overflow-hidden'
+                    : '',
                   header.column.getCanSort() &&
                     'cursor-pointer select-none lg:hover:bg-gray-800 transition-colors',
                 ]"
@@ -392,7 +395,11 @@ function getColumnLabel(columnId: string) {
                     header.id === '__actions' ? 'justify-center' : '',
                   ]"
                 >
-                  <span v-if="typeof header.column.columnDef.header === 'string'">
+                  <span
+                    v-if="typeof header.column.columnDef.header === 'string'"
+                    class="truncate min-w-0 flex-1"
+                    :title="header.column.columnDef.header"
+                  >
                     {{ header.column.columnDef.header }}
                   </span>
                   <component
@@ -409,7 +416,7 @@ function getColumnLabel(columnId: string) {
                         ? 'i-lucide-chevron-down'
                         : 'i-lucide-chevrons-up-down'
                     "
-                    class="w-4 h-4 text-gray-500"
+                    class="w-4 h-4 text-gray-500 flex-shrink-0"
                   />
                 </div>
               </th>

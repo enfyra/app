@@ -1,33 +1,21 @@
 <template>
-  <Teleport to="body">
-    <UDrawer
-      :handle="false"
-      v-model:open="isOpen"
-      direction="right"
-      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-2xl'"
-      :ui="{
-        header:
-          'border-b border-muted text-muted pb-2 flex items-center justify-between',
-      }"
-    >
-      <template #header>
-        <div class="flex items-center gap-3">
-          <UIcon name="lucide:route" class="w-5 h-5" />
-          <div>
-            <h3 class="text-lg font-semibold">Select Route</h3>
-            <p class="text-sm text-muted-foreground mt-1">
-              Choose a route for the permission
-            </p>
-          </div>
+  <CommonDrawer
+    :handle="false"
+    v-model="isOpen"
+    direction="right"
+    :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-2xl'"
+  >
+    <template #header>
+      <div class="flex items-center gap-3">
+        <UIcon name="lucide:route" class="w-5 h-5" />
+        <div>
+          <h3 class="text-lg font-semibold">Select Route</h3>
+          <p class="text-sm text-muted-foreground mt-1">
+            Choose a route for the permission
+          </p>
         </div>
-        <UButton
-          @click="close"
-          icon="lucide:x"
-          color="error"
-          variant="ghost"
-          size="lg"
-        />
-      </template>
+      </div>
+    </template>
 
       <template #body>
         <div class="space-y-0">
@@ -162,11 +150,8 @@
       </template>
 
       <template #footer>
-        <div class="flex justify-end">
-          <UButton variant="outline" color="error" @click="close"> Cancel </UButton>
-        </div>
       </template>
-    </UDrawer>
+    </CommonDrawer>
 
     <!-- Filter Drawer -->
     <FilterDrawerLazy
@@ -175,7 +160,6 @@
       :current-filter="currentFilter"
       @apply="handleFilterApply"
     />
-  </Teleport>
 </template>
 
 <script setup lang="ts">

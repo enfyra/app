@@ -70,9 +70,48 @@ export function useDataTableVisibility(
         const nextHidden = new Set(hidden);
 
         let needsSave = false;
+        
+        // Auto-hide createdAt and updatedAt when >= 7 fields
         if (columnFields.length >= 7) {
           ["createdAt", "updatedAt"].forEach((fieldName) => {
             if (columnFields.includes(fieldName) && !nextHidden.has(fieldName)) {
+              nextHidden.add(fieldName);
+              needsSave = true;
+            }
+          });
+        }
+
+        // Auto-hide fields beyond the first 10 when >= 10 fields (after hiding timestamps)
+        const visibleFieldsAfterTimestampHide = columnFields.filter(
+          (field) => !nextHidden.has(field)
+        );
+        
+        if (columnFields.length >= 10 && visibleFieldsAfterTimestampHide.length >= 10) {
+          // Sort fields by createdAt to get the order
+          const sortedFields = [...columnFields].sort((a, b) => {
+            // Get field objects from schema to access createdAt
+            const aField = schema.definition.find((f: TableDefinitionField) => f.name === a && f.fieldType === "column");
+            const bField = schema.definition.find((f: TableDefinitionField) => f.name === b && f.fieldType === "column");
+            
+            // Always put id first
+            if (a.toLowerCase() === 'id') return -1;
+            if (b.toLowerCase() === 'id') return 1;
+            
+            // Sort by createdAt if available, otherwise by field name
+            const aCreatedAt = aField?.createdAt ? new Date(aField.createdAt).getTime() : 0;
+            const bCreatedAt = bField?.createdAt ? new Date(bField.createdAt).getTime() : 0;
+            if (aCreatedAt !== bCreatedAt) return aCreatedAt - bCreatedAt;
+            return a.localeCompare(b);
+          });
+          
+          // Keep only the first 10 fields (excluding already hidden ones)
+          const fieldsToKeep = sortedFields
+            .filter((field) => !nextHidden.has(field))
+            .slice(0, 10);
+          
+          // Hide all other visible fields
+          columnFields.forEach((fieldName) => {
+            if (!fieldsToKeep.includes(fieldName) && !nextHidden.has(fieldName)) {
               nextHidden.add(fieldName);
               needsSave = true;
             }

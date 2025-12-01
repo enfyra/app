@@ -75,17 +75,12 @@ async function handleCreate() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <UModal
-      v-model:open="isOpen"
-      title="Create New Folder"
-      :close="{
-        color: 'error',
-        variant: 'soft',
-        size: 'lg',
-        label: 'Close',
-      }"
-    >
+  <CommonModal
+    v-model="isOpen"
+  >
+    <template #title>
+      Create New Folder
+    </template>
       <template #header>
         <div class="flex justify-between items-center w-full">
           <div class="text-base font-semibold">Create New Folder</div>
@@ -126,6 +121,5 @@ async function handleCreate() {
           </UButton>
         </div>
       </template>
-    </UModal>
-  </Teleport>
+    </CommonModal>
 </template>

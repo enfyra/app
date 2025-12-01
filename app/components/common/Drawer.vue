@@ -1,0 +1,85 @@
+<script setup lang="ts">
+const props = withDefaults(
+  defineProps<{
+    modelValue: boolean;
+    direction?: 'left' | 'right';
+    class?: string;
+    handle?: boolean;
+    handleOnly?: boolean;
+  }>(),
+  {
+    direction: 'right',
+    handle: false,
+    handleOnly: false,
+  }
+);
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean];
+}>();
+
+const isOpen = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value),
+});
+
+const { isMobile, isTablet } = useScreen();
+
+const drawerClass = computed(() => {
+  const baseClass = props.class || '';
+  const responsiveClass = (isMobile.value || isTablet.value) 
+    ? 'w-full max-w-full' 
+    : props.direction === 'right' 
+      ? 'min-w-xl max-w-xl' 
+      : 'min-w-xl max-w-xl';
+  return `${responsiveClass} ${baseClass}`.trim();
+});
+
+function close() {
+  isOpen.value = false;
+}
+</script>
+
+<template>
+  <Teleport to="body">
+    <UDrawer
+      :handle="props.handle"
+      :handle-only="props.handleOnly"
+      v-model:open="isOpen"
+      :direction="props.direction"
+      :class="drawerClass"
+      :ui="{
+        container: 'h-[100dvh]',
+        content: 'overflow-hidden',
+        header: 'border-b border-muted text-muted pb-2 flex items-center justify-between flex-shrink-0',
+        body: 'flex-1 overflow-y-auto min-h-0',
+        footer: 'flex-shrink-0',
+      }"
+    >
+      <template #header>
+        <div class="flex items-center justify-between w-full ">
+          <div class="flex-1 min-w-0">
+            <slot name="header" />
+          </div>
+          <UButton
+            icon="lucide:x"
+            color="error"
+            variant="soft"
+            :size="(isMobile || isTablet) ? 'lg' : 'xl'"
+            :class="(isMobile || isTablet) ? 'rounded-full !aspect-square flex-shrink-0' : 'flex-shrink-0'"
+            @click="close"
+          />
+        </div>
+      </template>
+
+      <template #body>
+        <slot name="body" />
+      </template>
+
+      <template #footer>
+        <slot name="footer" />
+      </template>
+    </UDrawer>
+  </Teleport>
+</template>
+

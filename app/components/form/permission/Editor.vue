@@ -1,25 +1,13 @@
 <template>
-  <Teleport to="body">
-    <UDrawer
-      :handle="false"
-      v-model:open="isOpen"
-      direction="right"
-      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-2xl'"
-      :ui="{
-        header:
-          'border-b border-muted text-muted pb-2 flex items-center justify-between',
-      }"
-    >
-      <template #header>
-        <h3 class="text-lg font-semibold">Edit Permission</h3>
-        <UButton
-          @click="close"
-          icon="lucide:x"
-          color="error"
-          variant="ghost"
-          size="lg"
-        />
-      </template>
+  <CommonDrawer
+    :handle="false"
+    v-model="isOpen"
+    direction="right"
+    :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-2xl'"
+  >
+    <template #header>
+      <h3 class="text-lg font-semibold">Edit Permission</h3>
+    </template>
 
       <template #body>
         <div class="p-4 space-y-4">
@@ -102,7 +90,6 @@
 
           <!-- Buttons -->
           <div class="flex justify-end gap-2 pt-4 border-t border-muted">
-            <UButton variant="outline" color="error" @click="close"> Cancel </UButton>
             <UButton
               color="primary"
               @click="apply"
@@ -113,14 +100,13 @@
           </div>
         </div>
       </template>
-    </UDrawer>
+    </CommonDrawer>
 
     <!-- Route Picker -->
     <FormPermissionRoutePicker
       v-model="showRoutePicker"
       @select="onRouteSelect"
     />
-  </Teleport>
 </template>
 
 <script setup lang="ts">

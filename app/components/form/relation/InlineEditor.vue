@@ -10,6 +10,12 @@ const emit = defineEmits(["update:modelValue"]);
 const showModal = ref(false);
 const selectedIds = ref<any[]>([]);
 const { getId } = useDatabase();
+const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
+const { schemas } = useSchema();
+
+onMounted(async () => {
+  await ensureRoutesLoaded();
+});
 
 watch(
   () => props.modelValue,
@@ -75,6 +81,35 @@ function shortenId(id: string | number): string {
   // Ngắn hơn nữa: 4 ký tự đầu + … + 3 ký tự cuối
   return str.length > 12 ? `${str.slice(0, 4)}…${str.slice(-3)}` : str;
 }
+
+function getTargetTableName(): string | null {
+  const targetTableRef = props.relationMeta?.targetTable;
+  if (!targetTableRef) return null;
+  
+  if (typeof targetTableRef === 'string') {
+    return targetTableRef;
+  }
+  
+  const targetTableId = getId(targetTableRef);
+  if (!targetTableId) return null;
+  
+  const targetSchema = Object.values(schemas.value).find(
+    (schema: any) => getId(schema) === targetTableId
+  );
+  
+  return targetSchema?.name || null;
+}
+
+function navigateToDetail(item: any) {
+  const targetTableName = getTargetTableName();
+  if (!targetTableName) return;
+  
+  const itemId = getId(item);
+  if (!itemId) return;
+  
+  const url = `/data/${targetTableName}/${itemId}`;
+  window.open(url, '_blank');
+}
 </script>
 
 <template>
@@ -83,10 +118,11 @@ function shortenId(id: string | number): string {
       v-for="item in selectedIds"
       :key="getId(item)"
       size="lg"
-      :color="getId(item) ? 'primary' : 'error'"
+      :color="getId(item) ? 'secondary' : 'error'"
       variant="soft"
-      class="flex items-center gap-1"
+      class="flex items-center gap-1 cursor-pointer transition-all duration-200 hover:opacity-80 hover:brightness-110"
       :title="getId(item) ? String(getId(item)) : 'Invalid ID'"
+      @click="navigateToDetail(item)"
     >
       {{ getId(item) ? shortenId(getId(item)) : "Invalid ID" }}
       <button

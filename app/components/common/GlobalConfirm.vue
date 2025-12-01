@@ -9,16 +9,10 @@ watch(
 </script>
 
 <template>
-  <Teleport to="body">
-    <UModal 
-      v-model:open="isVisible" 
-      :handle="false"
-      :close="{
-        color: 'error',
-        variant: 'solid',
-        size: 'lg',
-      }"
-    >
+  <CommonModal 
+    v-model="isVisible" 
+    :handle="false"
+  >
       <template #title>
         <div class="flex items-center justify-between w-full">
           <div class="text-lg font-semibold">{{ options.title }}</div>
@@ -41,6 +35,5 @@ watch(
           </UButton>
         </div>
       </template>
-    </UModal>
-  </Teleport>
+    </CommonModal>
 </template>

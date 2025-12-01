@@ -104,43 +104,31 @@ const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
-  <Teleport to="body">
-    <UDrawer
-      :handle="false"
-      handle-only
-      :open="modelValue"
-      @update:open="(value) => (value ? null : handleClose())"
-      direction="right"
-      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-2xl max-w-2xl'"
-    >
-      <template #header>
-        <div class="flex items-start justify-between gap-2">
-          <div class="flex items-start gap-2 md:gap-3 min-w-0 flex-1">
-            <UIcon name="i-lucide-filter" :class="(isMobile || isTablet) ? 'w-6 h-6' : 'w-8 h-8 mt-1'" />
-            <div class="min-w-0 flex-1">
-              <h3 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg font-semibold'">Filter {{ tableName }}</h3>
-              <p class="text-xs md:text-sm text-gray-500 mt-1">
-                {{
-                  hasActiveConditions
-                    ? `${localFilter.conditions.length} condition(s) configured`
-                    : "No filters applied"
-                }}
-              </p>
-            </div>
+  <CommonDrawer
+    :handle="false"
+    handle-only
+    :model-value="modelValue"
+    @update:model-value="(value) => (value ? null : handleClose())"
+    direction="right"
+    :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-2xl max-w-2xl'"
+  >
+    <template #header>
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-start gap-2 md:gap-3 min-w-0 flex-1">
+          <UIcon name="i-lucide-filter" :class="(isMobile || isTablet) ? 'w-6 h-6' : 'w-8 h-8 mt-1'" />
+          <div class="min-w-0 flex-1">
+            <h3 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg font-semibold'">Filter {{ tableName }}</h3>
+            <p class="text-xs md:text-sm text-gray-500 mt-1">
+              {{
+                hasActiveConditions
+                  ? `${localFilter.conditions.length} condition(s) configured`
+                  : "No filters applied"
+              }}
+            </p>
           </div>
-
-          <UButton
-            icon="i-lucide-x"
-            :size="(isMobile || isTablet) ? 'sm' : 'md'"
-            color="error"
-            variant="soft"
-            @click="handleClose"
-            :class="(isMobile || isTablet) ? 'flex-shrink-0 rounded-full !aspect-square' : 'flex-shrink-0'"
-          >
-            <span v-if="!isMobile && !isTablet">Close</span>
-          </UButton>
         </div>
-      </template>
+      </div>
+    </template>
 
       <template #body>
         <div class="space-y-4">
@@ -189,17 +177,6 @@ const { isMobile, isTablet } = useScreen();
             </UButton>
 
             <UButton
-              @click="handleClose"
-              variant="outline"
-              icon="i-lucide-x-circle"
-              color="error"
-              :size="(isMobile || isTablet) ? 'sm' : 'md'"
-              :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-            >
-              <span v-if="!isMobile && !isTablet">Cancel</span>
-            </UButton>
-
-            <UButton
               @click="handleApply"
               :disabled="!hasActiveConditions"
               :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : 'min-w-[100px]'"
@@ -212,6 +189,5 @@ const { isMobile, isTablet } = useScreen();
           </div>
         </div>
       </template>
-    </UDrawer>
-  </Teleport>
+    </CommonDrawer>
 </template>
