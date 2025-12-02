@@ -226,6 +226,16 @@ async function updateConfig() {
     return;
   }
 
+  // Refetch latest config data to ensure UI reflects server state
+  await executeGetConfig();
+  const data = configData.value?.data?.[0];
+  if (data) {
+    form.value = { ...data };
+    formChanges.update(data);
+    hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
+  }
+
   // Reload global storage configs
   await fetchGlobalStorageConfigs();
 
@@ -235,8 +245,6 @@ async function updateConfig() {
     description: "Storage configuration updated!",
   });
   errors.value = {};
-  formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
 }
 
 async function deleteConfig() {

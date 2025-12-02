@@ -192,6 +192,16 @@ async function updateConfig() {
     return;
   }
 
+  // Refetch latest config data to ensure UI reflects server state
+  await executeGetConfig();
+  const data = configData.value?.data?.[0];
+  if (data) {
+    form.value = { ...data };
+    formChanges.update(data);
+    hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
+  }
+
   toast.add({
     title: "Success",
     color: "success",
@@ -202,8 +212,6 @@ async function updateConfig() {
   await fetchAiConfig();
 
   errors.value = {};
-  formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
 }
 
 async function deleteConfig() {

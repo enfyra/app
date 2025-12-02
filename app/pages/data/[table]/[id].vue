@@ -84,16 +84,22 @@ async function handleUpdate() {
     return;
   }
 
+  // Refetch latest record data to ensure UI reflects server state
+  await fetchRecord();
+  const data = apiData.value?.data?.[0];
+  if (data) {
+    currentRecord.value = { ...data };
+    formChanges.update(data);
+    hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
+  }
+
   toast.add({
     title: "Success",
     color: "success",
     description: "Record updated!",
   });
   updateErrors.value = {};
-
-  // Confirm form changes as new baseline (like settings pages do)
-  formEditorRef.value?.confirmChanges();
-  formChanges.update(currentRecord.value);
 }
 
 const {

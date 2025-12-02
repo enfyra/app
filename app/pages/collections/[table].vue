@@ -177,6 +177,13 @@ async function patchTable() {
 
   registerDataMenuItems(Object.values(schemas.value));
 
+  // Refetch latest table data to ensure UI reflects server state
+  await fetchTableData();
+  const updatedData = tableData.value?.data?.[0];
+  if (updatedData) {
+    table.value = updatedData;
+  }
+
   toast.add({
     title: "Success",
     color: "success",
