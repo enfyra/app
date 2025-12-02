@@ -1,9 +1,9 @@
 <template>
-  <UIcon
-    :name="folderIconName"
+    <UIcon
+      :name="folderIconName"
     :class="[getSoftIconColor()]"
     size="48"
-  />
+    />
 </template>
 
 <script setup lang="ts">

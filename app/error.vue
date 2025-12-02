@@ -7,17 +7,17 @@
     <!-- Grid Pattern Background -->
     <div class="absolute inset-0 opacity-5 dark:opacity-10">
       <div class="absolute inset-0" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 24px 24px;"></div>
-    </div>
+        </div>
 
     <!-- Centered Content -->
     <div class="relative mx-auto w-full max-w-[472px] text-center z-10">
-      <h1
-        id="error-title"
+        <h1
+          id="error-title"
         class="mb-8 font-bold text-gray-800 dark:text-white/90 text-title-md xl:text-title-2xl"
-        aria-live="assertive"
-      >
-        {{ error.statusCode || "500" }}
-      </h1>
+          aria-live="assertive"
+        >
+          {{ error.statusCode || "500" }}
+        </h1>
 
       <!-- Error Icon/Illustration -->
       <div class="flex justify-center mb-6">
@@ -33,15 +33,15 @@
       </div>
 
       <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90 mb-2">
-        {{ error.statusMessage || "Server Error" }}
-      </h2>
+          {{ error.statusMessage || "Server Error" }}
+        </h2>
 
       <p
         class="mt-4 mb-8 text-base text-gray-500 dark:text-gray-400 sm:text-lg max-w-md mx-auto"
         role="alert"
       >
-        {{ errorDescription }}
-      </p>
+          {{ errorDescription }}
+        </p>
 
       <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
         <UButton
@@ -56,16 +56,16 @@
           Back to Home Page
         </UButton>
 
-        <UButton
+          <UButton
           variant="outline"
-          icon="lucide:refresh-cw"
+            icon="lucide:refresh-cw"
           size="lg"
-          @click="refresh"
-          aria-label="Refresh the page"
+            @click="refresh"
+            aria-label="Refresh the page"
           class="w-full sm:w-auto"
-        >
-          Try Again
-        </UButton>
+          >
+            Try Again
+          </UButton>
       </div>
     </div>
   </div>
