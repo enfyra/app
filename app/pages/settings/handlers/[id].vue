@@ -189,16 +189,22 @@ async function save() {
     return;
   }
 
+  // Refetch latest handler data to ensure UI reflects server state
+  await executeGetHandler();
+  const data = handlerData.value?.data?.[0];
+  if (data) {
+    form.value = { ...data };
+    formChanges.update(data);
+    hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
+  }
+
   toast.add({
     title: "Success",
     color: "success",
     description: "Handler updated!",
   });
   errors.value = {};
-
-  // Confirm form changes as new baseline
-  formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
 }
 
 async function deleteHandler() {
