@@ -163,7 +163,7 @@ const visibleGroups = computed(() => {
 </script>
 
 <template>
-  <nav class="flex flex-col h-full relative bg-white dark:bg-gray-900">
+  <nav class="flex flex-col h-full relative bg-white dark:bg-gray-900" style="height: 100dvh;">
 
     <div class="h-16 flex items-center justify-between px-5 py-8 border-b border-gray-200 dark:border-gray-800 relative">
       <div v-if="!isCollapsed" class="flex items-center gap-3">
