@@ -111,8 +111,10 @@
   }
 
   /* Force dark mode */
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+  
   html {
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: 'Outfit', 'Manrope', system-ui, sans-serif;
     background: var(--bg-app);
     overflow-x: hidden !important;
     overscroll-behavior: none;
@@ -347,6 +349,68 @@
 
   .magnetic-hover:hover {
     transform: scale(1.02);
+  }
+
+  /* === TAILADMIN UTILITY CLASSES === */
+  .menu-item {
+    @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+  }
+
+  .menu-item-active {
+    @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  }
+
+  .menu-item-inactive {
+    @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+  }
+
+  .menu-item-icon {
+    @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400;
+  }
+
+  .menu-item-icon-active {
+    @apply text-brand-500 dark:text-brand-400;
+  }
+
+  .menu-item-icon-inactive {
+    @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+  }
+
+  .menu-dropdown-item {
+    @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
+  }
+
+  .menu-dropdown-item-active {
+    @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  }
+
+  .menu-dropdown-item-inactive {
+    @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-200 rounded-full dark:bg-gray-700;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #344054;
   }
 }
 

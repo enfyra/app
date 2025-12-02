@@ -1,60 +1,71 @@
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-background"
+    class="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden bg-white dark:bg-gray-900"
     role="main"
     aria-labelledby="error-title"
   >
-    <div class="text-center space-y-6 px-4">
-      <div class="space-y-2">
-        <!-- Error Icon for 403 -->
-        <div v-if="error.statusCode === 403" class="flex justify-center mb-4">
-          <UIcon name="lucide:shield-x" class="w-16 h-16 text-red-500" />
+    <!-- Grid Pattern Background -->
+    <div class="absolute inset-0 opacity-5 dark:opacity-10">
+      <div class="absolute inset-0" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 24px 24px;"></div>
+    </div>
+
+    <!-- Centered Content -->
+    <div class="relative mx-auto w-full max-w-[472px] text-center z-10">
+      <h1
+        id="error-title"
+        class="mb-8 font-bold text-gray-800 dark:text-white/90 text-title-md xl:text-title-2xl"
+        aria-live="assertive"
+      >
+        {{ error.statusCode || "500" }}
+      </h1>
+
+      <!-- Error Icon/Illustration -->
+      <div class="flex justify-center mb-6">
+        <div v-if="error.statusCode === 403" class="w-32 h-32 flex items-center justify-center">
+          <UIcon name="lucide:shield-x" class="w-full h-full text-error-500" />
         </div>
-        <h1
-          id="error-title"
-          class="text-8xl font-bold text-primary"
-          aria-live="assertive"
-        >
-          {{ error.statusCode || "500" }}
-        </h1>
-        <h2 class="text-xl font-medium text-foreground">
-          {{ error.statusMessage || "Server Error" }}
-        </h2>
-        <p class="text-gray-500 max-w-md mx-auto" role="alert">
-          {{ errorDescription }}
-        </p>
+        <div v-else-if="error.statusCode === 404" class="w-64 h-64 flex items-center justify-center">
+          <UIcon name="lucide:file-question" class="w-full h-full text-gray-400 dark:text-gray-600" />
+        </div>
+        <div v-else class="w-32 h-32 flex items-center justify-center">
+          <UIcon name="lucide:alert-circle" class="w-full h-full text-error-500" />
+        </div>
       </div>
 
-      <div class="space-y-3">
+      <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90 mb-2">
+        {{ error.statusMessage || "Server Error" }}
+      </h2>
+
+      <p
+        class="mt-4 mb-8 text-base text-gray-500 dark:text-gray-400 sm:text-lg max-w-md mx-auto"
+        role="alert"
+      >
+        {{ errorDescription }}
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
         <UButton
           icon="lucide:home"
           size="lg"
+          variant="solid"
+          color="primary"
           @click="handleError"
           aria-label="Go back to homepage"
+          class="w-full sm:w-auto"
         >
-          Go Home
+          Back to Home Page
         </UButton>
 
-        <div>
-          <UButton
-            variant="ghost"
-            icon="lucide:refresh-cw"
-            @click="refresh"
-            aria-label="Refresh the page"
-          >
-            Try Again
-          </UButton>
-        </div>
-      </div>
-
-      <!-- Skip link for screen readers -->
-      <div class="sr-only">
-        <a
-          href="#error-actions"
-          class="focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:bg-primary focus:text-white focus:px-4 focus:py-2 focus:rounded"
+        <UButton
+          variant="outline"
+          icon="lucide:refresh-cw"
+          size="lg"
+          @click="refresh"
+          aria-label="Refresh the page"
+          class="w-full sm:w-auto"
         >
-          Skip to error actions
-        </a>
+          Try Again
+        </UButton>
       </div>
     </div>
   </div>
@@ -98,15 +109,3 @@ useHead({
 });
 </script>
 
-<style scoped>
-/* Ensure good contrast for error messages */
-[role="alert"] {
-  color: rgb(107, 114, 128);
-}
-
-@media (prefers-color-scheme: dark) {
-  [role="alert"] {
-    color: rgb(156, 163, 175);
-  }
-}
-</style>

@@ -21,7 +21,6 @@
     >
       <div
         class="relative z-10 transition-all duration-200"
-        :class="hovered ? 'scale-105' : ''"
       >
         <UIcon
           :name="file.icon"

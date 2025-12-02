@@ -2,17 +2,17 @@
   <UiModernCard
     variant="form"
     :class="[
-      error && 'border-[var(--color-error)]/50 bg-[var(--color-error)]/5',
-      focused && 'border-[#7C3AED]/50 ring-2 ring-[#7C3AED]/20',
+      error && 'border-error-500/50 bg-error-50 dark:bg-error-500/10',
+      focused && 'border-brand-500/50 ring-2 ring-brand-500/20',
       className,
     ]"
     v-bind="$attrs"
   >
-    <div v-if="title || description" class="mb-6 pb-4 border-b" :style="{ borderColor: 'var(--border-subtle)' }">
-      <h3 v-if="title" class="text-lg mb-1" :style="{ color: 'var(--text-primary)' }">
+    <div v-if="title || description" class="mb-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+      <h3 v-if="title" class="text-lg mb-1 font-semibold text-gray-800 dark:text-white/90">
         {{ title }}
       </h3>
-      <p v-if="description" class="text-sm" :style="{ color: 'var(--text-tertiary)' }">
+      <p v-if="description" class="text-sm text-gray-500 dark:text-gray-400">
         {{ description }}
       </p>
     </div>

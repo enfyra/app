@@ -15,10 +15,10 @@
         <slot name="icon" />
       </div>
       <div class="flex-1 min-w-0">
-        <h3 class="text-base mb-1" :style="{ color: 'var(--text-primary)' }">
+        <h3 class="text-base mb-1 font-semibold text-gray-800 dark:text-white/90">
           {{ title }}
         </h3>
-        <p v-if="description" class="text-sm" :style="{ color: 'var(--text-tertiary)' }">
+        <p v-if="description" class="text-sm text-gray-500 dark:text-gray-400">
           {{ description }}
         </p>
       </div>
@@ -29,13 +29,12 @@
       <div
         v-for="(stat, index) in stats"
         :key="index"
-        class="text-center p-3 rounded-lg"
-        :style="{ background: 'var(--bg-surface)' }"
+        class="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-900"
       >
-        <div class="text-xl font-medium" :style="{ color: 'var(--text-primary)' }">
+        <div class="text-xl font-medium text-gray-800 dark:text-white/90">
           {{ stat.value }}
         </div>
-        <div class="text-xs mt-1" :style="{ color: 'var(--text-tertiary)' }">
+        <div class="text-xs mt-1 text-gray-500 dark:text-gray-400">
           {{ stat.label }}
         </div>
       </div>
@@ -49,8 +48,7 @@
     <!-- Footer -->
     <div
       v-if="$slots.footer"
-      class="pt-4 mt-4 border-t"
-      :style="{ borderColor: 'var(--border-subtle)' }"
+      class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800"
     >
       <slot name="footer" />
     </div>

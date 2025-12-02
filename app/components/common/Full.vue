@@ -3,7 +3,7 @@
     <!-- Logo Icon -->
     <div class="relative group">
       <div
-        class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg lg:group-hover:scale-110 transition-transform duration-200"
+        class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg"
       >
         <span class="text-white font-bold text-lg">E</span>
       </div>

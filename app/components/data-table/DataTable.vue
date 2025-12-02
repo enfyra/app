@@ -45,7 +45,7 @@ const enhancedColumns = computed(() => {
     header: ({ table }) =>
       h("input", {
         type: "checkbox",
-        class: "rounded w-5 h-5 cursor-pointer block mx-auto",
+        class: "rounded w-5 h-5 cursor-pointer block",
         checked: table.getIsAllRowsSelected(),
         indeterminate: table.getIsSomeRowsSelected(),
         onChange: table.getToggleAllRowsSelectedHandler(),
@@ -202,18 +202,18 @@ function getStatusClass(status: string | null) {
   if (!status) return ''
   const lowerStatus = status.toLowerCase()
   if (lowerStatus.includes('active') || lowerStatus === 'yes') {
-    return 'bg-green-500/15 border border-green-500/30 text-green-400'
+    return 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500'
   }
   if (lowerStatus.includes('inactive') || lowerStatus === 'no') {
-    return 'bg-gray-500/15 border border-gray-500/30 text-gray-400'
+    return 'bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-white/80'
   }
   if (lowerStatus.includes('pending')) {
-    return 'bg-yellow-500/15 border border-yellow-500/30 text-yellow-400'
+    return 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-400'
   }
   if (lowerStatus.includes('completed')) {
-    return 'bg-blue-500/15 border border-blue-500/30 text-blue-400'
+    return 'bg-blue-light-50 text-blue-light-700 dark:bg-blue-light-500/15 dark:text-blue-light-500'
   }
-  return 'bg-gray-500/15 border border-gray-500/30 text-gray-400'
+  return 'bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-white/80'
 }
 
 function getVisibleCellsForCard(row: any) {
@@ -303,13 +303,13 @@ function getColumnLabel(columnId: string) {
                 {{ getPrimaryFieldValue(row) }}
               </h4>
             </div>
-            <div
+            <span
               v-if="getStatusField(row)"
-              class="px-2.5 py-1 rounded-full text-xs flex-shrink-0"
+              class="rounded-full px-2.5 py-0.5 text-theme-xs font-medium capitalize flex-shrink-0"
               :class="getStatusClass(getStatusField(row))"
             >
               {{ getStatusField(row) }}
-            </div>
+            </span>
           </div>
 
           <div class="space-y-2.5 mb-3">
@@ -358,17 +358,17 @@ function getColumnLabel(columnId: string) {
     <!-- Desktop Table View -->
     <div
       v-if="!loading"
-      class="hidden lg:block overflow-hidden rounded-2xl border border-gray-700/50 transition-all duration-300 bg-gray-900/30 backdrop-blur-sm"
+      class="hidden lg:block overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03]"
     >
-      <div class="overflow-x-auto">
-        <table class="w-full table-fixed" aria-label="Data table">
-          <thead class="bg-gray-800/50 border-b border-gray-700/50">
-            <tr>
+      <div class="max-w-full overflow-x-auto custom-scrollbar">
+        <table class="min-w-full" aria-label="Data table">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
               <th
                 v-for="header in table.getFlatHeaders()"
                 :key="header.id"
                 :class="[
-                  'px-4 py-3.5 text-sm font-medium text-gray-400',
+                  'px-5 py-3 text-left sm:px-6',
                   header.id === '__actions' ? 'text-center' : 'text-left',
                   header.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                   header.id === '__actions' ? 'w-12 min-w-12 max-w-12' : '',
@@ -377,7 +377,7 @@ function getColumnLabel(columnId: string) {
                     ? 'overflow-hidden'
                     : '',
                   header.column.getCanSort() &&
-                    'cursor-pointer select-none lg:hover:bg-gray-800 transition-colors',
+                    'cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-white/5 transition-colors',
                 ]"
                 @click="header.column.getToggleSortingHandler()?.($event)"
                 scope="col"
@@ -391,24 +391,25 @@ function getColumnLabel(columnId: string) {
               >
                 <div
                   :class="[
-                    'flex items-center gap-2',
+                    'flex items-center',
+                    header.id === 'select' ? 'justify-center' : 'gap-2',
                     header.id === '__actions' ? 'justify-center' : '',
                   ]"
                 >
-                  <span
+                  <p
                     v-if="typeof header.column.columnDef.header === 'string'"
-                    class="truncate min-w-0 flex-1"
+                    class="font-medium text-gray-500 text-theme-xs dark:text-gray-400 truncate min-w-0 flex-1"
                     :title="header.column.columnDef.header"
                   >
                     {{ header.column.columnDef.header }}
-                  </span>
+                  </p>
                   <component
                     v-else
                     :is="header.column.columnDef.header"
                     v-bind="header.getContext()"
                   />
                   <UIcon
-                    v-if="header.column.getCanSort()"
+                    v-if="header.column.getCanSort() && header.id !== 'select'"
                     :name="
                       header.column.getIsSorted() === 'asc'
                         ? 'i-lucide-chevron-up'
@@ -416,13 +417,13 @@ function getColumnLabel(columnId: string) {
                         ? 'i-lucide-chevron-down'
                         : 'i-lucide-chevrons-up-down'
                     "
-                    class="w-4 h-4 text-gray-500 flex-shrink-0"
+                    class="w-4 h-4 text-gray-500 dark:text-gray-400 flex-shrink-0"
                   />
                 </div>
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-800/30">
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             <template v-for="(row, index) in table.getRowModel().rows" :key="row.id">
               <!-- With Context Menu -->
               <UContextMenu
@@ -432,10 +433,10 @@ function getColumnLabel(columnId: string) {
               >
                 <tr
                   :class="[
-                    'group cursor-pointer transition-all duration-200',
+                    'group cursor-pointer transition-all duration-200 border-t border-gray-100 dark:border-gray-800',
                     selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
-                      ? 'bg-gray-800/60'
-                      : 'lg:hover:bg-gray-800/30',
+                      ? 'bg-brand-50 dark:bg-brand-500/10'
+                      : 'hover:bg-gray-50 dark:hover:bg-white/5',
                   ]"
                   @click="handleRowClick(row.original)"
                 >
@@ -443,7 +444,7 @@ function getColumnLabel(columnId: string) {
                     v-for="cell in row.getVisibleCells()"
                     :key="cell.id"
                 :class="[
-                  'px-4 py-3.5 text-sm text-gray-200 align-middle',
+                  'px-5 py-4 sm:px-6 align-middle',
                       cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                       cell.column.id === '__actions'
                         ? 'w-12 min-w-12 max-w-12'
@@ -454,13 +455,13 @@ function getColumnLabel(columnId: string) {
                         : '',
                     ]"
                   >
-                    <div
+                    <p
                   v-if="typeof cell.column.columnDef.cell !== 'function'"
-                  class="w-full truncate"
+                  class="text-gray-500 text-theme-sm dark:text-gray-400 w-full truncate"
                       :title="String(cell.getValue())"
                     >
                       {{ cell.getValue() }}
-                    </div>
+                    </p>
                     <component
                       v-else
                       :is="cell.column.columnDef.cell"
@@ -474,10 +475,10 @@ function getColumnLabel(columnId: string) {
               <tr
                 v-else
                 :class="[
-                  'group cursor-pointer transition-all duration-200',
+                  'group cursor-pointer transition-all duration-200 border-t border-gray-100 dark:border-gray-800',
                   selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
-                    ? 'bg-gray-800/60'
-                    : 'lg:hover:bg-gray-800/30',
+                    ? 'bg-brand-50 dark:bg-brand-500/10'
+                    : 'hover:bg-gray-50 dark:hover:bg-white/5',
                 ]"
                 @click="handleRowClick(row.original)"
               >
@@ -485,7 +486,7 @@ function getColumnLabel(columnId: string) {
                   v-for="cell in row.getVisibleCells()"
                   :key="cell.id"
                   :class="[
-                    'px-4 py-3.5 text-sm text-gray-200 align-middle',
+                    'px-5 py-4 sm:px-6 align-middle',
                     cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                     cell.column.id === '__actions'
                       ? 'w-12 min-w-12 max-w-12'
@@ -496,13 +497,13 @@ function getColumnLabel(columnId: string) {
                       : '',
                   ]"
                 >
-                  <div
+                  <p
                     v-if="typeof cell.column.columnDef.cell !== 'function'"
-                    class="w-full truncate"
+                    class="text-gray-500 text-theme-sm dark:text-gray-400 w-full truncate"
                     :title="String(cell.getValue())"
                   >
                     {{ cell.getValue() }}
-                  </div>
+                  </p>
                   <component
                     v-else
                     :is="cell.column.columnDef.cell"

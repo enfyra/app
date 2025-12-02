@@ -1,18 +1,16 @@
 <template>
   <div
     class="group relative"
-    @mouseenter="hoveredFolderId = folder.id"
-    @mouseleave="hoveredFolderId = null"
   >
     <UContextMenu :items="getContextMenuItems()" :disabled="isFolderDisabled">
       <div
-        class="relative rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden"
+        class="relative rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] transition-all duration-200 cursor-pointer overflow-hidden hover:shadow-theme-md"
+        :class="{
+          'border-brand-500 shadow-theme-md': props.selectedItems.includes(props.folder.id),
+          'hover:border-gray-300 dark:hover:border-gray-700': !props.selectedItems.includes(props.folder.id),
+        }"
         :style="{
-          backgroundColor: hoverBgColor,
-          borderColor: hoverBorderColor,
           borderWidth: props.selectedItems.includes(props.folder.id) ? '2px' : '1px',
-          boxShadow: hoverShadow,
-          transform: props.selectedItems.includes(props.folder.id) ? 'scale(1.01)' : 'scale(1)',
           opacity: isFolderDisabled ? '0.6' : '1',
           cursor: isFolderDisabled ? 'not-allowed' : 'pointer'
         }"
@@ -32,51 +30,53 @@
           </span>
         </div>
 
-        <Transition
-          enter-active-class="transition duration-200"
-          enter-from-class="opacity-0 scale-75"
-          enter-to-class="opacity-100 scale-100"
-          leave-active-class="transition duration-200"
-          leave-from-class="opacity-100 scale-100"
-          leave-to-class="opacity-0 scale-75"
+        <div
+          v-if="isSelectionMode"
+          class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-white dark:bg-gray-800 shadow-theme-xs"
+          @click.stop="$emit('toggle-selection', folder.id)"
         >
-          <div
-            v-if="(hoveredFolderId === folder.id || selectedItems.includes(folder.id)) && isSelectionMode"
-            class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-white dark:bg-gray-800"
-            style="box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)"
-            @click.stop="$emit('toggle-selection', folder.id)"
-          >
-            <UCheckbox
-              :model-value="selectedItems.includes(folder.id)"
-              @update:model-value="() => $emit('toggle-selection', folder.id)"
-            />
-          </div>
-        </Transition>
+          <UCheckbox
+            :model-value="selectedItems.includes(folder.id)"
+            @update:model-value="() => $emit('toggle-selection', folder.id)"
+          />
+        </div>
 
-        <div class="p-4 flex items-start gap-4">
-          <div class="flex-shrink-0">
+        <div class="p-5 flex flex-col h-full">
+          <div class="mb-4">
             <FolderGridIconSquare :folder="folder" :hovered="hoveredFolderId === folder.id" />
           </div>
 
-          <div class="flex-1 min-w-0 space-y-1">
-          <FolderGridEditableName
-            :folder="folder"
-            :editing-folder-id="editingFolderId"
-            v-model:editing-name="editingName"
-            :editing-loading="editingLoading"
-            :original-name="originalName"
-            :is-selection-mode="isSelectionMode"
-            @start-rename="startRename"
-            @save-edit="saveEdit"
-            @cancel-edit="cancelEdit"
-          />
+          <div class="flex-1 flex flex-col justify-between">
+            <div class="mb-3">
+              <FolderGridEditableName
+                :folder="folder"
+                :editing-folder-id="editingFolderId"
+                v-model:editing-name="editingName"
+                :editing-loading="editingLoading"
+                :original-name="originalName"
+                :is-selection-mode="isSelectionMode"
+                @start-rename="startRename"
+                @save-edit="saveEdit"
+                @cancel-edit="cancelEdit"
+              />
+            </div>
 
-            <div class="text-xs text-gray-400">
-              {{ folder.itemCount }}
-          </div>
+            <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
+              <span>{{ folder.itemCount }}</span>
+              <span>{{ folder.size || '0 B' }}</span>
+            </div>
 
-            <div class="text-xs text-gray-400">
-              Updated {{ folder.modifiedAt }}
+            <div class="flex items-center justify-end" @click.stop>
+              <UDropdownMenu :items="getDropdownMenuItems()">
+                <UButton
+                  variant="soft"
+                  size="sm"
+                  class="h-8 w-8 p-0"
+                  @click.stop
+                >
+                  <UIcon name="lucide:more-vertical" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                </UButton>
+              </UDropdownMenu>
             </div>
           </div>
         </div>
@@ -116,56 +116,6 @@ const editingName = ref("");
 const originalName = ref("");
 const editingLoading = ref(false);
 
-const folderHoverBgColor = computed(() => {
-  if (!props.folder) return "#7C3AED";
-  
-  if (props.folder.color) {
-    return props.folder.color;
-  }
-  
-  const colors = ["#3B82F6", "#7C3AED", "#F59E0B", "#14B8A6"];
-  const folderId = props.folder.id || props.folder.name || "";
-  
-  let hash = 0;
-  for (let i = 0; i < folderId.length; i++) {
-    hash = folderId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % colors.length;
-  
-  return colors[index];
-});
-
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-const hoverBgColor = computed(() => {
-  if (hoveredFolderId.value === props.folder.id) {
-    return hexToRgba(folderHoverBgColor.value, 0.08);
-  }
-  return 'rgba(21, 27, 46, 0.6)';
-});
-
-const hoverBorderColor = computed(() => {
-  if (props.selectedItems.includes(props.folder.id)) return '#7C3AED';
-  if (hoveredFolderId.value === props.folder.id) {
-    return hexToRgba(folderHoverBgColor.value, 0.25);
-  }
-  return 'rgba(255, 255, 255, 0.06)';
-});
-
-const hoverShadow = computed(() => {
-  if (props.selectedItems.includes(props.folder.id)) {
-    return '0 4px 16px rgba(124, 58, 237, 0.2)';
-  }
-  if (hoveredFolderId.value === props.folder.id) {
-    return `0 2px 8px ${hexToRgba(folderHoverBgColor.value, 0.12)}`;
-  }
-  return '0 1px 3px rgba(0, 0, 0, 0.2)';
-});
 
 const { checkPermissionCondition } = usePermissions();
 

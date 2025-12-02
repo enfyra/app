@@ -298,49 +298,51 @@ useSubHeaderActionRegistry([
     <div class="min-h-[400px] space-y-8">
       <div class="space-y-8">
         <!-- Folders Section -->
-        <div>
-          <div class="flex items-center gap-2 mb-4">
-            <UIcon name="lucide:folder" class="w-5 h-5 text-blue-500" />
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] shadow-theme-md overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
               Folders
             </h2>
           </div>
 
-          <FolderView
-            :folders="props.folders"
-            :view-mode="viewMode"
-            :loading="props.foldersLoading && props.folders.length === 0"
-            empty-title="No folders"
-            empty-description="No folders in this location"
-            :is-selection-mode="isSelectionMode"
-            :selected-items="selectedItems"
-            @folder-click="handleFolderClick"
-            @toggle-selection="handleToggleItemSelection"
-            @refresh-folders="() => emit('refreshFolders')"
-          />
+          <div class="p-5">
+            <FolderView
+              :folders="props.folders"
+              :view-mode="viewMode"
+              :loading="props.foldersLoading && props.folders.length === 0"
+              empty-title="No folders"
+              empty-description="No folders in this location"
+              :is-selection-mode="isSelectionMode"
+              :selected-items="selectedItems"
+              @folder-click="handleFolderClick"
+              @toggle-selection="handleToggleItemSelection"
+              @refresh-folders="() => emit('refreshFolders')"
+            />
+          </div>
         </div>
 
         <!-- Files Section -->
-        <div>
-          <div class="flex items-center gap-2 mb-4">
-            <UIcon name="lucide:file" class="w-5 h-5 text-gray-500" />
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] shadow-theme-md overflow-hidden">
+          <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
               Files
             </h2>
           </div>
 
-          <FileView
-            :files="props.files"
-            :view-mode="viewMode"
-            :loading="props.filesLoading && props.files.length === 0"
-            empty-title="No files"
-            empty-description="No files in this location"
-            :is-selection-mode="isSelectionMode"
-            :selected-items="selectedItems"
-            @file-click="handleFileClick"
-            @toggle-selection="handleToggleItemSelection"
-            @refresh-files="() => emit('refreshFiles')"
-          />
+          <div class="p-5">
+            <FileView
+              :files="props.files"
+              :view-mode="viewMode"
+              :loading="props.filesLoading && props.files.length === 0"
+              empty-title="No files"
+              empty-description="No files in this location"
+              :is-selection-mode="isSelectionMode"
+              :selected-items="selectedItems"
+              @file-click="handleFileClick"
+              @toggle-selection="handleToggleItemSelection"
+              @refresh-files="() => emit('refreshFiles')"
+            />
+          </div>
         </div>
       </div>
     </div>

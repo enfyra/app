@@ -1,101 +1,86 @@
 <template>
   <div
     class="group relative"
-    @mouseenter="hoveredFileId = file.id"
-    @mouseleave="hoveredFileId = null"
   >
     <UContextMenu
       :items="moveState.moveMode ? [] : getContextMenuItems()"
       :disabled="moveState.moveMode"
     >
       <div
-        class="relative rounded-xl border transition-all duration-200 overflow-hidden cursor-pointer"
+        class="relative rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] transition-all duration-200 overflow-hidden cursor-pointer hover:shadow-theme-md"
         :class="{
-          'border-purple-500 shadow-lg shadow-purple-500/20': selectedItems.includes(file.id),
-          'border-gray-800/50 hover:border-gray-700/50': !selectedItems.includes(file.id) && hoveredFileId === file.id,
-          'border-gray-800/30': !selectedItems.includes(file.id) && hoveredFileId !== file.id,
+          'border-brand-500 shadow-theme-md': selectedItems.includes(file.id),
+          'hover:border-gray-300 dark:hover:border-gray-700': !selectedItems.includes(file.id),
         }"
         :style="{
-          background: 'rgba(21, 27, 46, 0.6)',
           borderWidth: selectedItems.includes(file.id) ? '2px' : '1px',
-          boxShadow: selectedItems.includes(file.id)
-            ? '0 8px 32px rgba(124, 58, 237, 0.2)'
-            : hoveredFileId === file.id
-            ? '0 4px 16px rgba(0, 0, 0, 0.3)'
-            : '0 1px 3px rgba(0, 0, 0, 0.2)',
-          transform: hoveredFileId === file.id ? 'translateY(-4px)' : 'translateY(0)',
           opacity: moveState.moveMode ? '0.6' : '1',
           cursor: moveState.moveMode ? 'not-allowed' : 'pointer'
         }"
         @click="handleFileClick"
       >
-        <div class="h-28 relative overflow-hidden rounded-t-xl">
-          <Preview :file="file" :hovered="hoveredFileId === file.id" />
-          
-          <div 
-            v-if="isSelectionMode || selectedItems.includes(file.id)"
-            class="absolute top-3 left-3 z-30 cursor-pointer"
-            @click.stop="handleCheckboxClick"
-        >
+        <div class="p-5 flex items-start gap-4 h-full">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center" :class="getFileIconBgClass()">
+              <UIcon
+                :name="file.icon"
+                :class="getFileIconColor()"
+                size="24"
+              />
+            </div>
+          </div>
+
+          <div class="flex-1 flex flex-col justify-between min-w-0">
+            <div class="mb-3">
+              <EditableName
+                :file="file"
+                :editing-file-id="editingFileId"
+                v-model:editing-name="editingName"
+                :editing-loading="editingLoading"
+                :original-name="originalName"
+                :is-selection-mode="isSelectionMode"
+                @start-rename="startRename"
+                @save-edit="saveEdit"
+                @cancel-edit="cancelEdit"
+              />
+            </div>
+
+            <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
+              <span>{{ file.size }}</span>
+              <span>{{ file.modifiedAt }}</span>
+            </div>
+
+            <div v-if="!moveState.moveMode" class="flex items-center justify-between" @click.stop>
+              <UBadge
+                :color="getStorageColor(file)"
+                variant="soft"
+                size="sm"
+              >
+                <UIcon :name="getStorageIcon(file)" class="w-3 h-3 mr-1" />
+                {{ getStorageName(file) }}
+              </UBadge>
+              <UDropdownMenu :items="getDropdownMenuItems()">
+                <UButton
+                  variant="soft"
+                  size="sm"
+                  class="h-8 w-8 p-0"
+                  @click.stop
+                >
+                  <UIcon name="lucide:more-vertical" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                </UButton>
+              </UDropdownMenu>
+            </div>
+          </div>
+
           <div
-              class="w-5 h-5 rounded bg-gray-900/90 border border-gray-700 flex items-center justify-center p-1"
-              @click.stop="handleCheckboxClick"
+            v-if="isSelectionMode"
+            class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-white dark:bg-gray-800 shadow-theme-xs"
+            @click.stop="handleCheckboxClick"
           >
             <UCheckbox
               :model-value="selectedItems.includes(file.id)"
-                @update:model-value="handleCheckboxClick"
-                @click.stop="handleCheckboxClick"
-                class="!m-0 pointer-events-auto"
+              @update:model-value="handleCheckboxClick"
             />
-          </div>
-          </div>
-
-          <div 
-            v-if="!moveState.moveMode"
-            class="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
-            @click.stop
-          >
-            <UDropdownMenu :items="getDropdownMenuItems()">
-              <UButton
-                variant="ghost"
-                size="sm"
-                class="h-8 w-8 p-0 bg-gray-900/80 hover:bg-gray-800/80"
-              >
-                <UIcon name="lucide:more-vertical" class="w-4 h-4 text-gray-400" />
-              </UButton>
-            </UDropdownMenu>
-            </div>
-        </div>
-
-        <div class="p-3 space-y-2">
-          <EditableName
-            :file="file"
-            :editing-file-id="editingFileId"
-            v-model:editing-name="editingName"
-            :editing-loading="editingLoading"
-            :original-name="originalName"
-            :is-selection-mode="isSelectionMode"
-            @start-rename="startRename"
-            @save-edit="saveEdit"
-            @cancel-edit="cancelEdit"
-          />
-
-          <div class="flex items-center justify-between text-xs text-gray-400">
-            <span>{{ file.size }}</span>
-            <span>{{ file.modifiedAt }}</span>
-              </div>
-
-          <div class="flex items-center">
-              <UBadge
-              size="sm"
-                variant="subtle"
-                :color="getStorageColor(file)"
-              >
-                <template #leading>
-                <UIcon :name="getStorageIcon(file)" class="w-3.5 h-3.5" />
-                </template>
-                {{ getStorageName(file) }}
-              </UBadge>
           </div>
         </div>
       </div>
@@ -105,9 +90,10 @@
 
 <script setup lang="ts">
 import type { FileItem } from "~/utils/types";
-import Preview from "./FileGridPreview.vue";
+// import Preview from "./FileGridPreview.vue";
 import EditableName from "./FileGridEditableName.vue";
-import Actions from "./FileGridActions.vue";
+// import Actions from "./FileGridActions.vue";
+import { getFileColor } from "~/utils/file-management/file-icons";
 
 interface Props {
   file: FileItem & {
@@ -154,7 +140,7 @@ const canDeleteFile = checkPermissionCondition({
   ],
 });
 
-const hoveredFileId = ref<string | null>(null);
+// const hoveredFileId = ref<string | null>(null);
 
 const editingFileId = ref<string | null>(null);
 const editingName = ref("");
@@ -390,4 +376,22 @@ function getStorageColor(file: any) {
   };
   return colorMap[storageType] || "neutral";
 }
+
+const getFileIconBgClass = () => {
+  const mimetype = props.file.mimetype || '';
+  if (mimetype.startsWith('image/')) {
+    return 'bg-success-50 dark:bg-success-500/20';
+  }
+  if (mimetype.startsWith('video/')) {
+    return 'bg-purple-50 dark:bg-purple-500/20';
+  }
+  if (mimetype.startsWith('audio/')) {
+    return 'bg-primary-50 dark:bg-primary-500/20';
+  }
+  return 'bg-gray-50 dark:bg-gray-500/20';
+};
+
+const getFileIconColor = () => {
+  return getFileColor(props.file.mimetype || '');
+};
 </script>

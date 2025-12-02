@@ -44,6 +44,7 @@ import {
   getFolderIcon,
   getDefaultFolderIcon,
 } from "~/utils/file-management/folder-icons";
+import { formatFileSize } from "~/utils/file-management/file-utils";
 
 interface Props {
   folders: any[];
@@ -62,15 +63,20 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Transform folders data for display
 const transformedFolders = computed(() => {
-  return props.folders.map((folder: any) => ({
-    ...folder,
-    displayName: folder.name || "Untitled",
-    icon: getFolderIcon(folder).name,
-    iconColor: getFolderIcon(folder).color,
-    fileCount: folder.children?.length || folder.files?.length || 0,
-    modifiedAt: formatDate(folder.createdAt || folder.updatedAt),
-    itemCount: `${folder.children?.length || folder.files?.length || 0} items`,
-  }));
+  return props.folders.map((folder: any) => {
+    const fileCount = folder.children?.length || folder.files?.length || 0;
+    const totalSize = folder.totalSize || folder.size || 0;
+    return {
+      ...folder,
+      displayName: folder.name || "Untitled",
+      icon: getFolderIcon(folder).name,
+      iconColor: getFolderIcon(folder).color,
+      fileCount: fileCount,
+      modifiedAt: formatDate(folder.createdAt || folder.updatedAt),
+      itemCount: `${fileCount} ${fileCount === 1 ? 'File' : 'Files'}`,
+      size: formatFileSize(parseInt(totalSize.toString())),
+    };
+  });
 });
 
 // Access global move state to disable folders under move

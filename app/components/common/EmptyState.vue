@@ -43,15 +43,15 @@ const textSize = computed(() => {
   <div class="flex flex-col items-center justify-center py-8 gap-3">
     <UIcon
       :name="props.icon || defaultIcon"
-      :class="`${iconSize} text-muted-foreground`"
+      :class="`${iconSize} text-gray-400 dark:text-gray-500`"
     />
     <div class="text-center">
-      <p :class="`${textSize} font-medium text-foreground`">
+      <p :class="`${textSize} font-medium text-gray-800 dark:text-white/90`">
         {{ props.title || defaultTitle }}
       </p>
       <p
         v-if="props.description"
-        :class="`${textSize} text-sm text-muted-foreground mt-1`"
+        :class="`${textSize} text-sm text-gray-500 dark:text-gray-400 mt-1`"
       >
         {{ props.description }}
       </p>

@@ -355,7 +355,7 @@ async function deleteRoute(routeItem: any) {
                   value: routeItem.isSystem ? 'System' : '-'
                 },
                 {
-                  label: 'Methods',
+                  label: 'Published Methods',
                   component: routeItem.publishedMethods?.length ? 'UBadge' : undefined,
                   values: routeItem.publishedMethods?.length ?
                     routeItem.publishedMethods

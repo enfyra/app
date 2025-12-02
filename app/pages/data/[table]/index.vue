@@ -82,6 +82,8 @@ const {
   handleSelectionChange,
 } = useDataTableActions(tableName, fetchData, data);
 
+const { isMobile, isTablet } = useScreen();
+
 useSubHeaderActionRegistry([
   {
     id: "toggle-selection",
@@ -102,6 +104,7 @@ useSubHeaderActionRegistry([
       }
     },
     side: "right",
+    show: computed(() => !isMobile.value && !isTablet.value),
     permission: {
       and: [
         {

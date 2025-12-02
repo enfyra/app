@@ -117,104 +117,58 @@ function getGradientForCollection(id: any): string | undefined {
             v-for="collection in collections"
             :key="collection.id"
             @click="navigateTo(`/collections/${collection.name}`)"
-            class="rounded-lg bg-[var(--bg-surface)] border border-white/[0.06] cursor-pointer group relative overflow-hidden transition-all duration-300 flex flex-col hover:shadow-md hover:-translate-y-0.5"
-            :class="isTablet ? 'p-2' : 'p-3'"
+            class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] cursor-pointer group transition-all duration-300 hover:shadow-theme-md"
+            :class="isTablet ? 'p-5' : 'p-5 md:p-6'"
           >
-            <!-- Gradient glow on hover -->
             <div
-              :class="`absolute inset-0 bg-gradient-to-br ${getGradientForCollection(
-                getId(collection)
-              )} opacity-0 group-hover:opacity-5 transition-opacity duration-300`"
-            ></div>
-            <div
-              :class="`absolute inset-0 bg-gradient-to-br ${getGradientForCollection(
-                getId(collection)
-              )} opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-300`"
-            ></div>
+              :class="[
+                'flex items-center justify-center w-12 h-12 rounded-xl mb-5',
+                collection.isSystem 
+                  ? 'bg-error-100 dark:bg-error-500/20' 
+                  : `bg-gradient-to-br ${getGradientForCollection(getId(collection))}`
+              ]"
+            >
+              <UIcon 
+                name="lucide:database" 
+                :class="[
+                  'w-6 h-6',
+                  collection.isSystem 
+                    ? 'text-error-600 dark:text-error-400' 
+                    : 'text-white'
+                ]" 
+              />
+            </div>
 
-            <div class="relative flex flex-col flex-1">
-              <!-- Content wrapper -->
+            <div class="flex items-end justify-between">
               <div class="flex-1">
-                <!-- Header with Icon -->
-                <div class="flex items-start justify-between mb-2">
-                  <div
-                    :class="`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${getGradientForCollection(
-                      getId(collection)
-                    )} shadow-lg transition-transform duration-300 group-hover:scale-110`"
-                  >
-                    <UIcon name="lucide:database" class="w-7 h-7 text-white" />
-                  </div>
-                </div>
-
-                <!-- Title & Description -->
-                <h3
-                  class="text-xl font-semibold mb-1 tracking-tight transition-all duration-300 text-gray-100"
-                >
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-1">
                   {{ collection.name || "Untitled Collection" }}
                 </h3>
-                <p class="text-sm mb-2 truncate text-gray-400">
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">
                   {{ collection.description || "No description" }}
                 </p>
-
-                <!-- Stats -->
-                <div class="flex items-center gap-4 mb-2">
-                  <!-- Fields Count -->
-                  <div class="flex items-center gap-2">
-                    <div
-                      :class="`w-8 h-8 rounded-lg bg-gradient-to-br ${getGradientForCollection(
-                        getId(collection)
-                      )} opacity-20 flex items-center justify-center`"
-                    >
-                      <UIcon
-                        name="lucide:layers"
-                        class="w-4 h-4 text-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-100">
-                        {{ getFieldCount(collection.name) }}
-                      </div>
-                      <div class="text-xs text-gray-500">fields</div>
-                    </div>
+                
+                <div class="flex items-center gap-4">
+                  <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Fields</p>
+                    <p class="mt-1 font-semibold text-gray-800 dark:text-white/90">
+                      {{ getFieldCount(collection.name) }}
+                    </p>
                   </div>
-
-                  <!-- System/Custom Badge -->
-                  <div class="flex items-center gap-2">
-                    <div
-                      :class="`w-8 h-8 rounded-lg bg-gradient-to-br ${getGradientForCollection(
-                        getId(collection)
-                      )} opacity-20 flex items-center justify-center`"
+                  <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Type</p>
+                    <span
+                      :class="[
+                        'mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                        collection.isSystem
+                          ? 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500'
+                          : 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-500'
+                      ]"
                     >
-                      <UIcon
-                        :name="
-                          collection.isSystem
-                            ? 'lucide:shield-check'
-                            : 'lucide:box'
-                        "
-                        class="w-4 h-4 text-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <div class="text-sm font-medium text-gray-100">
-                        {{ collection.isSystem ? "System" : "Custom" }}
-                      </div>
-                      <div class="text-xs text-gray-500">type</div>
-                    </div>
+                      {{ collection.isSystem ? "System" : "Custom" }}
+                    </span>
                   </div>
                 </div>
-              </div>
-
-              <!-- Footer -->
-              <div
-                class="flex items-center justify-between pt-2 border-t border-white/[0.06] mt-auto"
-              >
-                <span class="text-xs text-gray-500">
-                  {{ new Date(collection.createdAt).toLocaleDateString() }}
-                </span>
-                <UIcon
-                  name="lucide:arrow-right"
-                  class="w-5 h-5 opacity-0 group-hover:opacity-100 transition-all duration-300 text-gray-400"
-                />
               </div>
             </div>
           </div>

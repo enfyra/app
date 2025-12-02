@@ -3,7 +3,8 @@ const route = useRoute();
 const { menuGroups } = useMenuRegistry();
 const { checkPermissionCondition } = usePermissions();
 const { isMobile, isTablet, width } = useScreen();
-const { setSidebarVisible, sidebarCollapsed, setSidebarCollapsed, settings } = useGlobalState();
+const { setSidebarVisible, sidebarCollapsed, setSidebarCollapsed, settings, sidebarVisible } = useGlobalState();
+const isTabletOrMobile = computed(() => width.value <= 1024);
 const { getFileUrl } = useFileUrl();
 
 const faviconUrl = computed(() => {
@@ -162,27 +163,32 @@ const visibleGroups = computed(() => {
 </script>
 
 <template>
-  <nav class="flex flex-col h-full relative">
+  <nav class="flex flex-col h-full relative bg-white dark:bg-gray-900">
 
-    <div class="h-16 flex items-center justify-between px-6 border-b border-gray-800 relative">
+    <div class="h-16 flex items-center justify-between px-5 py-8 border-b border-gray-200 dark:border-gray-800 relative">
       <div v-if="!isCollapsed" class="flex items-center gap-3">
         <div class="relative">
-          <div class="absolute inset-0 bg-gradient-to-br from-[#0066FF] to-[#7C3AED] rounded-xl blur-md opacity-60"></div>
-          <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-[#0066FF] to-[#7C3AED] flex items-center justify-center overflow-hidden">
+          <div class="relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
             <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
-            <UIcon v-else name="lucide:database" class="w-5 h-5 text-white" />
+            <UIcon v-else name="lucide:database" class="w-5 h-5 text-brand-500" />
           </div>
         </div>
         <div>
-          <span class="font-bold text-gradient-primary text-lg tracking-tight">{{ settings?.projectName || 'Enfyra' }}</span>
-          <p class="text-xs text-gray-500">{{ settings?.projectDescription || 'CMS' }}</p>
+          <span class="font-semibold text-gray-900 dark:text-white/90 text-base">{{ settings?.projectName || 'Enfyra' }}</span>
+          <p class="text-xs text-gray-500 dark:text-gray-400">{{ settings?.projectDescription || 'CMS' }}</p>
+        </div>
+      </div>
+      <div v-else class="flex items-center justify-center w-full">
+        <div class="relative w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+          <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
+          <UIcon v-else name="lucide:database" class="w-4 h-4 text-brand-500" />
         </div>
       </div>
 
       <button
         v-if="!isMobile && !isTablet"
         @click="setSidebarCollapsed(!isCollapsed)"
-        class="h-9 w-9 p-0 flex items-center justify-center rounded-xl hover:bg-gray-800/50 transition-colors duration-150 text-gray-400"
+        class="h-9 w-9 p-0 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors duration-150 text-gray-500 dark:text-gray-400"
         :class="isCollapsed ? 'mx-auto' : ''"
       >
         <UIcon
@@ -196,25 +202,27 @@ const visibleGroups = computed(() => {
     </div>
 
     <div v-if="!isCollapsed" class="px-3 pt-4 pb-2">
-      <UInput
-        v-model="searchQuery"
-        placeholder="Search menu..."
-        icon="lucide:search"
-        size="sm"
-        class="w-full"
-      />
+      <div class="relative">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search menu..."
+          class="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-4 py-2.5 pl-10 text-sm text-gray-800 dark:text-white/90 shadow-theme-xs placeholder:text-gray-400 dark:placeholder:text-white/30 focus:border-brand-300 dark:focus:border-brand-800 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:bg-gray-900"
+        />
+        <UIcon name="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+      </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto py-3 scrollbar-hide">
+    <div class="flex-1 overflow-y-auto py-3 custom-scrollbar">
       <div
         v-if="visibleGroups.filter(g => g.position !== 'bottom').length === 0"
         class="flex flex-col items-center justify-center py-12 px-4 text-center"
       >
-        <UIcon name="lucide:search-x" class="w-12 h-12 text-muted-foreground mb-3" />
-        <p class="text-sm text-muted-foreground">
+        <UIcon name="lucide:search-x" class="w-12 h-12 text-gray-400 dark:text-gray-500 mb-3" />
+        <p class="text-sm text-gray-500 dark:text-gray-400">
           {{ searchQuery ? 'No menu items found' : 'No menu items available' }}
         </p>
-        <p v-if="searchQuery" class="text-xs text-muted-foreground/70 mt-1">
+        <p v-if="searchQuery" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
           Try a different search term
         </p>
       </div>
@@ -234,8 +242,8 @@ const visibleGroups = computed(() => {
                   :to="group.route"
                   @click="handleMenuClick"
                   :class="[
-                    'flex-1 aspect-square flex items-center justify-center rounded-xl transition-colors duration-150 p-2',
-                    ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-white bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'text-gray-300 hover:bg-gray-800/50'
+                    'flex-1 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 p-2',
+                    ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/15 dark:text-brand-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
                   ]"
                 >
                   <UIcon
@@ -247,8 +255,8 @@ const visibleGroups = computed(() => {
                   v-else-if="group.type === 'Dropdown Menu'"
                   @click="toggleGroup(group.id)"
                   :class="[
-                    'flex-1 aspect-square flex items-center justify-center rounded-xl transition-colors duration-150 p-2',
-                    'text-gray-300 hover:bg-gray-800/50'
+                    'flex-1 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 p-2',
+                    'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
                   ]"
                 >
                   <UIcon
@@ -261,7 +269,7 @@ const visibleGroups = computed(() => {
                 <button
                   v-if="group.type === 'Dropdown Menu'"
                   @click.stop="toggleGroup(group.id)"
-                  class="w-6 h-6 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 text-gray-400 hover:bg-gray-800/50"
+                  class="w-6 h-6 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
                 >
                   <UIcon
                     name="lucide:chevron-right"
@@ -296,8 +304,8 @@ const visibleGroups = computed(() => {
                     :to="item.path || item.route"
                     @click="handleMenuClick"
                     :class="[
-                      'w-8 h-8 flex items-center justify-center rounded-xl transition-colors duration-15',
-                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED] to-[#D946EF]' : 'text-gray-400 hover:bg-gray-800/50'
+                      'w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-150',
+                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/15 dark:text-brand-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
                     ]"
                   >
                     <UIcon
@@ -330,29 +338,32 @@ const visibleGroups = computed(() => {
                 :to="group.route"
                 @click="handleMenuClick"
                 :class="[
-                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150',
-                  (group.route && activeRoutes.has(group.route)) ? 'text-white bg-gradient-to-r from-[#0066FF] to-[#7C3AED]' : 'text-gray-300 hover:bg-gray-800/50'
+                  'menu-item group',
+                  (group.route && activeRoutes.has(group.route)) ? 'menu-item-active' : 'menu-item-inactive'
                 ]"
               >
-                <UIcon
-                  :name="group.icon"
-                  class="w-5 h-5 flex-shrink-0"
-                />
-
-                <span class="text-sm font-medium">{{ group.label }}</span>
+                <span :class="(group.route && activeRoutes.has(group.route)) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
+                  <UIcon
+                    :name="group.icon"
+                    class="w-5 h-5 flex-shrink-0"
+                  />
+                </span>
+                <span class="menu-item-text">{{ group.label }}</span>
               </NuxtLink>
             </div>
 
             <div v-else>
         <button
           @click="toggleGroup(group.id)"
-          class="w-full flex items-center justify-between px-6 py-2 text-xs uppercase tracking-wider transition-colors group cursor-pointer text-gray-500"
+          class="w-full flex items-center justify-between px-6 py-2 text-xs uppercase tracking-wider transition-colors group cursor-pointer text-gray-400 dark:text-gray-500"
         >
-          <span class="group-hover:text-gradient-primary transition-all">{{ group.label }}</span>
+          <span>{{ group.label }}</span>
           <UIcon
             :name="'lucide:chevron-right'"
-            class="w-4 h-4 transition-transform duration-300 ease-out"
-            :style="{ transform: isGroupExpanded(group.id) ? 'rotate(90deg)' : 'rotate(0deg)' }"
+            :class="[
+              'w-4 h-4 transition-transform duration-300 ease-out',
+              isGroupExpanded(group.id) ? 'rotate-90 text-brand-500 dark:text-brand-400' : 'text-gray-500 dark:text-gray-400'
+            ]"
           />
         </button>
 
@@ -373,7 +384,7 @@ const visibleGroups = computed(() => {
                 v-if="item.children && item.children.length > 0"
                 class="space-y-1"
               >
-                <div class="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <div class="px-2 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   {{ item.label }}
                 </div>
 
@@ -387,15 +398,17 @@ const visibleGroups = computed(() => {
                     :to="child.path || child.route"
                     @click="handleMenuClick"
                     :class="[
-                      'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150',
-                      ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED] to-[#D946EF]' : 'text-gray-400 hover:bg-gray-800/50'
+                      'menu-dropdown-item group',
+                      ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'
                     ]"
                   >
-                    <UIcon
-                      :name="child.icon || 'lucide:circle'"
-                      class="w-5 h-5 flex-shrink-0"
-                    />
-                    <span class="text-sm">{{ child.label }}</span>
+                    <span :class="((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
+                      <UIcon
+                        :name="child.icon || 'lucide:circle'"
+                        class="w-5 h-5 flex-shrink-0"
+                      />
+                    </span>
+                    <span>{{ child.label }}</span>
                   </NuxtLink>
                 </PermissionGate>
               </div>
@@ -405,15 +418,17 @@ const visibleGroups = computed(() => {
                 :to="item.path || item.route"
                 @click="handleMenuClick"
                 :class="[
-                  'w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors duration-150',
-                  ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-white bg-gradient-to-r from-[#7C3AED] to-[#D946EF]' : 'text-gray-400 hover:bg-gray-800/50'
+                  'menu-item group',
+                  ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'menu-item-active' : 'menu-item-inactive'
                 ]"
               >
-                <UIcon
-                  :name="item.icon || 'lucide:circle'"
-                  class="w-5 h-5 flex-shrink-0"
-                />
-                <span class="text-sm">{{ item.label }}</span>
+                <span :class="((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
+                  <UIcon
+                    :name="item.icon || 'lucide:circle'"
+                    class="w-5 h-5 flex-shrink-0"
+                  />
+                </span>
+                <span class="menu-item-text">{{ item.label }}</span>
               </NuxtLink>
             </PermissionGate>
           </template>
@@ -426,23 +441,21 @@ const visibleGroups = computed(() => {
       </template>
     </div>
 
-    <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="p-4 border-t border-gray-800 relative">
-      <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7C3AED] to-transparent opacity-50"></div>
-
+    <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="p-4 border-t border-gray-200 dark:border-gray-800 relative">
       <template v-for="group in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">
         <PermissionGate :condition="group.permission as any">
-          <button
+          <UButton
             @click="group.onClick"
+            :icon="group.icon"
+            :label="isCollapsed ? undefined : group.label"
+            variant="ghost"
+            color="error"
             :class="[
-              'w-full flex items-center gap-3 p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 transition-colors duration-150 cursor-pointer group',
-              isCollapsed ? 'justify-center' : ''
+              'w-full justify-start',
+              isCollapsed ? 'justify-center' : '',
+              group.class ? group.class : ''
             ]"
-          >
-            <div class="w-8 h-8 rounded-lg bg-red-500/15 text-red-600 flex items-center justify-center group-hover:bg-red-500/25 transition-colors">
-              <UIcon :name="group.icon" size="18" :class="group.class" />
-            </div>
-            <span v-if="!isCollapsed" class="text-sm font-medium text-red-600 group-hover:text-red-500 transition-colors">{{ group.label }}</span>
-          </button>
+          />
         </PermissionGate>
       </template>
     </div>
