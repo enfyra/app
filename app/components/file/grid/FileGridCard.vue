@@ -90,9 +90,7 @@
 
 <script setup lang="ts">
 import type { FileItem } from "~/utils/types";
-// import Preview from "./FileGridPreview.vue";
 import EditableName from "./FileGridEditableName.vue";
-// import Actions from "./FileGridActions.vue";
 import { getFileColor } from "~/utils/file-management/file-icons";
 
 interface Props {
@@ -139,8 +137,6 @@ const canDeleteFile = checkPermissionCondition({
     },
   ],
 });
-
-// const hoveredFileId = ref<string | null>(null);
 
 const editingFileId = ref<string | null>(null);
 const editingName = ref("");
@@ -280,7 +276,6 @@ function getContextMenuItems() {
     ],
   ];
 
-  // Only show delete option if user has permission
   if (canDeleteFile) {
     menuItems.push([
       {
@@ -336,7 +331,6 @@ function getDropdownMenuItems() {
     },
   ];
 
-  // Only show delete option if user has permission
   if (canDeleteFile) {
     menuItems.push({
       label: "Delete",

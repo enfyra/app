@@ -58,7 +58,7 @@
 
         <div class="flex flex-col items-center justify-between grow lg:flex-row">
           <div
-            class="flex items-center justify-between w-full gap-2 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:py-3"
+            class="flex items-center justify-between w-full gap-2 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 py-0.25"
           >
             <div :class="[headerContentClasses, 'flex-1']" :style="headerContentStyle">
               <LayoutHeader />

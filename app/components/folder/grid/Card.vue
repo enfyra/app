@@ -43,7 +43,7 @@
 
         <div class="p-5 flex flex-col h-full">
           <div class="mb-4">
-            <FolderGridIconSquare :folder="folder" :hovered="hoveredFolderId === folder.id" />
+            <FolderGridIconSquare :folder="folder" />
           </div>
 
           <div class="flex-1 flex flex-col justify-between">
@@ -108,8 +108,6 @@ const emit = defineEmits<{
   "delete-folder": [folder: any];
   "copy-folder-url": [folder: any];
 }>();
-
-const hoveredFolderId = ref<string | null>(null);
 
 const editingFolderId = ref<string | null>(null);
 const editingName = ref("");
