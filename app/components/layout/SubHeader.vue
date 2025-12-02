@@ -1,14 +1,11 @@
 <template>
   <div
-    class="h-12 flex items-center shrink-0 relative overflow-hidden backdrop-blur-sm"
+    class="h-12 flex items-center shrink-0 relative overflow-hidden border-b border-gray-200 dark:border-gray-800"
     :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
-    :style="{
-      background: 'rgba(21, 27, 46, 0.5)'
-    }"
   >
     <!-- Blue gradient accent line -->
     <div 
-      class="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#0066FF]/30 to-transparent"
+      class="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/30 to-transparent"
       :class="props.accentPosition === 'top' ? 'top-0' : 'bottom-0'"
     ></div>
     <div class="flex items-center gap-1.5 md:gap-3">

@@ -682,13 +682,13 @@ onBeforeUnmount(async () => {
               <div class="flex-shrink-0">
                 <div
                   v-if="message.type === 'bot'"
-                  class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+                  class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center"
                 >
                   <Icon name="lucide:bot" class="w-5 h-5 text-white" />
                 </div>
                 <div
                   v-else
-                  class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center"
+                  class="w-8 h-8 rounded-full bg-gradient-to-br from-success-500 to-success-600 flex items-center justify-center"
                 >
                   <Icon name="lucide:user" class="w-5 h-5 text-white" />
                 </div>
@@ -697,11 +697,11 @@ onBeforeUnmount(async () => {
               <!-- Message Content -->
               <div class="flex-1 min-w-0" :class="message.type === 'user' ? 'flex justify-end' : ''">
                 <div
-                  class="rounded-2xl transition-all duration-200 overflow-hidden"
+                  class="rounded-xl transition-all duration-200 overflow-hidden"
                   :class="[
                     message.type === 'user'
-                      ? 'bg-blue-600 text-white px-4 py-3 max-w-[80%] inline-block'
-                      : 'bg-gray-900 border border-gray-800 px-4 py-3 inline-block',
+                      ? 'bg-brand-500 text-white px-4 py-3 max-w-[80%] inline-block shadow-theme-xs'
+                      : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-4 py-3 inline-block shadow-theme-xs',
                   ]"
                 >
                   <!-- User message - plain text -->
@@ -717,15 +717,15 @@ onBeforeUnmount(async () => {
                     v-else
                     class="space-y-3"
                   >
-                    <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
+                    <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-800 dark:text-gray-200">
                       <div v-html="renderMarkdown(message.content)" />
                       <div
                         v-if="message.isStreaming"
                         class="inline-flex items-center gap-0.5 mt-1"
                       >
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 0ms" />
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 120ms" />
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 240ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-bounce" style="animation-delay: 0ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-bounce" style="animation-delay: 120ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-bounce" style="animation-delay: 240ms" />
                       </div>
                     </div>
                   </div>
@@ -733,7 +733,7 @@ onBeforeUnmount(async () => {
                   <!-- Timestamp and Tokens -->
                   <div
                     class="text-xs mt-2 opacity-60 flex items-center gap-2"
-                    :class="message.type === 'user' ? 'text-blue-100' : 'text-gray-500'"
+                    :class="message.type === 'user' ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'"
                   >
                     <span>{{ formatTime(message.timestamp) }}</span>
                     <span
@@ -751,9 +751,9 @@ onBeforeUnmount(async () => {
                   >
                     <template v-if="message.toolCalls[0]?.status !== undefined">
                       <div
-                        class="bg-gray-800/50 border border-gray-700 rounded overflow-hidden w-fit"
+                        class="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden w-fit"
                         :class="{
-                          'cursor-pointer hover:bg-gray-800/70 transition-colors': message.toolCalls.length > 1
+                          'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800/70 transition-colors': message.toolCalls.length > 1
                         }"
                         @click="message.toolCalls.length > 1 && toggleToolCalls(message.id)"
                       >
@@ -766,10 +766,10 @@ onBeforeUnmount(async () => {
                             :key="toolCall.id"
                             class="flex items-center gap-1.5 px-2 py-1 text-xs"
                             :class="{
-                              'text-gray-400': toolCall.status === 'pending',
-                              'text-green-400': toolCall.status === 'success',
-                              'text-red-400': toolCall.status === 'error',
-                              'border-b border-gray-700/50': index < getSortedToolCalls(message.toolCalls).length - 1
+                              'text-gray-500 dark:text-gray-400': toolCall.status === 'pending',
+                              'text-success-600 dark:text-success-500': toolCall.status === 'success',
+                              'text-error-600 dark:text-error-500': toolCall.status === 'error',
+                              'border-b border-gray-200 dark:border-gray-700/50': index < getSortedToolCalls(message.toolCalls).length - 1
                             }"
                           >
                             <Icon
@@ -813,9 +813,9 @@ onBeforeUnmount(async () => {
                             <span
                               class="flex-1"
                               :class="{
-                                'text-gray-400': getDisplayToolCall(message.toolCalls)!.status === 'pending',
-                                'text-green-400': getDisplayToolCall(message.toolCalls)!.status === 'success',
-                                'text-red-400': getDisplayToolCall(message.toolCalls)!.status === 'error',
+                                'text-gray-500 dark:text-gray-400': getDisplayToolCall(message.toolCalls)!.status === 'pending',
+                                'text-success-600 dark:text-success-500': getDisplayToolCall(message.toolCalls)!.status === 'success',
+                                'text-error-600 dark:text-error-500': getDisplayToolCall(message.toolCalls)!.status === 'error',
                               }"
                             >{{ getDisplayToolCall(message.toolCalls)!.name }}</span>
                             <span class="text-[10px] opacity-50">+{{ message.toolCalls.length - 1 }}</span>
@@ -825,7 +825,7 @@ onBeforeUnmount(async () => {
                     </template>
                     <div
                       v-else
-                      class="flex items-center gap-1.5 px-2 py-1 bg-gray-800/50 border border-gray-700 rounded text-xs text-gray-400 w-fit"
+                      class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-xs text-gray-500 dark:text-gray-400 w-fit"
                     >
                       <Icon name="lucide:wrench" class="w-3.5 h-3.5 flex-shrink-0" />
                       <span>{{ message.toolCalls.length }} tool call{{ message.toolCalls.length > 1 ? 's' : '' }}</span>
@@ -838,15 +838,15 @@ onBeforeUnmount(async () => {
             <!-- Typing Indicator - only show when bot is thinking, not streaming -->
             <div v-if="isTyping && messages[messages.length - 1]?.type === 'user'" class="flex gap-3">
               <div class="flex-shrink-0">
-                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center">
                   <Icon name="lucide:bot" class="w-5 h-5 text-white" />
                 </div>
               </div>
-              <div class="bg-gray-900 border border-gray-800 rounded-2xl px-5 py-4">
+              <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-5 py-4 shadow-theme-xs">
                 <div class="flex gap-1.5">
-                  <div class="w-2 h-2 rounded-full bg-gray-600 ai-chat-bounce" style="animation-delay: 0ms" />
-                  <div class="w-2 h-2 rounded-full bg-gray-600 ai-chat-bounce" style="animation-delay: 150ms" />
-                  <div class="w-2 h-2 rounded-full bg-gray-600 ai-chat-bounce" style="animation-delay: 300ms" />
+                  <div class="w-2 h-2 rounded-full bg-brand-500 ai-chat-bounce" style="animation-delay: 0ms" />
+                  <div class="w-2 h-2 rounded-full bg-brand-500 ai-chat-bounce" style="animation-delay: 150ms" />
+                  <div class="w-2 h-2 rounded-full bg-brand-500 ai-chat-bounce" style="animation-delay: 300ms" />
                 </div>
               </div>
             </div>
@@ -861,13 +861,13 @@ onBeforeUnmount(async () => {
         <div class="max-w-4xl mx-auto">
           <form @submit.prevent="sendMessage">
             <!-- Wrapper with border (looks like single input) -->
-            <div class="relative flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-2xl hover:border-gray-600 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
+            <div class="relative flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl hover:border-gray-400 dark:hover:border-gray-600 focus-within:border-brand-300 dark:focus-within:border-brand-800 focus-within:ring-3 focus-within:ring-brand-500/10 transition-colors shadow-theme-xs">
               <!-- Text Input - no border, no padding -->
               <textarea
                 ref="textareaRef"
                 v-model="inputMessage"
                 rows="1"
-                class="flex-1 bg-transparent text-gray-100 placeholder-gray-500 resize-none outline-none max-h-[150px] py-1"
+                class="flex-1 bg-transparent text-gray-800 dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/30 resize-none outline-none max-h-[150px] py-1 text-sm"
                 style="field-sizing: content;"
                 placeholder="Type your message..."
                 @keydown.enter.exact.prevent="sendMessage"
@@ -891,7 +891,7 @@ onBeforeUnmount(async () => {
                 v-if="isTyping"
                 type="button"
                 @click="stopStreaming"
-                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors"
+                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-error-500 hover:bg-error-600 text-white transition-colors"
               >
                 <Icon name="lucide:square" class="w-3.5 h-3.5" />
               </button>
@@ -899,7 +899,7 @@ onBeforeUnmount(async () => {
                 v-else
                 type="submit"
                 :disabled="!inputMessage.trim()"
-                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
+                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-brand-500 hover:bg-brand-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
               >
                 <Icon name="lucide:send" class="w-4 h-4" />
               </button>
@@ -907,7 +907,7 @@ onBeforeUnmount(async () => {
           </form>
 
           <!-- Helper Text -->
-          <div class="text-xs text-gray-500 mt-2 text-center">
+          <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
             Press Enter to send • Shift + Enter for new line
           </div>
         </div>

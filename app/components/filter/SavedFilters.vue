@@ -150,10 +150,10 @@ watch(
 </script>
 
 <template>
-  <div class="border-t border-gray-800 pt-4 mt-4">
+  <div class="border-t border-gray-200 dark:border-gray-800 pt-4 mt-4">
     <!-- Header -->
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-semibold text-gray-300">Saved Filters</h3>
+      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">Saved Filters</h3>
       <UButton
         v-if="savedFilters.length > 0"
         @click="clearAllFilters"
@@ -182,7 +182,7 @@ watch(
     <!-- Popular Filters (if no search) -->
     <div v-if="!searchQuery && popularFilters.length > 0" class="mb-4">
       <div
-        class="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1"
+        class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1"
       >
         <UIcon name="lucide:trending-up" class="w-3 h-3" />
         Most Used
@@ -191,40 +191,40 @@ watch(
         <div
           v-for="filter in popularFilters"
           :key="`popular-${filter.id}`"
-          class="flex items-center justify-between p-3 rounded-lg border border-amber-400/20 bg-amber-400/5 lg:hover:border-amber-400/30 cursor-pointer transition-all duration-200 group"
+          class="flex items-center justify-between p-3 rounded-lg border border-warning-400/20 bg-warning-400/5 lg:hover:border-warning-400/30 cursor-pointer transition-all duration-200 group"
           @click="applySavedFilter(filter)"
         >
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-200 truncate">
+            <div class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">
               {{ filter.name }}
             </div>
-            <div class="text-xs text-gray-500 mt-1">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {{ filter.useCount }} uses
             </div>
           </div>
-          <UIcon name="lucide:star" class="w-3 h-3 text-amber-400" />
+          <UIcon name="lucide:star" class="w-3 h-3 text-warning-500" />
         </div>
       </div>
     </div>
 
     <!-- Saved Filters List -->
     <div v-if="filteredSavedFilters.length > 0" class="space-y-1">
-      <div class="text-xs font-medium text-gray-400 mb-2">
+      <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
         {{ searchQuery ? "Search Results" : "All Saved Filters" }}
       </div>
 
-      <div class="max-h-80 overflow-y-auto space-y-1">
+      <div class="max-h-80 overflow-y-auto space-y-1 custom-scrollbar">
         <div
           v-for="filter in filteredSavedFilters"
           :key="filter.id"
-          class="flex items-center justify-between p-3 rounded-lg border border-gray-800 lg:hover:border-gray-600 lg:hover:bg-gray-800/50 cursor-pointer transition-all duration-200 group"
+          class="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-800 lg:hover:border-gray-300 dark:lg:hover:border-gray-700 lg:hover:bg-gray-50 dark:lg:hover:bg-white/5 cursor-pointer transition-all duration-200 group"
           @click="applySavedFilter(filter)"
         >
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-200 truncate">
+            <div class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">
               {{ filter.name }}
             </div>
-            <div class="text-xs text-gray-500 mt-1">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {{ formatDate(filter.lastUsed) }} • {{ filter.useCount }} uses
             </div>
           </div>
@@ -261,12 +261,12 @@ watch(
     <div v-else-if="savedFilters.length === 0" class="text-center py-8">
       <UIcon
         name="lucide:bookmark"
-        class="w-8 h-8 text-gray-500 mx-auto mb-2"
+        class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2"
       />
-      <div class="text-sm text-gray-400 text-center mb-3">
+      <div class="text-sm text-gray-500 dark:text-gray-400 text-center mb-3">
         No saved filters yet
       </div>
-      <div class="text-xs text-gray-500 text-center">
+      <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
         Apply filters and click "Save" to bookmark your favorite filter
         combinations
       </div>
@@ -279,9 +279,9 @@ watch(
     >
       <UIcon
         name="lucide:search-x"
-        class="w-8 h-8 text-gray-500 mx-auto mb-2"
+        class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2"
       />
-      <div class="text-sm text-gray-400 text-center">
+      <div class="text-sm text-gray-500 dark:text-gray-400 text-center">
         No filters found for "{{ searchQuery }}"
       </div>
     </div>
@@ -306,7 +306,7 @@ watch(
       <template #body>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">
+            <label class="block text-sm font-medium text-gray-800 dark:text-white/90 mb-2">
               Filter Name
             </label>
             <UInput

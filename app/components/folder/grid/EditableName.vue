@@ -46,22 +46,12 @@
       class="flex items-center gap-2 flex-1 min-w-0"
     >
       <h3
-        class="font-semibold text-white truncate flex-1 min-w-0 text-base leading-tight"
+        class="font-semibold text-gray-800 dark:text-white/90 truncate flex-1 min-w-0 text-base leading-tight"
         style="letter-spacing: -0.01em; font-weight: 600;"
         :title="folder.displayName"
-        @dblclick="!isSelectionMode && $emit('start-rename')"
       >
         {{ folder.displayName }}
       </h3>
-      <UButton
-        v-if="!isSelectionMode"
-        icon="lucide:edit-3"
-        size="xs"
-        variant="ghost"
-        color="neutral"
-        @click.stop="$emit('start-rename')"
-        class="opacity-0 lg:group-hover:opacity-100 transition-opacity hover:bg-white/10 flex-shrink-0"
-      />
     </div>
   </div>
 </template>

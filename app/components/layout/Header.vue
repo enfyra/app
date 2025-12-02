@@ -41,7 +41,6 @@
 </template>
 
 <script setup lang="ts">
-const route = useRoute();
 const { isMobile } = useScreen();
 const { headerActions } = useHeaderActionRegistry();
 

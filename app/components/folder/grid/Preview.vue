@@ -18,7 +18,6 @@
     <!-- Large centered icon -->
     <div
       class="relative z-10 transition-all duration-300"
-      :class="hovered ? 'scale-110 rotate-3' : ''"
     >
       <UIcon
         :name="folder.icon"

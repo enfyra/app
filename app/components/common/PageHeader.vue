@@ -3,14 +3,16 @@
  * PAGE HEADER (CommonPageHeader) - Page-specific hero section
  *
  * Position: Below UnifiedHeader
- * Shows: Page title, description, optional stats cards
+ * Shows: Page title, description, optional stats cards, and actions
  * Background: Radial gradient backgrounds (modern design)
  *
  * USAGE RULES:
  * - NO breadcrumbs here (use UnifiedHeader via useBreadcrumbRegistry)
- * - NO action buttons here (use UnifiedHeader via registry)
- * - Focus on: Title, Description, Stats/KPIs
+ * - Actions from SubHeader registry are displayed on the right
+ * - Focus on: Title, Description, Stats/KPIs, Actions
  */
+
+import { isRef, unref } from "vue";
 
 interface StatCard {
   label: string;
@@ -30,6 +32,29 @@ const props = withDefaults(defineProps<Props>(), {
   stats: () => [],
   variant: "default",
   gradient: "none",
+});
+
+const { subHeaderActions } = useSubHeaderActionRegistry();
+const { isMobile, isTablet } = useScreen();
+
+const leftActions = computed(() => {
+  return subHeaderActions.value.filter((a) => {
+    const showValue =
+      a.show === undefined ? true : isRef(a.show) ? unref(a.show) : a.show;
+    return a && a.side === "left" && showValue;
+  });
+});
+
+const rightActions = computed(() => {
+  return subHeaderActions.value.filter((a) => {
+    const showValue =
+      a.show === undefined ? true : isRef(a.show) ? unref(a.show) : a.show;
+    return a && a.side === "right" && showValue;
+  });
+});
+
+const hasActions = computed(() => {
+  return leftActions.value.length > 0 || rightActions.value.length > 0;
 });
 
 // Radial gradient backgrounds (modern, subtle)
@@ -66,23 +91,17 @@ onMounted(() => {
 watch(() => [props.title, props.description, props.variant, props.gradient, props.stats], () => {
   triggerAnimation();
 }, { deep: true });
-
-const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
   <div
-    class="bg-gray-800/30 relative overflow-hidden"
-    :style="{
-      backgroundImage: gradientStyle,
-    }"
+    class="relative overflow-hidden border-b border-gray-200 dark:border-gray-800"
   >
-    <!-- Subtle gradient accent at top -->
-    <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7C3AED]/30 to-transparent" />
-
     <!-- Content -->
     <div class="relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', isMinimal ? ((isMobile || isTablet) ? 'py-3' : 'py-4') : ((isMobile || isTablet) ? 'py-4' : 'py-5')]">
-      <!-- Title & Description -->
+      <div class="flex flex-col gap-4" :class="(isMobile || isTablet) ? '' : 'flex-row items-center justify-between'">
+        <!-- Left: Title & Description -->
+        <div class="flex-1 min-w-0">
       <div
         :class="(isMobile || isTablet) ? 'space-y-0.5' : 'space-y-1'"
         class="transition-all duration-400"
@@ -93,14 +112,82 @@ const { isMobile, isTablet } = useScreen();
         }"
       >
         <h1
-          class="font-semibold tracking-tight text-gray-100"
+              class="font-semibold tracking-tight text-gray-800 dark:text-white/90"
           :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-xl') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-4xl' : 'text-3xl')"
         >
           {{ title }}
         </h1>
-        <p v-if="description" :class="[(isMobile || isTablet) ? 'text-xs' : 'text-sm', 'text-gray-400']">
+            <p v-if="description" :class="[(isMobile || isTablet) ? 'text-xs' : 'text-sm', 'text-gray-500 dark:text-gray-400']">
           {{ description }}
         </p>
+          </div>
+        </div>
+
+        <!-- Right: Actions -->
+        <div v-if="hasActions" class="flex items-center space-x-2 shrink-0" :class="(isMobile || isTablet) ? 'justify-end' : ''">
+          <template v-for="action in leftActions" :key="action.key || action.id">
+            <PermissionGate :condition="action.permission">
+              <component
+                v-if="action.component"
+                :is="action.component"
+                v-bind="action.props"
+              />
+              <UButton
+                v-else
+                :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
+                :label="(isMobile || isTablet) ? undefined : (isRef(action.label) ? unref(action.label) : action.label)"
+                :variant="
+                  (isRef(action.variant)
+                    ? unref(action.variant)
+                    : action.variant) || 'soft'
+                "
+                :color="
+                  (isRef(action.color) ? unref(action.color) : action.color) ||
+                  'neutral'
+                "
+                :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
+                :disabled="
+                  typeof action.disabled === 'boolean'
+                    ? action.disabled
+                    : unref(action.disabled)
+                "
+                @click="action.onClick"
+                :class="action.class"
+              />
+            </PermissionGate>
+          </template>
+          <template v-for="action in rightActions" :key="action.key || action.id">
+            <PermissionGate :condition="action.permission">
+              <component
+                v-if="action.component"
+                :is="action.component"
+                v-bind="action.props"
+              />
+              <UButton
+                v-else
+                :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
+                :label="(isMobile || isTablet) ? undefined : (isRef(action.label) ? unref(action.label) : action.label)"
+                :variant="
+                  (isRef(action.variant)
+                    ? unref(action.variant)
+                    : action.variant) || 'soft'
+                "
+                :color="
+                  (isRef(action.color) ? unref(action.color) : action.color) ||
+                  'neutral'
+                "
+                :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
+                :disabled="
+                  typeof action.disabled === 'boolean'
+                    ? action.disabled
+                    : unref(action.disabled)
+                "
+                @click="action.onClick"
+                :class="action.class"
+              />
+            </PermissionGate>
+          </template>
+        </div>
       </div>
 
       <!-- Stats Cards -->
@@ -116,7 +203,7 @@ const { isMobile, isTablet } = useScreen();
           v-for="(stat, index) in stats"
           :key="index"
           :class="[
-            'border border-gray-700 bg-gray-900/50 relative overflow-hidden group transition-all duration-300 hover:-translate-y-1',
+            'border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] relative overflow-hidden group transition-all duration-300',
             (isMobile || isTablet) ? 'rounded-lg' : 'rounded-xl',
             isStatsFocus ? ((isMobile || isTablet) ? 'p-3' : 'p-6') : ((isMobile || isTablet) ? 'p-2.5' : 'p-4')
           ]"
@@ -128,17 +215,17 @@ const { isMobile, isTablet } = useScreen();
         >
           <!-- Gradient glow on hover -->
           <div
-            class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            class="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-brand-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           />
 
           <div class="relative">
             <div
-              class="font-semibold text-gray-100"
+              class="font-semibold text-gray-800 dark:text-white/90"
               :class="(isMobile || isTablet) ? (isStatsFocus ? 'text-xl' : 'text-lg') : (isStatsFocus ? 'text-3xl' : 'text-2xl')"
             >
               {{ stat.value }}
             </div>
-            <div :class="[(isMobile || isTablet) ? 'text-xs mt-0.5' : 'text-sm mt-1', 'text-gray-400']">
+            <div :class="[(isMobile || isTablet) ? 'text-xs mt-0.5' : 'text-sm mt-1', 'text-gray-500 dark:text-gray-400']">
               {{ stat.label }}
             </div>
           </div>

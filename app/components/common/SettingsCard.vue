@@ -1,11 +1,11 @@
 <template>
   <div
     :class="[
-      'relative group transition-all duration-300 overflow-hidden cursor-pointer backdrop-blur-xl h-full flex flex-col',
-      'bg-[var(--bg-surface)] border border-white/[0.06]',
+      'relative group transition-all duration-300 overflow-hidden cursor-pointer h-full flex flex-col',
+      'bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800',
       (isMobile || isTablet) ? 'rounded-lg p-2' : 'rounded-lg p-3',
       cardClass,
-      'hover:shadow-md hover:-translate-y-0.5'
+      'hover:shadow-theme-md'
     ]"
   >
     <!-- Gradient overlay on hover -->
@@ -17,7 +17,7 @@
       <div
         :class="[
           (isMobile || isTablet) ? 'w-8 h-8 rounded-lg' : 'w-10 h-10 rounded-xl',
-          'flex items-center justify-center flex-shrink-0 self-start transition-transform duration-300 group-hover:scale-110',
+          'flex items-center justify-center flex-shrink-0 self-start',
           iconBgClass
         ]"
       >
@@ -26,10 +26,10 @@
 
       <!-- Title & Description -->
       <div class="flex-1 min-w-0 self-start">
-        <h3 :class="(isMobile || isTablet) ? 'text-xs mb-0 font-semibold text-gray-100' : 'text-sm mb-0.5 font-semibold text-gray-100'">
+        <h3 :class="(isMobile || isTablet) ? 'text-xs mb-0 font-semibold text-gray-800 dark:text-white/90' : 'text-sm mb-0.5 font-semibold text-gray-800 dark:text-white/90'">
           {{ title }}
         </h3>
-        <p v-if="description && !isMobile && !isTablet" class="text-xs text-gray-400">
+        <p v-if="description && !isMobile && !isTablet" class="text-xs text-gray-500 dark:text-gray-400">
           {{ description }}
         </p>
       </div>
@@ -59,17 +59,17 @@
     <!-- Content wrapper with flex-1 to push footer down -->
     <div class="flex-1">
       <!-- Stats List (Figma Performance Card Style) -->
-      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 rounded-lg mb-1.5' : 'relative p-2 rounded-lg mb-2', 'bg-gray-900']">
+      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 rounded-lg mb-1.5' : 'relative p-2 rounded-lg mb-2', 'bg-gray-50 dark:bg-gray-900']">
         <div
           v-for="(stat, index) in stats"
           :key="stat.label"
           class="flex items-center justify-between"
           :class="(isMobile || isTablet) ? { 'mt-1': index > 0 } : { 'mt-1.5': index > 0 }"
         >
-          <span :class="(isMobile || isTablet) ? 'text-2xs text-gray-400' : 'text-xs text-gray-400'">
+          <span :class="(isMobile || isTablet) ? 'text-2xs text-gray-500 dark:text-gray-400' : 'text-xs text-gray-500 dark:text-gray-400'">
             {{ stat.label }}
           </span>
-          <div :class="(isMobile || isTablet) ? 'text-2xs font-medium text-gray-100' : 'text-xs font-medium text-gray-100'">
+          <div :class="(isMobile || isTablet) ? 'text-2xs font-medium text-gray-800 dark:text-white/90' : 'text-xs font-medium text-gray-800 dark:text-white/90'">
             <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-end">
               <component
                 v-for="(item, idx) in stat.values"
@@ -97,9 +97,9 @@
         <div
           v-for="stat in stats"
           :key="stat.label"
-          :class="[(isMobile || isTablet) ? 'text-center p-1.5 rounded-lg' : 'text-center p-2 rounded-lg', 'bg-gray-900/70']"
+          :class="[(isMobile || isTablet) ? 'text-center p-1.5 rounded-lg' : 'text-center p-2 rounded-lg', 'bg-gray-50 dark:bg-gray-900/70']"
         >
-          <div :class="(isMobile || isTablet) ? 'text-sm font-medium text-gray-100 mb-0' : 'text-base font-medium text-gray-100 mb-0.5'">
+          <div :class="(isMobile || isTablet) ? 'text-sm font-medium text-gray-800 dark:text-white/90 mb-0' : 'text-base font-medium text-gray-800 dark:text-white/90 mb-0.5'">
             <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-center">
               <component
                 v-for="(item, idx) in stat.values"
@@ -119,7 +119,7 @@
             </component>
             <template v-else>{{ stat.value }}</template>
           </div>
-          <div :class="(isMobile || isTablet) ? 'text-2xs text-gray-400' : 'text-xs text-gray-400'">
+          <div :class="(isMobile || isTablet) ? 'text-2xs text-gray-500 dark:text-gray-400' : 'text-xs text-gray-500 dark:text-gray-400'">
             {{ stat.label }}
           </div>
         </div>
@@ -134,7 +134,7 @@
     <!-- Footer -->
     <div
       v-if="$slots.footer || (actions && actions.length > 0)"
-      :class="[(isMobile || isTablet) ? 'relative pt-1.5 mt-1.5 border-t' : 'relative pt-2 mt-2 border-t', 'border-white/[0.06]']"
+      :class="[(isMobile || isTablet) ? 'relative z-10 pt-1.5 mt-1.5 border-t' : 'relative z-10 pt-2 mt-2 border-t', 'border-gray-200 dark:border-gray-800']"
     >
       <!-- Custom footer content -->
       <slot name="footer" />

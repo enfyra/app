@@ -11,15 +11,13 @@
     <!-- Unified Sidebar -->
     <aside
       v-if="sidebarVisible || !isTabletOrMobile"
-      class="flex flex-col flex-shrink-0 transition-all duration-500 ease-out"
+      class="fixed top-0 left-0 flex flex-col flex-shrink-0 h-screen transition-all duration-300 ease-in-out bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-99999"
       :class="[
         isTabletOrMobile
-          ? 'fixed inset-y-0 left-0 w-72 z-[70] shadow-2xl backdrop-blur-xl my-2 ml-3 mr-1 rounded-lg'
-          : (sidebarCollapsed ? 'w-20 my-2 ml-2 mr-1 rounded-lg' : 'w-72 my-2 ml-3 mr-1 rounded-lg')
+          ? 'w-[290px]'
+          : (sidebarCollapsed ? 'w-[90px]' : 'w-[290px]'),
+        isTabletOrMobile && !sidebarVisible ? '-translate-x-full' : 'translate-x-0'
       ]"
-      :style="{
-        background: 'rgba(15, 20, 33, 0.6)',
-      }"
       aria-label="Primary navigation"
     >
       <SidebarUnifiedSidebar />
@@ -36,16 +34,18 @@
 
     <!-- Main Content -->
     <main
-      class="flex-1 flex flex-col min-h-0 relative overflow-x-hidden"
-      :style="{ background: 'var(--bg-app)' }"
+      class="flex-1 flex flex-col min-h-0 relative overflow-x-hidden transition-all duration-300 ease-in-out bg-white dark:bg-gray-900"
+      :class="[
+        isTabletOrMobile
+          ? 'ml-0'
+          : (sidebarCollapsed ? 'lg:ml-[90px]' : 'lg:ml-[290px]')
+      ]"
       id="main-content"
     >
-      <!-- Layout Header (Breadcrumbs OR Actions) - Styled via useHeaderStyleRegistry -->
       <header
-        :class="[headerContainerClasses, 'mx-2 mt-2 rounded-lg']"
+        :class="[headerContainerClasses, 'sticky top-0 flex w-full bg-white border-b border-gray-200 dark:border-gray-800 dark:bg-gray-900 z-99999']"
         :style="headerContainerStyle"
       >
-        <!-- Accent line (gradient line on top/bottom of header) -->
         <div
           v-if="headerAccentLine?.enabled"
           class="absolute left-0 right-0"
@@ -56,9 +56,14 @@
           }"
         ></div>
 
-        <div :class="headerContentClasses" :style="headerContentStyle">
-          <!-- Header Content (Breadcrumbs/Actions from LayoutHeader) -->
-          <LayoutHeader />
+        <div class="flex flex-col items-center justify-between grow lg:flex-row">
+          <div
+            class="flex items-center justify-between w-full gap-2 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:py-3"
+          >
+            <div :class="[headerContentClasses, 'flex-1']" :style="headerContentStyle">
+              <LayoutHeader />
+            </div>
+          </div>
         </div>
       </header>
 
@@ -71,20 +76,16 @@
             :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
             :variant="pageHeader?.variant"
             :gradient="pageHeader?.gradient"
-            class="mx-2 mt-2 rounded-lg"
           />
 
-      <!-- Sub Header (optional secondary toolbar) -->
-      <div v-if="hasSubHeaderActions && width >= 1024" class="mx-2 mt-2 rounded-lg overflow-hidden">
-        <LayoutSubHeader />
-      </div>
+      <!-- Sub Header (only show if no PageHeader) -->
+      <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
 
      
 
       <!-- Page Content -->
       <section class="flex-1 min-h-0 overflow-hidden relative z-10">
-        <div class="p-2.5 h-full overflow-y-auto">
-          
+        <div class="px-4 py-4 lg:px-6 lg:py-6 h-full overflow-y-auto">
           <slot />
         </div>
       </section>

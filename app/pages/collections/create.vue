@@ -202,7 +202,7 @@ async function save() {
 <template>
   <div class="relative">
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <div class="bg-[var(--bg-surface)] rounded-lg p-6">
+      <CommonFormCard>
         <TableForm v-model="table" :new="true">
           <template #tableName>
             <div class="mb-6">
@@ -236,7 +236,7 @@ async function save() {
             />
           </div>
         </TableForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>

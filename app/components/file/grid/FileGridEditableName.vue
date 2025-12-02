@@ -45,21 +45,12 @@
       class="flex items-center justify-between gap-2 flex-1 min-w-0"
     >
       <h3
-        class="text-sm font-medium text-white truncate flex-1 min-w-0"
+        class="text-base font-semibold text-gray-800 dark:text-white/90 truncate flex-1 min-w-0"
+        style="letter-spacing: -0.01em; font-weight: 600;"
         :title="file.displayName"
-        @dblclick="!isSelectionMode && $emit('start-rename')"
       >
         {{ file.displayName }}
       </h3>
-      <UButton
-        v-if="!isSelectionMode"
-        icon="lucide:edit-3"
-        size="xs"
-        variant="ghost"
-        color="neutral"
-        @click.stop="$emit('start-rename')"
-        class="opacity-0 lg:group-hover:opacity-100 transition-opacity ml-1 hover:bg-white/10"
-      />
     </div>
   </div>
 </template>

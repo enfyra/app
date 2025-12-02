@@ -83,7 +83,7 @@ export function useDataTableVisibility(
 
         // Auto-hide fields beyond the first 10 when >= 10 fields (after hiding timestamps)
         const visibleFieldsAfterTimestampHide = columnFields.filter(
-          (field) => !nextHidden.has(field)
+          (field: string) => !nextHidden.has(field)
         );
         
         if (columnFields.length >= 10 && visibleFieldsAfterTimestampHide.length >= 10) {
@@ -110,7 +110,7 @@ export function useDataTableVisibility(
             .slice(0, 10);
           
           // Hide all other visible fields
-          columnFields.forEach((fieldName) => {
+          columnFields.forEach((fieldName: string) => {
             if (!fieldsToKeep.includes(fieldName) && !nextHidden.has(fieldName)) {
               nextHidden.add(fieldName);
               needsSave = true;

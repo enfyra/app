@@ -8,24 +8,22 @@
   >
     <div class="flex items-start justify-between gap-2">
       <div class="flex-1 min-w-0">
-        <div class="text-2xl font-semibold mb-1" :style="{ color: 'var(--text-primary)' }">
+        <div class="text-2xl font-semibold mb-1 text-gray-800 dark:text-white/90">
           {{ value }}
         </div>
-        <div class="text-sm" :style="{ color: 'var(--text-tertiary)' }">
+        <div class="text-sm text-gray-500 dark:text-gray-400">
           {{ label }}
         </div>
         <div
           v-if="trend"
-          class="text-xs mt-1"
-          :style="{ color: trendColor }"
+          :class="['text-xs mt-1', trendColor]"
         >
           {{ trend.value }}
         </div>
       </div>
       <div
         v-if="$slots.icon"
-        class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-        :style="{ background: 'var(--bg-elevated)' }"
+        class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-gray-50 dark:bg-gray-900"
       >
         <slot name="icon" />
       </div>
@@ -62,12 +60,12 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const trendColor = computed(() => {
-  if (!props.trend) return "var(--text-tertiary)";
+  if (!props.trend) return undefined;
 
   const colors = {
-    up: "var(--color-success)",
-    down: "var(--color-error)",
-    neutral: "var(--text-tertiary)",
+    up: "text-success-600 dark:text-success-500",
+    down: "text-error-600 dark:text-error-500",
+    neutral: "text-gray-500 dark:text-gray-400",
   };
 
   return colors[props.trend.direction];

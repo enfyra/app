@@ -36,7 +36,7 @@
           :to="unref(action.to)"
           :replace="unref(action.replace)"
           :aria-label="action.label || action.id"
-          :class="[(isMobile || isTablet) && action.icon ? 'rounded-full !aspect-square' : '', action.class]"
+          :class="action.class"
           @click="handleActionClick(action)"
           class="cursor-pointer"
         />

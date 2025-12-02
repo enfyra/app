@@ -2,12 +2,12 @@
   <component
     :is="animated ? 'div' : 'div'"
     ref="cardRef"
-    class="rounded-xl border transition-all duration-300 relative overflow-hidden"
+    class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] transition-all duration-300 relative overflow-hidden"
     :class="[
       variantClasses,
       sizeClasses[size],
       glassEffect && 'backdrop-blur-xl',
-      elevated && 'shadow-md',
+      elevated && 'shadow-theme-md',
       className,
     ]"
     :style="{
@@ -83,25 +83,25 @@ const sizeClasses = {
 const variantClasses = computed(() => {
   const variants = {
     form: [
-      "bg-[var(--bg-surface)]",
-      "border-0",
+      "bg-white dark:bg-white/[0.03]",
+      "border-gray-200 dark:border-gray-800",
     ].join(" "),
     settings: [
-      "bg-[var(--bg-elevated)]",
-      "border-[var(--border-default)]",
-      "hover:border-[#7C3AED]/30",
-      "hover:shadow-md",
+      "bg-white dark:bg-white/[0.03]",
+      "border-gray-200 dark:border-gray-800",
+      "hover:border-brand-300 dark:hover:border-brand-800",
+      "hover:shadow-theme-md",
       "group cursor-pointer",
     ].join(" "),
     stats: [
-      "bg-[var(--bg-surface)]",
-      "border-[var(--border-default)]",
-      "hover:border-[var(--border-strong)]",
-      props.elevated && "shadow-sm hover:shadow-md",
+      "bg-white dark:bg-white/[0.03]",
+      "border-gray-200 dark:border-gray-800",
+      "hover:border-gray-300 dark:hover:border-gray-700",
+      props.elevated && "shadow-theme-sm hover:shadow-theme-md",
     ]
       .filter(Boolean)
       .join(" "),
-    simple: ["bg-[var(--bg-elevated)]", "border-[var(--border-default)]"].join(
+    simple: ["bg-white dark:bg-white/[0.03]", "border-gray-200 dark:border-gray-800"].join(
       " "
     ),
   };
