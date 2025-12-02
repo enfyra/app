@@ -33,13 +33,13 @@
         <div
           v-if="isSelectionMode"
           class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-white dark:bg-gray-800 shadow-theme-xs"
-          @click.stop="$emit('toggle-selection', folder.id)"
-        >
-          <UCheckbox
-            :model-value="selectedItems.includes(folder.id)"
-            @update:model-value="() => $emit('toggle-selection', folder.id)"
-          />
-        </div>
+            @click.stop="$emit('toggle-selection', folder.id)"
+          >
+            <UCheckbox
+              :model-value="selectedItems.includes(folder.id)"
+              @update:model-value="() => $emit('toggle-selection', folder.id)"
+            />
+          </div>
 
         <div class="p-5 flex flex-col h-full">
           <div class="mb-4">
@@ -48,23 +48,23 @@
 
           <div class="flex-1 flex flex-col justify-between">
             <div class="mb-3">
-              <FolderGridEditableName
-                :folder="folder"
-                :editing-folder-id="editingFolderId"
-                v-model:editing-name="editingName"
-                :editing-loading="editingLoading"
-                :original-name="originalName"
-                :is-selection-mode="isSelectionMode"
-                @start-rename="startRename"
-                @save-edit="saveEdit"
-                @cancel-edit="cancelEdit"
-              />
+          <FolderGridEditableName
+            :folder="folder"
+            :editing-folder-id="editingFolderId"
+            v-model:editing-name="editingName"
+            :editing-loading="editingLoading"
+            :original-name="originalName"
+            :is-selection-mode="isSelectionMode"
+            @start-rename="startRename"
+            @save-edit="saveEdit"
+            @cancel-edit="cancelEdit"
+          />
             </div>
 
             <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
               <span>{{ folder.itemCount }}</span>
               <span>{{ folder.size || '0 B' }}</span>
-            </div>
+          </div>
 
             <div class="flex items-center justify-end" @click.stop>
               <UDropdownMenu :items="getDropdownMenuItems()">

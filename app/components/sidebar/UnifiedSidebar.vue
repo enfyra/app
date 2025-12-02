@@ -204,11 +204,11 @@ const visibleGroups = computed(() => {
     <div v-if="!isCollapsed" class="px-3 pt-4 pb-2">
       <div class="relative">
         <input
-          v-model="searchQuery"
+        v-model="searchQuery"
           type="text"
-          placeholder="Search menu..."
+        placeholder="Search menu..."
           class="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-4 py-2.5 pl-10 text-sm text-gray-800 dark:text-white/90 shadow-theme-xs placeholder:text-gray-400 dark:placeholder:text-white/30 focus:border-brand-300 dark:focus:border-brand-800 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:bg-gray-900"
-        />
+      />
         <UIcon name="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
       </div>
     </div>
@@ -343,10 +343,10 @@ const visibleGroups = computed(() => {
                 ]"
               >
                 <span :class="(group.route && activeRoutes.has(group.route)) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
-                  <UIcon
-                    :name="group.icon"
-                    class="w-5 h-5 flex-shrink-0"
-                  />
+                <UIcon
+                  :name="group.icon"
+                  class="w-5 h-5 flex-shrink-0"
+                />
                 </span>
                 <span class="menu-item-text">{{ group.label }}</span>
               </NuxtLink>
@@ -403,10 +403,10 @@ const visibleGroups = computed(() => {
                     ]"
                   >
                     <span :class="((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
-                      <UIcon
-                        :name="child.icon || 'lucide:circle'"
-                        class="w-5 h-5 flex-shrink-0"
-                      />
+                    <UIcon
+                      :name="child.icon || 'lucide:circle'"
+                      class="w-5 h-5 flex-shrink-0"
+                    />
                     </span>
                     <span>{{ child.label }}</span>
                   </NuxtLink>
@@ -423,10 +423,10 @@ const visibleGroups = computed(() => {
                 ]"
               >
                 <span :class="((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
-                  <UIcon
-                    :name="item.icon || 'lucide:circle'"
-                    class="w-5 h-5 flex-shrink-0"
-                  />
+                <UIcon
+                  :name="item.icon || 'lucide:circle'"
+                  class="w-5 h-5 flex-shrink-0"
+                />
                 </span>
                 <span class="menu-item-text">{{ item.label }}</span>
               </NuxtLink>

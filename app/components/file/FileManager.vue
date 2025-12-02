@@ -306,18 +306,18 @@ useSubHeaderActionRegistry([
           </div>
 
           <div class="p-5">
-            <FolderView
-              :folders="props.folders"
-              :view-mode="viewMode"
-              :loading="props.foldersLoading && props.folders.length === 0"
-              empty-title="No folders"
-              empty-description="No folders in this location"
-              :is-selection-mode="isSelectionMode"
-              :selected-items="selectedItems"
-              @folder-click="handleFolderClick"
-              @toggle-selection="handleToggleItemSelection"
-              @refresh-folders="() => emit('refreshFolders')"
-            />
+          <FolderView
+            :folders="props.folders"
+            :view-mode="viewMode"
+            :loading="props.foldersLoading && props.folders.length === 0"
+            empty-title="No folders"
+            empty-description="No folders in this location"
+            :is-selection-mode="isSelectionMode"
+            :selected-items="selectedItems"
+            @folder-click="handleFolderClick"
+            @toggle-selection="handleToggleItemSelection"
+            @refresh-folders="() => emit('refreshFolders')"
+          />
           </div>
         </div>
 
@@ -330,18 +330,18 @@ useSubHeaderActionRegistry([
           </div>
 
           <div class="p-5">
-            <FileView
-              :files="props.files"
-              :view-mode="viewMode"
-              :loading="props.filesLoading && props.files.length === 0"
-              empty-title="No files"
-              empty-description="No files in this location"
-              :is-selection-mode="isSelectionMode"
-              :selected-items="selectedItems"
-              @file-click="handleFileClick"
-              @toggle-selection="handleToggleItemSelection"
-              @refresh-files="() => emit('refreshFiles')"
-            />
+          <FileView
+            :files="props.files"
+            :view-mode="viewMode"
+            :loading="props.filesLoading && props.files.length === 0"
+            empty-title="No files"
+            empty-description="No files in this location"
+            :is-selection-mode="isSelectionMode"
+            :selected-items="selectedItems"
+            @file-click="handleFileClick"
+            @toggle-selection="handleToggleItemSelection"
+            @refresh-files="() => emit('refreshFiles')"
+          />
           </div>
         </div>
       </div>

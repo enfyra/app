@@ -67,12 +67,12 @@ const transformedFolders = computed(() => {
     const fileCount = folder.children?.length || folder.files?.length || 0;
     const totalSize = folder.totalSize || folder.size || 0;
     return {
-      ...folder,
-      displayName: folder.name || "Untitled",
-      icon: getFolderIcon(folder).name,
-      iconColor: getFolderIcon(folder).color,
+    ...folder,
+    displayName: folder.name || "Untitled",
+    icon: getFolderIcon(folder).name,
+    iconColor: getFolderIcon(folder).color,
       fileCount: fileCount,
-      modifiedAt: formatDate(folder.createdAt || folder.updatedAt),
+    modifiedAt: formatDate(folder.createdAt || folder.updatedAt),
       itemCount: `${fileCount} ${fileCount === 1 ? 'File' : 'Files'}`,
       size: formatFileSize(parseInt(totalSize.toString())),
     };

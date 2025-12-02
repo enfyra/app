@@ -147,12 +147,12 @@ function getGradientForCollection(id: any): string | undefined {
                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">
                   {{ collection.description || "No description" }}
                 </p>
-                
+
                 <div class="flex items-center gap-4">
-                  <div>
+                    <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Fields</p>
                     <p class="mt-1 font-semibold text-gray-800 dark:text-white/90">
-                      {{ getFieldCount(collection.name) }}
+                        {{ getFieldCount(collection.name) }}
                     </p>
                   </div>
                   <div>
@@ -160,12 +160,12 @@ function getGradientForCollection(id: any): string | undefined {
                     <span
                       :class="[
                         'mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                        collection.isSystem
+                          collection.isSystem
                           ? 'bg-error-50 text-error-600 dark:bg-error-500/15 dark:text-error-500'
                           : 'bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-500'
                       ]"
                     >
-                      {{ collection.isSystem ? "System" : "Custom" }}
+                        {{ collection.isSystem ? "System" : "Custom" }}
                     </span>
                   </div>
                 </div>

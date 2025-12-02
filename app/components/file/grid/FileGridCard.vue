@@ -26,29 +26,29 @@
                 :name="file.icon"
                 :class="getFileIconColor()"
                 size="24"
-              />
-            </div>
+            />
+          </div>
           </div>
 
           <div class="flex-1 flex flex-col justify-between min-w-0">
             <div class="mb-3">
-              <EditableName
-                :file="file"
-                :editing-file-id="editingFileId"
-                v-model:editing-name="editingName"
-                :editing-loading="editingLoading"
-                :original-name="originalName"
-                :is-selection-mode="isSelectionMode"
-                @start-rename="startRename"
-                @save-edit="saveEdit"
-                @cancel-edit="cancelEdit"
-              />
+          <EditableName
+            :file="file"
+            :editing-file-id="editingFileId"
+            v-model:editing-name="editingName"
+            :editing-loading="editingLoading"
+            :original-name="originalName"
+            :is-selection-mode="isSelectionMode"
+            @start-rename="startRename"
+            @save-edit="saveEdit"
+            @cancel-edit="cancelEdit"
+          />
             </div>
 
             <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
-              <span>{{ file.size }}</span>
-              <span>{{ file.modifiedAt }}</span>
-            </div>
+            <span>{{ file.size }}</span>
+            <span>{{ file.modifiedAt }}</span>
+              </div>
 
             <div v-if="!moveState.moveMode" class="flex items-center justify-between" @click.stop>
               <UBadge
