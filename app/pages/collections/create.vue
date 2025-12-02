@@ -10,6 +10,7 @@ const errors = ref<Record<string, string>>({});
 const table = reactive<any>({
   name: "",
   description: "",
+  isSingleRecord: false,
   columns: [],
   relations: [],
   uniques: [],

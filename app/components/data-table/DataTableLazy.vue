@@ -31,15 +31,6 @@ const DataTable = defineAsyncComponent(() => import("./DataTable.vue"));
           (selectedRows) => $emit('selection-change', selectedRows)
         "
       />
-      <template #fallback>
-        <CommonLoadingState
-          type="table"
-          size="md"
-          context="page"
-          :title="`Loading data...`"
-          description="Fetching records"
-        />
-      </template>
     </Suspense>
   </div>
 </template>
