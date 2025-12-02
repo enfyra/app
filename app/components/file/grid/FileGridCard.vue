@@ -1,8 +1,6 @@
 <template>
   <div
     class="group relative"
-    @mouseenter="hoveredFileId = file.id"
-    @mouseleave="hoveredFileId = null"
   >
     <UContextMenu
       :items="moveState.moveMode ? [] : getContextMenuItems()"
@@ -92,9 +90,9 @@
 
 <script setup lang="ts">
 import type { FileItem } from "~/utils/types";
-import Preview from "./FileGridPreview.vue";
+// import Preview from "./FileGridPreview.vue";
 import EditableName from "./FileGridEditableName.vue";
-import Actions from "./FileGridActions.vue";
+// import Actions from "./FileGridActions.vue";
 import { getFileColor } from "~/utils/file-management/file-icons";
 
 interface Props {
@@ -142,7 +140,7 @@ const canDeleteFile = checkPermissionCondition({
   ],
 });
 
-const hoveredFileId = ref<string | null>(null);
+// const hoveredFileId = ref<string | null>(null);
 
 const editingFileId = ref<string | null>(null);
 const editingName = ref("");

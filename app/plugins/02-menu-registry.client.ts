@@ -72,7 +72,6 @@ export default defineNuxtPlugin(async () => {
     await registerDataMenuItems(schemaValues);
   }
 
-  // Register logout as a special menu item
   registerMenuItem({
     id: "logout",
     label: "Logout",
@@ -80,8 +79,7 @@ export default defineNuxtPlugin(async () => {
     route: "",
     type: "Menu",
     order: 9999, // Put at the end
-    position: "bottom" as any,
-    class: "rotate-180",
+    position: "bottom",
     onClick: async () => {
       const ok = await confirm({ content: "Are you sure you want to logout?" });
       if (ok) await logout();

@@ -1,8 +1,6 @@
 <template>
   <div
     class="group relative"
-    @mouseenter="hoveredFolderId = folder.id"
-    @mouseleave="hoveredFolderId = null"
   >
     <UContextMenu :items="getContextMenuItems()" :disabled="isFolderDisabled">
       <div

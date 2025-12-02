@@ -444,19 +444,18 @@ const visibleGroups = computed(() => {
     <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="p-4 border-t border-gray-200 dark:border-gray-800 relative">
       <template v-for="group in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">
         <PermissionGate :condition="group.permission as any">
-          <button
+          <UButton
             @click="group.onClick"
+            :icon="group.icon"
+            :label="isCollapsed ? undefined : group.label"
+            variant="ghost"
+            color="error"
             :class="[
-              'menu-item group w-full',
-              'menu-item-inactive',
-              isCollapsed ? 'justify-center' : ''
+              'w-full justify-start',
+              isCollapsed ? 'justify-center' : '',
+              group.class ? group.class : ''
             ]"
-          >
-            <span class="menu-item-icon-inactive">
-              <UIcon :name="group.icon" class="w-5 h-5" :class="group.class" />
-            </span>
-            <span v-if="!isCollapsed" class="menu-item-text text-error-600 dark:text-error-400">{{ group.label }}</span>
-          </button>
+          />
         </PermissionGate>
       </template>
     </div>
