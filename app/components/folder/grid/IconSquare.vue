@@ -11,7 +11,6 @@ import { getFolderIconName, getFolderIconColor } from "~/utils/file-management/f
 
 interface Props {
   folder: any;
-  hovered?: boolean;
 }
 
 const props = defineProps<Props>();

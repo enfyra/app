@@ -30,7 +30,6 @@ export default defineNuxtPlugin(async () => {
     await registerAllMenusFromApi(menuData);
   }
 
-  // Only register Collections if not already in API data
   const hasCollections = menuData.some(
     (item: any) => item.label === "Collections" || item.path === "/collections"
   );
@@ -51,7 +50,6 @@ export default defineNuxtPlugin(async () => {
     } as any);
   }
 
-  // Only register Data if not already in API data
   const hasData = menuData.some(
     (item: any) => item.label === "Data" || item.path === "/data"
   );
@@ -78,7 +76,7 @@ export default defineNuxtPlugin(async () => {
     icon: "lucide:log-out",
     route: "",
     type: "Menu",
-    order: 9999, // Put at the end
+    order: 9999,
     position: "bottom",
     onClick: async () => {
       const ok = await confirm({ content: "Are you sure you want to logout?" });
