@@ -460,7 +460,7 @@ const visibleGroups = computed(() => {
       <template v-for="(group, index) in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">
         <div :class="index > 0 ? 'border-t border-gray-200 dark:border-gray-800' : ''">
           <PermissionGate :condition="group.permission as any">
-            <div class="p-4">
+            <div :class="(isMobile || isTablet) ? 'p-2' : 'p-4'">
               <component
                 v-if="group.component"
                 :is="group.component"

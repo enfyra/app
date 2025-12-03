@@ -1,6 +1,3 @@
-/* Vue Transition Classes */
-
-/* Fade animation for overlay */
 .fade-enter-active {
   transition: opacity 0.15s ease;
 }
@@ -19,7 +16,6 @@
   opacity: 1;
 }
 
-/* Loading state transitions */
 .loading-fade-enter-active,
 .loading-fade-leave-active {
   transition: opacity 0.3s ease-in-out;

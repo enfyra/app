@@ -209,7 +209,7 @@ const { isMobile, isTablet } = useScreen();
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
           <!-- Header Section -->
           <div
-            :class="(isMobile || isTablet) ? 'rounded-lg border border-muted/30 p-3 shadow-sm bg-gray-800/50' : 'rounded-xl border border-muted/30 p-6 shadow-sm bg-gray-800/50'"
+            :class="(isMobile || isTablet) ? 'rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 shadow-sm bg-white dark:bg-gray-800/50' : 'rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 shadow-sm bg-white dark:bg-gray-800/50'"
           >
             <div :class="(isMobile || isTablet) ? 'flex items-center justify-between mb-3' : 'flex items-center justify-between mb-4'">
               <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
@@ -255,7 +255,7 @@ const { isMobile, isTablet } = useScreen();
 
           <!-- Content Section -->
           <div
-            :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-muted/30 p-3 bg-gray-800/50' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-muted/30 p-6 bg-gray-800/50'"
+            :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 bg-white dark:bg-gray-800/50' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 bg-white dark:bg-gray-800/50'"
           >
             <!-- Loading State -->
             <CommonLoadingState
@@ -305,7 +305,7 @@ const { isMobile, isTablet } = useScreen();
         </div>
       </template>
       <template #footer>
-        <div :class="(isMobile || isTablet) ? '' : 'rounded-xl border border-muted/30 p-4 bg-gray-800/50'">
+        <div :class="(isMobile || isTablet) ? '' : 'rounded-xl border border-gray-200 dark:border-gray-700/30 p-4 bg-white dark:bg-gray-800/50'">
           <FormRelationPagination
             :page="page"
             :total="total"

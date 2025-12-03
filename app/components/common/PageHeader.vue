@@ -95,7 +95,12 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
 
 <template>
   <div
-    class="relative overflow-hidden border-b border-gray-200 dark:border-gray-800"
+    class="relative overflow-hidden"
+    :style="{
+      borderBottomColor: 'var(--border-default)',
+      borderBottomWidth: '1px',
+      borderBottomStyle: 'solid'
+    }"
   >
     <!-- Content -->
     <div class="relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', isMinimal ? ((isMobile || isTablet) ? 'py-3' : 'py-4') : ((isMobile || isTablet) ? 'py-4' : 'py-5')]">

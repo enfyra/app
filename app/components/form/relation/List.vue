@@ -309,8 +309,8 @@ const { isMobile, isTablet } = useScreen();
     <div
       v-for="item in data"
       :key="getId(item)"
-      class="border rounded-lg overflow-hidden"
-      :class="isSelected(getId(item)) ? 'border-primary-400' : 'border-muted'"
+      class="border rounded-lg overflow-hidden hover:bg-gray-200 dark:hover:bg-white/15 transition-colors"
+      :class="isSelected(getId(item)) ? 'border-primary-400' : 'border-gray-200 dark:border-gray-700'"
     >
       <!-- Main Row -->
       <div
@@ -320,7 +320,7 @@ const { isMobile, isTablet } = useScreen();
         <!-- Select Area (clickable) -->
         <button
           @click.stop="toggle(getId(item))"
-          :class="(isMobile || isTablet) ? 'flex-1 px-2 py-2 flex items-center gap-1.5 lg:hover:bg-muted transition-colors text-left min-w-0' : 'flex-1 px-4 py-3 flex items-center gap-2 lg:hover:bg-muted transition-colors text-left min-w-0'"
+          :class="(isMobile || isTablet) ? 'flex-1 px-2 py-2 flex items-center gap-1.5 text-left min-w-0' : 'flex-1 px-4 py-3 flex items-center gap-2 text-left min-w-0'"
         >
           <UIcon
             v-if="isSelected(getId(item))"
@@ -343,7 +343,7 @@ const { isMobile, isTablet } = useScreen();
         </button>
 
         <!-- Action Buttons -->
-        <div :class="(isMobile || isTablet) ? 'flex items-center gap-0.5 px-1 border-l border-muted flex-shrink-0' : 'flex items-center gap-1 px-2 border-l border-muted flex-shrink-0'">
+        <div :class="(isMobile || isTablet) ? 'flex items-center gap-0.5 px-1 border-l border-gray-200 dark:border-gray-700 flex-shrink-0' : 'flex items-center gap-1 px-2 border-l border-gray-200 dark:border-gray-700 flex-shrink-0'">
           <UButton
             :icon="isExpanded(getId(item)) ? 'lucide:chevron-up' : 'lucide:chevron-down'"
             :size="(isMobile || isTablet) ? 'xs' : 'sm'"
@@ -368,7 +368,7 @@ const { isMobile, isTablet } = useScreen();
       <!-- Expanded Details -->
       <div
         v-if="isExpanded(getId(item))"
-        :class="(isMobile || isTablet) ? 'border-t border-muted bg-muted/20 px-2 py-2' : 'border-t border-muted bg-muted/20 px-4 py-3'"
+        :class="(isMobile || isTablet) ? 'border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/20 px-2 py-2' : 'border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/20 px-4 py-3'"
       >
         <div :class="(isMobile || isTablet) ? 'grid grid-cols-1 gap-2 text-xs' : 'grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm'">
           <div

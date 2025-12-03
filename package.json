@@ -1,17 +1,17 @@
 {
   "name": "enfyra-app",
-  "version": "1.0.1-stable",
+  "version": "1.1.0-stable",
   "description": "Dynamic admin interface for Enfyra backend - auto-generates management UI from database schemas",
   "license": "MIT",
   "author": "dothinh115 <dothinh115@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dothinh115/dynamiq_cms.git"
+    "url": "https://github.com/enfyra/app"
   },
   "bugs": {
-    "url": "https://github.com/dothinh115/dynamiq_cms/issues"
+    "url": "https://github.com/enfyra/app/issues"
   },
-  "homepage": "https://github.com/dothinh115/dynamiq_cms#readme",
+  "homepage": "https://enfyra.io",
   "keywords": [
     "cms",
     "nuxt",

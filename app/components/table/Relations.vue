@@ -188,7 +188,7 @@ function saveRelation() {
 
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'" v-if="currentRelation">
-          <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-6'">
+          <div :class="(isMobile || isTablet) ? 'bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3' : 'bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/30 p-6'">
             <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
               <UIcon name="lucide:git-branch" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />
               <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-foreground' : 'text-lg font-semibold text-foreground'">
@@ -226,7 +226,7 @@ function saveRelation() {
       <template #footer>
         <!-- Actions Section -->
         <div
-          :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3 w-full' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-4 w-full'"
+          :class="(isMobile || isTablet) ? 'bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 w-full' : 'bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/30 p-4 w-full'"
         >
           <div class="flex items-center justify-between w-full">
             <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
@@ -270,7 +270,7 @@ function saveRelation() {
       </template>
       <template #body>
         <div class="space-y-4">
-          <p class="text-sm text-gray-300 text-center">
+          <p class="text-sm text-gray-700 dark:text-gray-300 text-center">
             You have unsaved changes to this relation. Are you sure you want to close? All changes will be lost.
           </p>
         </div>

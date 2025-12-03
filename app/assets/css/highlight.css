@@ -1,9 +1,3 @@
-/**
- * Highlight.js Theme - VS Code Dark+ Style
- * Optimized for AI Chatbot Code Blocks
- */
-
-/* Base styles */
 .hljs {
   display: block;
   overflow-x: auto;
@@ -13,14 +7,12 @@
   border-radius: 0.75rem;
 }
 
-/* Comments */
 .hljs-comment,
 .hljs-quote {
   color: #6a9955;
   font-style: italic;
 }
 
-/* Keywords */
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-literal,
@@ -29,44 +21,37 @@
   color: #569cd6;
 }
 
-/* Functions */
 .hljs-function,
 .hljs-title {
   color: #dcdcaa;
 }
 
-/* Strings */
 .hljs-string,
 .hljs-template-variable {
   color: #ce9178;
 }
 
-/* Numbers */
 .hljs-number,
 .hljs-regexp {
   color: #b5cea8;
 }
 
-/* Variables */
 .hljs-variable,
 .hljs-attr {
   color: #9cdcfe;
 }
 
-/* Built-in types */
 .hljs-built_in,
 .hljs-class,
 .hljs-type {
   color: #4ec9b0;
 }
 
-/* Meta, preprocessor */
 .hljs-meta,
 .hljs-meta-keyword {
   color: #569cd6;
 }
 
-/* Tags (HTML/XML) */
 .hljs-tag {
   color: #808080;
 }
@@ -75,40 +60,33 @@
   color: #569cd6;
 }
 
-/* Operators */
 .hljs-operator,
 .hljs-symbol {
   color: #d4d4d4;
 }
 
-/* Parameters */
 .hljs-params {
   color: #9cdcfe;
 }
 
-/* Additions (git diff) */
 .hljs-addition {
   background-color: #1e4620;
   color: #b5cea8;
 }
 
-/* Deletions (git diff) */
 .hljs-deletion {
   background-color: #4b1818;
   color: #d16969;
 }
 
-/* Emphasis */
 .hljs-emphasis {
   font-style: italic;
 }
 
-/* Strong */
 .hljs-strong {
   font-weight: bold;
 }
 
-/* Selector, property */
 .hljs-selector-class,
 .hljs-selector-id,
 .hljs-selector-attr,
@@ -120,15 +98,11 @@
   color: #9cdcfe;
 }
 
-/* JSON keys */
 .hljs-attr,
 .hljs-attribute {
   color: #9cdcfe;
 }
 
-/* Language specific */
-
-/* JavaScript/TypeScript */
 .language-javascript .hljs-keyword,
 .language-typescript .hljs-keyword,
 .language-js .hljs-keyword,
@@ -136,7 +110,6 @@
   color: #569cd6;
 }
 
-/* Python */
 .language-python .hljs-keyword {
   color: #569cd6;
 }
@@ -145,7 +118,6 @@
   color: #4ec9b0;
 }
 
-/* CSS */
 .language-css .hljs-selector-tag {
   color: #d7ba7d;
 }
@@ -154,7 +126,6 @@
   color: #9cdcfe;
 }
 
-/* HTML */
 .language-html .hljs-tag {
   color: #808080;
 }
@@ -167,7 +138,6 @@
   color: #9cdcfe;
 }
 
-/* SQL */
 .language-sql .hljs-keyword {
   color: #569cd6;
 }
@@ -176,13 +146,11 @@
   color: #4ec9b0;
 }
 
-/* Bash/Shell */
 .language-bash .hljs-built_in,
 .language-sh .hljs-built_in {
   color: #dcdcaa;
 }
 
-/* Line numbers (optional enhancement) */
 .hljs-ln-numbers {
   text-align: right;
   color: #858585;

@@ -1,10 +1,8 @@
-/* macOS-style scrollbars for all browsers */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
-/* Chrome, Safari, Edge */
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -30,7 +28,6 @@
   background-color: rgba(0, 0, 0, 0.4);
 }
 
-/* Dark mode scrollbars */
 .dark *::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.2);
 }
@@ -47,7 +44,6 @@
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
-/* Hide scrollbar when not scrolling (optional - more macOS-like) */
 *::-webkit-scrollbar {
   transition: opacity 0.3s;
 }
@@ -60,7 +56,6 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Hide scrollbar completely */
 .scrollbar-hide {
   scrollbar-width: none;
   -ms-overflow-style: none;
