@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { StateEffect } from "@codemirror/state";
+
 const props = defineProps<{
   modelValue?: string;
   language?: "javascript" | "vue" | "json" | "html";
@@ -21,9 +23,10 @@ const startY = ref(0);
 const startHeight = ref(0);
 const previewStyle = ref<{ top: string; left: string; width: string; height: string } | null>(null);
 
-const { customTheme, vscodeTheme } = useCodeMirrorTheme(currentHeight);
+const colorMode = useColorMode();
+const { themeCompartment, themeExtensions } = useCodeMirrorTheme(currentHeight);
 const { getLanguageExtension, getBasicSetup, enfyraSyntaxPlugin } = useCodeMirrorExtensions();
-const { editorRef, createEditor, watchExtensions, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
+const { code, editorRef, createEditor, watchExtensions, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
   modelValue: props.modelValue,
   language: props.language,
   height: currentHeight.value,
@@ -37,10 +40,32 @@ const extensions = computed(() => [
     emit("diagnostics", diags);
   }),
   languageExtension.value,
-  vscodeTheme.value,
-  customTheme.value,
+  themeCompartment.of(themeExtensions.value),
   enfyraSyntaxPlugin,
 ]);
+
+
+// Watch for theme changes and update theme compartment
+watch(() => colorMode.value, () => {
+  if (editorView.value) {
+    editorView.value.dispatch({
+      effects: themeCompartment.reconfigure(themeExtensions.value),
+    });
+    
+    // Update gutters border after theme change
+    nextTick(() => {
+      if (editorView.value) {
+        const gutters = editorView.value.dom.querySelector('.cm-gutters');
+        if (gutters) {
+          const isDark = colorMode.value === 'dark';
+          (gutters as HTMLElement).style.borderRight = isDark 
+            ? '1px solid rgba(255, 255, 255, 0.08)' 
+            : '1px solid #e5e7eb';
+        }
+      }
+    });
+  }
+});
 
 watch(currentHeight, () => {
   if (isResizing.value) return;
@@ -57,27 +82,43 @@ watch(currentHeight, () => {
 
 const resizeObserverRef = ref<ResizeObserver | null>(null);
 
-onMounted(() => {
+onMounted(async () => {
+  // Wait a bit to ensure computed values are updated
+  await nextTick();
+  await new Promise(resolve => setTimeout(resolve, 50));
+  
   createEditor(extensions.value);
   watchExtensions(extensions);
   if (containerRef.value) {
     containerRef.value.style.height = currentHeight.value;
   }
   
-  nextTick(() => {
-    if (editorRef.value) {
-      editorRef.value.style.height = "100%";
+  await nextTick();
+  if (editorRef.value) {
+    editorRef.value.style.height = "100%";
+  }
+  
+  if (editorRef.value && containerRef.value) {
+    resizeObserverRef.value = new ResizeObserver(() => {
+      if (editorView.value && !isResizing.value) {
+        editorView.value.requestMeasure();
+      }
+    });
+    resizeObserverRef.value.observe(containerRef.value);
+  }
+  
+  // Force update gutters border after editor is created
+  await nextTick();
+  await new Promise(resolve => setTimeout(resolve, 100));
+  if (editorView.value) {
+    const gutters = editorView.value.dom.querySelector('.cm-gutters');
+    if (gutters) {
+      const isDark = colorMode.value === 'dark';
+      (gutters as HTMLElement).style.borderRight = isDark 
+        ? '1px solid rgba(255, 255, 255, 0.08)' 
+        : '1px solid #e5e7eb';
     }
-    
-    if (editorRef.value && containerRef.value) {
-      resizeObserverRef.value = new ResizeObserver(() => {
-        if (editorView.value && !isResizing.value) {
-          editorView.value.requestMeasure();
-        }
-      });
-      resizeObserverRef.value.observe(containerRef.value);
-    }
-  });
+  }
 });
 
 onUnmounted(() => {
@@ -199,6 +240,10 @@ function handleMouseUp(e?: MouseEvent) {
   nextTick(() => {
     if (editorView.value) {
       editorView.value.requestMeasure();
+      editorView.value.dispatch({
+        effects: StateEffect.reconfigure.of(extensions.value),
+      });
+      editorView.value.dispatch({});
     }
   });
 }
@@ -207,8 +252,11 @@ function handleMouseUp(e?: MouseEvent) {
 <template>
   <div 
     ref="containerRef" 
-    class="rounded-md overflow-hidden ring-1 ring-gray-200 dark:ring-gray-700 relative"
-    :class="!isResizing ? 'transition-[height] duration-300 ease-out' : ''"
+    class="rounded-md overflow-hidden relative"
+    :class="[
+      !isResizing ? 'transition-[height] duration-300 ease-out' : '',
+      colorMode.value === 'dark' ? 'ring-1 ring-gray-700' : 'ring-1 ring-gray-200'
+    ]"
     :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
   >
     <div ref="editorRef" class="codemirror-editor h-full" />

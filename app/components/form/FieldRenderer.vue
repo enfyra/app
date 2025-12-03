@@ -421,7 +421,7 @@ const hasError = computed(() => !!errorMessage.value);
 
 const isCustomComponent = computed(() => {
   const column = props.columnMap.get(props.keyName);
-  const manualConfig = props.typeMap?.[props.keyName];
+  const manualConfig = props.fieldMap?.[props.keyName];
   const config =
     typeof manualConfig === "string"
       ? { type: manualConfig }
@@ -445,7 +445,7 @@ const isCustomComponent = computed(() => {
 // Get component type for loading skeleton
 function getComponentType(): string {
   const column = props.columnMap.get(props.keyName);
-  const manualConfig = props.typeMap?.[props.keyName];
+  const manualConfig = props.fieldMap?.[props.keyName];
   const config =
     typeof manualConfig === "string"
       ? { type: manualConfig }

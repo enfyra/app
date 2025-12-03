@@ -81,19 +81,6 @@ async function handleCreate() {
     <template #title>
       Create New Folder
     </template>
-      <template #header>
-        <div class="flex justify-between items-center w-full">
-          <div class="text-base font-semibold">Create New Folder</div>
-          <UButton
-            icon="lucide:x"
-            color="error"
-            variant="soft"
-            @click="isOpen = false"
-          >
-            Close
-          </UButton>
-        </div>
-      </template>
 
       <template #body>
         <UForm :state="newFolder" @submit="handleCreate">
