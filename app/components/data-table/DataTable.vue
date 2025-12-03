@@ -278,13 +278,8 @@ function getColumnLabel(columnId: string) {
 
 <template>
   <div class="w-full space-y-4">
-    <!-- Loading State -->
-    <div v-if="loading" class="w-full">
-      <CommonLoadingState type="table" size="md" context="page" />
-    </div>
-
     <!-- Mobile & Tablet Card View -->
-    <div v-if="!loading" class="lg:hidden">
+    <div class="lg:hidden">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div
           v-for="(row, index) in table.getRowModel().rows"
@@ -345,7 +340,7 @@ function getColumnLabel(columnId: string) {
         </div>
       </div>
 
-      <div v-if="!loading && props.data.length === 0" class="py-8 text-center">
+      <div v-if="props.data.length === 0" class="py-8 text-center">
         <CommonEmptyState
           title="No data available"
           description="There are no records to display"
@@ -357,7 +352,6 @@ function getColumnLabel(columnId: string) {
 
     <!-- Desktop Table View -->
     <div
-      v-if="!loading"
       class="hidden lg:block overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03]"
     >
       <div class="max-w-full overflow-x-auto custom-scrollbar">
@@ -512,7 +506,7 @@ function getColumnLabel(columnId: string) {
                 </td>
               </tr>
             </template>
-            <tr v-if="!loading && props.data.length === 0">
+            <tr v-if="props.data.length === 0">
               <td
                 :colspan="table.getFlatHeaders().length"
                 class="px-4 py-8 text-center"

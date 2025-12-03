@@ -280,7 +280,7 @@ async function saveMenu() {
             v-model:errors="errors"
             :table-name="tableName"
             :excluded="excludedFields"
-            :type-map="typeMap"
+            :field-map="typeMap"
             mode="create"
           />
         </UForm>

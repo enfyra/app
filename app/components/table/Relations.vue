@@ -212,7 +212,7 @@ function saveRelation() {
                 'junctionSourceColumn',
                 'junctionTargetColumn'
               ]"
-              :type-map="{
+              :field-map="{
                 type: {
                   type: 'enum',
                   options: relationTypes,

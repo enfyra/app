@@ -10,7 +10,7 @@
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
             :excluded="['createdAt', 'updatedAt', 'isSystem', 'compiledCode']"
-            :type-map="{
+            :field-map="{
               code: { type: 'code', language: 'vue', height: '400px' },
             }"
             :loading="loading"

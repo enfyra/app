@@ -33,7 +33,7 @@
             :table-name="tableName"
             :loading="loading"
             :excluded="['installedBy', 'type']"
-            :type-map="{
+            :field-map="{
               name: {
                 disabled: true,
               },

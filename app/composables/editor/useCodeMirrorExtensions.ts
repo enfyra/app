@@ -111,17 +111,35 @@ export function useCodeMirrorExtensions() {
       const line = doc.line(i)
       const text = line.text
 
-      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE)\b/g
+      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS)\b/g
+      const templateWithBracketRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS)\s*\[(['"])([^'"]*)\1\]/g
       const throwRegex = /@THROW\d*/g
       
       const matchedRanges: Array<{ from: number; to: number }> = []
       let match
       
+      // First, match template syntax with bracket access (e.g., @PKGS['abc'])
+      while ((match = templateWithBracketRegex.exec(text)) !== null) {
+        const absolutePos = line.from + match.index
+        if (!isInComment(doc, absolutePos)) {
+          const fullMatch = match[0]
+          builder.add(absolutePos, absolutePos + fullMatch.length, templateDecoration)
+          matchedRanges.push({ from: absolutePos, to: absolutePos + fullMatch.length })
+        }
+      }
+      
+      // Then, match template syntax without bracket access
       while ((match = templateRegex.exec(text)) !== null) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
-          builder.add(absolutePos, absolutePos + match[0].length, templateDecoration)
-          matchedRanges.push({ from: absolutePos, to: absolutePos + match[0].length })
+          // Check if this match is already covered by bracket regex
+          const isAlreadyMatched = matchedRanges.some(range => 
+            absolutePos >= range.from && absolutePos < range.to
+          )
+          if (!isAlreadyMatched) {
+            builder.add(absolutePos, absolutePos + match[0].length, templateDecoration)
+            matchedRanges.push({ from: absolutePos, to: absolutePos + match[0].length })
+          }
         }
       }
       

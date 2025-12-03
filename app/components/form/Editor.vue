@@ -6,7 +6,7 @@
       :key-name="(field.name || field.propertyName) as string"
       :form-data="modelValue"
       :column-map="fieldMap"
-      :type-map="typeMapWithGenerated"
+      :field-map="fieldMapWithGenerated"
       :errors="errors"
       :loading="props.loading"
       :mode="props.mode"
@@ -25,14 +25,14 @@ const props = withDefaults(
     tableName: string;
     excluded?: string[];
     includes?: string[];
-    typeMap?: Record<string, any>;
+    fieldMap?: Record<string, any>;
     loading?: boolean;
     mode?: 'create' | 'update';
   }>(),
   {
     excluded: () => [],
     includes: () => [],
-    typeMap: () => ({}),
+    fieldMap: () => ({}),
     loading: false,
     mode: 'update',
   }
@@ -50,8 +50,8 @@ const { definition, fieldMap, sortFieldsByOrder, useFormChanges } = useSchema(
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
 
-const typeMapWithGenerated = computed(() => {
-  const result = { ...props.typeMap };
+const fieldMapWithGenerated = computed(() => {
+  const result = { ...props.fieldMap };
 
   // Add disabled for generated fields
   for (const field of definition.value) {
@@ -105,8 +105,8 @@ const visibleFields = computed(() => {
     const key = field.name || field.propertyName;
     if (!key) return false;
 
-    // Check if field is excluded in typeMap
-    const fieldConfig = typeMapWithGenerated.value[key];
+    // Check if field is excluded in fieldMap
+    const fieldConfig = fieldMapWithGenerated.value[key];
     if (fieldConfig && fieldConfig.excluded === true) {
       return false;
     }

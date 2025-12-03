@@ -10,7 +10,7 @@ const props = withDefaults(
     tableName: string;
     excluded?: string[];
     includes?: string[];
-    typeMap?: Record<string, any>;
+    fieldMap?: Record<string, any>;
     loading?: boolean;
     mode?: 'create' | 'update';
   }>(),

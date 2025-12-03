@@ -1,3 +1,5 @@
+import SidebarUserInfo from "../components/sidebar/UserInfo.vue";
+
 export default defineNuxtPlugin(async () => {
   const { logout } = useEnfyraAuth();
 
@@ -69,6 +71,15 @@ export default defineNuxtPlugin(async () => {
   if (schemaValues.length > 0) {
     await registerDataMenuItems(schemaValues);
   }
+
+  registerMenuItem({
+    id: "user-info",
+    label: "User Info",
+    type: "Menu",
+    order: 9998,
+    position: "bottom",
+    component: SidebarUserInfo,
+  } as any);
 
   registerMenuItem({
     id: "logout",

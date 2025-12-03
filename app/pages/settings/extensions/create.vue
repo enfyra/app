@@ -8,7 +8,7 @@
             :table-name="tableName"
             :errors="createErrors"
             :excluded="['compiledCode']"
-            :type-map="{
+            :field-map="{
               code: { type: 'code', language: 'vue', height: '400px' },
             }"
             @update:errors="(errors) => (createErrors = errors)"
