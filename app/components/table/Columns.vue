@@ -446,7 +446,7 @@ watch(
                 'isPrimary',
                 'table',
               ]"
-              :type-map="typeMap"
+              :field-map="typeMap"
             />
           </div>
         </div>

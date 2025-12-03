@@ -11,7 +11,7 @@
             :table-name="tableName"
             :excluded="excludedFields"
             :includes="includedFields.length > 0 ? includedFields : undefined"
-            :type-map="typeMap"
+            :field-map="typeMap"
             :loading="loading"
           />
         </UForm>

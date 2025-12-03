@@ -10,7 +10,7 @@
             @update:errors="(errors) => (createErrors = errors)"
             :excluded="excludedFields"
             :includes="includedFields.length > 0 ? includedFields : undefined"
-            :type-map="typeMap"
+            :field-map="typeMap"
             mode="create"
           />
         </UForm>

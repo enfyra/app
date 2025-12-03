@@ -15,7 +15,7 @@ const props = defineProps<{
   keyName: string;
   formData: Record<string, any>;
   columnMap: Map<string, any>;
-  typeMap?: Record<string, any>;
+  fieldMap?: Record<string, any>;
   errors: Record<string, string>;
   readonly?: boolean;
   loading?: boolean;
@@ -28,7 +28,7 @@ const emit = defineEmits<{
 
 function updateFormData(key: string, value: any) {
   const column = props.columnMap.get(key);
-  const manualConfig = props.typeMap?.[key];
+  const manualConfig = props.fieldMap?.[key];
   const config =
     typeof manualConfig === "string"
       ? { type: manualConfig }
@@ -55,7 +55,7 @@ function getComponentConfigByKey(key: string) {
   const column = props.columnMap.get(key);
   const isRelation = column?.fieldType === "relation";
 
-  const manualConfig = props.typeMap?.[key];
+  const manualConfig = props.fieldMap?.[key];
   const config =
     typeof manualConfig === "string"
       ? { type: manualConfig }

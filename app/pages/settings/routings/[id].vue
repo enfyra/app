@@ -10,7 +10,7 @@
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
             :excluded="['routePermissions', 'mainTable']"
-            :type-map="typeMap"
+            :field-map="typeMap"
             :loading="loading"
           />
         </UForm>

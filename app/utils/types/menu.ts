@@ -27,6 +27,8 @@ export interface MenuItem {
   label: string;
   route: string;
   icon?: string;
+  // Where this menu should appear in sidebar
+  position?: "top" | "bottom";
   sidebarId?: number | string; // Support both SQL (number) and MongoDB (string) - optional for special items like logout
   permission?: PermissionCondition;
   // Additional fields from API for full compatibility
@@ -46,6 +48,10 @@ export interface MenuItem {
   // Optional handlers for special items (e.g., logout button)
   onClick?: () => void | Promise<void>;
   class?: string;
+  // Optional custom component instead of default menu rendering
+  component?: string | any;
+  componentProps?: Record<string, any>;
+  key?: string;
 }
 
 // API Response Interface from useMenuApi (different from MenuDefinition)

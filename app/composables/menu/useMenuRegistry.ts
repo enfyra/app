@@ -1,3 +1,5 @@
+import { resolveComponent, markRaw } from "vue";
+
 export function useMenuRegistry() {
   const menuItems = useState<MenuItem[]>("menu-items", () => []);
   const { getId } = useDatabase();
@@ -37,11 +39,32 @@ export function useMenuRegistry() {
   });
 
   const registerMenuItem = (item: MenuItem) => {
+    const processedItem: MenuItem = { ...item };
+
+    if (processedItem.component) {
+      if (typeof processedItem.component === "string") {
+        try {
+          const componentName = processedItem.component;
+          const resolved = resolveComponent(componentName as any);
+          if (resolved && typeof resolved !== "string") {
+            processedItem.component = markRaw(resolved);
+          }
+        } catch (error) {
+          console.warn(
+            `Failed to resolve menu component: ${String(processedItem.component)}`,
+            error
+          );
+        }
+      } else {
+        processedItem.component = markRaw(processedItem.component);
+      }
+    }
+
     const existingIndex = menuItems.value.findIndex((m) => m.id === item.id);
     if (existingIndex > -1) {
-      menuItems.value[existingIndex] = item;
+      menuItems.value[existingIndex] = processedItem;
     } else {
-      menuItems.value.push(item);
+      menuItems.value.push(processedItem);
     }
   };
 

@@ -237,8 +237,13 @@ const visibleGroups = computed(() => {
               'bg-gray-800/60 rounded-xl': group.type === 'Dropdown Menu'
             }">
               <div class="relative flex items-center">
+                <component
+                  v-if="group.component"
+                  :is="group.component"
+                  v-bind="group.componentProps || {}"
+                />
                 <NuxtLink
-                  v-if="group.type === 'Menu' && group.route"
+                  v-else-if="group.type === 'Menu' && group.route"
                   :to="group.route"
                   @click="handleMenuClick"
                   :class="[
@@ -330,7 +335,17 @@ const visibleGroups = computed(() => {
             :key="group.id"
           >
             <div
-              v-if="group.type === 'Menu' && (!group.items || group.items.length === 0)"
+              v-if="group.component"
+              class="space-y-1 px-3"
+            >
+              <component
+                :is="group.component"
+                v-bind="group.componentProps || {}"
+              />
+            </div>
+
+            <div
+              v-else-if="group.type === 'Menu' && (!group.items || group.items.length === 0)"
               class="space-y-1 px-3"
             >
               <NuxtLink
@@ -441,22 +456,32 @@ const visibleGroups = computed(() => {
       </template>
     </div>
 
-    <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="p-4 border-t border-gray-200 dark:border-gray-800 relative">
-      <template v-for="group in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">
-        <PermissionGate :condition="group.permission as any">
-          <UButton
-            @click="group.onClick"
-            :icon="group.icon"
-            :label="isCollapsed ? undefined : group.label"
-            variant="ghost"
-            color="error"
-            :class="[
-              'w-full justify-start',
-              isCollapsed ? 'justify-center' : '',
-              group.class ? group.class : ''
-            ]"
-          />
-        </PermissionGate>
+    <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="border-t border-gray-200 dark:border-gray-800 relative">
+      <template v-for="(group, index) in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">
+        <div :class="index > 0 ? 'border-t border-gray-200 dark:border-gray-800' : ''">
+          <PermissionGate :condition="group.permission as any">
+            <div class="p-4">
+              <component
+                v-if="group.component"
+                :is="group.component"
+                v-bind="group.componentProps || {}"
+              />
+              <UButton
+                v-else
+                @click="group.onClick"
+                :icon="group.icon"
+                :label="isCollapsed ? undefined : group.label"
+                variant="ghost"
+                color="error"
+                :class="[
+                  'w-full justify-start',
+                  isCollapsed ? 'justify-center' : '',
+                  group.class ? group.class : ''
+                ]"
+              />
+            </div>
+          </PermissionGate>
+        </div>
       </template>
     </div>
   </nav>
