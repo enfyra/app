@@ -33,6 +33,34 @@
     @apply cursor-pointer;
   }
 
+  .text-error,
+  [class*="text-error"] {
+    color: rgb(239, 68, 68) !important;
+  }
+
+  .dark .text-error,
+  .dark [class*="text-error"] {
+    color: rgb(248, 113, 113) !important;
+  }
+
+  .text-error\/75 {
+    color: rgba(239, 68, 68, 0.75) !important;
+  }
+
+  .dark .text-error\/75 {
+    color: rgba(248, 113, 113, 0.75) !important;
+  }
+
+  [class*="before:bg-error"]::before,
+  [class*="before:bg-error\/10"]::before {
+    background-color: rgba(239, 68, 68, 0.1) !important;
+  }
+
+  .dark [class*="before:bg-error"]::before,
+  .dark [class*="before:bg-error\/10"]::before {
+    background-color: rgba(248, 113, 113, 0.1) !important;
+  }
+
 }
 
 .app-viewport-container {

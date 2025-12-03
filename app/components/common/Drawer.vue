@@ -50,10 +50,10 @@ function close() {
       :class="drawerClass"
       :ui="{
         container: 'h-[100dvh]',
-        content: 'overflow-hidden bg-gray-50 dark:bg-gray-900',
-        header: 'border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between flex-shrink-0',
-        body: 'flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar',
-        footer: 'flex-shrink-0 border-t border-gray-200 dark:border-gray-800 px-6 py-4',
+        content: 'overflow-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-white',
+        header: 'border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between flex-shrink-0 text-gray-900 dark:text-white',
+        body: 'flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar text-gray-900 dark:text-white',
+        footer: 'flex-shrink-0 border-t border-gray-200 dark:border-gray-800 px-6 py-4 text-gray-900 dark:text-white',
       }"
     >
       <template #header>
