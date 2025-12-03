@@ -2,7 +2,7 @@
   <div class="flex items-start justify-between gap-2">
     <div
       v-if="editingFolderId === folder.id"
-      class="flex items-center gap-1 flex-1"
+      class="flex items-center gap-1 flex-1 min-w-0"
     >
       <input
         v-model="localEditingName"
@@ -10,7 +10,7 @@
         @keyup.escape="!editingLoading && $emit('cancel-edit')"
         :disabled="editingLoading"
         :data-editing-id="folder.id"
-        class="flex-1 text-xs font-semibold bg-gray-800 border border-primary rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        class="flex-1 min-w-0 max-w-full text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-primary rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
         style="letter-spacing: -0.01em"
         @click.stop
       />

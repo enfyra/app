@@ -170,27 +170,33 @@ function handleMouseUp(e?: MouseEvent) {
   });
 }
 
+const colorMode = useColorMode();
+
 onMounted(async () => {
   try {
     await loadTinyMCE();
 
-    window.tinymce.init({
+    const initTinyMCE = () => {
+      const isDark = colorMode.value === 'dark';
+      
+      // Destroy existing editor if it exists
+      if (editorRef.value) {
+        editorRef.value.destroy();
+        editorRef.value = null;
+      }
+      
+      window.tinymce.init({
       selector: `#${textareaId}`,
-      skin_url: "/tinymce/skins/ui/oxide-dark",
-      content_css: "/tinymce/skins/content/dark/content.css",
+      skin_url: isDark ? "/tinymce/skins/ui/oxide-dark" : "/tinymce/skins/ui/oxide",
+      content_css: isDark ? "/tinymce/skins/content/dark/content.css" : "/tinymce/skins/content/default/content.css",
       content_style: `
         body {
-          color: rgb(31, 41, 55) !important;
-        }
-        @media (prefers-color-scheme: dark) {
-          body {
-            color: rgba(255, 255, 255, 0.9) !important;
-          }
+          color: ${isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)'} !important;
         }
       `,
       icons_url: "/tinymce/icons/default/icons.min.js",
       plugins: ["link", "lists", "code", "table"],
-      skin: "oxide-dark",
+      skin: isDark ? "oxide-dark" : "oxide",
       external_plugins: {
         link: "/tinymce/plugins/link/plugin.min.js",
         lists: "/tinymce/plugins/lists/plugin.min.js",
@@ -219,7 +225,7 @@ onMounted(async () => {
             if (iframe) {
               const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
               if (iframeDoc) {
-                const isDark = document.documentElement.classList.contains('dark');
+                const isDark = colorMode.value === 'dark';
                 const tinymceBody = iframeDoc.getElementById('tinymce');
                 
                 if (tinymceBody) {
@@ -276,6 +282,22 @@ onMounted(async () => {
           isFocused.value = false;
         });
       },
+    });
+    };
+    
+    initTinyMCE();
+    
+    // Watch for theme changes and reinitialize editor
+    watch(() => colorMode.value, () => {
+      if (editorRef.value) {
+        const currentContent = editorRef.value.getContent();
+        initTinyMCE();
+        nextTick(() => {
+          if (editorRef.value) {
+            editorRef.value.setContent(currentContent);
+          }
+        });
+      }
     });
   } catch (error) {}
 });

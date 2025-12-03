@@ -21,9 +21,8 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     <div
       v-for="i in lines"
       :key="i"
-      :class="['h-4 rounded', animationClass, shimmerClass]"
+      :class="['h-4 rounded skeleton-gradient', animationClass, shimmerClass]"
       :style="{
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
         width: i === lines ? '75%' : '100%'
       }"
     ></div>
@@ -32,10 +31,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
   <!-- Avatar Skeleton -->
   <div v-else-if="type === 'avatar'" class="flex items-center gap-3">
     <div
-      :class="['w-10 h-10 rounded-full', animationClass, shimmerClass]"
-      :style="{
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-      }"
+      :class="['w-10 h-10 rounded-full skeleton-gradient', animationClass, shimmerClass]"
     ></div>
     <div class="space-y-2 flex-1">
       <div
@@ -58,20 +54,16 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     <div
       v-for="i in 8"
       :key="i"
-      class="rounded-xl border p-4 space-y-4"
+      class="rounded-xl border p-4 space-y-4 skeleton-card"
       :class="[animationClass, shimmerClass]"
       :style="{
-        background: 'rgba(21, 27, 46, 0.4)',
-        backdropFilter: 'blur(20px)',
-        borderColor: 'rgba(255, 255, 255, 0.08)',
+        backgroundColor: 'var(--bg-elevated)',
+        borderColor: 'var(--border-default)',
       }"
     >
       <div class="flex items-center gap-3">
         <div
-          class="w-10 h-10 rounded-full flex-shrink-0"
-          :style="{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-          }"
+          class="w-10 h-10 rounded-full flex-shrink-0 skeleton-gradient"
         ></div>
         <div class="space-y-2 flex-1">
           <div
@@ -91,31 +83,19 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
 
       <div class="space-y-2">
         <div
-          class="h-3 rounded w-full"
-          :style="{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-          }"
+          class="h-3 rounded w-full skeleton-gradient"
         ></div>
         <div
-          class="h-3 rounded w-3/4"
-          :style="{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-          }"
+          class="h-3 rounded w-3/4 skeleton-gradient"
         ></div>
       </div>
 
       <div class="flex gap-2 justify-end">
         <div
-          class="h-8 w-20 rounded-lg"
-          :style="{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-          }"
+          class="h-8 w-20 rounded-lg skeleton-gradient"
         ></div>
         <div
-          class="h-8 w-16 rounded-lg"
-          :style="{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-          }"
+          class="h-8 w-16 rounded-lg skeleton-gradient"
         ></div>
       </div>
     </div>
@@ -132,27 +112,19 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         class="relative rounded-xl border transition-all duration-200 overflow-hidden"
         :class="[animationClass, shimmerClass]"
         :style="{
-          background: 'rgba(21, 27, 46, 0.6)',
-          borderColor: 'rgba(255, 255, 255, 0.06)',
+          backgroundColor: 'var(--bg-elevated)',
+          borderColor: 'var(--border-subtle)',
           borderWidth: '1px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
+          boxShadow: 'var(--shadow-xs)',
         }"
       >
         <div class="h-28 relative overflow-hidden rounded-t-xl">
           <div
-            class="w-full h-full"
-            :style="{
-              background: i % 2 === 0 
-                ? 'linear-gradient(135deg, rgba(0, 102, 255, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)'
-                : 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(217, 70, 239, 0.1) 100%)',
-            }"
+            class="w-full h-full skeleton-preview-bg"
           >
             <div class="w-full h-full flex items-center justify-center">
               <div
-                class="w-12 h-12 rounded"
-                :style="{
-                  background: 'rgba(148, 163, 184, 0.2)',
-                }"
+                class="w-12 h-12 rounded skeleton-icon"
               />
             </div>
           </div>
@@ -160,9 +132,8 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         
         <div class="p-3 space-y-2">
           <div
-            class="h-3.5 rounded"
+            class="h-3.5 rounded skeleton-gradient"
             :style="{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
               width: `${70 + (i % 3) * 10}%`
             }"
           />
@@ -181,10 +152,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
             />
           </div>
           <div
-            class="h-5 w-16 rounded-full"
-            :style="{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(124, 58, 237, 0.15))',
-            }"
+            class="h-5 w-16 rounded-full skeleton-badge"
           />
         </div>
       </div>
@@ -196,24 +164,25 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     v-else-if="type === 'table'"
     class="w-full space-y-0 overflow-hidden rounded-xl border"
     :style="{
-      borderColor: 'rgba(255, 255, 255, 0.08)',
+      borderColor: 'var(--border-default)',
     }"
   >
     <!-- Header -->
     <div
       class="grid grid-cols-5 gap-4 p-4"
       :style="{
-        background: 'rgba(21, 27, 46, 0.6)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: 'var(--bg-elevated)',
+        borderBottomColor: 'var(--border-default)',
+        borderBottomWidth: '1px',
+        borderBottomStyle: 'solid',
       }"
     >
       <div
         v-for="i in 5"
         :key="i"
-        class="h-4 rounded"
+        class="h-4 rounded skeleton-gradient"
         :class="[animationClass, shimmerClass]"
         :style="{
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
           width: i === 1 ? '100%' : i === 2 ? '75%' : i === 3 ? '50%' : i === 4 ? '66%' : 'auto'
         }"
       ></div>
@@ -225,37 +194,25 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         :key="i"
         class="grid grid-cols-5 gap-4 p-4"
         :style="{
-          borderBottom: i < 8 ? '1px solid rgba(255, 255, 255, 0.05)' : 'none',
-          background: i % 2 === 1 ? 'rgba(21, 27, 46, 0.3)' : 'transparent'
+          borderBottom: i < 8 ? '1px solid var(--border-subtle)' : 'none',
+          backgroundColor: i % 2 === 1 ? 'var(--bg-surface)' : 'transparent'
         }"
       >
         <div
-          class="h-4 rounded"
+          class="h-4 rounded skeleton-gradient"
           :class="shimmerClass"
-          :style="{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-          }"
         ></div>
         <div
-          class="h-4 rounded w-3/4"
+          class="h-4 rounded w-3/4 skeleton-gradient"
           :class="shimmerClass"
-          :style="{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-          }"
         ></div>
         <div
-          class="h-4 rounded w-1/2"
+          class="h-4 rounded w-1/2 skeleton-gradient"
           :class="shimmerClass"
-          :style="{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-          }"
         ></div>
         <div
-          class="h-4 rounded w-2/3"
+          class="h-4 rounded w-2/3 skeleton-gradient"
           :class="shimmerClass"
-          :style="{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-          }"
         ></div>
         <div class="flex gap-2 justify-end">
           <div
@@ -301,18 +258,12 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     <!-- Action buttons -->
     <div class="flex gap-3 pt-6">
       <div
-        class="h-10 w-24 rounded-lg"
+        class="h-10 w-24 rounded-lg skeleton-primary"
         :class="[animationClass, shimmerClass]"
-        :style="{
-          background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(139, 92, 246, 0.3))'
-        }"
       ></div>
       <div
-        class="h-10 w-20 rounded-lg"
+        class="h-10 w-20 rounded-lg skeleton-gradient"
         :class="[animationClass, shimmerClass]"
-        :style="{
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-        }"
       ></div>
     </div>
   </div>
@@ -328,10 +279,10 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         class="relative rounded-xl border transition-all duration-200 overflow-hidden"
         :class="[animationClass, shimmerClass]"
         :style="{
-          backgroundColor: 'rgba(21, 27, 46, 0.6)',
-          borderColor: 'rgba(255, 255, 255, 0.06)',
+          backgroundColor: 'var(--bg-elevated)',
+          borderColor: 'var(--border-subtle)',
           borderWidth: '1px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
+          boxShadow: 'var(--shadow-xs)',
         }"
       >
         <div class="p-4 flex items-start gap-4">
@@ -346,23 +297,16 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
 
           <div class="flex-1 min-w-0 space-y-1">
           <div
-              class="h-4 rounded"
+              class="h-4 rounded skeleton-gradient"
             :style="{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
                 width: `${60 + (i % 3) * 15}%`
             }"
           />
             <div
-              class="h-3 w-16 rounded"
-              :style="{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
-              }"
+              class="h-3 w-16 rounded skeleton-gradient"
             />
             <div
-              class="h-3 w-24 rounded"
-              :style="{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
-              }"
+              class="h-3 w-24 rounded skeleton-gradient"
             />
           </div>
         </div>

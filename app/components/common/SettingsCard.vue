@@ -9,7 +9,7 @@
     ]"
   >
     <!-- Gradient overlay on hover -->
-    <div :class="`absolute inset-0 bg-gradient-to-br ${hoverGradientClass} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`" />
+    <div :class="`absolute inset-0 bg-gradient-to-br ${hoverGradientClass} opacity-0 group-hover:opacity-70 dark:group-hover:opacity-20 transition-opacity duration-300 pointer-events-none`" />
 
     <!-- Header with icon + title -->
     <div :class="(isMobile || isTablet) ? 'relative flex items-center gap-2 mb-1.5' : 'relative flex items-center gap-3 mb-2'">
@@ -59,7 +59,7 @@
     <!-- Content wrapper with flex-1 to push footer down -->
     <div class="flex-1">
       <!-- Stats List (Figma Performance Card Style) -->
-      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 rounded-lg mb-1.5' : 'relative p-2 rounded-lg mb-2', 'bg-gray-50 dark:bg-gray-900']">
+      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 rounded-lg mb-1.5' : 'relative p-2 rounded-lg mb-2', 'bg-gray-100 dark:bg-gray-800']">
         <div
           v-for="(stat, index) in stats"
           :key="stat.label"
@@ -97,7 +97,7 @@
         <div
           v-for="stat in stats"
           :key="stat.label"
-          :class="[(isMobile || isTablet) ? 'text-center p-1.5 rounded-lg' : 'text-center p-2 rounded-lg', 'bg-gray-50 dark:bg-gray-900/70']"
+          :class="[(isMobile || isTablet) ? 'text-center p-1.5 rounded-lg' : 'text-center p-2 rounded-lg', 'bg-gray-100 dark:bg-gray-800']"
         >
           <div :class="(isMobile || isTablet) ? 'text-sm font-medium text-gray-800 dark:text-white/90 mb-0' : 'text-base font-medium text-gray-800 dark:text-white/90 mb-0.5'">
             <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-center">
@@ -263,11 +263,11 @@ const iconBgClass = computed(() => {
 
 const hoverGradientClass = computed(() => {
   const colorMap = {
-    primary: "from-primary-500/5 to-primary-600/5",
-    success: "from-green-500/5 to-teal-500/5",
-    warning: "from-amber-500/5 to-orange-500/5",
-    error: "from-red-500/5 to-pink-500/5",
-    neutral: "from-gray-500/5 to-gray-600/5",
+    primary: "from-primary-500/50 to-primary-600/50 dark:from-primary-500/30 dark:to-primary-600/30",
+    success: "from-green-500/50 to-teal-500/50 dark:from-green-500/30 dark:to-teal-500/30",
+    warning: "from-amber-500/50 to-orange-500/50 dark:from-amber-500/30 dark:to-orange-500/30",
+    error: "from-red-500/50 to-pink-500/50 dark:from-red-500/30 dark:to-pink-500/30",
+    neutral: "from-gray-500/50 to-gray-600/50 dark:from-gray-500/30 dark:to-gray-600/30",
   };
   return colorMap[props.iconColor];
 });

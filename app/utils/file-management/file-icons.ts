@@ -8,8 +8,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (!mimetype) {
     return {
       icon: "lucide:file",
-      color: "text-gray-300",
-      background: "bg-gray-800",
+      color: "text-gray-600 dark:text-gray-300",
+      background: "bg-gray-100 dark:bg-gray-800",
     };
   }
 
@@ -17,8 +17,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.startsWith("image/")) {
     return {
       icon: "lucide:image",
-      color: "text-blue-300",
-      background: "bg-blue-900/30",
+      color: "text-blue-600 dark:text-blue-300",
+      background: "bg-blue-100 dark:bg-blue-900/30",
     };
   }
 
@@ -26,8 +26,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.startsWith("video/")) {
     return {
       icon: "lucide:video",
-      color: "text-purple-300",
-      background: "bg-purple-900/30",
+      color: "text-purple-600 dark:text-purple-300",
+      background: "bg-purple-100 dark:bg-purple-900/30",
     };
   }
 
@@ -35,8 +35,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.startsWith("audio/")) {
     return {
       icon: "lucide:music",
-      color: "text-green-300",
-      background: "bg-green-900/30",
+      color: "text-green-600 dark:text-green-300",
+      background: "bg-green-100 dark:bg-green-900/30",
     };
   }
 
@@ -44,8 +44,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.includes("pdf")) {
     return {
       icon: "lucide:file-text",
-      color: "text-red-300",
-      background: "bg-red-900/30",
+      color: "text-red-600 dark:text-red-300",
+      background: "bg-red-100 dark:bg-red-900/30",
     };
   }
 
@@ -53,8 +53,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.includes("word") || mimetype.includes("document")) {
     return {
       icon: "lucide:file-text",
-      color: "text-blue-300",
-      background: "bg-blue-900/30",
+      color: "text-blue-600 dark:text-blue-300",
+      background: "bg-blue-100 dark:bg-blue-900/30",
     };
   }
 
@@ -62,8 +62,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.includes("excel") || mimetype.includes("spreadsheet")) {
     return {
       icon: "lucide:table",
-      color: "text-green-300",
-      background: "bg-green-900/30",
+      color: "text-green-600 dark:text-green-300",
+      background: "bg-green-100 dark:bg-green-900/30",
     };
   }
 
@@ -71,8 +71,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.includes("powerpoint") || mimetype.includes("presentation")) {
     return {
       icon: "lucide:presentation",
-      color: "text-orange-300",
-      background: "bg-orange-900/30",
+      color: "text-orange-600 dark:text-orange-300",
+      background: "bg-orange-100 dark:bg-orange-900/30",
     };
   }
 
@@ -80,8 +80,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.includes("zip") || mimetype.includes("rar") || mimetype.includes("7z")) {
     return {
       icon: "lucide:archive",
-      color: "text-yellow-300",
-      background: "bg-yellow-900/30",
+      color: "text-yellow-600 dark:text-yellow-300",
+      background: "bg-yellow-100 dark:bg-yellow-900/30",
     };
   }
 
@@ -89,8 +89,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.includes("text/")) {
     return {
       icon: "lucide:file-text",
-      color: "text-gray-300",
-      background: "bg-gray-800",
+      color: "text-gray-600 dark:text-gray-300",
+      background: "bg-gray-100 dark:bg-gray-800",
     };
   }
 
@@ -98,15 +98,15 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.includes("code") || mimetype.includes("script")) {
     return {
       icon: "lucide:code",
-      color: "text-indigo-300",
-      background: "bg-indigo-900/30",
+      color: "text-indigo-600 dark:text-indigo-300",
+      background: "bg-indigo-100 dark:bg-indigo-900/30",
     };
   }
 
   return {
     icon: "lucide:file",
-    color: "text-gray-300",
-    background: "bg-gray-800",
+    color: "text-gray-600 dark:text-gray-300",
+    background: "bg-gray-100 dark:bg-gray-800",
   };
 }
 

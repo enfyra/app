@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootContainerRef" class="flex app-viewport-container text-sm bg-background text-foreground overflow-x-hidden" style="height: 100dvh">
+  <div ref="rootContainerRef" class="flex app-viewport-container text-sm text-foreground overflow-x-hidden" style="height: 100dvh; background-color: var(--bg-app);">
     <!-- Skip Link for Keyboard Navigation -->
     <a
       href="#main-content"
@@ -11,7 +11,8 @@
     <!-- Unified Sidebar -->
     <aside
       v-if="sidebarVisible || !isTabletOrMobile"
-      class="fixed top-0 left-0 flex flex-col flex-shrink-0 h-screen transition-all duration-300 ease-in-out bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-99999"
+      class="fixed top-0 left-0 flex flex-col flex-shrink-0 h-screen transition-all duration-300 ease-in-out border-r z-99999"
+      style="background-color: var(--bg-elevated); border-color: var(--border-default);"
       :class="[
         isTabletOrMobile
           ? 'w-[290px]'
@@ -34,17 +35,24 @@
 
     <!-- Main Content -->
     <main
-      class="flex-1 flex flex-col min-h-0 relative overflow-x-hidden transition-all duration-300 ease-in-out bg-white dark:bg-gray-900"
+      class="flex-1 flex flex-col min-h-0 relative overflow-x-hidden transition-all duration-300 ease-in-out"
       :class="[
         isTabletOrMobile
           ? 'ml-0'
           : (sidebarCollapsed ? 'lg:ml-[90px]' : 'lg:ml-[290px]')
       ]"
+      style="background-color: var(--bg-app);"
       id="main-content"
     >
       <header
-        :class="[headerContainerClasses, 'sticky top-0 flex w-full bg-white border-b border-gray-200 dark:border-gray-800 dark:bg-gray-900 z-99999']"
-        :style="headerContainerStyle"
+        :class="[headerContainerClasses, 'sticky top-0 flex w-full z-99999']"
+        :style="{
+          ...headerContainerStyle,
+          backgroundColor: 'var(--bg-app)',
+          borderBottomColor: 'var(--border-default)',
+          borderBottomWidth: '1px',
+          borderBottomStyle: 'solid'
+        }"
       >
         <div
           v-if="headerAccentLine?.enabled"
@@ -58,7 +66,12 @@
 
         <div class="flex flex-col items-center justify-between grow lg:flex-row">
           <div
-            class="flex items-center justify-between w-full gap-2 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 h-16"
+            class="flex items-center justify-between w-full gap-2 sm:gap-4 lg:justify-normal lg:border-b-0 h-16"
+            :style="{
+              borderBottomColor: 'var(--border-default)',
+              borderBottomWidth: '1px',
+              borderBottomStyle: 'solid'
+            }"
           >
             <div :class="[headerContentClasses, 'flex-1']" :style="headerContentStyle">
               <LayoutHeader />

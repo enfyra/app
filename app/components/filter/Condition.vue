@@ -59,13 +59,13 @@ const { isMobile, isTablet } = useScreen();
 <template>
   <div
     :class="[
-      'border border-muted rounded-lg bg-gray-800/50',
+      'border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800/50',
       (isMobile || isTablet) ? 'p-2 space-y-2' : 'flex items-center gap-2 p-3'
     ]"
   >
     <!-- Field Select -->
     <div v-if="!readonly" :class="(isMobile || isTablet) ? 'w-full' : 'flex items-center gap-2'">
-      <label v-if="isMobile || isTablet" class="text-xs text-gray-400 mb-1 block">Field</label>
+      <label v-if="isMobile || isTablet" class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Field</label>
       <USelect
         :model-value="
           condition.field.includes('.')
@@ -89,7 +89,7 @@ const { isMobile, isTablet } = useScreen();
 
     <!-- Operator Select -->
     <div :class="(isMobile || isTablet) ? 'w-full' : ''">
-      <label v-if="(isMobile || isTablet) && !readonly" class="text-xs text-gray-400 mb-1 block">Operator</label>
+      <label v-if="(isMobile || isTablet) && !readonly" class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Operator</label>
       <USelect
         v-if="!readonly"
         v-model="condition.operator"
@@ -112,7 +112,7 @@ const { isMobile, isTablet } = useScreen();
       v-if="needsValue(condition.operator) || condition.operator === '_is_null'"
     >
       <div :class="(isMobile || isTablet) ? 'w-full' : 'flex-1'">
-        <label v-if="(isMobile || isTablet) && !readonly" class="text-xs text-gray-400 mb-1 block">Value</label>
+        <label v-if="(isMobile || isTablet) && !readonly" class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Value</label>
         <FilterValueInput
           v-if="!readonly"
           :model-value="condition.value"

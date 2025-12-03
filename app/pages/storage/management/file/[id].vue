@@ -256,50 +256,50 @@ function getFileIconAndColor(mimetype: string): {
   if (!mimetype)
     return {
       icon: "lucide:file",
-      color: "text-gray-300",
-      background: "bg-gray-800",
+      color: "text-gray-600 dark:text-gray-300",
+      background: "bg-gray-100 dark:bg-gray-800",
     };
 
   if (mimetype.startsWith("image/"))
     return {
       icon: "lucide:image",
-      color: "text-blue-300",
-      background: "bg-blue-500/20",
+      color: "text-blue-600 dark:text-blue-300",
+      background: "bg-blue-100 dark:bg-blue-500/20",
     };
   if (mimetype.startsWith("video/"))
     return {
       icon: "lucide:video",
-      color: "text-purple-300",
-      background: "bg-purple-500/20",
+      color: "text-purple-600 dark:text-purple-300",
+      background: "bg-purple-100 dark:bg-purple-500/20",
     };
   if (mimetype.startsWith("audio/"))
     return {
       icon: "lucide:music",
-      color: "text-green-300",
-      background: "bg-green-500/20",
+      color: "text-green-600 dark:text-green-300",
+      background: "bg-green-100 dark:bg-green-500/20",
     };
   if (mimetype.includes("pdf"))
     return {
       icon: "lucide:file-text",
-      color: "text-red-300",
-      background: "bg-red-900/30",
+      color: "text-red-600 dark:text-red-300",
+      background: "bg-red-100 dark:bg-red-900/30",
     };
   if (mimetype.includes("zip") || mimetype.includes("archive"))
     return {
       icon: "lucide:archive",
-      color: "text-yellow-300",
-      background: "bg-yellow-900/30",
+      color: "text-yellow-600 dark:text-yellow-300",
+      background: "bg-yellow-100 dark:bg-yellow-900/30",
     };
   if (mimetype.startsWith("text/"))
     return {
       icon: "lucide:file-text",
-      color: "text-cyan-300",
-      background: "bg-cyan-900/30",
+      color: "text-cyan-600 dark:text-cyan-300",
+      background: "bg-cyan-100 dark:bg-cyan-900/30",
     };
   return {
     icon: "lucide:file",
-    color: "text-gray-300",
-    background: "bg-gray-800",
+    color: "text-gray-600 dark:text-gray-300",
+    background: "bg-gray-100 dark:bg-gray-800",
   };
 }
 </script>
@@ -310,7 +310,7 @@ function getFileIconAndColor(mimetype: string): {
     <div class="space-y-6">
       <!-- File Preview -->
       <div
-        class="bg-gray-800/50 rounded-xl border border-gray-700/50 shadow-xl overflow-hidden"
+        class="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 shadow-xl overflow-hidden"
         v-if="!pending || !isMounted"
       >
         <div class="flex justify-center p-4">
@@ -347,7 +347,7 @@ function getFileIconAndColor(mimetype: string): {
 
       <!-- File Editor Section -->
       <div
-        class="space-y-4 bg-gray-800/50 rounded-xl border border-gray-700/50 p-6"
+        class="space-y-4 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 p-6"
       >
         <div class="flex items-center gap-3">
           <UIcon name="lucide:edit-3" class="w-5 h-5" />
@@ -374,7 +374,7 @@ function getFileIconAndColor(mimetype: string): {
       </div>
 
       <!-- File Permissions Section -->
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
+      <div class="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 p-6">
         <PermissionManager
           table-name="file_permission_definition"
           :current-field-id="{ field: 'file', value: fileId }"

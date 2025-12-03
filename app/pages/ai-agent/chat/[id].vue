@@ -19,7 +19,7 @@ const encodeCopyData = (value: string) => encodeURIComponent(value)
 const decodeCopyData = (value: string) => decodeURIComponent(value)
 const renderCopyButton = (raw: string) => {
   const encoded = encodeCopyData(raw)
-  return `<button type="button" class="absolute top-3 right-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-700 bg-gray-900/80 text-gray-300 transition hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 copy-code-trigger" data-copy-code="${encoded}">
+  return `<button type="button" class="absolute top-3 right-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-900/80 text-gray-700 dark:text-gray-300 transition hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 copy-code-trigger" data-copy-code="${encoded}">
     <svg class="h-4 w-4 copy-icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -34,12 +34,12 @@ renderer.code = function({ text, lang }: { text: string; lang?: string }): strin
   if (lang && hljs.getLanguage(lang)) {
     try {
       const highlighted = hljs.highlight(text, { language: lang }).value
-      return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`, renderCopyButton(text))
+      return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`, renderCopyButton(text))
     } catch (err) {
     }
   }
   const highlighted = hljs.highlightAuto(text).value
-  return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs">${highlighted}</code></pre>`, renderCopyButton(text))
+  return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/60 px-4 py-4 pr-12"><code class="hljs">${highlighted}</code></pre>`, renderCopyButton(text))
 }
 
 marked.use({ renderer })
@@ -717,7 +717,7 @@ onBeforeUnmount(async () => {
                     v-else
                     class="space-y-3"
                   >
-                    <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-800 dark:text-gray-200">
+                    <div class="ai-chat-prose prose-sm max-w-none" style="color: var(--text-primary);">
                       <div v-html="renderMarkdown(message.content)" />
                       <div
                         v-if="message.isStreaming"

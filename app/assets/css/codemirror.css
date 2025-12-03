@@ -1,30 +1,46 @@
-/* CodeMirror selection fix */
-.cm-editor .cm-selectionBackground {
+.dark .cm-editor .cm-selectionBackground {
   background-color: #264F78 !important;
+}
+
+.dark .cm-editor.cm-focused .cm-selectionBackground {
+  background-color: #264F78 !important;
+}
+
+.dark .cm-editor .cm-content ::selection {
+  background-color: #264F78 !important;
+  color: inherit !important;
+}
+
+.dark .cm-editor .cm-line ::selection {
+  background-color: #264F78 !important;
+  color: inherit !important;
+}
+
+.cm-editor .cm-selectionBackground {
+  background-color: #add6ff !important;
 }
 
 .cm-editor.cm-focused .cm-selectionBackground {
-  background-color: #264F78 !important;
+  background-color: #add6ff !important;
 }
 
 .cm-editor .cm-content ::selection {
-  background-color: #264F78 !important;
+  background-color: #add6ff !important;
   color: inherit !important;
 }
 
 .cm-editor .cm-line ::selection {
-  background-color: #264F78 !important;
+  background-color: #add6ff !important;
   color: inherit !important;
 }
 
-/* CodeMirror autocomplete dark theme override */
-.cm-tooltip.cm-tooltip-autocomplete {
+.dark .cm-tooltip.cm-tooltip-autocomplete {
   background-color: #252526 !important;
   border: 1px solid #454545 !important;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
-.cm-tooltip-autocomplete > ul {
+.dark .cm-tooltip-autocomplete > ul {
   background-color: #252526 !important;
   color: #d4d4d4 !important;
   font-family: 'Fira Code', 'JetBrains Mono', monospace !important;
@@ -33,24 +49,69 @@
   padding: 4px 0 !important;
 }
 
-.cm-tooltip-autocomplete > ul > li {
+.dark .cm-tooltip-autocomplete > ul > li {
   background-color: transparent !important;
   color: #d4d4d4 !important;
   padding: 4px 8px !important;
   cursor: pointer !important;
 }
 
-.cm-tooltip-autocomplete > ul > li[aria-selected="true"] {
+.dark .cm-tooltip-autocomplete > ul > li[aria-selected="true"] {
   background-color: #094771 !important;
   color: #ffffff !important;
 }
 
-.cm-tooltip-autocomplete > ul > li:hover:not([aria-selected="true"]) {
+.dark .cm-tooltip-autocomplete > ul > li:hover:not([aria-selected="true"]) {
   background-color: #2a2d2e !important;
 }
 
-.cm-completionIcon {
+.dark .cm-completionIcon {
   color: #cccccc !important;
+  margin-right: 4px !important;
+}
+
+.dark .cm-completionLabel {
+  color: inherit !important;
+}
+
+.dark .cm-completionDetail {
+  color: #858585 !important;
+  font-style: italic !important;
+}
+
+.cm-tooltip.cm-tooltip-autocomplete {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.cm-tooltip-autocomplete > ul {
+  background-color: #ffffff !important;
+  color: #1e1e1e !important;
+  font-family: 'Fira Code', 'JetBrains Mono', monospace !important;
+  max-height: 200px !important;
+  margin: 0 !important;
+  padding: 4px 0 !important;
+}
+
+.cm-tooltip-autocomplete > ul > li {
+  background-color: transparent !important;
+  color: #1e1e1e !important;
+  padding: 4px 8px !important;
+  cursor: pointer !important;
+}
+
+.cm-tooltip-autocomplete > ul > li[aria-selected="true"] {
+  background-color: #0969da !important;
+  color: #ffffff !important;
+}
+
+.cm-tooltip-autocomplete > ul > li:hover:not([aria-selected="true"]) {
+  background-color: #f6f8fa !important;
+}
+
+.cm-completionIcon {
+  color: #6e7681 !important;
   margin-right: 4px !important;
 }
 
@@ -59,7 +120,6 @@
 }
 
 .cm-completionDetail {
-  color: #858585 !important;
+  color: #6e7681 !important;
   font-style: italic !important;
 }
-

@@ -117,7 +117,7 @@ function getGradientForCollection(id: any): string | undefined {
             v-for="collection in collections"
             :key="collection.id"
             @click="navigateTo(`/collections/${collection.name}`)"
-            class="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] cursor-pointer group transition-all duration-300 hover:shadow-theme-md hover:bg-gray-50 dark:hover:bg-white/[0.06] overflow-hidden"
+            class="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] cursor-pointer group transition-all duration-300 hover:shadow-theme-md hover:bg-gray-200 dark:hover:bg-white/[0.12] overflow-hidden"
             :class="isTablet ? 'p-5' : 'p-5 md:p-6'"
           >
             <div
@@ -195,12 +195,12 @@ function getGradientForCollection(id: any): string | undefined {
           />
           <p class="hidden md:block text-sm text-gray-400">
             Showing
-            <span class="text-gray-200"
+            <span class="text-gray-700 dark:text-gray-200"
               >{{ (page - 1) * pageLimit + 1 }}-{{
                 Math.min(page * pageLimit, total)
               }}</span
             >
-            of <span class="text-gray-200">{{ total }}</span> results
+            of <span class="text-gray-700 dark:text-gray-200">{{ total }}</span> results
           </p>
         </div>
       </div>

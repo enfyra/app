@@ -94,12 +94,12 @@ const { isMobile, isTablet } = useScreen();
         size="xs"
         class="w-20"
       />
-      <span v-else class="text-xs px-2 py-1 bg-gray-100 rounded">
+      <span v-else class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">
         {{ group.operator.toUpperCase() }}
       </span>
     </div>
 
-    <div :class="(isMobile || isTablet) ? 'space-y-2 pl-2 border-l-2 border-muted' : 'space-y-2 pl-4 border-l-2 border-muted'">
+    <div :class="(isMobile || isTablet) ? 'space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700' : 'space-y-2 pl-4 border-l-2 border-gray-200 dark:border-gray-700'">
       <template v-for="(item, index) in group.conditions" :key="item.id">
         <!-- Filter Condition -->
         <FilterCondition
@@ -116,7 +116,7 @@ const { isMobile, isTablet } = useScreen();
         />
 
         <!-- Nested Filter Group -->
-        <div v-else :class="(isMobile || isTablet) ? 'border border-muted rounded-lg p-2' : 'border border-muted rounded-lg p-3'">
+        <div v-else :class="(isMobile || isTablet) ? 'border border-gray-200 dark:border-gray-700 rounded-lg p-2' : 'border border-gray-200 dark:border-gray-700 rounded-lg p-3'">
           <!-- Show relation context if this is a relation group -->
           <div
             v-if="item.relationContext"

@@ -2,7 +2,7 @@
   <component
     :is="animated ? 'div' : 'div'"
     ref="cardRef"
-    class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] transition-all duration-300 relative overflow-hidden"
+    class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.06] transition-all duration-300 relative overflow-hidden"
     :class="[
       variantClasses,
       sizeClasses[size],
@@ -83,7 +83,7 @@ const sizeClasses = {
 const variantClasses = computed(() => {
   const variants = {
     form: [
-      "bg-white dark:bg-white/[0.03]",
+      "bg-white dark:bg-white/[0.06]",
       "border-gray-200 dark:border-gray-800",
     ].join(" "),
     settings: [

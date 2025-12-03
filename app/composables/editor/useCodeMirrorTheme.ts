@@ -1,13 +1,18 @@
 import { EditorView } from "@codemirror/view";
-import { vscodeDark } from "@uiw/codemirror-theme-vscode";
+import { vscodeDark, vscodeLight } from "@uiw/codemirror-theme-vscode";
 
 export function useCodeMirrorTheme(height?: string | Ref<string>) {
+  const colorMode = useColorMode();
   const heightValue = computed(() => {
     if (!height) return "400px";
     return typeof height === "string" ? height : height.value;
   });
 
-  const customTheme = computed(() => EditorView.baseTheme({
+  const isDark = computed(() => colorMode.value === 'dark');
+
+  const customTheme = computed(() => {
+    if (isDark.value) {
+      return EditorView.baseTheme({
     "&": {
       backgroundColor: "#1e1e1e",
       color: "#d4d4d4",
@@ -113,7 +118,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
     },
 
     ".cm-enfyra-template": {
-      color: "#4EC9B0 !important", // Teal color for @ templates (@QUERY, @REQ, @RES, etc.)
+          color: "#4EC9B0 !important",
       fontWeight: "bold !important",
       backgroundColor: "transparent !important",
       textDecoration: "none !important",
@@ -124,7 +129,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
     },
 
     ".cm-enfyra-table": {
-      color: "#DCDCAA !important", // Yellow color for # table access
+          color: "#DCDCAA !important",
       fontWeight: "bold !important",
       backgroundColor: "transparent !important",
       textDecoration: "none !important",
@@ -135,7 +140,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
     },
 
     ".cm-enfyra-percentage": {
-      color: "#C586C0 !important", // Purple color for % percentage syntax
+          color: "#C586C0 !important",
       fontWeight: "bold !important",
       backgroundColor: "transparent !important",
       textDecoration: "none !important",
@@ -155,10 +160,167 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
       color: "#F48771 !important",
       fontWeight: "bold !important",
     },
-  }));
+      });
+    } else {
+      return EditorView.baseTheme({
+        "&": {
+          backgroundColor: "#ffffff",
+          color: "#1e1e1e",
+          fontSize: "14px",
+          fontFamily: "'Fira Code', monospace",
+          borderRadius: "8px",
+          border: "1px solid #e5e7eb",
+          overflow: "hidden",
+          height: "100%",
+        },
+
+        ".cm-content": {
+          padding: "0",
+          lineHeight: "1.6",
+        },
+
+        ".cm-content ::selection": {
+          backgroundColor: "#add6ff !important",
+          color: "inherit !important",
+        },
+
+        ".cm-line": {
+          padding: "0 8px",
+        },
+
+        ".cm-gutters": {
+          backgroundColor: "#f8f9fa",
+          color: "#6e7681",
+          borderRight: "1px solid #e5e7eb",
+        },
+
+        ".cm-activeLine": {
+          backgroundColor: "#f6f8fa",
+        },
+
+        ".cm-selectionBackground": {
+          backgroundColor: "#add6ff !important",
+        },
+        
+        "&.cm-focused .cm-selectionBackground": {
+          backgroundColor: "#add6ff !important",
+        },
+        
+        ".cm-selectionMatch": {
+          backgroundColor: "#c8e1ff80",
+        },
+
+        ".cm-cursor": {
+          borderLeft: "2px solid #1e1e1e",
+        },
+
+        ".cm-tooltip": {
+          backgroundColor: "#ffffff",
+          color: "#1e1e1e",
+          border: "1px solid #e5e7eb",
+          borderRadius: "4px",
+          padding: "0",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+        },
+
+        ".cm-tooltip-autocomplete": {
+          "& > ul": {
+            maxHeight: "200px",
+            fontFamily: "'Fira Code', monospace",
+            fontSize: "13px",
+          },
+          "& > ul > li": {
+            padding: "4px 8px",
+            display: "flex",
+            alignItems: "center",
+            minHeight: "24px",
+          },
+          "& > ul > li[aria-selected]": {
+            backgroundColor: "#0969da",
+            color: "#ffffff",
+          },
+          "& .cm-completionIcon": {
+            width: "16px",
+            marginRight: "4px",
+            opacity: "0.7",
+          },
+          "& .cm-completionLabel": {
+            flex: "1",
+          },
+          "& .cm-completionDetail": {
+            marginLeft: "8px",
+            color: "#6e7681",
+            fontStyle: "italic",
+          },
+        },
+
+        ".cm-tooltip-hover": {
+          backgroundColor: "#ffffff",
+          border: "1px solid #e5e7eb",
+          padding: "8px",
+          maxWidth: "500px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+        },
+
+        ".cm-diagnostic": {
+          backgroundColor: "#ffffff",
+          border: "1px solid #e5e7eb",
+          padding: "4px 8px",
+          borderRadius: "4px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+        },
+
+        ".cm-enfyra-template": {
+          color: "#0969da !important",
+          fontWeight: "bold !important",
+          backgroundColor: "transparent !important",
+          textDecoration: "none !important",
+        },
+        ".cm-enfyra-template *": {
+          color: "#0969da !important",
+          fontWeight: "bold !important",
+        },
+
+        ".cm-enfyra-table": {
+          color: "#953800 !important",
+          fontWeight: "bold !important",
+          backgroundColor: "transparent !important",
+          textDecoration: "none !important",
+        },
+        ".cm-enfyra-table *": {
+          color: "#953800 !important",
+          fontWeight: "bold !important",
+        },
+
+        ".cm-enfyra-percentage": {
+          color: "#8250df !important",
+          fontWeight: "bold !important",
+          backgroundColor: "transparent !important",
+          textDecoration: "none !important",
+        },
+        ".cm-enfyra-percentage *": {
+          color: "#8250df !important",
+          fontWeight: "bold !important",
+        },
+
+        ".cm-enfyra-throw": {
+          color: "#cf222e !important",
+          fontWeight: "bold !important",
+          backgroundColor: "transparent !important",
+          textDecoration: "none !important",
+        },
+        ".cm-enfyra-throw *": {
+          color: "#cf222e !important",
+          fontWeight: "bold !important",
+        },
+      });
+    }
+  });
+
+  const vscodeTheme = computed(() => isDark.value ? vscodeDark : vscodeLight);
 
   return {
     customTheme,
-    vscodeTheme: vscodeDark,
+    vscodeTheme,
   };
 }

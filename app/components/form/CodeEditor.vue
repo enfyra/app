@@ -37,7 +37,7 @@ const extensions = computed(() => [
     emit("diagnostics", diags);
   }),
   languageExtension.value,
-  vscodeTheme,
+  vscodeTheme.value,
   customTheme.value,
   enfyraSyntaxPlugin,
 ]);
@@ -207,7 +207,7 @@ function handleMouseUp(e?: MouseEvent) {
 <template>
   <div 
     ref="containerRef" 
-    class="rounded-md overflow-hidden ring-1 ring-slate-700 relative"
+    class="rounded-md overflow-hidden ring-1 ring-gray-200 dark:ring-gray-700 relative"
     :class="!isResizing ? 'transition-[height] duration-300 ease-out' : ''"
     :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
   >
@@ -226,12 +226,12 @@ function handleMouseUp(e?: MouseEvent) {
     <div
       ref="resizeHandleRef"
       @mousedown="handleMouseDown"
-      class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-slate-600/50 transition-colors group z-50 select-none"
-      :class="{ 'bg-slate-600/50': isResizing }"
+      class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-gray-300 dark:hover:bg-gray-600/50 transition-colors group z-50 select-none"
+      :class="{ 'bg-gray-300 dark:bg-gray-600/50': isResizing }"
       style="touch-action: none; pointer-events: auto;"
     >
       <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
-        <div class="w-12 h-0.5 bg-slate-500 group-hover:bg-slate-400 rounded-full"></div>
+        <div class="w-12 h-0.5 bg-gray-400 dark:bg-gray-500 group-hover:bg-gray-500 dark:group-hover:bg-gray-400 rounded-full"></div>
       </div>
     </div>
   </div>
