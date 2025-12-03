@@ -24,6 +24,8 @@ const previewLayerRef = ref<HTMLDivElement>();
 const isFocused = ref(false);
 const previewHeight = ref<string | null>(null);
 const previewStyle = ref<{ top: string; left: string; width: string; height: string } | null>(null);
+const mutationObserverRef = ref<MutationObserver | null>(null);
+const iframeLoadHandlerRef = ref<(() => void) | null>(null);
 
 const initialHeight = props.height ?? 300;
 const currentHeight = ref(`${initialHeight}px`);
@@ -179,10 +181,54 @@ onMounted(async () => {
     const initTinyMCE = () => {
       const isDark = colorMode.value === 'dark';
       
-      // Destroy existing editor if it exists
+      // Remove existing TinyMCE instance if it exists
       if (editorRef.value) {
-        editorRef.value.destroy();
+        try {
+          editorRef.value.destroy();
+        } catch (e) {
+          // Ignore if already destroyed
+        }
         editorRef.value = null;
+      }
+      
+      // Remove any existing TinyMCE instance for this selector using tinymce.remove()
+      try {
+        window.tinymce.remove(`#${textareaId}`);
+      } catch (e) {
+        // Ignore if doesn't exist
+      }
+      
+      // Also try to remove by ID directly
+      try {
+        const existingEditor = window.tinymce.get(textareaId);
+        if (existingEditor) {
+          existingEditor.remove();
+        }
+      } catch (e) {
+        // Ignore if doesn't exist
+      }
+      
+      // Ensure textarea element exists and has a parentNode
+      let textareaElement = document.getElementById(textareaId);
+      if (!textareaElement && containerRef.value) {
+        textareaElement = document.createElement('textarea');
+        textareaElement.id = textareaId;
+        containerRef.value.appendChild(textareaElement);
+      }
+      
+      if (!textareaElement) {
+        console.error('Textarea element not found for TinyMCE initialization');
+        return;
+      }
+      
+      // Ensure textarea has a parentNode (is in the DOM)
+      if (!textareaElement.parentNode) {
+        console.error('Textarea element has no parentNode');
+        if (containerRef.value) {
+          containerRef.value.appendChild(textareaElement);
+        } else {
+          return;
+        }
       }
       
       window.tinymce.init({
@@ -215,57 +261,80 @@ onMounted(async () => {
         editorRef.value = editor;
 
         editor.on("init", () => {
-          editor.setContent(ensureString(props.modelValue));
+          try {
+            editor.setContent(ensureString(props.modelValue));
+          } catch (e) {
+            console.error('Error setting content on init:', e);
+          }
           if (containerRef.value) {
             containerRef.value.style.height = currentHeight.value;
           }
           
           const updateContentStyle = () => {
-            const iframe = editor.getContentAreaContainer().querySelector('iframe');
-            if (iframe) {
-              const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-              if (iframeDoc) {
-                const isDark = colorMode.value === 'dark';
-                const tinymceBody = iframeDoc.getElementById('tinymce');
-                
-                if (tinymceBody) {
-                  tinymceBody.style.color = isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)';
+            if (!editorRef.value || !editor) return;
+            
+            try {
+              const container = editor.getContentAreaContainer();
+              if (!container) return;
+              
+              const iframe = container.querySelector('iframe');
+              if (iframe) {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                if (iframeDoc) {
+                  const isDark = colorMode.value === 'dark';
+                  const tinymceBody = iframeDoc.getElementById('tinymce');
                   
-                  const existingStyle = iframeDoc.getElementById('custom-content-style');
-                  if (existingStyle) {
-                    existingStyle.remove();
+                  if (tinymceBody) {
+                    tinymceBody.style.color = isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)';
+                    
+                    const existingStyle = iframeDoc.getElementById('custom-content-style');
+                    if (existingStyle) {
+                      existingStyle.remove();
+                    }
+                    
+                    const style = iframeDoc.createElement('style');
+                    style.id = 'custom-content-style';
+                    style.textContent = `
+                      #tinymce {
+                        color: ${isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)'} !important;
+                      }
+                      #tinymce * {
+                        color: ${isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)'} !important;
+                      }
+                    `;
+                    iframeDoc.head.appendChild(style);
                   }
-                  
-                  const style = iframeDoc.createElement('style');
-                  style.id = 'custom-content-style';
-                  style.textContent = `
-                    #tinymce {
-                      color: ${isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)'} !important;
-                    }
-                    #tinymce * {
-                      color: ${isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)'} !important;
-                    }
-                  `;
-                  iframeDoc.head.appendChild(style);
                 }
               }
+            } catch (error) {
+              // Editor may have been destroyed, ignore
             }
           };
           
           nextTick(() => {
             updateContentStyle();
             
-            const iframe = editor.getContentAreaContainer().querySelector('iframe');
-            if (iframe) {
-              iframe.addEventListener('load', updateContentStyle);
+            try {
+              const container = editor.getContentAreaContainer();
+              if (!container) return;
               
-              const observer = new MutationObserver(() => {
-                updateContentStyle();
-              });
-              observer.observe(document.documentElement, {
-                attributes: true,
-                attributeFilter: ['class']
-              });
+              const iframe = container.querySelector('iframe');
+              if (iframe) {
+                const loadHandler = () => updateContentStyle();
+                iframe.addEventListener('load', loadHandler);
+                iframeLoadHandlerRef.value = loadHandler;
+                
+                const observer = new MutationObserver(() => {
+                  updateContentStyle();
+                });
+                observer.observe(document.documentElement, {
+                  attributes: true,
+                  attributeFilter: ['class']
+                });
+                mutationObserverRef.value = observer;
+              }
+            } catch (error) {
+              // Editor may have been destroyed, ignore
             }
           });
         });
@@ -288,15 +357,80 @@ onMounted(async () => {
     initTinyMCE();
     
     // Watch for theme changes and reinitialize editor
-    watch(() => colorMode.value, () => {
+    watch(() => colorMode.value, async () => {
       if (editorRef.value) {
         const currentContent = editorRef.value.getContent();
-        initTinyMCE();
-        nextTick(() => {
+        try {
+          // Save textarea element reference before destroying
+          const textareaElement = document.getElementById(textareaId);
+          const textareaParent = textareaElement?.parentNode;
+          
+          // Cleanup observers and listeners before destroying
+          if (mutationObserverRef.value) {
+            mutationObserverRef.value.disconnect();
+            mutationObserverRef.value = null;
+          }
+          
+          if (editorRef.value && iframeLoadHandlerRef.value) {
+            try {
+              const container = editorRef.value.getContentAreaContainer();
+              if (container) {
+                const iframe = container.querySelector('iframe');
+                if (iframe) {
+                  iframe.removeEventListener('load', iframeLoadHandlerRef.value);
+                }
+              }
+            } catch (e) {
+              // Ignore if already destroyed
+            }
+            iframeLoadHandlerRef.value = null;
+          }
+          
+          // Remove TinyMCE instance using tinymce.remove() first
+          try {
+            window.tinymce.remove(`#${textareaId}`);
+          } catch (e) {
+            // Ignore if doesn't exist
+          }
+          
+          // Also try to remove by ID directly
+          try {
+            const existingEditor = window.tinymce.get(textareaId);
+            if (existingEditor) {
+              existingEditor.remove();
+            }
+          } catch (e) {
+            // Ignore if doesn't exist
+          }
+          
+          try {
+            editorRef.value.destroy();
+          } catch (e) {
+            // Ignore if already destroyed
+          }
+          editorRef.value = null;
+          
+          // Ensure textarea element still exists in DOM after destroy
+          await nextTick();
+          let textareaAfterDestroy = document.getElementById(textareaId);
+          if (!textareaAfterDestroy && textareaParent && containerRef.value) {
+            // Recreate textarea if it was removed
+            const newTextarea = document.createElement('textarea');
+            newTextarea.id = textareaId;
+            containerRef.value.appendChild(newTextarea);
+          }
+          
+          // Wait longer for DOM cleanup to complete
+          await new Promise(resolve => setTimeout(resolve, 200));
+          initTinyMCE();
+          await nextTick();
+          await new Promise(resolve => setTimeout(resolve, 100));
           if (editorRef.value) {
             editorRef.value.setContent(currentContent);
           }
-        });
+        } catch (error) {
+          console.error("Error reinitializing TinyMCE on theme change:", error);
+        }
       }
     });
   } catch (error) {}
@@ -334,6 +468,28 @@ watch(
 );
 
 onBeforeUnmount(() => {
+  // Cleanup MutationObserver
+  if (mutationObserverRef.value) {
+    mutationObserverRef.value.disconnect();
+    mutationObserverRef.value = null;
+  }
+  
+  // Cleanup iframe event listener
+  if (editorRef.value && iframeLoadHandlerRef.value) {
+    try {
+      const container = editorRef.value.getContentAreaContainer();
+      if (container) {
+        const iframe = container.querySelector('iframe');
+        if (iframe) {
+          iframe.removeEventListener('load', iframeLoadHandlerRef.value);
+        }
+      }
+    } catch (e) {
+      // Ignore if already destroyed
+    }
+    iframeLoadHandlerRef.value = null;
+  }
+  
   document.removeEventListener("mousemove", handleMouseMove);
   document.removeEventListener("mouseup", handleMouseUp);
   document.removeEventListener("mouseleave", handleMouseUp);

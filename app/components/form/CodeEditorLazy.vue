@@ -1,7 +1,11 @@
 <template>
   <Suspense>
     <CodeEditor 
-      v-bind="$attrs" 
+      v-if="shouldRender"
+      :model-value="props.modelValue"
+      :language="props.language"
+      :height="props.height"
+      :class="props.class"
       @update:model-value="(value) => $emit('update:modelValue', value)"
       @diagnostics="(diags) => $emit('diagnostics', diags)"
     />
@@ -17,10 +21,23 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({
+  inheritAttrs: false,
+});
+
+const props = defineProps<{
+  modelValue?: string;
+  language?: "javascript" | "vue" | "json" | "html";
+  height?: string;
+  class?: string;
+}>();
+
 defineEmits<{
   'update:modelValue': [value: string];
   'diagnostics': [diags: any[]];
 }>();
+
+const shouldRender = ref(true);
 
 const CodeEditor = defineAsyncComponent(() => 
   import('./CodeEditor.vue')

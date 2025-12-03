@@ -1,4 +1,5 @@
 import { EditorView } from "@codemirror/view";
+import { Compartment } from "@codemirror/state";
 import { vscodeDark, vscodeLight } from "@uiw/codemirror-theme-vscode";
 
 export function useCodeMirrorTheme(height?: string | Ref<string>) {
@@ -9,6 +10,9 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
   });
 
   const isDark = computed(() => colorMode.value === 'dark');
+  
+  // Create a Compartment for theme management
+  const themeCompartment = new Compartment();
 
   const customTheme = computed(() => {
     if (isDark.value) {
@@ -19,7 +23,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
       fontSize: "14px",
       fontFamily: "'Fira Code', monospace",
       borderRadius: "8px",
-      border: "1px solid #3c3c3c",
+      border: "none",
       overflow: "hidden",
       height: "100%",
     },
@@ -41,7 +45,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
     ".cm-gutters": {
       backgroundColor: "#252526",
       color: "#858585",
-      borderRight: "1px solid #3c3c3c",
+      borderRight: "1px solid rgba(255, 255, 255, 0.08)",
     },
 
     ".cm-activeLine": {
@@ -169,7 +173,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
           fontSize: "14px",
           fontFamily: "'Fira Code', monospace",
           borderRadius: "8px",
-          border: "1px solid #e5e7eb",
+          border: "none",
           overflow: "hidden",
           height: "100%",
         },
@@ -318,9 +322,17 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
   });
 
   const vscodeTheme = computed(() => isDark.value ? vscodeDark : vscodeLight);
+  
+  // Combined theme extensions
+  const themeExtensions = computed(() => [
+    vscodeTheme.value,
+    customTheme.value,
+  ]);
 
   return {
     customTheme,
     vscodeTheme,
+    themeCompartment,
+    themeExtensions,
   };
 }

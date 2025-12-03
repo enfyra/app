@@ -155,7 +155,7 @@ export default defineAppConfig({
         base: [
           "w-full rounded-lg border border-gray-300 dark:border-gray-700",
           "bg-transparent dark:bg-gray-900",
-          "px-4 py-2.5 text-sm",
+          "px-4 py-2.5 text-sm min-h-[44px]",
           "text-gray-800 dark:text-white/90",
           "shadow-theme-xs",
           "placeholder:text-gray-400 dark:placeholder:text-white/30",
@@ -210,7 +210,18 @@ export default defineAppConfig({
     },
     switch: {
       slots: {
-        thumb: "data-[state=unchecked]:bg-gray-300 bg-white",
+        base: [
+          "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          "data-[state=checked]:bg-brand-500 dark:data-[state=checked]:bg-brand-500",
+          "data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600",
+        ].join(" "),
+        thumb: [
+          "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+          "data-[state=checked]:translate-x-5",
+          "data-[state=unchecked]:translate-x-0",
+        ].join(" "),
       },
     },
     checkbox: {
