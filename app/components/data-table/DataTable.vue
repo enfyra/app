@@ -284,7 +284,7 @@ function getColumnLabel(columnId: string) {
         <div
           v-for="(row, index) in table.getRowModel().rows"
           :key="row.id"
-          class="rounded-2xl p-4 cursor-pointer transition-all border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-900/30 backdrop-blur-sm hover:bg-gray-200 dark:hover:bg-gray-800/50"
+          class="rounded-2xl p-4 cursor-pointer transition-all border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-900/30 backdrop-blur-sm hover:bg-brand-50 dark:hover:bg-brand-500/20"
           @click="handleRowClick(row.original)"
         >
           <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-700/50">
@@ -371,7 +371,7 @@ function getColumnLabel(columnId: string) {
                     ? 'overflow-hidden'
                     : '',
                   header.column.getCanSort() &&
-                    'cursor-pointer select-none hover:bg-gray-200 dark:hover:bg-white/15 transition-colors',
+                    'cursor-pointer select-none hover:bg-brand-50 dark:hover:bg-brand-500/20 transition-colors',
                 ]"
                 @click="header.column.getToggleSortingHandler()?.($event)"
                 scope="col"
@@ -430,7 +430,7 @@ function getColumnLabel(columnId: string) {
                     'group cursor-pointer transition-all duration-200 border-t border-gray-100 dark:border-gray-800',
                     selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
                       ? 'bg-brand-50 dark:bg-brand-500/10'
-                      : 'hover:bg-gray-200 dark:hover:bg-white/15',
+                      : 'hover:bg-brand-50 dark:hover:bg-brand-500/20',
                   ]"
                   @click="handleRowClick(row.original)"
                 >
@@ -472,7 +472,7 @@ function getColumnLabel(columnId: string) {
                   'group cursor-pointer transition-all duration-200 border-t border-gray-100 dark:border-gray-800',
                   selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
                     ? 'bg-brand-50 dark:bg-brand-500/10'
-                    : 'hover:bg-gray-200 dark:hover:bg-white/15',
+                    : 'hover:bg-brand-50 dark:hover:bg-brand-500/20',
                 ]"
                 @click="handleRowClick(row.original)"
               >

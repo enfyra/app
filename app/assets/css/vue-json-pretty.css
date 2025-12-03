@@ -21,3 +21,27 @@
 .vjs-tree .vjs-tree__brackets {
   color: #a8a8a2 !important;
 }
+
+.vjs-tree[data-theme="light"] .vjs-value__string {
+  color: #0969da !important;
+}
+
+.vjs-tree[data-theme="light"] .vjs-value__number {
+  color: #953800 !important;
+}
+
+.vjs-tree[data-theme="light"] .vjs-value__boolean {
+  color: #cf222e !important;
+}
+
+.vjs-tree[data-theme="light"] .vjs-key {
+  color: #8250df !important;
+}
+
+.vjs-tree[data-theme="light"] .vjs-tree__brackets {
+  color: #6e7681 !important;
+}
+
+.vjs-tree[data-theme="light"] {
+  color: #1e1e1e !important;
+}
