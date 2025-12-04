@@ -35,16 +35,10 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     ></div>
     <div class="space-y-2 flex-1">
       <div
-        :class="['h-4 rounded w-1/2', animationClass, shimmerClass]"
-        :style="{
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-        }"
+        :class="['h-4 rounded w-1/2 skeleton-inline', animationClass, shimmerClass]"
       ></div>
       <div
-        :class="['h-3 rounded w-1/3', animationClass, shimmerClass]"
-        :style="{
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-        }"
+        :class="['h-3 rounded w-1/3 skeleton-inline', animationClass, shimmerClass]"
       ></div>
     </div>
   </div>
@@ -67,16 +61,10 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         ></div>
         <div class="space-y-2 flex-1">
           <div
-            class="h-4 rounded w-3/4"
-            :style="{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-            }"
+            class="h-4 rounded w-3/4 skeleton-inline"
           ></div>
           <div
-            class="h-3 rounded w-1/2"
-            :style="{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-            }"
+            class="h-3 rounded w-1/2 skeleton-inline"
           ></div>
         </div>
       </div>
@@ -139,16 +127,10 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
           />
           <div class="flex items-center justify-between">
             <div
-              class="h-3 w-12 rounded"
-              :style="{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
-              }"
+              class="h-3 w-12 rounded skeleton-inline"
             />
             <div
-              class="h-3 w-16 rounded"
-              :style="{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))',
-              }"
+              class="h-3 w-16 rounded skeleton-inline"
             />
           </div>
           <div
@@ -216,18 +198,12 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         ></div>
         <div class="flex gap-2 justify-end">
           <div
-            class="w-8 h-6 rounded"
+            class="w-8 h-6 rounded skeleton-inline"
             :class="shimmerClass"
-            :style="{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-            }"
           ></div>
           <div
-            class="w-8 h-6 rounded"
+            class="w-8 h-6 rounded skeleton-inline"
             :class="shimmerClass"
-            :style="{
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-            }"
           ></div>
         </div>
       </div>
@@ -239,19 +215,13 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     <div v-for="i in 5" :key="i" class="space-y-2">
       <!-- Label -->
       <div
-        class="h-4 w-24 rounded"
+        class="h-4 w-24 rounded skeleton-inline"
         :class="[animationClass, shimmerClass]"
-        :style="{
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-        }"
       ></div>
       <!-- Input -->
       <div
-        class="h-10 w-full rounded-lg"
+        class="h-10 w-full rounded-lg skeleton-inline"
         :class="[animationClass, shimmerClass]"
-        :style="{
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(124, 58, 237, 0.25))'
-        }"
       ></div>
     </div>
 

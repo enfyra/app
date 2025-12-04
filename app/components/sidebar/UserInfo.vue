@@ -1,6 +1,8 @@
 <script setup lang="ts">
 const colorMode = useColorMode();
 const { me } = useEnfyraAuth();
+const { width } = useScreen();
+const { setSidebarVisible } = useGlobalState();
 
 const userEmail = computed(() => {
   if (!me.value) return '';
@@ -16,6 +18,10 @@ const isDark = computed({
 
 function toggleTheme() {
   isDark.value = !isDark.value;
+}
+
+function handleProfileClick() {
+  if (width.value <= 1024) setSidebarVisible(false);
 }
 </script>
 
@@ -34,6 +40,7 @@ function toggleTheme() {
         to="/me"
         class="shrink-0"
         active-class="[&_button]:bg-brand-50 [&_button]:text-brand-500 dark:[&_button]:bg-brand-500/15 dark:[&_button]:text-brand-400"
+        @click="handleProfileClick"
       >
         <UButton
           icon="lucide:user"
