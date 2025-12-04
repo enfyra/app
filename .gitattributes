@@ -1,2 +1,5 @@
 # Exclude Discord workflow from being merged to other projects
 .github/workflows/discord-release.yml merge=ours
+
+# Preserve init.json in downstream projects during merge
+init.json merge=ours
