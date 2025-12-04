@@ -1,6 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
+  srcDir: 'app',
   compatibilityDate: "2025-05-15",
   devtools: { enabled: true },
   devServer: {
@@ -42,7 +43,7 @@ export default defineNuxtConfig({
     storageKey: "nuxt-color-mode",
   },
   ssr: false,
-  css: ["./app/assets/css/main.css", "./app/assets/css/highlight.css"],
+  css: ["assets/css/main.css", "assets/css/highlight.css"],
   app: {
     head: {
       htmlAttrs: {
