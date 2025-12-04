@@ -326,8 +326,7 @@
   }
 
   .skeleton-base {
-    background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
-    opacity: 0.6;
+    background: linear-gradient(135deg, #E5E7EB 0%, #D1D5DB 100%);
   }
 
   .dark .skeleton-base {
@@ -336,8 +335,7 @@
   }
 
   .skeleton-gradient {
-    background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
-    opacity: 0.7;
+    background: linear-gradient(135deg, #E5E7EB 0%, #D1D5DB 100%);
   }
 
   .dark .skeleton-gradient {
@@ -359,8 +357,7 @@
   }
 
   .skeleton-icon {
-    background: var(--bg-surface);
-    opacity: 0.5;
+    background: #D1D5DB;
   }
 
   .dark .skeleton-icon {
@@ -368,8 +365,7 @@
   }
 
   .skeleton-badge {
-    background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
-    opacity: 0.6;
+    background: linear-gradient(135deg, #D1D5DB 0%, #E5E7EB 100%);
   }
 
   .dark .skeleton-badge {
@@ -378,10 +374,19 @@
 
   .skeleton-primary {
     background: linear-gradient(135deg, rgba(70, 95, 255, 0.2) 0%, rgba(124, 58, 237, 0.25) 100%);
-    opacity: 0.7;
+    opacity: 0.85;
   }
 
   .dark .skeleton-primary {
     background: linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+  }
+
+  .skeleton-inline {
+    background: linear-gradient(135deg, #E5E7EB 0%, #D1D5DB 100%);
+  }
+
+  .dark .skeleton-inline {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(124, 58, 237, 0.25) 100%);
+    opacity: 0.8;
   }
 }
