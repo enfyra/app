@@ -1,44 +1,12 @@
-import { javascript } from "@codemirror/lang-javascript";
-import { vue } from "@codemirror/lang-vue";
-import { html } from "@codemirror/lang-html";
-import { linter, lintGutter } from "@codemirror/lint";
-import {
-  lineNumbers,
-  highlightActiveLine,
-  keymap,
-  EditorView,
-  drawSelection,
-  dropCursor,
-  rectangularSelection,
-  crosshairCursor,
-  Decoration,
-} from "@codemirror/view";
-import type { DecorationSet } from "@codemirror/view";
-import { RangeSetBuilder, StateField, StateEffect } from "@codemirror/state";
-import {
-  indentWithTab,
-  history,
-  defaultKeymap,
-  historyKeymap,
-  insertNewlineAndIndent,
-} from "@codemirror/commands";
-import {
-  closeBrackets,
-  closeBracketsKeymap,
-  autocompletion,
-  completionKeymap,
-} from "@codemirror/autocomplete";
-import {
-  bracketMatching,
-  indentUnit,
-  foldGutter,
-  foldKeymap,
-  indentOnInput,
-  indentService,
-} from "@codemirror/language";
-import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
-
-export function useCodeMirrorExtensions() {
+export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
+  // Get modules (handle both ref and direct value)
+  const modules = computed(() => {
+    if (!codeMirrorModules) return null
+    return isRef(codeMirrorModules) ? codeMirrorModules.value : codeMirrorModules
+  })
+  
+  // Helper to get modules value - always check current state
+  const getModules = () => modules.value
   function isInComment(doc: any, absolutePos: number): boolean {
     const fullText = doc.toString()
     const beforePos = fullText.substring(0, absolutePos)
@@ -63,11 +31,13 @@ export function useCodeMirrorExtensions() {
     return false
   }
 
-  function buildEnfyraDecorations(view: EditorView): DecorationSet {
-    const builder = new RangeSetBuilder<Decoration>()
+  function buildEnfyraDecorations(view: any): any {
+    const m = getModules()
+    if (!m) return null
+    const builder = new m.RangeSetBuilder()
     const doc = view.state.doc
 
-    const templateDecoration = Decoration.mark({
+    const templateDecoration = m.Decoration.mark({
       tagName: "span",
       class: "cm-enfyra-template",
       attributes: {
@@ -75,7 +45,7 @@ export function useCodeMirrorExtensions() {
       }
     })
 
-    const throwDecoration = Decoration.mark({
+    const throwDecoration = m.Decoration.mark({
       tagName: "span",
       class: "cm-enfyra-throw",
       attributes: {
@@ -83,7 +53,7 @@ export function useCodeMirrorExtensions() {
       }
     })
 
-    const tableAccessDecoration = Decoration.mark({
+    const tableAccessDecoration = m.Decoration.mark({
       tagName: "span",
       class: "cm-enfyra-table",
       attributes: {
@@ -91,7 +61,7 @@ export function useCodeMirrorExtensions() {
       }
     })
 
-    const percentageDecoration = Decoration.mark({
+    const percentageDecoration = m.Decoration.mark({
       tagName: "span",
       class: "cm-enfyra-percentage",
       attributes: {
@@ -99,7 +69,7 @@ export function useCodeMirrorExtensions() {
       }
     })
 
-    const standaloneAtDecoration = Decoration.mark({
+    const standaloneAtDecoration = m.Decoration.mark({
       tagName: "span",
       class: "cm-enfyra-standalone-at",
       attributes: {
@@ -194,20 +164,27 @@ export function useCodeMirrorExtensions() {
     return builder.finish()
   }
 
-  const enfyraSyntaxPlugin = StateField.define<DecorationSet>({
-    create(state) {
+  const enfyraSyntaxPlugin = computed(() => {
+    const m = getModules()
+    if (!m) return null
+    return m.StateField.define({
+    create(state: any) {
       return buildEnfyraDecorations({ state } as any)
     },
-    update(decorations, transaction) {
+    update(decorations: any, transaction: any) {
       if (transaction.docChanged) {
         return buildEnfyraDecorations({ state: transaction.state } as any)
       }
       return decorations.map(transaction.changes)
     },
-    provide: f => EditorView.decorations.from(f)
+      provide: (f: any) => m.EditorView.decorations.from(f)
+    })
   })
 
-  const vueIndentService = indentService.of((context, pos) => {
+  const vueIndentService = computed(() => {
+    const m = getModules()
+    if (!m) return null
+    return m.indentService.of((context: any, pos: number) => {
     const doc = context.state.doc;
     
     let checkPos = pos - 1;
@@ -258,23 +235,28 @@ export function useCodeMirrorExtensions() {
       return baseIndent + 2; // Indent inside blocks
     }
     
-    return baseIndent; // Keep same level
-  });
+      return baseIndent; // Keep same level
+    })
+  })
 
   function getLanguageExtension(language?: "javascript" | "vue" | "json" | "html" | "typescript") {
+    const m = getModules()
+    if (!m) return null
     switch (language) {
       case "vue":
-        return vue();
+        return m.vue();
       case "html":
-        return html();
+        return m.html();
       case "javascript":
       default:
-        return javascript({ jsx: true, typescript: false });
+        return m.javascript({ jsx: true, typescript: false });
     }
   }
 
   const createLinter = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
-    return linter(async (view) => {
+    const m = getModules()
+    if (!m) return () => []
+    return m.linter(async (view: any) => {
       const diagnostics: any[] = [];
       
       if (onDiagnostics) {
@@ -286,26 +268,29 @@ export function useCodeMirrorExtensions() {
   };
 
   const getBasicSetup = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
+    const m = getModules()
+    if (!m) return []
+    
     const setup = [
-      lineNumbers(),
-      highlightActiveLine(),
-      history(),
-      foldGutter(),
-      drawSelection(),
-      dropCursor(),
-      rectangularSelection(),
-      crosshairCursor(),
-      bracketMatching(),
-      closeBrackets(),
-      autocompletion(),
-      highlightSelectionMatches(),
-      indentUnit.of("  "),
+      m.lineNumbers(),
+      m.highlightActiveLine(),
+      m.history(),
+      m.foldGutter(),
+      m.drawSelection(),
+      m.dropCursor(),
+      m.rectangularSelection(),
+      m.crosshairCursor(),
+      m.bracketMatching(),
+      m.closeBrackets(),
+      m.autocompletion(),
+      m.highlightSelectionMatches(),
+      m.indentUnit.of("  "),
       createLinter(language, onDiagnostics),
-      lintGutter(),
-      keymap.of([
+      m.lintGutter(),
+      m.keymap.of([
         {
           key: "Enter",
-          run: (view) => {
+          run: (view: any) => {
             const state = view.state;
             const pos = state.selection.main.head;
             const before = state.doc.sliceString(pos - 1, pos);
@@ -335,12 +320,12 @@ export function useCodeMirrorExtensions() {
               }
             }
 
-            return insertNewlineAndIndent(view);
+            return m.insertNewlineAndIndent(view);
           },
         },
         {
           key: "Backspace",
-          run: (view) => {
+          run: (view: any) => {
             const state = view.state;
             const pos = state.selection.main.head;
             const line = state.doc.lineAt(pos);
@@ -366,20 +351,21 @@ export function useCodeMirrorExtensions() {
             return false;
           },
         },
-        indentWithTab,
-        ...closeBracketsKeymap,
-        ...defaultKeymap,
-        ...historyKeymap,
-        ...foldKeymap,
-        ...completionKeymap,
-        ...searchKeymap,
+        m.indentWithTab,
+        ...m.closeBracketsKeymap,
+        ...m.defaultKeymap,
+        ...m.historyKeymap,
+        ...m.foldKeymap,
+        ...m.completionKeymap,
+        ...m.searchKeymap,
       ]),
     ];
     
     if (language === 'vue') {
-      setup.push(vueIndentService);
+      const indent = vueIndentService.value
+      if (indent) setup.push(indent);
     } else if (language === 'javascript' || language === 'html' || language === 'json') {
-      setup.push(indentOnInput());
+      setup.push(m.indentOnInput());
     }
     
     return setup;

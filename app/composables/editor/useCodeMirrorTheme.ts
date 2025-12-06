@@ -1,8 +1,4 @@
-import { EditorView } from "@codemirror/view";
-import { Compartment } from "@codemirror/state";
-import { vscodeDark, vscodeLight } from "@uiw/codemirror-theme-vscode";
-
-export function useCodeMirrorTheme(height?: string | Ref<string>) {
+export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModules?: Ref<any> | any) {
   const colorMode = useColorMode();
   const heightValue = computed(() => {
     if (!height) return "400px";
@@ -11,12 +7,29 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
 
   const isDark = computed(() => colorMode.value === 'dark');
   
-  // Create a Compartment for theme management
-  const themeCompartment = new Compartment();
+  // Get modules (handle both ref and direct value)
+  const modules = computed(() => {
+    if (!codeMirrorModules) return null
+    return isRef(codeMirrorModules) ? codeMirrorModules.value : codeMirrorModules
+  })
+  
+  // Create a Compartment for theme management (only when modules loaded)
+  const themeCompartmentRef = ref<any>(null)
+  
+  watch(modules, (m) => {
+    if (m?.Compartment && !themeCompartmentRef.value) {
+      themeCompartmentRef.value = new m.Compartment()
+    }
+  }, { immediate: true })
+  
+  const themeCompartment = computed(() => themeCompartmentRef.value)
 
   const customTheme = computed(() => {
+    const m = modules.value
+    if (!m?.EditorView) return null
+    
     if (isDark.value) {
-      return EditorView.baseTheme({
+      return m.EditorView.baseTheme({
     "&": {
       backgroundColor: "#1e1e1e",
       color: "#d4d4d4",
@@ -166,7 +179,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
     },
       });
     } else {
-      return EditorView.baseTheme({
+      return m.EditorView.baseTheme({
         "&": {
           backgroundColor: "#ffffff",
           color: "#1e1e1e",
@@ -321,13 +334,20 @@ export function useCodeMirrorTheme(height?: string | Ref<string>) {
     }
   });
 
-  const vscodeTheme = computed(() => isDark.value ? vscodeDark : vscodeLight);
+  const vscodeTheme = computed(() => {
+    const m = modules.value
+    if (!m) return null
+    return isDark.value ? m.vscodeDark : m.vscodeLight
+  });
   
   // Combined theme extensions
-  const themeExtensions = computed(() => [
-    vscodeTheme.value,
-    customTheme.value,
-  ]);
+  const themeExtensions = computed(() => {
+    if (!vscodeTheme.value || !customTheme.value) return []
+    return [
+      vscodeTheme.value,
+      customTheme.value,
+    ]
+  });
 
   return {
     customTheme,

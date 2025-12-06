@@ -1,15 +1,5 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount } from 'vue';
-import {
-  useVueTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  getFilteredRowModel,
-  type ColumnDef,
-  type SortingState,
-  type VisibilityState,
-} from "@tanstack/vue-table";
 import type { DataTableProps } from "../../utils/types";
 
 const props = withDefaults(defineProps<DataTableProps>(), {
@@ -27,6 +17,26 @@ const emit = defineEmits<{
 
 const { getId } = useDatabase();
 
+// Lazy load @tanstack/vue-table
+const vueTableModule = ref<any>(null)
+const loadingTable = ref(true)
+
+onMounted(async () => {
+  try {
+    // Dynamic import - will be code split
+    vueTableModule.value = await import('@tanstack/vue-table')
+    loadingTable.value = false
+  } catch (error) {
+    console.error('Failed to load @tanstack/vue-table:', error)
+    loadingTable.value = false
+  }
+})
+
+// Type aliases for better readability
+type ColumnDef = any
+type SortingState = any[]
+type VisibilityState = Record<string, boolean>
+
 function handleRowClick(row: any) {
   emit("row-click", row);
 }
@@ -38,11 +48,11 @@ const rowSelection = ref({});
 
 // Enhanced columns with checkbox if selectable
 const enhancedColumns = computed(() => {
-  if (!props.selectable) return props.columns;
+  if (!props.selectable || !vueTableModule.value) return props.columns;
 
-  const selectColumn: ColumnDef<any> = {
+  const selectColumn: ColumnDef = {
     id: "select",
-    header: ({ table }) =>
+    header: ({ table }: { table: any }) =>
       h("input", {
         type: "checkbox",
         class: "rounded w-5 h-5 cursor-pointer block",
@@ -52,7 +62,7 @@ const enhancedColumns = computed(() => {
         onClick: (e: Event) => e.stopPropagation(),
         "aria-label": "Select all rows",
       }),
-    cell: ({ row }) =>
+    cell: ({ row }: { row: any }) =>
       h(
         "div",
         {
@@ -81,51 +91,64 @@ const enhancedColumns = computed(() => {
   return [selectColumn, ...props.columns];
 });
 
-// Create table instance
-const table = useVueTable({
-  get data() {
-    return props.data;
-  },
-  get columns() {
-    return enhancedColumns.value;
-  },
-  getCoreRowModel: getCoreRowModel(),
-  getSortedRowModel: getSortedRowModel(),
-  getPaginationRowModel: getPaginationRowModel(),
-  getFilteredRowModel: getFilteredRowModel(),
-  enableRowSelection: true,
-  onSortingChange: (updater) => {
-    sorting.value =
-      typeof updater === "function" ? updater(sorting.value) : updater;
-  },
-  onColumnVisibilityChange: (updater) => {
-    columnVisibility.value =
-      typeof updater === "function" ? updater(columnVisibility.value) : updater;
-  },
-  onRowSelectionChange: (updater) => {
-    rowSelection.value =
-      typeof updater === "function" ? updater(rowSelection.value) : updater;
-  },
-  state: {
-    get sorting() {
-      return sorting.value;
+// Create table instance (only when module is loaded)
+const table = computed(() => {
+  if (!vueTableModule.value) return null
+  
+  const {
+    useVueTable,
+    getCoreRowModel,
+    getSortedRowModel,
+    getPaginationRowModel,
+    getFilteredRowModel,
+  } = vueTableModule.value
+
+  return useVueTable({
+    get data() {
+      return props.data;
     },
-    get columnVisibility() {
-      return columnVisibility.value;
+    get columns() {
+      return enhancedColumns.value;
     },
-    get rowSelection() {
-      return rowSelection.value;
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    enableRowSelection: true,
+    onSortingChange: (updater: any) => {
+      sorting.value =
+        typeof updater === "function" ? updater(sorting.value) : updater;
     },
-  },
-  initialState: {
-    pagination: {
-      pageSize: props.pageSize,
+    onColumnVisibilityChange: (updater: any) => {
+      columnVisibility.value =
+        typeof updater === "function" ? updater(columnVisibility.value) : updater;
     },
-  },
-});
+    onRowSelectionChange: (updater: any) => {
+      rowSelection.value =
+        typeof updater === "function" ? updater(rowSelection.value) : updater;
+    },
+    state: {
+      get sorting() {
+        return sorting.value;
+      },
+      get columnVisibility() {
+        return columnVisibility.value;
+      },
+      get rowSelection() {
+        return rowSelection.value;
+      },
+    },
+    initialState: {
+      pagination: {
+        pageSize: props.pageSize,
+      },
+    },
+  })
+})
 
 const selectedRows = computed(() => {
-  return table.getSelectedRowModel().rows.map((row) => row.original);
+  if (!table.value) return []
+  return table.value.getSelectedRowModel().rows.map((row: any) => row.original);
 });
 
 // Sync external selectedItems with internal rowSelection
@@ -170,6 +193,7 @@ watch(
 
 // Helper functions for card view
 function getPrimaryFieldValue(row: any) {
+  if (!table.value) return 'N/A'
   const cells = row.getVisibleCells()
   const nameCell = cells.find((cell: any) => 
     ['name', 'title', 'fullName', 'user'].includes(cell.column.id?.toLowerCase() || '')
@@ -268,7 +292,8 @@ function formatDateTime(value: any) {
 }
 
 function getColumnLabel(columnId: string) {
-  const header = table.getFlatHeaders().find((h: any) => h.id === columnId)
+  if (!table.value) return columnId
+  const header = table.value.getFlatHeaders().find((h: any) => h.id === columnId)
   if (header && typeof header.column.columnDef.header === 'string') {
     return header.column.columnDef.header
   }
@@ -278,11 +303,22 @@ function getColumnLabel(columnId: string) {
 
 <template>
   <div class="w-full space-y-4">
-    <!-- Mobile & Tablet Card View -->
-    <div class="lg:hidden">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div
-          v-for="(row, index) in table.getRowModel().rows"
+    <!-- Loading state -->
+    <div v-if="loadingTable" class="flex items-center justify-center py-8">
+      <CommonLoadingState
+        title="Loading table..."
+        size="sm"
+        type="spinner"
+      />
+    </div>
+
+    <!-- Table content (only render when loaded) -->
+    <template v-else-if="table">
+      <!-- Mobile & Tablet Card View -->
+      <div class="lg:hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div
+            v-for="(row, index) in table.getRowModel().rows"
           :key="row.id"
           class="rounded-2xl p-4 cursor-pointer transition-all border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-900/30 backdrop-blur-sm hover:bg-brand-50 dark:hover:bg-brand-500/20"
           @click="handleRowClick(row.original)"
@@ -359,7 +395,7 @@ function getColumnLabel(columnId: string) {
           <thead>
             <tr class="border-b border-gray-200 dark:border-gray-700">
               <th
-                v-for="header in table.getFlatHeaders()"
+                v-for="header in table?.getFlatHeaders() || []"
                 :key="header.id"
                 :class="[
                   'px-5 py-3 text-left sm:px-6',
@@ -418,7 +454,7 @@ function getColumnLabel(columnId: string) {
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            <template v-for="(row, index) in table.getRowModel().rows" :key="row.id">
+            <template v-for="(row, index) in table?.getRowModel().rows || []" :key="row.id">
               <!-- With Context Menu -->
               <UContextMenu
                 v-if="props.contextMenuItems"
@@ -508,7 +544,7 @@ function getColumnLabel(columnId: string) {
             </template>
             <tr v-if="props.data.length === 0">
               <td
-                :colspan="table.getFlatHeaders().length"
+                :colspan="table?.getFlatHeaders().length || 0"
                 class="px-4 py-8 text-center"
               >
                 <CommonEmptyState
@@ -523,5 +559,6 @@ function getColumnLabel(columnId: string) {
         </table>
       </div>
     </div>
+    </template>
   </div>
 </template>
