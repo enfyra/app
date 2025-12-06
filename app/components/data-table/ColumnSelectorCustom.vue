@@ -1,8 +1,10 @@
 <template>
-  <UPopover>
-    <UButton icon="i-lucide-columns" :size="size" :variant="variant">
-      Columns
-    </UButton>
+  <component :is="PopoverComponent">
+    <template #default>
+      <UButton icon="i-lucide-columns" :size="size" :variant="variant">
+        Columns
+      </UButton>
+    </template>
 
     <template #panel>
       <div class="p-2 min-w-[200px]">
@@ -17,7 +19,7 @@
         </div>
       </div>
     </template>
-  </UPopover>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -32,4 +34,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: "md",
   variant: "soft",
 });
+
+// Type assertion to bypass TypeScript error for panel slot
+const PopoverComponent = resolveComponent('UPopover') as any;
 </script>

@@ -1,22 +1,27 @@
 <script setup lang="ts">
 import { marked } from 'marked'
-import hljs from 'highlight.js'
+const { initHighlight, highlight, getLanguage } = useHighlight()
 
 marked.setOptions({
   breaks: true,
   gfm: true,
 })
 
+// Initialize highlight.js on mount
+onMounted(async () => {
+  await initHighlight()
+})
+
 const renderer = new marked.Renderer()
 renderer.code = function({ text, lang }: { text: string; lang?: string }): string {
-  if (lang && hljs.getLanguage(lang)) {
+  if (lang && getLanguage(lang)) {
     try {
-      const highlighted = hljs.highlight(text, { language: lang }).value
+      const highlighted = highlight(text, lang)
       return `<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`
     } catch (err) {
     }
   }
-  const highlighted = hljs.highlightAuto(text).value
+  const highlighted = highlight(text)
   return `<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs">${highlighted}</code></pre>`
 }
 

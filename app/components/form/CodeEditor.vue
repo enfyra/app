@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { StateEffect } from "@codemirror/state";
-
 const props = defineProps<{
   modelValue?: string;
   language?: "javascript" | "vue" | "json" | "html";
@@ -23,33 +21,66 @@ const startY = ref(0);
 const startHeight = ref(0);
 const previewStyle = ref<{ top: string; left: string; width: string; height: string } | null>(null);
 
+// Lazy load CodeMirror
+const { initCodeMirror, codeMirrorModules, loading: loadingCodeMirror } = useCodeMirrorLazy()
+
 const colorMode = useColorMode();
-const { themeCompartment, themeExtensions } = useCodeMirrorTheme(currentHeight);
-const { getLanguageExtension, getBasicSetup, enfyraSyntaxPlugin } = useCodeMirrorExtensions();
+
+// Initialize theme composable (can be called early, it will wait for modules)
+const { themeCompartment, themeExtensions } = useCodeMirrorTheme(currentHeight, codeMirrorModules);
+
+// Initialize editor composable (can be called early)
 const { code, editorRef, createEditor, watchExtensions, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
   modelValue: props.modelValue,
   language: props.language,
   height: currentHeight.value,
-  emit
+  emit,
+  codeMirrorModules: codeMirrorModules
 });
 
-const languageExtension = computed(() => getLanguageExtension(props.language));
+// Initialize extensions composable - pass ref so it's reactive
+const { getLanguageExtension, getBasicSetup, enfyraSyntaxPlugin } = useCodeMirrorExtensions(codeMirrorModules)
 
-const extensions = computed(() => [
-  ...getBasicSetup(props.language, (diags) => {
+const languageExtension = computed(() => {
+  if (!codeMirrorModules.value) return null
+  return getLanguageExtension(props.language)
+});
+
+const extensions = computed(() => {
+  if (!codeMirrorModules.value || !themeCompartment.value) return []
+  
+  const setup = getBasicSetup(props.language, (diags: any[]) => {
     emit("diagnostics", diags);
-  }),
-  languageExtension.value,
-  themeCompartment.of(themeExtensions.value),
-  enfyraSyntaxPlugin,
-]);
+  })
+  
+  // Safety check: ensure setup is valid array
+  if (!Array.isArray(setup) || setup.length === 0) {
+    return []
+  }
+  
+  const exts = [...setup]
+  
+  if (languageExtension.value) {
+    exts.push(languageExtension.value)
+  }
+  
+  if (themeExtensions.value.length > 0) {
+    exts.push(themeCompartment.value.of(themeExtensions.value))
+  }
+  
+  if (enfyraSyntaxPlugin?.value) {
+    exts.push(enfyraSyntaxPlugin.value)
+  }
+  
+  return exts
+});
 
 
 // Watch for theme changes and update theme compartment
 watch(() => colorMode.value, () => {
-  if (editorView.value) {
+  if (editorView.value && themeCompartment.value) {
     editorView.value.dispatch({
-      effects: themeCompartment.reconfigure(themeExtensions.value),
+      effects: themeCompartment.value.reconfigure(themeExtensions.value),
     });
     
     // Update gutters border after theme change
@@ -83,12 +114,39 @@ watch(currentHeight, () => {
 const resizeObserverRef = ref<ResizeObserver | null>(null);
 
 onMounted(async () => {
-  // Wait a bit to ensure computed values are updated
-  await nextTick();
-  await new Promise(resolve => setTimeout(resolve, 50));
+  // Initialize CodeMirror first
+  await initCodeMirror()
   
-  createEditor(extensions.value);
-  watchExtensions(extensions);
+  // Wait for CodeMirror to load if still loading
+  if (loadingCodeMirror.value) {
+    await new Promise((resolve) => {
+      const unwatch = watch(loadingCodeMirror, (loading) => {
+        if (!loading) {
+          unwatch()
+          resolve(undefined)
+        }
+      })
+    })
+  }
+  
+  // Wait for modules to be ready and extensions to be computed
+  await nextTick();
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  // Wait until extensions are ready
+  let retries = 0
+  while (extensions.value.length === 0 && retries < 10) {
+    await new Promise(resolve => setTimeout(resolve, 50))
+    await nextTick()
+    retries++
+  }
+  
+  if (codeMirrorModules.value && extensions.value.length > 0) {
+    createEditor(extensions.value);
+    watchExtensions(extensions);
+  } else {
+    console.error('Failed to initialize CodeMirror editor: extensions not ready')
+  }
   if (containerRef.value) {
     containerRef.value.style.height = currentHeight.value;
   }
@@ -238,10 +296,10 @@ function handleMouseUp(e?: MouseEvent) {
   }
   
   nextTick(() => {
-    if (editorView.value) {
+    if (editorView.value && codeMirrorModules.value?.StateEffect) {
       editorView.value.requestMeasure();
       editorView.value.dispatch({
-        effects: StateEffect.reconfigure.of(extensions.value),
+        effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
       });
       editorView.value.dispatch({});
     }
