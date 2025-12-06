@@ -11,15 +11,23 @@
         class="mb-6"
       >
         <template #description>
-          <div class="space-y-2">
-            <p>
-              This package is available in your custom handlers and hooks as:
-            </p>
-            <code
-              class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
-            >
-              $ctx.$pkgs.{{ packageData?.name.replace(/[@\/\-]/g, "") }}
-            </code>
+          <div class="space-y-4">
+            <div class="space-y-2">
+              <p class="font-medium">In JavaScript/TypeScript code:</p>
+              <code
+                class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
+              >
+                $ctx.$pkgs{{ packageData?.name && /[@\/\-]/.test(packageData.name) ? `['${packageData.name}']` : `.${packageData?.name.replace(/[@\/\-]/g, "")}` }}
+              </code>
+            </div>
+            <div class="space-y-2">
+              <p class="font-medium">In template syntax:</p>
+              <code
+                class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
+              >
+                @PKGS{{ packageData?.name && /[@\/\-]/.test(packageData.name) ? `['${packageData.name}']` : `.${packageData?.name.replace(/[@\/\-]/g, "")}` }}
+              </code>
+            </div>
           </div>
         </template>
       </UAlert>
@@ -28,9 +36,12 @@
       <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
         <UForm :state="form" @submit="handleUpdate">
           <FormEditorLazy
+            ref="formEditorRef"
+            table-name="package_definition"
+            mode="update"
             v-model="form"
             v-model:errors="errors"
-            :table-name="tableName"
+            @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :loading="loading"
             :excluded="['installedBy', 'type']"
             :field-map="{
@@ -55,7 +66,10 @@ const tableName = "package_definition";
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
-const { validate } = useSchema(tableName);
+const hasFormChanges = ref(false);
+const formEditorRef = ref();
+const { validate, useFormChanges } = useSchema(tableName);
+const formChanges = useFormChanges();
 
 // Fetch package data
 const {
@@ -93,48 +107,86 @@ const {
   errorContext: "Uninstall Package",
 });
 
-useHeaderActionRegistry({
-  id: "save-package",
-  label: "Save",
-  icon: "lucide:save",
-  variant: "solid",
-  color: "primary",
-  loading: computed(() => updating.value),
-  submit: handleUpdate,
-  permission: {
-    and: [
-      {
-        route: "/package_definition",
-        actions: ["update"],
-      },
-    ],
-  },
-});
-
-useHeaderActionRegistry({
-  id: "uninstall-package",
-  label: "Uninstall",
-  icon: "lucide:trash-2",
-  variant: "solid",
-  color: "error",
-  loading: computed(() => deleting.value),
-  submit: handleUninstall,
-  permission: {
-    and: [
-      {
-        route: "/package_definition",
-        actions: ["delete"],
-      },
-    ],
-  },
-});
-
-// Initialize form when data loads
-watch(packageData, (data) => {
-  if (data) {
-    form.value = { ...data };
+async function handleReset() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) {
+    return;
   }
-});
+
+  if (formChanges.originalData.value) {
+    form.value = formChanges.discardChanges(form.value);
+    hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
+    
+    toast.add({
+      title: "Reset Complete",
+      color: "success",
+      description: "All changes have been discarded.",
+    });
+  }
+}
+
+useHeaderActionRegistry([
+  {
+    id: "reset-package",
+    label: "Reset",
+    icon: "lucide:rotate-ccw",
+    variant: "outline",
+    color: "warning",
+    disabled: computed(() => !hasFormChanges.value),
+    onClick: handleReset,
+    show: computed(() => hasFormChanges.value),
+  },
+  {
+    id: "save-package",
+    label: "Save",
+    icon: "lucide:save",
+    variant: "solid",
+    color: "primary",
+    size: "md",
+    submit: handleUpdate,
+    loading: computed(() => updating.value),
+    disabled: computed(() => !hasFormChanges.value),
+    permission: {
+      and: [
+        {
+          route: "/package_definition",
+          actions: ["update"],
+        },
+      ],
+    },
+  },
+  {
+    id: "uninstall-package",
+    label: "Uninstall",
+    icon: "lucide:trash-2",
+    variant: "solid",
+    color: "error",
+    size: "md",
+    onClick: handleUninstall,
+    loading: computed(() => deleting.value),
+    permission: {
+      and: [
+        {
+          route: "/package_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+]);
+
+async function initializeForm() {
+  await loadPackage();
+  const data = packageData.value;
+  form.value = data ? { ...data } : {};
+  if (data) {
+    formChanges.update(data);
+  }
+}
 
 async function handleUpdate() {
   const { isValid, errors: validationErrors } = validate(form.value);
@@ -170,6 +222,9 @@ async function handleUpdate() {
     color: "success",
   });
 
+  formEditorRef.value?.confirmChanges();
+  formChanges.update(form.value);
+  
   await loadPackage();
 }
 
@@ -214,6 +269,6 @@ watch(packageData, (data) => {
 }, { immediate: true });
 
 onMounted(() => {
-  loadPackage();
+  initializeForm();
 });
 </script>

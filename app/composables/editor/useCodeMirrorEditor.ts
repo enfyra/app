@@ -13,7 +13,6 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
   const editorRef = ref<HTMLDivElement>();
   const editorView = ref<any>();
   
-  // Get modules (handle both ref and direct value)
   const modules = computed(() => {
     if (!codeMirrorModules) return null
     return isRef(codeMirrorModules) ? codeMirrorModules.value : codeMirrorModules
@@ -29,26 +28,38 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     }
   );
 
-  watch(code, (val) => {
+  watch(code, (val, oldVal) => {
+    if (val === oldVal) return;
     emit("update:modelValue", val);
-  });
+  }, { flush: 'post' });
 
   function createEditor(extensions: any[]) {
     const m = modules.value
     if (!m?.EditorView || !editorRef.value) return
     
+    const updateListenerExtension = m.EditorView.updateListener.of((update: any) => {
+      if (update.docChanged) {
+        code.value = update.state.doc.toString();
+      }
+    });
+    
     editorView.value = new m.EditorView({
       doc: code.value,
       extensions: [
         ...extensions,
-        m.EditorView.updateListener.of((update: any) => {
-          if (update.docChanged) {
-            code.value = update.state.doc.toString();
-          }
-        }),
+        updateListenerExtension,
       ],
       parent: editorRef.value,
     });
+    
+    if (editorView.value?.dom) {
+      editorView.value.dom.addEventListener('keyup', () => {
+        const newCode = editorView.value?.state?.doc?.toString() || '';
+        if (newCode !== code.value) {
+          code.value = newCode;
+        }
+      });
+    }
     
     if (editorRef.value.parentElement) {
       const parent = editorRef.value.parentElement;
@@ -73,10 +84,10 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     );
   }
 
-  watch(code, (newCode) => {
+  watch(code, (newCode, oldCode) => {
     if (editorView.value) {
       const currentCode = editorView.value.state.doc.toString();
-      if (currentCode !== newCode) {
+      if (currentCode !== newCode && newCode !== oldCode) {
         editorView.value.dispatch({
           changes: {
             from: 0,

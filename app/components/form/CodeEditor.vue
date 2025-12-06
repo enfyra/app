@@ -21,13 +21,13 @@ const startY = ref(0);
 const startHeight = ref(0);
 const previewStyle = ref<{ top: string; left: string; width: string; height: string } | null>(null);
 
+const colorMode = useColorMode();
+
 // Lazy load CodeMirror
 const { initCodeMirror, codeMirrorModules, loading: loadingCodeMirror } = useCodeMirrorLazy()
 
-const colorMode = useColorMode();
-
-// Initialize theme composable (can be called early, it will wait for modules)
-const { themeCompartment, themeExtensions } = useCodeMirrorTheme(currentHeight, codeMirrorModules);
+// Initialize theme composable (pass colorMode to avoid double inject)
+const { themeCompartment, themeExtensions, customHighlightStyle } = useCodeMirrorTheme(currentHeight, codeMirrorModules, colorMode);
 
 // Initialize editor composable (can be called early)
 const { code, editorRef, createEditor, watchExtensions, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
@@ -53,7 +53,6 @@ const extensions = computed(() => {
     emit("diagnostics", diags);
   })
   
-  // Safety check: ensure setup is valid array
   if (!Array.isArray(setup) || setup.length === 0) {
     return []
   }
@@ -66,6 +65,12 @@ const extensions = computed(() => {
   
   if (themeExtensions.value.length > 0) {
     exts.push(themeCompartment.value.of(themeExtensions.value))
+  }
+  
+  if (customHighlightStyle?.value) {
+    exts.push(customHighlightStyle.value)
+  } else if (codeMirrorModules.value?.syntaxHighlighting && codeMirrorModules.value?.defaultHighlightStyle) {
+    exts.push(codeMirrorModules.value.syntaxHighlighting(codeMirrorModules.value.defaultHighlightStyle))
   }
   
   if (enfyraSyntaxPlugin?.value) {
@@ -105,77 +110,117 @@ watch(currentHeight, () => {
     containerRef.value.style.height = currentHeight.value;
   }
   nextTick(() => {
-    if (editorView.value) {
+    if (editorView.value && codeMirrorModules.value?.StateEffect) {
       editorView.value.requestMeasure();
+      if (extensions.value.length > 0) {
+        editorView.value.dispatch({
+          effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
+        });
+      }
+      editorView.value.dispatch({});
     }
   });
 });
 
+watch(extensions, (newExts, oldExts) => {
+  if (editorView.value && codeMirrorModules.value?.StateEffect && newExts.length > 0 && !isResizing.value) {
+    const oldLen = oldExts?.length || 0
+    if (oldLen !== newExts.length) {
+      nextTick(() => {
+        if (editorView.value) {
+          editorView.value.dispatch({
+            effects: codeMirrorModules.value.StateEffect.reconfigure.of(newExts),
+          });
+        }
+      });
+    }
+  }
+}, { deep: true });
+
 const resizeObserverRef = ref<ResizeObserver | null>(null);
 
 onMounted(async () => {
-  // Initialize CodeMirror first
-  await initCodeMirror()
-  
-  // Wait for CodeMirror to load if still loading
-  if (loadingCodeMirror.value) {
-    await new Promise((resolve) => {
-      const unwatch = watch(loadingCodeMirror, (loading) => {
-        if (!loading) {
-          unwatch()
-          resolve(undefined)
-        }
+  try {
+    // Initialize CodeMirror first
+    await initCodeMirror()
+    
+    // Wait for CodeMirror to load if still loading
+    if (loadingCodeMirror.value) {
+      await new Promise((resolve) => {
+        const unwatch = watch(loadingCodeMirror, (loading) => {
+          if (!loading) {
+            unwatch()
+            resolve(undefined)
+          }
+        })
       })
-    })
-  }
-  
-  // Wait for modules to be ready and extensions to be computed
-  await nextTick();
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
-  // Wait until extensions are ready
-  let retries = 0
-  while (extensions.value.length === 0 && retries < 10) {
-    await new Promise(resolve => setTimeout(resolve, 50))
-    await nextTick()
-    retries++
-  }
-  
-  if (codeMirrorModules.value && extensions.value.length > 0) {
-    createEditor(extensions.value);
-    watchExtensions(extensions);
-  } else {
-    console.error('Failed to initialize CodeMirror editor: extensions not ready')
-  }
-  if (containerRef.value) {
-    containerRef.value.style.height = currentHeight.value;
-  }
-  
-  await nextTick();
-  if (editorRef.value) {
-    editorRef.value.style.height = "100%";
-  }
-  
-  if (editorRef.value && containerRef.value) {
-    resizeObserverRef.value = new ResizeObserver(() => {
-      if (editorView.value && !isResizing.value) {
-        editorView.value.requestMeasure();
-      }
-    });
-    resizeObserverRef.value.observe(containerRef.value);
-  }
-  
-  // Force update gutters border after editor is created
-  await nextTick();
-  await new Promise(resolve => setTimeout(resolve, 100));
-  if (editorView.value) {
-    const gutters = editorView.value.dom.querySelector('.cm-gutters');
-    if (gutters) {
-      const isDark = colorMode.value === 'dark';
-      (gutters as HTMLElement).style.borderRight = isDark 
-        ? '1px solid rgba(255, 255, 255, 0.08)' 
-        : '1px solid #e5e7eb';
     }
+    
+    // Wait for modules to be ready and extensions to be computed
+    await nextTick();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Wait until extensions are ready
+    let retries = 0
+    while (extensions.value.length === 0 && retries < 10) {
+      await new Promise(resolve => setTimeout(resolve, 50))
+      await nextTick()
+      retries++
+    }
+    
+    if (codeMirrorModules.value && extensions.value.length > 0) {
+      createEditor(extensions.value);
+      watchExtensions(extensions);
+    } else {
+      console.warn('CodeMirror extensions not ready yet, will retry on next tick')
+      await nextTick()
+      if (codeMirrorModules.value && extensions.value.length > 0) {
+        createEditor(extensions.value);
+        watchExtensions(extensions);
+      }
+    }
+    
+    if (containerRef.value) {
+      containerRef.value.style.height = currentHeight.value;
+    }
+    
+    await nextTick();
+    if (editorRef.value) {
+      editorRef.value.style.height = "100%";
+    }
+    
+    if (editorRef.value && containerRef.value) {
+      let resizeTimeout: ReturnType<typeof setTimeout> | null = null
+      resizeObserverRef.value = new ResizeObserver(() => {
+        if (editorView.value && !isResizing.value) {
+          if (resizeTimeout) clearTimeout(resizeTimeout)
+          resizeTimeout = setTimeout(() => {
+            editorView.value?.requestMeasure();
+            if (codeMirrorModules.value?.StateEffect && extensions.value.length > 0) {
+              editorView.value?.dispatch({
+                effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
+              });
+            }
+          }, 100)
+        }
+      });
+      resizeObserverRef.value.observe(containerRef.value);
+    }
+    
+    // Force update gutters border after editor is created
+    await nextTick();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    if (editorView.value) {
+      const gutters = editorView.value.dom.querySelector('.cm-gutters');
+      if (gutters) {
+        const isDark = colorMode.value === 'dark';
+        (gutters as HTMLElement).style.borderRight = isDark 
+          ? '1px solid rgba(255, 255, 255, 0.08)' 
+          : '1px solid #e5e7eb';
+      }
+    }
+  } catch (error) {
+    console.error('Error initializing CodeMirror editor:', error)
   }
 });
 
@@ -298,9 +343,11 @@ function handleMouseUp(e?: MouseEvent) {
   nextTick(() => {
     if (editorView.value && codeMirrorModules.value?.StateEffect) {
       editorView.value.requestMeasure();
-      editorView.value.dispatch({
-        effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
-      });
+      if (extensions.value.length > 0) {
+        editorView.value.dispatch({
+          effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
+        });
+      }
       editorView.value.dispatch({});
     }
   });

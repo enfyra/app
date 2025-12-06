@@ -24,10 +24,17 @@ export const useVueTableLazy = () => {
     }
   }
 
+  const reset = () => {
+    vueTableModule.value = null
+    loading.value = false
+    initialized.value = false
+  }
+
   return {
     vueTableModule: readonly(vueTableModule),
     loading: readonly(loading),
     initVueTable,
+    reset,
   }
 }
 
