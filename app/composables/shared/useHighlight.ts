@@ -90,12 +90,19 @@ export const useHighlight = () => {
     return hljs.value.getLanguage(lang)
   }
 
+  const reset = () => {
+    hljs.value = null
+    loading.value = false
+    initialized.value = false
+  }
+
   return {
     hljs: readonly(hljs),
     loading: readonly(loading),
     initHighlight,
     highlight,
     getLanguage,
+    reset,
   }
 }
 

@@ -111,9 +111,8 @@ export default defineNuxtPlugin(() => {
 
   function updateDocumentTitleAndDescription() {
     const path = route.path;
-    const { settings: currentSettings } = useGlobalState();
-    const projectName = currentSettings.value?.projectName || 'Enfyra';
-    const projectDescription = currentSettings.value?.projectDescription || 'Content Management System';
+    const projectName = settings.value?.projectName || 'Enfyra';
+    const projectDescription = settings.value?.projectDescription || 'Content Management System';
 
     let title = projectName;
     let description = projectDescription;

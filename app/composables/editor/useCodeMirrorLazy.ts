@@ -18,6 +18,7 @@ export const useCodeMirrorLazy = () => {
         commandsModule,
         autocompleteModule,
         languageModule,
+        highlightModule,
         lintModule,
         searchModule,
         langJsModule,
@@ -30,6 +31,7 @@ export const useCodeMirrorLazy = () => {
         import('@codemirror/commands'),
         import('@codemirror/autocomplete'),
         import('@codemirror/language'),
+        import('@codemirror/highlight'),
         import('@codemirror/lint'),
         import('@codemirror/search'),
         import('@codemirror/lang-javascript'),
@@ -67,6 +69,10 @@ export const useCodeMirrorLazy = () => {
         foldKeymap: languageModule.foldKeymap,
         indentOnInput: languageModule.indentOnInput,
         indentService: languageModule.indentService,
+        HighlightStyle: languageModule.HighlightStyle,
+        defaultHighlightStyle: languageModule.defaultHighlightStyle,
+        syntaxHighlighting: languageModule.syntaxHighlighting,
+        tags: highlightModule.tags,
         linter: lintModule.linter,
         lintGutter: lintModule.lintGutter,
         searchKeymap: searchModule.searchKeymap,
@@ -88,10 +94,17 @@ export const useCodeMirrorLazy = () => {
     }
   }
 
+  const reset = () => {
+    codeMirrorModules.value = null
+    loading.value = false
+    initialized.value = false
+  }
+
   return {
     codeMirrorModules: readonly(codeMirrorModules),
     loading: readonly(loading),
     initCodeMirror,
+    reset,
   }
 }
 

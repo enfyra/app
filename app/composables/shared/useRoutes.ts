@@ -34,30 +34,33 @@ export function useRoutes() {
     return allRoutes
   }
   
-  function getRouteForTableId(tableId: string | number): string {
+  function getRouteForTableId(tableId: string | number, schemas?: any): string {
     const id = String(tableId)
     if (tableRoutesMap.value[id]) {
       return tableRoutesMap.value[id]
     }
     
-    const { schemas } = useSchema()
-    const table = Object.values(schemas.value).find(
-      (schema: any) => {
-        const schemaId = getId(schema);
-        return schemaId === id;
-      }
-    )
+    if (schemas) {
+      const table = Object.values(schemas).find(
+        (schema: any) => {
+          const schemaId = getId(schema);
+          return schemaId === id;
+        }
+      ) as any
+      
+      return table?.name ? `/${table.name}` : `/${id}`
+    }
     
-    return table?.name ? `/${table.name}` : `/${id}`
+    return `/${id}`
   }
   
-  function getRouteForTableName(tableName: string): string {
-    const { schemas } = useSchema()
-    const table = schemas.value[tableName]
-    
-    const tableId = getId(table);
-    if (tableId) {
-      return getRouteForTableId(tableId)
+  function getRouteForTableName(tableName: string, schemas?: any): string {
+    if (schemas && schemas[tableName]) {
+      const table = schemas[tableName]
+      const tableId = getId(table);
+      if (tableId) {
+        return getRouteForTableId(tableId, schemas)
+      }
     }
     
     return `/${tableName}`

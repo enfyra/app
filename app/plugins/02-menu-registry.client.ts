@@ -11,7 +11,8 @@ export default defineNuxtPlugin(async () => {
   const { schemas, fetchSchema } = useSchema();
   const { fetchSetting, fetchStorageConfigs, fetchAiConfig } = useGlobalState();
   const { confirm } = useConfirm();
-  const { loadRoutes } = useRoutes();
+  const { loadRoutes, getRouteForTableName } = useRoutes();
+  const routes = useState<any[]>('routes:all', () => []);
 
   const { fetchMenuDefinitions } = useMenuApi();
 
@@ -69,7 +70,9 @@ export default defineNuxtPlugin(async () => {
 
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
-    await registerDataMenuItems(schemaValues);
+    const getRouteForTableNameWithSchemas = (tableName: string) => 
+      getRouteForTableName(tableName, schemas.value);
+    await registerDataMenuItems(schemaValues, getRouteForTableNameWithSchemas, routes);
   }
 
   registerMenuItem({

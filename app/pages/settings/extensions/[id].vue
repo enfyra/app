@@ -70,15 +70,6 @@ const uploadLoading = ref(false);
 const { validate, getIncludeFields } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
-watch(() => extensionData.value?.data?.[0]?.name, (name) => {
-  if (name) {
-    registerPageHeader({
-      title: `Extension: ${name}`,
-      gradient: "purple",
-    });
-  }
-}, { immediate: true });
-
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
@@ -183,6 +174,15 @@ const {
   },
   errorContext: "Fetch Extension",
 });
+
+watch(() => extensionData.value?.data?.[0]?.name, (name) => {
+  if (name) {
+    registerPageHeader({
+      title: `Extension: ${name}`,
+      gradient: "purple",
+    });
+  }
+}, { immediate: true });
 
 const {
   error: updateError,

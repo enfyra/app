@@ -5,12 +5,13 @@
         <UForm :state="form" @submit="updateHook">
           <FormEditorLazy
             ref="formEditorRef"
+            table-name="hook_definition"
+            mode="update"
             v-model="form"
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            :table-name="'hook_definition'"
-            :excluded="['isSystem']"
             :loading="loading"
+            :excluded="['isSystem']"
           />
         </UForm>
       </CommonFormCard>
@@ -38,9 +39,42 @@ const id = route.params.id as string;
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 
-const { validate, getIncludeFields } = useSchema(tableName);
+const { validate, getIncludeFields, useFormChanges } = useSchema(tableName);
+const formChanges = useFormChanges();
+
+async function handleReset() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) {
+    return;
+  }
+
+  if (formChanges.originalData.value) {
+    form.value = formChanges.discardChanges(form.value);
+    hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
+    
+    toast.add({
+      title: "Reset Complete",
+      color: "success",
+      description: "All changes have been discarded.",
+    });
+  }
+}
 
 useHeaderActionRegistry([
+  {
+    id: "reset-hook",
+    label: "Reset",
+    icon: "lucide:rotate-ccw",
+    variant: "outline",
+    color: "warning",
+    disabled: computed(() => !hasFormChanges.value),
+    onClick: handleReset,
+    show: computed(() => hasFormChanges.value),
+  },
   {
     id: "save-hook",
     label: "Save",
@@ -114,8 +148,9 @@ const errors = ref<Record<string, string>>({});
 async function initializeForm() {
   await executeGetHook();
   const data = hookData.value?.data?.[0];
+  form.value = data ? { ...data } : {};
   if (data) {
-    form.value = { ...data };
+    formChanges.update(data);
   }
 }
 
@@ -148,6 +183,7 @@ async function updateHook() {
 
   // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
+  formChanges.update(form.value);
 }
 
 async function deleteHook() {

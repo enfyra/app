@@ -285,11 +285,15 @@
   }
 
   .menu-item-icon-active {
-    @apply text-brand-500 dark:text-brand-400;
+    @apply text-brand-500 dark:text-brand-400 flex items-center;
   }
 
   .menu-item-icon-inactive {
-    @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+    @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300 flex items-center;
+  }
+
+  .menu-item-text {
+    @apply flex items-center;
   }
 
   .menu-dropdown-item {
@@ -392,5 +396,9 @@
   .dark .skeleton-inline {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(124, 58, 237, 0.25) 100%);
     opacity: 0.8;
+  }
+
+  [data-slot="progress"] [data-slot="indicator"] {
+    transition: transform 0.1s linear !important;
   }
 }

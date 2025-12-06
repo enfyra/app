@@ -50,6 +50,7 @@ const { definition, fieldMap, sortFieldsByOrder, useFormChanges } = useSchema(
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
 
+
 const fieldMapWithGenerated = computed(() => {
   const result = { ...props.fieldMap };
 
@@ -126,7 +127,6 @@ function updateErrors(errors: Record<string, string>) {
   emit("update:errors", errors);
 }
 
-// Initialize original data when modelValue changes (first load)
 watch(
   () => props.modelValue,
   (newValue) => {
@@ -142,10 +142,13 @@ watch(
   { immediate: true, deep: true }
 );
 
-// Watch for form changes and emit hasChanged
 watch(
   () => props.modelValue,
   (newValue) => {
+    if (Object.keys(originalData.value).length === 0) {
+      return;
+    }
+    
     if (
       newValue &&
       Object.keys(newValue).length > 0 &&

@@ -178,7 +178,11 @@ export function useMenuRegistry() {
     return null;
   };
 
-  const registerDataMenuItems = async (tables: any[]) => {
+  const registerDataMenuItems = async (
+    tables: any[],
+    getRouteForTableName?: (tableName: string) => string,
+    routes?: Ref<any[]> | any[]
+  ) => {
     // Find Data parent menu
     let dataParentId = menuItems.value.find((m) => m.id === "data")?.id;
     if (!dataParentId) {
@@ -202,17 +206,18 @@ export function useMenuRegistry() {
       return;
     }
 
-    const { getRouteForTableName } = useRoutes();
-    const routes = useState<any[]>('routes:all', () => []);
+    const getRoute = getRouteForTableName || ((tableName: string) => `/${tableName}`);
+    const routesRef = routes || useState<any[]>('routes:all', () => []);
+    const routesValue = isRef(routesRef) ? routesRef.value : routesRef;
     const nonSystemTables = tables.filter((table) => !table.isSystem);
 
     nonSystemTables.forEach((table) => {
       const tableName = table.name || table.table_name;
       if (!tableName) return;
 
-      const dynamicRoute = getRouteForTableName(tableName);
+      const dynamicRoute = getRoute(tableName);
 
-      const routeExists = routes.value.some((route: any) =>
+      const routeExists = routesValue.some((route: any) =>
         route.path === dynamicRoute && route.isEnabled !== false
       );
 

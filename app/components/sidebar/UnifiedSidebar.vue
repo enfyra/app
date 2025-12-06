@@ -423,7 +423,7 @@ const visibleGroups = computed(() => {
                       class="w-5 h-5 flex-shrink-0"
                     />
                     </span>
-                    <span>{{ child.label }}</span>
+                    <span class="menu-item-text">{{ child.label }}</span>
                   </NuxtLink>
                 </PermissionGate>
               </div>
