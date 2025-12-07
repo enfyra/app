@@ -76,6 +76,24 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
+    id: "delete-hook",
+    label: "Delete",
+    icon: "lucide:trash",
+    variant: "solid",
+    color: "error",
+    size: "md",
+    onClick: deleteHook,
+    loading: computed(() => deleteLoading.value),
+    permission: {
+      and: [
+        {
+          route: "/hook_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
     id: "save-hook",
     label: "Save",
     icon: "lucide:save",
@@ -90,24 +108,6 @@ useHeaderActionRegistry([
         {
           route: "/hook_definition",
           actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
-    id: "delete-hook",
-    label: "Delete",
-    icon: "lucide:trash",
-    variant: "solid",
-    color: "error",
-    size: "md",
-    onClick: deleteHook,
-    loading: computed(() => deleteLoading.value),
-    permission: {
-      and: [
-        {
-          route: "/hook_definition",
-          actions: ["delete"],
         },
       ],
     },

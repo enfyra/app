@@ -18,6 +18,11 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean];
 }>();
 
+const slots = useSlots();
+const hasHeader = computed(() => !!slots.header);
+const hasFooter = computed(() => !!slots.footer);
+const hasContent = computed(() => hasHeader.value || !!slots.body || hasFooter.value);
+
 const isOpen = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value),
@@ -43,6 +48,7 @@ function close() {
 <template>
   <Teleport to="body">
     <UDrawer
+      v-if="hasContent"
       :handle="props.handle"
       :handle-only="props.handleOnly"
       v-model:open="isOpen"
@@ -57,7 +63,7 @@ function close() {
       }"
     >
       <template #header>
-        <div class="flex items-center justify-between w-full ">
+        <div v-if="hasHeader" class="flex items-center justify-between w-full ">
           <div class="flex-1 min-w-0">
             <slot name="header" />
           </div>
@@ -77,7 +83,7 @@ function close() {
       </template>
 
       <template #footer>
-        <slot name="footer" />
+        <slot v-if="hasFooter" name="footer" />
       </template>
     </UDrawer>
   </Teleport>

@@ -5,6 +5,7 @@ declare global {
   }
 }
 import { ensureString } from "../../utils/components/form";
+import { enfyraConfig } from "../../../enfyra.config";
 
 const props = defineProps<{
   modelValue: string | null;
@@ -241,7 +242,7 @@ onMounted(async () => {
         }
       `,
       icons_url: "/tinymce/icons/default/icons.min.js",
-      plugins: ["link", "lists", "code", "table"],
+      plugins: enfyraConfig.richText?.plugins,
       skin: isDark ? "oxide-dark" : "oxide",
       external_plugins: {
         link: "/tinymce/plugins/link/plugin.min.js",
@@ -249,16 +250,66 @@ onMounted(async () => {
         code: "/tinymce/plugins/code/plugin.min.js",
         table: "/tinymce/plugins/table/plugin.min.js",
       },
-      toolbar:
-        "undo redo  | bold italic underline | " +
-        "bullist numlist | link table | code",
+      toolbar: enfyraConfig.richText?.toolbar,
       menubar: false,
       height: initialHeight,
       resize: false,
       readonly: props.disabled ?? false,
       license_key: "gpl",
+      formats: (() => {
+        const formats = enfyraConfig.richText?.formats;
+        if (!formats) return undefined;
+        
+        const processedFormats: any = {};
+        const theme = colorMode.value as 'light' | 'dark';
+        
+        Object.keys(formats).forEach((key) => {
+          const format = formats[key];
+          processedFormats[key] = {
+            inline: key,
+            ...format,
+          };
+          
+          if (format.styles && typeof format.styles === 'function') {
+            processedFormats[key].styles = format.styles(theme);
+          }
+        });
+        
+        return processedFormats;
+      })(),
       setup(editor: any) {
         editorRef.value = editor;
+
+        const customButtons = enfyraConfig.richText?.customButtons || [];
+        const buttonActions = enfyraConfig.richText?.buttonActions || {};
+        
+        customButtons.forEach((buttonConfig) => {
+          const { name, text, tooltip, format, onAction, params } = buttonConfig;
+          
+          let buttonOnAction: any;
+          
+          if (format) {
+            buttonOnAction = function() {
+              editor.execCommand('mceToggleFormat', false, format);
+            };
+          } else if (onAction) {
+            if (typeof onAction === 'function') {
+              buttonOnAction = onAction;
+            } else if (typeof onAction === 'string') {
+              buttonOnAction = function() {
+                editor.execCommand(onAction, false, ...(params || []));
+              };
+            }
+          } else {
+            buttonOnAction = function() {};
+          }
+          
+          editor.ui.registry.addButton(name, {
+            text: text || name,
+            tooltip: tooltip || text || name,
+            onAction: buttonOnAction,
+          });
+        });
 
         editor.on("init", () => {
           try {

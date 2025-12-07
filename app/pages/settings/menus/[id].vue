@@ -220,25 +220,6 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
-    id: "save-menu",
-    label: "Save Changes",
-    icon: "lucide:save",
-    variant: "solid",
-    color: "primary",
-    size: "md",
-    loading: updateLoading,
-    disabled: computed(() => !hasFormChanges.value),
-    onClick: updateMenuDetail,
-    permission: {
-      and: [
-        {
-          route: "/menu_definition",
-          actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
     id: "delete-menu",
     label: "Delete",
     icon: "lucide:trash",
@@ -253,6 +234,25 @@ useHeaderActionRegistry([
         {
           route: "/menu_definition",
           actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
+    id: "save-menu",
+    label: "Save Changes",
+    icon: "lucide:save",
+    variant: "solid",
+    color: "primary",
+    size: "md",
+    loading: updateLoading,
+    disabled: computed(() => !hasFormChanges.value),
+    onClick: updateMenuDetail,
+    permission: {
+      and: [
+        {
+          route: "/menu_definition",
+          actions: ["update"],
         },
       ],
     },

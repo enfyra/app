@@ -141,6 +141,24 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
+    id: "uninstall-package",
+    label: "Uninstall",
+    icon: "lucide:trash-2",
+    variant: "solid",
+    color: "error",
+    size: "md",
+    onClick: handleUninstall,
+    loading: computed(() => deleting.value),
+    permission: {
+      and: [
+        {
+          route: "/package_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
     id: "save-package",
     label: "Save",
     icon: "lucide:save",
@@ -155,24 +173,6 @@ useHeaderActionRegistry([
         {
           route: "/package_definition",
           actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
-    id: "uninstall-package",
-    label: "Uninstall",
-    icon: "lucide:trash-2",
-    variant: "solid",
-    color: "error",
-    size: "md",
-    onClick: handleUninstall,
-    loading: computed(() => deleting.value),
-    permission: {
-      and: [
-        {
-          route: "/package_definition",
-          actions: ["delete"],
         },
       ],
     },

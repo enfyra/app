@@ -79,6 +79,30 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
+    id: "delete-table",
+    label: "Delete",
+    icon: "lucide:trash",
+    variant: "solid",
+    color: "error",
+    loading: computed(() => deleting.value),
+    disabled: computed(
+      () =>
+        (table.value?.isSystem &&
+          !isSystemTableModifiable(table.value?.name)) ||
+        schemaLoading.value ||
+        saving.value
+    ),
+    onClick: handleDelete,
+    permission: {
+      and: [
+        {
+          route: "/table_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
     id: "save-table",
     label: "Save",
     icon: "lucide:save",
@@ -99,30 +123,6 @@ useHeaderActionRegistry([
         {
           route: "/table_definition",
           actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
-    id: "delete-table",
-    label: "Delete",
-    icon: "lucide:trash",
-    variant: "solid",
-    color: "error",
-    loading: computed(() => deleting.value),
-    disabled: computed(
-      () =>
-        (table.value?.isSystem &&
-          !isSystemTableModifiable(table.value?.name)) ||
-        schemaLoading.value ||
-        saving.value
-    ),
-    onClick: handleDelete,
-    permission: {
-      and: [
-        {
-          route: "/table_definition",
-          actions: ["delete"],
         },
       ],
     },

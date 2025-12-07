@@ -85,25 +85,6 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
-    id: "save-handler",
-    label: "Save",
-    icon: "lucide:save",
-    variant: "solid",
-    color: "primary",
-    size: "md",
-    submit: save,
-    loading: computed(() => saveLoading.value),
-    disabled: computed(() => form.value?.isSystem || !hasFormChanges.value),
-    permission: {
-      and: [
-        {
-          route: "/route_handler_definition",
-          actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
     id: "delete-handler",
     label: "Delete",
     icon: "lucide:trash",
@@ -118,6 +99,25 @@ useHeaderActionRegistry([
         {
           route: "/route_handler_definition",
           actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
+    id: "save-handler",
+    label: "Save",
+    icon: "lucide:save",
+    variant: "solid",
+    color: "primary",
+    size: "md",
+    submit: save,
+    loading: computed(() => saveLoading.value),
+    disabled: computed(() => form.value?.isSystem || !hasFormChanges.value),
+    permission: {
+      and: [
+        {
+          route: "/route_handler_definition",
+          actions: ["update"],
         },
       ],
     },
