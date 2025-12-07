@@ -14,6 +14,11 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean];
 }>();
 
+const slots = useSlots();
+const hasTitle = computed(() => !!slots.title);
+const hasFooter = computed(() => !!slots.footer);
+const hasContent = computed(() => hasTitle.value || !!slots.body || hasFooter.value);
+
 const isOpen = computed({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value),
@@ -29,6 +34,7 @@ function close() {
 <template>
   <Teleport to="body">
     <UModal
+      v-if="hasContent"
       v-model:open="isOpen"
       :handle="props.handle"
       :class="props.class"
@@ -39,7 +45,7 @@ function close() {
       }"
     >
       <template #title>
-        <div class="flex items-center justify-between w-full">
+        <div v-if="hasTitle" class="flex items-center justify-between w-full">
           <div class="flex-1 min-w-0">
             <slot name="title" />
           </div>
@@ -51,7 +57,7 @@ function close() {
       </template>
 
       <template #footer>
-        <slot name="footer" />
+        <slot v-if="hasFooter" name="footer" />
       </template>
     </UModal>
   </Teleport>

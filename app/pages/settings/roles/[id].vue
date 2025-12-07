@@ -75,6 +75,23 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
+    id: "delete-role",
+    label: "Delete",
+    icon: "lucide:trash",
+    variant: "soft",
+    color: "error",
+    onClick: deleteRole,
+    loading: computed(() => deleteLoading.value),
+    permission: {
+      and: [
+        {
+          route: "/role_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
     id: "save-role",
     label: "Save",
     icon: "lucide:save",
@@ -88,23 +105,6 @@ useHeaderActionRegistry([
         {
           route: "/role_definition",
           actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
-    id: "delete-role",
-    label: "Delete",
-    icon: "lucide:trash",
-    variant: "soft",
-    color: "error",
-    onClick: deleteRole,
-    loading: computed(() => deleteLoading.value),
-    permission: {
-      and: [
-        {
-          route: "/role_definition",
-          actions: ["delete"],
         },
       ],
     },

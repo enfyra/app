@@ -96,6 +96,24 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
+    id: "delete-file",
+    label: "Delete",
+    icon: "lucide:trash",
+    variant: "solid",
+    color: "error",
+    size: "md",
+    onClick: deleteFile,
+    loading: computed(() => deleteLoading.value),
+    permission: {
+      and: [
+        {
+          route: "/file_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
     id: "save-file",
     label: "Save",
     icon: "lucide:save",
@@ -110,25 +128,6 @@ useHeaderActionRegistry([
         {
           route: "/file_definition",
           actions: ["update"],
-        },
-      ],
-    },
-  },
-
-  {
-    id: "delete-file",
-    label: "Delete",
-    icon: "lucide:trash",
-    variant: "solid",
-    color: "error",
-    size: "md",
-    onClick: deleteFile,
-    loading: computed(() => deleteLoading.value),
-    permission: {
-      and: [
-        {
-          route: "/file_definition",
-          actions: ["delete"],
         },
       ],
     },

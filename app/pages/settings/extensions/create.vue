@@ -68,40 +68,41 @@ registerPageHeader({
   gradient: "purple",
 });
 
-useHeaderActionRegistry({
-  id: "save-extension",
-  label: "Save",
-  icon: "lucide:save",
-  variant: "solid",
-  color: "primary",
-  submit: handleCreate,
-  loading: computed(() => createLoading.value),
-  permission: {
-    and: [
-      {
-        route: "/extension_definition",
-        actions: ["create"],
-      },
-    ],
+useHeaderActionRegistry([
+  {
+    id: "upload-extension",
+    label: "Upload",
+    icon: "lucide:upload",
+    variant: "solid",
+    color: "secondary",
+    onClick: () => (showUploadModal.value = true),
+    permission: {
+      and: [
+        {
+          route: "/extension_definition",
+          actions: ["create"],
+        },
+      ],
+    },
   },
-});
-
-useHeaderActionRegistry({
-  id: "upload-extension",
-  label: "Upload",
-  icon: "lucide:upload",
-  variant: "solid",
-  color: "secondary",
-  onClick: () => (showUploadModal.value = true),
-  permission: {
-    and: [
-      {
-        route: "/extension_definition",
-        actions: ["create"],
-      },
-    ],
+  {
+    id: "save-extension",
+    label: "Save",
+    icon: "lucide:save",
+    variant: "solid",
+    color: "primary",
+    submit: handleCreate,
+    loading: computed(() => createLoading.value),
+    permission: {
+      and: [
+        {
+          route: "/extension_definition",
+          actions: ["create"],
+        },
+      ],
+    },
   },
-});
+]);
 
 // Setup useApi composable at top level
 const {

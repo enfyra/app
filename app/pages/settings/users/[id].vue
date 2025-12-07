@@ -105,6 +105,24 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
+    id: "delete-user",
+    label: "Delete",
+    icon: "lucide:trash",
+    variant: "solid",
+    color: "error",
+    size: "md",
+    loading: computed(() => deleteLoading.value),
+    onClick: deleteUser,
+    permission: {
+      and: [
+        {
+          route: "/user_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
     id: "save-user",
     label: "Save",
     icon: "lucide:save",
@@ -119,24 +137,6 @@ useHeaderActionRegistry([
         {
           route: "/user_definition",
           actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
-    id: "delete-user",
-    label: "Delete",
-    icon: "lucide:trash",
-    variant: "solid",
-    color: "error",
-    size: "md",
-    loading: computed(() => deleteLoading.value),
-    onClick: deleteUser,
-    permission: {
-      and: [
-        {
-          route: "/user_definition",
-          actions: ["delete"],
         },
       ],
     },

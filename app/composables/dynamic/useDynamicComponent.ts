@@ -421,8 +421,137 @@ export const useDynamicComponent = () => {
     }
   };
 
+  const loadExtensionComponentPreview = async (
+    compiledCode: string,
+    extensionName: string,
+    previewState?: {
+      headerActions: Ref<any[]>;
+      subHeaderActions: Ref<any[]>;
+      pageHeader: Ref<any>;
+    }
+  ) => {
+    try {
+      if (typeof window === "undefined") {
+        throw new Error("Extensions can only be loaded on client-side");
+      }
+
+      if (!(window as any).Vue) {
+        (window as any).Vue = await import("vue");
+      }
+
+      const g = globalThis as any;
+
+      const headerActionsRef = previewState?.headerActions || ref<any[]>([]);
+      const subHeaderActionsRef = previewState?.subHeaderActions || ref<any[]>([]);
+      const pageHeaderRef = previewState?.pageHeader || ref<any>(null);
+
+      const mockUseHeaderActionRegistry = (actions?: any) => {
+        if (actions) {
+          const actionsArray = Array.isArray(actions) ? actions : [actions];
+          actionsArray.forEach((action: any) => {
+            headerActionsRef.value.push(action);
+          });
+        }
+        return {
+          headerActions: headerActionsRef,
+          register: (action: any) => {
+            headerActionsRef.value.push(action);
+          },
+        };
+      };
+
+      const mockUseSubHeaderActionRegistry = (actions?: any) => {
+        if (actions) {
+          const actionsArray = Array.isArray(actions) ? actions : [actions];
+          actionsArray.forEach((action: any) => {
+            subHeaderActionsRef.value.push(action);
+          });
+        }
+        return {
+          subHeaderActions: subHeaderActionsRef,
+          register: (action: any) => {
+            subHeaderActionsRef.value.push(action);
+          },
+        };
+      };
+
+      const mockUsePageHeaderRegistry = () => {
+        return {
+          pageHeader: pageHeaderRef,
+          registerPageHeader: (config: any) => {
+            pageHeaderRef.value = config;
+          },
+        };
+      };
+
+      const composables = {
+        useApi,
+        useEnfyraApi,
+        useHeaderActionRegistry: mockUseHeaderActionRegistry,
+        useSubHeaderActionRegistry: mockUseSubHeaderActionRegistry,
+        usePageHeaderRegistry: mockUsePageHeaderRegistry,
+        useSchema,
+        useScreen,
+        useGlobalState,
+        useConfirm,
+        useEnfyraAuth,
+        usePermissions,
+        useFilterQuery,
+        useDataTableColumns,
+        useToast,
+        useState,
+        useRoute,
+        useRouter,
+        useCookie,
+        useNuxtApp,
+        navigateTo,
+        useFetch,
+        useAsyncData,
+        useLazyFetch,
+        useHead,
+        useSeoMeta,
+      };
+
+      Object.entries(composables).forEach(([key, composable]) => {
+        if (typeof composable === "function") {
+          g[key] = composable;
+        }
+      });
+
+      const vue = await import("vue");
+      EXTENSION_VUE_FUNCTIONS.forEach((fnName) => {
+        g[fnName] = vue[fnName];
+      });
+
+      const componentName = extensionName;
+      delete (window as any)[componentName];
+
+      const script = document.createElement("script");
+      script.textContent = compiledCode;
+      script.type = "text/javascript";
+      document.head.appendChild(script);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      document.head.removeChild(script);
+
+      const component = (window as any)[componentName];
+      if (!component) {
+        throw new Error(`Component "${componentName}" not found`);
+      }
+
+      const wrappedComponent = markRaw({
+        ...component,
+        components: availableComponents,
+      });
+
+      return markRaw(wrappedComponent);
+    } catch (error: any) {
+      throw new Error(`Failed to load preview component: ${error?.message || error}`);
+    }
+  };
+
   return {
     loadDynamicComponent,
+    loadExtensionComponentPreview,
     clearCache,
     getCacheStats,
     isComponentCached,

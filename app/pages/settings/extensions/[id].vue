@@ -50,6 +50,12 @@
         })
     "
   />
+
+  <!-- Preview Modal -->
+  <ExtensionPreviewModal
+    v-model="showPreviewModal"
+    :code="form?.code || ''"
+  />
 </template>
 
 <script setup lang="ts">
@@ -66,6 +72,7 @@ const tableName = "extension_definition";
 
 const showUploadModal = ref(false);
 const uploadLoading = ref(false);
+const showPreviewModal = ref(false);
 
 const { validate, getIncludeFields } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -108,15 +115,23 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
-    id: "save-extension",
-    label: "Save",
-    icon: "lucide:save",
-    variant: "solid",
+    id: "preview-extension",
+    label: "Preview",
+    icon: "lucide:eye",
+    variant: "outline",
     color: "primary",
     size: "md",
-    submit: updateExtension,
-    loading: computed(() => updateLoading.value),
-    disabled: computed(() => !hasFormChanges.value),
+    onClick: () => (showPreviewModal.value = true),
+    disabled: computed(() => !form.value?.code),
+  },
+  {
+    id: "upload-extension",
+    label: "Upload",
+    icon: "lucide:upload",
+    variant: "outline",
+    color: "secondary",
+    size: "md",
+    onClick: () => (showUploadModal.value = true),
     permission: {
       and: [
         {
@@ -145,13 +160,15 @@ useHeaderActionRegistry([
     },
   },
   {
-    id: "upload-extension",
-    label: "Upload",
-    icon: "lucide:upload",
-    variant: "outline",
-    color: "secondary",
+    id: "save-extension",
+    label: "Save",
+    icon: "lucide:save",
+    variant: "solid",
+    color: "primary",
     size: "md",
-    onClick: () => (showUploadModal.value = true),
+    submit: updateExtension,
+    loading: computed(() => updateLoading.value),
+    disabled: computed(() => !hasFormChanges.value),
     permission: {
       and: [
         {

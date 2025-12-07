@@ -173,6 +173,24 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
+    id: "delete-data-entry",
+    label: "Delete",
+    icon: "lucide:trash",
+    variant: "solid",
+    color: "error",
+    size: "md",
+    loading: computed(() => deleteLoading.value),
+    onClick: deleteRecord,
+    permission: {
+      and: [
+        {
+          route: getRouteForTableName(tableName),
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
     id: "save-data-entry",
     label: "Save",
     icon: "lucide:save",
@@ -187,24 +205,6 @@ useHeaderActionRegistry([
         {
           route: getRouteForTableName(tableName),
           actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
-    id: "delete-data-entry",
-    label: "Delete",
-    icon: "lucide:trash",
-    variant: "solid",
-    color: "error",
-    size: "md",
-    loading: computed(() => deleteLoading.value),
-    onClick: deleteRecord,
-    permission: {
-      and: [
-        {
-          route: getRouteForTableName(tableName),
-          actions: ["delete"],
         },
       ],
     },

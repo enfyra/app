@@ -73,6 +73,25 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
+    id: "delete-routing",
+    label: "Delete",
+    icon: "lucide:trash",
+    variant: "solid",
+    color: "error",
+    size: "md",
+    order: 3,
+    onClick: deleteRoute,
+    loading: computed(() => deleteLoading.value),
+    permission: {
+      and: [
+        {
+          route: "/route_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
     id: "save-routing",
     label: "Save",
     icon: "lucide:save",
@@ -88,25 +107,6 @@ useHeaderActionRegistry([
         {
           route: "/route_definition",
           actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
-    id: "delete-routing",
-    label: "Delete",
-    icon: "lucide:trash",
-    variant: "solid",
-    color: "error",
-    size: "md",
-    order: 3,
-    onClick: deleteRoute,
-    loading: computed(() => deleteLoading.value),
-    permission: {
-      and: [
-        {
-          route: "/route_definition",
-          actions: ["delete"],
         },
       ],
     },

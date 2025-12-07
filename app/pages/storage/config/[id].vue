@@ -119,6 +119,24 @@ useHeaderActionRegistry([
     show: computed(() => hasFormChanges.value),
   },
   {
+    id: "delete-config",
+    label: "Delete",
+    icon: "lucide:trash",
+    variant: "solid",
+    color: "error",
+    size: "md",
+    onClick: deleteConfig,
+    loading: computed(() => deleteLoading.value),
+    permission: {
+      and: [
+        {
+          route: "/storage_config_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
+  },
+  {
     id: "save-config",
     label: "Save",
     icon: "lucide:save",
@@ -133,24 +151,6 @@ useHeaderActionRegistry([
         {
           route: "/storage_config_definition",
           actions: ["update"],
-        },
-      ],
-    },
-  },
-  {
-    id: "delete-config",
-    label: "Delete",
-    icon: "lucide:trash",
-    variant: "solid",
-    color: "error",
-    size: "md",
-    onClick: deleteConfig,
-    loading: computed(() => deleteLoading.value),
-    permission: {
-      and: [
-        {
-          route: "/storage_config_definition",
-          actions: ["delete"],
         },
       ],
     },
