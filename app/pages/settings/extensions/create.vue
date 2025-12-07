@@ -40,6 +40,12 @@
           })
       "
     />
+
+    <!-- Preview Modal -->
+    <ExtensionPreviewModal
+      v-model="showPreviewModal"
+      :code="createForm?.code || ''"
+    />
   </div>
 </template>
 
@@ -59,6 +65,7 @@ const createErrors = ref<Record<string, string>>({});
 // Upload modal state
 const showUploadModal = ref(false);
 const uploadLoading = ref(false);
+const showPreviewModal = ref(false);
 
 const { generateEmptyForm, validate } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -84,6 +91,16 @@ useHeaderActionRegistry([
         },
       ],
     },
+  },
+  {
+    id: "preview-extension",
+    label: "Preview",
+    icon: "lucide:eye",
+    variant: "outline",
+    color: "primary",
+    size: "md",
+    onClick: () => (showPreviewModal.value = true),
+    disabled: computed(() => !createForm.value?.code),
   },
   {
     id: "save-extension",
