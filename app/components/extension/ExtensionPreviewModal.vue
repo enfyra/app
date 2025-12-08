@@ -119,7 +119,7 @@ async function compileAndPreview() {
     });
 
     if (response?.success && response?.compiledCode) {
-      const extensionId = response?.extensionId || `preview_${Date.now()}`;
+      const extensionId = (response as any)?.extensionId || `preview_${Date.now()}`;
       const component = await loadExtensionComponentPreview(
         response.compiledCode,
         extensionId,
