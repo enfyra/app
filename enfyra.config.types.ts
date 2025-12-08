@@ -13,7 +13,12 @@ export interface RichTextEditorConfig {
   customButtons?: RichTextEditorButtonConfig[];
   buttonActions?: Record<string, (editor: any, params?: any) => void>;
   formats?: Record<string, { 
-    styles?: Record<string, string> | ((theme: 'light' | 'dark') => Record<string, string>);
+    inline?: string | boolean;
+    block?: string | boolean;
+    wrapper?: boolean;
+    classes?: string | string[] | ((theme: 'light' | 'dark') => string | string[]);
+    css?: Record<string, string> | ((theme: 'light' | 'dark') => Record<string, string>);
+    classStyles?: Record<string, Record<string, string> | ((theme: 'light' | 'dark') => Record<string, string>)>;
     attributes?: Record<string, string>;
   }>;
 }

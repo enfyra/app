@@ -103,22 +103,22 @@ useHeaderActionRegistry([
     disabled: computed(() => !createForm.value?.code),
   },
   {
-    id: "save-extension",
-    label: "Save",
-    icon: "lucide:save",
-    variant: "solid",
-    color: "primary",
-    submit: handleCreate,
-    loading: computed(() => createLoading.value),
-    permission: {
-      and: [
-        {
-          route: "/extension_definition",
-          actions: ["create"],
-        },
-      ],
-    },
+  id: "save-extension",
+  label: "Save",
+  icon: "lucide:save",
+  variant: "solid",
+  color: "primary",
+  submit: handleCreate,
+  loading: computed(() => createLoading.value),
+  permission: {
+    and: [
+      {
+        route: "/extension_definition",
+        actions: ["create"],
+      },
+    ],
   },
+      },
 ]);
 
 // Setup useApi composable at top level
