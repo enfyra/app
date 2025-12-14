@@ -13,13 +13,14 @@ const limit = 20;
 
 const { getIncludeFields: getFileFields } = useSchema("file_definition");
 
+const idField = computed(() => getIdFieldName());
+
 const {
   data: rootFolders,
   pending: rootPending,
   execute: fetchRootFolders,
 } = useApi(() => `folder_definition`, {
   query: computed(() => {
-    const idField = getIdFieldName();
     return {
       limit,
       page: folderPage.value,
@@ -27,7 +28,7 @@ const {
       sort: "-order,-createdAt",
       filter: {
         parent: {
-          [idField]: {
+          [idField.value]: {
             _is_null: true,
           },
         },
@@ -43,7 +44,6 @@ const {
   execute: fetchRootFiles,
 } = useApi(() => `file_definition`, {
   query: computed(() => {
-    const idField = getIdFieldName();
     return {
       fields: getFileFields(),
       limit,
@@ -52,7 +52,7 @@ const {
       sort: "-createdAt",
       filter: {
         folder: {
-          [idField]: {
+          [idField.value]: {
             _is_null: true,
           },
         },
