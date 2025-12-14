@@ -142,13 +142,13 @@ async function handleBulkDelete() {
   if (selectedItems.value.length === 0) return;
 
   const folderIds = selectedItems.value.filter((id) =>
-    props.folders.find((folder) => folder.id === id)
+    props.folders.find((folder) => getId(folder) === id)
   );
   const fileIds = selectedItems.value.filter((id) =>
-    props.files.find((file) => file.id === id)
+    props.files.find((file) => getId(file) === id)
   );
 
-  const folderList = folderIds.map((id) => props.folders.find((f) => f.id === id)).filter(Boolean);
+  const folderList = folderIds.map((id) => props.folders.find((f) => getId(f) === id)).filter(Boolean);
 
   if (folderIds.length > 0) {
     await deleteSelectedFolders(folderList, () => emit("refreshItems"));
@@ -283,7 +283,7 @@ useSubHeaderActionRegistry([
         selectedItems.value = [];
       } else {
         const allItems = [...props.folders, ...props.files];
-        selectedItems.value = allItems.map((item) => item.id);
+        selectedItems.value = allItems.map((item) => getId(item));
       }
     },
     side: "right",

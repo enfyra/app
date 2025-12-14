@@ -15,6 +15,7 @@ export function useFileManager(parentFilter?: any) {
 
   const toast = useToast();
   const { confirm } = useConfirm();
+  const { getId } = useDatabase();
 
   const { execute: deleteFolderApi, error: deleteFolderError } = useApi(
     () => "/folder_definition",
@@ -69,7 +70,7 @@ export function useFileManager(parentFilter?: any) {
     });
 
     if (isConfirmed) {
-      await deleteFolderApi({ id: folder.id });
+      await deleteFolderApi({ id: getId(folder) });
 
       if (deleteFolderError.value) {
         return;
@@ -95,7 +96,7 @@ export function useFileManager(parentFilter?: any) {
   ) {
     if (!folderList || folderList.length === 0) return;
 
-    const folderIds = folderList.map((f) => f.id);
+    const folderIds = folderList.map((f) => getId(f));
     const folderNames = folderList.map((f) => f.name).filter(Boolean);
 
     const isConfirmed = await confirm({
@@ -139,7 +140,7 @@ export function useFileManager(parentFilter?: any) {
     });
 
     if (isConfirmed) {
-      await deleteFileApi({ id: file.id });
+      await deleteFileApi({ id: getId(file) });
 
       if (deleteFileError.value) {
         return;
