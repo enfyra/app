@@ -244,5 +244,16 @@ export default defineAppConfig({
         wrapper: "min-w-0",
       },
     },
+    contextMenu: {
+      slots: {
+        item: [
+          "group relative w-full flex items-center select-none outline-none",
+          "before:absolute before:z-[-1] before:inset-px before:rounded-md",
+          "data-disabled:cursor-not-allowed data-disabled:opacity-75",
+          "data-[state=open]:text-highlighted transition-colors before:transition-colors",
+          "p-1.5 text-sm gap-1.5",
+        ].join(" "),
+      },
+    },
   },
 });

@@ -162,10 +162,13 @@ const {
   pending: loading,
   execute: executeGetConfig,
 } = useApi(() => `/${tableName}`, {
-  query: {
-    fields: getIncludeFields(),
-    filter: { id: { _eq: route.params.id } },
-  },
+  query: computed(() => {
+    const idField = getIdFieldName();
+    return {
+      fields: getIncludeFields(),
+      filter: { [idField]: { _eq: route.params.id } },
+    };
+  }),
   errorContext: "Fetch Storage Configuration",
 });
 

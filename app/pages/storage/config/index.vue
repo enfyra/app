@@ -56,7 +56,7 @@
       >
         <CommonListItem
           v-for="config in storageConfigs"
-          :key="config.id"
+          :key="getId(config)"
           :title="config.name"
           :description="config.description || 'No description provided'"
           :icon="getStorageIcon(config)"
@@ -85,7 +85,7 @@
                 <USwitch
                   v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['update'] }] })"
                   :model-value="config.isEnabled"
-                  :disabled="getConfigLoader(config.id.toString()).isLoading"
+                  :disabled="getConfigLoader(String(getId(config))).isLoading"
                   @update:model-value="toggleConfigStatus(config)"
                   @click.stop
                 />
@@ -247,12 +247,13 @@ function getConfigLoader(configId: string) {
 }
 
 const toggleConfigStatus = async (config: any) => {
-  const loader = getConfigLoader(config.id.toString());
+  const configId = getId(config);
+  const loader = getConfigLoader(String(configId));
   const newStatus = !config.isEnabled;
 
   if (apiData.value?.data) {
     const configIndex = apiData.value.data.findIndex(
-      (c: any) => c.id === config.id
+      (c: any) => getId(c) === configId
     );
     if (configIndex !== -1) {
       apiData.value.data[configIndex].isEnabled = newStatus;
@@ -264,14 +265,14 @@ const toggleConfigStatus = async (config: any) => {
       body: {
         isEnabled: newStatus,
       },
-      id: config.id,
+      id: configId,
     })
   );
 
   if (updateError.value) {
     if (apiData.value?.data) {
       const configIndex = apiData.value.data.findIndex(
-        (c: any) => c.id === config.id
+        (c: any) => getId(c) === configId
       );
       if (configIndex !== -1) {
         apiData.value.data[configIndex].isEnabled = !newStatus;
@@ -309,7 +310,7 @@ const deleteConfig = async (config: any) => {
   });
 
   if (isConfirmed) {
-    await deleteConfigApi({ id: config.id });
+    await deleteConfigApi({ id: getId(config) });
 
     if (deleteError.value) {
       return;

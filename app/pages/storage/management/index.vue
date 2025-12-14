@@ -6,7 +6,7 @@ const selectedStorage = ref<{ label: string; value: string; icon: string }>();
 const route = useRoute();
 const { storageConfigs } = useGlobalState();
 const router = useRouter();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 const folderPage = ref(Number(route.query.folderPage) || 1);
 const filePage = ref(Number(route.query.filePage) || 1);
 const limit = 20;
@@ -18,19 +18,22 @@ const {
   pending: rootPending,
   execute: fetchRootFolders,
 } = useApi(() => `folder_definition`, {
-  query: computed(() => ({
-    limit,
-    page: folderPage.value,
-    meta: "*",
-    sort: "-order,-createdAt",
-    filter: {
-      parent: {
-        id: {
-          _is_null: true,
+  query: computed(() => {
+    const idField = getIdFieldName();
+    return {
+      limit,
+      page: folderPage.value,
+      meta: "*",
+      sort: "-order,-createdAt",
+      filter: {
+        parent: {
+          [idField]: {
+            _is_null: true,
+          },
         },
       },
-    },
-  })),
+    };
+  }),
   errorContext: "Load Root Folders",
 });
 
@@ -39,20 +42,23 @@ const {
   pending: filesPending,
   execute: fetchRootFiles,
 } = useApi(() => `file_definition`, {
-  query: computed(() => ({
-    fields: getFileFields(),
-    limit,
-    page: filePage.value,
-    meta: "*",
-    sort: "-createdAt",
-    filter: {
-      folder: {
-        id: {
-          _is_null: true,
+  query: computed(() => {
+    const idField = getIdFieldName();
+    return {
+      fields: getFileFields(),
+      limit,
+      page: filePage.value,
+      meta: "*",
+      sort: "-createdAt",
+      filter: {
+        folder: {
+          [idField]: {
+            _is_null: true,
+          },
         },
       },
-    },
-  })),
+    };
+  }),
   errorContext: "Load Root Files",
 });
 
