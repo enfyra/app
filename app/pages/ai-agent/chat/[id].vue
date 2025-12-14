@@ -110,7 +110,7 @@ const handleConfigSelect = async (config: any) => {
 
   const idField = getIdFieldName()
   await updateConversation({
-    id: conversationId.value,
+    id: conversationId.value as string,
     body: {
       config: { [idField]: getId(config) }
     }
