@@ -23,11 +23,11 @@ const {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
-      filter: {
+    filter: {
         [idField]: {
-          _eq: route.params.id,
-        },
+        _eq: route.params.id,
       },
+    },
     };
   }),
   errorContext: "Load Folder Info",
@@ -41,17 +41,17 @@ const {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
-      limit: pageLimit,
-      page: folderPage.value,
-      meta: "*",
-      sort: "-order,-createdAt",
-      filter: {
-        parent: {
+    limit: pageLimit,
+    page: folderPage.value,
+    meta: "*",
+    sort: "-order,-createdAt",
+    filter: {
+      parent: {
           [idField]: {
-            _eq: route.params.id,
-          },
+          _eq: route.params.id,
         },
       },
+    },
     };
   }),
   errorContext: "Load Child Folders",
@@ -65,18 +65,18 @@ const {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
-      fields: getFileFields(),
-      limit: pageLimit,
-      page: filePage.value,
-      meta: "*",
-      sort: "-createdAt",
-      filter: {
-        folder: {
+    fields: getFileFields(),
+    limit: pageLimit,
+    page: filePage.value,
+    meta: "*",
+    sort: "-createdAt",
+    filter: {
+      folder: {
           [idField]: {
-            _eq: route.params.id,
-          },
+          _eq: route.params.id,
         },
       },
+    },
     };
   }),
   errorContext: "Load Files",

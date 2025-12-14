@@ -1,3 +1,7 @@
+import { getAppUrl, normalizeUrl } from "~/utils/api/url";
+
+const ENFYRA_API_PREFIX = "/enfyra/api";
+
 export interface StreamOptions {
   onMessage: (chunk: string) => void
   onComplete?: () => void
@@ -9,7 +13,21 @@ export const useStreamingAPI = () => {
   const connectSSE = (url: string, options: StreamOptions & { queryParams?: Record<string, string> }) => {
     const { queryParams, ...streamOptions } = options
     
-    let fullUrl = url
+    // Get base URL from config
+    const config: any = useRuntimeConfig().public.enfyraSDK;
+    const apiUrl = getAppUrl();
+    const apiPrefix = config?.apiPrefix || ENFYRA_API_PREFIX;
+    
+    // Normalize the path (remove leading /api if present)
+    const basePath = url
+      .replace(/^\/?api\/?/, "")
+      .replace(/^\/+/, "");
+    
+    // Build full URL
+    const fullBaseURL = normalizeUrl(apiUrl, apiPrefix);
+    
+    let fullUrl = normalizeUrl(fullBaseURL, basePath);
+    
     if (queryParams && Object.keys(queryParams).length > 0) {
       const params = new URLSearchParams()
       Object.entries(queryParams).forEach(([key, value]) => {
@@ -17,7 +35,7 @@ export const useStreamingAPI = () => {
           params.append(key, String(value))
         }
       })
-      fullUrl = `${url}?${params.toString()}`
+      fullUrl = `${fullUrl}?${params.toString()}`
     }
 
     const eventSource = new EventSource(fullUrl)
