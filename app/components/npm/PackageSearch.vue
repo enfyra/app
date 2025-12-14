@@ -238,12 +238,12 @@ const {
   data: searchData,
   pending: loading,
   execute: executeSearch,
-} = useApiLazy("/npm-search", {
+} = useApi("/npm-search", {
+  immediate: false,
   query: computed(() => ({
     q: searchTerm.value,
   })),
   watch: false,
-  immediate: false,
 });
 
 // Watch for search data changes
