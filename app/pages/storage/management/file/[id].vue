@@ -9,6 +9,7 @@ const { updateFileTimestamp } = useGlobalState();
 const { getPreviewUrl } = useFileUrl();
 const fileId = route.params.id as string;
 const { registerPageHeader } = usePageHeaderRegistry();
+const { getIdFieldName } = useDatabase();
 
 const {
   data: file,
@@ -16,13 +17,16 @@ const {
   error,
   execute,
 } = useApi(`/file_definition`, {
-  query: {
-    filter: {
-      id: {
-        _eq: fileId,
+  query: computed(() => {
+    const idField = getIdFieldName();
+    return {
+      filter: {
+        [idField]: {
+          _eq: fileId,
+        },
       },
-    },
-  },
+    };
+  }),
   errorContext: "Fetch File",
 });
 

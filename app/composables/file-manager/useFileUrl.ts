@@ -48,7 +48,7 @@ export const useFileUrl = () => {
    * Generate preview URL (alias for getFileUrl)
    */
   function getPreviewUrl(fileId: string): string {
-    return getFileUrl(fileId, { format: 'avif', quality: 70 });
+    return getFileUrl(fileId, { format: 'webp', quality: 70 });
   }
 
   /**
@@ -56,7 +56,7 @@ export const useFileUrl = () => {
    */
   function getThumbnailUrl(fileId: string): string {
     return getFileUrl(fileId, {
-      format: 'avif',
+      format: 'webp',
       width: 300,
       height: 300,
       quality: 70

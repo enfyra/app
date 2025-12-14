@@ -125,7 +125,7 @@ const imageSrc = computed(() => {
 
     // Add format if not present
     if (!url.searchParams.has("format")) {
-      url.searchParams.set("format", "avif");
+      url.searchParams.set("format", "webp");
     }
 
     // Preserve existing query params (like ?t= for cache busting)

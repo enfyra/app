@@ -6,7 +6,7 @@ const showUploadModal = ref(false);
 const selectedStorage = ref<{ label: string; value: string; icon: string }>();
 
 const { storageConfigs } = useGlobalState();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 
 const folderPage = ref(Number(route.query.folderPage) || 1);
 const filePage = ref(Number(route.query.filePage) || 1);
@@ -20,13 +20,16 @@ const {
   pending: folderPending,
   execute: fetchFolder,
 } = useApi(() => `/folder_definition`, {
-  query: computed(() => ({
-    filter: {
-      id: {
-        _eq: route.params.id,
+  query: computed(() => {
+    const idField = getIdFieldName();
+    return {
+      filter: {
+        [idField]: {
+          _eq: route.params.id,
+        },
       },
-    },
-  })),
+    };
+  }),
   errorContext: "Load Folder Info",
 });
 
@@ -35,19 +38,22 @@ const {
   pending: childFoldersPending,
   execute: fetchChildFolders,
 } = useApi(() => `/folder_definition`, {
-  query: computed(() => ({
-    limit: pageLimit,
-    page: folderPage.value,
-    meta: "*",
-    sort: "-order,-createdAt",
-    filter: {
-      parent: {
-        id: {
-          _eq: route.params.id,
+  query: computed(() => {
+    const idField = getIdFieldName();
+    return {
+      limit: pageLimit,
+      page: folderPage.value,
+      meta: "*",
+      sort: "-order,-createdAt",
+      filter: {
+        parent: {
+          [idField]: {
+            _eq: route.params.id,
+          },
         },
       },
-    },
-  })),
+    };
+  }),
   errorContext: "Load Child Folders",
 });
 
@@ -56,20 +62,23 @@ const {
   pending: filesPending,
   execute: fetchFiles,
 } = useApi(() => `/file_definition`, {
-  query: computed(() => ({
-    fields: getFileFields(),
-    limit: pageLimit,
-    page: filePage.value,
-    meta: "*",
-    sort: "-createdAt",
-    filter: {
-      folder: {
-        id: {
-          _eq: route.params.id,
+  query: computed(() => {
+    const idField = getIdFieldName();
+    return {
+      fields: getFileFields(),
+      limit: pageLimit,
+      page: filePage.value,
+      meta: "*",
+      sort: "-createdAt",
+      filter: {
+        folder: {
+          [idField]: {
+            _eq: route.params.id,
+          },
         },
       },
-    },
-  })),
+    };
+  }),
   errorContext: "Load Files",
 });
 
