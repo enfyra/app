@@ -372,7 +372,7 @@ const sendMessage = async () => {
   scrollToBottom()
 
   try {
-    const apiUrl = '/enfyra/api/ai-agent/chat/stream'
+    const apiUrl = '/ai-agent/chat/stream'
 
     const queryParams: Record<string, string> = {
       message: userMsg,

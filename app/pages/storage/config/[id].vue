@@ -165,7 +165,7 @@ const {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
-      fields: getIncludeFields(),
+    fields: getIncludeFields(),
       filter: { [idField]: { _eq: route.params.id } },
     };
   }),

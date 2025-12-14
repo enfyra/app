@@ -20,11 +20,11 @@ const {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
-      filter: {
+    filter: {
         [idField]: {
-          _eq: fileId,
-        },
+        _eq: fileId,
       },
+    },
     };
   }),
   errorContext: "Fetch File",
