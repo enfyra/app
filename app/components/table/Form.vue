@@ -18,10 +18,8 @@ const { isMobile, isTablet } = useScreen();
 
 <template>
   <div class="space-y-6">
-    <!-- Table Name slot for create new -->
     <slot name="tableName" />
     
-    <!-- Table Description -->
     <div class="mb-6">
       <UFormField label="Description">
         <UTextarea
@@ -34,7 +32,6 @@ const { isMobile, isTablet } = useScreen();
       </UFormField>
     </div>
     
-    <!-- Is Single Record -->
     <div
       :class="(isMobile || isTablet) ? 'flex items-center justify-between py-4 border-t' : 'flex items-center justify-between py-4 border-t border-b'"
       :style="{
@@ -57,7 +54,6 @@ const { isMobile, isTablet } = useScreen();
         </p>
       </div>
 
-      <!-- Right: Switch/Toggle -->
       <USwitch
         id="field-isSingleRecord"
         v-model="table.isSingleRecord"
@@ -65,7 +61,6 @@ const { isMobile, isTablet } = useScreen();
       />
     </div>
     
-    <!-- Table Content -->
     <slot />
   </div>
 </template>

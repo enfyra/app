@@ -100,7 +100,14 @@ function saveColumn() {
 
   const newCol = { ...currentColumn.value };
 
-  // Use centralized UUID logic
+  // DEBUG: column before pushing back to table.columns
+  console.log("[Columns.saveColumn] newCol", {
+    name: newCol?.name,
+    type: newCol?.type,
+    metadata: newCol?.metadata,
+    defaultValue: newCol?.defaultValue,
+  });
+
   handleUuidType(newCol);
 
   if (isNew.value) {
@@ -109,7 +116,6 @@ function saveColumn() {
     columns.value.splice(editingIndex.value, 1, newCol);
   }
 
-  // Reset form changes before closing
   formEditorRef.value?.confirmChanges();
   
   isEditing.value = false;

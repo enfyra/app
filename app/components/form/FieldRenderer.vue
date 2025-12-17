@@ -1,5 +1,6 @@
 <script setup lang="ts">
 // Vue functions are auto-imported
+import JSON5 from "json5";
 import {
   UInput,
   UTextarea,
@@ -25,6 +26,27 @@ const emit = defineEmits<{
   "update:formData": [key: string, value: any];
   "update:errors": [errors: Record<string, string>];
 }>();
+
+function toJsonEditorString(value: any): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function tryParseJsonLike(raw: string): { ok: true; value: any } | { ok: false } {
+  const trimmed = (raw ?? "").trim();
+  if (trimmed === "") return { ok: true, value: null };
+  try {
+    // JSON5 allows unquoted keys, single quotes, trailing commas, etc.
+    return { ok: true, value: JSON5.parse(trimmed) };
+  } catch {
+    return { ok: false };
+  }
+}
 
 function updateFormData(key: string, value: any) {
   const column = props.columnMap.get(key);
@@ -65,6 +87,8 @@ function getComponentConfigByKey(key: string) {
   const isSystemField = key === "createdAt" || key === "updatedAt";
   const disabled = config.disabled ?? isSystemField;
   const hasError = !!props.errors?.[key];
+  const isSimpleJsonField = finalType === "simple-json";
+  const isRichTextField = finalType === "richtext";
 
   const fieldProps = {
     ...config.fieldProps,
@@ -75,7 +99,8 @@ function getComponentConfigByKey(key: string) {
     placeholder: config.placeholder || column?.placeholder || key,
     class: "w-full",
     ...config.componentProps,
-    ...(hasError && { error: props.errors[key] }),
+    // Không truyền error trực tiếp vào component cho simple-json để tránh phá syntax highlight của CodeMirror
+    ...(hasError && !isSimpleJsonField && { error: props.errors[key] }),
   };
 
   // Handle special cases first
@@ -160,16 +185,24 @@ function getComponentConfigByKey(key: string) {
     }
 
     case "simple-json":
-      // If field is disabled, show disabled input instead of code editor
       if (disabled) {
         return {
           component: UInput,
           componentProps: {
             ...componentPropsBase,
             type: "text",
-            modelValue: ensureString(props.formData[key]),
+            modelValue: toJsonEditorString(props.formData[key]),
             "onUpdate:modelValue": (val: string) => {
-              updateFormData(key, val);
+              const parsed = tryParseJsonLike(val);
+              const updated = { ...props.errors };
+              if (!parsed.ok) {
+                updated[key] = "Invalid JSON";
+                updateErrors(updated);
+                return;
+              }
+              delete updated[key];
+              updateErrors(updated);
+              updateFormData(key, parsed.value);
             },
           },
           fieldProps: {
@@ -183,20 +216,21 @@ function getComponentConfigByKey(key: string) {
         component: resolveComponent("FormCodeEditorLazy"),
         componentProps: {
           ...componentPropsBase,
-          modelValue: ensureString(props.formData[key]),
-          language: "json",
+          modelValue: toJsonEditorString(props.formData[key]),
+          language: "javascript",
           height: config.height || "300px",
           "onUpdate:modelValue": (val: string) => {
-            updateFormData(key, val);
-          },
-          onDiagnostics: (diags: any[]) => {
+            const parsed = tryParseJsonLike(val);
             const updated = { ...props.errors };
-            if (diags?.length > 0) {
-              updated[key] = "JSON syntax error";
-            } else {
-              delete updated[key];
+            if (!parsed.ok) {
+              updated[key] = "Invalid JSON";
+              updateErrors(updated);
+              // Không động vào formData khi JSON sai → tránh remount/jitter.
+              return;
             }
+            delete updated[key];
             updateErrors(updated);
+            updateFormData(key, parsed.value);
           },
           ...(hasError && { error: props.errors[key] }),
         },
@@ -328,12 +362,14 @@ function getComponentConfigByKey(key: string) {
       return {
         component: resolveComponent("FormRichTextEditorLazy"),
         componentProps: {
+          // Không truyền placeholder/class vào RichTextEditorLazy vì root là Suspense → Vue cảnh báo extraneous attrs
           modelValue: ensureString(props.formData[key]),
-          disabled: disabled,
+          // Per-field rich text config từ column.metadata.richText
+          editorConfig: column?.metadata?.richText,
+          disabled,
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },
-          ...(hasError && { error: props.errors[key] }),
         },
         fieldProps: {
           ...fieldProps,
@@ -464,21 +500,25 @@ function getComponentType(): string {
 
     <!-- Component chính -->
     <div v-else class="field-input">
-      <UFormField :error="errorMessage">
+      <UFormField :error="getComponentType() === 'simple-json' ? undefined : errorMessage">
         <div
-          v-if="isCustomComponent && hasError"
-          class="rounded-md border-2 border-red-500"
+          :class="[
+            isCustomComponent && hasError
+              ? 'rounded-md border-2 border-red-500'
+              : ''
+          ]"
         >
-      <component
-        :is="componentConfig.component"
-        v-bind="componentConfig.componentProps"
-      />
+          <component
+            :is="componentConfig.component"
+            v-bind="componentConfig.componentProps"
+          />
         </div>
-        <component
-          v-else
-          :is="componentConfig.component"
-          v-bind="componentConfig.componentProps"
-        />
+        <p
+          v-if="getComponentType() === 'simple-json' && hasError && errorMessage"
+          class="mt-1 text-xs text-red-500"
+        >
+          {{ errorMessage }}
+        </p>
       </UFormField>
     </div>
   </div>

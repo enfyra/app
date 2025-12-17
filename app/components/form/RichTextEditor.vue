@@ -6,11 +6,14 @@ declare global {
 }
 import { ensureString } from "../../utils/components/form";
 import { enfyraConfig } from "../../../enfyra.config";
+import type { RichTextEditorConfig } from "../../../enfyra.config.types";
 
 const props = defineProps<{
   modelValue: string | null;
   disabled?: boolean;
   height?: number;
+  // Optional per-field rich text config (from column.metadata.richText)
+  editorConfig?: RichTextEditorConfig;
 }>();
 
 const emit = defineEmits<{
@@ -37,6 +40,41 @@ const startHeight = ref(0);
 
 const isLoading = ref(true);
 const isError = ref(false);
+
+const effectiveConfig = computed<RichTextEditorConfig>(() => {
+  const base = enfyraConfig.richText || {};
+  const override = props.editorConfig || {};
+
+  const baseButtons = base.customButtons || [];
+  const overrideButtons = override.customButtons || [];
+
+  const mergedButtonsMap: Record<string, any> = {};
+  for (const btn of baseButtons) {
+    mergedButtonsMap[btn.name] = btn;
+  }
+  for (const btn of overrideButtons) {
+    mergedButtonsMap[btn.name] = btn;
+  }
+
+  const mergedButtons =
+    overrideButtons.length > 0 ? Object.values(mergedButtonsMap) : baseButtons;
+
+  return {
+    ...base,
+    ...override,
+    plugins: override.plugins ?? base.plugins,
+    toolbar: override.toolbar ?? base.toolbar,
+    customButtons: mergedButtons,
+    formats: {
+      ...(base.formats || {}),
+      ...(override.formats || {}),
+    },
+    buttonActions: {
+      ...(base.buttonActions || {}),
+      ...(override.buttonActions || {}),
+    },
+  };
+});
 
 function loadTinyMCE(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -242,7 +280,7 @@ onMounted(async () => {
         }
       `,
       icons_url: "/tinymce/icons/default/icons.min.js",
-      plugins: enfyraConfig.richText?.plugins,
+      plugins: effectiveConfig.value.plugins,
       skin: isDark ? "oxide-dark" : "oxide",
       external_plugins: {
         link: "/tinymce/plugins/link/plugin.min.js",
@@ -250,14 +288,14 @@ onMounted(async () => {
         code: "/tinymce/plugins/code/plugin.min.js",
         table: "/tinymce/plugins/table/plugin.min.js",
       },
-      toolbar: enfyraConfig.richText?.toolbar,
+      toolbar: effectiveConfig.value.toolbar,
       menubar: false,
       height: initialHeight,
       resize: false,
       readonly: props.disabled ?? false,
       license_key: "gpl",
       formats: (() => {
-        const formats = enfyraConfig.richText?.formats;
+        const formats = effectiveConfig.value.formats;
         if (!formats) return undefined;
         
         const processedFormats: any = {};
@@ -298,8 +336,8 @@ onMounted(async () => {
       setup(editor: any) {
         editorRef.value = editor;
 
-        const customButtons = enfyraConfig.richText?.customButtons || [];
-        const buttonActions = enfyraConfig.richText?.buttonActions || {};
+        const customButtons = effectiveConfig.value.customButtons || [];
+        const buttonActions = effectiveConfig.value.buttonActions || {};
         
         customButtons.forEach((buttonConfig) => {
           const { name, text, tooltip, format, onAction, params } = buttonConfig;
@@ -361,7 +399,7 @@ onMounted(async () => {
                       existingStyle.remove();
                     }
                     
-                    const formats = enfyraConfig.richText?.formats;
+                    const formats = effectiveConfig.value.formats;
                     let formatCss = '';
                     if (formats) {
                       const theme = colorMode.value as 'light' | 'dark';

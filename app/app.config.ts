@@ -101,7 +101,7 @@ export default defineAppConfig({
     },
     badge: {
       slots: {
-        base: "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium capitalize",
+        base: "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium",
       },
       compoundVariants: [
         {
@@ -184,7 +184,10 @@ export default defineAppConfig({
           "transition-all duration-300",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "disabled:border-gray-100 disabled:bg-gray-50 dark:disabled:border-gray-800 dark:disabled:bg-white/[0.03]",
-        ].join(" "),
+        ],
+        item: [
+          'cursor-pointer hover:bg-primary-500/20'
+        ],
       },
     },
     formField: {

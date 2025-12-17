@@ -10,7 +10,7 @@ const emit = defineEmits(["update:modelValue"]);
 const showModal = ref(false);
 const selectedIds = ref<any[]>([]);
 const { getId } = useDatabase();
-const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
+const { ensureRoutesLoaded } = useRoutes();
 const { schemas } = useSchema();
 
 onMounted(async () => {
@@ -78,7 +78,6 @@ function shortenId(id: string | number): string {
     return "Invalid ID";
   }
   const str = String(id);
-  // Ngắn hơn nữa: 4 ký tự đầu + … + 3 ký tự cuối
   return str.length > 12 ? `${str.slice(0, 4)}…${str.slice(-3)}` : str;
 }
 
@@ -114,26 +113,35 @@ function navigateToDetail(item: any) {
 
 <template>
   <div class="flex flex-wrap gap-2 items-center">
-    <UBadge
+    <div
       v-for="item in selectedIds"
       :key="getId(item)"
-      size="lg"
-      :color="getId(item) ? 'secondary' : 'error'"
-      variant="soft"
-      class="flex items-center gap-1 cursor-pointer transition-all duration-200 hover:opacity-80 hover:brightness-110"
+      class="inline-flex items-stretch rounded-md overflow-hidden bg-secondary-500/10 border border-secondary-500/30"
       :title="getId(item) ? String(getId(item)) : 'Invalid ID'"
-      @click="navigateToDetail(item)"
     >
-      {{ getId(item) ? shortenId(getId(item)) : "Invalid ID" }}
+      <span class="px-2 py-0.5 text-xs font-mono bg-secondary-500/20">
+        {{ getId(item) ? shortenId(getId(item)) : "Invalid ID" }}
+      </span>
+
       <button
-        @click.stop="removeId(getId(item))"
-        class="ml-1 text-xs lg:hover:text-red-500 cursor-pointer"
-        title="Delete"
-        v-if="!props.disabled"
+        type="button"
+        class="px-1.5 flex items-center justify-center text-[10px] text-gray-300 hover:bg-primary-500/20 hover:text-primary-300 transition-colors"
+        :title="`Open detail for ${getId(item)}`"
+        @click.stop="navigateToDetail(item)"
       >
-        ✕
+        <UIcon name="lucide:arrow-up-right" class="w-3 h-3" />
       </button>
-    </UBadge>
+
+      <button
+        v-if="!props.disabled"
+        type="button"
+        class="px-1.5 flex items-center justify-center text-[10px] text-gray-300 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+        title="Remove relation"
+        @click.stop="removeId(getId(item))"
+      >
+        <UIcon name="lucide:x" class="w-3 h-3" />
+      </button>
+    </div>
 
     <UButton
       icon="lucide:square-pen"
