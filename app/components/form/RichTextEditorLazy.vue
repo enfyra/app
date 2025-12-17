@@ -5,6 +5,7 @@
         :model-value="modelValue"
         :disabled="disabled"
         :height="height"
+        :editor-config="editorConfig"
         @update:model-value="$emit('update:modelValue', $event)"
       />
     </template>
@@ -34,6 +35,7 @@ defineProps<{
   modelValue: string | null;
   disabled?: boolean;
   height?: number;
+  editorConfig?: any;
 }>();
 
 defineEmits<{

@@ -48,7 +48,6 @@ const {
   error: updateError,
 } = useApi(() => `/table_definition`, {
   method: "patch",
-  body: computed(() => table.value),
   errorContext: "Update Table",
 });
 
@@ -164,7 +163,7 @@ async function save() {
 }
 
 async function patchTable() {
-  await executePatchTable({ id: getId(table.value) });
+  await executePatchTable({ id: getId(table.value), body: table.value });
 
   if (updateError.value) {
     return; // Error already handled by useApi
