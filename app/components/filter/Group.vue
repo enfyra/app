@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Types will be auto-imported from utils
 
 const props = defineProps<{
   group: FilterGroup;
@@ -18,7 +17,7 @@ function updateGroup() {
 }
 
 function addCondition() {
-  // Get available fields for this context
+  
   const availableOptions = getCombinedOptionsForContext(
     props.tableName,
     props.schemas
@@ -81,7 +80,7 @@ const { isMobile, isTablet } = useScreen();
 
 <template>
   <div class="space-y-4">
-    <!-- Group Operator -->
+    
     <div class="flex items-center gap-2" v-if="group.conditions.length > 1">
       <USelect
         v-if="!readonly"
@@ -101,7 +100,7 @@ const { isMobile, isTablet } = useScreen();
 
     <div :class="(isMobile || isTablet) ? 'space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700' : 'space-y-2 pl-4 border-l-2 border-gray-200 dark:border-gray-700'">
       <template v-for="(item, index) in group.conditions" :key="item.id">
-        <!-- Filter Condition -->
+        
         <FilterCondition
           v-if="isCondition(item)"
           :condition="item"
@@ -115,9 +114,8 @@ const { isMobile, isTablet } = useScreen();
           @remove="removeItem"
         />
 
-        <!-- Nested Filter Group -->
         <div v-else :class="(isMobile || isTablet) ? 'border border-gray-200 dark:border-gray-700 rounded-lg p-2' : 'border border-gray-200 dark:border-gray-700 rounded-lg p-3'">
-          <!-- Show relation context if this is a relation group -->
+          
           <div
             v-if="item.relationContext"
             class="mb-3 p-2 bg-blue-50 dark:bg-blue-950 rounded text-sm text-blue-700 dark:text-blue-300"
@@ -165,7 +163,6 @@ const { isMobile, isTablet } = useScreen();
         </div>
       </template>
 
-      <!-- Add Actions -->
       <div v-if="!readonly" class="flex gap-2">
         <UButton
           @click="addCondition"

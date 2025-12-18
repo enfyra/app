@@ -1,22 +1,18 @@
 import type { PermissionCondition } from '~/utils/types/permissions'
 
 export const mockPermissionConditions: Record<string, PermissionCondition> = {
-  // Public access - no permission required
   public: null,
   
-  // Simple route permission
   simpleRead: {
     route: '/users',
     actions: ['read']
   },
   
-  // Multiple actions
   fullAccess: {
     route: '/admin',
     actions: ['create', 'read', 'update', 'delete']
   },
   
-  // AND condition
   adminUserManagement: {
     and: [
       { route: '/users', actions: ['read'] },
@@ -24,7 +20,6 @@ export const mockPermissionConditions: Record<string, PermissionCondition> = {
     ]
   },
   
-  // OR condition
   contentEditor: {
     or: [
       { route: '/posts', actions: ['create', 'update'] },
@@ -32,7 +27,6 @@ export const mockPermissionConditions: Record<string, PermissionCondition> = {
     ]
   },
   
-  // Complex nested condition
   superAdmin: {
     and: [
       { route: '/admin', actions: ['read'] },
@@ -45,7 +39,6 @@ export const mockPermissionConditions: Record<string, PermissionCondition> = {
     ]
   },
   
-  // Menu specific permissions
   menuManagement: {
     and: [
       { route: '/menu_definition', actions: ['read'] },
@@ -59,7 +52,6 @@ export const mockPermissionConditions: Record<string, PermissionCondition> = {
     ]
   },
   
-  // Table permissions
   tableAccess: {
     and: [
       { route: '/table_definition', actions: ['read'] },
@@ -74,7 +66,6 @@ export const mockPermissionConditions: Record<string, PermissionCondition> = {
   }
 }
 
-// Mock user permissions for testing
 export const mockUserPermissions = {
   admin: [
     { route: '/admin', actions: ['create', 'read', 'update', 'delete'] },
@@ -99,7 +90,6 @@ export const mockUserPermissions = {
   guest: []
 }
 
-// Mock route definitions for testing
 export const mockRoutes = [
   { path: '/admin', name: 'admin' },
   { path: '/users', name: 'users' },

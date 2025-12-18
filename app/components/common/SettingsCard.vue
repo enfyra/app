@@ -8,12 +8,11 @@
       'hover:shadow-theme-md'
     ]"
   >
-    <!-- Gradient overlay on hover -->
+    
     <div :class="`absolute inset-0 bg-gradient-to-br ${hoverGradientClass} opacity-0 group-hover:opacity-70 dark:group-hover:opacity-20 transition-opacity duration-300 pointer-events-none`" />
 
-    <!-- Header with icon + title -->
     <div :class="(isMobile || isTablet) ? 'relative flex items-center gap-2 mb-1.5' : 'relative flex items-center gap-3 mb-2'">
-      <!-- Icon with gradient -->
+      
       <div
         :class="[
           (isMobile || isTablet) ? 'w-8 h-8 rounded-lg' : 'w-10 h-10 rounded-xl',
@@ -24,7 +23,6 @@
         <UIcon :name="icon" :class="(isMobile || isTablet) ? 'w-4 h-4 text-white' : 'w-5 h-5 text-white'" />
       </div>
 
-      <!-- Title & Description -->
       <div class="flex-1 min-w-0 self-start">
         <h3 :class="(isMobile || isTablet) ? 'text-xs mb-0 font-semibold text-gray-800 dark:text-white/90' : 'text-sm mb-0.5 font-semibold text-gray-800 dark:text-white/90'">
           {{ title }}
@@ -34,7 +32,6 @@
         </p>
       </div>
 
-      <!-- Card Header Actions -->
       <div
         v-if="headerActions && headerActions.length > 0"
         :class="(isMobile || isTablet) ? 'flex items-center gap-1 flex-shrink-0' : 'flex items-center gap-2 flex-shrink-0'"
@@ -56,9 +53,8 @@
       </div>
     </div>
 
-    <!-- Content wrapper with flex-1 to push footer down -->
     <div class="flex-1">
-      <!-- Stats List (Figma Performance Card Style) -->
+      
       <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 rounded-lg mb-1.5' : 'relative p-2 rounded-lg mb-2', 'bg-gray-100 dark:bg-gray-800']">
         <div
           v-for="(stat, index) in stats"
@@ -92,7 +88,6 @@
         </div>
       </div>
 
-      <!-- Stats Grid (Figma Security Card Style) -->
       <div v-else-if="stats && stats.length && statsLayout === 'grid'" :class="(isMobile || isTablet) ? 'relative grid grid-cols-2 gap-1.5 mb-1.5' : 'relative grid grid-cols-2 gap-2 mb-2'">
         <div
           v-for="stat in stats"
@@ -125,21 +120,18 @@
         </div>
       </div>
 
-      <!-- Custom body content -->
       <div v-if="$slots.default" :class="(isMobile || isTablet) ? 'relative mb-1.5' : 'relative mb-2'">
         <slot />
       </div>
     </div>
 
-    <!-- Footer -->
     <div
       v-if="$slots.footer || (actions && actions.length > 0)"
       :class="[(isMobile || isTablet) ? 'relative z-10 pt-1.5 mt-1.5 border-t' : 'relative z-10 pt-2 mt-2 border-t', 'border-gray-200 dark:border-gray-800']"
     >
-      <!-- Custom footer content -->
+      
       <slot name="footer" />
 
-      <!-- Action Buttons -->
       <div v-if="actions && actions.length" :class="(isMobile || isTablet) ? 'flex justify-end gap-1.5' : 'flex justify-end gap-2'">
         <UButton
           v-for="action in actions"
@@ -223,7 +215,7 @@ const componentMap = {
 };
 
 const getComponent = (componentName?: string) => {
-  if (!componentName) return UButton; // default fallback
+  if (!componentName) return UButton; 
   return componentMap[componentName as keyof typeof componentMap] || UButton;
 };
 

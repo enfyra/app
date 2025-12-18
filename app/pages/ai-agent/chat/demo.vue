@@ -7,7 +7,6 @@ marked.setOptions({
   gfm: true,
 })
 
-// Initialize highlight.js on mount
 onMounted(async () => {
   await initHighlight()
 })

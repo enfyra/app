@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// Vue functions are auto-imported
+
 import JSON5 from "json5";
 import {
   UInput,
@@ -41,7 +41,7 @@ function tryParseJsonLike(raw: string): { ok: true; value: any } | { ok: false }
   const trimmed = (raw ?? "").trim();
   if (trimmed === "") return { ok: true, value: null };
   try {
-    // JSON5 allows unquoted keys, single quotes, trailing commas, etc.
+    
     return { ok: true, value: JSON5.parse(trimmed) };
   } catch {
     return { ok: false };
@@ -57,10 +57,9 @@ function updateFormData(key: string, value: any) {
       : manualConfig || {};
   const finalType = config.type || column?.type;
 
-  // Convert empty string to null for string fields (input/textarea)
   if (typeof value === "string" && value.trim() === "") {
     const stringTypes = ["varchar", "text", "uuid", "richtext", "code", "simple-json"];
-    // If field type is string type or undefined (defaults to varchar), convert to null
+    
     if (!finalType || stringTypes.includes(finalType)) {
       value = null;
     }
@@ -99,11 +98,10 @@ function getComponentConfigByKey(key: string) {
     placeholder: config.placeholder || column?.placeholder || key,
     class: "w-full",
     ...config.componentProps,
-    // Không truyền error trực tiếp vào component cho simple-json để tránh phá syntax highlight của CodeMirror
+    
     ...(hasError && !isSimpleJsonField && { error: props.errors[key] }),
   };
 
-  // Handle special cases first
   if (isRelation) {
     return {
       component: resolveComponent("FormRelationInlineEditor"),
@@ -120,7 +118,6 @@ function getComponentConfigByKey(key: string) {
     };
   }
 
-  // Switch case for different field types
   switch (finalType) {
     case "boolean":
       return {
@@ -225,7 +222,7 @@ function getComponentConfigByKey(key: string) {
             if (!parsed.ok) {
               updated[key] = "Invalid JSON";
               updateErrors(updated);
-              // Không động vào formData khi JSON sai → tránh remount/jitter.
+              
               return;
             }
             delete updated[key];
@@ -339,7 +336,7 @@ function getComponentConfigByKey(key: string) {
       };
 
     case "richtext":
-      // If field is disabled, show disabled input instead of rich text editor
+      
       if (disabled) {
         return {
           component: UInput,
@@ -362,9 +359,9 @@ function getComponentConfigByKey(key: string) {
       return {
         component: resolveComponent("FormRichTextEditorLazy"),
         componentProps: {
-          // Không truyền placeholder/class vào RichTextEditorLazy vì root là Suspense → Vue cảnh báo extraneous attrs
+          
           modelValue: ensureString(props.formData[key]),
-          // Per-field rich text config từ column.metadata.richText
+          
           editorConfig: column?.metadata?.richText,
           disabled,
           "onUpdate:modelValue": (val: string) => {
@@ -478,7 +475,6 @@ const isCustomComponent = computed(() => {
   return isRelation || (finalType && customTypes.includes(finalType));
 });
 
-// Get component type for loading skeleton
 function getComponentType(): string {
   const column = props.columnMap.get(props.keyName);
   const manualConfig = props.fieldMap?.[props.keyName];
@@ -493,12 +489,11 @@ function getComponentType(): string {
 
 <template>
   <div>
-    <!-- Loading skeleton với fadeout -->
+    
     <div v-if="props.loading">
       <FieldLoadingSkeleton :type="getComponentType()" />
     </div>
 
-    <!-- Component chính -->
     <div v-else class="field-input">
       <UFormField :error="getComponentType() === 'simple-json' ? undefined : errorMessage">
         <div

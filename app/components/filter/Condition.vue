@@ -41,7 +41,6 @@ function onFieldSelectChange(selectedValue: string) {
   }
 }
 
-// Get enum options for select fields
 const enumOptions = computed(() => {
   if (props.condition.type === "select") {
     return getFieldOptions(
@@ -63,7 +62,7 @@ const { isMobile, isTablet } = useScreen();
       (isMobile || isTablet) ? 'p-2 space-y-2' : 'flex items-center gap-2 p-3'
     ]"
   >
-    <!-- Field Select -->
+    
     <div v-if="!readonly" :class="(isMobile || isTablet) ? 'w-full' : 'flex items-center gap-2'">
       <label v-if="isMobile || isTablet" class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Field</label>
       <USelect
@@ -87,7 +86,6 @@ const { isMobile, isTablet } = useScreen();
       condition.field
     }}</span>
 
-    <!-- Operator Select -->
     <div :class="(isMobile || isTablet) ? 'w-full' : ''">
       <label v-if="(isMobile || isTablet) && !readonly" class="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Operator</label>
       <USelect
@@ -107,7 +105,6 @@ const { isMobile, isTablet } = useScreen();
       </span>
     </div>
 
-    <!-- Value Input -->
     <template
       v-if="needsValue(condition.operator) || condition.operator === '_is_null'"
     >
@@ -122,7 +119,6 @@ const { isMobile, isTablet } = useScreen();
           :enum-options="enumOptions"
         />
 
-        <!-- Readonly Value Display -->
         <span v-else class="text-sm">
           <template v-if="condition.operator === '_is_null'">
             {{ condition.value ? "Is empty" : "Is not empty" }}
@@ -140,7 +136,6 @@ const { isMobile, isTablet } = useScreen();
       </div>
     </template>
 
-    <!-- Remove Button -->
     <UButton
       v-if="!readonly"
       @click="emit('remove', conditionIndex)"

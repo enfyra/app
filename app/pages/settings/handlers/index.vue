@@ -18,7 +18,6 @@ registerPageHeader({
 });
 const { isTablet } = useScreen();
 
-// Fixed color for processing/actions
 const pageIconColor = 'success';
 
 const {
@@ -175,7 +174,6 @@ watch(
       />
     </Transition>
 
-    <!-- Premium Pagination -->
     <div
       v-if="!loading && routeHandlers.length > 0 && total > pageLimit"
       class="flex items-center justify-between mt-6"

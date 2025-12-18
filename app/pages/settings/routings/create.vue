@@ -94,7 +94,6 @@ async function handleCreate() {
 
   await loadRoutes();
 
-  // Reregister menus after route creation
   const { registerDataMenuItems } = useMenuRegistry();
   const { schemas } = useSchema();
   await registerDataMenuItems(Object.values(schemas.value));

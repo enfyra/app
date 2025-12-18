@@ -155,10 +155,10 @@ import type { UploadModalProps, UploadModalEmits } from "../../utils/types";
 
 const props = withDefaults(defineProps<UploadModalProps>(), {
   title: "Upload Files",
-  accept: "*/*",
+  accept: "**",
   multiple: false,
   maxSize: 10 * 1024 * 1024,
-  dragText: "Drag and drop your files here",
+  dragText: "Drag and drop files here",
   acceptText: "or click to browse",
   uploadText: "Upload",
   uploadingText: "Uploading...",
@@ -172,16 +172,16 @@ const isOpen = computed({
   set: (value) => emit("update:modelValue", value),
 });
 
-const dropZone = ref<HTMLElement>();
 const fileInput = ref<HTMLInputElement>();
+const dropZone = ref<HTMLElement>();
 const selectedFiles = ref<File[]>([]);
 const isDragOver = ref(false);
 const dragCounter = ref(0);
-const uploading = ref(false);
 const hasError = ref(false);
 const errorMessage = ref("");
+const uploading = ref(false);
 
-const isLoading = computed(() => uploading.value || props.loading);
+const isLoading = computed(() => props.loading || uploading.value);
 
 const acceptString = computed(() => {
   if (Array.isArray(props.accept)) {
@@ -190,19 +190,14 @@ const acceptString = computed(() => {
   return props.accept;
 });
 
-const acceptText = computed(() => {
-  if (Array.isArray(props.accept)) {
-    return `Accepted: ${props.accept.join(", ")}`;
-  }
-  if (props.accept === ".zip") return "ZIP files only";
-  if (props.accept === "image/*") return "Images only";
-  return props.acceptText;
-});
+const dragText = computed(() => props.dragText || "Drag and drop files here");
+const acceptText = computed(() => props.acceptText || "or click to browse");
+const uploadText = computed(() => props.uploadText || "Upload");
+const uploadingText = computed(() => props.uploadingText || "Uploading...");
 
 const validateFile = (file: File): string | null => {
-  // Check file type
-  const acceptValue = acceptString.value;
-  if (acceptValue !== "*/*") {
+  const acceptValue = Array.isArray(props.accept) ? props.accept.join(",") : props.accept;
+  if (acceptValue && acceptValue !== "**") {
     const acceptTypes = acceptValue?.split(",").map((t) => t.trim()) || [];
     const isValidType = acceptTypes.some((type) => {
       if (type.startsWith(".")) {
@@ -220,8 +215,7 @@ const validateFile = (file: File): string | null => {
     }
   }
 
-  // Check file size
-  if (file.size > props.maxSize) {
+  if (props.maxSize && file.size > props.maxSize) {
     return `File too large. Maximum size: ${formatFileSize(props.maxSize)}`;
   }
 
@@ -384,7 +378,6 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 };
 
-// Reset when modal closes
 watch(isOpen, (newValue) => {
   if (!newValue) {
     clearFiles();

@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-3">
-    <!-- Main Search Input -->
+    
     <div class="relative">
       <UInputMenu
         v-model="selectedPackageItem"
@@ -15,9 +15,6 @@
         icon="lucide:search"
         class="w-full"
       >
-        <!-- <template #leading>
-          <UIcon name="lucide:search" class="w-4 h-4 text-gray-500" />
-        </template> -->
 
         <template #item="{ item }">
           <div class="flex items-start justify-between w-full">
@@ -46,7 +43,7 @@
 
         <template #trailing>
           <div class="flex items-center gap-2">
-            <!-- Search status -->
+            
             <div
               v-if="searchTerm && searchTerm.length >= 2"
               class="flex items-center"
@@ -64,7 +61,6 @@
               </UBadge>
             </div>
 
-            <!-- Clear button -->
             <UButton
               v-if="selectedPackageItem || searchTerm"
               variant="ghost"
@@ -80,7 +76,6 @@
       </UInputMenu>
     </div>
 
-    <!-- Search hints -->
     <div class="flex items-center justify-between text-xs text-gray-500">
       <div class="flex items-center gap-1">
         <UIcon name="lucide:lightbulb" class="w-3 h-3" />
@@ -94,7 +89,6 @@
       </div>
     </div>
 
-    <!-- Selected Package Card -->
     <Transition name="fade-slide">
       <div
         v-if="selectedPackage"
@@ -102,7 +96,7 @@
       >
         <div class="flex items-start justify-between">
           <div class="flex-1 space-y-2">
-            <!-- Package name and version -->
+            
             <div class="flex items-center gap-2 flex-wrap">
               <div class="flex items-center gap-2">
                 <UIcon
@@ -118,7 +112,6 @@
               </UBadge>
             </div>
 
-            <!-- Package description -->
             <p
               v-if="selectedPackage.description"
               class="text-xs text-gray-400 line-clamp-2 leading-relaxed"
@@ -126,7 +119,6 @@
               {{ selectedPackage.description }}
             </p>
 
-            <!-- Package metadata -->
             <div class="flex items-center gap-3 text-xs text-gray-500">
               <div class="flex items-center gap-1">
                 <UIcon name="lucide:user" class="w-3 h-3" />
@@ -142,7 +134,6 @@
             </div>
           </div>
 
-          <!-- Action buttons -->
           <div class="flex items-center gap-1 ml-3">
             <UButton
               variant="ghost"
@@ -211,8 +202,6 @@ const searchTerm = ref("");
 const packages = ref<NpmPackage[]>([]);
 const selectedPackage = ref<NpmPackage | null>(props.modelValue || null);
 
-// Transform packages to object array for UInputMenu
-// Only show packages if search term is long enough
 const packageItems = computed(() => {
   if (!searchTerm.value || searchTerm.value.length < 2) {
     return [];
@@ -233,7 +222,6 @@ const packageItems = computed(() => {
 
 const selectedPackageItem = ref<any>(null);
 
-// Setup API composable for npm search
 const {
   data: searchData,
   pending: loading,
@@ -246,16 +234,14 @@ const {
   watch: false,
 });
 
-// Watch for search data changes
 watch(searchData, (newData) => {
   if (newData?.data) {
     packages.value = newData.data;
   }
 });
 
-// Watch searchTerm changes with debouncing
 watch(searchTerm, (newQuery, oldQuery) => {
-  // Clear packages immediately when user starts typing new query
+  
   if (newQuery !== oldQuery && newQuery.length >= 2) {
     packages.value = [];
   }
@@ -273,7 +259,6 @@ watch(
   }, 300)
 );
 
-// Watch for external value changes
 watch(
   () => props.modelValue,
   (newValue) => {
@@ -295,7 +280,6 @@ watch(
   }
 );
 
-// Watch selected package item and find corresponding package object
 watch(selectedPackageItem, (item) => {
   if (item?.value) {
     const pkg = packages.value.find((p) => p.name === item.value);
@@ -305,7 +289,6 @@ watch(selectedPackageItem, (item) => {
   }
 });
 
-// Watch selectedPackage changes to emit events
 watch(selectedPackage, (newPkg) => {
   emit("update:modelValue", newPkg);
   if (newPkg) {
@@ -313,7 +296,6 @@ watch(selectedPackage, (newPkg) => {
   }
 });
 
-// Clear selection function
 const clearSelection = () => {
   selectedPackageItem.value = null;
   selectedPackage.value = null;

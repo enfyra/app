@@ -14,7 +14,6 @@ marked.setOptions({
   gfm: true,
 })
 
-// Initialize highlight.js on mount
 onMounted(async () => {
   await initHighlight()
 })
@@ -645,14 +644,14 @@ onBeforeUnmount(async () => {
 
 <template>
   <div class="flex flex-col -mx-3 md:-mx-6 h-full">
-    <!-- Messages Area -->
+    
     <div
       ref="messagesContainer"
       class="flex-1 overflow-y-auto px-6 py-6"
     >
       <div class="max-w-4xl mx-auto space-y-6">
         <Transition name="ai-chat-fade" mode="out-in">
-          <!-- Loading -->
+          
           <CommonLoadingState
             v-if="!isMounted || (loadingHistory && historyPage === 1)"
             title="Loading messages..."
@@ -662,9 +661,8 @@ onBeforeUnmount(async () => {
             context="page"
           />
 
-          <!-- Messages -->
           <div v-else class="space-y-6">
-            <!-- Load More Button -->
+            
             <div v-if="hasMoreHistory" class="flex justify-center">
               <UButton
                 :loading="isLoadingMore"
@@ -683,7 +681,7 @@ onBeforeUnmount(async () => {
               class="flex gap-3 group"
               :class="message.type === 'user' ? 'flex-row-reverse' : ''"
             >
-              <!-- Avatar -->
+              
               <div class="flex-shrink-0">
                 <div
                   v-if="message.type === 'bot'"
@@ -699,7 +697,6 @@ onBeforeUnmount(async () => {
                 </div>
               </div>
 
-              <!-- Message Content -->
               <div class="flex-1 min-w-0" :class="message.type === 'user' ? 'flex justify-end' : ''">
                 <div
                   class="rounded-xl transition-all duration-200 overflow-hidden"
@@ -709,7 +706,7 @@ onBeforeUnmount(async () => {
                       : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-4 py-3 inline-block shadow-theme-xs',
                   ]"
                 >
-                  <!-- User message - plain text -->
+                  
                   <div
                     v-if="message.type === 'user'"
                     class="text-sm leading-relaxed whitespace-pre-wrap break-words"
@@ -717,7 +714,6 @@ onBeforeUnmount(async () => {
                     {{ message.content }}
                   </div>
 
-                  <!-- Bot message - always render markdown -->
                   <div
                     v-else
                     class="space-y-3"
@@ -735,7 +731,6 @@ onBeforeUnmount(async () => {
                     </div>
                   </div>
 
-                  <!-- Timestamp and Tokens -->
                   <div
                     class="text-xs mt-2 opacity-60 flex items-center gap-2"
                     :class="message.type === 'user' ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'"
@@ -840,7 +835,6 @@ onBeforeUnmount(async () => {
               </div>
             </div>
 
-            <!-- Typing Indicator - only show when bot is thinking, not streaming -->
             <div v-if="isTyping && messages[messages.length - 1]?.type === 'user'" class="flex gap-3">
               <div class="flex-shrink-0">
                 <div class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center">
@@ -860,14 +854,13 @@ onBeforeUnmount(async () => {
       </div>
     </div>
 
-    <!-- Input Area -->
     <div class="flex-shrink-0">
       <div class="px-6 py-4">
         <div class="max-w-4xl mx-auto">
           <form @submit.prevent="sendMessage">
-            <!-- Wrapper with border (looks like single input) -->
+            
             <div class="relative flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl hover:border-gray-400 dark:hover:border-gray-600 focus-within:border-brand-300 dark:focus-within:border-brand-800 focus-within:ring-3 focus-within:ring-brand-500/10 transition-colors shadow-theme-xs">
-              <!-- Text Input - no border, no padding -->
+              
               <textarea
                 ref="textareaRef"
                 v-model="inputMessage"
@@ -891,7 +884,6 @@ onBeforeUnmount(async () => {
                 }"
               />
 
-              <!-- Send/Stop Button - inside wrapper -->
               <button
                 v-if="isTyping"
                 type="button"
@@ -911,7 +903,6 @@ onBeforeUnmount(async () => {
             </div>
           </form>
 
-          <!-- Helper Text -->
           <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
             Press Enter to send • Shift + Enter for new line
           </div>
@@ -920,7 +911,6 @@ onBeforeUnmount(async () => {
     </div>
   </div>
 
-  <!-- Config Drawer -->
   <AiConfigDrawer
     v-model="showConfigDrawer"
     :current-config="selectedAiConfig"

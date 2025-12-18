@@ -32,15 +32,6 @@
 </template>
 
 <script setup lang="ts">
-/**
- * STATS CARD - Compact card for displaying metrics
- *
- * Features:
- * - Compact size optimized for grids
- * - Optional icon with background
- * - Trend indicator with color coding
- * - Hover lift animation
- */
 
 interface Trend {
   value: string;

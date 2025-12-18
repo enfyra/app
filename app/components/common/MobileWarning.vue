@@ -7,7 +7,7 @@
       aria-modal="true"
       aria-labelledby="mobile-warning-title"
     >
-      <!-- Animated background pattern -->
+      
       <div class="absolute inset-0 opacity-10">
         <div
           class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent"
@@ -17,12 +17,11 @@
       <div
         class="relative bg-gradient-to-b from-gray-800/95 to-gray-900/95 backdrop-blur-xl border border-gray-700/50 rounded-2xl shadow-[0_20px_70px_rgba(0,0,0,0.8)] max-w-md w-full p-8 text-center space-y-6 transform transition-transform duration-300"
       >
-        <!-- Glowing top accent -->
+        
         <div
           class="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"
         ></div>
 
-        <!-- Icon with animation -->
         <div class="flex justify-center">
           <div class="relative">
             <div
@@ -39,7 +38,6 @@
           </div>
         </div>
 
-        <!-- Content -->
         <div class="space-y-3">
           <h2
             id="mobile-warning-title"
@@ -53,7 +51,6 @@
           </p>
         </div>
 
-        <!-- Stats with better styling -->
         <div
           class="bg-black/30 rounded-xl p-4 space-y-3 border border-gray-800"
         >
@@ -72,7 +69,6 @@
           </div>
         </div>
 
-        <!-- Bottom decoration -->
         <div class="flex justify-center gap-1 pt-2">
           <div class="w-1 h-1 bg-gray-600 rounded-full animate-pulse"></div>
           <div

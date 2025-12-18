@@ -54,7 +54,6 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// Inherit attrs to pass through to loaded component
 defineOptions({
   inheritAttrs: false
 });
@@ -87,12 +86,11 @@ const {
 
 const loadMatchingWidget = async () => {
   error.value = null;
-  
-  // Check if we have extension metadata cached (use widget ID as path)
+
   const widgetPath = `widget:${props.id}`;
   const cachedMeta = getCachedExtensionMeta(widgetPath);
   if (cachedMeta) {
-    // Check if component is cached
+    
     const isCached = isComponentCached(cachedMeta.extensionId, cachedMeta.updatedAt);
     
     if (isCached) {
@@ -103,14 +101,13 @@ const loadMatchingWidget = async () => {
           cachedMeta.updatedAt
         );
         widgetComponent.value = component;
-        return; // Skip API fetch
+        return; 
       } catch (err: any) {
         console.warn('❌ Failed to load cached widget component:', err);
       }
     }
   }
 
-  // No cache or component not cached - fetch API
   componentLoading.value = true;
   await fetchAndLoadWidget();
 };
@@ -139,14 +136,11 @@ const fetchAndLoadWidget = async () => {
       return;
     }
 
-    // Cache extension metadata for next time
     const widgetPath = `widget:${props.id}`;
     setCachedExtensionMeta(widgetPath, extension);
-    
-    // Check if component is cached 
+
     const isCached = isComponentCached(extension.extensionId, extension.updatedAt);
 
-    // Load component
     const component = await loadDynamicComponent(
       extension.compiledCode || extension.code,
       extension.extensionId,
@@ -166,7 +160,6 @@ const retry = () => {
   loadMatchingWidget();
 };
 
-// Watch for id changes
 watch(
   () => props.id,
   () => {

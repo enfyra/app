@@ -7,7 +7,6 @@ const { generateEmptyForm, validate } = useSchema(tableName);
 const createErrors = ref<Record<string, string>>({});
 const { getId } = useDatabase();
 
-// Get the correct route for this table
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -16,7 +15,6 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-// Load routes on mount
 onMounted(async () => {
   await ensureRoutesLoaded();
   newRecord.value = generateEmptyForm();
@@ -87,7 +85,7 @@ async function handleCreate() {
 
 <template>
   <div class="space-y-6">
-    <!-- Content - Limited width -->
+    
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <CommonFormCard>
         <UForm :state="newRecord" @submit="handleCreate">

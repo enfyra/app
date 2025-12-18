@@ -7,7 +7,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     await fetchUser({ fields: DEFAULT_ME_FIELDS });
   }
 
-  // If no user yet → call fetchUser
   if (to.path !== "/login") {
     if (!me.value) {
       return navigateTo("/login");

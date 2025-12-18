@@ -58,7 +58,7 @@ export function useFileManagerMove() {
     moveState.value.selectedFileIds = [];
     moveState.value.selectedFolderIds = [];
     moveState.value.sourceFolderId = null;
-    return []; // Return empty array to clear local selection
+    return []; 
   }
 
   function isMoveHereDisabled(parentId?: string): boolean {

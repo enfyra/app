@@ -1,6 +1,6 @@
 <template>
   <div class="flex gap-2">
-    <!-- Component actions -->
+    
     <template
       v-for="action in visibleComponentActions"
       :key="action.key || action.id"
@@ -10,7 +10,6 @@
       </PermissionGate>
     </template>
 
-    <!-- Regular button actions -->
     <template v-for="action in visibleButtonActions" :key="action.id">
       <PermissionGate :condition="action.permission">
         <UButton
@@ -68,7 +67,6 @@ const visibleActions = computed(() => {
       return false;
     }
 
-    // Check show property
     const showValue =
       action.show === undefined
         ? true

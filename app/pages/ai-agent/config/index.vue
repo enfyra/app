@@ -260,7 +260,6 @@ const toggleConfigStatus = async (config: any) => {
     color: "success",
   });
 
-  // Reload AI configs in global state
   await fetchAiConfig();
 };
 
@@ -295,7 +294,6 @@ const deleteConfig = async (config: any) => {
       color: "success",
     });
 
-    // Reload AI configs in global state
     await fetchAiConfig();
   }
 };

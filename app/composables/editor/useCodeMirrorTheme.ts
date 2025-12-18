@@ -12,13 +12,11 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
 
   const isDark = computed(() => colorMode.value === 'dark');
 
-  // Get modules (handle both ref and direct value)
   const modules = computed(() => {
     if (!codeMirrorModules) return null
     return isRef(codeMirrorModules) ? codeMirrorModules.value : codeMirrorModules
   })
 
-  // Create a Compartment for theme management (only when modules loaded)
   const themeCompartmentRef = ref<any>(null)
 
   watch(modules, (m) => {
@@ -397,7 +395,6 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
     return null
   });
 
-  // Combined theme extensions
   const themeExtensions = computed(() => {
     if (!customTheme.value) return []
     const exts = [customTheme.value]

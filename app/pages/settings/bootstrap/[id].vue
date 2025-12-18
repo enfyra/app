@@ -163,7 +163,6 @@ async function initializeForm() {
 async function save() {
   if (!form.value) return;
 
-  // Set updatedBy to current user
   const { me } = useEnfyraAuth();
   const { getId } = useDatabase();
   const userId = getId(me.value);
@@ -195,7 +194,6 @@ async function save() {
   });
   errors.value = {};
 
-  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
   formChanges.update(form.value);
 }

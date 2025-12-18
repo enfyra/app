@@ -2,36 +2,29 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref, computed } from 'vue'
 
-// Create a simple mock PermissionGate component for testing logic
 const MockPermissionGate = {
   name: 'MockPermissionGate',
   props: {
-    // Legacy props for backward compatibility
     actions: { type: Array, default: () => [] },
     routes: { type: Array, default: () => [] },
     mode: { type: String, default: 'any' },
-    // New flexible permission condition
     condition: { type: Object, default: null }
   },
   setup(props) {
-    // Mock auth and permissions
     const me = ref(null)
     const hasAnyPermission = vi.fn(() => false)
     const hasAllPermissions = vi.fn(() => false)
     const checkPermissionCondition = vi.fn(() => false)
 
     const hasPermission = computed(() => {
-      // Root admin always has access
       if (me.value?.isRootAdmin) {
         return true
       }
 
-      // Use new condition-based approach
       if (props.condition) {
         return checkPermissionCondition(props.condition)
       }
 
-      // Fallback to legacy approach
       if (props.routes.length > 0 && props.actions.length > 0) {
         if (props.mode === 'all') {
           return hasAllPermissions(props.routes, props.actions)
@@ -40,11 +33,9 @@ const MockPermissionGate = {
         }
       }
 
-      // Default: allow access
       return true
     })
 
-    // Expose for testing
     return {
       hasPermission,
       me,
@@ -73,7 +64,6 @@ describe('PermissionGate (Security Critical)', () => {
         }
       })
 
-      // Set root admin user
       wrapper.vm.me = { isRootAdmin: true }
       
       expect(wrapper.vm.hasPermission).toBe(true)
@@ -94,11 +84,9 @@ describe('PermissionGate (Security Critical)', () => {
         }
       })
 
-      // Set root admin user
       wrapper.vm.me = { isRootAdmin: true }
       
       expect(wrapper.vm.hasPermission).toBe(true)
-      // Note: computed may run during initialization, so we don't check call count
     })
   })
 
@@ -117,7 +105,6 @@ describe('PermissionGate (Security Critical)', () => {
         }
       })
 
-      // Set regular user (not root admin)
       wrapper.vm.me = { id: 1, isRootAdmin: false }
       wrapper.vm.checkPermissionCondition.mockReturnValue(true)
 
@@ -138,7 +125,6 @@ describe('PermissionGate (Security Critical)', () => {
         }
       })
 
-      // Set regular user
       wrapper.vm.me = { id: 1, isRootAdmin: false }
       wrapper.vm.checkPermissionCondition.mockReturnValue(false)
 
@@ -214,7 +200,6 @@ describe('PermissionGate (Security Critical)', () => {
         props: {
           routes: ['/api/users'],
           actions: ['read']
-          // mode not specified, should default to "any"
         },
         slots: {
           default: '<div data-testid="protected-content">Protected Content</div>'
@@ -246,7 +231,6 @@ describe('PermissionGate (Security Critical)', () => {
       const wrapper = mount(MockPermissionGate, {
         props: {
           routes: ['/api/users']
-          // actions not provided
         },
         slots: {
           default: '<div data-testid="protected-content">Protected Content</div>'
@@ -262,7 +246,6 @@ describe('PermissionGate (Security Critical)', () => {
       const wrapper = mount(MockPermissionGate, {
         props: {
           actions: ['read']
-          // routes not provided
         },
         slots: {
           default: '<div data-testid="protected-content">Protected Content</div>'

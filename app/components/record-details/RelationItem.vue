@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-3">
-    <!-- Primary Info Header -->
+    
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -28,7 +28,6 @@
       </UButton>
     </div>
 
-    <!-- Key Fields (always shown) -->
     <div v-if="keyFields.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
       <div 
         v-for="[key, value] in keyFields" 
@@ -44,7 +43,6 @@
       </div>
     </div>
 
-    <!-- Additional Fields (expandable) -->
     <div v-if="expanded && additionalFields.length > 0" class="border-t border-muted/50 pt-3">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div 
@@ -72,16 +70,13 @@ const props = defineProps<{
 const { getId } = useDatabase();
 const expanded = ref(false);
 
-// Priority fields that should be shown first
 const priorityFields = ['name', 'title', 'label', 'email', 'type', 'status', 'description'];
 
-// Fields to exclude from display
 const excludedFields = ['id', '_id', 'createdAt', 'updatedAt', 'isSystem', 'isRootAdmin'];
 
 const keyFields = computed(() => {
   const fields: [string, any][] = [];
-  
-  // Add priority fields first
+
   for (const field of priorityFields) {
     if (field in props.item && props.item[field] !== null && props.item[field] !== undefined) {
       const value = props.item[field];
@@ -90,8 +85,7 @@ const keyFields = computed(() => {
       }
     }
   }
-  
-  // Limit to 3 key fields
+
   return fields.slice(0, 3);
 });
 
@@ -101,7 +95,7 @@ const additionalFields = computed(() => {
   
   Object.entries(props.item).forEach(([key, value]) => {
     if (!usedKeys.has(key) && value !== null && value !== undefined) {
-      // Skip nested objects/relations
+      
       if (typeof value !== 'object') {
         fields.push([key, value]);
       }
@@ -114,14 +108,13 @@ const additionalFields = computed(() => {
 const hasMoreFields = computed(() => additionalFields.value.length > 0);
 
 function getPrimaryLabel(item: any): string {
-  // Try to find the most meaningful label
+  
   for (const field of ['name', 'title', 'label', 'email']) {
     if (item[field]) {
       return String(item[field]);
     }
   }
-  
-  // Fallback to type or first available string field
+
   for (const [key, value] of Object.entries(item)) {
     if (typeof value === 'string' && value.length > 0 && !excludedFields.includes(key)) {
       return String(value);

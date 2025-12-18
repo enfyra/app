@@ -27,7 +27,6 @@ const createErrors = ref<Record<string, string>>({});
 const { generateEmptyForm, validate } = useSchema(tableName);
 const { getId } = useDatabase();
 
-// Setup useApi composable at top level
 const {
   data: createData,
   pending: createLoading,

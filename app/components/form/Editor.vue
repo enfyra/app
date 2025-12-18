@@ -50,11 +50,9 @@ const { definition, fieldMap, sortFieldsByOrder, useFormChanges } = useSchema(
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
 
-
 const fieldMapWithGenerated = computed(() => {
   const result = { ...props.fieldMap };
 
-  // Add disabled for generated fields
   for (const field of definition.value) {
     const key = field.name || field.propertyName;
     if (key && field.isGenerated === true) {
@@ -106,7 +104,6 @@ const visibleFields = computed(() => {
     const key = field.name || field.propertyName;
     if (!key) return false;
 
-    // Check if field is excluded in fieldMap
     const fieldConfig = fieldMapWithGenerated.value[key];
     if (fieldConfig && fieldConfig.excluded === true) {
       return false;
@@ -161,9 +158,6 @@ watch(
   { deep: true }
 );
 
-
-
-// Expose method to manually confirm form changes
 defineExpose({
   confirmChanges: () => {
     if (props.modelValue && Object.keys(props.modelValue).length > 0) {

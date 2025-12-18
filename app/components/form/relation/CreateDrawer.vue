@@ -19,11 +19,9 @@ const targetTable = Object.values(schemas.value).find(
 ) as any;
 const { generateEmptyForm, validate } = useSchema(targetTable?.name);
 
-// Get the correct route for the target table
 const { getRouteForTableId, ensureRoutesLoaded } = useRoutes();
 const targetRoute = ref<string>('');
 
-// Load routes and set target route
 watchEffect(async () => {
   if (targetTable?.id) {
     await ensureRoutesLoaded();
@@ -97,7 +95,7 @@ async function createNewRecord() {
     </template>
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
-          <!-- Form Section -->
+          
           <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-6'">
             <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
               <UIcon name="lucide:edit-3" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />
@@ -110,7 +108,6 @@ async function createNewRecord() {
             />
           </div>
 
-          <!-- Actions Section -->
           <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-4'">
             <div class="flex items-center justify-between">
               <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">

@@ -29,7 +29,7 @@ const rootIcon = computed(() => props.icon || "lucide:home");
     aria-label="breadcrumb"
     class="hidden md:flex items-center gap-2 text-sm"
   >
-    <!-- Home Link with Icon -->
+    
     <NuxtLink
       to="/"
       class="transition-colors duration-200 flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -42,13 +42,12 @@ const rootIcon = computed(() => props.icon || "lucide:home");
     </NuxtLink>
 
     <template v-for="(seg, i) in segments" :key="seg.to">
-      <!-- Separator -->
+      
       <UIcon
         name="lucide:chevron-right"
         class="w-3.5 h-3.5 shrink-0 text-gray-400 dark:text-gray-500"
       />
 
-      <!-- Link or Current Page -->
       <NuxtLink
         v-if="i < segments.length - 1"
         :to="seg.to"

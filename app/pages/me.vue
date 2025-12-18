@@ -135,14 +135,12 @@ async function saveProfile() {
   });
   errors.value = {};
 
-  // Refetch latest data
   await fetchMe();
   const updatedData = apiData.value?.data?.[0];
   if (updatedData) {
     form.value = { ...updatedData };
   }
 
-  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
   formChanges.update(form.value);
 }

@@ -28,12 +28,10 @@ const isOpen = computed({
   set: (value) => emit("update:modelValue", value),
 });
 
-// Initialize empty form when modal opens
 watch(isOpen, (newVal) => {
   if (newVal) {
     newFolder.value = generateEmptyForm();
 
-    // Set parent if provided
     if (props.parentId) {
       newFolder.value.parent = { id: props.parentId };
     }
@@ -67,7 +65,6 @@ async function handleCreate() {
     description: "New folder created successfully!",
   });
 
-  // Emit created event
   emit("created");
 
   isOpen.value = false;

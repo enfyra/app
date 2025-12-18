@@ -28,7 +28,7 @@ const nameError = ref<string | null>(null);
 watch(
   () => table.name,
   (newVal) => {
-    // Only validate when user has interacted with the input
+    
     const name = newVal.trim();
     if (name === "") nameError.value = "Table name is required";
     else if (!TABLE_NAME_FIELD_REGEX.test(name))
@@ -85,7 +85,6 @@ function validateRelation(rel: any) {
 function validateAll() {
   errors.value = {};
 
-  // Validate table name
   const name = table.name.trim();
   if (name === "") {
     errors.value["name"] = "Table name is required";
@@ -105,16 +104,14 @@ function validateAll() {
     });
   }
 
-  // Call validate for each column and relation
   for (const col of table.columns) {
-    validateColumn(col); // auto-assign to error.value
+    validateColumn(col); 
   }
 
   for (const rel of table.relations) {
     validateRelation(rel);
   }
 
-  // If error still empty → valid
   return Object.keys(errors.value).length === 0;
 }
 
@@ -172,16 +169,12 @@ async function save() {
     return;
   }
 
-  // Fetch schema first to get updated tables
   await fetchSchema();
 
-  // Reload routes to include the new table's route
   await loadRoutes();
 
-  // Wait a bit to ensure schemas.value is updated
   await nextTick();
 
-  // Re-register all table menus to ensure sync
   await registerDataMenuItems(Object.values(schemas.value));
 
   toast.add({
@@ -190,7 +183,6 @@ async function save() {
     description: "New table created!",
   });
 
-  // Get the newly created table name from response
   const newTableName = createData.value?.data?.[0]?.name;
   if (newTableName) {
     await navigateTo(`/collections/${newTableName}`, { replace: true });

@@ -17,7 +17,6 @@ registerPageHeader({
   gradient: "purple",
 });
 
-// Fixed color for initialization scripts
 const pageIconColor = 'success';
 
 const {
@@ -170,7 +169,6 @@ watch(
       />
     </Transition>
 
-    <!-- Premium Pagination -->
     <div
       v-if="!loading && bootstrapScripts.length > 0 && total > pageLimit"
       class="flex items-center justify-between mt-6"

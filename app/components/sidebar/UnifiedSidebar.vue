@@ -234,7 +234,7 @@ const visibleGroups = computed(() => {
             :key="group.id"
           >
             <div class="space-y-1" :class="{
-              'bg-gray-800/60 rounded-xl': group.type === 'Dropdown Menu'
+              'bg-gray-100 dark:bg-gray-800/60 rounded-xl': group.type === 'Dropdown Menu'
             }">
               <div class="relative flex items-center">
                 <component
@@ -248,7 +248,7 @@ const visibleGroups = computed(() => {
                   @click="handleMenuClick"
                   :class="[
                     'flex-1 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 p-2',
-                    ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/15 dark:text-brand-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                    ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/15 dark:text-brand-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
                   ]"
                 >
                   <UIcon
@@ -261,7 +261,7 @@ const visibleGroups = computed(() => {
                   @click="toggleGroup(group.id)"
                   :class="[
                     'flex-1 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 p-2',
-                    'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                    'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
                   ]"
                 >
                   <UIcon
@@ -270,11 +270,10 @@ const visibleGroups = computed(() => {
                   />
                 </button>
 
-                <!-- Chevron button for dropdowns -->
                 <button
                   v-if="group.type === 'Dropdown Menu'"
                   @click.stop="toggleGroup(group.id)"
-                  class="w-6 h-6 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
+                  class="w-6 h-6 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
                 >
                   <UIcon
                     name="lucide:chevron-right"
@@ -285,11 +284,9 @@ const visibleGroups = computed(() => {
                   />
                 </button>
 
-                <!-- Invisible spacer for standalone menu to match dropdown width -->
                 <div v-else class="w-6 h-6"></div>
               </div>
 
-              <!-- Expanded dropdown items (icon-only) -->
               <div
                 v-if="group.type === 'Dropdown Menu'"
                 :class="[
@@ -310,7 +307,7 @@ const visibleGroups = computed(() => {
                     @click="handleMenuClick"
                     :class="[
                       'w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-150',
-                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/15 dark:text-brand-400' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/15 dark:text-brand-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
                     ]"
                   >
                     <UIcon
@@ -460,7 +457,7 @@ const visibleGroups = computed(() => {
       <template v-for="(group, index) in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">
         <div :class="index > 0 ? 'border-t border-gray-200 dark:border-gray-800' : ''">
           <PermissionGate :condition="group.permission as any">
-            <div :class="(isMobile || isTablet) ? 'p-2' : 'p-4'">
+            <div :class="(isMobile || isTablet) ? 'p-2' : (isCollapsed ? 'p-2' : 'p-4')">
               <component
                 v-if="group.component"
                 :is="group.component"

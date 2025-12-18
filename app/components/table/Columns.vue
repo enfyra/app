@@ -17,12 +17,11 @@ const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 
-// Handle drawer close
 function handleDrawerClose() {
-  // Check if there are unsaved changes
+  
   if (hasFormChanges.value) {
     showCloseConfirm.value = true;
-    // Reopen drawer to show modal
+    
     isEditing.value = true;
   }
 }
@@ -32,9 +31,9 @@ function cancelDrawer() {
 }
 
 function discardChanges() {
-  // Reset form changes
+  
   formEditorRef.value?.confirmChanges();
-  // Reset errors
+  
   errors.value = {};
   showCloseConfirm.value = false;
   isEditing.value = false;
@@ -43,7 +42,6 @@ function discardChanges() {
   editingIndex.value = null;
 }
 
-// Centralized UUID logic
 function handleUuidType(column: any): any {
   if (column.type === "uuid") {
     column.isGenerated = true;
@@ -63,12 +61,10 @@ function editColumn(col: any, index: number) {
   editingIndex.value = index;
   currentColumn.value = { ...toRaw(col) };
 
-  // For MongoDB _id, force type to uuid (override any existing type)
   if (isMongoDB.value && currentColumn.value.name === getIdFieldName()) {
     currentColumn.value.type = "uuid";
   }
 
-  // Use centralized UUID logic
   handleUuidType(currentColumn.value);
 }
 
@@ -100,7 +96,6 @@ function saveColumn() {
 
   const newCol = { ...currentColumn.value };
 
-  // DEBUG: column before pushing back to table.columns
   console.log("[Columns.saveColumn] newCol", {
     name: newCol?.name,
     type: newCol?.type,
@@ -130,21 +125,18 @@ function addNewColumn() {
   currentColumn.value = createEmptyColumn();
   currentColumn.value.isNullable = true;
   currentColumn.value.isUpdatable = true;
-  currentColumn.value.isPrimary = false; // New columns are never primary by default
-  currentColumn.value.isGenerated = false; // User-defined columns are not auto-generated
-  currentColumn.value.isSystem = false; // User-created columns are not system columns
+  currentColumn.value.isPrimary = false; 
+  currentColumn.value.isGenerated = false; 
+  currentColumn.value.isSystem = false; 
   editingIndex.value = null;
   deleteIds(currentColumn.value);
 
-  // Set default type based on database
   if (!currentColumn.value.type) {
     currentColumn.value.type = isMongoDB.value ? "uuid" : "varchar";
   }
 
-  // Use centralized UUID logic
   handleUuidType(currentColumn.value);
 }
-
 
 function getUuidTypeMap() {
   return {
@@ -224,18 +216,18 @@ const typeMap = computed(() => {
       options:
         isPrimaryColumn
           ? isMongoDB.value
-            ? columnTypes.filter((colType) => colType.value === "uuid") // MongoDB _id only supports uuid
-            : columnTypes.filter((colType) => ["uuid", "int"].includes(colType.value)) // SQL id supports uuid or int
+            ? columnTypes.filter((colType) => colType.value === "uuid") 
+            : columnTypes.filter((colType) => ["uuid", "int"].includes(colType.value)) 
           : columnTypes,
-      default: isPrimaryColumn && isMongoDB.value ? "uuid" : undefined, // Default to uuid for MongoDB _id
+      default: isPrimaryColumn && isMongoDB.value ? "uuid" : undefined, 
     },
     name: {
       disabled: currentColumn.value?.name === getIdFieldName(),
     },
     defaultValue: getDefaultValueType(currentType),
-    // Apply UUID type mapping
+    
     ...(currentType === "uuid" && getUuidTypeMap()),
-    // Apply array/enum type mapping
+    
     ...(["array-select", "enum"].includes(currentType) &&
       getArrayEnumTypeMap(currentType, currentColumn.value?.options)),
 
@@ -254,7 +246,6 @@ const typeMap = computed(() => {
       },
     }),
 
-    // Exclude options field for other types
     ...(!["array-select", "enum"].includes(currentType) &&
       currentType !== "uuid" && {
         options: {
@@ -268,7 +259,7 @@ onMounted(() => {
   const primaryColumn = createEmptyColumn();
   const { getIdFieldName, isMongoDB } = useDatabase();
   primaryColumn.name = getIdFieldName();
-  primaryColumn.type = isMongoDB.value ? "uuid" : "int"; // MongoDB uses uuid, SQL can use int
+  primaryColumn.type = isMongoDB.value ? "uuid" : "int"; 
   primaryColumn.isPrimary = true;
   primaryColumn.isGenerated = true;
   primaryColumn.isNullable = false;
@@ -276,7 +267,6 @@ onMounted(() => {
   if (!columns.value.length) columns.value.push(primaryColumn);
 });
 
-// Handle type changes and options changes
 function handleTypeChange(newType: string, oldType: string) {
   if (!currentColumn.value) return;
 
@@ -295,7 +285,6 @@ function handleOptionsChange(currentType: string, newOptions: any[]) {
   if (!currentColumn.value) return;
   if (!["array-select", "enum"].includes(currentType)) return;
 
-  // If no options, hide defaultValue
   if (!newOptions || newOptions.length === 0) {
     if (currentColumn.value.defaultValue) {
       delete currentColumn.value.defaultValue;
@@ -303,10 +292,9 @@ function handleOptionsChange(currentType: string, newOptions: any[]) {
     return;
   }
 
-  // Sanitize defaultValue to keep only existing values in options
   if (currentColumn.value.defaultValue) {
     if (currentType === "array-select") {
-      // For array-select, defaultValue is array
+      
       if (Array.isArray(currentColumn.value.defaultValue)) {
         currentColumn.value.defaultValue =
           currentColumn.value.defaultValue.filter((value: any) => {
@@ -315,7 +303,7 @@ function handleOptionsChange(currentType: string, newOptions: any[]) {
           });
       }
     } else if (currentType === "enum") {
-      // For enum, defaultValue is single value
+      
       const val =
         typeof currentColumn.value.defaultValue === "object"
           ? currentColumn.value.defaultValue.value
@@ -328,7 +316,6 @@ function handleOptionsChange(currentType: string, newOptions: any[]) {
   }
 }
 
-// Unified watcher to handle both type and options changes
 watch(
   () => [currentColumn.value?.type, currentColumn.value?.options],
   ([newType, newOptions], [oldType]) => {
@@ -355,7 +342,7 @@ watch(
       :key="column.id ?? index"
       class="flex items-center justify-between rounded-lg border border-muted lg:hover:bg-muted/50 transition"
     >
-      <!-- Click section to edit -->
+      
       <div
         class="flex items-center gap-2 flex-1 cursor-pointer px-4 py-3"
         @click="editColumn(column, index)"
@@ -373,7 +360,6 @@ watch(
         >
       </div>
 
-      <!-- Delete button -->
       <UButton
         icon="lucide:trash"
         color="error"
@@ -385,7 +371,6 @@ watch(
       />
     </div>
 
-    <!-- Add column -->
     <div class="flex justify-end pt-2">
       <UButton
         icon="lucide:plus"
@@ -396,7 +381,6 @@ watch(
     </div>
   </div>
 
-  <!-- Edit Column Drawer -->
   <CommonDrawer
     :handle="false"
     handle-only
@@ -424,7 +408,7 @@ watch(
 
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'" v-if="currentColumn">
-          <!-- Form Section -->
+          
           <div
             :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 bg-white dark:bg-gray-800/50' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 bg-white dark:bg-gray-800/50'"
           >
@@ -458,7 +442,7 @@ watch(
       </template>
 
       <template #footer>
-        <!-- Actions Section -->
+        
         <div :class="(isMobile || isTablet) ? 'bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3' : 'bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/30 p-4'">
           <div class="flex items-center justify-between">
             <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
@@ -492,7 +476,6 @@ watch(
       </template>
     </CommonDrawer>
 
-    <!-- Close Confirmation Modal -->
     <CommonModal 
       v-model="showCloseConfirm" 
       :handle="false"

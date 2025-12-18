@@ -1,6 +1,6 @@
 <template>
   <div ref="rootContainerRef" class="flex app-viewport-container text-sm text-foreground overflow-x-hidden" style="height: 100dvh; background-color: var(--bg-app);">
-    <!-- Skip Link for Keyboard Navigation -->
+    
     <a
       href="#main-content"
       class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-white focus:px-4 focus:py-2 focus:rounded"
@@ -8,7 +8,6 @@
       Skip to main content
     </a>
 
-    <!-- Unified Sidebar -->
     <aside
       v-if="sidebarVisible || !isTabletOrMobile"
       class="fixed top-0 left-0 flex flex-col flex-shrink-0 h-screen transition-all duration-300 ease-in-out border-r z-99999"
@@ -24,7 +23,6 @@
       <SidebarUnifiedSidebar />
     </aside>
 
-    <!-- Overlay for tablet/mobile -->
     <div
       v-if="sidebarVisible && isTabletOrMobile"
       class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300"
@@ -33,7 +31,6 @@
       aria-hidden="true"
     ></div>
 
-    <!-- Main Content -->
     <main
       class="flex-1 flex flex-col min-h-0 relative overflow-x-hidden transition-all duration-300 ease-in-out"
       :class="[
@@ -80,7 +77,6 @@
         </div>
       </header>
 
-       <!-- Page Header (optional - registered by pages) -->
        <CommonPageHeader
             v-if="hasPageHeader"
             :key="`${pageHeader!.title}-${pageHeader?.description || ''}-${pageHeader?.variant || 'default'}-${pageHeader?.gradient || 'none'}`"
@@ -91,12 +87,8 @@
             :gradient="pageHeader?.gradient"
           />
 
-      <!-- Sub Header (only show if no PageHeader) -->
       <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
 
-     
-
-      <!-- Page Content -->
       <section class="flex-1 min-h-0 overflow-hidden relative z-10">
         <div class="px-4 py-4 lg:px-6 lg:py-6 h-full overflow-y-auto">
           <slot />
@@ -105,7 +97,6 @@
     </main>
   </div>
 
-  <!-- Confirm Modal -->
   <div id="others-overlay"></div>
 
   <CommonGlobalConfirm />
@@ -119,7 +110,6 @@ const { sidebarVisible, sidebarCollapsed, routeLoading, setSidebarVisible } =
 const { width } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
 
-// Header style registry
 const {
   containerStyle: headerContainerStyle,
   containerClasses: headerContainerClasses,
@@ -135,7 +125,6 @@ const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
 
 const rootContainerRef = ref<HTMLElement | null>(null);
 
-// Sidebar behavior
 watch(
   isTabletOrMobile,
   (isMobileOrTablet) => {
@@ -154,5 +143,5 @@ watch(
 </script>
 
 <style scoped>
-/* No custom styles needed - using Tailwind */
+
 </style>

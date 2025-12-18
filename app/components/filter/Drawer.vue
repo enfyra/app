@@ -2,7 +2,7 @@
 const props = defineProps<{
   modelValue: boolean;
   tableName: string;
-  currentFilter?: FilterGroup; // Optional current filter from parent
+  currentFilter?: FilterGroup; 
 }>();
 
 const { schemas } = useSchema();
@@ -14,12 +14,10 @@ const emit = defineEmits<{
   apply: [filter: FilterGroup];
 }>();
 
-// Create and manage filter state internally
 const { createEmptyFilter } = useFilterQuery();
 const localFilter = ref<FilterGroup>(createEmptyFilter());
-const originalFilter = ref<FilterGroup>(createEmptyFilter()); // Track original state
+const originalFilter = ref<FilterGroup>(createEmptyFilter()); 
 
-// Initialize filter from parent if provided
 watch(
   () => props.currentFilter,
   (newFilter) => {
@@ -30,12 +28,11 @@ watch(
   { immediate: true }
 );
 
-// Save original state when drawer opens and restore on cancel
 watch(
   () => props.modelValue,
   (isOpen) => {
     if (isOpen) {
-      // Use parent's current filter if provided, otherwise use existing local state
+      
       const initialFilter = props.currentFilter || localFilter.value;
       localFilter.value = JSON.parse(JSON.stringify(initialFilter));
       originalFilter.value = JSON.parse(JSON.stringify(initialFilter));
@@ -44,36 +41,33 @@ watch(
 );
 
 function handleApply() {
-  // Auto-save to filter history if there are active filters
+  
   if (hasActiveFilters(localFilter.value)) {
     addToHistory(localFilter.value);
   }
 
-  // Emit the normalized filter object
   emit("apply", { ...localFilter.value });
   emit("update:modelValue", false);
 }
 
 function handleClear() {
-  // Clear local filter
+  
   localFilter.value = createEmptyFilter();
 
-  // Apply cleared filter immediately
   emit("apply", { ...localFilter.value });
   emit("update:modelValue", false);
 }
 
 function handleClose() {
-  // Revert to original state when canceling
+  
   localFilter.value = JSON.parse(JSON.stringify(originalFilter.value));
   emit("update:modelValue", false);
 }
 
 function applySavedFilter(filter: any) {
-  // Apply saved filter directly
+  
   localFilter.value = { ...filter };
 
-  // Emit the filter and close
   emit("apply", { ...filter });
   emit("update:modelValue", false);
 }
@@ -143,7 +137,6 @@ const { isMobile, isTablet } = useScreen();
             :table-name="tableName"
           />
 
-          <!-- Saved Filters Section -->
           <FilterSavedFilters
             :table-name="tableName"
             :current-filter="localFilter"

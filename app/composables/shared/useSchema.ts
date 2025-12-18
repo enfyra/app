@@ -116,8 +116,8 @@ export function useSchema(tableName?: string | Ref<string>) {
             if (!seenRelationKeys.has(inverseKey)) {
               const inverseRel = {
                 ...rel,
-                id: undefined,  // set undefined thay vì delete
-                _id: undefined, // also clear MongoDB _id
+                id: undefined,  
+                _id: undefined, 
                 name: rel.inversePropertyName,
                 propertyName: rel.inversePropertyName,
                 inversePropertyName: rel.propertyName,
@@ -294,7 +294,7 @@ export function useSchema(tableName?: string | Ref<string>) {
         if (customError) {
           errors[key] = customError;
           isValid = false;
-          continue; // Skip default validation if custom validator fails
+          continue; 
         }
       }
 

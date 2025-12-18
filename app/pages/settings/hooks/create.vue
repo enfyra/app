@@ -43,7 +43,6 @@ useHeaderActionRegistry({
   },
 });
 
-// Setup useApi composable at top level
 const {
   data: createData,
   error: createError,

@@ -18,7 +18,6 @@
       Permissions
     </UButton>
 
-    <!-- Permission Configuration Drawer -->
     <CommonDrawer
       :handle="false"
       v-model="showDrawer"
@@ -58,7 +57,6 @@ const emit = defineEmits<{
 const showDrawer = ref(false);
 const permissionValue = ref<any>(null);
 
-// Parse permission from modelValue
 watch(
   () => props.modelValue,
   (newValue) => {

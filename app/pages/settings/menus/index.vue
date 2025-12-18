@@ -20,7 +20,6 @@ const currentFilter = ref(createEmptyFilter());
 
 const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
 
-// Fixed color for navigation structure
 const pageIconColor = 'primary';
 
 registerPageHeader({
@@ -71,10 +70,10 @@ const {
 
 const menusData = computed(() => apiData.value?.data || []);
 const total = computed(() => {
-  // Use filterCount when there are active filters, otherwise use totalCount
+  
   const hasFilters = hasActiveFilters(currentFilter.value);
   if (hasFilters) {
-    // When filtering, use filterCount even if it's 0
+    
     return apiData.value?.meta?.filterCount ?? 0;
   }
   return apiData.value?.meta?.totalCount || 0;
@@ -130,8 +129,6 @@ useHeaderActionRegistry([
   },
 ]);
 
-
-// Create loaders for each menu toggle button
 const menuLoaders = ref<Record<string, any>>({});
 
 function getMenuLoader(menuId: string) {
@@ -141,15 +138,14 @@ function getMenuLoader(menuId: string) {
   return menuLoaders.value[menuId];
 }
 
-// Handle filter apply from FilterDrawer
 async function handleFilterApply(filter: FilterGroup) {
   currentFilter.value = filter;
   
   if (page.value === 1) {
-    // Already on page 1 → fetch directly
+    
     await fetchMenus();
   } else {
-    // On other page → go to page 1, watch will trigger
+    
     const newQuery = { ...route.query };
     delete newQuery.page;
     
@@ -163,8 +159,6 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
   const loader = getMenuLoader(menuItem.id);
   const newEnabled = value !== undefined ? value : !menuItem.isEnabled;
 
-  // Optimistic update - change UI immediately
-  // Update directly in apiData to trigger reactivity
   if (apiData.value?.data) {
     const menuIndex = apiData.value.data.findIndex(
       (m: any) => m.id === menuItem.id
@@ -174,7 +168,6 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
     }
   }
 
-  // Create a specific instance for this menu update
   const { execute: updateSpecificMenu, error: updateError } = useApi(
     () => `/menu_definition/${menuItem.id}`,
     {
@@ -188,7 +181,7 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
   );
 
   if (updateError.value) {
-    // Revert optimistic update on error
+    
     if (apiData.value?.data) {
       const menuIndex = apiData.value.data.findIndex(
         (m: any) => m.id === menuItem.id
@@ -200,12 +193,10 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
     return;
   }
 
-  // Reregister all menus after successful update
   const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
   const { fetchMenuDefinitions } = useMenuApi();
   await reregisterAllMenus(fetchMenuDefinitions as any);
 
-  // Also reregister table menus to restore them
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
     await registerDataMenuItems(schemaValues);
@@ -243,12 +234,10 @@ async function deleteMenu(menuItem: any) {
 
     await fetchMenus();
 
-    // Reregister all menus after successful delete
     const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
     const { fetchMenuDefinitions } = useMenuApi();
     await reregisterAllMenus(fetchMenuDefinitions as any);
 
-    // Also reregister table menus to restore them
     const schemaValues = Object.values(schemas.value);
     if (schemaValues.length > 0) {
       await registerDataMenuItems(schemaValues);
@@ -399,7 +388,6 @@ watch(
     </Transition>
   </div>
 
-  <!-- Filter Drawer -->
   <FilterDrawerLazy
     v-model="showFilterDrawer"
     :table-name="tableName"

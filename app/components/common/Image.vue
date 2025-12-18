@@ -114,21 +114,18 @@ const retryTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 const imageSrc = computed(() => {
   let src = props.src;
 
-  // Handle assets paths
   if (src.includes("/assets/")) {
-    // Ensure it starts with /assets/
+    
     if (!src.startsWith("/assets/")) {
       src = src.replace(/^\/?(assets\/)/, "/assets/");
     }
 
     const url = new URL(src, window.location.origin);
 
-    // Add format if not present
     if (!url.searchParams.has("format")) {
       url.searchParams.set("format", "webp");
     }
 
-    // Preserve existing query params (like ?t= for cache busting)
     src = url.pathname + url.search;
   }
 
@@ -167,7 +164,6 @@ const loadingStyle = computed(() => {
   return {};
 });
 
-// Container style: chỉ override khi cần custom loading size
 const containerStyle = computed(() => {
   if (props.customLoadingSize && isLoading.value) {
     return {
@@ -287,18 +283,16 @@ onUnmounted(() => {
 watch(
   () => props.src,
   (newSrc, oldSrc) => {
-    // Reset states
+    
     isLoading.value = true;
     hasError.value = false;
     isRetrying.value = false;
     retryCount.value = 0;
 
-    // Force reload image if src changed
     if (newSrc !== oldSrc && imageRef.value) {
-      // Clear current src to force browser to reload
+      
       imageRef.value.src = "";
 
-      // Re-trigger intersection observer if needed
       if (isInViewport.value) {
         nextTick(() => {
           if (imageRef.value) {

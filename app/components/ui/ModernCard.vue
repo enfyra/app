@@ -25,19 +25,17 @@
     }"
     v-bind="$attrs"
   >
-    <!-- Accent border at top -->
+    
     <div
       v-if="accentBorder"
       class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7C3AED]/40 to-transparent"
     />
 
-    <!-- Hover gradient overlay for settings variant -->
     <div
       v-if="variant === 'settings'"
       class="absolute inset-0 bg-gradient-to-br from-[#0066FF]/5 to-[#7C3AED]/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
     />
 
-    <!-- Content -->
     <div class="relative z-10">
       <slot />
     </div>

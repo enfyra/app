@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <!-- Allow All Toggle -->
+    
     <div class="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
       <div>
         <label class="text-sm font-medium">Allow All Access</label>
@@ -15,7 +15,6 @@
       />
     </div>
 
-    <!-- Current Permission Structure -->
     <div v-if="!isAllowAll" class="space-y-3">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-medium text-muted-foreground">
@@ -49,18 +48,16 @@ const currentGroups = ref<any[]>([]);
 const isAllowAll = ref(false);
 const groupsOperator = ref("and");
 
-// Initialize from props
 onMounted(() => {
-  // Set allowAll from prop
+  
   if (props.allowAll !== undefined) {
     isAllowAll.value = props.allowAll;
   }
-  
-  // Set permission groups from prop
+
   if (props.permissionGroups && props.permissionGroups.length > 0) {
     currentGroups.value = [...props.permissionGroups];
   } else if (!isAllowAll.value) {
-    // Create default group if none exists and not allowAll
+    
     currentGroups.value = [
       {
         id: Math.random().toString(36).substring(2, 9),
@@ -69,18 +66,16 @@ onMounted(() => {
       },
     ];
   }
-  
-  // Don't emit on mount - parent should already have the data
+
 });
 
-// Watch for changes in permissionGroups prop (after mount)
 watch(
   () => props.permissionGroups,
   (newGroups) => {
     if (newGroups && newGroups.length > 0) {
       currentGroups.value = [...newGroups];
     } else if (!isAllowAll.value) {
-      // Create default group if none exists
+      
       currentGroups.value = [
         {
           id: Math.random().toString(36).substring(2, 9),
@@ -92,7 +87,6 @@ watch(
   }
 );
 
-// Watch for allowAll prop changes (after mount)
 watch(
   () => props.allowAll,
   (newValue) => {
@@ -115,10 +109,10 @@ function removeGroup(groupIndex: number) {
 function handleAllowAllChange(value: boolean) {
   isAllowAll.value = value;
   if (value) {
-    // Clear groups when enabling allowAll
+    
     currentGroups.value = [];
   } else {
-    // Create default group when disabling allowAll
+    
     currentGroups.value = [
       {
         id: Math.random().toString(36).substring(2, 9),
@@ -134,7 +128,7 @@ function emitUpdate() {
   if (isAllowAll.value) {
     emit("update", { allowAll: true });
   } else if (currentGroups.value.length > 0) {
-    // Return the single root group (which may contain nested groups)
+    
     emit("update", currentGroups.value[0]);
   }
 }

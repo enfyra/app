@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref, computed, onMounted } from 'vue'
 
-// Mock types for extension system
 interface ExtensionComponent {
   name: string
   components: Record<string, any>
@@ -15,21 +14,17 @@ interface MenuResponse {
   }>
 }
 
-// Mock the dynamic page component functionality
 const MockPageComponent = {
   name: 'MockPageComponent',
   setup() {
-    // Mock composable returns
     const isMounted = ref(false)
     const componentLoading = ref(true)
     const error = ref<string | null>(null)
     const extensionComponent = ref<ExtensionComponent | null>(null)
     const menuResponse = ref<MenuResponse | null>(null)
 
-    // Mock navigation function
     const navigateTo = vi.fn()
 
-    // Simulate mounting lifecycle
     onMounted(() => {
       setTimeout(() => {
         isMounted.value = true
@@ -40,7 +35,6 @@ const MockPageComponent = {
     const retry = () => {
       error.value = null
       componentLoading.value = true
-      // Simulate retry logic
       setTimeout(() => {
         componentLoading.value = false
       }, 50)
@@ -121,7 +115,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should show loading state when componentLoading is true', () => {
       const wrapper = mount(MockPageComponent)
       
-      // Component starts with loading state
       expect(wrapper.find('[data-testid="loading-state"]').exists()).toBe(true)
       expect(wrapper.find('[data-testid="extension-content"]').exists()).toBe(false)
       expect(wrapper.find('[data-testid="error-state"]').exists()).toBe(false)
@@ -130,7 +123,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should hide loading state when component is mounted and not loading', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Wait for mounting simulation
       await new Promise(resolve => setTimeout(resolve, 150))
       await wrapper.vm.$nextTick()
 
@@ -142,7 +134,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should show extension disabled error', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Simulate extension disabled error
       wrapper.vm.error = 'Extension is disabled by administrator'
       wrapper.vm.isMounted = true
       wrapper.vm.componentLoading = false
@@ -157,7 +148,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should show generic extension error with retry', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Simulate generic error
       wrapper.vm.error = 'Failed to load extension component'
       wrapper.vm.isMounted = true
       wrapper.vm.componentLoading = false
@@ -172,7 +162,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should navigate to settings when clicking settings button', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Setup disabled extension error
       wrapper.vm.error = 'Extension is disabled by administrator'
       wrapper.vm.isMounted = true
       wrapper.vm.componentLoading = false
@@ -186,7 +175,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should retry when clicking retry button', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Setup generic error
       wrapper.vm.error = 'Network timeout'
       wrapper.vm.isMounted = true
       wrapper.vm.componentLoading = false
@@ -203,7 +191,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should render extension component when loaded', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Setup successful extension load
       wrapper.vm.extensionComponent = {
         name: 'TestExtension',
         components: {
@@ -226,7 +213,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should render extension without nested components', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Setup extension without nested components
       wrapper.vm.extensionComponent = {
         name: 'SimpleExtension',
         components: null,
@@ -245,7 +231,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should wrap extension in permission gate', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Setup extension with permission
       wrapper.vm.extensionComponent = {
         name: 'ProtectedExtension',
         components: {},
@@ -268,7 +253,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should show no extension state when no extension loaded', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Setup no extension state
       wrapper.vm.extensionComponent = null
       wrapper.vm.isMounted = true
       wrapper.vm.componentLoading = false
@@ -282,10 +266,8 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should handle state transitions correctly', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Initially loading
       expect(wrapper.find('[data-testid="loading-state"]').exists()).toBe(true)
 
-      // Transition to error
       wrapper.vm.error = 'Connection failed'
       wrapper.vm.isMounted = true
       wrapper.vm.componentLoading = false
@@ -294,7 +276,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
       expect(wrapper.find('[data-testid="loading-state"]').exists()).toBe(false)
       expect(wrapper.find('[data-testid="error-state"]').exists()).toBe(true)
 
-      // Retry and load extension
       wrapper.vm.error = null
       wrapper.vm.extensionComponent = {
         name: 'LoadedExtension',
@@ -312,7 +293,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should handle permission-based access control', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Setup extension with specific permission requirements
       wrapper.vm.extensionComponent = {
         name: 'AdminExtension',
         components: { AdminPanel: {} },
@@ -332,7 +312,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should handle fallback permission when no menu response', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Setup extension without menu response
       wrapper.vm.extensionComponent = {
         name: 'PublicExtension',
         components: {},
@@ -352,7 +331,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should handle complex extension with multiple components', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Setup complex extension
       const complexExtension = {
         name: 'CRMExtension',
         components: {
@@ -378,7 +356,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should handle extension enable/disable state', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Test disabled extension
       wrapper.vm.extensionComponent = {
         name: 'DisabledExtension',
         components: {},
@@ -398,7 +375,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should handle component mounting properly', () => {
       const wrapper = mount(MockPageComponent)
 
-      // Check initial state
       expect(wrapper.vm.isMounted).toBe(false)
       expect(wrapper.vm.componentLoading).toBe(true)
     })
@@ -406,17 +382,14 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should clean up properly on unmount', () => {
       const wrapper = mount(MockPageComponent)
 
-      // Simulate some state
       wrapper.vm.extensionComponent = {
         name: 'TestExtension',
         components: {},
         enabled: true
       }
 
-      // Unmount component
       wrapper.unmount()
 
-      // Component should be destroyed without errors
       expect(wrapper.exists()).toBe(false)
     })
   })
@@ -425,7 +398,6 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
     it('should recover from error state on retry', async () => {
       const wrapper = mount(MockPageComponent)
 
-      // Start with error
       wrapper.vm.error = 'Initial load failed'
       wrapper.vm.isMounted = true
       wrapper.vm.componentLoading = false
@@ -433,13 +405,11 @@ describe('DynamicPageComponent (Critical Extension System)', () => {
 
       expect(wrapper.find('[data-testid="error-state"]').exists()).toBe(true)
 
-      // Retry
       await wrapper.find('[data-testid="retry-btn"]').trigger('click')
 
       expect(wrapper.vm.error).toBeNull()
       expect(wrapper.vm.componentLoading).toBe(true)
 
-      // Simulate successful load after retry
       await new Promise(resolve => setTimeout(resolve, 60))
       wrapper.vm.componentLoading = false
       wrapper.vm.extensionComponent = {

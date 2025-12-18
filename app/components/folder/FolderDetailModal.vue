@@ -24,7 +24,7 @@ const folderIconName = computed(() => {
 const folderIconColor = computed(() => {
   if (!selectedFolder.value) return "#7C3AED";
   const colorClass = getFolderIconColor(selectedFolder.value);
-  // Extract color from class (e.g., "text-blue-500" -> "#3B82F6")
+  
   if (colorClass.includes("blue")) return "#3B82F6";
   if (colorClass.includes("amber")) return "#F59E0B";
   return "#7C3AED";
@@ -40,9 +40,9 @@ const folderIconColor = computed(() => {
     </template>
       <template #body>
         <div v-if="selectedFolder" class="space-y-8">
-          <!-- Folder Identity Section -->
+          
           <div class="flex items-start gap-6">
-            <!-- Folder Icon -->
+            
             <div
               class="relative flex items-center justify-center w-20 h-20 rounded-2xl"
               :style="{
@@ -59,7 +59,6 @@ const folderIconColor = computed(() => {
               />
             </div>
 
-            <!-- Folder Name & Badge -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3 mb-2">
                 <h2
@@ -91,7 +90,6 @@ const folderIconColor = computed(() => {
             </div>
           </div>
 
-          <!-- Description Section -->
           <div class="p-5 rounded-xl bg-gray-900/50">
             <div class="flex items-start gap-3">
               <UIcon
@@ -115,9 +113,8 @@ const folderIconColor = computed(() => {
             </div>
           </div>
 
-          <!-- Timestamps Section -->
           <div class="grid grid-cols-2 gap-4">
-            <!-- Created -->
+            
             <div class="p-5 rounded-xl bg-gray-900/50">
               <div class="flex items-start gap-3">
                 <UIcon
@@ -139,7 +136,6 @@ const folderIconColor = computed(() => {
               </div>
             </div>
 
-            <!-- Modified -->
             <div class="p-5 rounded-xl bg-gray-900/50">
               <div class="flex items-start gap-3">
                 <UIcon
@@ -162,7 +158,6 @@ const folderIconColor = computed(() => {
             </div>
           </div>
 
-          <!-- Properties Section -->
           <div class="p-5 rounded-xl bg-gray-900/50 space-y-4">
             <div
               class="text-xs text-gray-500 uppercase mb-4"
@@ -171,7 +166,6 @@ const folderIconColor = computed(() => {
               Properties
             </div>
 
-            <!-- ID -->
             <div class="flex items-start gap-3 py-2">
               <UIcon
                 name="lucide:hash"
@@ -185,7 +179,6 @@ const folderIconColor = computed(() => {
               </div>
             </div>
 
-            <!-- Parent Folder -->
             <div class="flex items-start gap-3 py-2">
               <UIcon
                 name="lucide:folder-tree"
@@ -200,7 +193,6 @@ const folderIconColor = computed(() => {
               </div>
             </div>
 
-            <!-- Order -->
             <div class="flex items-start gap-3 py-2">
               <UIcon
                 name="lucide:list-ordered"

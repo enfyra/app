@@ -19,7 +19,7 @@
 
       <template #body>
         <div class="space-y-0">
-          <!-- Filter Section -->
+          
           <div class="p-4 border-b border-muted">
             <div class="flex justify-between items-center">
               <div class="text-sm text-muted-foreground">
@@ -46,9 +46,8 @@
             </div>
           </div>
 
-          <!-- Routes List Section -->
           <div class="p-4">
-            <!-- Loading State -->
+            
             <CommonLoadingState
               v-if="loading"
               type="form"
@@ -56,7 +55,6 @@
               size="md"
             />
 
-            <!-- Routes List -->
             <div v-else-if="routes.length > 0" class="space-y-2">
               <div
                 v-for="route in routes"
@@ -83,7 +81,6 @@
               </div>
             </div>
 
-            <!-- Empty State -->
             <CommonEmptyState
               v-else
               :title="
@@ -113,7 +110,6 @@
             </CommonEmptyState>
           </div>
 
-          <!-- Pagination Section -->
           <div
             v-if="!loading && total > limit"
             class="px-4 pb-4 pt-0 border-t border-muted"
@@ -153,7 +149,6 @@
       </template>
     </CommonDrawer>
 
-    <!-- Filter Drawer -->
     <FilterDrawerLazy
       v-model="showFilterDrawer"
       table-name="route_definition"
@@ -182,14 +177,12 @@ const isOpen = computed({
 const page = ref(1);
 const limit = 7;
 
-// Get schema fields for route_definition
 const { getIncludeFields } = useSchema("route_definition");
 
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
 const showFilterDrawer = ref(false);
 
-// API call to fetch routes
 const {
   data: apiData,
   pending: loading,
@@ -215,25 +208,22 @@ const {
 const routes = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
-// Watch page changes
 watch(page, () => {
   fetchRoutes();
 });
 
-// Handle filter apply from FilterDrawer
 async function handleFilterApply(filter: FilterGroup) {
   currentFilter.value = filter;
-  page.value = 1; // Reset to first page when filter changes
+  page.value = 1; 
   await fetchRoutes();
 }
 
 async function clearFilter() {
   currentFilter.value = createEmptyFilter();
-  page.value = 1; // Reset to first page when clearing filters
+  page.value = 1; 
   await fetchRoutes();
 }
 
-// Fetch routes when drawer opens
 watch(
   () => props.modelValue,
   (isOpen) => {
@@ -250,7 +240,7 @@ function selectRoute(route: any) {
 
 function close() {
   emit("update:modelValue", false);
-  // Reset state
+  
   page.value = 1;
 }
 </script>

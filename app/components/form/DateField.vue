@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Date Field Button -->
+    
     <UButton
       @click="openModal"
       variant="outline"
@@ -11,7 +11,6 @@
       :disabled="disabled"
     />
 
-    <!-- Date Picker Modal -->
     <CommonModal v-model="showModal">
       <template #title>
         Select Date
@@ -47,18 +46,17 @@ const emit = defineEmits<{
 }>();
 
 const showModal = ref(false);
-// Initialize with current date
+
 const today = new Date();
 const tempValue = ref<CalendarDate | any>(
   new CalendarDate(today.getFullYear(), today.getMonth() + 1, today.getDate())
 );
 
-// Parse date string (YYYY-MM-DD or ISO format) to date components
 function parseDateString(dateInput: Date | string): { year: number; month: number; day: number } | null {
   if (!dateInput) return null;
 
   try {
-    // If it's already a Date object
+    
     if (dateInput instanceof Date) {
       return {
         year: dateInput.getUTCFullYear(),
@@ -67,10 +65,8 @@ function parseDateString(dateInput: Date | string): { year: number; month: numbe
       };
     }
 
-    // Parse string format (YYYY-MM-DD or ISO)
     const dateStr = String(dateInput);
 
-    // Try YYYY-MM-DD format first (no timezone issues)
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
       const parts = dateStr.split('-').map(Number);
       if (parts.length === 3 && parts.every(n => !isNaN(n))) {
@@ -82,7 +78,6 @@ function parseDateString(dateInput: Date | string): { year: number; month: numbe
       }
     }
 
-    // Fallback to parsing as Date (for ISO format)
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return null;
 
@@ -104,7 +99,6 @@ function formatDateDisplay(dateInput: Date | string): string {
   return `${monthNames[parsed.month]} ${parsed.day}, ${parsed.year}`;
 }
 
-// Normalize modelValue to YYYY-MM-DD format
 const normalizedValue = computed(() => {
   if (!props.modelValue) return null;
 
@@ -130,12 +124,12 @@ const buttonClass = computed(() => {
 function openModal() {
   if (normalizedValue.value) {
     try {
-      // Parse YYYY-MM-DD format
+      
       const parsed = parseDateString(normalizedValue.value);
       if (parsed) {
         tempValue.value = new CalendarDate(parsed.year, parsed.month + 1, parsed.day);
       } else {
-        // Use current date as fallback
+        
         const today = new Date();
         tempValue.value = new CalendarDate(
           today.getFullYear(),
@@ -145,7 +139,7 @@ function openModal() {
       }
     } catch (error) {
       console.error("Error converting to CalendarDate:", error);
-      // Use current date as fallback
+      
       const today = new Date();
       tempValue.value = new CalendarDate(
         today.getFullYear(),
@@ -154,7 +148,7 @@ function openModal() {
       );
     }
   } else {
-    // Use current date as default when no value
+    
     const today = new Date();
     tempValue.value = new CalendarDate(
       today.getFullYear(),

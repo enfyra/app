@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref, computed, watch } from 'vue'
 
-// Mock FilterGroup and FilterCondition types for testing
 interface FilterCondition {
   field: string
   operator: string
@@ -16,7 +15,6 @@ interface FilterGroup {
   conditions: (FilterCondition | FilterGroup)[]
 }
 
-// Mock the filter functionality
 const MockFilterDrawer = {
   name: 'MockFilterDrawer',
   props: {
@@ -26,7 +24,6 @@ const MockFilterDrawer = {
   },
   emits: ['update:modelValue', 'apply'],
   setup(props, { emit }) {
-    // Mock composable returns
     const schemas = ref({ tables: {} })
     const addToHistory = vi.fn()
     const hasActiveFilters = vi.fn(() => false)
@@ -36,18 +33,15 @@ const MockFilterDrawer = {
       conditions: []
     }))
 
-    // Local state management
     const localFilter = ref<FilterGroup>(createEmptyFilter())
     const originalFilter = ref<FilterGroup>(createEmptyFilter())
 
-    // Watch for currentFilter changes
     watch(() => props.currentFilter, (newFilter) => {
       if (newFilter) {
         localFilter.value = JSON.parse(JSON.stringify(newFilter))
       }
     }, { immediate: true })
 
-    // Watch for drawer open/close
     watch(() => props.modelValue, (isOpen) => {
       if (isOpen) {
         const initialFilter = props.currentFilter || localFilter.value
@@ -241,14 +235,11 @@ describe('FilterDrawer Component (Critical Query Generation)', () => {
         }
       })
 
-      // Verify initial state
       expect(wrapper.find('[data-testid="condition-field"]').text()).toBe('age')
       
-      // Simulate modification (in real app, user would modify through UI)
       wrapper.vm.localFilter.conditions = []
       await wrapper.vm.$nextTick()
 
-      // Close without applying (cancel)
       await wrapper.find('[data-testid="close-btn"]').trigger('click')
 
       expect(wrapper.emitted('update:modelValue')).toBeTruthy()
@@ -478,7 +469,6 @@ describe('FilterDrawer Component (Critical Query Generation)', () => {
         }
       })
 
-      // Test the hasActiveFiltersLocal function with nested groups
       const nestedGroup: FilterGroup = {
         id: 'test',
         operator: 'or',
@@ -487,7 +477,6 @@ describe('FilterDrawer Component (Critical Query Generation)', () => {
         ]
       }
 
-      // This would be called internally by the component
       expect(wrapper.vm.hasActiveFiltersLocal?.(nestedGroup)).toBe(true)
 
       const emptyGroup: FilterGroup = {

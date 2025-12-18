@@ -19,7 +19,6 @@ registerPageHeader({
   gradient: "purple",
 });
 
-// Fixed color for security/permissions
 const pageIconColor = 'warning';
 
 const {
@@ -171,7 +170,6 @@ watch(
       />
     </Transition>
 
-    <!-- Premium Pagination -->
     <div
       v-if="!loading && roles.length > 0 && total > pageLimit"
       class="flex items-center justify-between mt-6"

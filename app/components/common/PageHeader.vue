@@ -1,16 +1,4 @@
 <script setup lang="ts">
-/**
- * PAGE HEADER (CommonPageHeader) - Page-specific hero section
- *
- * Position: Below UnifiedHeader
- * Shows: Page title, description, optional stats cards, and actions
- * Background: Radial gradient backgrounds (modern design)
- *
- * USAGE RULES:
- * - NO breadcrumbs here (use UnifiedHeader via useBreadcrumbRegistry)
- * - Actions from SubHeader registry are displayed on the right
- * - Focus on: Title, Description, Stats/KPIs, Actions
- */
 
 import { isRef, unref } from "vue";
 
@@ -57,7 +45,6 @@ const hasActions = computed(() => {
   return leftActions.value.length > 0 || rightActions.value.length > 0;
 });
 
-// Radial gradient backgrounds (modern, subtle)
 const gradientStyle = computed(() => {
   const gradients = {
     purple: "radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0%, transparent 50%)",
@@ -72,7 +59,6 @@ const gradientStyle = computed(() => {
 const isMinimal = computed(() => props.variant === "minimal");
 const isStatsFocus = computed(() => props.variant === "stats-focus");
 
-// Animation state
 const isVisible = ref(false);
 
 function triggerAnimation() {
@@ -102,10 +88,10 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
       borderBottomStyle: 'solid'
     }"
   >
-    <!-- Content -->
+    
     <div class="relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', isMinimal ? ((isMobile || isTablet) ? 'py-3' : 'py-4') : ((isMobile || isTablet) ? 'py-4' : 'py-5')]">
       <div class="flex flex-col gap-4" :class="(isMobile || isTablet) ? '' : 'flex-row items-center justify-between'">
-        <!-- Left: Title & Description -->
+        
         <div class="flex-1 min-w-0">
       <div
         :class="(isMobile || isTablet) ? 'space-y-0.5' : 'space-y-1'"
@@ -128,7 +114,6 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
           </div>
         </div>
 
-        <!-- Right: Actions -->
         <div v-if="hasActions" class="flex items-center space-x-2 shrink-0" :class="(isMobile || isTablet) ? 'justify-end' : ''">
           <template v-for="action in leftActions" :key="action.key || action.id">
             <PermissionGate :condition="action.permission">
@@ -195,7 +180,6 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
         </div>
       </div>
 
-      <!-- Stats Cards -->
       <div
         v-if="stats && stats.length > 0"
         :class="[
@@ -218,7 +202,7 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
             transitionDelay: `${200 + index * 50}ms`,
           }"
         >
-          <!-- Gradient glow on hover -->
+          
           <div
             class="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-brand-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           />

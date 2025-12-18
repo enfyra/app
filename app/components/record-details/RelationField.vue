@@ -1,5 +1,5 @@
 <template>
-  <!-- Empty/Null Value -->
+  
   <div
     v-if="!value || (Array.isArray(value) && value.length === 0)"
     class="flex items-center justify-center py-8 bg-muted/10 rounded-lg border-2 border-dashed border-muted/50"
@@ -14,7 +14,6 @@
     </div>
   </div>
 
-  <!-- Array Relations (one-to-many, many-to-many) -->
   <div v-else-if="Array.isArray(value)" class="space-y-4">
     <div class="flex items-center justify-between">
       <UBadge variant="outline" size="sm" color="info">
@@ -45,7 +44,6 @@
     </div>
   </div>
 
-  <!-- Single Relations (one-to-one, many-to-one) -->
   <div
     v-else-if="typeof value === 'object'"
     class="border border-muted/50 rounded-lg p-4 bg-gradient-to-r from-background to-muted/20 lg:hover:shadow-md transition-all duration-200 lg:hover:border-primary/50"
@@ -53,7 +51,6 @@
     <RecordDetailsRelationItem :item="value" />
   </div>
 
-  <!-- Fallback -->
   <div v-else class="text-muted-foreground">
     {{ String(value) }}
   </div>

@@ -21,15 +21,6 @@
 </template>
 
 <script setup lang="ts">
-/**
- * FORM CARD - Specialized card for forms and data entry
- *
- * Features:
- * - Optional title/description with divider
- * - Focus state (purple border + ring)
- * - Error state (red border + background tint)
- * - Clean, distraction-free design
- */
 
 interface Props {
   title?: string;

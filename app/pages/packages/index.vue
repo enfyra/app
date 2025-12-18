@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <!-- Package Type Cards -->
+    
     <div class="grid gap-4 md:grid-cols-2">
       <CommonSettingsCard
         title="App Packages"
@@ -37,7 +37,6 @@
       />
     </div>
 
-    <!-- Quick Actions -->
     <div class="mt-8">
       <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
       <div class="flex gap-3">

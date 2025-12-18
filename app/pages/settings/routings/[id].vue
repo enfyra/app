@@ -56,7 +56,6 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-// Init typeMap with default value (will be updated after routeData loads)
 const typeMap = ref<Record<string, any>>({});
 
 useHeaderActionRegistry([
@@ -125,7 +124,6 @@ const {
   errorContext: "Fetch Route",
 });
 
-// Update page header when route data loads
 watch(() => routeData.value?.data?.[0]?.path, (path) => {
   if (path) {
     registerPageHeader({
@@ -135,11 +133,9 @@ watch(() => routeData.value?.data?.[0]?.path, (path) => {
   }
 }, { immediate: true });
 
-// Update typeMap when route data changes
 watch(() => routeData.value?.data?.[0], (currentRoute) => {
   if (!currentRoute) return;
 
-  // Check if route has associated table
   let hasAssociatedTable = false;
   if (currentRoute.mainTable) {
     const { schemas } = useSchema();
@@ -152,7 +148,6 @@ watch(() => routeData.value?.data?.[0], (currentRoute) => {
     }
   }
 
-  // Update typeMap to disable isEnabled if has associated table
   typeMap.value = {
     isEnabled: {
       disabled: hasAssociatedTable
@@ -223,12 +218,10 @@ async function updateRoute() {
 
   await loadRoutes();
 
-  // Reregister menus after route update
   const { registerDataMenuItems } = useMenuRegistry();
   const { schemas } = useSchema();
   await registerDataMenuItems(Object.values(schemas.value));
 
-  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
   formChanges.update(form.value);
 }
@@ -275,7 +268,6 @@ async function deleteRoute() {
 
   await loadRoutes();
 
-  // Reregister menus after route deletion
   const { registerDataMenuItems } = useMenuRegistry();
   const { schemas } = useSchema();
   await registerDataMenuItems(Object.values(schemas.value));

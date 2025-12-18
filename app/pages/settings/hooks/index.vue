@@ -18,7 +18,6 @@ registerPageHeader({
   gradient: "purple",
 });
 
-// Fixed color for event handling
 const pageIconColor = 'success';
 
 const {
@@ -36,7 +35,6 @@ const {
   errorContext: "Fetch Hooks",
 });
 
-// Update API at setup level
 const { execute: updateHookApi, error: updateError } = useApi(
   () => `/hook_definition`,
   {
@@ -218,7 +216,6 @@ async function deleteHook(hook: any) {
       />
     </Transition>
 
-    <!-- Premium Pagination -->
     <div
       v-if="!loading && hooks.length > 0 && total > pageLimit"
       class="flex items-center justify-between mt-6"

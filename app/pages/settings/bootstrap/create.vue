@@ -53,7 +53,6 @@ useHeaderActionRegistry([
   },
 ]);
 
-// Setup useApi composable at top level
 const {
   data: createData,
   error: createError,
@@ -66,7 +65,7 @@ const {
 
 onMounted(() => {
   createForm.value = generateEmptyForm();
-  // Set createdBy to current user
+  
   const { me } = useEnfyraAuth();
   const { getId } = useDatabase();
   const userId = getId(me.value);

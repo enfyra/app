@@ -1,5 +1,5 @@
 <template>
-  <!-- _is_null - Checkbox with label -->
+  
   <div v-if="operator === '_is_null'" class="flex items-center gap-2 min-w-32">
     <UCheckbox 
       :model-value="modelValue" 
@@ -10,7 +10,6 @@
     </span>
   </div>
 
-  <!-- Boolean Select -->
   <USelect
     v-else-if="fieldType === 'boolean'"
     :model-value="modelValue"
@@ -22,7 +21,6 @@
     class="min-w-32 min-h-8"
   />
 
-  <!-- Date Picker - Single -->
   <FilterDatePicker
     v-else-if="fieldType === 'date' && !needsTwoValues(operator)"
     :model-value="modelValue"
@@ -30,7 +28,6 @@
     mode="single"
   />
 
-  <!-- Date Picker - Range -->
   <FilterDatePicker
     v-else-if="fieldType === 'date' && needsTwoValues(operator)"
     :model-value="modelValue"
@@ -38,7 +35,6 @@
     mode="range"
   />
 
-  <!-- Number Range -->
   <div
     v-else-if="fieldType === 'number' && needsTwoValues(operator)"
     class="flex items-center gap-1"
@@ -60,7 +56,6 @@
     />
   </div>
 
-  <!-- Multi-select for _in, _not_in with enums -->
   <USelect
     v-else-if="
       fieldType === 'select' &&
@@ -73,7 +68,6 @@
     class="min-w-32 min-h-8"
   />
 
-  <!-- Single select for enums -->
   <USelect
     v-else-if="fieldType === 'select'"
     :model-value="modelValue"
@@ -82,7 +76,6 @@
     class="min-w-32 min-h-8"
   />
 
-  <!-- Array input for _in, _not_in with other types -->
   <FilterArrayInput
     v-else-if="['_in', '_not_in'].includes(operator)"
     :model-value="modelValue"
@@ -90,7 +83,6 @@
     @update:model-value="emit('update:modelValue', $event)"
   />
 
-  <!-- Default Single Input -->
   <UInput
     v-else
     :model-value="modelValue"

@@ -1,14 +1,9 @@
-/**
- * Stat card for page header
- */
+
 export interface PageHeaderStat {
   label: string;
   value: string | number;
 }
 
-/**
- * Page Header Configuration
- */
 export interface PageHeaderConfig {
   title: string;
   description?: string;
@@ -17,9 +12,6 @@ export interface PageHeaderConfig {
   gradient?: "purple" | "blue" | "cyan" | "none";
 }
 
-/**
- * Composable for managing page header with auto-cleanup on route change
- */
 export const usePageHeaderRegistry = () => {
   const route = useRoute();
 
@@ -30,9 +22,6 @@ export const usePageHeaderRegistry = () => {
     () => new Map()
   );
 
-  /**
-   * Register page header configuration for current route
-   */
   const registerPageHeader = (config: PageHeaderConfig) => {
     const currentRoute = route.path;
 
@@ -41,16 +30,10 @@ export const usePageHeaderRegistry = () => {
     pageHeaderConfig.value = config;
   };
 
-  /**
-   * Clear page header
-   */
   const clearPageHeader = () => {
     pageHeaderConfig.value = null;
   };
 
-  /**
-   * Check if page header is registered
-   */
   const hasPageHeader = computed(() => pageHeaderConfig.value !== null);
 
   watch(

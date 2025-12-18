@@ -1,16 +1,15 @@
 <template>
   <div class="flex items-center justify-between w-full">
-    <!-- Left side: Left actions from registry (sorted by order) -->
+    
     <div class="flex items-center gap-1.5 md:gap-3 min-w-0 flex-1">
       <template v-for="action in leftActions" :key="action.key || action.id">
-        <!-- Component actions -->
+        
         <component
           v-if="action.component"
           :is="action.component"
           v-bind="action.props"
         />
 
-        <!-- Regular button actions -->
         <UButton
           v-else
           :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
@@ -35,7 +34,6 @@
       </template>
     </div>
 
-    <!-- Right Side Action Buttons -->
     <LayoutHeaderActions />
   </div>
 </template>

@@ -23,13 +23,10 @@ const previewStyle = ref<{ top: string; left: string; width: string; height: str
 
 const colorMode = useColorMode();
 
-// Lazy load CodeMirror
 const { initCodeMirror, codeMirrorModules, loading: loadingCodeMirror } = useCodeMirrorLazy()
 
-// Initialize theme composable (pass colorMode to avoid double inject)
 const { themeCompartment, themeExtensions, customHighlightStyle } = useCodeMirrorTheme(currentHeight, codeMirrorModules, colorMode);
 
-// Initialize editor composable (can be called early)
 const { code, editorRef, createEditor, watchExtensions, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
   modelValue: props.modelValue,
   language: props.language,
@@ -38,7 +35,6 @@ const { code, editorRef, createEditor, watchExtensions, destroyEditor, editorVie
   codeMirrorModules: codeMirrorModules
 });
 
-// Initialize extensions composable - pass ref so it's reactive
 const { getLanguageExtension, getBasicSetup, enfyraSyntaxPlugin } = useCodeMirrorExtensions(codeMirrorModules)
 
 const languageExtension = computed(() => {
@@ -80,15 +76,12 @@ const extensions = computed(() => {
   return exts
 });
 
-
-// Watch for theme changes and update theme compartment
 watch(() => colorMode.value, () => {
   if (editorView.value && themeCompartment.value) {
     editorView.value.dispatch({
       effects: themeCompartment.value.reconfigure(themeExtensions.value),
     });
-    
-    // Update gutters border after theme change
+
     nextTick(() => {
       if (editorView.value) {
         const gutters = editorView.value.dom.querySelector('.cm-gutters');
@@ -141,10 +134,9 @@ const resizeObserverRef = ref<ResizeObserver | null>(null);
 
 onMounted(async () => {
   try {
-    // Initialize CodeMirror first
-    await initCodeMirror()
     
-    // Wait for CodeMirror to load if still loading
+    await initCodeMirror()
+
     if (loadingCodeMirror.value) {
       await new Promise((resolve) => {
         const unwatch = watch(loadingCodeMirror, (loading) => {
@@ -155,12 +147,10 @@ onMounted(async () => {
         })
       })
     }
-    
-    // Wait for modules to be ready and extensions to be computed
+
     await nextTick();
     await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Wait until extensions are ready
+
     let retries = 0
     while (extensions.value.length === 0 && retries < 10) {
       await new Promise(resolve => setTimeout(resolve, 50))
@@ -206,8 +196,7 @@ onMounted(async () => {
       });
       resizeObserverRef.value.observe(containerRef.value);
     }
-    
-    // Force update gutters border after editor is created
+
     await nextTick();
     await new Promise(resolve => setTimeout(resolve, 100));
     if (editorView.value) {
@@ -365,8 +354,7 @@ function handleMouseUp(e?: MouseEvent) {
     :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
   >
     <div ref="editorRef" class="codemirror-editor h-full" />
-    
-    <!-- Preview Layer -->
+
     <Teleport to="body">
       <div
         v-if="isResizing && previewStyle"

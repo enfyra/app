@@ -243,9 +243,6 @@ export const useDynamicComponent = () => {
     Widget: markRaw(DynamicWidgetComponent),
   };
 
-  /**
-   * Clear old versions of a specific extension from cache
-   */
   const clearOldVersions = (extensionId: string) => {
     for (const [key] of extensionCache) {
       if (key.startsWith(`${extensionId}:`)) {
@@ -254,9 +251,6 @@ export const useDynamicComponent = () => {
     }
   };
 
-  /**
-   * Manage cache size with LRU strategy
-   */
   const manageCacheSize = () => {
     if (extensionCache.size >= maxCacheSize) {
       const firstKey = extensionCache.keys().next().value;
@@ -266,9 +260,6 @@ export const useDynamicComponent = () => {
     }
   };
 
-  /**
-   * Clear cache for specific extension or all
-   */
   const clearCache = (extensionId?: string) => {
     if (extensionId) {
       clearOldVersions(extensionId);
@@ -279,9 +270,6 @@ export const useDynamicComponent = () => {
     cacheMisses.value = 0;
   };
 
-  /**
-   * Get cache statistics
-   */
   const getCacheStats = () => ({
     size: extensionCache.size,
     hits: cacheHits.value,
@@ -294,7 +282,7 @@ export const useDynamicComponent = () => {
           ).toFixed(2) + "%"
         : "0%",
     keys: Array.from(extensionCache.keys()),
-    memoryEstimate: `~${extensionCache.size * 50}KB`, // Rough estimate
+    memoryEstimate: `~${extensionCache.size * 50}KB`, 
   });
 
   const loadDynamicComponent = async (
@@ -321,7 +309,6 @@ export const useDynamicComponent = () => {
 
       clearOldVersions(extensionName);
 
-      // 1. Setup globals if not already done
       if (!(window as any).Vue) {
         (window as any).Vue = await import("vue");
       }
@@ -372,7 +359,6 @@ export const useDynamicComponent = () => {
         g[fnName] = vue[fnName];
       });
 
-      // 2. Execute the code
       const componentName = extensionName;
 
       delete (window as any)[componentName];
@@ -402,7 +388,6 @@ export const useDynamicComponent = () => {
         );
       }
 
-      // 3. Create wrapper component with injected dependencies
       if (!component || typeof component !== "object") {
         throw new Error(`Invalid component: ${component}`);
       }

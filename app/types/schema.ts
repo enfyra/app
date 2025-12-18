@@ -1,6 +1,5 @@
 import type { Ref } from 'vue';
 
-// Các type cơ bản cho column
 export type ColumnType = 
   | 'uuid'
   | 'varchar'
@@ -18,16 +17,14 @@ export type ColumnType =
   | 'number'
   | 'timestamp';
 
-// Các type relation
 export type RelationType = 
   | 'one-to-one' 
   | 'one-to-many' 
   | 'many-to-one' 
   | 'many-to-many';
 
-// Column từ API response
 export interface TableColumnResponse {
-  id?: number;  // optional vì virtual column không có id
+  id?: number;  
   name: string;
   type: ColumnType;
   defaultValue?: any;
@@ -38,7 +35,7 @@ export interface TableColumnResponse {
   isPrimary?: boolean;
   isSystem?: boolean;
   isUpdatable?: boolean;
-  isVirtual?: boolean;  // thêm field này cho createdAt, updatedAt virtual
+  isVirtual?: boolean;  
   options?: any;
   placeholder?: string | null;
   table?: {
@@ -48,7 +45,6 @@ export interface TableColumnResponse {
   updatedAt?: string;
 }
 
-// Relation từ API response
 export interface TableRelationResponse {
   id: number;
   propertyName: string;
@@ -67,7 +63,6 @@ export interface TableRelationResponse {
   updatedAt?: string;
 }
 
-// Table response từ API
 export interface TableApiResponse {
   id: number;
   name: string;
@@ -75,14 +70,13 @@ export interface TableApiResponse {
   description?: string | null;
   isSystem?: boolean;
   indexes?: any[] | null;
-  uniques?: any[][] | null;  // mảng của mảng string (composite unique)
+  uniques?: any[][] | null;  
   columns?: TableColumnResponse[];
   relations?: TableRelationResponse[];
   createdAt?: string;
   updatedAt?: string;
 }
 
-// Response wrapper từ API
 export interface ApiTableListResponse {
   data: TableApiResponse[];
   meta?: {
@@ -92,18 +86,14 @@ export interface ApiTableListResponse {
   };
 }
 
-// ===== Types sau khi convert =====
-
-// Field trong definition (có thể là column hoặc relation)
 export interface TableDefinitionField {
-  // Common fields
+  
   name?: string;
   label?: string;
   fieldType: 'column' | 'relation';
-  
-  // Column fields (optional)
+
   id?: number;
-  type?: ColumnType | RelationType;  // có thể là column type hoặc relation type
+  type?: ColumnType | RelationType;  
   defaultValue?: any;
   description?: string | null;
   isGenerated?: boolean;
@@ -118,8 +108,7 @@ export interface TableDefinitionField {
   table?: {
     id: number;
   };
-  
-  // Relation fields (optional)
+
   propertyName?: string;
   inversePropertyName?: string | null;
   relationType?: RelationType;
@@ -129,13 +118,11 @@ export interface TableDefinitionField {
   targetTable?: {
     id: number;
   };
-  
-  // Timestamps
+
   createdAt?: string;
   updatedAt?: string;
 }
 
-// Schema sau khi convert (lưu trong state)
 export interface TableSchema {
   id: number;
   name: string;
@@ -147,13 +134,10 @@ export interface TableSchema {
   definition: TableDefinitionField[];
   createdAt?: string;
   updatedAt?: string;
-  [key: string]: any;  // cho phép thêm field khác
+  [key: string]: any;  
 }
 
-// Collection của tất cả schemas
 export type SchemaCollection = Record<string, TableSchema>;
-
-// ===== Types cho form và validation =====
 
 export interface FormValidationResult {
   isValid: boolean;

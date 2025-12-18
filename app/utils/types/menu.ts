@@ -1,9 +1,8 @@
 import type { PermissionCondition } from "./permissions";
 
-// API Response Interface from /menu_definition endpoint
 export interface MenuDefinition {
-  id?: number; // SQL databases
-  _id?: string; // MongoDB
+  id?: number; 
+  _id?: string; 
   description: string;
   icon: string;
   isEnabled: boolean;
@@ -21,17 +20,16 @@ export interface MenuDefinition {
   updatedAt?: string;
 }
 
-// Internal Interface for Menu Items in useMenuRegistry
 export interface MenuItem {
   id: string;
   label: string;
   route: string;
   icon?: string;
-  // Where this menu should appear in sidebar
+  
   position?: "top" | "bottom";
-  sidebarId?: number | string; // Support both SQL (number) and MongoDB (string) - optional for special items like logout
+  sidebarId?: number | string; 
   permission?: PermissionCondition;
-  // Additional fields from API for full compatibility
+  
   path?: string;
   children?: any[];
   order?: number;
@@ -45,19 +43,18 @@ export interface MenuItem {
   extension?: any;
   createdAt?: string;
   updatedAt?: string;
-  // Optional handlers for special items (e.g., logout button)
+  
   onClick?: () => void | Promise<void>;
   class?: string;
-  // Optional custom component instead of default menu rendering
+  
   component?: string | any;
   componentProps?: Record<string, any>;
   key?: string;
 }
 
-// API Response Interface from useMenuApi (different from MenuDefinition)
 export interface MenuApiItem {
-  id?: number; // SQL databases
-  _id?: string; // MongoDB
+  id?: number; 
+  _id?: string; 
   description: string;
   icon: string;
   isEnabled: boolean;

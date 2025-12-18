@@ -131,7 +131,6 @@ async function handleSaveSetting() {
   });
   errors.value = {};
 
-  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
   formChanges.update(setting.value);
 }

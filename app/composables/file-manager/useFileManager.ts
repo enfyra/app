@@ -33,7 +33,6 @@ export function useFileManager(parentFilter?: any) {
     }
   );
 
-
   function showFolderDetail(folder: any) {
     const showDetailModal = useState("folder-detail-modal", () => false);
     const selectedFolder = useState<any>("folder-selected", () => null);

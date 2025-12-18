@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <!-- Group Operator -->
+    
     <div class="flex items-center gap-2" v-if="group.conditions?.length > 1">
       <USelect
         v-if="!disabled"
@@ -20,7 +20,7 @@
 
     <div class="space-y-2 pl-4 border-l-2 border-muted">
       <template v-for="(item, index) in group.conditions" :key="item.id">
-        <!-- Permission Rule -->
+        
         <div
           v-if="isPermission(item)"
           class="flex items-center justify-between p-3 border border-muted rounded-lg lg:hover:bg-muted/50 cursor-pointer transition-colors"
@@ -65,7 +65,6 @@
           </div>
         </div>
 
-        <!-- Nested Permission Group -->
         <div v-else class="border border-muted rounded-lg p-3 relative">
           <UButton
             v-if="!disabled"
@@ -84,7 +83,6 @@
         </div>
       </template>
 
-      <!-- Add Actions -->
       <div v-if="!disabled" class="flex gap-2">
         <UButton
           @click="addPermission"
@@ -105,7 +103,6 @@
       </div>
     </div>
 
-    <!-- Permission Editor -->
     <FormPermissionEditor
       v-model="showEditModal"
       :permission="editingPermission"
@@ -116,7 +113,6 @@
 </template>
 
 <script setup lang="ts">
-// USelect, UButton auto-imported by Nuxt
 
 const props = defineProps<{
   group: any;

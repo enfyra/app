@@ -33,17 +33,14 @@ const isOpen = computed({
 const selectedConfig = ref<Config | null>(props.currentConfig)
 const { isMobile, isTablet } = useScreen()
 
-// Get AI configs from global state
 const { aiConfigs } = useGlobalState()
 const configs = computed(() => aiConfigs.value || [])
 const loading = ref(false)
 
-// Watch for config changes from parent
 watch(() => props.currentConfig, (newConfig) => {
   selectedConfig.value = newConfig
 })
 
-// Initialize selected config when drawer opens
 watch(isOpen, (isOpen) => {
   if (isOpen) {
     selectedConfig.value = props.currentConfig
@@ -93,7 +90,7 @@ const closeDrawer = () => {
 
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
-          <!-- Configs List Section -->
+          
           <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-6'">
             <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
               <Icon name="lucide:settings-2" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />
@@ -181,7 +178,6 @@ const closeDrawer = () => {
             </Transition>
           </div>
 
-          <!-- Actions Section -->
           <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-4'">
             <div class="flex items-center justify-between">
               <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">

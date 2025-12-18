@@ -141,7 +141,7 @@ export function useMenuRegistry() {
             (dropdown) => String(getId(dropdown)) === String(parentId)
           );
           if (isChildOfDropdown) {
-            return; // Skip children, they're already added
+            return; 
           }
         }
 
@@ -183,7 +183,7 @@ export function useMenuRegistry() {
     getRouteForTableName?: (tableName: string) => string,
     routes?: Ref<any[]> | any[]
   ) => {
-    // Find Data parent menu
+    
     let dataParentId = menuItems.value.find((m) => m.id === "data")?.id;
     if (!dataParentId) {
       const foundId = findParentMenuIdByPath("/data");
@@ -194,7 +194,6 @@ export function useMenuRegistry() {
       return;
     }
 
-    // Clear existing data menu items
     const tableMenuItems = menuItems.value.filter(
       (item) => item.id.startsWith("data-")
     );
