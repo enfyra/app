@@ -1,6 +1,6 @@
 {
   "name": "enfyra-app",
-  "version": "1.1.4",
+  "version": "1.1.6",
   "description": "Dynamic admin interface for Enfyra backend - auto-generates management UI from database schemas",
   "license": "MIT",
   "author": "dothinh115 <dothinh115@gmail.com>",
