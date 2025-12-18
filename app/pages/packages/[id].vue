@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <!-- Usage Instructions (Backend only) -->
+      
       <UAlert
         v-if="packageData?.type === 'Backend'"
         icon="lucide:code-2"
@@ -32,7 +32,6 @@
         </template>
       </UAlert>
 
-      <!-- Form -->
       <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
         <UForm :state="form" @submit="handleUpdate">
           <FormEditorLazy
@@ -71,7 +70,6 @@ const formEditorRef = ref();
 const { validate, useFormChanges } = useSchema(tableName);
 const formChanges = useFormChanges();
 
-// Fetch package data
 const {
   data: apiData,
   pending: loading,
@@ -88,7 +86,6 @@ const {
 
 const packageData = computed(() => apiData.value?.data?.[0]);
 
-// Update API
 const {
   execute: updatePackage,
   pending: updating,
@@ -250,7 +247,6 @@ async function handleUninstall() {
     color: "success",
   });
 
-  // Navigate back to the appropriate package list
   const packageType = packageData.value?.type;
   await navigateTo(`/packages/${packageType.toLowerCase()}`, {
     replace: true,

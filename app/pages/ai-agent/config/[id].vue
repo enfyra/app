@@ -192,7 +192,6 @@ async function updateConfig() {
     return;
   }
 
-  // Refetch latest config data to ensure UI reflects server state
   await executeGetConfig();
   const data = configData.value?.data?.[0];
   if (data) {
@@ -208,7 +207,6 @@ async function updateConfig() {
     description: "AI configuration updated!",
   });
 
-  // Reload AI configs in global state
   await fetchAiConfig();
 
   errors.value = {};
@@ -233,7 +231,6 @@ async function deleteConfig() {
     color: "success"
   });
 
-  // Reload AI configs in global state
   await fetchAiConfig();
 
   await navigateTo("/ai-agent/config");

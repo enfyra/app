@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { ref, computed } from 'vue'
 
-// Mock TanStack Table
 const mockUseVueTable = vi.fn()
 const mockGetCoreRowModel = vi.fn()
 const mockGetSortedRowModel = vi.fn()
@@ -17,7 +16,6 @@ vi.mock('@tanstack/vue-table', () => ({
   getFilteredRowModel: mockGetFilteredRowModel
 }))
 
-// Create a simplified mock DataTable component for testing
 const MockDataTable = {
   name: 'DataTable',
   props: {
@@ -33,16 +31,12 @@ const MockDataTable = {
       <div v-if="loading" data-testid="loading-state" class="loading-overlay">
         Loading...
       </div>
-      
-      <!-- Header -->
       <div class="table-header" data-testid="table-header">
         <div v-if="selectable" class="bulk-actions" data-testid="bulk-actions">
           <span>{{ selectedCount }} selected</span>
           <button @click="handleBulkDelete" data-testid="bulk-delete-btn">Delete</button>
         </div>
       </div>
-
-      <!-- Table -->
       <table data-testid="data-table" class="table">
         <thead>
           <tr>
@@ -100,8 +94,6 @@ const MockDataTable = {
           </tr>
         </tbody>
       </table>
-
-      <!-- Pagination -->
       <div class="table-footer" data-testid="table-footer">
         <div class="pagination" data-testid="pagination">
           <button 
@@ -152,7 +144,6 @@ const MockDataTable = {
       const end = start + props.pageSize
       let sortedData = [...props.data]
 
-      // Apply sorting
       if (sortColumn.value) {
         sortedData.sort((a, b) => {
           const aVal = getCellValue(a, sortColumn.value)
@@ -418,10 +409,8 @@ describe('DataTable', () => {
         }
       })
 
-      // Select first row
       await wrapper.find('[data-testid="select-row-0"]').trigger('change')
       
-      // Click bulk delete
       await wrapper.find('[data-testid="bulk-delete-btn"]').trigger('click')
 
       expect(wrapper.emitted('bulk-delete')).toBeTruthy()
@@ -552,11 +541,9 @@ describe('DataTable', () => {
         }
       })
 
-      // Go to page 2 first
       await wrapper.find('[data-testid="next-page"]').trigger('click')
       expect(wrapper.find('[data-testid="page-info"]').text()).toBe('Page 2 of 3')
 
-      // Then go back to page 1
       await wrapper.find('[data-testid="prev-page"]').trigger('click')
       expect(wrapper.find('[data-testid="page-info"]').text()).toBe('Page 1 of 3')
     })
@@ -582,7 +569,6 @@ describe('DataTable', () => {
         }
       })
 
-      // Navigate to last page
       await wrapper.find('[data-testid="next-page"]').trigger('click')
       await wrapper.find('[data-testid="next-page"]').trigger('click')
 
@@ -599,7 +585,6 @@ describe('DataTable', () => {
         }
       })
 
-      // With 3 items and default pageSize 10, should show all on page 1
       expect(wrapper.find('[data-testid="page-info"]').text()).toBe('Page 1 of 1')
     })
 
@@ -612,7 +597,6 @@ describe('DataTable', () => {
         }
       })
 
-      // With 3 items and pageSize 2, should have 2 pages
       expect(wrapper.find('[data-testid="page-info"]').text()).toBe('Page 1 of 2')
     })
   })

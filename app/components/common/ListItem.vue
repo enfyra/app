@@ -8,7 +8,7 @@
     @click="handleClick"
   >
     <div class="flex items-start gap-2 md:gap-4">
-      <!-- Icon/Avatar -->
+      
       <div v-if="icon || avatar" class="flex-shrink-0">
         <div
           v-if="avatar"
@@ -31,7 +31,6 @@
         />
       </div>
 
-      <!-- Content -->
       <div class="flex-1 min-w-0">
         <slot name="content">
           <div v-if="title || $slots.title" class="flex items-center gap-2 mb-1.5 md:mb-2">
@@ -51,13 +50,11 @@
         </slot>
       </div>
 
-      <!-- Actions -->
       <div v-if="$slots.actions" class="flex items-center gap-2 flex-shrink-0">
         <slot name="actions" />
       </div>
     </div>
 
-    <!-- Footer -->
     <div v-if="$slots.footer" class="flex items-center justify-between gap-2 pt-2 mt-2 border-t border-gray-200 dark:border-gray-800">
       <slot name="footer" />
     </div>

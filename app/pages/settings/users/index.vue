@@ -96,7 +96,6 @@
         Showing <span class="text-gray-700 dark:text-gray-200">{{ (page - 1) * limit + 1 }}-{{ Math.min(page * limit, total) }}</span> of <span class="text-gray-700 dark:text-gray-200">{{ total }}</span> results
       </p>
     </div>
-  
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
@@ -131,7 +130,6 @@ registerPageHeader({
   gradient: "blue",
 });
 
-// Fixed color for user management
 const pageIconColor = 'warning';
 
 const {
@@ -216,15 +214,14 @@ useHeaderActionRegistry([
   },
 ]);
 
-// Handle filter apply from FilterDrawer
 async function handleFilterApply(filter: FilterGroup) {
   currentFilter.value = filter;
   
   if (page.value === 1) {
-    // Already on page 1 → fetch directly
+    
     await fetchUsers();
   } else {
-    // On other page → go to page 1, watch will trigger
+    
     const newQuery = { ...route.query };
     delete newQuery.page;
     
@@ -237,7 +234,6 @@ async function handleFilterApply(filter: FilterGroup) {
 function getHeaderActions(user: any) {
   const actions = [];
 
-  // Avatar only
   if (user.avatar) {
     actions.push({
       component: "UAvatar",
@@ -262,7 +258,7 @@ function getHeaderActions(user: any) {
 }
 
 async function deleteUser(user: any) {
-  // Protect rootAdmin from deletion
+  
   if (user.isRootAdmin) {
     toast.add({
       title: "Error",

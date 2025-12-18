@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <!-- Schema Structure -->
+    
     <div
       class="bg-gradient-to-r from-gray-100/80 to-gray-200/40 dark:from-gray-900/50 dark:to-gray-800/10 rounded-xl border border-gray-300/50 dark:border-gray-700/30 p-4"
     >
@@ -20,7 +20,6 @@
       </ClientOnly>
     </div>
 
-    <!-- Example POST Request -->
     <div
       class="bg-gradient-to-r from-green-500/10 to-green-400/5 rounded-xl border border-green-300/50 dark:border-green-800/30 p-4"
     >
@@ -42,7 +41,6 @@
       </ClientOnly>
     </div>
 
-    <!-- Example PATCH Request -->
     <div
       class="bg-gradient-to-r from-yellow-500/10 to-yellow-400/5 rounded-xl border border-yellow-300/50 dark:border-yellow-800/30 p-4"
     >
@@ -67,7 +65,6 @@
       </ClientOnly>
     </div>
 
-    <!-- Field Validation Rules -->
     <div
       v-if="validationRules.length > 0"
       class="bg-gradient-to-r from-secondary-500/10 to-secondary-400/5 rounded-xl border border-secondary-300/50 dark:border-secondary-800/30 p-4"
@@ -92,7 +89,6 @@
       </ClientOnly>
     </div>
 
-    <!-- Relations -->
     <div
       v-if="relations.length > 0"
       class="bg-gradient-to-r from-purple-500/10 to-purple-400/5 rounded-xl border border-purple-300/50 dark:border-purple-800/30 p-4"
@@ -113,7 +109,6 @@
       </ClientOnly>
     </div>
 
-    <!-- Loading State -->
     <div v-if="!schemaData" class="flex items-center justify-center h-64">
       <div class="text-center">
         <UIcon
@@ -137,10 +132,8 @@ interface Props {
 const props = defineProps<Props>();
 const colorMode = useColorMode();
 
-// Get global schemas for finding target tables by ID
 const { schemas: allSchemas } = useSchema();
 
-// Get schema data with error handling
 const schemaComposable = computed(() => {
   try {
     const schema = useSchema(props.tableName);
@@ -150,30 +143,26 @@ const schemaComposable = computed(() => {
   }
 });
 
-// Get schema data
 const schemaData = computed(() => {
   if (!schemaComposable.value) {
     return null;
   }
 
   try {
-    // definition is already a computed ref, so we use .value
+    
     const definitions = unref(schemaComposable.value.definition);
 
-    // Keep all definitions for Schema Structure, but will filter in other sections
     return definitions;
   } catch (error) {
     return null;
   }
 });
 
-// Schema structure for documentation
 const schemaStructure = computed(() => {
   if (!schemaData.value || !Array.isArray(schemaData.value)) return {};
 
   const structure: Record<string, any> = {};
 
-  // Sort fields: regular columns first, then relations, then system fields last
   const sortedFields = [...schemaData.value].sort((a: any, b: any) => {
     const aName = a.name || a.propertyName;
     const bName = b.name || b.propertyName;
@@ -183,8 +172,7 @@ const schemaStructure = computed(() => {
     const bIsSystem = systemFields.includes(bName);
     const aIsRelation = a.fieldType === 'relation';
     const bIsRelation = b.fieldType === 'relation';
-    
-    // Assign priority: 1 = regular columns, 2 = relations, 3 = system fields
+
     const getPriority = (isSystem: boolean, isRelation: boolean) => {
       if (isSystem) return 3;
       if (isRelation) return 2;
@@ -200,14 +188,11 @@ const schemaStructure = computed(() => {
   sortedFields.forEach((field: any) => {
     const fieldName = field.name || field.propertyName;
     if (!fieldName) return;
-    
-    // Skip isSystem from all tables
+
     if (fieldName === 'isSystem') return;
-    
-    // Skip isRootAdmin only from user_definition table
+
     if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
 
-    // Get target table name for relations
     let targetTableName = null;
     if (field.targetTable) {
       if (typeof field.targetTable === 'string') {
@@ -215,7 +200,7 @@ const schemaStructure = computed(() => {
       } else if (field.targetTable.name) {
         targetTableName = field.targetTable.name;
       } else if (field.targetTable.id && schemaComposable.value) {
-        // Try to find table name by ID
+        
         const targetSchema = Object.values(allSchemas.value).find((schema: any) => schema.id === field.targetTable.id);
         if (targetSchema && (targetSchema as any).name) {
           targetTableName = (targetSchema as any).name;
@@ -241,7 +226,6 @@ const schemaStructure = computed(() => {
   return structure;
 });
 
-// Example payload for POST request
 const examplePayload = computed(() => {
   if (!schemaData.value || !Array.isArray(schemaData.value)) {
     return {};
@@ -253,21 +237,16 @@ const examplePayload = computed(() => {
     const fieldName = field.name || field.propertyName;
     if (!fieldName) return;
 
-    // Skip auto-generated fields for POST example  
     if (field.isGenerated) return;
-    
-    // Skip system fields
+
     if (["createdAt", "updatedAt", "id"].includes(fieldName)) return;
-    
-    // Skip isSystem from all tables
+
     if (fieldName === 'isSystem') return;
-    
-    // Skip isRootAdmin only from user_definition table
+
     if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
 
-    // Handle relations differently
     if (field.fieldType === "relation") {
-      // Get target table name for relation example
+      
       let targetTableName = "unknown";
       if (field.targetTable) {
         if (typeof field.targetTable === 'string') {
@@ -281,8 +260,7 @@ const examplePayload = computed(() => {
           }
         }
       }
-      
-      // Check relation type to determine format
+
       const relationType = field.type || field.relationType;
       if (relationType === 'one-to-many' || relationType === 'many-to-many') {
         example[fieldName] = [{ id: `${targetTableName}-id` }];
@@ -334,7 +312,6 @@ const examplePayload = computed(() => {
   return example;
 });
 
-// Example patch payload - show partial update with 1-2 fields
 const examplePatchPayload = computed(() => {
   if (!schemaData.value || !Array.isArray(schemaData.value)) {
     return {};
@@ -342,7 +319,7 @@ const examplePatchPayload = computed(() => {
 
   const example: Record<string, any> = {};
   let fieldsAdded = 0;
-  const maxFields = 2; // Show only 1-2 fields for PATCH example
+  const maxFields = 2; 
 
   schemaData.value.forEach((field: any) => {
     if (fieldsAdded >= maxFields) return;
@@ -350,13 +327,11 @@ const examplePatchPayload = computed(() => {
     const fieldName = field.name || field.propertyName;
     if (!fieldName) return;
 
-    // Skip auto-generated fields, system fields 
     if (field.isGenerated) return;
     if (["createdAt", "updatedAt", "id"].includes(fieldName)) return;
     if (fieldName === 'isSystem') return;
     if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
 
-    // Handle relations
     if (field.fieldType === "relation") {
       let targetTableName = "unknown";
       if (field.targetTable) {
@@ -371,8 +346,7 @@ const examplePatchPayload = computed(() => {
           }
         }
       }
-      
-      // Check relation type to determine format
+
       const relationType = field.type || field.relationType;
       if (relationType === 'one-to-many' || relationType === 'many-to-many') {
         example[fieldName] = [{ id: `${targetTableName}-id` }];
@@ -383,7 +357,6 @@ const examplePatchPayload = computed(() => {
       return;
     }
 
-    // Add one example field for PATCH
     switch (field.type?.toLowerCase()) {
       case "varchar":
       case "text":
@@ -399,7 +372,7 @@ const examplePatchPayload = computed(() => {
         fieldsAdded++;
         break;
       default:
-        if (fieldsAdded === 0) { // Ensure at least one field
+        if (fieldsAdded === 0) { 
           example[fieldName] = `updated_${field.type}_value`;
           fieldsAdded++;
         }
@@ -409,7 +382,6 @@ const examplePatchPayload = computed(() => {
   return example;
 });
 
-// Validation rules
 const validationRules = computed(() => {
   if (!schemaData.value || !Array.isArray(schemaData.value)) {
     return [];
@@ -421,13 +393,10 @@ const validationRules = computed(() => {
     const fieldName = field.name || field.propertyName;
     if (!fieldName) return;
 
-    // Skip system fields for validation rules
     if (["createdAt", "updatedAt", "id"].includes(fieldName)) return;
-    
-    // Skip isSystem from all tables
+
     if (fieldName === 'isSystem') return;
-    
-    // Skip isRootAdmin only from user_definition table
+
     if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
 
     const fieldRules: string[] = [];
@@ -463,14 +432,13 @@ const validationRules = computed(() => {
   return rules;
 });
 
-// Relations
 const relations = computed(() => {
   if (!schemaData.value || !Array.isArray(schemaData.value)) return [];
 
   return schemaData.value
     .filter((field: any) => field.fieldType === "relation")
     .map((field: any) => {
-      // Get target table name
+      
       let targetTableName = "unknown";
       if (field.targetTable) {
         if (typeof field.targetTable === 'string') {
@@ -478,7 +446,7 @@ const relations = computed(() => {
         } else if (field.targetTable.name) {
           targetTableName = field.targetTable.name;
         } else if (field.targetTable.id && schemaComposable.value) {
-          // Try to find table name by ID
+          
           const targetSchema = Object.values(allSchemas.value).find((schema: any) => schema.id === field.targetTable.id);
           if (targetSchema && (targetSchema as any).name) {
             targetTableName = (targetSchema as any).name;
@@ -488,7 +456,7 @@ const relations = computed(() => {
 
       return {
         name: field.name || field.propertyName,
-        type: field.type || field.relationType || "many-to-one", // default relation type
+        type: field.type || field.relationType || "many-to-one", 
         targetTable: targetTableName,
         nullable: field.isNullable || false,
       };

@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <!-- Packages List -->
+    
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -64,7 +64,6 @@
       />
     </Transition>
 
-    <!-- Pagination -->
     <div
       class="flex justify-center mt-4"
       v-if="!loading && packages.length > 0"

@@ -44,7 +44,7 @@ const strokeDashoffset = computed(() =>
 </script>
 
 <template>
-  <!-- Linear Progress -->
+  
   <div v-if="type === 'linear'" :class="['w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden', progressHeight]">
     <div 
       v-if="indeterminate"
@@ -58,10 +58,9 @@ const strokeDashoffset = computed(() =>
     ></div>
   </div>
 
-  <!-- Circular Progress -->
   <div v-else :class="['relative', circularSize]">
     <svg :class="circularSize" class="transform -rotate-90">
-      <!-- Background Circle -->
+      
       <circle
         cx="50%"
         cy="50%"
@@ -71,7 +70,7 @@ const strokeDashoffset = computed(() =>
         stroke-width="2"
         fill="none"
       />
-      <!-- Progress Circle -->
+      
       <circle
         cx="50%"
         cy="50%"
@@ -86,8 +85,7 @@ const strokeDashoffset = computed(() =>
         stroke-linecap="round"
       />
     </svg>
-    
-    <!-- Percentage Text -->
+
     <div v-if="!indeterminate" class="absolute inset-0 flex items-center justify-center">
       <span :class="[
         'font-medium',

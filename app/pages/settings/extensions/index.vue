@@ -67,7 +67,6 @@
       />
     </Transition>
 
-    <!-- Premium Pagination -->
     <div
       v-if="!loading && extensions.length > 0 && total > limit"
       class="flex items-center justify-between mt-6"
@@ -116,7 +115,6 @@ registerPageHeader({
   gradient: "purple",
 });
 
-// Fixed color for system extensions
 const pageIconColor = 'primary';
 
 const {

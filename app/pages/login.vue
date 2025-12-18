@@ -3,7 +3,7 @@
     class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-900 px-4"
   >
     <UCard class="w-full max-w-md lg:p-6 p-2 sm:p-8">
-      <!-- Branding -->
+      
       <template #header>
         <div class="text-center space-y-2">
           <div class="flex justify-center items-center gap-3">
@@ -16,10 +16,9 @@
         </div>
       </template>
 
-      <!-- Form -->
       <UForm :state="form" @submit="handleLogin" aria-label="Login form">
         <div class="flex flex-col gap-y-5">
-          <!-- Email -->
+          
           <div>
             <UFormField
               :error="error.email ?? undefined"
@@ -42,7 +41,6 @@
             </UFormField>
           </div>
 
-          <!-- Password -->
           <div>
             <UFormField
               :error="error.password ?? undefined"
@@ -62,12 +60,10 @@
             /></UFormField>
           </div>
 
-          <!-- Checkbox -->
           <div class="flex justify-end">
             <USwitch v-model="form.remember" label="Remember me" />
           </div>
 
-          <!-- Submit -->
           <UButton
             type="submit"
             size="sm"

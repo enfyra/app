@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue'
 import type { MenuItem, MiniSidebar } from '~/utils/types/menu'
 
-// Mock Vue composables for testing
 export const createMockState = <T>(initialValue: T) => {
   const state = ref(initialValue)
   return {
@@ -14,12 +13,10 @@ export const createMockState = <T>(initialValue: T) => {
   }
 }
 
-// Mock useState function
 export const mockUseState = <T>(key: string, initialValue: () => T) => {
   return createMockState(initialValue())
 }
 
-// Mock API responses
 export const createMockApiResponse = <T>(data: T, delay = 0) => {
   return new Promise(resolve => {
     setTimeout(() => {
@@ -28,7 +25,6 @@ export const createMockApiResponse = <T>(data: T, delay = 0) => {
   })
 }
 
-// Helper to create test menu items
 export const createTestMenuItem = (overrides: Partial<MenuItem> = {}): MenuItem => ({
   id: '1',
   label: 'Test Menu',
@@ -52,7 +48,6 @@ export const createTestMenuItem = (overrides: Partial<MenuItem> = {}): MenuItem 
   ...overrides
 })
 
-// Helper to create test mini sidebar
 export const createTestMiniSidebar = (overrides: Partial<MiniSidebar> = {}): MiniSidebar => ({
   id: '1',
   label: 'Test Sidebar',
@@ -63,7 +58,6 @@ export const createTestMiniSidebar = (overrides: Partial<MiniSidebar> = {}): Min
   ...overrides
 })
 
-// Mock permission conditions
 export const mockPermissions = {
   public: null,
   authenticated: {
@@ -78,20 +72,16 @@ export const mockPermissions = {
   }
 }
 
-// Helper to wait for next tick in tests
 export const nextTick = () => new Promise(resolve => setTimeout(resolve, 0))
 
-// Mock toast notifications
 export const mockToast = {
   add: () => {},
   remove: () => {},
   clear: () => {}
 }
 
-// Mock navigation
 export const mockNavigateTo = () => {}
 
-// Mock route object
 export const mockRoute = {
   path: '/test',
   params: {},

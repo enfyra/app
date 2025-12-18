@@ -13,7 +13,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Image files
   if (mimetype.startsWith("image/")) {
     return {
       icon: "lucide:image",
@@ -22,7 +21,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Video files
   if (mimetype.startsWith("video/")) {
     return {
       icon: "lucide:video",
@@ -31,7 +29,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Audio files
   if (mimetype.startsWith("audio/")) {
     return {
       icon: "lucide:music",
@@ -40,7 +37,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // PDF files
   if (mimetype.includes("pdf")) {
     return {
       icon: "lucide:file-text",
@@ -49,7 +45,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Document files
   if (mimetype.includes("word") || mimetype.includes("document")) {
     return {
       icon: "lucide:file-text",
@@ -58,7 +53,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Spreadsheet files
   if (mimetype.includes("excel") || mimetype.includes("spreadsheet")) {
     return {
       icon: "lucide:table",
@@ -67,7 +61,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Presentation files
   if (mimetype.includes("powerpoint") || mimetype.includes("presentation")) {
     return {
       icon: "lucide:presentation",
@@ -76,7 +69,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Archive files
   if (mimetype.includes("zip") || mimetype.includes("rar") || mimetype.includes("7z")) {
     return {
       icon: "lucide:archive",
@@ -85,7 +77,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Text files
   if (mimetype.includes("text/")) {
     return {
       icon: "lucide:file-text",
@@ -94,7 +85,6 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     };
   }
 
-  // Code files
   if (mimetype.includes("code") || mimetype.includes("script")) {
     return {
       icon: "lucide:code",

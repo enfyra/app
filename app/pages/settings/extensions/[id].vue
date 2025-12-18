@@ -28,7 +28,6 @@
     size="sm"
   />
 
-  <!-- Upload Modal -->
   <CommonUploadModalLazy
     v-model="showUploadModal"
     title="Upload Extension"
@@ -51,7 +50,6 @@
     "
   />
 
-  <!-- Preview Modal -->
   <ExtensionPreviewModal
     v-model="showPreviewModal"
     :code="form?.code || ''"
@@ -251,7 +249,7 @@ async function updateExtension() {
     description: "Extension updated!",
   });
   errors.value = {};
-  // Confirm form changes as new baseline
+  
   formEditorRef.value?.confirmChanges();
   formChanges.update(form.value);
 }

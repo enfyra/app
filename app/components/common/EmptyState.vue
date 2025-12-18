@@ -15,7 +15,6 @@ const defaultTitle = "No data available";
 const defaultIcon = "lucide:database";
 const defaultSize = "md";
 
-// Hardcode các class để Tailwind có thể generate buildtime
 const iconSize = computed(() => {
   switch (props.size || defaultSize) {
     case "sm":

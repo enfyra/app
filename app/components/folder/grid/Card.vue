@@ -114,7 +114,6 @@ const editingName = ref("");
 const originalName = ref("");
 const editingLoading = ref(false);
 
-
 const { checkPermissionCondition } = usePermissions();
 
 const canDeleteFolder = checkPermissionCondition({

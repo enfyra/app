@@ -21,29 +21,26 @@
           leave-to-class="opacity-0 scale-95"
         >
           <div v-if="show" class="relative">
-            <!-- Glow effect -->
-            <div class="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 rounded-2xl blur-xl animate-pulse"></div>
             
-            <!-- Main container -->
+            <div class="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 rounded-2xl blur-xl animate-pulse"></div>
+
             <div class="relative bg-background/95 backdrop-blur border border-border/50 rounded-2xl p-8 shadow-2xl min-w-[320px]">
               <div class="flex flex-col items-center gap-5">
-                <!-- Modern spinner -->
+                
                 <div class="relative w-16 h-16">
-                  <!-- Outer ring -->
+                  
                   <div class="absolute inset-0 border-4 border-primary/20 rounded-full"></div>
-                  <!-- Spinning ring -->
+                  
                   <div class="absolute inset-0 border-4 border-transparent border-t-primary rounded-full animate-spin"></div>
-                  <!-- Inner dot -->
+                  
                   <div class="absolute inset-[18px] bg-primary rounded-full animate-pulse"></div>
                 </div>
-                
-                <!-- Text content -->
+
                 <div class="text-center space-y-2">
                   <h3 class="text-lg font-semibold text-foreground">{{ title }}</h3>
                   <p class="text-sm text-muted-foreground max-w-[250px]">{{ description }}</p>
                 </div>
-                
-                <!-- Loading dots -->
+
                 <div class="flex gap-1.5">
                   <div class="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                   <div class="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>

@@ -5,7 +5,7 @@
     :class="className"
     v-bind="$attrs"
   >
-    <!-- Header -->
+    
     <div class="flex items-start gap-4 mb-4">
       <div
         v-if="$slots.icon"
@@ -24,7 +24,6 @@
       </div>
     </div>
 
-    <!-- Stats -->
     <div v-if="stats && stats.length > 0" class="grid grid-cols-2 gap-3 mb-4">
       <div
         v-for="(stat, index) in stats"
@@ -40,12 +39,10 @@
       </div>
     </div>
 
-    <!-- Content -->
     <div v-if="$slots.default" class="mb-4">
       <slot />
     </div>
 
-    <!-- Footer -->
     <div
       v-if="$slots.footer"
       class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800"
@@ -56,16 +53,6 @@
 </template>
 
 <script setup lang="ts">
-/**
- * SETTINGS CARD - Card with icon, title, description, and actions
- *
- * Features:
- * - Gradient icon container (blue-to-purple)
- * - Optional stats grid
- * - Optional footer with actions
- * - Hover gradient overlay
- * - Animated entrance
- */
 
 interface Stat {
   label: string;

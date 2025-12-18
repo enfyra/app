@@ -1,9 +1,6 @@
 export const useFileUrl = () => {
   const { getFileTimestamp } = useGlobalState();
-  
-  /**
-   * Generate file URL with cache busting
-   */
+
   function getFileUrl(fileId: string, options?: {
     format?: string;
     width?: number;
@@ -43,17 +40,11 @@ export const useFileUrl = () => {
 
     return url;
   }
-  
-  /**
-   * Generate preview URL (alias for getFileUrl)
-   */
+
   function getPreviewUrl(fileId: string): string {
     return getFileUrl(fileId, { format: 'webp', quality: 70 });
   }
 
-  /**
-   * Generate thumbnail URL
-   */
   function getThumbnailUrl(fileId: string): string {
     return getFileUrl(fileId, {
       format: 'webp',

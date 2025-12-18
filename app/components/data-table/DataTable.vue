@@ -17,13 +17,12 @@ const emit = defineEmits<{
 
 const { getId } = useDatabase();
 
-// Lazy load @tanstack/vue-table
 const vueTableModule = ref<any>(null)
 const loadingTable = ref(true)
 
 onMounted(async () => {
   try {
-    // Dynamic import - will be code split
+    
     vueTableModule.value = await import('@tanstack/vue-table')
     loadingTable.value = false
   } catch (error) {
@@ -32,7 +31,6 @@ onMounted(async () => {
   }
 })
 
-// Type aliases for better readability
 type ColumnDef = any
 type SortingState = any[]
 type VisibilityState = Record<string, boolean>
@@ -45,8 +43,6 @@ const sorting = ref<SortingState>([]);
 const columnVisibility = ref<VisibilityState>({});
 const rowSelection = ref({});
 
-
-// Enhanced columns with checkbox if selectable
 const enhancedColumns = computed(() => {
   if (!props.selectable || !vueTableModule.value) return props.columns;
 
@@ -91,7 +87,6 @@ const enhancedColumns = computed(() => {
   return [selectColumn, ...props.columns];
 });
 
-// Create table instance (only when module is loaded)
 const table = computed(() => {
   if (!vueTableModule.value) return null
   
@@ -151,13 +146,11 @@ const selectedRows = computed(() => {
   return table.value.getSelectedRowModel().rows.map((row: any) => row.original);
 });
 
-// Sync external selectedItems with internal rowSelection
 watch(
   () => props.selectedItems,
   (newSelectedItems) => {
     if (!newSelectedItems) return;
-    
-    // Build row selection map based on current data indices
+
     const newRowSelection: Record<string, boolean> = {};
     newSelectedItems.forEach(id => {
       const rowIndex = props.data.findIndex(row => row.id === id);
@@ -165,8 +158,7 @@ watch(
         newRowSelection[rowIndex] = true;
       }
     });
-    
-    // Only update if different to avoid unnecessary re-renders
+
     const currentKeys = Object.keys(rowSelection.value);
     const newKeys = Object.keys(newRowSelection);
     
@@ -178,7 +170,6 @@ watch(
   { immediate: true }
 );
 
-// Emit selection changes to parent (with debounce to prevent rapid firing)
 let emitTimeout: NodeJS.Timeout;
 watch(
   selectedRows,
@@ -191,7 +182,6 @@ watch(
   { deep: true }
 );
 
-// Helper functions for card view
 function getPrimaryFieldValue(row: any) {
   if (!table.value) return 'N/A'
   const cells = row.getVisibleCells()
@@ -303,7 +293,7 @@ function getColumnLabel(columnId: string) {
 
 <template>
   <div class="w-full space-y-4">
-    <!-- Loading state -->
+    
     <div v-if="loadingTable" class="flex items-center justify-center py-8">
       <CommonLoadingState
         title="Loading table..."
@@ -312,9 +302,8 @@ function getColumnLabel(columnId: string) {
       />
     </div>
 
-    <!-- Table content (only render when loaded) -->
     <template v-else-if="table">
-      <!-- Mobile & Tablet Card View -->
+      
       <div class="lg:hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div
@@ -386,7 +375,6 @@ function getColumnLabel(columnId: string) {
       </div>
     </div>
 
-    <!-- Desktop Table View -->
     <div
       class="hidden lg:block overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03]"
     >
@@ -455,7 +443,7 @@ function getColumnLabel(columnId: string) {
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             <template v-for="(row, index) in table?.getRowModel().rows || []" :key="row.id">
-              <!-- With Context Menu -->
+              
               <UContextMenu
                 v-if="props.contextMenuItems"
                 :items="props.contextMenuItems(row.original)"
@@ -501,7 +489,6 @@ function getColumnLabel(columnId: string) {
                 </tr>
               </UContextMenu>
 
-              <!-- Without Context Menu -->
               <tr
                 v-else
                 :class="[

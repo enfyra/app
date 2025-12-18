@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 
-// Test utility functions for schema operations
 describe('Schema Utilities', () => {
   describe('field type validation', () => {
     it('should validate string field types', () => {
@@ -86,7 +85,6 @@ describe('Schema Utilities', () => {
     it('should detect invalid schema structure', () => {
       const invalidSchema = {
         users: {
-          // Missing definition
         }
       }
 
@@ -103,7 +101,6 @@ describe('Schema Utilities', () => {
   })
 })
 
-// Mock utility functions
 function isStringType(type: string): boolean {
   return ['string', 'text', 'varchar', 'char'].includes(type.toLowerCase())
 }

@@ -10,13 +10,13 @@ export interface FilterGroup {
   id: string;
   operator: "and" | "or";
   conditions: (FilterCondition | FilterGroup)[];
-  relationContext?: string; // e.g. 'author' - indicates filtering within this relation
+  relationContext?: string; 
 }
 
 export interface FieldOption {
   label: string;
   value: string;
-  fieldCategory: "column" | "relation"; // Renamed from 'type' to avoid conflict with SelectItem
+  fieldCategory: "column" | "relation"; 
   fieldType?: string;
   targetTable?: string;
 }

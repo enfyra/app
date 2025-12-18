@@ -10,7 +10,7 @@
           :key="i"
           class="bg-[var(--bg-surface)] border border-white/[0.06] rounded-lg p-4"
         >
-          <!-- Desktop Skeleton -->
+          
           <div class="hidden md:flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-2">
@@ -26,7 +26,7 @@
               <USkeleton class="w-20 h-8 rounded" />
             </div>
           </div>
-          <!-- Mobile Skeleton -->
+          
           <div class="md:hidden space-y-3">
             <div class="flex items-start gap-3">
               <USkeleton class="w-6 h-6 rounded flex-shrink-0" />
@@ -114,7 +114,6 @@
       />
     </Transition>
 
-    <!-- Premium Pagination -->
     <div
       v-if="!loading && storageConfigs.length > 0 && total > limit"
       class="flex items-center justify-between mt-6"
@@ -281,7 +280,6 @@ const toggleConfigStatus = async (config: any) => {
     return;
   }
 
-  // Reload global storage configs
   await fetchGlobalStorageConfigs();
 
   toast.add({
@@ -318,7 +316,6 @@ const deleteConfig = async (config: any) => {
 
     await fetchStorageConfigs();
 
-    // Reload global storage configs
     await fetchGlobalStorageConfigs();
 
     toast.add({

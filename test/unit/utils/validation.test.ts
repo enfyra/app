@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 
-// Test validation utilities
 describe('Validation Utilities', () => {
   describe('email validation', () => {
     it('should validate correct email addresses', () => {
@@ -146,7 +145,6 @@ describe('Validation Utilities', () => {
   })
 })
 
-// Mock validation functions
 function isValidEmail(email: string): boolean {
   if (!email || typeof email !== 'string') return false
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -156,7 +154,6 @@ function isValidEmail(email: string): boolean {
 function isValidPassword(password: string): boolean {
   if (!password || typeof password !== 'string') return false
   
-  // At least 8 characters, contains uppercase, lowercase, number, and special character
   const hasLowerCase = /[a-z]/.test(password)
   const hasUpperCase = /[A-Z]/.test(password)
   const hasNumbers = /\d/.test(password)

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Single Date Picker Button -->
+    
     <UButton
       v-if="mode === 'single'"
       @click="() => openModal()"
@@ -11,7 +11,6 @@
       class="min-w-32 min-h-8"
     />
 
-    <!-- Date Range Buttons -->
     <div v-else-if="mode === 'range'" class="flex items-center gap-1">
       <UButton
         @click="() => openModal('from')"
@@ -32,7 +31,6 @@
       />
     </div>
 
-    <!-- Date Picker Modal -->
     <UModal v-model:open="showModal">
       <template #header>
         <div class="flex justify-between items-center w-full">
@@ -104,7 +102,7 @@ function applyValue() {
     if (!date) return '';
     const d = date instanceof Date ? date : new Date(date);
     if (isNaN(d.getTime())) return '';
-    return d.toISOString().split('T')[0]; // Get only date part (YYYY-MM-DD)
+    return d.toISOString().split('T')[0]; 
   };
 
   if (props.mode === 'single') {

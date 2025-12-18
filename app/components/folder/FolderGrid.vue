@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-4">
-    <!-- Grid View -->
+    
     <div
       class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
     >
-      <!-- Folder Items Container -->
+      
       <div v-if="transformedFolders.length > 0" class="contents">
         <FolderGridCard
           v-for="folder in transformedFolders"
@@ -21,7 +21,6 @@
         />
       </div>
 
-      <!-- Empty State -->
       <div v-else class="col-span-full text-center py-12">
         <UIcon
           :name="getDefaultFolderIcon()"
@@ -61,7 +60,6 @@ const props = withDefaults(defineProps<Props>(), {
   selectedItems: () => [],
 });
 
-// Transform folders data for display
 const transformedFolders = computed(() => {
   return props.folders.map((folder: any) => {
     const fileCount = folder.children?.length || folder.files?.length || 0;
@@ -79,7 +77,6 @@ const transformedFolders = computed(() => {
   });
 });
 
-// Access global move state to disable folders under move
 const { moveState } = useFileManagerMove();
 
 function isFolderDisabled(folderId: string) {

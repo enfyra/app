@@ -34,10 +34,8 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', checkScreenSize);
 });
 
-// Simple local state for checkbox values
 const localCheckedState = ref<Record<string, boolean>>({});
 
-// Initialize local state when modal opens
 const initializeState = () => {
   const state: Record<string, boolean> = {};
   props.items.forEach(item => {
@@ -46,19 +44,16 @@ const initializeState = () => {
   localCheckedState.value = state;
 };
 
-// Watch modal open to initialize state
 watch(isOpen, (newValue) => {
   if (newValue) {
     initializeState();
   }
 });
 
-// Handle checkbox change - just update local state
 const handleCheckboxChange = (label: string, checked: boolean) => {
   localCheckedState.value[label] = checked;
 };
 
-// Apply changes - call onToggle for items that changed
 const applyChanges = () => {
   props.items.forEach(item => {
     const newState = localCheckedState.value[item.label];
@@ -71,7 +66,6 @@ const applyChanges = () => {
   isOpen.value = false;
 };
 
-// Cancel changes - just close modal
 const cancelChanges = () => {
   isOpen.value = false;
 };

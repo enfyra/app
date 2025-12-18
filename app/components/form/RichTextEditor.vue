@@ -12,7 +12,7 @@ const props = defineProps<{
   modelValue: string | null;
   disabled?: boolean;
   height?: number;
-  // Optional per-field rich text config (from column.metadata.richText)
+  
   editorConfig?: RichTextEditorConfig;
 }>();
 
@@ -219,35 +219,31 @@ onMounted(async () => {
 
     const initTinyMCE = () => {
       const isDark = colorMode.value === 'dark';
-      
-      // Remove existing TinyMCE instance if it exists
+
       if (editorRef.value) {
         try {
           editorRef.value.destroy();
         } catch (e) {
-          // Ignore if already destroyed
+          
         }
         editorRef.value = null;
       }
-      
-      // Remove any existing TinyMCE instance for this selector using tinymce.remove()
+
       try {
         window.tinymce.remove(`#${textareaId}`);
       } catch (e) {
-        // Ignore if doesn't exist
+        
       }
-      
-      // Also try to remove by ID directly
+
       try {
         const existingEditor = window.tinymce.get(textareaId);
         if (existingEditor) {
           existingEditor.remove();
         }
       } catch (e) {
-        // Ignore if doesn't exist
+        
       }
-      
-      // Ensure textarea element exists and has a parentNode
+
       let textareaElement = document.getElementById(textareaId);
       if (!textareaElement && containerRef.value) {
         textareaElement = document.createElement('textarea');
@@ -259,8 +255,7 @@ onMounted(async () => {
         console.error('Textarea element not found for TinyMCE initialization');
         return;
       }
-      
-      // Ensure textarea has a parentNode (is in the DOM)
+
       if (!textareaElement.parentNode) {
         console.error('Textarea element has no parentNode');
         if (containerRef.value) {
@@ -463,7 +458,7 @@ onMounted(async () => {
                 }
               }
             } catch (error) {
-              // Editor may have been destroyed, ignore
+              
             }
           };
           
@@ -490,7 +485,7 @@ onMounted(async () => {
                 mutationObserverRef.value = observer;
               }
             } catch (error) {
-              // Editor may have been destroyed, ignore
+              
             }
           });
         });
@@ -511,17 +506,15 @@ onMounted(async () => {
     };
     
     initTinyMCE();
-    
-    // Watch for theme changes and reinitialize editor
+
     watch(() => colorMode.value, async () => {
       if (editorRef.value) {
         const currentContent = editorRef.value.getContent();
         try {
-          // Save textarea element reference before destroying
+          
           const textareaElement = document.getElementById(textareaId);
           const textareaParent = textareaElement?.parentNode;
-          
-          // Cleanup observers and listeners before destroying
+
           if (mutationObserverRef.value) {
             mutationObserverRef.value.disconnect();
             mutationObserverRef.value = null;
@@ -537,46 +530,42 @@ onMounted(async () => {
                 }
               }
             } catch (e) {
-              // Ignore if already destroyed
+              
             }
             iframeLoadHandlerRef.value = null;
           }
-          
-          // Remove TinyMCE instance using tinymce.remove() first
+
           try {
             window.tinymce.remove(`#${textareaId}`);
           } catch (e) {
-            // Ignore if doesn't exist
+            
           }
-          
-          // Also try to remove by ID directly
+
           try {
             const existingEditor = window.tinymce.get(textareaId);
             if (existingEditor) {
               existingEditor.remove();
             }
           } catch (e) {
-            // Ignore if doesn't exist
+            
           }
           
           try {
             editorRef.value.destroy();
           } catch (e) {
-            // Ignore if already destroyed
+            
           }
           editorRef.value = null;
-          
-          // Ensure textarea element still exists in DOM after destroy
+
           await nextTick();
           let textareaAfterDestroy = document.getElementById(textareaId);
           if (!textareaAfterDestroy && textareaParent && containerRef.value) {
-            // Recreate textarea if it was removed
+            
             const newTextarea = document.createElement('textarea');
             newTextarea.id = textareaId;
             containerRef.value.appendChild(newTextarea);
           }
-          
-          // Wait longer for DOM cleanup to complete
+
           await new Promise(resolve => setTimeout(resolve, 200));
           initTinyMCE();
           await nextTick();
@@ -624,13 +613,12 @@ watch(
 );
 
 onBeforeUnmount(() => {
-  // Cleanup MutationObserver
+  
   if (mutationObserverRef.value) {
     mutationObserverRef.value.disconnect();
     mutationObserverRef.value = null;
   }
-  
-  // Cleanup iframe event listener
+
   if (editorRef.value && iframeLoadHandlerRef.value) {
     try {
       const container = editorRef.value.getContentAreaContainer();
@@ -641,7 +629,7 @@ onBeforeUnmount(() => {
         }
       }
     } catch (e) {
-      // Ignore if already destroyed
+      
     }
     iframeLoadHandlerRef.value = null;
   }
@@ -667,7 +655,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="rich-text-editor">
-    <!-- Loading State -->
+    
     <div
       v-if="isLoading"
       class="flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700"
@@ -682,7 +670,6 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- Error State -->
     <div
       v-else-if="isError"
       class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
@@ -712,7 +699,6 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- TinyMCE Editor with Resize Handle -->
     <div
       v-else
       ref="containerRef"
@@ -726,8 +712,7 @@ onBeforeUnmount(() => {
       :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
     >
       <textarea :id="textareaId"></textarea>
-      
-      <!-- Preview Layer -->
+
       <Teleport to="body">
         <div
           v-if="isResizing && previewStyle"
@@ -765,7 +750,6 @@ onBeforeUnmount(() => {
 .tox .tox-tinymce--focus {
   outline: none !important;
 }
-
 
 .tox .tox-button {
   color: rgb(31, 41, 55) !important;

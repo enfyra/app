@@ -19,7 +19,7 @@ export class AcornLinter {
       setInterval: true,
       clearTimeout: true,
       clearInterval: true,
-      // Vue globals
+      
       ref: true,
       reactive: true,
       computed: true,
@@ -28,7 +28,7 @@ export class AcornLinter {
       onUnmounted: true,
       defineProps: true,
       defineEmits: true,
-      // Custom globals
+      
       ...globals
     };
   }
@@ -36,24 +36,22 @@ export class AcornLinter {
   verify(code: string, options: AcornLintOptions): Diagnostic[] {
     const diagnostics: Diagnostic[] = [];
 
-    // Skip validation for HTML and JSON
     if (options.language === 'html' || options.language === 'json') {
       return diagnostics;
     }
 
-    // For Vue files, extract script content
     let jsCode = code;
     let scriptOffset = 0;
 
     if (options.language === 'vue') {
       const result = this.extractVueScript(code);
-      if (!result) return diagnostics; // No script section
+      if (!result) return diagnostics; 
       jsCode = result.content;
       scriptOffset = result.offset;
     }
 
     try {
-      // Parse with Acorn
+      
       const ast = parse(jsCode, {
         ecmaVersion: 2022,
         sourceType: 'module',
@@ -61,11 +59,10 @@ export class AcornLinter {
         allowAwaitOutsideFunction: true
       });
 
-      // Custom validation rules
       this.validateAST(ast, jsCode, diagnostics, scriptOffset);
 
     } catch (error: any) {
-      // Syntax error
+      
       const pos = error.pos || 0;
       diagnostics.push({
         from: scriptOffset + pos,
@@ -94,9 +91,8 @@ export class AcornLinter {
   private validateAST(ast: any, code: string, diagnostics: Diagnostic[], offset: number = 0) {
     const declaredVars = new Set<string>();
     const usedVars = new Set<string>();
-    const constVars = new Map<string, any>(); // Store const variable nodes for position info
+    const constVars = new Map<string, any>(); 
 
-    // Walk the AST to collect variable declarations and usage
     walk(ast, {
       VariableDeclaration: (node: any) => {
         for (const declarator of node.declarations) {
@@ -119,12 +115,11 @@ export class AcornLinter {
 
       Identifier: (node: any, ancestors: any[]) => {
         const parent = ancestors[ancestors.length - 2];
-        
-        // Skip if this identifier is being declared
+
         if (parent?.type === 'VariableDeclarator' && parent.id === node) return;
         if (parent?.type === 'FunctionDeclaration' && parent.id === node) return;
         if (parent?.type === 'Property' && parent.key === node && !parent.computed) return;
-        if (parent?.type === 'AssignmentExpression' && parent.left === node) return; // Handle in AssignmentExpression
+        if (parent?.type === 'AssignmentExpression' && parent.left === node) return; 
         
         usedVars.add(node.name);
       },
@@ -132,8 +127,7 @@ export class AcornLinter {
       AssignmentExpression: (node: any) => {
         if (node.left.type === 'Identifier') {
           const varName = node.left.name;
-          
-          // Check const reassignment
+
           if (constVars.has(varName)) {
             const pos = this.getNodePosition(code, node.left);
             diagnostics.push({
@@ -147,7 +141,7 @@ export class AcornLinter {
       },
 
       UpdateExpression: (node: any) => {
-        // Handle ++var, --var, var++, var--
+        
         if (node.argument.type === 'Identifier') {
           const varName = node.argument.name;
           
@@ -164,10 +158,9 @@ export class AcornLinter {
       }
     });
 
-    // Check for undefined variables
     for (const varName of usedVars) {
       if (!declaredVars.has(varName) && !this.globals[varName]) {
-        // Find first usage position (simplified)
+        
         const regex = new RegExp(`\\b${varName}\\b`);
         const match = code.match(regex);
         if (match && match.index !== undefined) {
@@ -190,7 +183,6 @@ export class AcornLinter {
   }
 }
 
-// Factory function for CodeMirror
 export function createAcornLinter(globals: Record<string, boolean> = {}) {
   const linter = new AcornLinter(globals);
   

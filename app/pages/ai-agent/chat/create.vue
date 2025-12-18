@@ -7,7 +7,6 @@ marked.setOptions({
   gfm: true,
 })
 
-// Initialize highlight.js on mount
 onMounted(async () => {
   await initHighlight()
 })
@@ -424,14 +423,14 @@ const formatTime = (date: Date) => {
 
 <template>
   <div class="flex flex-col -m-3 md:-m-6 h-full">
-    <!-- Messages Area -->
+    
     <div
       ref="messagesContainer"
       class="flex-1 overflow-y-auto px-6 py-6"
     >
       <div class="max-w-4xl mx-auto space-y-6">
         <Transition name="ai-chat-fade" mode="out-in">
-          <!-- Empty state when no messages -->
+          
           <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full py-12 text-center">
             <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 flex items-center justify-center mb-4">
               <Icon name="lucide:message-circle" class="w-10 h-10 text-cyan-400" />
@@ -445,7 +444,6 @@ const formatTime = (date: Date) => {
             </p>
           </div>
 
-          <!-- Messages -->
           <div v-else class="space-y-6">
             <div
               v-for="message in messages"
@@ -609,14 +607,13 @@ const formatTime = (date: Date) => {
       </div>
     </div>
 
-    <!-- Input Area -->
     <div class=" flex-shrink-0">
       <div class="px-6 py-4">
         <div class="max-w-4xl mx-auto">
           <form @submit.prevent="sendMessage">
-            <!-- Wrapper with border (looks like single input) -->
+            
             <div class="relative flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-2xl hover:border-gray-600 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
-              <!-- Text Input - no border, no padding -->
+              
               <textarea
                 ref="textareaRef"
                 v-model="inputMessage"
@@ -641,7 +638,6 @@ const formatTime = (date: Date) => {
                 }"
               />
 
-              <!-- Send/Stop Button - inside wrapper -->
               <button
                 v-if="isTyping"
                 type="button"
@@ -661,7 +657,6 @@ const formatTime = (date: Date) => {
             </div>
           </form>
 
-          <!-- Helper Text -->
           <div class="text-xs text-gray-500 mt-2 text-center">
             <template v-if="hasConfigs">
               Press Enter to send • Shift + Enter for new line
@@ -675,7 +670,6 @@ const formatTime = (date: Date) => {
     </div>
   </div>
 
-  <!-- Config Drawer -->
   <AiConfigDrawer
     v-model="showConfigDrawer"
     :current-config="selectedAiConfig"

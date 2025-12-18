@@ -21,12 +21,11 @@ const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 
-// Handle drawer close
 function handleDrawerClose() {
-  // Check if there are unsaved changes
+  
   if (hasFormChanges.value) {
     showCloseConfirm.value = true;
-    // Reopen drawer to show modal
+    
     isEditing.value = true;
   }
 }
@@ -36,9 +35,9 @@ function cancelDrawer() {
 }
 
 function discardChanges() {
-  // Reset form changes
+  
   formEditorRef.value?.confirmChanges();
-  // Reset errors
+  
   relationErrors.value = {};
   showCloseConfirm.value = false;
   isEditing.value = false;
@@ -93,7 +92,6 @@ function saveRelation() {
     relations.value.splice(editingIndex.value, 1, newRel);
   }
 
-  // Reset form changes before closing
   formEditorRef.value?.confirmChanges();
 
   isEditing.value = false;
@@ -157,7 +155,6 @@ function saveRelation() {
     </div>
   </div>
 
-  <!-- Edit Relation Drawer -->
   <CommonDrawer
     :handle="false"
     handle-only
@@ -224,7 +221,7 @@ function saveRelation() {
       </template>
 
       <template #footer>
-        <!-- Actions Section -->
+        
         <div
           :class="(isMobile || isTablet) ? 'bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 w-full' : 'bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/30 p-4 w-full'"
         >
@@ -260,7 +257,6 @@ function saveRelation() {
       </template>
     </CommonDrawer>
 
-    <!-- Close Confirmation Modal -->
     <CommonModal 
       v-model="showCloseConfirm" 
       :handle="false"

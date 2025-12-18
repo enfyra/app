@@ -13,12 +13,11 @@
         class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-40"
       >
         <div class="flex flex-col items-center gap-3">
-          <!-- Simple spinner -->
+          
           <div
             class="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin"
           ></div>
 
-          <!-- Optional message -->
           <p v-if="message" class="text-sm text-muted-foreground">
             {{ message }}
           </p>

@@ -6,7 +6,6 @@ import {
   mockEmptyApiResponse,
 } from "../../fixtures/menu-data";
 
-// Mock useEnfyraApi
 const mockExecute = vi.fn();
 const mockData = ref(null);
 const mockPending = ref(false);
@@ -17,7 +16,6 @@ const mockUseEnfyraApi = vi.fn(() => ({
   execute: mockExecute,
 }));
 
-// Mock the composable
 const mockUseMenuApi = () => {
   mockUseEnfyraApi();
 
@@ -272,7 +270,6 @@ describe("useMenuApi", () => {
 
       const dropdownMenus = menuApi.getDropdownMenus.value;
       expect(dropdownMenus).toHaveLength(2);
-      // Should maintain stable order when order values are the same
       expect(dropdownMenus[0].id).toBe(1);
       expect(dropdownMenus[1].id).toBe(2);
     });
@@ -358,7 +355,6 @@ describe("useMenuApi", () => {
 
   describe("getMenuItemsBySidebar", () => {
     it("should return menus and dropdown menus for specific sidebar", () => {
-      // Sidebar 1 has Settings dropdown and Overview menu
       const sidebar1Items = menuApi.getMenuItemsBySidebar.value("1");
 
       expect(sidebar1Items).toHaveLength(2);
@@ -369,7 +365,6 @@ describe("useMenuApi", () => {
     });
 
     it("should return only dropdown menus for sidebar 2", () => {
-      // Sidebar 2 has Files dropdown
       const sidebar2Items = menuApi.getMenuItemsBySidebar.value("2");
 
       expect(sidebar2Items).toHaveLength(1);
@@ -397,7 +392,6 @@ describe("useMenuApi", () => {
     });
 
     it("should handle sidebar ID as number", () => {
-      // The function expects string, so we need to convert number to string for comparison
       const items = menuApi.getMenuItemsBySidebar.value("1");
       expect(items).toHaveLength(2);
       expect(items.map((item: any) => item.label)).toEqual([

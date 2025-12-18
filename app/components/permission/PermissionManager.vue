@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <!-- Header -->
+    
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <UIcon :name="icon || 'lucide:shield'" class="w-5 h-5" />
@@ -25,7 +25,6 @@
       </PermissionGate>
     </div>
 
-    <!-- Permissions List -->
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -94,7 +93,6 @@
             </div>
           </PermissionGate>
 
-          <!-- Fallback for users without update permission -->
           <div
             v-if="
               !checkPermissionCondition({
@@ -151,7 +149,6 @@
       />
     </Transition>
 
-    <!-- Permission Editor Drawer -->
     <Teleport to="body">
       <UDrawer
       :handle="false"
@@ -235,10 +232,8 @@ const deleting = ref<string | number | null>(null);
 
 const permissionTableName = computed(() => props.tableName);
 
-// Schema composable
 const { generateEmptyForm } = useSchema(permissionTableName);
 
-// API calls for CRUD operations
 const {
   data: permissionsData,
   pending: loading,
@@ -284,25 +279,22 @@ const {
 const permissions = computed(() => permissionsData.value?.data || []);
 const saving = computed(() => creating.value || updating.value);
 
-// Methods
 function createNewPermission() {
-  // Validate currentFieldId is required
+  
   if (!props.currentFieldId) {
     toast.add({
       title: "Error",
       description: "Cannot create permission: missing field ID context",
       color: "error",
     });
-    return; // Stop function execution
+    return; 
   }
 
   isEditing.value = false;
   currentPermission.value = null;
 
-  // Generate empty form from schema
   permissionForm.value = generateEmptyForm();
 
-  // Set current field ID (required)
   permissionForm.value[props.currentFieldId.field] = {
     id: props.currentFieldId.value,
   };
@@ -328,23 +320,22 @@ function closeDrawer() {
 
 async function savePermission() {
   if (isEditing.value && currentPermission.value) {
-    // Update existing permission
+    
     await updatePermission({
       body: permissionForm.value,
       id: currentPermission.value.id,
     });
 
-    if (updateError.value) return; // Error occurred, don't proceed
+    if (updateError.value) return; 
   } else {
-    // Create new permission
+    
     await createPermission({
       body: permissionForm.value,
     });
 
-    if (createError.value) return; // Error occurred, don't proceed
+    if (createError.value) return; 
   }
 
-  // Refresh permissions list
   await fetchPermissions();
 
   closeDrawer();
@@ -373,7 +364,7 @@ async function deletePermission(permission: Permission) {
   deleting.value = permission.id;
   await deletePermissionApi({ id: permission.id });
 
-  if (deleteError.value) return; // Error occurred, don't proceed
+  if (deleteError.value) return; 
 
   toast.add({
     title: "Permission Deleted",
@@ -385,7 +376,6 @@ async function deletePermission(permission: Permission) {
   deleting.value = null;
 }
 
-// Lifecycle
 onMounted(() => {
   fetchPermissions();
 });

@@ -28,7 +28,6 @@ const clearAllTimer = ref<NodeJS.Timeout | null>(null);
 const deleteConfirmations = ref<Record<string, boolean>>({});
 const deleteTimers = ref<Record<string, NodeJS.Timeout>>({});
 
-// Load saved filters
 const loadSavedFilters = () => {
   savedFilters.value = getFilterHistory();
 };
@@ -45,17 +44,14 @@ const filteredSavedFilters = computed(() => {
 });
 
 const popularFilters = computed(() => {
-  // Use savedFilters to ensure reactivity when filters are deleted
+  
   return savedFilters.value.sort((a, b) => b.useCount - a.useCount).slice(0, 3);
 });
 
-// Methods
-
 const applySavedFilter = (filter: FilterHistoryItem) => {
-  // Update use count immediately when clicking on saved filter
+  
   incrementUseCount(filter.id);
 
-  // Reload to update popular filters
   loadSavedFilters();
 
   emit("applyFilter", filter.filter);
@@ -63,16 +59,15 @@ const applySavedFilter = (filter: FilterHistoryItem) => {
 
 const removeSavedFilter = (filterId: string) => {
   if (!deleteConfirmations.value[filterId]) {
-    // First click - show confirmation state
+    
     deleteConfirmations.value[filterId] = true;
 
-    // Reset after 3 seconds if not confirmed
     deleteTimers.value[filterId] = setTimeout(() => {
       deleteConfirmations.value[filterId] = false;
       delete deleteTimers.value[filterId];
     }, 3000);
   } else {
-    // Second click - perform delete
+    
     if (deleteTimers.value[filterId]) {
       clearTimeout(deleteTimers.value[filterId]);
       delete deleteTimers.value[filterId];
@@ -101,15 +96,14 @@ const saveRename = () => {
 
 const clearAllFilters = () => {
   if (!clearAllConfirmation.value) {
-    // First click - show confirmation state
+    
     clearAllConfirmation.value = true;
 
-    // Reset after 3 seconds if not confirmed
     clearAllTimer.value = setTimeout(() => {
       clearAllConfirmation.value = false;
     }, 3000);
   } else {
-    // Second click - perform action
+    
     if (clearAllTimer.value) {
       clearTimeout(clearAllTimer.value);
     }
@@ -122,10 +116,9 @@ const clearAllFilters = () => {
 import { formatDate as formatDateUtil } from "~/utils/common/filter/filter-helpers";
 
 const formatDate = (dateString: string) => {
-  return formatDateUtil(dateString, true); // includeTime = true
+  return formatDateUtil(dateString, true); 
 };
 
-// Lifecycle
 onMounted(() => {
   loadSavedFilters();
 });
@@ -134,13 +127,12 @@ onUnmounted(() => {
   if (clearAllTimer.value) {
     clearTimeout(clearAllTimer.value);
   }
-  // Clean up all delete timers
+  
   Object.values(deleteTimers.value).forEach((timer) => {
     clearTimeout(timer);
   });
 });
 
-// Watch for external filter changes
 watch(
   () => props.tableName,
   () => {
@@ -151,7 +143,7 @@ watch(
 
 <template>
   <div class="border-t border-gray-200 dark:border-gray-800 pt-4 mt-4">
-    <!-- Header -->
+    
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">Saved Filters</h3>
       <UButton
@@ -168,7 +160,6 @@ watch(
       </UButton>
     </div>
 
-    <!-- Search -->
     <div v-if="savedFilters.length > 3" class="mb-3">
       <UInput
         v-model="searchQuery"
@@ -179,7 +170,6 @@ watch(
       />
     </div>
 
-    <!-- Popular Filters (if no search) -->
     <div v-if="!searchQuery && popularFilters.length > 0" class="mb-4">
       <div
         class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1"
@@ -207,7 +197,6 @@ watch(
       </div>
     </div>
 
-    <!-- Saved Filters List -->
     <div v-if="filteredSavedFilters.length > 0" class="space-y-1">
       <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
         {{ searchQuery ? "Search Results" : "All Saved Filters" }}
@@ -257,7 +246,6 @@ watch(
       </div>
     </div>
 
-    <!-- Empty State -->
     <div v-else-if="savedFilters.length === 0" class="text-center py-8">
       <UIcon
         name="lucide:bookmark"
@@ -272,7 +260,6 @@ watch(
       </div>
     </div>
 
-    <!-- No Search Results -->
     <div
       v-else-if="searchQuery && filteredSavedFilters.length === 0"
       class="text-center py-8"
@@ -286,7 +273,6 @@ watch(
       </div>
     </div>
 
-    <!-- Rename Filter Dialog -->
     <UModal v-model:open="showRenameDialog">
       <template #header>
         <div class="flex items-center justify-between w-full">

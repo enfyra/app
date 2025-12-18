@@ -11,10 +11,9 @@
           class="bg-[var(--bg-surface)] border border-white/[0.06] rounded-lg p-3 md:p-4"
         >
           <div class="flex items-start gap-2 md:gap-4">
-            <!-- Avatar skeleton -->
-            <USkeleton class="w-10 h-10 md:w-12 md:h-12 rounded-full flex-shrink-0" />
             
-            <!-- Content skeleton -->
+            <USkeleton class="w-10 h-10 md:w-12 md:h-12 rounded-full flex-shrink-0" />
+
             <div class="flex-1 min-w-0">
               <USkeleton class="h-4 md:h-5 w-32 md:w-48 rounded mb-1.5 md:mb-2" />
               <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3">
@@ -29,7 +28,6 @@
               </div>
             </div>
 
-            <!-- Action button skeleton -->
             <USkeleton class="w-8 h-8 md:w-10 md:h-10 rounded flex-shrink-0" />
           </div>
         </div>
@@ -93,7 +91,6 @@
       />
     </Transition>
 
-    <!-- Pagination -->
     <div
       v-if="!loading && conversations.length > 0 && total > pageLimit"
       class="flex items-center justify-between mt-6"
@@ -126,11 +123,9 @@ const router = useRouter()
 const route = useRoute()
 const { checkPermissionCondition } = usePermissions()
 
-// Pagination
 const page = ref(1)
 const pageLimit = 9
 
-// Page header
 const { registerPageHeader } = usePageHeaderRegistry()
 registerPageHeader({
   title: 'AI Chat',
@@ -138,7 +133,6 @@ registerPageHeader({
   gradient: 'cyan',
 })
 
-// Fetch conversations
 const {
   data: apiData,
   pending: loading,
@@ -157,10 +151,8 @@ const {
 const conversations = computed(() => apiData.value?.data || [])
 const total = computed(() => apiData.value?.meta?.totalCount || 0)
 
-// Mounted state for skeleton loading
 const { isMounted } = useMounted()
 
-// Watch route query for pagination
 watch(
   () => route.query.page,
   async (newVal) => {
@@ -170,17 +162,14 @@ watch(
   { immediate: true }
 )
 
-// Navigate to conversation detail
 const navigateToChat = (conversation: any) => {
   router.push(`/ai-agent/chat/${conversation.id}`)
 }
 
-// Navigate to create new conversation page
 const createNewConversation = () => {
   router.push('/ai-agent/chat/create')
 }
 
-// Delete conversation with loader
 const { confirm } = useConfirm()
 const toast = useToast()
 const { createLoader } = useLoader()
@@ -222,7 +211,6 @@ const deleteConversation = async (conversation: any) => {
       color: 'success',
     })
 
-    // Check if we're deleting the last item on the current page
     if (conversations.value.length === 1 && page.value > 1) {
       page.value = page.value - 1
       await router.push({
@@ -235,7 +223,6 @@ const deleteConversation = async (conversation: any) => {
   }
 }
 
-// Format date
 const formatDate = (date: string) => {
   return new Intl.DateTimeFormat('vi-VN', {
     year: 'numeric',
@@ -246,7 +233,6 @@ const formatDate = (date: string) => {
   }).format(new Date(date))
 }
 
-// Setup header actions
 useHeaderActionRegistry({
   id: 'create-conversation',
   label: 'New Conversation',

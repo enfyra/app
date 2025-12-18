@@ -1,8 +1,5 @@
 import { ref, computed } from "vue";
 
-/**
- * Header Style Configuration
- */
 export interface HeaderStyleConfig {
   background?: string;
   borderColor?: string;
@@ -30,9 +27,6 @@ export interface HeaderStyleConfig {
   contentClass?: string;
 }
 
-/**
- * Default header style matching Figma design
- */
 const defaultHeaderStyle: HeaderStyleConfig = {
   background: "rgba(21, 27, 46, 0.5)",
   borderColor: "var(--border-subtle)",
@@ -46,8 +40,8 @@ const defaultHeaderStyle: HeaderStyleConfig = {
   backdropBlurAmount: "20px",
   shadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
 
-  paddingX: "1.5rem", // px-6
-  paddingY: "1rem", // Match logo section vertical spacing
+  paddingX: "1.5rem", 
+  paddingY: "1rem", 
 
   accentLine: {
     enabled: true,
@@ -60,21 +54,12 @@ const defaultHeaderStyle: HeaderStyleConfig = {
   contentClass: "flex items-center justify-between gap-4",
 };
 
-/**
- * Header style registry state
- */
 const headerStyleConfig = ref<HeaderStyleConfig>({ ...defaultHeaderStyle });
 
-/**
- * Composable for managing header styles
- */
 export const useHeaderStyleRegistry = () => {
-  // Get screen size reactively at the composable level
+  
   const { isMobile, isTablet } = useScreen();
 
-  /**
-   * Update header style configuration
-   */
   const updateHeaderStyle = (config: Partial<HeaderStyleConfig>) => {
     headerStyleConfig.value = {
       ...headerStyleConfig.value,
@@ -82,16 +67,10 @@ export const useHeaderStyleRegistry = () => {
     };
   };
 
-  /**
-   * Reset header style to default
-   */
   const resetHeaderStyle = () => {
     headerStyleConfig.value = { ...defaultHeaderStyle };
   };
 
-  /**
-   * Get computed container style object
-   */
   const containerStyle = computed(() => {
     const style: Record<string, string> = {};
     const config = headerStyleConfig.value;
@@ -105,9 +84,6 @@ export const useHeaderStyleRegistry = () => {
     return style;
   });
 
-  /**
-   * Get computed container classes
-   */
   const containerClasses = computed(() => {
     const classes: string[] = [];
     const config = headerStyleConfig.value;
@@ -127,22 +103,15 @@ export const useHeaderStyleRegistry = () => {
     return classes;
   });
 
-  /**
-   * Get computed content classes
-   */
   const contentClasses = computed(() => {
     const config = headerStyleConfig.value;
     return config.contentClass || "";
   });
 
-  /**
-   * Get computed content style (padding)
-   */
   const contentStyle = computed(() => {
     const style: Record<string, string> = {};
     const config = headerStyleConfig.value;
 
-    // Responsive padding: px-4 on mobile/tablet, px-6 on desktop
     const responsivePaddingX = (isMobile.value || isTablet.value) ? '1rem' : (config.paddingX || '1.5rem');
 
     style.paddingLeft = style.paddingRight = responsivePaddingX;
@@ -151,9 +120,6 @@ export const useHeaderStyleRegistry = () => {
     return style;
   });
 
-  /**
-   * Get accent line config
-   */
   const accentLineConfig = computed(() => headerStyleConfig.value.accentLine);
 
   return {

@@ -154,7 +154,7 @@ export function useFilterHistory(tableName: string) {
         const newItem: FilterHistoryItem = {
           id: generateId(),
           name,
-          filter: JSON.parse(JSON.stringify(filter)), // Deep clone
+          filter: JSON.parse(JSON.stringify(filter)), 
           tableName,
           createdAt: now,
           lastUsed: now,

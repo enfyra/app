@@ -25,7 +25,6 @@ export function getFolderIconColor(folder: any): string {
   return getFolderIcon(folder).color;
 }
 
-// For simple folder icon usage without folder object
 export function getDefaultFolderIcon(): string {
   return "lucide:folder";
 }

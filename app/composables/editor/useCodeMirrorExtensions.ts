@@ -1,17 +1,16 @@
 export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
-  // Get modules (handle both ref and direct value)
+  
   const modules = computed(() => {
     if (!codeMirrorModules) return null
     return isRef(codeMirrorModules) ? codeMirrorModules.value : codeMirrorModules
   })
-  
-  // Helper to get modules value - always check current state
+
   const getModules = () => modules.value
   function isInComment(doc: any, absolutePos: number): boolean {
     const fullText = doc.toString()
     const beforePos = fullText.substring(0, absolutePos)
     
-    const lineCommentIndex = beforePos.lastIndexOf('//')
+    const lineCommentIndex = beforePos.lastIndexOf('
     if (lineCommentIndex !== -1) {
       const afterComment = fullText.substring(lineCommentIndex + 2, absolutePos)
       if (!afterComment.includes('\n')) {
@@ -19,10 +18,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       }
     }
     
-    const blockCommentStart = beforePos.lastIndexOf('/*')
-    if (blockCommentStart !== -1) {
-      const afterStart = fullText.substring(blockCommentStart + 2)
-      const blockCommentEnd = afterStart.indexOf('*/')
+    const blockCommentStart = beforePos.lastIndexOf('')
       if (blockCommentEnd === -1 || blockCommentStart + 2 + blockCommentEnd >= absolutePos) {
         return true
       }
@@ -87,8 +83,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       
       const matchedRanges: Array<{ from: number; to: number }> = []
       let match
-      
-      // First, match template syntax with bracket access (e.g., @PKGS['abc'])
+
       while ((match = templateWithBracketRegex.exec(text)) !== null) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
@@ -97,12 +92,11 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
           matchedRanges.push({ from: absolutePos, to: absolutePos + fullMatch.length })
         }
       }
-      
-      // Then, match template syntax without bracket access
+
       while ((match = templateRegex.exec(text)) !== null) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
-          // Check if this match is already covered by bracket regex
+          
           const isAlreadyMatched = matchedRanges.some(range => 
             absolutePos >= range.from && absolutePos < range.to
           )
@@ -204,14 +198,14 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     }
     
     if (prevLineText.trim().match(/^<script[^>]*>$/)) {
-      return 0; // No indent after <script>
+      return 0; 
     }
     
     const trimmedPrev = prevLineText.trim();
     const rootLevelPatterns = [
       /^(import|export|const|let|var|function|class)\b/,
-      /^\/\//,  // comments
-      /^\/\*/,  // block comments
+      /^\/\
+      /^\/\*/,  
     ];
     
     const isRootLevel = rootLevelPatterns.some(pattern => pattern.test(trimmedPrev)) 
@@ -220,7 +214,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
                        && !trimmedPrev.includes('(');
     
     if (isRootLevel) {
-      return 0; // No indent for root level statements
+      return 0; 
     }
     
     const baseIndent = /^\s*/.exec(prevLineText)?.[0]?.length || 0;
@@ -232,10 +226,10 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
                          /^function\s+\w+\s*\([^)]*\)\s*{/.test(trimmed);
     
     if (shouldIndent) {
-      return baseIndent + 2; // Indent inside blocks
+      return baseIndent + 2; 
     }
     
-      return baseIndent; // Keep same level
+      return baseIndent; 
     })
   })
 
@@ -306,7 +300,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
               if (before === pair.open && after === pair.close) {
                 const line = state.doc.lineAt(pos);
                 const currentIndent = /^\s*/.exec(line.text)?.[0] || '';
-                const indent = currentIndent + '  '; // Add 2 spaces
+                const indent = currentIndent + '  '; 
 
                 view.dispatch({
                   changes: {

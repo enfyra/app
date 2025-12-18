@@ -29,7 +29,6 @@ const formEditorRef = ref();
 
 const FormEditor = defineAsyncComponent(() => import("./Editor.vue"));
 
-// Expose confirm method
 defineExpose({
   confirmChanges: () => {
     formEditorRef.value?.confirmChanges();

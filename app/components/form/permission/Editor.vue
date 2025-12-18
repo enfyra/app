@@ -11,7 +11,7 @@
 
       <template #body>
         <div class="p-4 space-y-4">
-          <!-- Route Selection -->
+          
           <div>
             <label class="block text-sm font-medium mb-2">Route</label>
             <div class="flex gap-2">
@@ -51,7 +51,6 @@
             </p>
           </div>
 
-          <!-- Actions Selection -->
           <div>
             <label class="block text-sm font-medium mb-3">Actions</label>
             <div class="flex flex-wrap gap-2">
@@ -87,8 +86,6 @@
             </p>
           </div>
 
-
-          <!-- Buttons -->
           <div class="flex justify-end gap-2 pt-4 border-t border-muted">
             <UButton
               color="primary"
@@ -102,7 +99,6 @@
       </template>
     </CommonDrawer>
 
-    <!-- Route Picker -->
     <FormPermissionRoutePicker
       v-model="showRoutePicker"
       @select="onRouteSelect"
@@ -135,14 +131,12 @@ const localPermission = ref<any>({
 
 const showRoutePicker = ref(false);
 
-// Validation
 const isValid = computed(() => {
   return !!(
     localPermission.value.route && localPermission.value.actions?.length > 0
   );
 });
 
-// Watch for permission changes
 watch(
   () => props.permission,
   (newPermission) => {

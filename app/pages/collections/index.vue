@@ -64,24 +64,23 @@ watch(
 function getFieldCount(collectionName: string): number {
   const schema = schemas.value[collectionName];
   if (!schema?.definition) return 0;
-  // Exclude default fields: createdAt and updatedAt
+  
   return schema.definition.filter(
     (field: any) => field.name !== 'createdAt' && field.name !== 'updatedAt'
   ).length;
 }
 
-// List of gradient colors for random assignment
 const gradients = [
-  "from-blue-500 to-cyan-500", // blue to cyan
-  "from-purple-500 to-fuchsia-500", // purple to fuchsia
-  "from-cyan-500 to-teal-500", // cyan to teal
-  "from-orange-500 to-pink-500", // orange to pink
-  "from-violet-500 to-fuchsia-500", // violet to fuchsia
-  "from-cyan-500 to-blue-500", // cyan to blue
+  "from-blue-500 to-cyan-500", 
+  "from-purple-500 to-fuchsia-500", 
+  "from-cyan-500 to-teal-500", 
+  "from-orange-500 to-pink-500", 
+  "from-violet-500 to-fuchsia-500", 
+  "from-cyan-500 to-blue-500", 
 ];
 
 function getGradientForCollection(id: any): string | undefined {
-  // Use ID to consistently assign same gradient to same collection
+  
   const idStr = String(id);
   let hash = 0;
   for (let i = 0; i < idStr.length; i++) {

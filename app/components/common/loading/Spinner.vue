@@ -20,19 +20,17 @@ const spinnerSize = computed(() => {
 
 <template>
   <div :class="spinnerSize">
-    <!-- Ring Spinner -->
+    
     <svg v-if="type === 'ring'" :class="[spinnerSize, 'animate-spin']" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" :stroke="color" stroke-width="2" fill="none" 
         stroke-dasharray="60" stroke-dashoffset="40" stroke-linecap="round"/>
     </svg>
 
-    <!-- Crescent Spinner (iOS Style) -->
     <svg v-else-if="type === 'crescent'" :class="[spinnerSize, 'animate-spin']" viewBox="0 0 24 24">
       <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12" 
         fill="none" :stroke="color" stroke-width="2" stroke-linecap="round"/>
     </svg>
 
-    <!-- Dashed Ring -->
     <svg v-else :class="[spinnerSize, 'animate-spin']" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" :stroke="color" stroke-width="2" fill="none" 
         stroke-dasharray="15 5" stroke-linecap="round"/>

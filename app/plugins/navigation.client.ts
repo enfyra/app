@@ -5,7 +5,6 @@ export default defineNuxtPlugin(() => {
   const router = useRouter();
   const { isMobile } = useScreen();
 
-  // Calculate breadcrumb segments from route
   const breadcrumbSegments = computed(() => {
     const parts = route.path.split("/").filter(Boolean);
 
@@ -16,10 +15,8 @@ export default defineNuxtPlugin(() => {
     });
   });
 
-  // Check if we can go back (not on root level)
   const canGoBack = computed(() => breadcrumbSegments.value.length > 1);
 
-  // Back button handler
   const goBack = () => {
     router.back();
   };

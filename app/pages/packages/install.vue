@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
-        <!-- Package Type Selector -->
+        
         <div class="mb-6">
           <label class="block text-sm font-medium mb-2">Package Type</label>
           <div class="grid grid-cols-2 gap-4">
@@ -48,7 +48,6 @@
           </div>
         </div>
 
-        <!-- Usage Note -->
         <UAlert
           v-if="packageType === 'Backend'"
           icon="lucide:alert-triangle"
@@ -62,7 +61,6 @@
           variant="soft"
         />
 
-        <!-- NPM Package Search (Backend only) -->
         <div v-if="packageType === 'Backend'" class="mb-6">
           <div class="space-y-3">
             <label class="block text-sm font-medium text-gray-300">
@@ -81,7 +79,6 @@
           </div>
         </div>
 
-        <!-- Form -->
         <UForm :state="form" @submit="handleCreate">
           <FormEditorLazy
             v-model="form"
@@ -159,32 +156,28 @@ function initializeForm() {
   }
 }
 
-// Handle NPM package selection
 function handlePackageSelect(pkg: any) {
   if (!pkg) return;
 
-  // Auto-fill form fields
   form.value.name = pkg.name;
   form.value.version = pkg.version;
   form.value.description = pkg.description || "";
 }
 
-// Handle NPM package clear
 function handlePackageClear() {
   initializeForm();
 }
 
-// Watch package type changes to update form
 watch(packageType, () => {
   form.value.type = packageType.value;
-  // Clear NPM selection when switching to App type
+  
   if (packageType.value === "App") {
     selectedNpmPackage.value = null;
   }
 });
 
 async function handleCreate() {
-  // Set the type based on selection
+  
   form.value.type = packageType.value;
 
   const { isValid, errors: validationErrors } = validate(form.value);
@@ -214,7 +207,6 @@ async function handleCreate() {
     color: "success",
   });
 
-  // Navigate to the package detail page
   await navigateTo(`/packages/${packageId}`, {
     replace: true,
   });

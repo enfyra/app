@@ -13,14 +13,11 @@ const formEditorRef = ref();
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 
-// Get the correct route for this table
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Initialize currentRecord ref early
 const currentRecord = ref<Record<string, any>>({});
 
-// Load routes on mount
 onMounted(async () => {
   await ensureRoutesLoaded();
   await initializeForm();
@@ -60,8 +57,6 @@ async function initializeForm() {
   }
 }
 
-// Already handled in the onMounted above
-
 async function handleUpdate() {
   const { isValid, errors } = validate(currentRecord.value);
 
@@ -84,7 +79,6 @@ async function handleUpdate() {
     return;
   }
 
-  // Refetch latest record data to ensure UI reflects server state
   await fetchRecord();
   const data = apiData.value?.data?.[0];
   if (data) {
@@ -214,7 +208,7 @@ useHeaderActionRegistry([
 
 <template>
   <div class="space-y-6">
-    <!-- Content - Limited width -->
+    
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <CommonFormCard>
         <FormEditorLazy

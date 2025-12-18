@@ -104,11 +104,10 @@ const {
 
 const loadMatchingExtension = async () => {
   error.value = null;
-  
-  // Check if we have extension metadata cached
+
   const cachedMeta = getCachedExtensionMeta(props.path);
   if (cachedMeta) {
-    // Check if component is cached
+    
     const isCached = isComponentCached(cachedMeta.extensionId, cachedMeta.updatedAt);
     
     if (isCached) {
@@ -119,14 +118,13 @@ const loadMatchingExtension = async () => {
           cachedMeta.updatedAt
         );
         extensionComponent.value = component;
-        return; // Skip API fetch
+        return; 
       } catch (err: any) {
         console.warn('❌ Failed to load cached component:', err);
       }
     }
   }
-  
-  // No cache or component not cached - fetch API
+
   componentLoading.value = true;
   await fetchAndLoadExtension();
 };
@@ -163,13 +161,10 @@ const fetchAndLoadExtension = async () => {
       return;
     }
 
-    // Cache extension metadata for next time
     setCachedExtensionMeta(props.path, extension);
-    
-    // Check if component is cached 
+
     const isCached = isComponentCached(extension.extensionId, extension.updatedAt);
 
-    // Load component
     const component = await loadDynamicComponent(
       extension.compiledCode || extension.code,
       extension.extensionId,
@@ -184,12 +179,10 @@ const fetchAndLoadExtension = async () => {
   }
 };
 
-
 const retry = () => {
   loadMatchingExtension();
 };
 
-// Watch for path changes (immediate: true covers both watch and onMounted)
 watch(
   () => props.path,
   () => {

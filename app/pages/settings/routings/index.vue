@@ -13,7 +13,6 @@ const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Fixed color for routing infrastructure
 const pageIconColor = 'primary';
 
 registerPageHeader({
@@ -21,7 +20,6 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-// Helper to get id from both SQL (id) and MongoDB (_id)
 const { getId } = useDatabase();
 
 const showFilterDrawer = ref(false);
@@ -64,10 +62,10 @@ const {
 
 const routesData = computed(() => apiData.value?.data || []);
 const total = computed(() => {
-  // Use filterCount when there are active filters, otherwise use totalCount
+  
   const hasFilters = hasActiveFilters(currentFilter.value);
   if (hasFilters) {
-    // When filtering, use filterCount even if it's 0
+    
     return apiData.value?.meta?.filterCount ?? 0;
   }
   return apiData.value?.meta?.totalCount || 0;
@@ -118,18 +116,14 @@ useHeaderActionRegistry([
   },
 ]);
 
-// Update routes when data changes
-
-
-// Handle filter apply from FilterDrawer
 async function handleFilterApply(filter: FilterGroup) {
   currentFilter.value = filter;
   
   if (page.value === 1) {
-    // Already on page 1 → fetch directly
+    
     await fetchRoutes();
   } else {
-    // On other page → go to page 1, watch will trigger
+    
     const newQuery = { ...route.query };
     delete newQuery.page;
     
@@ -148,7 +142,6 @@ watch(
   { immediate: true }
 );
 
-// Update API at setup level
 const { execute: updateRouteApi, error: updateError } = useApi(
   () => `/route_definition`,
   {
@@ -165,7 +158,6 @@ const { execute: deleteRouteApi, error: deleteError } = useApi(
   }
 );
 
-// Create loaders for each route toggle button
 const routeLoaders = ref<Record<string, any>>({});
 
 function getRouteLoader(routeId: string) {
@@ -180,7 +172,6 @@ function getRouteHeaderActions(routeItem: any) {
     return [];
   }
 
-  // Check if route has associated table
   const hasAssociatedTable = getId(routeItem.mainTable);
   const { schemas } = useSchema();
   const tableExists = hasAssociatedTable && Object.values(schemas.value).some(
@@ -202,7 +193,7 @@ function getRouteHeaderActions(routeItem: any) {
 }
 
 function getRouteFooterActions(routeItem: any) {
-  // Check if route has associated table
+  
   const hasAssociatedTable = getId(routeItem.mainTable);
   const { schemas } = useSchema();
   const tableExists = hasAssociatedTable && Object.values(schemas.value).some(
@@ -228,10 +219,9 @@ function getRouteFooterActions(routeItem: any) {
 }
 
 async function toggleEnabled(routeItem: any) {
-  // Optimistic update - change UI immediately
+  
   const newEnabled = !routeItem.isEnabled;
 
-  // Update directly in apiData to trigger reactivity
   if (apiData.value?.data) {
     const routeIndex = apiData.value.data.findIndex(
       (r: any) => getId(r) === getId(routeItem)
@@ -244,7 +234,7 @@ async function toggleEnabled(routeItem: any) {
   await updateRouteApi({ id: getId(routeItem), body: { isEnabled: newEnabled } });
 
   if (updateError.value) {
-    // Revert optimistic update on error
+    
     if (apiData.value?.data) {
       const routeIndex = apiData.value.data.findIndex(
         (r: any) => getId(r) === getId(routeItem)
@@ -256,7 +246,6 @@ async function toggleEnabled(routeItem: any) {
     return;
   }
 
-  // Reload routes and reregister menus after route toggle
   const { loadRoutes } = useRoutes();
   const { registerDataMenuItems } = useMenuRegistry();
   const { schemas } = useSchema();
@@ -288,7 +277,6 @@ async function deleteRoute(routeItem: any) {
 
     await fetchRoutes();
 
-    // Reload routes and reregister menus after route deletion
     const { loadRoutes } = useRoutes();
     const { registerDataMenuItems } = useMenuRegistry();
     const { schemas } = useSchema();
@@ -386,7 +374,6 @@ async function deleteRoute(routeItem: any) {
           size="sm"
         />
 
-        <!-- Premium Pagination -->
         <div
           v-if="!loading && routesData.length > 0 && total > pageLimit"
           class="flex items-center justify-between mt-6"
@@ -415,7 +402,6 @@ async function deleteRoute(routeItem: any) {
     </Transition>
   </div>
 
-  <!-- Filter Drawer -->
   <FilterDrawerLazy
     v-model="showFilterDrawer"
     :table-name="tableName"

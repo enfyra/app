@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Vue functions are auto-imported
 
 const props = withDefaults(
   defineProps<{
@@ -21,7 +20,6 @@ const emit = defineEmits<{
   "update:errors": [errors: Record<string, string>];
 }>();
 
-// Copy status state
 const copyStatus = ref<"idle" | "success" | "error">("idle");
 
 function updateFormData(key: string, value: any) {
@@ -51,20 +49,17 @@ const fieldPermission = computed(() => {
   return fieldConfig.value.permission;
 });
 
-// Check if field is a relation (exclude from dropdown)
 const isRelationField = computed(() => {
   const field = props.columnMap.get(props.keyName);
   return field?.fieldType === "relation";
 });
 
-// Copy raw value function
 async function copyRawValue() {
   const rawValue = props.formData[props.keyName];
 
-  // Handle different value types for copy
   let textToCopy: string;
   if (typeof rawValue === "string") {
-    textToCopy = rawValue; // Don't stringify strings to avoid quotes
+    textToCopy = rawValue; 
   } else if (rawValue === null || rawValue === undefined) {
     textToCopy = String(rawValue);
   } else {
@@ -72,7 +67,7 @@ async function copyRawValue() {
   }
 
   try {
-    // Check if clipboard API is available and in secure context
+    
     if (!navigator.clipboard || !window.isSecureContext) {
       throw new Error("Clipboard API not available or not in secure context");
     }
@@ -80,12 +75,11 @@ async function copyRawValue() {
     await navigator.clipboard.writeText(textToCopy);
     copyStatus.value = "success";
 
-    // Reset status after 2 seconds
     setTimeout(() => {
       copyStatus.value = "idle";
     }, 2000);
   } catch (error) {
-    // Fallback: try using execCommand
+    
     try {
       const textArea = document.createElement("textarea");
       textArea.value = textToCopy;
@@ -112,14 +106,12 @@ async function copyRawValue() {
       copyStatus.value = "error";
     }
 
-    // Reset status after 2 seconds
     setTimeout(() => {
       copyStatus.value = "idle";
     }, 2000);
   }
 }
 
-// Dropdown menu items
 const dropdownItems = computed(() => [
   {
     label: "Copy Raw Value",
@@ -128,7 +120,6 @@ const dropdownItems = computed(() => [
   },
 ]);
 
-// Check if field is boolean type
 const isBooleanField = computed(() => {
   const field = props.columnMap.get(props.keyName);
   const configType = typeof fieldConfig.value === "string" ? fieldConfig.value : fieldConfig.value?.type;
@@ -165,7 +156,6 @@ const { isMobile, isTablet } = useScreen();
       />
     </div>
 
-    <!-- Right: Switch/Toggle -->
     <FormFieldRenderer
       :key-name="keyName"
       :form-data="formData"

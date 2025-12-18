@@ -4,12 +4,11 @@
     role="main"
     aria-labelledby="error-title"
   >
-    <!-- Grid Pattern Background -->
+    
     <div class="absolute inset-0 opacity-5 dark:opacity-10">
       <div class="absolute inset-0" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 24px 24px;"></div>
         </div>
 
-    <!-- Centered Content -->
     <div class="relative mx-auto w-full max-w-[472px] text-center z-10">
         <h1
           id="error-title"
@@ -19,7 +18,6 @@
           {{ error.statusCode || "500" }}
         </h1>
 
-      <!-- Error Icon/Illustration -->
       <div class="flex justify-center mb-6">
         <div v-if="error.statusCode === 403" class="w-32 h-32 flex items-center justify-center">
           <UIcon name="lucide:shield-x" class="w-full h-full text-error-500" />
@@ -97,7 +95,6 @@ const errorDescription = computed(() => {
 const handleError = () => clearError({ redirect: "/" });
 const refresh = () => window.location.reload();
 
-// Set page title for better SEO and accessibility
 useHead({
   title: computed(() => `Error ${props.error.statusCode} - Enfyra App`),
   meta: [

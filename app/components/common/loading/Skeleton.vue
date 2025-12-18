@@ -16,7 +16,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
 </script>
 
 <template>
-  <!-- Text Skeleton -->
+  
   <div v-if="type === 'text'" class="space-y-2">
     <div
       v-for="i in lines"
@@ -28,7 +28,6 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     ></div>
   </div>
 
-  <!-- Avatar Skeleton -->
   <div v-else-if="type === 'avatar'" class="flex items-center gap-3">
     <div
       :class="['w-10 h-10 rounded-full skeleton-gradient', animationClass, shimmerClass]"
@@ -43,7 +42,6 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     </div>
   </div>
 
-  <!-- Card Skeleton (Original) -->
   <div v-else-if="type === 'card'" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
     <div
       v-for="i in 8"
@@ -89,7 +87,6 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     </div>
   </div>
 
-  <!-- File Card Skeleton -->
   <div v-else-if="type === 'file-card'" class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
     <div
       v-for="i in 8"
@@ -141,7 +138,6 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     </div>
   </div>
 
-  <!-- Table Skeleton -->
   <div
     v-else-if="type === 'table'"
     class="w-full space-y-0 overflow-hidden rounded-xl border"
@@ -149,7 +145,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
       borderColor: 'var(--border-default)',
     }"
   >
-    <!-- Header -->
+    
     <div
       class="grid grid-cols-5 gap-4 p-4"
       :style="{
@@ -169,7 +165,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         }"
       ></div>
     </div>
-    <!-- Rows -->
+    
     <div>
       <div
         v-for="i in 8"
@@ -210,22 +206,20 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     </div>
   </div>
 
-  <!-- Form Skeleton -->
   <div v-else-if="type === 'form'" class="space-y-4">
     <div v-for="i in 5" :key="i" class="space-y-2">
-      <!-- Label -->
+      
       <div
         class="h-4 w-24 rounded skeleton-inline"
         :class="[animationClass, shimmerClass]"
       ></div>
-      <!-- Input -->
+      
       <div
         class="h-10 w-full rounded-lg skeleton-inline"
         :class="[animationClass, shimmerClass]"
       ></div>
     </div>
 
-    <!-- Action buttons -->
     <div class="flex gap-3 pt-6">
       <div
         class="h-10 w-24 rounded-lg skeleton-primary"
@@ -238,7 +232,6 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     </div>
   </div>
 
-  <!-- Folder Skeleton -->
   <div v-else-if="type === 'folder'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
     <div
       v-for="i in 8"

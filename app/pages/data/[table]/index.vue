@@ -18,11 +18,9 @@ const { isMounted } = useMounted();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 
-// Get the correct route for this table
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
 const { registerPageHeader } = usePageHeaderRegistry();
 
-// Ensure routes are loaded on mount
 onMounted(async () => {
   await ensureRoutesLoaded();
 });
@@ -173,11 +171,10 @@ const columns = computed(() => {
         visibleColumns.value.has(field.name)
     )
     .sort((a, b) => {
-      // Always put id first if it exists
+      
       if (a.name?.toLowerCase() === 'id') return -1;
       if (b.name?.toLowerCase() === 'id') return 1;
-      
-      // Sort by createdAt if available, otherwise by id
+
       const aCreatedAt = a.createdAt ? new Date(a.createdAt).getTime() : (a.id ?? 0);
       const bCreatedAt = b.createdAt ? new Date(b.createdAt).getTime() : (b.id ?? 0);
       return aCreatedAt - bCreatedAt;
@@ -250,7 +247,7 @@ watch(
       data.value = newData.data;
       const hasFilters = hasActiveFilters(currentFilter.value);
       if (hasFilters) {
-        // When filtering, use filterCount even if it's 0
+        
         total.value = newData.meta?.filterCount ?? 0;
       } else {
         total.value = newData.meta?.totalCount || 0;
@@ -341,7 +338,7 @@ useHeaderActionRegistry([
 
 <template>
   <div class="space-y-6">
-    <!-- Active Filters Badge -->
+    
     <div
       v-if="hasActiveFilters(currentFilter)"
       class="flex items-center gap-2 p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30"
@@ -363,9 +360,8 @@ useHeaderActionRegistry([
       </UButton>
     </div>
 
-    <!-- Data Table -->
     <Transition name="loading-fade" mode="out-in">
-      <!-- Loading State: khi chưa mounted (first render) hoặc đang loading -->
+      
       <div v-if="!isMounted || loading" class="w-full py-8">
         <CommonLoadingState
           type="table"
@@ -376,7 +372,6 @@ useHeaderActionRegistry([
         />
       </div>
 
-      <!-- Data Table: khi có data -->
       <div v-else-if="data && data.length > 0" class="space-y-6">
         <DataTableLazy
           :data="data"
@@ -388,7 +383,6 @@ useHeaderActionRegistry([
           @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
         />
 
-        <!-- Premium Pagination -->
         <div
           v-if="Math.ceil(total / pageLimit) > 1"
           class="flex items-center justify-between"
@@ -416,7 +410,6 @@ useHeaderActionRegistry([
         </div>
       </div>
 
-      <!-- Empty State: khi đã mounted, không loading và không có data -->
       <div v-else class="w-full py-8">
         <CommonEmptyState
           title="No data available"
@@ -427,7 +420,6 @@ useHeaderActionRegistry([
       </div>
     </Transition>
 
-    <!-- Filter Drawer - use existing component -->
     <FilterDrawerLazy
       :model-value="showFilterDrawer"
       @update:model-value="showFilterDrawer = $event"

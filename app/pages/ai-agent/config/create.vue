@@ -105,7 +105,6 @@ async function handleCreate() {
     color: "success",
   });
 
-  // Reload AI configs in global state
   await fetchAiConfig();
 
   await navigateTo(`/ai-agent/config/${getId(createData.value.data[0])}`, {

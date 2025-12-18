@@ -147,7 +147,7 @@ async function initializeForm() {
   const data = tableData.value?.data?.[0];
   if (data) {
     table.value = data;
-    formChanges.update(data); // Set original data
+    formChanges.update(data); 
     hasFormChanges.value = false;
   }
 }
@@ -166,17 +166,15 @@ async function patchTable() {
   await executePatchTable({ id: getId(table.value), body: table.value });
 
   if (updateError.value) {
-    return; // Error already handled by useApi
+    return; 
   }
 
   await fetchSchema();
 
-  // Reload routes to include updated table routes
   await loadRoutes();
 
   registerDataMenuItems(Object.values(schemas.value));
 
-  // Refetch latest table data to ensure UI reflects server state
   await fetchTableData();
   const updatedData = tableData.value?.data?.[0];
   if (updatedData) {
@@ -189,7 +187,6 @@ async function patchTable() {
     description: "Table structure updated!",
   });
 
-  // Reset form changes after successful save
   formChanges.update(table.value);
   hasFormChanges.value = false;
 }
@@ -203,7 +200,6 @@ async function handleReset() {
     return;
   }
 
-  // Reset table to original state
   if (formChanges.originalData.value) {
     table.value = formChanges.discardChanges(table.value);
     hasFormChanges.value = false;
@@ -231,12 +227,11 @@ async function deleteTable() {
   await executeDeleteTable({ id: getId(table.value) });
 
   if (deleteError.value) {
-    return; // Error already handled by useApi
+    return; 
   }
 
   await fetchSchema();
 
-  // Reload routes to remove deleted table routes
   await loadRoutes();
 
   registerDataMenuItems(Object.values(schemas.value));
@@ -249,7 +244,6 @@ async function deleteTable() {
   return navigateTo(`/collections`);
 }
 
-// Watch for form changes
 watch(
   () => table.value,
   (newValue) => {
@@ -317,7 +311,6 @@ onMounted(() => {
       />
     </Transition>
 
-    <!-- Schema Viewer Modal -->
     <Teleport to="body">
       <UModal
         v-model:open="showSchemaViewer"

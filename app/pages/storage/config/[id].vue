@@ -213,7 +213,6 @@ async function updateConfig() {
     return;
   }
 
-  // Add updatedBy field with current user id (support both MongoDB and PostgreSQL)
   const idField = getIdFieldName();
   const body = {
     ...form.value,
@@ -229,7 +228,6 @@ async function updateConfig() {
     return;
   }
 
-  // Refetch latest config data to ensure UI reflects server state
   await executeGetConfig();
   const data = configData.value?.data?.[0];
   if (data) {
@@ -239,7 +237,6 @@ async function updateConfig() {
     formEditorRef.value?.confirmChanges();
   }
 
-  // Reload global storage configs
   await fetchGlobalStorageConfigs();
 
   toast.add({
@@ -263,7 +260,6 @@ async function deleteConfig() {
     return;
   }
 
-  // Reload global storage configs
   await fetchGlobalStorageConfigs();
 
   toast.add({

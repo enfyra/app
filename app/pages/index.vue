@@ -10,8 +10,6 @@
 </template>
 
 <script setup lang="ts">
-// Root index page - overview only
-// Main navigation is handled through sidebar menu
 
 const { registerPageHeader } = usePageHeaderRegistry();
 

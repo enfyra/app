@@ -40,12 +40,10 @@ function handleArrayInput(value: string) {
   emit('update:modelValue', parsedValues);
 }
 
-// Auto-normalize input format on blur
 function normalizeInput() {
-  // This will trigger the computed displayValue to re-render with proper format
-  // The computed getter will join the array with ',' (no spaces)
+
   if (Array.isArray(props.modelValue) && props.modelValue.length > 0) {
-    // Force re-render to show normalized format
+    
     nextTick();
   }
 }

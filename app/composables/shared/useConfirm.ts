@@ -8,7 +8,6 @@ const options = ref({
 
 let resolver: (value: boolean) => void;
 
-
 export function useConfirm() {
   const confirm = (opts: Partial<typeof options.value>): Promise<boolean> => {
     options.value = {

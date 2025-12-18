@@ -309,9 +309,9 @@ function getFileIconAndColor(mimetype: string): {
 
 <template>
   <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
-    <!-- File Content -->
+    
     <div class="space-y-6">
-      <!-- File Preview -->
+      
       <div
         class="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 shadow-xl overflow-hidden"
         v-if="!pending || !isMounted"
@@ -330,7 +330,6 @@ function getFileIconAndColor(mimetype: string): {
             />
           </div>
 
-          <!-- File Icon for non-images -->
           <div v-else class="text-center">
             <div
               :class="[
@@ -348,7 +347,6 @@ function getFileIconAndColor(mimetype: string): {
         </div>
       </div>
 
-      <!-- File Editor Section -->
       <div
         class="space-y-4 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 p-6"
       >
@@ -376,7 +374,6 @@ function getFileIconAndColor(mimetype: string): {
         </UForm>
       </div>
 
-      <!-- File Permissions Section -->
       <div class="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 p-6">
         <PermissionManager
           table-name="file_permission_definition"
@@ -387,7 +384,6 @@ function getFileIconAndColor(mimetype: string): {
       </div>
     </div>
 
-    <!-- Replace File Modal -->
     <CommonUploadModal
       v-model="showReplaceModal"
       :title="`Replace ${form.filename || 'File'}`"

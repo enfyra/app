@@ -2,21 +2,12 @@ export function useDatabase() {
   const config = useRuntimeConfig();
   const dbType = config.public.dbType as 'postgres' | 'mysql' | 'mongodb' | 'mariadb';
 
-  /**
-   * Check if the current database is MongoDB
-   */
   const isMongoDB = computed(() => dbType === 'mongodb');
 
-  /**
-   * Get the ID field name based on database type
-   */
   const getIdFieldName = (): 'id' | '_id' => {
     return dbType === 'mongodb' ? '_id' : 'id';
   };
 
-  /**
-   * Get id value from an item, respecting the database type
-   */
   const getId = (item: any): any => {
     if (!item) return null;
     
@@ -29,24 +20,18 @@ export function useDatabase() {
     return rawId;
   };
 
-  /**
-   * Delete id fields from an object based on database type
-   */
   const deleteIds = (obj: any): void => {
     if (!obj) return;
     
     if (isMongoDB.value) {
       delete obj._id;
-      delete obj.id; // Also delete id for safety
+      delete obj.id; 
     } else {
       delete obj.id;
-      delete obj._id; // Also delete _id for safety
+      delete obj._id; 
     }
   };
 
-  /**
-   * Create an ID filter that works with the current database type
-   */
   const createIdFilter = (idValue: any, operator: string = '_eq'): any => {
     const fieldName = getIdFieldName();
     return {

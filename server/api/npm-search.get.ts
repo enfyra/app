@@ -52,7 +52,6 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    // Call NPM Registry API
     const response = await $fetch<NpmSearchResponse>(
       `https://registry.npmjs.org/-/v1/search`,
       {
@@ -66,7 +65,6 @@ export default defineEventHandler(async (event) => {
       }
     );
 
-    // Transform response to simpler format
     const packages = response.objects.map((obj) => ({
       name: obj.package.name,
       version: obj.package.version,
@@ -86,7 +84,6 @@ export default defineEventHandler(async (event) => {
       },
     }));
 
-    // Sort by relevance (combination of search score and package score)
     packages.sort((a, b) => {
       const scoreA = a.searchScore * 0.7 + a.score * 0.3;
       const scoreB = b.searchScore * 0.7 + b.score * 0.3;

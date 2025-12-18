@@ -10,7 +10,6 @@ const props = defineProps<{
 
 const emit = defineEmits(["apply", "update:open"]);
 
-// Local state for drawer open/close
 const isDrawerOpen = computed({
   get: () => props.open || false,
   set: (value) => emit("update:open", value),
@@ -37,18 +36,14 @@ const targetTable = computed(() => {
   ) || null;
 });
 
-// Get schema for the target table - computed to handle reactive props
 const targetTableName = computed(() => targetTable.value?.name || "");
 const { getIncludeFields, definition } = useSchema(targetTableName);
 
-
 const { isMounted } = useMounted();
 
-// Get the correct route for the target table
 const { getRouteForTableId, ensureRoutesLoaded } = useRoutes();
 const targetRoute = ref<string>('');
 
-// Load routes and set target route
 watchEffect(async () => {
   const tableId = getId(targetTable.value);
   if (tableId) {
@@ -94,16 +89,15 @@ const data = computed(() => {
 });
 
 const total = computed(() => {
-  // Use filterCount when there are active filters, otherwise use totalCount
+  
   const hasFilters = hasActiveFilters(currentFilter.value);
   if (hasFilters) {
-    // When filtering, use filterCount even if it's 0
+    
     return apiData.value?.meta?.filterCount ?? 0;
   }
   return apiData.value?.meta?.totalCount || 0;
 });
 
-// Ensure page is valid when total changes
 watch(total, (newTotal) => {
   const maxPage = Math.ceil(newTotal / limit);
   if (page.value > maxPage && maxPage > 0) {
@@ -119,7 +113,7 @@ function toggle(id: any) {
       ? selected.value.filter((s) => getId(s) !== id)
       : [...selected.value, { [getIdFieldName()]: id }];
   } else {
-    // For single select: if already selected, deselect; otherwise select
+    
     const isCurrentlySelected = selected.value.some((s) => getId(s) === id);
     selected.value = isCurrentlySelected ? [] : [{ [getIdFieldName()]: id }];
   }
@@ -137,16 +131,15 @@ function navigateToDetail(item: any) {
   window.open(url, '_blank');
 }
 
-// Handle filter apply from FilterDrawer
 async function handleFilterApply(filter: FilterGroup) {
   currentFilter.value = filter;
-  page.value = 1; // Reset to first page when filter changes
+  page.value = 1; 
   await fetchDataWithValidation();
 }
 
 async function clearFilter() {
   currentFilter.value = createEmptyFilter();
-  page.value = 1; // Reset to first page when clearing filters
+  page.value = 1; 
   await fetchDataWithValidation();
 }
 
@@ -158,23 +151,18 @@ async function fetchDataWithValidation() {
   try {
     await fetchData();
 
-    // Validate page after fetch
     const maxPage = Math.ceil(total.value / limit);
     if (page.value > maxPage && maxPage > 0) {
       page.value = maxPage;
     }
   } catch (error) {
     console.error("Error fetching relation data:", error);
-    // Reset to page 1 on error
+    
     if (page.value > 1) {
       page.value = 1;
     }
   }
 }
-
-// onMounted(
-//   fetchDataWithValidation
-// );
 
 watch(
   () => props.open,
@@ -193,7 +181,7 @@ const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
-  <!-- Main Drawer -->
+  
   <CommonDrawer
     :handle="false"
     handle-only
@@ -207,7 +195,7 @@ const { isMobile, isTablet } = useScreen();
     </template>
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
-          <!-- Header Section -->
+          
           <div
             :class="(isMobile || isTablet) ? 'rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 shadow-sm bg-white dark:bg-gray-800/50' : 'rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 shadow-sm bg-white dark:bg-gray-800/50'"
           >
@@ -228,7 +216,6 @@ const { isMobile, isTablet } = useScreen();
                 </div>
               </div>
 
-              <!-- Action Buttons -->
               <FormRelationActions
                 :has-active-filters="hasActiveFilters(currentFilter)"
                 :filter-count="currentFilter.conditions.length"
@@ -238,7 +225,6 @@ const { isMobile, isTablet } = useScreen();
               />
             </div>
 
-            <!-- Selection Mode & Count -->
             <div class="flex items-center gap-2">
               <UBadge v-if="selected.length > 0" variant="soft" color="primary" size="sm">
                 {{ selected.length }} selected
@@ -253,11 +239,10 @@ const { isMobile, isTablet } = useScreen();
             </div>
           </div>
 
-          <!-- Content Section -->
           <div
             :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 bg-white dark:bg-gray-800/50' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 bg-white dark:bg-gray-800/50'"
           >
-            <!-- Loading State -->
+            
             <CommonLoadingState
               v-if="!isMounted || loading"
               type="form"
@@ -265,7 +250,6 @@ const { isMobile, isTablet } = useScreen();
               size="md"
             />
 
-            <!-- Empty State -->
             <CommonEmptyState
               v-else-if="isMounted && !loading && data.length === 0"
               :title="
@@ -291,7 +275,6 @@ const { isMobile, isTablet } = useScreen();
               "
             />
 
-            <!-- Data List -->
             <FormRelationList
               v-else
               :data="data"
@@ -326,8 +309,6 @@ const { isMobile, isTablet } = useScreen();
     v-model:selected="selected"
   />
 
-
-  <!-- Filter Drawer -->
   <FilterDrawerLazy
     v-model="showFilterDrawer"
     :table-name="targetTable?.name || ''"

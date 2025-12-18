@@ -52,7 +52,6 @@ const form = ref<Record<string, any>>({});
 
 const errors = ref<Record<string, string>>({});
 
-// Dynamic excluded fields based on form state (same logic as create page)
 const excludedFields = computed(() => {
   const baseExcluded = [
     "id",
@@ -63,26 +62,24 @@ const excludedFields = computed(() => {
     "menus",
   ];
 
-  // If no type selected, hide all relation fields
   if (!form.value.type) {
     baseExcluded.push("sidebar", "parent", "extension");
   }
-  // If type is "Mini Sidebar" - shows in sidebar, has path, no parent/sidebar
+  
   else if (form.value.type === "Mini Sidebar") {
     baseExcluded.push("sidebar", "parent");
   }
-  // If type is "Dropdown Menu" - shows inside a sidebar, no path, no parent/extension
+  
   else if (form.value.type === "Dropdown Menu") {
     baseExcluded.push("path", "parent", "extension");
   }
-  // If type is "Menu" - shows inside sidebar or dropdown, can have everything
+  
   else if (form.value.type === "Menu") {
-    // If parent is selected, exclude sidebar (child inherits parent's sidebar)
-    // But keep path field visible as it might be required
+
     if (form.value.parent) {
       baseExcluded.push("sidebar");
     }
-    // If sidebar is selected, exclude parent (direct menu under sidebar)
+    
     else if (form.value.sidebar) {
       baseExcluded.push("parent");
     }
@@ -91,7 +88,6 @@ const excludedFields = computed(() => {
   return baseExcluded;
 });
 
-// Static type map to avoid reactive interference with inputs
 const typeMap = {
   permission: {
     type: "permission",
@@ -107,29 +103,27 @@ async function initializeForm() {
   }
 }
 
-// Watch type changes and clear conflicting fields
 watch(
   () => form.value.type,
   (newType, oldType) => {
     if (oldType && newType !== oldType) {
-      // Clear fields that should be excluded for the new type
+      
       if (newType === "Mini Sidebar") {
-        // Mini Sidebar: no parent, no sidebar, but has path
+        
         form.value.sidebar = null;
         form.value.parent = null;
       } else if (newType === "Dropdown Menu") {
-        // Dropdown: no path, no parent, no extension, but has sidebar
+        
         form.value.path = "";
         form.value.parent = null;
         form.value.extension = null;
       } else if (newType === "Menu") {
-        // Menu: can have everything, don't auto-clear as user might want to keep values
-        // Ensure mutual exclusion if both are set
+
         if (form.value.parent && form.value.sidebar) {
-          form.value.sidebar = null; // Prefer parent
+          form.value.sidebar = null; 
         }
       } else {
-        // If clearing type, clear all relation fields
+        
         form.value.sidebar = null;
         form.value.parent = null;
         form.value.extension = null;
@@ -139,13 +133,12 @@ watch(
   }
 );
 
-// Watch parent/sidebar mutual exclusion for Menu type
 watch(
   () => form.value.parent,
   (newParent) => {
     if (newParent && form.value.type === "Menu") {
       form.value.sidebar = null;
-      // Don't clear path - user might want to set custom path for child menu
+      
     }
   }
 );
@@ -159,7 +152,6 @@ watch(
   }
 );
 
-// Watch path changes for Mini Sidebar type (warn if missing)
 watch(
   () => form.value.path,
   (newPath) => {
@@ -173,7 +165,6 @@ watch(
   }
 );
 
-// Watch sidebar changes for Dropdown Menu type (warn if missing)
 watch(
   () => form.value.sidebar,
   (newSidebar) => {
@@ -281,7 +272,6 @@ async function updateMenuDetail() {
   await fetchMenuDefinitions();
   await reregisterAllMenus(fetchMenuDefinitions as any);
 
-  // Also reregister table menus to restore them
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
     await registerDataMenuItems(schemaValues);
@@ -294,7 +284,6 @@ async function updateMenuDetail() {
   });
   errors.value = {};
 
-  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
   formChanges.update(form.value);
 }
@@ -315,7 +304,6 @@ async function deleteMenuDetail() {
   await fetchMenuDefinitions();
   await reregisterAllMenus(fetchMenuDefinitions as any);
 
-  // Also reregister table menus to restore them
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
     await registerDataMenuItems(schemaValues);

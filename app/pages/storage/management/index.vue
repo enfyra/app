@@ -236,7 +236,7 @@ useHeaderActionRegistry([
 
 <template>
   <div class="space-y-8">
-    <!-- Integrated File Manager -->
+    
     <FileManager
       :folders="folders"
       :files="files"
@@ -251,12 +251,11 @@ useHeaderActionRegistry([
       @create-folder="showCreateModal = true"
     />
 
-    <!-- Pagination -->
     <div
       class="flex justify-center gap-4 mt-6"
       v-if="!rootPending && !filesPending"
     >
-      <!-- Folder Pagination -->
+      
       <div v-if="folderTotal > limit" class="flex items-center gap-2">
         <span class="text-sm text-gray-600 dark:text-gray-400">Folders:</span>
         <UPagination
@@ -276,7 +275,6 @@ useHeaderActionRegistry([
         />
       </div>
 
-      <!-- File Pagination -->
       <div v-if="fileTotal > limit" class="flex items-center gap-2">
         <span class="text-sm text-gray-600 dark:text-gray-400">Files:</span>
         <UPagination
@@ -297,7 +295,6 @@ useHeaderActionRegistry([
       </div>
     </div>
 
-    <!-- Upload Modal -->
     <CommonUploadModal
       v-model="showUploadModal"
       title="Upload Files"
@@ -323,7 +320,6 @@ useHeaderActionRegistry([
       </template>
     </CommonUploadModal>
 
-    <!-- Create Folder Modal -->
     <FolderCreateModal
       v-model="showCreateModal"
       @created="handleFolderCreated"

@@ -1,4 +1,4 @@
-// File-related types and interfaces
+
 
 export interface FileItem {
   id: string;

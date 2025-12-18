@@ -21,7 +21,7 @@ export default defineNuxtPlugin(() => {
       }
 
       let faviconUrl = projectFavicon;
-      if (!projectFavicon.startsWith('http://') && !projectFavicon.startsWith('https://') && !projectFavicon.startsWith('/')) {
+      if (!projectFavicon.startsWith('http://') && !projectFavicon.startsWith('https://')) {
         faviconUrl = `/assets/${projectFavicon}`;
       }
 

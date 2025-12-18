@@ -33,7 +33,7 @@ function removeGroup(list: string[][], groupIndex: number) {
 
 <template>
   <div class="space-y-8">
-    <!-- Unique Constraints -->
+    
     <div class="space-y-4">
       <div class="flex items-center gap-2 text-lg font-semibold text-muted">
         <UIcon name="lucide:key" class="w-5 h-5" />
@@ -77,7 +77,6 @@ function removeGroup(list: string[][], groupIndex: number) {
       </div>
     </div>
 
-    <!-- Index -->
     <div class="space-y-4">
       <div class="flex items-center gap-2 text-lg font-semibold text-muted">
         <UIcon name="lucide:list" class="w-5 h-5" />

@@ -77,7 +77,7 @@ const displayArray = computed(() => {
           ) {
             cleaned = cleaned.slice(1, -1);
           }
-          // Remove escape characters
+          
           cleaned = cleaned.replace(/\\"/g, '"').replace(/\\'/g, "'");
           return cleaned;
         })

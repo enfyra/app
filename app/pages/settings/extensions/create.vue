@@ -18,7 +18,6 @@
       </CommonFormCard>
     </div>
 
-    <!-- Upload Modal -->
     <CommonUploadModalLazy
       v-model="showUploadModal"
       title="Upload Extension"
@@ -41,7 +40,6 @@
       "
     />
 
-    <!-- Preview Modal -->
     <ExtensionPreviewModal
       v-model="showPreviewModal"
       :code="createForm?.code || ''"
@@ -62,7 +60,6 @@ const tableName = "extension_definition";
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
-// Upload modal state
 const showUploadModal = ref(false);
 const uploadLoading = ref(false);
 const showPreviewModal = ref(false);
@@ -121,7 +118,6 @@ useHeaderActionRegistry([
       },
 ]);
 
-// Setup useApi composable at top level
 const {
   data: createData,
   error: createError,
@@ -173,7 +169,7 @@ async function handleUpload(files: File | File[]) {
     uploadLoading.value = true;
 
     for (const file of fileArray) {
-      // Read file content and put it into createForm.code field
+      
       const fileContent = await readFileContent(file);
       createForm.value.code = fileContent;
 
@@ -196,7 +192,6 @@ async function handleUpload(files: File | File[]) {
   }
 }
 
-// Helper function to read file content
 function readFileContent(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

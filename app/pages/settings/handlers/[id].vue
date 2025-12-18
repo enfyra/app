@@ -189,7 +189,6 @@ async function save() {
     return;
   }
 
-  // Refetch latest handler data to ensure UI reflects server state
   await executeGetHandler();
   const data = handlerData.value?.data?.[0];
   if (data) {

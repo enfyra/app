@@ -1,6 +1,6 @@
 <template>
   <div class="relative w-full h-full flex items-center justify-center overflow-hidden">
-    <!-- Dotted grid pattern background -->
+    
     <div
       class="absolute inset-0 opacity-20"
       style="
@@ -9,13 +9,11 @@
       "
     />
 
-    <!-- Gradient backdrop for depth -->
     <div
       class="absolute inset-0 opacity-30"
       style="background: radial-gradient(circle at center, #7C3AED20 0%, transparent 70%)"
     />
 
-    <!-- Large centered icon -->
     <div
       class="relative z-10 transition-all duration-300"
     >

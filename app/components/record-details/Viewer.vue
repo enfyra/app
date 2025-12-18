@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <!-- Basic Information Section -->
+    
     <div class="bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg p-4">
       <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
         <UIcon name="lucide:info" size="20" class="text-primary" />
@@ -27,7 +27,6 @@
       </div>
     </div>
 
-    <!-- Relations Section -->
     <div v-if="relationFields.length > 0" class="bg-gradient-to-r from-info/5 to-success/5 rounded-lg p-4">
       <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
         <UIcon name="lucide:git-fork" size="20" class="text-info" />
@@ -59,7 +58,6 @@
       </div>
     </div>
 
-    <!-- Metadata Section -->
     <div v-if="metadataFields.length > 0" class="bg-gradient-to-r from-warning/5 to-error/5 rounded-lg p-4">
       <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
         <UIcon name="lucide:clock" size="20" class="text-warning" />
@@ -107,7 +105,6 @@ const visibleFields = computed(() => {
   return sortFieldsByOrder(fields);
 });
 
-// Separate fields into logical sections
 const basicFields = computed(() => {
   return visibleFields.value.filter((field) => {
     const key = field.name || field.propertyName;

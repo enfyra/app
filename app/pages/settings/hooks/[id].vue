@@ -181,7 +181,6 @@ async function updateHook() {
   });
   errors.value = {};
 
-  // Confirm form changes as new baseline
   formEditorRef.value?.confirmChanges();
   formChanges.update(form.value);
 }

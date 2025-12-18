@@ -1,6 +1,4 @@
 <script setup lang="ts">
-// Settings index page - overview only
-// Individual settings are accessed through sidebar navigation with permission checks
 
 const { registerPageHeader } = usePageHeaderRegistry();
 

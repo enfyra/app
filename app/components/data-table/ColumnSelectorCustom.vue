@@ -35,6 +35,5 @@ const props = withDefaults(defineProps<Props>(), {
   variant: "soft",
 });
 
-// Type assertion to bypass TypeScript error for panel slot
 const PopoverComponent = resolveComponent('UPopover') as any;
 </script>

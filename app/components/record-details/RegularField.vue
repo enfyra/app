@@ -1,6 +1,6 @@
 <template>
   <div class="text-sm">
-    <!-- Null/Empty -->
+    
     <span
       v-if="value === null || value === undefined"
       class="text-muted-foreground italic"
@@ -8,7 +8,6 @@
       —
     </span>
 
-    <!-- Boolean -->
     <span
       v-else-if="typeof value === 'boolean'"
       class="inline-flex items-center gap-1"
@@ -21,13 +20,11 @@
       <span>{{ value ? "True" : "False" }}</span>
     </span>
 
-    <!-- Date/Time -->
     <span v-else-if="isDateField" class="inline-flex items-center gap-1">
       <UIcon name="lucide:calendar" class="text-muted-foreground" size="14" />
       <span class="font-mono text-xs">{{ formatDate(value) }}</span>
     </span>
 
-    <!-- ID Fields -->
     <span
       v-else-if="field.name === 'id' || field.propertyName === 'id'"
       class="inline-flex items-center gap-1"
@@ -36,7 +33,6 @@
       <span class="font-mono">{{ value }}</span>
     </span>
 
-    <!-- Array (non-relation) -->
     <div v-else-if="Array.isArray(value)" class="space-y-1">
       <UBadge variant="outline" size="sm">{{ value.length }} items</UBadge>
       <div v-if="value.length > 0" class="pl-2 border-l-2 border-muted">
@@ -53,7 +49,6 @@
       </div>
     </div>
 
-    <!-- Long Text -->
     <div v-else-if="isLongText" class="space-y-2">
       <div class="text-xs text-muted-foreground">
         {{ String(value).length }} characters
@@ -77,7 +72,6 @@
       </UButton>
     </div>
 
-    <!-- JSON/Object -->
     <div
       v-else-if="typeof value === 'object'"
       class="p-3 bg-muted/30 rounded border"
@@ -88,7 +82,6 @@
       >
     </div>
 
-    <!-- Regular Text/Number -->
     <span v-else class="inline-flex items-center gap-1">
       <UIcon
         v-if="getFieldIcon"

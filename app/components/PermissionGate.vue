@@ -24,7 +24,6 @@ const hasPermission = computed(() => {
     return checkPermissionCondition(props.condition);
   }
 
-  // Fallback to legacy approach
   if (props.routes && props.actions) {
     if (props.mode === "all") {
       return hasAllPermissions(props.routes, props.actions);

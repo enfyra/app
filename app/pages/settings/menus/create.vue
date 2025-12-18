@@ -13,7 +13,6 @@ registerPageHeader({
   gradient: "purple",
 });
 
-// Dynamic excluded fields based on form state
 const excludedFields = computed(() => {
   const baseExcluded = [
     "id",
@@ -24,26 +23,24 @@ const excludedFields = computed(() => {
     "menus",
   ];
 
-  // If no type selected, hide all relation fields
   if (!form.value.type) {
     baseExcluded.push("sidebar", "parent", "extension");
   }
-  // If type is "Mini Sidebar" - shows in sidebar, has path, no parent/sidebar
+  
   else if (form.value.type === "Mini Sidebar") {
     baseExcluded.push("sidebar", "parent");
   }
-  // If type is "Dropdown" - shows inside a sidebar, no path, no parent/extension
+  
   else if (form.value.type === "Dropdown Menu") {
     baseExcluded.push("path", "parent", "extension");
   }
-  // If type is "Menu" - shows inside sidebar or dropdown, can have everything
+  
   else if (form.value.type === "Menu") {
-    // If parent is selected, exclude sidebar (child inherits parent's sidebar)
-    // But keep path field visible as it might be required
+
     if (form.value.parent) {
       baseExcluded.push("sidebar");
     }
-    // If sidebar is selected, exclude parent (direct menu under sidebar)
+    
     else if (form.value.sidebar) {
       baseExcluded.push("parent");
     }
@@ -52,7 +49,6 @@ const excludedFields = computed(() => {
   return baseExcluded;
 });
 
-// Static type map to avoid reactive interference with inputs
 const typeMap = {
   order: {
     componentProps: {
@@ -65,7 +61,6 @@ const typeMap = {
   },
 };
 
-// Menu registry composables for reregistering after changes
 const { fetchMenuDefinitions } = useMenuApi();
 const { reregisterAllMenus, registerDataMenuItems } =
   useMenuRegistry();
@@ -101,31 +96,29 @@ useHeaderActionRegistry([
   },
 ]);
 
-// Watch type changes and clear conflicting fields
 watch(
   () => form.value.type,
   (newType, oldType) => {
     if (oldType && newType !== oldType) {
-      // Clear fields that should be excluded for the new type
+      
       if (newType === "Mini Sidebar") {
-        // Mini Sidebar: no parent, no sidebar, but has path
+        
         form.value.sidebar = null;
         form.value.parent = null;
-        // Keep path as it's required for Mini Sidebar
+        
       } else if (newType === "Dropdown Menu") {
-        // Dropdown: no path, no parent, no extension, but has sidebar
+        
         form.value.path = "";
         form.value.parent = null;
         form.value.extension = null;
-        // Keep sidebar as it's required for Dropdown
+        
       } else if (newType === "Menu") {
-        // Menu: can have everything, don't auto-clear as user might want to keep values
-        // But ensure mutual exclusion between parent and sidebar
+
         if (form.value.parent && form.value.sidebar) {
-          form.value.sidebar = null; // Prefer parent over sidebar
+          form.value.sidebar = null; 
         }
       } else {
-        // If clearing type, clear all relation fields
+        
         form.value.sidebar = null;
         form.value.parent = null;
         form.value.extension = null;
@@ -135,13 +128,12 @@ watch(
   }
 );
 
-// Watch parent/sidebar mutual exclusion for Menu type
 watch(
   () => form.value.parent,
   (newParent) => {
     if (newParent && form.value.type === "Menu") {
       form.value.sidebar = null;
-      // Don't clear path - user might want to set custom path for child menu
+      
     }
   }
 );
@@ -155,12 +147,11 @@ watch(
   }
 );
 
-// Watch path changes for Mini Sidebar type
 watch(
   () => form.value.path,
   (newPath) => {
     if (form.value.type === "Mini Sidebar" && !newPath) {
-      // Mini Sidebar requires a path
+      
       toast.add({
         title: "Path Required",
         description: "Mini Sidebar must have a path",
@@ -170,12 +161,11 @@ watch(
   }
 );
 
-// Watch sidebar changes for Dropdown Menu type
 watch(
   () => form.value.sidebar,
   (newSidebar) => {
     if (form.value.type === "Dropdown Menu" && !newSidebar) {
-      // Dropdown Menu requires a sidebar
+      
       toast.add({
         title: "Sidebar Required",
         description: "Dropdown Menu must be assigned to a sidebar",
@@ -190,7 +180,7 @@ onMounted(() => {
 });
 
 async function saveMenu() {
-  // Custom validation based on menu type
+  
   let validationErrors: string[] = [];
 
   if (form.value.type === "Mini Sidebar") {
@@ -228,7 +218,6 @@ async function saveMenu() {
     return;
   }
 
-  // Validate form using existing validation
   const validationResult = validate(form.value);
   if (
     !validationResult.isValid &&
@@ -243,17 +232,14 @@ async function saveMenu() {
     return;
   }
 
-  // Create menu
   await createMenu({ body: form.value });
 
   if (createError.value) {
     return;
   }
 
-  // Reregister all menus after create
   await reregisterAllMenus(fetchMenuDefinitions as any);
 
-  // Also reregister table menus to ensure consistency
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
     await registerDataMenuItems(schemaValues);
@@ -265,7 +251,6 @@ async function saveMenu() {
     color: "success",
   });
 
-  // Redirect to menus list
   await navigateTo("/settings/menus");
 }
 </script>

@@ -20,7 +20,6 @@
       </slot>
     </div>
 
-    <!-- Form Content -->
     <slot />
   </UiModernCard>
 </template>
