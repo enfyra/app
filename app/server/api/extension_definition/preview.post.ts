@@ -1,6 +1,10 @@
+import {
+  defineEventHandler,
+  readBody,
+  createError,
+} from "h3";
 import { buildExtensionWithVite } from "../../../utils/server/extension/compiler";
 import { isProbablyVueSFC, assertValidVueSFC, assertValidJsBundleSyntax } from "../../../utils/server/extension/validation";
-import { createError } from "h3";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);

@@ -158,7 +158,11 @@ const visibleGroups = computed(() => {
 
       return { ...group, items: matchedItems };
     })
-    .filter(group => !query || group.items?.length);
+    .filter(group => {
+      if (!query) return true;
+      if (group.type === 'Menu') return true;
+      return group.items?.length > 0;
+    });
 });
 </script>
 
@@ -342,19 +346,19 @@ const visibleGroups = computed(() => {
             </div>
 
             <div
-              v-else-if="group.type === 'Menu' && (!group.items || group.items.length === 0)"
+              v-else-if="group.type === 'Menu'"
               class="space-y-1 px-3"
             >
               <NuxtLink
-                v-if="group.route"
-                :to="group.route"
+                v-if="group.route || group.path"
+                :to="(group.route || group.path)!"
                 @click="handleMenuClick"
                 :class="[
                   'menu-item group',
-                  (group.route && activeRoutes.has(group.route)) ? 'menu-item-active' : 'menu-item-inactive'
+                  ((group.route || group.path) && activeRoutes.has((group.route || group.path)!)) ? 'menu-item-active' : 'menu-item-inactive'
                 ]"
               >
-                <span :class="(group.route && activeRoutes.has(group.route)) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
+                <span :class="((group.route || group.path) && activeRoutes.has((group.route || group.path)!)) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
                 <UIcon
                   :name="group.icon"
                   class="w-5 h-5 flex-shrink-0"
@@ -362,6 +366,24 @@ const visibleGroups = computed(() => {
                 </span>
                 <span class="menu-item-text">{{ group.label }}</span>
               </NuxtLink>
+              <div
+                v-else
+                :class="[
+                  'menu-item group',
+                  'menu-item-inactive'
+                ]"
+              >
+                <span class="menu-item-icon-inactive">
+                <UIcon
+                  :name="group.icon"
+                  class="w-5 h-5 flex-shrink-0"
+                />
+                </span>
+                <span class="menu-item-text">{{ group.label }}</span>
+                <div class="text-red-500 text-xs mt-1">
+                  DEBUG: Missing route/path
+                </div>
+              </div>
             </div>
 
             <div v-else>

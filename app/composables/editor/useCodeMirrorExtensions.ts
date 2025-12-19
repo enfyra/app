@@ -10,7 +10,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     const fullText = doc.toString()
     const beforePos = fullText.substring(0, absolutePos)
     
-    const lineCommentIndex = beforePos.lastIndexOf('
+    const lineCommentIndex = beforePos.lastIndexOf('//')
     if (lineCommentIndex !== -1) {
       const afterComment = fullText.substring(lineCommentIndex + 2, absolutePos)
       if (!afterComment.includes('\n')) {
@@ -18,7 +18,9 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       }
     }
     
-    const blockCommentStart = beforePos.lastIndexOf('')
+    const blockCommentStart = beforePos.lastIndexOf('/*')
+    if (blockCommentStart !== -1) {
+      const blockCommentEnd = fullText.indexOf('*/', blockCommentStart)
       if (blockCommentEnd === -1 || blockCommentStart + 2 + blockCommentEnd >= absolutePos) {
         return true
       }
@@ -204,7 +206,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     const trimmedPrev = prevLineText.trim();
     const rootLevelPatterns = [
       /^(import|export|const|let|var|function|class)\b/,
-      /^\/\
+      /^\/\//,
       /^\/\*/,  
     ];
     
