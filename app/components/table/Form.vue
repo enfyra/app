@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useModel } from "#imports";
-
 const props = withDefaults(
   defineProps<{
     modelValue: any;

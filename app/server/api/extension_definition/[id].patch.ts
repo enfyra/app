@@ -4,6 +4,7 @@ import {
   getHeader,
   createError,
 } from "h3";
+// @ts-ignore
 import { useRuntimeConfig } from "#imports";
 import { $fetch } from "ofetch";
 import {

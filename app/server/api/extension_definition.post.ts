@@ -4,8 +4,9 @@ import {
   getHeader,
   createError,
 } from "h3";
-import { useRuntimeConfig } from "#imports";
 import { $fetch } from "ofetch";
+// @ts-ignore
+import { useRuntimeConfig } from "#imports";
 import {
   processExtensionDefinition,
 } from "../../utils/server/extension";

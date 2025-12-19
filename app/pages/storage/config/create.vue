@@ -126,7 +126,7 @@ async function handleCreate() {
   const idField = getIdFieldName();
   const body = {
     ...createForm.value,
-    createdBy: { [idField]: me.value?.[idField] }
+    createdBy: { [idField]: (me.value as any)?.[idField] }
   };
 
   await executeCreateConfig({ body });

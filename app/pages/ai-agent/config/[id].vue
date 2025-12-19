@@ -180,7 +180,7 @@ async function updateConfig() {
   const idField = getIdFieldName();
   const body = {
     ...form.value,
-    updatedBy: { [idField]: me.value?.[idField] }
+    updatedBy: { [idField]: (me.value as any)?.[idField] }
   };
 
   await executeUpdateConfig({
