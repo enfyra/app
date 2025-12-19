@@ -1,8 +1,8 @@
-import { ref, unref, toRaw, computed } from "vue";
-import { $fetch } from "~/utils/api/http";
+import { ref, unref, toRaw } from "vue";
+// import { $fetch } from "~/utils/api/http";
 import { getAppUrl, normalizeUrl } from "~/utils/api/url";
 
-const ENFYRA_API_PREFIX = "/enfyra/api";
+const ENFYRA_API_PREFIX = "/api";
 
 interface ApiError {
   message: string;
@@ -83,7 +83,6 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       };
 
       const fullBaseURL = normalizeUrl(apiUrl, apiPrefix);
-
       // Handle batch file upload
       if (
         isBatchOperation &&

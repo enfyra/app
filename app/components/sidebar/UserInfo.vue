@@ -6,7 +6,7 @@ const { setSidebarVisible, sidebarCollapsed } = useGlobalState();
 
 const userEmail = computed(() => {
   if (!me.value) return '';
-  return me.value.email || me.value.username || '';
+  return me.value.email || '';
 });
 
 const isCollapsed = computed(() => {

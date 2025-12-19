@@ -92,20 +92,6 @@ import {
 } from "#components";
 
 import {
-  useHeaderActionRegistry,
-  useSubHeaderActionRegistry,
-  usePageHeaderRegistry,
-  useSchema,
-  useScreen,
-  useGlobalState,
-  useConfirm,
-  useEnfyraAuth,
-  usePermissions,
-  useFilterQuery,
-  useDataTableColumns,
-  useApi,
-  useEnfyraApi,
-  useToast,
   useState,
   useRoute,
   useRouter,
@@ -117,6 +103,37 @@ import {
   useLazyFetch,
   useHead,
   useSeoMeta,
+} from "#app";
+
+import {
+  // @ts-ignore
+  useHeaderActionRegistry,
+  // @ts-ignore
+  useSubHeaderActionRegistry,
+  // @ts-ignore
+  usePageHeaderRegistry,
+  // @ts-ignore
+  useSchema,
+  // @ts-ignore
+  useScreen,
+  // @ts-ignore
+  useGlobalState,
+  // @ts-ignore
+  useConfirm,
+  // @ts-ignore
+  useEnfyraAuth,
+  // @ts-ignore
+  usePermissions,
+  // @ts-ignore
+  useFilterQuery,
+  // @ts-ignore
+  useDataTableColumns,
+  // @ts-ignore
+  useApi,
+  // @ts-ignore
+  useToast,
+  // @ts-ignore
+  useEnfyra
 } from "#imports";
 
 import { EXTENSION_VUE_FUNCTIONS } from "../../utils/extension/globals";
@@ -317,7 +334,6 @@ export const useDynamicComponent = () => {
 
       const composables = {
         useApi,
-        useEnfyraApi,
         useHeaderActionRegistry,
         useSubHeaderActionRegistry,
         usePageHeaderRegistry,
@@ -471,7 +487,6 @@ export const useDynamicComponent = () => {
 
       const composables = {
         useApi,
-        useEnfyraApi,
         useHeaderActionRegistry: mockUseHeaderActionRegistry,
         useSubHeaderActionRegistry: mockUseSubHeaderActionRegistry,
         usePageHeaderRegistry: mockUsePageHeaderRegistry,

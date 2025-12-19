@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useModel } from "#imports";
 
 const props = defineProps<{
   modelValue: any;
