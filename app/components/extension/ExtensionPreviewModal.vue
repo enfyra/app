@@ -111,15 +111,23 @@ async function compileAndPreview() {
   previewComponent.value = null;
 
   try {
-    const response = await $fetch('/api/extension_definition/preview', {
+    const { getAppUrl } = await import('~/utils/api/url');
+    const baseURL = getAppUrl();
+    
+    const response = await $fetch<{
+      success: boolean;
+      compiledCode: string;
+      extensionId?: string;
+    }>('/api/extension_definition/preview', {
       method: 'POST',
       body: {
         code: props.code,
       },
+      baseURL,
     });
 
     if (response?.success && response?.compiledCode) {
-      const extensionId = (response as any)?.extensionId || `preview_${Date.now()}`;
+      const extensionId = response?.extensionId || `preview_${Date.now()}`;
       const component = await loadExtensionComponentPreview(
         response.compiledCode,
         extensionId,

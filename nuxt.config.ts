@@ -15,23 +15,28 @@ export default defineNuxtConfig({
   ],
   serverHandlers: [
     {
-      route: "/enfyra/api/npm-search",
-      handler: "server/api/npm-search.get.ts",
+      route: "/api/npm-search",
+      handler: "~/server/api/npm-search.get.ts",
       method: "get",
     },
     {
-      route: "/enfyra/api/extension_definition",
-      handler: "server/api/extension_definition.post.ts",
+      route: "/api/extension_definition",
+      handler: "~/server/api/extension_definition.post.ts",
       method: "post",
     },
     {
-      route: "/enfyra/api/extension_definition/**",
-      handler: "server/api/extension_definition/[id].patch.ts",
+      route: "/api/extension_definition/**",
+      handler: "~/server/api/extension_definition/[id].patch.ts",
       method: "patch",
     },
     {
+      route: "/api/extension_definition/preview",
+      handler: "~/server/api/extension_definition/preview.post.ts",
+      method: "post",
+    },
+    {
       route: "**",
-      handler: "server/middleware/server-id.ts",
+      handler: "~/server/middleware/server-id.ts",
       middleware: true,
     },
   ],
@@ -96,6 +101,7 @@ export default defineNuxtConfig({
     },
   },
   enfyraSDK: {
-    apiUrl: process.env.API_URL
+    apiUrl: process.env.API_URL,
+    apiPrefix: '/api'
   },
 });
