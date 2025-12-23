@@ -1,66 +1,68 @@
 <template>
-  <div
-    class="flow-node group cursor-pointer transition-all relative"
-    :class="[
-      nodeClass,
-      data.enabled === false ? 'disabled-state' : ''
-    ]"
-    @click="handleClick"
-  >
-    <Handle type="target" :position="Position.Left" :style="{ top: '50%', transform: 'translateY(-50%)', opacity: 0 }" />
-    <Handle type="source" :position="Position.Right" :style="{ top: '50%', transform: 'translateY(-50%)', opacity: 0 }" />
-    <div v-if="data.enabled !== false" class="status-indicator"></div>
-    <div class="flow-node-content">
-      <div class="flex items-start gap-1.5">
-        <div :class="iconClass">
-          <UIcon :name="iconName" class="w-3.5 h-3.5" />
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-0.5 flex-wrap mb-0.5">
-            <h5 class="text-[8px] font-semibold text-gray-900 dark:text-white truncate leading-tight max-w-[100px]">
-              {{ data.label || 'Unnamed' }}
-            </h5>
-            <UBadge
-              v-if="data.isDefault"
-              size="xs"
-              variant="soft"
-              color="primary"
-              class="text-[7px] px-0.5 py-0 leading-none"
-            >
-              Default
-            </UBadge>
-            <UBadge
-              v-if="!data.route && !data.isDefault"
-              size="xs"
-              variant="soft"
-              color="warning"
-              class="text-[7px] px-0.5 py-0 leading-none"
-            >
-              Global
-            </UBadge>
-            <UBadge
-              v-if="data.enabled === false"
-              size="xs"
-              variant="soft"
-              color="neutral"
-              class="text-[7px] px-0.5 py-0 leading-none"
-            >
-              Disabled
-            </UBadge>
-            <UBadge
-              v-else-if="!data.isDefault && data.route"
-              size="xs"
-              variant="soft"
-              color="success"
-              class="text-[7px] px-0.5 py-0 leading-none"
-            >
-              Enabled
-            </UBadge>
+  <UContextMenu :items="contextMenuItems" :disabled="!canDelete">
+    <div
+      class="flow-node group cursor-pointer transition-all relative"
+      :class="[
+        nodeClass,
+        data.enabled === false ? 'disabled-state' : ''
+      ]"
+      @click="handleClick"
+    >
+      <Handle type="target" :position="Position.Left" :style="{ top: '50%', transform: 'translateY(-50%)', opacity: 0 }" />
+      <Handle type="source" :position="Position.Right" :style="{ top: '50%', transform: 'translateY(-50%)', opacity: 0 }" />
+      <div v-if="data.enabled !== false" class="status-indicator"></div>
+      <div class="flow-node-content">
+        <div class="flex items-start gap-1.5">
+          <div :class="iconClass">
+            <UIcon :name="iconName" class="w-3.5 h-3.5" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-0.5 flex-wrap mb-0.5">
+              <h5 class="text-[8px] font-semibold text-gray-900 dark:text-white truncate leading-tight max-w-[100px]">
+                {{ data.label || 'Unnamed' }}
+              </h5>
+              <UBadge
+                v-if="data.isDefault"
+                size="xs"
+                variant="soft"
+                color="primary"
+                class="text-[7px] px-0.5 py-0 leading-none"
+              >
+                Default
+              </UBadge>
+              <UBadge
+                v-if="!data.route && !data.isDefault"
+                size="xs"
+                variant="soft"
+                color="warning"
+                class="text-[7px] px-0.5 py-0 leading-none"
+              >
+                Global
+              </UBadge>
+              <UBadge
+                v-if="data.enabled === false"
+                size="xs"
+                variant="soft"
+                color="neutral"
+                class="text-[7px] px-0.5 py-0 leading-none"
+              >
+                Disabled
+              </UBadge>
+              <UBadge
+                v-else-if="!data.isDefault && data.route"
+                size="xs"
+                variant="soft"
+                color="success"
+                class="text-[7px] px-0.5 py-0 leading-none"
+              >
+                Enabled
+              </UBadge>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </UContextMenu>
 </template>
 
 <script setup lang="ts">
@@ -70,17 +72,50 @@ import { Handle, Position } from '@vue-flow/core';
 interface Props {
   data: any;
   type: 'prehook' | 'handler' | 'posthook';
+  onClick?: () => void;
+  onDelete?: () => void;
 }
 
 const props = defineProps<Props>();
 
-const emit = defineEmits<{
-  click: [];
-}>();
-
 function handleClick() {
-  emit('click');
+  if (props.onClick) {
+    props.onClick();
+  }
 }
+
+function handleDelete() {
+  if (props.onDelete) {
+    props.onDelete();
+  }
+}
+
+const canDelete = computed(() => {
+  // Không thể xóa default handler hoặc system handler/hook
+  if (props.data.isDefault || props.data.isSystem) {
+    return false;
+  }
+  return true;
+});
+
+const contextMenuItems = computed(() => {
+  if (!canDelete.value) {
+    return [];
+  }
+  
+  return [
+    [
+      {
+        label: 'Delete',
+        icon: 'lucide:trash-2',
+        color: 'error' as const,
+        onSelect: () => {
+          handleDelete();
+        },
+      },
+    ],
+  ];
+});
 
 const nodeClass = computed(() => {
   const baseClass = props.data.enabled === false 

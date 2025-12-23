@@ -107,6 +107,18 @@ const emit = defineEmits<{
 const vueFlowRef = ref<any>(null);
 const hasFitted = ref(false);
 
+function handleNodeDelete(nodeData: any, nodeType: string) {
+  if (nodeType === 'handler') {
+    emit('deleteHandler', nodeData);
+  } else if (nodeType === 'prehook' || nodeType === 'posthook') {
+    const hookData = {
+      ...nodeData,
+      _hookType: nodeType === 'prehook' ? 'pre' : 'post',
+    };
+    emit('deleteHook', hookData);
+  }
+}
+
 const nodeTypes = markRaw({
   prehook: markRaw({
     props: ['data', 'id'],
@@ -114,6 +126,17 @@ const nodeTypes = markRaw({
       return () => h(FlowNode, {
         data: props.data,
         type: 'prehook',
+        onClick: () => {
+          const nodeData = props.data;
+          const hookData = {
+            ...nodeData,
+            _hookType: 'pre',
+          };
+          emit('editHook', hookData);
+        },
+        onDelete: () => {
+          handleNodeDelete(props.data, 'prehook');
+        },
       });
     },
   }),
@@ -123,6 +146,16 @@ const nodeTypes = markRaw({
       return () => h(FlowNode, {
         data: props.data,
         type: 'handler',
+        onClick: () => {
+          if (props.data._isDefault || props.data.isDefault) {
+            emit('createHandler');
+          } else {
+            emit('editHandler', props.data);
+          }
+        },
+        onDelete: () => {
+          handleNodeDelete(props.data, 'handler');
+        },
       });
     },
   }),
@@ -132,6 +165,17 @@ const nodeTypes = markRaw({
       return () => h(FlowNode, {
         data: props.data,
         type: 'posthook',
+        onClick: () => {
+          const nodeData = props.data;
+          const hookData = {
+            ...nodeData,
+            _hookType: 'post',
+          };
+          emit('editHook', hookData);
+        },
+        onDelete: () => {
+          handleNodeDelete(props.data, 'posthook');
+        },
       });
     },
   }),
@@ -422,15 +466,8 @@ function handleNodeClick(event: any) {
   if (!nodeData) return;
 
   const nodeType = node?.type;
-  if (nodeData._isDefault || nodeData.isDefault || nodeType === 'handler') {
-    emit('editHandler', nodeData);
-  } else if (nodeType !== 'methodLabel') {
-    const hookData = {
-      ...nodeData,
-      _hookType: nodeType === 'prehook' ? 'pre' : nodeType === 'posthook' ? 'post' : null,
-    };
-    emit('editHook', hookData);
-  }
+  // Click handling is now done in the node component itself
+  // This function is kept for backward compatibility but may not be needed
 }
 
 function handlePaneReady() {
