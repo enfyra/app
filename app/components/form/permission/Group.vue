@@ -24,7 +24,7 @@
         <div
           v-if="isPermission(item)"
           class="flex items-center justify-between p-3 border border-muted rounded-lg lg:hover:bg-muted/50 cursor-pointer transition-colors"
-          @click="editPermission(index, item)"
+          @click="editPermission(Number(index), item)"
         >
           <div class="flex items-center gap-2">
             <UIcon
@@ -59,7 +59,7 @@
               size="md"
               variant="ghost"
               color="error"
-              @click.stop="removeItem(index)"
+              @click.stop="removeItem(Number(index))"
               :disabled="disabled"
             />
           </div>
@@ -68,7 +68,7 @@
         <div v-else class="border border-muted rounded-lg p-3 relative">
           <UButton
             v-if="!disabled"
-            @click="removeItem(index)"
+            @click="removeItem(Number(index))"
             icon="lucide:x"
             size="xs"
             color="error"
@@ -78,7 +78,7 @@
           <FormPermissionGroup
             :group="item"
             :disabled="disabled"
-            @update:group="(g: any) => onNestedGroupUpdate(g, index)"
+            @update:group="(g: any) => onNestedGroupUpdate(g, Number(index))"
           />
         </div>
       </template>

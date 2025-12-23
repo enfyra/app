@@ -30,6 +30,15 @@
               Default
             </UBadge>
             <UBadge
+              v-if="!data.route && !data.isDefault"
+              size="xs"
+              variant="soft"
+              color="warning"
+              class="text-[7px] px-0.5 py-0 leading-none"
+            >
+              Global
+            </UBadge>
+            <UBadge
               v-if="data.enabled === false"
               size="xs"
               variant="soft"
@@ -39,7 +48,7 @@
               Disabled
             </UBadge>
             <UBadge
-              v-else-if="!data.isDefault"
+              v-else-if="!data.isDefault && data.route"
               size="xs"
               variant="soft"
               color="success"
@@ -49,16 +58,13 @@
             </UBadge>
           </div>
         </div>
-        <UIcon
-          name="lucide:chevron-right"
-          class="w-2.5 h-2.5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 flex-shrink-0"
-        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Handle, Position } from '@vue-flow/core';
 
 interface Props {
