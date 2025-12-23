@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
     body = processedBody;
 
     const config = useRuntimeConfig();
-    const apiPath = event.path.replace("/enfyra/api", "");
+    const apiPath = event.path.replace("/api", "");
     const targetUrl = `${config.public?.enfyraSDK?.apiUrl}${apiPath}`;
 
     const response = await $fetch(targetUrl, {
