@@ -1,0 +1,101 @@
+.vue-flow-container {
+  width: 100%;
+  height: 100%;
+}
+
+
+.vue-flow__edge-path {
+  stroke-dasharray: 5, 5;
+  animation: dash 1s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.vue-flow-container marker,
+.vue-flow-container svg marker,
+.vue-flow__edges marker,
+.vue-flow__edges svg marker {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+.flow-node {
+  min-width: 130px;
+  max-width: 150px;
+  height: 40px;
+  border: 1px solid;
+  border-radius: 5px;
+  padding: 6px 8px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background: white;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  border-color: rgb(209, 213, 219);
+}
+
+.dark .flow-node {
+  background: rgb(17, 24, 39);
+  border-color: rgb(55, 65, 81);
+}
+
+.flow-node:hover:not(.disabled-state) {
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.flow-node.disabled-state {
+  opacity: 0.5;
+  border-style: dashed;
+  filter: grayscale(0.3);
+}
+
+.flow-node-content {
+  width: 100%;
+}
+
+.status-indicator {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+  }
+}
+
+.dark .status-indicator {
+  background: #34d399;
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.3);
+  animation: pulse-dark 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-dark {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.3);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.2);
+  }
+}
+
