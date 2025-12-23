@@ -90,6 +90,7 @@
     v-model:errors="hookErrors"
     :loading="createHookLoading"
     :hook-type="hookType || 'pre'"
+    :route-id="routeId"
     @save="saveHook"
     @cancel="handleCancelHook"
   />
@@ -109,6 +110,7 @@
     v-model:errors="editHookErrors"
     :loading="updateHookLoading"
     :hook-type="editHookType || 'pre'"
+    :route-id="routeId"
     @save="updateHook"
     @cancel="handleCancelEditHook"
   />
@@ -408,9 +410,44 @@ const {
   errorContext: "Fetch Post-Hooks",
 });
 
+const {
+  data: globalPreHooksData,
+  pending: globalPreHooksLoading,
+  execute: fetchGlobalPreHooks,
+} = useApi(() => "/pre_hook_definition", {
+  query: computed(() => ({
+    fields: getPreHookIncludeFields(),
+    filter: {
+      route: { id: { _is_null: true } },
+    },
+    sort: ["priority"],
+  })),
+  errorContext: "Fetch Global Pre-Hooks",
+});
+
+const {
+  data: globalPostHooksData,
+  pending: globalPostHooksLoading,
+  execute: fetchGlobalPostHooks,
+} = useApi(() => "/post_hook_definition", {
+  query: computed(() => ({
+    fields: getPostHookIncludeFields(),
+    filter: {
+      route: { id: { _is_null: true } },
+    },
+    sort: ["priority"],
+  })),
+  errorContext: "Fetch Global Post-Hooks",
+});
+
 const handlers = computed(() => handlersData.value?.data || []);
-const preHooks = computed(() => preHooksData.value?.data || []);
-const postHooks = computed(() => postHooksData.value?.data || []);
+const routePreHooks = computed(() => preHooksData.value?.data || []);
+const routePostHooks = computed(() => postHooksData.value?.data || []);
+const globalPreHooks = computed(() => globalPreHooksData.value?.data || []);
+const globalPostHooks = computed(() => globalPostHooksData.value?.data || []);
+
+const preHooks = computed(() => [...routePreHooks.value, ...globalPreHooks.value]);
+const postHooks = computed(() => [...routePostHooks.value, ...globalPostHooks.value]);
 
 const mainTableInfo = computed(() => {
   const route = routeData.value?.data?.[0];
@@ -471,7 +508,7 @@ function getAfterHookPriority(hook: any): number | null {
   return hook.priority ?? null;
 }
 
-const hooksLoading = computed(() => preHooksLoading.value || postHooksLoading.value);
+const hooksLoading = computed(() => preHooksLoading.value || postHooksLoading.value || globalPreHooksLoading.value || globalPostHooksLoading.value);
 
 const showCreateHandlerDrawer = ref(false);
 const handlerForm = ref<Record<string, any>>({});
@@ -823,13 +860,21 @@ async function saveHook() {
     return;
   }
 
+  const hookData = { ...hookForm.value };
+  
+  if (hookData.route === null) {
+    hookData.route = null;
+  } else if (hookData.route === undefined || !hookData.route) {
+    hookData.route = { id: routeId.value };
+  }
+
   if (isPreHook) {
-    await executeCreatePreHook({ body: hookForm.value });
+    await executeCreatePreHook({ body: hookData });
     if (createPreHookError.value) {
       return;
     }
   } else {
-    await executeCreatePostHook({ body: hookForm.value });
+    await executeCreatePostHook({ body: hookData });
     if (createPostHookError.value) {
       return;
     }
@@ -841,7 +886,7 @@ async function saveHook() {
   });
 
   showCreateHookDrawer.value = false;
-  await Promise.all([fetchPreHooks(), fetchPostHooks()]);
+  await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
 
 const showEditHookDrawer = ref(false);
@@ -878,7 +923,7 @@ const {
 } = useApi(() => `/pre_hook_definition`, {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
-    filter: { id: { _eq: editingHookId.value } },
+    filter: { id: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
   })),
   errorContext: "Fetch Pre-Hook",
   immediate: false,
@@ -891,7 +936,7 @@ const {
 } = useApi(() => `/post_hook_definition`, {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
-    filter: { id: { _eq: editingHookId.value } },
+    filter: { id: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
   })),
   errorContext: "Fetch Post-Hook",
   immediate: false,
@@ -900,35 +945,77 @@ const {
 
 const isEditHookDrawerUpdatingFromRoute = ref(false);
 
-watch(() => route.query.editHook, async (value) => {
-  if (value && typeof value === 'string') {
-    const hookId = value;
+watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, hookTypeParam]) => {
+  if (hookId && typeof hookId === 'string') {
+    const normalizedHookId = String(hookId);
+    const currentId = editingHookId.value ? String(editingHookId.value) : null;
     
-    if (hookId && editingHookId.value !== hookId) {
+    if (normalizedHookId && currentId !== normalizedHookId) {
       isEditHookDrawerUpdatingFromRoute.value = true;
-      editingHookId.value = hookId;
+      editingHookId.value = normalizedHookId;
       editHookErrors.value = {};
       
-      await Promise.all([fetchEditPreHook(), fetchEditPostHook()]);
-      
-      if (editPreHookData.value?.data?.[0]) {
-        editHookType.value = 'pre';
-        editHookForm.value = { ...editPreHookData.value.data[0] };
-      } else if (editPostHookData.value?.data?.[0]) {
-        editHookType.value = 'post';
-        editHookForm.value = { ...editPostHookData.value.data[0] };
+      if (hookTypeParam === 'pre') {
+        await fetchEditPreHook();
+        if (editPreHookData.value?.data?.[0]) {
+          editHookType.value = 'pre';
+          const hookData = { ...editPreHookData.value.data[0] };
+          if (!hookData.route) {
+            hookData.route = null;
+          }
+          editHookForm.value = hookData;
+          showEditHookDrawer.value = true;
+        } else {
+          editingHookId.value = null;
+          editHookType.value = null;
+          return;
+        }
+      } else if (hookTypeParam === 'post') {
+        await fetchEditPostHook();
+        if (editPostHookData.value?.data?.[0]) {
+          editHookType.value = 'post';
+          const hookData = { ...editPostHookData.value.data[0] };
+          if (!hookData.route) {
+            hookData.route = null;
+          }
+          editHookForm.value = hookData;
+          showEditHookDrawer.value = true;
+        } else {
+          editingHookId.value = null;
+          editHookType.value = null;
+          return;
+        }
       } else {
-        editingHookId.value = null;
-        editHookType.value = null;
-        return;
+        await Promise.all([fetchEditPreHook(), fetchEditPostHook()]);
+        
+        if (editPreHookData.value?.data?.[0]) {
+          editHookType.value = 'pre';
+          const hookData = { ...editPreHookData.value.data[0] };
+          if (!hookData.route) {
+            hookData.route = null;
+          }
+          editHookForm.value = hookData;
+          showEditHookDrawer.value = true;
+        } else if (editPostHookData.value?.data?.[0]) {
+          editHookType.value = 'post';
+          const hookData = { ...editPostHookData.value.data[0] };
+          if (!hookData.route) {
+            hookData.route = null;
+          }
+          editHookForm.value = hookData;
+          showEditHookDrawer.value = true;
+        } else {
+          editingHookId.value = null;
+          editHookType.value = null;
+          return;
+        }
       }
       
-      showEditHookDrawer.value = true;
       nextTick(() => {
         isEditHookDrawerUpdatingFromRoute.value = false;
       });
     }
-  } else if (!value && showEditHookDrawer.value) {
+  } else if (!hookId && showEditHookDrawer.value) {
     isEditHookDrawerUpdatingFromRoute.value = true;
     showEditHookDrawer.value = false;
     editingHookId.value = null;
@@ -944,31 +1031,66 @@ watch(() => route.query.editHook, async (value) => {
 watch(showEditHookDrawer, (isOpen) => {
   if (isEditHookDrawerUpdatingFromRoute.value) return;
   
-  if (isOpen && editingHookId.value) {
-    router.push({
-      query: { ...route.query, editHook: editingHookId.value }
-    });
-  } else {
+  if (isOpen && editingHookId.value && editHookType.value) {
+    if (route.query.editHook !== editingHookId.value || route.query.editHookType !== editHookType.value) {
+      router.push({
+        query: { ...route.query, editHook: editingHookId.value, editHookType: editHookType.value }
+      });
+    }
+  } else if (!isOpen) {
     const newQuery = { ...route.query };
     delete newQuery.editHook;
+    delete newQuery.editHookType;
     router.replace({ query: newQuery });
   }
 });
 
 async function editHook(hook: any) {
-  editingHookId.value = getId(hook);
-  editHookErrors.value = {};
-  await Promise.all([fetchEditPreHook(), fetchEditPostHook()]);
+  const hookId = String(getId(hook));
+  const hookType = hook._hookType;
   
-  if (editPreHookData.value?.data?.[0]) {
-    editHookType.value = 'pre';
-    editHookForm.value = { ...editPreHookData.value.data[0] };
-  } else if (editPostHookData.value?.data?.[0]) {
-    editHookType.value = 'post';
-    editHookForm.value = { ...editPostHookData.value.data[0] };
+  if (!hookType) {
+    console.error('Hook type not determined for hook:', hook);
+    return;
   }
   
-  showEditHookDrawer.value = true;
+  isEditHookDrawerUpdatingFromRoute.value = true;
+  editingHookId.value = hookId;
+  editHookErrors.value = {};
+  
+  if (hookType === 'pre') {
+    await fetchEditPreHook();
+    if (editPreHookData.value?.data?.[0]) {
+      editHookType.value = 'pre';
+      const hookData = { ...editPreHookData.value.data[0] };
+      if (!hookData.route) {
+        hookData.route = null;
+      }
+      editHookForm.value = hookData;
+      showEditHookDrawer.value = true;
+      router.push({
+        query: { ...route.query, editHook: hookId, editHookType: 'pre' }
+      });
+    }
+  } else if (hookType === 'post') {
+    await fetchEditPostHook();
+    if (editPostHookData.value?.data?.[0]) {
+      editHookType.value = 'post';
+      const hookData = { ...editPostHookData.value.data[0] };
+      if (!hookData.route) {
+        hookData.route = null;
+      }
+      editHookForm.value = hookData;
+      showEditHookDrawer.value = true;
+      router.push({
+        query: { ...route.query, editHook: hookId, editHookType: 'post' }
+      });
+    }
+  }
+  
+  nextTick(() => {
+    isEditHookDrawerUpdatingFromRoute.value = false;
+  });
 }
 
 function handleCancelEditHook() {
@@ -992,15 +1114,23 @@ async function updateHook() {
     return;
   }
 
+  const hookData = { ...editHookForm.value };
+  
+  if (hookData.route === null) {
+    hookData.route = null;
+  } else if (hookData.route === undefined || !hookData.route) {
+    hookData.route = { id: routeId.value };
+  }
+
   if (isPreHook) {
     await executeUpdatePreHook({
       id: editingHookId.value,
-      body: editHookForm.value,
+      body: hookData,
     });
   } else {
     await executeUpdatePostHook({
       id: editingHookId.value,
-      body: editHookForm.value,
+      body: hookData,
     });
   }
 
@@ -1014,7 +1144,7 @@ async function updateHook() {
   });
 
   showEditHookDrawer.value = false;
-  await Promise.all([fetchPreHooks(), fetchPostHooks()]);
+  await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
 
 const { execute: togglePreHookApi, error: togglePreHookError } = useApi(
@@ -1069,7 +1199,7 @@ async function toggleHook(hook: any, enabled: boolean) {
     color: "success",
   });
 
-  await Promise.all([fetchPreHooks(), fetchPostHooks()]);
+  await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
 
 async function deleteHook(hook: any) {
@@ -1098,14 +1228,14 @@ async function deleteHook(hook: any) {
     color: "success",
   });
 
-  await Promise.all([fetchPreHooks(), fetchPostHooks()]);
+  await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
 
 watch(
   () => routeData.value?.data?.[0],
   async (newRoute) => {
     if (newRoute) {
-      await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks()]);
+      await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
     }
   },
   { immediate: true }
@@ -1113,6 +1243,6 @@ watch(
 
 onMounted(async () => {
   await initializeForm();
-  await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks()]);
+  await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 });
 </script>

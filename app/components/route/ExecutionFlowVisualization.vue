@@ -53,9 +53,9 @@
         :nodes-connectable="false"
         :elements-selectable="false"
         :pan-on-drag="true"
-        :zoom-on-scroll="true"
+        :zoom-on-scroll="false"
         :zoom-on-pinch="true"
-        :pan-on-scroll="true"
+        :pan-on-scroll="false"
         @pane-ready="handlePaneReady"
       >
         <Controls />
@@ -207,16 +207,22 @@ const methodGroups = computed(() => {
   });
 
   props.sortedPreHooks.forEach((hook) => {
-    if (hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0) {
+    const hookId = props.getId(hook);
+    const isGlobal = !hook.route;
+    const hasMethods = hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0;
+    
+    if (hasMethods) {
       hook.methods.forEach((method: any) => {
-        if (method.method && groups[method.method] && !groups[method.method]!.preHooks.find((h: any) => props.getId(h) === props.getId(hook))) {
+        if (method.method && groups[method.method] && !groups[method.method]!.preHooks.find((h: any) => props.getId(h) === hookId)) {
           groups[method.method]!.preHooks.push(hook);
         }
       });
     } else {
-      if (groups['ALL'] && !groups['ALL']!.preHooks.find((h: any) => props.getId(h) === props.getId(hook))) {
-        groups['ALL']!.preHooks.push(hook);
-      }
+      Object.keys(groups).forEach((methodKey) => {
+        if (groups[methodKey] && !groups[methodKey]!.preHooks.find((h: any) => props.getId(h) === hookId)) {
+          groups[methodKey]!.preHooks.push(hook);
+        }
+      });
     }
   });
 
@@ -238,16 +244,22 @@ const methodGroups = computed(() => {
   }
 
   props.sortedAfterHooks.forEach((hook) => {
-    if (hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0) {
+    const hookId = props.getId(hook);
+    const isGlobal = !hook.route;
+    const hasMethods = hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0;
+    
+    if (hasMethods) {
       hook.methods.forEach((method: any) => {
-        if (method.method && groups[method.method] && !groups[method.method]!.postHooks.find((h: any) => props.getId(h) === props.getId(hook))) {
+        if (method.method && groups[method.method] && !groups[method.method]!.postHooks.find((h: any) => props.getId(h) === hookId)) {
           groups[method.method]!.postHooks.push(hook);
         }
       });
     } else {
-      if (groups['ALL'] && !groups['ALL']!.postHooks.find((h: any) => props.getId(h) === props.getId(hook))) {
-        groups['ALL']!.postHooks.push(hook);
-      }
+      Object.keys(groups).forEach((methodKey) => {
+        if (groups[methodKey] && !groups[methodKey]!.postHooks.find((h: any) => props.getId(h) === hookId)) {
+          groups[methodKey]!.postHooks.push(hook);
+        }
+      });
     }
   });
 
@@ -297,6 +309,7 @@ const allNodes = computed(() => {
           label: hook.name || 'Unnamed Hook',
           priority: props.getPreHookPriority(hook) || 0,
           enabled: hook.isEnabled !== false,
+          route: hook.route,
         },
         draggable: false,
         selectable: false,
@@ -333,6 +346,7 @@ const allNodes = computed(() => {
           label: hook.name || 'Unnamed Hook',
           priority: props.getAfterHookPriority(hook) || 0,
           enabled: hook.isEnabled !== false,
+          route: hook.route,
         },
         draggable: false,
         selectable: false,
@@ -411,7 +425,11 @@ function handleNodeClick(event: any) {
   if (nodeData._isDefault || nodeData.isDefault || nodeType === 'handler') {
     emit('editHandler', nodeData);
   } else if (nodeType !== 'methodLabel') {
-    emit('editHook', nodeData);
+    const hookData = {
+      ...nodeData,
+      _hookType: nodeType === 'prehook' ? 'pre' : nodeType === 'posthook' ? 'post' : null,
+    };
+    emit('editHook', hookData);
   }
 }
 
