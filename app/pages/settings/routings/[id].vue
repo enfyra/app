@@ -1,6 +1,34 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
+    <div class="max-w-[1200px] lg:max-w-[1200px] md:w-full space-y-6">
+      <CommonFormCard v-if="mainTableInfo">
+        <template #header>
+          <div class="flex items-center gap-2">
+            <UIcon name="lucide:database" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Main Table</h3>
+          </div>
+        </template>
+        <div class="p-4 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-lg bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
+              <UIcon name="lucide:table" class="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            </div>
+            <div class="flex-1">
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">This route is the main route for table:</p>
+              <h4 class="text-base font-semibold text-gray-900 dark:text-white">
+                {{ mainTableInfo.name || mainTableInfo.tableName || 'Unknown Table' }}
+              </h4>
+              <p v-if="mainTableInfo.description" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {{ mainTableInfo.description }}
+              </p>
+            </div>
+            <UBadge size="lg" variant="soft" color="primary">
+              Main Route
+            </UBadge>
+          </div>
+        </div>
+      </CommonFormCard>
+
       <CommonFormCard>
         <UForm :state="form" @submit="updateRoute">
           <FormEditorLazy
@@ -9,12 +37,32 @@
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
-            :excluded="['routePermissions', 'mainTable']"
+            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHook', 'postHook']"
             :field-map="typeMap"
             :loading="loading"
           />
         </UForm>
       </CommonFormCard>
+
+      <RouteExecutionFlowVisualization
+        v-if="routeData?.data?.[0]"
+        :route-data="routeData"
+        :handlers="displayHandlers"
+        :sorted-pre-hooks="sortedPreHooks"
+        :sorted-after-hooks="sortedAfterHooks"
+        :get-pre-hook-priority="getPreHookPriority"
+        :get-after-hook-priority="getAfterHookPriority"
+        :get-id="getId"
+        :has-main-table="!!mainTableInfo"
+        :default-handler="defaultHandler"
+        @edit-handler="editHandler"
+        @edit-hook="editHook"
+        @create-handler="createHandler"
+        @create-hook="createHook"
+        @delete-handler="deleteHandler"
+        @delete-hook="deleteHook"
+        @toggle-hook="toggleHook"
+      />
 
       <CommonFormCard>
         <PermissionManager
@@ -27,6 +75,44 @@
     </div>
   </div>
 
+  <RouteCreateHandlerDrawer
+    v-model="showCreateHandlerDrawer"
+    v-model:form="handlerForm"
+    v-model:errors="handlerErrors"
+    :loading="createHandlerLoading"
+    @save="saveHandler"
+    @cancel="handleCancelHandler"
+  />
+
+  <RouteCreateHookDrawer
+    v-model="showCreateHookDrawer"
+    v-model:form="hookForm"
+    v-model:errors="hookErrors"
+    :loading="createHookLoading"
+    :hook-type="hookType || 'pre'"
+    @save="saveHook"
+    @cancel="handleCancelHook"
+  />
+
+  <RouteEditHandlerDrawer
+    v-model="showEditHandlerDrawer"
+    v-model:form="editHandlerForm"
+    v-model:errors="editHandlerErrors"
+    :loading="updateHandlerLoading"
+    @save="updateHandler"
+    @cancel="handleCancelEditHandler"
+  />
+
+  <RouteEditHookDrawer
+    v-model="showEditHookDrawer"
+    v-model:form="editHookForm"
+    v-model:errors="editHookErrors"
+    :loading="updateHookLoading"
+    :hook-type="editHookType || 'pre'"
+    @save="updateHook"
+    @cancel="handleCancelEditHook"
+  />
+
   <CommonEmptyState
     v-if="!loading && !routeData?.data?.[0]"
     title="Route not found"
@@ -38,9 +124,11 @@
 
 <script setup lang="ts">
 const route = useRoute();
+const router = useRouter();
 const toast = useToast();
 const { confirm } = useConfirm();
 const { loadRoutes } = useRoutes();
+const { getId } = useDatabase();
 
 const tableName = "route_definition";
 const hasFormChanges = ref(false);
@@ -48,7 +136,10 @@ const formEditorRef = ref();
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 
-const { validate, getIncludeFields } = useSchema(tableName);
+const { validate, getIncludeFields, schemas } = useSchema(tableName);
+const { getIncludeFields: getPreHookIncludeFields } = useSchema("pre_hook_definition");
+const { getIncludeFields: getPostHookIncludeFields } = useSchema("post_hook_definition");
+const { getIncludeFields: getHandlerIncludeFields } = useSchema("route_handler_definition");
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -57,6 +148,8 @@ registerPageHeader({
 });
 
 const typeMap = ref<Record<string, any>>({});
+
+const routeId = computed(() => route.params.id as string);
 
 useHeaderActionRegistry([
   {
@@ -138,8 +231,6 @@ watch(() => routeData.value?.data?.[0], (currentRoute) => {
 
   let hasAssociatedTable = false;
   if (currentRoute.mainTable) {
-    const { schemas } = useSchema();
-    const { getId } = useDatabase();
     const mainTableId = getId(currentRoute.mainTable);
     if (mainTableId) {
       hasAssociatedTable = Object.values(schemas.value).some(
@@ -170,7 +261,7 @@ const {
   pending: deleteLoading,
 } = useApi(`/${tableName}`, {
   method: "delete",
-  errorContext: "Delete Route",
+  errorContext: "Delete Route ",
 });
 
 const form = ref<Record<string, any>>({});
@@ -219,7 +310,6 @@ async function updateRoute() {
   await loadRoutes();
 
   const { registerDataMenuItems } = useMenuRegistry();
-  const { schemas } = useSchema();
   await registerDataMenuItems(Object.values(schemas.value));
 
   formEditorRef.value?.confirmChanges();
@@ -269,13 +359,760 @@ async function deleteRoute() {
   await loadRoutes();
 
   const { registerDataMenuItems } = useMenuRegistry();
-  const { schemas } = useSchema();
   await registerDataMenuItems(Object.values(schemas.value));
   
   await navigateTo("/settings/routings");
 }
 
-onMounted(() => {
-  initializeForm();
+const {
+  data: handlersData,
+  pending: handlersLoading,
+  execute: fetchHandlers,
+} = useApi(() => "/route_handler_definition", {
+  query: computed(() => ({
+    fields: getHandlerIncludeFields(),
+    filter: {
+      route: { id: { _eq: routeId.value } },
+    },
+  })),
+  errorContext: "Fetch Handlers",
+});
+
+const {
+  data: preHooksData,
+  pending: preHooksLoading,
+  execute: fetchPreHooks,
+} = useApi(() => "/pre_hook_definition", {
+  query: computed(() => ({
+    fields: getPreHookIncludeFields(),
+    filter: {
+      route: { id: { _eq: routeId.value } },
+    },
+    sort: ["priority"],
+  })),
+  errorContext: "Fetch Pre-Hooks",
+});
+
+const {
+  data: postHooksData,
+  pending: postHooksLoading,
+  execute: fetchPostHooks,
+} = useApi(() => "/post_hook_definition", {
+  query: computed(() => ({
+    fields: getPostHookIncludeFields(),
+    filter: {
+      route: { id: { _eq: routeId.value } },
+    },
+    sort: ["priority"],
+  })),
+  errorContext: "Fetch Post-Hooks",
+});
+
+const handlers = computed(() => handlersData.value?.data || []);
+const preHooks = computed(() => preHooksData.value?.data || []);
+const postHooks = computed(() => postHooksData.value?.data || []);
+
+const mainTableInfo = computed(() => {
+  const route = routeData.value?.data?.[0];
+  if (!route?.mainTable) return null;
+  
+  const mainTableId = getId(route.mainTable);
+  const tableSchema = Object.values(schemas.value).find((schema: any) => {
+    const schemaId = getId(schema);
+    return schemaId === mainTableId;
+  });
+  
+  return tableSchema || route.mainTable;
+});
+
+const defaultHandler = computed(() => {
+  if (!mainTableInfo.value || handlers.value.length > 0) return null;
+  
+  return {
+    _isDefault: true,
+    name: `Default handler for ${mainTableInfo.value.name || mainTableInfo.value.tableName || 'table'}`,
+    description: 'This is a default handler. Click to create a custom handler.',
+  };
+});
+
+const displayHandlers = computed(() => {
+  if (defaultHandler.value) {
+    return [defaultHandler.value];
+  }
+  return handlers.value;
+});
+
+const allHooks = computed(() => [
+  ...preHooks.value.map((hook: any) => ({ ...hook, _hookType: 'pre' })),
+  ...postHooks.value.map((hook: any) => ({ ...hook, _hookType: 'post' })),
+]);
+
+const sortedPreHooks = computed(() => {
+  return [...preHooks.value].sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0));
+});
+
+const sortedAfterHooks = computed(() => {
+  return [...postHooks.value].sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0));
+});
+
+function hasPreHook(hook: any): boolean {
+  return hook._hookType === 'pre';
+}
+
+function hasAfterHook(hook: any): boolean {
+  return hook._hookType === 'post';
+}
+
+function getPreHookPriority(hook: any): number | null {
+  return hook.priority ?? null;
+}
+
+function getAfterHookPriority(hook: any): number | null {
+  return hook.priority ?? null;
+}
+
+const hooksLoading = computed(() => preHooksLoading.value || postHooksLoading.value);
+
+const showCreateHandlerDrawer = ref(false);
+const handlerForm = ref<Record<string, any>>({});
+const handlerErrors = ref<Record<string, string>>({});
+
+const { generateEmptyForm: generateHandlerEmptyForm, validate: validateHandler } = useSchema("route_handler_definition");
+
+const {
+  data: createHandlerData,
+  error: createHandlerError,
+  execute: executeCreateHandler,
+  pending: createHandlerLoading,
+} = useApi(() => `/route_handler_definition`, {
+  method: "post",
+  errorContext: "Create Handler",
+});
+
+const isHandlerDrawerUpdatingFromRoute = ref(false);
+
+watch(() => route.query.createHandler, (value) => {
+  const shouldOpen = value === 'true';
+  if (showCreateHandlerDrawer.value !== shouldOpen) {
+    isHandlerDrawerUpdatingFromRoute.value = true;
+    showCreateHandlerDrawer.value = shouldOpen;
+    if (shouldOpen) {
+      handlerForm.value = generateHandlerEmptyForm();
+      handlerForm.value.route = { id: routeId.value };
+      handlerErrors.value = {};
+    } else {
+      handlerForm.value = {};
+      handlerErrors.value = {};
+    }
+    nextTick(() => {
+      isHandlerDrawerUpdatingFromRoute.value = false;
+    });
+  }
+}, { immediate: true });
+
+watch(showCreateHandlerDrawer, (isOpen) => {
+  if (isHandlerDrawerUpdatingFromRoute.value) return;
+  
+  if (isOpen) {
+    router.push({
+      query: { ...route.query, createHandler: 'true' }
+    });
+  } else {
+    const newQuery = { ...route.query };
+    delete newQuery.createHandler;
+    router.replace({ query: newQuery });
+  }
+});
+
+function createHandler() {
+  handlerForm.value = generateHandlerEmptyForm();
+  handlerForm.value.route = { id: routeId.value };
+  handlerErrors.value = {};
+  showCreateHandlerDrawer.value = true;
+}
+
+function handleCancelHandler() {
+  showCreateHandlerDrawer.value = false;
+}
+
+async function saveHandler() {
+  const { isValid, errors } = validateHandler(handlerForm.value);
+
+  if (!isValid) {
+    handlerErrors.value = errors;
+    toast.add({
+      title: "Validation error",
+      description: "Please check the fields with errors.",
+      color: "error",
+    });
+    return;
+  }
+
+  await executeCreateHandler({ body: handlerForm.value });
+
+  if (createHandlerError.value) {
+    return;
+  }
+
+  toast.add({
+    title: "Handler created successfully",
+    color: "success",
+  });
+
+  showCreateHandlerDrawer.value = false;
+  await fetchHandlers();
+}
+
+const showEditHandlerDrawer = ref(false);
+const editHandlerForm = ref<Record<string, any>>({});
+const editHandlerErrors = ref<Record<string, string>>({});
+const editingHandlerId = ref<string | null>(null);
+
+const {
+  error: updateHandlerError,
+  execute: executeUpdateHandler,
+  pending: updateHandlerLoading,
+} = useApi(() => `/route_handler_definition`, {
+  method: "patch",
+  errorContext: "Update Handler",
+});
+
+const {
+  data: editHandlerData,
+  pending: editHandlerLoading,
+  execute: fetchEditHandler,
+} = useApi(() => `/route_handler_definition`, {
+  query: computed(() => ({
+    fields: getHandlerIncludeFields(),
+    filter: { id: { _eq: editingHandlerId.value } },
+  })),
+  errorContext: "Fetch Handler",
+  immediate: false,
+});
+
+watch(editHandlerData, (data) => {
+  if (data?.data?.[0]) {
+    editHandlerForm.value = { ...data.data[0] };
+  }
+});
+
+const isEditHandlerDrawerUpdatingFromRoute = ref(false);
+
+watch(() => route.query.editHandler, async (value) => {
+  if (value && typeof value === 'string') {
+    if (editingHandlerId.value !== value) {
+      isEditHandlerDrawerUpdatingFromRoute.value = true;
+      editingHandlerId.value = value;
+      editHandlerErrors.value = {};
+      await fetchEditHandler();
+      showEditHandlerDrawer.value = true;
+      nextTick(() => {
+        isEditHandlerDrawerUpdatingFromRoute.value = false;
+      });
+    }
+  } else if (!value && showEditHandlerDrawer.value) {
+    isEditHandlerDrawerUpdatingFromRoute.value = true;
+    showEditHandlerDrawer.value = false;
+    editingHandlerId.value = null;
+    editHandlerForm.value = {};
+    editHandlerErrors.value = {};
+    nextTick(() => {
+      isEditHandlerDrawerUpdatingFromRoute.value = false;
+    });
+  }
+}, { immediate: true });
+
+watch(showEditHandlerDrawer, (isOpen) => {
+  if (isEditHandlerDrawerUpdatingFromRoute.value) return;
+  
+  if (isOpen && editingHandlerId.value) {
+    router.push({
+      query: { ...route.query, editHandler: editingHandlerId.value }
+    });
+  } else {
+    const newQuery = { ...route.query };
+    delete newQuery.editHandler;
+    router.replace({ query: newQuery });
+  }
+});
+
+async function editHandler(handler: any) {
+  if (handler._isDefault) {
+    createHandler();
+    return;
+  }
+  
+  editingHandlerId.value = getId(handler);
+  editHandlerErrors.value = {};
+  await fetchEditHandler();
+  showEditHandlerDrawer.value = true;
+}
+
+function handleCancelEditHandler() {
+  showEditHandlerDrawer.value = false;
+}
+
+async function updateHandler() {
+  if (!editingHandlerId.value || !editHandlerForm.value) return;
+
+  const { isValid, errors } = validateHandler(editHandlerForm.value);
+
+  if (!isValid) {
+    editHandlerErrors.value = errors;
+    toast.add({
+      title: "Validation error",
+      description: "Please check the fields with errors.",
+      color: "error",
+    });
+    return;
+  }
+
+  await executeUpdateHandler({
+    id: editingHandlerId.value,
+    body: editHandlerForm.value,
+  });
+
+  if (updateHandlerError.value) {
+    return;
+  }
+
+  toast.add({
+    title: "Handler updated successfully",
+    color: "success",
+  });
+
+  showEditHandlerDrawer.value = false;
+  await fetchHandlers();
+}
+
+const { execute: deleteHandlerApi, error: deleteHandlerError } = useApi(
+  () => `/route_handler_definition`,
+  {
+    method: "delete",
+    errorContext: "Delete Handler",
+  }
+);
+
+async function deleteHandler(handler: any) {
+  const isConfirmed = await confirm({
+    title: "Delete Handler",
+    content: `Are you sure you want to delete handler "${handler.name || "Unnamed"}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+
+  if (!isConfirmed) return;
+
+  await deleteHandlerApi({ id: getId(handler) });
+
+  if (deleteHandlerError.value) {
+    return;
+  }
+
+  toast.add({
+    title: "Success",
+    description: "Handler deleted successfully",
+    color: "success",
+  });
+
+  await fetchHandlers();
+}
+
+const showCreateHookDrawer = ref(false);
+const hookForm = ref<Record<string, any>>({});
+const hookErrors = ref<Record<string, string>>({});
+
+const { generateEmptyForm: generatePreHookEmptyForm, validate: validatePreHook } = useSchema("pre_hook_definition");
+const { generateEmptyForm: generatePostHookEmptyForm, validate: validatePostHook } = useSchema("post_hook_definition");
+
+const {
+  data: createPreHookData,
+  error: createPreHookError,
+  execute: executeCreatePreHook,
+  pending: createPreHookLoading,
+} = useApi(() => `/pre_hook_definition`, {
+  method: "post",
+  errorContext: "Create Pre-Hook",
+});
+
+const {
+  data: createPostHookData,
+  error: createPostHookError,
+  execute: executeCreatePostHook,
+  pending: createPostHookLoading,
+} = useApi(() => `/post_hook_definition`, {
+  method: "post",
+  errorContext: "Create Post-Hook",
+});
+
+const createHookLoading = computed(() => createPreHookLoading.value || createPostHookLoading.value);
+
+const isHookDrawerUpdatingFromRoute = ref(false);
+
+watch(() => route.query.createHook, (value) => {
+  const shouldOpen = value === 'true' || value === 'pre' || value === 'post';
+  if (showCreateHookDrawer.value !== shouldOpen) {
+    isHookDrawerUpdatingFromRoute.value = true;
+    showCreateHookDrawer.value = shouldOpen;
+    if (shouldOpen) {
+      const hookType = value === 'pre' ? 'pre' : value === 'post' ? 'post' : null;
+      if (hookType === 'pre') {
+        hookForm.value = generatePreHookEmptyForm();
+      } else if (hookType === 'post') {
+        hookForm.value = generatePostHookEmptyForm();
+      } else {
+        hookForm.value = generatePreHookEmptyForm(); // default to pre
+      }
+      hookForm.value.route = { id: routeId.value };
+      hookErrors.value = {};
+    } else {
+      hookForm.value = {};
+      hookErrors.value = {};
+    }
+    nextTick(() => {
+      isHookDrawerUpdatingFromRoute.value = false;
+    });
+  }
+}, { immediate: true });
+
+watch(showCreateHookDrawer, (isOpen) => {
+  if (isHookDrawerUpdatingFromRoute.value) return;
+  
+  if (isOpen) {
+    const hookTypeParam = hookType.value || 'pre';
+    router.push({
+      query: { ...route.query, createHook: hookTypeParam }
+    });
+  } else {
+    const newQuery = { ...route.query };
+    delete newQuery.createHook;
+    router.replace({ query: newQuery });
+  }
+});
+
+const hookType = ref<'pre' | 'post' | null>(null);
+
+function createHook(type?: 'pre' | 'post') {
+  hookType.value = type || 'pre';
+  if (hookType.value === 'pre') {
+    hookForm.value = generatePreHookEmptyForm();
+  } else {
+    hookForm.value = generatePostHookEmptyForm();
+  }
+  hookForm.value.route = { id: routeId.value };
+  hookErrors.value = {};
+  showCreateHookDrawer.value = true;
+}
+
+function handleCancelHook() {
+  showCreateHookDrawer.value = false;
+}
+
+async function saveHook() {
+  const isPreHook = hookType.value === 'pre';
+  const validate = isPreHook ? validatePreHook : validatePostHook;
+  const { isValid, errors } = validate(hookForm.value);
+
+  if (!isValid) {
+    hookErrors.value = errors;
+    toast.add({
+      title: "Validation error",
+      description: "Please check the fields with errors.",
+      color: "error",
+    });
+    return;
+  }
+
+  if (isPreHook) {
+    await executeCreatePreHook({ body: hookForm.value });
+    if (createPreHookError.value) {
+      return;
+    }
+  } else {
+    await executeCreatePostHook({ body: hookForm.value });
+    if (createPostHookError.value) {
+      return;
+    }
+  }
+
+  toast.add({
+    title: `${isPreHook ? 'Pre' : 'Post'}-Hook created successfully`,
+    color: "success",
+  });
+
+  showCreateHookDrawer.value = false;
+  await Promise.all([fetchPreHooks(), fetchPostHooks()]);
+}
+
+const showEditHookDrawer = ref(false);
+const editHookForm = ref<Record<string, any>>({});
+const editHookErrors = ref<Record<string, string>>({});
+const editingHookId = ref<string | null>(null);
+const editHookType = ref<'pre' | 'post' | null>(null);
+
+const {
+  error: updatePreHookError,
+  execute: executeUpdatePreHook,
+  pending: updatePreHookLoading,
+} = useApi(() => `/pre_hook_definition`, {
+  method: "patch",
+  errorContext: "Update Pre-Hook",
+});
+
+const {
+  error: updatePostHookError,
+  execute: executeUpdatePostHook,
+  pending: updatePostHookLoading,
+} = useApi(() => `/post_hook_definition`, {
+  method: "patch",
+  errorContext: "Update Post-Hook",
+});
+
+const updateHookLoading = computed(() => updatePreHookLoading.value || updatePostHookLoading.value);
+const updateHookError = computed(() => updatePreHookError.value || updatePostHookError.value);
+
+const {
+  data: editPreHookData,
+  pending: editPreHookLoading,
+  execute: fetchEditPreHook,
+} = useApi(() => `/pre_hook_definition`, {
+  query: computed(() => ({
+    fields: getPreHookIncludeFields(),
+    filter: { id: { _eq: editingHookId.value } },
+  })),
+  errorContext: "Fetch Pre-Hook",
+  immediate: false,
+});
+
+const {
+  data: editPostHookData,
+  pending: editPostHookLoading,
+  execute: fetchEditPostHook,
+} = useApi(() => `/post_hook_definition`, {
+  query: computed(() => ({
+    fields: getPostHookIncludeFields(),
+    filter: { id: { _eq: editingHookId.value } },
+  })),
+  errorContext: "Fetch Post-Hook",
+  immediate: false,
+});
+
+
+const isEditHookDrawerUpdatingFromRoute = ref(false);
+
+watch(() => route.query.editHook, async (value) => {
+  if (value && typeof value === 'string') {
+    const hookId = value;
+    
+    if (hookId && editingHookId.value !== hookId) {
+      isEditHookDrawerUpdatingFromRoute.value = true;
+      editingHookId.value = hookId;
+      editHookErrors.value = {};
+      
+      await Promise.all([fetchEditPreHook(), fetchEditPostHook()]);
+      
+      if (editPreHookData.value?.data?.[0]) {
+        editHookType.value = 'pre';
+        editHookForm.value = { ...editPreHookData.value.data[0] };
+      } else if (editPostHookData.value?.data?.[0]) {
+        editHookType.value = 'post';
+        editHookForm.value = { ...editPostHookData.value.data[0] };
+      } else {
+        editingHookId.value = null;
+        editHookType.value = null;
+        return;
+      }
+      
+      showEditHookDrawer.value = true;
+      nextTick(() => {
+        isEditHookDrawerUpdatingFromRoute.value = false;
+      });
+    }
+  } else if (!value && showEditHookDrawer.value) {
+    isEditHookDrawerUpdatingFromRoute.value = true;
+    showEditHookDrawer.value = false;
+    editingHookId.value = null;
+    editHookForm.value = {};
+    editHookErrors.value = {};
+    editHookType.value = null;
+    nextTick(() => {
+      isEditHookDrawerUpdatingFromRoute.value = false;
+    });
+  }
+}, { immediate: true });
+
+watch(showEditHookDrawer, (isOpen) => {
+  if (isEditHookDrawerUpdatingFromRoute.value) return;
+  
+  if (isOpen && editingHookId.value) {
+    router.push({
+      query: { ...route.query, editHook: editingHookId.value }
+    });
+  } else {
+    const newQuery = { ...route.query };
+    delete newQuery.editHook;
+    router.replace({ query: newQuery });
+  }
+});
+
+async function editHook(hook: any) {
+  editingHookId.value = getId(hook);
+  editHookErrors.value = {};
+  await Promise.all([fetchEditPreHook(), fetchEditPostHook()]);
+  
+  if (editPreHookData.value?.data?.[0]) {
+    editHookType.value = 'pre';
+    editHookForm.value = { ...editPreHookData.value.data[0] };
+  } else if (editPostHookData.value?.data?.[0]) {
+    editHookType.value = 'post';
+    editHookForm.value = { ...editPostHookData.value.data[0] };
+  }
+  
+  showEditHookDrawer.value = true;
+}
+
+function handleCancelEditHook() {
+  showEditHookDrawer.value = false;
+}
+
+async function updateHook() {
+  if (!editingHookId.value || !editHookForm.value || !editHookType.value) return;
+
+  const isPreHook = editHookType.value === 'pre';
+  const validate = isPreHook ? validatePreHook : validatePostHook;
+  const { isValid, errors } = validate(editHookForm.value);
+
+  if (!isValid) {
+    editHookErrors.value = errors;
+    toast.add({
+      title: "Validation error",
+      description: "Please check the fields with errors.",
+      color: "error",
+    });
+    return;
+  }
+
+  if (isPreHook) {
+    await executeUpdatePreHook({
+      id: editingHookId.value,
+      body: editHookForm.value,
+    });
+  } else {
+    await executeUpdatePostHook({
+      id: editingHookId.value,
+      body: editHookForm.value,
+    });
+  }
+
+  if (updateHookError.value) {
+    return;
+  }
+
+  toast.add({
+    title: `${isPreHook ? 'Pre' : 'Post'}-Hook updated successfully`,
+    color: "success",
+  });
+
+  showEditHookDrawer.value = false;
+  await Promise.all([fetchPreHooks(), fetchPostHooks()]);
+}
+
+const { execute: togglePreHookApi, error: togglePreHookError } = useApi(
+  () => `/pre_hook_definition`,
+  {
+    method: "patch",
+    errorContext: "Toggle Pre-Hook",
+  }
+);
+
+const { execute: togglePostHookApi, error: togglePostHookError } = useApi(
+  () => `/post_hook_definition`,
+  {
+    method: "patch",
+    errorContext: "Toggle Post-Hook",
+  }
+);
+
+const { execute: deletePreHookApi, error: deletePreHookError } = useApi(
+  () => `/pre_hook_definition`,
+  {
+    method: "delete",
+    errorContext: "Delete Pre-Hook",
+  }
+);
+
+const { execute: deletePostHookApi, error: deletePostHookError } = useApi(
+  () => `/post_hook_definition`,
+  {
+    method: "delete",
+    errorContext: "Delete Post-Hook",
+  }
+);
+
+async function toggleHook(hook: any, enabled: boolean) {
+  const originalEnabled = hook.isEnabled;
+  hook.isEnabled = enabled;
+  const isPreHook = hook._hookType === 'pre';
+  const toggleApi = isPreHook ? togglePreHookApi : togglePostHookApi;
+  const toggleError = isPreHook ? togglePreHookError : togglePostHookError;
+
+  await toggleApi({ id: getId(hook), body: { isEnabled: enabled } });
+
+  if (toggleError.value) {
+    hook.isEnabled = originalEnabled;
+    return;
+  }
+
+  toast.add({
+    title: "Success",
+    description: `${isPreHook ? 'Pre' : 'Post'}-Hook ${enabled ? "enabled" : "disabled"} successfully`,
+    color: "success",
+  });
+
+  await Promise.all([fetchPreHooks(), fetchPostHooks()]);
+}
+
+async function deleteHook(hook: any) {
+  const isConfirmed = await confirm({
+    title: "Delete Hook",
+    content: `Are you sure you want to delete ${hook._hookType === 'pre' ? 'pre' : 'post'}-hook "${hook.name || "Unnamed"}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+
+  if (!isConfirmed) return;
+
+  const isPreHook = hook._hookType === 'pre';
+  const deleteApi = isPreHook ? deletePreHookApi : deletePostHookApi;
+  const deleteError = isPreHook ? deletePreHookError : deletePostHookError;
+
+  await deleteApi({ id: getId(hook) });
+
+  if (deleteError.value) {
+    return;
+  }
+
+  toast.add({
+    title: "Success",
+    description: `${isPreHook ? 'Pre' : 'Post'}-Hook deleted successfully`,
+    color: "success",
+  });
+
+  await Promise.all([fetchPreHooks(), fetchPostHooks()]);
+}
+
+watch(
+  () => routeData.value?.data?.[0],
+  async (newRoute) => {
+    if (newRoute) {
+      await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks()]);
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(async () => {
+  await initializeForm();
+  await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks()]);
 });
 </script>
