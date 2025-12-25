@@ -49,7 +49,7 @@
     "@enfyra/sdk-nuxt": "^0.3.25",
     "@iconify-json/lucide": "^1.2.49",
     "@nuxt/icon": "^2.1.0",
-    "@nuxt/ui": "^4.2.1",
+    "@nuxt/ui": "^4.3.0",
     "@nuxtjs/tailwindcss": "^7.0.0-beta.0",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/typography": "^0.5.16",
