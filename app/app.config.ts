@@ -1,5 +1,11 @@
 export default defineAppConfig({
   ui: {
+    dropdownMenu: {
+      slots: {
+        item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-md data-disabled:cursor-not-allowed data-disabled:opacity-75',
+
+      }
+    },
     colors: {
       primary: "purple",
       secondary: "cyan",
