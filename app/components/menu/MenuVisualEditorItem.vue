@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MenuDefinition, MenuTreeItem, DragEvent, MenuContextMenuItem } from '~/utils/types/menu';
+import type { MenuDefinition, MenuTreeItem, DragEvent } from '~/utils/types/menu';
 import draggable from 'vuedraggable';
 
 const props = defineProps<{
@@ -31,6 +31,9 @@ watch(() => props.item.children, (newChildren) => {
 function handleItemClick(menu: MenuTreeItem) {
   const originalMenu = props.allMenus?.find(m => String(getId(m)) === String(menu.id));
   if (originalMenu) {
+    if (originalMenu.isSystem) {
+      return;
+    }
     emit('edit-menu', originalMenu);
   }
 }
@@ -93,11 +96,27 @@ function handleChildrenReorder(event: DragEvent) {
   }
 }
 
-function getContextMenuItems(menu: MenuTreeItem): MenuContextMenuItem[][] {
-  const originalMenu = props.allMenus?.find(m => String(getId(m)) === String(menu.id));
-  if (!originalMenu) return [[]];
+const menuItems = computed(() => {
+  const originalMenu = props.allMenus?.find(m => String(getId(m)) === String(props.item.id));
+  if (!originalMenu) return [];
   
-  const items: MenuContextMenuItem[] = [
+  if (originalMenu.isSystem && originalMenu.type !== 'Dropdown Menu') {
+    return [];
+  }
+  
+  if (originalMenu.isSystem && originalMenu.type === 'Dropdown Menu') {
+    return [
+      {
+        label: 'Add Child Menu',
+        icon: 'lucide:plus-circle',
+        onSelect: () => {
+          if (originalMenu) emit('add-child-menu', originalMenu);
+        }
+      }
+    ];
+  }
+  
+  const items: any[] = [
     {
       label: 'Edit',
       icon: 'lucide:edit',
@@ -201,14 +220,24 @@ function getContextMenuItems(menu: MenuTreeItem): MenuContextMenuItem[][] {
     });
   }
 
-  return [items];
-}
+  return items;
+});
+
 
 const movingMenuId = useState<string | number | null>('moving-menu-id', () => null);
 
 const isMoving = computed(() => {
   const menuId = getId(props.item);
   return movingMenuId.value !== null && String(movingMenuId.value) === String(menuId);
+});
+
+const isSystemMenu = computed(() => {
+  const originalMenu = props.allMenus?.find(m => String(getId(m)) === String(props.item.id));
+  return originalMenu?.isSystem === true;
+});
+
+const cursorClass = computed(() => {
+  return isSystemMenu.value ? 'cursor-not-allowed' : 'cursor-pointer';
 });
 
 const canMoveHere = computed(() => {
@@ -265,25 +294,39 @@ function handleCancelMove() {
 
 <template>
   <div>
-    <UContextMenu
-      :items="getContextMenuItems(item)"
+    <div
+      v-if="item.isDropdown"
+      :class="[
+        'menu-item-dropdown-header flex items-center !gap-2 px-3 py-2 rounded-lg transition-colors group relative',
+        (level || 0) > 0 ? 'pl-3 md:pl-6' : 'pl-3',
+        isMoving ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : '',
+        isSystemMenu ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+      ]"
+      @click="handleItemClick(item)"
     >
-      <div
-        v-if="item.isDropdown"
-        :class="[
-          'menu-item-dropdown-header flex items-center !gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer group relative',
-          (level || 0) > 0 ? 'pl-3 md:pl-6' : 'pl-3',
-          isMoving ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''
-        ]"
-        @click="handleItemClick(item)"
-      >
         <UIcon 
           name="lucide:grip-vertical" 
           class="w-4 h-4 text-gray-400 dark:text-gray-500 drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity" 
           @click.stop
         />
         <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
-        <span class="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">{{ item.label }}</span>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ item.label }}</span>
+        <UDropdownMenu
+          v-if="menuItems.length > 0"
+          :items="[menuItems]"
+          :content="{
+            side: 'bottom',
+          }"
+        >
+          <UButton
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            icon="lucide:more-vertical"
+            class="ml-1"
+            @click.stop
+          />
+        </UDropdownMenu>
         <UButton
           v-if="canMoveHere && item.isDropdown"
           size="xs"
@@ -359,100 +402,6 @@ function handleCancelMove() {
           </UBadge>
         </div>
       </div>
-      <div
-        v-else
-        :class="[
-          'menu-item flex items-center !gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer group relative',
-          (level || 0) > 0 ? 'pl-4 md:pl-6' : '',
-          isMoving ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''
-        ]"
-        @click="handleItemClick(item)"
-      >
-        <UIcon 
-          name="lucide:grip-vertical" 
-          class="w-4 h-4 text-gray-400 dark:text-gray-500 drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity" 
-          @click.stop
-        />
-        <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
-        <span class="text-sm text-gray-700 dark:text-gray-300 flex-1">{{ item.label }}</span>
-        <UButton
-          v-if="canMoveHere"
-          size="xs"
-          color="primary"
-          variant="soft"
-          class="ml-2"
-          @click.stop="handleMoveHere"
-        >
-          <UIcon name="lucide:move" class="w-3 h-3 mr-1" />
-          Move here
-        </UButton>
-        <div v-if="isMoving" class="flex items-center gap-2 mr-2">
-          <UBadge
-            variant="soft"
-            color="primary"
-            size="xs"
-          >
-            <UIcon name="lucide:move" class="w-3 h-3 mr-1" />
-            Moving
-          </UBadge>
-          <UButton
-            size="xs"
-            color="error"
-            variant="soft"
-            @click.stop="handleCancelMove"
-          >
-            <UIcon name="lucide:x" class="w-3 h-3" />
-          </UButton>
-        </div>
-        <div class="flex items-center gap-1 ml-auto">
-          <UBadge
-            v-if="!item.isEnabled"
-            variant="soft"
-            color="error"
-            size="xs"
-          >
-            Disabled
-          </UBadge>
-          <UBadge
-            v-if="item.isSystem"
-            variant="soft"
-            color="warning"
-            size="xs"
-          >
-            System
-          </UBadge>
-          <UBadge
-            v-if="!item.isSystem"
-            variant="soft"
-            color="neutral"
-            size="xs"
-          >
-            Custom
-          </UBadge>
-          <UBadge
-            v-if="item.type === 'Menu' && item.extension"
-            variant="soft"
-            color="primary"
-            size="xs"
-            class="cursor-pointer"
-            :title="`Extension: ${item.extension.name || item.extension.description || getId(item.extension) || item.extension.extensionId}`"
-            @click.stop="navigateTo(`/settings/extensions/${getId(item.extension) || item.extension.extensionId}`)"
-          >
-            <UIcon name="lucide:puzzle" class="w-3 h-3 mr-1" />
-            {{ item.extension.name || item.extension.description || 'Extension' }}
-          </UBadge>
-          <UBadge
-            v-if="item.type === 'Menu' && !item.isSystem && !item.extension"
-            variant="soft"
-            color="neutral"
-            size="xs"
-            title="No extension - Right click to create"
-          >
-            <UIcon name="lucide:puzzle" class="w-3 h-3 mr-1" />
-            No Extension
-          </UBadge>
-        </div>
-      </div>
     
     <div 
       v-if="item.isDropdown" 
@@ -477,7 +426,7 @@ function handleCancelMove() {
           <MenuVisualEditorItem
             :item="child"
             :level="(level || 0) + 1"
-            :all-menus="allMenus"
+            :all-menus="props.allMenus"
             @edit-menu="$emit('edit-menu', $event)"
             @delete-menu="$emit('delete-menu', $event)"
             @toggle-enabled="$emit('toggle-enabled', $event)"
@@ -485,11 +434,124 @@ function handleCancelMove() {
             @edit-extension="$emit('edit-extension', $event)"
             @delete-extension="$emit('delete-extension', $event)"
             @reorder-menus="$emit('reorder-menus', $event)"
+            @move-menu="$emit('move-menu', $event)"
+            @move-menu-to="$emit('move-menu-to', $event)"
           />
         </template>
       </draggable>
     </div>
-    </UContextMenu>
+    <div
+      v-else
+      :class="[
+        'menu-item flex items-center !gap-2 px-3 py-2 rounded-lg transition-colors group relative',
+        (level || 0) > 0 ? 'pl-4 md:pl-6' : '',
+        isMoving ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : '',
+        isSystemMenu ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+      ]"
+      @click="handleItemClick(item)"
+    >
+      <UIcon 
+        name="lucide:grip-vertical" 
+        class="w-4 h-4 text-gray-400 dark:text-gray-500 drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity" 
+        @click.stop
+      />
+      <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
+      <span class="text-sm text-gray-700 dark:text-gray-300">{{ item.label }}</span>
+      <UDropdownMenu
+        v-if="menuItems.length > 0"
+        :items="[menuItems]"
+        :popper="{ placement: 'bottom-end' }"
+        :content="{
+          
+        }"
+      >
+        <UButton
+          size="xs"
+          color="neutral"
+          variant="ghost"
+          icon="lucide:more-vertical"
+          class="ml-1"
+          @click.stop
+        />
+      </UDropdownMenu>
+      <UButton
+        v-if="canMoveHere"
+        size="xs"
+        color="primary"
+        variant="soft"
+        class="ml-2"
+        @click.stop="handleMoveHere"
+      >
+        <UIcon name="lucide:move" class="w-3 h-3 mr-1" />
+        Move here
+      </UButton>
+      <div v-if="isMoving" class="flex items-center gap-2 mr-2">
+        <UBadge
+          variant="soft"
+          color="primary"
+          size="xs"
+        >
+          <UIcon name="lucide:move" class="w-3 h-3 mr-1" />
+          Moving
+        </UBadge>
+        <UButton
+          size="xs"
+          color="error"
+          variant="soft"
+          @click.stop="handleCancelMove"
+        >
+          <UIcon name="lucide:x" class="w-3 h-3" />
+        </UButton>
+      </div>
+      <div class="flex items-center gap-1 ml-auto">
+        <UBadge
+          v-if="!item.isEnabled"
+          variant="soft"
+          color="error"
+          size="xs"
+        >
+          Disabled
+        </UBadge>
+        <UBadge
+          v-if="item.isSystem"
+          variant="soft"
+          color="warning"
+          size="xs"
+        >
+          System
+        </UBadge>
+        <UBadge
+          v-if="!item.isSystem"
+          variant="soft"
+          color="neutral"
+          size="xs"
+        >
+          Custom
+        </UBadge>
+        <UBadge
+          v-if="item.type === 'Menu' && item.extension"
+          variant="soft"
+          color="primary"
+          size="xs"
+          class="cursor-pointer"
+          :title="`Extension: ${item.extension.name || item.extension.description || getId(item.extension) || item.extension.extensionId}`"
+          @click.stop="navigateTo(`/settings/extensions/${getId(item.extension) || item.extension.extensionId}`)"
+        >
+          <UIcon name="lucide:puzzle" class="w-3 h-3 mr-1" />
+          {{ item.extension.name || item.extension.description || 'Extension' }}
+        </UBadge>
+        <UBadge
+          v-if="item.type === 'Menu' && !item.isSystem && !item.extension"
+          variant="soft"
+          color="neutral"
+          size="xs"
+          title="No extension - Right click to create"
+        >
+          <UIcon name="lucide:puzzle" class="w-3 h-3 mr-1" />
+          No Extension
+        </UBadge>
+      </div>
+    </div>
   </div>
 </template>
 

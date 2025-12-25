@@ -7,7 +7,6 @@ const route = useRoute();
 const tableName = "menu_definition";
 const { getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { schemas } = useSchema();
-const { createLoader } = useLoader();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
 
@@ -87,17 +86,8 @@ useHeaderActionRegistry([
   },
 ]);
 
-const menuLoaders = ref<Record<string, any>>({});
-
 const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
 const { fetchMenuDefinitions } = useMenuApi();
-
-function getMenuLoader(menuId: string) {
-  if (!menuLoaders.value[menuId]) {
-    menuLoaders.value[menuId] = createLoader();
-  }
-  return menuLoaders.value[menuId];
-}
 
 async function refreshMenus() {
   await fetchMenus();
@@ -191,7 +181,6 @@ async function toggleEnabled(payload: { menu: MenuDefinition; enabled: boolean }
   const enabled = payload.enabled;
   if (menuItem.isSystem) return;
   
-  const loader = getMenuLoader(String(getId(menuItem)));
   const newEnabled = enabled;
 
   if (apiData.value?.data) {
@@ -211,9 +200,7 @@ async function toggleEnabled(payload: { menu: MenuDefinition; enabled: boolean }
     }
   );
 
-  await loader.withLoading(() =>
-    updateSpecificMenu({ body: { isEnabled: newEnabled } })
-  );
+  await updateSpecificMenu({ body: { isEnabled: newEnabled } });
 
   if (updateError.value) {
     if (apiData.value?.data) {
