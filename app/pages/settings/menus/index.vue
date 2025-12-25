@@ -1,30 +1,26 @@
 <script setup lang="ts">
+import type { MenuDefinition } from '~/utils/types/menu';
 
 const toast = useToast();
 const { confirm } = useConfirm();
-const page = ref(1);
-const pageLimit = 9;
 const route = useRoute();
-const router = useRouter();
 const tableName = "menu_definition";
-const { getIncludeFields } = useSchema(tableName);
+const { getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { schemas } = useSchema();
-const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
-const menus = computed(() => apiData.value?.data || []);
 const { createLoader } = useLoader();
-const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
-const showFilterDrawer = ref(false);
-const currentFilter = ref(createEmptyFilter());
 
 const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
 
-const pageIconColor = 'primary';
+const { execute: updateMenuApi } = useApi(() => '/menu_definition', {
+  method: 'patch',
+  errorContext: 'Update Menu Order',
+});
 
 registerPageHeader({
   title: "Menu Manager",
-  description: "Configure and manage navigation menus for your application",
+  description: "Configure and manage navigation menus visually",
   variant: "default",
   gradient: "purple",
 });
@@ -33,83 +29,30 @@ onBeforeUnmount(() => {
   clearPageHeader();
 });
 
-const filterLabel = computed(() => {
-  const activeCount = currentFilter.value.conditions.length;
-  return activeCount > 0 ? `Filters (${activeCount})` : "Filter";
-});
-
-const filterVariant = computed(() => {
-  return hasActiveFilters(currentFilter.value) ? "solid" : "outline";
-});
-
-const filterColor = computed(() => {
-  return hasActiveFilters(currentFilter.value) ? "secondary" : "neutral";
-});
-
 const {
   data: apiData,
   pending: loading,
   execute: fetchMenus,
 } = useApi(() => "/menu_definition", {
   query: computed(() => {
-    const filterQuery = hasActiveFilters(currentFilter.value)
-      ? buildQuery(currentFilter.value)
-      : {};
-
     return {
-      fields: getIncludeFields(),
-      sort: "-createdAt",
-      meta: "*",
-      page: page.value,
-      limit: pageLimit,
-      ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
+      fields: `${getIncludeFields()},extension.*,parent.*,children.*`,
+      sort: "order",
+      limit: 0,
     };
   }),
   errorContext: "Fetch Menus",
 });
 
-const menusData = computed(() => apiData.value?.data || []);
-const total = computed(() => {
-  
-  const hasFilters = hasActiveFilters(currentFilter.value);
-  if (hasFilters) {
-    
-    return apiData.value?.meta?.filterCount ?? 0;
-  }
-  return apiData.value?.meta?.totalCount || 0;
-});
+const menus = computed(() => apiData.value?.data || [] as MenuDefinition[]);
+
+const showEditModal = ref(false);
+const selectedMenu = ref<MenuDefinition | null>(null);
+const menuItemEditorRef = ref();
+const showExtensionDrawer = ref(false);
+const selectedMenuForExtension = ref<MenuDefinition | null>(null);
 
 useHeaderActionRegistry([
-  {
-    id: "filter-menus",
-    icon: "lucide:filter",
-    get label() {
-      return filterLabel.value;
-    },
-    get variant() {
-      return filterVariant.value;
-    },
-    get color() {
-      return filterColor.value;
-    },
-    get key() {
-      return `filter-${
-        currentFilter.value.conditions.length
-      }-${hasActiveFilters(currentFilter.value)}`;
-    },
-    size: "md",
-    onClick: () => {
-      showFilterDrawer.value = true;
-    },
-    permission: {
-      and: [
-        {
-          route: "/menu_definition",
-          actions: ["read"],
-        },
-      ],
-    },
-  },
   {
     id: "create-menu",
     label: "Create Menu",
@@ -117,7 +60,22 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     size: "md",
-    to: "/settings/menus/create",
+    onClick: async () => {
+      if (showEditModal.value && menuItemEditorRef.value?.hasFormChanges) {
+        const isConfirmed = await confirm({
+          title: "Discard Changes?",
+          content: "You have unsaved changes. Are you sure you want to close? All changes will be lost.",
+          confirmText: "Discard",
+          cancelText: "Cancel",
+        });
+        
+        if (!isConfirmed) {
+          return;
+        }
+      }
+      selectedMenu.value = null;
+      showEditModal.value = true;
+    },
     permission: {
       and: [
         {
@@ -131,6 +89,9 @@ useHeaderActionRegistry([
 
 const menuLoaders = ref<Record<string, any>>({});
 
+const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
+const { fetchMenuDefinitions } = useMenuApi();
+
 function getMenuLoader(menuId: string) {
   if (!menuLoaders.value[menuId]) {
     menuLoaders.value[menuId] = createLoader();
@@ -138,30 +99,104 @@ function getMenuLoader(menuId: string) {
   return menuLoaders.value[menuId];
 }
 
-async function handleFilterApply(filter: FilterGroup) {
-  currentFilter.value = filter;
-  
-  if (page.value === 1) {
-    
-    await fetchMenus();
-  } else {
-    
-    const newQuery = { ...route.query };
-    delete newQuery.page;
-    
-    await router.replace({
-      query: newQuery,
-    });
+async function refreshMenus() {
+  await fetchMenus();
+  await reregisterAllMenus(fetchMenuDefinitions as any);
+
+  const schemaValues = Object.values(schemas.value);
+  if (schemaValues.length > 0) {
+    await registerDataMenuItems(schemaValues);
   }
 }
 
-async function toggleEnabled(menuItem: any, value?: boolean) {
-  const loader = getMenuLoader(menuItem.id);
-  const newEnabled = value !== undefined ? value : !menuItem.isEnabled;
+function handleEditMenu(menu: MenuDefinition) {
+  selectedMenu.value = menu;
+  showEditModal.value = true;
+}
+
+function buildPathFromParentChain(menu: MenuDefinition, allMenus: MenuDefinition[]): string {
+  const pathParts: string[] = [];
+  
+  function traverseUp(currentMenu: MenuDefinition) {
+    if (currentMenu.path && currentMenu.path !== '/') {
+      const parts = currentMenu.path.split('/').filter(Boolean);
+      if (parts.length > 0) {
+        pathParts.unshift(...parts);
+      }
+    }
+    
+    if (currentMenu.parent) {
+      const parentId = getId(currentMenu.parent);
+      if (parentId) {
+        const parent = allMenus.find(m => String(getId(m)) === String(parentId));
+        if (parent) {
+          traverseUp(parent);
+        }
+      }
+    }
+  }
+  
+  traverseUp(menu);
+  
+  if (pathParts.length > 0) {
+    return '/' + pathParts.join('/') + '/';
+  }
+  
+  return '/';
+}
+
+function handleAddChildMenu(parentMenu: MenuDefinition) {
+  const newMenu = generateEmptyForm();
+  newMenu.type = 'Menu';
+  const parentId = getId(parentMenu);
+  newMenu.parent = parentId ? { id: parentId } : null;
+  
+  const basePath = buildPathFromParentChain(parentMenu, menus.value);
+  console.log('handleAddChildMenu - parentMenu:', parentMenu);
+  console.log('handleAddChildMenu - basePath:', basePath);
+  newMenu.path = basePath;
+  console.log('handleAddChildMenu - newMenu:', newMenu);
+  
+  selectedMenu.value = newMenu as MenuDefinition;
+  showEditModal.value = true;
+}
+
+async function handleAddStandaloneMenu() {
+  if (showEditModal.value && menuItemEditorRef.value?.hasFormChanges) {
+    const isConfirmed = await confirm({
+      title: "Discard Changes?",
+      content: "You have unsaved changes. Are you sure you want to close? All changes will be lost.",
+      confirmText: "Discard",
+      cancelText: "Cancel",
+    });
+    
+    if (!isConfirmed) {
+      return;
+    }
+  }
+  const newMenu = generateEmptyForm();
+  newMenu.type = 'Menu';
+  selectedMenu.value = newMenu as MenuDefinition;
+  showEditModal.value = true;
+}
+
+async function handleSaveMenu() {
+  await refreshMenus();
+  showEditModal.value = false;
+  selectedMenu.value = null;
+}
+
+async function toggleEnabled(payload: { menu: MenuDefinition; enabled: boolean }) {
+  const menuItem = payload.menu;
+  const enabled = payload.enabled;
+  if (menuItem.isSystem) return;
+  
+  const loader = getMenuLoader(String(getId(menuItem)));
+  const newEnabled = enabled;
 
   if (apiData.value?.data) {
     const menuIndex = apiData.value.data.findIndex(
-      (m: any) => m.id === menuItem.id
+      (m: any) => String(getId(m)) === String(getId(menuItem))
     );
     if (menuIndex !== -1) {
       apiData.value.data[menuIndex].isEnabled = newEnabled;
@@ -169,7 +204,7 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
   }
 
   const { execute: updateSpecificMenu, error: updateError } = useApi(
-    () => `/menu_definition/${menuItem.id}`,
+    () => `/menu_definition/${getId(menuItem)}`,
     {
       method: "patch",
       errorContext: "Toggle Menu",
@@ -181,10 +216,9 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
   );
 
   if (updateError.value) {
-    
     if (apiData.value?.data) {
       const menuIndex = apiData.value.data.findIndex(
-        (m: any) => m.id === menuItem.id
+        (m: any) => String(getId(m)) === String(getId(menuItem))
       );
       if (menuIndex !== -1) {
         apiData.value.data[menuIndex].isEnabled = !newEnabled;
@@ -193,14 +227,7 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
     return;
   }
 
-  const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
-  const { fetchMenuDefinitions } = useMenuApi();
-  await reregisterAllMenus(fetchMenuDefinitions as any);
-
-  const schemaValues = Object.values(schemas.value);
-  if (schemaValues.length > 0) {
-    await registerDataMenuItems(schemaValues);
-  }
+  await refreshMenus();
 
   toast.add({
     title: "Success",
@@ -209,7 +236,16 @@ async function toggleEnabled(menuItem: any, value?: boolean) {
   });
 }
 
-async function deleteMenu(menuItem: any) {
+async function deleteMenu(menuItem: MenuDefinition) {
+  if (menuItem.isSystem) {
+    toast.add({
+      title: "Cannot Delete",
+      description: "System menus cannot be deleted",
+      color: "error",
+    });
+    return;
+  }
+
   const isConfirmed = await confirm({
     title: "Delete Menu",
     content: `Are you sure you want to delete menu "${menuItem.label}"? This action cannot be undone.`,
@@ -219,7 +255,7 @@ async function deleteMenu(menuItem: any) {
 
   if (isConfirmed) {
     const { execute: deleteMenuApi, error: deleteError } = useApi(
-      () => `/menu_definition/${menuItem.id}`,
+      () => `/menu_definition/${getId(menuItem)}`,
       {
         method: "delete",
         errorContext: "Delete Menu",
@@ -232,16 +268,7 @@ async function deleteMenu(menuItem: any) {
       return;
     }
 
-    await fetchMenus();
-
-    const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
-    const { fetchMenuDefinitions } = useMenuApi();
-    await reregisterAllMenus(fetchMenuDefinitions as any);
-
-    const schemaValues = Object.values(schemas.value);
-    if (schemaValues.length > 0) {
-      await registerDataMenuItems(schemaValues);
-    }
+    await refreshMenus();
 
     toast.add({
       title: "Success",
@@ -251,14 +278,150 @@ async function deleteMenu(menuItem: any) {
   }
 }
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchMenus();
-  },
-  { immediate: true }
-);
+function handleEditExtension(menu: MenuDefinition) {
+  selectedMenuForExtension.value = menu;
+  showExtensionDrawer.value = true;
+}
+
+async function handleSaveExtension() {
+  await refreshMenus();
+  showExtensionDrawer.value = false;
+  selectedMenuForExtension.value = null;
+}
+
+async function handleDeleteExtension(menu: MenuDefinition) {
+  if (!menu.extension) return;
+
+  const extensionId = getId(menu.extension);
+  if (!extensionId) return;
+
+  const isConfirmed = await confirm({
+    title: "Delete Extension",
+    content: `Are you sure you want to delete the extension "${menu.extension.name || menu.extension.description || extensionId}"? This will permanently delete the extension and unlink it from menu "${menu.label}".`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+
+  if (!isConfirmed) return;
+
+  const { execute: deleteExtensionApi, error: deleteError } = useApi(
+    () => `/extension_definition/${extensionId}`,
+    {
+      method: "delete",
+      errorContext: "Delete Extension",
+    }
+  );
+
+  await deleteExtensionApi();
+
+  if (deleteError.value) {
+    return;
+  }
+
+  await refreshMenus();
+
+  toast.add({
+    title: "Success",
+    description: `Extension deleted successfully!`,
+    color: "success",
+  });
+}
+
+async function handleMoveMenu(menu: MenuDefinition) {
+  
+}
+
+async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: MenuDefinition | null }) {
+  const { menu, newParent } = payload;
+  const menuId = getId(menu);
+  if (!menuId) return;
+
+  const newParentId = newParent ? getId(newParent) : null;
+  const oldParentId = getId(menu.parent);
+
+  if (String(oldParentId || null) === String(newParentId || null)) {
+    return;
+  }
+
+  const body: { parent?: number | string | null; order?: number } = {
+    parent: newParentId
+  };
+
+  if (newParentId) {
+    const siblings = menus.value.filter((m: MenuDefinition) => {
+      const mParentId = getId(m.parent);
+      return String(mParentId || null) === String(newParentId);
+    });
+    body.order = siblings.length;
+  } else {
+    const rootSiblings = menus.value.filter((m: MenuDefinition) => {
+      const mParentId = getId(m.parent);
+      return !mParentId;
+    });
+    body.order = rootSiblings.length;
+  }
+
+  await updateMenuApi({
+    id: menuId,
+    body
+  });
+
+  await refreshMenus();
+
+  toast.add({
+    title: "Success",
+    description: "Menu moved successfully!",
+    color: "success",
+  });
+}
+
+async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
+  if (!updatedMenus || updatedMenus.length === 0) return;
+
+  console.log('[handleReorderMenus] Input updatedMenus:', updatedMenus.map(m => ({
+    id: getId(m),
+    label: m.label,
+    order: m.order,
+    parent: getId(m.parent)
+  })));
+
+  const updatePromises = updatedMenus.map(async (menu) => {
+    const menuId = getId(menu);
+    if (!menuId) return;
+
+    const body: { order: number } = {
+      order: menu.order
+    };
+
+    console.log(`[handleReorderMenus] Updating menu ${menuId} (${menu.label}):`, body);
+
+    await updateMenuApi({
+      id: menuId,
+      body
+    });
+  });
+
+  try {
+    await Promise.all(updatePromises);
+    await refreshMenus();
+
+    toast.add({
+      title: "Success",
+      description: "Menu order updated successfully!",
+      color: "success",
+    });
+  } catch (error) {
+    toast.add({
+      title: "Error",
+      description: "Failed to update menu order. Please try again.",
+      color: "error",
+    });
+  }
+}
+
+onMounted(() => {
+  fetchMenus();
+});
 </script>
 
 <template>
@@ -266,132 +429,40 @@ watch(
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="loading || !isMounted"
-        title="Loading menus..."
-        description="Fetching menu configuration"
-        size="sm"
-        type="card"
+        type="menu"
         context="page"
       />
-
-      <div v-else-if="menus.length" class="space-y-6">
-        <div
-          class="grid gap-4"
-          :class="
-            isTablet
-              ? 'grid-cols-2'
-              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
-          "
-        >
-          <CommonSettingsCard
-            v-for="menu in menus"
-            :key="menu.id"
-            :title="menu.label"
-            :description="menu.path"
-            :icon="menu.icon || 'lucide:circle'"
-            :icon-color="pageIconColor"
-            :card-class="'cursor-pointer transition-all'"
-            @click="navigateTo(`/settings/menus/${getId(menu)}`)"
-            :stats="[
-              {
-                label: 'Type',
-                component: 'UBadge',
-                props: {
-                  variant: 'soft',
-                  color: menu.type === 'Mini Sidebar' ? 'primary'
-                    : menu.type === 'Dropdown Menu' ? 'secondary'
-                    : 'neutral',
-                },
-                value: menu.type === 'Mini Sidebar' ? 'Mini Sidebar'
-                  : menu.type === 'Dropdown Menu' ? 'Dropdown Menu'
-                  : menu.type === 'Menu' ? 'Menu'
-                  : 'Unknown',
-              },
-              {
-                label: 'Status',
-                component: 'UBadge',
-                props: {
-                  variant: 'soft',
-                  color: menu.isEnabled ? 'success' : 'warning',
-                },
-                value: menu.isEnabled ? 'Enabled' : 'Disabled',
-              },
-              {
-                label: 'System',
-                component: menu.isSystem ? 'UBadge' : undefined,
-                props: menu.isSystem ? { variant: 'soft', color: 'info' } : undefined,
-                value: menu.isSystem ? 'System' : '-'
-              },
-            ]"
-            :actions="[
-              {
-                label: 'Delete',
-                props: {
-                  icon: 'i-lucide-trash-2',
-                  variant: 'solid',
-                  color: 'error',
-                  size: 'sm',
-                },
-                disabled: menu.isSystem,
-                onClick: (e?: Event) => {
-                  e?.stopPropagation();
-                  deleteMenu(menu);
-                },
-              }
-            ]"
-            :header-actions="[
-              ...(menu.isSystem ? [] : [{
-                component: 'USwitch',
-                props: {
-                  'model-value': menu.isEnabled,
-                  disabled: getMenuLoader(menu.id).isLoading
-                },
-                onClick: (e?: Event) => e?.stopPropagation(),
-                onUpdate: (value: boolean) => toggleEnabled(menu, value)
-              }])
-            ]"
-          />
-        </div>
-
-        <div
-          v-if="!loading && menus.length > 0 && total > pageLimit"
-          class="flex items-center justify-between mt-6"
-        >
-          <UPagination
-            v-model:page="page"
-            :items-per-page="pageLimit"
-            :total="total"
-            show-edges
-            :sibling-count="1"
-            :to="
-              (p) => ({
-                path: route.path,
-                query: { ...route.query, page: p },
-              })
-            "
-            :ui="{
-              item: 'h-9 w-9 rounded-xl transition-all duration-300',
-            }"
-          />
-          <p class="hidden md:block text-sm text-gray-400">
-            Showing <span class="text-gray-700 dark:text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of <span class="text-gray-700 dark:text-gray-200">{{ total }}</span> results
-          </p>
-        </div>
-      </div>
-
-      <CommonEmptyState
+      
+      <MenuVisualEditor
         v-else
-        title="No menus found"
-        description="No menu configurations have been created yet"
-        icon="lucide:navigation"
-        size="sm"
+        :menus="menus"
+        :loading="false"
+        @edit-menu="handleEditMenu"
+        @delete-menu="deleteMenu"
+        @toggle-enabled="toggleEnabled"
+        @add-child-menu="handleAddChildMenu"
+        @add-standalone-menu="handleAddStandaloneMenu"
+        @edit-extension="handleEditExtension"
+        @delete-extension="handleDeleteExtension"
+        @reorder-menus="handleReorderMenus"
+        @move-menu="handleMoveMenu"
+        @move-menu-to="handleMoveMenuTo"
       />
     </Transition>
   </div>
 
-  <FilterDrawerLazy
-    v-model="showFilterDrawer"
-    :table-name="tableName"
-    :current-filter="currentFilter"
-    @apply="handleFilterApply"
-  />
+      <MenuItemEditor
+        ref="menuItemEditorRef"
+        v-model="showEditModal"
+        :menu="selectedMenu"
+        :all-menus="menus"
+        @save="handleSaveMenu"
+      />
+
+      <ExtensionEditorDrawer
+        v-model="showExtensionDrawer"
+        :menu="selectedMenuForExtension"
+        @save="handleSaveExtension"
+      />
+
 </template>
