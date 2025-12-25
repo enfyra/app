@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
-  type?: 'text' | 'avatar' | 'card' | 'table' | 'form' | 'folder' | 'file-card';
+  type?: 'text' | 'avatar' | 'card' | 'table' | 'form' | 'folder' | 'file-card' | 'menu';
   lines?: number;
   animated?: boolean;
   shimmer?: boolean;
@@ -271,6 +271,33 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
             <div
               class="h-3 w-24 rounded skeleton-gradient"
             />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div v-else-if="type === 'menu'" class="w-full space-y-4 p-4">
+    <div class="menu-preview bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+      <div class="space-y-2">
+        <div v-for="i in 4" :key="i" class="space-y-2">
+          <div class="menu-item flex items-center gap-2 px-3 py-2 rounded-lg">
+            <div class="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded skeleton-gradient" :class="[animationClass, shimmerClass]"></div>
+            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded skeleton-gradient" :class="[animationClass, shimmerClass]" :style="{ width: `${120 + (i % 3) * 40}px` }"></div>
+            <div class="flex items-center gap-1 ml-auto">
+              <div class="h-5 w-14 bg-gray-200 dark:bg-gray-700 rounded-full skeleton-gradient" :class="[animationClass, shimmerClass]"></div>
+              <div class="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full skeleton-gradient" :class="[animationClass, shimmerClass]"></div>
+              <div v-if="i % 2 === 0" class="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded-full skeleton-gradient" :class="[animationClass, shimmerClass]"></div>
+            </div>
+          </div>
+          <div v-if="i <= 2" class="pl-4 md:pl-6 space-y-1">
+            <div class="menu-item-child flex items-center gap-2 px-3 py-1.5 rounded-lg">
+              <div class="w-3.5 h-3.5 bg-gray-200 dark:bg-gray-700 rounded skeleton-gradient" :class="[animationClass, shimmerClass]"></div>
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded skeleton-gradient" :class="[animationClass, shimmerClass]" :style="{ width: `${80 + (i % 2) * 30}px` }"></div>
+              <div class="flex items-center gap-1 ml-auto">
+                <div class="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded-full skeleton-gradient" :class="[animationClass, shimmerClass]"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 export interface ExtensionDefinition {
-  id: number;
+  id?: number;
+  _id?: string;
   code: string;
   compiledCode?: string;
   description: string | null;
@@ -9,21 +10,25 @@ export interface ExtensionDefinition {
   type: string;
   version: string;
   menu?: {
-    id: number;
+    id?: number;
+    _id?: string;
     label: string;
     path: string;
     icon: string;
     sidebar: {
-      id: number;
+      id?: number;
+      _id?: string;
     };
   };
   extensionId?: string;
   createdBy?: {
-    id: string;
+    id?: string;
+    _id?: string;
     email: string;
   };
   updatedBy?: {
-    id: string;
+    id?: string;
+    _id?: string;
     email: string;
   };
   createdAt: string;

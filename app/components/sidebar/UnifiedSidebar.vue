@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MenuItemRenderer from './MenuItemRenderer.vue';
+
 const route = useRoute();
 const { menuGroups } = useMenuRegistry();
 const { checkPermissionCondition } = usePermissions();
@@ -21,6 +23,24 @@ const isCollapsed = computed(() => {
   return sidebarCollapsed.value;
 });
 
+function findActiveRoutes(items: any[], active: Set<string>, currentPath: string) {
+  const isRouteMatch = (routePath: string) =>
+    currentPath === routePath ||
+    (currentPath.startsWith(routePath) &&
+     (currentPath[routePath.length] === '/' || currentPath[routePath.length] === undefined));
+
+  for (const item of items) {
+    const itemRoute = item.route || item.path;
+    if (itemRoute && isRouteMatch(itemRoute)) {
+      active.add(itemRoute);
+    }
+
+    if (item.items && item.items.length > 0) {
+      findActiveRoutes(item.items, active, currentPath);
+    }
+  }
+}
+
 const activeRoutes = computed(() => {
   const active = new Set<string>();
   const currentPath = route.path;
@@ -35,22 +55,8 @@ const activeRoutes = computed(() => {
       active.add(group.route);
     }
 
-    if (group.items) {
-      for (const item of group.items) {
-        const itemRoute = item.route || item.path;
-        if (itemRoute && isRouteMatch(itemRoute)) {
-          active.add(itemRoute);
-        }
-
-        if (item.children) {
-          for (const child of item.children) {
-            const childRoute = child.route || child.path;
-            if (childRoute && isRouteMatch(childRoute)) {
-              active.add(childRoute);
-            }
-          }
-        }
-      }
+    if (group.items && group.items.length > 0) {
+      findActiveRoutes(group.items, active, currentPath);
     }
   }
 
@@ -153,7 +159,7 @@ const visibleGroups = computed(() => {
 
       const matchedItems = permittedItems.filter((item: any) =>
         item.label.toLowerCase().includes(query) ||
-        item.children?.some((child: any) => child.label.toLowerCase().includes(query))
+        item.items?.some((child: any) => child.label.toLowerCase().includes(query))
       );
 
       return { ...group, items: matchedItems };
@@ -164,6 +170,7 @@ const visibleGroups = computed(() => {
       return group.items?.length > 0;
     });
 });
+
 </script>
 
 <template>
@@ -212,8 +219,16 @@ const visibleGroups = computed(() => {
           type="text"
         placeholder="Search menu..."
           class="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-4 py-2.5 pl-10 text-sm text-gray-800 dark:text-white/90 shadow-theme-xs placeholder:text-gray-400 dark:placeholder:text-white/30 focus:border-brand-300 dark:focus:border-brand-800 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:bg-gray-900"
+          :class="searchQuery ? 'pr-10' : ''"
       />
         <UIcon name="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <button
+          v-if="searchQuery"
+          @click="searchQuery = ''"
+          class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+        >
+          <UIcon name="lucide:x" class="w-4 h-4" />
+        </button>
       </div>
     </div>
 
@@ -414,56 +429,14 @@ const visibleGroups = computed(() => {
             >
           <template v-for="item in group.items" :key="item.id">
             <PermissionGate :condition="item.permission as any">
-              <div
-                v-if="item.children && item.children.length > 0"
-                class="space-y-1"
-              >
-                <div class="px-2 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                  {{ item.label }}
-                </div>
-
-                <PermissionGate
-                  v-for="child in item.children"
-                  :key="child.id"
-                  :condition="child.permission as any"
-                >
-                  <NuxtLink
-                    v-if="child.path || child.route"
-                    :to="child.path || child.route"
-                    @click="handleMenuClick"
-                    :class="[
-                      'menu-dropdown-item group',
-                      ((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'
-                    ]"
-                  >
-                    <span :class="((child.path && activeRoutes.has(child.path)) || (child.route && activeRoutes.has(child.route))) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
-                    <UIcon
-                      :name="child.icon || 'lucide:circle'"
-                      class="w-5 h-5 flex-shrink-0"
-                    />
-                    </span>
-                    <span class="menu-item-text">{{ child.label }}</span>
-                  </NuxtLink>
-                </PermissionGate>
-              </div>
-
-              <NuxtLink
-                v-else-if="item.path || item.route"
-                :to="item.path || item.route"
-                @click="handleMenuClick"
-                :class="[
-                  'menu-item group',
-                  ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'menu-item-active' : 'menu-item-inactive'
-                ]"
-              >
-                <span :class="((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
-                <UIcon
-                  :name="item.icon || 'lucide:circle'"
-                  class="w-5 h-5 flex-shrink-0"
-                />
-                </span>
-                <span class="menu-item-text">{{ item.label }}</span>
-              </NuxtLink>
+              <MenuItemRenderer
+                :item="item"
+                :level="0"
+                :active-routes="activeRoutes"
+                :expanded-groups="expandedGroups"
+                @toggle-group="toggleGroup"
+                @menu-click="handleMenuClick"
+              />
             </PermissionGate>
           </template>
             </div>

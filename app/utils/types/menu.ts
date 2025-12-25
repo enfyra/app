@@ -1,4 +1,5 @@
 import type { PermissionCondition } from "./permissions";
+import type { ExtensionDefinition } from "./extensions";
 
 export interface MenuDefinition {
   id?: number; 
@@ -12,12 +13,19 @@ export interface MenuDefinition {
   path: string;
   permission: PermissionCondition | null;
   type: "Dropdown Menu" | "Menu";
-  parent: number | string | null;
+  parent: number | string | { id: number | string } | null;
   sidebar: { id?: number; _id?: string } | null;
-  children: any[];
-  menus: any[];
+  children: MenuDefinition[];
+  menus: MenuDefinition[];
+  extension?: ExtensionDefinition;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface MenuTreeItem extends Omit<MenuDefinition, 'children'> {
+  id: string;
+  isDropdown: boolean;
+  children: MenuTreeItem[];
 }
 
 export interface MenuItem {
@@ -31,24 +39,24 @@ export interface MenuItem {
   permission?: PermissionCondition;
   
   path?: string;
-  children?: any[];
+  children?: MenuItem[];
   order?: number;
   type?: "Dropdown Menu" | "Menu";
-  parent?: any;
-  sidebar?: any;
+  parent?: MenuDefinition | MenuItem | null;
+  sidebar?: { id?: number; _id?: string } | null;
   description?: string;
   isEnabled?: boolean;
   isSystem?: boolean;
-  menus?: any[];
-  extension?: any;
+  menus?: MenuItem[];
+  extension?: ExtensionDefinition;
   createdAt?: string;
   updatedAt?: string;
   
   onClick?: () => void | Promise<void>;
   class?: string;
   
-  component?: string | any;
-  componentProps?: Record<string, any>;
+  component?: string | (() => Promise<any>);
+  componentProps?: Record<string, unknown>;
   key?: string;
 }
 
@@ -62,13 +70,43 @@ export interface MenuApiItem {
   label: string;
   order: number;
   path: string;
-  permission: any;
+  permission: PermissionCondition | null;
   type: "Dropdown Menu" | "Menu";
   parent: number | string | null;
   sidebar: { id?: number; _id?: string } | null;
-  children: any[];
-  menus: any[];
-  extension?: any;
+  children: MenuApiItem[];
+  menus: MenuApiItem[];
+  extension?: ExtensionDefinition;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface MenuContextMenuItem {
+  label?: string;
+  icon?: string;
+  onSelect?: () => void;
+  color?: "primary" | "secondary" | "success" | "info" | "warning" | "error" | "neutral";
+  type?: "separator";
+  children?: MenuContextMenuItem[];
+}
+
+export interface DragEventAdded {
+  element: MenuTreeItem;
+  newIndex: number;
+  oldIndex: number;
+}
+
+export interface DragEventRemoved {
+  element: MenuTreeItem;
+  oldIndex: number;
+}
+
+export interface DragEvent {
+  added?: DragEventAdded;
+  removed?: DragEventRemoved;
+  moved?: {
+    element: MenuTreeItem;
+    newIndex: number;
+    oldIndex: number;
+  };
 }

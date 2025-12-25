@@ -418,7 +418,7 @@ const {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
     filter: {
-      route: { id: { _is_null: true } },
+      isGlobal: { _eq: true },
     },
     sort: ["priority"],
   })),
@@ -433,7 +433,7 @@ const {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
     filter: {
-      route: { id: { _is_null: true } },
+      isGlobal: { _eq: true },
     },
     sort: ["priority"],
   })),
@@ -861,12 +861,6 @@ async function saveHook() {
   }
 
   const hookData = { ...hookForm.value };
-  
-  if (hookData.route === null) {
-    hookData.route = null;
-  } else if (hookData.route === undefined || !hookData.route) {
-    hookData.route = { id: routeId.value };
-  }
 
   if (isPreHook) {
     await executeCreatePreHook({ body: hookData });
@@ -959,11 +953,7 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         await fetchEditPreHook();
         if (editPreHookData.value?.data?.[0]) {
           editHookType.value = 'pre';
-          const hookData = { ...editPreHookData.value.data[0] };
-          if (!hookData.route) {
-            hookData.route = null;
-          }
-          editHookForm.value = hookData;
+          editHookForm.value = { ...editPreHookData.value.data[0] };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -974,11 +964,7 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         await fetchEditPostHook();
         if (editPostHookData.value?.data?.[0]) {
           editHookType.value = 'post';
-          const hookData = { ...editPostHookData.value.data[0] };
-          if (!hookData.route) {
-            hookData.route = null;
-          }
-          editHookForm.value = hookData;
+          editHookForm.value = { ...editPostHookData.value.data[0] };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -990,19 +976,11 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         
         if (editPreHookData.value?.data?.[0]) {
           editHookType.value = 'pre';
-          const hookData = { ...editPreHookData.value.data[0] };
-          if (!hookData.route) {
-            hookData.route = null;
-          }
-          editHookForm.value = hookData;
+          editHookForm.value = { ...editPreHookData.value.data[0] };
           showEditHookDrawer.value = true;
         } else if (editPostHookData.value?.data?.[0]) {
           editHookType.value = 'post';
-          const hookData = { ...editPostHookData.value.data[0] };
-          if (!hookData.route) {
-            hookData.route = null;
-          }
-          editHookForm.value = hookData;
+          editHookForm.value = { ...editPostHookData.value.data[0] };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -1062,11 +1040,7 @@ async function editHook(hook: any) {
     await fetchEditPreHook();
     if (editPreHookData.value?.data?.[0]) {
       editHookType.value = 'pre';
-      const hookData = { ...editPreHookData.value.data[0] };
-      if (!hookData.route) {
-        hookData.route = null;
-      }
-      editHookForm.value = hookData;
+      editHookForm.value = { ...editPreHookData.value.data[0] };
       showEditHookDrawer.value = true;
       router.push({
         query: { ...route.query, editHook: hookId, editHookType: 'pre' }
@@ -1076,11 +1050,7 @@ async function editHook(hook: any) {
     await fetchEditPostHook();
     if (editPostHookData.value?.data?.[0]) {
       editHookType.value = 'post';
-      const hookData = { ...editPostHookData.value.data[0] };
-      if (!hookData.route) {
-        hookData.route = null;
-      }
-      editHookForm.value = hookData;
+      editHookForm.value = { ...editPostHookData.value.data[0] };
       showEditHookDrawer.value = true;
       router.push({
         query: { ...route.query, editHook: hookId, editHookType: 'post' }
@@ -1115,12 +1085,6 @@ async function updateHook() {
   }
 
   const hookData = { ...editHookForm.value };
-  
-  if (hookData.route === null) {
-    hookData.route = null;
-  } else if (hookData.route === undefined || !hookData.route) {
-    hookData.route = { id: routeId.value };
-  }
 
   if (isPreHook) {
     await executeUpdatePreHook({

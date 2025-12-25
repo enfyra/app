@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
   try {
     let body = await readBody(event);
 
-    const { processedBody, compiledCode } = await processExtensionDefinition(body, method);
+    const { processedBody } = await processExtensionDefinition(body, method);
     body = processedBody;
 
     const config = useRuntimeConfig();

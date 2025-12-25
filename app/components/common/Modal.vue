@@ -4,9 +4,11 @@ const props = withDefaults(
     modelValue: boolean;
     class?: string;
     handle?: boolean;
+    preventClose?: boolean;
   }>(),
   {
     handle: false,
+    preventClose: false,
   }
 );
 
@@ -21,7 +23,12 @@ const hasContent = computed(() => hasTitle.value || !!slots.body || hasFooter.va
 
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: (value) => {
+    if (!value && props.preventClose) {
+      return;
+    }
+    emit('update:modelValue', value);
+  },
 });
 
 const { isMobile, isTablet } = useScreen();

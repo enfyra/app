@@ -241,6 +241,10 @@ const methodGroups = computed(() => {
     }
   });
 
+  if (props.hasMainTable && props.defaultHandler && allMethods.size === 0) {
+    allMethods.add('ALL');
+  }
+
   allMethods.forEach((method) => {
     groups[method] = {
       method,
@@ -252,10 +256,16 @@ const methodGroups = computed(() => {
 
   props.sortedPreHooks.forEach((hook) => {
     const hookId = props.getId(hook);
-    const isGlobal = !hook.route;
+    const isGlobal = hook.isGlobal === true;
     const hasMethods = hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0;
     
-    if (hasMethods) {
+    if (isGlobal) {
+      Object.keys(groups).forEach((methodKey) => {
+        if (groups[methodKey] && !groups[methodKey]!.preHooks.find((h: any) => props.getId(h) === hookId)) {
+          groups[methodKey]!.preHooks.push(hook);
+        }
+      });
+    } else if (hasMethods) {
       hook.methods.forEach((method: any) => {
         if (method.method && groups[method.method] && !groups[method.method]!.preHooks.find((h: any) => props.getId(h) === hookId)) {
           groups[method.method]!.preHooks.push(hook);
@@ -281,7 +291,7 @@ const methodGroups = computed(() => {
   if (props.hasMainTable && props.defaultHandler) {
     Object.keys(groups).forEach((method) => {
       const group = groups[method];
-      if (group && !group.handler && (group.preHooks.length > 0 || group.postHooks.length > 0)) {
+      if (group && !group.handler) {
         group.handler = props.defaultHandler;
       }
     });
@@ -289,10 +299,16 @@ const methodGroups = computed(() => {
 
   props.sortedAfterHooks.forEach((hook) => {
     const hookId = props.getId(hook);
-    const isGlobal = !hook.route;
+    const isGlobal = hook.isGlobal === true;
     const hasMethods = hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0;
     
-    if (hasMethods) {
+    if (isGlobal) {
+      Object.keys(groups).forEach((methodKey) => {
+        if (groups[methodKey] && !groups[methodKey]!.postHooks.find((h: any) => props.getId(h) === hookId)) {
+          groups[methodKey]!.postHooks.push(hook);
+        }
+      });
+    } else if (hasMethods) {
       hook.methods.forEach((method: any) => {
         if (method.method && groups[method.method] && !groups[method.method]!.postHooks.find((h: any) => props.getId(h) === hookId)) {
           groups[method.method]!.postHooks.push(hook);
@@ -466,8 +482,6 @@ function handleNodeClick(event: any) {
   if (!nodeData) return;
 
   const nodeType = node?.type;
-  // Click handling is now done in the node component itself
-  // This function is kept for backward compatibility but may not be needed
 }
 
 function handlePaneReady() {

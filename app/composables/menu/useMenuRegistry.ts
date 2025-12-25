@@ -6,28 +6,31 @@ export function useMenuRegistry() {
 
   const menuGroups = computed(() => {
     const topLevelItems = menuItems.value.filter(item => {
-      if (item.type === 'Dropdown Menu') return true;
-      if (item.type === 'Menu' && (!item.parent || item.parent === null)) return true;
+      if (!item.parent) {
+        if (item.type === 'Dropdown Menu') return true;
+        if (item.type === 'Menu') return true;
+      }
       return false;
     });
 
-    const groups = topLevelItems
-      .map(item => {
-        const children = menuItems.value.filter(child => {
-          if (!child.parent) return false;
-          return String(child.parent) === String(item.id) ||
-                 (typeof child.parent === 'object' && String((child.parent as any).id || child.parent) === String(item.id));
-        });
+    function buildMenuTree(item: any): any {
+      const children = menuItems.value.filter(child => {
+        if (!child.parent) return false;
+        return String(child.parent) === String(item.id);
+      });
 
-        return {
-          ...item,
-          icon: item.icon || 'lucide:circle',
-          route: item.route || item.path,
-          position: (item as any).position || 'top' as const,
-          items: children.length > 0 ? children : (item.children || []),
-          order: item.order || 0,
-        };
-      })
+      return {
+        ...item,
+        icon: item.icon || 'lucide:circle',
+        route: item.route || item.path,
+        position: (item as any).position || 'top' as const,
+        items: children.length > 0 ? children.map(buildMenuTree) : (item.children || []).map(buildMenuTree),
+        order: item.order || 0,
+      };
+    }
+
+    const groups = topLevelItems
+      .map(buildMenuTree)
       .sort((a, b) => {
         if (a.position !== b.position) {
           return a.position === 'top' ? -1 : 1;
@@ -99,62 +102,42 @@ export function useMenuRegistry() {
   const registerAllMenusFromApi = async (menuDefinitions: MenuDefinition[]) => {
     if (!menuDefinitions || menuDefinitions.length === 0) return;
 
-    const dropdownMenusData = menuDefinitions
-      .filter((item) => item.type === "Dropdown Menu" && item.isEnabled)
+    const allMenus = menuDefinitions
+      .filter((item) => item.isEnabled)
       .sort((a, b) => a.order - b.order);
 
-    const regularMenuItems = menuDefinitions
-      .filter((item) => item.type === "Menu" && item.isEnabled)
-      .sort((a, b) => a.order - b.order);
-
-    if (dropdownMenusData.length > 0) {
-      dropdownMenusData.forEach((item) => {
-        const itemId = getId(item);
-        if (itemId) {
-          const children = regularMenuItems
-            .filter((menuItem) => {
-              const parentId = getId(menuItem.parent);
-              return parentId && String(parentId) === String(itemId);
-            })
-            .map((child) => ({
-              ...child,
-              id: String(getId(child)),
-              route: child.path,
-            }));
-
-          registerMenuItem({
-            ...item,
-            id: String(itemId),
-            route: item.path || "",
-            children,
-          } as any);
-        }
-      });
+    function buildChildren(parentId: string | number): any[] {
+      return allMenus
+        .filter((menuItem) => {
+          const menuParentId = getId(menuItem.parent);
+          return menuParentId && String(menuParentId) === String(parentId);
+        })
+        .map((child) => {
+          const childId = getId(child);
+          return {
+            ...child,
+            id: String(childId),
+            route: child.path,
+            children: childId ? buildChildren(childId) : [],
+          };
+        });
     }
 
-    if (regularMenuItems.length > 0) {
-      regularMenuItems.forEach((item) => {
-        const parentId = getId(item.parent);
+    allMenus.forEach((item) => {
+      const itemId = getId(item);
+      if (!itemId) return;
 
-        if (parentId) {
-          const isChildOfDropdown = dropdownMenusData.some(
-            (dropdown) => String(getId(dropdown)) === String(parentId)
-          );
-          if (isChildOfDropdown) {
-            return; 
-          }
-        }
-
-        const itemId = getId(item);
-        if (itemId) {
-          registerMenuItem({
-            ...item,
-            id: String(itemId),
-            route: item.path,
-          } as any);
-        }
-      });
-    }
+      const parentId = getId(item.parent);
+      const children = buildChildren(itemId);
+      
+      registerMenuItem({
+        ...item,
+        id: String(itemId),
+        route: item.path || "",
+        parent: parentId ? String(parentId) : undefined,
+        children,
+      } as any);
+    });
   };
 
   const reregisterAllMenus = async (

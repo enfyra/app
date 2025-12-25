@@ -44,7 +44,6 @@
     >
       <component
         :is="extensionComponent"
-        :components="extensionComponent.components"
       />
     </PermissionGate>
 
