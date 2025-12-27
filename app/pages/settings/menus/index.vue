@@ -30,11 +30,17 @@ const { menuDefinitions, fetchMenuDefinitions } = useMenuApi();
 
 const menus = computed(() => {
   const rawMenus = menuDefinitions.value?.data || [];
-  return rawMenus.map((menu: any) => ({
-    ...menu,
-    id: getId(menu),
-    _id: String(getId(menu)),
-  })) as MenuDefinition[];
+  return rawMenus
+    .filter((menu: any) => {
+      const menuPath = menu.path || menu.route || '';
+      const menuLabel = menu.label || '';
+      return menuPath !== '/data' && menuLabel !== 'Data';
+    })
+    .map((menu: any) => ({
+      ...menu,
+      id: getId(menu),
+      _id: String(getId(menu)),
+    })) as MenuDefinition[];
 });
 
 const showEditModal = ref(false);
