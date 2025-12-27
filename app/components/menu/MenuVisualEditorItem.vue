@@ -74,7 +74,7 @@ function handleChildrenReorder(event: DragEvent) {
     if (!childMenuId) return;
     
     const originalMenu = allMenus.find(m => String(getId(m)) === String(childMenuId));
-    if (!originalMenu || originalMenu.isSystem) return;
+    if (!originalMenu) return;
     
     const oldOrder = originalMenu.order;
     if (oldOrder !== index) {
