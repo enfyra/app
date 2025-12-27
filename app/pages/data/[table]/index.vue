@@ -14,7 +14,6 @@ const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
-const { isMounted } = useMounted();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 
@@ -171,13 +170,15 @@ const columns = computed(() => {
         visibleColumns.value.has(field.name)
     )
     .sort((a, b) => {
+      const aName = a.name?.toLowerCase() || '';
+      const bName = b.name?.toLowerCase() || '';
       
-      if (a.name?.toLowerCase() === 'id') return -1;
-      if (b.name?.toLowerCase() === 'id') return 1;
+      if (aName === 'id' || aName === '_id') return -1;
+      if (bName === 'id' || bName === '_id') return 1;
 
-      const aCreatedAt = a.createdAt ? new Date(a.createdAt).getTime() : (a.id ?? 0);
-      const bCreatedAt = b.createdAt ? new Date(b.createdAt).getTime() : (b.id ?? 0);
-      return aCreatedAt - bCreatedAt;
+      const aSortKey = a.id ?? (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+      const bSortKey = b.id ?? (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+      return aSortKey - bSortKey;
     })
     .map((field) => {
       let config: DataTableColumnConfig = {
@@ -360,65 +361,44 @@ useHeaderActionRegistry([
       </UButton>
     </div>
 
-    <Transition name="loading-fade" mode="out-in">
-      
-      <div v-if="!isMounted || loading" class="w-full py-8">
-        <CommonLoadingState
-          type="table"
-          size="md"
-          context="page"
-          :title="`Loading data...`"
-          description="Fetching records"
-        />
-      </div>
+    <div class="space-y-6">
+      <DataTableLazy
+        :data="data"
+        :columns="columns"
+        :loading="loading"
+        :page-size="pageLimit"
+        :selectable="isSelectionMode"
+        :skeleton-rows="pageLimit"
+        @selection-change="handleSelectionChange"
+        @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
+      />
 
-      <div v-else-if="data && data.length > 0" class="space-y-6">
-        <DataTableLazy
-          :data="data"
-          :columns="columns"
-          :loading="false"
-          :page-size="pageLimit"
-          :selectable="isSelectionMode"
-          @selection-change="handleSelectionChange"
-          @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
+      <div
+        v-if="!loading && Math.ceil(total / pageLimit) > 1"
+        class="flex items-center justify-between"
+      >
+        <UPagination
+          v-model:page="page"
+          :items-per-page="pageLimit"
+          :total="total"
+          show-edges
+          :sibling-count="1"
+          :to="
+            (p) => ({
+              path: route.path,
+              query: { ...route.query, page: p },
+            })
+          "
+          :ui="{
+            item: 'h-9 w-9 rounded-xl transition-all duration-300',
+          }"
         />
-
-        <div
-          v-if="Math.ceil(total / pageLimit) > 1"
-          class="flex items-center justify-between"
-        >
-          <UPagination
-            v-model:page="page"
-            :items-per-page="pageLimit"
-            :total="total"
-            show-edges
-            :sibling-count="1"
-            :to="
-              (p) => ({
-                path: route.path,
-                query: { ...route.query, page: p },
-              })
-            "
-            :ui="{
-              item: 'h-9 w-9 rounded-xl transition-all duration-300',
-            }"
-          />
-          <p class="hidden md:block text-sm text-gray-600 dark:text-gray-400">
-            Showing <span class="text-gray-700 dark:text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span>
-            of <span class="text-gray-700 dark:text-gray-200">{{ total }}</span> results
-          </p>
-        </div>
+        <p class="hidden md:block text-sm text-gray-600 dark:text-gray-400">
+          Showing <span class="text-gray-700 dark:text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span>
+          of <span class="text-gray-700 dark:text-gray-200">{{ total }}</span> results
+        </p>
       </div>
-
-      <div v-else class="w-full py-8">
-        <CommonEmptyState
-          title="No data available"
-          description="There are no records to display"
-          icon="lucide:database"
-          size="lg"
-        />
-      </div>
-    </Transition>
+    </div>
 
     <FilterDrawerLazy
       :model-value="showFilterDrawer"

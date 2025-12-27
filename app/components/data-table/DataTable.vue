@@ -8,6 +8,7 @@ const props = withDefaults(defineProps<DataTableProps>(), {
   selectable: false,
   contextMenuItems: undefined,
   selectedItems: () => [],
+  skeletonRows: 5,
 });
 
 const emit = defineEmits<{
@@ -365,13 +366,34 @@ function getColumnLabel(columnId: string) {
         </div>
       </div>
 
-      <div v-if="props.data.length === 0" class="py-8 text-center">
+      <div v-if="!loading && props.data.length === 0" class="py-8 text-center">
         <CommonEmptyState
           title="No data available"
           description="There are no records to display"
           icon="lucide:database"
           size="sm"
         />
+      </div>
+      <div v-if="loading" class="lg:hidden space-y-3">
+        <div
+          v-for="i in (props.skeletonRows || 5)"
+          :key="`mobile-skeleton-${i}`"
+          class="rounded-2xl p-4 border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-900/30 animate-pulse"
+        >
+          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-700/50">
+            <div class="flex-1 space-y-2">
+              <div class="h-3 skeleton-base rounded w-16"></div>
+              <div class="h-5 skeleton-base rounded w-3/4"></div>
+            </div>
+            <div class="h-6 skeleton-base rounded w-20"></div>
+          </div>
+          <div class="space-y-2.5">
+            <div v-for="j in 3" :key="j" class="flex items-center justify-between">
+              <div class="h-3 skeleton-base rounded w-24"></div>
+              <div class="h-3 skeleton-base rounded w-32"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -442,7 +464,26 @@ function getColumnLabel(columnId: string) {
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            <template v-for="(row, index) in table?.getRowModel().rows || []" :key="row.id">
+            <template v-if="loading">
+              <tr v-for="i in (props.skeletonRows || 5)" :key="`skeleton-${i}`" class="animate-pulse">
+                <td
+                  v-for="(header, headerIndex) in table?.getFlatHeaders() || []"
+                  :key="`skeleton-${i}-${headerIndex}`"
+                  :class="[
+                    'px-5 py-4 sm:px-6 align-middle',
+                    header.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
+                    header.id === '__actions'
+                      ? 'w-12 min-w-12 max-w-12'
+                      : header.id?.toLowerCase() === 'id'
+                      ? 'w-20 min-w-20 max-w-20'
+                      : '',
+                  ]"
+                >
+                  <div class="h-4 skeleton-base rounded" :style="{ width: headerIndex % 3 === 0 ? '80%' : headerIndex % 3 === 1 ? '60%' : '90%' }"></div>
+                </td>
+              </tr>
+            </template>
+            <template v-else v-for="(row, index) in table?.getRowModel().rows || []" :key="row.id">
               
               <UContextMenu
                 v-if="props.contextMenuItems"
@@ -529,7 +570,7 @@ function getColumnLabel(columnId: string) {
                 </td>
               </tr>
             </template>
-            <tr v-if="props.data.length === 0">
+            <tr v-if="!loading && props.data.length === 0">
               <td
                 :colspan="table?.getFlatHeaders().length || 0"
                 class="px-4 py-8 text-center"

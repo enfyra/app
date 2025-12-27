@@ -9,6 +9,7 @@ export interface DataTableProps {
   selectable?: boolean;
   contextMenuItems?: (row: any) => any[];
   selectedItems?: string[];
+  skeletonRows?: number;
 }
 
 export interface ColumnSelectorProps {

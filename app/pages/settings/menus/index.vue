@@ -3,11 +3,9 @@ import type { MenuDefinition } from '~/utils/types/menu';
 
 const toast = useToast();
 const { confirm } = useConfirm();
-const route = useRoute();
 const tableName = "menu_definition";
-const { getIncludeFields, generateEmptyForm } = useSchema(tableName);
+const { generateEmptyForm } = useSchema(tableName);
 const { schemas } = useSchema();
-const { isMounted } = useMounted();
 const { getId } = useDatabase();
 
 const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
@@ -28,22 +26,16 @@ onBeforeUnmount(() => {
   clearPageHeader();
 });
 
-const {
-  data: apiData,
-  pending: loading,
-  execute: fetchMenus,
-} = useApi(() => "/menu_definition", {
-  query: computed(() => {
-    return {
-      fields: `${getIncludeFields()},extension.*,parent.*,children.*`,
-      sort: "order",
-      limit: 0,
-    };
-  }),
-  errorContext: "Fetch Menus",
-});
+const { menuDefinitions, fetchMenuDefinitions } = useMenuApi();
 
-const menus = computed(() => apiData.value?.data || [] as MenuDefinition[]);
+const menus = computed(() => {
+  const rawMenus = menuDefinitions.value?.data || [];
+  return rawMenus.map((menu: any) => ({
+    ...menu,
+    id: getId(menu),
+    _id: String(getId(menu)),
+  })) as MenuDefinition[];
+});
 
 const showEditModal = ref(false);
 const selectedMenu = ref<MenuDefinition | null>(null);
@@ -86,11 +78,10 @@ useHeaderActionRegistry([
   },
 ]);
 
-const { reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
-const { fetchMenuDefinitions } = useMenuApi();
+const { menuItems, reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
 
 async function refreshMenus() {
-  await fetchMenus();
+  await fetchMenuDefinitions();
   await reregisterAllMenus(fetchMenuDefinitions as any);
 
   const schemaValues = Object.values(schemas.value);
@@ -182,18 +173,28 @@ async function toggleEnabled(payload: { menu: MenuDefinition; enabled: boolean }
   if (menuItem.isSystem) return;
   
   const newEnabled = enabled;
+  const originalEnabled = menuItem.isEnabled;
+  const menuId = getId(menuItem);
 
-  if (apiData.value?.data) {
-    const menuIndex = apiData.value.data.findIndex(
-      (m: any) => String(getId(m)) === String(getId(menuItem))
-    );
-    if (menuIndex !== -1) {
-      apiData.value.data[menuIndex].isEnabled = newEnabled;
-    }
+  const rawMenus = menuDefinitions.value?.data || [];
+  const menuIndex = rawMenus.findIndex(
+    (m: any) => String(getId(m)) === String(menuId)
+  );
+  
+  const registryMenuIndex = menuItems.value.findIndex(
+    (m: any) => String(m.id) === String(menuId)
+  );
+
+  if (menuIndex !== -1 && menuDefinitions.value?.data) {
+    menuDefinitions.value.data[menuIndex]!.isEnabled = newEnabled;
+  }
+
+  if (registryMenuIndex !== -1) {
+    menuItems.value[registryMenuIndex]!.isEnabled = newEnabled;
   }
 
   const { execute: updateSpecificMenu, error: updateError } = useApi(
-    () => `/menu_definition/${getId(menuItem)}`,
+    () => `/menu_definition/${menuId}`,
     {
       method: "patch",
       errorContext: "Toggle Menu",
@@ -203,14 +204,13 @@ async function toggleEnabled(payload: { menu: MenuDefinition; enabled: boolean }
   await updateSpecificMenu({ body: { isEnabled: newEnabled } });
 
   if (updateError.value) {
-    if (apiData.value?.data) {
-      const menuIndex = apiData.value.data.findIndex(
-        (m: any) => String(getId(m)) === String(getId(menuItem))
-      );
-      if (menuIndex !== -1) {
-        apiData.value.data[menuIndex].isEnabled = !newEnabled;
-      }
+    if (menuIndex !== -1 && menuDefinitions.value?.data) {
+      menuDefinitions.value.data[menuIndex]!.isEnabled = originalEnabled;
     }
+    if (registryMenuIndex !== -1) {
+      menuItems.value[registryMenuIndex]!.isEnabled = originalEnabled;
+    }
+    await refreshMenus();
     return;
   }
 
@@ -325,6 +325,7 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
 
   const newParentId = newParent ? getId(newParent) : null;
   const oldParentId = getId(menu.parent);
+  const originalParent = menu.parent;
 
   if (String(oldParentId || null) === String(newParentId || null)) {
     return;
@@ -348,10 +349,56 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
     body.order = rootSiblings.length;
   }
 
-  await updateMenuApi({
+  const rawMenus = menuDefinitions.value?.data || [];
+  const menuIndex = rawMenus.findIndex(
+    (m: any) => String(getId(m)) === String(menuId)
+  );
+  
+  const registryMenuIndex = menuItems.value.findIndex(
+    (m: any) => String(m.id) === String(menuId)
+  );
+
+  const newParentValue = newParentId ? (typeof newParentId === 'object' ? newParentId : { id: newParentId }) : null;
+  const originalParentValue = originalParent ? (typeof getId(originalParent) === 'object' ? getId(originalParent) : { id: getId(originalParent) }) : null;
+
+  if (menuIndex !== -1 && menuDefinitions.value?.data) {
+    const menu = menuDefinitions.value.data[menuIndex]!;
+    menu.parent = newParentValue;
+  }
+
+  if (registryMenuIndex !== -1) {
+    const registryMenu = menuItems.value[registryMenuIndex]!;
+    if (newParentId) {
+      const parentMenu = menus.value.find(m => String(getId(m)) === String(newParentId));
+      registryMenu.parent = parentMenu ? (parentMenu as any) : String(newParentId) as any;
+    } else {
+      registryMenu.parent = undefined;
+    }
+  }
+
+  const { error: updateError } = await updateMenuApi({
     id: menuId,
     body
   });
+
+  if (updateError.value) {
+    if (menuIndex !== -1 && menuDefinitions.value?.data) {
+      const menu = menuDefinitions.value.data[menuIndex]!;
+      menu.parent = originalParentValue;
+    }
+    if (registryMenuIndex !== -1) {
+      const registryMenu = menuItems.value[registryMenuIndex]!;
+      if (originalParent) {
+        const parentId = getId(originalParent);
+        const parentMenu = menus.value.find(m => String(getId(m)) === String(parentId));
+        registryMenu.parent = parentMenu ? (parentMenu as any) : String(parentId) as any;
+      } else {
+        registryMenu.parent = undefined;
+      }
+    }
+    await refreshMenus();
+    return;
+  }
 
   await refreshMenus();
 
@@ -365,12 +412,8 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
 async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
   if (!updatedMenus || updatedMenus.length === 0) return;
 
-  console.log('[handleReorderMenus] Input updatedMenus:', updatedMenus.map(m => ({
-    id: getId(m),
-    label: m.label,
-    order: m.order,
-    parent: getId(m.parent)
-  })));
+  const originalMenuDefinitions = menuDefinitions.value?.data ? JSON.parse(JSON.stringify(menuDefinitions.value.data)) : [];
+  const originalMenuItems = JSON.parse(JSON.stringify(menuItems.value));
 
   const updatePromises = updatedMenus.map(async (menu) => {
     const menuId = getId(menu);
@@ -379,8 +422,6 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
     const body: { order: number } = {
       order: menu.order
     };
-
-    console.log(`[handleReorderMenus] Updating menu ${menuId} (${menu.label}):`, body);
 
     await updateMenuApi({
       id: menuId,
@@ -398,6 +439,11 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
       color: "success",
     });
   } catch (error) {
+    if (menuDefinitions.value && originalMenuDefinitions.length > 0) {
+      menuDefinitions.value.data = originalMenuDefinitions;
+    }
+    menuItems.value = originalMenuItems;
+    await refreshMenus();
     toast.add({
       title: "Error",
       description: "Failed to update menu order. Please try again.",
@@ -406,37 +452,24 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
   }
 }
 
-onMounted(() => {
-  fetchMenus();
-});
 </script>
 
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
-        v-if="loading || !isMounted"
-        type="menu"
-        context="page"
-      />
-      
-      <MenuVisualEditor
-        v-else
-        :menus="menus"
-        :loading="false"
-        @edit-menu="handleEditMenu"
-        @delete-menu="deleteMenu"
-        @toggle-enabled="toggleEnabled"
-        @add-child-menu="handleAddChildMenu"
-        @add-standalone-menu="handleAddStandaloneMenu"
-        @edit-extension="handleEditExtension"
-        @delete-extension="handleDeleteExtension"
-        @reorder-menus="handleReorderMenus"
-        @move-menu="handleMoveMenu"
-        @move-menu-to="handleMoveMenuTo"
-      />
-    </Transition>
-  </div>
+    <MenuVisualEditor
+      :menus="menus"
+      :loading="false"
+      @edit-menu="handleEditMenu"
+      @delete-menu="deleteMenu"
+      @toggle-enabled="toggleEnabled"
+      @add-child-menu="handleAddChildMenu"
+      @add-standalone-menu="handleAddStandaloneMenu"
+      @edit-extension="handleEditExtension"
+      @delete-extension="handleDeleteExtension"
+      @reorder-menus="handleReorderMenus"
+      @move-menu="handleMoveMenu"
+      @move-menu-to="handleMoveMenuTo"
+    />
 
       <MenuItemEditor
         ref="menuItemEditorRef"
@@ -451,5 +484,5 @@ onMounted(() => {
         :menu="selectedMenuForExtension"
         @save="handleSaveExtension"
       />
-
+  </div>
 </template>

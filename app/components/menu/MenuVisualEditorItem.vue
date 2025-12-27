@@ -321,7 +321,7 @@ function handleCancelMove() {
           <UButton
             size="xs"
             color="neutral"
-            variant="ghost"
+            variant="soft"
             icon="lucide:more-vertical"
             class="ml-1"
             @click.stop
@@ -468,7 +468,7 @@ function handleCancelMove() {
         <UButton
           size="xs"
           color="neutral"
-          variant="ghost"
+          variant="soft"
           icon="lucide:more-vertical"
           class="ml-1"
           @click.stop
