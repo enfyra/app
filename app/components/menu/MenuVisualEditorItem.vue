@@ -23,6 +23,7 @@ const emit = defineEmits<{
 const { getId } = useDatabase();
 
 const childrenItems = ref<MenuTreeItem[]>(props.item.children || []);
+const isExpanded = ref(true);
 
 watch(() => props.item.children, (newChildren) => {
   childrenItems.value = newChildren || [];
@@ -236,9 +237,6 @@ const isSystemMenu = computed(() => {
   return originalMenu?.isSystem === true;
 });
 
-const cursorClass = computed(() => {
-  return isSystemMenu.value ? 'cursor-not-allowed' : 'cursor-pointer';
-});
 
 const canMoveHere = computed(() => {
   if (!movingMenuId.value) return false;
@@ -300,7 +298,7 @@ function handleCancelMove() {
         'menu-item-dropdown-header flex items-center !gap-2 px-3 py-2 rounded-lg transition-colors group relative',
         (level || 0) > 0 ? 'pl-3 md:pl-6' : 'pl-3',
         isMoving ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : '',
-        isSystemMenu ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+        isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
       ]"
       @click="handleItemClick(item)"
     >
@@ -311,6 +309,12 @@ function handleCancelMove() {
         />
         <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
         <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ item.label }}</span>
+        <UIcon 
+          v-if="isSystemMenu" 
+          name="lucide:lock" 
+          class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 ml-1" 
+          title="System menu - cannot be edited"
+        />
         <UDropdownMenu
           v-if="menuItems.length > 0"
           :items="[menuItems]"
@@ -357,6 +361,19 @@ function handleCancelMove() {
           </UButton>
         </div>
         <div class="flex items-center gap-1 ml-auto">
+          <button
+            v-if="item.isDropdown && (childrenItems.length > 0 || item.children?.length > 0)"
+            @click.stop="isExpanded = !isExpanded"
+            class="w-5 h-5 flex items-center justify-center transition-colors duration-150 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+          >
+            <UIcon
+              name="lucide:chevron-right"
+              :class="[
+                'w-4 h-4 transition-transform duration-300 ease-out',
+                isExpanded ? 'rotate-90' : ''
+              ]"
+            />
+          </button>
           <UBadge
             variant="soft"
             color="secondary"
@@ -405,23 +422,27 @@ function handleCancelMove() {
     
     <div 
       v-if="item.isDropdown" 
-      class="mt-1"
+      :class="[
+        'grid transition-all duration-300 ease-out',
+        isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+      ]"
     >
-      <draggable
-        v-model="childrenItems"
-        :animation="200"
-        handle=".drag-handle"
-        ghost-class="ghost-item"
-        chosen-class="chosen-item"
-        drag-class="dragging-item"
-        :group="{ name: 'menu-items', pull: false, put: false }"
-        @change="handleChildrenReorder"
-        item-key="id"
-        :class="[
-          'space-y-1',
-          (level || 0) > 0 ? 'pl-4 md:pl-6' : 'pl-4 md:pl-6'
-        ]"
-      >
+      <div class="overflow-hidden">
+        <draggable
+          v-model="childrenItems"
+          :animation="200"
+          handle=".drag-handle"
+          ghost-class="ghost-item"
+          chosen-class="chosen-item"
+          drag-class="dragging-item"
+          :group="{ name: 'menu-items', pull: false, put: false }"
+          @change="handleChildrenReorder"
+          item-key="id"
+          :class="[
+            'space-y-1 mt-1',
+            (level || 0) > 0 ? 'pl-4 md:pl-6' : 'pl-4 md:pl-6'
+          ]"
+        >
         <template #item="{ element: child }">
           <MenuVisualEditorItem
             :item="child"
@@ -439,6 +460,7 @@ function handleCancelMove() {
           />
         </template>
       </draggable>
+      </div>
     </div>
     <div
       v-else
@@ -446,7 +468,7 @@ function handleCancelMove() {
         'menu-item flex items-center !gap-2 px-3 py-2 rounded-lg transition-colors group relative',
         (level || 0) > 0 ? 'pl-4 md:pl-6' : '',
         isMoving ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : '',
-        isSystemMenu ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+        isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
       ]"
       @click="handleItemClick(item)"
     >
@@ -457,6 +479,12 @@ function handleCancelMove() {
       />
       <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
       <span class="text-sm text-gray-700 dark:text-gray-300">{{ item.label }}</span>
+      <UIcon 
+        v-if="isSystemMenu" 
+        name="lucide:lock" 
+        class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 ml-1" 
+        title="System menu - cannot be edited"
+      />
       <UDropdownMenu
         v-if="menuItems.length > 0"
         :items="[menuItems]"
