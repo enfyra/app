@@ -5,7 +5,9 @@ defineOptions({
   inheritAttrs: false,
 });
 
-const props = defineProps<DataTableProps>();
+const props = withDefaults(defineProps<DataTableProps>(), {
+  skeletonRows: 5,
+});
 
 defineEmits<{
   "row-click": [row: any];
@@ -26,6 +28,7 @@ const DataTable = defineAsyncComponent(() => import("./DataTable.vue"));
         :selectable="props.selectable"
         :selected-items="props.selectedItems"
         :context-menu-items="props.contextMenuItems"
+        :skeleton-rows="props.skeletonRows"
         @row-click="(row) => $emit('row-click', row)"
         @selection-change="
           (selectedRows) => $emit('selection-change', selectedRows)

@@ -53,6 +53,7 @@ const {
   }),
   errorContext: "Fetch Menu",
   immediate: false,
+  lazy: true,
 });
 
 const {
@@ -332,22 +333,16 @@ async function handleSave() {
 
     <template #body>
       <div class="space-y-4">
-        <div v-if="loading" class="flex items-center justify-center py-8">
-          <div class="text-gray-400">Loading menu data...</div>
-        </div>
-        
-        <div v-else>
-          <FormEditorLazy
-            ref="formEditorRef"
-            v-model="form"
-            v-model:errors="errors"
-            @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            :table-name="tableName"
-            :excluded="excludedFields"
-            :field-map="typeMap"
-            :loading="loading"
-          />
-        </div>
+        <FormEditorLazy
+          ref="formEditorRef"
+          v-model="form"
+          v-model:errors="errors"
+          @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+          :table-name="tableName"
+          :excluded="excludedFields"
+          :field-map="typeMap"
+          :loading="loading"
+        />
       </div>
     </template>
 
