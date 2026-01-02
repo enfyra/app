@@ -167,6 +167,84 @@ const setCachedExtensionMeta = (path: string, extensionData: any) => {
 };
 
 export const useDynamicComponent = () => {
+  const loadingPackages = new Map<string, Promise<any>>();
+
+  const loadSinglePackage = async (
+    packageName: string,
+    packagesObject: Record<string, any>,
+    options: { useCacheBuster?: boolean; silent?: boolean } = {}
+  ): Promise<any> => {
+    if (loadingPackages.has(packageName)) {
+      return loadingPackages.get(packageName)!;
+    }
+
+    if (packagesObject[packageName] !== undefined) {
+      return Promise.resolve(packagesObject[packageName]);
+    }
+
+    const promise = (async () => {
+      try {
+        const cacheBuster = options.useCacheBuster ? `?_=${Date.now()}` : '';
+        const moduleResult = await import(/* @vite-ignore */ `/api/packages/${encodeURIComponent(packageName)}${cacheBuster}`);
+
+        const executedResult = moduleResult.default !== undefined
+          ? moduleResult.default
+          : moduleResult;
+
+        packagesObject[packageName] = executedResult;
+
+        const safeName = packageName.replace(/[^a-zA-Z0-9]/g, '_');
+        if (safeName !== packageName) {
+          packagesObject[safeName] = executedResult;
+        }
+
+        if (typeof window !== 'undefined') {
+          (window as any).packages[packageName] = executedResult;
+          if (safeName !== packageName) {
+            (window as any).packages[safeName] = executedResult;
+          }
+        }
+
+        return executedResult;
+      } catch (error: any) {
+        const errorMessage = error?.message || String(error);
+        const isModuleResolutionError =
+          errorMessage.includes('Failed to resolve module specifier') ||
+          errorMessage.includes('Relative references must start with') ||
+          errorMessage.includes('Failed to fetch dynamically imported module') ||
+          errorMessage.includes('404') ||
+          errorMessage.includes('ERR_ABORTED');
+
+        if (!isModuleResolutionError && !options.silent) {
+          console.warn(`Failed to import package ${packageName}:`, error);
+        }
+        packagesObject[packageName] = null;
+        return null;
+      } finally {
+        loadingPackages.delete(packageName);
+      }
+    })();
+
+    loadingPackages.set(packageName, promise);
+    return promise;
+  };
+
+  const detectPackages = (code: string): string[] => {
+    const packagePattern = /const\s*\{([^}]+)\}\s*=\s*(?:await\s+)?getPackages\(\)/g;
+    const matches = [...code.matchAll(packagePattern)];
+    const packages: string[] = [];
+
+    for (const match of matches) {
+      if (match[1]) {
+        const destructured = match[1];
+        const items = destructured.split(',').map(s => s.trim());
+        packages.push(...items);
+      }
+    }
+
+    return [...new Set(packages)];
+  };
+
   const availableComponents = {
     UIcon: markRaw(UIcon),
     Icon: markRaw(UIcon),
@@ -429,7 +507,8 @@ export const useDynamicComponent = () => {
       headerActions: Ref<any[]>;
       subHeaderActions: Ref<any[]>;
       pageHeader: Ref<any>;
-    }
+    },
+    originalCode?: string
   ) => {
     try {
       if (typeof window === "undefined") {
@@ -441,6 +520,35 @@ export const useDynamicComponent = () => {
       }
 
       const g = globalThis as any;
+      const packagesObject: Record<string, any> = {};
+
+      g.packages = packagesObject;
+      if (typeof window !== 'undefined') {
+        (window as any).packages = packagesObject;
+      }
+
+      if (originalCode) {
+        const requiredPackages = detectPackages(originalCode);
+        console.log('[Preview] Preloading packages:', requiredPackages);
+
+        await Promise.all(
+          requiredPackages.map(pkg =>
+            loadSinglePackage(pkg, packagesObject, { useCacheBuster: true, silent: false })
+              .then(result => {
+                console.log(`[Preview] Loaded package ${pkg}:`, result);
+                return result;
+              })
+          )
+        );
+
+        console.log('[Preview] All packages loaded. packagesObject:', packagesObject);
+      }
+
+      const getPackagesWrapper = () => packagesObject;
+      g.getPackages = getPackagesWrapper;
+      if (typeof window !== 'undefined') {
+        (window as any).getPackages = getPackagesWrapper;
+      }
 
       const headerActionsRef = previewState?.headerActions || ref<any[]>([]);
       const subHeaderActionsRef = previewState?.subHeaderActions || ref<any[]>([]);
@@ -535,7 +643,32 @@ export const useDynamicComponent = () => {
 
       const component = (window as any)[componentName];
       if (!component) {
-        throw new Error(`Component "${componentName}" not found`);
+        const availableExtensions = Object.keys(window as any).filter(
+          (k) =>
+            k.startsWith(extensionName) ||
+            k.startsWith(extensionName.toLowerCase())
+        );
+        throw new Error(
+          `Component "${componentName}" not found. Available: ${availableExtensions.join(", ")}`
+        );
+      }
+
+      // Validate component
+      if (typeof component !== "object" || component === null) {
+        throw new Error(`Invalid component: ${typeof component}. Component must be an object.`);
+      }
+
+      // Check if component has at least one of: render, setup, template, hoặc là một function
+      const isValidComponent = 
+        typeof component === "function" ||
+        component.render ||
+        component.setup ||
+        component.template ||
+        component.__v_isVNode !== undefined;
+
+      if (!isValidComponent) {
+        console.warn('Component may not be valid Vue component:', component);
+        // Vẫn tiếp tục, có thể là component hợp lệ nhưng không có các properties trên
       }
 
       const wrappedComponent = markRaw({
@@ -549,9 +682,82 @@ export const useDynamicComponent = () => {
     }
   };
 
+  const getPackages = async (includeExecutedCode = true) => {
+    try {
+      if (typeof window === "undefined") {
+        throw new Error("Packages can only be loaded on client-side");
+      }
+
+      const g = globalThis as any;
+
+      if (includeExecutedCode && g.packages && Object.keys(g.packages).length > 0) {
+        const hasNullPackages = Object.values(g.packages).some((pkg: any) => pkg === null);
+        if (!hasNullPackages) {
+          return g.packages;
+        }
+      }
+
+      const response = await fetch("/api/packages");
+      if (!response.ok) {
+        throw new Error(`Failed to fetch packages list: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const packages = data.data || [];
+
+      if (!includeExecutedCode) {
+        const packagesObject: Record<string, any> = {};
+        packages.forEach((pkg: any) => {
+          packagesObject[pkg.name] = {
+            name: pkg.name,
+            version: pkg.version,
+            description: pkg.description,
+            dependencies: pkg.dependencies || {},
+          };
+        });
+        return packagesObject;
+      }
+
+      const packagesObject: Record<string, any> = g.packages || {};
+
+      if (!g.packages) {
+        g.packages = packagesObject;
+        if (typeof window !== 'undefined') {
+          (window as any).packages = packagesObject;
+        }
+      }
+
+      await Promise.all(
+        packages.map(async (pkg: any) => {
+          if (packagesObject[pkg.name] && packagesObject[pkg.name] !== null) {
+            return;
+          }
+
+          if (pkg.name.startsWith('@types/') ||
+              pkg.name.includes('/') && !pkg.name.startsWith('@')) {
+            packagesObject[pkg.name] = null;
+            return;
+          }
+
+          await loadSinglePackage(pkg.name, packagesObject, { useCacheBuster: false, silent: true });
+        })
+      );
+
+      g.packages = packagesObject;
+      if (typeof window !== 'undefined') {
+        (window as any).packages = packagesObject;
+      }
+
+      return packagesObject;
+    } catch (error: any) {
+      throw new Error(`Failed to get packages: ${error?.message || error}`);
+    }
+  };
+
   return {
     loadDynamicComponent,
     loadExtensionComponentPreview,
+    getPackages,
     clearCache,
     getCacheStats,
     isComponentCached,
