@@ -187,9 +187,12 @@ export const useDynamicComponent = () => {
         const cacheBuster = options.useCacheBuster ? `?_=${Date.now()}` : '';
         const moduleResult = await import(/* @vite-ignore */ `/api/packages/${encodeURIComponent(packageName)}${cacheBuster}`);
 
-        const executedResult = moduleResult.default !== undefined
-          ? moduleResult.default
-          : moduleResult;
+        let executedResult;
+        if (moduleResult.default !== undefined) {
+          executedResult = moduleResult.default;
+        } else {
+          executedResult = moduleResult;
+        }
 
         packagesObject[packageName] = executedResult;
 
@@ -453,6 +456,20 @@ export const useDynamicComponent = () => {
         g[fnName] = vue[fnName];
       });
 
+      if (!g.packages) {
+        g.packages = {};
+        if (typeof window !== 'undefined') {
+          (window as any).packages = g.packages;
+        }
+      }
+
+      if (!g.getPackages) {
+        g.getPackages = getPackages;
+        if (typeof window !== 'undefined') {
+          (window as any).getPackages = g.getPackages;
+        }
+      }
+
       const componentName = extensionName;
 
       delete (window as any)[componentName];
@@ -529,19 +546,12 @@ export const useDynamicComponent = () => {
 
       if (originalCode) {
         const requiredPackages = detectPackages(originalCode);
-        console.log('[Preview] Preloading packages:', requiredPackages);
 
         await Promise.all(
           requiredPackages.map(pkg =>
-            loadSinglePackage(pkg, packagesObject, { useCacheBuster: true, silent: false })
-              .then(result => {
-                console.log(`[Preview] Loaded package ${pkg}:`, result);
-                return result;
-              })
+            loadSinglePackage(pkg, packagesObject, { useCacheBuster: true, silent: true })
           )
         );
-
-        console.log('[Preview] All packages loaded. packagesObject:', packagesObject);
       }
 
       const getPackagesWrapper = () => packagesObject;
@@ -697,7 +707,7 @@ export const useDynamicComponent = () => {
         }
       }
 
-      const response = await fetch("/api/packages");
+      const response = await fetch("/api/package_definition?filter%5Btype%5D%5B_eq%5D=App&limit=-1");
       if (!response.ok) {
         throw new Error(`Failed to fetch packages list: ${response.statusText}`);
       }
@@ -739,7 +749,7 @@ export const useDynamicComponent = () => {
             return;
           }
 
-          await loadSinglePackage(pkg.name, packagesObject, { useCacheBuster: false, silent: true });
+          await loadSinglePackage(pkg.name, packagesObject, { useCacheBuster: true, silent: true });
         })
       );
 

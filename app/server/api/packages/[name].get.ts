@@ -157,7 +157,8 @@ export default defineEventHandler(async (event) => {
 })()
       `.trim();
 
-      code = `export default ${code};`;
+      code = `const __CommonJSModule__ = ${code};
+export default __CommonJSModule__;`;
     }
 
     event.node.res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
