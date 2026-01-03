@@ -5,7 +5,7 @@
       <CommonLoadingState
         v-if="!isMounted || loading"
         title="Loading packages..."
-        description="Fetching installed backend packages"
+        description="Fetching installed server packages"
         size="sm"
         type="card"
         context="page"
@@ -20,7 +20,7 @@
       >
         <CommonSettingsCard
           v-for="pkg in packages"
-          :key="pkg.id"
+          :key="getId(pkg)"
           :title="pkg.name"
           :description="pkg.description || 'No description'"
           icon="lucide:server"
@@ -66,7 +66,7 @@
 
       <CommonEmptyState
         v-else
-        title="No backend packages installed"
+        title="No server packages installed"
         description="Install packages to enhance your handlers and hooks"
         icon="lucide:server"
         size="sm"
@@ -110,18 +110,18 @@ const { getId } = useDatabase();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
-  title: "Backend Packages",
+  title: "Server Packages",
   gradient: "cyan",
 });
 
 useHeaderActionRegistry({
-  id: "create-backend-package",
+  id: "create-server-package",
   label: "Install Package",
   icon: "lucide:server",
   variant: "solid",
   color: "primary",
   size: "md",
-  to: "/packages/install",
+  to: "/packages/install?type=server",
   permission: {
     and: [
       {
@@ -141,10 +141,10 @@ const {
     page: page.value,
     limit,
     filter: {
-      type: { _eq: "Backend" },
+      type: { _eq: "Server" },
     },
   })),
-  errorContext: "Load Backend Packages",
+  errorContext: "Load Server Packages",
 });
 
 const packages = computed(() => apiData.value?.data || []);
@@ -160,20 +160,20 @@ const { execute: removePackage, error: removePackageError } = useApi(
 
 const deletingPackages = ref(new Set<string>());
 
-async function deletePackage(pkg: any) {
+async function deletePackage(pkgId: any, pkgName: string) {
   const isConfirmed = await confirm({
     title: "Uninstall Package",
-    content: `Are you sure you want to uninstall "${pkg.name}"? This action cannot be undone.`,
+    content: `Are you sure you want to uninstall "${pkgName}"? This action cannot be undone.`,
     confirmText: "Uninstall",
     cancelText: "Cancel",
   });
 
   if (!isConfirmed) return;
 
-  deletingPackages.value.add(pkg.id);
+  deletingPackages.value.add(pkgId);
 
   try {
-    await removePackage({ id: pkg.id });
+    await removePackage({ id: pkgId });
 
     if (removePackageError.value) {
       return;
@@ -181,17 +181,19 @@ async function deletePackage(pkg: any) {
 
     toast.add({
       title: "Success",
-      description: `Package ${pkg.name} uninstalled successfully`,
+      description: `Package ${pkgName} uninstalled successfully`,
       color: "success",
     });
 
     await loadPackages();
   } finally {
-    deletingPackages.value.delete(pkg.id);
+    deletingPackages.value.delete(pkgId);
   }
 }
 
 function getHeaderActions(pkg: any) {
+  const pkgId = getId(pkg);
+
   return [
     {
       component: "UButton",
@@ -199,11 +201,11 @@ function getHeaderActions(pkg: any) {
         icon: "i-heroicons-trash",
         variant: "outline",
         color: "error",
-        loading: deletingPackages.value.has(pkg.id),
+        loading: deletingPackages.value.has(pkgId),
       },
       onClick: (e?: Event) => {
         e?.stopPropagation();
-        deletePackage(pkg);
+        deletePackage(pkgId, pkg.name);
       },
     },
   ];

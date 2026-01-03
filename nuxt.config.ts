@@ -35,6 +35,26 @@ export default defineNuxtConfig({
       method: "post",
     },
     {
+      route: "/api/package_definition",
+      handler: "~/server/api/package_definition.post.ts",
+      method: "post",
+    },
+    {
+      route: "/api/package_definition/**",
+      handler: "~/server/api/package_definition/[id].patch.ts",
+      method: "patch",
+    },
+    {
+      route: "/api/package_definition/**",
+      handler: "~/server/api/package_definition/[id].delete.ts",
+      method: "delete",
+    },
+    {
+      route: "/api/packages",
+      handler: "~/server/api/packages.get.ts",
+      method: "get",
+    },
+    {
       route: "**",
       handler: "~/server/middleware/server-id.ts",
       middleware: true,
@@ -103,5 +123,10 @@ export default defineNuxtConfig({
   enfyraSDK: {
     apiUrl: process.env.API_URL,
     apiPrefix: '/api'
+  },
+  routeRules: {
+    '/api/packages/**': {
+      swr: 86400,
+    },
   },
 });

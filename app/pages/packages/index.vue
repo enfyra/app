@@ -20,8 +20,8 @@
       />
 
       <CommonSettingsCard
-        title="Backend Packages"
-        description="Manage backend server packages"
+        title="Server Packages"
+        description="Manage server packages"
         icon="lucide:server"
         icon-color="success"
         :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-success/20 transition-all'"
@@ -50,11 +50,11 @@
         />
         <UButton
           icon="lucide:plus"
-          label="Install Backend Package"
+          label="Install Server Package"
           variant="outline"
           color="success"
           size="md"
-          to="/packages/install?type=backend"
+          to="/packages/install?type=server"
         />
       </div>
     </div>
@@ -70,7 +70,7 @@ const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
   title: "Packages",
-  description: "Manage app and backend packages",
+  description: "Manage app and server packages",
   gradient: "purple",
 });
 </script>

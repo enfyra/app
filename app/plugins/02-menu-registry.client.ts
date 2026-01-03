@@ -8,25 +8,14 @@ export default defineNuxtPlugin(async () => {
     registerDataMenuItems,
     registerMenuItem,
   } = useMenuRegistry();
-  const { schemas, fetchSchema } = useSchema();
-  const { fetchSetting, fetchStorageConfigs, fetchAiConfig } = useGlobalState();
+  const { schemas } = useSchema();
   const { confirm } = useConfirm();
-  const { loadRoutes, getRouteForTableName } = useRoutes();
+  const { getRouteForTableName } = useRoutes();
   const routes = useState<any[]>('routes:all', () => []);
 
-  const { fetchMenuDefinitions } = useMenuApi();
-
-  const [, , , , , menuResponse] = await Promise.all([
-    fetchSchema(),
-    fetchSetting(),
-    fetchStorageConfigs(),
-    fetchAiConfig(),
-    loadRoutes(),
-    fetchMenuDefinitions(),
-  ]);
-
-  const menuData = (menuResponse && "data" in menuResponse && Array.isArray(menuResponse.data))
-    ? menuResponse.data
+  const { menuDefinitions } = useMenuApi();
+  const menuData = (menuDefinitions.value && "data" in menuDefinitions.value && Array.isArray(menuDefinitions.value.data))
+    ? menuDefinitions.value.data
     : [];
 
   if (menuData.length > 0) {
@@ -98,3 +87,4 @@ export default defineNuxtPlugin(async () => {
     },
   } as any);
 });
+

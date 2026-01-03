@@ -30,7 +30,7 @@
         </div>
       </div>
 
-      <div v-else-if="previewComponent" class="extension-preview-container space-y-4">
+      <div v-else-if="previewComponent && isValidComponent" class="extension-preview-container space-y-4">
         <div v-if="previewPageHeader" class="rounded-xl bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 p-6 shadow-lg">
           <h2 class="text-2xl font-bold text-white mb-2">{{ previewPageHeader.title }}</h2>
           <p v-if="previewPageHeader.description" class="text-white/90 text-sm leading-relaxed">
@@ -53,8 +53,20 @@
 
         <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
           <div class="p-8 min-h-[60vh]">
-            <component :is="previewComponent" />
+            <component :is="previewComponent" v-if="isValidComponent" />
           </div>
+        </div>
+      </div>
+      
+      <div v-else-if="previewComponent && !isValidComponent" class="flex items-center justify-center h-[70vh]">
+        <div class="text-center max-w-md">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center">
+            <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-yellow-500 dark:text-yellow-400" />
+          </div>
+          <h4 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Component Render Error</h4>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Component đã được compile nhưng không thể render. Có thể do package dependencies chưa được load đúng cách.
+          </p>
         </div>
       </div>
     </template>
@@ -85,6 +97,16 @@ const previewComponent = ref<any>(null);
 const previewHeaderActions = ref<any[]>([]);
 const previewSubHeaderActions = ref<any[]>([]);
 const previewPageHeader = ref<any>(null);
+
+const isValidComponent = computed(() => {
+  if (!previewComponent.value) return false;
+  // Check if component is a valid Vue component
+  return typeof previewComponent.value === 'object' && 
+         (previewComponent.value.__v_isVNode !== undefined || 
+          previewComponent.value.setup !== undefined ||
+          previewComponent.value.render !== undefined ||
+          previewComponent.value.template !== undefined);
+});
 
 const { loadExtensionComponentPreview } = useDynamicComponent();
 
@@ -128,16 +150,33 @@ async function compileAndPreview() {
 
     if (response?.success && response?.compiledCode) {
       const extensionId = response?.extensionId || `preview_${Date.now()}`;
-      const component = await loadExtensionComponentPreview(
-        response.compiledCode,
-        extensionId,
-        {
-          headerActions: previewHeaderActions,
-          subHeaderActions: previewSubHeaderActions,
-          pageHeader: previewPageHeader,
+      try {
+        const component = await loadExtensionComponentPreview(
+          response.compiledCode,
+          extensionId,
+          {
+            headerActions: previewHeaderActions,
+            subHeaderActions: previewSubHeaderActions,
+            pageHeader: previewPageHeader,
+          },
+          props.code
+        );
+        
+        // Validate component before setting
+        if (!component) {
+          throw new Error('Component is null or undefined after loading');
         }
-      );
-      previewComponent.value = markRaw(component);
+        if (typeof component !== 'object') {
+          throw new Error(`Component is not an object: ${typeof component}`);
+        }
+        // Check if component has a render function or setup function
+        if (!component.render && !component.setup && !component.template) {
+          console.warn('Component may not be valid Vue component:', component);
+        }
+        previewComponent.value = markRaw(component);
+      } catch (loadError: any) {
+        throw new Error(`Failed to load component: ${loadError?.message || loadError}`);
+      }
     } else {
       throw new Error('Failed to compile extension');
     }

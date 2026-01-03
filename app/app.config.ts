@@ -1,5 +1,12 @@
 export default defineAppConfig({
   ui: {
+    pagination: {
+      slots: {
+        root: 'w-full', 
+        item: '!w-fit',
+        list: 'w-full flex-wrap'
+      }
+    },
     dropdownMenu: {
       slots: {
         item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-md data-disabled:cursor-not-allowed data-disabled:opacity-75',
