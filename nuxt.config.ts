@@ -55,11 +55,6 @@ export default defineNuxtConfig({
       method: "get",
     },
     {
-      route: "/api/packages/**",
-      handler: "~/server/api/packages/[name].get.ts",
-      method: "get",
-    },
-    {
       route: "**",
       handler: "~/server/middleware/server-id.ts",
       middleware: true,

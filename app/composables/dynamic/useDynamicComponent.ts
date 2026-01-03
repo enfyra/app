@@ -1,4 +1,5 @@
 import { markRaw } from "vue";
+import type { ExternalPackage } from "../../server/utils/package-bundler";
 import {
   UIcon,
   UButton,
@@ -143,6 +144,14 @@ const maxCacheSize = 50;
 const cacheHits = ref(0);
 const cacheMisses = ref(0);
 
+const loadedPackages = new Map<string, { exports: string[]; globalName: string }>();
+
+function getGlobalNameForPackage(packageName: string): string {
+  return packageName
+    .replace(/[^a-zA-Z0-9]/g, '_')
+    .replace(/^(\d)/, '_$1');
+}
+
 const extensionMetaCache = useState<Map<string, any>>(
   "extension-meta-cache",
   () => new Map()
@@ -169,6 +178,81 @@ const setCachedExtensionMeta = (path: string, extensionData: any) => {
 export const useDynamicComponent = () => {
   const loadingPackages = new Map<string, Promise<any>>();
 
+  const getExternalPackages = (): ExternalPackage[] => {
+    const externals: ExternalPackage[] = [];
+    for (const [name, meta] of loadedPackages.entries()) {
+      externals.push({
+        name,
+        globalName: meta.globalName,
+        exports: meta.exports,
+      });
+    }
+    return externals;
+  };
+
+  interface PackageMetadata {
+    name: string;
+    dependencies: string[];
+    exports: string[];
+  }
+
+  const fetchPackageMetadata = async (packageName: string): Promise<PackageMetadata> => {
+    try {
+      const response = await fetch(`/api/packages?name=${encodeURIComponent(packageName)}&format=json`);
+      if (!response.ok) {
+        console.warn(`[fetchPackageMetadata] Failed to fetch metadata for ${packageName}: ${response.statusText}`);
+        return { name: packageName, dependencies: [], exports: [] };
+      }
+
+      const bundleData = await response.json();
+      return {
+        name: packageName,
+        dependencies: bundleData.__dependencies || [],
+        exports: bundleData.__exports || [],
+      };
+    } catch (error) {
+      console.error(`[fetchPackageMetadata] Error fetching metadata for ${packageName}:`, error);
+      return { name: packageName, dependencies: [], exports: [] };
+    }
+  };
+
+  const topologicalSort = (packages: string[], metadataMap: Map<string, PackageMetadata>): string[] => {
+    const sorted: string[] = [];
+    const visited = new Set<string>();
+    const visiting = new Set<string>();
+
+    const visit = (pkgName: string) => {
+      if (visited.has(pkgName)) {
+        return;
+      }
+      if (visiting.has(pkgName)) {
+        console.warn(`[topologicalSort] Circular dependency detected involving ${pkgName}`);
+        return;
+      }
+
+      visiting.add(pkgName);
+
+      const metadata = metadataMap.get(pkgName);
+      if (metadata) {
+        for (const dep of metadata.dependencies) {
+          if (packages.includes(dep)) {
+            visit(dep);
+          }
+        }
+      }
+
+      visiting.delete(pkgName);
+      visited.add(pkgName);
+      sorted.push(pkgName);
+    };
+
+    for (const pkg of packages) {
+      visit(pkg);
+    }
+
+    return sorted;
+  };
+
   const loadSinglePackage = async (
     packageName: string,
     packagesObject: Record<string, any>,
@@ -184,8 +268,26 @@ export const useDynamicComponent = () => {
 
     const promise = (async () => {
       try {
-        const cacheBuster = options.useCacheBuster ? `?_=${Date.now()}` : '';
-        const moduleResult = await import(/* @vite-ignore */ `/api/packages/${encodeURIComponent(packageName)}${cacheBuster}`);
+        const cacheBuster = options.useCacheBuster ? `&_=${Date.now()}` : '';
+
+        const externals = getExternalPackages();
+        const externalsParam = externals.length > 0 ? `&externals=${encodeURIComponent(JSON.stringify(externals))}` : '';
+
+        const response = await fetch(`/api/packages?name=${encodeURIComponent(packageName)}${cacheBuster}&format=json${externalsParam}`);
+        if (!response.ok) {
+          throw new Error(`Failed to load package: ${response.statusText}`);
+        }
+
+        const bundleData = await response.json();
+        const { __code, __dependencies, __exports } = bundleData;
+
+        const moduleUrl = URL.createObjectURL(new Blob([__code], { type: 'application/javascript' }));
+        const moduleResult = await import(/* @vite-ignore */ moduleUrl);
+        URL.revokeObjectURL(moduleUrl);
+
+        console.log(`[loadSinglePackage] ${packageName} moduleResult:`, moduleResult);
+        console.log(`[loadSinglePackage] ${packageName} keys:`, Object.keys(moduleResult));
+        console.log(`[loadSinglePackage] ${packageName} default:`, moduleResult.default);
 
         let executedResult;
         if (moduleResult.default !== undefined) {
@@ -194,7 +296,26 @@ export const useDynamicComponent = () => {
           executedResult = moduleResult;
         }
 
+        console.log(`[loadSinglePackage] ${packageName} executedResult:`, executedResult);
+        console.log(`[loadSinglePackage] ${packageName} executedResult keys:`, Object.keys(executedResult || {}));
+
         packagesObject[packageName] = executedResult;
+
+        if (typeof window !== 'undefined') {
+          const globalName = getGlobalNameForPackage(packageName);
+          const packageExports = moduleResult.default || moduleResult;
+          (globalThis as any)[globalName] = packageExports;
+          (window as any)[globalName] = packageExports;
+
+          loadedPackages.set(packageName, {
+            exports: __exports || Object.keys(packageExports),
+            globalName,
+          });
+
+          console.log(`[loadSinglePackage] Exposed ${packageName} to globalThis.${globalName}`, {
+            exports: __exports || Object.keys(packageExports),
+          });
+        }
 
         const safeName = packageName.replace(/[^a-zA-Z0-9]/g, '_');
         if (safeName !== packageName) {
@@ -210,6 +331,7 @@ export const useDynamicComponent = () => {
 
         return executedResult;
       } catch (error: any) {
+        console.error(`[loadSinglePackage] ${packageName} ERROR:`, error);
         const errorMessage = error?.message || String(error);
         const isModuleResolutionError =
           errorMessage.includes('Failed to resolve module specifier') ||
@@ -233,15 +355,37 @@ export const useDynamicComponent = () => {
   };
 
   const detectPackages = (code: string): string[] => {
-    const packagePattern = /const\s*\{([^}]+)\}\s*=\s*(?:await\s+)?getPackages\(\)/g;
-    const matches = [...code.matchAll(packagePattern)];
     const packages: string[] = [];
 
-    for (const match of matches) {
+    // Pattern 1: const { chartjs, vue_chartjs } = await getPackages()
+    const destructuringPattern = /const\s*\{([^}]+)\}\s*=\s*(?:await\s+)?getPackages\(\)/g;
+    const destructuringMatches = [...code.matchAll(destructuringPattern)];
+    for (const match of destructuringMatches) {
       if (match[1]) {
         const destructured = match[1];
         const items = destructured.split(',').map(s => s.trim());
         packages.push(...items);
+      }
+    }
+
+    // Pattern 2: const pkgs = await getPackages(); pkgs['chart.js']
+    const variablePattern = /const\s+(\w+)\s*=\s*(?:await\s+)?getPackages\(\)/;
+    const variableMatch = code.match(variablePattern);
+    if (variableMatch && variableMatch[1]) {
+      const varName = variableMatch[1];
+
+      // Find all access patterns: pkgs['name'], pkgs["name"], pkgs.name
+      const accessPattern = new RegExp(`${varName}\\[(['"])([\\w./-]+)\\1\\]|${varName}\\.([\\w-]+)`, 'g');
+      const accessMatches = [...code.matchAll(accessPattern)];
+
+      for (const match of accessMatches) {
+        const quoted = match[2];
+        const dotted = match[3];
+        if (quoted) {
+          packages.push(quoted);
+        } else if (dotted) {
+          packages.push(dotted);
+        }
       }
     }
 
@@ -456,6 +600,13 @@ export const useDynamicComponent = () => {
         g[fnName] = vue[fnName];
       });
 
+      g.vueVersion = vue.version;
+      g.Transition = vue.Transition;
+      g.TransitionGroup = vue.TransitionGroup;
+      g.KeepAlive = vue.KeepAlive;
+      g.Teleport = vue.Teleport;
+      g.Suspense = vue.Suspense;
+
       if (!g.packages) {
         g.packages = {};
         if (typeof window !== 'undefined') {
@@ -537,6 +688,19 @@ export const useDynamicComponent = () => {
       }
 
       const g = globalThis as any;
+
+      const vue = await import("vue");
+      EXTENSION_VUE_FUNCTIONS.forEach((fnName) => {
+        g[fnName] = vue[fnName];
+      });
+
+      g.vueVersion = vue.version;
+      g.Transition = vue.Transition;
+      g.TransitionGroup = vue.TransitionGroup;
+      g.KeepAlive = vue.KeepAlive;
+      g.Teleport = vue.Teleport;
+      g.Suspense = vue.Suspense;
+
       const packagesObject: Record<string, any> = {};
 
       g.packages = packagesObject;
@@ -544,17 +708,50 @@ export const useDynamicComponent = () => {
         (window as any).packages = packagesObject;
       }
 
+      console.log('[ExtensionPreview] DEBUG: originalCode exists?', !!originalCode);
+
       if (originalCode) {
+        console.log('[ExtensionPreview] DEBUG: Starting package detection and loading...');
+
         const requiredPackages = detectPackages(originalCode);
 
-        await Promise.all(
-          requiredPackages.map(pkg =>
-            loadSinglePackage(pkg, packagesObject, { useCacheBuster: true, silent: true })
-          )
-        );
+        console.log('[ExtensionPreview] DEBUG: Detected packages:', requiredPackages);
+        console.log('[ExtensionPreview] DEBUG: Packages count:', requiredPackages.length);
+
+        const metadataMap = new Map<string, PackageMetadata>();
+
+        console.log('[ExtensionPreview] DEBUG: Starting metadata fetch...');
+
+        for (const pkg of requiredPackages) {
+          console.log(`[ExtensionPreview] DEBUG: Fetching metadata for ${pkg}...`);
+          const metadata = await fetchPackageMetadata(pkg);
+          metadataMap.set(pkg, metadata);
+          console.log(`[ExtensionPreview] DEBUG: Fetched metadata for ${pkg}:`, metadata);
+        }
+
+        console.log('[ExtensionPreview] DEBUG: Starting topological sort...');
+
+        const sortedPackages = topologicalSort(requiredPackages, metadataMap);
+
+        console.log('[ExtensionPreview] DEBUG: Sorted packages (dependency order):', sortedPackages);
+
+        for (const pkg of sortedPackages) {
+          console.log(`[ExtensionPreview] DEBUG: Loading package ${pkg}...`);
+          await loadSinglePackage(pkg, packagesObject, { useCacheBuster: true, silent: true });
+        }
+
+        console.log('[ExtensionPreview] DEBUG: All packages loaded:', Object.keys(packagesObject));
+        for (const [name, pkg] of Object.entries(packagesObject)) {
+          console.log(`[ExtensionPreview] Package ${name}:`, Object.keys(pkg || {}));
+        }
+      } else {
+        console.log('[ExtensionPreview] DEBUG: No originalCode, skipping package loading');
       }
 
-      const getPackagesWrapper = () => packagesObject;
+      const getPackagesWrapper = () => {
+        console.log('[getPackages] Returning:', Object.keys(packagesObject));
+        return packagesObject;
+      };
       g.getPackages = getPackagesWrapper;
       if (typeof window !== 'undefined') {
         (window as any).getPackages = getPackagesWrapper;
@@ -636,11 +833,6 @@ export const useDynamicComponent = () => {
         }
       });
 
-      const vue = await import("vue");
-      EXTENSION_VUE_FUNCTIONS.forEach((fnName) => {
-        g[fnName] = vue[fnName];
-      });
-
       const componentName = extensionName;
       delete (window as any)[componentName];
 
@@ -684,6 +876,15 @@ export const useDynamicComponent = () => {
       const wrappedComponent = markRaw({
         ...component,
         components: availableComponents,
+      });
+
+      console.log('[ExtensionPreview] Component:', {
+        name: componentName,
+        hasRender: !!wrappedComponent.render,
+        hasSetup: !!wrappedComponent.setup,
+        hasTemplate: !!wrappedComponent.template,
+        isFunction: typeof wrappedComponent === 'function',
+        keys: Object.keys(wrappedComponent),
       });
 
       return markRaw(wrappedComponent);
@@ -737,27 +938,46 @@ export const useDynamicComponent = () => {
         }
       }
 
-      await Promise.all(
-        packages.map(async (pkg: any) => {
-          if (packagesObject[pkg.name] && packagesObject[pkg.name] !== null) {
-            return;
-          }
+      const packageNames = packages
+        .filter((pkg: any) =>
+          !pkg.name.startsWith('@types/') &&
+          !(pkg.name.includes('/') && !pkg.name.startsWith('@'))
+        )
+        .map((pkg: any) => pkg.name);
 
-          if (pkg.name.startsWith('@types/') ||
-              pkg.name.includes('/') && !pkg.name.startsWith('@')) {
-            packagesObject[pkg.name] = null;
-            return;
-          }
+      console.log('[getPackages] Loading packages:', packageNames);
 
-          await loadSinglePackage(pkg.name, packagesObject, { useCacheBuster: true, silent: true });
-        })
+      const packagesToLoad = packageNames.filter(
+        (pkgName: string) => !packagesObject[pkgName] || packagesObject[pkgName] === null
       );
+
+      console.log('[getPackages] Packages to load:', packagesToLoad);
+
+      const metadataMap = new Map<string, PackageMetadata>();
+
+      for (const pkgName of packagesToLoad) {
+        console.log(`[getPackages] Fetching metadata for ${pkgName}...`);
+        const metadata = await fetchPackageMetadata(pkgName);
+        metadataMap.set(pkgName, metadata);
+        console.log(`[getPackages] Metadata for ${pkgName}:`, metadata);
+      }
+
+      const sortedPackages = topologicalSort(packagesToLoad, metadataMap);
+
+      console.log('[getPackages] Sorted packages (dependency order):', sortedPackages);
+
+      for (const pkgName of sortedPackages) {
+        console.log(`[getPackages] Loading package ${pkgName}...`);
+        await loadSinglePackage(pkgName, packagesObject, { useCacheBuster: true, silent: true });
+        console.log(`[getPackages] Loaded package ${pkgName}`);
+      }
 
       g.packages = packagesObject;
       if (typeof window !== 'undefined') {
         (window as any).packages = packagesObject;
       }
 
+      console.log('[getPackages] All packages loaded:', Object.keys(packagesObject));
       return packagesObject;
     } catch (error: any) {
       throw new Error(`Failed to get packages: ${error?.message || error}`);
