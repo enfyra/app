@@ -285,19 +285,12 @@ export const useDynamicComponent = () => {
         const moduleResult = await import(/* @vite-ignore */ moduleUrl);
         URL.revokeObjectURL(moduleUrl);
 
-        console.log(`[loadSinglePackage] ${packageName} moduleResult:`, moduleResult);
-        console.log(`[loadSinglePackage] ${packageName} keys:`, Object.keys(moduleResult));
-        console.log(`[loadSinglePackage] ${packageName} default:`, moduleResult.default);
-
         let executedResult;
         if (moduleResult.default !== undefined) {
           executedResult = moduleResult.default;
         } else {
           executedResult = moduleResult;
         }
-
-        console.log(`[loadSinglePackage] ${packageName} executedResult:`, executedResult);
-        console.log(`[loadSinglePackage] ${packageName} executedResult keys:`, Object.keys(executedResult || {}));
 
         packagesObject[packageName] = executedResult;
 
@@ -310,10 +303,6 @@ export const useDynamicComponent = () => {
           loadedPackages.set(packageName, {
             exports: __exports || Object.keys(packageExports),
             globalName,
-          });
-
-          console.log(`[loadSinglePackage] Exposed ${packageName} to globalThis.${globalName}`, {
-            exports: __exports || Object.keys(packageExports),
           });
         }
 
@@ -708,48 +697,23 @@ export const useDynamicComponent = () => {
         (window as any).packages = packagesObject;
       }
 
-      console.log('[ExtensionPreview] DEBUG: originalCode exists?', !!originalCode);
-
       if (originalCode) {
-        console.log('[ExtensionPreview] DEBUG: Starting package detection and loading...');
-
         const requiredPackages = detectPackages(originalCode);
-
-        console.log('[ExtensionPreview] DEBUG: Detected packages:', requiredPackages);
-        console.log('[ExtensionPreview] DEBUG: Packages count:', requiredPackages.length);
-
         const metadataMap = new Map<string, PackageMetadata>();
 
-        console.log('[ExtensionPreview] DEBUG: Starting metadata fetch...');
-
         for (const pkg of requiredPackages) {
-          console.log(`[ExtensionPreview] DEBUG: Fetching metadata for ${pkg}...`);
           const metadata = await fetchPackageMetadata(pkg);
           metadataMap.set(pkg, metadata);
-          console.log(`[ExtensionPreview] DEBUG: Fetched metadata for ${pkg}:`, metadata);
         }
-
-        console.log('[ExtensionPreview] DEBUG: Starting topological sort...');
 
         const sortedPackages = topologicalSort(requiredPackages, metadataMap);
 
-        console.log('[ExtensionPreview] DEBUG: Sorted packages (dependency order):', sortedPackages);
-
         for (const pkg of sortedPackages) {
-          console.log(`[ExtensionPreview] DEBUG: Loading package ${pkg}...`);
           await loadSinglePackage(pkg, packagesObject, { useCacheBuster: true, silent: true });
         }
-
-        console.log('[ExtensionPreview] DEBUG: All packages loaded:', Object.keys(packagesObject));
-        for (const [name, pkg] of Object.entries(packagesObject)) {
-          console.log(`[ExtensionPreview] Package ${name}:`, Object.keys(pkg || {}));
-        }
-      } else {
-        console.log('[ExtensionPreview] DEBUG: No originalCode, skipping package loading');
       }
 
       const getPackagesWrapper = () => {
-        console.log('[getPackages] Returning:', Object.keys(packagesObject));
         return packagesObject;
       };
       g.getPackages = getPackagesWrapper;
@@ -945,31 +909,21 @@ export const useDynamicComponent = () => {
         )
         .map((pkg: any) => pkg.name);
 
-      console.log('[getPackages] Loading packages:', packageNames);
-
       const packagesToLoad = packageNames.filter(
         (pkgName: string) => !packagesObject[pkgName] || packagesObject[pkgName] === null
       );
 
-      console.log('[getPackages] Packages to load:', packagesToLoad);
-
       const metadataMap = new Map<string, PackageMetadata>();
 
       for (const pkgName of packagesToLoad) {
-        console.log(`[getPackages] Fetching metadata for ${pkgName}...`);
         const metadata = await fetchPackageMetadata(pkgName);
         metadataMap.set(pkgName, metadata);
-        console.log(`[getPackages] Metadata for ${pkgName}:`, metadata);
       }
 
       const sortedPackages = topologicalSort(packagesToLoad, metadataMap);
 
-      console.log('[getPackages] Sorted packages (dependency order):', sortedPackages);
-
       for (const pkgName of sortedPackages) {
-        console.log(`[getPackages] Loading package ${pkgName}...`);
         await loadSinglePackage(pkgName, packagesObject, { useCacheBuster: true, silent: true });
-        console.log(`[getPackages] Loaded package ${pkgName}`);
       }
 
       g.packages = packagesObject;
@@ -977,7 +931,6 @@ export const useDynamicComponent = () => {
         (window as any).packages = packagesObject;
       }
 
-      console.log('[getPackages] All packages loaded:', Object.keys(packagesObject));
       return packagesObject;
     } catch (error: any) {
       throw new Error(`Failed to get packages: ${error?.message || error}`);
