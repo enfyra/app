@@ -842,15 +842,6 @@ export const useDynamicComponent = () => {
         components: availableComponents,
       });
 
-      console.log('[ExtensionPreview] Component:', {
-        name: componentName,
-        hasRender: !!wrappedComponent.render,
-        hasSetup: !!wrappedComponent.setup,
-        hasTemplate: !!wrappedComponent.template,
-        isFunction: typeof wrappedComponent === 'function',
-        keys: Object.keys(wrappedComponent),
-      });
-
       return markRaw(wrappedComponent);
     } catch (error: any) {
       throw new Error(`Failed to load preview component: ${error?.message || error}`);
