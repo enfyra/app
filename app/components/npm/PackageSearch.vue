@@ -6,9 +6,11 @@
         v-model="selectedPackageItem"
         :items="packageItems"
         v-model:search-term="searchTerm"
+        v-model:open="isMenuOpen"
         :placeholder="placeholder"
         :disabled="disabled"
         :loading="loading"
+        :popper="{ placement: 'bottom-start' }"
         size="lg"
         variant="outline"
         loading-icon="lucide:loader-2"
@@ -206,6 +208,9 @@ const packageItems = computed(() => {
   if (!searchTerm.value || searchTerm.value.length < 2) {
     return [];
   }
+  if (loading.value) {
+    return [];
+  }
   return packages.value.map((pkg) => ({
     label: pkg.name,
     description: pkg.description || "No description available",
@@ -221,6 +226,7 @@ const packageItems = computed(() => {
 });
 
 const selectedPackageItem = ref<any>(null);
+const isMenuOpen = ref(false);
 
 const {
   data: searchData,
@@ -241,9 +247,13 @@ watch(searchData, (newData) => {
 });
 
 watch(searchTerm, (newQuery, oldQuery) => {
-  
-  if (newQuery !== oldQuery && newQuery.length >= 2) {
-    packages.value = [];
+  if (newQuery !== oldQuery) {
+    if (newQuery.length >= 2) {
+      packages.value = [];
+      isMenuOpen.value = false;
+    } else {
+      isMenuOpen.value = false;
+    }
   }
 });
 
@@ -252,12 +262,25 @@ watch(
   debounce(async (query: string) => {
     if (query.length < 2) {
       packages.value = [];
+      isMenuOpen.value = false;
       return;
     }
 
+    isMenuOpen.value = false;
     await executeSearch();
+    if (!loading.value) {
+      isMenuOpen.value = true;
+    }
   }, 300)
 );
+
+watch(loading, (isLoading) => {
+  if (isLoading) {
+    isMenuOpen.value = false;
+  } else if (searchTerm.value.length >= 2) {
+    isMenuOpen.value = true;
+  }
+});
 
 watch(
   () => props.modelValue,

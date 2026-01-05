@@ -59,6 +59,10 @@ function close() {
         </div>
       </template>
 
+      <template #description>
+        <span class="sr-only">{{ hasTitle ? 'Modal dialog' : 'Dialog' }}</span>
+      </template>
+
       <template #body>
         <slot name="body" />
       </template>

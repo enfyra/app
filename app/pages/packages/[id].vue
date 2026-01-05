@@ -1,38 +1,37 @@
 <template>
   <div class="space-y-6">
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      
-      <UAlert
-        v-if="packageData?.type === 'Backend'"
-        icon="lucide:code-2"
-        title="Usage in Handlers & Hooks"
-        color="info"
-        variant="soft"
-        class="mb-6"
-      >
-        <template #description>
-          <div class="space-y-4">
-            <div class="space-y-2">
-              <p class="font-medium">In JavaScript/TypeScript code:</p>
-              <code
-                class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
-              >
-                $ctx.$pkgs{{ packageData?.name && /[@\/\-]/.test(packageData.name) ? `['${packageData.name}']` : `.${packageData?.name.replace(/[@\/\-]/g, "")}` }}
-              </code>
+      <CommonFormCard>
+        <UAlert
+          v-if="packageData?.type === 'Server'"
+          icon="lucide:code-2"
+          title="Usage in Handlers & Hooks"
+          color="info"
+          variant="soft"
+          class="mb-6"
+        >
+          <template #description>
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <p class="font-medium">In JavaScript/TypeScript code:</p>
+                <code
+                  class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
+                >
+                  $ctx.$pkgs{{ packageData?.name && /[@\/\-]/.test(packageData.name) ? `['${packageData.name}']` : `.${packageData?.name.replace(/[@\/\-]/g, "")}` }}
+                </code>
+              </div>
+              <div class="space-y-2">
+                <p class="font-medium">In template syntax:</p>
+                <code
+                  class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
+                >
+                  @PKGS{{ packageData?.name && /[@\/\-]/.test(packageData.name) ? `['${packageData.name}']` : `.${packageData?.name.replace(/[@\/\-]/g, "")}` }}
+                </code>
+              </div>
             </div>
-            <div class="space-y-2">
-              <p class="font-medium">In template syntax:</p>
-              <code
-                class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
-              >
-                @PKGS{{ packageData?.name && /[@\/\-]/.test(packageData.name) ? `['${packageData.name}']` : `.${packageData?.name.replace(/[@\/\-]/g, "")}` }}
-              </code>
-            </div>
-          </div>
-        </template>
-      </UAlert>
+          </template>
+        </UAlert>
 
-      <div class="bg-gray-800/50 rounded-xl border border-gray-700/50 p-6">
         <UForm :state="form" @submit="handleUpdate">
           <FormEditorLazy
             ref="formEditorRef"
@@ -50,7 +49,7 @@
             }"
           />
         </UForm>
-      </div>
+      </CommonFormCard>
     </div>
   </div>
 </template>
@@ -213,6 +212,11 @@ async function handleUpdate() {
     return;
   }
 
+  if (packageData.value?.type === 'App') {
+    const { fetchAppPackages } = useGlobalState();
+    await fetchAppPackages();
+  }
+
   toast.add({
     title: "Success",
     description: "Package updated successfully",
@@ -241,14 +245,18 @@ async function handleUninstall() {
     return;
   }
 
+  if (packageData.value?.type === 'App') {
+    const { fetchAppPackages } = useGlobalState();
+    await fetchAppPackages();
+  }
+
   toast.add({
     title: "Success",
     description: `Package ${packageData.value?.name} uninstalled successfully`,
     color: "success",
   });
 
-  const packageType = packageData.value?.type;
-  await navigateTo(`/packages/${packageType.toLowerCase()}`, {
+  await navigateTo('/packages', {
     replace: true,
   });
 }
@@ -259,7 +267,7 @@ watch(packageData, (data) => {
   if (data) {
     registerPageHeader({
       title: data.name || 'Package Details',
-      gradient: data.type === 'Backend' ? 'cyan' : 'blue',
+      gradient: data.type === 'Server' ? 'cyan' : 'blue',
     });
   }
 }, { immediate: true });

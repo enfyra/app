@@ -143,12 +143,21 @@ export function useMenuRegistry() {
   const reregisterAllMenus = async (
     fetchMenuDefinitions: () => Promise<{ data: MenuDefinition[] } | null>
   ) => {
+    const fixedMenuIds = ['user-info', 'logout'];
+    const fixedMenuItems = menuItems.value.filter(item => 
+      fixedMenuIds.includes(item.id)
+    );
+
     clearAllMenus();
 
     const menuResponse = await fetchMenuDefinitions();
     if (menuResponse?.data) {
       await registerAllMenusFromApi(menuResponse.data);
     }
+
+    fixedMenuItems.forEach(item => {
+      registerMenuItem(item);
+    });
   };
 
   const findParentMenuIdByPath = (path: string): string | number | null => {

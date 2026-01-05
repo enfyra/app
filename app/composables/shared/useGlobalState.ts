@@ -4,6 +4,9 @@ export const useGlobalState = () => {
   const storageConfigs = useState<any[]>("global:storage:configs", () => []);
   const aiConfigs = useState<any[]>("global:ai:configs", () => []);
   const aiConfig = useState<any>("global:ai:config", () => {});
+  const appPackages = useState<any[]>("global:app:packages", () => []);
+  const packageCacheState = useState<Map<string, any>>("global:app:packages:cache", () => new Map());
+  const packageCacheTimestamp = useState<number>("global:app:packages:cache:timestamp", () => 0);
 
   const sidebarVisible = useState<boolean>(
     "global:sidebar:visible",
@@ -67,6 +70,22 @@ export const useGlobalState = () => {
     errorContext: "Fetch AI Config",
   });
 
+  const {
+    data: appPackagesData,
+    execute: executeFetchAppPackages,
+  } = useApi(() => "/package_definition", {
+    query: {
+      fields: "*",
+      limit: -1,
+      filter: {
+        type: {
+          _eq: "App",
+        },
+      }
+    },
+    errorContext: "Fetch App Packages",
+  });
+
   async function fetchSetting() {
     await executeFetchSettings();
     settings.value = settingsData.value?.data[0] || {};
@@ -82,6 +101,18 @@ export const useGlobalState = () => {
     const data = aiConfigData.value?.data || [];
     aiConfigs.value = data;
     aiConfig.value = data[0] || {};
+  }
+
+  async function fetchAppPackages() {
+    await executeFetchAppPackages();
+    appPackages.value = appPackagesData.value?.data || [];
+    packageCacheState.value.clear();
+    packageCacheTimestamp.value = Date.now();
+  }
+
+  function clearPackageCache() {
+    packageCacheState.value.clear();
+    packageCacheTimestamp.value = Date.now();
   }
 
   function toggleSidebar() {
@@ -123,6 +154,11 @@ export const useGlobalState = () => {
     aiConfigs,
     aiConfig,
     fetchAiConfig,
+    appPackages,
+    fetchAppPackages,
+    packageCacheState,
+    packageCacheTimestamp,
+    clearPackageCache,
     sidebarVisible,
     sidebarCollapsed,
     routeLoading,

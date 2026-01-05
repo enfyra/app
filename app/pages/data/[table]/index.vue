@@ -176,8 +176,12 @@ const columns = computed(() => {
       if (aName === 'id' || aName === '_id') return -1;
       if (bName === 'id' || bName === '_id') return 1;
 
-      const aSortKey = a.id ?? (a.createdAt ? new Date(a.createdAt).getTime() : 0);
-      const bSortKey = b.id ?? (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+      const aSortKey = a.createdAt 
+        ? new Date(a.createdAt).getTime() 
+        : (a.id ?? Number.MAX_SAFE_INTEGER);
+      const bSortKey = b.createdAt 
+        ? new Date(b.createdAt).getTime() 
+        : (b.id ?? Number.MAX_SAFE_INTEGER);
       return aSortKey - bSortKey;
     })
     .map((field) => {
