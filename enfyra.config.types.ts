@@ -3,6 +3,7 @@ export interface RichTextEditorButtonConfig {
   text?: string;
   tooltip?: string;
   format?: string;
+  icon?: string;
   onAction?: string | ((editor: any, params?: any) => void);
   params?: any[];
 }

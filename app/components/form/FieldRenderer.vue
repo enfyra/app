@@ -356,13 +356,15 @@ function getComponentConfigByKey(key: string) {
         };
       }
 
+      const richTextConfig = column?.metadata?.richText;
+
       return {
         component: resolveComponent("FormRichTextEditorLazy"),
         componentProps: {
-          
+
           modelValue: ensureString(props.formData[key]),
-          
-          editorConfig: column?.metadata?.richText,
+
+          editorConfig: richTextConfig,
           disabled,
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
