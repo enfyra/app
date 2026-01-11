@@ -1,14 +1,5 @@
 <template>
-  <Suspense>
-    <template #default>
-      <RichTextEditor
-        :model-value="modelValue"
-        :disabled="disabled"
-        :height="height"
-        :editor-config="editorConfig"
-        @update:model-value="$emit('update:modelValue', $event)"
-      />
-    </template>
+  <ClientOnly>
     <template #fallback>
       <div
         class="flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700"
@@ -23,7 +14,14 @@
         </div>
       </div>
     </template>
-  </Suspense>
+    <RichTextEditor
+      :model-value="modelValue"
+      :disabled="disabled"
+      :height="height"
+      :editor-config="editorConfig"
+      @update:model-value="$emit('update:modelValue', $event)"
+    />
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">

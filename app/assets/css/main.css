@@ -9,6 +9,7 @@
 @import "./ai-chat.css";
 @import "./highlight.css";
 @import "./vue-flow.css";
+@import "./richtext-editor.css";
 
 @layer base {
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');

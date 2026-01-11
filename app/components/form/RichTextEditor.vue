@@ -1,18 +1,43 @@
 <script setup lang="ts">
-declare global {
-  interface Window {
-    tinymce: any;
-  }
-}
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
+import Underline from '@tiptap/extension-underline'
+import TextAlign from '@tiptap/extension-text-align'
+import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { createLowlight } from 'lowlight'
 import { ensureString } from "../../utils/components/form";
-import { enfyraConfig } from "../../../enfyra.config";
+import type { AnyExtension } from '@tiptap/core'
+import { Extension } from '@tiptap/core'
+import { Mark } from '@tiptap/core'
+import { Node } from '@tiptap/core'
+import CommonModal from '../common/Modal.vue'
 import type { RichTextEditorConfig } from "../../../enfyra.config.types";
+import { enfyraConfig } from "../../../enfyra.config";
+
+const insertHorizontalRule = () => {
+  editor.value?.chain().focus().setHorizontalRule().run();
+};
+
+const insertBlockquote = () => {
+  editor.value?.chain().focus().toggleBlockquote().run();
+};
+
+const clearFormat = () => {
+  editor.value?.chain().focus().unsetAllMarks().run();
+  editor.value?.chain().focus().clearNodes().run();
+};
 
 const props = defineProps<{
   modelValue: string | null;
   disabled?: boolean;
   height?: number;
-  
   editorConfig?: RichTextEditorConfig;
 }>();
 
@@ -20,51 +45,50 @@ const emit = defineEmits<{
   (e: "update:modelValue", v: string): void;
 }>();
 
-const textareaId = `tinymce-${Math.random().toString(36).slice(2)}`;
-const editorRef = ref<any>(null);
 const containerRef = ref<HTMLDivElement>();
 const resizeHandleRef = ref<HTMLDivElement>();
 const previewLayerRef = ref<HTMLDivElement>();
 const isFocused = ref(false);
+const isResizing = ref(false);
+const startY = ref(0);
+const startHeight = ref(0);
 const previewHeight = ref<string | null>(null);
 const previewStyle = ref<{ top: string; left: string; width: string; height: string } | null>(null);
-const mutationObserverRef = ref<MutationObserver | null>(null);
-const iframeLoadHandlerRef = ref<(() => void) | null>(null);
 
 const initialHeight = props.height ?? 300;
 const currentHeight = ref(`${initialHeight}px`);
 const minHeight = computed(() => initialHeight);
-const isResizing = ref(false);
-const startY = ref(0);
-const startHeight = ref(0);
+const isMounted = ref(false);
 
-const isLoading = ref(true);
-const isError = ref(false);
+const lowlight = createLowlight();
+
+function camelToKebab(str: string): string {
+  return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+}
+
+const linkModalOpen = ref(false);
+const imageModalOpen = ref(false);
+const linkUrl = ref('');
+const imageUrl = ref('');
+
+type ButtonGroup = string[];
 
 const effectiveConfig = computed<RichTextEditorConfig>(() => {
   const base = enfyraConfig.richText || {};
   const override = props.editorConfig || {};
 
-  const baseButtons = base.customButtons || [];
-  const overrideButtons = override.customButtons || [];
+  const defaultToolbar = 'undo redo | clear | h1 h2 h3 h4 h5 h6 | bold italic underline strike | bullist numlist | alignleft aligncenter alignright alignjustify | link image table blockquote hr';
 
-  const mergedButtonsMap: Record<string, any> = {};
-  for (const btn of baseButtons) {
-    mergedButtonsMap[btn.name] = btn;
-  }
-  for (const btn of overrideButtons) {
-    mergedButtonsMap[btn.name] = btn;
-  }
+  const customButtonNames = override.customButtons?.map(btn => btn.name) || [];
+  const finalToolbar = customButtonNames.length > 0
+    ? defaultToolbar + ' | ' + customButtonNames.join(' ')
+    : defaultToolbar;
 
-  const mergedButtons =
-    overrideButtons.length > 0 ? Object.values(mergedButtonsMap) : baseButtons;
-
-  return {
+  const result = {
     ...base,
     ...override,
-    plugins: override.plugins ?? base.plugins,
-    toolbar: override.toolbar ?? base.toolbar,
-    customButtons: mergedButtons,
+    toolbar: finalToolbar,
+    customButtons: override.customButtons ?? base.customButtons ?? [],
     formats: {
       ...(base.formats || {}),
       ...(override.formats || {}),
@@ -74,29 +98,270 @@ const effectiveConfig = computed<RichTextEditorConfig>(() => {
       ...(override.buttonActions || {}),
     },
   };
+  return result;
 });
 
-function loadTinyMCE(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.tinymce) {
-      isLoading.value = false;
-      return resolve();
+const toolbarButtons = computed<ButtonGroup[]>(() => {
+  const toolbar = effectiveConfig.value.toolbar || 'bold italic underline | link image | bullist numlist | align';
+  const result = toolbar.split('|').map(group => group.trim().split(/\s+/).filter(Boolean));
+  return result;
+});
+
+const injectCustomStyles = () => {
+  const formats = effectiveConfig.value.formats;
+  if (!formats) return;
+
+  const colorMode = useColorMode();
+  const theme = colorMode.value as 'light' | 'dark';
+
+  const styleId = 'custom-rich-text-formats';
+  let styleEl = document.getElementById(styleId);
+
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = styleId;
+    document.head.appendChild(styleEl);
+  }
+
+  const cssRules: string[] = [];
+
+  Object.keys(formats).forEach((key) => {
+    const format = formats![key];
+    if (!format) return;
+
+    let cssStyles: Record<string, string> = {};
+    if (format.css) {
+      if (typeof format.css === 'function') {
+        cssStyles = format.css(theme);
+      } else {
+        cssStyles = format.css;
+      }
     }
 
-    const s = document.createElement("script");
-    s.src = "/tinymce/tinymce.min.js";
-    s.onload = () => {
-      isLoading.value = false;
-      resolve();
-    };
-    s.onerror = () => {
-      isLoading.value = false;
-      isError.value = true;
-      reject(new Error("TinyMCE load failed"));
-    };
-    document.head.appendChild(s);
+    if (format.inline || (!format.block && !format.wrapper)) {
+      const classSelector = `.${key}`;
+      const styles = Object.entries(cssStyles).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
+      if (styles) {
+        cssRules.push(`${classSelector} { ${styles} }`);
+      }
+    } else if (format.block || format.wrapper) {
+      const styles = Object.entries(cssStyles).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
+      if (styles) {
+        cssRules.push(`${key} { ${styles} }`);
+      }
+    }
   });
-}
+
+  styleEl.textContent = cssRules.join('\n');
+};
+
+const createCustomFormatsExtension = (): Extension => {
+  const formats = effectiveConfig.value.formats;
+
+  const extensions: any[] = [];
+  const marks: any[] = [];
+  const nodes: any[] = [];
+
+  const colorMode = useColorMode();
+
+  Object.keys(formats || {}).forEach((key) => {
+    const format = formats![key];
+    if (!format) return;
+
+    const theme = colorMode.value as 'light' | 'dark';
+
+    let classes: string[] = [];
+    if (format.classes) {
+      if (typeof format.classes === 'function') {
+        const cls = format.classes(theme);
+        classes = Array.isArray(cls) ? cls : [cls];
+      } else {
+        classes = Array.isArray(format.classes) ? format.classes : [format.classes];
+      }
+    }
+
+    if (format.inline || (!format.block && !format.wrapper)) {
+      const allClasses = [...classes, key].join(' ');
+      marks.push(Mark.create({
+        name: key,
+        addAttributes() {
+          const attrs: any = { ...format.attributes };
+          if (allClasses) attrs.class = { default: allClasses };
+          return attrs;
+        },
+        parseHTML() {
+          return [
+            {
+              tag: 'span',
+              getAttrs: (node: any) => {
+                if (node.classList && node.classList.contains(key)) {
+                  return {};
+                }
+                return false;
+              },
+            },
+          ];
+        },
+        renderHTML({ HTMLAttributes }) {
+          const attrs: any = {};
+          if (allClasses) attrs.class = allClasses;
+          return ['span', { ...attrs, ...HTMLAttributes }, 0];
+        },
+      }));
+    } else if (format.block) {
+      nodes.push(Node.create({
+        name: key,
+        addAttributes() {
+          const attrs: any = { ...format.attributes };
+          if (classes.length) attrs.class = { default: classes.join(' ') };
+          return attrs;
+        },
+        content: 'inline*',
+        group: 'block',
+        parseHTML() {
+          return [
+            {
+              tag: key,
+            },
+          ];
+        },
+        renderHTML({ HTMLAttributes }) {
+          return [key, HTMLAttributes, 0];
+        },
+      }));
+    } else if (format.wrapper !== undefined) {
+      nodes.push(Node.create({
+        name: key,
+        addAttributes() {
+          const attrs: any = { ...format.attributes };
+          if (classes.length) attrs.class = { default: classes.join(' ') };
+          return attrs;
+        },
+        content: 'block*',
+        group: 'block',
+        parseHTML() {
+          return [
+            {
+              tag: key,
+            },
+          ];
+        },
+        renderHTML({ HTMLAttributes }) {
+          return [key, HTMLAttributes, 0];
+        },
+      }));
+    }
+  });
+
+  return Extension.create({
+    name: 'customFormats',
+    addExtensions() {
+      return [...extensions, ...marks, ...nodes];
+    },
+  });
+};
+
+const editor = useEditor({
+  content: ensureString(props.modelValue),
+  extensions: [
+    StarterKit.configure({
+      codeBlock: false,
+      link: false,
+      heading: {
+        levels: [1, 2, 3, 4, 5, 6],
+      },
+      bulletList: {
+        keepMarks: true,
+        keepAttributes: false,
+      },
+      orderedList: {
+        keepMarks: true,
+        keepAttributes: false,
+      },
+    }) as AnyExtension,
+    Placeholder.configure({
+      placeholder: 'Type something...',
+    }) as AnyExtension,
+    Underline as AnyExtension,
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+      alignments: ['left', 'center', 'right', 'justify'],
+      defaultAlignment: 'left',
+    }) as AnyExtension,
+    Link.configure({
+      openOnClick: false,
+    }) as AnyExtension,
+    Image.extend({
+      addAttributes() {
+        return {
+          ...this.parent?.(),
+          width: { default: null },
+          height: { default: null },
+        };
+      },
+    }) as AnyExtension,
+    Table.configure({
+      resizable: true,
+    }) as AnyExtension,
+    TableRow as AnyExtension,
+    TableHeader as AnyExtension,
+    TableCell as AnyExtension,
+    CodeBlockLowlight.configure({
+      lowlight,
+      defaultLanguage: 'auto',
+    }) as AnyExtension,
+    createCustomFormatsExtension(),
+  ],
+  editable: !props.disabled,
+  onFocus: () => {
+    isFocused.value = true;
+  },
+  onBlur: ({ editor }) => {
+    isFocused.value = false;
+    try {
+      if (editor && isMounted.value) {
+        emit('update:modelValue', editor.getHTML());
+      }
+    } catch {
+    }
+  },
+  onDestroy: () => {
+    isMounted.value = false;
+  },
+  onCreate: ({ editor }) => {
+    if (editor) {
+      isMounted.value = true;
+    }
+  },
+});
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (editor.value && value !== editor.value.getHTML()) {
+      editor.value.commands.setContent(ensureString(value));
+    }
+  }
+);
+
+watch(
+  () => props.disabled,
+  (value) => {
+    if (editor.value) {
+      editor.value.setEditable(!value);
+    }
+  }
+);
+
+watch(
+  effectiveConfig,
+  () => {
+    nextTick(() => {
+      injectCustomStyles();
+    });
+  },
+  { immediate: true, deep: true }
+);
 
 function handleMouseDown(e: MouseEvent) {
   e.preventDefault();
@@ -106,7 +371,7 @@ function handleMouseDown(e: MouseEvent) {
   if (containerRef.value) {
     const rect = containerRef.value.getBoundingClientRect();
     startHeight.value = rect.height;
-    
+
     previewStyle.value = {
       top: `${rect.top}px`,
       left: `${rect.left}px`,
@@ -114,40 +379,33 @@ function handleMouseDown(e: MouseEvent) {
       height: `${rect.height}px`
     };
   }
-  
+
   document.addEventListener("mousemove", handleMouseMove, { passive: false });
   document.addEventListener("mouseup", handleMouseUp, { passive: false });
   document.addEventListener("mouseleave", handleMouseUp, { passive: false });
-  
+
   if (resizeHandleRef.value) {
     resizeHandleRef.value.style.userSelect = "none";
   }
-  
-  if (editorRef.value) {
-    const container = editorRef.value.getContainer();
-    if (container) {
-      container.style.pointerEvents = "none";
-    }
-  }
-  
+
   if (containerRef.value) {
     containerRef.value.style.pointerEvents = "none";
   }
-  
+
   document.body.style.userSelect = "none";
   document.body.style.cursor = "ns-resize";
 }
 
 function handleMouseMove(e: MouseEvent) {
   if (!isResizing.value || !containerRef.value) return;
-  
+
   e.preventDefault();
   e.stopPropagation();
-  
+
   const deltaY = e.clientY - startY.value;
   const newHeight = Math.max(minHeight.value, startHeight.value + deltaY);
   const heightStr = `${newHeight}px`;
-  
+
   const rect = containerRef.value.getBoundingClientRect();
   previewStyle.value = {
     top: `${rect.top}px`,
@@ -155,7 +413,7 @@ function handleMouseMove(e: MouseEvent) {
     width: `${rect.width}px`,
     height: heightStr
   };
-  
+
   previewHeight.value = heightStr;
 }
 
@@ -164,431 +422,35 @@ function handleMouseUp(e?: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
   }
-  
+
   if (!containerRef.value) return;
-  
+
   const finalHeight = previewHeight.value || currentHeight.value;
   isResizing.value = false;
   previewHeight.value = null;
   previewStyle.value = null;
-  
+
   document.removeEventListener("mousemove", handleMouseMove);
   document.removeEventListener("mouseup", handleMouseUp);
   document.removeEventListener("mouseleave", handleMouseUp);
-  
+
   if (resizeHandleRef.value) {
     resizeHandleRef.value.style.userSelect = "";
   }
-  
-  if (editorRef.value) {
-    const container = editorRef.value.getContainer();
-    if (container) {
-      container.style.pointerEvents = "";
-    }
-  }
-  
+
   if (containerRef.value) {
     containerRef.value.style.pointerEvents = "";
   }
-  
+
   document.body.style.userSelect = "";
   document.body.style.cursor = "";
-  
+
   currentHeight.value = finalHeight;
-  
+
   if (containerRef.value) {
     containerRef.value.style.height = finalHeight;
   }
-  
-  nextTick(() => {
-    if (editorRef.value) {
-      const container = editorRef.value.getContainer();
-      if (container) {
-        container.style.height = finalHeight;
-      }
-      editorRef.value.fire('ResizeEditor');
-    }
-  });
 }
-
-const colorMode = useColorMode();
-
-onMounted(async () => {
-  try {
-    await loadTinyMCE();
-
-    const initTinyMCE = () => {
-      const isDark = colorMode.value === 'dark';
-
-      if (editorRef.value) {
-        try {
-          editorRef.value.destroy();
-        } catch (e) {
-          
-        }
-        editorRef.value = null;
-      }
-
-      try {
-        window.tinymce.remove(`#${textareaId}`);
-      } catch (e) {
-        
-      }
-
-      try {
-        const existingEditor = window.tinymce.get(textareaId);
-        if (existingEditor) {
-          existingEditor.remove();
-        }
-      } catch (e) {
-        
-      }
-
-      let textareaElement = document.getElementById(textareaId);
-      if (!textareaElement && containerRef.value) {
-        textareaElement = document.createElement('textarea');
-        textareaElement.id = textareaId;
-        containerRef.value.appendChild(textareaElement);
-      }
-      
-      if (!textareaElement) {
-        console.error('Textarea element not found for TinyMCE initialization');
-        return;
-      }
-
-      if (!textareaElement.parentNode) {
-        console.error('Textarea element has no parentNode');
-        if (containerRef.value) {
-          containerRef.value.appendChild(textareaElement);
-        } else {
-          return;
-        }
-      }
-      
-      window.tinymce.init({
-      selector: `#${textareaId}`,
-      skin_url: isDark ? "/tinymce/skins/ui/oxide-dark" : "/tinymce/skins/ui/oxide",
-      content_css: isDark ? "/tinymce/skins/content/dark/content.css" : "/tinymce/skins/content/default/content.css",
-      content_style: `
-        body {
-          color: ${isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)'} !important;
-        }
-      `,
-      icons_url: "/tinymce/icons/default/icons.min.js",
-      plugins: effectiveConfig.value.plugins,
-      skin: isDark ? "oxide-dark" : "oxide",
-      external_plugins: {
-        link: "/tinymce/plugins/link/plugin.min.js",
-        lists: "/tinymce/plugins/lists/plugin.min.js",
-        code: "/tinymce/plugins/code/plugin.min.js",
-        table: "/tinymce/plugins/table/plugin.min.js",
-      },
-      toolbar: effectiveConfig.value.toolbar,
-      menubar: false,
-      height: initialHeight,
-      resize: false,
-      readonly: props.disabled ?? false,
-      license_key: "gpl",
-      formats: (() => {
-        const formats = effectiveConfig.value.formats;
-        if (!formats) return undefined;
-        
-        const processedFormats: any = {};
-        const theme = colorMode.value as 'light' | 'dark';
-        
-        Object.keys(formats).forEach((key) => {
-          const format = formats[key];
-          if (!format) return;
-          
-          processedFormats[key] = {};
-          
-          if (format.block !== undefined) {
-            processedFormats[key].block = format.block === true ? key : (typeof format.block === 'string' ? format.block : key);
-          } else if (format.wrapper !== undefined) {
-            processedFormats[key].wrapper = format.wrapper === true ? key : (typeof format.wrapper === 'string' ? format.wrapper : key);
-          } else if (format.inline !== undefined) {
-            processedFormats[key].inline = format.inline === true ? key : (typeof format.inline === 'string' ? format.inline : key);
-          } else {
-            processedFormats[key].inline = key;
-          }
-          
-          if (format.classes) {
-            if (typeof format.classes === 'function') {
-              const classes = format.classes(theme);
-              processedFormats[key].classes = Array.isArray(classes) ? classes : [classes];
-            } else {
-              processedFormats[key].classes = Array.isArray(format.classes) ? format.classes : [format.classes];
-            }
-          }
-          
-          if (format.attributes) {
-            processedFormats[key].attributes = format.attributes;
-          }
-        });
-        
-        return processedFormats;
-      })(),
-      setup(editor: any) {
-        editorRef.value = editor;
-
-        const customButtons = effectiveConfig.value.customButtons || [];
-        const buttonActions = effectiveConfig.value.buttonActions || {};
-        
-        customButtons.forEach((buttonConfig) => {
-          const { name, text, tooltip, format, onAction, params } = buttonConfig;
-          
-          let buttonOnAction: any;
-          
-          if (format) {
-            buttonOnAction = function() {
-              editor.execCommand('mceToggleFormat', false, format);
-            };
-          } else if (onAction) {
-            if (typeof onAction === 'function') {
-              buttonOnAction = onAction;
-            } else if (typeof onAction === 'string') {
-              buttonOnAction = function() {
-                editor.execCommand(onAction, false, ...(params || []));
-              };
-            }
-          } else {
-            buttonOnAction = function() {};
-          }
-          
-          editor.ui.registry.addButton(name, {
-            text: text || name,
-            tooltip: tooltip || text || name,
-            onAction: buttonOnAction,
-          });
-        });
-
-        editor.on("init", () => {
-          try {
-            editor.setContent(ensureString(props.modelValue));
-          } catch (e) {
-            console.error('Error setting content on init:', e);
-          }
-          if (containerRef.value) {
-            containerRef.value.style.height = currentHeight.value;
-          }
-          
-          const updateContentStyle = () => {
-            if (!editorRef.value || !editor) return;
-            
-            try {
-              const container = editor.getContentAreaContainer();
-              if (!container) return;
-              
-              const iframe = container.querySelector('iframe');
-              if (iframe) {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-                if (iframeDoc) {
-                  const isDark = colorMode.value === 'dark';
-                  const tinymceBody = iframeDoc.getElementById('tinymce');
-                  
-                  if (tinymceBody) {
-                    tinymceBody.style.color = isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)';
-                    
-                    const existingStyle = iframeDoc.getElementById('custom-content-style');
-                    if (existingStyle) {
-                      existingStyle.remove();
-                    }
-                    
-                    const formats = effectiveConfig.value.formats;
-                    let formatCss = '';
-                    if (formats) {
-                      const theme = colorMode.value as 'light' | 'dark';
-                      Object.keys(formats).forEach((key) => {
-                        const format = formats[key];
-                        if (!format) return;
-                        
-                        let tagName = key;
-                        if (format.block !== undefined) {
-                          tagName = format.block === true ? key : (typeof format.block === 'string' ? format.block : key);
-                        } else if (format.wrapper !== undefined) {
-                          tagName = format.wrapper === true ? key : (typeof format.wrapper === 'string' ? format.wrapper : key);
-                        } else if (format.inline !== undefined) {
-                          tagName = format.inline === true ? key : (typeof format.inline === 'string' ? format.inline : key);
-                        }
-                        
-                        if (format.css) {
-                          const cssObj = typeof format.css === 'function' ? format.css(theme) : format.css;
-                          const cssRules = Object.entries(cssObj)
-                            .map(([prop, value]) => {
-                              const kebabProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
-                              return `${kebabProp}: ${value}`;
-                            })
-                            .join('; ');
-                          
-                          formatCss += `#tinymce ${tagName} { ${cssRules}; }\n`;
-                        }
-                        
-                        if (format.classStyles) {
-                          Object.keys(format.classStyles).forEach((className) => {
-                            const classStyle = format.classStyles?.[className];
-                            if (!classStyle) return;
-                            
-                            const cssObj = typeof classStyle === 'function' ? classStyle(theme) : classStyle;
-                            const cssRules = Object.entries(cssObj)
-                              .map(([prop, value]) => {
-                                const kebabProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
-                                return `${kebabProp}: ${value}`;
-                              })
-                              .join('; ');
-                            
-                            formatCss += `#tinymce ${tagName}.${className} { ${cssRules}; }\n`;
-                          });
-                        }
-                      });
-                    }
-                    
-                    const style = iframeDoc.createElement('style');
-                    style.id = 'custom-content-style';
-                    style.textContent = `
-                      #tinymce {
-                        color: ${isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)'} !important;
-                      }
-                      #tinymce * {
-                        color: ${isDark ? 'rgba(255, 255, 255, 0.9)' : 'rgb(31, 41, 55)'} !important;
-                      }
-                      ${formatCss}
-                    `;
-                    iframeDoc.head.appendChild(style);
-                  }
-                }
-              }
-            } catch (error) {
-              
-            }
-          };
-          
-          nextTick(() => {
-            updateContentStyle();
-            
-            try {
-              const container = editor.getContentAreaContainer();
-              if (!container) return;
-              
-              const iframe = container.querySelector('iframe');
-              if (iframe) {
-                const loadHandler = () => updateContentStyle();
-                iframe.addEventListener('load', loadHandler);
-                iframeLoadHandlerRef.value = loadHandler;
-                
-                const observer = new MutationObserver(() => {
-                  updateContentStyle();
-                });
-                observer.observe(document.documentElement, {
-                  attributes: true,
-                  attributeFilter: ['class']
-                });
-                mutationObserverRef.value = observer;
-              }
-            } catch (error) {
-              
-            }
-          });
-        });
-
-        editor.on("Change KeyUp Undo Redo", () => {
-          emit("update:modelValue", editor.getContent());
-        });
-
-        editor.on("focus", () => {
-          isFocused.value = true;
-        });
-
-        editor.on("blur", () => {
-          isFocused.value = false;
-        });
-      },
-    });
-    };
-    
-    initTinyMCE();
-
-    watch(() => colorMode.value, async () => {
-      if (editorRef.value) {
-        const currentContent = editorRef.value.getContent();
-        try {
-          
-          const textareaElement = document.getElementById(textareaId);
-          const textareaParent = textareaElement?.parentNode;
-
-          if (mutationObserverRef.value) {
-            mutationObserverRef.value.disconnect();
-            mutationObserverRef.value = null;
-          }
-          
-          if (editorRef.value && iframeLoadHandlerRef.value) {
-            try {
-              const container = editorRef.value.getContentAreaContainer();
-              if (container) {
-                const iframe = container.querySelector('iframe');
-                if (iframe) {
-                  iframe.removeEventListener('load', iframeLoadHandlerRef.value);
-                }
-              }
-            } catch (e) {
-              
-            }
-            iframeLoadHandlerRef.value = null;
-          }
-
-          try {
-            window.tinymce.remove(`#${textareaId}`);
-          } catch (e) {
-            
-          }
-
-          try {
-            const existingEditor = window.tinymce.get(textareaId);
-            if (existingEditor) {
-              existingEditor.remove();
-            }
-          } catch (e) {
-            
-          }
-          
-          try {
-            editorRef.value.destroy();
-          } catch (e) {
-            
-          }
-          editorRef.value = null;
-
-          await nextTick();
-          let textareaAfterDestroy = document.getElementById(textareaId);
-          if (!textareaAfterDestroy && textareaParent && containerRef.value) {
-            
-            const newTextarea = document.createElement('textarea');
-            newTextarea.id = textareaId;
-            containerRef.value.appendChild(newTextarea);
-          }
-
-          await new Promise(resolve => setTimeout(resolve, 200));
-          initTinyMCE();
-          await nextTick();
-          await new Promise(resolve => setTimeout(resolve, 100));
-          if (editorRef.value) {
-            editorRef.value.setContent(currentContent);
-          }
-        } catch (error) {
-          console.error("Error reinitializing TinyMCE on theme change:", error);
-        }
-      }
-    });
-  } catch (error) {}
-});
-
-watch(
-  () => props.modelValue,
-  (v) => {
-    if (editorRef.value && v !== editorRef.value.getContent()) {
-      editorRef.value.setContent(ensureString(v));
-    }
-  }
-);
 
 watch(
   () => props.height,
@@ -599,134 +461,301 @@ watch(
       if (containerRef.value) {
         containerRef.value.style.height = heightStr;
       }
-      nextTick(() => {
-        if (editorRef.value) {
-          const container = editorRef.value.getContainer();
-          if (container) {
-            container.style.height = heightStr;
-          }
-          editorRef.value.fire('ResizeEditor');
-        }
-      });
     }
   }
 );
 
 onBeforeUnmount(() => {
-  
-  if (mutationObserverRef.value) {
-    mutationObserverRef.value.disconnect();
-    mutationObserverRef.value = null;
-  }
-
-  if (editorRef.value && iframeLoadHandlerRef.value) {
-    try {
-      const container = editorRef.value.getContentAreaContainer();
-      if (container) {
-        const iframe = container.querySelector('iframe');
-        if (iframe) {
-          iframe.removeEventListener('load', iframeLoadHandlerRef.value);
-        }
-      }
-    } catch (e) {
-      
-    }
-    iframeLoadHandlerRef.value = null;
-  }
-  
   document.removeEventListener("mousemove", handleMouseMove);
   document.removeEventListener("mouseup", handleMouseUp);
   document.removeEventListener("mouseleave", handleMouseUp);
   document.body.style.userSelect = "";
   document.body.style.cursor = "";
-  if (editorRef.value) {
-    const container = editorRef.value.getContainer();
-    if (container) {
-      container.style.pointerEvents = "";
-    }
-    editorRef.value.destroy();
-    editorRef.value = null;
-  }
   if (containerRef.value) {
     containerRef.value.style.pointerEvents = "";
   }
 });
+
+const isActive = (name: string, attributes = {}) => {
+  return computed(() => {
+    if (!editor.value) return false;
+    try {
+      return editor.value.isActive(name, attributes);
+    } catch {
+      return false;
+    }
+  });
+};
+
+const handleButtonClick = (action: () => void, event: MouseEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+  try {
+    action();
+  } catch (error) {
+    console.error('Action failed:', error);
+  }
+};
+
+const getButtonClass = (active: boolean, disabled = false) => {
+  return [
+    'p-2 rounded transition-colors',
+    disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-700',
+    active ? 'bg-gray-300 dark:bg-gray-600' : '',
+  ];
+};
+
+const setLink = () => {
+  if (editor.value?.isActive('link')) {
+    editor.value.chain().focus().unsetLink().run();
+  } else {
+    linkModalOpen.value = true;
+  }
+};
+
+const confirmLink = () => {
+  if (linkUrl.value && editor.value) {
+    editor.value.chain().focus().setLink({ href: linkUrl.value }).run();
+  }
+  linkUrl.value = '';
+  linkModalOpen.value = false;
+};
+
+const insertImage = () => {
+  imageModalOpen.value = true;
+};
+
+const confirmImage = () => {
+  if (imageUrl.value && editor.value) {
+    editor.value.chain().focus().setImage({ src: imageUrl.value }).run();
+  }
+  imageUrl.value = '';
+  imageModalOpen.value = false;
+};
+
+const insertTable = () => {
+  editor.value?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+};
+
+const toggleCodeBlock = () => {
+  editor.value?.chain().focus().toggleCodeBlock().run();
+};
+
+const undo = () => {
+  editor.value?.chain().focus().undo().run();
+};
+
+const redo = () => {
+  editor.value?.chain().focus().redo().run();
+};
+
+const handleEditorClick = (event: MouseEvent) => {
+  if (editor.value && !props.disabled) {
+    const target = event.target as HTMLElement;
+    if (target.closest('.ProseMirror')) {
+      return;
+    }
+    editor.value.chain().focus().run();
+  }
+};
+
+type ButtonConfig = {
+  name: string;
+  attrs?: any;
+  icon: string;
+  action: () => void;
+  text?: string;
+  tooltip?: string;
+};
+
+const availableButtons = computed<Record<string, ButtonConfig>>(() => {
+  const customButtons = effectiveConfig.value.customButtons || [];
+  const buttonActions = effectiveConfig.value.buttonActions || {};
+
+  const baseButtons: Record<string, ButtonConfig> = {
+    bold: { name: 'bold', icon: 'lucide:bold', action: () => editor.value?.chain().focus().toggleBold().run() },
+    italic: { name: 'italic', icon: 'lucide:italic', action: () => editor.value?.chain().focus().toggleItalic().run() },
+    underline: { name: 'underline', icon: 'lucide:underline', action: () => editor.value?.chain().focus().toggleUnderline().run() },
+    strike: { name: 'strike', icon: 'lucide:strikethrough', action: () => editor.value?.chain().focus().toggleStrike().run() },
+    code: { name: 'code', icon: 'lucide:code', action: () => editor.value?.chain().focus().toggleCode().run() },
+    h1: { name: 'heading', attrs: { level: 1 }, icon: 'lucide:heading-1', action: () => editor.value?.chain().focus().toggleHeading({ level: 1 }).run() },
+    h2: { name: 'heading', attrs: { level: 2 }, icon: 'lucide:heading-2', action: () => editor.value?.chain().focus().toggleHeading({ level: 2 }).run() },
+    h3: { name: 'heading', attrs: { level: 3 }, icon: 'lucide:heading-3', action: () => editor.value?.chain().focus().toggleHeading({ level: 3 }).run() },
+    h4: { name: 'heading', attrs: { level: 4 }, icon: 'lucide:heading-4', action: () => editor.value?.chain().focus().toggleHeading({ level: 4 }).run() },
+    h5: { name: 'heading', attrs: { level: 5 }, icon: 'lucide:heading-5', action: () => editor.value?.chain().focus().toggleHeading({ level: 5 }).run() },
+    h6: { name: 'heading', attrs: { level: 6 }, icon: 'lucide:heading-6', action: () => editor.value?.chain().focus().toggleHeading({ level: 6 }).run() },
+    paragraph: { name: 'paragraph', icon: 'lucide:paragraph', action: () => editor.value?.chain().focus().setParagraph().run() },
+    bullist: { name: 'bulletList', icon: 'lucide:list', action: () => editor.value?.chain().focus().toggleBulletList().run() },
+    numlist: { name: 'orderedList', icon: 'lucide:list-ordered', action: () => editor.value?.chain().focus().toggleOrderedList().run() },
+    alignleft: { name: 'textAlign', attrs: { align: 'left' }, icon: 'lucide:align-left', action: () => editor.value?.chain().focus().setTextAlign('left').run() },
+    aligncenter: { name: 'textAlign', attrs: { align: 'center' }, icon: 'lucide:align-center', action: () => editor.value?.chain().focus().setTextAlign('center').run() },
+    alignright: { name: 'textAlign', attrs: { align: 'right' }, icon: 'lucide:align-right', action: () => editor.value?.chain().focus().setTextAlign('right').run() },
+    alignjustify: { name: 'textAlign', attrs: { align: 'justify' }, icon: 'lucide:align-justify', action: () => editor.value?.chain().focus().setTextAlign('justify').run() },
+    link: { name: 'link', icon: 'lucide:link', action: setLink },
+    image: { name: 'image', icon: 'lucide:image', action: insertImage },
+    table: { name: 'table', icon: 'lucide:table', action: insertTable },
+    blockquote: { name: 'blockquote', icon: 'lucide:quote', action: insertBlockquote },
+    hr: { name: 'horizontalRule', icon: 'lucide:minus', action: insertHorizontalRule },
+    codeblock: { name: 'codeBlock', icon: 'lucide:file-code', action: toggleCodeBlock },
+    clear: { name: 'clearFormat', icon: 'lucide:eraser', action: clearFormat },
+    undo: { name: 'undo', icon: 'lucide:undo', action: undo },
+    redo: { name: 'redo', icon: 'lucide:redo', action: redo },
+  };
+
+  const customButtonsMap: Record<string, ButtonConfig> = {};
+
+  customButtons.forEach((btn) => {
+    const createAction = () => {
+      if (btn.format && editor.value) {
+        const formats = effectiveConfig.value.formats || {};
+        const format = formats[btn.format];
+        if (format) {
+          if (format.inline || (!format.block && !format.wrapper)) {
+            editor.value.chain().focus().toggleMark(btn.format).run();
+          } else if (format.block) {
+            const isActive = editor.value.isActive(btn.format);
+            if (isActive) {
+              editor.value.chain().focus().setNode('paragraph').run();
+            } else {
+              editor.value.chain().focus().setNode(btn.format).run();
+            }
+          } else if (format.wrapper) {
+            const isActive = editor.value.isActive(btn.format);
+            if (isActive) {
+              editor.value.chain().focus().setNode('paragraph').run();
+            } else {
+              editor.value.chain().focus().wrapIn(btn.format).run();
+            }
+          }
+        }
+      } else if (btn.onAction) {
+        if (typeof btn.onAction === 'function') {
+          btn.onAction(editor.value);
+        } else if (typeof btn.onAction === 'string') {
+          const action = buttonActions[btn.onAction];
+          if (action) {
+            action(editor.value);
+          }
+        }
+      }
+    };
+
+    customButtonsMap[btn.name] = {
+      name: btn.name,
+      icon: btn.icon || 'lucide:circle',
+      text: btn.text,
+      tooltip: btn.tooltip,
+      action: createAction,
+    };
+  });
+
+  return { ...baseButtons, ...customButtonsMap };
+});
+
+const getButtonConfig = (key: string): ButtonConfig | undefined => {
+  return availableButtons.value[key];
+};
+
+const isButtonActive = (key: string): boolean => {
+  const config = getButtonConfig(key);
+  if (!config || !editor.value) return false;
+  if (config.attrs) {
+    return isActive(config.name, config.attrs).value;
+  }
+  return isActive(config.name).value;
+};
+
+onBeforeUnmount(() => {
+  isMounted.value = false;
+  const editorInstance = editor.value;
+  if (editorInstance) {
+    try {
+      editorInstance.destroy();
+    } catch {
+    }
+  }
+});
+
+onUnmounted(() => {
+  isMounted.value = false;
+});
+
+
 </script>
 
 <template>
   <div class="rich-text-editor">
-    
-    <div
-      v-if="isLoading"
-      class="flex items-center justify-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700"
-    >
-      <div class="text-center">
-        <div
-          class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-3"
-        ></div>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          Loading rich text editor...
-        </p>
-      </div>
-    </div>
+    <Teleport to="body">
+      <div
+        v-if="isResizing && previewStyle"
+        ref="previewLayerRef"
+        class="fixed pointer-events-none z-50 border-2 border-dashed border-primary-500 dark:border-primary-400 bg-primary-500/5 dark:bg-primary-400/5 rounded-md"
+        :style="previewStyle"
+      ></div>
+    </Teleport>
 
     <div
-      v-else-if="isError"
-      class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
-    >
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg
-            class="h-5 w-5 text-red-400 dark:text-red-500"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-red-800 dark:text-red-300">
-            Rich text editor failed to load
-          </h3>
-          <p class="text-sm text-red-700 dark:text-red-400 mt-1">
-            Please refresh the page to try again.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-else
-      ref="containerRef"
-      class="rich-text-editor-container rounded-md overflow-hidden relative border transition-all duration-300"
+      v-if="editor"
+      class="rich-text-editor-wrapper inline-block w-full"
       :class="[
-        isFocused 
-          ? 'border-0 ring-3 ring-primary' 
-          : 'border-0',
-        !isResizing ? 'transition-[height] duration-300 ease-out' : ''
+        'rounded-md transition-all duration-200 ring-3',
+        isFocused
+          ? 'ring-primary z-10'
+          : 'ring-gray-200 dark:ring-gray-700',
+        props.disabled ? 'opacity-60 cursor-not-allowed' : '',
       ]"
-      :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
     >
-      <textarea :id="textareaId"></textarea>
+      <div
+        ref="containerRef"
+        class="overflow-hidden relative flex flex-col rounded-md transition-all duration-200"
+        :class="[
+          props.disabled ? 'bg-gray-50 dark:bg-gray-800/50' : '',
+          !isResizing ? 'transition-[height] duration-300 ease-out' : ''
+        ]"
+        :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
+      >
+      <div class="border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-2 flex flex-wrap gap-1 shrink-0"
+           :class="{ 'pointer-events-none': props.disabled }">
+        <template v-for="(group, groupIndex) in toolbarButtons" :key="'group-' + groupIndex">
+          <div v-if="groupIndex > 0" class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <button
+            v-for="key in group"
+            :key="key"
+            :class="[
+              getButtonClass(isButtonActive(key), disabled),
+              getButtonConfig(key)?.text ? 'px-2' : 'min-w-[32px]'
+            ]"
+            :disabled="disabled || !getButtonConfig(key)"
+            :title="getButtonConfig(key)?.tooltip"
+            class="flex items-center justify-center h-8"
+            @click="getButtonConfig(key)?.action && handleButtonClick(getButtonConfig(key)!.action, $event)"
+          >
+            <template v-if="getButtonConfig(key)?.text">
+              <span class="text-xs font-medium whitespace-nowrap">{{ getButtonConfig(key)?.text }}</span>
+            </template>
+            <template v-else-if="getButtonConfig(key)?.icon">
+              <Icon :name="(getButtonConfig(key)?.icon) || 'lucide:help-circle'" class="w-4 h-4" />
+            </template>
+          </button>
+        </template>
+      </div>
 
-      <Teleport to="body">
-        <div
-          v-if="isResizing && previewStyle"
-          ref="previewLayerRef"
-          class="fixed pointer-events-none z-50 border-2 border-dashed border-brand-500 dark:border-brand-400 bg-brand-500/5 rounded-md"
-          :style="previewStyle"
-        ></div>
-      </Teleport>
-      
+      <div
+        class="rich-text-editor-content-wrapper flex-1 overflow-hidden relative"
+        :class="{ 'pointer-events-none': props.disabled }"
+        @click="handleEditorClick"
+      >
+        <EditorContent
+          :editor="editor"
+          class="rich-text-editor-content p-4 focus:outline-none h-full"
+        />
+      </div>
+
       <div
         ref="resizeHandleRef"
         @mousedown="handleMouseDown"
         class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-gray-600/50 dark:hover:bg-gray-500/50 transition-colors group z-50 select-none"
-        :class="{ 'bg-gray-600/50 dark:bg-gray-500/50': isResizing }"
+        :class="{ 'bg-gray-600/50 dark:bg-gray-500/50': isResizing, 'pointer-events-none': props.disabled }"
         style="touch-action: none; pointer-events: auto;"
       >
         <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
@@ -734,95 +763,76 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
+    </div>
+
+    <CommonModal v-model="linkModalOpen">
+      <template #title>Add Link</template>
+      <template #body>
+        <div class="space-y-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">URL</label>
+          <input
+            v-model="linkUrl"
+            type="text"
+            placeholder="https://example.com"
+            autofocus
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            @keydown.enter="confirmLink"
+          />
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            @click="linkModalOpen = false"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+            @click="confirmLink"
+          >
+            Add Link
+          </button>
+        </div>
+      </template>
+    </CommonModal>
+
+    <CommonModal v-model="imageModalOpen">
+      <template #title>Add Image</template>
+      <template #body>
+        <div class="space-y-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Image URL</label>
+          <input
+            v-model="imageUrl"
+            type="text"
+            placeholder="https://example.com/image.jpg"
+            autofocus
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            @keydown.enter="confirmImage"
+          />
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            @click="imageModalOpen = false"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+            @click="confirmImage"
+          >
+            Add Image
+          </button>
+        </div>
+      </template>
+    </CommonModal>
   </div>
 </template>
-
-<style lang="scss">
-
-.tox .tox-edit-area::before {
-  border: none !important;
-}
-
-.tox .tox-tinymce {
-  border: none !important;
-}
-
-.tox .tox-tinymce--focus {
-  outline: none !important;
-}
-
-.tox .tox-button {
-  color: rgb(31, 41, 55) !important;
-}
-
-.dark .tox .tox-button {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.tox .tox-button:hover:not(:disabled) {
-  background: rgb(249, 250, 251) !important;
-}
-
-.dark .tox .tox-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.05) !important;
-}
-
-.tox .tox-button--enabled {
-  color: rgb(31, 41, 55) !important;
-}
-
-.dark .tox .tox-button--enabled {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.tox .tox-button--active {
-  background: rgb(249, 250, 251) !important;
-  color: rgb(31, 41, 55) !important;
-}
-
-.dark .tox .tox-button--active {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.tox .tox-icon {
-  color: rgb(31, 41, 55) !important;
-}
-
-.dark .tox .tox-icon {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.tox .tox-button--enabled .tox-icon {
-  color: rgb(31, 41, 55) !important;
-}
-
-.dark .tox .tox-button--enabled .tox-icon {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.tox .tox-toolbar__group {
-  border-right-color: rgb(209, 213, 219) !important;
-}
-
-.dark .tox .tox-toolbar__group {
-  border-right-color: rgb(55, 65, 81) !important;
-}
-
-.tox .tox-statusbar {
-  color: rgb(107, 114, 128) !important;
-}
-
-.dark .tox .tox-statusbar {
-  color: rgba(255, 255, 255, 0.5) !important;
-}
-
-.tox .tox-statusbar__text-container {
-  color: rgb(107, 114, 128) !important;
-}
-
-.dark .tox .tox-statusbar__text-container {
-  color: rgba(255, 255, 255, 0.5) !important;
-}
-
-</style>

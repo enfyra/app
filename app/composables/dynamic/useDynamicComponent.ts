@@ -121,7 +121,6 @@ import {
   useGlobalState,
   // @ts-ignore
   useConfirm,
-  // @ts-ignore
   useEnfyraAuth,
   // @ts-ignore
   usePermissions,
@@ -133,7 +132,6 @@ import {
   useApi,
   // @ts-ignore
   useToast,
-  // @ts-ignore
   useEnfyra
 } from "#imports";
 
@@ -200,7 +198,6 @@ export const useDynamicComponent = () => {
     try {
       const response = await fetch(`/api/packages?name=${encodeURIComponent(packageName)}&format=json`);
       if (!response.ok) {
-        console.warn(`[fetchPackageMetadata] Failed to fetch metadata for ${packageName}: ${response.statusText}`);
         return { name: packageName, dependencies: [], exports: [] };
       }
 
@@ -211,7 +208,6 @@ export const useDynamicComponent = () => {
         exports: bundleData.__exports || [],
       };
     } catch (error) {
-      console.error(`[fetchPackageMetadata] Error fetching metadata for ${packageName}:`, error);
       return { name: packageName, dependencies: [], exports: [] };
     }
   };
@@ -226,7 +222,6 @@ export const useDynamicComponent = () => {
         return;
       }
       if (visiting.has(pkgName)) {
-        console.warn(`[topologicalSort] Circular dependency detected involving ${pkgName}`);
         return;
       }
 
@@ -320,18 +315,6 @@ export const useDynamicComponent = () => {
 
         return executedResult;
       } catch (error: any) {
-        console.error(`[loadSinglePackage] ${packageName} ERROR:`, error);
-        const errorMessage = error?.message || String(error);
-        const isModuleResolutionError =
-          errorMessage.includes('Failed to resolve module specifier') ||
-          errorMessage.includes('Relative references must start with') ||
-          errorMessage.includes('Failed to fetch dynamically imported module') ||
-          errorMessage.includes('404') ||
-          errorMessage.includes('ERR_ABORTED');
-
-        if (!isModuleResolutionError && !options.silent) {
-          console.warn(`Failed to import package ${packageName}:`, error);
-        }
         packagesObject[packageName] = null;
         return null;
       } finally {
@@ -346,7 +329,6 @@ export const useDynamicComponent = () => {
   const detectPackages = (code: string): string[] => {
     const packages: string[] = [];
 
-    // Pattern 1: const { chartjs, vue_chartjs } = await getPackages()
     const destructuringPattern = /const\s*\{([^}]+)\}\s*=\s*(?:await\s+)?getPackages\(\)/g;
     const destructuringMatches = [...code.matchAll(destructuringPattern)];
     for (const match of destructuringMatches) {
@@ -357,13 +339,11 @@ export const useDynamicComponent = () => {
       }
     }
 
-    // Pattern 2: const pkgs = await getPackages(); pkgs['chart.js']
     const variablePattern = /const\s+(\w+)\s*=\s*(?:await\s+)?getPackages\(\)/;
     const variableMatch = code.match(variablePattern);
     if (variableMatch && variableMatch[1]) {
       const varName = variableMatch[1];
 
-      // Find all access patterns: pkgs['name'], pkgs["name"], pkgs.name
       const accessPattern = new RegExp(`${varName}\\[(['"])([\\w./-]+)\\1\\]|${varName}\\.([\\w-]+)`, 'g');
       const accessMatches = [...code.matchAll(accessPattern)];
 
@@ -571,16 +551,12 @@ export const useDynamicComponent = () => {
         useLazyFetch,
         useHead,
         useSeoMeta,
+        useEnfyra
       };
 
       Object.entries(composables).forEach(([key, composable]) => {
         if (typeof composable === "function") {
           g[key] = composable;
-        } else {
-          console.warn(
-            `Extension composable ${key} is not a function`,
-            composable
-          );
         }
       });
 
@@ -604,7 +580,7 @@ export const useDynamicComponent = () => {
       }
 
       if (!g.getPackages) {
-        g.getPackages = getPackages;
+        g.getPackages = (packageNames?: string[]) => getPackages(packageNames);
         if (typeof window !== 'undefined') {
           (window as any).getPackages = g.getPackages;
         }
@@ -699,23 +675,10 @@ export const useDynamicComponent = () => {
 
       if (originalCode) {
         const requiredPackages = detectPackages(originalCode);
-        const metadataMap = new Map<string, PackageMetadata>();
-
-        for (const pkg of requiredPackages) {
-          const metadata = await fetchPackageMetadata(pkg);
-          metadataMap.set(pkg, metadata);
-        }
-
-        const sortedPackages = topologicalSort(requiredPackages, metadataMap);
-
-        for (const pkg of sortedPackages) {
-          await loadSinglePackage(pkg, packagesObject, { useCacheBuster: true, silent: true });
-        }
+        await getPackages(requiredPackages);
       }
 
-      const getPackagesWrapper = () => {
-        return packagesObject;
-      };
+      const getPackagesWrapper = (packageNames?: string[]) => getPackages(packageNames);
       g.getPackages = getPackagesWrapper;
       if (typeof window !== 'undefined') {
         (window as any).getPackages = getPackagesWrapper;
@@ -819,22 +782,8 @@ export const useDynamicComponent = () => {
         );
       }
 
-      // Validate component
       if (typeof component !== "object" || component === null) {
         throw new Error(`Invalid component: ${typeof component}. Component must be an object.`);
-      }
-
-      // Check if component has at least one of: render, setup, template, hoặc là một function
-      const isValidComponent = 
-        typeof component === "function" ||
-        component.render ||
-        component.setup ||
-        component.template ||
-        component.__v_isVNode !== undefined;
-
-      if (!isValidComponent) {
-        console.warn('Component may not be valid Vue component:', component);
-        // Vẫn tiếp tục, có thể là component hợp lệ nhưng không có các properties trên
       }
 
       const wrappedComponent = markRaw({
@@ -848,42 +797,13 @@ export const useDynamicComponent = () => {
     }
   };
 
-  const getPackages = async (includeExecutedCode = true) => {
+  const getPackages = async (packageNames?: string[]) => {
     try {
       if (typeof window === "undefined") {
         throw new Error("Packages can only be loaded on client-side");
       }
 
       const g = globalThis as any;
-
-      if (includeExecutedCode && g.packages && Object.keys(g.packages).length > 0) {
-        const hasNullPackages = Object.values(g.packages).some((pkg: any) => pkg === null);
-        if (!hasNullPackages) {
-          return g.packages;
-        }
-      }
-
-      const response = await fetch("/api/package_definition?filter%5Btype%5D%5B_eq%5D=App&limit=-1");
-      if (!response.ok) {
-        throw new Error(`Failed to fetch packages list: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const packages = data.data || [];
-
-      if (!includeExecutedCode) {
-        const packagesObject: Record<string, any> = {};
-        packages.forEach((pkg: any) => {
-          packagesObject[pkg.name] = {
-            name: pkg.name,
-            version: pkg.version,
-            description: pkg.description,
-            dependencies: pkg.dependencies || {},
-          };
-        });
-        return packagesObject;
-      }
-
       const packagesObject: Record<string, any> = g.packages || {};
 
       if (!g.packages) {
@@ -893,16 +813,18 @@ export const useDynamicComponent = () => {
         }
       }
 
-      const packageNames = packages
-        .filter((pkg: any) =>
-          !pkg.name.startsWith('@types/') &&
-          !(pkg.name.includes('/') && !pkg.name.startsWith('@'))
-        )
-        .map((pkg: any) => pkg.name);
+      if (!packageNames || packageNames.length === 0) {
+        return packagesObject;
+      }
 
-      const packagesToLoad = packageNames.filter(
-        (pkgName: string) => !packagesObject[pkgName] || packagesObject[pkgName] === null
+      const uniquePackageNames = [...new Set(packageNames)];
+      const packagesToLoad = uniquePackageNames.filter(
+        (pkgName: string) => packagesObject[pkgName] === undefined || packagesObject[pkgName] === null
       );
+
+      if (packagesToLoad.length === 0) {
+        return packagesObject;
+      }
 
       const metadataMap = new Map<string, PackageMetadata>();
 
