@@ -741,7 +741,7 @@ onUnmounted(() => {
       </div>
 
       <div
-        class="rich-text-editor-content-wrapper flex-1 overflow-hidden relative"
+        class="rich-text-editor-content-wrapper flex-1 overflow-y-auto relative"
         :class="{ 'pointer-events-none': props.disabled }"
         @click="handleEditorClick"
       >

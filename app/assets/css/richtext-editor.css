@@ -2,8 +2,7 @@
   outline: none !important;
   border: none !important;
   box-shadow: none !important;
-  height: 100%;
-  overflow-y: auto;
+  min-height: 100%;
   cursor: text;
   caret-color: #1f2937;
 }
@@ -50,7 +49,6 @@
 .rich-text-editor-content,
 .rich-text-editor-content-wrapper {
   cursor: text;
-  min-height: 100%;
   outline: none;
 }
 
