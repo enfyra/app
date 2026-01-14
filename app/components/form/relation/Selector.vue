@@ -37,7 +37,6 @@ const targetTable = computed(() => {
 });
 
 const targetTableName = computed(() => targetTable.value?.name || "");
-const { getIncludeFields, definition } = useSchema(targetTableName);
 
 const { isMounted } = useMounted();
 
@@ -63,7 +62,6 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchData,
-  error: apiError,
 } = useApi(() => targetRoute.value || `/${targetTable.value?.name}`, {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
@@ -71,7 +69,7 @@ const {
       : {};
 
     const query = {
-      fields: getIncludeFields(),
+      fields: "*",
       page: page.value,
       limit,
       meta: "totalCount,filterCount",
