@@ -80,19 +80,30 @@
   outline: 3px solid #68cef8;
 }
 
+.rich-text-editor :deep(.tableWrapper) {
+  overflow-x: auto;
+  margin: 1em 0;
+  position: relative;
+}
+
 .rich-text-editor :deep(table) {
   border-collapse: collapse;
-  table-layout: fixed;
-  width: 100%;
-  margin: 1em 0;
-  overflow: visible;
+  table-layout: auto;
+  width: 100% !important;
+  min-width: 100% !important;
+  margin: 0;
+}
+
+.rich-text-editor :deep(table col) {
+  width: auto !important;
+  min-width: 80px !important;
 }
 
 .rich-text-editor :deep(td),
 .rich-text-editor :deep(th) {
-  min-width: 1em;
+  min-width: 80px;
   border: 1px solid #dfe6e9;
-  padding: 6px 8px;
+  padding: 8px 12px;
   vertical-align: top;
   box-sizing: border-box;
   position: relative;
@@ -135,18 +146,6 @@
   width: 4px;
   background-color: #adf;
   pointer-events: none;
-}
-
-.rich-text-editor :deep(.TableWrapper) {
-  overflow-x: auto;
-  margin: 1em 0;
-  position: relative;
-}
-
-.rich-text-editor :deep(.TableWrapper table) {
-  border-collapse: collapse;
-  table-layout: fixed;
-  width: 100%;
 }
 
 .rich-text-editor :deep(table p) {
@@ -258,4 +257,87 @@
 .rich-text-editor :deep(.dark) ol,
 .rich-text-editor :deep(html.dark .ProseMirror ol) {
   color: #e5e7eb;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  overflow-y: visible;
+  margin: 1em 0;
+  position: relative;
+}
+
+.tableWrapper table {
+  border-collapse: collapse;
+  table-layout: auto;
+  width: 100%;
+}
+
+.tableWrapper table td,
+.tableWrapper table th {
+  min-width: 80px;
+  border: 1px solid #dfe6e9;
+  padding: 8px 12px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tableWrapper table th {
+  font-weight: bold;
+  text-align: left;
+  background-color: #f8f9fa;
+}
+
+.dark .tableWrapper table th,
+html.dark .tableWrapper table th {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark .tableWrapper table td,
+html.dark .tableWrapper table td {
+  border-color: #374151;
+}
+
+.dark .tableWrapper table,
+html.dark .tableWrapper table {
+  border-color: #4b5563;
+}
+
+table {
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+table td,
+table th {
+  border: 1px solid #dfe6e9;
+  padding: 8px 12px;
+  min-width: 80px;
+}
+
+table th {
+  font-weight: bold;
+  text-align: left;
+  background-color: #f8f9fa;
+}
+
+.dark table th,
+html.dark table th {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark table td,
+html.dark table td {
+  border-color: #374151;
+}
+
+.table-settings-btn {
+  cursor: pointer;
+  padding: 0;
+}
+
+.table-settings-btn svg {
+  pointer-events: none;
 }
