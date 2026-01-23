@@ -270,6 +270,7 @@ const editor = useEditor({
   content: ensureString(props.modelValue),
   extensions: [
     StarterKit.configure({
+      code: false,
       codeBlock: false,
       link: false,
       heading: {
@@ -287,7 +288,11 @@ const editor = useEditor({
     Placeholder.configure({
       placeholder: 'Type something...',
     }) as AnyExtension,
-    Underline as AnyExtension,
+    Underline.configure({
+      HTMLAttributes: {
+        class: 'underline',
+      },
+    }) as AnyExtension,
     TextAlign.configure({
       types: ['heading', 'paragraph'],
       alignments: ['left', 'center', 'right', 'justify'],
@@ -633,7 +638,29 @@ const addRowAfter = () => {
 };
 
 const deleteRow = () => {
-  editor.value?.chain().focus().deleteRow().run();
+  if (!editor.value) return;
+
+  const { state } = editor.value;
+  let lastRowCellPos: number | null = null;
+
+  state.doc.descendants((node, pos) => {
+    if (node.type.name === 'table') {
+      node.descendants((child, offset) => {
+        if (child.type.name === 'tableCell' || child.type.name === 'tableHeader') {
+          lastRowCellPos = pos + offset + 1;
+        }
+      });
+    }
+  });
+
+  if (lastRowCellPos !== null) {
+    editor.value?.chain()
+      .focus()
+      .setTextSelection(lastRowCellPos)
+      .deleteRow()
+      .run();
+  }
+
   tableModifyModalOpen.value = false;
 };
 
@@ -648,7 +675,35 @@ const addColumnAfter = () => {
 };
 
 const deleteColumn = () => {
-  editor.value?.chain().focus().deleteColumn().run();
+  if (!editor.value) return;
+
+  const { state } = editor.value;
+  let maxColIndex = -1;
+  let targetPos: number | null = null;
+
+  state.doc.descendants((node, pos) => {
+    if (node.type.name === 'table') {
+      node.descendants((child, offset) => {
+        if (child.type.name === 'tableCell' || child.type.name === 'tableHeader') {
+          const attrs = child.attrs;
+          const colIndex = attrs.colindex || 0;
+          if (colIndex > maxColIndex) {
+            maxColIndex = colIndex;
+            targetPos = pos + offset + 1;
+          }
+        }
+      });
+    }
+  });
+
+  if (targetPos !== null) {
+    editor.value?.chain()
+      .focus()
+      .setTextSelection(targetPos)
+      .deleteColumn()
+      .run();
+  }
+
   tableModifyModalOpen.value = false;
 };
 
