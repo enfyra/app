@@ -68,6 +68,11 @@ function camelToKebab(str: string): string {
 
 const linkModalOpen = ref(false);
 const imageModalOpen = ref(false);
+const tableMenuOpen = ref(false);
+const tableMenuRef = ref<HTMLDivElement>();
+const tableMenuStyle = ref<{ top: string; left: string } | null>(null);
+const tableModifyModalOpen = ref(false);
+const tableObserver = ref<MutationObserver | null>(null);
 const linkUrl = ref('');
 const imageUrl = ref('');
 
@@ -331,6 +336,68 @@ const editor = useEditor({
   onCreate: ({ editor }) => {
     if (editor) {
       isMounted.value = true;
+
+      const updateTableButtons = () => {
+        if (!editor || !tableObserver.value) return;
+
+        tableObserver.value.disconnect();
+
+        const tables = editor.view.dom.querySelectorAll('table');
+        const existingButtons = editor.view.dom.querySelectorAll('.table-settings-btn');
+
+        existingButtons.forEach(btn => btn.remove());
+
+        tables.forEach((table: HTMLElement) => {
+          const wrapper = table.closest('.tableWrapper');
+          if (wrapper) {
+            (wrapper as HTMLElement).style.position = 'relative';
+            (wrapper as HTMLElement).style.paddingTop = '32px';
+          }
+
+          const button = document.createElement('button');
+          button.className = 'table-settings-btn absolute z-20 w-8 h-8 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 rounded-md shadow-md flex items-center justify-center cursor-pointer transition-colors';
+          button.style.cssText = 'top: 4px; right: 0;';
+          button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>';
+          button.title = 'Table options';
+          button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            tableModifyModalOpen.value = true;
+          });
+
+          if (wrapper) {
+            wrapper.appendChild(button);
+          } else {
+            const newWrapper = document.createElement('div');
+            newWrapper.className = 'tableWrapper';
+            newWrapper.style.position = 'relative';
+            newWrapper.style.paddingTop = '32px';
+            table.parentNode?.insertBefore(newWrapper, table);
+            newWrapper.appendChild(table);
+            newWrapper.appendChild(button);
+          }
+        });
+
+        tableObserver.value.observe(editor.view.dom, {
+          childList: true,
+          subtree: true,
+        });
+      };
+
+      tableObserver.value = new MutationObserver(() => {
+        nextTick(updateTableButtons);
+      });
+
+      tableObserver.value.observe(editor.view.dom, {
+        childList: true,
+        subtree: true,
+      });
+
+      editor.on('selectionUpdate', () => {
+        nextTick(updateTableButtons);
+      });
+
+      nextTick(updateTableButtons);
     }
   },
 });
@@ -534,7 +601,84 @@ const confirmImage = () => {
 };
 
 const insertTable = () => {
-  editor.value?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  if (editor.value?.isActive('table')) {
+    tableMenuOpen.value = !tableMenuOpen.value;
+    if (tableMenuOpen.value) {
+      nextTick(() => {
+        const tableButton = document.querySelector('[data-table-button]') as HTMLElement;
+        if (tableButton) {
+          const rect = tableButton.getBoundingClientRect();
+          tableMenuStyle.value = {
+            top: `${rect.bottom + 8}px`,
+            left: `${rect.left}px`,
+          };
+        }
+      });
+    } else {
+      tableMenuStyle.value = null;
+    }
+  } else {
+    editor.value?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  }
+};
+
+const addRowBefore = () => {
+  editor.value?.chain().focus().addRowBefore().run();
+  tableModifyModalOpen.value = false;
+};
+
+const addRowAfter = () => {
+  editor.value?.chain().focus().addRowAfter().run();
+  tableModifyModalOpen.value = false;
+};
+
+const deleteRow = () => {
+  editor.value?.chain().focus().deleteRow().run();
+  tableModifyModalOpen.value = false;
+};
+
+const addColumnBefore = () => {
+  editor.value?.chain().focus().addColumnBefore().run();
+  tableModifyModalOpen.value = false;
+};
+
+const addColumnAfter = () => {
+  editor.value?.chain().focus().addColumnAfter().run();
+  tableModifyModalOpen.value = false;
+};
+
+const deleteColumn = () => {
+  editor.value?.chain().focus().deleteColumn().run();
+  tableModifyModalOpen.value = false;
+};
+
+const deleteTable = () => {
+  editor.value?.chain().focus().deleteTable().run();
+  tableModifyModalOpen.value = false;
+};
+
+const toggleHeaderColumn = () => {
+  editor.value?.chain().focus().toggleHeaderColumn().run();
+  tableModifyModalOpen.value = false;
+};
+
+const toggleHeaderRow = () => {
+  editor.value?.chain().focus().toggleHeaderRow().run();
+  tableModifyModalOpen.value = false;
+};
+
+const mergeCells = () => {
+  editor.value?.chain().focus().mergeCells().run();
+  tableModifyModalOpen.value = false;
+};
+
+const splitCell = () => {
+  editor.value?.chain().focus().splitCell().run();
+  tableModifyModalOpen.value = false;
+};
+
+const applyTableSize = () => {
+  tableModifyModalOpen.value = false;
 };
 
 const toggleCodeBlock = () => {
@@ -667,6 +811,9 @@ const isButtonActive = (key: string): boolean => {
 
 onBeforeUnmount(() => {
   isMounted.value = false;
+  if (tableObserver.value) {
+    tableObserver.value.disconnect();
+  }
   const editorInstance = editor.value;
   if (editorInstance) {
     try {
@@ -676,8 +823,27 @@ onBeforeUnmount(() => {
   }
 });
 
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target;
+  if (tableMenuRef.value && target instanceof window.Node && !tableMenuRef.value.contains(target)) {
+    tableMenuOpen.value = false;
+    tableMenuStyle.value = null;
+  }
+};
+
+watch(tableMenuOpen, (isOpen) => {
+  if (isOpen) {
+    nextTick(() => {
+      document.addEventListener('click', handleClickOutside);
+    });
+  } else {
+    document.removeEventListener('click', handleClickOutside);
+  }
+});
+
 onUnmounted(() => {
   isMounted.value = false;
+  document.removeEventListener('click', handleClickOutside);
 });
 
 
@@ -696,7 +862,7 @@ onUnmounted(() => {
 
     <div
       v-if="editor"
-      class="rich-text-editor-wrapper inline-block w-full"
+      class="rich-text-editor-wrapper inline-block w-full relative"
       :class="[
         'rounded-md transition-all duration-200 ring-3',
         isFocused
@@ -707,7 +873,7 @@ onUnmounted(() => {
     >
       <div
         ref="containerRef"
-        class="overflow-hidden relative flex flex-col rounded-md transition-all duration-200"
+        class="relative flex flex-col rounded-md transition-all duration-200"
         :class="[
           props.disabled ? 'bg-gray-50 dark:bg-gray-800/50' : '',
           !isResizing ? 'transition-[height] duration-300 ease-out' : ''
@@ -721,6 +887,7 @@ onUnmounted(() => {
           <button
             v-for="key in group"
             :key="key"
+            :data-table-button="key === 'table' ? '' : undefined"
             :class="[
               getButtonClass(isButtonActive(key), disabled),
               getButtonConfig(key)?.text ? 'px-2' : 'min-w-[32px]'
@@ -764,6 +931,101 @@ onUnmounted(() => {
       </div>
     </div>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="tableMenuOpen && tableMenuStyle"
+        ref="tableMenuRef"
+        class="fixed z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg py-1 min-w-[180px]"
+        :style="{ top: tableMenuStyle.top, left: tableMenuStyle.left, maxHeight: '300px', overflowY: 'auto' }"
+        @click.stop
+      >
+        <div class="px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+          Table Options
+        </div>
+        <button
+          @click="addRowBefore"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:arrow-up" class="w-4 h-4" />
+          Add Row Before
+        </button>
+        <button
+          @click="addRowAfter"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:arrow-down" class="w-4 h-4" />
+          Add Row After
+        </button>
+        <button
+          @click="deleteRow"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:trash-2" class="w-4 h-4" />
+          Delete Row
+        </button>
+        <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+        <button
+          @click="addColumnBefore"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:arrow-left" class="w-4 h-4" />
+          Add Column Before
+        </button>
+        <button
+          @click="addColumnAfter"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:arrow-right" class="w-4 h-4" />
+          Add Column After
+        </button>
+        <button
+          @click="deleteColumn"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:trash-2" class="w-4 h-4" />
+          Delete Column
+        </button>
+        <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+        <button
+          @click="toggleHeaderRow"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:header" class="w-4 h-4" />
+          Toggle Header Row
+        </button>
+        <button
+          @click="toggleHeaderColumn"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:columns" class="w-4 h-4" />
+          Toggle Header Column
+        </button>
+        <button
+          @click="mergeCells"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:combine" class="w-4 h-4" />
+          Merge Cells
+        </button>
+        <button
+          @click="splitCell"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+        >
+          <Icon name="lucide:square" class="w-4 h-4" />
+          Split Cell
+        </button>
+        <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+        <button
+          @click="deleteTable"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2"
+        >
+          <Icon name="lucide:trash" class="w-4 h-4" />
+          Delete Table
+        </button>
+      </div>
+    </Teleport>
+
 
     <CommonModal v-model="linkModalOpen">
       <template #title>Add Link</template>
@@ -830,6 +1092,71 @@ onUnmounted(() => {
             @click="confirmImage"
           >
             Add Image
+          </button>
+        </div>
+      </template>
+    </CommonModal>
+
+    <CommonModal v-model="tableModifyModalOpen">
+      <template #title>Table Options</template>
+      <template #body>
+        <div class="space-y-4">
+          <div>
+            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 px-1">Add</div>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                @click="addRowAfter"
+                class="px-3 py-2 text-sm text-left bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center gap-2"
+              >
+                <Icon name="lucide:plus" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <span>Add Row</span>
+              </button>
+              <button
+                @click="addColumnAfter"
+                class="px-3 py-2 text-sm text-left bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center gap-2"
+              >
+                <Icon name="lucide:plus" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <span>Add Column</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 px-1">Remove</div>
+            <div class="space-y-2">
+              <button
+                @click="deleteRow"
+                class="w-full px-3 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex items-center gap-2"
+              >
+                <Icon name="lucide:minus" class="w-4 h-4" />
+                <span>Delete Row</span>
+              </button>
+              <button
+                @click="deleteColumn"
+                class="w-full px-3 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex items-center gap-2"
+              >
+                <Icon name="lucide:minus" class="w-4 h-4" />
+                <span>Delete Column</span>
+              </button>
+              <button
+                @click="deleteTable"
+                class="w-full px-3 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex items-center gap-2"
+              >
+                <Icon name="lucide:trash" class="w-4 h-4" />
+                <span>Delete Table</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end">
+          <button
+            type="button"
+            class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors font-medium"
+            @click="tableModifyModalOpen = false"
+          >
+            Cancel
           </button>
         </div>
       </template>
