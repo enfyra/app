@@ -92,13 +92,13 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       ) {
         const responses = await Promise.all(
           executeOpts.files.map(async (fileObj: FormData) => {
-            return $fetch<T>(basePath, {
+            return $fetch(basePath, {
               baseURL: fullBaseURL,
               method: method as any,
               body: fileObj,
               headers: options.headers,
               query: finalQuery,
-            });
+            }) as Promise<T>;
           })
         );
 

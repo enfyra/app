@@ -50,7 +50,7 @@ export function useMenuRegistry() {
           const componentName = processedItem.component;
           const resolved = resolveComponent(componentName as any);
           if (resolved && typeof resolved !== "string") {
-            processedItem.component = markRaw(resolved);
+            (processedItem as any).component = markRaw(resolved);
           }
         } catch (error) {
           console.warn(
@@ -218,7 +218,7 @@ export function useMenuRegistry() {
           label: table.label || table.display_name || tableName,
           route: `/data/${tableName}`,
           icon: table.icon || "lucide:database",
-          parent: dataParentId,
+          parent: dataParentId as any,
           type: "Menu",
           permission: {
             or: [

@@ -839,6 +839,16 @@ export const useDynamicComponent = () => {
         await loadSinglePackage(pkgName, packagesObject, { useCacheBuster: true, silent: true });
       }
 
+      const failedPackages = sortedPackages.filter(
+        (pkgName) => packagesObject[pkgName] === null || packagesObject[pkgName] === undefined
+      );
+
+      if (failedPackages.length > 0) {
+        throw new Error(
+          `Extension uses package(s) that are not installed: ${failedPackages.join(', ')}. Please install these packages first.`
+        );
+      }
+
       g.packages = packagesObject;
       if (typeof window !== 'undefined') {
         (window as any).packages = packagesObject;

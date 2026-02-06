@@ -22,7 +22,7 @@ export interface MenuDefinition {
   updatedAt?: string;
 }
 
-export interface MenuTreeItem extends Omit<MenuDefinition, 'children'> {
+export interface MenuTreeItem extends Omit<MenuDefinition, 'children' | 'id'> {
   id: string;
   isDropdown: boolean;
   children: MenuTreeItem[];
