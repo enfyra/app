@@ -479,7 +479,7 @@ function getColumnLabel(columnId: string) {
                       : '',
                   ]"
                 >
-                  <div class="h-4 skeleton-base rounded" :style="{ width: headerIndex % 3 === 0 ? '80%' : headerIndex % 3 === 1 ? '60%' : '90%' }"></div>
+                  <div class="h-4 skeleton-base rounded" :style="{ width: (headerIndex as number) % 3 === 0 ? '80%' : (headerIndex as number) % 3 === 1 ? '60%' : '90%' }"></div>
                 </td>
               </tr>
             </template>
