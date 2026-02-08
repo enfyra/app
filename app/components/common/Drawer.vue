@@ -49,8 +49,8 @@ function close() {
   <Teleport to="body">
     <UDrawer
       v-if="hasContent"
-      :handle="props.handle"
-      :handle-only="props.handleOnly"
+      :handle="false"
+      handle-only
       v-model:open="isOpen"
       :direction="props.direction"
       :class="drawerClass"

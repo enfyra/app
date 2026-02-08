@@ -310,17 +310,17 @@ function getColumnLabel(columnId: string) {
           <div
             v-for="(row, index) in table.getRowModel().rows"
           :key="row.id"
-          class="rounded-2xl p-4 cursor-pointer transition-all border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-900/30 backdrop-blur-sm hover:bg-brand-50 dark:hover:bg-brand-500/20"
+          class="rounded-2xl p-4 cursor-pointer transition-all border border-gray-700/50 bg-gray-900/30 backdrop-blur-sm hover:bg-gray-800/40"
           @click="handleRowClick(row.original)"
         >
-          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-700/50">
+          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-700/50">
             <div class="flex-1">
               <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs text-gray-500 dark:text-gray-400">
+                <span class="text-xs text-gray-500">
                   ID: {{ getId(row.original) }}
                 </span>
               </div>
-              <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200">
+              <h4 class="text-base font-semibold text-gray-200">
                 {{ getPrimaryFieldValue(row) }}
               </h4>
             </div>
@@ -339,8 +339,8 @@ function getColumnLabel(columnId: string) {
               :key="cell.id"
               class="flex items-center justify-between text-sm"
             >
-              <span class="text-gray-500 dark:text-gray-400">{{ getColumnLabel(cell.column.id) }}</span>
-              <span class="text-gray-800 dark:text-gray-200 font-medium text-right flex-1 ml-4 truncate" :title="String(cell.getValue())">
+              <span class="text-gray-400">{{ getColumnLabel(cell.column.id) }}</span>
+              <span class="text-gray-200 font-medium text-right flex-1 ml-4 truncate" :title="String(cell.getValue())">
                 <component
                   v-if="typeof cell.column.columnDef.cell === 'function'"
                   :is="cell.column.columnDef.cell"
@@ -353,7 +353,7 @@ function getColumnLabel(columnId: string) {
 
           <div
             v-if="getCreatedAtValue(row) || getUpdatedAtValue(row)"
-            class="flex items-center gap-4 pt-3 border-t border-gray-200 dark:border-gray-700/50 text-xs text-gray-500 dark:text-gray-400"
+            class="flex items-center gap-4 pt-3 border-t border-gray-700/50 text-xs text-gray-500"
           >
             <span v-if="getCreatedAtValue(row)">
               Created: {{ formatDateTime(getCreatedAtValue(row)) }}
@@ -378,9 +378,9 @@ function getColumnLabel(columnId: string) {
         <div
           v-for="i in (props.skeletonRows || 5)"
           :key="`mobile-skeleton-${i}`"
-          class="rounded-2xl p-4 border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-900/30 animate-pulse"
+          class="rounded-2xl p-4 border border-gray-700/50 bg-gray-900/30 animate-pulse"
         >
-          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-700/50">
+          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-700/50">
             <div class="flex-1 space-y-2">
               <div class="h-3 skeleton-base rounded w-16"></div>
               <div class="h-5 skeleton-base rounded w-3/4"></div>
@@ -398,12 +398,12 @@ function getColumnLabel(columnId: string) {
     </div>
 
     <div
-      class="hidden lg:block overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03]"
+      class="hidden lg:block bg-white dark:bg-white/[0.03]"
     >
-      <div class="max-w-full overflow-x-auto custom-scrollbar">
+      <div class="max-w-full overflow-x-auto overflow-y-auto custom-scrollbar">
         <table class="min-w-full" aria-label="Data table">
-          <thead>
-            <tr class="border-b border-gray-200 dark:border-gray-700">
+          <thead >
+            <tr>
               <th
                 v-for="header in table?.getFlatHeaders() || []"
                 :key="header.id"
@@ -417,7 +417,7 @@ function getColumnLabel(columnId: string) {
                     ? 'overflow-hidden'
                     : '',
                   header.column.getCanSort() &&
-                    'cursor-pointer select-none hover:bg-brand-50 dark:hover:bg-brand-500/20 transition-colors',
+                    'cursor-pointer select-none hover:bg-gray-50 dark:hover:bg-white/5 transition-colors',
                 ]"
                 @click="header.column.getToggleSortingHandler()?.($event)"
                 scope="col"
@@ -463,7 +463,7 @@ function getColumnLabel(columnId: string) {
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody>
             <template v-if="loading">
               <tr v-for="i in (props.skeletonRows || 5)" :key="`skeleton-${i}`" class="animate-pulse">
                 <td
@@ -492,10 +492,10 @@ function getColumnLabel(columnId: string) {
               >
                 <tr
                   :class="[
-                    'group cursor-pointer transition-all duration-200 border-t border-gray-100 dark:border-gray-800',
+                    'group cursor-pointer transition-all duration-200',
                     selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
                       ? 'bg-brand-50 dark:bg-brand-500/10'
-                      : 'hover:bg-brand-50 dark:hover:bg-brand-500/20',
+                      : 'hover:bg-gray-50 dark:hover:bg-white/5',
                   ]"
                   @click="handleRowClick(row.original)"
                 >
@@ -533,7 +533,7 @@ function getColumnLabel(columnId: string) {
               <tr
                 v-else
                 :class="[
-                  'group cursor-pointer transition-all duration-200 border-t border-gray-100 dark:border-gray-800',
+                  'group cursor-pointer transition-all duration-200',
                   selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
                     ? 'bg-brand-50 dark:bg-brand-500/10'
                     : 'hover:bg-brand-50 dark:hover:bg-brand-500/20',
