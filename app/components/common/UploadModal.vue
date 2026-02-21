@@ -204,6 +204,7 @@ const validateFile = (file: File): string | null => {
         return file.name?.toLowerCase().endsWith(type.toLowerCase()) ?? false;
       }
       if (type.includes("*")) {
+        if (type === "*/*") return true;
         const [mainType] = type.split("/");
         return mainType ? file.type.startsWith(mainType) : false;
       }
