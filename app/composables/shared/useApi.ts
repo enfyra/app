@@ -144,8 +144,12 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       return response;
     } catch (err) {
       const apiError = handleError(err, errorContext, (error, context) => {
-        const errorMessage = error?.data?.message || error?.message || "An error occurred";
-        
+        let errorMessage = error?.data?.message || error?.message || "An error occurred";
+
+        if (Array.isArray(errorMessage)) {
+          errorMessage = errorMessage.join(". ");
+        }
+
         toast.add({
           title: "Error",
           description: errorMessage,
