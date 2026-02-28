@@ -630,6 +630,7 @@ const {
 watch(editHandlerData, (data) => {
   if (data?.data?.[0]) {
     editHandlerForm.value = { ...data.data[0] };
+    editHandlerForm.value.route = { id: routeId.value };
   }
 });
 
@@ -678,10 +679,11 @@ async function editHandler(handler: any) {
     createHandler();
     return;
   }
-  
+
   editingHandlerId.value = getId(handler);
   editHandlerErrors.value = {};
   await fetchEditHandler();
+  editHandlerForm.value.route = { id: routeId.value };
   showEditHandlerDrawer.value = true;
 }
 
@@ -954,6 +956,7 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         if (editPreHookData.value?.data?.[0]) {
           editHookType.value = 'pre';
           editHookForm.value = { ...editPreHookData.value.data[0] };
+          editHookForm.value.route = { id: routeId.value };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -965,6 +968,7 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         if (editPostHookData.value?.data?.[0]) {
           editHookType.value = 'post';
           editHookForm.value = { ...editPostHookData.value.data[0] };
+          editHookForm.value.route = { id: routeId.value };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -973,14 +977,16 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         }
       } else {
         await Promise.all([fetchEditPreHook(), fetchEditPostHook()]);
-        
+
         if (editPreHookData.value?.data?.[0]) {
           editHookType.value = 'pre';
           editHookForm.value = { ...editPreHookData.value.data[0] };
+          editHookForm.value.route = { id: routeId.value };
           showEditHookDrawer.value = true;
         } else if (editPostHookData.value?.data?.[0]) {
           editHookType.value = 'post';
           editHookForm.value = { ...editPostHookData.value.data[0] };
+          editHookForm.value.route = { id: routeId.value };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -1041,6 +1047,7 @@ async function editHook(hook: any) {
     if (editPreHookData.value?.data?.[0]) {
       editHookType.value = 'pre';
       editHookForm.value = { ...editPreHookData.value.data[0] };
+      editHookForm.value.route = { id: routeId.value };
       showEditHookDrawer.value = true;
       router.push({
         query: { ...route.query, editHook: hookId, editHookType: 'pre' }
@@ -1051,6 +1058,7 @@ async function editHook(hook: any) {
     if (editPostHookData.value?.data?.[0]) {
       editHookType.value = 'post';
       editHookForm.value = { ...editPostHookData.value.data[0] };
+      editHookForm.value.route = { id: routeId.value };
       showEditHookDrawer.value = true;
       router.push({
         query: { ...route.query, editHook: hookId, editHookType: 'post' }
