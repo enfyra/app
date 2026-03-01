@@ -74,6 +74,8 @@ const tableMenuStyle = ref<{ top: string; left: string } | null>(null);
 const tableModifyModalOpen = ref(false);
 const linkUrl = ref('');
 const imageUrl = ref('');
+const canUndo = ref(false);
+const canRedo = ref(false);
 
 type ButtonGroup = string[];
 
@@ -81,7 +83,7 @@ const effectiveConfig = computed<RichTextEditorConfig>(() => {
   const base = enfyraConfig.richText || {};
   const override = props.editorConfig || {};
 
-  const defaultToolbar = 'undo redo | clear | h1 h2 h3 h4 h5 h6 | bold italic underline strike | bullist numlist | alignleft aligncenter alignright alignjustify | link image table blockquote hr';
+  const defaultToolbar = 'clear | h1 h2 h3 h4 h5 h6 | bold italic underline strike | bullist numlist | alignleft aligncenter alignright alignjustify | link image table blockquote hr';
 
   const customButtonNames = override.customButtons?.map(btn => btn.name) || [];
   const finalToolbar = customButtonNames.length > 0
@@ -270,6 +272,8 @@ const editor = useEditor({
   extensions: [
     StarterKit.configure({
       codeBlock: false,
+      code: false,
+      underline: false,
       link: false,
       heading: {
         levels: [1, 2, 3, 4, 5, 6],
@@ -286,7 +290,7 @@ const editor = useEditor({
     Placeholder.configure({
       placeholder: 'Type something...',
     }) as AnyExtension,
-    Underline as AnyExtension,
+    Underline,
     TextAlign.configure({
       types: ['heading', 'paragraph'],
       alignments: ['left', 'center', 'right', 'justify'],
@@ -338,7 +342,13 @@ const editor = useEditor({
   onCreate: ({ editor }) => {
     if (editor) {
       isMounted.value = true;
+      canUndo.value = editor.can().undo();
+      canRedo.value = editor.can().redo();
     }
+  },
+  onUpdate: ({ editor }) => {
+    canUndo.value = editor.can().undo();
+    canRedo.value = editor.can().redo();
   },
 });
 
@@ -801,47 +811,71 @@ onUnmounted(() => {
       v-if="editor"
       class="rich-text-editor-wrapper inline-block w-full relative"
       :class="[
-        'rounded-md transition-all duration-200 ring-3',
+        'rounded-lg transition-all duration-200 border shadow-theme-xs',
         isFocused
-          ? 'ring-primary z-10'
-          : 'ring-gray-200 dark:ring-gray-700',
+          ? 'border-brand-300 dark:border-brand-800 ring-3 ring-brand-500/10'
+          : 'border-gray-300 dark:border-gray-700',
         props.disabled ? 'opacity-60 cursor-not-allowed' : '',
       ]"
     >
       <div
         ref="containerRef"
-        class="relative flex flex-col rounded-md transition-all duration-200"
+        class="relative flex flex-col rounded-lg transition-all duration-200 bg-transparent dark:bg-gray-900 overflow-hidden"
         :class="[
           props.disabled ? 'bg-gray-50 dark:bg-gray-800/50' : '',
           !isResizing ? 'transition-[height] duration-300 ease-out' : ''
         ]"
         :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
       >
-      <div class="border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 p-2 flex flex-wrap gap-1 shrink-0"
+      <div class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2 flex items-center gap-1 shrink-0"
            :class="{ 'pointer-events-none': props.disabled }">
-        <template v-for="(group, groupIndex) in toolbarButtons" :key="'group-' + groupIndex">
-          <div v-if="groupIndex > 0" class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+        <div class="flex flex-wrap gap-1 items-center">
+          <template v-for="(group, groupIndex) in toolbarButtons" :key="'group-' + groupIndex">
+            <div v-if="groupIndex > 0" class="w-px bg-gray-200 dark:bg-gray-700 mx-1 self-stretch"></div>
+            <button
+              v-for="key in group"
+              :key="key"
+              :data-table-button="key === 'table' ? '' : undefined"
+              :class="[
+                getButtonClass(isButtonActive(key), disabled),
+                getButtonConfig(key)?.text ? 'px-2' : 'min-w-[32px]'
+              ]"
+              :disabled="disabled || !getButtonConfig(key)"
+              :title="getButtonConfig(key)?.tooltip"
+              class="flex items-center justify-center h-8"
+              @click="getButtonConfig(key)?.action && handleButtonClick(getButtonConfig(key)!.action, $event)"
+            >
+              <template v-if="getButtonConfig(key)?.text">
+                <span class="text-xs font-medium whitespace-nowrap">{{ getButtonConfig(key)?.text }}</span>
+              </template>
+              <template v-else-if="getButtonConfig(key)?.icon">
+                <Icon :name="(getButtonConfig(key)?.icon) || 'lucide:help-circle'" class="w-4 h-4" />
+              </template>
+            </button>
+          </template>
+        </div>
+        <div class="flex-1"></div>
+        <div class="w-px bg-gray-200 dark:bg-gray-700 self-stretch mx-1"></div>
+        <div class="flex gap-1 shrink-0 items-center">
           <button
-            v-for="key in group"
-            :key="key"
-            :data-table-button="key === 'table' ? '' : undefined"
-            :class="[
-              getButtonClass(isButtonActive(key), disabled),
-              getButtonConfig(key)?.text ? 'px-2' : 'min-w-[32px]'
-            ]"
-            :disabled="disabled || !getButtonConfig(key)"
-            :title="getButtonConfig(key)?.tooltip"
-            class="flex items-center justify-center h-8"
-            @click="getButtonConfig(key)?.action && handleButtonClick(getButtonConfig(key)!.action, $event)"
+            :class="getButtonClass(false, disabled || !canUndo)"
+            :disabled="disabled || !canUndo"
+            title="Undo"
+            class="flex items-center justify-center h-8 min-w-[32px]"
+            @click="undo"
           >
-            <template v-if="getButtonConfig(key)?.text">
-              <span class="text-xs font-medium whitespace-nowrap">{{ getButtonConfig(key)?.text }}</span>
-            </template>
-            <template v-else-if="getButtonConfig(key)?.icon">
-              <Icon :name="(getButtonConfig(key)?.icon) || 'lucide:help-circle'" class="w-4 h-4" />
-            </template>
+            <Icon name="lucide:undo" class="w-4 h-4" />
           </button>
-        </template>
+          <button
+            :class="getButtonClass(false, disabled || !canRedo)"
+            :disabled="disabled || !canRedo"
+            title="Redo"
+            class="flex items-center justify-center h-8 min-w-[32px]"
+            @click="redo"
+          >
+            <Icon name="lucide:redo" class="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div
