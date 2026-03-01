@@ -10,6 +10,7 @@
 @import "./highlight.css";
 @import "./vue-flow.css";
 @import "./richtext-editor.css";
+@import "prosemirror-tables/style/tables.css";
 
 @layer base {
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
