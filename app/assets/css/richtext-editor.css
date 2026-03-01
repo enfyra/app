@@ -102,21 +102,21 @@ html.dark .rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
 
 .rich-text-editor .tableWrapper {
   overflow-x: auto;
+  overflow-y: visible;
   margin: 1em 0;
   position: relative;
 }
 
 .rich-text-editor table {
   border-collapse: collapse;
-  table-layout: auto;
+  table-layout: fixed;
   width: 100% !important;
   min-width: 100% !important;
   margin: 0;
 }
 
 .rich-text-editor table col {
-  width: auto !important;
-  min-width: 80px !important;
+  min-width: 50px;
 }
 
 .rich-text-editor td,
@@ -155,16 +155,6 @@ html.dark .rich-text-editor .ProseMirror td {
   top: 0;
   bottom: 0;
   background: rgba(200, 200, 255, 0.4);
-  pointer-events: none;
-}
-
-.rich-text-editor .column-resize-handle {
-  position: absolute;
-  right: -2px;
-  top: 0;
-  bottom: -2px;
-  width: 4px;
-  background-color: #adf;
   pointer-events: none;
 }
 
@@ -353,8 +343,9 @@ html.dark .rich-text-editor .ProseMirror ol {
 
 .tableWrapper table {
   border-collapse: collapse;
-  table-layout: auto;
+  table-layout: fixed;
   width: 100%;
+  position: relative;
 }
 
 .tableWrapper table td,
@@ -391,7 +382,7 @@ html.dark .tableWrapper table {
 
 table {
   border-collapse: collapse;
-  table-layout: auto;
+  table-layout: fixed;
 }
 
 table td,
@@ -418,11 +409,33 @@ html.dark table td {
   border-color: #374151;
 }
 
-.table-settings-btn {
-  cursor: pointer;
-  padding: 0;
+.rich-text-editor .column-resize-handle,
+.rich-text-editor .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background-color: #3b82f6;
+  z-index: 20;
+  pointer-events: none;
 }
 
-.table-settings-btn svg {
-  pointer-events: none;
+.dark .rich-text-editor .column-resize-handle,
+.dark .rich-text-editor .ProseMirror .column-resize-handle {
+  background-color: #60a5fa;
+}
+
+.rich-text-editor .resize-cursor,
+.rich-text-editor table.resize-cursor,
+.rich-text-editor .ProseMirror.resize-cursor {
+  cursor: col-resize !important;
+}
+
+.rich-text-editor table colgroup {
+  display: table-column-group;
+}
+
+.rich-text-editor table col {
+  width: auto;
 }

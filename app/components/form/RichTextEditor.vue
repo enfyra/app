@@ -72,7 +72,6 @@ const tableMenuOpen = ref(false);
 const tableMenuRef = ref<HTMLDivElement>();
 const tableMenuStyle = ref<{ top: string; left: string } | null>(null);
 const tableModifyModalOpen = ref(false);
-const tableObserver = ref<MutationObserver | null>(null);
 const linkUrl = ref('');
 const imageUrl = ref('');
 
@@ -307,6 +306,9 @@ const editor = useEditor({
     }) as AnyExtension,
     Table.configure({
       resizable: true,
+      handleWidth: 5,
+      cellMinWidth: 50,
+      lastColumnResizable: true,
     }) as AnyExtension,
     TableRow as AnyExtension,
     TableHeader as AnyExtension,
@@ -336,68 +338,6 @@ const editor = useEditor({
   onCreate: ({ editor }) => {
     if (editor) {
       isMounted.value = true;
-
-      const updateTableButtons = () => {
-        if (!editor || !tableObserver.value) return;
-
-        tableObserver.value.disconnect();
-
-        const tables = editor.view.dom.querySelectorAll('table');
-        const existingButtons = editor.view.dom.querySelectorAll('.table-settings-btn');
-
-        existingButtons.forEach(btn => btn.remove());
-
-        tables.forEach((table: HTMLElement) => {
-          const wrapper = table.closest('.tableWrapper');
-          if (wrapper) {
-            (wrapper as HTMLElement).style.position = 'relative';
-            (wrapper as HTMLElement).style.paddingTop = '32px';
-          }
-
-          const button = document.createElement('button');
-          button.className = 'table-settings-btn absolute z-20 w-8 h-8 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 rounded-md shadow-md flex items-center justify-center cursor-pointer transition-colors';
-          button.style.cssText = 'top: 4px; right: 0;';
-          button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>';
-          button.title = 'Table options';
-          button.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            tableModifyModalOpen.value = true;
-          });
-
-          if (wrapper) {
-            wrapper.appendChild(button);
-          } else {
-            const newWrapper = document.createElement('div');
-            newWrapper.className = 'tableWrapper';
-            newWrapper.style.position = 'relative';
-            newWrapper.style.paddingTop = '32px';
-            table.parentNode?.insertBefore(newWrapper, table);
-            newWrapper.appendChild(table);
-            newWrapper.appendChild(button);
-          }
-        });
-
-        tableObserver.value.observe(editor.view.dom, {
-          childList: true,
-          subtree: true,
-        });
-      };
-
-      tableObserver.value = new MutationObserver(() => {
-        nextTick(updateTableButtons);
-      });
-
-      tableObserver.value.observe(editor.view.dom, {
-        childList: true,
-        subtree: true,
-      });
-
-      editor.on('selectionUpdate', () => {
-        nextTick(updateTableButtons);
-      });
-
-      nextTick(updateTableButtons);
     }
   },
 });
@@ -811,9 +751,6 @@ const isButtonActive = (key: string): boolean => {
 
 onBeforeUnmount(() => {
   isMounted.value = false;
-  if (tableObserver.value) {
-    tableObserver.value.disconnect();
-  }
   const editorInstance = editor.value;
   if (editorInstance) {
     try {
@@ -991,7 +928,7 @@ onUnmounted(() => {
           @click="toggleHeaderRow"
           class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
         >
-          <Icon name="lucide:header" class="w-4 h-4" />
+          <Icon name="lucide:panel-top" class="w-4 h-4" />
           Toggle Header Row
         </button>
         <button
@@ -1098,66 +1035,92 @@ onUnmounted(() => {
     </CommonModal>
 
     <CommonModal v-model="tableModifyModalOpen">
-      <template #title>Table Options</template>
+      <template #title>Table Settings</template>
       <template #body>
-        <div class="space-y-4">
-          <div>
-            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 px-1">Add</div>
-            <div class="grid grid-cols-2 gap-2">
-              <button
-                @click="addRowAfter"
-                class="px-3 py-2 text-sm text-left bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center gap-2"
-              >
-                <Icon name="lucide:plus" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                <span>Add Row</span>
-              </button>
-              <button
-                @click="addColumnAfter"
-                class="px-3 py-2 text-sm text-left bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-md transition-colors flex items-center gap-2"
-              >
-                <Icon name="lucide:plus" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                <span>Add Column</span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 px-1">Remove</div>
-            <div class="space-y-2">
-              <button
-                @click="deleteRow"
-                class="w-full px-3 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex items-center gap-2"
-              >
-                <Icon name="lucide:minus" class="w-4 h-4" />
-                <span>Delete Row</span>
-              </button>
-              <button
-                @click="deleteColumn"
-                class="w-full px-3 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex items-center gap-2"
-              >
-                <Icon name="lucide:minus" class="w-4 h-4" />
-                <span>Delete Column</span>
-              </button>
-              <button
-                @click="deleteTable"
-                class="w-full px-3 py-2 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex items-center gap-2"
-              >
-                <Icon name="lucide:trash" class="w-4 h-4" />
-                <span>Delete Table</span>
-              </button>
-            </div>
-          </div>
+        <div class="grid grid-cols-3 gap-2">
+          <button
+            @click="addRowBefore"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <Icon name="lucide:arrow-up" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <span class="text-xs text-gray-600 dark:text-gray-300">Row Above</span>
+          </button>
+          <button
+            @click="addRowAfter"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <Icon name="lucide:arrow-down" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <span class="text-xs text-gray-600 dark:text-gray-300">Row Below</span>
+          </button>
+          <button
+            @click="deleteRow"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <Icon name="lucide:trash-2" class="w-5 h-5 text-red-500 dark:text-red-400" />
+            <span class="text-xs text-red-600 dark:text-red-400">Delete Row</span>
+          </button>
+          <button
+            @click="addColumnBefore"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <Icon name="lucide:arrow-left" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <span class="text-xs text-gray-600 dark:text-gray-300">Col Left</span>
+          </button>
+          <button
+            @click="addColumnAfter"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <Icon name="lucide:arrow-right" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <span class="text-xs text-gray-600 dark:text-gray-300">Col Right</span>
+          </button>
+          <button
+            @click="deleteColumn"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <Icon name="lucide:trash-2" class="w-5 h-5 text-red-500 dark:text-red-400" />
+            <span class="text-xs text-red-600 dark:text-red-400">Delete Col</span>
+          </button>
+          <button
+            @click="toggleHeaderRow"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <Icon name="lucide:panel-top" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <span class="text-xs text-gray-600 dark:text-gray-300">Header Row</span>
+          </button>
+          <button
+            @click="mergeCells"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <Icon name="lucide:merge" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <span class="text-xs text-gray-600 dark:text-gray-300">Merge</span>
+          </button>
+          <button
+            @click="splitCell"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <Icon name="lucide:split" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <span class="text-xs text-gray-600 dark:text-gray-300">Split</span>
+          </button>
+        </div>
+        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            @click="deleteTable"
+            class="w-full flex items-center justify-center gap-2 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <Icon name="lucide:trash" class="w-5 h-5" />
+            <span class="font-medium">Delete Table</span>
+          </button>
         </div>
       </template>
       <template #footer>
         <div class="flex justify-end">
-          <button
-            type="button"
-            class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md transition-colors font-medium"
+          <UButton
+            variant="ghost"
+            color="neutral"
             @click="tableModifyModalOpen = false"
           >
-            Cancel
-          </button>
+            Close
+          </UButton>
         </div>
       </template>
     </CommonModal>
