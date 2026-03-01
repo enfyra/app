@@ -1,4 +1,4 @@
-.rich-text-editor :deep(.ProseMirror) {
+.rich-text-editor .ProseMirror {
   outline: none !important;
   border: none !important;
   box-shadow: none !important;
@@ -7,26 +7,46 @@
   caret-color: #1f2937;
 }
 
-.rich-text-editor :deep(.tiptap),
-.rich-text-editor :deep(.tiptap.ProseMirror),
-.rich-text-editor :deep(.tiptap.ProseMirror-focused) {
+.rich-text-editor .ProseMirror ::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: inherit;
+}
+
+.rich-text-editor .ProseMirror ::-moz-selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: inherit;
+}
+
+.rich-text-editor .tiptap,
+.rich-text-editor .tiptap.ProseMirror,
+.rich-text-editor .tiptap.ProseMirror-focused {
   outline: none !important;
   border: none !important;
   box-shadow: none !important;
 }
 
-.rich-text-editor :deep(.ProseMirror-focused) {
+.rich-text-editor .ProseMirror-focused {
   outline: none !important;
   border: none !important;
   box-shadow: none !important;
 }
 
-.rich-text-editor :deep(.dark .ProseMirror),
-.rich-text-editor :deep(html.dark .ProseMirror) {
+.dark .rich-text-editor .ProseMirror,
+html.dark .rich-text-editor .ProseMirror {
   caret-color: #e5e7eb;
   outline: none !important;
   border: none !important;
   box-shadow: none !important;
+}
+
+.dark .rich-text-editor .ProseMirror ::selection {
+  background-color: rgba(96, 165, 250, 0.4);
+  color: inherit;
+}
+
+.dark .rich-text-editor .ProseMirror ::-moz-selection {
+  background-color: rgba(96, 165, 250, 0.4);
+  color: inherit;
 }
 
 .rich-text-editor-content .ProseMirror {
@@ -35,13 +55,13 @@
   box-shadow: none !important;
 }
 
-.rich-text-editor :deep(.ProseMirror:read-only),
-.rich-text-editor :deep(.ProseMirror[contenteditable="false"]) {
+.rich-text-editor .ProseMirror:read-only,
+.rich-text-editor .ProseMirror[contenteditable="false"] {
   cursor: not-allowed;
   opacity: 0.7;
 }
 
-.rich-text-editor :deep(.ProseMirror:empty::before) {
+.rich-text-editor .ProseMirror:empty::before {
   content: '\200b';
 }
 
@@ -58,11 +78,11 @@
   box-shadow: none;
 }
 
-.rich-text-editor :deep(.ProseMirror p) {
+.rich-text-editor .ProseMirror p {
   min-height: 1.5em;
 }
 
-.rich-text-editor :deep(.ProseMirror p.is-editor-empty:first-child::before) {
+.rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   color: #9ca3af;
   pointer-events: none;
@@ -71,22 +91,22 @@
   height: 0;
 }
 
-.rich-text-editor :deep(.dark .ProseMirror p.is-editor-empty:first-child::before),
-.rich-text-editor :deep(html.dark .ProseMirror p.is-editor-empty:first-child::before) {
+.dark .rich-text-editor .ProseMirror p.is-editor-empty:first-child::before,
+html.dark .rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
   color: #6b7280;
 }
 
-.rich-text-editor :deep(.ProseMirror-selectednode) {
+.rich-text-editor .ProseMirror-selectednode {
   outline: 3px solid #68cef8;
 }
 
-.rich-text-editor :deep(.tableWrapper) {
+.rich-text-editor .tableWrapper {
   overflow-x: auto;
   margin: 1em 0;
   position: relative;
 }
 
-.rich-text-editor :deep(table) {
+.rich-text-editor table {
   border-collapse: collapse;
   table-layout: auto;
   width: 100% !important;
@@ -94,13 +114,13 @@
   margin: 0;
 }
 
-.rich-text-editor :deep(table col) {
+.rich-text-editor table col {
   width: auto !important;
   min-width: 80px !important;
 }
 
-.rich-text-editor :deep(td),
-.rich-text-editor :deep(th) {
+.rich-text-editor td,
+.rich-text-editor th {
   min-width: 80px;
   border: 1px solid #dfe6e9;
   padding: 8px 12px;
@@ -109,24 +129,24 @@
   position: relative;
 }
 
-.rich-text-editor :deep(th) {
+.rich-text-editor th {
   font-weight: bold;
   text-align: left;
   background-color: #f8f9fa;
 }
 
-.rich-text-editor :deep(.dark) th,
-.rich-text-editor :deep(html.dark .ProseMirror th) {
+.dark .rich-text-editor th,
+html.dark .rich-text-editor .ProseMirror th {
   background-color: #374151;
   border-color: #4b5563;
 }
 
-.rich-text-editor :deep(.dark) td,
-.rich-text-editor :deep(html.dark .ProseMirror td) {
+.dark .rich-text-editor td,
+html.dark .rich-text-editor .ProseMirror td {
   border-color: #374151;
 }
 
-.rich-text-editor :deep(.selectedCell:after) {
+.rich-text-editor .selectedCell:after {
   z-index: 2;
   position: absolute;
   content: "";
@@ -138,7 +158,7 @@
   pointer-events: none;
 }
 
-.rich-text-editor :deep(.column-resize-handle) {
+.rich-text-editor .column-resize-handle {
   position: absolute;
   right: -2px;
   top: 0;
@@ -148,11 +168,11 @@
   pointer-events: none;
 }
 
-.rich-text-editor :deep(table p) {
+.rich-text-editor table p {
   margin: 0;
 }
 
-.rich-text-editor :deep(blockquote) {
+.rich-text-editor blockquote {
   border-left: 4px solid #ddd;
   padding-left: 1rem;
   margin: 1rem 0;
@@ -160,13 +180,13 @@
   color: #555;
 }
 
-.rich-text-editor :deep(hr) {
+.rich-text-editor hr {
   border: none;
   border-top: 2px solid #ddd;
   margin: 1.5rem 0;
 }
 
-.rich-text-editor :deep(h1) {
+.rich-text-editor h1 {
   font-size: 2em;
   font-weight: bold;
   line-height: 1.2;
@@ -174,7 +194,7 @@
   margin-bottom: 0.4em;
 }
 
-.rich-text-editor :deep(h2) {
+.rich-text-editor h2 {
   font-size: 1.5em;
   font-weight: bold;
   line-height: 1.3;
@@ -182,7 +202,7 @@
   margin-bottom: 0.4em;
 }
 
-.rich-text-editor :deep(h3) {
+.rich-text-editor h3 {
   font-size: 1.25em;
   font-weight: bold;
   line-height: 1.4;
@@ -190,7 +210,7 @@
   margin-bottom: 0.4em;
 }
 
-.rich-text-editor :deep(h4) {
+.rich-text-editor h4 {
   font-size: 1.1em;
   font-weight: bold;
   line-height: 1.5;
@@ -198,7 +218,7 @@
   margin-bottom: 0.3em;
 }
 
-.rich-text-editor :deep(h5) {
+.rich-text-editor h5 {
   font-size: 1em;
   font-weight: bold;
   line-height: 1.5;
@@ -206,7 +226,7 @@
   margin-bottom: 0.3em;
 }
 
-.rich-text-editor :deep(h6) {
+.rich-text-editor h6 {
   font-size: 0.9em;
   font-weight: bold;
   line-height: 1.5;
@@ -214,49 +234,114 @@
   margin-bottom: 0.3em;
 }
 
-.rich-text-editor :deep(ul),
-.rich-text-editor :deep(ol) {
+.rich-text-editor ul,
+.rich-text-editor ol {
   padding-left: 1.5rem;
   margin: 1rem 0;
 }
 
-.rich-text-editor :deep(ul) {
+.rich-text-editor ul {
   list-style-type: disc;
 }
 
-.rich-text-editor :deep(ul ul) {
+.rich-text-editor ul ul {
   list-style-type: circle;
 }
 
-.rich-text-editor :deep(ul ul ul) {
+.rich-text-editor ul ul ul {
   list-style-type: square;
 }
 
-.rich-text-editor :deep(ol) {
+.rich-text-editor ol {
   list-style-type: decimal;
 }
 
-.rich-text-editor :deep(ol ol) {
+.rich-text-editor ol ol {
   list-style-type: lower-alpha;
 }
 
-.rich-text-editor :deep(ol ol ol) {
+.rich-text-editor ol ol ol {
   list-style-type: lower-roman;
 }
 
-.rich-text-editor :deep(li) {
+.rich-text-editor li {
   margin: 0.25rem 0;
 }
 
-.rich-text-editor :deep(li p) {
+.rich-text-editor li p {
   margin: 0;
 }
 
-.rich-text-editor :deep(.dark) ul,
-.rich-text-editor :deep(html.dark .ProseMirror ul),
-.rich-text-editor :deep(.dark) ol,
-.rich-text-editor :deep(html.dark .ProseMirror ol) {
+.dark .rich-text-editor ul,
+html.dark .rich-text-editor .ProseMirror ul,
+.dark .rich-text-editor ol,
+html.dark .rich-text-editor .ProseMirror ol {
   color: #e5e7eb;
+}
+
+.dark .rich-text-editor blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
+.dark .rich-text-editor hr {
+  border-top-color: #4b5563;
+}
+
+.dark .rich-text-editor h1,
+.dark .rich-text-editor h2,
+.dark .rich-text-editor h3,
+.dark .rich-text-editor h4,
+.dark .rich-text-editor h5,
+.dark .rich-text-editor h6 {
+  color: #f3f4f6;
+}
+
+.rich-text-editor code {
+  background-color: #f3f4f6;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+.dark .rich-text-editor code {
+  background-color: #374151;
+}
+
+.rich-text-editor pre {
+  background-color: #1f2937;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.rich-text-editor pre code {
+  background-color: transparent;
+  padding: 0;
+  color: #e5e7eb;
+}
+
+.dark .rich-text-editor pre {
+  background-color: #111827;
+}
+
+.rich-text-editor a {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.rich-text-editor a:hover {
+  color: #2563eb;
+}
+
+.dark .rich-text-editor a {
+  color: #60a5fa;
+}
+
+.dark .rich-text-editor a:hover {
+  color: #93c5fd;
 }
 
 .tableWrapper {
