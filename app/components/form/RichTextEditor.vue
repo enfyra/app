@@ -47,8 +47,6 @@ const emit = defineEmits<{
 
 const containerRef = ref<HTMLDivElement>();
 const resizeHandleRef = ref<HTMLDivElement>();
-const previewLayerRef = ref<HTMLDivElement>();
-const isFocused = ref(false);
 const isResizing = ref(false);
 const startY = ref(0);
 const startHeight = ref(0);
@@ -324,11 +322,7 @@ const editor = useEditor({
     createCustomFormatsExtension(),
   ],
   editable: !props.disabled,
-  onFocus: () => {
-    isFocused.value = true;
-  },
   onBlur: ({ editor }) => {
-    isFocused.value = false;
     try {
       if (editor && isMounted.value) {
         emit('update:modelValue', editor.getHTML());
@@ -809,20 +803,16 @@ onUnmounted(() => {
 
     <div
       v-if="editor"
-      class="rich-text-editor-wrapper inline-block w-full relative"
+      class="rich-text-editor-wrapper inline-block w-full relative rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent dark:bg-gray-900"
       :class="[
-        'rounded-lg transition-all duration-200 border shadow-theme-xs',
-        isFocused
-          ? 'border-brand-300 dark:border-brand-800 ring-3 ring-brand-500/10'
-          : 'border-gray-300 dark:border-gray-700',
-        props.disabled ? 'opacity-60 cursor-not-allowed' : '',
+        props.disabled ? 'cursor-not-allowed opacity-50 border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03]' : '',
       ]"
     >
       <div
         ref="containerRef"
-        class="relative flex flex-col rounded-lg transition-all duration-200 bg-transparent dark:bg-gray-900 overflow-hidden"
+        class="relative flex flex-col rounded-lg overflow-hidden"
         :class="[
-          props.disabled ? 'bg-gray-50 dark:bg-gray-800/50' : '',
+          props.disabled ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-transparent dark:bg-gray-900',
           !isResizing ? 'transition-[height] duration-300 ease-out' : ''
         ]"
         :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
