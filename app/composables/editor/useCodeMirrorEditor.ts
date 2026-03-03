@@ -74,7 +74,7 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
       extensions,
       (newExtensions) => {
         const m = modules.value
-        if (editorView.value && m?.StateEffect) {
+        if (editorView.value && m?.StateEffect && newExtensions.length > 0) {
           editorView.value.dispatch({
             effects: m.StateEffect.reconfigure.of(newExtensions),
           });
