@@ -13,53 +13,6 @@ export default defineNuxtConfig({
     "nuxt-codemirror",
     "@enfyra/sdk-nuxt",
   ],
-  serverHandlers: [
-    {
-      route: "/api/npm-search",
-      handler: "~/server/api/npm-search.get.ts",
-      method: "get",
-    },
-    {
-      route: "/api/extension_definition",
-      handler: "~/server/api/extension_definition.post.ts",
-      method: "post",
-    },
-    {
-      route: "/api/extension_definition/**",
-      handler: "~/server/api/extension_definition/[id].patch.ts",
-      method: "patch",
-    },
-    {
-      route: "/api/extension_definition/preview",
-      handler: "~/server/api/extension_definition/preview.post.ts",
-      method: "post",
-    },
-    {
-      route: "/api/package_definition",
-      handler: "~/server/api/package_definition.post.ts",
-      method: "post",
-    },
-    {
-      route: "/api/package_definition/**",
-      handler: "~/server/api/package_definition/[id].patch.ts",
-      method: "patch",
-    },
-    {
-      route: "/api/package_definition/**",
-      handler: "~/server/api/package_definition/[id].delete.ts",
-      method: "delete",
-    },
-    {
-      route: "/api/packages",
-      handler: "~/server/api/packages.get.ts",
-      method: "get",
-    },
-    {
-      route: "**",
-      handler: "~/server/middleware/server-id.ts",
-      middleware: true,
-    },
-  ],
   colorMode: {
     preference: "dark",
     fallback: "dark",
