@@ -98,37 +98,16 @@ watch(() => colorMode.value, () => {
 
 watch(currentHeight, () => {
   if (isResizing.value) return;
-  
+
   if (containerRef.value) {
     containerRef.value.style.height = currentHeight.value;
   }
   nextTick(() => {
-    if (editorView.value && codeMirrorModules.value?.StateEffect) {
+    if (editorView.value) {
       editorView.value.requestMeasure();
-      if (extensions.value.length > 0) {
-        editorView.value.dispatch({
-          effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
-        });
-      }
-      editorView.value.dispatch({});
     }
   });
 });
-
-watch(extensions, (newExts, oldExts) => {
-  if (editorView.value && codeMirrorModules.value?.StateEffect && newExts.length > 0 && !isResizing.value) {
-    const oldLen = oldExts?.length || 0
-    if (oldLen !== newExts.length) {
-      nextTick(() => {
-        if (editorView.value) {
-          editorView.value.dispatch({
-            effects: codeMirrorModules.value.StateEffect.reconfigure.of(newExts),
-          });
-        }
-      });
-    }
-  }
-}, { deep: true });
 
 const resizeObserverRef = ref<ResizeObserver | null>(null);
 
@@ -186,11 +165,6 @@ onMounted(async () => {
           if (resizeTimeout) clearTimeout(resizeTimeout)
           resizeTimeout = setTimeout(() => {
             editorView.value?.requestMeasure();
-            if (codeMirrorModules.value?.StateEffect && extensions.value.length > 0) {
-              editorView.value?.dispatch({
-                effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
-              });
-            }
           }, 100)
         }
       });
@@ -330,14 +304,8 @@ function handleMouseUp(e?: MouseEvent) {
   }
   
   nextTick(() => {
-    if (editorView.value && codeMirrorModules.value?.StateEffect) {
+    if (editorView.value) {
       editorView.value.requestMeasure();
-      if (extensions.value.length > 0) {
-        editorView.value.dispatch({
-          effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
-        });
-      }
-      editorView.value.dispatch({});
     }
   });
 }
