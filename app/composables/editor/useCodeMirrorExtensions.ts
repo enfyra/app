@@ -75,6 +75,8 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       }
     })
 
+    const allDecorations: Array<{ from: number; to: number; decoration: any }> = []
+
     for (let i = 1; i <= doc.lines; i++) {
       const line = doc.line(i)
       const text = line.text
@@ -82,7 +84,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS)\b/g
       const templateWithBracketRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS)\s*\[(['"])([^'"]*)\1\]/g
       const throwRegex = /@THROW\d*/g
-      
+
       const matchedRanges: Array<{ from: number; to: number }> = []
       let match
 
@@ -90,7 +92,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
           const fullMatch = match[0]
-          builder.add(absolutePos, absolutePos + fullMatch.length, templateDecoration)
+          allDecorations.push({ from: absolutePos, to: absolutePos + fullMatch.length, decoration: templateDecoration })
           matchedRanges.push({ from: absolutePos, to: absolutePos + fullMatch.length })
         }
       }
@@ -98,21 +100,20 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       while ((match = templateRegex.exec(text)) !== null) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
-          
-          const isAlreadyMatched = matchedRanges.some(range => 
+          const isAlreadyMatched = matchedRanges.some(range =>
             absolutePos >= range.from && absolutePos < range.to
           )
           if (!isAlreadyMatched) {
-            builder.add(absolutePos, absolutePos + match[0].length, templateDecoration)
+            allDecorations.push({ from: absolutePos, to: absolutePos + match[0].length, decoration: templateDecoration })
             matchedRanges.push({ from: absolutePos, to: absolutePos + match[0].length })
           }
         }
       }
-      
+
       while ((match = throwRegex.exec(text)) !== null) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
-          builder.add(absolutePos, absolutePos + match[0].length, throwDecoration)
+          allDecorations.push({ from: absolutePos, to: absolutePos + match[0].length, decoration: throwDecoration })
           matchedRanges.push({ from: absolutePos, to: absolutePos + match[0].length })
         }
       }
@@ -121,7 +122,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       while ((match = allAtRegex.exec(text)) !== null) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
-          const isMatched = matchedRanges.some(range => 
+          const isMatched = matchedRanges.some(range =>
             absolutePos >= range.from && absolutePos < range.to
           )
           if (!isMatched) {
@@ -134,7 +135,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
                   endPos = absolutePos + 1 + identifierMatch[0].length
                 }
               }
-              builder.add(absolutePos, endPos, standaloneAtDecoration)
+              allDecorations.push({ from: absolutePos, to: endPos, decoration: standaloneAtDecoration })
             }
           }
         }
@@ -144,7 +145,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       while ((match = tableRegex.exec(text)) !== null) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
-          builder.add(absolutePos, absolutePos + match[0].length, tableAccessDecoration)
+          allDecorations.push({ from: absolutePos, to: absolutePos + match[0].length, decoration: tableAccessDecoration })
         }
       }
 
@@ -152,9 +153,15 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       while ((match = percentageRegex.exec(text)) !== null) {
         const absolutePos = line.from + match.index
         if (!isInComment(doc, absolutePos)) {
-          builder.add(absolutePos, absolutePos + match[0].length, percentageDecoration)
+          allDecorations.push({ from: absolutePos, to: absolutePos + match[0].length, decoration: percentageDecoration })
         }
       }
+    }
+
+    allDecorations.sort((a, b) => a.from - b.from)
+
+    for (const dec of allDecorations) {
+      builder.add(dec.from, dec.to, dec.decoration)
     }
 
     return builder.finish()
