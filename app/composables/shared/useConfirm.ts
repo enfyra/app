@@ -1,17 +1,20 @@
 const isVisible = ref(false);
-const options = ref({
+
+const defaultOptions = {
   title: "Confirm",
   content: "",
   confirmText: "Confirm",
   cancelText: "Cancel",
-});
+};
+
+const options = ref({ ...defaultOptions });
 
 let resolver: (value: boolean) => void;
 
 export function useConfirm() {
-  const confirm = (opts: Partial<typeof options.value>): Promise<boolean> => {
+  const confirm = (opts: Partial<typeof defaultOptions>): Promise<boolean> => {
     options.value = {
-      ...options.value,
+      ...defaultOptions,
       ...opts,
     };
     isVisible.value = true;

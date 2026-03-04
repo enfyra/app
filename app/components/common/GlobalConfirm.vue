@@ -6,11 +6,16 @@ watch(
     if (!newVal) onCancel();
   }
 );
+
+const isDestructive = computed(() => {
+  const text = options.value.confirmText?.toLowerCase() || '';
+  return text.includes('delete') || text.includes('remove') || text.includes('destroy');
+});
 </script>
 
 <template>
-  <CommonModal 
-    v-model="isVisible" 
+  <CommonModal
+    v-model="isVisible"
     :handle="false"
   >
       <template #title>
@@ -27,10 +32,10 @@ watch(
       </template>
       <template #footer>
         <div class="flex justify-end gap-2 w-full">
-          <UButton variant="ghost" color="error" @click="onCancel">
+          <UButton variant="ghost" @click="onCancel">
             {{ options.cancelText }}
           </UButton>
-          <UButton @click="onConfirm">
+          <UButton :color="isDestructive ? 'error' : 'primary'" @click="onConfirm">
             {{ options.confirmText }}
           </UButton>
         </div>

@@ -10,6 +10,88 @@ import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
+
+const CustomTableCell = TableCell.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      colspan: {
+        default: 1,
+        parseHTML: (element) => element.getAttribute('colspan') || 1,
+        renderHTML: (attributes) => {
+          if (attributes.colspan === 1) return {}
+          return { colspan: attributes.colspan }
+        },
+      },
+      rowspan: {
+        default: 1,
+        parseHTML: (element) => element.getAttribute('rowspan') || 1,
+        renderHTML: (attributes) => {
+          if (attributes.rowspan === 1) return {}
+          return { rowspan: attributes.rowspan }
+        },
+      },
+      colwidth: {
+        default: null,
+        parseHTML: (element) => {
+          const style = element.getAttribute('style') || ''
+          const match = style.match(/width:\s*(\d+(?:\.\d+)?)/i)
+          if (match && match[1]) {
+            return [parseInt(match[1])]
+          }
+          const colwidth = element.getAttribute('colwidth')
+          return colwidth ? [parseInt(colwidth)] : null
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.colwidth || attributes.colwidth.length === 0) return {}
+          const width = attributes.colwidth[0]
+          return { style: `width: ${width}px` }
+        },
+      },
+    }
+  },
+})
+
+const CustomTableHeader = TableHeader.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      colspan: {
+        default: 1,
+        parseHTML: (element) => element.getAttribute('colspan') || 1,
+        renderHTML: (attributes) => {
+          if (attributes.colspan === 1) return {}
+          return { colspan: attributes.colspan }
+        },
+      },
+      rowspan: {
+        default: 1,
+        parseHTML: (element) => element.getAttribute('rowspan') || 1,
+        renderHTML: (attributes) => {
+          if (attributes.rowspan === 1) return {}
+          return { rowspan: attributes.rowspan }
+        },
+      },
+      colwidth: {
+        default: null,
+        parseHTML: (element) => {
+          const style = element.getAttribute('style') || ''
+          const match = style.match(/width:\s*(\d+(?:\.\d+)?)/i)
+          if (match && match[1]) {
+            return [parseInt(match[1])]
+          }
+          const colwidth = element.getAttribute('colwidth')
+          return colwidth ? [parseInt(colwidth)] : null
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.colwidth || attributes.colwidth.length === 0) return {}
+          const width = attributes.colwidth[0]
+          return { style: `width: ${width}px` }
+        },
+      },
+    }
+  },
+})
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { createLowlight } from 'lowlight'
 import { ensureString } from "../../utils/components/form";
@@ -143,15 +225,17 @@ const injectCustomStyles = () => {
     }
 
     if (format.inline || (!format.block && !format.wrapper)) {
-      const classSelector = `.${key}`;
+      const tag = format.tag || 'span';
+      const selector = tag === 'span' ? `.${key}` : tag;
       const styles = Object.entries(cssStyles).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
       if (styles) {
-        cssRules.push(`${classSelector} { ${styles} }`);
+        cssRules.push(`${selector} { ${styles} }`);
       }
     } else if (format.block || format.wrapper) {
+      const tag = format.tag || key;
       const styles = Object.entries(cssStyles).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
       if (styles) {
-        cssRules.push(`${key} { ${styles} }`);
+        cssRules.push(`${tag} { ${styles} }`);
       }
     }
   });
@@ -185,7 +269,9 @@ const createCustomFormatsExtension = (): Extension => {
     }
 
     if (format.inline || (!format.block && !format.wrapper)) {
-      const allClasses = [...classes, key].join(' ');
+      const tag = format.tag || 'span';
+      const shouldAddKeyClass = tag === 'span';
+      const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
       marks.push(Mark.create({
         name: key,
         addAttributes() {
@@ -196,9 +282,9 @@ const createCustomFormatsExtension = (): Extension => {
         parseHTML() {
           return [
             {
-              tag: 'span',
+              tag,
               getAttrs: (node: any) => {
-                if (node.classList && node.classList.contains(key)) {
+                if (tag !== 'span' || (node.classList && node.classList.contains(key))) {
                   return {};
                 }
                 return false;
@@ -209,15 +295,18 @@ const createCustomFormatsExtension = (): Extension => {
         renderHTML({ HTMLAttributes }) {
           const attrs: any = {};
           if (allClasses) attrs.class = allClasses;
-          return ['span', { ...attrs, ...HTMLAttributes }, 0];
+          return [tag, { ...attrs, ...HTMLAttributes }, 0];
         },
       }));
     } else if (format.block) {
+      const tag = format.tag || key;
+      const shouldAddKeyClass = !format.tag;
+      const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
       nodes.push(Node.create({
         name: key,
         addAttributes() {
           const attrs: any = { ...format.attributes };
-          if (classes.length) attrs.class = { default: classes.join(' ') };
+          if (allClasses) attrs.class = { default: allClasses };
           return attrs;
         },
         content: 'inline*',
@@ -225,20 +314,23 @@ const createCustomFormatsExtension = (): Extension => {
         parseHTML() {
           return [
             {
-              tag: key,
+              tag,
             },
           ];
         },
         renderHTML({ HTMLAttributes }) {
-          return [key, HTMLAttributes, 0];
+          return [tag, HTMLAttributes, 0];
         },
       }));
     } else if (format.wrapper !== undefined) {
+      const tag = format.tag || key;
+      const shouldAddKeyClass = !format.tag;
+      const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
       nodes.push(Node.create({
         name: key,
         addAttributes() {
           const attrs: any = { ...format.attributes };
-          if (classes.length) attrs.class = { default: classes.join(' ') };
+          if (allClasses) attrs.class = { default: allClasses };
           return attrs;
         },
         content: 'block*',
@@ -246,12 +338,12 @@ const createCustomFormatsExtension = (): Extension => {
         parseHTML() {
           return [
             {
-              tag: key,
+              tag,
             },
           ];
         },
         renderHTML({ HTMLAttributes }) {
-          return [key, HTMLAttributes, 0];
+          return [tag, HTMLAttributes, 0];
         },
       }));
     }
@@ -313,8 +405,8 @@ const editor = useEditor({
       lastColumnResizable: true,
     }) as AnyExtension,
     TableRow as AnyExtension,
-    TableHeader as AnyExtension,
-    TableCell as AnyExtension,
+    CustomTableHeader as AnyExtension,
+    CustomTableCell as AnyExtension,
     CodeBlockLowlight.configure({
       lowlight,
       defaultLanguage: 'auto',
@@ -817,9 +909,9 @@ onUnmounted(() => {
         ]"
         :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
       >
-      <div class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2 flex items-center gap-1 shrink-0"
+      <div class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2 flex items-start gap-1 shrink-0"
            :class="{ 'pointer-events-none': props.disabled }">
-        <div class="flex flex-wrap gap-1 items-center">
+        <div class="flex flex-wrap gap-1 items-center flex-1">
           <template v-for="(group, groupIndex) in toolbarButtons" :key="'group-' + groupIndex">
             <div v-if="groupIndex > 0" class="w-px bg-gray-200 dark:bg-gray-700 mx-1 self-stretch"></div>
             <button
@@ -844,7 +936,6 @@ onUnmounted(() => {
             </button>
           </template>
         </div>
-        <div class="flex-1"></div>
         <div class="w-px bg-gray-200 dark:bg-gray-700 self-stretch mx-1"></div>
         <div class="flex gap-1 shrink-0 items-center">
           <button
