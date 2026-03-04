@@ -13,7 +13,8 @@ export interface RichTextEditorConfig {
   toolbar?: string;
   customButtons?: RichTextEditorButtonConfig[];
   buttonActions?: Record<string, (editor: any, params?: any) => void>;
-  formats?: Record<string, { 
+  formats?: Record<string, {
+    tag?: string;
     inline?: string | boolean;
     block?: string | boolean;
     wrapper?: boolean;
