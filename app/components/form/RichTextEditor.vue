@@ -746,6 +746,7 @@ type ButtonConfig = {
   action: () => void;
   text?: string;
   tooltip?: string;
+  format?: string;
 };
 
 const availableButtons = computed<Record<string, ButtonConfig>>(() => {
@@ -826,6 +827,7 @@ const availableButtons = computed<Record<string, ButtonConfig>>(() => {
       text: btn.text,
       tooltip: btn.tooltip,
       action: createAction,
+      format: btn.format,
     };
   });
 
@@ -839,10 +841,11 @@ const getButtonConfig = (key: string): ButtonConfig | undefined => {
 const isButtonActive = (key: string): boolean => {
   const config = getButtonConfig(key);
   if (!config || !editor.value) return false;
+  const checkName = config.format || config.name;
   if (config.attrs) {
-    return isActive(config.name, config.attrs).value;
+    return isActive(checkName, config.attrs).value;
   }
-  return isActive(config.name).value;
+  return isActive(checkName).value;
 };
 
 onBeforeUnmount(() => {
