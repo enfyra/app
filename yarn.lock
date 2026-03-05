@@ -540,10 +540,10 @@
   dependencies:
     tslib "^2.4.0"
 
-"@enfyra/sdk-nuxt@^0.6.3":
-  version "0.6.3"
-  resolved "https://registry.yarnpkg.com/@enfyra/sdk-nuxt/-/sdk-nuxt-0.6.3.tgz#9484ab926907dcd309d18b5a9224168700cb1c24"
-  integrity sha512-MyElvbkOBMk8KITZTbnYeITKNOui/9mufYDfxpgAq+DYWTEum7wAA+REznU+X4z+IPqmJEevucIk+tzXrFsG7A==
+"@enfyra/sdk-nuxt@^0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@enfyra/sdk-nuxt/-/sdk-nuxt-0.7.2.tgz#6e30050379e1088d73ec53818f303d7e30f11916"
+  integrity sha512-4yWM5Izpp7PEjf1js+lOASXKMphsioIc+h0Daf7BaeX+bnF42iovQ2n9a6udWrghZ8XgtrjYsg7oRH4bUD5sCA==
   dependencies:
     defu "^6.1.4"
     h3 "^1.15.4"
