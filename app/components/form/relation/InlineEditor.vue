@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getDetailPathForTable } from "~/utils/relation-detail-paths";
+
 const props = defineProps<{
   relationMeta: any;
   modelValue: any;
@@ -102,12 +104,14 @@ function getTargetTableName(): string | null {
 function navigateToDetail(item: any) {
   const targetTableName = getTargetTableName();
   if (!targetTableName) return;
-  
+
   const itemId = getId(item);
   if (!itemId) return;
-  
-  const url = `/data/${targetTableName}/${itemId}`;
-  window.open(url, '_blank');
+
+  const url =
+    getDetailPathForTable(targetTableName, itemId) ??
+    `/data/${targetTableName}/${itemId}`;
+  window.open(url, "_blank");
 }
 </script>
 

@@ -11,8 +11,8 @@
             :table-name="tableName"
             :excluded="['createdAt', 'updatedAt', 'isSystem']"
             :field-map="{
-              scope: { type: 'text', placeholder: 'openid,email,profile' },
-              redirectUri: { type: 'text', placeholder: 'https://your-app.com/api/auth/callback' },
+              scope: { type: 'varchar', placeholder: 'openid,email,profile' },
+              redirectUri: { type: 'varchar', placeholder: 'https://your-app.com/api/auth/callback' },
             }"
             :loading="loading"
           />
@@ -228,7 +228,7 @@ async function deleteConfig() {
     description: "OAuth configuration deleted successfully",
     color: "success"
   });
-  await navigateTo("/settings/oauth");
+  await navigateTo("/settings/oauth/config");
 }
 
 async function initializeForm() {

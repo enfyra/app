@@ -101,7 +101,7 @@ async function handleCreate() {
   });
 
   const { getId } = useDatabase();
-  await navigateTo(`/settings/oauth/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/settings/oauth/config/${getId(createData.value.data[0])}`, {
     replace: true,
   });
 }

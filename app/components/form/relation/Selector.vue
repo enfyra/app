@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getDetailPathForTable } from "~/utils/relation-detail-paths";
 
 const props = defineProps<{
   relationMeta: any;
@@ -125,8 +126,10 @@ function apply() {
 function navigateToDetail(item: any) {
   const itemId = getId(item);
   if (!itemId || !targetTableName.value) return;
-  const url = `/data/${targetTableName.value}/${itemId}`;
-  window.open(url, '_blank');
+  const url =
+    getDetailPathForTable(targetTableName.value, itemId) ??
+    `/data/${targetTableName.value}/${itemId}`;
+  window.open(url, "_blank");
 }
 
 async function handleFilterApply(filter: FilterGroup) {
