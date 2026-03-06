@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div :class="props.layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6' : 'space-y-6'">
     <FormField
       v-for="field in visibleFields"
       :key="field.name || field.propertyName"
@@ -12,7 +12,10 @@
       :mode="props.mode"
       @update:form-data="updateFormData"
       @update:errors="updateErrors"
-      class="relative group"
+      :class="[
+        'relative group',
+        props.layout === 'grid' && field.fieldType === 'relation' ? 'md:col-span-2' : ''
+      ]"
     />
   </div>
 </template>
@@ -28,6 +31,7 @@ const props = withDefaults(
     fieldMap?: Record<string, any>;
     loading?: boolean;
     mode?: 'create' | 'update';
+    layout?: 'stack' | 'grid';
   }>(),
   {
     excluded: () => [],
@@ -35,6 +39,7 @@ const props = withDefaults(
     fieldMap: () => ({}),
     loading: false,
     mode: 'update',
+    layout: 'stack',
   }
 );
 

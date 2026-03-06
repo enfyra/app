@@ -31,6 +31,7 @@ function updateErrors(errors: Record<string, string>) {
 }
 
 const column = computed(() => props.columnMap.get(props.keyName));
+const displayLabel = computed(() => (column.value?.label || props.keyName) as string);
 
 const fieldConfig = computed(() => {
   const manualConfig = props.fieldMap?.[props.keyName];
@@ -146,7 +147,7 @@ const { isMobile, isTablet } = useScreen();
         class="text-sm font-medium"
         :style="{ color: 'var(--text-primary)' }"
       >
-        {{ keyName }}
+        {{ displayLabel }}
       </label>
       <p
         v-if="column?.description"
@@ -175,7 +176,7 @@ const { isMobile, isTablet } = useScreen();
         class="text-sm font-medium flex items-center gap-1"
         :style="{ color: 'var(--text-primary)' }"
       >
-        {{ keyName }}
+        {{ displayLabel }}
         <span
           v-if="
             column?.isNullable === false &&

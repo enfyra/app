@@ -13,9 +13,11 @@ const props = withDefaults(
     fieldMap?: Record<string, any>;
     loading?: boolean;
     mode?: 'create' | 'update';
+    layout?: 'stack' | 'grid';
   }>(),
   {
     mode: 'update',
+    layout: 'stack',
   }
 );
 
