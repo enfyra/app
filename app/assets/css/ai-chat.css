@@ -29,6 +29,7 @@
   overflow-wrap: break-word;
   word-break: break-word;
   max-width: 100%;
+  min-width: 0;
 }
 
 .dark .ai-chat-prose {
@@ -86,6 +87,8 @@
   margin: 1em 0;
   overflow-x: auto;
   position: relative;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .dark .ai-chat-prose pre {
@@ -100,7 +103,8 @@
   font-size: 0.875rem;
   line-height: 1.6;
   display: block;
-  overflow-x: auto;
+  min-width: min-content;
+  white-space: pre;
 }
 
 .ai-chat-prose ul,

@@ -33,7 +33,7 @@ const renderCopyButton = (raw: string) => {
     </svg>
   </button>`
 }
-const wrapCodeWithCopy = (content: string, copyButton: string) => `<div class="relative">${copyButton}${content}</div>`
+const wrapCodeWithCopy = (content: string, copyButton: string) => `<div class="relative max-w-full min-w-0">${copyButton}${content}</div>`
 renderer.code = function({ text, lang }: { text: string; lang?: string }): string {
   if (lang && getLanguage(lang)) {
     try {
@@ -699,11 +699,11 @@ onBeforeUnmount(async () => {
 
               <div class="flex-1 min-w-0" :class="message.type === 'user' ? 'flex justify-end' : ''">
                 <div
-                  class="rounded-xl transition-all duration-200 overflow-hidden"
+                  class="rounded-xl transition-all duration-200 overflow-hidden max-w-full min-w-0"
                   :class="[
                     message.type === 'user'
                       ? 'bg-brand-500 text-white px-4 py-3 max-w-[80%] inline-block shadow-theme-xs'
-                      : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-4 py-3 inline-block shadow-theme-xs',
+                      : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-4 py-3 inline-block max-w-[85%] shadow-theme-xs',
                   ]"
                 >
                   
