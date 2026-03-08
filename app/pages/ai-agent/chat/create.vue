@@ -57,6 +57,13 @@ interface Message {
     inputTokens: number
     outputTokens: number
   }
+  metadata?: {
+    boundToolsCount?: number
+    usedToolsCount?: number
+    durationMs?: number
+    cacheHitTokens?: number
+    cacheHitPct?: number
+  }
 }
 
 const messages = ref<Message[]>([])
@@ -292,6 +299,18 @@ const sendMessage = async () => {
                 inputTokens: json.data.inputTokens || 0,
                 outputTokens: json.data.outputTokens || 0,
               }
+              const meta = json.data.metadata
+              if (meta && typeof meta === 'object') {
+                const bound = Array.isArray(meta.boundTools) ? meta.boundTools.length : undefined
+                const used = typeof meta.usedToolsCount === 'number' ? meta.usedToolsCount : (Array.isArray(meta.usedTools) ? meta.usedTools.length : undefined)
+                botMessage.metadata = {
+                  boundToolsCount: bound,
+                  usedToolsCount: used,
+                  durationMs: typeof meta.durationMs === 'number' ? meta.durationMs : undefined,
+                  cacheHitTokens: typeof meta.cacheHitTokens === 'number' ? meta.cacheHitTokens : undefined,
+                  cacheHitPct: typeof meta.cacheHitPct === 'number' ? meta.cacheHitPct : undefined,
+                }
+              }
             }
           } else if (json.type === 'error') {
             const botMessage = messages.value.find(m => m.id === botMessageId)
@@ -500,16 +519,44 @@ const formatTime = (date: Date) => {
                   </div>
 
                   <div
-                    class="text-xs mt-2 opacity-60 flex items-center gap-2"
+                    class="text-xs mt-2 opacity-60 flex items-center gap-2 flex-wrap"
                     :class="message.type === 'user' ? 'text-blue-100' : 'text-gray-500'"
                   >
                     <span>{{ formatTime(message.timestamp) }}</span>
                     <span
                       v-if="message.type === 'bot' && message.tokens"
-                      class="text-[10px] opacity-50 token-info select-text"
+                      class="text-[10px] opacity-50 token-info select-text inline-flex items-center gap-1"
                       style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
                     >
-                      • {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
+                      {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
+                    </span>
+                    <span
+                      v-if="message.type === 'bot' && message.metadata && (message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null || message.metadata.durationMs != null)"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-900/40 text-[11px] font-medium text-violet-400 token-info select-text"
+                      style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
+                    >
+                      <Icon name="lucide:wrench" class="w-3 h-3 flex-shrink-0" />
+                      <template v-if="message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null">
+                        {{ message.metadata.usedToolsCount ?? '—' }}/{{ message.metadata.boundToolsCount ?? '—' }} tools
+                      </template>
+                      <template v-if="message.metadata.durationMs != null">
+                        <span v-if="message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null"> · </span>
+                        {{ (message.metadata.durationMs / 1000).toFixed(1) }}s
+                      </template>
+                    </span>
+                    <span
+                      v-if="message.type === 'bot' && message.metadata && (message.metadata.cacheHitTokens != null || message.metadata.cacheHitPct != null)"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-900/40 text-[11px] font-medium text-emerald-400 token-info select-text"
+                      style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
+                    >
+                      <Icon name="lucide:database" class="w-3 h-3 flex-shrink-0" />
+                      <template v-if="message.metadata?.cacheHitTokens != null && message.metadata.cacheHitTokens > 0">
+                        {{ message.metadata.cacheHitTokens.toLocaleString() }} cache
+                      </template>
+                      <template v-if="message.metadata?.cacheHitPct != null">
+                        <span v-if="message.metadata?.cacheHitTokens != null && message.metadata.cacheHitTokens > 0"> · </span>
+                        {{ message.metadata.cacheHitPct }}%
+                      </template>
                     </span>
                   </div>
 
