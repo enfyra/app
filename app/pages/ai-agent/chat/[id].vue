@@ -64,6 +64,13 @@ interface Message {
     inputTokens: number
     outputTokens: number
   }
+  metadata?: {
+    boundToolsCount?: number
+    usedToolsCount?: number
+    durationMs?: number
+    cacheHitTokens?: number
+    cacheHitPct?: number
+  }
 }
 
 const messages = ref<Message[]>([])
@@ -169,7 +176,7 @@ const {
     const idField = getIdFieldName()
     return {
       fields: ['*'].join(','),
-      sort: ['-createdAt'].join(','),
+      sort: ['-sequence'].join(','),
       meta: '*',
       limit: historyLimit,
       page: historyPage.value,
@@ -185,34 +192,69 @@ const {
   errorContext: 'Load Chat History',
 })
 
+function parseJsonField(val: any): any {
+  if (!val) return null
+  if (typeof val === 'string') {
+    try {
+      return JSON.parse(val)
+    } catch {
+      return null
+    }
+  }
+  return val
+}
+
+function buildToolCallsDisplay(item: any): Array<{ id: string; name: string; status: 'pending' | 'success' | 'error' }> | undefined {
+  const rawCalls = parseJsonField(item.toolCalls)
+  if (!rawCalls || !Array.isArray(rawCalls) || rawCalls.length === 0) return undefined
+
+  const rawResults = parseJsonField(item.toolResults) as Array<{ toolCallId?: string; tool_call_id?: string; status?: string }> | null
+  const resultsMap = new Map<string, string>()
+  if (rawResults && Array.isArray(rawResults)) {
+    for (const r of rawResults) {
+      const status = r.status === 'error' ? 'error' : (r.status === 'success' ? 'success' : 'pending')
+      const callId = r.toolCallId || r.tool_call_id
+      if (callId) resultsMap.set(callId, status)
+    }
+  }
+
+  const display: Array<{ id: string; name: string; status: 'pending' | 'success' | 'error' }> = []
+  for (const tc of rawCalls) {
+    const id = tc.id || tc.call_id || ''
+    const name = tc.function?.name || tc.name || 'unknown'
+    const status = (resultsMap.get(id) || 'pending') as 'pending' | 'success' | 'error'
+    display.push({ id, name, status })
+  }
+  return display.length > 0 ? display : undefined
+}
+
 watch(historyData, (data) => {
   if (data?.data) {
     if (data.data.length > 0) {
       const newMessages = data.data.map((item: any) => {
-        let toolCalls = undefined
-        if (item.toolCalls) {
-          if (typeof item.toolCalls === 'string') {
-            try {
-              toolCalls = JSON.parse(item.toolCalls)
-            } catch {
-              toolCalls = null
-            }
-          } else if (Array.isArray(item.toolCalls)) {
-            toolCalls = item.toolCalls
-          }
-        }
-        
+        const toolCallsDisplay = buildToolCallsDisplay(item)
+        const rawMeta = parseJsonField(item.metadata) ?? item.metadata
+        const metadata = (rawMeta && typeof rawMeta === 'object') ? (() => {
+          const bound = Array.isArray(rawMeta.boundTools) ? rawMeta.boundTools.length : undefined
+          const used = typeof rawMeta.usedToolsCount === 'number' ? rawMeta.usedToolsCount : (Array.isArray(rawMeta.usedTools) ? rawMeta.usedTools.length : undefined)
+          const duration = typeof rawMeta.durationMs === 'number' ? rawMeta.durationMs : undefined
+          const cacheTokens = typeof rawMeta.cacheHitTokens === 'number' ? rawMeta.cacheHitTokens : undefined
+          const cachePct = typeof rawMeta.cacheHitPct === 'number' ? rawMeta.cacheHitPct : undefined
+          const hasAny = bound != null || used != null || duration != null || cacheTokens != null || cachePct != null
+          return hasAny ? { boundToolsCount: bound, usedToolsCount: used, durationMs: duration, cacheHitTokens: cacheTokens, cacheHitPct: cachePct } : undefined
+        })() : undefined
         return {
           id: item.id.toString(),
           type: item.role === 'user' ? 'user' : 'bot',
           content: item.content,
-          timestamp: new Date(item.createdAt),
+          timestamp: new Date(item.createdAt || Date.now()),
           isMarkdown: item.role === 'assistant',
-          toolCalls: toolCalls && toolCalls.length > 0 ? toolCalls : undefined,
-          tokens: item.inputTokens || item.outputTokens ? {
-            inputTokens: item.inputTokens || 0,
-            outputTokens: item.outputTokens || 0,
+          toolCalls: toolCallsDisplay,
+          tokens: (item.inputTokens != null || item.outputTokens != null) ? {
+            inputTokens: item.inputTokens ?? 0,
+            outputTokens: item.outputTokens ?? 0,
           } : undefined,
+          metadata,
         }
       }).reverse()
 
@@ -430,6 +472,18 @@ const sendMessage = async () => {
               botMessage.tokens = {
                 inputTokens: json.data.inputTokens || 0,
                 outputTokens: json.data.outputTokens || 0,
+              }
+              const meta = json.data.metadata
+              if (meta && typeof meta === 'object') {
+                const bound = Array.isArray(meta.boundTools) ? meta.boundTools.length : undefined
+                const used = typeof meta.usedToolsCount === 'number' ? meta.usedToolsCount : (Array.isArray(meta.usedTools) ? meta.usedTools.length : undefined)
+                botMessage.metadata = {
+                  boundToolsCount: bound,
+                  usedToolsCount: used,
+                  durationMs: typeof meta.durationMs === 'number' ? meta.durationMs : undefined,
+                  cacheHitTokens: typeof meta.cacheHitTokens === 'number' ? meta.cacheHitTokens : undefined,
+                  cacheHitPct: typeof meta.cacheHitPct === 'number' ? meta.cacheHitPct : undefined,
+                }
               }
             }
           } else if (json.type === 'error') {
@@ -732,44 +786,110 @@ onBeforeUnmount(async () => {
                   </div>
 
                   <div
-                    class="text-xs mt-2 opacity-60 flex items-center gap-2"
-                    :class="message.type === 'user' ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'"
+                    class="text-xs mt-2 flex items-center gap-2 flex-wrap"
+                    :class="message.type === 'user' ? 'text-white/80 opacity-60' : 'text-gray-500 dark:text-gray-400'"
                   >
                     <span>{{ formatTime(message.timestamp) }}</span>
                     <span
-                      v-if="message.type === 'bot' && message.tokens"
-                      class="text-[10px] opacity-50 token-info select-text"
+                      v-if="message.type === 'bot' && (message.tokens || message.isStreaming)"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800/80 text-[11px] font-medium text-gray-600 dark:text-gray-400 token-info select-text"
                       style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
                     >
-                      • {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
+                      <Icon name="lucide:activity" class="w-3 h-3 flex-shrink-0" />
+                      <template v-if="message.tokens && (message.tokens.inputTokens > 0 || message.tokens.outputTokens > 0)">
+                        {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
+                      </template>
+                      <template v-else>
+                        {{ message.isStreaming ? '— in / — out' : '0 in / 0 out' }}
+                      </template>
+                    </span>
+                    <span
+                      v-if="message.type === 'bot' && message.metadata && (message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null || message.metadata.durationMs != null)"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-100 dark:bg-violet-900/30 text-[11px] font-medium text-violet-700 dark:text-violet-400 token-info select-text"
+                      style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
+                    >
+                      <Icon name="lucide:wrench" class="w-3 h-3 flex-shrink-0" />
+                      <template v-if="message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null">
+                        {{ message.metadata.usedToolsCount ?? '—' }}/{{ message.metadata.boundToolsCount ?? '—' }} tools
+                      </template>
+                      <template v-if="message.metadata.durationMs != null">
+                        <span v-if="message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null"> · </span>
+                        {{ (message.metadata.durationMs / 1000).toFixed(1) }}s
+                      </template>
+                    </span>
+                    <span
+                      v-if="message.type === 'bot' && message.metadata && (message.metadata.cacheHitTokens != null || message.metadata.cacheHitPct != null)"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 token-info select-text"
+                      style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
+                    >
+                      <Icon name="lucide:database" class="w-3 h-3 flex-shrink-0" />
+                      <template v-if="message.metadata?.cacheHitTokens != null && message.metadata.cacheHitTokens > 0">
+                        {{ message.metadata.cacheHitTokens.toLocaleString() }} cache
+                      </template>
+                      <template v-if="message.metadata?.cacheHitPct != null">
+                        <span v-if="message.metadata?.cacheHitTokens != null && message.metadata.cacheHitTokens > 0"> · </span>
+                        {{ message.metadata.cacheHitPct }}%
+                      </template>
                     </span>
                   </div>
 
                   <div
                     v-if="message.type === 'bot' && message.toolCalls && message.toolCalls.length > 0"
-                    class="mt-3"
+                    class="mt-3 space-y-1"
                   >
                     <template v-if="message.toolCalls[0]?.status !== undefined">
-                      <div
-                        class="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden w-fit"
-                        :class="{
-                          'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800/70 transition-colors': message.toolCalls.length > 1
-                        }"
-                        @click="message.toolCalls.length > 1 && toggleToolCalls(message.id)"
-                      >
+                      <template v-if="message.toolCalls.length === 1">
                         <div
-                          v-if="message.toolCalls.length === 1 || expandedToolCalls[message.id]"
-                          class="space-y-px"
+                          class="inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 w-fit"
+                          :class="{
+                            'text-gray-500 dark:text-gray-400': message.toolCalls[0].status === 'pending',
+                            'text-success-600 dark:text-success-500': message.toolCalls[0].status === 'success',
+                            'text-error-600 dark:text-error-500': message.toolCalls[0].status === 'error',
+                          }"
+                        >
+                          <Icon
+                            v-if="message.toolCalls[0].status === 'pending'"
+                            name="lucide:loader-2"
+                            class="w-3.5 h-3.5 animate-spin flex-shrink-0"
+                          />
+                          <Icon
+                            v-else-if="message.toolCalls[0].status === 'success'"
+                            name="lucide:check-circle"
+                            class="w-3.5 h-3.5 flex-shrink-0"
+                          />
+                          <Icon
+                            v-else-if="message.toolCalls[0].status === 'error'"
+                            name="lucide:x-circle"
+                            class="w-3.5 h-3.5 flex-shrink-0"
+                          />
+                          <span class="font-medium">{{ message.toolCalls[0].name }}</span>
+                        </div>
+                      </template>
+                      <template v-else>
+                        <button
+                          type="button"
+                          class="inline-flex items-center gap-2 px-2 py-1.5 text-xs rounded-md bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700/50 transition-colors w-fit"
+                          @click="toggleToolCalls(message.id)"
+                        >
+                          <Icon name="lucide:wrench" class="w-3.5 h-3.5 flex-shrink-0" />
+                          <span>{{ message.toolCalls.length }} tool calls</span>
+                          <Icon
+                            :name="expandedToolCalls[message.id] ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+                            class="w-3.5 h-3.5 flex-shrink-0"
+                          />
+                        </button>
+                        <div
+                          v-if="expandedToolCalls[message.id]"
+                          class="rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30 overflow-hidden w-fit"
                         >
                           <div
                             v-for="(toolCall, index) in getSortedToolCalls(message.toolCalls)"
                             :key="toolCall.id"
-                            class="flex items-center gap-1.5 px-2 py-1 text-xs"
+                            class="flex items-center gap-1.5 px-2 py-1.5 text-xs border-t first:border-t-0 border-gray-200 dark:border-gray-700/50"
                             :class="{
                               'text-gray-500 dark:text-gray-400': toolCall.status === 'pending',
                               'text-success-600 dark:text-success-500': toolCall.status === 'success',
                               'text-error-600 dark:text-error-500': toolCall.status === 'error',
-                              'border-b border-gray-200 dark:border-gray-700/50': index < getSortedToolCalls(message.toolCalls).length - 1
                             }"
                           >
                             <Icon
@@ -787,41 +907,10 @@ onBeforeUnmount(async () => {
                               name="lucide:x-circle"
                               class="w-3.5 h-3.5 flex-shrink-0"
                             />
-                            <span class="flex-1">{{ toolCall.name }}</span>
+                            <span class="font-medium">{{ toolCall.name }}</span>
                           </div>
                         </div>
-                        <div
-                          v-else
-                          class="flex items-center gap-1.5 px-2 py-1 text-xs"
-                        >
-                          <template v-if="getDisplayToolCall(message.toolCalls)">
-                            <Icon
-                              v-if="getDisplayToolCall(message.toolCalls)!.status === 'pending'"
-                              name="lucide:loader-2"
-                              class="w-3.5 h-3.5 animate-spin flex-shrink-0"
-                            />
-                            <Icon
-                              v-else-if="getDisplayToolCall(message.toolCalls)!.status === 'success'"
-                              name="lucide:check-circle"
-                              class="w-3.5 h-3.5 flex-shrink-0"
-                            />
-                            <Icon
-                              v-else-if="getDisplayToolCall(message.toolCalls)!.status === 'error'"
-                              name="lucide:x-circle"
-                              class="w-3.5 h-3.5 flex-shrink-0"
-                            />
-                            <span
-                              class="flex-1"
-                              :class="{
-                                'text-gray-500 dark:text-gray-400': getDisplayToolCall(message.toolCalls)!.status === 'pending',
-                                'text-success-600 dark:text-success-500': getDisplayToolCall(message.toolCalls)!.status === 'success',
-                                'text-error-600 dark:text-error-500': getDisplayToolCall(message.toolCalls)!.status === 'error',
-                              }"
-                            >{{ getDisplayToolCall(message.toolCalls)!.name }}</span>
-                            <span class="text-[10px] opacity-50">+{{ message.toolCalls.length - 1 }}</span>
-                          </template>
-                        </div>
-                      </div>
+                      </template>
                     </template>
                     <div
                       v-else
