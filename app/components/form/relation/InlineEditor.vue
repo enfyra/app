@@ -129,7 +129,7 @@ function navigateToDetail(item: any) {
 
       <button
         type="button"
-        class="px-1.5 flex items-center justify-center text-[10px] text-gray-300 hover:bg-primary-500/20 hover:text-primary-300 transition-colors"
+        class="px-1.5 flex items-center justify-center text-[10px] text-gray-600 dark:text-gray-300 hover:bg-primary-500/20 hover:text-primary-600 dark:hover:text-primary-300 transition-colors"
         :title="`Open detail for ${getId(item)}`"
         @click.stop="navigateToDetail(item)"
       >
@@ -139,7 +139,7 @@ function navigateToDetail(item: any) {
       <button
         v-if="!props.disabled"
         type="button"
-        class="px-1.5 flex items-center justify-center text-[10px] text-gray-300 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+        class="px-1.5 flex items-center justify-center text-[10px] text-gray-600 dark:text-gray-300 hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
         title="Remove relation"
         @click.stop="removeId(getId(item))"
       >
