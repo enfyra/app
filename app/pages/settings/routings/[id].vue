@@ -57,7 +57,7 @@
         :default-handler="defaultHandler"
         @edit-handler="editHandler"
         @edit-hook="editHook"
-        @create-handler="createHandler"
+        @create-handler="createHandler($event)"
         @create-hook="createHook"
         @delete-handler="deleteHandler"
         @delete-hook="deleteHook"
@@ -244,6 +244,9 @@ watch(() => routeData.value?.data?.[0], (currentRoute) => {
   typeMap.value = {
     isEnabled: {
       disabled: hasAssociatedTable
+    },
+    publishedMethods: {
+      type: 'methods-selector'
     }
   };
 }, { immediate: true });
@@ -561,9 +564,14 @@ watch(showCreateHandlerDrawer, (isOpen) => {
   }
 });
 
-function createHandler() {
+function createHandler(methodObject?: { method: string; id?: string }) {
   handlerForm.value = generateHandlerEmptyForm();
   handlerForm.value.route = { id: routeId.value };
+
+  if (methodObject) {
+    handlerForm.value.method = methodObject;
+  }
+
   handlerErrors.value = {};
   showCreateHandlerDrawer.value = true;
 }
@@ -676,7 +684,7 @@ watch(showEditHandlerDrawer, (isOpen) => {
 
 async function editHandler(handler: any) {
   if (handler._isDefault) {
-    createHandler();
+    createHandler(handler._methodObject);
     return;
   }
 

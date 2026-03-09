@@ -7,7 +7,8 @@
             v-model="createForm"
             :table-name="tableName"
             v-model:errors="createErrors"
-            :excluded="['mainTable']"
+            :excluded="['mainTable', 'preHook', 'postHook', 'handlers', 'routePermissions']"
+            :field-map="fieldMap"
             mode="create"
           />
         </UForm>
@@ -27,6 +28,10 @@ const createErrors = ref<Record<string, string>>({});
 
 const { generateEmptyForm, validate } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
+
+const fieldMap = {
+  publishedMethods: { type: 'methods-selector' },
+};
 
 registerPageHeader({
   title: "Create New Route",

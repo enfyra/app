@@ -81,8 +81,8 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       const line = doc.line(i)
       const text = line.text
 
-      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS)\b/g
-      const templateWithBracketRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS)\s*\[(['"])([^'"]*)\1\]/g
+      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS|SOCKET)\b/g
+      const templateWithBracketRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS|SOCKET)\s*\[(['"])([^'"]*)\1\]/g
       const throwRegex = /@THROW\d*/g
 
       const matchedRanges: Array<{ from: number; to: number }> = []

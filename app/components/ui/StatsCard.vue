@@ -23,7 +23,7 @@
       </div>
       <div
         v-if="$slots.icon"
-        class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-gray-50 dark:bg-gray-900"
+        class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 glass-subtle"
       >
         <slot name="icon" />
       </div>
@@ -54,8 +54,8 @@ const trendColor = computed(() => {
   if (!props.trend) return undefined;
 
   const colors = {
-    up: "text-success-600 dark:text-success-500",
-    down: "text-error-600 dark:text-error-500",
+    up: "text-emerald-500",
+    down: "text-rose-500",
     neutral: "text-gray-500 dark:text-gray-400",
   };
 

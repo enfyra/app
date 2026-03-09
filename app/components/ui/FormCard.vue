@@ -2,13 +2,13 @@
   <UiModernCard
     variant="form"
     :class="[
-      error && 'border-error-500/50 bg-error-50 dark:bg-error-500/10',
-      focused && 'border-brand-500/50 ring-2 ring-brand-500/20',
+      error && 'border-rose-500/50 bg-rose-500/10',
+      focused && 'border-violet-500/40 ring-2 ring-violet-500/20',
       className,
     ]"
     v-bind="$attrs"
   >
-    <div v-if="title || description" class="mb-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+    <div v-if="title || description" class="mb-6 pb-4" style="border-bottom: 1px solid var(--glass-border);">
       <h3 v-if="title" class="text-lg mb-1 font-semibold text-gray-800 dark:text-white/90">
         {{ title }}
       </h3>

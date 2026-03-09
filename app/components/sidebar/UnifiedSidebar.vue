@@ -174,9 +174,9 @@ const visibleGroups = computed(() => {
 </script>
 
 <template>
-  <nav class="flex flex-col h-full relative bg-white dark:bg-gray-900" style="height: 100dvh;">
+  <nav class="flex flex-col h-full relative" style="height: 100dvh;">
 
-    <div class="h-16 flex items-center justify-between px-5 py-8 border-b border-gray-200 dark:border-gray-800 relative">
+    <div class="h-16 flex items-center justify-between px-5 py-8 relative" style="border-bottom: 1px solid var(--glass-border);">
       <div v-if="!isCollapsed" class="flex items-center gap-3">
         <div class="relative">
           <div class="relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
@@ -199,7 +199,7 @@ const visibleGroups = computed(() => {
       <button
         v-if="!isMobile && !isTablet"
         @click="setSidebarCollapsed(!isCollapsed)"
-        class="h-9 w-9 p-0 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors duration-150 text-gray-500 dark:text-gray-400"
+        class="h-9 w-9 p-0 flex items-center justify-center rounded-xl glass-button text-violet-400"
         :class="isCollapsed ? 'mx-auto' : ''"
       >
         <UIcon
@@ -218,7 +218,7 @@ const visibleGroups = computed(() => {
         v-model="searchQuery"
           type="text"
         placeholder="Search menu..."
-          class="h-10 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-4 py-2.5 pl-10 text-sm text-gray-800 dark:text-white/90 shadow-theme-xs placeholder:text-gray-400 dark:placeholder:text-white/30 focus:border-brand-300 dark:focus:border-brand-800 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:bg-gray-900"
+          class="h-10 w-full rounded-xl glass-input px-4 py-2.5 pl-10 text-sm text-gray-800 dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/30 focus:border-violet-500/40 dark:focus:border-violet-500/30 focus:outline-none focus:ring-3 focus:ring-violet-500/10"
           :class="searchQuery ? 'pr-10' : ''"
       />
         <UIcon name="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -252,8 +252,8 @@ const visibleGroups = computed(() => {
             v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
             :key="group.id"
           >
-            <div class="space-y-1" :class="{
-              'bg-gray-100 dark:bg-gray-800/60 rounded-xl': group.type === 'Dropdown Menu'
+            <div class="space-y-1 p-1" :class="{
+              '': group.type === 'Dropdown Menu'
             }">
               <div class="relative flex items-center">
                 <component
@@ -266,8 +266,8 @@ const visibleGroups = computed(() => {
                   :to="group.route"
                   @click="handleMenuClick"
                   :class="[
-                    'flex-1 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 p-2',
-                    ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/15 dark:text-brand-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                    'flex-1 aspect-square flex items-center justify-center rounded-xl p-2',
+                    ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-violet-500 bg-violet-500/10' : 'text-gray-400 dark:text-gray-500 hover:bg-violet-500/5'
                   ]"
                 >
                   <UIcon
@@ -279,8 +279,8 @@ const visibleGroups = computed(() => {
                   v-else-if="group.type === 'Dropdown Menu'"
                   @click="toggleGroup(group.id)"
                   :class="[
-                    'flex-1 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 p-2',
-                    'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                    'flex-1 aspect-square flex items-center justify-center rounded-xl p-2',
+                    'text-gray-400 dark:text-gray-500 hover:bg-violet-500/5'
                   ]"
                 >
                   <UIcon
@@ -292,7 +292,7 @@ const visibleGroups = computed(() => {
                 <button
                   v-if="group.type === 'Dropdown Menu'"
                   @click.stop="toggleGroup(group.id)"
-                  class="w-6 h-6 aspect-square flex items-center justify-center rounded-lg transition-colors duration-150 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
+                  class="w-6 h-6 aspect-square flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:bg-violet-500/5"
                 >
                   <UIcon
                     name="lucide:chevron-right"
@@ -325,8 +325,8 @@ const visibleGroups = computed(() => {
                     :to="item.path || item.route"
                     @click="handleMenuClick"
                     :class="[
-                      'w-8 h-8 flex items-center justify-center rounded-lg transition-colors duration-150',
-                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-brand-500 bg-brand-50 dark:bg-brand-500/15 dark:text-brand-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'
+                      'w-8 h-8 flex items-center justify-center rounded-xl',
+                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-violet-500 bg-violet-500/10' : 'text-gray-400 dark:text-gray-500 hover:bg-violet-500/5'
                     ]"
                   >
                     <UIcon
@@ -411,7 +411,7 @@ const visibleGroups = computed(() => {
             :name="'lucide:chevron-right'"
             :class="[
               'w-4 h-4 transition-transform duration-300 ease-out',
-              isGroupExpanded(group.id) ? 'rotate-90 text-brand-500 dark:text-brand-400' : 'text-gray-500 dark:text-gray-400'
+              isGroupExpanded(group.id) ? 'rotate-90 text-violet-400' : 'text-gray-500 dark:text-gray-400'
             ]"
           />
         </button>
@@ -448,9 +448,9 @@ const visibleGroups = computed(() => {
       </template>
     </div>
 
-    <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="border-t border-gray-200 dark:border-gray-800 relative">
+    <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="relative" style="border-top: 1px solid var(--glass-border);">
       <template v-for="(group, index) in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">
-        <div :class="index > 0 ? 'border-t border-gray-200 dark:border-gray-800' : ''">
+        <div :class="index > 0 ? 'glass-subtle' : ''">
           <PermissionGate :condition="group.permission as any">
             <div :class="(isMobile || isTablet) ? 'p-2' : (isCollapsed ? 'p-2' : 'p-4')">
               <component

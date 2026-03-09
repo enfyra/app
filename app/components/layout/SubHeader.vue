@@ -38,7 +38,13 @@
                 : unref(action.disabled)
             "
             @click="action.onClick"
-            :class="action.class"
+            :class="[
+              action.class,
+              (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
+              (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
+                ? '!bg-white !border-2 !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                : ''
+            ]"
           />
         </PermissionGate>
       </template>
@@ -74,7 +80,13 @@
                 : unref(action.disabled)
             "
             @click="action.onClick"
-            :class="action.class"
+            :class="[
+              action.class,
+              (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
+              (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
+                ? '!bg-white !border-2 !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                : ''
+            ]"
           />
         </PermissionGate>
       </template>

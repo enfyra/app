@@ -162,10 +162,10 @@ function handleRootReorder(event: DragEvent) {
     
     <div v-else class="space-y-4">
       <div class="menu-preview-container">
-      <div class="menu-preview bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+      <div class="menu-preview glass-card rounded-2xl p-4">
         <div
           v-if="canMoveToRoot"
-          class="mb-2 p-2 border-2 border-dashed border-blue-400 dark:border-blue-500 rounded-lg bg-blue-50 dark:bg-blue-900/20"
+          class="mb-2 p-2 border-2 border-dashed border-violet-400 dark:border-violet-500 rounded-xl bg-violet-500/10 dark:bg-violet-500/20"
         >
           <UButton
             size="sm"
@@ -216,8 +216,8 @@ function handleRootReorder(event: DragEvent) {
 <style scoped>
 .ghost-item {
   opacity: 0.5;
-  background: rgba(59, 130, 246, 0.1);
-  border: 2px dashed rgb(59, 130, 246);
+  background: rgba(139, 92, 246, 0.1);
+  border: 2px dashed rgb(139, 92, 246);
 }
 
 .chosen-item {
@@ -226,13 +226,12 @@ function handleRootReorder(event: DragEvent) {
 
 .dragging-item {
   opacity: 0.5;
-  transform: rotate(2deg);
 }
 
 .menu-visual-editor :deep(.sortable-ghost) {
   opacity: 0.5;
-  background: rgba(59, 130, 246, 0.1);
-  border: 2px dashed rgb(59, 130, 246);
+  background: rgba(139, 92, 246, 0.1);
+  border: 2px dashed rgb(139, 92, 246);
 }
 
 .menu-visual-editor :deep(.sortable-chosen) {
@@ -241,6 +240,5 @@ function handleRootReorder(event: DragEvent) {
 
 .menu-visual-editor :deep(.sortable-drag) {
   opacity: 0.5;
-  transform: rotate(2deg);
 }
 </style>

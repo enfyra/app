@@ -45,9 +45,14 @@ function close() {
       v-model:open="isOpen"
       :handle="props.handle"
       :class="props.class"
+      :ui="{
+        content: 'glass-modal',
+        header: 'pb-0',
+        body: 'pt-4',
+      }"
       :close="{
         color: 'error',
-        variant: 'solid',
+        variant: 'soft',
         size: (isMobile || isTablet) ? 'lg' : 'xl',
       }"
     >

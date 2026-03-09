@@ -17,6 +17,7 @@
               v-model:errors="localErrors"
               :table-name="'route_handler_definition'"
               :excluded="['createdBy', 'updatedBy', 'route']"
+              :field-map="fieldMap"
               mode="create"
             />
           </UForm>
@@ -77,6 +78,10 @@ const localErrors = computed({
   get: () => props.errors,
   set: (value) => emit('update:errors', value),
 });
+
+const fieldMap = {
+  method: { type: 'method-selector' },
+};
 
 watch(() => props.modelValue, (isOpen) => {
   if (!isOpen) {

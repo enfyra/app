@@ -32,73 +32,75 @@
     </div>
 
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <CommonFormCard>
-        <template #header>
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold">Event Handlers</h3>
-            <UButton
-              icon="i-lucide-plus"
-              size="sm"
-              color="primary"
-              variant="soft"
-              @click="handleCreateEvent"
-            >
-              Create Event
-            </UButton>
-          </div>
-        </template>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Event Handlers</h3>
+        <UButton
+          icon="lucide:plus"
+          size="sm"
+          color="primary"
+          variant="solid"
+          @click="handleCreateEvent"
+        >
+          Create Event
+        </UButton>
+      </div>
 
-        <div v-if="events.length > 0" class="space-y-3">
-          <div
-            v-for="event in events"
-            :key="event.id"
-            class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          >
-            <div class="flex items-center justify-between">
-              <div class="flex-1 cursor-pointer" @click="handleEditEvent(event)">
-                <div class="flex items-center gap-3">
-                  <h4 class="font-medium">{{ event.eventName }}</h4>
-                  <UBadge
-                    :variant="event.isEnabled ? 'soft' : 'soft'"
-                    :color="event.isEnabled ? 'success' : 'neutral'"
-                    size="sm"
-                  >
-                    {{ event.isEnabled ? 'Active' : 'Inactive' }}
-                  </UBadge>
-                </div>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ event.description || 'No description' }}</p>
-              </div>
-              <div class="flex items-center gap-2">
-                <UButton
-                  :icon="event.isEnabled ? 'i-lucide-power' : 'i-lucide-power-off'"
-                  size="xs"
-                  :color="event.isEnabled ? 'warning' : 'success'"
-                  variant="ghost"
-                  @click.stop="toggleEventStatus(event)"
-                />
-                <UButton
-                  icon="i-lucide-trash-2"
-                  size="xs"
-                  color="error"
-                  variant="ghost"
-                  @click.stop="deleteEvent(event)"
-                />
-                <UButton
-                  icon="i-lucide-chevron-right"
-                  size="xs"
-                  color="neutral"
-                  variant="ghost"
-                  @click="handleEditEvent(event)"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+      <div v-if="events.length > 0" class="grid gap-4 grid-cols-1 md:grid-cols-2">
+        <CommonSettingsCard
+          v-for="event in events"
+          :key="event.id"
+          :title="event.eventName"
+          :description="event.description || 'No description'"
+          icon="lucide:zap"
+          icon-color="warning"
+          :card-class="'cursor-pointer'"
+          @click="handleEditEvent(event)"
+          :stats="[
+            {
+              label: 'Status',
+              component: 'UBadge',
+              props: {
+                variant: 'soft',
+                color: event.isEnabled ? 'success' : 'neutral',
+              },
+              value: event.isEnabled ? 'Active' : 'Inactive'
+            }
+          ]"
+          :header-actions="[
+            {
+              component: 'USwitch',
+              props: {
+                'model-value': event.isEnabled,
+              },
+              onClick: (e?: Event) => e?.stopPropagation(),
+              onUpdate: () => toggleEventStatus(event),
+            }
+          ]"
+          :actions="[
+            {
+              label: 'Delete',
+              props: {
+                icon: 'lucide:trash-2',
+                variant: 'solid',
+                color: 'error',
+                size: 'sm',
+              },
+              onClick: (e?: Event) => {
+                e?.stopPropagation();
+                deleteEvent(event);
+              },
+            }
+          ]"
+        />
+      </div>
 
-        <div v-else class="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
-          No event handlers defined. Click "Create Event" to add one.
-        </div>
-      </CommonFormCard>
+      <CommonEmptyState
+        v-else
+        title="No event handlers"
+        description="No event handlers defined. Click 'Create Event' to add one."
+        icon="lucide:zap-off"
+        size="sm"
+      />
     </div>
 
     <WebsocketEventEditorDrawer
@@ -193,6 +195,15 @@ const {
 });
 
 const {
+  error: deleteError,
+  execute: executeDelete,
+  pending: deleteLoading,
+} = useApi(() => `/websocket_definition`, {
+  method: "delete",
+  errorContext: "Delete WebSocket Gateway",
+});
+
+const {
   error: toggleEventError,
   execute: executeToggleEvent,
 } = useApi(() => `/websocket_event_definition`, {
@@ -214,9 +225,31 @@ useHeaderActionRegistry([
     label: "Reset",
     icon: "lucide:rotate-ccw",
     variant: "outline",
-    color: "neutral",
-    onClick: handleReset,
+    color: "warning",
+    size: "md",
+    order: 1,
     disabled: computed(() => !hasFormChanges.value),
+    onClick: handleReset,
+    show: computed(() => hasFormChanges.value),
+  },
+  {
+    id: "delete-websocket",
+    label: "Delete",
+    icon: "lucide:trash",
+    variant: "solid",
+    color: "error",
+    size: "md",
+    order: 3,
+    onClick: deleteGateway,
+    loading: computed(() => deleteLoading.value),
+    permission: {
+      and: [
+        {
+          route: "/websocket_definition",
+          actions: ["delete"],
+        },
+      ],
+    },
   },
   {
     id: "save-websocket",
@@ -224,8 +257,11 @@ useHeaderActionRegistry([
     icon: "lucide:save",
     variant: "solid",
     color: "primary",
+    size: "md",
+    order: 2,
     submit: updateGateway,
     loading: computed(() => updateLoading.value),
+    disabled: computed(() => !hasFormChanges.value),
     permission: {
       and: [
         {
@@ -318,6 +354,36 @@ async function handleReset() {
     color: "success",
     description: "All changes have been discarded.",
   });
+}
+
+async function deleteGateway() {
+  const ok = await confirm({
+    title: "Delete WebSocket Gateway",
+    content: "Are you sure you want to delete this WebSocket gateway? This action cannot be undone.",
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+
+  if (!ok) return;
+
+  await executeDelete({ id: String(pageId.value) });
+
+  if (deleteError.value) {
+    toast.add({
+      title: "Error",
+      description: deleteError.value.message || "Failed to delete WebSocket gateway",
+      color: "error",
+    });
+    return;
+  }
+
+  toast.add({
+    title: "Success",
+    description: "WebSocket gateway has been deleted successfully",
+    color: "success",
+  });
+
+  await navigateTo("/settings/websockets");
 }
 
 async function toggleEventStatus(event: any) {

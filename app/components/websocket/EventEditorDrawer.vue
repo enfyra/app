@@ -162,6 +162,7 @@ async function handleSave() {
   <CommonDrawer
     v-model="isOpen"
     direction="right"
+    class="w-full max-w-full"
   >
     <template #header>
       <div class="flex items-center gap-2">

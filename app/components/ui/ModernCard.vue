@@ -2,19 +2,15 @@
   <component
     :is="animated ? 'div' : 'div'"
     ref="cardRef"
-    class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.06] transition-all duration-300 relative overflow-hidden"
+    class="rounded-2xl relative overflow-hidden"
     :class="[
       variantClasses,
       sizeClasses[size],
-      glassEffect && 'backdrop-blur-xl',
+      glassEffect ? 'glass-card' : '',
       elevated && 'shadow-theme-md',
       className,
     ]"
     :style="{
-      ...(glassEffect && {
-        background: 'rgba(21, 27, 46, 0.6)',
-        backdropFilter: 'blur(20px)',
-      }),
       opacity: isVisible ? 1 : 0,
       transform: animated
         ? isVisible
@@ -25,15 +21,15 @@
     }"
     v-bind="$attrs"
   >
-    
+
     <div
       v-if="accentBorder"
-      class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7C3AED]/40 to-transparent"
+      class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/60 to-transparent"
     />
 
     <div
       v-if="variant === 'settings'"
-      class="absolute inset-0 bg-gradient-to-br from-[#0066FF]/5 to-[#7C3AED]/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+      class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
     />
 
     <div class="relative z-10">
@@ -63,7 +59,7 @@ const props = withDefaults(defineProps<Props>(), {
   size: "default",
   elevated: false,
   animated: false,
-  glassEffect: false,
+  glassEffect: true,
   accentBorder: false,
   className: "",
   animationDelay: "0ms",
@@ -81,27 +77,21 @@ const sizeClasses = {
 const variantClasses = computed(() => {
   const variants = {
     form: [
-      "bg-white dark:bg-white/[0.06]",
-      "border-gray-200 dark:border-gray-800",
+      "glass-card",
     ].join(" "),
     settings: [
-      "bg-white dark:bg-white/[0.03]",
-      "border-gray-200 dark:border-gray-800",
-      "hover:border-brand-300 dark:hover:border-brand-800",
-      "hover:shadow-theme-md",
+      "glass-card-hover",
       "group cursor-pointer",
     ].join(" "),
     stats: [
-      "bg-white dark:bg-white/[0.03]",
-      "border-gray-200 dark:border-gray-800",
-      "hover:border-gray-300 dark:hover:border-gray-700",
-      props.elevated && "shadow-theme-sm hover:shadow-theme-md",
+      "glass-card",
+      props.elevated && "shadow-glow",
     ]
       .filter(Boolean)
       .join(" "),
-    simple: ["bg-white dark:bg-white/[0.03]", "border-gray-200 dark:border-gray-800"].join(
-      " "
-    ),
+    simple: [
+      "glass-card",
+    ].join(" "),
   };
 
   return variants[props.variant];

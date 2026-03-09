@@ -1,9 +1,9 @@
 .fade-enter-active {
-  transition: opacity 0.15s ease;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fade-leave-active {
-  transition: opacity 0.15s ease;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fade-enter-from,
@@ -18,10 +18,75 @@
 
 .loading-fade-enter-active,
 .loading-fade-leave-active {
-  transition: opacity 0.3s ease-in-out;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .loading-fade-enter-from,
 .loading-fade-leave-to {
   opacity: 0;
+}
+
+.glass-enter-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.glass-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.glass-enter-from {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+}
+
+.glass-leave-to {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+}
+
+.glass-enter-to,
+.glass-leave-from {
+  opacity: 1;
+  backdrop-filter: blur(20px);
+}
+
+.slide-up-enter-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide-up-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.glow-enter-active {
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.glow-leave-active {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.glow-enter-from {
+  opacity: 0;
+  box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+}
+
+.glow-leave-to {
+  opacity: 0;
+  box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+}
+
+.glow-enter-to {
+  opacity: 1;
+  box-shadow: var(--shadow-glow);
 }
