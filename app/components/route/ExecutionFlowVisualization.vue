@@ -97,7 +97,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   editHandler: [handler: any];
   editHook: [hook: any];
-  createHandler: [];
+  createHandler: [methodObject?: { method: string; id?: string }];
   createHook: [type: 'pre' | 'post'];
   deleteHandler: [handler: any];
   deleteHook: [hook: any];
@@ -148,7 +148,7 @@ const nodeTypes = markRaw({
         type: 'handler',
         onClick: () => {
           if (props.data._isDefault || props.data.isDefault) {
-            emit('createHandler');
+            emit('createHandler', props.data._methodObject);
           } else {
             emit('editHandler', props.data);
           }
@@ -197,6 +197,32 @@ const nodeTypes = markRaw({
       ]);
     },
   }),
+});
+
+const methodLookup = computed(() => {
+  const lookup: Record<string, any> = {};
+
+  props.sortedPreHooks.forEach((hook) => {
+    if (hook.methods && Array.isArray(hook.methods)) {
+      hook.methods.forEach((method: any) => {
+        if (method.method && props.getId(method)) {
+          lookup[method.method] = method;
+        }
+      });
+    }
+  });
+
+  props.sortedAfterHooks.forEach((hook) => {
+    if (hook.methods && Array.isArray(hook.methods)) {
+      hook.methods.forEach((method: any) => {
+        if (method.method && props.getId(method)) {
+          lookup[method.method] = method;
+        }
+      });
+    }
+  });
+
+  return lookup;
 });
 
 const methodGroups = computed(() => {
@@ -379,6 +405,9 @@ const allNodes = computed(() => {
 
     if (group.handler) {
       const handlerId = `handler-${group.method}-${group.handler._isDefault ? 'default' : props.getId(group.handler)}`;
+      const methodObject = group.handler._isDefault
+        ? (methodLookup.value[group.method] || { method: group.method })
+        : group.handler.method;
       nodes.push({
         id: handlerId,
         type: 'handler',
@@ -388,6 +417,8 @@ const allNodes = computed(() => {
           label: group.handler.name || group.handler.logic?.substring(0, 20) || 'Unnamed Handler',
           isDefault: group.handler._isDefault || false,
           enabled: group.handler.isEnabled !== false,
+          _method: group.method,
+          _methodObject: methodObject,
         },
         draggable: false,
         selectable: false,

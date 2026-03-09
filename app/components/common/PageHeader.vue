@@ -47,9 +47,9 @@ const hasActions = computed(() => {
 
 const gradientStyle = computed(() => {
   const gradients = {
-    purple: "radial-gradient(at 0% 0%, rgba(124, 58, 237, 0.15) 0%, transparent 50%)",
-    blue: "radial-gradient(at 100% 0%, rgba(0, 102, 255, 0.15) 0%, transparent 50%)",
-    cyan: "radial-gradient(at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 50%)",
+    purple: "radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.2) 0%, transparent 50%), radial-gradient(at 100% 100%, rgba(232, 121, 249, 0.1) 0%, transparent 50%)",
+    blue: "radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.2) 0%, transparent 50%), radial-gradient(at 0% 100%, rgba(34, 211, 238, 0.1) 0%, transparent 50%)",
+    cyan: "radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.15) 0%, transparent 50%), radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)",
     none: undefined,
   };
 
@@ -142,7 +142,13 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
                     : unref(action.disabled)
                 "
                 @click="action.onClick"
-                :class="action.class"
+                :class="[
+                  action.class,
+                  (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
+                  (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
+                    ? '!bg-white !border-2 !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                    : ''
+                ]"
               />
             </PermissionGate>
           </template>
@@ -173,7 +179,13 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
                     : unref(action.disabled)
                 "
                 @click="action.onClick"
-                :class="action.class"
+                :class="[
+                  action.class,
+                  (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
+                  (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
+                    ? '!bg-white !border-2 !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                    : ''
+                ]"
               />
             </PermissionGate>
           </template>

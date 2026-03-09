@@ -98,9 +98,38 @@ function getComponentConfigByKey(key: string) {
     placeholder: config.placeholder || column?.placeholder || key,
     class: "w-full",
     ...config.componentProps,
-    
+
     ...(hasError && !isSimpleJsonField && { error: props.errors[key] }),
   };
+
+  if (finalType === "method-selector") {
+    return {
+      component: resolveComponent("FormMethodSelector"),
+      componentProps: {
+        ...componentPropsBase,
+        modelValue: props.formData[key],
+        "onUpdate:modelValue": (val: any) => {
+          updateFormData(key, val);
+        },
+      },
+      fieldProps,
+    };
+  }
+
+  if (finalType === "methods-selector") {
+    return {
+      component: resolveComponent("FormMethodSelector"),
+      componentProps: {
+        ...componentPropsBase,
+        modelValue: props.formData[key],
+        multiple: true,
+        "onUpdate:modelValue": (val: any) => {
+          updateFormData(key, val);
+        },
+      },
+      fieldProps,
+    };
+  }
 
   if (isRelation) {
     return {

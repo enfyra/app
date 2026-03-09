@@ -3,7 +3,10 @@ import CommonBreadCrumbs from "~/components/common/BreadCrumbs.vue";
 export default defineNuxtPlugin(() => {
   const route = useRoute();
   const router = useRouter();
-  const { isMobile } = useScreen();
+  const { isMobile, width } = useScreen();
+  const { sidebarCollapsed, setSidebarCollapsed } = useGlobalState();
+
+  const isTabletOrMobile = computed(() => width.value <= 1024);
 
   const breadcrumbSegments = computed(() => {
     const parts = route.path.split("/").filter(Boolean);
@@ -21,12 +24,34 @@ export default defineNuxtPlugin(() => {
     router.back();
   };
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed.value);
+  };
+
   useHeaderActionRegistry([
+    {
+      id: "sidebar-toggle-button",
+      icon: "lucide:panel-left",
+      variant: "outline",
+      color: "neutral",
+      size: isMobile ? 'lg' : 'md',
+      side: "left",
+      class: 'cursor-pointer !aspect-square',
+      onClick: toggleSidebar,
+      global: true,
+      permission: {
+        allowAll: true,
+      },
+      order: 0,
+      get show() {
+        return !isTabletOrMobile.value && sidebarCollapsed.value;
+      },
+    },
     {
       id: "navigation-back-button",
       icon: "lucide:arrow-left",
-      variant: "soft",
-      color: "secondary",
+      variant: "outline",
+      color: "neutral",
       size: isMobile ? 'lg' : 'md',
       side: "left",
       class: 'cursor-pointer !aspect-square',
@@ -36,7 +61,7 @@ export default defineNuxtPlugin(() => {
       onClick: goBack,
       global: true,
       permission: {
-        allowAll: true, 
+        allowAll: true,
       },
       order: 1
     },
@@ -54,7 +79,7 @@ export default defineNuxtPlugin(() => {
       },
       global: true,
       permission: {
-        allowAll: true, 
+        allowAll: true,
       },
       order: 2
     },

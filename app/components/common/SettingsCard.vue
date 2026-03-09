@@ -1,18 +1,18 @@
 <template>
   <div
     :class="[
-      'relative group transition-all duration-300 overflow-hidden cursor-pointer h-full flex flex-col',
-      'bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800',
-      (isMobile || isTablet) ? 'rounded-lg p-2' : 'rounded-lg p-3',
+      'relative group overflow-hidden cursor-pointer h-full flex flex-col glass-card',
+      (isMobile || isTablet) ? 'rounded-xl p-2' : 'rounded-2xl p-4',
       cardClass,
-      'hover:shadow-theme-md'
     ]"
   >
-    
-    <div :class="`absolute inset-0 bg-gradient-to-br ${hoverGradientClass} opacity-0 group-hover:opacity-70 dark:group-hover:opacity-20 transition-opacity duration-300 pointer-events-none`" />
 
-    <div :class="(isMobile || isTablet) ? 'relative flex items-center gap-2 mb-1.5' : 'relative flex items-center gap-3 mb-2'">
-      
+    <div :class="`absolute inset-0 bg-gradient-to-br ${hoverGradientClass} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`" />
+
+    <div class="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-cyan-500/5 pointer-events-none" />
+
+    <div :class="(isMobile || isTablet) ? 'relative flex items-center gap-2 mb-1.5' : 'relative flex items-center gap-3 mb-3'">
+
       <div
         :class="[
           (isMobile || isTablet) ? 'w-8 h-8 rounded-lg' : 'w-10 h-10 rounded-xl',
@@ -54,8 +54,8 @@
     </div>
 
     <div class="flex-1">
-      
-      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 rounded-lg mb-1.5' : 'relative p-2 rounded-lg mb-2', 'bg-gray-100 dark:bg-gray-800']">
+
+      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 rounded-xl mb-1.5' : 'relative p-2.5 rounded-xl mb-3', 'glass-subtle']">
         <div
           v-for="(stat, index) in stats"
           :key="stat.label"
@@ -88,11 +88,11 @@
         </div>
       </div>
 
-      <div v-else-if="stats && stats.length && statsLayout === 'grid'" :class="(isMobile || isTablet) ? 'relative grid grid-cols-2 gap-1.5 mb-1.5' : 'relative grid grid-cols-2 gap-2 mb-2'">
+      <div v-else-if="stats && stats.length && statsLayout === 'grid'" :class="(isMobile || isTablet) ? 'relative grid grid-cols-2 gap-1.5 mb-1.5' : 'relative grid grid-cols-2 gap-2 mb-3'">
         <div
           v-for="stat in stats"
           :key="stat.label"
-          :class="[(isMobile || isTablet) ? 'text-center p-1.5 rounded-lg' : 'text-center p-2 rounded-lg', 'bg-gray-100 dark:bg-gray-800']"
+          :class="[(isMobile || isTablet) ? 'text-center p-1.5 rounded-xl' : 'text-center p-2.5 rounded-xl', 'glass-subtle']"
         >
           <div :class="(isMobile || isTablet) ? 'text-sm font-medium text-gray-800 dark:text-white/90 mb-0' : 'text-base font-medium text-gray-800 dark:text-white/90 mb-0.5'">
             <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-center">
@@ -120,16 +120,17 @@
         </div>
       </div>
 
-      <div v-if="$slots.default" :class="(isMobile || isTablet) ? 'relative mb-1.5' : 'relative mb-2'">
+      <div v-if="$slots.default" :class="(isMobile || isTablet) ? 'relative mb-1.5' : 'relative mb-3'">
         <slot />
       </div>
     </div>
 
     <div
       v-if="$slots.footer || (actions && actions.length > 0)"
-      :class="[(isMobile || isTablet) ? 'relative z-10 pt-1.5 mt-1.5 border-t' : 'relative z-10 pt-2 mt-2 border-t', 'border-gray-200 dark:border-gray-800']"
+      class="relative z-10 pt-3 mt-3"
+      style="border-top: 1px solid var(--glass-border);"
     >
-      
+
       <slot name="footer" />
 
       <div v-if="actions && actions.length" :class="(isMobile || isTablet) ? 'flex justify-end gap-1.5' : 'flex justify-end gap-2'">
@@ -215,7 +216,7 @@ const componentMap = {
 };
 
 const getComponent = (componentName?: string) => {
-  if (!componentName) return UButton; 
+  if (!componentName) return UButton;
   return componentMap[componentName as keyof typeof componentMap] || UButton;
 };
 
@@ -237,29 +238,29 @@ const getDefaultProps = (componentName?: string, context: 'header' | 'stats' = '
       UKbd: { size: 'xs' },
     }
   };
-  
+
   if (!componentName) return {};
   return defaults[context]?.[componentName as keyof typeof defaults[typeof context]] || {};
 };
 
 const iconBgClass = computed(() => {
   const colorMap = {
-    primary: "bg-gradient-to-br from-primary-500 to-primary-600",
-    success: "bg-gradient-to-br from-green-500 to-teal-500",
+    primary: "bg-gradient-to-br from-violet-500 to-indigo-600",
+    success: "bg-gradient-to-br from-emerald-500 to-teal-500",
     warning: "bg-gradient-to-br from-amber-500 to-orange-500",
-    error: "bg-gradient-to-br from-red-500 to-pink-500",
-    neutral: "bg-gradient-to-br from-gray-500 to-gray-600",
+    error: "bg-gradient-to-br from-rose-500 to-pink-500",
+    neutral: "bg-gradient-to-br from-gray-500 to-slate-600",
   };
   return colorMap[props.iconColor];
 });
 
 const hoverGradientClass = computed(() => {
   const colorMap = {
-    primary: "from-primary-500/50 to-primary-600/50 dark:from-primary-500/30 dark:to-primary-600/30",
-    success: "from-green-500/50 to-teal-500/50 dark:from-green-500/30 dark:to-teal-500/30",
-    warning: "from-amber-500/50 to-orange-500/50 dark:from-amber-500/30 dark:to-orange-500/30",
-    error: "from-red-500/50 to-pink-500/50 dark:from-red-500/30 dark:to-pink-500/30",
-    neutral: "from-gray-500/50 to-gray-600/50 dark:from-gray-500/30 dark:to-gray-600/30",
+    primary: "from-violet-500/10 to-cyan-500/5",
+    success: "from-emerald-500/10 to-teal-500/5",
+    warning: "from-amber-500/10 to-orange-500/5",
+    error: "from-rose-500/10 to-pink-500/5",
+    neutral: "from-gray-500/10 to-slate-500/5",
   };
   return colorMap[props.iconColor];
 });

@@ -81,17 +81,6 @@ function getProviderLabel(provider: string) {
   }
 }
 
-useHeaderActionRegistry([
-  {
-    id: "back-oauth-accounts",
-    label: "Back",
-    icon: "lucide:arrow-left",
-    variant: "outline",
-    color: "neutral",
-    to: "/settings/oauth/accounts",
-  },
-]);
-
 async function initializeForm() {
   await fetchAccount();
   const data = apiData.value?.data?.[0];

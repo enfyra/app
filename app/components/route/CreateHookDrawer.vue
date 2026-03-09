@@ -17,6 +17,7 @@
               v-model:errors="localErrors"
               :table-name="hookType === 'pre' ? 'pre_hook_definition' : 'post_hook_definition'"
               :excluded="['route', 'isSystem']"
+              :field-map="fieldMap"
               mode="create"
             />
           </UForm>
@@ -81,5 +82,9 @@ const localErrors = computed({
   get: () => props.errors,
   set: (value) => emit('update:errors', value),
 });
+
+const fieldMap = {
+  methods: { type: 'methods-selector' },
+};
 </script>
 

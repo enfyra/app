@@ -5,12 +5,11 @@
     :class="className"
     v-bind="$attrs"
   >
-    
+
     <div class="flex items-start gap-4 mb-4">
       <div
         v-if="$slots.icon"
-        class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-        style="background: linear-gradient(135deg, #0066FF 0%, #7C3AED 100%)"
+        class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-violet-500 to-indigo-600 text-white"
       >
         <slot name="icon" />
       </div>
@@ -28,7 +27,7 @@
       <div
         v-for="(stat, index) in stats"
         :key="index"
-        class="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-900"
+        class="text-center p-3 rounded-xl glass-subtle"
       >
         <div class="text-xl font-medium text-gray-800 dark:text-white/90">
           {{ stat.value }}
@@ -45,7 +44,8 @@
 
     <div
       v-if="$slots.footer"
-      class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800"
+      class="pt-4 mt-4"
+      style="border-top: 1px solid var(--glass-border);"
     >
       <slot name="footer" />
     </div>
