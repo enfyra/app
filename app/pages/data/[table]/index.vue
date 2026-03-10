@@ -14,6 +14,8 @@ const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
+const singleRecordIdMap = useState<Record<string, string>>('singleRecordIdMap', () => ({}));
+
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 
@@ -37,10 +39,16 @@ const {
 
 watch([() => schemas.value[tableName], isSingleRecord], async ([currentSchema, isSingle]) => {
   if (currentSchema && isSingle) {
+    const cachedId = singleRecordIdMap.value[tableName];
+    if (cachedId) {
+      navigateTo(`/data/${tableName}/${cachedId}`, { replace: true });
+      return;
+    }
     await fetchSingleRecord();
     const records = singleRecordData.value?.data;
     if (records && records.length > 0) {
       const recordId = getId(records[0]);
+      singleRecordIdMap.value[tableName] = recordId;
       navigateTo(`/data/${tableName}/${recordId}`, { replace: true });
     }
   }
