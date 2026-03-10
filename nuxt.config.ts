@@ -7,12 +7,15 @@ export default defineNuxtConfig({
   devServer: {
     port: parseInt(process.env.PORT || "3000"),
   },
-    modules: [
+  modules: [
     "@nuxt/icon",
     "@nuxt/ui",
     "nuxt-codemirror",
     "@enfyra/sdk-nuxt",
   ],
+  nitro: {
+    plugins: ['~/server/plugins/socket-relay.server.ts'],
+  },
   colorMode: {
     preference: "dark",
     fallback: "dark",
