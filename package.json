@@ -76,6 +76,7 @@
     "@vue-flow/minimap": "^1.5.4",
     "acorn": "^8.15.0",
     "acorn-walk": "^8.3.4",
+    "engine.io": "^6.6.6",
     "esbuild": "^0.27.2",
     "eslint": "^9.31.0",
     "highlight.js": "^11.11.1",
