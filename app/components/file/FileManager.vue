@@ -162,15 +162,18 @@ async function handleBulkDelete() {
     isSelectionMode.value = false;
 }
 
+const { isMobile, isTablet } = useScreen();
+
 useSubHeaderActionRegistry([
   {
     id: "page-view-mode",
-    label: computed(() =>
-      viewMode.value === "grid" ? "List View" : "Grid View"
-    ),
     icon: computed(() =>
       viewMode.value === "grid" ? "lucide:layout-list" : "lucide:layout-grid"
     ),
+    variant: "outline",
+    color: "neutral",
+    size: (isMobile.value || isTablet.value) ? "lg" : "md",
+    class: "cursor-pointer",
     onClick: toggleViewMode,
     side: "left",
   },

@@ -314,13 +314,13 @@ function getColumnLabel(columnId: string) {
           @click="handleRowClick(row.original)"
         >
           <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-700/50">
-            <div class="flex-1">
+            <div class="flex-1 min-w-0 overflow-hidden">
               <div class="flex items-center gap-2 mb-1">
                 <span class="text-xs text-gray-500">
                   ID: {{ getId(row.original) }}
                 </span>
               </div>
-              <h4 class="text-base font-semibold text-gray-200">
+              <h4 class="text-base font-semibold text-gray-200 truncate" :title="String(getPrimaryFieldValue(row))">
                 {{ getPrimaryFieldValue(row) }}
               </h4>
             </div>
@@ -337,16 +337,16 @@ function getColumnLabel(columnId: string) {
             <div
               v-for="cell in getVisibleCellsForCard(row)"
               :key="cell.id"
-              class="flex items-center justify-between text-sm"
+              class="flex items-center justify-between text-sm gap-2"
             >
-              <span class="text-gray-400">{{ getColumnLabel(cell.column.id) }}</span>
-              <span class="text-gray-200 font-medium text-right flex-1 ml-4 truncate" :title="String(cell.getValue())">
+              <span class="text-gray-400 shrink-0">{{ getColumnLabel(cell.column.id) }}</span>
+              <span class="text-gray-200 font-medium text-right flex-1 min-w-0 overflow-hidden truncate" :title="String(cell.getValue())">
                 <component
                   v-if="typeof cell.column.columnDef.cell === 'function'"
                   :is="cell.column.columnDef.cell"
                   v-bind="cell.getContext()"
                 />
-                <span v-else>{{ cell.getValue() }}</span>
+                <span v-else class="truncate block">{{ cell.getValue() }}</span>
               </span>
             </div>
           </div>
