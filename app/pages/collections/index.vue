@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { defineComponent, h } from "vue";
+
 const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
@@ -16,6 +18,57 @@ registerPageHeader({
 const { isTablet } = useScreen();
 const { schemas } = useSchema();
 
+const searchQuery = ref("");
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+watch(searchQuery, (newVal) => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+
+  if (newVal === "") {
+    page.value = 1;
+    fetchCollections();
+    return;
+  }
+
+  searchTimeout = setTimeout(() => {
+    page.value = 1;
+    fetchCollections();
+  }, 550);
+});
+
+const SearchInput = defineComponent({
+  setup() {
+    const UInput = resolveComponent("UInput");
+    const UIcon = resolveComponent("UIcon");
+
+    return () =>
+      h("div", { class: "relative flex items-center" }, [
+        h(UInput, {
+          modelValue: searchQuery.value,
+          "onUpdate:modelValue": (val: string) => (searchQuery.value = val),
+          placeholder: "Search by table name...",
+          icon: "lucide:search",
+          size: "lg",
+          class: "w-full lg:w-64",
+        }),
+        searchQuery.value
+          ? h("button", {
+              class: "absolute right-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer",
+              onClick: () => (searchQuery.value = ""),
+            }, [
+              h(UIcon, { name: "lucide:x", class: "w-4 h-4" }),
+            ])
+          : null,
+      ]);
+  },
+});
+
+useSubHeaderActionRegistry({
+  id: "search-collections",
+  component: SearchInput,
+  side: "right",
+});
+
 const {
   data: apiData,
   pending: loading,
@@ -24,15 +77,25 @@ const {
   query: computed(() => ({
     fields: "*",
     sort: "-createdAt",
-    meta: "*",
+    meta: "totalCount,filterCount",
     page: page.value,
     limit: pageLimit,
+    ...(searchQuery.value && {
+      filter: {
+        name: { _contains: searchQuery.value },
+      },
+    }),
   })),
   errorContext: "Fetch Collections",
 });
 
 const collections = computed(() => apiData.value?.data || []);
-const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const total = computed(() => {
+  if (searchQuery.value) {
+    return apiData.value?.meta?.filterCount ?? 0;
+  }
+  return apiData.value?.meta?.totalCount || 0;
+});
 
 useHeaderActionRegistry({
   id: "create-collection",
@@ -185,7 +248,7 @@ function getGradientForCollection(id: any): string | undefined {
             :to="
               (p) => ({
                 path: route.path,
-                query: { ...route.query, page: p },
+                query: { page: p },
               })
             "
             :ui="{
@@ -206,8 +269,8 @@ function getGradientForCollection(id: any): string | undefined {
 
       <CommonEmptyState
         v-else
-        title="No collections found"
-        description="No table collections have been created yet"
+        :title="searchQuery ? 'No results found' : 'No collections found'"
+        :description="searchQuery ? 'No tables found matching your search' : 'No table collections have been created yet'"
         icon="lucide:database"
         size="sm"
       />

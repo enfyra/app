@@ -3,7 +3,7 @@ import CommonBreadCrumbs from "~/components/common/BreadCrumbs.vue";
 export default defineNuxtPlugin(() => {
   const route = useRoute();
   const router = useRouter();
-  const { isMobile, width } = useScreen();
+  const { isMobile, isTablet, width } = useScreen();
   const { sidebarCollapsed, setSidebarCollapsed } = useGlobalState();
 
   const isTabletOrMobile = computed(() => width.value <= 1024);
@@ -34,7 +34,7 @@ export default defineNuxtPlugin(() => {
       icon: "lucide:panel-left",
       variant: "outline",
       color: "neutral",
-      size: isMobile ? 'lg' : 'md',
+      size: (isMobile || isTablet) ? 'lg' : 'md',
       side: "left",
       class: 'cursor-pointer !aspect-square',
       onClick: toggleSidebar,
@@ -52,9 +52,9 @@ export default defineNuxtPlugin(() => {
       icon: "lucide:arrow-left",
       variant: "outline",
       color: "neutral",
-      size: isMobile ? 'lg' : 'md',
+      size: (isMobile || isTablet) ? 'lg' : 'sm',
       side: "left",
-      class: 'cursor-pointer !aspect-square',
+      class: 'cursor-pointer',
       get disabled() {
         return !canGoBack.value;
       },

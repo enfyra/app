@@ -540,15 +540,18 @@
   dependencies:
     tslib "^2.4.0"
 
-"@enfyra/sdk-nuxt@^0.7.5":
-  version "0.7.5"
-  resolved "https://registry.yarnpkg.com/@enfyra/sdk-nuxt/-/sdk-nuxt-0.7.5.tgz#1576e780e61ed36a06b751dc79fb738ef0582a58"
-  integrity sha512-kn7bLsny6GXhdn0Kk5OFE80tnadxt59xW/petEN+dCkGNhnUTMRi2pYpY+8MzBU/TPAcjqz2ljYr9FNh2r+YQQ==
+"@enfyra/sdk-nuxt@^0.7.6":
+  version "0.7.6"
+  resolved "https://registry.yarnpkg.com/@enfyra/sdk-nuxt/-/sdk-nuxt-0.7.6.tgz#e31a818265e2c13db49b6a14b2d20ba83b4960d3"
+  integrity sha512-X6lya6sYvtwe5bdUloVWww0JhgCwOaysc0zf7+M+Y3acrD+j9Z1HlpgjJAUz7gDNDgSwFczge19oWQ1xcKK6Gg==
   dependencies:
     defu "^6.1.4"
+    engine.io "^6.6.3"
     h3 "^1.15.4"
     http-proxy "^1.18.1"
     ofetch "^1.3.3"
+    socket.io "^4.8.3"
+    socket.io-client "^4.8.3"
 
 "@esbuild/aix-ppc64@0.25.12":
   version "0.25.12"
@@ -4481,7 +4484,7 @@ engine.io-parser@~5.2.1:
   resolved "https://registry.yarnpkg.com/engine.io-parser/-/engine.io-parser-5.2.3.tgz#00dc5b97b1f233a23c9398d0209504cf5f94d92f"
   integrity sha512-HqD3yTBfnBxIrbnM1DoD6Pcq8NECnh8d4As1Qgh0z5Gg3jRRIqijury0CL3ghu/edArpUYiYqQiDUQBIs4np3Q==
 
-engine.io@^6.6.6, engine.io@~6.6.0:
+engine.io@^6.6.3, engine.io@^6.6.6, engine.io@~6.6.0:
   version "6.6.6"
   resolved "https://registry.yarnpkg.com/engine.io/-/engine.io-6.6.6.tgz#9942111e7a4dc31f057e73470d7b7fcc7f74c390"
   integrity sha512-U2SN0w3OpjFRVlrc17E6TMDmH58Xl9rai1MblNjAdwWp07Kk+llmzX0hjDpQdrDGzwmvOtgM5yI+meYX6iZ2xA==

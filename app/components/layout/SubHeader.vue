@@ -3,15 +3,15 @@
     class="h-12 flex items-center shrink-0 relative overflow-hidden border-b border-gray-200 dark:border-gray-800"
     :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
   >
-    
-    <div 
+
+    <div
       class="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/30 to-transparent"
       :class="props.accentPosition === 'top' ? 'top-0' : 'bottom-0'"
     ></div>
     <div class="flex items-center gap-1.5 md:gap-3">
       <template v-for="action in leftActions" :key="action.key || action.id">
         <PermissionGate :condition="action.permission">
-          
+
           <component
             v-if="action.component"
             :is="action.component"
@@ -42,7 +42,7 @@
               action.class,
               (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
               (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                ? '!bg-white !border-2 !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                ? '!bg-white !border !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
                 : ''
             ]"
           />
@@ -53,7 +53,7 @@
     <div class="flex items-center gap-2">
       <template v-for="action in rightActions" :key="action.key || action.id">
         <PermissionGate :condition="action.permission">
-          
+
           <component
             v-if="action.component"
             :is="action.component"
@@ -84,7 +84,7 @@
               action.class,
               (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
               (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                ? '!bg-white !border-2 !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                ? '!bg-white !border !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
                 : ''
             ]"
           />

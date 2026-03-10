@@ -3,7 +3,6 @@ import { Server as Engine } from "engine.io";
 import { Server } from "socket.io";
 import { io as ioClient } from "socket.io-client";
 import { defineEventHandler } from "h3";
-import { useRuntimeConfig } from "#imports";
 import { $fetch } from "ofetch";
 import { isAccessTokenExpired } from "@enfyra/sdk-nuxt/runtime/utils/server/refreshToken";
 import {

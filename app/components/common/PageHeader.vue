@@ -114,7 +114,7 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
           </div>
         </div>
 
-        <div v-if="hasActions" class="flex items-center space-x-2 shrink-0" :class="(isMobile || isTablet) ? 'justify-end' : ''">
+        <div v-if="hasActions" class="flex items-center gap-2 shrink-0" :class="(isMobile || isTablet) ? 'w-full' : ''">
           <template v-for="action in leftActions" :key="action.key || action.id">
             <PermissionGate :condition="action.permission">
               <component
@@ -146,7 +146,7 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
                   action.class,
                   (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
                   (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                    ? '!bg-white !border-2 !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                    ? '!bg-white !border !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
                     : ''
                 ]"
               />
@@ -157,7 +157,7 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
               <component
                 v-if="action.component"
                 :is="action.component"
-                v-bind="action.props"
+                v-bind="{ ...action.props, class: (isMobile || isTablet) ? 'w-full flex-1' : action.props?.class }"
               />
               <UButton
                 v-else
@@ -183,7 +183,7 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
                   action.class,
                   (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
                   (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                    ? '!bg-white !border-2 !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                    ? '!bg-white !border !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
                     : ''
                 ]"
               />
