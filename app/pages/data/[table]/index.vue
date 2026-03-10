@@ -20,6 +20,32 @@ const currentFilter = ref(createEmptyFilter());
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
 const { registerPageHeader } = usePageHeaderRegistry();
 
+const schema = computed(() => schemas.value[tableName]);
+const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
+
+const {
+  data: singleRecordData,
+  execute: fetchSingleRecord,
+} = useApi(() => getRouteForTableName(tableName), {
+  query: {
+    limit: 1,
+    fields: "*",
+  },
+  immediate: false,
+  errorContext: "Fetch Single Record",
+});
+
+watch([() => schemas.value[tableName], isSingleRecord], async ([currentSchema, isSingle]) => {
+  if (currentSchema && isSingle) {
+    await fetchSingleRecord();
+    const records = singleRecordData.value?.data;
+    if (records && records.length > 0) {
+      const recordId = getId(records[0]);
+      navigateTo(`/data/${tableName}/${recordId}`, { replace: true });
+    }
+  }
+}, { immediate: true });
+
 onMounted(async () => {
   await ensureRoutesLoaded();
 });
@@ -65,6 +91,7 @@ const {
       ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
     };
   }),
+  immediate: computed(() => !isSingleRecord.value),
   errorContext: "Fetch Data",
 });
 
@@ -284,6 +311,7 @@ async function clearFilters() {
 watch(
   () => route.query.page,
   async (newVal) => {
+    if (isSingleRecord.value) return;
     page.value = newVal ? Number(newVal) : 1;
     await fetchData();
   },
@@ -342,8 +370,8 @@ useHeaderActionRegistry([
 </script>
 
 <template>
-  <div class="space-y-6">
-    
+  <div v-if="!isSingleRecord" class="space-y-6">
+
     <div
       v-if="hasActiveFilters(currentFilter)"
       class="flex items-center gap-2 p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30"

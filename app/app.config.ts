@@ -162,6 +162,16 @@ export default defineAppConfig({
           variant: "soft",
           class: "bg-amber-100 text-amber-800 dark:bg-amber-500/25 dark:text-amber-300"
         },
+        {
+          color: "info",
+          variant: "soft",
+          class: "!text-gray-900"
+        },
+        {
+          color: "info",
+          variant: "solid",
+          class: "!text-gray-900"
+        },
       ]
     },
     input: {

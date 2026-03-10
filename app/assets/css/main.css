@@ -171,17 +171,17 @@
 }
 
 .glass-header {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.88) 100%) !important;
   border-bottom: 1px solid rgba(139, 92, 246, 0.12) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  box-shadow: 0 2px 12px rgba(139, 92, 246, 0.04), 0 0 30px rgba(139, 92, 246, 0.02) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  box-shadow: 2px 0 12px rgba(139, 92, 246, 0.04), 0 0 40px rgba(139, 92, 246, 0.03) !important;
 }
 
 .dark .glass-header {
-  background: rgba(24, 24, 27, 0.75) !important;
+  background: rgba(24, 24, 27, 0.7) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 .glass-input {

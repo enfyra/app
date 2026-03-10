@@ -1,6 +1,6 @@
 <template>
   <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-900 px-4"
+    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 dark:from-indigo-900 dark:via-slate-900 dark:to-purple-900 px-4"
   >
     <UCard class="w-full max-w-md lg:p-6 p-2 sm:p-8">
       
@@ -12,7 +12,7 @@
               Enfyra App
             </h1>
           </div>
-          <p class="text-sm text-gray-400">Login to continue</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Login to continue</p>
         </div>
       </template>
 

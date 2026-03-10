@@ -116,7 +116,7 @@ function getGradientForCollection(id: any): string | undefined {
             v-for="collection in collections"
             :key="collection.id"
             @click="navigateTo(`/collections/${collection.name}`)"
-            class="relative rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] cursor-pointer group transition-all duration-300 hover:shadow-theme-md hover:bg-gray-200 dark:hover:bg-white/[0.12] overflow-hidden"
+            class="relative rounded-2xl border border-gray-200/60 dark:border-white/5 bg-white dark:bg-zinc-900/40 cursor-pointer group transition-all duration-300 hover:border-violet-300/50 dark:hover:border-violet-500/30 hover:shadow-lg dark:hover:shadow-xl overflow-hidden"
             :class="isTablet ? 'p-5' : 'p-5 md:p-6'"
           >
             <div
