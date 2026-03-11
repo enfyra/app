@@ -91,6 +91,7 @@ useHeaderActionRegistry([
     size: "md",
     onClick: deleteConfig,
     loading: computed(() => deleteLoading.value),
+    disabled: computed(() => configData.value?.data?.[0]?.isSystem ?? false),
     permission: {
       and: [
         {

@@ -3,9 +3,22 @@
     :class="[
       'relative group overflow-hidden cursor-pointer h-full flex flex-col glass-card',
       (isMobile || isTablet) ? 'rounded-xl p-2' : 'rounded-2xl p-4',
+      topBadge ? 'pt-6' : '',
       cardClass,
     ]"
   >
+    <div
+      v-if="topBadge"
+      class="absolute top-2 right-2 z-10"
+    >
+      <UBadge
+        :color="topBadge.color || 'info'"
+        variant="soft"
+        size="xs"
+      >
+        {{ topBadge.label }}
+      </UBadge>
+    </div>
 
     <div :class="`absolute inset-0 bg-gradient-to-br ${hoverGradientClass} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`" />
 
@@ -196,6 +209,7 @@ interface Props {
   actions?: Action[];
   headerActions?: HeaderAction[];
   cardClass?: string;
+  topBadge?: { label: string; color?: string };
 }
 
 const props = withDefaults(defineProps<Props>(), {

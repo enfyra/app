@@ -7,7 +7,7 @@
             v-model="createForm"
             :table-name="tableName"
             v-model:errors="createErrors"
-            :excluded="['mainTable', 'preHook', 'postHook', 'handlers', 'routePermissions']"
+            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHook', 'postHook']"
             :field-map="fieldMap"
             mode="create"
           />
@@ -30,7 +30,8 @@ const { generateEmptyForm, validate } = useSchema(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const fieldMap = {
-  publishedMethods: { type: 'methods-selector' },
+  publishedMethods: { type: 'methods-selector', allowedMethodsKey: 'availableMethods' },
+  availableMethods: { type: 'methods-selector' },
 };
 
 registerPageHeader({
@@ -73,8 +74,21 @@ onMounted(() => {
   createForm.value = generateEmptyForm();
 });
 
+function filterPublishedToAvailable(body: Record<string, any>) {
+  const available = body.availableMethods || [];
+  const availableSet = new Set(available.filter((m: any) => m?.method).map((m: any) => m.method));
+  if (Array.isArray(body.publishedMethods)) {
+    body.publishedMethods = availableSet.size > 0
+      ? body.publishedMethods.filter((m: any) => m?.method && availableSet.has(m.method))
+      : [];
+  }
+}
+
 async function handleCreate() {
-  const { isValid, errors } = validate(createForm.value);
+  const body = { ...createForm.value };
+  filterPublishedToAvailable(body);
+
+  const { isValid, errors } = validate(body);
 
   if (!isValid) {
     createErrors.value = errors;
@@ -86,7 +100,7 @@ async function handleCreate() {
     return;
   }
 
-  await executeCreateRoute({ body: createForm.value });
+  await executeCreateRoute({ body });
 
   if (createError.value) {
     return;

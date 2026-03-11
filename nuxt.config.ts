@@ -42,11 +42,14 @@ export default defineNuxtConfig({
       style: [
         {
           innerHTML: `
-            html, body {
-              overflow: hidden !important;
-              position: fixed !important;
+            html {
+              height: 100%;
+            }
+            html, body, #__nuxt {
               width: 100% !important;
-              height: 100% !important;
+              min-height: 100% !important;
+              overflow-x: hidden !important;
+              overscroll-behavior-x: auto !important;
               touch-action: pan-x pan-y !important;
             }
           `,

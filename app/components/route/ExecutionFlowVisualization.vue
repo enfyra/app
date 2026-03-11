@@ -40,7 +40,16 @@
       </div>
     </template>
 
-    <div v-if="allNodes.length > 0" class="h-[500px] border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900/50">
+    <div
+      v-if="!hasAvailableMethods"
+      class="text-center py-12 px-4 rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10"
+    >
+      <UIcon name="lucide:list-filter" class="w-12 h-12 mx-auto mb-3 text-amber-500 dark:text-amber-400" />
+      <p class="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">No Available Methods</p>
+      <p class="text-xs text-amber-700 dark:text-amber-300/90">Please add Available Methods in the form above to display the execution flow for each HTTP method.</p>
+    </div>
+
+    <div v-else-if="allNodes.length > 0" class="h-[500px] border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900/50">
       <VueFlow
         ref="vueFlowRef"
         :nodes="allNodes"
@@ -82,6 +91,7 @@ import FlowNode from './FlowNode.vue';
 
 interface Props {
   routeData?: any;
+  availableMethods?: string[];
   handlers: any[];
   sortedPreHooks: any[];
   sortedAfterHooks: any[];
@@ -199,6 +209,11 @@ const nodeTypes = markRaw({
   }),
 });
 
+const hasAvailableMethods = computed(() => {
+  const list = props.availableMethods || [];
+  return Array.isArray(list) && list.length > 0;
+});
+
 const methodLookup = computed(() => {
   const lookup: Record<string, any> = {};
 
@@ -233,45 +248,13 @@ const methodGroups = computed(() => {
     postHooks: any[];
   }> = {};
 
-  const allMethods = new Set<string>();
+  const list = props.availableMethods || [];
+  const availableMethodsList = Array.isArray(list) ? list : [];
+  if (availableMethodsList.length === 0) return [];
 
-  props.handlers.forEach((handler) => {
-    if (handler.method?.method) {
-      allMethods.add(handler.method.method);
-    } else if (handler._isDefault) {
-      allMethods.add('ALL');
-    }
-  });
+  const allowedMethods = new Set(availableMethodsList);
 
-  props.sortedPreHooks.forEach((hook) => {
-    if (hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0) {
-      hook.methods.forEach((method: any) => {
-        if (method.method) {
-          allMethods.add(method.method);
-        }
-      });
-    } else {
-      allMethods.add('ALL');
-    }
-  });
-
-  props.sortedAfterHooks.forEach((hook) => {
-    if (hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0) {
-      hook.methods.forEach((method: any) => {
-        if (method.method) {
-          allMethods.add(method.method);
-        }
-      });
-    } else {
-      allMethods.add('ALL');
-    }
-  });
-
-  if (props.hasMainTable && props.defaultHandler && allMethods.size === 0) {
-    allMethods.add('ALL');
-  }
-
-  allMethods.forEach((method) => {
+  availableMethodsList.forEach((method) => {
     groups[method] = {
       method,
       preHooks: [],
@@ -284,41 +267,34 @@ const methodGroups = computed(() => {
     const hookId = props.getId(hook);
     const isGlobal = hook.isGlobal === true;
     const hasMethods = hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0;
-    
-    if (isGlobal) {
-      Object.keys(groups).forEach((methodKey) => {
-        if (groups[methodKey] && !groups[methodKey]!.preHooks.find((h: any) => props.getId(h) === hookId)) {
-          groups[methodKey]!.preHooks.push(hook);
-        }
-      });
-    } else if (hasMethods) {
-      hook.methods.forEach((method: any) => {
-        if (method.method && groups[method.method] && !groups[method.method]!.preHooks.find((h: any) => props.getId(h) === hookId)) {
-          groups[method.method]!.preHooks.push(hook);
-        }
-      });
-    } else {
-      Object.keys(groups).forEach((methodKey) => {
-        if (groups[methodKey] && !groups[methodKey]!.preHooks.find((h: any) => props.getId(h) === hookId)) {
-          groups[methodKey]!.preHooks.push(hook);
-        }
-      });
-    }
+    const targetMethods = (isGlobal || !hasMethods)
+      ? [...allowedMethods]
+      : hook.methods.map((m: any) => m?.method).filter(Boolean).filter((m: string) => allowedMethods.has(m));
+
+    targetMethods.forEach((methodKey: string) => {
+      if (groups[methodKey] && !groups[methodKey]!.preHooks.find((h: any) => props.getId(h) === hookId)) {
+        groups[methodKey]!.preHooks.push(hook);
+      }
+    });
   });
 
   props.handlers.forEach((handler) => {
-    if (handler.method?.method && groups[handler.method.method]) {
+    if (handler.method?.method && allowedMethods.has(handler.method.method) && groups[handler.method.method]) {
       groups[handler.method.method]!.handler = handler;
-    } else if (handler._isDefault && groups['ALL']) {
-      groups['ALL']!.handler = handler;
+    } else if (handler._isDefault) {
+      availableMethodsList.forEach((methodKey) => {
+        if (groups[methodKey] && !groups[methodKey]!.handler) {
+          groups[methodKey]!.handler = { ...handler, _methodObject: handler._methodObject || { method: methodKey } };
+        }
+      });
     }
   });
 
   if (props.hasMainTable && props.defaultHandler) {
-    Object.keys(groups).forEach((method) => {
-      const group = groups[method];
+    availableMethodsList.forEach((methodKey) => {
+      const group = groups[methodKey];
       if (group && !group.handler) {
-        group.handler = props.defaultHandler;
+        group.handler = { ...props.defaultHandler, _methodObject: { method: methodKey } };
       }
     });
   }
@@ -327,26 +303,15 @@ const methodGroups = computed(() => {
     const hookId = props.getId(hook);
     const isGlobal = hook.isGlobal === true;
     const hasMethods = hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0;
-    
-    if (isGlobal) {
-      Object.keys(groups).forEach((methodKey) => {
-        if (groups[methodKey] && !groups[methodKey]!.postHooks.find((h: any) => props.getId(h) === hookId)) {
-          groups[methodKey]!.postHooks.push(hook);
-        }
-      });
-    } else if (hasMethods) {
-      hook.methods.forEach((method: any) => {
-        if (method.method && groups[method.method] && !groups[method.method]!.postHooks.find((h: any) => props.getId(h) === hookId)) {
-          groups[method.method]!.postHooks.push(hook);
-        }
-      });
-    } else {
-      Object.keys(groups).forEach((methodKey) => {
-        if (groups[methodKey] && !groups[methodKey]!.postHooks.find((h: any) => props.getId(h) === hookId)) {
-          groups[methodKey]!.postHooks.push(hook);
-        }
-      });
-    }
+    const targetMethods = (isGlobal || !hasMethods)
+      ? [...allowedMethods]
+      : hook.methods.map((m: any) => m?.method).filter(Boolean).filter((m: string) => allowedMethods.has(m));
+
+    targetMethods.forEach((methodKey: string) => {
+      if (groups[methodKey] && !groups[methodKey]!.postHooks.find((h: any) => props.getId(h) === hookId)) {
+        groups[methodKey]!.postHooks.push(hook);
+      }
+    });
   });
 
   Object.values(groups).forEach((group) => {

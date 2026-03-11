@@ -148,6 +148,7 @@ useHeaderActionRegistry([
     size: "md",
     onClick: deleteExtension,
     loading: computed(() => deleteLoading.value),
+    disabled: computed(() => extensionData.value?.data?.[0]?.isSystem ?? false),
     permission: {
       and: [
         {

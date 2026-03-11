@@ -1,7 +1,7 @@
 <template>
-  <template v-if="hasPermission">
+  <div v-if="hasPermission">
     <slot />
-  </template>
+  </div>
 </template>
 
 <script setup lang="ts">
