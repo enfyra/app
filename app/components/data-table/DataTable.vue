@@ -64,6 +64,7 @@ const enhancedColumns = computed(() => {
         "div",
         {
           class: "flex items-center justify-center",
+          onClick: (e: Event) => e.stopPropagation(),
         },
         [
           h("input", {
@@ -150,15 +151,15 @@ const selectedRows = computed(() => {
 watch(
   () => props.selectedItems,
   (newSelectedItems) => {
-    if (!newSelectedItems) return;
-
     const newRowSelection: Record<string, boolean> = {};
-    newSelectedItems.forEach(id => {
-      const rowIndex = props.data.findIndex(row => row.id === id);
-      if (rowIndex >= 0) {
-        newRowSelection[rowIndex] = true;
-      }
-    });
+    if (newSelectedItems?.length) {
+      newSelectedItems.forEach(id => {
+        const rowIndex = props.data.findIndex(row => String(getId(row)) === String(id));
+        if (rowIndex >= 0) {
+          newRowSelection[rowIndex] = true;
+        }
+      });
+    }
 
     const currentKeys = Object.keys(rowSelection.value);
     const newKeys = Object.keys(newRowSelection);
@@ -502,6 +503,7 @@ function getColumnLabel(columnId: string) {
                   <td
                     v-for="cell in row.getVisibleCells()"
                     :key="cell.id"
+                    @click="cell.column.id === 'select' && $event.stopPropagation()"
                 :class="[
                   'px-5 py-4 sm:px-6 align-middle',
                       cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
@@ -543,6 +545,7 @@ function getColumnLabel(columnId: string) {
                 <td
                   v-for="cell in row.getVisibleCells()"
                   :key="cell.id"
+                  @click="cell.column.id === 'select' && $event.stopPropagation()"
                   :class="[
                     'px-5 py-4 sm:px-6 align-middle',
                     cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
