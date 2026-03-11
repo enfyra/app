@@ -1,3 +1,11 @@
+.cm-editor.cm-focused {
+  outline: none !important;
+}
+
+.dark .cm-editor.cm-focused {
+  outline: none !important;
+}
+
 .dark .cm-editor .cm-selectionBackground {
   background-color: #264F78 !important;
 }

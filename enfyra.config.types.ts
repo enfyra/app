@@ -19,7 +19,7 @@ export interface RichTextEditorConfig {
     block?: string | boolean;
     wrapper?: boolean;
     classes?: string | string[] | ((theme: 'light' | 'dark') => string | string[]);
-    css?: Record<string, string> | ((theme: 'light' | 'dark') => Record<string, string>);
+    css?: Record<string, string> | { dark?: Record<string, string>; light?: Record<string, string> } | ((theme: 'light' | 'dark') => Record<string, string>);
     classStyles?: Record<string, Record<string, string> | ((theme: 'light' | 'dark') => Record<string, string>)>;
     attributes?: Record<string, string>;
   }>;
