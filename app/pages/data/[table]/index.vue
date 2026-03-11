@@ -27,6 +27,7 @@ const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
 
 const {
   data: singleRecordData,
+  pending: singleRecordPending,
   execute: fetchSingleRecord,
 } = useApi(() => getRouteForTableName(tableName), {
   query: {
@@ -36,6 +37,13 @@ const {
   immediate: false,
   errorContext: "Fetch Single Record",
 });
+
+const singleRecordLoading = computed(
+  () =>
+    isSingleRecord.value &&
+    !singleRecordIdMap.value[tableName] &&
+    singleRecordPending.value
+);
 
 watch([() => schemas.value[tableName], isSingleRecord], async ([currentSchema, isSingle]) => {
   if (currentSchema && isSingle) {
@@ -112,7 +120,12 @@ const {
   handleDelete,
   handleBulkDelete,
   handleSelectionChange,
+  resetSelection,
 } = useDataTableActions(tableName, fetchData, data);
+
+const selectedRowIds = computed(() =>
+  selectedRows.value.map((row) => String(getId(row)))
+);
 
 const { isMobile, isTablet } = useScreen();
 
@@ -128,11 +141,10 @@ useSubHeaderActionRegistry([
     variant: computed(() => (isSelectionMode.value ? "ghost" : "outline")),
     color: computed(() => (isSelectionMode.value ? "error" : "primary")),
     onClick: () => {
-      const wasSelectionMode = isSelectionMode.value;
-      isSelectionMode.value = !wasSelectionMode;
-
-      if (wasSelectionMode) {
-        selectedRows.value = [];
+      if (isSelectionMode.value) {
+        resetSelection();
+      } else {
+        isSelectionMode.value = true;
       }
     },
     side: "right",
@@ -175,8 +187,8 @@ useSubHeaderActionRegistry([
     get props() {
       return {
         items: columnDropdownItems.value,
-        variant: "soft",
-        color: "secondary",
+        variant: "outline",
+        color: "neutral",
       };
     },
     side: "right",
@@ -378,7 +390,18 @@ useHeaderActionRegistry([
 </script>
 
 <template>
-  <div v-if="!isSingleRecord" class="space-y-6">
+  <div class="space-y-6">
+    <Transition name="loading-fade" mode="out-in">
+      <div v-if="singleRecordLoading" key="single-loading">
+        <CommonLoadingState
+          title="Loading..."
+          description="Redirecting to record"
+          size="sm"
+          type="card"
+          context="page"
+        />
+      </div>
+      <div v-else-if="!isSingleRecord" key="list" class="space-y-6">
 
     <div
       v-if="hasActiveFilters(currentFilter)"
@@ -408,6 +431,7 @@ useHeaderActionRegistry([
         :loading="loading"
         :page-size="pageLimit"
         :selectable="isSelectionMode"
+        :selected-items="selectedRowIds"
         :skeleton-rows="pageLimit"
         @selection-change="handleSelectionChange"
         @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
@@ -447,5 +471,7 @@ useHeaderActionRegistry([
       :current-filter="currentFilter"
       @apply="handleFilterApply"
     />
+      </div>
+    </Transition>
   </div>
 </template>

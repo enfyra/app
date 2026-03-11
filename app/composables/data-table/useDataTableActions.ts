@@ -56,6 +56,11 @@ export function useDataTableActions(
     }
   }
 
+  function resetSelection() {
+    selectedRows.value = [];
+    isSelectionMode.value = false;
+  }
+
   async function handleBulkDelete(rows: any[]) {
     const result = await confirm({
       title: "Delete Records",
@@ -83,7 +88,7 @@ export function useDataTableActions(
         color: "success",
       });
 
-      selectedRows.value = [];
+      resetSelection();
       await fetchData();
     });
   }
@@ -94,5 +99,6 @@ export function useDataTableActions(
     handleDelete,
     handleBulkDelete,
     handleSelectionChange,
+    resetSelection,
   };
 }
