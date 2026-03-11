@@ -84,7 +84,7 @@ const localErrors = computed({
 });
 
 const fieldMap = {
-  methods: { type: 'methods-selector' },
+  methods: { type: 'methods-selector', componentProps: { excludeGqlMethods: true } },
 };
 </script>
 
