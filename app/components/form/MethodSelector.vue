@@ -4,6 +4,7 @@ const props = withDefaults(
     modelValue: any;
     disabled?: boolean;
     multiple?: boolean;
+    allowedMethods?: string[];
   }>(),
   {
     multiple: false,
@@ -47,8 +48,18 @@ watch(methodsData, (data) => {
   }
 });
 
+const showAvailableMethodsHint = computed(() => {
+  const allowed = props.allowedMethods;
+  return Array.isArray(allowed) && allowed.length === 0;
+});
+
 const availableMethods = computed(() => {
-  return methodsCache.value;
+  const all = methodsCache.value;
+  const allowed = props.allowedMethods;
+  if (allowed === undefined) return all;
+  if (!Array.isArray(allowed)) return all;
+  const allowedSet = new Set(allowed);
+  return all.filter((m: any) => m?.method && allowedSet.has(m.method));
 });
 
 const selectedMethod = computed(() => {
@@ -99,6 +110,22 @@ function getMethodColor(method: string): 'success' | 'info' | 'warning' | 'error
   return methodColorMap[method] || 'neutral';
 }
 
+watch([() => props.modelValue, () => props.allowedMethods], () => {
+  const allowed = props.allowedMethods;
+  if (!Array.isArray(allowed)) return;
+  const allowedSet = new Set(allowed);
+  if (props.multiple && Array.isArray(props.modelValue)) {
+    const filtered = allowedSet.size > 0
+      ? props.modelValue.filter((m: any) => m?.method && allowedSet.has(m.method))
+      : [];
+    if (filtered.length !== props.modelValue.length) {
+      emit('update:modelValue', filtered);
+    }
+  } else if (props.modelValue?.method && (allowedSet.size === 0 || !allowedSet.has(props.modelValue.method))) {
+    emit('update:modelValue', null);
+  }
+}, { immediate: true });
+
 onMounted(async () => {
   if (!methodsLoaded.value) {
     await fetchMethods();
@@ -107,18 +134,23 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-wrap gap-2">
+  <div v-if="showAvailableMethodsHint" class="text-sm text-amber-600 dark:text-amber-400">
+    Please select Available Methods first.
+  </div>
+  <div v-else class="flex flex-wrap gap-2">
     <UBadge
       v-for="m in availableMethods"
       :key="getId(m) || m.method"
       :color="isSelected(m.method) ? getMethodColor(m.method) : 'neutral'"
       :variant="isSelected(m.method) ? 'solid' : 'outline'"
       size="md"
-      class="cursor-pointer select-none px-3 py-1 font-mono text-xs font-semibold"
+      class="cursor-pointer select-none px-3 py-1 font-mono text-xs font-semibold inline-flex items-center gap-1.5"
       :class="{ 'opacity-50 cursor-not-allowed': disabled }"
       @click="selectMethod(m)"
     >
       {{ m.method }}
+      <UIcon v-if="isSelected(m.method)" name="lucide:check" class="size-3.5 shrink-0" />
+
     </UBadge>
   </div>
 </template>

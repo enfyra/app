@@ -221,7 +221,7 @@ function getFooterActions(extension: ExtensionDefinition) {
         color: 'error',
         size: 'sm',
       },
-      disabled: !hasDeletePermission,
+      disabled: !hasDeletePermission || extension.isSystem,
       onClick: (e?: Event) => {
         e?.stopPropagation();
         deleteExtension(extension);

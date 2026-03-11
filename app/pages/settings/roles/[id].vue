@@ -82,6 +82,7 @@ useHeaderActionRegistry([
     color: "error",
     onClick: deleteRole,
     loading: computed(() => deleteLoading.value),
+    disabled: computed(() => apiData.value?.data?.[0]?.isSystem ?? false),
     permission: {
       and: [
         {

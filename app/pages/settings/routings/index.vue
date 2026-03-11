@@ -160,6 +160,31 @@ const { execute: deleteRouteApi, error: deleteError } = useApi(
 
 const routeLoaders = ref<Record<string, any>>({});
 
+const methodColorMap: Record<string, string> = {
+  GET: 'info',
+  POST: 'success',
+  PATCH: 'warning',
+  DELETE: 'error',
+};
+
+function getPublishedMethodsStat(routeItem: any) {
+  const availableSet = new Set(
+    (routeItem.availableMethods || [])
+      .filter((m: any) => m?.method)
+      .map((m: any) => m.method)
+  );
+  const filtered = (routeItem.publishedMethods || [])
+    .filter((m: any) => m?.method && availableSet.has(m.method));
+  return {
+    component: filtered.length ? 'UBadge' : undefined,
+    values: filtered.length ? filtered.map((m: any) => ({
+      value: m.method.toUpperCase(),
+      props: { color: methodColorMap[m.method] }
+    })) : undefined,
+    value: filtered.length ? undefined : '-',
+  };
+}
+
 function getRouteLoader(routeId: string) {
   if (!routeLoaders.value[routeId]) {
     routeLoaders.value[routeId] = createLoader();
@@ -326,6 +351,7 @@ async function deleteRoute(routeItem: any) {
               :icon-color="pageIconColor"
               :card-class="'cursor-pointer transition-all'"
               @click="navigateTo(`/settings/routings/${getId(routeItem)}`)"
+              :top-badge="routeItem.isSystem ? { label: 'System', color: 'info' } : undefined"
               :stats="[
                 {
                   label: 'Status',
@@ -337,27 +363,8 @@ async function deleteRoute(routeItem: any) {
                   value: routeItem.isEnabled ? 'Enabled' : 'Disabled'
                 },
                 {
-                  label: 'System',
-                  component: routeItem.isSystem ? 'UBadge' : undefined,
-                  props: routeItem.isSystem ? { variant: 'soft', color: 'info' } : undefined,
-                  value: routeItem.isSystem ? 'System' : '-'
-                },
-                {
                   label: 'Published Methods',
-                  component: routeItem.publishedMethods?.length ? 'UBadge' : undefined,
-                  values: routeItem.publishedMethods?.length ?
-                    routeItem.publishedMethods
-                      .filter((m: any) => m?.method)
-                      .map((m: any) => ({
-                        value: m.method.toUpperCase(),
-                        props: {
-                          color: m.method === 'GET' ? 'info' :
-                                 m.method === 'POST' ? 'success' :
-                                 m.method === 'PATCH' ? 'warning' :
-                                 m.method === 'DELETE' ? 'error' : undefined
-                        }
-                      })) : undefined,
-                  value: !routeItem.publishedMethods?.length ? '-' : undefined
+                  ...getPublishedMethodsStat(routeItem)
                 }
               ]"
               :actions="getRouteFooterActions(routeItem)"

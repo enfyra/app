@@ -242,6 +242,7 @@ useHeaderActionRegistry([
     order: 3,
     onClick: deleteGateway,
     loading: computed(() => deleteLoading.value),
+    disabled: computed(() => gatewayData.value?.data?.[0]?.isSystem ?? false),
     permission: {
       and: [
         {

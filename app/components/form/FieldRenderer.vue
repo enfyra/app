@@ -117,12 +117,18 @@ function getComponentConfigByKey(key: string) {
   }
 
   if (finalType === "methods-selector") {
+    const allowedMethods = config.allowedMethodsKey
+      ? (props.formData[config.allowedMethodsKey] || [])
+          .filter((m: any) => m?.method)
+          .map((m: any) => m.method)
+      : undefined;
     return {
       component: resolveComponent("FormMethodSelector"),
       componentProps: {
         ...componentPropsBase,
         modelValue: props.formData[key],
         multiple: true,
+        allowedMethods,
         "onUpdate:modelValue": (val: any) => {
           updateFormData(key, val);
         },

@@ -47,6 +47,7 @@
       <RouteExecutionFlowVisualization
         v-if="routeData?.data?.[0]"
         :route-data="routeData"
+        :available-methods="availableMethodStrings"
         :handlers="displayHandlers"
         :sorted-pre-hooks="sortedPreHooks"
         :sorted-after-hooks="sortedAfterHooks"
@@ -176,6 +177,7 @@ useHeaderActionRegistry([
     order: 3,
     onClick: deleteRoute,
     loading: computed(() => deleteLoading.value),
+    disabled: computed(() => routeData.value?.data?.[0]?.isSystem ?? false),
     permission: {
       and: [
         {
@@ -246,6 +248,10 @@ watch(() => routeData.value?.data?.[0], (currentRoute) => {
       disabled: hasAssociatedTable
     },
     publishedMethods: {
+      type: 'methods-selector',
+      allowedMethodsKey: 'availableMethods'
+    },
+    availableMethods: {
       type: 'methods-selector'
     }
   };
@@ -273,6 +279,22 @@ const form = ref<Record<string, any>>({});
 
 const errors = ref<Record<string, string>>({});
 
+const availableMethodStrings = computed(() => {
+  const methods = formChanges.originalData.value?.availableMethods ?? routeData.value?.data?.[0]?.availableMethods;
+  if (!Array.isArray(methods)) return [];
+  return methods.filter((m: any) => m?.method).map((m: any) => m.method);
+});
+
+function filterPublishedToAvailable(body: Record<string, any>) {
+  const available = body.availableMethods || [];
+  const availableSet = new Set(available.filter((m: any) => m?.method).map((m: any) => m.method));
+  if (Array.isArray(body.publishedMethods)) {
+    body.publishedMethods = availableSet.size > 0
+      ? body.publishedMethods.filter((m: any) => m?.method && availableSet.has(m.method))
+      : [];
+  }
+}
+
 async function initializeForm() {
   await executeGetRoute();
   const data = routeData.value?.data?.[0];
@@ -285,7 +307,10 @@ async function initializeForm() {
 async function updateRoute() {
   if (!form.value) return;
 
-  const { isValid, errors: validationErrors } = validate(form.value);
+  const body = { ...form.value };
+  filterPublishedToAvailable(body);
+
+  const { isValid, errors: validationErrors } = validate(body);
   if (!isValid) {
     errors.value = validationErrors;
     toast.add({
@@ -298,7 +323,7 @@ async function updateRoute() {
 
   await executeUpdateRoute({
     id: route.params.id as string,
-    body: form.value,
+    body,
   });
 
   if (updateError.value) {
@@ -311,6 +336,7 @@ async function updateRoute() {
     description: "Route updated!",
   });
   errors.value = {};
+  form.value = { ...form.value, ...body };
 
   await loadRoutes();
 

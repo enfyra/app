@@ -165,12 +165,12 @@ export default defineAppConfig({
         {
           color: "info",
           variant: "soft",
-          class: "!text-gray-900"
+          class: "bg-cyan-100 text-cyan-800 dark:bg-cyan-500/25 dark:text-cyan-300"
         },
         {
           color: "info",
           variant: "solid",
-          class: "!text-gray-900"
+          class: "bg-gradient-to-r from-cyan-500 to-teal-500 text-white"
         },
       ]
     },
@@ -242,6 +242,13 @@ export default defineAppConfig({
         label: "mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300",
         description: "text-theme-xs text-gray-500 dark:text-gray-400",
         error: "mt-1.5 text-theme-xs text-rose-500",
+      },
+      variants: {
+        required: {
+          true: {
+            label: "after:content-['*'] after:ms-0.5 after:text-gray-500 dark:after:text-gray-400",
+          },
+        },
       },
     },
     card: {
