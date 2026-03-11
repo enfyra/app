@@ -1,13 +1,17 @@
 <script setup lang="ts">
+const GQL_METHODS = ['GQL_QUERY', 'GQL_MUTATION'];
+
 const props = withDefaults(
   defineProps<{
     modelValue: any;
     disabled?: boolean;
     multiple?: boolean;
     allowedMethods?: string[];
+    excludeGqlMethods?: boolean;
   }>(),
   {
     multiple: false,
+    excludeGqlMethods: false,
   }
 );
 
@@ -54,12 +58,16 @@ const showAvailableMethodsHint = computed(() => {
 });
 
 const availableMethods = computed(() => {
-  const all = methodsCache.value;
+  let list = methodsCache.value;
   const allowed = props.allowedMethods;
-  if (allowed === undefined) return all;
-  if (!Array.isArray(allowed)) return all;
-  const allowedSet = new Set(allowed);
-  return all.filter((m: any) => m?.method && allowedSet.has(m.method));
+  if (Array.isArray(allowed)) {
+    const allowedSet = new Set(allowed);
+    list = list.filter((m: any) => m?.method && allowedSet.has(m.method));
+  }
+  if (props.excludeGqlMethods) {
+    list = list.filter((m: any) => m?.method && !GQL_METHODS.includes(m.method));
+  }
+  return list;
 });
 
 const selectedMethod = computed(() => {

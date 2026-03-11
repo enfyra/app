@@ -82,7 +82,6 @@
 </template>
 
 <script setup lang="ts">
-import { h, computed, markRaw, defineComponent, ref, watch, nextTick, onMounted } from 'vue';
 import { VueFlow, Handle, Position } from '@vue-flow/core';
 import { Controls } from '@vue-flow/controls';
 import '@vue-flow/core/dist/style.css';
@@ -209,9 +208,16 @@ const nodeTypes = markRaw({
   }),
 });
 
-const hasAvailableMethods = computed(() => {
+const GQL_METHODS = ['GQL_QUERY', 'GQL_MUTATION'];
+
+const filteredAvailableMethods = computed(() => {
   const list = props.availableMethods || [];
-  return Array.isArray(list) && list.length > 0;
+  const arr = Array.isArray(list) ? list : [];
+  return arr.filter((m: string) => !GQL_METHODS.includes(m));
+});
+
+const hasAvailableMethods = computed(() => {
+  return filteredAvailableMethods.value.length > 0;
 });
 
 const methodLookup = computed(() => {
@@ -248,8 +254,7 @@ const methodGroups = computed(() => {
     postHooks: any[];
   }> = {};
 
-  const list = props.availableMethods || [];
-  const availableMethodsList = Array.isArray(list) ? list : [];
+  const availableMethodsList = filteredAvailableMethods.value;
   if (availableMethodsList.length === 0) return [];
 
   const allowedMethods = new Set(availableMethodsList);
@@ -476,8 +481,6 @@ function handleNodeClick(event: any) {
   const node = event.node || event;
   const nodeData = node?.data;
   if (!nodeData) return;
-
-  const nodeType = node?.type;
 }
 
 function handlePaneReady() {

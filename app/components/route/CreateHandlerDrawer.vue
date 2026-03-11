@@ -80,7 +80,7 @@ const localErrors = computed({
 });
 
 const fieldMap = {
-  method: { type: 'method-selector' },
+  method: { type: 'method-selector', componentProps: { excludeGqlMethods: true } },
 };
 
 watch(() => props.modelValue, (isOpen) => {
