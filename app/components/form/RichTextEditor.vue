@@ -193,12 +193,27 @@ const toolbarButtons = computed<ButtonGroup[]>(() => {
   return result;
 });
 
+function resolveCssStyles(formatCss: any): { light?: Record<string, string>; dark?: Record<string, string>; shared?: Record<string, string> } {
+  if (!formatCss) return {};
+  if (typeof formatCss === 'function') {
+    const lightStyles = formatCss('light');
+    const darkStyles = formatCss('dark');
+    if (JSON.stringify(lightStyles) === JSON.stringify(darkStyles)) return { shared: lightStyles };
+    return { light: lightStyles, dark: darkStyles };
+  }
+  if (formatCss.dark !== undefined || formatCss.light !== undefined) {
+    const light = (formatCss.light && typeof formatCss.light === 'object') ? formatCss.light : {};
+    const dark = (formatCss.dark && typeof formatCss.dark === 'object') ? formatCss.dark : {};
+    return { light: Object.keys(light).length ? light : undefined, dark: Object.keys(dark).length ? dark : undefined };
+  }
+  return { shared: formatCss };
+}
+
+const METADATA_SCOPE = '.rich-text-editor .ProseMirror';
+
 const injectCustomStyles = () => {
   const formats = effectiveConfig.value.formats;
   if (!formats) return;
-
-  const colorMode = useColorMode();
-  const theme = colorMode.value as 'light' | 'dark';
 
   const styleId = 'custom-rich-text-formats';
   let styleEl = document.getElementById(styleId);
@@ -211,32 +226,32 @@ const injectCustomStyles = () => {
 
   const cssRules: string[] = [];
 
+  const toRule = (selector: string, stylesObj: Record<string, string>) => {
+    const styles = Object.entries(stylesObj).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
+    if (styles) cssRules.push(`${selector} { ${styles} }`);
+  };
+
   Object.keys(formats).forEach((key) => {
     const format = formats![key];
     if (!format) return;
 
-    let cssStyles: Record<string, string> = {};
-    if (format.css) {
-      if (typeof format.css === 'function') {
-        cssStyles = format.css(theme);
-      } else {
-        cssStyles = format.css;
-      }
-    }
+    const resolved = resolveCssStyles(format.css);
 
-    if (format.inline || (!format.block && !format.wrapper)) {
+    const toSelector = (tag: string, isSpan: boolean) =>
+      isSpan ? `${METADATA_SCOPE} .${key}` : `${METADATA_SCOPE} ${tag}`;
+
+    if (format.inline) {
       const tag = format.tag || 'span';
-      const selector = tag === 'span' ? `.${key}` : tag;
-      const styles = Object.entries(cssStyles).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
-      if (styles) {
-        cssRules.push(`${selector} { ${styles} }`);
-      }
-    } else if (format.block || format.wrapper) {
+      const sel = toSelector(tag, tag === 'span');
+      if (resolved.shared) toRule(sel, resolved.shared);
+      if (resolved.light) toRule(`html:not(.dark) ${sel}`, resolved.light);
+      if (resolved.dark) toRule(`html.dark ${sel}`, resolved.dark);
+    } else {
       const tag = format.tag || key;
-      const styles = Object.entries(cssStyles).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
-      if (styles) {
-        cssRules.push(`${tag} { ${styles} }`);
-      }
+      const sel = `${METADATA_SCOPE} ${tag}`;
+      if (resolved.shared) toRule(sel, resolved.shared);
+      if (resolved.light) toRule(`html:not(.dark) ${sel}`, resolved.light);
+      if (resolved.dark) toRule(`html.dark ${sel}`, resolved.dark);
     }
   });
 
@@ -268,7 +283,7 @@ const createCustomFormatsExtension = (): Extension => {
       }
     }
 
-    if (format.inline || (!format.block && !format.wrapper)) {
+    if (format.inline) {
       const tag = format.tag || 'span';
       const shouldAddKeyClass = tag === 'span';
       const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
@@ -298,7 +313,7 @@ const createCustomFormatsExtension = (): Extension => {
           return [tag, { ...attrs, ...HTMLAttributes }, 0];
         },
       }));
-    } else if (format.block) {
+    } else if (format.wrapper) {
       const tag = format.tag || key;
       const shouldAddKeyClass = !format.tag;
       const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
@@ -309,7 +324,7 @@ const createCustomFormatsExtension = (): Extension => {
           if (allClasses) attrs.class = { default: allClasses };
           return attrs;
         },
-        content: 'inline*',
+        content: 'block*',
         group: 'block',
         parseHTML() {
           return [
@@ -322,7 +337,7 @@ const createCustomFormatsExtension = (): Extension => {
           return [tag, HTMLAttributes, 0];
         },
       }));
-    } else if (format.wrapper !== undefined) {
+    } else {
       const tag = format.tag || key;
       const shouldAddKeyClass = !format.tag;
       const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
@@ -333,7 +348,7 @@ const createCustomFormatsExtension = (): Extension => {
           if (allClasses) attrs.class = { default: allClasses };
           return attrs;
         },
-        content: 'block*',
+        content: 'inline*',
         group: 'block',
         parseHTML() {
           return [
@@ -435,6 +450,9 @@ const editor = useEditor({
   onUpdate: ({ editor }) => {
     canUndo.value = editor.can().undo();
     canRedo.value = editor.can().redo();
+    if (editor && isMounted.value) {
+      emit('update:modelValue', editor.getHTML());
+    }
   },
 });
 
@@ -791,21 +809,21 @@ const availableButtons = computed<Record<string, ButtonConfig>>(() => {
         const formats = effectiveConfig.value.formats || {};
         const format = formats[btn.format];
         if (format) {
-          if (format.inline || (!format.block && !format.wrapper)) {
+          if (format.inline) {
             editor.value.chain().focus().toggleMark(btn.format).run();
-          } else if (format.block) {
-            const isActive = editor.value.isActive(btn.format);
-            if (isActive) {
-              editor.value.chain().focus().setNode('paragraph').run();
-            } else {
-              editor.value.chain().focus().setNode(btn.format).run();
-            }
           } else if (format.wrapper) {
             const isActive = editor.value.isActive(btn.format);
             if (isActive) {
               editor.value.chain().focus().setNode('paragraph').run();
             } else {
               editor.value.chain().focus().wrapIn(btn.format).run();
+            }
+          } else {
+            const isActive = editor.value.isActive(btn.format);
+            if (isActive) {
+              editor.value.chain().focus().setNode('paragraph').run();
+            } else {
+              editor.value.chain().focus().setNode(btn.format).run();
             }
           }
         }
