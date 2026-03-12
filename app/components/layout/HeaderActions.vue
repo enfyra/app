@@ -31,7 +31,7 @@
           "
           :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
           :loading="unref(action.loading)"
-          :disabled="unref(action.disabled)"
+          :disabled="unref(action.disabled) || unref(action.loading)"
           :to="unref(action.to)"
           :replace="unref(action.replace)"
           :aria-label="action.label || action.id"

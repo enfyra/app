@@ -91,10 +91,10 @@ const closeDrawer = () => {
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
           
-          <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-6'">
+          <div :class="(isMobile || isTablet) ? 'bg-gray-100 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-muted/30 p-3' : 'bg-gray-100 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-muted/30 p-6'">
             <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
               <Icon name="lucide:settings-2" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />
-              <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-foreground' : 'text-lg font-semibold text-foreground'">
+              <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-gray-900 dark:text-foreground' : 'text-lg font-semibold text-gray-900 dark:text-foreground'">
                 Available Configurations
               </h3>
             </div>
@@ -118,7 +118,7 @@ const closeDrawer = () => {
                     (isMobile || isTablet) ? 'p-3' : 'p-4',
                     selectedConfig?.id === config.id
                       ? 'border-primary bg-primary/10'
-                      : 'border-gray-700 hover:border-gray-600 hover:bg-gray-800/50'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                   ]"
                   @click="selectConfig(config)"
                 >
@@ -129,7 +129,7 @@ const closeDrawer = () => {
                         (isMobile || isTablet) ? 'w-8 h-8' : 'w-10 h-10',
                         selectedConfig?.id === config.id
                           ? 'bg-primary/20'
-                          : 'bg-gray-800'
+                          : 'bg-gray-200 dark:bg-gray-800'
                       ]"
                     >
                       <Icon
@@ -138,22 +138,22 @@ const closeDrawer = () => {
                           (isMobile || isTablet) ? 'w-4 h-4' : 'w-5 h-5',
                           selectedConfig?.id === config.id
                             ? 'text-primary'
-                            : 'text-gray-400'
+                            : 'text-gray-600 dark:text-gray-400'
                         ]"
                       />
                     </div>
                     <div class="flex-1 min-w-0">
-                      <h4 :class="(isMobile || isTablet) ? 'text-sm font-medium text-white mb-1' : 'font-medium text-white mb-1'">
+                      <h4 :class="(isMobile || isTablet) ? 'text-sm font-medium text-gray-900 dark:text-white mb-1' : 'font-medium text-gray-900 dark:text-white mb-1'">
                         {{ config.name || `Config #${config.id}` }}
                       </h4>
-                      <p v-if="config.description" :class="(isMobile || isTablet) ? 'text-xs text-gray-400 line-clamp-2' : 'text-sm text-gray-400 line-clamp-2'">
+                      <p v-if="config.description" :class="(isMobile || isTablet) ? 'text-xs text-gray-600 dark:text-gray-400 line-clamp-2' : 'text-sm text-gray-600 dark:text-gray-400 line-clamp-2'">
                         {{ config.description }}
                       </p>
                       <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mt-1.5' : 'flex items-center gap-2 mt-2'">
-                        <span :class="(isMobile || isTablet) ? 'text-xs px-1.5 py-0.5' : 'text-xs px-2 py-1'" class="rounded-full bg-gray-800 text-gray-300">
+                        <span :class="(isMobile || isTablet) ? 'text-xs px-1.5 py-0.5' : 'text-xs px-2 py-1'" class="rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                           {{ config.provider || 'Unknown' }}
                         </span>
-                        <span v-if="config.model" :class="(isMobile || isTablet) ? 'text-xs px-1.5 py-0.5' : 'text-xs px-2 py-1'" class="rounded-full bg-gray-800 text-gray-300">
+                        <span v-if="config.model" :class="(isMobile || isTablet) ? 'text-xs px-1.5 py-0.5' : 'text-xs px-2 py-1'" class="rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
                           {{ config.model }}
                         </span>
                       </div>
@@ -178,40 +178,41 @@ const closeDrawer = () => {
             </Transition>
           </div>
 
-          <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-4'">
-            <div class="flex items-center justify-between">
-              <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
-                <Icon
-                  name="lucide:info"
-                  class="text-muted-foreground"
-                  size="16"
-                />
-                <span class="text-sm text-muted-foreground">
-                  {{ selectedConfig ? 'Ready to apply configuration' : 'Please select a configuration' }}
-                </span>
-              </div>
-              <div :class="(isMobile || isTablet) ? 'flex gap-1.5 w-full justify-end' : 'flex gap-3'">
-                <UButton
-                  variant="ghost"
-                  color="neutral"
-                  @click="closeDrawer"
-                  :size="(isMobile || isTablet) ? 'sm' : 'md'"
-                  :icon="(isMobile || isTablet) ? 'lucide:x' : undefined"
-                >
-                  {{ (isMobile || isTablet) ? '' : 'Cancel' }}
-                </UButton>
-                <UButton
-                  variant="solid"
-                  color="primary"
-                  @click="applyConfig"
-                  :disabled="!selectedConfig"
-                  :size="(isMobile || isTablet) ? 'sm' : 'md'"
-                  :icon="(isMobile || isTablet) ? 'lucide:check' : undefined"
-                >
-                  {{ (isMobile || isTablet) ? '' : 'Apply' }}
-                </UButton>
-              </div>
-            </div>
+        </div>
+      </template>
+
+      <template #footer>
+        <div class="flex items-center w-full">
+          <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
+            <Icon
+              name="lucide:info"
+              class="text-gray-500 dark:text-muted-foreground"
+              size="16"
+            />
+            <span class="text-sm text-gray-600 dark:text-muted-foreground">
+              {{ selectedConfig ? 'Ready to apply configuration' : 'Please select a configuration' }}
+            </span>
+          </div>
+          <div class="flex gap-2 ml-auto">
+            <UButton
+              variant="outline"
+              color="neutral"
+              @click="closeDrawer"
+              :size="(isMobile || isTablet) ? 'sm' : 'md'"
+              :icon="(isMobile || isTablet) ? 'lucide:x' : undefined"
+            >
+              {{ (isMobile || isTablet) ? '' : 'Cancel' }}
+            </UButton>
+            <UButton
+              variant="solid"
+              color="primary"
+              @click="applyConfig"
+              :disabled="!selectedConfig"
+              :size="(isMobile || isTablet) ? 'sm' : 'md'"
+              :icon="(isMobile || isTablet) ? 'lucide:check' : undefined"
+            >
+              {{ (isMobile || isTablet) ? '' : 'Apply' }}
+            </UButton>
           </div>
         </div>
       </template>

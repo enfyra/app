@@ -61,7 +61,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
         ".cm-gutters": {
           backgroundColor: "#0c0c0e",
           color: "#858585",
-          borderRight: "1px solid rgba(255, 255, 255, 0.08)",
+          borderRight: "1px solid var(--border-neutral)",
         },
 
         ".cm-activeLine": {
@@ -227,7 +227,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
         ".cm-gutters": {
           backgroundColor: "#f8f9fa",
           color: "#6e7681",
-          borderRight: "1px solid #e5e7eb",
+          borderRight: "1px solid var(--border-neutral)",
         },
 
         ".cm-activeLine": {
@@ -253,7 +253,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
         ".cm-tooltip": {
           backgroundColor: "#ffffff",
           color: "#1e1e1e",
-          border: "1px solid #e5e7eb",
+          border: "1px solid var(--border-neutral)",
           borderRadius: "4px",
           padding: "0",
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
@@ -292,7 +292,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
 
         ".cm-tooltip-hover": {
           backgroundColor: "#ffffff",
-          border: "1px solid #e5e7eb",
+          border: "1px solid var(--border-neutral)",
           padding: "8px",
           maxWidth: "500px",
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
@@ -300,7 +300,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
 
         ".cm-diagnostic": {
           backgroundColor: "#ffffff",
-          border: "1px solid #e5e7eb",
+          border: "1px solid var(--border-neutral)",
           padding: "4px 8px",
           borderRadius: "4px",
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",

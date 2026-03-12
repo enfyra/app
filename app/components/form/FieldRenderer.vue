@@ -20,6 +20,7 @@ const props = defineProps<{
   errors: Record<string, string>;
   readonly?: boolean;
   loading?: boolean;
+  fieldId?: string;
 }>();
 
 const emit = defineEmits<{
@@ -97,6 +98,7 @@ function getComponentConfigByKey(key: string) {
     disabled,
     placeholder: config.placeholder || column?.placeholder || key,
     class: "w-full",
+    id: props.fieldId,
     ...config.componentProps,
 
     ...(hasError && !isSimpleJsonField && { error: props.errors[key] }),

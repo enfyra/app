@@ -125,6 +125,7 @@ async function createNewRecord() {
                   icon="lucide:plus"
                   @click="createNewRecord"
                   :loading="creating"
+                  :disabled="creating"
                   :size="(isMobile || isTablet) ? 'sm' : 'md'"
                   :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
                 >

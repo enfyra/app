@@ -17,7 +17,7 @@
               :class="[
                 'relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-200',
                 packageType === 'Server'
-                  ? 'border-secondary bg-gradient-to-br from-secondary/20 to-secondary/5 shadow-lg shadow-secondary/20'
+                  ? 'border-cyan-600 dark:border-cyan-500 bg-cyan-50 dark:bg-cyan-950/60 shadow-lg shadow-cyan-200/50 dark:shadow-cyan-500/10'
                   : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/30 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50',
               ]"
             >
@@ -26,7 +26,7 @@
                   :class="[
                     'flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200',
                     packageType === 'Server'
-                      ? 'bg-secondary/20 text-secondary'
+                      ? 'bg-cyan-200/80 dark:bg-cyan-500/25 text-cyan-700 dark:text-cyan-200'
                       : 'bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 group-hover:text-gray-700 dark:group-hover:text-gray-300',
                   ]"
                 >
@@ -45,7 +45,7 @@
                     </span>
                     <div
                       v-if="packageType === 'Server'"
-                      class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-xs font-medium"
+                      class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-600 dark:bg-cyan-500/30 text-white dark:text-cyan-100 text-xs font-medium"
                     >
                       <UIcon name="lucide:check" class="w-3 h-3" />
                       <span>Selected</span>
@@ -53,7 +53,7 @@
                   </div>
                   <p class="text-sm text-gray-700 dark:text-gray-400">
                     Use in handlers & hooks via
-                    <code class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-900/50 text-secondary text-xs font-mono">$ctx.$pkgs</code>
+                    <code class="px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/40 text-cyan-800 dark:text-cyan-200 text-xs font-mono">$ctx.$pkgs</code>
                   </p>
                 </div>
               </div>
@@ -64,7 +64,7 @@
               :class="[
                 'relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-200',
                 packageType === 'App'
-                  ? 'border-secondary bg-gradient-to-br from-secondary/20 to-secondary/5 shadow-lg shadow-secondary/20'
+                  ? 'border-cyan-600 dark:border-cyan-500 bg-cyan-50 dark:bg-cyan-950/60 shadow-lg shadow-cyan-200/50 dark:shadow-cyan-500/10'
                   : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/30 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50',
               ]"
             >
@@ -73,7 +73,7 @@
                   :class="[
                     'flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200',
                     packageType === 'App'
-                      ? 'bg-secondary/20 text-secondary'
+                      ? 'bg-cyan-200/80 dark:bg-cyan-500/25 text-cyan-700 dark:text-cyan-200'
                       : 'bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 group-hover:text-gray-700 dark:group-hover:text-gray-300',
                   ]"
                 >
@@ -92,7 +92,7 @@
                     </span>
                     <div
                       v-if="packageType === 'App'"
-                      class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary/20 text-secondary text-xs font-medium"
+                      class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-600 dark:bg-cyan-500/30 text-white dark:text-cyan-100 text-xs font-medium"
                     >
                       <UIcon name="lucide:check" class="w-3 h-3" />
                       <span>Selected</span>
@@ -113,10 +113,12 @@
           icon="lucide:alert-triangle"
           title="Usage in Handlers & Hooks"
           description="Installed packages will be available as $ctx.$pkgs.packageName in your custom handlers and hooks."
-          color="secondary"
+          color="primary"
           class="mb-6"
           :ui="{
             icon: 'text-[35px]',
+            title: 'text-violet-800 dark:text-violet-200',
+            description: 'text-violet-700 dark:text-violet-200/90',
           }"
           variant="soft"
         />
@@ -126,10 +128,12 @@
           icon="lucide:info"
           title="Frontend Packages"
           description="Packages will be installed in your Nuxt app and available in your extension."
-          color="secondary"
+          color="primary"
           class="mb-6"
           :ui="{
             icon: 'text-[35px]',
+            title: 'text-violet-800 dark:text-violet-200',
+            description: 'text-violet-700 dark:text-violet-200/90',
           }"
           variant="soft"
         />

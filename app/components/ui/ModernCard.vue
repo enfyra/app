@@ -41,7 +41,7 @@
 <script setup lang="ts">
 
 type CardVariant = "form" | "settings" | "stats" | "simple";
-type CardSize = "compact" | "default" | "spacious";
+type CardSize = "sm" | "md" | "lg";
 
 interface Props {
   variant?: CardVariant;
@@ -56,7 +56,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   variant: "simple",
-  size: "default",
+  size: "md",
   elevated: false,
   animated: false,
   glassEffect: true,
@@ -69,9 +69,9 @@ const cardRef = ref<HTMLElement>();
 const isVisible = ref(false);
 
 const sizeClasses = {
-  compact: "p-4",
-  default: "p-6",
-  spacious: "p-8",
+  sm: "p-4",
+  md: "p-6",
+  lg: "p-8",
 };
 
 const variantClasses = computed(() => {

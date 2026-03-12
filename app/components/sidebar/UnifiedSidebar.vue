@@ -395,9 +395,6 @@ const visibleGroups = computed(() => {
                 />
                 </span>
                 <span class="menu-item-text">{{ group.label }}</span>
-                <div class="text-red-500 text-xs mt-1">
-                  DEBUG: Missing route/path
-                </div>
               </div>
             </div>
 

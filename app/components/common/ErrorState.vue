@@ -3,17 +3,16 @@ const props = defineProps<{
   title?: string;
   description?: string;
   icon?: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-    icon?: string;
-  };
+  retry?: () => void;
+  retryLabel?: string;
   size?: "sm" | "md" | "lg";
 }>();
 
-const defaultTitle = "No data available";
-const defaultIcon = "lucide:database";
+const defaultTitle = "Something went wrong";
+const defaultDescription = "An error occurred while loading the data.";
+const defaultIcon = "lucide:alert-circle";
 const defaultSize = "md";
+const defaultRetryLabel = "Try Again";
 
 const iconSize = computed(() => {
   switch (props.size || defaultSize) {
@@ -40,34 +39,34 @@ const textSize = computed(() => {
 
 <template>
   <div
-    role="status"
-    aria-live="polite"
+    role="alert"
+    aria-live="assertive"
     class="flex flex-col items-center justify-center py-8 gap-3"
   >
     <UIcon
       :name="props.icon || defaultIcon"
-      :class="`${iconSize} text-gray-400 dark:text-gray-500`"
+      :class="`${iconSize} text-red-400 dark:text-red-500`"
     />
     <div class="text-center">
       <p :class="`${textSize} font-medium text-gray-800 dark:text-white/90`">
         {{ props.title || defaultTitle }}
       </p>
       <p
-        v-if="props.description"
+        v-if="props.description || defaultDescription"
         :class="`${textSize} text-sm text-gray-500 dark:text-gray-400 mt-1`"
       >
-        {{ props.description }}
+        {{ props.description || defaultDescription }}
       </p>
     </div>
     <UButton
-      v-if="props.action"
-      :icon="props.action.icon"
-      @click="props.action.onClick"
+      v-if="props.retry"
+      icon="lucide:refresh-cw"
+      @click="props.retry"
       size="sm"
       variant="soft"
-      color="primary"
+      color="error"
     >
-      {{ props.action.label }}
+      {{ props.retryLabel || defaultRetryLabel }}
     </UButton>
   </div>
 </template>

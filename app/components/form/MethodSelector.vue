@@ -146,19 +146,19 @@ onMounted(async () => {
     Please select Available Methods first.
   </div>
   <div v-else class="flex flex-wrap gap-2">
-    <UBadge
+    <UButton
       v-for="m in availableMethods"
       :key="getId(m) || m.method"
       :color="isSelected(m.method) ? getMethodColor(m.method) : 'neutral'"
       :variant="isSelected(m.method) ? 'solid' : 'outline'"
-      size="md"
-      class="cursor-pointer select-none px-3 py-1 font-mono text-xs font-semibold inline-flex items-center gap-1.5"
-      :class="{ 'opacity-50 cursor-not-allowed': disabled }"
+      size="xs"
+      :disabled="disabled"
+      :aria-pressed="isSelected(m.method)"
+      class="font-mono text-xs font-semibold"
       @click="selectMethod(m)"
     >
       {{ m.method }}
-      <UIcon v-if="isSelected(m.method)" name="lucide:check" class="size-3.5 shrink-0" />
-
-    </UBadge>
+      <UIcon v-if="isSelected(m.method)" name="lucide:check" class="size-3.5 shrink-0 ml-1" />
+    </UButton>
   </div>
 </template>

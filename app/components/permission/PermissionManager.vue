@@ -114,6 +114,7 @@
                       size="xs"
                       @click.stop="deletePermission(permission)"
                       :loading="deleting === permission.id"
+                      :disabled="deleting === permission.id"
                     />
                   </PermissionGate>
                   <UIcon name="lucide:chevron-right" class="w-4 h-4 text-gray-400" />
@@ -175,6 +176,7 @@
                   size="xs"
                   @click.stop="deletePermission(permission)"
                   :loading="deleting === permission.id"
+                  :disabled="deleting === permission.id"
                 />
               </PermissionGate>
             </div>
@@ -229,7 +231,7 @@
           <div
             class="flex justify-end border border-gray-200 dark:border-muted/50 rounded-lg p-4 bg-white dark:bg-gray-800/50"
           >
-            <UButton @click="savePermission" :loading="saving" color="primary">
+            <UButton @click="savePermission" :loading="saving" :disabled="saving" color="primary">
               {{ isEditing ? "Update" : "Create" }}
             </UButton>
           </div>

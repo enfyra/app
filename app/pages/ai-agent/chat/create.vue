@@ -16,7 +16,7 @@ const encodeCopyData = (value: string) => encodeURIComponent(value)
 const decodeCopyData = (value: string) => decodeURIComponent(value)
 const renderCopyButton = (raw: string) => {
   const encoded = encodeCopyData(raw)
-  return `<button type="button" class="absolute top-3 right-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-700 bg-gray-900/80 text-gray-300 transition hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 copy-code-trigger" data-copy-code="${encoded}">
+  return `<button type="button" class="absolute top-3 right-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-300 dark:border-gray-700 bg-white/90 dark:bg-gray-900/80 text-gray-700 dark:text-gray-300 transition hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 copy-code-trigger" data-copy-code="${encoded}">
     <svg class="h-4 w-4 copy-icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -31,12 +31,12 @@ renderer.code = function({ text, lang }: { text: string; lang?: string }): strin
   if (lang && getLanguage(lang)) {
     try {
       const highlighted = highlight(text, lang)
-      return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`, renderCopyButton(text))
+      return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/60 px-4 py-4 pr-12"><code class="hljs language-${lang}">${highlighted}</code></pre>`, renderCopyButton(text))
     } catch (err) {
     }
   }
   const highlighted = highlight(text)
-  return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-800 bg-black/60 px-4 py-4 pr-12"><code class="hljs">${highlighted}</code></pre>`, renderCopyButton(text))
+  return wrapCodeWithCopy(`<pre class="!mb-0 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/60 px-4 py-4 pr-12"><code class="hljs">${highlighted}</code></pre>`, renderCopyButton(text))
 }
 
 marked.use({ renderer })
@@ -452,12 +452,12 @@ const formatTime = (date: Date) => {
           
           <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full py-12 text-center">
             <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 flex items-center justify-center mb-4">
-              <Icon name="lucide:message-circle" class="w-10 h-10 text-cyan-400" />
+              <Icon name="lucide:message-circle" class="w-10 h-10 text-cyan-600 dark:text-cyan-400" />
             </div>
-            <h3 class="text-xl font-semibold text-white mb-2">Start a New Conversation</h3>
-            <p class="text-gray-400 max-w-md">
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">Start a New Conversation</h3>
+            <p class="text-gray-600 dark:text-gray-400 max-w-md">
               Type your message below to begin chatting with the AI assistant.
-              <span v-if="!selectedAiConfig" class="block mt-2 text-orange-400">
+              <span v-if="!selectedAiConfig" class="block mt-2 text-orange-600 dark:text-orange-400">
                 Don't forget to select an AI configuration first!
               </span>
             </p>
@@ -491,7 +491,7 @@ const formatTime = (date: Date) => {
                   :class="[
                     message.type === 'user'
                       ? 'bg-blue-600 text-white px-4 py-3 max-w-[80%] inline-block'
-                      : 'bg-gray-900 border border-gray-800 px-4 py-3 inline-block max-w-[85%]',
+                      : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 px-4 py-3 inline-block max-w-[85%] shadow-sm',
                   ]"
                 >
                   <div
@@ -504,35 +504,35 @@ const formatTime = (date: Date) => {
                     v-else
                     class="space-y-3"
                   >
-                    <div class="ai-chat-prose prose-invert prose-sm max-w-none text-gray-200">
+                    <div class="ai-chat-prose prose-sm max-w-none" style="color: var(--text-primary);">
                       <div v-if="message.content" v-html="renderMarkdown(message.content)" />
                       <div
                         v-if="message.isStreaming"
                         class="inline-flex items-center gap-0.5"
                         :class="message.content ? 'mt-1' : ''"
                       >
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 0ms" />
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 120ms" />
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-bounce" style="animation-delay: 240ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style="animation-delay: 0ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style="animation-delay: 120ms" />
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style="animation-delay: 240ms" />
                       </div>
                     </div>
                   </div>
 
                   <div
                     class="text-xs mt-2 opacity-60 flex items-center gap-2 flex-wrap"
-                    :class="message.type === 'user' ? 'text-blue-100' : 'text-gray-500'"
+                    :class="message.type === 'user' ? 'text-blue-100' : 'text-gray-600 dark:text-gray-400'"
                   >
                     <span>{{ formatTime(message.timestamp) }}</span>
                     <span
                       v-if="message.type === 'bot' && message.tokens"
-                      class="text-[10px] opacity-50 token-info select-text inline-flex items-center gap-1"
+                      class="text-[10px] opacity-70 token-info select-text inline-flex items-center gap-1"
                       style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
                     >
                       {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
                     </span>
                     <span
                       v-if="message.type === 'bot' && message.metadata && (message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null || message.metadata.durationMs != null)"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-900/40 text-[11px] font-medium text-violet-400 token-info select-text"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-100 dark:bg-violet-900/40 text-[11px] font-medium text-violet-700 dark:text-violet-400 token-info select-text"
                       style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
                     >
                       <Icon name="lucide:wrench" class="w-3 h-3 flex-shrink-0" />
@@ -546,7 +546,7 @@ const formatTime = (date: Date) => {
                     </span>
                     <span
                       v-if="message.type === 'bot' && message.metadata && (message.metadata.cacheHitTokens != null || message.metadata.cacheHitPct != null)"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-900/40 text-[11px] font-medium text-emerald-400 token-info select-text"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/40 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 token-info select-text"
                       style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
                     >
                       <Icon name="lucide:database" class="w-3 h-3 flex-shrink-0" />
@@ -566,9 +566,9 @@ const formatTime = (date: Date) => {
                   >
                     <template v-if="message.toolCalls[0]?.status !== undefined">
                       <div
-                        class="bg-gray-800/50 border border-gray-700 rounded overflow-hidden w-fit"
+                        class="bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded overflow-hidden w-fit"
                         :class="{
-                          'cursor-pointer hover:bg-gray-800/70 transition-colors': message.toolCalls.length > 1
+                          'cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800/70 transition-colors': message.toolCalls.length > 1
                         }"
                         @click="message.toolCalls.length > 1 && toggleToolCalls(message.id)"
                       >
@@ -581,10 +581,10 @@ const formatTime = (date: Date) => {
                             :key="toolCall.id"
                             class="flex items-center gap-1.5 px-2 py-1 text-xs"
                             :class="{
-                              'text-gray-400': toolCall.status === 'pending',
-                              'text-green-400': toolCall.status === 'success',
-                              'text-red-400': toolCall.status === 'error',
-                              'border-b border-gray-700/50': index < getSortedToolCalls(message.toolCalls).length - 1
+                              'text-gray-600 dark:text-gray-400': toolCall.status === 'pending',
+                              'text-green-600 dark:text-green-400': toolCall.status === 'success',
+                              'text-red-600 dark:text-red-400': toolCall.status === 'error',
+                              'border-b border-gray-200 dark:border-gray-700/50': index < getSortedToolCalls(message.toolCalls).length - 1
                             }"
                           >
                             <Icon
@@ -628,9 +628,9 @@ const formatTime = (date: Date) => {
                             <span
                               class="flex-1"
                               :class="{
-                                'text-gray-400': getDisplayToolCall(message.toolCalls)!.status === 'pending',
-                                'text-green-400': getDisplayToolCall(message.toolCalls)!.status === 'success',
-                                'text-red-400': getDisplayToolCall(message.toolCalls)!.status === 'error',
+                                'text-gray-600 dark:text-gray-400': getDisplayToolCall(message.toolCalls)!.status === 'pending',
+                                'text-green-600 dark:text-green-400': getDisplayToolCall(message.toolCalls)!.status === 'success',
+                                'text-red-600 dark:text-red-400': getDisplayToolCall(message.toolCalls)!.status === 'error',
                               }"
                             >{{ getDisplayToolCall(message.toolCalls)!.name }}</span>
                             <span class="text-[10px] opacity-50">+{{ message.toolCalls.length - 1 }}</span>
@@ -640,7 +640,7 @@ const formatTime = (date: Date) => {
                     </template>
                     <div
                       v-else
-                      class="flex items-center gap-1.5 px-2 py-1 bg-gray-800/50 border border-gray-700 rounded text-xs text-gray-400 w-fit"
+                      class="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded text-xs text-gray-600 dark:text-gray-400 w-fit"
                     >
                       <Icon name="lucide:wrench" class="w-3.5 h-3.5 flex-shrink-0" />
                       <span>{{ message.toolCalls.length }} tool call{{ message.toolCalls.length > 1 ? 's' : '' }}</span>
@@ -659,13 +659,13 @@ const formatTime = (date: Date) => {
         <div class="max-w-4xl mx-auto">
           <form @submit.prevent="sendMessage">
             
-            <div class="relative flex items-center gap-2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-2xl hover:border-gray-600 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
+            <div class="relative flex items-center gap-2 px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-2xl hover:border-gray-400 dark:hover:border-gray-600 focus-within:border-blue-500 dark:focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-colors">
               
               <textarea
                 ref="textareaRef"
                 v-model="inputMessage"
                 rows="1"
-                class="flex-1 bg-transparent text-gray-100 placeholder-gray-500 resize-none outline-none max-h-[150px] py-1"
+                class="flex-1 bg-transparent text-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none outline-none max-h-[150px] py-1"
                 style="field-sizing: content;"
                 :placeholder="hasConfigs ? 'Type your message...' : 'Please select an AI configuration first'"
                 :disabled="!hasConfigs || isTyping"
@@ -689,7 +689,7 @@ const formatTime = (date: Date) => {
                 v-if="isTyping"
                 type="button"
                 disabled
-                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-red-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
+                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-red-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
               >
                 <Icon name="lucide:square" class="w-3.5 h-3.5" />
               </button>
@@ -697,19 +697,19 @@ const formatTime = (date: Date) => {
                 v-else-if="hasConfigs"
                 type="submit"
                 :disabled="!inputMessage.trim()"
-                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
+                class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white transition-colors"
               >
                 <Icon name="lucide:send" class="w-4 h-4" />
               </button>
             </div>
           </form>
 
-          <div class="text-xs text-gray-500 mt-2 text-center">
+          <div class="text-xs text-gray-600 dark:text-gray-500 mt-2 text-center">
             <template v-if="hasConfigs">
               Press Enter to send • Shift + Enter for new line
             </template>
             <template v-else>
-              <span class="text-orange-400">No AI configuration available. Please create one first.</span>
+              <span class="text-orange-600 dark:text-orange-400">No AI configuration available. Please create one first.</span>
             </template>
           </div>
         </div>

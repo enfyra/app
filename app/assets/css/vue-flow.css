@@ -28,20 +28,14 @@
   min-width: 130px;
   max-width: 150px;
   height: 40px;
-  border: 1px solid;
+  border: 1px solid var(--flow-node-border);
   border-radius: 5px;
   padding: 6px 8px;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  background: white;
+  background: var(--flow-node-bg);
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  border-color: rgb(209, 213, 219);
-}
-
-.dark .flow-node {
-  background: rgb(17, 24, 39);
-  border-color: rgb(55, 65, 81);
 }
 
 .flow-node:hover:not(.disabled-state) {
@@ -66,36 +60,36 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  background: var(--accent-emerald);
+  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
   }
   50% {
     opacity: 0.8;
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.1);
   }
 }
 
 .dark .status-indicator {
-  background: #34d399;
-  box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.3);
+  background: var(--accent-emerald-bright);
+  box-shadow: 0 0 0 2px rgba(110, 231, 183, 0.3);
   animation: pulse-dark 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes pulse-dark {
   0%, 100% {
     opacity: 1;
-    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.3);
+    box-shadow: 0 0 0 2px rgba(110, 231, 183, 0.3);
   }
   50% {
     opacity: 0.8;
-    box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.2);
+    box-shadow: 0 0 0 4px rgba(110, 231, 183, 0.2);
   }
 }
 

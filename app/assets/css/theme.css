@@ -97,6 +97,32 @@
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
     --ease-glass: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    --table-header-bg: #d7dbe2;
+    --table-header-color: #0f172a;
+    --table-header-border: #9ca3af;
+    --table-cell-border: #dfe6e9;
+    --caret-color: #1f2937;
+    --prose-placeholder: #94a3b8;
+    --prose-blockquote-border: #ddd;
+    --prose-blockquote-color: #555;
+    --prose-hr-border: #ddd;
+    --prose-code-bg: #f3f4f6;
+    --prose-inline-code-color: #059669;
+    --prose-pre-bg: #1f2937;
+    --prose-pre-color: #e5e7eb;
+    --prose-link: #3b82f6;
+    --prose-link-hover: #2563eb;
+    --prose-selection-bg: rgba(59, 130, 246, 0.3);
+    --selection-bg: rgba(59, 130, 246, 0.3);
+    --selection-text: inherit;
+    --prose-heading-color: inherit;
+    --prose-list-color: inherit;
+    --column-resize-handle: #3b82f6;
+    --border-neutral: #e5e7eb;
+    --flow-node-bg: #ffffff;
+    --flow-node-border: #d1d5db;
+    --scrollbar-thumb: #e5e7eb;
   }
 
   .dark {
@@ -157,5 +183,31 @@
     --glass-border-subtle: rgba(255, 255, 255, 0.04);
     --glass-backdrop: blur(24px) saturate(180%);
     --glass-backdrop-strong: blur(40px) saturate(200%);
+
+    --table-header-bg: #374151;
+    --table-header-color: #f3f4f6;
+    --table-header-border: #4b5563;
+    --table-cell-border: #374151;
+    --caret-color: #e5e7eb;
+    --prose-placeholder: #6b7280;
+    --prose-blockquote-border: #4b5563;
+    --prose-blockquote-color: #9ca3af;
+    --prose-hr-border: #4b5563;
+    --prose-code-bg: #374151;
+    --prose-inline-code-color: #34d399;
+    --prose-pre-bg: #111827;
+    --prose-pre-color: #e5e7eb;
+    --prose-link: #60a5fa;
+    --prose-link-hover: #93c5fd;
+    --prose-selection-bg: rgba(96, 165, 250, 0.4);
+    --selection-bg: rgba(96, 165, 250, 0.4);
+    --selection-text: inherit;
+    --prose-heading-color: #f3f4f6;
+    --prose-list-color: #e5e7eb;
+    --column-resize-handle: #60a5fa;
+    --border-neutral: rgba(255, 255, 255, 0.08);
+    --flow-node-bg: #111827;
+    --flow-node-border: #374151;
+    --scrollbar-thumb: rgba(139, 92, 246, 0.3);
   }
 }

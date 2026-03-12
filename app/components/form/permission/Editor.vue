@@ -54,7 +54,7 @@
           <div>
             <label class="block text-sm font-medium mb-3">Actions</label>
             <div class="flex flex-wrap gap-2">
-              <UBadge
+              <UButton
                 v-for="action in ['create', 'read', 'update', 'delete']"
                 :key="action"
                 :color="
@@ -67,13 +67,14 @@
                     ? 'solid'
                     : 'outline'
                 "
-                size="md"
-                class="cursor-pointer px-3 py-1.5 transition-all"
+                size="xs"
+                :disabled="disabled"
+                :aria-pressed="localPermission?.actions?.includes(action)"
                 @click="toggleAction(action)"
               >
                 <UIcon :name="getActionIcon(action)" class="w-4 h-4 mr-1.5" />
                 {{ action.charAt(0).toUpperCase() + action.slice(1) }}
-              </UBadge>
+              </UButton>
             </div>
             <p class="text-xs text-muted-foreground mt-2">
               Click to toggle permissions

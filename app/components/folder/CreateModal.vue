@@ -99,6 +99,7 @@ async function handleCreate() {
             color="primary"
             @click="handleCreate"
             :loading="createLoading"
+            :disabled="createLoading"
             icon="lucide:save"
           >
             Create Folder

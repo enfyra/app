@@ -156,7 +156,7 @@
           }"
           :to="action.to"
           :loading="action.loading"
-          :disabled="action.disabled"
+          :disabled="action.disabled || action.loading"
           @click="action.onClick"
           :class="[
             action.onClick || action.to ? 'cursor-pointer' : '',
