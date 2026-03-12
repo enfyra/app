@@ -403,7 +403,7 @@ function getColumnLabel(columnId: string) {
     >
       <div class="max-w-full overflow-x-auto overflow-y-auto custom-scrollbar">
         <table class="min-w-full" aria-label="Data table">
-          <thead >
+          <thead>
             <tr>
               <th
                 v-for="header in table?.getFlatHeaders() || []"

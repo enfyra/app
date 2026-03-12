@@ -29,12 +29,12 @@
 interface Props {
   title?: string;
   description?: string;
-  size?: 'compact' | 'default' | 'spacious';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
 withDefaults(defineProps<Props>(), {
-  size: 'default',
+  size: 'md',
   className: '',
 });
 </script>

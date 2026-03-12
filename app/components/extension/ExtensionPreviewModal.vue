@@ -134,7 +134,6 @@ async function compileAndPreview() {
 
   try {
     const { getAppUrl } = await import('~/utils/api/url');
-    const baseURL = getAppUrl();
     
     const response = await $fetch<{
       success: boolean;
@@ -145,7 +144,7 @@ async function compileAndPreview() {
       body: {
         code: props.code,
       },
-      baseURL,
+      baseURL: getAppUrl(),
     });
 
     if (response?.success && response?.compiledCode) {
@@ -181,7 +180,7 @@ async function compileAndPreview() {
       throw new Error('Failed to compile extension');
     }
   } catch (error: any) {
-    previewError.value = error?.data?.message || error?.message || 'Failed to compile extension';
+    previewError.value = error?.data?.message || error?.response?.data?.message || error?.message || 'Failed to compile extension';
     console.error('Preview error:', error);
   } finally {
     previewLoading.value = false;

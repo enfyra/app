@@ -992,7 +992,7 @@ onBeforeUnmount(async () => {
             </div>
           </form>
 
-          <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+          <div class="text-xs text-gray-600 dark:text-gray-500 mt-2 text-center">
             Press Enter to send • Shift + Enter for new line
           </div>
         </div>

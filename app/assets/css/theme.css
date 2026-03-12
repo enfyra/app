@@ -98,9 +98,9 @@
     --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
     --ease-glass: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-    --table-header-bg: #e5e7eb;
+    --table-header-bg: #d7dbe2;
     --table-header-color: #0f172a;
-    --table-header-border: #d1d5db;
+    --table-header-border: #9ca3af;
     --table-cell-border: #dfe6e9;
     --caret-color: #1f2937;
     --prose-placeholder: #94a3b8;
