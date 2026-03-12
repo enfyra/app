@@ -66,6 +66,7 @@
               square
               class="flex-shrink-0 md:hidden"
               :loading="getDeleteLoader(conversation.id).isLoading"
+              :disabled="getDeleteLoader(conversation.id).isLoading"
               @click.stop="deleteConversation(conversation)"
             />
             <UButton
@@ -76,6 +77,7 @@
               square
               class="flex-shrink-0 hidden md:flex"
               :loading="getDeleteLoader(conversation.id).isLoading"
+              :disabled="getDeleteLoader(conversation.id).isLoading"
               @click.stop="deleteConversation(conversation)"
             />
           </template>

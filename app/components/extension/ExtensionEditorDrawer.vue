@@ -276,7 +276,7 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
             variant="solid"
             color="primary"
             :loading="updateLoading || createLoading"
-            :disabled="!hasFormChanges"
+            :disabled="!hasFormChanges || updateLoading || createLoading"
             @click="handleSave"
           >
             {{ menu?.extension ? 'Update' : 'Create' }}

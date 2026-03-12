@@ -7,18 +7,12 @@ import {
 // @ts-ignore
 import { useRuntimeConfig } from "#imports";
 import { $fetch } from "ofetch";
-import {
-  processExtensionDefinition,
-} from "../../../utils/server/extension";
 
 export default defineEventHandler(async (event) => {
   const method = event.method;
 
   try {
-    let body = await readBody(event);
-
-    const { processedBody } = await processExtensionDefinition(body, method);
-    body = processedBody;
+    const body = await readBody(event);
 
     const config = useRuntimeConfig();
     const apiPath = event.path.replace("/api", "");

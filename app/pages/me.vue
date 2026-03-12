@@ -429,6 +429,7 @@ onMounted(() => {
               variant="soft"
               size="md"
               :loading="passwordLoading"
+              :disabled="passwordLoading"
               icon="lucide:shield-check"
             >
               Update password

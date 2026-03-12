@@ -36,8 +36,9 @@
                 :error="!!error.email"
                 :required="true"
                 autocomplete="email"
-                aria-describedby="email-error"
+                :aria-describedby="error.email ? 'email-error' : undefined"
               />
+              <span v-if="error.email" id="email-error" role="alert" class="sr-only">{{ error.email }}</span>
             </UFormField>
           </div>
 
@@ -56,8 +57,10 @@
                 class="w-full"
                 id="password"
                 autocomplete="current-password"
-                aria-describedby="password-error"
-            /></UFormField>
+                :aria-describedby="error.password ? 'password-error' : undefined"
+              />
+              <span v-if="error.password" id="password-error" role="alert" class="sr-only">{{ error.password }}</span>
+            </UFormField>
           </div>
 
           <div class="flex justify-end">

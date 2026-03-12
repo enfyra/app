@@ -20,6 +20,9 @@ const emit = defineEmits<{
   "update:errors": [errors: Record<string, string>];
 }>();
 
+const uniqueId = useId();
+const fieldId = computed(() => `field-${props.keyName}-${uniqueId}`);
+
 const copyStatus = ref<"idle" | "success" | "error">("idle");
 
 function updateFormData(key: string, value: any) {
@@ -143,7 +146,7 @@ const { isMobile, isTablet } = useScreen();
   >
     <div class="space-y-0.5">
       <label
-        :for="`field-${keyName}`"
+        :for="fieldId"
         class="text-sm font-medium"
         :style="{ color: 'var(--text-primary)' }"
       >
@@ -163,6 +166,7 @@ const { isMobile, isTablet } = useScreen();
       :column-map="columnMap"
         :field-map="fieldMap"
       :errors="errors"
+      :field-id="fieldId"
       @update:form-data="updateFormData"
       @update:errors="updateErrors"
       :loading="props.loading"
@@ -172,7 +176,7 @@ const { isMobile, isTablet } = useScreen();
   <div v-else v-bind="fieldProps" class="space-y-2">
     <div class="flex items-center justify-between">
       <label
-        :for="`field-${keyName}`"
+        :for="fieldId"
         class="text-sm font-medium flex items-center gap-1"
         :style="{ color: 'var(--text-primary)' }"
       >
@@ -226,6 +230,7 @@ const { isMobile, isTablet } = useScreen();
       :column-map="columnMap"
         :field-map="fieldMap"
       :errors="errors"
+      :field-id="fieldId"
       @update:form-data="updateFormData"
       @update:errors="updateErrors"
       :loading="props.loading"

@@ -23,10 +23,11 @@
             'neutral'
           "
           :size="action.size || (isMobile ? 'sm' : 'md')"
+          :loading="unref(action.loading)"
           :disabled="
-            typeof action.disabled === 'boolean'
+            (typeof action.disabled === 'boolean'
               ? action.disabled
-              : unref(action.disabled)
+              : unref(action.disabled)) || unref(action.loading)
           "
           @click="action.onClick"
           :class="[

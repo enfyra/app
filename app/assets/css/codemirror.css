@@ -7,39 +7,39 @@
 }
 
 .dark .cm-editor .cm-selectionBackground {
-  background-color: #264F78 !important;
+  background-color: var(--selection-bg) !important;
 }
 
 .dark .cm-editor.cm-focused .cm-selectionBackground {
-  background-color: #264F78 !important;
+  background-color: var(--selection-bg) !important;
 }
 
 .dark .cm-editor .cm-content ::selection {
-  background-color: #264F78 !important;
-  color: inherit !important;
+  background-color: var(--selection-bg) !important;
+  color: var(--selection-text) !important;
 }
 
 .dark .cm-editor .cm-line ::selection {
-  background-color: #264F78 !important;
-  color: inherit !important;
+  background-color: var(--selection-bg) !important;
+  color: var(--selection-text) !important;
 }
 
 .cm-editor .cm-selectionBackground {
-  background-color: #add6ff !important;
+  background-color: var(--selection-bg) !important;
 }
 
 .cm-editor.cm-focused .cm-selectionBackground {
-  background-color: #add6ff !important;
+  background-color: var(--selection-bg) !important;
 }
 
 .cm-editor .cm-content ::selection {
-  background-color: #add6ff !important;
-  color: inherit !important;
+  background-color: var(--selection-bg) !important;
+  color: var(--selection-text) !important;
 }
 
 .cm-editor .cm-line ::selection {
-  background-color: #add6ff !important;
-  color: inherit !important;
+  background-color: var(--selection-bg) !important;
+  color: var(--selection-text) !important;
 }
 
 .dark .cm-tooltip.cm-tooltip-autocomplete {
@@ -89,7 +89,7 @@
 
 .cm-tooltip.cm-tooltip-autocomplete {
   background-color: #ffffff !important;
-  border: 1px solid #e5e7eb !important;
+  border: 1px solid var(--border-neutral) !important;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 

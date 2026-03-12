@@ -86,10 +86,7 @@ watch(() => colorMode.value, () => {
       if (editorView.value) {
         const gutters = editorView.value.dom.querySelector('.cm-gutters');
         if (gutters) {
-          const isDark = colorMode.value === 'dark';
-          (gutters as HTMLElement).style.borderRight = isDark 
-            ? '1px solid rgba(255, 255, 255, 0.08)' 
-            : '1px solid #e5e7eb';
+          (gutters as HTMLElement).style.borderRight = '1px solid var(--border-neutral)';
         }
       }
     });
@@ -176,10 +173,7 @@ onMounted(async () => {
     if (editorView.value) {
       const gutters = editorView.value.dom.querySelector('.cm-gutters');
       if (gutters) {
-        const isDark = colorMode.value === 'dark';
-        (gutters as HTMLElement).style.borderRight = isDark 
-          ? '1px solid rgba(255, 255, 255, 0.08)' 
-          : '1px solid #e5e7eb';
+        (gutters as HTMLElement).style.borderRight = '1px solid var(--border-neutral)';
       }
     }
   } catch (error) {

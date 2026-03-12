@@ -37,6 +37,7 @@
           variant="solid"
           color="primary"
           :loading="loading"
+          :disabled="loading"
           @click="$emit('save')"
         >
           Save Hook

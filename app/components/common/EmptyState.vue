@@ -39,7 +39,11 @@ const textSize = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center py-8 gap-3">
+  <div
+    role="status"
+    aria-live="polite"
+    class="flex flex-col items-center justify-center py-8 gap-3"
+  >
     <UIcon
       :name="props.icon || defaultIcon"
       :class="`${iconSize} text-gray-400 dark:text-gray-500`"

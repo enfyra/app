@@ -359,7 +359,7 @@ async function handleSave() {
           variant="solid"
           color="primary"
           :loading="updateLoading || createLoading"
-          :disabled="!hasFormChanges"
+          :disabled="!hasFormChanges || updateLoading || createLoading"
           @click="handleSave"
         >
           {{ menu ? 'Update' : 'Create' }}
