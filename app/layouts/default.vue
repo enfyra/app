@@ -10,10 +10,9 @@
 
     <aside
       v-if="(isTabletOrMobile && sidebarVisible) || !isTabletOrMobile"
-      class="fixed top-0 left-0 flex flex-col flex-shrink-0 h-screen transition-all duration-300 ease-in-out z-99999 glass-sidebar"
+      class="fixed top-0 left-0 flex flex-col flex-shrink-0 h-screen transition-all duration-300 ease-in-out z-99999 glass-sidebar w-[290px]"
       :class="[
-        isTabletOrMobile && !sidebarVisible ? '-translate-x-full' : 'translate-x-0',
-        sidebarCollapsed ? 'w-[70px]' : 'w-[290px]'
+        isTabletOrMobile && !sidebarVisible ? '-translate-x-full' : 'translate-x-0'
       ]"
       aria-label="Primary navigation"
     >
@@ -33,7 +32,7 @@
       :class="[
         isTabletOrMobile
           ? 'ml-0'
-          : (sidebarCollapsed ? 'lg:ml-[70px]' : 'lg:ml-[290px]')
+          : 'lg:ml-[290px]'
       ]"
       id="main-content"
     >
@@ -90,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-const { sidebarVisible, sidebarCollapsed, routeLoading, setSidebarVisible } =
+const { sidebarVisible, routeLoading, setSidebarVisible } =
   useGlobalState();
 const { width } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
