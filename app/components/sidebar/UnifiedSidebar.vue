@@ -5,8 +5,7 @@ const route = useRoute();
 const { menuGroups } = useMenuRegistry();
 const { checkPermissionCondition } = usePermissions();
 const { isMobile, isTablet, width } = useScreen();
-const { setSidebarVisible, sidebarCollapsed, setSidebarCollapsed, settings, sidebarVisible } = useGlobalState();
-const isTabletOrMobile = computed(() => width.value <= 1024);
+const { setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
 
 const faviconUrl = computed(() => {
@@ -16,11 +15,6 @@ const faviconUrl = computed(() => {
     return favicon;
   }
   return getFileUrl(favicon);
-});
-
-const isCollapsed = computed(() => {
-  if (isMobile.value || isTablet.value) return false;
-  return sidebarCollapsed.value;
 });
 
 function findActiveRoutes(items: any[], active: Set<string>, currentPath: string) {
@@ -96,13 +90,6 @@ const expandedGroups = ref<Set<string>>(new Set());
 const searchQuery = ref('');
 
 onMounted(() => {
-  const collapsedState = localStorage.getItem('sidebar-collapsed');
-  if (collapsedState) {
-    setSidebarCollapsed(collapsedState === 'true');
-  } else if (!isMobile.value && !isTablet.value) {
-    setSidebarCollapsed(true);
-  }
-
   const saved = localStorage.getItem('sidebar-expanded-groups');
   if (saved) {
     try {
@@ -111,11 +98,6 @@ onMounted(() => {
   } else {
     menuGroups.value.forEach(group => expandedGroups.value.add(group.id));
   }
-
-});
-
-watch(sidebarCollapsed, (newVal) => {
-  localStorage.setItem('sidebar-collapsed', String(newVal));
 });
 
 watch(expandedGroups, (newVal) => {
@@ -177,7 +159,7 @@ const visibleGroups = computed(() => {
   <nav class="flex flex-col h-full relative" style="height: 100dvh;">
 
     <div class="h-16 flex items-center justify-between px-5 py-8 relative" style="border-bottom: 1px solid var(--glass-border);">
-      <div v-if="!isCollapsed" class="flex items-center gap-3">
+      <div class="flex items-center gap-3">
         <div class="relative">
           <div class="relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
             <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
@@ -189,15 +171,9 @@ const visibleGroups = computed(() => {
           <p class="text-xs text-gray-500 dark:text-gray-400">{{ settings?.projectDescription || 'CMS' }}</p>
         </div>
       </div>
-      <div v-else class="flex items-center justify-center w-full">
-        <div class="relative w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
-          <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
-          <UIcon v-else name="lucide:database" class="w-4 h-4 text-brand-500" />
-        </div>
-      </div>
     </div>
 
-    <div v-if="!isCollapsed" class="px-3 pt-4 pb-2">
+    <div class="px-3 pt-4 pb-2">
       <div class="relative">
         <input
         v-model="searchQuery"
@@ -231,110 +207,11 @@ const visibleGroups = computed(() => {
         </p>
       </div>
 
-      <template v-if="isCollapsed">
-        <div class="space-y-3 px-3 relative">
-          <template
-            v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
-            :key="group.id"
-          >
-            <div class="space-y-1 p-1" :class="{
-              '': group.type === 'Dropdown Menu'
-            }">
-              <div class="relative flex items-center">
-                <component
-                  v-if="group.component"
-                  :is="group.component"
-                  v-bind="group.componentProps || {}"
-                />
-                <NuxtLink
-                  v-else-if="group.type === 'Menu' && group.route"
-                  :to="group.route"
-                  @click="handleMenuClick"
-                  :class="[
-                    'flex-1 aspect-square flex items-center justify-center rounded-xl p-2',
-                    ((group.route && activeRoutes.has(group.route)) || activeGroups.has(group.id)) ? 'text-violet-500 bg-violet-500/10' : 'text-gray-400 dark:text-gray-500 hover:bg-violet-500/5'
-                  ]"
-                >
-                  <UIcon
-                    :name="group.icon"
-                    class="w-5 h-5 flex-shrink-0"
-                  />
-                </NuxtLink>
-                <button
-                  v-else-if="group.type === 'Dropdown Menu'"
-                  @click="toggleGroup(group.id)"
-                  :class="[
-                    'flex-1 aspect-square flex items-center justify-center rounded-xl p-2',
-                    'text-gray-400 dark:text-gray-500 hover:bg-violet-500/5'
-                  ]"
-                >
-                  <UIcon
-                    :name="group.icon"
-                    class="w-5 h-5 flex-shrink-0"
-                  />
-                </button>
-
-                <button
-                  v-if="group.type === 'Dropdown Menu'"
-                  @click.stop="toggleGroup(group.id)"
-                  class="w-6 h-6 aspect-square flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:bg-violet-500/5"
-                >
-                  <UIcon
-                    name="lucide:chevron-right"
-                    :class="[
-                      'w-4 h-4 transition-transform duration-300 ease-out',
-                      isGroupExpanded(group.id) ? 'rotate-90' : ''
-                    ]"
-                  />
-                </button>
-
-                <div v-else class="w-6 h-6"></div>
-              </div>
-
-              <div
-                v-if="group.type === 'Dropdown Menu'"
-                :class="[
-                  'grid transition-all duration-300 ease-out',
-                  isGroupExpanded(group.id) ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                ]"
-              >
-                <div class="overflow-hidden">
-                  <div
-                    v-if="group.items"
-                    class="space-y-1 pl-1.5"
-                  >
-              <template v-for="item in group.items" :key="item.id">
-                <PermissionGate :condition="item.permission as any">
-                  <NuxtLink
-                    v-if="item.path || item.route"
-                    :to="item.path || item.route"
-                    @click="handleMenuClick"
-                    :class="[
-                      'w-8 h-8 flex items-center justify-center rounded-xl',
-                      ((item.path && activeRoutes.has(item.path)) || (item.route && activeRoutes.has(item.route))) ? 'text-violet-500 bg-violet-500/10' : 'text-gray-400 dark:text-gray-500 hover:bg-violet-500/5'
-                    ]"
-                  >
-                    <UIcon
-                      :name="item.icon || 'lucide:circle'"
-                      class="w-8 h-8 flex-shrink-0"
-                    />
-                  </NuxtLink>
-                </PermissionGate>
-              </template>
-                </div>
-              </div>
-            </div>
-            </div>
-          </template>
-        </div>
-      </template>
-
-      <template v-else>
-        <div class="space-y-6 relative">
-          <template
-            v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
-            :key="group.id"
-          >
+      <div class="space-y-6 relative">
+        <template
+          v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
+          :key="group.id"
+        >
             <div
               v-if="group.component"
               class="space-y-1 px-3"
@@ -427,14 +304,13 @@ const visibleGroups = computed(() => {
             </div>
           </template>
         </div>
-      </template>
     </div>
 
     <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="relative" style="border-top: 1px solid var(--glass-border);">
       <template v-for="(group, index) in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">
         <div :class="index > 0 ? 'glass-subtle' : ''">
           <PermissionGate :condition="group.permission as any">
-            <div :class="(isMobile || isTablet) ? 'p-2' : (isCollapsed ? 'p-2' : 'p-4')">
+            <div :class="(isMobile || isTablet) ? 'p-2' : 'p-4'">
               <component
                 v-if="group.component"
                 :is="group.component"
@@ -444,12 +320,11 @@ const visibleGroups = computed(() => {
                 v-else
                 @click="group.onClick"
                 :icon="group.icon"
-                :label="isCollapsed ? undefined : group.label"
+                :label="group.label"
                 variant="ghost"
                 color="error"
                 :class="[
                   'w-full justify-start',
-                  isCollapsed ? 'justify-center' : '',
                   group.class ? group.class : ''
                 ]"
               />
