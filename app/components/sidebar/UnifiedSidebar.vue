@@ -195,21 +195,6 @@ const visibleGroups = computed(() => {
           <UIcon v-else name="lucide:database" class="w-4 h-4 text-brand-500" />
         </div>
       </div>
-
-      <button
-        v-if="!isMobile && !isTablet"
-        @click="setSidebarCollapsed(!isCollapsed)"
-        class="h-9 w-9 p-0 flex items-center justify-center rounded-xl glass-button text-violet-400"
-        :class="isCollapsed ? 'mx-auto' : ''"
-      >
-        <UIcon
-          name="lucide:menu"
-          class="w-4 h-4 transition-transform duration-300 ease-out"
-          :style="{
-            transform: isCollapsed ? 'rotate(90deg)' : 'rotate(0deg)'
-          }"
-        />
-      </button>
     </div>
 
     <div v-if="!isCollapsed" class="px-3 pt-4 pb-2">
