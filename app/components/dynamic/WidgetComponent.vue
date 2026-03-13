@@ -1,12 +1,12 @@
 <template>
   <div>
     <div
-      v-if="(!isMounted || componentLoading) && !error"
+      v-if="loading"
       class="flex items-center gap-2 text-sm text-gray-400"
     >
-      <UIcon 
-        name="i-heroicons-arrow-path-20-solid" 
-        class="animate-spin" 
+      <UIcon
+        name="i-heroicons-arrow-path-20-solid"
+        class="animate-spin"
         size="16"
       />
       <span>Loading...</span>
@@ -16,7 +16,7 @@
       v-else-if="error"
       class="flex items-center gap-2 text-sm text-red-500"
     >
-      <UIcon 
+      <UIcon
         :name="error.includes('disabled') ? 'i-heroicons-lock-closed' : 'i-heroicons-exclamation-triangle'"
         size="16"
       />
@@ -58,17 +58,15 @@ defineOptions({
   inheritAttrs: false
 });
 
-const { isMounted } = useMounted();
-const { loadDynamicComponent, isComponentCached, getCachedExtensionMeta, setCachedExtensionMeta } = useDynamicComponent();
+const { loadDynamicComponent, getCachedComponent, getCachedExtensionMeta, setCachedExtensionMeta } = useDynamicComponent();
 
 const error = ref<string | null>(null);
 const widgetComponent = ref<any>(null);
-const componentLoading = ref(false);
+const loading = ref(false);
 
 const {
   data: extensionResponse,
   error: extensionError,
-  pending: loading,
   execute: executeFetchExtension,
 } = useApi(() => "/extension_definition", {
   query: computed(() => ({
@@ -82,34 +80,33 @@ const {
     },
   })),
   errorContext: "Fetch Widget Extension",
+  immediate: false,
 });
+
+const tryLoadFromCache = (): boolean => {
+  const widgetPath = `widget:${props.id}`;
+  const cachedMeta = getCachedExtensionMeta(widgetPath);
+  if (!cachedMeta) return false;
+
+  const cachedComponent = getCachedComponent(cachedMeta.extensionId, cachedMeta.updatedAt);
+  if (cachedComponent) {
+    widgetComponent.value = cachedComponent;
+    return true;
+  }
+
+  return false;
+};
 
 const loadMatchingWidget = async () => {
   error.value = null;
 
-  const widgetPath = `widget:${props.id}`;
-  const cachedMeta = getCachedExtensionMeta(widgetPath);
-  if (cachedMeta) {
-    
-    const isCached = isComponentCached(cachedMeta.extensionId, cachedMeta.updatedAt);
-    
-    if (isCached) {
-      try {
-        const component = await loadDynamicComponent(
-          cachedMeta.compiledCode || cachedMeta.code,
-          cachedMeta.extensionId,
-          cachedMeta.updatedAt
-        );
-        widgetComponent.value = component;
-        return; 
-      } catch (err: any) {
-        console.warn('❌ Failed to load cached widget component:', err);
-      }
-    }
+  if (tryLoadFromCache()) {
+    return;
   }
 
-  componentLoading.value = true;
+  loading.value = true;
   await fetchAndLoadWidget();
+  loading.value = false;
 };
 
 const fetchAndLoadWidget = async () => {
@@ -118,13 +115,11 @@ const fetchAndLoadWidget = async () => {
 
     if (extensionError.value) {
       error.value = `API Error: ${extensionError.value}`;
-      componentLoading.value = false;
       return;
     }
 
     if (!extensionResponse.value?.data || extensionResponse.value.data.length === 0) {
       error.value = `No widget found with ID: ${props.id}`;
-      componentLoading.value = false;
       return;
     }
 
@@ -132,14 +127,17 @@ const fetchAndLoadWidget = async () => {
 
     if (!extension.isEnabled) {
       error.value = `Widget "${extension.name}" is currently disabled. Please contact an administrator to enable this widget.`;
-      componentLoading.value = false;
       return;
     }
 
     const widgetPath = `widget:${props.id}`;
     setCachedExtensionMeta(widgetPath, extension);
 
-    const isCached = isComponentCached(extension.extensionId, extension.updatedAt);
+    const cachedComponent = getCachedComponent(extension.extensionId, extension.updatedAt);
+    if (cachedComponent) {
+      widgetComponent.value = cachedComponent;
+      return;
+    }
 
     const component = await loadDynamicComponent(
       extension.compiledCode || extension.code,
@@ -151,8 +149,6 @@ const fetchAndLoadWidget = async () => {
 
   } catch (err: any) {
     error.value = `Failed to load widget: ${err?.message || err}`;
-  } finally {
-    componentLoading.value = false;
   }
 };
 
@@ -167,8 +163,4 @@ watch(
   },
   { immediate: true }
 );
-
-onMounted(async () => {
-  await loadMatchingWidget();
-});
 </script>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { isVisible, options, onCancel, onConfirm } = useConfirm();
+
 watch(
   () => isVisible.value,
   (newVal) => {
@@ -10,6 +11,21 @@ watch(
 const isDestructive = computed(() => {
   const text = options.value.confirmText?.toLowerCase() || '';
   return text.includes('delete') || text.includes('remove') || text.includes('destroy');
+});
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter' && isVisible.value) {
+    e.preventDefault();
+    onConfirm();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
 });
 </script>
 

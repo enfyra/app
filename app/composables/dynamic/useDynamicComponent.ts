@@ -165,6 +165,16 @@ const isComponentCached = (
   return extensionCache.has(cacheKey);
 };
 
+const getCachedComponent = (
+  extensionName: string,
+  updatedAt?: string | Date
+) => {
+  const cacheKey = `${extensionName}:${
+    updatedAt ? new Date(updatedAt).getTime() : Date.now()
+  }`;
+  return extensionCache.get(cacheKey) || null;
+};
+
 const getCachedExtensionMeta = (path: string) => {
   return extensionMetaCache.value.get(path);
 };
@@ -867,6 +877,7 @@ export const useDynamicComponent = () => {
     clearCache,
     getCacheStats,
     isComponentCached,
+    getCachedComponent,
     getCachedExtensionMeta,
     setCachedExtensionMeta,
   };
