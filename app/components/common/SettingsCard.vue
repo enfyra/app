@@ -209,7 +209,7 @@ interface Props {
   actions?: Action[];
   headerActions?: HeaderAction[];
   cardClass?: string;
-  topBadge?: { label: string; color?: string };
+  topBadge?: { label: string; color?: "error" | "info" | "success" | "primary" | "secondary" | "warning" | "neutral" };
 }
 
 const props = withDefaults(defineProps<Props>(), {
