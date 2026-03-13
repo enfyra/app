@@ -109,24 +109,20 @@
   border: 1px solid rgba(139, 92, 246, 0.12);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04), 0 0 30px rgba(139, 92, 246, 0.06);
   transition: all 0.25s ease;
 }
 
 .glass-card:hover {
   border-color: rgba(139, 92, 246, 0.2);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), 0 0 40px rgba(139, 92, 246, 0.1);
 }
 
 .dark .glass-card {
   background: rgba(24, 24, 27, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .dark .glass-card:hover {
   border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .glass-card-hover {

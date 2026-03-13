@@ -65,13 +65,16 @@
 
 .ai-chat-prose pre code {
   background-color: transparent;
-  color: inherit;
   padding: 0;
   font-size: 0.875rem;
   line-height: 1.6;
   display: block;
   min-width: min-content;
   white-space: pre;
+}
+
+.ai-chat-prose pre code:not(.hljs) {
+  color: inherit;
 }
 
 .ai-chat-prose ul,

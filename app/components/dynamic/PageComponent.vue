@@ -1,67 +1,58 @@
 <template>
-  <Transition name="loading-fade" mode="out-in">
-    <CommonLoadingState
-      v-if="!isMounted || componentLoading"
-      title="Loading extension..."
-      description="Fetching extension component"
-      size="md"
-      type="table"
-      context="page"
-    />
+  <div v-if="isLoading" />
 
-    <CommonEmptyState
-      v-else-if="error"
-      :title="
-        error.includes('disabled') ? 'Extension Disabled' : 'Extension Error'
-      "
-      :description="error"
-      :icon="
-        error.includes('disabled')
-          ? 'i-heroicons-lock-closed'
-          : 'i-heroicons-exclamation-triangle'
-      "
-      size="md"
-      :action="
-        error.includes('disabled')
-          ? {
-              label: 'Go to Extension Settings',
-              onClick: async () => {
-                await navigateTo('/settings/extensions');
-              },
-              icon: 'i-heroicons-cog-6-tooth',
-            }
-          : {
-              label: 'Retry',
-              onClick: retry,
-              icon: 'i-heroicons-arrow-path',
-            }
-      "
-    />
+  <CommonEmptyState
+    v-else-if="error"
+    :title="
+      error.includes('disabled') ? 'Extension Disabled' : 'Extension Error'
+    "
+    :description="error"
+    :icon="
+      error.includes('disabled')
+        ? 'i-heroicons-lock-closed'
+        : 'i-heroicons-exclamation-triangle'
+    "
+    size="md"
+    :action="
+      error.includes('disabled')
+        ? {
+            label: 'Go to Extension Settings',
+            onClick: async () => {
+              await navigateTo('/settings/extensions');
+            },
+            icon: 'i-heroicons-cog-6-tooth',
+          }
+        : {
+            label: 'Retry',
+            onClick: retry,
+            icon: 'i-heroicons-arrow-path',
+          }
+    "
+  />
 
-    <PermissionGate
-      v-else-if="extensionComponent"
-      :condition="menuResponse?.data[0]?.permission ?? { allowAll: true }"
-    >
-      <component
-        :is="extensionComponent"
-      />
-    </PermissionGate>
-
-    <CommonEmptyState
-      v-else
-      title="Extension Not Found"
-      :description="`No extension found for route: ${props.path}`"
-      icon="i-heroicons-puzzle-piece"
-      size="md"
-      :action="{
-        label: 'Browse Extensions',
-        onClick: async () => {
-          await navigateTo('/settings/extensions');
-        },
-        icon: 'i-heroicons-cog-6-tooth',
-      }"
+  <PermissionGate
+    v-else-if="extensionComponent"
+    :condition="menuResponse?.data[0]?.permission ?? { allowAll: true }"
+  >
+    <component
+      :is="extensionComponent"
     />
-  </Transition>
+  </PermissionGate>
+
+  <CommonEmptyState
+    v-else
+    title="Extension Not Found"
+    :description="`No extension found for route: ${props.path}`"
+    icon="i-heroicons-puzzle-piece"
+    size="md"
+    :action="{
+      label: 'Browse Extensions',
+      onClick: async () => {
+        await navigateTo('/settings/extensions');
+      },
+      icon: 'i-heroicons-cog-6-tooth',
+    }"
+  />
 </template>
 
 <script setup lang="ts">
@@ -71,17 +62,16 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const { isMounted } = useMounted();
-const { loadDynamicComponent, isComponentCached, getCachedExtensionMeta, setCachedExtensionMeta } = useDynamicComponent();
+const { loadDynamicComponent, getCachedComponent, getCachedExtensionMeta, setCachedExtensionMeta } = useDynamicComponent();
+const { setRouteLoading } = useGlobalState();
 
 const error = ref<string | null>(null);
 const extensionComponent = ref<any>(null);
-const componentLoading = ref(false);
+const isLoading = ref(true);
 
 const {
   data: menuResponse,
   error: menuError,
-  pending: loading,
   execute: executeFetchMenu,
 } = useApi(() => "/menu_definition", {
   query: computed(() => ({
@@ -99,33 +89,34 @@ const {
     },
   })),
   errorContext: "Fetch Menu with Extension",
+  immediate: false,
 });
+
+const tryLoadFromCache = (): boolean => {
+  const cachedMeta = getCachedExtensionMeta(props.path);
+  if (!cachedMeta) return false;
+
+  const cachedComponent = getCachedComponent(cachedMeta.extensionId, cachedMeta.updatedAt);
+  if (cachedComponent) {
+    extensionComponent.value = cachedComponent;
+    return true;
+  }
+
+  return false;
+};
 
 const loadMatchingExtension = async () => {
   error.value = null;
 
-  const cachedMeta = getCachedExtensionMeta(props.path);
-  if (cachedMeta) {
-    
-    const isCached = isComponentCached(cachedMeta.extensionId, cachedMeta.updatedAt);
-    
-    if (isCached) {
-      try {
-        const component = await loadDynamicComponent(
-          cachedMeta.compiledCode || cachedMeta.code,
-          cachedMeta.extensionId,
-          cachedMeta.updatedAt
-        );
-        extensionComponent.value = component;
-        return; 
-      } catch (err: any) {
-        console.warn('❌ Failed to load cached component:', err);
-      }
-    }
+  if (tryLoadFromCache()) {
+    isLoading.value = false;
+    return;
   }
 
-  componentLoading.value = true;
+  setRouteLoading(true);
   await fetchAndLoadExtension();
+  setRouteLoading(false);
+  isLoading.value = false;
 };
 
 const fetchAndLoadExtension = async () => {
@@ -134,13 +125,11 @@ const fetchAndLoadExtension = async () => {
 
     if (menuError.value) {
       error.value = `API Error: ${menuError.value}`;
-      componentLoading.value = false;
       return;
     }
 
     if (!menuResponse.value?.data || menuResponse.value.data.length === 0) {
       error.value = `No menu found for route: /${props.path}`;
-      componentLoading.value = false;
       return;
     }
 
@@ -148,7 +137,6 @@ const fetchAndLoadExtension = async () => {
 
     if (!menuItem.extension || menuItem.extension.length === 0) {
       error.value = `No extension found for route: /${props.path}`;
-      componentLoading.value = false;
       return;
     }
 
@@ -156,13 +144,16 @@ const fetchAndLoadExtension = async () => {
 
     if (!extension.isEnabled) {
       error.value = `Extension "${extension.name}" is currently disabled. Please contact an administrator to enable this extension.`;
-      componentLoading.value = false;
       return;
     }
 
     setCachedExtensionMeta(props.path, extension);
 
-    const isCached = isComponentCached(extension.extensionId, extension.updatedAt);
+    const cachedComponent = getCachedComponent(extension.extensionId, extension.updatedAt);
+    if (cachedComponent) {
+      extensionComponent.value = cachedComponent;
+      return;
+    }
 
     const component = await loadDynamicComponent(
       extension.compiledCode || extension.code,
@@ -173,18 +164,19 @@ const fetchAndLoadExtension = async () => {
 
   } catch (err: any) {
     error.value = `Failed to load extension: ${err?.message || err}`;
-  } finally {
-    componentLoading.value = false;
   }
 };
 
 const retry = () => {
+  isLoading.value = true;
   loadMatchingExtension();
 };
 
 watch(
   () => props.path,
   () => {
+    isLoading.value = true;
+    extensionComponent.value = null;
     loadMatchingExtension();
   },
   { immediate: true }
