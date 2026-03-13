@@ -9,10 +9,11 @@
     </a>
 
     <aside
-      v-if="(isTabletOrMobile && sidebarVisible) || (!isTabletOrMobile && !sidebarCollapsed)"
-      class="fixed top-0 left-0 flex flex-col flex-shrink-0 h-screen transition-all duration-300 ease-in-out z-99999 glass-sidebar w-[290px]"
+      v-if="(isTabletOrMobile && sidebarVisible) || !isTabletOrMobile"
+      class="fixed top-0 left-0 flex flex-col flex-shrink-0 h-screen transition-all duration-300 ease-in-out z-99999 glass-sidebar"
       :class="[
-        isTabletOrMobile && !sidebarVisible ? '-translate-x-full' : 'translate-x-0'
+        isTabletOrMobile && !sidebarVisible ? '-translate-x-full' : 'translate-x-0',
+        sidebarCollapsed ? 'w-[70px]' : 'w-[290px]'
       ]"
       aria-label="Primary navigation"
     >
@@ -32,7 +33,7 @@
       :class="[
         isTabletOrMobile
           ? 'ml-0'
-          : (sidebarCollapsed ? 'ml-0' : 'lg:ml-[290px]')
+          : (sidebarCollapsed ? 'lg:ml-[70px]' : 'lg:ml-[290px]')
       ]"
       id="main-content"
     >
