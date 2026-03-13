@@ -59,6 +59,15 @@
 </template>
 
 <script setup lang="ts">
+interface OAuthConfigDefinition {
+  id?: string;
+  _id?: string;
+  provider: string;
+  description?: string;
+  clientId: string;
+  isEnabled: boolean;
+}
+
 const page = ref(1);
 const limit = 9;
 
