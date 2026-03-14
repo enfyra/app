@@ -151,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-import type { UploadModalProps, UploadModalEmits } from "../../utils/types";
+import type { UploadModalProps, UploadModalEmits } from "~/types";
 
 const props = withDefaults(defineProps<UploadModalProps>(), {
   title: "Upload Files",

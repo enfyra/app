@@ -321,7 +321,7 @@ function getFileIconAndColor(mimetype: string): {
             v-if="form.mimetype?.startsWith('image/')"
             class="max-w-full max-h-132 w-full"
           >
-            <CommonImage
+            <CommonLazyImage
               :src="getPreviewUrl(fileId)"
               :alt="form.filename"
               class="object-contain h-full w-full max-w-132 max-h-132 mx-auto rounded-lg"

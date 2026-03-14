@@ -33,7 +33,6 @@
 
 <script setup lang="ts">
 import { CalendarDate } from "@internationalized/date";
-import { formatDate } from "~/utils/common/filter/filter-helpers";
 
 const props = defineProps<{
   modelValue: Date | string | null;

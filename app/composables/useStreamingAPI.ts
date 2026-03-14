@@ -1,7 +1,3 @@
-import { getAppUrl, normalizeUrl } from "~/utils/api/url";
-
-const ENFYRA_API_PREFIX = "/api";
-
 export interface StreamOptions {
   onMessage: (chunk: string) => void
   onComplete?: () => void

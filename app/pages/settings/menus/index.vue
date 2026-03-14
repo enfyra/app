@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MenuDefinition } from '~/utils/types/menu';
+import type { MenuDefinition } from '~/types/menu';
 
 const toast = useToast();
 const { confirm } = useConfirm();

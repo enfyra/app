@@ -113,10 +113,8 @@ const clearAllFilters = () => {
   }
 };
 
-import { formatDate as formatDateUtil } from "~/utils/common/filter/filter-helpers";
-
-const formatDate = (dateString: string) => {
-  return formatDateUtil(dateString, true); 
+const formatFilterDate = (dateString: string) => {
+  return formatDate(dateString, true);
 };
 
 onMounted(() => {
@@ -214,7 +212,7 @@ watch(
               {{ filter.name }}
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {{ formatDate(filter.lastUsed) }} • {{ filter.useCount }} uses
+              {{ formatFilterDate(filter.lastUsed) }} • {{ filter.useCount }} uses
             </div>
           </div>
 

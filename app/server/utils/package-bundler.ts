@@ -1,12 +1,9 @@
 import { build, type Plugin } from 'esbuild';
 import { readFileSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
+import type { ExternalPackage } from '../../types/server';
 
-export interface ExternalPackage {
-  name: string;
-  globalName: string;
-  exports: string[];
-}
+export type { ExternalPackage };
 
 function createExternalPlugin(externals: ExternalPackage[]): Plugin {
   return {

@@ -1,5 +1,3 @@
-import { DEFAULT_ME_FIELDS } from "~/utils/common/constants";
-
 export default defineNuxtRouteMiddleware(async (to, from) => {
   const { me, fetchUser } = useEnfyraAuth();
 

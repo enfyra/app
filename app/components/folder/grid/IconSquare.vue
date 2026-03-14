@@ -7,8 +7,6 @@
 </template>
 
 <script setup lang="ts">
-import { getFolderIconName, getFolderIconColor } from "~/utils/file-management/folder-icons";
-
 interface Props {
   folder: any;
 }

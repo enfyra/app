@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PermissionGateProps } from "../utils/types";
+import type { PermissionGateProps } from "~/types";
 
 const props = withDefaults(defineProps<PermissionGateProps>(), {
   mode: "any",

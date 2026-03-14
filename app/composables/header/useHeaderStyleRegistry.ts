@@ -1,5 +1,3 @@
-import { ref, computed } from "vue";
-
 export interface HeaderStyleConfig {
   background?: string;
   borderColor?: string;

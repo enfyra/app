@@ -70,8 +70,6 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick } from "vue";
-
 type ImageShape = "square" | "rounded" | "circle" | "none";
 
 interface Props {

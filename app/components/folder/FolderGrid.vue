@@ -38,13 +38,6 @@
 </template>
 
 <script setup lang="ts">
-import { formatDate } from "~/utils/common/filter/filter-helpers";
-import {
-  getFolderIcon,
-  getDefaultFolderIcon,
-} from "~/utils/file-management/folder-icons";
-import { formatFileSize } from "~/utils/file-management/file-utils";
-
 interface Props {
   folders: any[];
   emptyTitle?: string;

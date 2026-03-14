@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import { UIcon, UBadge } from "#components";
-import { getFileIconAndColor } from "~/utils/file-management/file-icons";
-import { formatFileSize } from "~/utils/file-management/file-utils";
-import { formatDate } from "~/utils/common/filter/filter-helpers";
 
 interface Props {
   files: any[];

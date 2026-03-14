@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { getDetailPathForTable } from "~/utils/relation-detail-paths";
-
 const props = defineProps<{
   relationMeta: any;
   modelValue: any;

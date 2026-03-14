@@ -1,13 +1,3 @@
-import {
-  ref,
-  computed,
-  onMounted,
-  onUnmounted,
-  readonly,
-  nextTick,
-  getCurrentInstance,
-} from "vue";
-
 export function useScreen() {
   const width = ref(typeof window !== "undefined" ? window.innerWidth : 0);
   const height = ref(typeof window !== "undefined" ? window.innerHeight : 0);

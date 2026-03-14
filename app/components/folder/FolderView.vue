@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { getDefaultFolderIcon } from "~/utils/file-management/folder-icons";
-
 interface Props {
   folders: any[];
   viewMode?: "grid" | "list";

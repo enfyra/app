@@ -1,7 +1,3 @@
-import { ref, computed, watch, type Ref } from "vue";
-import type { SchemaCollection, TableDefinitionField } from "~/types/schema";
-import { isRefSchemaCollection } from "~/utils/common/type-guards";
-
 export function useDataTableVisibility(
   tableName: string,
   schemas: Ref<SchemaCollection> | any
