@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount } from 'vue';
-import type { DataTableProps } from "../../utils/types";
+import type { DataTableProps } from "~/types";
 
 const props = withDefaults(defineProps<DataTableProps>(), {
   pageSize: 10,

@@ -28,8 +28,7 @@
 </template>
 
 <script setup lang="ts">
-
-import type { RouteLoadingProps } from "../utils/types";
+import type { RouteLoadingProps } from "~/types";
 
 withDefaults(defineProps<RouteLoadingProps>(), {
   show: false,

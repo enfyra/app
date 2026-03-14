@@ -12,20 +12,15 @@ export default defineNuxtPlugin(() => {
       const serverId = response.headers.get("X-Server-Id");
 
       if (serverId) {
-        
         if (lastServerId === null) {
           lastServerId = serverId;
         } else if (serverId !== lastServerId) {
-
           window.location.reload();
         }
       }
 
       return response;
     } catch (error) {
-      
-      if (lastServerId !== null) {
-      }
       throw error;
     }
   };

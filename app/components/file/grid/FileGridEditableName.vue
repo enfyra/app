@@ -56,8 +56,6 @@
 </template>
 
 <script setup lang="ts">
-import type { FileItem } from "~/utils/types";
-
 interface Props {
   file: FileItem & {
     displayName: string;

@@ -89,9 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FileItem } from "~/utils/types";
 import EditableName from "./FileGridEditableName.vue";
-import { getFileColor } from "~/utils/file-management/file-icons";
 
 interface Props {
   file: FileItem & {

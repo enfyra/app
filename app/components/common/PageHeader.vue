@@ -1,7 +1,4 @@
 <script setup lang="ts">
-
-import { isRef, unref } from "vue";
-
 interface StatCard {
   label: string;
   value: string | number;

@@ -1,4 +1,4 @@
-import type { MenuApiItem } from '~/utils/types/menu';
+import type { MenuApiItem } from '~/types/menu';
 
 export const useMenuApi = () => {
   const sharedMenuDefinitions = useState<{ data: MenuApiItem[] } | null>("menu-definitions", () => null);

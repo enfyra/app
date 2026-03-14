@@ -1,9 +1,3 @@
-import { ref, unref, toRaw } from "vue";
-// import { $fetch } from "~/utils/api/http";
-import { getAppUrl, normalizeUrl } from "~/utils/api/url";
-
-const ENFYRA_API_PREFIX = "/api";
-
 interface ApiError {
   message: string;
   status?: number;

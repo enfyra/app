@@ -38,12 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatDate } from "~/utils/common/filter/filter-helpers";
-import { getFileIconAndColor } from "~/utils/file-management/file-icons";
-import { formatFileSize } from "~/utils/file-management/file-utils";
-import type { FileItem } from "~/utils/types";
 import FileGridCard from "./grid/FileGridCard.vue";
-import { useFileUrl } from "~/composables/file-manager/useFileUrl";
 
 interface Props {
   files: FileItem[];

@@ -7,6 +7,11 @@
     "strictFunctionTypes": false,
     "noImplicitThis": false,
     "noImplicitReturns": false,
-    "strictPropertyInitialization": false
-  }
+    "strictPropertyInitialization": false,
+    "skipLibCheck": true,
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "exclude": [
+    "node_modules/nuxt-codemirror"
+  ]
 }

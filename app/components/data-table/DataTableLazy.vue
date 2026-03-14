@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DataTableProps } from "../../utils/types";
+import type { DataTableProps } from "~/types";
 
 defineOptions({
   inheritAttrs: false,
