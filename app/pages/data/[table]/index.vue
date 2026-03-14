@@ -13,7 +13,7 @@ const data = ref([]);
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
-
+const { setRouteLoading } = useGlobalState();
 const singleRecordIdMap = useState<Record<string, string>>('singleRecordIdMap', () => ({}));
 
 const showFilterDrawer = ref(false);
@@ -24,6 +24,7 @@ const { registerPageHeader } = usePageHeaderRegistry();
 
 const schema = computed(() => schemas.value[tableName]);
 const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
+
 
 const {
   data: singleRecordData,
@@ -38,23 +39,19 @@ const {
   errorContext: "Fetch Single Record",
 });
 
-const singleRecordLoading = computed(
-  () =>
-    isSingleRecord.value &&
-    !singleRecordIdMap.value[tableName] &&
-    singleRecordPending.value
-);
-
 watch([() => schemas.value[tableName], isSingleRecord], async ([currentSchema, isSingle]) => {
   if (currentSchema && isSingle) {
+    setRouteLoading(true);
     const cachedId = singleRecordIdMap.value[tableName];
     if (cachedId) {
+      setRouteLoading(false);
       navigateTo(`/data/${tableName}/${cachedId}`, { replace: true });
       return;
     }
     await fetchSingleRecord();
     const records = singleRecordData.value?.data;
     if (records && records.length > 0) {
+      setRouteLoading(false);
       const recordId = getId(records[0]);
       singleRecordIdMap.value[tableName] = recordId;
       navigateTo(`/data/${tableName}/${recordId}`, { replace: true });
@@ -392,16 +389,7 @@ useHeaderActionRegistry([
 <template>
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
-      <div v-if="singleRecordLoading" key="single-loading">
-        <CommonLoadingState
-          title="Loading..."
-          description="Redirecting to record"
-          size="sm"
-          type="card"
-          context="page"
-        />
-      </div>
-      <div v-else-if="!isSingleRecord" key="list" class="space-y-6">
+      <div v-if="!isSingleRecord" key="list" class="space-y-6">
 
     <div
       v-if="hasActiveFilters(currentFilter)"
