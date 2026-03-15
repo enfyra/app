@@ -15,7 +15,7 @@
               <span class="text-sm font-semibold">Select Date</span>
               <UButton icon="lucide:x" color="neutral" variant="ghost" size="xs" @click="close" />
             </div>
-            <UCalendar v-model="tempValue as any" class="w-fit" />
+            <UCalendar v-model="tempValue" class="w-fit" />
             <UButton color="primary" size="sm" @click="applyAndClose(close)">Apply</UButton>
           </div>
         </template>
@@ -38,7 +38,7 @@
                 <span class="text-sm font-semibold">From</span>
                 <UButton icon="lucide:x" color="neutral" variant="ghost" size="xs" @click="close" />
               </div>
-              <UCalendar v-model="tempFrom as any" class="w-fit" />
+              <UCalendar v-model="tempFrom" class="w-fit" />
               <UButton color="primary" size="sm" @click="applyRange('from', close)">Apply</UButton>
             </div>
           </template>
@@ -58,7 +58,7 @@
                 <span class="text-sm font-semibold">To</span>
                 <UButton icon="lucide:x" color="neutral" variant="ghost" size="xs" @click="close" />
               </div>
-              <UCalendar v-model="tempTo as any" class="w-fit" />
+              <UCalendar v-model="tempTo" class="w-fit" />
               <UButton color="primary" size="sm" @click="applyRange('to', close)">Apply</UButton>
             </div>
           </template>
@@ -91,9 +91,9 @@ const defaultCalendarDate = new CalendarDate(
 const showModal = ref(false);
 const showFrom = ref(false);
 const showTo = ref(false);
-const tempValue = ref(defaultCalendarDate);
-const tempFrom = ref(defaultCalendarDate);
-const tempTo = ref(defaultCalendarDate);
+const tempValue = shallowRef(defaultCalendarDate);
+const tempFrom = shallowRef(defaultCalendarDate);
+const tempTo = shallowRef(defaultCalendarDate);
 
 watch(showModal, (v) => {
   if (v) {
