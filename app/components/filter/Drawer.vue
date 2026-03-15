@@ -128,13 +128,20 @@ const { isMobile, isTablet } = useScreen();
         <div class="space-y-4">
           <div class="text-sm text-gray-600 dark:text-gray-400">
             Build your filter conditions below. Use AND/OR operators to combine
-            multiple criteria.
+            multiple criteria. Drag to reorder conditions.
           </div>
 
           <FilterBuilder
             v-model="localFilter"
             :schemas="schemas"
             :table-name="tableName"
+          />
+
+          <FilterPreview
+            v-if="hasActiveConditions"
+            :filter="localFilter"
+            :table-name="tableName"
+            :schemas="schemas"
           />
 
           <FilterSavedFilters

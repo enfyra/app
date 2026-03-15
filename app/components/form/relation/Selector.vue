@@ -19,10 +19,22 @@ const page = ref(1);
 const limit = 10;
 const showCreateDrawer = ref(false);
 const showFilterDrawer = ref(false);
+const searchQuery = ref("");
+const searchDebounced = ref("");
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
 const { schemas } = useSchema();
 const { getId, getIdFieldName } = useDatabase();
+
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+watch(searchQuery, (newVal) => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    searchDebounced.value = newVal;
+    page.value = 1;
+  }, 300);
+});
 
 const targetTable = computed(() => {
   const targetTableRef = props.relationMeta?.targetTable;
@@ -67,7 +79,7 @@ const {
       ? buildQuery(currentFilter.value)
       : {};
 
-    const query = {
+    const query: Record<string, any> = {
       fields: "*",
       page: page.value,
       limit,
@@ -75,6 +87,10 @@ const {
       sort: "-createdAt",
       ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
     };
+
+    if (searchDebounced.value.trim()) {
+      query.search = searchDebounced.value.trim();
+    }
 
     return query;
   }),
@@ -136,10 +152,26 @@ async function handleFilterApply(filter: FilterGroup) {
   await fetchDataWithValidation();
 }
 
+const hasSearchOrFilters = computed(() => {
+  return searchDebounced.value.trim() !== "" || hasActiveFilters(currentFilter.value);
+});
+
+function clearSearch() {
+  searchQuery.value = "";
+  searchDebounced.value = "";
+  page.value = 1;
+}
+
 async function clearFilter() {
   currentFilter.value = createEmptyFilter();
-  page.value = 1; 
+  page.value = 1;
   await fetchDataWithValidation();
+}
+
+function clearAllFilters() {
+  clearSearch();
+  currentFilter.value = createEmptyFilter();
+  page.value = 1;
 }
 
 function openFilterDrawer() {
@@ -166,7 +198,11 @@ async function fetchDataWithValidation() {
 watch(
   () => props.open,
   async (newVal) => {
-    if (newVal) await fetchDataWithValidation();
+    if (newVal) {
+      searchQuery.value = "";
+      searchDebounced.value = "";
+      await fetchDataWithValidation();
+    }
   }
 );
 
@@ -194,7 +230,7 @@ const { isMobile, isTablet } = useScreen();
     </template>
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
-          
+
           <div
             :class="(isMobile || isTablet) ? 'rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 shadow-sm bg-white dark:bg-gray-800/50' : 'rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 shadow-sm bg-white dark:bg-gray-800/50'"
           >
@@ -238,10 +274,63 @@ const { isMobile, isTablet } = useScreen();
             </div>
           </div>
 
+          <div class="relative">
+            <UInput
+              v-model="searchQuery"
+              :placeholder="`Search ${targetTable?.name || 'records'}...`"
+              :size="(isMobile || isTablet) ? 'sm' : 'md'"
+              class="w-full"
+            >
+              <template #leading>
+                <UIcon name="lucide:search" class="text-muted-foreground" />
+              </template>
+              <template #trailing>
+                <UButton
+                  v-if="searchQuery"
+                  icon="lucide:x"
+                  size="xs"
+                  variant="ghost"
+                  color="neutral"
+                  @click="clearSearch"
+                />
+              </template>
+            </UInput>
+
+            <div
+              v-if="hasSearchOrFilters"
+              class="flex items-center gap-2 mt-2"
+            >
+              <UBadge
+                v-if="searchDebounced"
+                variant="soft"
+                color="info"
+                size="xs"
+              >
+                Search: "{{ searchDebounced }}"
+              </UBadge>
+              <UBadge
+                v-if="hasActiveFilters(currentFilter)"
+                variant="soft"
+                color="secondary"
+                size="xs"
+              >
+                {{ currentFilter.conditions.length }} filter(s)
+              </UBadge>
+              <UButton
+                size="xs"
+                variant="ghost"
+                color="error"
+                @click="clearAllFilters"
+              >
+                Clear all
+              </UButton>
+            </div>
+          </div>
+
           <div
             :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 bg-white dark:bg-gray-800/50' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 bg-white dark:bg-gray-800/50'"
           >
-            
+
             <CommonLoadingState
               v-if="!isMounted || loading"
               type="form"
@@ -252,22 +341,22 @@ const { isMobile, isTablet } = useScreen();
             <CommonEmptyState
               v-else-if="isMounted && !loading && data.length === 0"
               :title="
-                hasActiveFilters(currentFilter)
-                  ? 'No relations found'
+                hasSearchOrFilters
+                  ? 'No results found'
                   : 'No relations available'
               "
               :description="
-                hasActiveFilters(currentFilter)
-                  ? 'Try adjusting your filters'
+                hasSearchOrFilters
+                  ? 'Try adjusting your search or filters'
                   : 'No relations have been created yet'
               "
               icon="lucide:database"
               size="sm"
               :action="
-                hasActiveFilters(currentFilter)
+                hasSearchOrFilters
                   ? {
                       label: 'Clear filters',
-                      onClick: clearFilter,
+                      onClick: clearAllFilters,
                       icon: 'lucide:x',
                     }
                   : undefined

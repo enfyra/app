@@ -168,23 +168,112 @@ function getComponentConfigByKey(key: string) {
         },
         fieldProps,
       };
-    case "enum": {
-      let items = config.options || column?.options || [];
-      
+    case "enum":
+    case "enum-picker": {
+      let rawOptions = config.options || column?.options || [];
+
       if (config.excludedOptions && Array.isArray(config.excludedOptions)) {
-        items = items.filter((item: any) => !config.excludedOptions.includes(item));
+        rawOptions = rawOptions.filter((item: any) => !config.excludedOptions.includes(item));
       }
-      
+
       if (config.includedOptions && Array.isArray(config.includedOptions)) {
-        items = items.filter((item: any) => config.includedOptions.includes(item));
+        rawOptions = rawOptions.filter((item: any) => config.includedOptions.includes(item));
+      }
+
+      const pickerOptions = rawOptions.map((item: any) => {
+        if (typeof item === 'object' && item !== null) {
+          return item;
+        }
+        return { value: item, label: String(item) };
+      });
+
+      const useDropdown = config.useDropdown === true || pickerOptions.length > 6;
+      const isNullable = column?.nullable === true;
+      const isRequired = column?.required === true || column?.isPrimary === true;
+
+      if (useDropdown) {
+        return {
+          component: USelect,
+          componentProps: {
+            ...componentPropsBase,
+            items: rawOptions,
+            modelValue: ensureNotNull(props.formData[key]),
+            "onUpdate:modelValue": (val: any) => {
+              updateFormData(key, val);
+            },
+          },
+          fieldProps,
+        };
       }
 
       return {
-        component: USelect,
+        component: resolveComponent("FormEnumPicker"),
         componentProps: {
           ...componentPropsBase,
-          items: items,
-          modelValue: ensureNotNull(props.formData[key]),
+          options: pickerOptions,
+          modelValue: props.formData[key],
+          size: config.pickerSize || "sm",
+          layout: config.pickerLayout || "inline",
+          columns: config.pickerColumns,
+          placeholder: config.placeholder,
+          nullable: isNullable && !isRequired,
+          required: isRequired,
+          "onUpdate:modelValue": (val: any) => {
+            updateFormData(key, val);
+          },
+        },
+        fieldProps,
+      };
+    }
+    case "enum-multiple":
+    case "enum-picker-multiple": {
+      let rawOptions = config.options || column?.options || [];
+
+      if (config.excludedOptions && Array.isArray(config.excludedOptions)) {
+        rawOptions = rawOptions.filter((item: any) => !config.excludedOptions.includes(item));
+      }
+
+      if (config.includedOptions && Array.isArray(config.includedOptions)) {
+        rawOptions = rawOptions.filter((item: any) => config.includedOptions.includes(item));
+      }
+
+      const pickerOptions = rawOptions.map((item: any) => {
+        if (typeof item === 'object' && item !== null) {
+          return item;
+        }
+        return { value: item, label: String(item) };
+      });
+
+      const useDropdown = config.useDropdown === true || pickerOptions.length > 6;
+
+      if (useDropdown) {
+        return {
+          component: USelect,
+          componentProps: {
+            ...componentPropsBase,
+            items: rawOptions,
+            modelValue: ensureNotNull(props.formData[key]),
+            multiple: true,
+            "onUpdate:modelValue": (val: any) => {
+              updateFormData(key, val);
+            },
+          },
+          fieldProps,
+        };
+      }
+
+      return {
+        component: resolveComponent("FormEnumPicker"),
+        componentProps: {
+          ...componentPropsBase,
+          options: pickerOptions,
+          modelValue: props.formData[key],
+          multiple: true,
+          size: config.pickerSize || "sm",
+          layout: config.pickerLayout || "inline",
+          columns: config.pickerColumns,
+          placeholder: config.placeholder,
+          required: column?.required === true,
           "onUpdate:modelValue": (val: any) => {
             updateFormData(key, val);
           },
