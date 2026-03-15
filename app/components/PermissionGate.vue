@@ -1,5 +1,7 @@
 <template>
+  <div v-bind="$attrs" :style="!hasPermission ? { display: 'contents' } : undefined">
     <slot v-if="hasPermission" />
+  </div>
 </template>
 
 <script setup lang="ts">

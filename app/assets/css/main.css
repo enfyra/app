@@ -78,6 +78,22 @@
 
 }
 
+.filter-date-picker-popover table {
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.filter-date-picker-popover table td,
+.filter-date-picker-popover table th {
+  min-width: 0;
+  border: none;
+  padding: 0.25rem;
+  font-weight: inherit;
+  text-align: center;
+  background: transparent;
+  color: inherit;
+}
+
 .app-viewport-container {
   overscroll-behavior-x: auto;
   overscroll-behavior-y: contain;

@@ -304,19 +304,23 @@
   border-bottom: 2px solid var(--table-header-border);
 }
 
-table {
+.rich-text-editor table,
+.tableWrapper table {
   border-collapse: collapse;
   table-layout: fixed;
 }
 
-table td,
-table th {
+.rich-text-editor table td,
+.rich-text-editor table th,
+.tableWrapper table td,
+.tableWrapper table th {
   border: 1px solid var(--table-cell-border);
   padding: 8px 12px;
   min-width: 80px;
 }
 
-table th {
+.rich-text-editor table th,
+.tableWrapper table th {
   font-weight: 600;
   text-align: left;
   background-color: var(--table-header-bg);
