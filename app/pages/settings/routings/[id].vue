@@ -37,7 +37,7 @@
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
-            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHook', 'postHook']"
+            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks']"
             :field-map="typeMap"
             :loading="loading"
           />
