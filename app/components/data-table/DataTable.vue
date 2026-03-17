@@ -217,16 +217,16 @@ function getStatusClass(status: string | null) {
   if (!status) return ''
   const lowerStatus = status.toLowerCase()
   if (lowerStatus.includes('active') || lowerStatus === 'yes') {
-    return 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-500'
+    return 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400'
   }
   if (lowerStatus.includes('inactive') || lowerStatus === 'no') {
     return 'bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-white/80'
   }
   if (lowerStatus.includes('pending')) {
-    return 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-400'
+    return 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'
   }
   if (lowerStatus.includes('completed')) {
-    return 'bg-blue-light-50 text-blue-light-700 dark:bg-blue-light-500/15 dark:text-blue-light-500'
+    return 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400'
   }
   return 'bg-gray-100 text-gray-700 dark:bg-white/5 dark:text-white/80'
 }
@@ -310,17 +310,17 @@ function getColumnLabel(columnId: string) {
           <div
             v-for="(row, index) in table.getRowModel().rows"
           :key="row.id"
-          class="rounded-2xl p-4 cursor-pointer transition-all border border-gray-700/50 bg-gray-900/30 backdrop-blur-sm hover:bg-gray-800/40"
+          class="rounded-2xl p-4 cursor-pointer transition-all border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-900/30 hover:bg-gray-50 dark:hover:bg-gray-800/40 shadow-sm"
           @click="handleRowClick(row.original)"
         >
-          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-700/50">
+          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-700/50">
             <div class="flex-1 min-w-0 overflow-hidden">
               <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs text-gray-500">
+                <span class="text-xs text-gray-500 dark:text-gray-500">
                   ID: {{ getId(row.original) }}
                 </span>
               </div>
-              <h4 class="text-base font-semibold text-gray-200 truncate" :title="String(getPrimaryFieldValue(row))">
+              <h4 class="text-base font-semibold text-gray-900 dark:text-gray-200 truncate" :title="String(getPrimaryFieldValue(row))">
                 {{ getPrimaryFieldValue(row) }}
               </h4>
             </div>
@@ -339,8 +339,8 @@ function getColumnLabel(columnId: string) {
               :key="cell.id"
               class="flex items-center justify-between text-sm gap-2"
             >
-              <span class="text-gray-400 shrink-0">{{ getColumnLabel(cell.column.id) }}</span>
-              <span class="text-gray-200 font-medium text-right flex-1 min-w-0 overflow-hidden truncate" :title="String(cell.getValue())">
+              <span class="text-gray-500 dark:text-gray-400 shrink-0">{{ getColumnLabel(cell.column.id) }}</span>
+              <span class="text-gray-900 dark:text-gray-200 font-medium text-right flex-1 min-w-0 overflow-hidden truncate" :title="String(cell.getValue())">
                 <component
                   v-if="typeof cell.column.columnDef.cell === 'function'"
                   :is="cell.column.columnDef.cell"
@@ -353,7 +353,7 @@ function getColumnLabel(columnId: string) {
 
           <div
             v-if="getCreatedAtValue(row) || getUpdatedAtValue(row)"
-            class="flex items-center gap-4 pt-3 border-t border-gray-700/50 text-xs text-gray-500"
+            class="flex items-center gap-4 pt-3 border-t border-gray-200 dark:border-gray-700/50 text-xs text-gray-500 dark:text-gray-500"
           >
             <span v-if="getCreatedAtValue(row)">
               Created: {{ formatDateTime(getCreatedAtValue(row)) }}
@@ -378,9 +378,9 @@ function getColumnLabel(columnId: string) {
         <div
           v-for="i in (props.skeletonRows || 5)"
           :key="`mobile-skeleton-${i}`"
-          class="rounded-2xl p-4 border border-gray-700/50 bg-gray-900/30 animate-pulse"
+          class="rounded-2xl p-4 border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-900/30 animate-pulse"
         >
-          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-700/50">
+          <div class="flex items-start justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-700/50">
             <div class="flex-1 space-y-2">
               <div class="h-3 skeleton-base rounded w-16"></div>
               <div class="h-5 skeleton-base rounded w-3/4"></div>
