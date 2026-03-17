@@ -188,7 +188,7 @@ function getComponentConfigByKey(key: string) {
       });
 
       const useDropdown = config.useDropdown === true || pickerOptions.length > 6;
-      const isNullable = column?.nullable === true;
+      const isNullable = column?.isNullable === true || column?.nullable === true;
       const isRequired = column?.required === true || column?.isPrimary === true;
 
       if (useDropdown) {

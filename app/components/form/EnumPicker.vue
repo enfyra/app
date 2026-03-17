@@ -37,13 +37,17 @@ const emit = defineEmits<{
 const isInitialized = ref(false);
 
 const selectedValue = computed(() => {
-  if (!props.modelValue) return null;
+  if (props.modelValue === null || props.modelValue === undefined) return null;
   return typeof props.modelValue === 'object' ? props.modelValue.value : props.modelValue;
 });
 
 const selectedValues = computed(() => {
   if (!props.multiple || !Array.isArray(props.modelValue)) return [];
   return props.modelValue.map((v: any) => typeof v === 'object' ? v.value : v);
+});
+
+const isNull = computed(() => {
+  return props.modelValue === null || props.modelValue === undefined;
 });
 
 function isSelected(value: string): boolean {
@@ -87,6 +91,11 @@ function selectOption(option: EnumOption) {
   }
 }
 
+function clearValue() {
+  if (props.disabled || props.required) return;
+  emit('update:modelValue', null);
+}
+
 watch(() => props.options, (options) => {
   if (isInitialized.value) return;
   if (props.required && !props.modelValue && options.length > 0) {
@@ -123,6 +132,23 @@ const { isMobile, isTablet } = useScreen();
       :class="['grid gap-2', gridClass]"
     >
       <UButton
+        v-if="nullable && !required"
+        :color="isNull ? 'neutral' : 'neutral'"
+        :variant="isNull ? 'solid' : 'outline'"
+        :size="size"
+        :disabled="disabled"
+        icon="lucide:circle-off"
+        class="justify-center"
+        @click="clearValue"
+      >
+        None
+        <UIcon
+          v-if="isNull"
+          name="lucide:check"
+          class="size-3.5 shrink-0 ml-1"
+        />
+      </UButton>
+      <UButton
         v-for="option in options"
         :key="option.value"
         :color="isSelected(option.value) ? getOptionColor(option) : 'neutral'"
@@ -146,6 +172,23 @@ const { isMobile, isTablet } = useScreen();
       v-else
       class="flex flex-wrap gap-2"
     >
+      <UButton
+        v-if="nullable && !required"
+        :color="isNull ? 'neutral' : 'neutral'"
+        :variant="isNull ? 'solid' : 'outline'"
+        :size="size"
+        :disabled="disabled"
+        icon="lucide:circle-off"
+        class="font-medium"
+        @click="clearValue"
+      >
+        None
+        <UIcon
+          v-if="isNull"
+          name="lucide:check"
+          class="size-3.5 shrink-0 ml-1"
+        />
+      </UButton>
       <UButton
         v-for="option in options"
         :key="option.value"

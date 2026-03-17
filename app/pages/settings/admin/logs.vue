@@ -40,9 +40,11 @@ const fileSearchQuery = ref("");
 const isSearchMode = ref(false);
 const searchResults = ref<string[]>([]);
 const searchLoading = ref(false);
+const hasMore = ref(false);
+const loadingMore = ref(false);
 
 const page = ref(1);
-const limit = ref(100);
+const limit = ref(20);
 
 const files = computed(() => {
   const raw = (logsData.value as any)?.files;
@@ -153,16 +155,22 @@ async function searchInLog(query: string) {
   }
 }
 
-async function loadLogContent(file?: string) {
+async function loadLogContent(file?: string, append: boolean = false) {
   const filename = file || selectedFile.value;
   if (!filename) return;
 
-  selectedFile.value = filename;
-  logLoading.value = true;
-  logError.value = null;
-  logSearchQuery.value = "";
-  isSearchMode.value = false;
-  searchResults.value = [];
+  if (!append) {
+    selectedFile.value = filename;
+    logLoading.value = true;
+    logError.value = null;
+    logSearchQuery.value = "";
+    isSearchMode.value = false;
+    searchResults.value = [];
+    page.value = 1;
+  } else {
+    loadingMore.value = true;
+    page.value++;
+  }
 
   if (route.query.file !== filename) {
     router.push({ query: { file: filename } });
@@ -224,7 +232,14 @@ async function loadLogContent(file?: string) {
       lines = [JSON.stringify(response, null, 2)];
     }
 
-    logContent.value = lines.join("\n");
+    hasMore.value = response?.hasMore ?? false;
+
+    if (append) {
+      const existingLines = logContent.value.split("\n").filter((line: string) => line.trim());
+      logContent.value = [...existingLines, ...lines].join("\n");
+    } else {
+      logContent.value = lines.join("\n");
+    }
   } catch (err: any) {
     logError.value = err?.data?.message || err?.message || "Failed to load log content";
     toast.add({
@@ -234,7 +249,13 @@ async function loadLogContent(file?: string) {
     });
   } finally {
     logLoading.value = false;
+    loadingMore.value = false;
   }
+}
+
+async function loadMoreLogs() {
+  if (!hasMore.value || loadingMore.value) return;
+  await loadLogContent(undefined, true);
 }
 
 function clearSearch() {
@@ -363,6 +384,9 @@ function closeLogViewer() {
   logError.value = null;
   isSearchMode.value = false;
   searchResults.value = [];
+  hasMore.value = false;
+  loadingMore.value = false;
+  page.value = 1;
   router.push({ query: {} });
 }
 
@@ -420,7 +444,7 @@ onMounted(async () => {
       />
 
       <div v-else class="space-y-6">
-        <div v-if="stats && !selectedFile" class="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <div v-if="stats && !selectedFile" class="grid gap-4 grid-cols-1 md:grid-cols-3">
           <div class="glass-card rounded-xl p-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
@@ -444,19 +468,6 @@ onMounted(async () => {
                   {{ stats.totalSizeFormatted ?? "N/A" }}
                 </p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">Total Size</p>
-              </div>
-            </div>
-          </div>
-          <div class="glass-card rounded-xl p-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                <UIcon name="lucide:align-left" class="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                  {{ stats.totalLines?.toLocaleString() ?? files.length }}
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Total Lines</p>
               </div>
             </div>
           </div>
@@ -496,7 +507,6 @@ onMounted(async () => {
               card-class="cursor-pointer"
               :stats="[
                 { label: 'Size', value: formatFileSize(file.size) },
-                { label: 'Lines', value: file.lineCount?.toLocaleString() ?? 'N/A' },
               ]"
               :header-actions="[
                 {
@@ -529,11 +539,14 @@ onMounted(async () => {
       :is-search-mode="isSearchMode"
       :search-result-count="searchResults.length"
       :search-loading="searchLoading"
+      :has-more="hasMore"
+      :loading-more="loadingMore"
       @close="closeLogViewer"
       @reload="loadLogContent()"
       @download="downloadLog()"
       @copy="copyToClipboard"
       @clear-search="clearSearch"
+      @load-more="loadMoreLogs"
     />
   </div>
 

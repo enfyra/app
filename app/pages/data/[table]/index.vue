@@ -145,7 +145,7 @@ useSubHeaderActionRegistry([
       }
     },
     side: "right",
-    show: computed(() => !isMobile.value && !isTablet.value),
+    show: computed(() => !isMobile.value && !isTablet.value && !isSingleRecord.value),
     permission: {
       and: [
         {
@@ -164,7 +164,7 @@ useSubHeaderActionRegistry([
     side: "right",
     onClick: () => handleBulkDelete(selectedRows.value),
     show: computed(
-      () => isSelectionMode.value && selectedRows.value.length > 0
+      () => isSelectionMode.value && selectedRows.value.length > 0 && !isSingleRecord.value
     ),
     permission: {
       and: [
@@ -266,6 +266,7 @@ const columns = computed(() => {
         icon: "lucide:trash-2",
         color: "error",
         show: () => {
+          if (isSingleRecord.value) return false;
           const hasDeletePermission = checkPermissionCondition({
             and: [
               {

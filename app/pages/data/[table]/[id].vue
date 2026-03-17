@@ -3,8 +3,11 @@ const route = useRoute();
 
 const toast = useToast();
 const tableName = route.params.table as string;
-const { validate } = useSchema(tableName);
+const { validate, schemas } = useSchema(tableName);
 const updateErrors = ref<Record<string, string>>({});
+
+const schema = computed(() => schemas.value[tableName]);
+const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
 
 const { confirm } = useConfirm();
 
@@ -175,6 +178,7 @@ useHeaderActionRegistry([
     size: "md",
     loading: computed(() => deleteLoading.value),
     onClick: deleteRecord,
+    show: computed(() => !isSingleRecord.value),
     permission: {
       and: [
         {
