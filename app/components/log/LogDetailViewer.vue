@@ -7,6 +7,8 @@ interface Props {
   isSearchMode?: boolean;
   searchResultCount?: number;
   searchLoading?: boolean;
+  hasMore?: boolean;
+  loadingMore?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -15,6 +17,8 @@ const props = withDefaults(defineProps<Props>(), {
   isSearchMode: false,
   searchResultCount: 0,
   searchLoading: false,
+  hasMore: false,
+  loadingMore: false,
 });
 
 const emit = defineEmits<{
@@ -24,6 +28,7 @@ const emit = defineEmits<{
   download: [];
   copy: [];
   clearSearch: [];
+  loadMore: [];
 }>();
 
 const searchQuery = defineModel<string>("searchQuery", { default: "" });
@@ -47,6 +52,24 @@ function handleCopy() {
 function handleClearSearch() {
   emit("clearSearch");
 }
+
+function handleLoadMore() {
+  emit("loadMore");
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === "Escape" && props.filename) {
+    handleClose();
+  }
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyDown);
+});
 </script>
 
 <template>
@@ -209,6 +232,18 @@ function handleClearSearch() {
               >
                 <span class="text-gray-400 dark:text-gray-600 select-none w-8 text-right shrink-0 font-mono text-xs">{{ index + 1 }}</span>
                 <pre class="whitespace-pre-wrap break-all flex-1 font-mono text-xs text-gray-700 dark:text-gray-300">{{ line }}</pre>
+              </div>
+              <div v-if="hasMore && !isSearchMode" class="flex justify-center py-6">
+                <UButton
+                  size="lg"
+                  variant="soft"
+                  color="primary"
+                  :loading="loadingMore"
+                  icon="lucide:chevrons-down"
+                  @click="handleLoadMore"
+                >
+                  {{ loadingMore ? 'Loading...' : 'Load More' }}
+                </UButton>
               </div>
             </div>
           </div>

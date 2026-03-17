@@ -153,11 +153,25 @@ async function initializeForm() {
 }
 
 async function save() {
-  const ok = await confirm({
-    content: "Are you sure you want to modify table structure?",
-  });
-  if (!ok) {
-    return;
+  const isChangingToSingleRecord =
+    formChanges.originalData.value?.isSingleRecord === false &&
+    table.value?.isSingleRecord === true;
+
+  if (isChangingToSingleRecord) {
+    const ok = await confirm({
+      title: "Warning: Data Loss",
+      content: "Changing to single record mode will keep only the first record. All other records will be automatically deleted. This action cannot be undone. Do you want to proceed?",
+    });
+    if (!ok) {
+      return;
+    }
+  } else {
+    const ok = await confirm({
+      content: "Are you sure you want to modify table structure?",
+    });
+    if (!ok) {
+      return;
+    }
   }
   await patchTable();
 }
