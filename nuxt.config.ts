@@ -15,6 +15,13 @@ export default defineNuxtConfig({
   ],
   nitro: {
     plugins: ['~/server/plugins/socket-relay.server.ts'],
+    handlers: [
+      {
+        method: 'get',
+        route: '/api/npm-search',
+        handler: '~/server/api/npm-search.get.ts',
+      },
+    ],
   },
   colorMode: {
     preference: "dark",
