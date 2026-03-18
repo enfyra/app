@@ -14,12 +14,32 @@ export default defineNuxtConfig({
     "@enfyra/sdk-nuxt",
   ],
   nitro: {
-    plugins: ['~/server/plugins/socket-relay.server.ts'],
+    plugins: ['~/server/plugins/socket-relay.server.ts', '~/server/plugins/auto-install-packages.ts'],
     handlers: [
       {
         method: 'get',
         route: '/api/npm-search',
         handler: '~/server/api/npm-search.get.ts',
+      },
+      {
+        method: 'get',
+        route: '/api/packages',
+        handler: '~/server/api/packages.get.ts',
+      },
+      {
+        method: 'post',
+        route: '/api/package_definition',
+        handler: '~/server/api/package_definition.post.ts',
+      },
+      {
+        method: 'patch',
+        route: '/api/package_definition/:id',
+        handler: '~/server/api/package_definition/[id].patch.ts',
+      },
+      {
+        method: 'delete',
+        route: '/api/package_definition/:id',
+        handler: '~/server/api/package_definition/[id].delete.ts',
       },
     ],
   },

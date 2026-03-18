@@ -12,42 +12,13 @@ const show = computed({
   set: (val) => emit("update:modelValue", val),
 });
 
-const { schemas, ensureSchema } = useSchema();
 const { getId, getIdFieldName } = useDatabase();
 
-const targetTableId = computed(() => {
-  return typeof props.relationMeta.targetTable === 'object'
-    ? getId(props.relationMeta.targetTable)
-    : props.relationMeta.targetTable;
-});
-
-const targetTableName = computed(() => {
-  for (const [name, schema] of Object.entries(schemas.value)) {
-    if (String(getId(schema)) === String(targetTableId.value)) {
-      return name;
-    }
-  }
-  return null;
-});
-
+const targetTableName = computed(() => props.relationMeta?.targetTableName || "");
 const targetTableNameResolved = computed(() => targetTableName.value || '');
 const { generateEmptyForm, validate } = useSchema(targetTableNameResolved);
 
-const { getRouteForTableId, ensureRoutesLoaded } = useRoutes();
-const targetRoute = ref<string>('');
-
-watchEffect(async () => {
-  if (targetTableId.value) {
-    await ensureRoutesLoaded();
-    targetRoute.value = getRouteForTableId(targetTableId.value);
-  }
-});
-
-watch(targetTableName, async (name) => {
-  if (name && !schemas.value[name]) {
-    await ensureSchema(name);
-  }
-}, { immediate: true });
+const targetRoute = computed(() => `/${targetTableName.value}`);
 
 const {
   data: createData,

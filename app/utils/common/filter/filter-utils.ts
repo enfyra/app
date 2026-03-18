@@ -60,7 +60,7 @@ export function getCombinedOptionsForContext(
         label: `${r.name} → (${targetTableName || "unknown"})`,
         value: r.name,
         fieldCategory: "relation",
-        targetTable: targetTableName,
+        targetTable: targetTableName ?? undefined,
       });
     });
 

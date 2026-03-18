@@ -6,12 +6,21 @@ const EXTENSION_VUE_FUNCTIONS = [
   'computed',
   'watch',
   'watchEffect',
+  'watchDeep',
+  'watchSyncEffect',
+  'watchPostEffect',
   'onMounted',
   'onUnmounted',
   'onBeforeMount',
   'onBeforeUnmount',
   'onUpdated',
   'onBeforeUpdate',
+  'onActivated',
+  'onDeactivated',
+  'onErrorCaptured',
+  'onRenderTracked',
+  'onRenderTriggered',
+  'onServerPrefetch',
   'nextTick',
   'h',
   'defineComponent',
@@ -19,6 +28,26 @@ const EXTENSION_VUE_FUNCTIONS = [
   'defineEmits',
   'defineExpose',
   'withDefaults',
+  'shallowRef',
+  'shallowReactive',
+  'shallowReadonly',
+  'toRef',
+  'toRefs',
+  'toValue',
+  'unref',
+  'isRef',
+  'isReactive',
+  'isReadonly',
+  'isProxy',
+  'toRaw',
+  'markRaw',
+  'triggerRef',
+  'customRef',
+  'readonly',
+  'provide',
+  'inject',
+  'useSlots',
+  'useAttrs',
 ];
 
 export async function setupVueGlobals(): Promise<void> {
@@ -48,81 +77,31 @@ export function exposeVueGlobals(g: any): void {
 
 export function getComposablesObject(): Record<string, any> {
   return {
-    useState: () => {
-      throw new Error('useState must be used within a Nuxt setup context');
-    },
-    useRoute: () => {
-      throw new Error('useRoute must be used within a Nuxt setup context');
-    },
-    useRouter: () => {
-      throw new Error('useRouter must be used within a Nuxt setup context');
-    },
-    useApi: () => {
-      throw new Error('useApi must be used within a Nuxt setup context');
-    },
-    useToast: () => {
-      throw new Error('useToast must be used within a Nuxt setup context');
-    },
-    useSchema: () => {
-      throw new Error('useSchema must be used within a Nuxt setup context');
-    },
-    useScreen: () => {
-      throw new Error('useScreen must be used within a Nuxt setup context');
-    },
-    useGlobalState: () => {
-      throw new Error('useGlobalState must be used within a Nuxt setup context');
-    },
-    usePermissions: () => {
-      throw new Error('usePermissions must be used within a Nuxt setup context');
-    },
-    useFilterQuery: () => {
-      throw new Error('useFilterQuery must be used within a Nuxt setup context');
-    },
-    useDataTableColumns: () => {
-      throw new Error('useDataTableColumns must be used within a Nuxt setup context');
-    },
-    useHeaderActionRegistry: () => {
-      throw new Error('useHeaderActionRegistry must be used within a Nuxt setup context');
-    },
-    useSubHeaderActionRegistry: () => {
-      throw new Error('useSubHeaderActionRegistry must be used within a Nuxt setup context');
-    },
-    usePageHeaderRegistry: () => {
-      throw new Error('usePageHeaderRegistry must be used within a Nuxt setup context');
-    },
-    useConfirm: () => {
-      throw new Error('useConfirm must be used within a Nuxt setup context');
-    },
-    useEnfyraAuth: () => {
-      throw new Error('useEnfyraAuth must be used within a Nuxt setup context');
-    },
-    useEnfyra: () => {
-      throw new Error('useEnfyra must be used within a Nuxt setup context');
-    },
-    navigateTo: () => {
-      throw new Error('navigateTo must be used within a Nuxt setup context');
-    },
-    useFetch: () => {
-      throw new Error('useFetch must be used within a Nuxt setup context');
-    },
-    useAsyncData: () => {
-      throw new Error('useAsyncData must be used within a Nuxt setup context');
-    },
-    useLazyFetch: () => {
-      throw new Error('useLazyFetch must be used within a Nuxt setup context');
-    },
-    useHead: () => {
-      throw new Error('useHead must be used within a Nuxt setup context');
-    },
-    useSeoMeta: () => {
-      throw new Error('useSeoMeta must be used within a Nuxt setup context');
-    },
-    useCookie: () => {
-      throw new Error('useCookie must be used within a Nuxt setup context');
-    },
-    useNuxtApp: () => {
-      throw new Error('useNuxtApp must be used within a Nuxt setup context');
-    },
+    useState,
+    useRoute,
+    useRouter,
+    useApi,
+    useToast,
+    useSchema,
+    useScreen,
+    useGlobalState,
+    usePermissions,
+    useFilterQuery,
+    useDataTableColumns,
+    useHeaderActionRegistry,
+    useSubHeaderActionRegistry,
+    usePageHeaderRegistry,
+    useConfirm,
+    useEnfyraAuth,
+    useEnfyra,
+    navigateTo,
+    useFetch,
+    useAsyncData,
+    useLazyFetch,
+    useHead,
+    useSeoMeta,
+    useCookie,
+    useNuxtApp,
   };
 }
 

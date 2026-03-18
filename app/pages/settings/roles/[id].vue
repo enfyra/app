@@ -184,8 +184,14 @@ async function save() {
   });
   errors.value = {};
 
+  await fetchRole();
+  const freshData = apiData.value?.data?.[0];
+  if (freshData) {
+    form.value = { ...freshData };
+    formChanges.update(freshData);
+  }
+
   formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
 }
 
 async function deleteRole() {

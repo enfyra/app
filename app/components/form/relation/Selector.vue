@@ -23,7 +23,6 @@ const searchQuery = ref("");
 const searchDebounced = ref("");
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
-const { schemas, ensureSchema } = useSchema();
 const { getId, getIdFieldName } = useDatabase();
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -36,44 +35,11 @@ watch(searchQuery, (newVal) => {
   }, 300);
 });
 
-const targetTableId = computed(() => {
-  const targetTableRef = props.relationMeta?.targetTable;
-  return typeof targetTableRef === 'string'
-    ? targetTableRef
-    : getId(targetTableRef);
-});
-
-const targetTable = computed(() => {
-  if (!targetTableId.value) return null;
-
-  for (const [name, schema] of Object.entries(schemas.value)) {
-    if (String(getId(schema)) === String(targetTableId.value)) {
-      return schema;
-    }
-  }
-  return null;
-});
-
-const targetTableName = computed(() => targetTable.value?.name || "");
-
-watch(targetTableId, async (id) => {
-  if (id && !targetTable.value) {
-    await ensureSchema(String(id));
-  }
-}, { immediate: true });
+const targetTableName = computed(() => props.relationMeta?.targetTableName || "");
 
 const { isMounted } = useMounted();
 
-const { getRouteForTableId, ensureRoutesLoaded } = useRoutes();
-const targetRoute = ref<string>('');
-
-watchEffect(async () => {
-  const tableId = getId(targetTable.value);
-  if (tableId) {
-    await ensureRoutesLoaded();
-    targetRoute.value = getRouteForTableId(tableId);
-  }
-});
+const targetRoute = computed(() => `/${targetTableName.value}`);
 
 watch(
   () => props.selectedIds,
@@ -86,7 +52,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchData,
-} = useApi(() => targetRoute.value || `/${targetTable.value?.name}`, {
+} = useApi(() => targetRoute.value || `/${targetTableName.value}`, {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
@@ -259,7 +225,7 @@ const { isMobile, isTablet } = useScreen();
                     Relations
                   </h3>
                   <p :class="(isMobile || isTablet) ? 'text-xs text-muted-foreground truncate' : 'text-sm text-muted-foreground'">
-                    {{ targetTable?.name || "Unknown" }} records
+                    {{ targetTableName || "Unknown" }} records
                   </p>
                 </div>
               </div>
@@ -290,7 +256,7 @@ const { isMobile, isTablet } = useScreen();
           <div class="relative">
             <UInput
               v-model="searchQuery"
-              :placeholder="`Search ${targetTable?.name || 'records'}...`"
+              :placeholder="`Search ${targetTableName || 'records'}...`"
               :size="(isMobile || isTablet) ? 'sm' : 'md'"
               class="w-full"
             >
@@ -412,7 +378,7 @@ const { isMobile, isTablet } = useScreen();
 
   <FilterDrawerLazy
     v-model="showFilterDrawer"
-    :table-name="targetTable?.name || ''"
+    :table-name="targetTableName"
     :current-filter="currentFilter"
     @apply="handleFilterApply"
   />

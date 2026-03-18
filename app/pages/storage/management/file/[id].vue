@@ -183,6 +183,12 @@ async function saveFile() {
 
   await execute();
 
+  const freshData = file.value?.data?.[0];
+  if (freshData) {
+    form.value = { ...freshData };
+    formChanges.update(freshData);
+  }
+
   const toast = useToast();
   toast.add({
     title: "Success",
@@ -191,7 +197,6 @@ async function saveFile() {
   });
 
   formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
 }
 
 async function deleteFile() {

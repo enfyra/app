@@ -172,6 +172,7 @@
 <script setup lang="ts">
 const toast = useToast();
 const { me } = useEnfyraAuth();
+const { fetchAppPackages } = useGlobalState();
 
 const tableName = "package_definition";
 const route = useRoute();
@@ -290,7 +291,6 @@ async function handleCreate() {
   const packageId = getId(createData.value?.data?.[0]);
 
   if (packageType.value === 'App') {
-    const { fetchAppPackages } = useGlobalState();
     await fetchAppPackages();
   }
 

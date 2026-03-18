@@ -336,15 +336,20 @@ async function updateRoute() {
     description: "Route updated!",
   });
   errors.value = {};
-  form.value = { ...form.value, ...body };
 
   await loadRoutes();
 
   const { registerDataMenuItems } = useMenuRegistry();
   await registerDataMenuItems(Object.values(schemas.value));
 
+  await executeGetRoute();
+  const freshData = routeData.value?.data?.[0];
+  if (freshData) {
+    form.value = { ...freshData };
+    formChanges.update(freshData);
+  }
+
   formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
 }
 
 async function handleReset() {
