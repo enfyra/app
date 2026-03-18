@@ -14,7 +14,7 @@ export default defineNuxtConfig({
     "@enfyra/sdk-nuxt",
   ],
   nitro: {
-    plugins: ['~/server/plugins/socket-relay.server.ts'],
+    plugins: ['~/server/plugins/socket-relay.server.ts', '~/server/plugins/auto-install-packages.ts'],
     handlers: [
       {
         method: 'get',
