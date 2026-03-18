@@ -3,7 +3,7 @@ const route = useRoute();
 
 const toast = useToast();
 const tableName = route.params.table as string;
-const { validate, schemas } = useSchema(tableName);
+const { validate, schemas, useFormChanges } = useSchema(tableName);
 const updateErrors = ref<Record<string, string>>({});
 
 const schema = computed(() => schemas.value[tableName]);
@@ -13,7 +13,6 @@ const { confirm } = useConfirm();
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
-const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();

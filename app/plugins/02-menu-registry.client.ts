@@ -5,12 +5,10 @@ export default defineNuxtPlugin(async () => {
 
   const {
     registerAllMenusFromApi,
-    registerDataMenuItems,
+    registerDataMenuItemsFromRoutes,
     registerMenuItem,
   } = useMenuRegistry();
-  const { schemas } = useSchema();
   const { confirm } = useConfirm();
-  const { getRouteForTableName } = useRoutes();
   const routes = useState<any[]>('routes:all', () => []);
 
   const { menuDefinitions } = useMenuApi();
@@ -57,12 +55,7 @@ export default defineNuxtPlugin(async () => {
     } as any);
   }
 
-  const schemaValues = Object.values(schemas.value);
-  if (schemaValues.length > 0) {
-    const getRouteForTableNameWithSchemas = (tableName: string) => 
-      getRouteForTableName(tableName, schemas.value);
-    await registerDataMenuItems(schemaValues, getRouteForTableNameWithSchemas, routes);
-  }
+  registerDataMenuItemsFromRoutes(routes.value);
 
   registerMenuItem({
     id: "user-info",

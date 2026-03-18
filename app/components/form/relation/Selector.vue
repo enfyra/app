@@ -23,7 +23,7 @@ const searchQuery = ref("");
 const searchDebounced = ref("");
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
-const { schemas } = useSchema();
+const { schemas, ensureSchema } = useSchema();
 const { getId, getIdFieldName } = useDatabase();
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -36,18 +36,31 @@ watch(searchQuery, (newVal) => {
   }, 300);
 });
 
-const targetTable = computed(() => {
+const targetTableId = computed(() => {
   const targetTableRef = props.relationMeta?.targetTable;
-  const targetId = typeof targetTableRef === 'string'
+  return typeof targetTableRef === 'string'
     ? targetTableRef
     : getId(targetTableRef);
+});
 
-  return Object.values(schemas.value).find(
-    (schema: any) => getId(schema) === targetId
-  ) || null;
+const targetTable = computed(() => {
+  if (!targetTableId.value) return null;
+
+  for (const [name, schema] of Object.entries(schemas.value)) {
+    if (String(getId(schema)) === String(targetTableId.value)) {
+      return schema;
+    }
+  }
+  return null;
 });
 
 const targetTableName = computed(() => targetTable.value?.name || "");
+
+watch(targetTableId, async (id) => {
+  if (id && !targetTable.value) {
+    await ensureSchema(String(id));
+  }
+}, { immediate: true });
 
 const { isMounted } = useMounted();
 

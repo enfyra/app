@@ -120,11 +120,11 @@ function saveRelation() {
         </span>
 
         <UBadge size="xs" color="info" v-if="rel.type">{{ rel.type }}</UBadge>
-        <UBadge size="xs" color="info" v-if="rel.targetTable">
+        <UBadge size="xs" color="info" v-if="rel.targetTable || rel.targetTableName">
           →
           {{
-            props.tableOptions.find((t) => t.value === rel.targetTable)
-              ?.label ?? rel.targetTable.id
+            props.tableOptions.find((t) => t.value === rel.targetTable || t.value === rel.targetTableName)
+              ?.label ?? (typeof rel.targetTable === 'string' ? rel.targetTable : rel.targetTableName ?? 'Unknown')
           }}
         </UBadge>
         <UBadge size="xs" color="info" v-if="rel.isNullable">nullable</UBadge>

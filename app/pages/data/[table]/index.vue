@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import ColumnSelector from "~/components/data-table/ColumnSelector.vue";
 
 const route = useRoute();
 const router = useRouter();
 const tableName = route.params.table as string;
-const { schemas } = useSchema();
+const { schemas, schemaReady } = useSchema(tableName);
 const total = ref(1);
 const page = ref(1);
 const pageLimit = 10;
@@ -13,7 +12,6 @@ const data = ref([]);
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
-const { setRouteLoading } = useGlobalState();
 const singleRecordIdMap = useState<Record<string, string>>('singleRecordIdMap', () => ({}));
 
 const showFilterDrawer = ref(false);
@@ -25,33 +23,27 @@ const { registerPageHeader } = usePageHeaderRegistry();
 const schema = computed(() => schemas.value[tableName]);
 const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
 
-
 const {
   data: singleRecordData,
-  pending: singleRecordPending,
   execute: fetchSingleRecord,
 } = useApi(() => getRouteForTableName(tableName), {
-  query: {
-    limit: 1,
-    fields: "*",
-  },
+  query: { limit: 1, fields: "*" },
   immediate: false,
   errorContext: "Fetch Single Record",
 });
 
-watch([() => schemas.value[tableName], isSingleRecord], async ([currentSchema, isSingle]) => {
-  if (currentSchema && isSingle) {
-    setRouteLoading(true);
+watch(schemaReady, async (ready) => {
+  if (ready && isSingleRecord.value) {
     const cachedId = singleRecordIdMap.value[tableName];
     if (cachedId) {
-      setRouteLoading(false);
       navigateTo(`/data/${tableName}/${cachedId}`, { replace: true });
       return;
     }
+
     await fetchSingleRecord();
+
     const records = singleRecordData.value?.data;
     if (records && records.length > 0) {
-      setRouteLoading(false);
       const recordId = getId(records[0]);
       singleRecordIdMap.value[tableName] = recordId;
       navigateTo(`/data/${tableName}/${recordId}`, { replace: true });

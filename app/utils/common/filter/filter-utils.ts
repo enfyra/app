@@ -1,13 +1,12 @@
 import type { FilterGroup, FieldOption } from "./filter-types";
+import { getTargetTableName } from "~/utils/schema";
 
 export function getTargetTableNameForGroup(
   group: FilterGroup,
   schemas: Record<string, any>,
   rootTableName: string
 ): string {
-  if (!group.relationContext) {
-    return rootTableName;
-  }
+  if (!group.relationContext) return rootTableName;
 
   const relationPath = group.relationContext.split(".");
   let currentTable = rootTableName;
@@ -18,22 +17,10 @@ export function getTargetTableNameForGroup(
       (f: any) => f.fieldType === "relation" && f.name === relationName
     );
 
-    if (!relation) {
-      return rootTableName;
-    }
+    if (!relation) return rootTableName;
 
-    let targetTableName = relation.targetTable?.name;
-
-    if (!targetTableName && relation.targetTable?.id) {
-      const targetTable = Object.values(schemas).find(
-        (schema: any) => schema.id === relation.targetTable.id
-      );
-      targetTableName = (targetTable as any)?.name;
-    }
-
-    if (!targetTableName) {
-      return rootTableName;
-    }
+    const targetTableName = getTargetTableName(relation, schemas);
+    if (!targetTableName) return rootTableName;
 
     currentTable = targetTableName;
   }
@@ -51,43 +38,31 @@ export function getCombinedOptionsForContext(
   const options: FieldOption[] = [];
   const systemFields: FieldOption[] = [];
 
-  const columns = schema.definition
-    .filter((field: any) => field.fieldType === "column" && !field.isHidden);
-
-  columns.forEach((field: any) => {
-    const option: FieldOption = {
-      label: field.name,
-      value: field.name,
-      fieldCategory: "column",
-      fieldType: field.type,
-    };
-
-    if (["createdAt", "updatedAt"].includes(field.name)) {
-      systemFields.push(option);
-    } else {
-      options.push(option);
-    }
-  });
-
-  const relations = schema.definition
-    .filter((field: any) => field.fieldType === "relation");
-
-  relations.forEach((relation: any) => {
-    let targetTableName = relation.targetTable?.name;
-    if (!targetTableName && relation.targetTable?.id) {
-      const targetTable = Object.values(schemas).find(
-        (s: any) => s.id === relation.targetTable.id
-      );
-      targetTableName = (targetTable as any)?.name;
-    }
-
-    options.push({
-      label: `${relation.name} → (${targetTableName || "unknown"})`,
-      value: relation.name,
-      fieldCategory: "relation",
-      targetTable: targetTableName,
+  schema.definition
+    .filter((f: any) => f.fieldType === "column" && !f.isHidden)
+    .forEach((f: any) => {
+      const option: FieldOption = {
+        label: f.name,
+        value: f.name,
+        fieldCategory: "column",
+        fieldType: f.type,
+      };
+      ["createdAt", "updatedAt"].includes(f.name)
+        ? systemFields.push(option)
+        : options.push(option);
     });
-  });
+
+  schema.definition
+    .filter((f: any) => f.fieldType === "relation")
+    .forEach((r: any) => {
+      const targetTableName = getTargetTableName(r, schemas);
+      options.push({
+        label: `${r.name} → (${targetTableName || "unknown"})`,
+        value: r.name,
+        fieldCategory: "relation",
+        targetTable: targetTableName,
+      });
+    });
 
   return [...options, ...systemFields];
 }
@@ -100,16 +75,12 @@ export function getFieldOptions(
   const schema = schemas[contextTableName];
   if (!schema?.definition) return [];
 
-  const fieldName = fieldKey.includes(".")
-    ? fieldKey.split(".").pop()
-    : fieldKey;
+  const fieldName = fieldKey.includes(".") ? fieldKey.split(".").pop() : fieldKey;
   const field = schema.definition.find(
     (f: any) => f.fieldType === "column" && f.name === fieldName
   );
 
-  if (field?.type === "enum" && field.options) {
-    return field.options.map((opt: string) => ({ label: opt, value: opt }));
-  }
-
-  return [];
+  return field?.type === "enum" && field.options
+    ? field.options.map((opt: string) => ({ label: opt, value: opt }))
+    : [];
 }
