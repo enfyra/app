@@ -259,8 +259,14 @@ async function updateExtension() {
   });
   errors.value = {};
 
+  await executeGetExtension();
+  const freshData = extensionData.value?.data?.[0];
+  if (freshData) {
+    form.value = { ...freshData };
+    formChanges.update(freshData);
+  }
+
   formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
 }
 
 async function deleteExtension() {

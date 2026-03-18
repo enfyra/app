@@ -204,10 +204,10 @@ async function saveProfile() {
   const updatedData = apiData.value?.data?.[0];
   if (updatedData) {
     form.value = { ...updatedData };
+    formChanges.update(updatedData);
   }
 
   formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
 }
 
 function validatePasswordForm() {

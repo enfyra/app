@@ -194,8 +194,14 @@ async function save() {
   });
   errors.value = {};
 
+  await executeGetScript();
+  const freshData = scriptData.value?.data?.[0];
+  if (freshData) {
+    form.value = { ...freshData };
+    formChanges.update(freshData);
+  }
+
   formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
 }
 
 async function deleteScript() {

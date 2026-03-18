@@ -97,6 +97,7 @@ const route = useRoute();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
+const { fetchAppPackages } = useGlobalState();
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -173,7 +174,6 @@ async function deletePackage(pkgId: any, pkgName: string) {
       return;
     }
 
-    const { fetchAppPackages } = useGlobalState();
     await fetchAppPackages();
 
     toast.add({
