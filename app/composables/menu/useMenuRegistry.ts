@@ -170,6 +170,54 @@ export function useMenuRegistry() {
     return null;
   };
 
+  const registerDataMenuItemsFromRoutes = (routes: any[]) => {
+    let dataParentId = menuItems.value.find((m) => m.id === "data")?.id;
+    if (!dataParentId) {
+      const foundId = findParentMenuIdByPath("/data");
+      dataParentId = foundId ? String(foundId) : undefined;
+    }
+
+    if (!dataParentId) {
+      return;
+    }
+
+    const tableMenuItems = menuItems.value.filter(
+      (item) => item.id.startsWith("data-")
+    );
+    tableMenuItems.forEach((item) => {
+      unregisterMenuItem(item.id);
+    });
+
+    if (!routes || routes.length === 0) {
+      return;
+    }
+
+    routes.forEach((route: any) => {
+      if (!route.mainTable) return;
+      if (route.isEnabled === false) return;
+
+      const table = route.mainTable;
+      const tableName = table.name;
+      if (!tableName) return;
+
+      if (table.isSystem) return;
+
+      registerMenuItem({
+        id: `data-${tableName}`,
+        label: table.alias || tableName,
+        route: `/data/${tableName}`,
+        icon: table.icon || "lucide:database",
+        parent: dataParentId as any,
+        type: "Menu",
+        permission: {
+          or: [
+            { route: route.path, actions: ["read"] }
+          ]
+        }
+      });
+    });
+  };
+
   const registerDataMenuItems = async (
     tables: any[],
     getRouteForTableName?: (tableName: string) => string,
@@ -215,7 +263,7 @@ export function useMenuRegistry() {
       if (routeExists) {
         registerMenuItem({
           id: `data-${tableName}`,
-          label: table.label || table.display_name || tableName,
+          label: table.alias || tableName,
           route: `/data/${tableName}`,
           icon: table.icon || "lucide:database",
           parent: dataParentId as any,
@@ -253,6 +301,7 @@ export function useMenuRegistry() {
     reregisterAllMenus,
 
     registerDataMenuItems,
+    registerDataMenuItemsFromRoutes,
     reregisterExtensionMenus,
   };
 }

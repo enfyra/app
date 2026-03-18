@@ -11,7 +11,7 @@ const showModal = ref(false);
 const selectedIds = ref<any[]>([]);
 const { getId } = useDatabase();
 const { ensureRoutesLoaded } = useRoutes();
-const { schemas } = useSchema();
+const { schemas, ensureSchema } = useSchema();
 
 onMounted(async () => {
   await ensureRoutesLoaded();
@@ -81,26 +81,36 @@ function shortenId(id: string | number): string {
   return str.length > 12 ? `${str.slice(0, 4)}…${str.slice(-3)}` : str;
 }
 
-function getTargetTableName(): string | null {
+async function getTargetTableName(): Promise<string | null> {
   const targetTableRef = props.relationMeta?.targetTable;
   if (!targetTableRef) return null;
-  
+
   if (typeof targetTableRef === 'string') {
     return targetTableRef;
   }
-  
+
   const targetTableId = getId(targetTableRef);
   if (!targetTableId) return null;
-  
-  const targetSchema = Object.values(schemas.value).find(
-    (schema: any) => getId(schema) === targetTableId
-  );
-  
-  return targetSchema?.name || null;
+
+  for (const [name, schema] of Object.entries(schemas.value)) {
+    if (String(getId(schema)) === String(targetTableId)) {
+      return name;
+    }
+  }
+
+  await ensureSchema(String(targetTableId));
+
+  for (const [name, schema] of Object.entries(schemas.value)) {
+    if (String(getId(schema)) === String(targetTableId)) {
+      return name;
+    }
+  }
+
+  return null;
 }
 
-function navigateToDetail(item: any) {
-  const targetTableName = getTargetTableName();
+async function navigateToDetail(item: any) {
+  const targetTableName = await getTargetTableName();
   if (!targetTableName) return;
 
   const itemId = getId(item);

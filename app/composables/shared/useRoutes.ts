@@ -2,13 +2,13 @@ export function useRoutes() {
   const routes = useState<any[]>('routes:all', () => [])
   const tableRoutesMap = useState<Record<string, string>>('routes:table:map', () => ({}))
   const { getId } = useDatabase();
-  
+
   const {
     data: routesData,
     execute: executeRoutes
   } = useApi(() => '/route_definition', {
     query: {
-      fields: ['*', 'mainTable.*'].join(','),
+      fields: ['id', 'path', 'isEnabled', 'mainTable.id', 'mainTable.name', 'mainTable.isSystem', 'mainTable.alias', 'mainTable.icon'].join(','),
       limit: 0,
       sort: 'path'
     },

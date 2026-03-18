@@ -1,191 +1,112 @@
 import type {
-  TableApiResponse,
   SchemaCollection,
   TableSchema,
   TableDefinitionField,
   FormValidationResult,
   FormChangesState,
-  RelationType,
 } from "~/types/schema";
+
+const TIMESTAMP_FIELDS = [
+  { name: "createdAt", type: "timestamp" },
+  { name: "updatedAt", type: "timestamp" },
+];
 
 export function useSchema(tableName?: string | Ref<string>) {
   const schemas = useState<SchemaCollection>("schemas:data", () => ({}));
-  const { getId } = useDatabase();
-
+  const schemaLoading = ref(false);
   const { getIdFieldName } = useDatabase();
-  const {
-    data: tablesData,
-    pending: tablesPending,
-    execute: executeFetchTables,
-  } = useApi(() => "/table_definition", {
-    query: {
-      fields: ["*", "columns.*", "relations.*"].join(","),
-      limit: 0,
-      sort: [getIdFieldName()].join(","),
-    },
-    errorContext: "Fetch Tables",
-  });
 
   async function fetchSchema() {
-    await executeFetchTables();
-    const tables: TableApiResponse[] = tablesData.value?.data || [];
-    updateSchemas(tables);
+    if (Object.keys(schemas.value).length > 0) return;
+
+    schemaLoading.value = true;
+    try {
+      const config = useRuntimeConfig().public.enfyraSDK;
+      const apiUrl = getAppUrl();
+      const apiPrefix = config?.apiPrefix || '/api';
+      const fullBaseURL = normalizeUrl(apiUrl, apiPrefix);
+
+      const response = await $fetch<{ data: any[] }>('/metadata', {
+        baseURL: fullBaseURL,
+      });
+
+      processAndCacheSchemas(response?.data || []);
+    } catch (error) {
+      console.error('[useSchema] Error fetching schema:', error);
+    } finally {
+      schemaLoading.value = false;
+    }
   }
 
-  function convertToEnfyraSchema(input: TableApiResponse[]): SchemaCollection {
-    const schema: SchemaCollection = {};
-    const seenRelationKeys = new Set<string>();
+  function processAndCacheSchemas(tables: any[]) {
+    for (const t of tables) {
+      if (schemas.value[t.name]) continue;
 
-    for (const t of input) {
-      schema[t.name] = {
-        ...t,
-        definition: [],
-      } as TableSchema;
-      delete schema[t.name]?.columns;
-      delete schema[t.name]?.relations;
-    }
+      const definition: TableDefinitionField[] = [];
 
-    for (const t of input) {
-      for (const col of t.columns || []) {
-        schema[t.name]?.definition.push({
-          ...col,
-          fieldType: "column",
-        } as TableDefinitionField);
-      }
-    }
+      (t.columns || []).forEach((col: any) => {
+        definition.push({ ...col, fieldType: "column" } as TableDefinitionField);
+      });
 
-    for (const tableName in schema) {
-      const def = schema[tableName]?.definition;
+      TIMESTAMP_FIELDS.forEach(({ name, type }) => {
+        if (!definition.some(d => d.name === name)) {
+          definition.push({
+            name,
+            type,
+            isNullable: false,
+            isSystem: true,
+            isUpdatable: false,
+            isHidden: false,
+            fieldType: "column",
+            isVirtual: true,
+          });
+        }
+      });
 
-      const shouldInject = (name: string) =>
-        !def?.some((d) => d.name === name && d.fieldType === "column");
-
-      if (shouldInject("createdAt")) {
-        def?.push({
-          name: "createdAt",
-          type: "timestamp",
-          isNullable: false,
-          isSystem: true,
-          isUpdatable: false,
-          isHidden: false,
-          fieldType: "column",
-          isVirtual: true,
-        });
-      }
-
-      if (shouldInject("updatedAt")) {
-        def?.push({
-          name: "updatedAt",
-          type: "timestamp",
-          isNullable: false,
-          isSystem: true,
-          isUpdatable: false,
-          isHidden: false,
-          fieldType: "column",
-          isVirtual: true,
-        });
-      }
-    }
-
-    for (const t of input) {
-      for (const rel of t.relations || []) {
-        const sourceTable = t.name;
-        if (!rel.propertyName) continue;
-
-        const directKey = `${sourceTable}:${rel.propertyName}`;
-        if (!seenRelationKeys.has(directKey)) {
-          schema[sourceTable]?.definition.push({
+      (t.relations || []).forEach((rel: any) => {
+        if (rel.propertyName) {
+          definition.push({
             ...rel,
             name: rel.propertyName,
             fieldType: "relation",
+            relationType: rel.type,
           } as TableDefinitionField);
-          seenRelationKeys.add(directKey);
         }
+      });
 
-        if (rel.inversePropertyName) {
-          const targetTableId = typeof rel.targetTable === 'string'
-            ? rel.targetTable
-            : getId(rel.targetTable);
-
-          const targetTableName = input.find(
-            (t) => getId(t) === targetTableId
-          )?.name;
-          
-          if (targetTableName) {
-            const inverseKey = `${targetTableName}:${rel.inversePropertyName}`;
-            if (!seenRelationKeys.has(inverseKey)) {
-              const inverseRel = {
-                ...rel,
-                id: undefined,  
-                _id: undefined, 
-                name: rel.inversePropertyName,
-                propertyName: rel.inversePropertyName,
-                inversePropertyName: rel.propertyName,
-                sourceTable: rel.targetTable,
-                targetTable: rel.sourceTable,
-                type: inverseRelationType(rel.type),
-                fieldType: "relation",
-                isNullable: true,
-              } as TableDefinitionField;
-              schema[targetTableName]?.definition.push(inverseRel);
-              seenRelationKeys.add(inverseKey);
-            }
-          }
-        }
-      }
-    }
-
-    return schema;
-  }
-
-  function inverseRelationType(type: RelationType): RelationType {
-    switch (type) {
-      case "one-to-many":
-        return "many-to-one";
-      case "many-to-one":
-        return "one-to-many";
-      default:
-        return type;
+      schemas.value[t.name] = {
+        ...t,
+        definition,
+      } as TableSchema;
     }
   }
 
-  function updateSchemas(tables: TableApiResponse[]) {
-    schemas.value = convertToEnfyraSchema(tables);
+  function updateSchemas(tables: any[]) {
+    processAndCacheSchemas(tables);
   }
 
   const tableNameRef = tableName
-    ? isRef(tableName)
-      ? tableName
-      : ref(tableName)
+    ? isRef(tableName) ? tableName : ref(tableName)
     : ref("");
 
   const definition = computed<TableDefinitionField[]>(
     () => schemas.value[tableNameRef.value]?.definition || []
   );
 
-  function sortFieldsByOrder(
-    fields: TableDefinitionField[]
-  ): TableDefinitionField[] {
+  function sortFieldsByOrder(fields: TableDefinitionField[]): TableDefinitionField[] {
     return [...fields].sort((a, b) => {
       if (a.fieldType === "column" && b.fieldType === "relation") return -1;
       if (a.fieldType === "relation" && b.fieldType === "column") return 1;
-      
-      if (a.fieldType === b.fieldType) {
-        const aId = a.id ?? Number.MAX_SAFE_INTEGER;
-        const bId = b.id ?? Number.MAX_SAFE_INTEGER;
-        return aId - bId;
-      }
-      
-      return 0;
+      return (a.id ?? Infinity) - (b.id ?? Infinity);
     });
   }
 
   const fieldMap = computed(() => {
     const map = new Map<string, TableDefinitionField>();
-    for (const field of definition.value) {
-      const key = field.name || field.propertyName;
-      if (key) map.set(key, field);
-    }
+    definition.value.forEach(f => {
+      const key = f.name || f.propertyName;
+      if (key) map.set(key, f);
+    });
     return map;
   });
 
@@ -194,82 +115,50 @@ export function useSchema(tableName?: string | Ref<string>) {
   }
 
   const editableFields = computed(() => {
-    let fields = definition.value.filter((field) => {
-      const key = field.name || field.propertyName;
-      if (!key) return false;
-      if (
-        ["id", "createdAt", "updatedAt", "isSystem", "isRootAdmin"].includes(
-          key
-        )
-      )
-        return false;
-      return true;
-    });
-
-    return sortFieldsByOrder(fields);
+    const excluded = ["id", "createdAt", "updatedAt", "isSystem", "isRootAdmin"];
+    return sortFieldsByOrder(
+      definition.value.filter(f => {
+        const key = f.name || f.propertyName;
+        return key && !excluded.includes(key);
+      })
+    );
   });
 
-  function generateEmptyForm(options?: {
-    excluded?: string[];
-  }): Record<string, any> {
-    const { excluded = [] } = options || {};
-    const result: Record<string, any> = {};
-    const { getIdFieldName } = useDatabase();
-
-    const defaultExcluded = [
-      "createdAt",
-      "updatedAt",
-      getIdFieldName(),
-      "isSystem",
-      "isRootAdmin",
+  function generateEmptyForm(options?: { excluded?: string[] }): Record<string, any> {
+    const allExcluded = [
+      "createdAt", "updatedAt", getIdFieldName(), "isSystem", "isRootAdmin",
+      ...(options?.excluded || [])
     ];
-    const allExcluded = [...defaultExcluded, ...excluded];
 
-    for (const field of editableFields.value) {
-      const key = field.name || field.propertyName;
-      if (!key || allExcluded.includes(key)) continue;
+    const result: Record<string, any> = {};
 
-      if (field.defaultValue !== undefined) {
-        result[key] = field.defaultValue;
-        continue;
+    editableFields.value.forEach(f => {
+      const key = f.name || f.propertyName;
+      if (!key || allExcluded.includes(key)) return;
+
+      if (f.defaultValue !== undefined) {
+        result[key] = f.defaultValue;
+        return;
       }
 
-      if (field.fieldType === "relation" || field.relationType) {
-        switch (field.relationType) {
-          case "one-to-many":
-          case "many-to-many":
-            result[key] = [];
-            break;
-          case "many-to-one":
-          case "one-to-one":
-          default:
-            result[key] = null;
-            break;
-        }
-        continue;
+      if (f.fieldType === "relation" || f.relationType) {
+        result[key] = ["one-to-many", "many-to-many"].includes(f.relationType) ? [] : null;
+        return;
       }
 
-      const nullable = field.isNullable ?? true;
-      if (nullable) {
+      if (f.isNullable ?? true) {
         result[key] = null;
-        continue;
+        return;
       }
 
-      switch (field.type) {
-        case "boolean":
-          result[key] = false;
-          break;
-        case "array":
-          result[key] = [];
-          break;
+      switch (f.type) {
+        case "boolean": result[key] = false; break;
+        case "array": result[key] = []; break;
         case "int":
-        case "number":
-          result[key] = 0;
-          break;
-        default:
-          result[key] = "";
+        case "number": result[key] = 0; break;
+        default: result[key] = "";
       }
-    }
+    });
 
     return result;
   }
@@ -284,30 +173,21 @@ export function useSchema(tableName?: string | Ref<string>) {
     for (const [key, value] of Object.entries(record)) {
       const field = getField(key);
       if (!field) continue;
+      if (field.fieldType === "relation" && field.inversePropertyName) continue;
 
-      const isRelation = field.fieldType === "relation";
-      const isInverse = isRelation && !!field.inversePropertyName;
-      if (isInverse) continue;
-
-      if (customValidators && customValidators[key]) {
-        const customError = customValidators[key](value);
-        if (customError) {
-          errors[key] = customError;
+      if (customValidators?.[key]) {
+        const error = customValidators[key](value);
+        if (error) {
+          errors[key] = error;
           isValid = false;
-          continue; 
+          continue;
         }
       }
 
-      const nullable = field.isNullable ?? true;
-      const isGenerated = field.isGenerated === true;
-      const isHidden = field.isHidden === true;
-
-      const empty =
-        value === null ||
-        value === undefined ||
+      const empty = value === null || value === undefined ||
         (typeof value === "string" && value.trim() === "");
 
-      if (!nullable && !isGenerated && !isHidden && empty) {
+      if (!(field.isNullable ?? true) && !field.isGenerated && !field.isHidden && empty) {
         errors[key] = "This field is required";
         isValid = false;
       }
@@ -320,12 +200,10 @@ export function useSchema(tableName?: string | Ref<string>) {
     if (!definition.value.length) return "*";
 
     const relations = definition.value
-      .filter((field) => field.fieldType === "relation")
-      .map((field) => {
-        const fieldName = field.propertyName || field.name;
-        return fieldName ? `${fieldName}.*` : null;
-      })
-      .filter((field): field is string => field !== null);
+      .filter(f => f.fieldType === "relation")
+      .map(f => f.propertyName || f.name)
+      .filter(Boolean)
+      .map(name => `${name}.*`);
 
     return ["*", ...relations].join(",");
   }
@@ -333,40 +211,29 @@ export function useSchema(tableName?: string | Ref<string>) {
   function useFormChanges(): FormChangesState {
     const originalData = ref<Record<string, any>>({});
 
-    function update(newData: Record<string, any>) {
-      originalData.value = JSON.parse(JSON.stringify(newData));
-    }
-
-    function checkChanges(currentData: Record<string, any>): boolean {
-      const original = JSON.stringify(originalData.value);
-      const current = JSON.stringify(currentData);
-      return original !== current;
-    }
-
-    function discardChanges(currentData: Record<string, any>): Record<string, any> {
-      return JSON.parse(JSON.stringify(originalData.value));
-    }
-
     return {
       originalData: readonly(originalData),
-      update,
-      checkChanges,
-      discardChanges,
+      update: (data) => { originalData.value = JSON.parse(JSON.stringify(data)); },
+      checkChanges: (data) => JSON.stringify(originalData.value) !== JSON.stringify(data),
+      discardChanges: () => JSON.parse(JSON.stringify(originalData.value)),
     };
   }
 
-  const tableSchema = computed<TableSchema | null>(() => {
-    if (!tableName) return null;
-    return schemas.value[tableNameRef.value] || null;
-  });
+  const tableSchema = computed<TableSchema | null>(() =>
+    tableName ? schemas.value[tableNameRef.value] || null : null
+  );
+
+  const schemaReady = computed(() =>
+    tableName ? !!schemas.value[tableNameRef.value] : true
+  );
 
   return {
     schemas: readonly(schemas),
     schema: tableSchema,
     fetchSchema,
-    schemaLoading: tablesPending,
+    schemaLoading,
     updateSchemas,
-
+    schemaReady,
     definition,
     fieldMap,
     generateEmptyForm,

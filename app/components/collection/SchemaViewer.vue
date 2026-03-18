@@ -124,6 +124,7 @@
 <script setup lang="ts">
 import VueJsonPretty from "vue-json-pretty";
 import "vue-json-pretty/lib/styles.css";
+import { getTargetTableName } from "~/utils/schema";
 
 interface Props {
   tableName: string;
@@ -136,27 +137,13 @@ const { schemas: allSchemas } = useSchema();
 
 const schemaComposable = computed(() => {
   try {
-    const schema = useSchema(props.tableName);
-    return schema;
+    return useSchema(props.tableName);
   } catch (error) {
     return null;
   }
 });
 
-const schemaData = computed(() => {
-  if (!schemaComposable.value) {
-    return null;
-  }
-
-  try {
-    
-    const definitions = unref(schemaComposable.value.definition);
-
-    return definitions;
-  } catch (error) {
-    return null;
-  }
-});
+const schemaData = computed(() => schemaComposable.value?.definition || null);
 
 const schemaStructure = computed(() => {
   if (!schemaData.value || !Array.isArray(schemaData.value)) return {};
@@ -193,20 +180,7 @@ const schemaStructure = computed(() => {
 
     if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
 
-    let targetTableName = null;
-    if (field.targetTable) {
-      if (typeof field.targetTable === 'string') {
-        targetTableName = field.targetTable;
-      } else if (field.targetTable.name) {
-        targetTableName = field.targetTable.name;
-      } else if (field.targetTable.id && schemaComposable.value) {
-        
-        const targetSchema = Object.values(allSchemas.value).find((schema: any) => schema.id === field.targetTable.id);
-        if (targetSchema && (targetSchema as any).name) {
-          targetTableName = (targetSchema as any).name;
-        }
-      }
-    }
+    const targetTableName = getTargetTableName(field, allSchemas.value);
 
     structure[fieldName] = {
       type: field.type || field.fieldType || "unknown",
@@ -246,20 +220,8 @@ const examplePayload = computed(() => {
     if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
 
     if (field.fieldType === "relation") {
-      
-      let targetTableName = "unknown";
-      if (field.targetTable) {
-        if (typeof field.targetTable === 'string') {
-          targetTableName = field.targetTable;
-        } else if (field.targetTable.name) {
-          targetTableName = field.targetTable.name;
-        } else if (field.targetTable.id && schemaComposable.value) {
-          const targetSchema = Object.values(allSchemas.value).find((schema: any) => schema.id === field.targetTable.id);
-          if (targetSchema && (targetSchema as any).name) {
-            targetTableName = (targetSchema as any).name;
-          }
-        }
-      }
+
+      const targetTableName = getTargetTableName(field, allSchemas.value) || "unknown";
 
       const relationType = field.type || field.relationType;
       if (relationType === 'one-to-many' || relationType === 'many-to-many') {
@@ -333,19 +295,7 @@ const examplePatchPayload = computed(() => {
     if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
 
     if (field.fieldType === "relation") {
-      let targetTableName = "unknown";
-      if (field.targetTable) {
-        if (typeof field.targetTable === 'string') {
-          targetTableName = field.targetTable;
-        } else if (field.targetTable.name) {
-          targetTableName = field.targetTable.name;
-        } else if (field.targetTable.id && schemaComposable.value) {
-          const targetSchema = Object.values(allSchemas.value).find((schema: any) => schema.id === field.targetTable.id);
-          if (targetSchema && (targetSchema as any).name) {
-            targetTableName = (targetSchema as any).name;
-          }
-        }
-      }
+      const targetTableName = getTargetTableName(field, allSchemas.value) || "unknown";
 
       const relationType = field.type || field.relationType;
       if (relationType === 'one-to-many' || relationType === 'many-to-many') {
@@ -438,25 +388,11 @@ const relations = computed(() => {
   return schemaData.value
     .filter((field: any) => field.fieldType === "relation")
     .map((field: any) => {
-      
-      let targetTableName = "unknown";
-      if (field.targetTable) {
-        if (typeof field.targetTable === 'string') {
-          targetTableName = field.targetTable;
-        } else if (field.targetTable.name) {
-          targetTableName = field.targetTable.name;
-        } else if (field.targetTable.id && schemaComposable.value) {
-          
-          const targetSchema = Object.values(allSchemas.value).find((schema: any) => schema.id === field.targetTable.id);
-          if (targetSchema && (targetSchema as any).name) {
-            targetTableName = (targetSchema as any).name;
-          }
-        }
-      }
+      const targetTableName = getTargetTableName(field, allSchemas.value) || "unknown";
 
       return {
         name: field.name || field.propertyName,
-        type: field.type || field.relationType || "many-to-one", 
+        type: field.type || field.relationType || "many-to-one",
         targetTable: targetTableName,
         nullable: field.isNullable || false,
       };

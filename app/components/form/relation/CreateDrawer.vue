@@ -12,28 +12,48 @@ const show = computed({
   set: (val) => emit("update:modelValue", val),
 });
 
-const { schemas } = useSchema();
+const { schemas, ensureSchema } = useSchema();
 const { getId, getIdFieldName } = useDatabase();
-const targetTable = Object.values(schemas.value).find(
-  (schema: any) => schema.id === props.relationMeta.targetTable.id
-) as any;
-const { generateEmptyForm, validate } = useSchema(targetTable?.name);
+
+const targetTableId = computed(() => {
+  return typeof props.relationMeta.targetTable === 'object'
+    ? getId(props.relationMeta.targetTable)
+    : props.relationMeta.targetTable;
+});
+
+const targetTableName = computed(() => {
+  for (const [name, schema] of Object.entries(schemas.value)) {
+    if (String(getId(schema)) === String(targetTableId.value)) {
+      return name;
+    }
+  }
+  return null;
+});
+
+const targetTableNameResolved = computed(() => targetTableName.value || '');
+const { generateEmptyForm, validate } = useSchema(targetTableNameResolved);
 
 const { getRouteForTableId, ensureRoutesLoaded } = useRoutes();
 const targetRoute = ref<string>('');
 
 watchEffect(async () => {
-  if (targetTable?.id) {
+  if (targetTableId.value) {
     await ensureRoutesLoaded();
-    targetRoute.value = getRouteForTableId(targetTable.id);
+    targetRoute.value = getRouteForTableId(targetTableId.value);
   }
 });
+
+watch(targetTableName, async (name) => {
+  if (name && !schemas.value[name]) {
+    await ensureSchema(name);
+  }
+}, { immediate: true });
 
 const {
   data: createData,
   pending: creating,
   execute: createRecord,
-} = useApi(() => targetRoute.value || `/${targetTable?.name}`, {
+} = useApi(() => targetRoute.value || `/${targetTableName.value}`, {
   method: "post",
   errorContext: "Create Relation Record",
 });
@@ -51,7 +71,7 @@ watch(show, (val) => {
 });
 
 async function createNewRecord() {
-  if (!targetTable?.name) return;
+  if (!targetTableName.value) return;
   const { isValid, errors } = validate(createForm.value);
   if (!isValid) {
     createErrors.value = errors;
@@ -88,7 +108,7 @@ async function createNewRecord() {
             Create New Record
           </h2>
           <p :class="(isMobile || isTablet) ? 'text-xs text-muted-foreground truncate' : 'text-sm text-muted-foreground'">
-            {{ targetTable?.name }} table
+            {{ targetTableName }} table
           </p>
         </div>
       </div>
@@ -103,7 +123,7 @@ async function createNewRecord() {
             </div>
             <FormEditorLazy
               v-model="createForm"
-              :table-name="targetTable?.name"
+              :table-name="targetTableNameResolved"
               :errors="createErrors"
             />
           </div>
