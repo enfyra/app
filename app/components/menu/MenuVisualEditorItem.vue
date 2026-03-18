@@ -100,11 +100,13 @@ function handleChildrenReorder(event: DragEvent) {
 const menuItems = computed(() => {
   const originalMenu = props.allMenus?.find(m => String(getId(m)) === String(props.item.id));
   if (!originalMenu) return [];
-  
-  if (originalMenu.isSystem && originalMenu.type !== 'Dropdown Menu') {
+
+  const isDashboard = originalMenu.path === '/dashboard';
+
+  if (originalMenu.isSystem && originalMenu.type !== 'Dropdown Menu' && !isDashboard) {
     return [];
   }
-  
+
   if (originalMenu.isSystem && originalMenu.type === 'Dropdown Menu') {
     return [
       {
@@ -116,8 +118,39 @@ const menuItems = computed(() => {
       }
     ];
   }
-  
-  const items: any[] = [
+
+  const items: any[] = [];
+
+  if (isDashboard && originalMenu.isSystem) {
+    if (originalMenu.extension) {
+      items.push({
+        label: 'Edit Extension',
+        icon: 'lucide:puzzle',
+        onSelect: () => {
+          if (originalMenu) emit('edit-extension', originalMenu);
+        }
+      });
+      items.push({
+        label: 'Delete Extension',
+        icon: 'lucide:trash-2',
+        color: 'error',
+        onSelect: () => {
+          if (originalMenu) emit('delete-extension', originalMenu);
+        }
+      });
+    } else {
+      items.push({
+        label: 'Create Extension',
+        icon: 'lucide:puzzle',
+        onSelect: () => {
+          if (originalMenu) emit('edit-extension', originalMenu);
+        }
+      });
+    }
+    return items;
+  }
+
+  items.push(
     {
       label: 'Edit',
       icon: 'lucide:edit',
@@ -132,7 +165,7 @@ const menuItems = computed(() => {
         if (originalMenu) emit('toggle-enabled', { menu: originalMenu, enabled: !originalMenu.isEnabled });
       }
     }
-  ];
+  );
 
   if (originalMenu.type === 'Dropdown Menu') {
     items.push({

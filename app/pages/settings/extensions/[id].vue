@@ -235,9 +235,17 @@ async function updateExtension() {
     return;
   }
 
+  const { me } = useEnfyraAuth();
+  const { getIdFieldName } = useDatabase();
+  const idField = getIdFieldName();
+  const body = {
+    ...form.value,
+    updatedBy: { [idField]: (me.value as any)?.[idField] }
+  };
+
   await executeUpdateExtension({
     id: route.params.id as string,
-    body: form.value,
+    body,
   });
 
   if (updateError.value) {
@@ -250,7 +258,7 @@ async function updateExtension() {
     description: "Extension updated!",
   });
   errors.value = {};
-  
+
   formEditorRef.value?.confirmChanges();
   formChanges.update(form.value);
 }

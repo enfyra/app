@@ -7,7 +7,7 @@
             v-model="createForm"
             :table-name="tableName"
             :errors="createErrors"
-            :excluded="['compiledCode']"
+            :excluded="['compiledCode', 'createdBy', 'updatedBy']"
             :field-map="{
               code: { type: 'code', language: 'vue', height: '400px' },
             }"
@@ -145,7 +145,15 @@ async function handleCreate() {
     return;
   }
 
-  await executeCreateExtension({ body: createForm.value });
+  const { me } = useEnfyraAuth();
+  const { getIdFieldName } = useDatabase();
+  const idField = getIdFieldName();
+  const body = {
+    ...createForm.value,
+    createdBy: { [idField]: (me.value as any)?.[idField] }
+  };
+
+  await executeCreateExtension({ body });
 
   if (createError.value) {
     return;

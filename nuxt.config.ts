@@ -21,6 +21,11 @@ export default defineNuxtConfig({
         route: '/api/npm-search',
         handler: '~/server/api/npm-search.get.ts',
       },
+      {
+        method: 'get',
+        route: '/api/packages',
+        handler: '~/server/api/packages.get.ts',
+      },
     ],
   },
   colorMode: {

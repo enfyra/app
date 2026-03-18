@@ -4,9 +4,10 @@ import type {
   TableDefinitionField,
   FormValidationResult,
   FormChangesState,
+  ColumnType,
 } from "~/types/schema";
 
-const TIMESTAMP_FIELDS = [
+const TIMESTAMP_FIELDS: { name: string; type: ColumnType }[] = [
   { name: "createdAt", type: "timestamp" },
   { name: "updatedAt", type: "timestamp" },
 ];
@@ -116,10 +117,18 @@ export function useSchema(tableName?: string | Ref<string>) {
 
   const editableFields = computed(() => {
     const excluded = ["id", "createdAt", "updatedAt", "isSystem", "isRootAdmin"];
+
+    const foreignKeyColumns = new Set<string>();
+    definition.value.forEach((field: any) => {
+      if (field.fieldType === "relation" && field.foreignKeyColumn) {
+        foreignKeyColumns.add(field.foreignKeyColumn);
+      }
+    });
+
     return sortFieldsByOrder(
       definition.value.filter(f => {
         const key = f.name || f.propertyName;
-        return key && !excluded.includes(key);
+        return key && !excluded.includes(key) && !foreignKeyColumns.has(key);
       })
     );
   });
@@ -142,7 +151,7 @@ export function useSchema(tableName?: string | Ref<string>) {
       }
 
       if (f.fieldType === "relation" || f.relationType) {
-        result[key] = ["one-to-many", "many-to-many"].includes(f.relationType) ? [] : null;
+        result[key] = f.relationType && ["one-to-many", "many-to-many"].includes(f.relationType) ? [] : null;
         return;
       }
 
@@ -170,7 +179,16 @@ export function useSchema(tableName?: string | Ref<string>) {
     const errors: Record<string, string> = {};
     let isValid = true;
 
+    const foreignKeyColumns = new Set<string>();
+    definition.value.forEach((field: any) => {
+      if (field.fieldType === "relation" && field.foreignKeyColumn) {
+        foreignKeyColumns.add(field.foreignKeyColumn);
+      }
+    });
+
     for (const [key, value] of Object.entries(record)) {
+      if (foreignKeyColumns.has(key)) continue;
+
       const field = getField(key);
       if (!field) continue;
       if (field.fieldType === "relation" && field.inversePropertyName) continue;

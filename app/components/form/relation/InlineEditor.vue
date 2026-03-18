@@ -10,12 +10,6 @@ const emit = defineEmits(["update:modelValue"]);
 const showModal = ref(false);
 const selectedIds = ref<any[]>([]);
 const { getId } = useDatabase();
-const { ensureRoutesLoaded } = useRoutes();
-const { schemas, ensureSchema } = useSchema();
-
-onMounted(async () => {
-  await ensureRoutesLoaded();
-});
 
 watch(
   () => props.modelValue,
@@ -81,44 +75,16 @@ function shortenId(id: string | number): string {
   return str.length > 12 ? `${str.slice(0, 4)}…${str.slice(-3)}` : str;
 }
 
-async function getTargetTableName(): Promise<string | null> {
-  const targetTableRef = props.relationMeta?.targetTable;
-  if (!targetTableRef) return null;
-
-  if (typeof targetTableRef === 'string') {
-    return targetTableRef;
-  }
-
-  const targetTableId = getId(targetTableRef);
-  if (!targetTableId) return null;
-
-  for (const [name, schema] of Object.entries(schemas.value)) {
-    if (String(getId(schema)) === String(targetTableId)) {
-      return name;
-    }
-  }
-
-  await ensureSchema(String(targetTableId));
-
-  for (const [name, schema] of Object.entries(schemas.value)) {
-    if (String(getId(schema)) === String(targetTableId)) {
-      return name;
-    }
-  }
-
-  return null;
-}
-
-async function navigateToDetail(item: any) {
-  const targetTableName = await getTargetTableName();
-  if (!targetTableName) return;
+function navigateToDetail(item: any) {
+  const tableName = props.relationMeta?.targetTableName;
+  if (!tableName) return;
 
   const itemId = getId(item);
   if (!itemId) return;
 
   const url =
-    getDetailPathForTable(targetTableName, itemId) ??
-    `/data/${targetTableName}/${itemId}`;
+    getDetailPathForTable(tableName, itemId) ??
+    `/data/${tableName}/${itemId}`;
   window.open(url, "_blank");
 }
 </script>
