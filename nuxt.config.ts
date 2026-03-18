@@ -31,6 +31,16 @@ export default defineNuxtConfig({
         route: '/api/package_definition',
         handler: '~/server/api/package_definition.post.ts',
       },
+      {
+        method: 'patch',
+        route: '/api/package_definition/:id',
+        handler: '~/server/api/package_definition/[id].patch.ts',
+      },
+      {
+        method: 'delete',
+        route: '/api/package_definition/:id',
+        handler: '~/server/api/package_definition/[id].delete.ts',
+      },
     ],
   },
   colorMode: {
