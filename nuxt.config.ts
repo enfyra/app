@@ -26,6 +26,11 @@ export default defineNuxtConfig({
         route: '/api/packages',
         handler: '~/server/api/packages.get.ts',
       },
+      {
+        method: 'post',
+        route: '/api/package_definition',
+        handler: '~/server/api/package_definition.post.ts',
+      },
     ],
   },
   colorMode: {
