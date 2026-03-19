@@ -17,21 +17,20 @@ export function useSchema(tableName?: string | Ref<string>) {
   const schemaLoading = ref(false);
   const { getIdFieldName } = useDatabase();
 
+  const {
+    execute: executeMetadata,
+    data: metadataData,
+  } = useApi<{ data: any[] }>("/metadata", {
+    errorContext: "Fetch Schema",
+  });
+
   async function fetchSchema() {
     if (Object.keys(schemas.value).length > 0) return;
 
     schemaLoading.value = true;
     try {
-      const config = useRuntimeConfig().public.enfyraSDK;
-      const apiUrl = getAppUrl();
-      const apiPrefix = config?.apiPrefix || '/api';
-      const fullBaseURL = normalizeUrl(apiUrl, apiPrefix);
-
-      const response = await $fetch<{ data: any[] }>('/metadata', {
-        baseURL: fullBaseURL,
-      });
-
-      processAndCacheSchemas(response?.data || []);
+      await executeMetadata();
+      processAndCacheSchemas(metadataData.value?.data || []);
     } catch (error) {
       console.error('[useSchema] Error fetching schema:', error);
     } finally {
