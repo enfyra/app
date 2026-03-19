@@ -12,6 +12,7 @@ export default defineNuxtConfig({
     "@nuxt/ui",
     "nuxt-codemirror",
     "@enfyra/sdk-nuxt",
+    "@tailwindcss/vite",
   ],
   nitro: {
     plugins: ['~/server/plugins/socket-relay.server.ts', '~/server/plugins/auto-install-packages.ts'],
