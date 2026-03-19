@@ -221,8 +221,20 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
   const uniquePackageNames = [...new Set(packageNames)];
   const packagesToLoad = uniquePackageNames.filter(
     (pkgName: string) =>
-      packagesObject[pkgName] === undefined || packagesObject[pkgName] === null
+      packagesObject[pkgName] === undefined
   );
+
+  const previouslyFailed = uniquePackageNames.filter(
+    (pkgName: string) => packagesObject[pkgName] === null
+  );
+
+  if (previouslyFailed.length > 0) {
+    previouslyFailed.forEach((pkgName: string) => {
+      delete packagesObject[pkgName];
+      loadingPackages.delete(pkgName);
+    });
+    packagesToLoad.push(...previouslyFailed);
+  }
 
   if (packagesToLoad.length === 0) {
     return packagesObject;
