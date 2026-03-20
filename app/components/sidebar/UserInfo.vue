@@ -9,15 +9,10 @@ const userEmail = computed(() => {
   return me.value.email || '';
 });
 
-const isDark = computed({
-  get: () => colorMode.value === 'dark',
-  set: (val: boolean) => {
-    colorMode.preference = val ? 'dark' : 'light';
-  }
-});
+const isDark = computed(() => colorMode.value === 'dark');
 
 function toggleTheme() {
-  isDark.value = !isDark.value;
+  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark';
 }
 
 function handleProfileClick() {
