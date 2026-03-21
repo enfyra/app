@@ -56,6 +56,11 @@ export const useDynamicComponent = () => {
 
       setupPackagesGlobal(g);
 
+      const requiredPackages = detectPackages(compiledCode);
+      if (requiredPackages.length > 0) {
+        await getPackages(requiredPackages);
+      }
+
       const component = await executeScriptInWindow(compiledCode, extensionName);
       findComponentInWindow(extensionName);
 
