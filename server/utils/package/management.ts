@@ -1,13 +1,64 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+interface ExecResult {
+  stdout: string;
+  stderr: string;
+}
+
+function execCommand(
+  cmd: string,
+  args: string[],
+  options: { cwd: string; timeout?: number }
+): Promise<ExecResult> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, {
+      cwd: options.cwd,
+      shell: false,
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    const timeoutMs = options.timeout || 120000;
+    const timeoutId = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(new Error(`Command timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    child.on('close', (code, signal) => {
+      clearTimeout(timeoutId);
+
+      if (code !== 0) {
+        const error = new Error(
+          `Command failed with exit code ${code}${signal ? ` (signal: ${signal})` : ''}\n${stderr}`
+        );
+        reject(error);
+      } else {
+        resolve({ stdout, stderr });
+      }
+    });
+
+    child.on('error', (err) => {
+      clearTimeout(timeoutId);
+      reject(err);
+    });
+  });
+}
 
 interface PackageInstallOptions {
   name: string;
@@ -82,21 +133,21 @@ export class PackageManagementService {
     const packageManager = this.getPackageManager();
     const packageSpec = version === 'latest' ? name : `${name}@${version}`;
 
-    let command: string;
+    const args: string[] = [];
     if (packageManager === 'bun') {
-      command = `bun add ${packageSpec} ${flags}`.trim();
+      args.push('add', packageSpec);
     } else if (packageManager === 'yarn') {
-      command = `yarn add ${packageSpec} ${flags}`.trim();
+      args.push('add', packageSpec);
     } else if (packageManager === 'pnpm') {
-      command = `pnpm add ${packageSpec} ${flags}`.trim();
+      args.push('add', packageSpec);
     } else {
-      command = `npm install ${packageSpec} --legacy-peer-deps ${flags}`.trim();
+      args.push('install', packageSpec, '--legacy-peer-deps');
     }
 
     const projectRoot = this.getProjectRoot();
 
     try {
-      const { stderr } = await execAsync(command, {
+      const { stderr } = await execCommand(packageManager, args, {
         cwd: projectRoot,
         timeout: 120000,
       });
@@ -119,19 +170,19 @@ export class PackageManagementService {
     const packageManager = this.getPackageManager();
     const projectRoot = this.getProjectRoot();
 
-    let command: string;
+    const args: string[] = [];
     if (packageManager === 'bun') {
-      command = `bun remove ${name}`;
+      args.push('remove', name);
     } else if (packageManager === 'yarn') {
-      command = `yarn remove ${name}`;
+      args.push('remove', name);
     } else if (packageManager === 'pnpm') {
-      command = `pnpm remove ${name}`;
+      args.push('remove', name);
     } else {
-      command = `npm uninstall ${name} --legacy-peer-deps`;
+      args.push('uninstall', name, '--legacy-peer-deps');
     }
 
     try {
-      const { stderr } = await execAsync(command, {
+      const { stderr } = await execCommand(packageManager, args, {
         cwd: projectRoot,
         timeout: 120000,
       });

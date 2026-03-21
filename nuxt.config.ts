@@ -84,17 +84,12 @@ export default defineNuxtConfig({
     public: {
       dbType: process.env.DB_TYPE || 'mysql',
       apiUrl: process.env.API_URL,
+      enfyraSDK: {
+        apiUrl: process.env.API_URL,
+      },
     },
   },
   routeRules: {
-    '/api/**': {
-      cors: true,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    },
     '/api/packages/**': {
       swr: 86400,
     },
