@@ -1,6 +1,6 @@
 import { build, type Plugin } from 'esbuild';
 import { readFileSync, existsSync } from 'fs';
-import { join, resolve, dirname } from 'path';
+import { join, resolve, dirname, sep } from 'path';
 import { fileURLToPath } from 'url';
 import type { ExternalPackage } from '../types/api';
 
@@ -100,10 +100,17 @@ const vueExternalPlugin: Plugin = {
 };
 
 function findProjectRoot(): string {
+  const isInsideOutput = (dir: string): boolean =>
+    dir.includes(`${sep}.output${sep}`) || dir.endsWith(`${sep}.output`);
+
   const tryFind = (startDir: string): string | null => {
     let current = resolve(startDir);
     while (current !== '/' && current.length > 1) {
-      if (existsSync(join(current, 'package.json')) && existsSync(join(current, 'node_modules'))) {
+      if (
+        !isInsideOutput(current) &&
+        existsSync(join(current, 'package.json')) &&
+        existsSync(join(current, 'node_modules'))
+      ) {
         return current;
       }
       const parent = resolve(current, '..');
