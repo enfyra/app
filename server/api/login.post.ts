@@ -14,31 +14,53 @@ import {
 } from "~/constants/enfyra";
 import { normalizeUrl } from "~/utils/api/url";
 
+interface CookieOptions {
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: "none" | "lax" | "strict";
+  path?: string;
+  domain?: string;
+  maxAge?: number;
+}
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const apiUrl = config.public.apiUrl;
 
   try {
     const body = await readBody(event);
+    const { cookieOptions: userCookieOptions, ...loginBody } = body;
+
     const response = await $fetch<any>(normalizeUrl(apiUrl, "/auth/login"), {
       method: "POST",
-      body,
+      body: loginBody,
       headers: {
         cookie: getHeader(event, "cookie") || "",
       },
     });
 
     const { accessToken, refreshToken, expTime } = response;
-    const cookieOptions = {
+
+    const defaultCookieOptions: CookieOptions = {
       httpOnly: true,
       secure: true,
-      sameSite: "lax" as const,
+      sameSite: "none",
       path: "/",
     };
 
-    setCookie(event, ACCESS_TOKEN_KEY, accessToken, cookieOptions);
-    setCookie(event, REFRESH_TOKEN_KEY, refreshToken, cookieOptions);
-    setCookie(event, EXP_TIME_KEY, String(expTime), cookieOptions);
+    const finalCookieOptions: CookieOptions = {
+      ...defaultCookieOptions,
+      ...userCookieOptions,
+    };
+
+    if (finalCookieOptions.sameSite === "none" && finalCookieOptions.secure === false) {
+      console.warn("[Login] Invalid cookie options: secure must be true when sameSite=none. Forcing secure=true.");
+      finalCookieOptions.secure = true;
+    }
+
+    setCookie(event, ACCESS_TOKEN_KEY, accessToken, finalCookieOptions);
+    setCookie(event, REFRESH_TOKEN_KEY, refreshToken, finalCookieOptions);
+    setCookie(event, EXP_TIME_KEY, String(expTime), finalCookieOptions);
 
     return response;
   } catch (err: any) {
