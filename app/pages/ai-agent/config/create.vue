@@ -24,7 +24,7 @@ definePageMeta({
 });
 
 const toast = useToast();
-const { me } = useEnfyraAuth();
+const { me } = useAuth();
 const { getIdFieldName, getId } = useDatabase();
 const { fetchAiConfig } = useGlobalState();
 

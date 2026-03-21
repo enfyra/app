@@ -1,9 +1,28 @@
 import type { ComputedRef, Ref } from "vue";
 import type { PermissionCondition } from "./permissions";
 
+export interface UploadModalProps {
+  modelValue: boolean;
+  title?: string;
+  accept?: string | string[];
+  multiple?: boolean;
+  maxSize?: number;
+  dragText?: string;
+  acceptText?: string;
+  uploadText?: string;
+  uploadingText?: string;
+  loading?: boolean;
+}
+
+export interface UploadModalEmits {
+  "update:modelValue": [value: boolean];
+  upload: [files: File | File[]];
+  error: [message: string];
+}
+
 export interface DataTableProps {
   data: any[];
-  columns: any[]; 
+  columns: any[];
   pageSize?: number;
   loading?: boolean;
   selectable?: boolean;
@@ -26,25 +45,6 @@ export interface BulkActionsProps {
   onDelete?: () => void;
 }
 
-export interface UploadModalProps {
-  modelValue: boolean;
-  title?: string;
-  accept?: string | string[];
-  multiple?: boolean;
-  maxSize?: number; 
-  dragText?: string;
-  acceptText?: string;
-  uploadText?: string;
-  uploadingText?: string;
-  loading?: boolean; 
-}
-
-export interface UploadModalEmits {
-  "update:modelValue": [value: boolean];
-  upload: [files: File | File[]];
-  error: [message: string];
-}
-
 export interface LoadingProps {
   show?: boolean;
   message?: string;
@@ -62,11 +62,9 @@ export interface RouteLoadingProps {
 }
 
 export interface PermissionGateProps {
-  
   actions?: string[];
   routes?: string[];
   mode?: "any" | "all";
-  
   condition?: PermissionCondition;
 }
 
@@ -120,14 +118,13 @@ export interface HeaderAction {
   showOn?: string[];
   hideOn?: string[];
   class?: string;
-  
-  component?: string | any; 
+  component?: string | any;
   props?: Record<string, any>;
-  key?: string; 
-  side?: "left" | "right"; 
-  global?: boolean; 
-  show?: boolean | Ref<boolean> | Readonly<Ref<boolean>> | ComputedRef<boolean>; 
-  order?: number; 
+  key?: string;
+  side?: "left" | "right";
+  global?: boolean;
+  show?: boolean | Ref<boolean> | Readonly<Ref<boolean>> | ComputedRef<boolean>;
+  order?: number;
 }
 
 export interface SettingsCardStat {
@@ -148,11 +145,11 @@ export interface SettingsCardAction {
 }
 
 export interface SettingsCardHeaderAction {
-  component?: string; 
-  props?: Record<string, any>; 
-  label?: string; 
-  onClick?: (e?: Event) => void; 
-  onUpdate?: (value: any) => void; 
+  component?: string;
+  props?: Record<string, any>;
+  label?: string;
+  onClick?: (e?: Event) => void;
+  onUpdate?: (value: any) => void;
 }
 
 export interface SettingsCardProps {

@@ -1,11 +1,12 @@
 import {
   defineEventHandler,
+  readBody,
   getHeader,
   getRouterParam,
   createError,
 } from "h3";
 import { $fetch } from "ofetch";
-import { packageManagementService } from "../../../utils/server/package";
+import { packageManagementService } from "../../utils/package";
 
 export default defineEventHandler(async (event) => {
   const path = event.path || event.node.req.url || '';
@@ -20,17 +21,17 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    let body = await readBody(event);
+
     const config = useRuntimeConfig();
-    const getResponse = await $fetch(`${config.public?.enfyraSDK?.apiUrl}/package_definition`, {
+    const apiPath = event.path.replace("/api", "");
+    const targetUrl = `${config.public.apiUrl}${apiPath}`;
+
+    const getResponse = await $fetch(`${config.public.apiUrl}/package_definition/${id}`, {
       method: "GET",
       headers: {
         cookie: getHeader(event, "cookie") || "",
         authorization: event.context.proxyHeaders?.authorization || "",
-      },
-      query: {
-        filter: {
-          id: { _eq: id },
-        },
       },
     });
 
@@ -43,37 +44,43 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (packageRecord.isSystem) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: "Cannot uninstall system packages",
-      });
-    }
-
     if (packageRecord.type === 'App') {
-      try {
-        await packageManagementService.uninstallPackage(packageRecord.name);
-      } catch (uninstallError: any) {
-        console.error(`Failed to uninstall package ${packageRecord.name}:`, uninstallError);
+      if (body.version && body.version !== packageRecord.version) {
+        try {
+          await packageManagementService.installPackage({
+            name: packageRecord.name,
+            version: body.version,
+            flags: body.flags || '',
+          });
+        } catch (installError: any) {
+          throw createError({
+            statusCode: 500,
+            statusMessage: `Failed to update package: ${installError.message}`,
+          });
+        }
       }
 
-      const response = await $fetch(`${config.public?.enfyraSDK?.apiUrl}/package_definition/${id}`, {
-        method: "DELETE",
+      const response = await $fetch(targetUrl, {
+        method: "PATCH",
         headers: {
           cookie: getHeader(event, "cookie") || "",
           authorization: event.context.proxyHeaders?.authorization || "",
+          "Content-Type": "application/json",
         },
+        body: body || undefined,
       });
 
       return response;
     }
 
-    const response = await $fetch(`${config.public?.enfyraSDK?.apiUrl}/package_definition/${id}`, {
-      method: "DELETE",
+    const response = await $fetch(targetUrl, {
+      method: "PATCH",
       headers: {
         cookie: getHeader(event, "cookie") || "",
         authorization: event.context.proxyHeaders?.authorization || "",
+        "Content-Type": "application/json",
       },
+      body: body || undefined,
     });
 
     return response;
@@ -84,7 +91,7 @@ export default defineEventHandler(async (event) => {
 
     throw createError({
       statusCode: 500,
-      statusMessage: error.message || `Failed to delete package definition`,
+      statusMessage: error.message || `Failed to update package definition`,
     });
   }
 });

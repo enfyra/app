@@ -235,7 +235,7 @@ async function updateExtension() {
     return;
   }
 
-  const { me } = useEnfyraAuth();
+  const { me } = useAuth();
   const { getIdFieldName } = useDatabase();
   const idField = getIdFieldName();
   const body = {

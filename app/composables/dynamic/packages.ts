@@ -1,4 +1,4 @@
-import type { ExternalPackage } from "~/types/server";
+import type { ExternalPackage } from "~/../server/types/api";
 
 const loadedPackages = new Map<string, { exports: string[]; globalName: string }>();
 const loadingPackages = new Map<string, Promise<any>>();

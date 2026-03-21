@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const colorMode = useColorMode();
-const { me } = useEnfyraAuth();
+const { me } = useAuth();
 const { width } = useScreen();
 const { setSidebarVisible } = useGlobalState();
 

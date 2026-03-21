@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MenuDefinition, MenuTreeItem, DragEvent } from '~/types/menu';
+import type { MenuDefinition, MenuTreeItem, DragEvent } from '~/types';
 import draggable from 'vuedraggable';
 
 const props = defineProps<{

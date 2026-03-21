@@ -66,7 +66,7 @@ const {
 onMounted(() => {
   createForm.value = generateEmptyForm();
   
-  const { me } = useEnfyraAuth();
+  const { me } = useAuth();
   const { getId } = useDatabase();
   const userId = getId(me.value);
   if (userId) {

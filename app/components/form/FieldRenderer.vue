@@ -456,6 +456,7 @@ function getComponentConfigByKey(key: string) {
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },
+          isNullable: column?.isNullable === true,
           ...(hasError && { error: props.errors[key] }),
         },
         fieldProps,

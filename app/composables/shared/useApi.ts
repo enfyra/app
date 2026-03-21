@@ -52,9 +52,6 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
     status.value = "pending";
 
     try {
-      const config: any = useRuntimeConfig().public.enfyraSDK;
-      const apiUrl = getAppUrl();
-      const apiPrefix = config?.apiPrefix || ENFYRA_API_PREFIX;
       const basePath = (typeof url === "function" ? url() : url)
         .replace(/^\/?api\/?/, "")
         .replace(/^\/+/, "");
@@ -76,7 +73,8 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         return segments.filter(Boolean).join("/");
       };
 
-      const fullBaseURL = normalizeUrl(apiUrl, apiPrefix);
+      const finalPath = "/api/" + basePath;
+      
       // Handle batch file upload
       if (
         isBatchOperation &&
@@ -86,8 +84,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       ) {
         const responses = await Promise.all(
           executeOpts.files.map(async (fileObj: FormData) => {
-            return $fetch(basePath, {
-              baseURL: fullBaseURL,
+            return $fetch(finalPath, {
               method: method as any,
               body: fileObj,
               headers: options.headers,
@@ -105,9 +102,8 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       if (isBatchOperation && executeOpts?.ids && executeOpts.ids.length > 0) {
         const responses = await Promise.all(
           executeOpts.ids.map(async (id) => {
-            const finalPath = buildPath(basePath, id);
-            return $fetch<T>(finalPath, {
-              baseURL: fullBaseURL,
+            const fullPath = buildPath(finalPath, id);
+            return $fetch<T>(fullPath, {
               method: method as any,
               body: finalBody ? toRaw(finalBody) : undefined,
               headers: options.headers,
@@ -121,12 +117,11 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         return responses;
       }
 
-      const finalPath = executeOpts?.id
-        ? buildPath(basePath, executeOpts.id)
-        : basePath;
+      const fullPath = executeOpts?.id
+        ? buildPath(finalPath, executeOpts.id)
+        : finalPath;
 
-      const response = await $fetch<T>(finalPath, {
-        baseURL: fullBaseURL,
+      const response = await $fetch<T>(fullPath, {
         method: method as any,
         body: finalBody ? toRaw(finalBody) : undefined,
         headers: options.headers,

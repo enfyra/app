@@ -1,5 +1,35 @@
 import type { Ref } from 'vue';
 
+export const columnTypes = [
+  { label: "UUID", value: "uuid", icon: "ph:key" },
+  { label: "Integer", value: "int", icon: "tabler:123" },
+  { label: "Float", value: "float", icon: "mdi:decimal" },
+  { label: "Varchar", value: "varchar", icon: "mdi:format-text" },
+  { label: "Boolean", value: "boolean", icon: "mdi:toggle-switch" },
+  { label: "Date", value: "date", icon: "mdi:calendar" },
+  { label: "Text", value: "text", icon: "mdi:file-document-outline" },
+  { label: "Rich Text", value: "richtext", icon: "mdi:format-text" },
+  { label: "Code", value: "code", icon: "mdi:code-braces-box" },
+  { label: "JSON", value: "simple-json", icon: "mdi:code-json" },
+  {
+    label: "Array Select",
+    value: "array-select",
+    icon: "mdi:format-list-bulleted",
+  },
+  { label: "Enum", value: "enum", icon: "lucide:type" },
+];
+
+export const relationTypes = [
+  {
+    label: "One to One",
+    value: "one-to-one",
+    icon: "ph:link-simple-horizontal",
+  },
+  { label: "One to Many", value: "one-to-many", icon: "mdi:source-branch" },
+  { label: "Many to One", value: "many-to-one", icon: "mdi:source-merge" },
+  { label: "Many to Many", value: "many-to-many", icon: "mdi:share-variant" },
+];
+
 export type ColumnType = 
   | 'uuid'
   | 'varchar'
@@ -24,7 +54,7 @@ export type RelationType =
   | 'many-to-many';
 
 export interface TableColumnResponse {
-  id?: number;  
+  id?: number;
   name: string;
   type: ColumnType;
   defaultValue?: any;
@@ -35,7 +65,7 @@ export interface TableColumnResponse {
   isPrimary?: boolean;
   isSystem?: boolean;
   isUpdatable?: boolean;
-  isVirtual?: boolean;  
+  isVirtual?: boolean;
   options?: any;
   placeholder?: string | null;
   table?: {
@@ -70,7 +100,7 @@ export interface TableApiResponse {
   description?: string | null;
   isSystem?: boolean;
   indexes?: any[] | null;
-  uniques?: any[][] | null;  
+  uniques?: any[][] | null;
   columns?: TableColumnResponse[];
   relations?: TableRelationResponse[];
   createdAt?: string;
@@ -87,13 +117,11 @@ export interface ApiTableListResponse {
 }
 
 export interface TableDefinitionField {
-  
   name?: string;
   label?: string;
   fieldType: 'column' | 'relation';
-
   id?: number;
-  type?: ColumnType | RelationType;  
+  type?: ColumnType | RelationType;
   defaultValue?: any;
   description?: string | null;
   isGenerated?: boolean;
@@ -108,7 +136,6 @@ export interface TableDefinitionField {
   table?: {
     id: number;
   };
-
   propertyName?: string;
   inversePropertyName?: string | null;
   relationType?: RelationType;
@@ -118,7 +145,6 @@ export interface TableDefinitionField {
   targetTable?: {
     id: number;
   };
-
   createdAt?: string;
   updatedAt?: string;
 }
@@ -134,7 +160,7 @@ export interface TableSchema {
   definition: TableDefinitionField[];
   createdAt?: string;
   updatedAt?: string;
-  [key: string]: any;  
+  [key: string]: any;
 }
 
 export type SchemaCollection = Record<string, TableSchema>;

@@ -1,7 +1,7 @@
 import SidebarUserInfo from "../components/sidebar/UserInfo.vue";
 
 export default defineNuxtPlugin(async () => {
-  const { logout } = useEnfyraAuth();
+  const { logout } = useAuth();
 
   const {
     registerAllMenusFromApi,

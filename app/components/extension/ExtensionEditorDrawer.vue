@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MenuDefinition } from '~/types/menu';
+import type { MenuDefinition } from '~/types';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -15,7 +15,7 @@ const toast = useToast();
 const tableName = "extension_definition";
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getId, getIdFieldName } = useDatabase();
-const { me } = useEnfyraAuth();
+const { me } = useAuth();
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});

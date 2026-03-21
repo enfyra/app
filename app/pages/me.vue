@@ -2,7 +2,7 @@
 const toast = useToast();
 const { confirm } = useConfirm();
 const { validate } = useSchema("user_definition");
-const { me } = useEnfyraAuth();
+const { me } = useAuth();
 
 const { registerPageHeader } = usePageHeaderRegistry();
 

@@ -5,7 +5,7 @@ import {
   createError,
 } from "h3";
 import { $fetch } from "ofetch";
-import { packageManagementService } from "../../utils/server/package";
+import { packageManagementService } from "../utils/package";
 
 export default defineEventHandler(async (event) => {
   const method = event.method;
@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     if (!body.type || body.type !== 'App') {
       const config = useRuntimeConfig();
       const apiPath = event.path.replace("/api", "");
-      const targetUrl = `${config.public?.enfyraSDK?.apiUrl}${apiPath}`;
+      const targetUrl = `${config.public.apiUrl}${apiPath}`;
 
       const response = await $fetch(targetUrl, {
         method: method as any,
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
     if (body.type === 'App') {
       const config = useRuntimeConfig();
       const apiPath = event.path.replace("/api", "");
-      const targetUrl = `${config.public?.enfyraSDK?.apiUrl}${apiPath}`;
+      const targetUrl = `${(config.public as any).apiUrl}${apiPath}`;
 
       let savedPackage: any;
 
@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
 
         if (packageId) {
           try {
-            await $fetch(`${config.public?.enfyraSDK?.apiUrl}/package_definition/${packageId}`, {
+            await $fetch(`${(config.public as any).apiUrl}/package_definition/${packageId}`, {
               method: "DELETE",
               headers: {
                 cookie: getHeader(event, "cookie") || "",

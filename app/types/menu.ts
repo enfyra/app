@@ -2,8 +2,8 @@ import type { PermissionCondition } from "./permissions";
 import type { ExtensionDefinition } from "./extensions";
 
 export interface MenuDefinition {
-  id?: number; 
-  _id?: string; 
+  id?: number;
+  _id?: string;
   description: string;
   icon: string;
   isEnabled: boolean;
@@ -33,11 +33,9 @@ export interface MenuItem {
   label: string;
   route: string;
   icon?: string;
-  
   position?: "top" | "bottom";
-  sidebarId?: number | string; 
+  sidebarId?: number | string;
   permission?: PermissionCondition;
-  
   path?: string;
   children?: MenuItem[];
   order?: number;
@@ -51,18 +49,16 @@ export interface MenuItem {
   extension?: ExtensionDefinition;
   createdAt?: string;
   updatedAt?: string;
-  
   onClick?: () => void | Promise<void>;
   class?: string;
-  
   component?: string | (() => Promise<any>);
   componentProps?: Record<string, unknown>;
   key?: string;
 }
 
 export interface MenuApiItem {
-  id?: number; 
-  _id?: string; 
+  id?: number;
+  _id?: string;
   description: string;
   icon: string;
   isEnabled: boolean;

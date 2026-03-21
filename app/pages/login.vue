@@ -1,90 +1,142 @@
 <template>
-  <div
-    class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 dark:from-indigo-900 dark:via-slate-900 dark:to-purple-900 px-4"
-  >
-    <UCard class="w-full max-w-md lg:p-6 p-2 sm:p-8">
+  <div class="min-h-screen flex">
+    <div class="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 overflow-hidden">
+      <div class="absolute inset-0">
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-300/10 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+        <div class="absolute top-1/2 left-1/2 w-[500px] h-[500px] bg-indigo-300/10 rounded-full blur-3xl animate-pulse"></div>
+      </div>
       
-      <template #header>
-        <div class="text-center space-y-2">
-          <div class="flex justify-center items-center gap-3">
-            <UIcon name="lucide:shield-check" class="text-primary" size="40" />
-            <h1 class="lg:text-3xl md:text-xl text-lg font-bold text-primary">
-              Enfyra App
-            </h1>
+      <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
+      
+      <div class="relative z-10 flex flex-col justify-between p-16 w-full">
+        <div>
+          <div class="flex items-center gap-3 mb-8">
+            <div class="p-3 bg-white/10 backdrop-blur-sm rounded-2xl aspect-square flex items-center justify-center">
+              <UIcon name="lucide:shield-check" class="text-4xl text-white" />
+            </div>
+            <span class="text-2xl font-bold text-white">Enfyra</span>
           </div>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Login to continue</p>
         </div>
-      </template>
-
-      <UForm :state="form" @submit="handleLogin" aria-label="Login form">
-        <div class="flex flex-col gap-y-5">
+        
+        <div class="space-y-6">
+          <h2 class="text-5xl font-bold text-white leading-tight">
+            Welcome to<br />
+            <span class="text-purple-200">the Future</span>
+          </h2>
+          <p class="text-lg text-indigo-100 max-w-md">
+            Experience the next generation of application management. Secure, powerful, and beautifully simple.
+          </p>
           
-          <div>
-            <UFormField
-              :error="error.email ?? undefined"
-              label="Email"
-              required
-            >
+          <div class="flex gap-4 pt-4">
+            <div class="flex items-center gap-2 text-white/80">
+              <UIcon name="lucide:check-circle" class="text-xl" />
+              <span>Secure</span>
+            </div>
+            <div class="flex items-center gap-2 text-white/80">
+              <UIcon name="lucide:zap" class="text-xl" />
+              <span>Fast</span>
+            </div>
+            <div class="flex items-center gap-2 text-white/80">
+              <UIcon name="lucide:layers" class="text-xl" />
+              <span>Powerful</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="text-sm text-white/60">
+          © 2026 Enfyra App. All rights reserved.
+        </div>
+      </div>
+    </div>
+
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-slate-200 via-gray-100 to-indigo-200 dark:from-gray-700 dark:via-gray-800 dark:to-indigo-950">
+      <div class="w-full max-w-md">
+        <div class="lg:hidden flex items-center gap-3 mb-8">
+          <div class="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl">
+            <UIcon name="lucide:shield-check" class="text-3xl text-white" />
+          </div>
+          <span class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Enfyra App</span>
+        </div>
+
+        <div class="mb-10">
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Sign in to your account
+          </h1>
+          <p class="text-gray-600 dark:text-gray-400">
+            Welcome back! Please enter your details.
+          </p>
+        </div>
+
+        <UForm :state="form" @submit="handleLogin" aria-label="Login form">
+          <div class="space-y-6">
+            
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Email
+              </label>
               <UInput
                 v-model="form.email"
-                placeholder="you@example.com"
+                type="email"
+                placeholder="Enter your email"
                 icon="lucide:mail"
-                size="sm"
+                size="lg"
                 class="w-full"
                 id="email"
-                :color="error.email ? 'error' : 'primary'"
                 :error="!!error.email"
                 :required="true"
                 autocomplete="email"
                 :aria-describedby="error.email ? 'email-error' : undefined"
               />
-              <span v-if="error.email" id="email-error" role="alert" class="sr-only">{{ error.email }}</span>
-            </UFormField>
-          </div>
+              <p v-if="error.email" id="email-error" role="alert" class="text-sm text-red-500 mt-1.5">{{ error.email }}</p>
+            </div>
 
-          <div>
-            <UFormField
-              :error="error.password ?? undefined"
-              label="Password"
-              required
-            >
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Password
+              </label>
               <UInput
                 v-model="form.password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 icon="lucide:lock"
-                size="sm"
+                size="lg"
                 class="w-full"
                 id="password"
                 autocomplete="current-password"
                 :aria-describedby="error.password ? 'password-error' : undefined"
               />
-              <span v-if="error.password" id="password-error" role="alert" class="sr-only">{{ error.password }}</span>
-            </UFormField>
-          </div>
+              <p v-if="error.password" id="password-error" role="alert" class="text-sm text-red-500 mt-1.5">{{ error.password }}</p>
+            </div>
 
-          <div class="flex justify-end">
-            <USwitch v-model="form.remember" label="Remember me" />
-          </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <USwitch v-model="form.remember" size="sm" />
+                <label for="remember" class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+                  Remember me
+                </label>
+              </div>
+            </div>
 
-          <UButton
-            type="submit"
-            size="sm"
-            class="w-full justify-center"
-            loading-auto
-          >
-            Login
-          </UButton>
-        </div>
-      </UForm>
-    </UCard>
+            <UButton
+              type="submit"
+              size="lg"
+              class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 dark:from-indigo-500 dark:to-purple-500 dark:hover:from-indigo-600 dark:hover:to-purple-600 text-white font-semibold shadow-lg"
+              loading-auto
+            >
+              Sign in
+            </UButton>
+          </div>
+        </UForm>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-const { login } = useEnfyraAuth();
+const { login } = useAuth();
 const toast = useToast();
 const form = reactive({
   email: "",
@@ -95,6 +147,7 @@ const error = reactive<{ email: string | null; password: string | null }>({
   email: null,
   password: null,
 });
+
 async function handleLogin() {
   const ok = await login(form);
   if (ok) window.location.reload();
@@ -107,6 +160,7 @@ async function handleLogin() {
     });
   }
 }
+
 watch(
   () => form.email,
   (newVal) => {
@@ -135,3 +189,24 @@ definePageMeta({
   layout: false,
 });
 </script>
+
+<style scoped>
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(10px, -10px);
+  }
+  50% {
+    transform: translate(-5px, 5px);
+  }
+  75% {
+    transform: translate(5px, 10px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+</style>

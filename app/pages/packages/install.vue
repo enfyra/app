@@ -171,7 +171,7 @@
 
 <script setup lang="ts">
 const toast = useToast();
-const { me } = useEnfyraAuth();
+const { me } = useAuth();
 const { fetchAppPackages } = useGlobalState();
 
 const tableName = "package_definition";

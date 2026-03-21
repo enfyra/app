@@ -46,7 +46,6 @@
     "@codemirror/matchbrackets": "^0.19.4",
     "@codemirror/search": "^6.5.11",
     "@codemirror/view": "^6.38.0",
-    "@enfyra/sdk-nuxt": "^0.7.7",
     "@floating-ui/dom": "1.7.4",
     "@iconify-json/lucide": "^1.2.49",
     "@nuxt/icon": "^2.1.0",
@@ -93,6 +92,7 @@
   },
   "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447",
   "devDependencies": {
+    "@nuxtjs/color-mode": "^4.0.0",
     "@tailwindcss/vite": "^4.2.2",
     "@types/lodash": "^4.17.20",
     "@types/lodash-es": "^4.17.12",

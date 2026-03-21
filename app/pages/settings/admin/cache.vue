@@ -2,7 +2,7 @@
 const toast = useToast();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { checkPermissionCondition } = usePermissions();
-const { me } = useEnfyraAuth();
+const { me } = useAuth();
 
 const hasPermission = computed(() => {
   if (me.value?.isRootAdmin) return true;
@@ -69,10 +69,9 @@ const loadingMap = ref<Record<string, boolean>>({});
 async function handleReload(action: typeof reloadActions[0]) {
   loadingMap.value[action.id] = true;
   try {
-    const config = useRuntimeConfig().public.enfyraSDK;
     const { getAppUrl, normalizeUrl } = await import("~/utils/api/url");
     const apiUrl = getAppUrl();
-    const apiPrefix = config?.apiPrefix || "/api";
+    const apiPrefix = "/api";
     const basePath = action.path.replace(/^\/+/, "");
     const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
 
