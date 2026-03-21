@@ -5,8 +5,8 @@
         v-for="(item, index) in displayArray"
         :key="index"
         color="primary"
-        variant="soft"
-        class="flex items-center justify-between gap-2 cursor-pointer hover:bg-red-500/80 hover:text-gray-200 transition-all duration-200"
+        variant="outline"
+        class="cursor-pointer hover:bg-red-500 hover:text-white hover:!border-red-500 transition-all duration-200"
         size="lg"
         @click="removeItem(index)"
       >
@@ -14,43 +14,46 @@
       </UBadge>
     </div>
 
-    <div class="flex gap-2">
-      <UInput
-        v-model="newOption"
-        placeholder="Enter new option"
-        class="flex-1"
-        @keyup.enter="addOption"
-      />
-      <UButton
-        @click="addOption"
-        icon="lucide:plus"
-        color="primary"
-        variant="solid"
-        size="sm"
-        :disabled="!newOption.trim()"
-        class="w-8 h-8 flex items-center justify-center"
-      >
-      </UButton>
+    <div
+      v-else
+      class="text-xs text-gray-500 italic"
+    >
+      No items added yet
     </div>
 
-    <div
-      v-if="displayArray.length === 0"
-      class="text-sm text-gray-400 text-center py-2"
-    >
-      No options selected
+    <div class="relative">
+      <UInput
+        v-model="newOption"
+        placeholder="Enter new item"
+        class="w-full"
+        @keyup.enter="addOption"
+      >
+        <template #trailing>
+          <UButton
+            @click="addOption"
+            icon="lucide:plus"
+            color="primary"
+            variant="solid"
+            size="md"
+            :disabled="!newOption.trim()"
+            class="rounded-md"
+          />
+        </template>
+      </UInput>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 interface Props {
-  modelValue?: string[] | string;
+  modelValue?: string[] | string | null;
   disabled?: boolean;
+  isNullable?: boolean;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  "update:modelValue": [value: string[]];
+  "update:modelValue": [value: string[] | null];
 }>();
 
 const newOption = ref("");
@@ -77,11 +80,11 @@ const displayArray = computed(() => {
           ) {
             cleaned = cleaned.slice(1, -1);
           }
-          
+
           cleaned = cleaned.replace(/\\"/g, '"').replace(/\\'/g, "'");
           return cleaned;
         })
-        .filter((item: string) => item.length > 0); 
+        .filter((item: string) => item.length > 0);
     }
     return [];
   } catch {
@@ -101,13 +104,21 @@ function removeItem(index: number) {
   const currentArray = [...displayArray.value];
   currentArray.splice(index, 1);
 
-  emit("update:modelValue", currentArray);
+  if (props.isNullable && currentArray.length === 0) {
+    emit("update:modelValue", null);
+  } else {
+    emit("update:modelValue", currentArray);
+  }
 }
 
 watch(
   () => props.modelValue,
   (newValue) => {
     newOption.value = "";
+
+    if (props.isNullable && Array.isArray(newValue) && newValue.length === 0) {
+      emit("update:modelValue", null);
+    }
   }
 );
 </script>

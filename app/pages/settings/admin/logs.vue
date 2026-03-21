@@ -2,7 +2,7 @@
 const toast = useToast();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { checkPermissionCondition } = usePermissions();
-const { me } = useEnfyraAuth();
+const { me } = useAuth();
 const { isTablet } = useScreen();
 const route = useRoute();
 const router = useRouter();
@@ -93,10 +93,9 @@ async function searchInLog(query: string) {
   isSearchMode.value = true;
 
   try {
-    const config = useRuntimeConfig().public.enfyraSDK;
     const { getAppUrl, normalizeUrl } = await import("~/utils/api/url");
     const apiUrl = getAppUrl();
-    const apiPrefix = config?.apiPrefix || "/api";
+    const apiPrefix = "/api";
     const basePath = `logs/${encodeURIComponent(selectedFile.value)}`;
     const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
 
@@ -177,10 +176,9 @@ async function loadLogContent(file?: string, append: boolean = false) {
   }
 
   try {
-    const config = useRuntimeConfig().public.enfyraSDK;
     const { getAppUrl, normalizeUrl } = await import("~/utils/api/url");
     const apiUrl = getAppUrl();
-    const apiPrefix = config?.apiPrefix || "/api";
+    const apiPrefix = "/api";
     const basePath = `logs/${encodeURIComponent(filename)}`;
     const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
 
@@ -323,10 +321,9 @@ async function downloadLog(file?: any) {
   if (!filename) return;
 
   try {
-    const config = useRuntimeConfig().public.enfyraSDK;
     const { getAppUrl, normalizeUrl } = await import("~/utils/api/url");
     const apiUrl = getAppUrl();
-    const apiPrefix = config?.apiPrefix || "/api";
+    const apiPrefix = "/api";
     const basePath = `logs/${encodeURIComponent(filename)}/tail`;
     const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
 

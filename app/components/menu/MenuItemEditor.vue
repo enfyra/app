@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MenuDefinition } from '~/types/menu';
+import type { MenuDefinition } from '~/types';
 
 const props = defineProps<{
   modelValue: boolean;

@@ -5,7 +5,7 @@ import type {
   FormValidationResult,
   FormChangesState,
   ColumnType,
-} from "~/types/schema";
+} from "~/types/database";
 
 const TIMESTAMP_FIELDS: { name: string; type: ColumnType }[] = [
   { name: "createdAt", type: "timestamp" },

@@ -1,4 +1,4 @@
-import { packageManagementService } from '../../utils/server/package/management'
+import { packageManagementService } from '../utils/package/management'
 
 export default defineNitroPlugin(async (nitroApp) => {
   console.log('🔍 Checking for missing packages...')

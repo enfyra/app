@@ -37,7 +37,7 @@ definePageMeta({
 const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
-const { me } = useEnfyraAuth();
+const { me } = useAuth();
 const { getIdFieldName } = useDatabase();
 const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
 

@@ -1,5 +1,3 @@
-
-
 export interface FileItem {
   id: string;
   displayName: string;

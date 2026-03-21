@@ -4,11 +4,11 @@ import { Server } from "socket.io";
 import { io as ioClient } from "socket.io-client";
 import { defineEventHandler } from "h3";
 import { $fetch } from "ofetch";
-import { isAccessTokenExpired } from "@enfyra/sdk-nuxt/runtime/utils/server/refreshToken";
+import { isAccessTokenExpired } from "~/utils/enfyra/server/refreshToken";
 import {
   ACCESS_TOKEN_KEY,
   REFRESH_TOKEN_KEY,
-} from "@enfyra/sdk-nuxt/runtime/constants/auth";
+} from "~/constants/enfyra";
 
 const WS_PREFIX = "/ws";
 
@@ -44,14 +44,14 @@ async function resolveAccessToken(
   }
   return accessToken || (typeof tokenFromAuth === "string" ? tokenFromAuth : null) || null;
 }
-const ENGINE_PATH = "/socket.io"; // default path - client không cần truyền path
+const ENGINE_PATH = "/socket.io";
 const ENGINE_PATH_SLASH = `${ENGINE_PATH}/`;
 
 const LOG = "[socket-relay:app]";
 
 export default defineNitroPlugin((nitroApp) => {
   const config = useRuntimeConfig();
-  const apiUrl = config.public?.enfyraSDK?.apiUrl;
+  const apiUrl = config.public.apiUrl;
   if (!apiUrl) {
     console.warn(`${LOG} Skip: apiUrl not set (enfyraSDK.apiUrl)`);
     return;
@@ -62,14 +62,12 @@ export default defineNitroPlugin((nitroApp) => {
   const engineOptions = {
     path: ENGINE_PATH,
     allowEIO3: false,
-    // origin: true = reflect request origin (required when credentials: true, cannot use "*")
     cors: { origin: true, credentials: true },
   };
   const engine = new Engine(engineOptions as any);
   const io = new Server();
   io.bind(engine);
 
-  // Allow dynamic namespaces (e.g. /chat, /notifications) - relay to backend
   io.of(/^\/.*$/).on("connection", async (clientSocket) => {
     const namespace = clientSocket.nsp.name;
     const backendNamespace =
@@ -80,7 +78,7 @@ export default defineNitroPlugin((nitroApp) => {
           : namespace;
     const backendNsUrl = `${backendUrl}${backendNamespace}`;
     const query = clientSocket.handshake.query || {};
-    const reconnect = query.reconnect !== "false"; // default true, ?reconnect=false để tắt
+    const reconnect = query.reconnect !== "false";
     console.log(`${LOG} Client connect namespace=${namespace} -> backend=${backendNsUrl} reconnect=${reconnect}`);
 
     const cookieHeader = clientSocket.handshake.headers?.cookie;

@@ -71,7 +71,7 @@ export const ENFYRA_GLOBALS = {
   useMounted: true,
   useLoader: true,
 
-  useEnfyraAuth: true,
+  useAuth: true,
   usePermissions: true,
 
   useMenuRegistry: true,
@@ -100,7 +100,7 @@ export const EXTENSION_COMPOSABLES = {
   useScreen: 'useScreen',
   useGlobalState: 'useGlobalState',
   useConfirm: 'useConfirm',
-  useEnfyraAuth: 'useEnfyraAuth',
+  useAuth: 'useAuth',
   usePermissions: 'usePermissions',
 
   useToast: 'useToast',

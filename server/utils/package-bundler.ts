@@ -1,7 +1,7 @@
 import { build, type Plugin } from 'esbuild';
 import { readFileSync, existsSync } from 'fs';
 import { join, resolve } from 'path';
-import type { ExternalPackage } from '../../types/server';
+import type { ExternalPackage } from '../types/api';
 
 export type { ExternalPackage };
 
@@ -19,7 +19,7 @@ function createExternalPlugin(externals: ExternalPackage[]): Plugin {
 
         build.onLoad({ filter: /.*/, namespace: `external-${ext.name}` }, () => {
           const exportsList = ext.exports.length > 0
-            ? ext.exports.map(e => `  export const ${e} = pkg.${e};`).join('\n')
+            ? ext.exports.map((e: string) => `  export const ${e} = pkg.${e};`).join('\n')
             : '  // No specific exports listed';
 
           return {

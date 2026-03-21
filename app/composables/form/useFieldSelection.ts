@@ -1,5 +1,5 @@
 import type { FilterCondition, FilterGroup } from '~/utils/common/filter/filter-types';
-import type { SchemaCollection } from '~/types/schema';
+import type { SchemaCollection } from '~/types';
 import { generateFilterId, mapDbTypeToFilterType, getOperatorsByType } from '~/utils/common/filter/filter-operators';
 import { getCombinedOptionsForContext } from '~/utils/common/filter/filter-utils';
 

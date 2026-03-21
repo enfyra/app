@@ -86,6 +86,10 @@ const {
 
 const setting = ref<Record<string, any>>({});
 
+const fieldMap = {
+  corsAllowedOrigins: { type: 'array-tags' },
+};
+
 async function initializeForm() {
   await loadSetting();
   const data = apiData.value?.data?.[0];
@@ -154,6 +158,7 @@ onMounted(() => {
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :loading="loading"
             :excluded="['isInit', 'id', 'createdAt', 'updatedAt']"
+            :field-map="fieldMap"
           />
         </UForm>
       </CommonFormCard>

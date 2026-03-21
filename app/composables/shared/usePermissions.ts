@@ -1,5 +1,5 @@
 export function usePermissions() {
-  const { me } = useEnfyraAuth();
+  const { me } = useAuth();
 
   const hasPermission = (routePath: string, method: string): boolean => {
     if (!me.value) {

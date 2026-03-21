@@ -163,7 +163,7 @@ async function initializeForm() {
 async function save() {
   if (!form.value) return;
 
-  const { me } = useEnfyraAuth();
+  const { me } = useAuth();
   const { getId } = useDatabase();
   const userId = getId(me.value);
   if (userId) {
