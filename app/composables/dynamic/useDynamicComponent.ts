@@ -85,7 +85,11 @@ export const useDynamicComponent = () => {
     compiledCode: string,
     extensionName: string,
     previewState?: PreviewState,
-    originalCode?: string
+    originalCode?: string,
+    options?: {
+      onLoadingPhase?: (phase: "packages" | "executing") => void;
+      onPackageLoading?: (packageName: string, index: number, total: number) => void;
+    }
   ) => {
     try {
       if (typeof window === "undefined") {
@@ -107,7 +111,12 @@ export const useDynamicComponent = () => {
 
       if (originalCode) {
         const requiredPackages = detectPackages(originalCode);
-        await getPackages(requiredPackages);
+        if (requiredPackages.length > 0) {
+          options?.onLoadingPhase?.("packages");
+          await getPackages(requiredPackages, {
+            onPackageLoading: options?.onPackageLoading,
+          });
+        }
       }
 
       setupPackagesGlobal(g);
@@ -115,6 +124,7 @@ export const useDynamicComponent = () => {
       const composables = getComposablesForPreview(previewState);
       exposeComposables(g, composables);
 
+      options?.onLoadingPhase?.("executing");
       const component = await executeScriptInWindow(compiledCode, extensionName);
       findComponentInWindow(extensionName);
 

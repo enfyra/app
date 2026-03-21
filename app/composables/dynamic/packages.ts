@@ -224,7 +224,14 @@ export function detectPackages(code: string): string[] {
   return [...new Set(packages)];
 }
 
-export async function getPackages(packageNames?: string[]): Promise<Record<string, any>> {
+export interface GetPackagesOptions {
+  onPackageLoading?: (packageName: string, index: number, total: number) => void;
+}
+
+export async function getPackages(
+  packageNames?: string[],
+  options?: GetPackagesOptions
+): Promise<Record<string, any>> {
   if (typeof window === "undefined") {
     throw new Error("Packages can only be loaded on client-side");
   }
@@ -272,8 +279,11 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
   );
 
   const sortedPackages = topologicalSort(packagesToLoad, metadataMap);
+  const total = sortedPackages.length;
 
-  for (const pkgName of sortedPackages) {
+  for (let i = 0; i < sortedPackages.length; i++) {
+    const pkgName = sortedPackages[i];
+    options?.onPackageLoading?.(pkgName, i + 1, total);
     await loadSinglePackage(pkgName, packagesObject, {
       useCacheBuster: true,
       silent: true,
