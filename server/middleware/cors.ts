@@ -15,7 +15,7 @@ let cachedCorsData: CorsCache = {
 async function fetchAllowedOrigins(): Promise<string[]> {
   try {
     const config = useRuntimeConfig();
-    const apiUrl = config.public?.enfyraSDK?.apiUrl || process.env.API_URL;
+    const apiUrl = config.public?.apiUrl;
     
     if (!apiUrl) {
       console.warn('[CORS] API URL not configured');
@@ -42,6 +42,7 @@ async function fetchAllowedOrigins(): Promise<string[]> {
     }
     
     const corsOrigins = settings?.corsAllowedOrigins || [];
+    
     return Array.isArray(corsOrigins) ? corsOrigins : [];
   } catch (error: any) {
     console.error('[CORS] Error fetching origins:', error.message);
@@ -71,10 +72,16 @@ export async function initCorsCache(): Promise<void> {
   console.log('[CORS] Cache initialized:', origins);
 }
 
-export function clearCorsCache() {
+export async function clearCorsCache(newOrigins?: string[]) {
   const oldOrigins = [...cachedCorsData.origins];
-  cachedCorsData = { origins: [], timestamp: 0 };
-  console.log('[CORS] Cache cleared, was:', oldOrigins);
+  
+  if (newOrigins !== undefined && newOrigins !== null) {
+    cachedCorsData = { origins: newOrigins, timestamp: Date.now() };
+    console.log('[CORS] Cache updated, was:', oldOrigins, 'now:', newOrigins);
+  } else {
+    cachedCorsData = { origins: [], timestamp: 0 };
+    console.log('[CORS] Cache cleared, was:', oldOrigins);
+  }
 }
 
 export function getCorsOrigins(): string[] {
@@ -90,9 +97,21 @@ export default defineEventHandler(async (event) => {
   }
   
   const origin = getRequestHeader(event, 'origin');
-  if (!origin) return;
+  
+  if (!origin) {
+    return;
+  }
   
   const allowedOrigins = await getValidatedOrigins();
+  
+  if (allowedOrigins.length === 0) {
+    console.log('[CORS] No origins configured, allowing:', origin);
+    setHeader(event, 'Access-Control-Allow-Origin', origin);
+    setHeader(event, 'Access-Control-Allow-Credentials', 'true');
+    setHeader(event, 'Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    setHeader(event, 'Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    return;
+  }
   
   if (allowedOrigins.includes(origin)) {
     console.log('[CORS] Allowed:', origin);

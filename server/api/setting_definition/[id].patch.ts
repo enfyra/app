@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getRequestHeader, readBody, setResponseHeaders } from "h3";
+import { createError, defineEventHandler, readBody, setResponseHeaders } from "h3";
 import { clearCorsCache } from "../../middleware/cors";
 
 export default defineEventHandler(async (event) => {
@@ -35,8 +35,12 @@ export default defineEventHandler(async (event) => {
     const responseData = await response.json();
     
     if (response.ok) {
-      console.log('[PATCH setting_definition] Success, clearing cache');
-      clearCorsCache();
+      const newData = responseData?.data || responseData;
+      let newSettings = Array.isArray(newData) ? newData[0] : newData;
+      const newOrigins = newSettings?.corsAllowedOrigins;
+      
+      console.log('[PATCH setting_definition] Success, new origins:', newOrigins);
+      await clearCorsCache(newOrigins);
     } else {
       console.log('[PATCH setting_definition] Failed:', response.status);
     }

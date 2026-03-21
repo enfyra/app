@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
     if (refreshToken) {
       try {
         const config = useRuntimeConfig();
-        const apiUrl = config.public?.enfyraSDK?.apiUrl;
+        const apiUrl = config.public?.apiUrl;
         if (apiUrl) {
           currentAccessToken = await refreshAccessToken(
             event,

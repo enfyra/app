@@ -83,10 +83,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       dbType: process.env.DB_TYPE || 'mysql',
-      apiUrl: process.env.API_URL,
-      enfyraSDK: {
-        apiUrl: process.env.API_URL,
-      },
+      apiUrl: process.env.API_URL?.replace(/\/+$/, ''),
     },
   },
   routeRules: {

@@ -9,9 +9,9 @@ export const useStreamingAPI = () => {
   const connectSSE = (url: string, options: StreamOptions & { queryParams?: Record<string, string> }) => {
     const { queryParams, ...streamOptions } = options
     
-    const config: any = useRuntimeConfig().public.enfyraSDK;
-    const apiUrl = getAppUrl();
-    const apiPrefix = config?.apiPrefix || ENFYRA_API_PREFIX;
+    const config: any = useRuntimeConfig().public;
+    const apiUrl = config?.apiUrl || getAppUrl();
+    const apiPrefix = "/api";
     
     const basePath = url
       .replace(/^\/+/, "");
