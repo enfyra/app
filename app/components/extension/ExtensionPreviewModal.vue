@@ -14,7 +14,9 @@
       <div v-if="previewLoading" class="flex items-center justify-center h-[70vh]">
         <div class="text-center">
           <UIcon name="i-heroicons-arrow-path" class="w-10 h-10 animate-spin mx-auto mb-4 text-primary-500" />
-          <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">Compiling extension...</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">
+            {{ previewLoadingMessage }}
+          </p>
         </div>
       </div>
 
@@ -92,11 +94,28 @@ const isOpen = computed({
 });
 
 const previewLoading = ref(false);
+const previewLoadingPhase = ref<"compiling" | "packages" | "executing">("compiling");
+const previewPackageProgress = ref<{ name: string; index: number; total: number } | null>(null);
 const previewError = ref<string | null>(null);
 const previewComponent = ref<any>(null);
 const previewHeaderActions = ref<any[]>([]);
 const previewSubHeaderActions = ref<any[]>([]);
 const previewPageHeader = ref<any>(null);
+
+const previewLoadingMessage = computed(() => {
+  if (previewLoadingPhase.value === "compiling") return "Compiling extension...";
+  if (previewLoadingPhase.value === "packages") {
+    if (previewPackageProgress.value) {
+      const { name, index, total } = previewPackageProgress.value;
+      return total > 1
+        ? `Loading packages (${index}/${total}): ${name}...`
+        : `Loading package: ${name}...`;
+    }
+    return "Loading packages...";
+  }
+  if (previewLoadingPhase.value === "executing") return "Executing extension...";
+  return "Loading...";
+});
 
 const isValidComponent = computed(() => {
   if (!previewComponent.value) return false;
@@ -112,6 +131,8 @@ const { loadExtensionComponentPreview } = useDynamicComponent();
 
 function clearPreview() {
   previewLoading.value = false;
+  previewLoadingPhase.value = "compiling";
+  previewPackageProgress.value = null;
   previewError.value = null;
   previewComponent.value = null;
   previewHeaderActions.value = [];
@@ -129,12 +150,14 @@ watch(() => props.modelValue, async (open) => {
 
 async function compileAndPreview() {
   previewLoading.value = true;
+  previewLoadingPhase.value = "compiling";
+  previewPackageProgress.value = null;
   previewError.value = null;
   previewComponent.value = null;
 
   try {
     const { getAppUrl } = await import('~/utils/api/url');
-    
+
     const response = await $fetch<{
       success: boolean;
       compiledCode: string;
@@ -158,7 +181,16 @@ async function compileAndPreview() {
             subHeaderActions: previewSubHeaderActions,
             pageHeader: previewPageHeader,
           },
-          props.code
+          props.code,
+          {
+            onLoadingPhase: (phase) => {
+              previewLoadingPhase.value = phase;
+              if (phase !== "packages") previewPackageProgress.value = null;
+            },
+            onPackageLoading: (name, index, total) => {
+              previewPackageProgress.value = { name, index, total };
+            },
+          }
         );
         
         // Validate component before setting

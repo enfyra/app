@@ -25,9 +25,14 @@ interface PackageMetadataResponse {
   name: string;
   dependencies: string[];
   exports: string[];
+  __bundle?: { __code: string; __exports?: string[] };
 }
 
-async function fetchPackageMetadata(packageName: string): Promise<PackageMetadataResponse> {
+const bundleCache = new Map<string, { __code: string; __exports?: string[] }>();
+
+async function fetchPackageMetadata(
+  packageName: string
+): Promise<PackageMetadataResponse> {
   try {
     const response = await fetch(
       `/api/packages?name=${encodeURIComponent(packageName)}&format=json`
@@ -37,6 +42,10 @@ async function fetchPackageMetadata(packageName: string): Promise<PackageMetadat
     }
 
     const bundleData = await response.json();
+    bundleCache.set(packageName, {
+      __code: bundleData.__code,
+      __exports: bundleData.__exports,
+    });
     return {
       name: packageName,
       dependencies: bundleData.__dependencies || [],
@@ -85,7 +94,7 @@ function topologicalSort(
 async function loadSinglePackage(
   packageName: string,
   packagesObject: Record<string, any>,
-  options: { useCacheBuster?: boolean; silent?: boolean } = {}
+  options: { useCacheBuster?: boolean; silent?: boolean; useCachedBundle?: boolean } = {}
 ): Promise<any> {
   if (loadingPackages.has(packageName)) {
     return loadingPackages.get(packageName)!;
@@ -97,23 +106,37 @@ async function loadSinglePackage(
 
   const promise = (async () => {
     try {
-      const cacheBuster = options.useCacheBuster ? `&_=${Date.now()}` : "";
-
       const externals = getExternalPackages();
-      const externalsParam =
-        externals.length > 0
-          ? `&externals=${encodeURIComponent(JSON.stringify(externals))}`
-          : "";
+      const cachedBundle =
+        options.useCachedBundle && externals.length === 0
+          ? bundleCache.get(packageName)
+          : null;
 
-      const response = await fetch(
-        `/api/packages?name=${encodeURIComponent(packageName)}${cacheBuster}&format=json${externalsParam}`
-      );
-      if (!response.ok) {
-        throw new Error(`Failed to load package: ${response.statusText}`);
+      let __code: string;
+      let __exports: string[] | undefined;
+
+      if (cachedBundle) {
+        bundleCache.delete(packageName);
+        __code = cachedBundle.__code;
+        __exports = cachedBundle.__exports;
+      } else {
+        const cacheBuster = options.useCacheBuster ? `&_=${Date.now()}` : "";
+        const externalsParam =
+          externals.length > 0
+            ? `&externals=${encodeURIComponent(JSON.stringify(externals))}`
+            : "";
+
+        const response = await fetch(
+          `/api/packages?name=${encodeURIComponent(packageName)}${cacheBuster}&format=json${externalsParam}`
+        );
+        if (!response.ok) {
+          throw new Error(`Failed to load package: ${response.statusText}`);
+        }
+
+        const bundleData = await response.json();
+        __code = bundleData.__code;
+        __exports = bundleData.__exports;
       }
-
-      const bundleData = await response.json();
-      const { __code, __exports } = bundleData;
 
       const moduleUrl = URL.createObjectURL(
         new Blob([__code], { type: "application/javascript" })
@@ -201,7 +224,14 @@ export function detectPackages(code: string): string[] {
   return [...new Set(packages)];
 }
 
-export async function getPackages(packageNames?: string[]): Promise<Record<string, any>> {
+export interface GetPackagesOptions {
+  onPackageLoading?: (packageName: string, index: number, total: number) => void;
+}
+
+export async function getPackages(
+  packageNames?: string[],
+  options?: GetPackagesOptions
+): Promise<Record<string, any>> {
   if (typeof window === "undefined") {
     throw new Error("Packages can only be loaded on client-side");
   }
@@ -241,16 +271,24 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
   }
 
   const metadataMap = new Map<string, PackageMetadataResponse>();
-
-  for (const pkgName of packagesToLoad) {
-    const metadata = await fetchPackageMetadata(pkgName);
-    metadataMap.set(pkgName, metadata);
-  }
+  await Promise.all(
+    packagesToLoad.map(async (pkgName) => {
+      const metadata = await fetchPackageMetadata(pkgName);
+      metadataMap.set(pkgName, metadata);
+    })
+  );
 
   const sortedPackages = topologicalSort(packagesToLoad, metadataMap);
+  const total = sortedPackages.length;
 
-  for (const pkgName of sortedPackages) {
-    await loadSinglePackage(pkgName, packagesObject, { useCacheBuster: true, silent: true });
+  for (let i = 0; i < sortedPackages.length; i++) {
+    const pkgName = sortedPackages[i];
+    options?.onPackageLoading?.(pkgName, i + 1, total);
+    await loadSinglePackage(pkgName, packagesObject, {
+      useCacheBuster: true,
+      silent: true,
+      useCachedBundle: true,
+    });
   }
 
   const failedPackages = sortedPackages.filter(
