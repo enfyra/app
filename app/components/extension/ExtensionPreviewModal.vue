@@ -78,6 +78,7 @@
 <script setup lang="ts">
 import { ref, watch, markRaw } from 'vue';
 import { useDynamicComponent } from '../../composables/dynamic/useDynamicComponent';
+import { useExtensionPerf } from '../../composables/dynamic/useExtensionPerf';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -95,7 +96,6 @@ const isOpen = computed({
 
 const previewLoading = ref(false);
 const previewLoadingPhase = ref<"compiling" | "packages" | "executing">("compiling");
-const previewPackageProgress = ref<{ name: string; index: number; total: number } | null>(null);
 const previewError = ref<string | null>(null);
 const previewComponent = ref<any>(null);
 const previewHeaderActions = ref<any[]>([]);
@@ -104,23 +104,14 @@ const previewPageHeader = ref<any>(null);
 
 const previewLoadingMessage = computed(() => {
   if (previewLoadingPhase.value === "compiling") return "Compiling extension...";
-  if (previewLoadingPhase.value === "packages") {
-    if (previewPackageProgress.value) {
-      const { name, index, total } = previewPackageProgress.value;
-      return total > 1
-        ? `Loading packages (${index}/${total}): ${name}...`
-        : `Loading package: ${name}...`;
-    }
-    return "Loading packages...";
-  }
+  if (previewLoadingPhase.value === "packages") return "Loading packages...";
   if (previewLoadingPhase.value === "executing") return "Executing extension...";
   return "Loading...";
 });
 
 const isValidComponent = computed(() => {
   if (!previewComponent.value) return false;
-  // Check if component is a valid Vue component
-  return typeof previewComponent.value === 'object' && 
+  return typeof previewComponent.value === 'object' &&
          (previewComponent.value.__v_isVNode !== undefined || 
           previewComponent.value.setup !== undefined ||
           previewComponent.value.render !== undefined ||
@@ -128,11 +119,20 @@ const isValidComponent = computed(() => {
 });
 
 const { loadExtensionComponentPreview } = useDynamicComponent();
+const perf = useExtensionPerf();
+
+const { execute: executePreviewApi } = useApi<{
+  success: boolean;
+  compiledCode: string;
+  extensionId?: string;
+}>('/extension_definition/preview', {
+  method: 'post',
+  errorContext: 'Extension Preview',
+});
 
 function clearPreview() {
   previewLoading.value = false;
   previewLoadingPhase.value = "compiling";
-  previewPackageProgress.value = null;
   previewError.value = null;
   previewComponent.value = null;
   previewHeaderActions.value = [];
@@ -141,39 +141,32 @@ function clearPreview() {
 }
 
 watch(() => props.modelValue, async (open) => {
-  if (open && props.code) {
-    await compileAndPreview();
-  } else if (!open) {
+  if (!open) {
     clearPreview();
+    return;
+  }
+  if (open && props.code && !previewLoading.value) {
+    await compileAndPreview();
   }
 });
 
 async function compileAndPreview() {
   previewLoading.value = true;
   previewLoadingPhase.value = "compiling";
-  previewPackageProgress.value = null;
   previewError.value = null;
   previewComponent.value = null;
+  const totalStart = performance.now();
 
   try {
-    const { getAppUrl } = await import('~/utils/api/url');
-
-    const response = await $fetch<{
-      success: boolean;
-      compiledCode: string;
-      extensionId?: string;
-    }>('/api/extension_definition/preview', {
-      method: 'POST',
-      body: {
-        code: props.code,
-      },
-      baseURL: getAppUrl(),
-    });
+    const response = await perf.time('Preview: Compile API', () =>
+      executePreviewApi({ body: { code: props.code } })
+    ) as { success: boolean; compiledCode: string; extensionId?: string } | null;
 
     if (response?.success && response?.compiledCode) {
-      const extensionId = response?.extensionId || `preview_${Date.now()}`;
+      const extensionId = response.extensionId || `preview_${Date.now()}`;
       try {
-        const component = await loadExtensionComponentPreview(
+        const component = await perf.time('Preview: Load & Execute', () =>
+          loadExtensionComponentPreview(
           response.compiledCode,
           extensionId,
           {
@@ -185,26 +178,26 @@ async function compileAndPreview() {
           {
             onLoadingPhase: (phase) => {
               previewLoadingPhase.value = phase;
-              if (phase !== "packages") previewPackageProgress.value = null;
-            },
-            onPackageLoading: (name, index, total) => {
-              previewPackageProgress.value = { name, index, total };
             },
           }
+          )
         );
-        
-        // Validate component before setting
+
         if (!component) {
           throw new Error('Component is null or undefined after loading');
         }
         if (typeof component !== 'object') {
           throw new Error(`Component is not an object: ${typeof component}`);
         }
-        // Check if component has a render function or setup function
         if (!component.render && !component.setup && !component.template) {
-          console.warn('Component may not be valid Vue component:', component);
+          console.warn('Invalid Vue component:', component);
         }
         previewComponent.value = markRaw(component);
+        if (perf.enabled) {
+          console.log(
+            `[Extension Perf] Preview total: ${(performance.now() - totalStart).toFixed(1)}ms`
+          );
+        }
       } catch (loadError: any) {
         throw new Error(`Failed to load component: ${loadError?.message || loadError}`);
       }

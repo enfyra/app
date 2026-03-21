@@ -1,5 +1,11 @@
 import type { ExternalPackage } from "~/../server/types/api";
 
+const PERF_ENABLED =
+  typeof window !== "undefined" &&
+  (import.meta.dev ||
+    (typeof URLSearchParams !== "undefined" &&
+      new URLSearchParams(window.location.search).get("perf") === "1"));
+
 const loadedPackages = new Map<string, { exports: string[]; globalName: string }>();
 const loadingPackages = new Map<string, Promise<any>>();
 
@@ -120,6 +126,7 @@ async function loadSinglePackage(
         __code = cachedBundle.__code;
         __exports = cachedBundle.__exports;
       } else {
+        bundleCache.delete(packageName);
         const cacheBuster = options.useCacheBuster ? `&_=${Date.now()}` : "";
         const externalsParam =
           externals.length > 0
@@ -189,12 +196,27 @@ async function loadSinglePackage(
 export function detectPackages(code: string): string[] {
   const packages: string[] = [];
 
+  const arrayArgPattern = /getPackages\s*\(\s*\[([^\]]*)\]\s*\)/g;
+  const arrayArgMatches = [...code.matchAll(arrayArgPattern)];
+  for (const match of arrayArgMatches) {
+    if (match[1]) {
+      const items = match[1]
+        .split(",")
+        .map((s) => s.trim().replace(/^['"]|['"]$/g, ""))
+        .filter(Boolean);
+      packages.push(...items);
+    }
+  }
+
   const destructuringPattern = /const\s*\{([^}]+)\}\s*=\s*(?:await\s+)?getPackages\(\)/g;
   const destructuringMatches = [...code.matchAll(destructuringPattern)];
   for (const match of destructuringMatches) {
     if (match[1]) {
       const destructured = match[1];
-      const items = destructured.split(",").map((s) => s.trim());
+      const items = destructured
+        .split(",")
+        .map((s) => (s.trim().split(/\s+as\s+/)[0] ?? s).trim())
+        .filter(Boolean);
       packages.push(...items);
     }
   }
@@ -221,17 +243,16 @@ export function detectPackages(code: string): string[] {
     }
   }
 
-  return [...new Set(packages)];
+  const invalidNames = new Set(["default", "ref", "loading", "value", "key"]);
+  const valid = (name: string) =>
+    name.length > 0 &&
+    !invalidNames.has(name) &&
+    /^[@a-z0-9][\w./-]*$/.test(name);
+
+  return [...new Set(packages)].filter(valid);
 }
 
-export interface GetPackagesOptions {
-  onPackageLoading?: (packageName: string, index: number, total: number) => void;
-}
-
-export async function getPackages(
-  packageNames?: string[],
-  options?: GetPackagesOptions
-): Promise<Record<string, any>> {
+export async function getPackages(packageNames?: string[]): Promise<Record<string, any>> {
   if (typeof window === "undefined") {
     throw new Error("Packages can only be loaded on client-side");
   }
@@ -271,24 +292,33 @@ export async function getPackages(
   }
 
   const metadataMap = new Map<string, PackageMetadataResponse>();
+  const metadataStart = performance.now();
   await Promise.all(
     packagesToLoad.map(async (pkgName) => {
       const metadata = await fetchPackageMetadata(pkgName);
       metadataMap.set(pkgName, metadata);
     })
   );
+  if (PERF_ENABLED) {
+    console.log(
+      `[Extension Perf] getPackages: fetchMetadata ${packagesToLoad.length} pkgs: ${(performance.now() - metadataStart).toFixed(1)}ms`
+    );
+  }
 
   const sortedPackages = topologicalSort(packagesToLoad, metadataMap);
-  const total = sortedPackages.length;
 
-  for (let i = 0; i < sortedPackages.length; i++) {
-    const pkgName = sortedPackages[i];
-    options?.onPackageLoading?.(pkgName, i + 1, total);
+  for (const pkgName of sortedPackages) {
+    const pkgStart = performance.now();
     await loadSinglePackage(pkgName, packagesObject, {
       useCacheBuster: true,
       silent: true,
       useCachedBundle: true,
     });
+    if (PERF_ENABLED) {
+      console.log(
+        `[Extension Perf] getPackages: load "${pkgName}": ${(performance.now() - pkgStart).toFixed(1)}ms`
+      );
+    }
   }
 
   const failedPackages = sortedPackages.filter(

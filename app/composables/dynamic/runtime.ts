@@ -52,6 +52,7 @@ const EXTENSION_VUE_FUNCTIONS = [
 
 export async function setupVueGlobals(): Promise<void> {
   if (typeof window === "undefined") return;
+  if ((window as any).Vue) return;
 
   (window as any).Vue = await import("vue");
 }

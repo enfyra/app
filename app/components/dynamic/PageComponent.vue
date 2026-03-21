@@ -64,6 +64,7 @@ const props = defineProps<Props>();
 
 const { loadDynamicComponent, getCachedComponent, getCachedExtensionMeta, setCachedExtensionMeta } = useDynamicComponent();
 const { setRouteLoading } = useGlobalState();
+const perf = useExtensionPerf();
 
 const error = ref<string | null>(null);
 const extensionComponent = ref<any>(null);
@@ -121,7 +122,7 @@ const loadMatchingExtension = async () => {
 
 const fetchAndLoadExtension = async () => {
   try {
-    await executeFetchMenu();
+    await perf.time("Route: fetchMenu", () => executeFetchMenu());
 
     if (menuError.value) {
       error.value = `API Error: ${menuError.value}`;
@@ -155,10 +156,14 @@ const fetchAndLoadExtension = async () => {
       return;
     }
 
-    const component = await loadDynamicComponent(
-      extension.compiledCode || extension.code,
-      extension.extensionId,
-      extension.updatedAt
+    const component = await perf.time("Route: loadDynamicComponent", () =>
+      loadDynamicComponent(
+        extension.compiledCode || extension.code,
+        extension.extensionId,
+        extension.updatedAt,
+        false,
+        extension.code
+      )
     );
     extensionComponent.value = component;
 

@@ -1,6 +1,7 @@
 import { markRaw } from "vue";
 
 import { availableComponents, getComposablesForPreview } from "./registry";
+import { useExtensionPerf } from "./useExtensionPerf";
 import { getPackages, detectPackages } from "./packages";
 import {
   isComponentCached,
@@ -26,11 +27,13 @@ import {
 import type { PreviewState } from "./types";
 
 export const useDynamicComponent = () => {
+  const perf = useExtensionPerf();
   const loadDynamicComponent = async (
     compiledCode: string,
     extensionName: string,
     updatedAt?: string | Date,
-    forceReload = false
+    forceReload = false,
+    originalCode?: string
   ) => {
     try {
       if (typeof window === "undefined") {
@@ -44,24 +47,27 @@ export const useDynamicComponent = () => {
 
       incrementCacheMisses();
 
-      await setupVueGlobals();
+      await Promise.all([setupVueGlobals(), getVueRuntime()]);
 
       const g = globalThis as any;
       const composables = getComposablesObject();
-
       exposeComposables(g, composables);
-
-      await getVueRuntime();
       exposeVueGlobals(g);
 
       setupPackagesGlobal(g);
 
-      const requiredPackages = detectPackages(compiledCode);
+      const requiredPackages = perf.timeSync("loadDynamic: detectPackages", () =>
+        detectPackages(originalCode || compiledCode)
+      );
       if (requiredPackages.length > 0) {
-        await getPackages(requiredPackages);
+        await perf.time("loadDynamic: getPackages", () =>
+          getPackages(requiredPackages)
+        );
       }
 
-      const component = await executeScriptInWindow(compiledCode, extensionName);
+      const component = await perf.time("loadDynamic: executeScript", () =>
+        executeScriptInWindow(compiledCode, extensionName)
+      );
       findComponentInWindow(extensionName);
 
       if (!component || typeof component !== "object") {
@@ -86,20 +92,16 @@ export const useDynamicComponent = () => {
     extensionName: string,
     previewState?: PreviewState,
     originalCode?: string,
-    options?: {
-      onLoadingPhase?: (phase: "packages" | "executing") => void;
-      onPackageLoading?: (packageName: string, index: number, total: number) => void;
-    }
+    options?: { onLoadingPhase?: (phase: "packages" | "executing") => void }
   ) => {
     try {
       if (typeof window === "undefined") {
         throw new Error("Extensions can only be loaded on client-side");
       }
 
-      await setupVueGlobals();
+      await Promise.all([setupVueGlobals(), getVueRuntime()]);
 
       const g = globalThis as any;
-      await getVueRuntime();
       exposeVueGlobals(g);
 
       const packagesObject: Record<string, any> = {};
@@ -109,13 +111,16 @@ export const useDynamicComponent = () => {
         (window as any).packages = packagesObject;
       }
 
-      if (originalCode) {
-        const requiredPackages = detectPackages(originalCode);
+      const codeForDetect = originalCode || compiledCode;
+      if (codeForDetect) {
+        const requiredPackages = perf.timeSync("preview: detectPackages", () =>
+          detectPackages(codeForDetect)
+        );
         if (requiredPackages.length > 0) {
           options?.onLoadingPhase?.("packages");
-          await getPackages(requiredPackages, {
-            onPackageLoading: options?.onPackageLoading,
-          });
+          await perf.time("preview: getPackages", () =>
+            getPackages(requiredPackages)
+          );
         }
       }
 
@@ -125,7 +130,9 @@ export const useDynamicComponent = () => {
       exposeComposables(g, composables);
 
       options?.onLoadingPhase?.("executing");
-      const component = await executeScriptInWindow(compiledCode, extensionName);
+      const component = await perf.time("preview: executeScript", () =>
+        executeScriptInWindow(compiledCode, extensionName)
+      );
       findComponentInWindow(extensionName);
 
       if (typeof component !== "object" || component === null) {
