@@ -1,6 +1,7 @@
 import { build, type Plugin } from 'esbuild';
 import { readFileSync, existsSync } from 'fs';
-import { join, resolve } from 'path';
+import { join, resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 import type { ExternalPackage } from '../types/api';
 
 export type { ExternalPackage };
@@ -99,14 +100,29 @@ const vueExternalPlugin: Plugin = {
 };
 
 function findProjectRoot(): string {
-  let current = process.cwd();
-  while (current !== '/' && current.length > 1) {
-    if (existsSync(join(current, 'package.json')) && existsSync(join(current, 'node_modules'))) {
-      return current;
+  const tryFind = (startDir: string): string | null => {
+    let current = resolve(startDir);
+    while (current !== '/' && current.length > 1) {
+      if (existsSync(join(current, 'package.json')) && existsSync(join(current, 'node_modules'))) {
+        return current;
+      }
+      const parent = resolve(current, '..');
+      if (parent === current) break;
+      current = parent;
     }
-    current = resolve(current, '..');
+    return null;
+  };
+
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const bundlerDir = dirname(__filename);
+    const fromServerUtils = tryFind(bundlerDir);
+    if (fromServerUtils) return fromServerUtils;
+  } catch {
   }
-  return process.cwd();
+
+  const fromCwd = tryFind(process.cwd());
+  return fromCwd || process.cwd();
 }
 
 export interface BundleOptions {
@@ -300,6 +316,7 @@ export async function bundlePackage(options: BundleOptions): Promise<BundleResul
     }
 
     try {
+      const shimsPath = join(projectRoot, 'server/utils/shims.js');
       const fallbackResult = await build({
         entryPoints: [mainFilePath],
         bundle: true,
@@ -310,7 +327,7 @@ export async function bundlePackage(options: BundleOptions): Promise<BundleResul
         write: false,
         logLevel: 'silent',
         absWorkingDir: projectRoot,
-        inject: [join(projectRoot, 'app/server/utils/shims.js')],
+        ...(existsSync(shimsPath) ? { inject: [shimsPath] } : {}),
         plugins: allPlugins,
       });
 
