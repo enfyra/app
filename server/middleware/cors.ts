@@ -50,16 +50,13 @@ async function fetchAllowedOrigins(): Promise<string[]> {
   }
 }
 
-async function getValidatedOrigins(): Promise<string[]> {
+export async function getValidatedOrigins(): Promise<string[]> {
   const now = Date.now();
   const isCacheExpired = now - cachedCorsData.timestamp > CACHE_TTL;
   
   if (isCacheExpired || cachedCorsData.origins.length === 0) {
     const origins = await fetchAllowedOrigins();
     cachedCorsData = { origins, timestamp: now };
-    console.log('[CORS] Cache reloaded:', origins);
-  } else {
-    console.log('[CORS] Cache hit:', cachedCorsData.origins);
   }
   
   return cachedCorsData.origins;
@@ -114,7 +111,6 @@ export default defineEventHandler(async (event) => {
   }
   
   if (allowedOrigins.includes(origin)) {
-    console.log('[CORS] Allowed:', origin);
     setHeader(event, 'Access-Control-Allow-Origin', origin);
     setHeader(event, 'Access-Control-Allow-Credentials', 'true');
     setHeader(event, 'Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
