@@ -90,5 +90,14 @@ export default defineNuxtConfig({
     '/api/packages/**': {
       swr: 86400,
     },
+    '/socket.io/**': {
+      ssr: false,
+      cache: false,
+    },
+  },
+  nitro: {
+    experimental: {
+      websocket: true,
+    },
   },
 });
