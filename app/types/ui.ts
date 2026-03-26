@@ -127,6 +127,8 @@ export interface HeaderAction {
   order?: number;
 }
 
+export type UniqueCheckStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'incomplete';
+
 export interface SettingsCardStat {
   label: string;
   value?: string | number;

@@ -135,11 +135,15 @@ export const useGlobalState = () => {
     routeLoading.value = loading;
   }
   
+  const MAX_FILE_TIMESTAMPS = 100;
+
   function updateFileTimestamp(fileId: string) {
-    fileUpdateTimestamp.value = {
-      ...fileUpdateTimestamp.value,
-      [fileId]: Date.now()
-    };
+    const current = { ...fileUpdateTimestamp.value, [fileId]: Date.now() };
+    const keys = Object.keys(current);
+    if (keys.length > MAX_FILE_TIMESTAMPS) {
+      keys.slice(0, keys.length - MAX_FILE_TIMESTAMPS).forEach(k => delete current[k]);
+    }
+    fileUpdateTimestamp.value = current;
   }
   
   function getFileTimestamp(fileId: string): number {

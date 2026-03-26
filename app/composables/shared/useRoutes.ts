@@ -8,7 +8,7 @@ export function useRoutes() {
     execute: executeRoutes
   } = useApi(() => '/route_definition', {
     query: {
-      fields: ['id', 'path', 'isEnabled', 'mainTable.id', 'mainTable.name', 'mainTable.isSystem', 'mainTable.alias', 'mainTable.icon'].join(','),
+      fields: ['id', 'path', 'isEnabled', 'updatedAt', 'mainTable.id', 'mainTable.name', 'mainTable.isSystem', 'mainTable.alias', 'mainTable.icon'].join(','),
       limit: 0,
       sort: 'path'
     },
@@ -74,6 +74,7 @@ export function useRoutes() {
   }
   
   return {
+    routes: readonly(routes),
     loadRoutes,
     ensureRoutesLoaded,
     getRouteForTableId,

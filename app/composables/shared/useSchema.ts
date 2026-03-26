@@ -38,6 +38,19 @@ export function useSchema(tableName?: string | Ref<string>) {
     }
   }
 
+  async function forceRefreshSchema() {
+    schemas.value = {};
+    schemaLoading.value = true;
+    try {
+      await executeMetadata();
+      processAndCacheSchemas(metadataData.value?.data || []);
+    } catch (error) {
+      console.error('[useSchema] Error refreshing schema:', error);
+    } finally {
+      schemaLoading.value = false;
+    }
+  }
+
   function processAndCacheSchemas(tables: any[]) {
     for (const t of tables) {
       if (schemas.value[t.name]) continue;
@@ -225,6 +238,17 @@ export function useSchema(tableName?: string | Ref<string>) {
     return ["*", ...relations].join(",");
   }
 
+  function getColumnFields(): string {
+    if (!definition.value.length) return "*";
+
+    const columnFields = definition.value
+      .filter(f => f.fieldType === "column")
+      .map(f => f.name)
+      .filter(Boolean);
+
+    return columnFields.length > 0 ? columnFields.join(",") : "*";
+  }
+
   function useFormChanges(): FormChangesState {
     const originalData = ref<Record<string, any>>({});
 
@@ -248,6 +272,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     schemas: readonly(schemas),
     schema: tableSchema,
     fetchSchema,
+    forceRefreshSchema,
     schemaLoading,
     updateSchemas,
     schemaReady,
@@ -256,6 +281,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     generateEmptyForm,
     validate,
     getIncludeFields,
+    getColumnFields,
     sortFieldsByOrder,
     useFormChanges,
   };

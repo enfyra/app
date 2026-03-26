@@ -2,7 +2,7 @@
 const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
-const { validate } = useSchema("user_definition");
+const { validateForm } = useFormValidation("user_definition");
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -146,16 +146,7 @@ useHeaderActionRegistry([
 async function saveUser() {
   if (!form.value) return;
 
-  const { isValid, errors: validationErrors } = validate(form.value);
-  if (!isValid) {
-    errors.value = validationErrors;
-    toast.add({
-      title: "Missing information",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(form.value, errors)) return;
 
   await updateUser({ body: form.value });
 

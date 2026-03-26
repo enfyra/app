@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { UniqueCheckStatus } from '~/types/ui';
 
 const props = withDefaults(
   defineProps<{
@@ -9,15 +10,22 @@ const props = withDefaults(
   errors: Record<string, string>;
   loading?: boolean;
     mode?: 'create' | 'update';
+    isUniqueField?: boolean;
+    uniqueCheckStatus?: UniqueCheckStatus;
+    uniqueCheckMessage?: string;
   }>(),
   {
     mode: 'update',
+    isUniqueField: false,
+    uniqueCheckStatus: 'idle',
+    uniqueCheckMessage: '',
   }
 );
 
 const emit = defineEmits<{
   "update:formData": [key: string, value: any];
   "update:errors": [errors: Record<string, string>];
+  "checkUnique": [fieldName: string];
 }>();
 
 const uniqueId = useId();
@@ -31,6 +39,10 @@ function updateFormData(key: string, value: any) {
 
 function updateErrors(errors: Record<string, string>) {
   emit("update:errors", errors);
+}
+
+function handleCheckUnique() {
+  emit("checkUnique", props.keyName);
 }
 
 const column = computed(() => props.columnMap.get(props.keyName));
@@ -132,6 +144,13 @@ const isBooleanField = computed(() => {
 });
 
 const { isMobile, isTablet } = useScreen();
+
+const effectiveErrors = computed(() => {
+  if (props.uniqueCheckStatus === 'invalid') {
+    return { ...props.errors, [props.keyName]: props.uniqueCheckMessage || 'Value already exists' };
+  }
+  return props.errors;
+});
 </script>
 
 <template>
@@ -165,7 +184,7 @@ const { isMobile, isTablet } = useScreen();
       :form-data="formData"
       :column-map="columnMap"
         :field-map="fieldMap"
-      :errors="errors"
+      :errors="effectiveErrors"
       :field-id="fieldId"
       @update:form-data="updateFormData"
       @update:errors="updateErrors"
@@ -175,52 +194,86 @@ const { isMobile, isTablet } = useScreen();
 
   <div v-else v-bind="fieldProps" class="space-y-2">
     <div class="flex items-center justify-between">
-      <label
-        :for="fieldId"
-        class="text-sm font-medium flex items-center gap-1"
-        :style="{ color: 'var(--text-primary)' }"
-      >
-        {{ displayLabel }}
-        <span
-          v-if="
-            column?.isNullable === false &&
-            column?.isGenerated !== true &&
-            (props.mode === 'create' || column?.isHidden !== true) &&
-            column?.type !== 'boolean' &&
-            keyName !== 'createdAt' &&
-            keyName !== 'updatedAt'
-          "
-          class="text-red-500"
-          >*</span
+      <div class="flex items-center gap-1">
+        <label
+          :for="fieldId"
+          class="text-sm font-medium flex items-center gap-1"
+          :style="{ color: 'var(--text-primary)' }"
         >
-      </label>
+          {{ displayLabel }}
+          <span
+            v-if="
+              column?.isNullable === false &&
+              column?.isGenerated !== true &&
+              (props.mode === 'create' || column?.isHidden !== true) &&
+              column?.type !== 'boolean' &&
+              keyName !== 'createdAt' &&
+              keyName !== 'updatedAt'
+            "
+            class="text-red-500"
+            >*</span
+          >
+        </label>
 
-      <div class="flex items-center gap-2 opacity-0 lg:group-hover:opacity-100 transition-opacity">
-        <Transition name="fade">
-          <UIcon
-            v-if="copyStatus === 'success'"
-            name="i-lucide-check"
-            class="w-4 h-4 text-green-600"
-          />
-          <UIcon
-            v-else-if="copyStatus === 'error'"
-            name="i-lucide-x"
-            class="w-4 h-4 text-red-600"
-          />
-        </Transition>
+        <div v-if="!isRelationField" class="flex items-center gap-1 opacity-0 lg:group-hover:opacity-100 transition-opacity">
+          <Transition name="fade">
+            <UIcon
+              v-if="copyStatus === 'success'"
+              name="i-lucide-check"
+              class="w-3.5 h-3.5 text-green-600"
+            />
+            <UIcon
+              v-else-if="copyStatus === 'error'"
+              name="i-lucide-x"
+              class="w-3.5 h-3.5 text-red-600"
+            />
+          </Transition>
+          <UDropdownMenu :items="dropdownItems">
+            <UButton
+              icon="i-lucide-chevron-down"
+              size="xs"
+              variant="ghost"
+              color="neutral"
+              @click.stop
+            />
+          </UDropdownMenu>
+        </div>
+      </div>
 
-        <UDropdownMenu
-          v-if="!isRelationField"
-          :items="dropdownItems"
-        >
-          <UButton
-            icon="i-lucide-chevron-down"
-            size="xs"
-            variant="ghost"
-            color="neutral"
-            @click.stop
-          />
-        </UDropdownMenu>
+      <div v-if="isUniqueField" class="flex items-center gap-1">
+        <UIcon
+          v-if="uniqueCheckStatus === 'checking'"
+          name="i-lucide-loader-2"
+          class="w-3.5 h-3.5 animate-spin text-blue-500"
+        />
+        <UTooltip v-else-if="uniqueCheckStatus === 'valid'" text="Value is unique">
+          <UBadge color="success" variant="subtle" size="xs">
+            <UIcon name="i-lucide-check" class="w-3 h-3 mr-0.5" />
+            Unique
+          </UBadge>
+        </UTooltip>
+        <UTooltip v-else-if="uniqueCheckStatus === 'invalid'" :text="uniqueCheckMessage || 'Value already exists'">
+          <UBadge color="error" variant="subtle" size="xs">
+            <UIcon name="i-lucide-x" class="w-3 h-3 mr-0.5" />
+            Duplicate
+          </UBadge>
+        </UTooltip>
+        <UTooltip v-else-if="uniqueCheckStatus === 'incomplete'" :text="uniqueCheckMessage || 'Fill all related fields first'">
+          <UBadge color="warning" variant="subtle" size="xs">
+            <UIcon name="i-lucide-alert-circle" class="w-3 h-3 mr-0.5" />
+            Incomplete
+          </UBadge>
+        </UTooltip>
+        <UButton
+          v-else
+          type="button"
+          icon="i-lucide-search-check"
+          label="Check"
+          size="xs"
+          variant="outline"
+          color="primary"
+          @click.stop="handleCheckUnique"
+        />
       </div>
     </div>
 
@@ -229,7 +282,7 @@ const { isMobile, isTablet } = useScreen();
       :form-data="formData"
       :column-map="columnMap"
         :field-map="fieldMap"
-      :errors="errors"
+      :errors="effectiveErrors"
       :field-id="fieldId"
       @update:form-data="updateFormData"
       @update:errors="updateErrors"
@@ -237,7 +290,13 @@ const { isMobile, isTablet } = useScreen();
     />
 
     <p
-      v-if="!errors?.[keyName] && column?.description"
+      v-if="uniqueCheckStatus === 'incomplete' && uniqueCheckMessage"
+      class="text-xs text-amber-500"
+    >
+      {{ uniqueCheckMessage }}
+    </p>
+    <p
+      v-else-if="!effectiveErrors?.[keyName] && column?.description"
       class="text-xs"
       :style="{ color: 'var(--text-tertiary)' }"
       v-html="column?.description"

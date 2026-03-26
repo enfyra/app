@@ -3,7 +3,7 @@ const toast = useToast();
 const { confirm } = useConfirm();
 const errors = ref<Record<string, string>>({});
 
-const { validate } = useSchema("setting_definition");
+const { validateForm } = useFormValidation("setting_definition");
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -111,16 +111,7 @@ const {
 async function handleSaveSetting() {
   if (!setting.value) return;
 
-  const { isValid, errors: validationErrors } = validate(setting.value);
-  if (!isValid) {
-    errors.value = validationErrors;
-    toast.add({
-      title: "Missing information",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(setting.value, errors)) return;
 
   await saveSetting({ body: setting.value });
 

@@ -64,7 +64,8 @@ const showUploadModal = ref(false);
 const uploadLoading = ref(false);
 const showPreviewModal = ref(false);
 
-const { generateEmptyForm, validate } = useSchema(tableName);
+const { generateEmptyForm } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -133,17 +134,7 @@ onMounted(() => {
 });
 
 async function handleCreate() {
-  const { isValid, errors } = validate(createForm.value);
-
-  if (!isValid) {
-    createErrors.value = errors;
-    toast.add({
-      title: "Error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(createForm.value, createErrors)) return;
 
   const { me } = useAuth();
   const { getIdFieldName } = useDatabase();

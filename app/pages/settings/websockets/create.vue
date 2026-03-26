@@ -116,7 +116,8 @@ const selectedTargetTables = ref<any[]>([]);
 const availableTables = ref<any[]>([]);
 const showTableSelector = ref(false);
 
-const { generateEmptyForm, validate } = useSchema(tableName);
+const { generateEmptyForm } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
 
@@ -207,17 +208,7 @@ function removeTargetTable(index: number) {
 }
 
 async function handleCreate() {
-  const { isValid, errors } = validate(createForm.value);
-
-  if (!isValid) {
-    createErrors.value = errors;
-    toast.add({
-      title: "Error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(createForm.value, createErrors)) return;
 
   const body = {
     ...createForm.value,

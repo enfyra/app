@@ -109,13 +109,21 @@
       </ClientOnly>
     </div>
 
-    <div v-if="!schemaData" class="flex items-center justify-center h-64">
+    <div v-if="schemaLoading || !schemaData" class="flex items-center justify-center h-64">
       <div class="text-center">
         <UIcon
+          v-if="schemaLoading"
+          name="lucide:loader-2"
+          class="w-12 h-12 text-muted-foreground mx-auto mb-2 animate-spin"
+        />
+        <UIcon
+          v-else
           name="lucide:database-zap"
           class="w-12 h-12 text-muted-foreground mx-auto mb-2"
         />
-        <p class="text-gray-600 dark:text-gray-400">Loading schema...</p>
+        <p class="text-gray-600 dark:text-gray-400">
+          {{ schemaLoading ? 'Loading schema...' : 'No schema data available' }}
+        </p>
       </div>
     </div>
   </div>
@@ -133,17 +141,16 @@ interface Props {
 const props = defineProps<Props>();
 const colorMode = useColorMode();
 
-const { schemas: allSchemas } = useSchema();
+const { schemas: allSchemas, fetchSchema, schemaLoading } = useSchema();
+const { definition, schema } = useSchema(toRef(props, 'tableName'));
 
-const schemaComposable = computed(() => {
-  try {
-    return useSchema(props.tableName);
-  } catch (error) {
-    return null;
+onMounted(async () => {
+  if (Object.keys(allSchemas.value).length === 0) {
+    await fetchSchema();
   }
 });
 
-const schemaData = computed(() => schemaComposable.value?.definition || null);
+const schemaData = computed(() => definition.value || null);
 
 const schemaStructure = computed(() => {
   if (!schemaData.value || !Array.isArray(schemaData.value)) return {};
@@ -191,7 +198,7 @@ const schemaStructure = computed(() => {
       isPrimary: field.isPrimary || false,
       ...(field.maxLength && { maxLength: field.maxLength }),
       ...(field.validation && { validation: field.validation }),
-      ...(field.options && { options: field.options }),
+      ...(field.options && Array.isArray(field.options) && { options: field.options }),
       ...(field.relationType && { relationType: field.relationType }),
       ...(targetTableName && { targetTable: targetTableName }),
     };
@@ -257,10 +264,10 @@ const examplePayload = computed(() => {
         example[fieldName] = "550e8400-e29b-41d4-a716-446655440000";
         break;
       case "array-select":
-        example[fieldName] = field.options ? [field.options[0]] : ["option1"];
+        example[fieldName] = (field.options && Array.isArray(field.options)) ? [field.options[0]] : ["option1"];
         break;
       case "enum":
-        example[fieldName] = field.options ? field.options[0] : "value1";
+        example[fieldName] = (field.options && Array.isArray(field.options)) ? field.options[0] : "value1";
         break;
       default:
         if (field.defaultValue !== undefined) {
@@ -367,7 +374,7 @@ const validationRules = computed(() => {
       fieldRules.push("format: uuid");
     }
 
-    if (field.options) {
+    if (field.options && Array.isArray(field.options)) {
       fieldRules.push(`allowed_values: [${field.options.join(", ")}]`);
     }
 

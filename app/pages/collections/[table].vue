@@ -1,10 +1,11 @@
 <script setup lang="ts">
 const route = useRoute();
-const { schemas, fetchSchema, schemaLoading } = useSchema();
+const { schemas, fetchSchema, forceRefreshSchema, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const toast = useToast();
 const { registerDataMenuItems } = useMenuRegistry();
 const { loadRoutes } = useRoutes();
+const { retryUntilFresh } = useServerSync();
 const { getId } = useDatabase();
 const tableName = "table_definition";
 const { getIncludeFields } = useSchema(tableName);
@@ -43,6 +44,7 @@ const {
 });
 
 const {
+  data: patchTableData,
   pending: saving,
   execute: executePatchTable,
   error: updateError,
@@ -135,7 +137,7 @@ useSubHeaderActionRegistry([
     id: "view-schema",
     label: "View Schema",
     icon: "lucide:database",
-    variant: "outline",
+    variant: "solid",
     color: "secondary",
     size: "md",
     onClick: () => (showSchemaViewer.value = true),
@@ -180,13 +182,22 @@ async function patchTable() {
   await executePatchTable({ id: getId(table.value), body: table.value });
 
   if (updateError.value) {
-    return; 
+    return;
   }
 
-  await fetchSchema();
+  const expectedUpdatedAt = patchTableData.value?.data?.[0]?.updatedAt;
+  const targetTableName = String(route.params.table);
+
+  await retryUntilFresh(
+    () => forceRefreshSchema(),
+    () => {
+      if (!expectedUpdatedAt) return false;
+      const cached = schemas.value[targetTableName];
+      return !cached?.updatedAt || new Date(cached.updatedAt) < new Date(expectedUpdatedAt);
+    }
+  );
 
   await loadRoutes();
-
   registerDataMenuItems(Object.values(schemas.value));
 
   await fetchTableData();
@@ -238,16 +249,19 @@ async function handleDelete() {
 }
 
 async function deleteTable() {
+  const deletedTableName = String(route.params.table);
   await executeDeleteTable({ id: getId(table.value) });
 
   if (deleteError.value) {
-    return; 
+    return;
   }
 
-  await fetchSchema();
+  await retryUntilFresh(
+    () => forceRefreshSchema(),
+    () => !!schemas.value[deletedTableName]
+  );
 
   await loadRoutes();
-
   registerDataMenuItems(Object.values(schemas.value));
 
   toast.add({

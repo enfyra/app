@@ -3,7 +3,8 @@ const route = useRoute();
 const toast = useToast();
 const newRecord = ref<Record<string, any>>({});
 const tableName = route.params.table as string;
-const { generateEmptyForm, validate } = useSchema(tableName);
+const { generateEmptyForm } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const createErrors = ref<Record<string, string>>({});
 const { getId } = useDatabase();
 
@@ -52,17 +53,7 @@ useHeaderActionRegistry([
 ]);
 
 async function handleCreate() {
-  const { isValid, errors } = validate(newRecord.value);
-
-  if (!isValid) {
-    createErrors.value = errors;
-    toast.add({
-      title: "Missing information",
-      color: "error",
-      description: "Please fill in all required fields.",
-    });
-    return;
-  }
+  if (!await validateForm(newRecord.value, createErrors)) return;
 
   await createRecord({ body: newRecord.value });
 

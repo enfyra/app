@@ -214,64 +214,26 @@ export default defineNuxtPlugin(() => {
     });
   }
 
+  let titleUpdateTimer: ReturnType<typeof setTimeout> | null = null;
+  const scheduleTitleUpdate = () => {
+    if (titleUpdateTimer) clearTimeout(titleUpdateTimer);
+    titleUpdateTimer = setTimeout(() => {
+      updateDocumentTitleAndDescription();
+      titleUpdateTimer = null;
+    }, 100);
+  };
+
   watch(
     () => settings.value,
     (newSettings) => {
       updateAppTitleAndFavicon(newSettings);
-      updateDocumentTitleAndDescription();
+      scheduleTitleUpdate();
     },
     { immediate: true, deep: true }
   );
 
-  router.afterEach(() => {
-    setTimeout(() => {
-      updateDocumentTitleAndDescription();
-    }, 100);
-  });
+  router.afterEach(scheduleTitleUpdate);
 
-  watch(
-    () => route.path,
-    () => {
-      setTimeout(() => {
-        updateDocumentTitleAndDescription();
-      }, 100);
-    },
-    { immediate: true }
-  );
-
-  watch(
-    () => schemas.value,
-    () => {
-      setTimeout(() => {
-        updateDocumentTitleAndDescription();
-      }, 100);
-    },
-    { deep: true }
-  );
-
-  watch(
-    () => route.params,
-    () => {
-      setTimeout(() => {
-        updateDocumentTitleAndDescription();
-      }, 100);
-    },
-    { deep: true, immediate: true }
-  );
-
-  watch(
-    () => menuItems.value,
-    () => {
-      setTimeout(() => {
-        updateDocumentTitleAndDescription();
-      }, 100);
-    },
-    { deep: true }
-  );
-
-  if (process.client) {
-    setTimeout(() => {
-      updateDocumentTitleAndDescription();
-    }, 200);
-  }
+  watch(() => schemas.value, scheduleTitleUpdate, { deep: true });
+  watch(() => menuItems.value, scheduleTitleUpdate, { deep: true });
 });

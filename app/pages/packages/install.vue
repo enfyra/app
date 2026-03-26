@@ -182,7 +182,8 @@ const selectedNpmPackage = ref<any>(null);
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
-const { generateEmptyForm, validate } = useSchema(tableName);
+const { generateEmptyForm } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 
 const {
   data: createData,
@@ -269,17 +270,7 @@ async function handleCreate() {
   
   form.value.type = packageType.value;
 
-  const { isValid, errors: validationErrors } = validate(form.value);
-  errors.value = validationErrors;
-
-  if (!isValid) {
-    toast.add({
-      title: "Invalid data",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(form.value, errors)) return;
 
   await createPackage({ body: form.value });
 

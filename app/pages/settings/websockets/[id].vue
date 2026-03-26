@@ -148,7 +148,7 @@ const events = ref<any[]>([]);
 const showEventDrawer = ref(false);
 const selectedEvent = ref<any>(null);
 
-const { validate } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const pageId = computed(() => route.params.id);
@@ -299,17 +299,7 @@ onMounted(async () => {
 });
 
 async function updateGateway() {
-  const { isValid, errors: validationErrors } = validate(form.value);
-
-  if (!isValid) {
-    errors.value = validationErrors;
-    toast.add({
-      title: "Error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(form.value, errors)) return;
 
   const body = {
     ...form.value,

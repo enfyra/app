@@ -24,7 +24,8 @@ const tableName = "user_definition";
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
-const { generateEmptyForm, validate } = useSchema(tableName);
+const { generateEmptyForm } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -65,17 +66,7 @@ onMounted(() => {
 });
 
 async function handleCreate() {
-  const { isValid, errors: validationErrors } = validate(form.value);
-  errors.value = validationErrors;
-
-  if (!isValid) {
-    toast.add({
-      title: "Invalid data",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(form.value, errors)) return;
 
   await createUser({ body: form.value });
 

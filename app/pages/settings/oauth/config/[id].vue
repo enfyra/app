@@ -42,7 +42,8 @@ const { confirm } = useConfirm();
 
 const tableName = "oauth_config_definition";
 
-const { validate, getIncludeFields } = useSchema(tableName);
+const { getIncludeFields } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const hasFormChanges = ref(false);
@@ -180,16 +181,7 @@ function getProviderLabel(provider: string) {
 async function updateConfig() {
   if (!form.value) return;
 
-  const { isValid, errors: validationErrors } = validate(form.value);
-  if (!isValid) {
-    errors.value = validationErrors;
-    toast.add({
-      title: "Missing information",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(form.value, errors)) return;
 
   await executeUpdateConfig({
     id: route.params.id as string,
