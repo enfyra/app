@@ -296,14 +296,15 @@ onMounted(() => {
 <template>
   <div class="relative">
     <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
-        v-if="!isMounted || loading"
-        type="form"
-        context="page"
-        title="Loading table structure..."
-        description="Fetching table definition and schema"
-        size="sm"
-      />
+      <div v-if="!isMounted || loading" class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+        <CommonFormCard>
+          <CommonLoadingState
+            type="form"
+            context="page"
+            size="sm"
+          />
+        </CommonFormCard>
+      </div>
 
       <UForm v-else-if="table" @submit.prevent="save" :state="table">
         <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
