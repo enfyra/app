@@ -26,7 +26,8 @@ const tableName = "route_definition";
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
-const { generateEmptyForm, validate } = useSchema(tableName);
+const { generateEmptyForm } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const fieldMap = {
@@ -88,17 +89,7 @@ async function handleCreate() {
   const body = { ...createForm.value };
   filterPublishedToAvailable(body);
 
-  const { isValid, errors } = validate(body);
-
-  if (!isValid) {
-    createErrors.value = errors;
-    toast.add({
-      title: "Error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(body, createErrors)) return;
 
   await executeCreateRoute({ body });
 

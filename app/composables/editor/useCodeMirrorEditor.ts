@@ -33,16 +33,18 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     emit("update:modelValue", val);
   }, { flush: 'post' });
 
+  let keyupHandler: (() => void) | null = null;
+
   function createEditor(extensions: any[]) {
     const m = modules.value
     if (!m?.EditorView || !editorRef.value) return
-    
+
     const updateListenerExtension = m.EditorView.updateListener.of((update: any) => {
       if (update.docChanged) {
         code.value = update.state.doc.toString();
       }
     });
-    
+
     editorView.value = new m.EditorView({
       doc: code.value,
       extensions: [
@@ -51,16 +53,17 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
       ],
       parent: editorRef.value,
     });
-    
+
     if (editorView.value?.dom) {
-      editorView.value.dom.addEventListener('keyup', () => {
+      keyupHandler = () => {
         const newCode = editorView.value?.state?.doc?.toString() || '';
         if (newCode !== code.value) {
           code.value = newCode;
         }
-      });
+      };
+      editorView.value.dom.addEventListener('keyup', keyupHandler);
     }
-    
+
     if (editorRef.value.parentElement) {
       const parent = editorRef.value.parentElement;
       if (parent.style.height) {
@@ -100,7 +103,12 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
   });
 
   function destroyEditor() {
+    if (keyupHandler && editorView.value?.dom) {
+      editorView.value.dom.removeEventListener('keyup', keyupHandler);
+      keyupHandler = null;
+    }
     editorView.value?.destroy();
+    editorView.value = null;
   }
 
   function updateEditorSize() {

@@ -72,7 +72,8 @@ const showUploadModal = ref(false);
 const uploadLoading = ref(false);
 const showPreviewModal = ref(false);
 
-const { validate, getIncludeFields } = useSchema(tableName);
+const { getIncludeFields } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const hasFormChanges = ref(false);
@@ -224,16 +225,7 @@ const errors = ref<Record<string, string>>({});
 async function updateExtension() {
   if (!form.value) return;
 
-  const { isValid, errors: validationErrors } = validate(form.value);
-  if (!isValid) {
-    errors.value = validationErrors;
-    toast.add({
-      title: "Missing information",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(form.value, errors)) return;
 
   const { me } = useAuth();
   const { getIdFieldName } = useDatabase();

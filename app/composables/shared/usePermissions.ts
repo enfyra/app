@@ -63,24 +63,24 @@ export function usePermissions() {
     return false;
   };
 
+  const actionToMethod = (action: string): string | null => {
+    switch (action) {
+      case "read":   return "GET";
+      case "create": return "POST";
+      case "update": return "PATCH";
+      case "delete": return "DELETE";
+      default:       return null;
+    }
+  };
+
   const checkPermissionRule = (rule: PermissionRule): boolean => {
     if (rule.allowAll === true) {
       return true;
     }
-    
+
     return rule.actions.every((action) => {
-      switch (action) {
-        case "read":
-          return hasPermission(rule.route, "GET");
-        case "create":
-          return hasPermission(rule.route, "POST");
-        case "update":
-          return hasPermission(rule.route, "PATCH");
-        case "delete":
-          return hasPermission(rule.route, "DELETE");
-        default:
-          return false;
-      }
+      const method = actionToMethod(action);
+      return method ? hasPermission(rule.route, method) : false;
     });
   };
 
@@ -115,41 +115,21 @@ export function usePermissions() {
   };
 
   const hasAnyPermission = (routes: string[], actions: string[]): boolean => {
-    return routes.some((routePath) => {
-      return actions.some((action) => {
-        switch (action) {
-          case "read":
-            return hasPermission(routePath, "GET");
-          case "create":
-            return hasPermission(routePath, "POST");
-          case "update":
-            return hasPermission(routePath, "PATCH");
-          case "delete":
-            return hasPermission(routePath, "DELETE");
-          default:
-            return false;
-        }
-      });
-    });
+    return routes.some((routePath) =>
+      actions.some((action) => {
+        const method = actionToMethod(action);
+        return method ? hasPermission(routePath, method) : false;
+      })
+    );
   };
 
   const hasAllPermissions = (routes: string[], actions: string[]): boolean => {
-    return routes.every((routePath) => {
-      return actions.every((action) => {
-        switch (action) {
-          case "read":
-            return hasPermission(routePath, "GET");
-          case "create":
-            return hasPermission(routePath, "POST");
-          case "update":
-            return hasPermission(routePath, "PATCH");
-          case "delete":
-            return hasPermission(routePath, "DELETE");
-          default:
-            return false;
-        }
-      });
-    });
+    return routes.every((routePath) =>
+      actions.every((action) => {
+        const method = actionToMethod(action);
+        return method ? hasPermission(routePath, method) : false;
+      })
+    );
   };
 
   return {

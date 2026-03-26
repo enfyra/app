@@ -1,13 +1,26 @@
-export function useScreen() {
-  const width = ref(typeof window !== "undefined" ? window.innerWidth : 0);
-  const height = ref(typeof window !== "undefined" ? window.innerHeight : 0);
+let listenerRegistered = false;
 
-  const updateDimensions = () => {
-    if (typeof window !== "undefined") {
+export function useScreen() {
+  const width = useState("screen:width", () => typeof window !== "undefined" ? window.innerWidth : 0);
+  const height = useState("screen:height", () => typeof window !== "undefined" ? window.innerHeight : 0);
+
+  if (import.meta.client && !listenerRegistered) {
+    listenerRegistered = true;
+    window.addEventListener("resize", () => {
       width.value = window.innerWidth;
       height.value = window.innerHeight;
-    }
-  };
+    });
+  }
+
+  const instance = getCurrentInstance();
+  if (instance) {
+    onMounted(() => {
+      if (typeof window !== "undefined") {
+        width.value = window.innerWidth;
+        height.value = window.innerHeight;
+      }
+    });
+  }
 
   const isMobile = computed(() => width.value < 768);
   const isTablet = computed(() => width.value >= 768 && width.value < 1024);
@@ -20,24 +33,6 @@ export function useScreen() {
     if (isLargeDesktop.value) return "large-desktop";
     return "desktop";
   });
-
-  if (typeof window !== "undefined") {
-    window.addEventListener("resize", updateDimensions);
-  }
-
-  const instance = getCurrentInstance();
-  if (instance) {
-    onMounted(async () => {
-      await nextTick();
-      updateDimensions();
-    });
-
-    onUnmounted(() => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("resize", updateDimensions);
-      }
-    });
-  }
 
   return {
     width: computed(() => width.value),

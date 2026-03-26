@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { createFieldSelectionHandler } from '~/utils/common/filter/field-selection';
+
 const props = defineProps<{
   condition: FilterCondition;
   parentGroup: FilterGroup;
@@ -24,17 +26,8 @@ function updateValue(newValue: any) {
 }
 
 function onFieldSelectChange(selectedValue: string) {
-  const { onFieldSelectChange: handleFieldSelect } = useFieldSelection(
-    props.schemas,
-    props.tableName
-  );
-
-  const result = handleFieldSelect(
-    selectedValue,
-    props.condition,
-    props.parentGroup!,
-    emit
-  );
+  const handleFieldSelect = createFieldSelectionHandler(props.schemas, props.tableName);
+  const result = handleFieldSelect(selectedValue, props.condition, props.parentGroup!, emit);
 
   if (result && result.convertToGroup && result.newGroup) {
     emit("convert-to-group", result.newGroup, props.conditionIndex);

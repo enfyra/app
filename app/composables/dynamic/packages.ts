@@ -2,9 +2,8 @@ import type { ExternalPackage } from "~/../server/types/api";
 
 const PERF_ENABLED =
   typeof window !== "undefined" &&
-  (import.meta.dev ||
-    (typeof URLSearchParams !== "undefined" &&
-      new URLSearchParams(window.location.search).get("perf") === "1"));
+  typeof URLSearchParams !== "undefined" &&
+  new URLSearchParams(window.location.search).get("perf") === "1";
 
 const loadedPackages = new Map<string, { exports: string[]; globalName: string }>();
 const loadingPackages = new Map<string, Promise<any>>();

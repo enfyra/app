@@ -35,7 +35,8 @@ const tableName = "storage_config_definition";
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
-const { generateEmptyForm, validate, definition } = useSchema(tableName);
+const { generateEmptyForm } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const typeMap = computed(() => {
@@ -111,17 +112,7 @@ onMounted(() => {
 });
 
 async function handleCreate() {
-  const { isValid, errors } = validate(createForm.value);
-
-  if (!isValid) {
-    createErrors.value = errors;
-    toast.add({
-      title: "Error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(createForm.value, createErrors)) return;
 
   const idField = getIdFieldName();
   const body = {

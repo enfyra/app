@@ -4,7 +4,7 @@ import ColumnSelector from "~/components/data-table/ColumnSelector.vue";
 const route = useRoute();
 const router = useRouter();
 const tableName = route.params.table as string;
-const { schemas, schemaReady } = useSchema(tableName);
+const { schemas, schemaReady, getColumnFields } = useSchema(tableName);
 const total = ref(1);
 const page = ref(1);
 const pageLimit = 10;
@@ -27,7 +27,7 @@ const {
   data: singleRecordData,
   execute: fetchSingleRecord,
 } = useApi(() => getRouteForTableName(tableName), {
-  query: { limit: 1, fields: "*" },
+  query: { limit: 1, fields: getColumnFields() },
   immediate: false,
   errorContext: "Fetch Single Record",
 });
@@ -90,7 +90,7 @@ const {
     return {
       limit: pageLimit,
       page: page.value,
-      fields: "*",
+      fields: getColumnFields(),
       sort: "-createdAt",
       meta: "*",
       ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),

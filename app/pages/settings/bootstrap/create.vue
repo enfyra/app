@@ -24,7 +24,8 @@ const tableName = "bootstrap_script_definition";
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
-const { generateEmptyForm, validate } = useSchema(tableName);
+const { generateEmptyForm } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -75,17 +76,7 @@ onMounted(() => {
 });
 
 async function handleCreate() {
-  const { isValid, errors } = validate(createForm.value);
-
-  if (!isValid) {
-    createErrors.value = errors;
-    toast.add({
-      title: "Missing information",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(createForm.value, createErrors)) return;
 
   await executeCreateScript({ body: createForm.value });
 

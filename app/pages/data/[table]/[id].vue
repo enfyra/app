@@ -3,7 +3,8 @@ const route = useRoute();
 
 const toast = useToast();
 const tableName = route.params.table as string;
-const { validate, schemas, useFormChanges } = useSchema(tableName);
+const { schemas, useFormChanges } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const updateErrors = ref<Record<string, string>>({});
 
 const schema = computed(() => schemas.value[tableName]);
@@ -12,7 +13,7 @@ const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
 const { confirm } = useConfirm();
 
 const hasFormChanges = ref(false);
-const formEditorRef = ref();
+const formEditorRegistry = useFormEditorRegistry();
 const formChanges = useFormChanges();
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
@@ -60,17 +61,7 @@ async function initializeForm() {
 }
 
 async function handleUpdate() {
-  const { isValid, errors } = validate(currentRecord.value);
-
-  if (!isValid) {
-    updateErrors.value = errors;
-    toast.add({
-      title: "Missing information",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(currentRecord.value, updateErrors)) return;
 
   await updateRecord({
     id: route.params.id as string,
@@ -87,7 +78,7 @@ async function handleUpdate() {
     currentRecord.value = { ...data };
     formChanges.update(data);
     hasFormChanges.value = false;
-    formEditorRef.value?.confirmChanges();
+    formEditorRegistry.value?.confirmChanges();
   }
 
   toast.add({
@@ -215,7 +206,6 @@ useHeaderActionRegistry([
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <CommonFormCard>
         <FormEditorLazy
-          ref="formEditorRef"
           :table-name="(route.params.table as string)"
           mode="update"
           v-model="currentRecord"

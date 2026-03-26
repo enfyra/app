@@ -67,7 +67,8 @@ const errors = ref<Record<string, string>>({});
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
-const { validate, useFormChanges } = useSchema(tableName);
+const { useFormChanges } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const formChanges = useFormChanges();
 
 const {
@@ -186,17 +187,7 @@ async function initializeForm() {
 }
 
 async function handleUpdate() {
-  const { isValid, errors: validationErrors } = validate(form.value);
-  errors.value = validationErrors;
-
-  if (!isValid) {
-    toast.add({
-      title: "Invalid data",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(form.value, errors)) return;
 
   const isConfirmed = await confirm({
     title: "Update Package",

@@ -130,7 +130,8 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const { confirm } = useConfirm();
-const { loadRoutes } = useRoutes();
+const { routes, loadRoutes } = useRoutes();
+const { retryUntilFresh } = useServerSync();
 const { getId } = useDatabase();
 
 const tableName = "route_definition";
@@ -139,7 +140,8 @@ const formEditorRef = ref();
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 
-const { validate, getIncludeFields, schemas } = useSchema(tableName);
+const { getIncludeFields, schemas } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 const { getIncludeFields: getPreHookIncludeFields } = useSchema("pre_hook_definition");
 const { getIncludeFields: getPostHookIncludeFields } = useSchema("post_hook_definition");
 const { getIncludeFields: getHandlerIncludeFields } = useSchema("route_handler_definition");
@@ -258,6 +260,7 @@ watch(() => routeData.value?.data?.[0], (currentRoute) => {
 }, { immediate: true });
 
 const {
+  data: updateRouteData,
   error: updateError,
   execute: executeUpdateRoute,
   pending: updateLoading,
@@ -310,16 +313,7 @@ async function updateRoute() {
   const body = { ...form.value };
   filterPublishedToAvailable(body);
 
-  const { isValid, errors: validationErrors } = validate(body);
-  if (!isValid) {
-    errors.value = validationErrors;
-    toast.add({
-      title: "Missing information",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(body, errors)) return;
 
   await executeUpdateRoute({
     id: route.params.id as string,
@@ -337,7 +331,17 @@ async function updateRoute() {
   });
   errors.value = {};
 
-  await loadRoutes();
+  const expectedUpdatedAt = updateRouteData.value?.data?.[0]?.updatedAt;
+  const routeId = String(route.params.id);
+
+  await retryUntilFresh(
+    () => loadRoutes(),
+    () => {
+      if (!expectedUpdatedAt) return false;
+      const cached = routes.value.find((r: any) => String(getId(r)) === routeId);
+      return !cached?.updatedAt || new Date(cached.updatedAt) < new Date(expectedUpdatedAt);
+    }
+  );
 
   const { registerDataMenuItems } = useMenuRegistry();
   await registerDataMenuItems(Object.values(schemas.value));
@@ -380,19 +384,23 @@ async function deleteRoute() {
   });
   if (!ok) return;
 
+  const deletedRouteId = String(route.params.id);
   await executeDeleteRoute({ id: route.params.id as string });
 
   if (deleteError.value) {
     return;
   }
 
-  toast.add({ 
+  toast.add({
     title: "Success",
-    description: "Route deleted successfully", 
-    color: "success" 
+    description: "Route deleted successfully",
+    color: "success"
   });
 
-  await loadRoutes();
+  await retryUntilFresh(
+    () => loadRoutes(),
+    () => routes.value.some((r: any) => String(getId(r)) === deletedRouteId)
+  );
 
   const { registerDataMenuItems } = useMenuRegistry();
   await registerDataMenuItems(Object.values(schemas.value));

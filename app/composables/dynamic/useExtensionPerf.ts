@@ -1,4 +1,4 @@
-const ENABLED = typeof window !== "undefined" && (import.meta.dev || (typeof URLSearchParams !== "undefined" && new URLSearchParams(window.location.search).get("perf") === "1"));
+const ENABLED = typeof window !== "undefined" && typeof URLSearchParams !== "undefined" && new URLSearchParams(window.location.search).get("perf") === "1";
 
 function mark(name: string) {
   if (ENABLED && performance?.mark) {

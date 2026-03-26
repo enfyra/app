@@ -114,7 +114,7 @@ useHeaderActionRegistry([
 
 const errors = ref<Record<string, string>>({});
 
-const { validate } = useSchema(tableName);
+const { validateForm } = useFormValidation(tableName);
 
 const {
   data: apiData,
@@ -160,16 +160,7 @@ const {
 async function save() {
   if (!form.value) return;
 
-  const { isValid, errors: validationErrors } = validate(form.value);
-  if (!isValid) {
-    errors.value = validationErrors;
-    toast.add({
-      title: "Missing information",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
-    return;
-  }
+  if (!await validateForm(form.value, errors)) return;
 
   await updateRole({ body: form.value });
 

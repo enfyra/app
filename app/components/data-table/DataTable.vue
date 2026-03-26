@@ -171,14 +171,12 @@ watch(
   { immediate: true }
 );
 
-let emitTimeout: NodeJS.Timeout;
 watch(
   selectedRows,
   (newSelection) => {
-    clearTimeout(emitTimeout);
-    emitTimeout = setTimeout(() => {
+    nextTick(() => {
       emit("selection-change", newSelection);
-    }, 10);
+    });
   },
   { deep: true }
 );

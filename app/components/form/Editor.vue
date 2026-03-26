@@ -10,8 +10,12 @@
       :errors="errors"
       :loading="props.loading"
       :mode="props.mode"
+      :is-unique-field="isFieldInUnique(field.name || field.propertyName || '')"
+      :unique-check-status="getCheckStatus(field.name || field.propertyName || '').status"
+      :unique-check-message="getCheckStatus(field.name || field.propertyName || '').message"
       @update:form-data="updateFormData"
       @update:errors="updateErrors"
+      @check-unique="handleCheckUnique"
       :class="[
         'relative group',
         props.layout === 'grid' && field.fieldType === 'relation' ? 'md:col-span-2' : ''
@@ -32,6 +36,7 @@ const props = withDefaults(
     loading?: boolean;
     mode?: 'create' | 'update';
     layout?: 'stack' | 'grid';
+    currentRecordId?: string | number | null;
   }>(),
   {
     excluded: () => [],
@@ -40,6 +45,7 @@ const props = withDefaults(
     loading: false,
     mode: 'update',
     layout: 'stack',
+    currentRecordId: null,
   }
 );
 
@@ -49,11 +55,32 @@ const emit = defineEmits<{
   "hasChanged": [hasChanged: boolean];
 }>();
 
-const { definition, fieldMap, sortFieldsByOrder, useFormChanges } = useSchema(
+const { definition, fieldMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
   props.tableName
 );
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
+
+const formEditorRegistry = useFormEditorRegistry();
+
+const currentRecordIdRef = computed(() => props.currentRecordId);
+const uniquesRef = computed(() => schema.value?.uniques || null);
+
+const {
+  isFieldInUnique,
+  getCheckStatus,
+  checkUnique,
+  resetCheck,
+} = useUniqueCheck(
+  props.tableName,
+  uniquesRef,
+  currentRecordIdRef
+);
+
+async function handleCheckUnique(fieldName: string) {
+  const value = props.modelValue[fieldName];
+  await checkUnique(fieldName, value, props.modelValue);
+}
 
 const fieldMapWithGenerated = computed(() => {
   const result = { ...props.fieldMap };
@@ -154,11 +181,11 @@ watch(
 
 watch(
   () => props.modelValue,
-  (newValue) => {
+  (newValue, oldValue) => {
     if (Object.keys(originalData.value).length === 0) {
       return;
     }
-    
+
     if (
       newValue &&
       Object.keys(newValue).length > 0 &&
@@ -167,17 +194,74 @@ watch(
       const hasChanged = formChanges.checkChanges(newValue);
       emit("hasChanged", hasChanged);
     }
+
+    if (newValue && oldValue) {
+      for (const key of Object.keys(newValue)) {
+        if (newValue[key] !== oldValue[key] && isFieldInUnique(key)) {
+          resetCheck(key);
+        }
+      }
+    }
   },
   { deep: true }
 );
 
-defineExpose({
-  confirmChanges: () => {
-    if (props.modelValue && Object.keys(props.modelValue).length > 0) {
-      originalData.value = JSON.parse(JSON.stringify(props.modelValue));
-      formChanges.update(props.modelValue);
-      emit("hasChanged", false);
+function getUniqueFieldsNeedingCheck(): string[] {
+  const fieldsNeedingCheck: string[] = [];
+  for (const field of visibleFields.value) {
+    const key = field.name || field.propertyName;
+    if (key && isFieldInUnique(key)) {
+      const status = getCheckStatus(key);
+      if (status.status !== 'valid') {
+        fieldsNeedingCheck.push(key);
+      }
     }
-  },
+  }
+  return fieldsNeedingCheck;
+}
+
+async function validateAllUniqueFields(): Promise<boolean> {
+  console.log('[validateAllUniqueFields]', JSON.stringify(visibleFields.value.map((f: any) => ({ key: f.name || f.propertyName, inUnique: isFieldInUnique(f.name || f.propertyName || '') }))));
+  const allUniqueFields: string[] = [];
+  for (const field of visibleFields.value) {
+    const key = field.name || field.propertyName;
+    if (key && isFieldInUnique(key)) {
+      allUniqueFields.push(key);
+    }
+  }
+
+  if (allUniqueFields.length === 0) return true;
+
+  const results = await Promise.all(
+    allUniqueFields.map(fieldName =>
+      checkUnique(fieldName, props.modelValue[fieldName], props.modelValue)
+    )
+  );
+
+  return results.every(result => result === true);
+}
+
+function confirmChanges() {
+  if (props.modelValue && Object.keys(props.modelValue).length > 0) {
+    originalData.value = JSON.parse(JSON.stringify(props.modelValue));
+    formChanges.update(props.modelValue);
+    emit("hasChanged", false);
+  }
+}
+
+onMounted(() => {
+  formEditorRegistry.value = { validateAllUniqueFields, confirmChanges, getUniqueFieldsNeedingCheck };
+});
+
+onUnmounted(() => {
+  if (formEditorRegistry.value?.validateAllUniqueFields === validateAllUniqueFields) {
+    formEditorRegistry.value = null;
+  }
+});
+
+defineExpose({
+  confirmChanges,
+  getUniqueFieldsNeedingCheck,
+  validateAllUniqueFields,
 });
 </script>

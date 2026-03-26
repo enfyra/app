@@ -8,17 +8,9 @@ export const useStreamingAPI = () => {
 
   const connectSSE = (url: string, options: StreamOptions & { queryParams?: Record<string, string> }) => {
     const { queryParams, ...streamOptions } = options
-    
-    const config: any = useRuntimeConfig().public;
-    const apiUrl = config?.apiUrl || getAppUrl();
-    const apiPrefix = "/api";
-    
-    const basePath = url
-      .replace(/^\/+/, "");
-    
-    const fullBaseURL = normalizeUrl(apiUrl, apiPrefix);
-    
-    let fullUrl = normalizeUrl(fullBaseURL, basePath);
+
+    const basePath = url.replace(/^\/+/, "");
+    let fullUrl = `/api/${basePath}`;
     
     if (queryParams && Object.keys(queryParams).length > 0) {
       const params = new URLSearchParams()
