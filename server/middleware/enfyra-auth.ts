@@ -1,4 +1,4 @@
-import { defineEventHandler, getCookie } from "h3";
+import { defineEventHandler, getCookie, getHeader } from "h3";
 import {
   validateTokens,
   refreshAccessToken,
@@ -17,6 +17,13 @@ export default defineEventHandler(async (event) => {
     url === logoutPath ||
     url.startsWith(authPrefix)
   ) {
+    return;
+  }
+
+  const authHeader = getHeader(event, "authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    event.context.proxyHeaders = event.context.proxyHeaders || {};
+    event.context.proxyHeaders.authorization = authHeader;
     return;
   }
 
