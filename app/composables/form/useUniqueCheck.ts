@@ -44,7 +44,6 @@ export function useUniqueCheck(
     value: any,
     allFormData?: Record<string, any>
   ): Promise<boolean> {
-    console.log('[checkUnique] START', fieldName, '=', value, typeof value);
     if (value === null || value === undefined || value === '') {
       setCheckStatus(fieldName, 'idle', '', value);
       return true;
@@ -84,24 +83,28 @@ export function useUniqueCheck(
         }
       }
 
-      if (currentIdRef.value) {
-        filter[getIdFieldName()] = { _ne: currentIdRef.value };
-      }
+      const idFieldName = getIdFieldName();
+
+      const finalFilter: Record<string, any> = {
+        _and: [
+          filter,
+          ...(currentIdRef.value
+            ? [{ [idFieldName]: { _neq: currentIdRef.value } }]
+            : []),
+        ],
+      };
 
       try {
-        console.log('[checkUnique] calling', tableNameRef.value, JSON.stringify(filter), 'value:', value);
         const response = await $fetch<{ data: any[]; meta?: { total?: number } }>(
           `/api/${tableNameRef.value}`,
           {
             query: {
-              filter,
+              filter: finalFilter,
               limit: 1,
               fields: getIdFieldName(),
             },
           }
         );
-        console.log('[checkUnique] response data length:', response?.data?.length);
-
         const exists = (response?.data?.length ?? 0) > 0;
 
         if (exists) {

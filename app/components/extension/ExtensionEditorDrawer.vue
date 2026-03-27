@@ -80,6 +80,7 @@ const excludedFields = computed(() => {
     "isSystem",
     "compiledCode",
     "menu",
+    "type",
   ];
 
   if (!props.menu?.extension) {
@@ -95,7 +96,7 @@ watch(() => isOpen.value, async (open) => {
       await fetchExtension();
       const data = extensionData.value?.data?.[0];
       if (data) {
-        form.value = { ...data };
+        form.value = { ...data, type: 'page' };
         const menuId = getId(props.menu);
         if (menuId) {
           form.value.menu = { id: menuId };
@@ -104,6 +105,7 @@ watch(() => isOpen.value, async (open) => {
       }
     } else {
       form.value = generateEmptyForm();
+      form.value.type = 'page';
       const menuId = getId(props.menu);
       if (menuId) {
         form.value.menu = { id: menuId };

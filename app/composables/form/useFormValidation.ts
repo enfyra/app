@@ -19,7 +19,6 @@ export function useFormValidation(tableName: string) {
       return false;
     }
 
-    console.log('[validateForm] registry:', formEditorRegistry.value);
     const uniqueValid = await formEditorRegistry.value?.validateAllUniqueFields();
     if (uniqueValid === false) {
       toast.add({
