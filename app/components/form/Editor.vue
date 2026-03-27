@@ -63,7 +63,8 @@ const originalData = ref<Record<string, any>>({});
 
 const formEditorRegistry = useFormEditorRegistry();
 
-const currentRecordIdRef = computed(() => props.currentRecordId);
+const { getId } = useDatabase();
+const currentRecordIdRef = computed(() => props.currentRecordId ?? (props.mode === 'update' ? getId(props.modelValue) : null));
 const uniquesRef = computed(() => schema.value?.uniques || null);
 
 const {
