@@ -1,48 +1,33 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+    <div class="w-full max-w-[1000px]">
       <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
           <FormEditorLazy
             v-model="createForm"
             :table-name="tableName"
             :errors="createErrors"
-            :field-map="{
-              connectionHandlerScript: {
-                type: 'code',
-                language: 'javascript',
-                height: '400px',
-                label: 'Connection Handler Script',
-                description: 'JavaScript code to execute when client connects'
-              },
-              connectionHandlerTimeout: {
-                type: 'number',
-                label: 'Connection Handler Timeout (ms)',
-                description: 'Timeout for connection handler execution (default: 5000ms)',
-                placeholder: '5000'
-              }
-            }"
+            :excluded="['steps']"
+            :field-map="createFieldMap"
             @update:errors="(errors) => (createErrors = errors)"
             mode="create"
           />
         </UForm>
       </CommonFormCard>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({
   layout: "default",
-  title: "Create WebSocket Gateway",
+  title: "Create Flow",
 });
 
 const toast = useToast();
 const router = useRouter();
-const { createLoader } = useLoader();
 
-const tableName = "websocket_definition";
+const tableName = "flow_definition";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -51,14 +36,24 @@ const { generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
+const TriggerConfigEditor = resolveComponent('FlowTriggerConfigEditor');
+const createFieldMap = computed(() => ({
+  triggerConfig: {
+    label: 'Trigger Configuration',
+    hideDescription: true,
+    component: TriggerConfigEditor,
+    componentProps: { triggerType: createForm.value.triggerType },
+  },
+}));
+
 registerPageHeader({
-  title: "Create New WebSocket Gateway",
-  gradient: "cyan",
+  title: "Create New Flow",
+  gradient: "purple",
 });
 
 useHeaderActionRegistry([
   {
-    id: "save-websocket",
+    id: "save-flow",
     label: "Save",
     icon: "lucide:save",
     variant: "solid",
@@ -66,23 +61,19 @@ useHeaderActionRegistry([
     submit: handleCreate,
     loading: computed(() => createLoading.value),
     permission: {
-      and: [
-        {
-          route: "/websocket_definition",
-          actions: ["create"],
-        },
-      ],
+      and: [{ route: "/flow_definition", actions: ["create"] }],
     },
   },
 ]);
 
 const {
+  data: createData,
   error: createError,
-  execute: executeCreateGateway,
+  execute: executeCreateFlow,
   pending: createLoading,
-} = useApi(() => `/websocket_definition`, {
+} = useApi(() => `/flow_definition`, {
   method: "post",
-  errorContext: "Create WebSocket Gateway",
+  errorContext: "Create Flow",
 });
 
 onMounted(async () => {
@@ -92,11 +83,14 @@ onMounted(async () => {
 async function handleCreate() {
   if (!await validateForm(createForm.value, createErrors)) return;
 
-  const body = {
-    ...createForm.value,
-  };
+  if (createForm.value.triggerType === 'schedule' && !createForm.value.triggerConfig?.cron) {
+    createErrors.value.triggerConfig = 'Cron expression is required for schedule trigger';
+    return;
+  }
 
-  await executeCreateGateway({ body });
+  const body = { ...createForm.value };
+
+  await executeCreateFlow({ body });
 
   if (createError.value) {
     toast.add({
@@ -109,10 +103,11 @@ async function handleCreate() {
 
   toast.add({
     title: "Success",
-    description: `WebSocket gateway "${createForm.value.path}" has been created successfully!`,
+    description: `Flow "${createForm.value.name}" has been created successfully!`,
     color: "success",
   });
 
-  router.push('/settings/websockets');
+  const createdId = createData.value?.data?.[0]?.id;
+  router.push(createdId ? `/settings/flows/${createdId}` : '/settings/flows');
 }
 </script>

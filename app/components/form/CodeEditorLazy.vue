@@ -1,11 +1,12 @@
 <template>
   <Suspense>
-    <CodeEditor 
+    <CodeEditor
       v-if="shouldRender"
       :model-value="props.modelValue"
       :language="props.language"
       :height="props.height"
       :class="props.class"
+      :enfyra-autocomplete="props.enfyraAutocomplete"
       @update:model-value="(value) => $emit('update:modelValue', value)"
       @diagnostics="(diags) => $emit('diagnostics', diags)"
     />
@@ -30,6 +31,7 @@ const props = defineProps<{
   language?: "javascript" | "vue" | "json" | "html";
   height?: string;
   class?: string;
+  enfyraAutocomplete?: boolean | 'vue';
 }>();
 
 defineEmits<{

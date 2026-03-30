@@ -3,6 +3,7 @@ const props = defineProps<{
   modelValue?: string;
   language?: "javascript" | "vue" | "json" | "html";
   height?: string;
+  enfyraAutocomplete?: boolean | 'vue';
 }>();
 
 const emit = defineEmits(["update:modelValue", "diagnostics"]);
@@ -47,7 +48,7 @@ const extensions = computed(() => {
   
   const setup = getBasicSetup(props.language, (diags: any[]) => {
     emit("diagnostics", diags);
-  })
+  }, props.enfyraAutocomplete)
   
   if (!Array.isArray(setup) || setup.length === 0) {
     return []

@@ -116,6 +116,17 @@
     @cancel="handleCancelEditHook"
   />
 
+  <RouteApiTestModal
+    v-model="showApiTestModal"
+    :route-path="form.path || ''"
+    :available-methods="availableMethodStrings"
+    :published-methods="publishedMethodStrings"
+    :handlers="displayHandlers"
+    :main-table-name="mainTableInfo?.name"
+    :schemas="schemas"
+    :columns="mainTableColumns"
+  />
+
   <CommonEmptyState
     v-if="!loading && !routeData?.data?.[0]"
     title="Route not found"
@@ -136,6 +147,7 @@ const { getId } = useDatabase();
 
 const tableName = "route_definition";
 const hasFormChanges = ref(false);
+const showApiTestModal = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
@@ -208,6 +220,18 @@ useHeaderActionRegistry([
         },
       ],
     },
+  },
+]);
+
+useSubHeaderActionRegistry([
+  {
+    id: "test-api",
+    label: "Test API",
+    icon: "lucide:play",
+    variant: "solid",
+    color: "success",
+    size: "md",
+    onClick: () => { showApiTestModal.value = true; },
   },
 ]);
 
@@ -286,6 +310,20 @@ const availableMethodStrings = computed(() => {
   const methods = formChanges.originalData.value?.availableMethods ?? routeData.value?.data?.[0]?.availableMethods;
   if (!Array.isArray(methods)) return [];
   return methods.filter((m: any) => m?.method).map((m: any) => m.method);
+});
+
+const publishedMethodStrings = computed(() => {
+  const methods = routeData.value?.data?.[0]?.publishedMethods;
+  if (!Array.isArray(methods)) return [];
+  return methods.filter((m: any) => m?.method).map((m: any) => m.method);
+});
+
+const mainTableColumns = computed(() => {
+  const tableName = mainTableInfo.value?.name;
+  if (!tableName || !schemas.value?.[tableName]) return [];
+  const table = schemas.value[tableName];
+  const cols = table.columns || table.fields || [];
+  return cols.map((c: any) => c.name || c.propertyName).filter(Boolean);
 });
 
 function filterPublishedToAvailable(body: Record<string, any>) {

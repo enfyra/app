@@ -1,5 +1,7 @@
+import { ENFYRA_COMPLETIONS, ENFYRA_METHOD_COMPLETIONS, VUE_COMPLETIONS, VUE_COMPONENT_COMPLETIONS } from '~/utils/editor-completions.constants';
+
 export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
-  
+
   const modules = computed(() => {
     if (!codeMirrorModules) return null
     return isRef(codeMirrorModules) ? codeMirrorModules.value : codeMirrorModules
@@ -127,15 +129,8 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
           )
           if (!isMatched) {
             const nextChar = text[match.index + 1]
-            if (!nextChar || !/[A-Z_]/.test(nextChar)) {
-              let endPos = absolutePos + 1
-              if (nextChar && /[a-zA-Z_]/.test(nextChar)) {
-                const identifierMatch = text.substring(match.index + 1).match(/^[a-zA-Z_][a-zA-Z0-9_]*/)
-                if (identifierMatch) {
-                  endPos = absolutePos + 1 + identifierMatch[0].length
-                }
-              }
-              allDecorations.push({ from: absolutePos, to: endPos, decoration: standaloneAtDecoration })
+            if (!nextChar) {
+              allDecorations.push({ from: absolutePos, to: absolutePos + 1, decoration: standaloneAtDecoration })
             }
           }
         }
@@ -270,7 +265,29 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     });
   };
 
-  const getBasicSetup = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
+  function enfyraCompletionSource(m: any) {
+    return (context: any) => {
+      const before = context.matchBefore(/[@#%][\w.]*/);
+      if (!before) {
+        const dotBefore = context.matchBefore(/\.\w*/);
+        if (dotBefore) {
+          return { from: dotBefore.from, options: ENFYRA_METHOD_COMPLETIONS };
+        }
+        return null;
+      }
+      return { from: before.from, options: ENFYRA_COMPLETIONS };
+    };
+  }
+
+  function vueCompletionSource(m: any) {
+    return (context: any) => {
+      const word = context.matchBefore(/[\w]*/);
+      if (!word || word.from === word.to) return null;
+      return { from: word.from, options: [...VUE_COMPLETIONS, ...VUE_COMPONENT_COMPLETIONS] };
+    };
+  }
+
+  const getBasicSetup = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void, enfyraAutocomplete?: boolean | 'vue') => {
     const m = getModules()
     if (!m) return []
     
@@ -285,7 +302,13 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       m.crosshairCursor(),
       m.bracketMatching(),
       m.closeBrackets(),
-      m.autocompletion(),
+      m.autocompletion({
+        override: enfyraAutocomplete === 'vue'
+          ? [vueCompletionSource(m)]
+          : enfyraAutocomplete
+            ? [enfyraCompletionSource(m)]
+            : undefined,
+      }),
       m.highlightSelectionMatches(),
       m.indentUnit.of("  "),
       createLinter(language, onDiagnostics),

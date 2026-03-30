@@ -126,7 +126,7 @@ const {
   execute: fetchGateways,
 } = useApi(() => "/websocket_definition", {
   query: computed(() => ({
-    fields: ["*", "events.*", "targetTables.*"].join(","),
+    fields: ["*", "events.*"].join(","),
     limit,
     page: page.value,
     meta: "*",
