@@ -342,6 +342,7 @@ async function handleSave() {
           :excluded="excludedFields"
           :field-map="typeMap"
           :loading="loading"
+          :current-record-id="props.menu ? getId(props.menu) : null"
         />
       </div>
     </template>

@@ -45,4 +45,6 @@ export interface StepNodeData {
   _addContext?: { parentId?: any; branch?: string; afterOrder?: number };
   execStatus?: 'completed' | 'failed' | 'running' | 'skipped' | null;
   execError?: string | null;
+  isFirst?: boolean;
+  isLast?: boolean;
 }

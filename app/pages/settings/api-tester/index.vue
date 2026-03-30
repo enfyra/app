@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { HTTP_METHODS, getHttpMethodColor } from '~/utils/http.constants';
+import { HTTP_METHODS, getHttpMethodColor, type HttpMethod } from '~/utils/http.constants';
 
 definePageMeta({ layout: "default", title: "API Tester" });
 
@@ -152,14 +152,12 @@ const filteredSystemRoutes = computed(() => {
   return systemRoutes.value.filter((r: any) => r.path?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q));
 });
 
-const httpMethods = [...HTTP_METHODS];
-
 function getRouteMethods(route: any): string[] {
   const methods = route.availableMethods;
   if (!Array.isArray(methods)) return [];
   const mapped = methods.map((m: any) => m?.method).filter(Boolean);
   if (mapped.includes('REST')) return ['GET', 'POST', 'PATCH', 'DELETE'];
-  return mapped.filter((m: string) => httpMethods.includes(m));
+  return mapped.filter((m: string): m is HttpMethod => HTTP_METHODS.includes(m as HttpMethod));
 }
 
 function methodColor(m: string): any {

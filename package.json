@@ -82,7 +82,6 @@
     "lodash-es": "^4.17.21",
     "lowlight": "3.3.0",
     "marked": "^17.0.0",
-    "ms": "2.1.3",
     "nuxt": "^4.2.1",
     "nuxt-codemirror": "0.0.16",
     "socket.io": "^4.8.3",

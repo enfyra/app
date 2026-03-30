@@ -10,5 +10,17 @@ export function getTargetTableName(
     );
     return (targetSchema as any)?.name || null;
   }
+  if (relation.targetTable && typeof relation.targetTable === "object" && schemas) {
+    if (typeof relation.targetTable.name === "string") {
+      return relation.targetTable.name;
+    }
+    const tid = relation.targetTable.id;
+    if (tid != null) {
+      const targetSchema = Object.values(schemas).find(
+        (s: any) => s.id === tid
+      );
+      return (targetSchema as any)?.name || null;
+    }
+  }
   return null;
 }

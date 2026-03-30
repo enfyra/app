@@ -595,6 +595,10 @@ const componentConfig = computed(() => getComponentConfigByKey(props.keyName));
 const errorMessage = computed(() => props.errors?.[props.keyName]);
 const hasError = computed(() => !!errorMessage.value);
 
+const isRelationColumn = computed(() => {
+  return props.columnMap.get(props.keyName)?.fieldType === "relation";
+});
+
 const isCustomComponent = computed(() => {
   const column = props.columnMap.get(props.keyName);
   const manualConfig = props.fieldMap?.[props.keyName];
@@ -617,6 +621,10 @@ const isCustomComponent = computed(() => {
   
   return isRelation || (finalType && customTypes.includes(finalType));
 });
+
+const showCustomErrorOutline = computed(
+  () => isCustomComponent.value && hasError.value && !isRelationColumn.value
+);
 
 function getComponentType(): string {
   const column = props.columnMap.get(props.keyName);
@@ -641,7 +649,7 @@ function getComponentType(): string {
       <UFormField :error="getComponentType() === 'simple-json' ? undefined : errorMessage">
         <div
           :class="[
-            isCustomComponent && hasError
+            showCustomErrorOutline
               ? 'rounded-md border-2 border-red-500'
               : ''
           ]"

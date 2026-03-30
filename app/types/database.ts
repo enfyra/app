@@ -139,6 +139,7 @@ export interface TableDefinitionField {
   propertyName?: string;
   inversePropertyName?: string | null;
   relationType?: RelationType;
+  foreignKeyColumn?: string | null;
   sourceTable?: {
     id: number;
   };

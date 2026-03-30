@@ -5,19 +5,21 @@ defineOptions({
 
 const props = withDefaults(
   defineProps<{
-    modelValue: Record<string, any>;
-    errors: Record<string, string>;
-    tableName: string;
-    excluded?: string[];
-    includes?: string[];
-    fieldMap?: Record<string, any>;
-    loading?: boolean;
-    mode?: 'create' | 'update';
-    layout?: 'stack' | 'grid';
-  }>(),
+                      modelValue: Record<string, any>;
+                      errors: Record<string, string>;
+                      tableName: string;
+                      excluded?: string[];
+                      includes?: string[];
+                      fieldMap?: Record<string, any>;
+                      loading?: boolean;
+                      mode?: 'create' | 'update';
+                      layout?: 'stack' | 'grid';
+                      currentRecordId?: string | number | null;
+                    }>(),
   {
     mode: 'update',
     layout: 'stack',
+    currentRecordId: null,
   }
 );
 

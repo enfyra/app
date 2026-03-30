@@ -1,8 +1,8 @@
 import { build, type Plugin } from 'esbuild';
 import { readFileSync, existsSync } from 'fs';
-import { join, resolve, dirname, sep } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import type { ExternalPackage } from '../types/api';
+import { packageManagementService } from './package/management';
 
 export type { ExternalPackage };
 
@@ -100,36 +100,7 @@ const vueExternalPlugin: Plugin = {
 };
 
 function findProjectRoot(): string {
-  const isInsideOutput = (dir: string): boolean =>
-    dir.includes(`${sep}.output${sep}`) || dir.endsWith(`${sep}.output`);
-
-  const tryFind = (startDir: string): string | null => {
-    let current = resolve(startDir);
-    while (current !== '/' && current.length > 1) {
-      if (
-        !isInsideOutput(current) &&
-        existsSync(join(current, 'package.json')) &&
-        existsSync(join(current, 'node_modules'))
-      ) {
-        return current;
-      }
-      const parent = resolve(current, '..');
-      if (parent === current) break;
-      current = parent;
-    }
-    return null;
-  };
-
-  try {
-    const __filename = fileURLToPath(import.meta.url);
-    const bundlerDir = dirname(__filename);
-    const fromServerUtils = tryFind(bundlerDir);
-    if (fromServerUtils) return fromServerUtils;
-  } catch {
-  }
-
-  const fromCwd = tryFind(process.cwd());
-  return fromCwd || process.cwd();
+  return packageManagementService.getProjectRoot();
 }
 
 export interface BundleOptions {
