@@ -104,6 +104,8 @@
 </template>
 
 <script setup lang="ts">
+import { HTTP_METHODS, getHttpMethodColor } from '~/utils/http.constants';
+
 const props = defineProps<{
   modelValue: boolean;
   routePath: string;
@@ -126,7 +128,7 @@ const isOpen = computed({
   set: (v) => emit('update:modelValue', v),
 });
 
-const httpMethods = ['GET', 'POST', 'PATCH', 'DELETE'] as const;
+const httpMethods = HTTP_METHODS;
 const method = ref<string>('GET');
 const filterObject = ref<any>(null);
 const selectedFields = ref<string[]>([]);
@@ -184,7 +186,7 @@ const canSend = computed(() => {
 });
 
 function methodColor(m: string): any {
-  return ({ GET: 'info', POST: 'success', PATCH: 'warning', DELETE: 'error' } as any)[m] || 'neutral';
+  return getHttpMethodColor(m);
 }
 
 function addQueryParam() {

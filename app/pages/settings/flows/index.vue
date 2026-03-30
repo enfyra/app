@@ -85,6 +85,8 @@
 </template>
 
 <script setup lang="ts">
+import { getTriggerColor } from '~/utils/flow.constants';
+
 const page = ref(1);
 const limit = 9;
 
@@ -143,13 +145,6 @@ useHeaderActionRegistry([
   },
 ]);
 
-function getTriggerColor(triggerType: string) {
-  const colors: Record<string, string> = {
-    schedule: 'info',
-    manual: 'neutral',
-  };
-  return colors[triggerType] || 'neutral';
-}
 
 function navigateToDetail(flow: any) {
   navigateTo(`/settings/flows/${getId(flow)}`);

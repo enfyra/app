@@ -68,9 +68,8 @@
 
 <script setup lang="ts">
 import { Handle, Position } from '@vue-flow/core';
-import type { StepNodeData, StepNodeType } from '~/types/flow';
-
-type BadgeColor = 'error' | 'info' | 'success' | 'primary' | 'warning' | 'neutral' | 'secondary';
+import type { StepNodeData } from '~/types/flow';
+import { STEP_TYPE_COLOR_MAP, STEP_TYPE_ICON_MAP, type BadgeColor } from '~/utils/flow.constants';
 
 interface Props {
   data: StepNodeData;
@@ -89,37 +88,11 @@ function handleClick() {
 const showReorder = computed(() => !['trigger', 'add'].includes(props.data.stepType));
 
 const typeColor = computed((): BadgeColor => {
-  const colors: Record<string, BadgeColor> = {
-    script: 'primary',
-    condition: 'warning',
-    query: 'info',
-    create: 'success',
-    update: 'success',
-    delete: 'error',
-    http: 'secondary',
-    trigger_flow: 'info',
-    sleep: 'neutral',
-    log: 'neutral',
-  };
-  return colors[props.data.stepType] || 'neutral';
+  return STEP_TYPE_COLOR_MAP[props.data.stepType] || 'neutral';
 });
 
 const iconName = computed(() => {
-  const icons: Record<string, string> = {
-    script: 'lucide:code',
-    condition: 'lucide:git-branch',
-    query: 'lucide:search',
-    create: 'lucide:plus-circle',
-    update: 'lucide:edit',
-    delete: 'lucide:trash-2',
-    http: 'lucide:globe',
-    trigger_flow: 'lucide:workflow',
-    sleep: 'lucide:clock',
-    log: 'lucide:file-text',
-    trigger: 'lucide:play',
-    add: 'lucide:plus',
-  };
-  return icons[props.data.stepType] || 'lucide:circle';
+  return STEP_TYPE_ICON_MAP[props.data.stepType] || 'lucide:circle';
 });
 
 const nodeClass = computed(() => {

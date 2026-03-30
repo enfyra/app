@@ -30,6 +30,12 @@ import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import FlowStepNode from './FlowStepNode.vue';
 import type { FlowStep, FlowDefinition } from '~/types/flow';
+import {
+  NODE_SPACING_Y, CENTER_X, START_Y, BRANCH_OFFSET_X,
+  EDGE_STYLE_DEFAULT, EDGE_STYLE_TRUE, EDGE_STYLE_FALSE,
+  EDGE_STYLE_TRUE_DASHED, EDGE_STYLE_FALSE_DASHED,
+  EDGE_LABEL_STYLE_TRUE, EDGE_LABEL_STYLE_FALSE,
+} from '~/utils/flow.constants';
 
 interface ExecutionOverlay {
   status: 'pending' | 'running' | 'completed' | 'failed';
@@ -55,11 +61,6 @@ const emit = defineEmits<{
 
 const vueFlowRef = ref<any>(null);
 const hasFitted = ref(false);
-
-const NODE_WIDTH = 220;
-const NODE_SPACING_Y = 100;
-const CENTER_X = 200;
-const START_Y = 30;
 
 function getTriggerInfo(flow: any): string {
   const t = flow?.triggerType;
@@ -136,8 +137,6 @@ function makeStepNode(step: any, x: number, y: number, isFirst = false, isLast =
     selectable: true,
   };
 }
-
-const BRANCH_OFFSET_X = 260;
 
 const nodes = computed(() => {
   const result: any[] = [];
@@ -233,7 +232,7 @@ const edges = computed(() => {
       target: stepNodeId,
       type: 'smoothstep',
       animated: true,
-      style: { stroke: '#94a3b8', strokeWidth: 2 },
+      style: EDGE_STYLE_DEFAULT,
     });
 
     if (step.type === 'condition') {
@@ -244,23 +243,23 @@ const edges = computed(() => {
       const falseAddId = `add-false-${step.id}`;
 
       if (trueChildren.length > 0 && trueChildren[0]) {
-        result.push({ id: `edge-${stepNodeId}-true-${trueChildren[0]!.id}`, source: stepNodeId, target: `step-${trueChildren[0]!.id}`, type: 'smoothstep', animated: true, label: 'true', labelStyle: { fill: '#22c55e', fontSize: 13, fontWeight: 700 }, style: { stroke: '#22c55e', strokeWidth: 2 } });
+        result.push({ id: `edge-${stepNodeId}-true-${trueChildren[0]!.id}`, source: stepNodeId, target: `step-${trueChildren[0]!.id}`, type: 'smoothstep', animated: true, label: 'true', labelStyle: EDGE_LABEL_STYLE_TRUE, style: EDGE_STYLE_TRUE });
         for (let i = 0; i < trueChildren.length - 1; i++) {
-          result.push({ id: `edge-true-${trueChildren[i]!.id}-${trueChildren[i + 1]!.id}`, source: `step-${trueChildren[i]!.id}`, target: `step-${trueChildren[i + 1]!.id}`, type: 'smoothstep', animated: true, style: { stroke: '#22c55e', strokeWidth: 2 } });
+          result.push({ id: `edge-true-${trueChildren[i]!.id}-${trueChildren[i + 1]!.id}`, source: `step-${trueChildren[i]!.id}`, target: `step-${trueChildren[i + 1]!.id}`, type: 'smoothstep', animated: true, style: EDGE_STYLE_TRUE });
         }
-        result.push({ id: `edge-true-last-${step.id}`, source: `step-${trueChildren[trueChildren.length - 1]!.id}`, target: trueAddId, type: 'smoothstep', animated: true, style: { stroke: '#22c55e', strokeWidth: 1, strokeDasharray: '4' } });
+        result.push({ id: `edge-true-last-${step.id}`, source: `step-${trueChildren[trueChildren.length - 1]!.id}`, target: trueAddId, type: 'smoothstep', animated: true, style: EDGE_STYLE_TRUE_DASHED });
       } else {
-        result.push({ id: `edge-${stepNodeId}-true-add`, source: stepNodeId, target: trueAddId, type: 'smoothstep', animated: true, label: 'true', labelStyle: { fill: '#22c55e', fontSize: 13, fontWeight: 700 }, style: { stroke: '#22c55e', strokeWidth: 1, strokeDasharray: '4' } });
+        result.push({ id: `edge-${stepNodeId}-true-add`, source: stepNodeId, target: trueAddId, type: 'smoothstep', animated: true, label: 'true', labelStyle: EDGE_LABEL_STYLE_TRUE, style: EDGE_STYLE_TRUE_DASHED });
       }
 
       if (falseChildren.length > 0 && falseChildren[0]) {
-        result.push({ id: `edge-${stepNodeId}-false-${falseChildren[0]!.id}`, source: stepNodeId, target: `step-${falseChildren[0]!.id}`, type: 'smoothstep', animated: true, label: 'false', labelStyle: { fill: '#ef4444', fontSize: 13, fontWeight: 700 }, style: { stroke: '#ef4444', strokeWidth: 2 } });
+        result.push({ id: `edge-${stepNodeId}-false-${falseChildren[0]!.id}`, source: stepNodeId, target: `step-${falseChildren[0]!.id}`, type: 'smoothstep', animated: true, label: 'false', labelStyle: EDGE_LABEL_STYLE_FALSE, style: EDGE_STYLE_FALSE });
         for (let i = 0; i < falseChildren.length - 1; i++) {
-          result.push({ id: `edge-false-${falseChildren[i]!.id}-${falseChildren[i + 1]!.id}`, source: `step-${falseChildren[i]!.id}`, target: `step-${falseChildren[i + 1]!.id}`, type: 'smoothstep', animated: true, style: { stroke: '#ef4444', strokeWidth: 2 } });
+          result.push({ id: `edge-false-${falseChildren[i]!.id}-${falseChildren[i + 1]!.id}`, source: `step-${falseChildren[i]!.id}`, target: `step-${falseChildren[i + 1]!.id}`, type: 'smoothstep', animated: true, style: EDGE_STYLE_FALSE });
         }
-        result.push({ id: `edge-false-last-${step.id}`, source: `step-${falseChildren[falseChildren.length - 1]!.id}`, target: falseAddId, type: 'smoothstep', animated: true, style: { stroke: '#ef4444', strokeWidth: 1, strokeDasharray: '4' } });
+        result.push({ id: `edge-false-last-${step.id}`, source: `step-${falseChildren[falseChildren.length - 1]!.id}`, target: falseAddId, type: 'smoothstep', animated: true, style: EDGE_STYLE_FALSE_DASHED });
       } else {
-        result.push({ id: `edge-${stepNodeId}-false-add`, source: stepNodeId, target: falseAddId, type: 'smoothstep', animated: true, label: 'false', labelStyle: { fill: '#ef4444', fontSize: 13, fontWeight: 700 }, style: { stroke: '#ef4444', strokeWidth: 1, strokeDasharray: '4' } });
+        result.push({ id: `edge-${stepNodeId}-false-add`, source: stepNodeId, target: falseAddId, type: 'smoothstep', animated: true, label: 'false', labelStyle: EDGE_LABEL_STYLE_FALSE, style: EDGE_STYLE_FALSE_DASHED });
       }
     }
 
@@ -273,7 +272,7 @@ const edges = computed(() => {
     target: 'add-step',
     type: 'smoothstep',
     animated: true,
-    style: { stroke: '#94a3b8', strokeWidth: 2 },
+    style: EDGE_STYLE_DEFAULT,
   });
 
   return result;

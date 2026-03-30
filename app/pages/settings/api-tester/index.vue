@@ -75,6 +75,8 @@
 </template>
 
 <script setup lang="ts">
+import { HTTP_METHODS, getHttpMethodColor } from '~/utils/http.constants';
+
 definePageMeta({ layout: "default", title: "API Tester" });
 
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -150,7 +152,7 @@ const filteredSystemRoutes = computed(() => {
   return systemRoutes.value.filter((r: any) => r.path?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q));
 });
 
-const httpMethods = ['GET', 'POST', 'PATCH', 'DELETE'];
+const httpMethods = [...HTTP_METHODS];
 
 function getRouteMethods(route: any): string[] {
   const methods = route.availableMethods;
@@ -161,7 +163,7 @@ function getRouteMethods(route: any): string[] {
 }
 
 function methodColor(m: string): any {
-  return ({ GET: 'info', POST: 'success', PATCH: 'warning', DELETE: 'error' } as any)[m] || 'neutral';
+  return getHttpMethodColor(m);
 }
 
 function openTest(route: any) {

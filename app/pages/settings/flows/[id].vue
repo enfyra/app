@@ -252,6 +252,8 @@
 </template>
 
 <script setup lang="ts">
+import { STEP_TYPE_OPTIONS, ERROR_OPTIONS, getExecutionStatusColor, getExecutionStatusDotClass, getStepTimelineIcon, getStepTimelineIconColor, getStepTimelineClass } from '~/utils/flow.constants';
+
 definePageMeta({ layout: "default", title: "Flow Editor" });
 
 const route = useRoute();
@@ -279,23 +281,8 @@ const selectedExec = ref<any>(null);
 const execLoading = ref(false);
 const reordering = ref(false);
 
-const stepTypeOptions = [
-  { label: 'Script', value: 'script' },
-  { label: 'Condition', value: 'condition' },
-  { label: 'Query', value: 'query' },
-  { label: 'Create Record', value: 'create' },
-  { label: 'Update Record', value: 'update' },
-  { label: 'Delete Record', value: 'delete' },
-  { label: 'HTTP Request', value: 'http' },
-  { label: 'Trigger Flow', value: 'trigger_flow' },
-  { label: 'Sleep', value: 'sleep' },
-  { label: 'Log', value: 'log' },
-];
-const errorOptions = [
-  { label: 'Stop entire flow', value: 'stop' },
-  { label: 'Skip this step and continue', value: 'skip' },
-  { label: 'Retry this step', value: 'retry' },
-];
+const stepTypeOptions = STEP_TYPE_OPTIONS;
+const errorOptions = ERROR_OPTIONS;
 const editForm = ref<Record<string, any>>({});
 
 const TriggerConfigEditor = resolveComponent('FlowTriggerConfigEditor');
@@ -760,11 +747,11 @@ async function triggerFlow() {
 }
 
 function getStatusColor(status: string) {
-  return ({ pending: 'neutral', running: 'info', completed: 'success', failed: 'error', cancelled: 'warning' } as any)[status] || 'neutral';
+  return getExecutionStatusColor(status);
 }
 
 function statusDotClass(status: string) {
-  return ({ pending: 'bg-gray-400', running: 'bg-blue-500 animate-pulse', completed: 'bg-green-500', failed: 'bg-red-500', cancelled: 'bg-yellow-500' } as any)[status] || 'bg-gray-400';
+  return getExecutionStatusDotClass(status);
 }
 
 function formatTime(d: string | null) {
@@ -903,25 +890,15 @@ const execStepTimeline = computed(() => {
 });
 
 function stepTimelineIcon(s: any): string {
-  if (s.status === 'completed' && s.type === 'condition') return 'i-lucide-git-branch';
-  if (s.status === 'completed') return 'i-lucide-check-circle';
-  if (s.status === 'failed') return 'i-lucide-x-circle';
-  if (s.status === 'skipped') return 'i-lucide-minus-circle';
-  return 'i-lucide-circle';
+  return getStepTimelineIcon(s);
 }
 
 function stepTimelineIconColor(s: any): string {
-  if (s.status === 'completed') return 'text-green-500';
-  if (s.status === 'failed') return 'text-red-500';
-  if (s.status === 'skipped') return 'text-gray-400';
-  return 'text-gray-300';
+  return getStepTimelineIconColor(s);
 }
 
 function stepTimelineClass(s: any): string {
-  if (s.status === 'completed') return 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700';
-  if (s.status === 'failed') return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
-  if (s.status === 'skipped') return 'bg-gray-50/50 dark:bg-gray-800/30 border-gray-100 dark:border-gray-700 opacity-60';
-  return 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700';
+  return getStepTimelineClass(s);
 }
 
 function formatJson(val: any): string {
