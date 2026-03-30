@@ -83,6 +83,18 @@ function getComponentConfigByKey(key: string) {
       ? { type: manualConfig }
       : manualConfig || {};
 
+  if (config.component) {
+    return {
+      component: typeof config.component === 'string' ? resolveComponent(config.component) : config.component,
+      componentProps: {
+        modelValue: props.formData[key],
+        'onUpdate:modelValue': (val: any) => updateFormData(key, val),
+        class: 'w-full',
+        ...config.componentProps,
+      },
+    };
+  }
+
   const finalType = config.type || column?.type;
   const isSystemField = key === "createdAt" || key === "updatedAt";
   const disabled = config.disabled ?? isSystemField;
@@ -416,13 +428,15 @@ function getComponentConfigByKey(key: string) {
         };
       }
 
+      const codeLanguage = config.language || "javascript";
       return {
         component: resolveComponent("FormCodeEditorLazy"),
         componentProps: {
           ...componentPropsBase,
           modelValue: ensureString(props.formData[key]),
-          language: config.language || "javascript",
+          language: codeLanguage,
           height: config.height || "300px",
+          enfyraAutocomplete: codeLanguage === 'javascript' ? true : codeLanguage === 'vue' ? 'vue' : undefined,
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },

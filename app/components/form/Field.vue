@@ -46,7 +46,15 @@ function handleCheckUnique() {
 }
 
 const column = computed(() => props.columnMap.get(props.keyName));
-const displayLabel = computed(() => (column.value?.label || props.keyName) as string);
+const displayLabel = computed(() => {
+  if (fieldConfig.value.hideLabel) return '';
+  return (fieldConfig.value.label || column.value?.label || props.keyName) as string;
+});
+
+const displayDescription = computed(() => {
+  if (fieldConfig.value.hideDescription) return null;
+  return fieldConfig.value.description || column.value?.description || null;
+});
 
 const fieldConfig = computed(() => {
   const manualConfig = props.fieldMap?.[props.keyName];
@@ -163,7 +171,7 @@ const effectiveErrors = computed(() => {
       borderColor: 'var(--border-subtle)',
     }"
   >
-    <div class="space-y-0.5">
+    <div v-if="!fieldConfig.hideLabel" class="space-y-0.5">
       <label
         :for="fieldId"
         class="text-sm font-medium"
@@ -172,10 +180,10 @@ const effectiveErrors = computed(() => {
         {{ displayLabel }}
       </label>
       <p
-        v-if="column?.description"
+        v-if="displayDescription"
         class="text-xs"
         :style="{ color: 'var(--text-tertiary)' }"
-        v-html="column?.description"
+        v-html="displayDescription"
       />
     </div>
 
@@ -299,7 +307,7 @@ const effectiveErrors = computed(() => {
       v-else-if="!effectiveErrors?.[keyName] && column?.description"
       class="text-xs"
       :style="{ color: 'var(--text-tertiary)' }"
-      v-html="column?.description"
+      v-html="displayDescription"
     />
   </div>
   </PermissionGate>

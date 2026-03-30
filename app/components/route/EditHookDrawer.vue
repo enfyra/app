@@ -25,7 +25,15 @@
       </div>
     </template>
     <template #footer>
-      <div class="flex justify-end gap-3">
+      <div class="flex gap-3">
+        <UButton
+          variant="soft"
+          color="error"
+          @click="$emit('delete')"
+        >
+          Delete
+        </UButton>
+        <div class="flex-1" />
         <UButton
           variant="outline"
           color="neutral"
@@ -67,6 +75,7 @@ const emit = defineEmits<{
   'update:errors': [value: Record<string, string>];
   save: [];
   cancel: [];
+  delete: [];
 }>();
 
 const localOpen = computed({

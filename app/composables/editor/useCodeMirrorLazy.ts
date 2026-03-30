@@ -63,6 +63,8 @@ export const useCodeMirrorLazy = () => {
         closeBracketsKeymap: autocompleteModule.closeBracketsKeymap,
         autocompletion: autocompleteModule.autocompletion,
         completionKeymap: autocompleteModule.completionKeymap,
+        CompletionContext: autocompleteModule.CompletionContext,
+        completeFromList: autocompleteModule.completeFromList,
         bracketMatching: languageModule.bracketMatching,
         indentUnit: languageModule.indentUnit,
         foldGutter: languageModule.foldGutter,

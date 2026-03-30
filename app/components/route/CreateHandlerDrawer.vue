@@ -82,6 +82,7 @@ const localErrors = computed({
 
 const fieldMap = {
   method: { type: 'method-selector', componentProps: { excludeGqlMethods: true } },
+  logic: { description: 'Must return a value. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.' },
 };
 
 watch(() => props.modelValue, (isOpen) => {

@@ -40,7 +40,7 @@ function handleError(
 export function useApi<T = any>(url: string | (() => string), options: any = {}) {
   const toast = useToast();
   const { method = "get", body, query, errorContext, onError } = options;
-  
+
   const data = ref<T | null>(null);
   const error = ref<ApiError | null>(null);
   const pending = ref(false);

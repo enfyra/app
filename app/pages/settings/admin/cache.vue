@@ -25,7 +25,7 @@ const reloadActions = [
   {
     id: "all",
     label: "Reload All",
-    description: "Reload metadata, routes, Swagger, and GraphQL schema",
+    description: "Reload metadata, routes, and GraphQL schema",
     icon: "lucide:refresh-cw",
     path: "/admin/reload",
     color: "primary",
@@ -45,14 +45,6 @@ const reloadActions = [
     icon: "lucide:route",
     path: "/admin/reload/routes",
     color: "secondary",
-  },
-  {
-    id: "swagger",
-    label: "Swagger",
-    description: "Reload Swagger API spec",
-    icon: "lucide:file-code",
-    path: "/admin/reload/swagger",
-    color: "neutral",
   },
   {
     id: "graphql",
