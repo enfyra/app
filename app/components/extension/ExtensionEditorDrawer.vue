@@ -133,6 +133,16 @@ async function handleSave() {
     return;
   }
 
+  const uniqueOk = await formEditorRef.value?.validateAllUniqueFields?.();
+  if (uniqueOk === false) {
+    toast.add({
+      title: "Duplicate value",
+      color: "error",
+      description: "Please verify all unique fields before saving.",
+    });
+    return;
+  }
+
   const idField = getIdFieldName();
   const userId = getId(me.value);
 

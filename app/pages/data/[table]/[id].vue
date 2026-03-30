@@ -21,6 +21,12 @@ const { registerPageHeader } = usePageHeaderRegistry();
 
 const currentRecord = ref<Record<string, any>>({});
 
+const currentRecordRouteId = computed(() => {
+  const p = route.params.id;
+  if (Array.isArray(p)) return p[0] ?? null;
+  return p ?? null;
+});
+
 onMounted(async () => {
   await ensureRoutesLoaded();
   await initializeForm();
@@ -212,6 +218,7 @@ useHeaderActionRegistry([
           v-model:errors="updateErrors"
           @has-changed="(hasChanged) => hasFormChanges = hasChanged"
           :loading="loading"
+          :current-record-id="currentRecordRouteId"
         />
       </CommonFormCard>
     </div>

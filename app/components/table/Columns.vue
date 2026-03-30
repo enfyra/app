@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   modelValue: any[];
+  reservedNames?: string[];
 }>();
 
 const isEditing = ref(false);
@@ -16,6 +17,8 @@ const { deleteIds, getIdFieldName, isMongoDB } = useDatabase();
 const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
+const localColumnsWithKeys = computed(() => columns.value.map((c: any, i: number) => ({ ...c, _localKey: i })));
+const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
 
 function handleDrawerClose() {
   
@@ -68,7 +71,7 @@ function editColumn(col: any, index: number) {
   handleUuidType(currentColumn.value);
 }
 
-function saveColumn() {
+async function saveColumn() {
   const customValidators = {
     name: (value: string) => {
       if (!value?.trim()) {
@@ -76,6 +79,13 @@ function saveColumn() {
       }
       if (!TABLE_NAME_FIELD_REGEX.test(value)) {
         return "Only letters (a-z, A-Z), numbers, _ allowed and must start with a letter!";
+      }
+      const trimmed = value.trim();
+      const reserved = (props.reservedNames || [])
+        .map((n: any) => String(n ?? '').trim())
+        .filter(Boolean)
+      if (reserved.includes(trimmed)) {
+        return "Field name already exists";
       }
       return null;
     },
@@ -94,14 +104,12 @@ function saveColumn() {
     return;
   }
 
-  const newCol = { ...currentColumn.value };
+  const uniqueOk = await formEditorRef.value?.validateAllUniqueFields?.();
+  if (uniqueOk === false) {
+    return;
+  }
 
-  console.log("[Columns.saveColumn] newCol", {
-    name: newCol?.name,
-    type: newCol?.type,
-    metadata: newCol?.metadata,
-    defaultValue: newCol?.defaultValue,
-  });
+  const newCol = { ...currentColumn.value };
 
   handleUuidType(newCol);
 
@@ -424,6 +432,9 @@ watch(
               tableName="column_definition"
               v-model:errors="errors"
               @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+              unique-check-mode="local"
+              :unique-local-records="localColumnsWithKeys"
+              :unique-local-self-key="localSelfKey"
               :includes="
                 currentColumn.name === getIdFieldName() ? ['name', 'type'] : undefined
               "

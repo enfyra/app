@@ -1,4 +1,6 @@
 import type { UniqueCheckStatus } from '~/types/ui';
+import { getTargetTableName } from '~/utils/schema';
+import { useSchema } from '~/composables/shared/useSchema';
 
 interface UniqueCheckState {
   status: UniqueCheckStatus;
@@ -9,17 +11,44 @@ interface UniqueCheckState {
 export function useUniqueCheck(
   tableName: string | Ref<string>,
   uniques: Ref<string[][] | null | undefined>,
-  currentId?: Ref<string | number | null>
+  currentId?: Ref<string | number | null>,
+  options?: {
+    mode?: 'api' | 'local' | Ref<'api' | 'local'>;
+    localRecords?: any[] | Ref<any[]>;
+    localSelfKey?: string | number | null | Ref<string | number | null>;
+  }
 ) {
   const checkStates = ref<Record<string, UniqueCheckState>>({});
-  const { getIdFieldName } = useDatabase();
+  const { getIdFieldName, getId } = useDatabase();
 
   const tableNameRef = isRef(tableName) ? tableName : ref(tableName);
   const currentIdRef = currentId || ref(null);
+  const { fieldMap, schemas } = useSchema(tableNameRef);
+  const modeRef = computed(() => {
+    const m = options?.mode;
+    const v = isRef(m) ? m.value : m;
+    return v || 'api';
+  });
+  const localRecordsRef = computed<any[]>(() => {
+    const r = options?.localRecords;
+    const v = isRef(r) ? r.value : r;
+    return Array.isArray(v) ? v : [];
+  });
+  const localSelfKeyRef = computed(() => {
+    const k = options?.localSelfKey;
+    return isRef(k) ? k.value : k;
+  });
 
   function getUniqueGroupsForField(fieldName: string): string[][] {
     if (!uniques.value) return [];
-    return uniques.value.filter(group => group.includes(fieldName));
+    const direct = uniques.value.filter(group => group.includes(fieldName));
+    if (direct.length > 0) return direct;
+    const field = fieldMap.value.get(fieldName);
+    const fk = field?.fieldType === 'relation' ? field.foreignKeyColumn : undefined;
+    if (fk) {
+      return uniques.value.filter(group => group.includes(fk));
+    }
+    return [];
   }
 
   function isFieldInUnique(fieldName: string): boolean {
@@ -39,6 +68,97 @@ export function useUniqueCheck(
     return uniques.value.filter(group => group.length > 1);
   }
 
+  function isSelfRelationField(fieldName: string): boolean {
+    const field = fieldMap.value.get(fieldName);
+    if (!field || field.fieldType !== 'relation') return false;
+    const st = field.sourceTable;
+    const tt = field.targetTable;
+    if (
+      st &&
+      tt &&
+      typeof st === 'object' &&
+      typeof tt === 'object' &&
+      st.id != null &&
+      tt.id != null &&
+      st.id === tt.id
+    ) {
+      return true;
+    }
+    const target = getTargetTableName(field, schemas.value as Record<string, any>);
+    return Boolean(target && target === tableNameRef.value);
+  }
+
+  function normalizeUniqueEqValue(fieldKey: string, raw: any): any {
+    const field = fieldMap.value.get(fieldKey);
+    if (field?.fieldType !== 'relation') return raw;
+    if (raw === null || raw === undefined || raw === '') return raw;
+    if (typeof raw !== 'object') return raw;
+    const id = getId(raw);
+    return id !== null && id !== undefined ? id : raw;
+  }
+
+  function eqValueForUniqueKey(uniqueKey: string, relationProperty: string, raw: any): any {
+    const rel = fieldMap.value.get(relationProperty);
+    if (
+      rel?.fieldType === 'relation' &&
+      rel.foreignKeyColumn &&
+      rel.foreignKeyColumn === uniqueKey
+    ) {
+      return normalizeUniqueEqValue(relationProperty, raw);
+    }
+    return normalizeUniqueEqValue(uniqueKey, raw);
+  }
+
+  function relationValueId(value: any): any {
+    if (value === null || value === undefined || value === '') return null;
+    if (typeof value !== 'object') return value;
+    return getId(value);
+  }
+
+  function checkUniqueLocal(
+    fieldName: string,
+    value: any,
+    allFormData?: Record<string, any>
+  ): boolean {
+    const groups = getUniqueGroupsForField(fieldName);
+    if (groups.length === 0) return true;
+
+    for (const group of groups) {
+      const recordValues: Record<string, any> = {};
+
+      if (group.length === 1 && group[0]) {
+        recordValues[group[0]] = eqValueForUniqueKey(group[0], fieldName, value);
+      } else {
+        if (!allFormData) return false;
+        const relMeta = fieldMap.value.get(fieldName);
+        const fk = relMeta?.fieldType === 'relation' ? relMeta.foreignKeyColumn : undefined;
+        for (const field of group) {
+          const rawVal =
+            field === fieldName || (fk && field === fk)
+              ? value
+              : allFormData[field];
+          recordValues[field] = eqValueForUniqueKey(field, fieldName, rawVal);
+        }
+      }
+
+      const selfKey = localSelfKeyRef.value;
+      const exists = localRecordsRef.value.some((r: any) => {
+        if (selfKey != null && r && r._localKey != null && String(r._localKey) === String(selfKey)) {
+          return false;
+        }
+        return group.every((k) => {
+          const v = recordValues[k];
+          const rv = r?.[k];
+          return String(rv ?? '') === String(v ?? '');
+        });
+      });
+
+      if (exists) return false;
+    }
+
+    return true;
+  }
+
   async function checkUnique(
     fieldName: string,
     value: any,
@@ -56,25 +176,60 @@ export function useUniqueCheck(
       return true;
     }
 
+    if (modeRef.value === 'local') {
+      const ok = checkUniqueLocal(fieldName, value, allFormData);
+      if (!ok) {
+        const groupLabel = groups[0]?.length === 1 ? fieldName : groups[0]?.join(' + ');
+        setCheckStatus(fieldName, 'invalid', `Value already exists for ${groupLabel}`, value);
+        return false;
+      }
+      setCheckStatus(fieldName, 'valid', '', value);
+      return true;
+    }
+
+    const currentId = currentIdRef.value;
+    if (
+      currentId !== null &&
+      currentId !== undefined &&
+      currentId !== '' &&
+      isSelfRelationField(fieldName)
+    ) {
+      const relatedId = relationValueId(value);
+      if (
+        relatedId !== null &&
+        relatedId !== undefined &&
+        String(relatedId) === String(currentId)
+      ) {
+        setCheckStatus(fieldName, 'valid', '', value);
+        return true;
+      }
+    }
+
     setCheckStatus(fieldName, 'checking', '', value);
 
     for (const group of groups) {
       const filter: Record<string, any> = {};
 
       if (group.length === 1 && group[0]) {
-        filter[group[0]] = { _eq: value };
+        const uk = group[0];
+        filter[uk] = { _eq: eqValueForUniqueKey(uk, fieldName, value) };
       } else {
         if (!allFormData) {
           setCheckStatus(fieldName, 'incomplete', 'Missing form data for composite unique check', value);
           return false;
         }
         const missingFields: string[] = [];
+        const relMeta = fieldMap.value.get(fieldName);
+        const fk = relMeta?.fieldType === 'relation' ? relMeta.foreignKeyColumn : undefined;
         for (const field of group) {
-          const fieldValue = field === fieldName ? value : allFormData[field];
-          if (fieldValue === null || fieldValue === undefined || fieldValue === '') {
+          const rawVal =
+            field === fieldName || (fk && field === fk)
+              ? value
+              : allFormData[field];
+          if (rawVal === null || rawVal === undefined || rawVal === '') {
             missingFields.push(field);
           }
-          filter[field] = { _eq: fieldValue };
+          filter[field] = { _eq: eqValueForUniqueKey(field, fieldName, rawVal) };
         }
         if (missingFields.length > 0) {
           const msg = `Fill all fields first: ${group.join(' + ')}`;
@@ -115,7 +270,12 @@ export function useUniqueCheck(
           return false;
         }
       } catch (error) {
-        console.error('[useUniqueCheck] Error checking uniqueness:', error);
+        const ok = checkUniqueLocal(fieldName, value, allFormData);
+        if (!ok) {
+          const groupLabel = group.length === 1 ? fieldName : group.join(' + ');
+          setCheckStatus(fieldName, 'invalid', `Value already exists for ${groupLabel}`, value);
+          return false;
+        }
         setCheckStatus(fieldName, 'idle', 'Error checking uniqueness', value);
         return false;
       }

@@ -162,6 +162,7 @@ const nodes = computed(() => {
 
   for (let ri = 0; ri < rootSteps.length; ri++) {
     const step = rootSteps[ri];
+    if (!step) continue;
     result.push(makeStepNode(step, CENTER_X, currentY, ri === 0, ri === rootSteps.length - 1));
     currentY += NODE_SPACING_Y;
 

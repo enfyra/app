@@ -30,6 +30,7 @@ const emit = defineEmits<{
 
 const uniqueId = useId();
 const fieldId = computed(() => `field-${props.keyName}-${uniqueId}`);
+const scrollId = computed(() => `scroll-${fieldId.value}`);
 
 const copyStatus = ref<"idle" | "success" | "error">("idle");
 
@@ -76,6 +77,25 @@ const fieldPermission = computed(() => {
 const isRelationField = computed(() => {
   const field = props.columnMap.get(props.keyName);
   return field?.fieldType === "relation";
+});
+
+const isRequiredField = computed(() => {
+  const field = props.columnMap.get(props.keyName);
+  if (!field) return false;
+  if (field?.isNullable === false && field?.isGenerated !== true && (props.mode === 'create' || field?.isHidden !== true)) {
+    if (field?.type === 'boolean') return false;
+    if (props.keyName === 'createdAt' || props.keyName === 'updatedAt') return false;
+    return true;
+  }
+  return false;
+});
+
+const isEmptyValue = computed(() => {
+  const v = props.formData[props.keyName];
+  if (v === null || v === undefined) return true;
+  if (typeof v === 'string') return v.trim() === '';
+  if (Array.isArray(v)) return v.length === 0;
+  return false;
 });
 
 async function copyRawValue() {
@@ -163,6 +183,7 @@ const effectiveErrors = computed(() => {
 
 <template>
   <PermissionGate :condition="fieldPermission">
+  <div :id="scrollId"></div>
   <div
     v-if="isBooleanField"
     v-bind="fieldProps"
@@ -280,6 +301,7 @@ const effectiveErrors = computed(() => {
           size="xs"
           variant="outline"
           color="primary"
+          :disabled="isRequiredField && isEmptyValue"
           @click.stop="handleCheckUnique"
         />
       </div>

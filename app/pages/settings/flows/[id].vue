@@ -252,6 +252,7 @@
 </template>
 
 <script setup lang="ts">
+import type { StepType, StepErrorHandling } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS, getExecutionStatusColor, getExecutionStatusDotClass, getStepTimelineIcon, getStepTimelineIconColor, getStepTimelineClass } from '~/utils/flow.constants';
 
 definePageMeta({ layout: "default", title: "Flow Editor" });
@@ -312,10 +313,10 @@ function getConditionLabel(parentId: any): string {
 const stepForm = ref({
   key: '',
   stepOrder: 0,
-  type: 'script',
+  type: 'script' as StepType,
   configJson: '',
   timeout: 5000,
-  onError: 'stop',
+  onError: 'stop' as StepErrorHandling,
   retryAttempts: 0,
   parentId: null as any,
   branch: undefined as string | undefined,
@@ -377,7 +378,7 @@ const latestExecDetail = ref<any>(null);
 const { data: latestExecData, execute: fetchLatestExecDetail } = useApi(
   () => {
     const latest = allExecutions.value[0];
-    if (!latest) return null;
+    if (!latest) return '/flow_execution_definition?limit=0';
     return `/flow_execution_definition?filter={"id":{"_eq":"${latest.id}"}}&fields=id,status,completedSteps,currentStep,error&limit=1`;
   },
   { errorContext: "Fetch Latest Exec Detail" }

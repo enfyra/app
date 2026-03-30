@@ -3,6 +3,7 @@
 const props = defineProps<{
   modelValue: any[];
   tableOptions: { label: string; value: any }[];
+  reservedNames?: string[];
 }>();
 
 const relations = useModel(props, "modelValue");
@@ -19,6 +20,8 @@ const { isMobile, isTablet } = useScreen();
 const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
+const localRelationsWithKeys = computed(() => relations.value.map((r: any, i: number) => ({ ...r, _localKey: i })));
+const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
 
 function handleDrawerClose() {
   
@@ -71,13 +74,30 @@ function editRelation(rel: any, index: number) {
   currentRelation.value = { ...toRaw(rel) };
 }
 
-function saveRelation() {
+async function saveRelation() {
   const rel = currentRelation.value;
   const index = editingIndex.value ?? relations.value.length;
-  const { isValid, errors } = validate(rel);
+  const customValidators = {
+    propertyName: (value: string) => {
+      if (!value?.trim()) return "Relation name is required";
+      if (!TABLE_NAME_FIELD_REGEX.test(value.trim())) return "Invalid name";
+      const trimmed = value.trim();
+      const reserved = (props.reservedNames || [])
+        .map((n: any) => String(n ?? '').trim())
+        .filter(Boolean);
+      if (reserved.includes(trimmed)) return "Field name already exists";
+      return null;
+    },
+  };
+  const { isValid, errors } = validate(rel, customValidators);
 
   if (!isValid) {
     relationErrors.value[index] = errors;
+    return;
+  }
+
+  const uniqueOk = await formEditorRef.value?.validateAllUniqueFields?.();
+  if (uniqueOk === false) {
     return;
   }
 
@@ -197,6 +217,9 @@ function saveRelation() {
               v-model:errors="currentRelationErrors"
               tableName="relation_definition"
               @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+              unique-check-mode="local"
+              :unique-local-records="localRelationsWithKeys"
+              :unique-local-self-key="localSelfKey"
               :excluded="[
                 'id',
                 'createdAt',

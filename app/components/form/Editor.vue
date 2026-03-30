@@ -37,6 +37,9 @@ const props = withDefaults(
     mode?: 'create' | 'update';
     layout?: 'stack' | 'grid';
     currentRecordId?: string | number | null;
+    uniqueCheckMode?: 'api' | 'local';
+    uniqueLocalRecords?: any[];
+    uniqueLocalSelfKey?: string | number | null;
   }>(),
   {
     excluded: () => [],
@@ -46,6 +49,9 @@ const props = withDefaults(
     mode: 'update',
     layout: 'stack',
     currentRecordId: null,
+    uniqueCheckMode: 'api',
+    uniqueLocalRecords: () => [],
+    uniqueLocalSelfKey: null,
   }
 );
 
@@ -66,6 +72,9 @@ const formEditorRegistry = useFormEditorRegistry();
 const { getId } = useDatabase();
 const currentRecordIdRef = computed(() => props.currentRecordId ?? (props.mode === 'update' ? getId(props.modelValue) : null));
 const uniquesRef = computed(() => schema.value?.uniques || null);
+const uniqueCheckModeRef = computed(() => props.uniqueCheckMode || 'api');
+const uniqueLocalRecordsRef = computed(() => props.uniqueLocalRecords || []);
+const uniqueLocalSelfKeyRef = computed(() => props.uniqueLocalSelfKey ?? null);
 
 const {
   isFieldInUnique,
@@ -75,7 +84,12 @@ const {
 } = useUniqueCheck(
   props.tableName,
   uniquesRef,
-  currentRecordIdRef
+  currentRecordIdRef,
+  {
+    mode: uniqueCheckModeRef,
+    localRecords: uniqueLocalRecordsRef,
+    localSelfKey: uniqueLocalSelfKeyRef,
+  }
 );
 
 async function handleCheckUnique(fieldName: string) {
@@ -165,6 +179,28 @@ function updateErrors(errors: Record<string, string>) {
   emit("update:errors", errors);
 }
 
+function scrollToFirstError() {
+  const errs = props.errors || {};
+  const firstKey = visibleFields.value
+    .map((f: any) => f.name || f.propertyName)
+    .find((k: any) => k && errs[k]);
+  if (!firstKey) return;
+  const el = document.querySelector(`[id^="scroll-field-${firstKey}-"]`);
+  const target = (el instanceof HTMLElement) ? el : null;
+  if (!target) return;
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+watch(
+  () => props.errors,
+  async (newErrs) => {
+    if (!newErrs || Object.keys(newErrs).length === 0) return;
+    await nextTick();
+    scrollToFirstError();
+  },
+  { deep: true }
+);
+
 watch(
   () => props.modelValue,
   (newValue) => {
@@ -222,7 +258,6 @@ function getUniqueFieldsNeedingCheck(): string[] {
 }
 
 async function validateAllUniqueFields(): Promise<boolean> {
-  console.log('[validateAllUniqueFields]', JSON.stringify(visibleFields.value.map((f: any) => ({ key: f.name || f.propertyName, inUnique: isFieldInUnique(f.name || f.propertyName || '') }))));
   const allUniqueFields: string[] = [];
   for (const field of visibleFields.value) {
     const key = field.name || field.propertyName;

@@ -35,6 +35,7 @@ watch(
       nameError.value =
         "Use letters (a-z, A-Z), numbers and underscore. Must start with a letter.";
     else if (name === "table") nameError.value = "Table name cannot be `table`";
+    else if (schemas.value?.[name]) nameError.value = "Table name already exists";
     else nameError.value = "";
   }
 );
@@ -102,6 +103,15 @@ function validateAll() {
       color: "error",
       description: "Please add at least one column or relation to the table",
     });
+  }
+
+  const allFieldNames = [
+    ...table.columns.map((c: any) => (c?.name ?? '').trim()).filter(Boolean),
+    ...table.relations.map((r: any) => (r?.propertyName ?? '').trim()).filter(Boolean),
+  ];
+  const dupNames = allFieldNames.filter((n: string, i: number) => allFieldNames.indexOf(n) !== i);
+  if (dupNames.length > 0) {
+    errors.value["fields"] = `Duplicate field name(s): ${Array.from(new Set(dupNames)).join(", ")}`;
   }
 
   for (const col of table.columns) {
@@ -215,11 +225,18 @@ async function save() {
           <div class="space-y-6">
             <TableConstraints
               v-model="table"
-              :column-names="table.columns.map((c: any) => c.name)"
+              :column-names="[
+                ...table.columns.map((c: any) => c.name),
+                ...table.relations.map((r: any) => r.propertyName),
+              ]"
             />
-            <TableColumns v-model="table.columns" />
+            <TableColumns
+              v-model="table.columns"
+              :reserved-names="table.relations.map((r: any) => r.propertyName)"
+            />
             <TableRelations
               v-model="table.relations"
+              :reserved-names="table.columns.map((c: any) => c.name)"
               :table-options="
                 Object.values(schemas).map((schema: any) => ({ 
                   label: schema.name, 

@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -67,19 +68,28 @@ interface PackageInstallOptions {
 }
 
 export class PackageManagementService {
-  private getProjectRoot(): string {
+  private projectRootCache: string | null = null;
+
+  getProjectRoot(): string {
+    if (this.projectRootCache) return this.projectRootCache;
+
+    if (process.env.PROJECT_ROOT) {
+      this.projectRootCache = process.env.PROJECT_ROOT;
+      return this.projectRootCache;
+    }
+
     try {
-      const fsSync = require('fs');
       let searchDir = __dirname;
-      
+
       while (searchDir !== path.dirname(searchDir)) {
         const packageJsonPath = path.join(searchDir, 'package.json');
         const appDirPath = path.join(searchDir, 'app');
-        
+
         if (fsSync.existsSync(packageJsonPath) && fsSync.existsSync(appDirPath)) {
+          this.projectRootCache = searchDir;
           return searchDir;
         }
-        
+
         const parentDir = path.dirname(searchDir);
         if (parentDir === searchDir) {
           break;
@@ -88,16 +98,18 @@ export class PackageManagementService {
       }
     } catch {
     }
-    
+
     let currentDir = process.cwd();
     if (currentDir.includes('.output')) {
       const parts = currentDir.split(path.sep);
       const outputIndex = parts.indexOf('.output');
       if (outputIndex > 0) {
-        return parts.slice(0, outputIndex).join(path.sep);
+        this.projectRootCache = parts.slice(0, outputIndex).join(path.sep);
+        return this.projectRootCache;
       }
     }
-    
+
+    this.projectRootCache = currentDir;
     return currentDir;
   }
 
@@ -110,16 +122,16 @@ export class PackageManagementService {
     const projectRoot = this.getProjectRoot();
 
     try {
-      if (require('fs').existsSync(path.join(projectRoot, 'bun.lockb'))) {
+      if (fsSync.existsSync(path.join(projectRoot, 'bun.lockb'))) {
         return 'bun';
       }
-      if (require('fs').existsSync(path.join(projectRoot, 'yarn.lock'))) {
+      if (fsSync.existsSync(path.join(projectRoot, 'yarn.lock'))) {
         return 'yarn';
       }
-      if (require('fs').existsSync(path.join(projectRoot, 'package-lock.json'))) {
+      if (fsSync.existsSync(path.join(projectRoot, 'package-lock.json'))) {
         return 'npm';
       }
-      if (require('fs').existsSync(path.join(projectRoot, 'pnpm-lock.yaml'))) {
+      if (fsSync.existsSync(path.join(projectRoot, 'pnpm-lock.yaml'))) {
         return 'pnpm';
       }
     } catch {
@@ -129,7 +141,7 @@ export class PackageManagementService {
   }
 
   async installPackage(options: PackageInstallOptions): Promise<{ version: string; description?: string }> {
-    const { name, version = 'latest', flags = '' } = options;
+    const { name, version = 'latest' } = options;
     const packageManager = this.getPackageManager();
     const packageSpec = version === 'latest' ? name : `${name}@${version}`;
 
@@ -163,6 +175,54 @@ export class PackageManagementService {
       };
     } catch (error: any) {
       throw new Error(`Failed to install package ${name}: ${error.message}`);
+    }
+  }
+
+  async installBatch(packages: Array<{ name: string; version?: string }>): Promise<void> {
+    if (packages.length === 0) return;
+
+    const packageManager = this.getPackageManager();
+    const projectRoot = this.getProjectRoot();
+
+    const specs = packages.map((p) =>
+      !p.version || p.version === 'latest' ? p.name : `${p.name}@${p.version}`,
+    );
+
+    const args: string[] = [];
+    if (packageManager === 'bun') {
+      args.push('add', ...specs);
+    } else if (packageManager === 'yarn') {
+      args.push('add', ...specs);
+    } else if (packageManager === 'pnpm') {
+      args.push('add', ...specs);
+    } else {
+      args.push('install', ...specs, '--legacy-peer-deps');
+    }
+
+    const timeout = Math.max(120000, packages.length * 30000);
+
+    try {
+      console.log(`Batch installing ${packages.length} packages: ${specs.join(' ')}`);
+      const { stderr } = await execCommand(packageManager, args, {
+        cwd: projectRoot,
+        timeout,
+      });
+
+      if (stderr && !stderr.includes('WARN') && !stderr.includes('warning')) {
+        console.warn(`Batch install stderr: ${stderr.substring(0, 500)}`);
+      }
+
+      console.log(`Batch install completed for ${packages.length} packages`);
+    } catch (error: any) {
+      console.error(`Batch install failed: ${error.message}, falling back to individual installs...`);
+
+      for (const pkg of packages) {
+        try {
+          await this.installPackage({ name: pkg.name, version: pkg.version || 'latest' });
+        } catch (e: any) {
+          console.error(`Individual install failed for ${pkg.name}: ${e.message}`);
+        }
+      }
     }
   }
 
@@ -207,21 +267,12 @@ export class PackageManagementService {
     }
   }
 
-  async isPackageInstalled(packageName: string): Promise<boolean> {
+  isPackageInstalled(packageName: string): boolean {
     try {
       const projectRoot = this.getProjectRoot();
-      const projectPackageJsonPath = path.join(projectRoot, 'package.json');
-      const packageJsonContent = await fs.readFile(projectPackageJsonPath, 'utf-8');
-      const packageJson = JSON.parse(packageJsonContent);
-
-      const allDependencies = {
-        ...(packageJson.dependencies || {}),
-        ...(packageJson.devDependencies || {}),
-      };
-
-      return packageName in allDependencies;
-    } catch (error) {
-      console.error(`Error checking package installation status for ${packageName}:`, error);
+      const pkgPath = path.join(projectRoot, 'node_modules', packageName, 'package.json');
+      return fsSync.existsSync(pkgPath);
+    } catch {
       return false;
     }
   }
