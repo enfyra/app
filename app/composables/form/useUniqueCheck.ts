@@ -11,7 +11,12 @@ interface UniqueCheckState {
 export function useUniqueCheck(
   tableName: string | Ref<string>,
   uniques: Ref<string[][] | null | undefined>,
-  currentId?: Ref<string | number | null>
+  currentId?: Ref<string | number | null>,
+  options?: {
+    mode?: 'api' | 'local' | Ref<'api' | 'local'>;
+    localRecords?: any[] | Ref<any[]>;
+    localSelfKey?: string | number | null | Ref<string | number | null>;
+  }
 ) {
   const checkStates = ref<Record<string, UniqueCheckState>>({});
   const { getIdFieldName, getId } = useDatabase();
@@ -19,6 +24,20 @@ export function useUniqueCheck(
   const tableNameRef = isRef(tableName) ? tableName : ref(tableName);
   const currentIdRef = currentId || ref(null);
   const { fieldMap, schemas } = useSchema(tableNameRef);
+  const modeRef = computed(() => {
+    const m = options?.mode;
+    const v = isRef(m) ? m.value : m;
+    return v || 'api';
+  });
+  const localRecordsRef = computed<any[]>(() => {
+    const r = options?.localRecords;
+    const v = isRef(r) ? r.value : r;
+    return Array.isArray(v) ? v : [];
+  });
+  const localSelfKeyRef = computed(() => {
+    const k = options?.localSelfKey;
+    return isRef(k) ? k.value : k;
+  });
 
   function getUniqueGroupsForField(fieldName: string): string[][] {
     if (!uniques.value) return [];
@@ -96,6 +115,50 @@ export function useUniqueCheck(
     return getId(value);
   }
 
+  function checkUniqueLocal(
+    fieldName: string,
+    value: any,
+    allFormData?: Record<string, any>
+  ): boolean {
+    const groups = getUniqueGroupsForField(fieldName);
+    if (groups.length === 0) return true;
+
+    for (const group of groups) {
+      const recordValues: Record<string, any> = {};
+
+      if (group.length === 1 && group[0]) {
+        recordValues[group[0]] = eqValueForUniqueKey(group[0], fieldName, value);
+      } else {
+        if (!allFormData) return false;
+        const relMeta = fieldMap.value.get(fieldName);
+        const fk = relMeta?.fieldType === 'relation' ? relMeta.foreignKeyColumn : undefined;
+        for (const field of group) {
+          const rawVal =
+            field === fieldName || (fk && field === fk)
+              ? value
+              : allFormData[field];
+          recordValues[field] = eqValueForUniqueKey(field, fieldName, rawVal);
+        }
+      }
+
+      const selfKey = localSelfKeyRef.value;
+      const exists = localRecordsRef.value.some((r: any) => {
+        if (selfKey != null && r && r._localKey != null && String(r._localKey) === String(selfKey)) {
+          return false;
+        }
+        return group.every((k) => {
+          const v = recordValues[k];
+          const rv = r?.[k];
+          return String(rv ?? '') === String(v ?? '');
+        });
+      });
+
+      if (exists) return false;
+    }
+
+    return true;
+  }
+
   async function checkUnique(
     fieldName: string,
     value: any,
@@ -109,6 +172,17 @@ export function useUniqueCheck(
     const groups = getUniqueGroupsForField(fieldName);
 
     if (groups.length === 0) {
+      setCheckStatus(fieldName, 'valid', '', value);
+      return true;
+    }
+
+    if (modeRef.value === 'local') {
+      const ok = checkUniqueLocal(fieldName, value, allFormData);
+      if (!ok) {
+        const groupLabel = groups[0]?.length === 1 ? fieldName : groups[0]?.join(' + ');
+        setCheckStatus(fieldName, 'invalid', `Value already exists for ${groupLabel}`, value);
+        return false;
+      }
       setCheckStatus(fieldName, 'valid', '', value);
       return true;
     }
@@ -196,7 +270,12 @@ export function useUniqueCheck(
           return false;
         }
       } catch (error) {
-        console.error('[useUniqueCheck] Error checking uniqueness:', error);
+        const ok = checkUniqueLocal(fieldName, value, allFormData);
+        if (!ok) {
+          const groupLabel = group.length === 1 ? fieldName : group.join(' + ');
+          setCheckStatus(fieldName, 'invalid', `Value already exists for ${groupLabel}`, value);
+          return false;
+        }
         setCheckStatus(fieldName, 'idle', 'Error checking uniqueness', value);
         return false;
       }

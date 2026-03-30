@@ -289,6 +289,16 @@ async function handleSave() {
     return;
   }
 
+  const uniqueOk = await formEditorRef.value?.validateAllUniqueFields?.();
+  if (uniqueOk === false) {
+    toast.add({
+      title: "Duplicate value",
+      color: "error",
+      description: "Please verify all unique fields before saving.",
+    });
+    return;
+  }
+
   if (props.menu && getId(props.menu)) {
     await updateMenu({
       id: Number(getId(props.menu)),

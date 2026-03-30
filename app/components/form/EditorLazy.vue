@@ -15,11 +15,17 @@ const props = withDefaults(
                       mode?: 'create' | 'update';
                       layout?: 'stack' | 'grid';
                       currentRecordId?: string | number | null;
+                      uniqueCheckMode?: 'api' | 'local';
+                      uniqueLocalRecords?: any[];
+                      uniqueLocalSelfKey?: string | number | null;
                     }>(),
   {
     mode: 'update',
     layout: 'stack',
     currentRecordId: null,
+    uniqueCheckMode: 'api',
+    uniqueLocalRecords: () => [],
+    uniqueLocalSelfKey: null,
   }
 );
 
@@ -36,6 +42,12 @@ const FormEditor = defineAsyncComponent(() => import("./Editor.vue"));
 defineExpose({
   confirmChanges: () => {
     formEditorRef.value?.confirmChanges();
+  },
+  validateAllUniqueFields: () => {
+    return formEditorRef.value?.validateAllUniqueFields?.();
+  },
+  getUniqueFieldsNeedingCheck: () => {
+    return formEditorRef.value?.getUniqueFieldsNeedingCheck?.() || [];
   },
 });
 </script>
