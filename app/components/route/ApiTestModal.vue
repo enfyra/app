@@ -147,6 +147,7 @@ const { createEmptyFilter, buildQuery } = useFilterQuery();
 
 watch(() => props.modelValue, (open) => {
   if (open) {
+    pending.value = false;
     response.value = null;
     responseError.value = '';
     recordId.value = '';

@@ -63,9 +63,12 @@ const { data: tablesData, execute: fetchTables } = useApi(
 
 async function loadTables() {
   isLoading.value = true;
-  await fetchTables();
-  tables.value = tablesData.value?.data || [];
-  isLoading.value = false;
+  try {
+    await fetchTables();
+    tables.value = tablesData.value?.data || [];
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 watch(searchTerm, () => {
