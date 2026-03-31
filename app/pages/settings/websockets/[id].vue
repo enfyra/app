@@ -31,6 +31,13 @@
       </CommonFormCard>
     </div>
 
+    <WebsocketConnectionHandlerTestModal
+      v-model="showConnTestModal"
+      :gateway-path="String(form?.path || gateway?.path || '')"
+      :script="String(form?.connectionHandlerScript || '')"
+      :timeout-ms="Number(form?.connectionHandlerTimeout || 5000)"
+    />
+
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Event Handlers</h3>
@@ -108,6 +115,7 @@
       v-model="showEventDrawer"
       :event="selectedEvent"
       :gateway-id="gatewayId"
+      :gateway-path="form?.path || gateway?.path || ''"
       @save="handleSaveEvent"
     />
   </div>
@@ -122,6 +130,7 @@
 </template>
 
 <script setup lang="ts">
+import WebsocketConnectionHandlerTestModal from '~/components/websocket/ConnectionHandlerTestModal.vue';
 
 definePageMeta({
   layout: "default",
@@ -152,6 +161,8 @@ const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const pageId = computed(() => route.params.id);
+
+const showConnTestModal = ref(false);
 
 registerPageHeader({
   title: "WebSocket Gateway",
@@ -239,7 +250,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "error",
     size: "md",
-    order: 3,
+    order: 2,
     onClick: deleteGateway,
     loading: computed(() => deleteLoading.value),
     disabled: computed(() => gatewayData.value?.data?.[0]?.isSystem ?? false),
@@ -259,7 +270,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     size: "md",
-    order: 2,
+    order: 999,
     submit: updateGateway,
     loading: computed(() => updateLoading.value),
     disabled: computed(() => !hasFormChanges.value),
@@ -271,6 +282,22 @@ useHeaderActionRegistry([
         },
       ],
     },
+  },
+]);
+
+useSubHeaderActionRegistry([
+  {
+    id: 'test-ws-connection',
+    label: 'Test',
+    icon: 'lucide:flask-conical',
+    variant: 'soft',
+    color: 'warning',
+    side: 'right',
+    order: 1,
+    onClick: () => {
+      showConnTestModal.value = true;
+    },
+    disabled: computed(() => !String(form.value?.connectionHandlerScript || '').trim()),
   },
 ]);
 
@@ -326,7 +353,14 @@ async function updateGateway() {
   });
 
   await fetchGatewayDetail();
+
+  await nextTick();
+  if (formEditorRef.value?.confirmChanges) {
+    formEditorRef.value.confirmChanges();
+  }
+  hasFormChanges.value = false;
 }
+
 
 async function handleReset() {
   const ok = await confirm({

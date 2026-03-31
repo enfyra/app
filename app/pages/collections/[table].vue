@@ -77,6 +77,7 @@ useHeaderActionRegistry([
     icon: "lucide:rotate-ccw",
     variant: "outline",
     color: "warning",
+    order: 1,
     disabled: computed(
       () =>
         schemaLoading.value ||
@@ -93,6 +94,7 @@ useHeaderActionRegistry([
     icon: "lucide:trash",
     variant: "solid",
     color: "error",
+    order: 2,
     loading: computed(() => deleting.value),
     disabled: computed(
       () =>
@@ -117,6 +119,7 @@ useHeaderActionRegistry([
     icon: "lucide:save",
     variant: "solid",
     color: "primary",
+    order: 999,
     loading: computed(() => saving.value || schemaLoading.value),
     disabled: computed(
       () =>
@@ -360,7 +363,22 @@ async function copyConfirmHash() {
   }
 }
 
-const localDiff = computed(() => {
+type TLocalSchemaDiff = {
+  removedColumns: string[];
+  addedColumns: string[];
+  renamedColumns: Array<{ from: string; to: string }>;
+  changedColumns: Array<{ name: string; before: any; after: any }>;
+  removedRelations: string[];
+  addedRelations: string[];
+  removedUniques: string[];
+  addedUniques: string[];
+  removedIndexes: string[];
+  addedIndexes: string[];
+};
+
+const isNonEmptyString = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
+
+const localDiff = computed<TLocalSchemaDiff>(() => {
   const before = formChanges.originalData.value || {};
   const after = table.value || {};
   const beforeCols = Array.isArray(before.columns) ? before.columns : [];
@@ -388,11 +406,11 @@ const localDiff = computed(() => {
   const removedColumns = Array.from(bColMap.keys())
     .filter((k) => k && !aColMap.has(k))
     .map((k) => bColMap.get(k)?.name)
-    .filter(Boolean);
+    .filter(isNonEmptyString);
   const addedColumns = Array.from(aColMap.keys())
     .filter((k) => k && !bColMap.has(k))
     .map((k) => aColMap.get(k)?.name)
-    .filter(Boolean);
+    .filter(isNonEmptyString);
 
   const renamedColumns = Array.from(aColMap.keys())
     .filter((k) => k && bColMap.has(k))
@@ -400,7 +418,7 @@ const localDiff = computed(() => {
       from: bColMap.get(k)?.name,
       to: aColMap.get(k)?.name,
     }))
-    .filter((x) => x.from && x.to && x.from !== x.to);
+    .filter((x): x is { from: string; to: string } => isNonEmptyString(x.from) && isNonEmptyString(x.to) && x.from !== x.to);
 
   const changedColumns = Array.from(aColMap.keys())
     .filter((k) => k && bColMap.has(k))
@@ -413,31 +431,31 @@ const localDiff = computed(() => {
       return JSON.stringify(bCopy) !== JSON.stringify(aCopy);
     })
     .map((k) => ({ name: aColMap.get(k)?.name, before: bColMap.get(k), after: aColMap.get(k) }))
-    .filter((x) => x.name);
+    .filter((x): x is { name: string; before: any; after: any } => isNonEmptyString(x.name));
 
   const relKey = (r: any) => `${r?.propertyName ?? ''}|${r?.type ?? ''}|${r?.targetTableName ?? r?.targetTable?.name ?? r?.targetTable ?? ''}`;
   const bKeys = new Set(beforeRels.map(relKey));
   const aKeys = new Set(afterRels.map(relKey));
-  const removedRelations = Array.from(bKeys).filter((k) => k && !aKeys.has(k));
-  const addedRelations = Array.from(aKeys).filter((k) => k && !bKeys.has(k));
+  const removedRelations = Array.from(bKeys).filter((k): k is string => isNonEmptyString(k) && !aKeys.has(k));
+  const addedRelations = Array.from(aKeys).filter((k): k is string => isNonEmptyString(k) && !bKeys.has(k));
 
   const normalizeGroup = (g: any) =>
     (Array.isArray(g) ? g : [])
       .map((x) => String(x ?? '').trim())
-      .filter(Boolean)
+      .filter(isNonEmptyString)
       .sort();
 
   const groupKey = (g: any) => normalizeGroup(g).join('|');
 
-  const beforeUniqueKeys = new Set(beforeUniques.map(groupKey).filter(Boolean));
-  const afterUniqueKeys = new Set(afterUniques.map(groupKey).filter(Boolean));
-  const removedUniques = Array.from(beforeUniqueKeys).filter((k) => k && !afterUniqueKeys.has(k));
-  const addedUniques = Array.from(afterUniqueKeys).filter((k) => k && !beforeUniqueKeys.has(k));
+  const beforeUniqueKeys = new Set(beforeUniques.map(groupKey).filter(isNonEmptyString));
+  const afterUniqueKeys = new Set(afterUniques.map(groupKey).filter(isNonEmptyString));
+  const removedUniques = Array.from(beforeUniqueKeys).filter((k): k is string => isNonEmptyString(k) && !afterUniqueKeys.has(k));
+  const addedUniques = Array.from(afterUniqueKeys).filter((k): k is string => isNonEmptyString(k) && !beforeUniqueKeys.has(k));
 
-  const beforeIndexKeys = new Set(beforeIndexes.map(groupKey).filter(Boolean));
-  const afterIndexKeys = new Set(afterIndexes.map(groupKey).filter(Boolean));
-  const removedIndexes = Array.from(beforeIndexKeys).filter((k) => k && !afterIndexKeys.has(k));
-  const addedIndexes = Array.from(afterIndexKeys).filter((k) => k && !beforeIndexKeys.has(k));
+  const beforeIndexKeys = new Set(beforeIndexes.map(groupKey).filter(isNonEmptyString));
+  const afterIndexKeys = new Set(afterIndexes.map(groupKey).filter(isNonEmptyString));
+  const removedIndexes = Array.from(beforeIndexKeys).filter((k): k is string => isNonEmptyString(k) && !afterIndexKeys.has(k));
+  const addedIndexes = Array.from(afterIndexKeys).filter((k): k is string => isNonEmptyString(k) && !beforeIndexKeys.has(k));
 
   return {
     removedColumns,
@@ -455,7 +473,7 @@ const localDiff = computed(() => {
 
 const modalRemovedColumns = computed<string[]>(() => {
   const serverCols = schemaConfirmDetails.value?.removedColumns;
-  if (Array.isArray(serverCols) && serverCols.length) return serverCols;
+  if (Array.isArray(serverCols) && serverCols.length) return serverCols.map((x: any) => String(x ?? '')).filter(isNonEmptyString);
   return localDiff.value.removedColumns;
 });
 

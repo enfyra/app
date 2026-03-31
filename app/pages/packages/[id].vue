@@ -134,6 +134,7 @@ useHeaderActionRegistry([
     icon: "lucide:rotate-ccw",
     variant: "outline",
     color: "warning",
+    order: 1,
     disabled: computed(() => !hasFormChanges.value),
     onClick: handleReset,
     show: computed(() => hasFormChanges.value),
@@ -145,6 +146,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "error",
     size: "md",
+    order: 2,
     onClick: handleUninstall,
     loading: computed(() => deleting.value),
     permission: {
@@ -163,6 +165,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     size: "md",
+    order: 999,
     submit: handleUpdate,
     loading: computed(() => updating.value),
     disabled: computed(() => !hasFormChanges.value),

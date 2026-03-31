@@ -29,10 +29,18 @@
       </CommonFormCard>
     </div>
 
+    <WebsocketConnectionHandlerTestModal
+      v-model="showConnTestModal"
+      :gateway-path="String(createForm?.path || '')"
+      :script="String(createForm?.connectionHandlerScript || '')"
+      :timeout-ms="Number(createForm?.connectionHandlerTimeout || 5000)"
+    />
+
   </div>
 </template>
 
 <script setup lang="ts">
+import WebsocketConnectionHandlerTestModal from '~/components/websocket/ConnectionHandlerTestModal.vue';
 definePageMeta({
   layout: "default",
   title: "Create WebSocket Gateway",
@@ -41,11 +49,13 @@ definePageMeta({
 const toast = useToast();
 const router = useRouter();
 const { createLoader } = useLoader();
+const { confirm } = useConfirm();
 
 const tableName = "websocket_definition";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const showConnTestModal = ref(false);
 
 const { generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -65,6 +75,7 @@ useHeaderActionRegistry([
     color: "primary",
     submit: handleCreate,
     loading: computed(() => createLoading.value),
+    order: 999,
     permission: {
       and: [
         {
@@ -73,6 +84,22 @@ useHeaderActionRegistry([
         },
       ],
     },
+  },
+]);
+
+useSubHeaderActionRegistry([
+  {
+    id: 'test-ws-connection',
+    label: 'Test',
+    icon: 'lucide:flask-conical',
+    variant: 'soft',
+    color: 'warning',
+    side: 'right',
+    order: 1,
+    onClick: () => {
+      showConnTestModal.value = true;
+    },
+    disabled: computed(() => !String(createForm.value?.connectionHandlerScript || '').trim()),
   },
 ]);
 

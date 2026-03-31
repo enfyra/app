@@ -423,6 +423,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     size: "md",
+    order: 999,
     onClick: saveFlowSettings,
     disabled: computed(() => !hasFormChanges.value),
     permission: { and: [{ route: "/flow_definition", actions: ["update"] }] },
@@ -613,7 +614,7 @@ async function testCurrentStep() {
   const testTimeout = setTimeout(() => testAbortController?.abort(), 35000);
   try {
     const { execute: testApi, data: testData, error: testError } = useApi(
-      () => `/admin/flow/test-step`,
+      () => `/admin/test/run`,
       { method: "post", errorContext: "Test Step" }
     );
     let mockFlow;
@@ -626,7 +627,7 @@ async function testCurrentStep() {
         return;
       }
     }
-    await testApi({ body: { type: stepForm.value.type, config, timeout: stepForm.value.timeout || 5000, mockFlow } });
+    await testApi({ body: { kind: 'flow_step', type: stepForm.value.type, config, timeout: stepForm.value.timeout || 5000, mockFlow } });
     if (testError.value) {
       testResult.value = { success: false, error: testError.value.message, duration: 0 };
     } else {

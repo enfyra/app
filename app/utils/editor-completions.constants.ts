@@ -4,6 +4,8 @@ export const ENFYRA_COMPLETIONS = [
   { label: '@PARAMS', type: 'variable', detail: 'Route params ($ctx.$params)' },
   { label: '@USER', type: 'variable', detail: 'Current user ($ctx.$user)' },
   { label: '@HELPERS', type: 'variable', detail: 'Helpers: $jwt, $bcrypt, autoSlug' },
+  { label: '@SOCKET', type: 'variable', detail: 'WebSocket helper ($ctx.$socket)' },
+  { label: '@FETCH', type: 'function', detail: 'Safe fetch helper ($ctx.$helpers.$fetch)' },
   { label: '@DATA', type: 'variable', detail: 'Response data (post-hooks)' },
   { label: '@STATUS', type: 'variable', detail: 'Status code (post-hooks)' },
   { label: '@PAYLOAD', type: 'variable', detail: 'Flow input payload' },

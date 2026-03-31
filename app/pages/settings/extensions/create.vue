@@ -97,6 +97,7 @@ useHeaderActionRegistry([
     variant: "outline",
     color: "primary",
     size: "md",
+    order: 10,
     onClick: () => (showPreviewModal.value = true),
     disabled: computed(() => !createForm.value?.code),
   },
@@ -106,6 +107,7 @@ useHeaderActionRegistry([
   icon: "lucide:save",
   variant: "solid",
   color: "primary",
+  order: 999,
   submit: handleCreate,
   loading: computed(() => createLoading.value),
   permission: {

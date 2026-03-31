@@ -50,6 +50,7 @@ useHeaderActionRegistry([
     icon: "lucide:save",
     variant: "solid",
     color: "primary",
+    order: 999,
     submit: handleCreate,
     loading: computed(() => createLoading.value),
     permission: {

@@ -95,6 +95,7 @@ useHeaderActionRegistry([
     icon: "lucide:rotate-ccw",
     variant: "outline",
     color: "warning",
+    order: 1,
     disabled: computed(() => !hasFormChanges.value),
     onClick: handleReset,
     show: computed(() => hasFormChanges.value),
@@ -106,6 +107,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "error",
     size: "md",
+    order: 2,
     onClick: deleteFile,
     loading: computed(() => deleteLoading.value),
     permission: {
@@ -124,6 +126,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     size: "md",
+    order: 999,
     submit: saveFile,
     loading: computed(() => updateLoading.value),
     disabled: computed(() => !hasFormChanges.value),

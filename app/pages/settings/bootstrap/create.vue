@@ -41,6 +41,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     size: "md",
+    order: 999,
     submit: handleCreate,
     loading: computed(() => createLoading.value),
     permission: {

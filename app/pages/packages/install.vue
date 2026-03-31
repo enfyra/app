@@ -201,6 +201,7 @@ useHeaderActionRegistry({
   icon: "lucide:download",
   variant: "solid",
   color: "primary",
+  order: 999,
   loading: computed(() => createLoading.value),
   submit: handleCreate,
   permission: {
