@@ -140,7 +140,6 @@ const {
 } = useApi("/table_definition", {
   method: "post",
   errorContext: "Create Table",
-  onError: (e: any) => e?.data?.code === 'SCHEMA_CONFIRM_REQUIRED',
 });
 
 useHeaderActionRegistry([
@@ -176,32 +175,7 @@ async function save() {
   const payload = getCleanTablePayload();
   await createTable({ body: payload });
 
-  if (createError.value?.data?.code === 'SCHEMA_CONFIRM_REQUIRED') {
-    const details = createError.value?.data?.details || {};
-    const ok2 = await confirm({
-      title: "Confirm Schema Migration",
-      confirmText: "Confirm",
-      content: [
-        `This action requires explicit confirmation.`,
-        `Table: ${details.tableName || payload?.name || ''}`,
-        details.requiredConfirmHash ? `Confirm hash: ${details.requiredConfirmHash}` : '',
-      ].filter(Boolean).join("\n"),
-    });
-    if (!ok2) return;
-
-    const headers: Record<string, string> = {};
-    if (details.requiredConfirmHash && details.confirmToken) {
-      headers["x-schema-confirm-hash"] = String(details.requiredConfirmHash);
-      headers["x-schema-confirm-token"] = String(details.confirmToken);
-      await createTable({ body: payload, headers });
-    } else if (details.expectedConfirm) {
-      await createTable({ body: payload, query: { schemaConfirm: details.expectedConfirm } });
-    }
-  }
-
-  if (createError.value) {
-    return;
-  }
+  if (createError.value) return;
 
   await fetchSchema();
 

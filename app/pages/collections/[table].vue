@@ -14,9 +14,7 @@ const { isMounted } = useMounted();
 
 const table = ref<any>();
 const schemaConfirmModalOpen = ref(false);
-const schemaConfirmMode = ref<'update' | 'delete'>('update');
 const schemaConfirmDetails = ref<any>(null);
-const schemaConfirmInput = ref('');
 const schemaConfirmLoading = ref(false);
 
 const hasFormChanges = ref(false);
@@ -57,7 +55,6 @@ const {
 } = useApi(() => `/table_definition`, {
   method: "patch",
   errorContext: "Update Table",
-  onError: (e: any) => e?.data?.code === 'SCHEMA_CONFIRM_REQUIRED',
 });
 
 const {
@@ -67,7 +64,6 @@ const {
 } = useApi(() => `/table_definition`, {
   method: "delete",
   errorContext: "Delete Table",
-  onError: (e: any) => e?.data?.code === 'SCHEMA_CONFIRM_REQUIRED',
 });
 
 useHeaderActionRegistry([
@@ -171,36 +167,28 @@ async function save() {
     table.value?.isSingleRecord === true;
 
   if (isChangingToSingleRecord) {
-    schemaConfirmMode.value = 'update';
-    schemaConfirmDetails.value = {
-      tableName: table.value?.name,
-      warning: "Changing to single record mode will keep only the first record. All other records will be automatically deleted.",
-    };
-    schemaConfirmInput.value = '';
-    schemaConfirmModalOpen.value = true;
-    return;
-  } else {
-    schemaConfirmMode.value = 'update';
-    schemaConfirmDetails.value = { tableName: table.value?.name };
-    schemaConfirmInput.value = '';
-    schemaConfirmModalOpen.value = true;
-    return;
+    const ok = await confirm({
+      title: 'Single Record Mode',
+      content: 'Changing to single record mode will keep only the first record. All other records will be automatically deleted.',
+    });
+    if (!ok) return;
   }
+
+  await patchTable();
 }
 
 async function patchTable() {
   await executePatchTable({ id: getId(table.value), body: table.value });
 
-  if (updateError.value?.data?.code === 'SCHEMA_CONFIRM_REQUIRED') {
-    schemaConfirmMode.value = 'update';
-    schemaConfirmDetails.value = updateError.value?.data?.details || {};
-    schemaConfirmInput.value = '';
-    schemaConfirmModalOpen.value = true;
-  }
+  if (updateError.value) return;
 
-  if (updateError.value) {
+  const preview = patchTableData.value?.data?.[0];
+  if (preview?._preview) {
+    schemaConfirmDetails.value = preview;
+    schemaConfirmModalOpen.value = true;
     return;
   }
+
   await afterPatchSuccess();
 }
 
@@ -258,41 +246,15 @@ async function handleReset() {
 }
 
 async function handleDelete() {
-  schemaConfirmMode.value = 'delete';
-  schemaConfirmDetails.value = { tableName: table.value?.name };
-  schemaConfirmInput.value = '';
-  schemaConfirmModalOpen.value = true;
-}
-
-async function deleteTable() {
-  const deletedTableName = String(route.params.table);
-  await executeDeleteTable({ id: getId(table.value) });
-
-  if (deleteError.value?.data?.code === 'SCHEMA_CONFIRM_REQUIRED') {
-    schemaConfirmMode.value = 'delete';
-    schemaConfirmDetails.value = deleteError.value?.data?.details || {};
-    schemaConfirmInput.value = '';
-    schemaConfirmModalOpen.value = true;
-  }
-
-  if (deleteError.value) {
-    return;
-  }
-
-  await retryUntilFresh(
-    () => forceRefreshSchema(),
-    () => !!schemas.value[deletedTableName]
-  );
-
-  await loadRoutes();
-  registerDataMenuItems(Object.values(schemas.value));
-
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Table deleted!",
+  const ok = await confirm({
+    title: 'Delete Table',
+    content: `Are you sure you want to delete table "${table.value?.name}"? This action cannot be undone.`,
   });
-  return navigateTo(`/collections`);
+  if (!ok) return;
+
+  await executeDeleteTable({ id: getId(table.value) });
+  if (deleteError.value) return;
+  await afterDeleteSuccess(String(route.params.table));
 }
 
 async function afterDeleteSuccess(deletedTableName: string) {
@@ -312,21 +274,15 @@ async function afterDeleteSuccess(deletedTableName: string) {
   await navigateTo(`/collections`);
 }
 
-const schemaConfirmExpectedTableName = computed(() =>
+const schemaConfirmTableName = computed(() =>
   String(schemaConfirmDetails.value?.tableName || table.value?.name || ''),
 );
 
 const isSchemaConfirmDestructive = computed(() => {
-  if (schemaConfirmMode.value === 'delete') return true;
-  if (schemaConfirmDetails.value?.requiredConfirmHash) return true;
-  if (modalRemovedColumns.value.length > 0) return true;
-  if (modalRemovedRelationsCount.value > 0) return true;
-  if (schemaConfirmDetails.value?.warning) return true;
-  return false;
+  return !!schemaConfirmDetails.value?.isDestructive;
 });
 
 const schemaConfirmBadgeText = computed(() => {
-  if (schemaConfirmMode.value === 'delete') return 'Destructive';
   if (!isSchemaConfirmDestructive.value) return 'Safe';
   const removedCols = modalRemovedColumns.value.length;
   const removedRels = modalRemovedRelationsCount.value;
@@ -337,14 +293,8 @@ const schemaConfirmBadgeText = computed(() => {
 });
 
 const schemaConfirmSubtitle = computed(() => {
-  if (schemaConfirmMode.value === 'delete') return 'Type the table name to proceed.';
   if (isSchemaConfirmDestructive.value) {
-    const removedCols = modalRemovedColumns.value.length;
-    const removedRels = modalRemovedRelationsCount.value;
-    if (removedCols || removedRels) {
-      return 'Destructive change detected (drops). Please review carefully.';
-    }
-    return 'Destructive change detected. Please review carefully.';
+    return 'Destructive change detected (drops). Please review carefully.';
   }
   return 'No destructive drops detected. Confirm to apply changes.';
 });
@@ -363,139 +313,45 @@ async function copyConfirmHash() {
   }
 }
 
-type TLocalSchemaDiff = {
-  removedColumns: string[];
-  addedColumns: string[];
-  renamedColumns: Array<{ from: string; to: string }>;
-  changedColumns: Array<{ name: string; before: any; after: any }>;
-  removedRelations: string[];
-  addedRelations: string[];
-  removedUniques: string[];
-  addedUniques: string[];
-  removedIndexes: string[];
-  addedIndexes: string[];
-};
-
-const isNonEmptyString = (v: unknown): v is string => typeof v === 'string' && v.trim().length > 0;
-
-const localDiff = computed<TLocalSchemaDiff>(() => {
-  const before = formChanges.originalData.value || {};
-  const after = table.value || {};
-  const beforeCols = Array.isArray(before.columns) ? before.columns : [];
-  const afterCols = Array.isArray(after.columns) ? after.columns : [];
-  const beforeRels = Array.isArray(before.relations) ? before.relations : [];
-  const afterRels = Array.isArray(after.relations) ? after.relations : [];
-  const beforeUniques = Array.isArray(before.uniques) ? before.uniques : [];
-  const afterUniques = Array.isArray(after.uniques) ? after.uniques : [];
-  const beforeIndexes = Array.isArray(before.indexes) ? before.indexes : [];
-  const afterIndexes = Array.isArray(after.indexes) ? after.indexes : [];
-
-  const normalizeCol = (c: any) => ({
-    key: String(c?._id ?? c?.id ?? c?.name ?? ''),
-    name: c?.name ?? '',
-    type: c?.type ?? '',
-    isNullable: c?.isNullable ?? true,
-    isPrimary: !!c?.isPrimary,
-    isGenerated: !!c?.isGenerated,
-    defaultValue: c?.defaultValue ?? null,
-  });
-  const byKey = (arr: any[]) => new Map(arr.map((c: any) => [normalizeCol(c).key, normalizeCol(c)]));
-  const bColMap = byKey(beforeCols);
-  const aColMap = byKey(afterCols);
-
-  const removedColumns = Array.from(bColMap.keys())
-    .filter((k) => k && !aColMap.has(k))
-    .map((k) => bColMap.get(k)?.name)
-    .filter(isNonEmptyString);
-  const addedColumns = Array.from(aColMap.keys())
-    .filter((k) => k && !bColMap.has(k))
-    .map((k) => aColMap.get(k)?.name)
-    .filter(isNonEmptyString);
-
-  const renamedColumns = Array.from(aColMap.keys())
-    .filter((k) => k && bColMap.has(k))
-    .map((k) => ({
-      from: bColMap.get(k)?.name,
-      to: aColMap.get(k)?.name,
-    }))
-    .filter((x): x is { from: string; to: string } => isNonEmptyString(x.from) && isNonEmptyString(x.to) && x.from !== x.to);
-
-  const changedColumns = Array.from(aColMap.keys())
-    .filter((k) => k && bColMap.has(k))
-    .filter((k) => {
-      const b = bColMap.get(k);
-      const a = aColMap.get(k);
-      if (!b || !a) return false;
-      const bCopy = { ...b, name: '' };
-      const aCopy = { ...a, name: '' };
-      return JSON.stringify(bCopy) !== JSON.stringify(aCopy);
-    })
-    .map((k) => ({ name: aColMap.get(k)?.name, before: bColMap.get(k), after: aColMap.get(k) }))
-    .filter((x): x is { name: string; before: any; after: any } => isNonEmptyString(x.name));
-
-  const relKey = (r: any) => `${r?.propertyName ?? ''}|${r?.type ?? ''}|${r?.targetTableName ?? r?.targetTable?.name ?? r?.targetTable ?? ''}`;
-  const bKeys = new Set(beforeRels.map(relKey));
-  const aKeys = new Set(afterRels.map(relKey));
-  const removedRelations = Array.from(bKeys).filter((k): k is string => isNonEmptyString(k) && !aKeys.has(k));
-  const addedRelations = Array.from(aKeys).filter((k): k is string => isNonEmptyString(k) && !bKeys.has(k));
-
-  const normalizeGroup = (g: any) =>
-    (Array.isArray(g) ? g : [])
-      .map((x) => String(x ?? '').trim())
-      .filter(isNonEmptyString)
-      .sort();
-
-  const groupKey = (g: any) => normalizeGroup(g).join('|');
-
-  const beforeUniqueKeys = new Set(beforeUniques.map(groupKey).filter(isNonEmptyString));
-  const afterUniqueKeys = new Set(afterUniques.map(groupKey).filter(isNonEmptyString));
-  const removedUniques = Array.from(beforeUniqueKeys).filter((k): k is string => isNonEmptyString(k) && !afterUniqueKeys.has(k));
-  const addedUniques = Array.from(afterUniqueKeys).filter((k): k is string => isNonEmptyString(k) && !beforeUniqueKeys.has(k));
-
-  const beforeIndexKeys = new Set(beforeIndexes.map(groupKey).filter(isNonEmptyString));
-  const afterIndexKeys = new Set(afterIndexes.map(groupKey).filter(isNonEmptyString));
-  const removedIndexes = Array.from(beforeIndexKeys).filter((k): k is string => isNonEmptyString(k) && !afterIndexKeys.has(k));
-  const addedIndexes = Array.from(afterIndexKeys).filter((k): k is string => isNonEmptyString(k) && !beforeIndexKeys.has(k));
-
-  return {
-    removedColumns,
-    addedColumns,
-    renamedColumns,
-    changedColumns,
-    removedRelations,
-    addedRelations,
-    removedUniques,
-    addedUniques,
-    removedIndexes,
-    addedIndexes,
-  };
-});
-
 const modalRemovedColumns = computed<string[]>(() => {
-  const serverCols = schemaConfirmDetails.value?.removedColumns;
-  if (Array.isArray(serverCols) && serverCols.length) return serverCols.map((x: any) => String(x ?? '')).filter(isNonEmptyString);
-  return localDiff.value.removedColumns;
+  const v = schemaConfirmDetails.value?.removedColumns;
+  return Array.isArray(v) ? v.map(String) : [];
 });
-
-const modalAddedColumns = computed<string[]>(() => localDiff.value.addedColumns || []);
-const modalRenamedColumns = computed<any[]>(() => localDiff.value.renamedColumns || []);
-const modalChangedColumns = computed<any[]>(() => localDiff.value.changedColumns || []);
-const modalAddedRelations = computed<string[]>(() => localDiff.value.addedRelations || []);
-const modalAddedUniques = computed<string[]>(() => localDiff.value.addedUniques || []);
-const modalRemovedUniques = computed<string[]>(() => localDiff.value.removedUniques || []);
-const modalAddedIndexes = computed<string[]>(() => localDiff.value.addedIndexes || []);
-const modalRemovedIndexes = computed<string[]>(() => localDiff.value.removedIndexes || []);
-
+const modalAddedColumns = computed<string[]>(() => {
+  const v = schemaConfirmDetails.value?.addedColumns;
+  return Array.isArray(v) ? v.map(String) : [];
+});
+const modalRenamedColumns = computed<any[]>(() => {
+  const v = schemaConfirmDetails.value?.renamedColumns;
+  return Array.isArray(v) ? v : [];
+});
+const modalChangedColumns = computed<string[]>(() => {
+  const v = schemaConfirmDetails.value?.changedColumns;
+  return Array.isArray(v) ? v.map(String) : [];
+});
+const modalAddedRelationsCount = computed<number>(() => {
+  const n = schemaConfirmDetails.value?.addedRelationsCount;
+  return typeof n === 'number' ? n : 0;
+});
 const modalRemovedRelationsCount = computed<number>(() => {
   const n = schemaConfirmDetails.value?.removedRelationsCount;
-  if (typeof n === 'number') return n;
-  return localDiff.value.removedRelations.length;
+  return typeof n === 'number' ? n : 0;
 });
-
-const canConfirmDelete = computed(() => {
-  const expected = schemaConfirmExpectedTableName.value;
-  if (!expected) return false;
-  return schemaConfirmInput.value.trim() === expected;
+const modalAddedUniques = computed<string[]>(() => {
+  const v = schemaConfirmDetails.value?.addedUniques;
+  return Array.isArray(v) ? v.map(String) : [];
+});
+const modalRemovedUniques = computed<string[]>(() => {
+  const v = schemaConfirmDetails.value?.removedUniques;
+  return Array.isArray(v) ? v.map(String) : [];
+});
+const modalAddedIndexes = computed<string[]>(() => {
+  const v = schemaConfirmDetails.value?.addedIndexes;
+  return Array.isArray(v) ? v.map(String) : [];
+});
+const modalRemovedIndexes = computed<string[]>(() => {
+  const v = schemaConfirmDetails.value?.removedIndexes;
+  return Array.isArray(v) ? v.map(String) : [];
 });
 
 async function onSchemaConfirmSubmit() {
@@ -503,55 +359,16 @@ async function onSchemaConfirmSubmit() {
     schemaConfirmModalOpen.value = false;
     return;
   }
-  if (schemaConfirmMode.value === 'delete' && !canConfirmDelete.value) {
-    return;
-  }
 
   schemaConfirmLoading.value = true;
   try {
-    if (schemaConfirmMode.value === 'update') {
-      // 1) Try without confirm headers (may return challenge)
-      await executePatchTable({ id: getId(table.value), body: table.value });
-      if (updateError.value?.data?.code === 'SCHEMA_CONFIRM_REQUIRED') {
-        schemaConfirmDetails.value = updateError.value?.data?.details || {};
-        const d = schemaConfirmDetails.value || {};
-        if (d.requiredConfirmHash && d.confirmToken) {
-          const headers: Record<string, string> = {
-            "x-schema-confirm-hash": String(d.requiredConfirmHash),
-            "x-schema-confirm-token": String(d.confirmToken),
-          };
-          // 2) Retry once with confirm headers (user already confirmed)
-          await executePatchTable({ id: getId(table.value), body: table.value, headers });
-        } else {
-          return;
-        }
-      }
-      if (!updateError.value) {
-        schemaConfirmModalOpen.value = false;
-        await afterPatchSuccess();
-      }
-      return;
-    }
-
-    // delete mode: require typing table name, then attempt delete; if challenge returned, retry once with headers
-    const deletedTableName = String(route.params.table);
-    await executeDeleteTable({ id: getId(table.value) });
-    if (deleteError.value?.data?.code === 'SCHEMA_CONFIRM_REQUIRED') {
-      schemaConfirmDetails.value = deleteError.value?.data?.details || {};
-      const d = schemaConfirmDetails.value || {};
-      if (d.requiredConfirmHash && d.confirmToken) {
-        const headers: Record<string, string> = {
-          "x-schema-confirm-hash": String(d.requiredConfirmHash),
-          "x-schema-confirm-token": String(d.confirmToken),
-        };
-        await executeDeleteTable({ id: getId(table.value), headers });
-      } else {
-        return;
-      }
-    }
-    if (!deleteError.value) {
+    const confirmQuery = {
+      schema_confirm_hash: schemaConfirmDetails.value?.requiredConfirmHash,
+    };
+    await executePatchTable({ id: getId(table.value), body: table.value, query: confirmQuery });
+    if (!updateError.value) {
       schemaConfirmModalOpen.value = false;
-      await afterDeleteSuccess(deletedTableName);
+      await afterPatchSuccess();
     }
   } finally {
     schemaConfirmLoading.value = false;
@@ -590,11 +407,11 @@ onMounted(() => {
               ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200'
               : 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-200'"
           >
-            <Icon :name="schemaConfirmMode === 'delete' ? 'lucide:trash-2' : (isSchemaConfirmDestructive ? 'lucide:triangle-alert' : 'lucide:diff')" class="h-5 w-5" />
+            <Icon :name="isSchemaConfirmDestructive ? 'lucide:triangle-alert' : 'lucide:diff'" class="h-5 w-5" />
           </div>
           <div class="min-w-0">
             <div class="text-base font-semibold leading-6">
-              {{ schemaConfirmMode === 'delete' ? 'Confirm Delete Table' : 'Review Changes' }}
+              Review Changes
             </div>
             <div class="mt-0.5 text-sm text-gray-600 dark:text-gray-300">
               {{ schemaConfirmSubtitle }}
@@ -610,9 +427,9 @@ onMounted(() => {
                 <div class="text-sm text-gray-700 dark:text-gray-200">
                   <span class="text-gray-500 dark:text-gray-400">Table</span>
                   <span class="mx-2">·</span>
-                  <span class="font-bold font-mono">{{ schemaConfirmExpectedTableName }}</span>
+                  <span class="font-bold font-mono">{{ schemaConfirmTableName }}</span>
                 </div>
-                <div v-if="schemaConfirmMode !== 'delete'" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Operation: update
                 </div>
               </div>
@@ -627,7 +444,7 @@ onMounted(() => {
             </div>
           </div>
 
-          <div v-if="schemaConfirmMode !== 'delete'" class="space-y-2">
+          <div class="space-y-2">
             <div class="flex items-center justify-between">
               <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Change summary</div>
               <div class="text-xs text-gray-500 dark:text-gray-400">Review before confirming</div>
@@ -688,8 +505,8 @@ onMounted(() => {
                   <div class="text-xs text-gray-500 dark:text-gray-400">{{ modalChangedColumns.length }}</div>
                 </div>
                 <div class="mt-2 flex flex-wrap gap-2">
-                  <span v-for="c in modalChangedColumns" :key="c.name" class="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 px-2.5 py-1 text-xs font-mono text-gray-900 dark:text-gray-100">
-                    {{ c.name }}
+                  <span v-for="c in modalChangedColumns" :key="c" class="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 px-2.5 py-1 text-xs font-mono text-gray-900 dark:text-gray-100">
+                    {{ c }}
                   </span>
                 </div>
               </div>
@@ -748,15 +565,10 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div v-if="modalAddedRelations.length" class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/20 px-4 py-3">
+              <div v-if="modalAddedRelationsCount" class="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3">
                 <div class="flex items-center justify-between">
-                  <div class="text-sm font-medium text-gray-900 dark:text-gray-100">Added relations</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ modalAddedRelations.length }}</div>
-                </div>
-                <div class="mt-2 space-y-1.5">
-                  <div v-for="r in modalAddedRelations" :key="r" class="text-sm font-mono text-gray-800 dark:text-gray-200">
-                    {{ r }}
-                  </div>
+                  <div class="text-sm font-medium text-emerald-900 dark:text-emerald-100">Added relations</div>
+                  <div class="text-xs text-emerald-700/80 dark:text-emerald-200/80">{{ modalAddedRelationsCount }}</div>
                 </div>
               </div>
 
@@ -781,13 +593,6 @@ onMounted(() => {
             </div>
           </div>
 
-          <div v-if="schemaConfirmMode === 'delete'" class="space-y-2">
-            <div class="text-sm">
-              Type the table name to confirm:
-              <span class="font-mono font-bold">{{ schemaConfirmExpectedTableName }}</span>
-            </div>
-            <UInput v-model="schemaConfirmInput" class="w-full" placeholder="Enter table name" />
-          </div>
         </div>
       </template>
       <template #footer>
@@ -796,15 +601,14 @@ onMounted(() => {
             Cancel
           </UButton>
           <UButton
-            :color="schemaConfirmMode === 'delete' ? 'error' : (isSchemaConfirmDestructive ? 'warning' : 'primary')"
+            :color="isSchemaConfirmDestructive ? 'warning' : 'primary'"
             :loading="schemaConfirmLoading"
-            :disabled="schemaConfirmMode === 'delete' ? !canConfirmDelete : false"
             class="justify-center"
             @click="onSchemaConfirmSubmit"
           >
             <span class="inline-flex items-center gap-2">
-              <Icon :name="schemaConfirmMode === 'delete' ? 'lucide:trash-2' : (isSchemaConfirmDestructive ? 'lucide:triangle-alert' : 'lucide:check')" class="h-4 w-4" />
-              {{ schemaConfirmMode === 'delete' ? 'Delete' : 'Confirm' }}
+              <Icon :name="isSchemaConfirmDestructive ? 'lucide:triangle-alert' : 'lucide:check'" class="h-4 w-4" />
+              Confirm
             </span>
           </UButton>
         </div>
