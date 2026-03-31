@@ -366,10 +366,12 @@ async function onSchemaConfirmSubmit() {
       schema_confirm_hash: schemaConfirmDetails.value?.requiredConfirmHash,
     };
     await executePatchTable({ id: getId(table.value), body: table.value, query: confirmQuery });
-    if (!updateError.value) {
+    if (updateError.value) {
       schemaConfirmModalOpen.value = false;
-      await afterPatchSuccess();
+      return;
     }
+    schemaConfirmModalOpen.value = false;
+    await afterPatchSuccess();
   } finally {
     schemaConfirmLoading.value = false;
   }
