@@ -4,6 +4,7 @@ const props = defineProps<{
   reservedNames?: string[];
 }>();
 
+const { confirm } = useConfirm();
 const isEditing = ref(false);
 const editingIndex = ref<number | null>(null);
 const currentColumn = ref<any>(null);
@@ -144,6 +145,17 @@ function addNewColumn() {
   }
 
   handleUuidType(currentColumn.value);
+}
+
+async function removeColumn(index: number) {
+  const col = columns.value?.[index];
+  const displayName = String(col?.name ?? "Unnamed");
+  const ok = await confirm({
+    title: "Remove Column",
+    content: `Remove column "${displayName}"? You can still cancel by discarding changes before saving.`,
+  });
+  if (!ok) return;
+  columns.value.splice(index, 1);
 }
 
 function getUuidTypeMap() {
@@ -375,7 +387,7 @@ watch(
         size="xs"
         :disabled="column.isSystem || column.isPrimary"
         class="lg:hover:cursor-pointer mr-2"
-        @click.stop="columns.splice(index, 1)"
+        @click.stop="removeColumn(index)"
       />
     </div>
 
