@@ -1,12 +1,10 @@
-import type { ExternalPackage } from "~/../server/types/api";
-
 const PERF_ENABLED =
   typeof window !== "undefined" &&
   typeof URLSearchParams !== "undefined" &&
   new URLSearchParams(window.location.search).get("perf") === "1";
 
-const loadedPackages = new Map<string, { exports: string[]; globalName: string }>();
 const loadingPackages = new Map<string, Promise<any>>();
+let versionCache: Map<string, string> | null = null;
 
 export function getGlobalNameForPackage(packageName: string): string {
   return packageName
@@ -14,92 +12,28 @@ export function getGlobalNameForPackage(packageName: string): string {
     .replace(/^(\d)/, "_$1");
 }
 
-export function getExternalPackages(): ExternalPackage[] {
-  const externals: ExternalPackage[] = [];
-  for (const [name, meta] of loadedPackages.entries()) {
-    externals.push({
-      name,
-      globalName: meta.globalName,
-      exports: meta.exports,
-    });
-  }
-  return externals;
-}
-
-interface PackageMetadataResponse {
-  name: string;
-  dependencies: string[];
-  exports: string[];
-  __bundle?: { __code: string; __exports?: string[] };
-}
-
-const bundleCache = new Map<string, { __code: string; __exports?: string[] }>();
-
-async function fetchPackageMetadata(
-  packageName: string
-): Promise<PackageMetadataResponse> {
+async function fetchVersionMap(): Promise<Map<string, string>> {
+  if (versionCache) return versionCache;
   try {
-    const response = await fetch(
-      `/api/packages?name=${encodeURIComponent(packageName)}&format=json`
-    );
-    if (!response.ok) {
-      return { name: packageName, dependencies: [], exports: [] };
-    }
-
-    const bundleData = await response.json();
-    bundleCache.set(packageName, {
-      __code: bundleData.__code,
-      __exports: bundleData.__exports,
-    });
-    return {
-      name: packageName,
-      dependencies: bundleData.__dependencies || [],
-      exports: bundleData.__exports || [],
-    };
+    const filter = JSON.stringify({ type: { _eq: "App" }, isEnabled: { _eq: true } });
+    const res = await fetch(`/api/package_definition?filter=${encodeURIComponent(filter)}&fields=name,version`);
+    if (!res.ok) return new Map();
+    const data = await res.json();
+    versionCache = new Map((data.data || []).map((p: any) => [p.name, p.version]));
+    return versionCache;
   } catch {
-    return { name: packageName, dependencies: [], exports: [] };
+    return new Map();
   }
 }
 
-function topologicalSort(
-  packages: string[],
-  metadataMap: Map<string, PackageMetadataResponse>
-): string[] {
-  const sorted: string[] = [];
-  const visited = new Set<string>();
-  const visiting = new Set<string>();
-
-  const visit = (pkgName: string) => {
-    if (visited.has(pkgName)) return;
-    if (visiting.has(pkgName)) return;
-
-    visiting.add(pkgName);
-
-    const metadata = metadataMap.get(pkgName);
-    if (metadata) {
-      for (const dep of metadata.dependencies) {
-        if (packages.includes(dep)) {
-          visit(dep);
-        }
-      }
-    }
-
-    visiting.delete(pkgName);
-    visited.add(pkgName);
-    sorted.push(pkgName);
-  };
-
-  for (const pkg of packages) {
-    visit(pkg);
-  }
-
-  return sorted;
+export function invalidateVersionCache(): void {
+  versionCache = null;
 }
 
 async function loadSinglePackage(
   packageName: string,
   packagesObject: Record<string, any>,
-  options: { useCacheBuster?: boolean; silent?: boolean; useCachedBundle?: boolean } = {}
+  loadedExternals: string[] = [],
 ): Promise<any> {
   if (loadingPackages.has(packageName)) {
     return loadingPackages.get(packageName)!;
@@ -111,41 +45,24 @@ async function loadSinglePackage(
 
   const promise = (async () => {
     try {
-      const externals = getExternalPackages();
-      const cachedBundle =
-        options.useCachedBundle && externals.length === 0
-          ? bundleCache.get(packageName)
-          : null;
+      const versionMap = await fetchVersionMap();
+      const version = versionMap.get(packageName);
+      const versionParam = version ? `&version=${encodeURIComponent(version)}` : "";
+      const externalsParam = loadedExternals.length > 0
+        ? `&externals=${encodeURIComponent(JSON.stringify(loadedExternals))}`
+        : "";
 
-      let __code: string;
-      let __exports: string[] | undefined;
-
-      if (cachedBundle) {
-        bundleCache.delete(packageName);
-        __code = cachedBundle.__code;
-        __exports = cachedBundle.__exports;
-      } else {
-        bundleCache.delete(packageName);
-        const cacheBuster = options.useCacheBuster ? `&_=${Date.now()}` : "";
-        const externalsParam =
-          externals.length > 0
-            ? `&externals=${encodeURIComponent(JSON.stringify(externals))}`
-            : "";
-
-        const response = await fetch(
-          `/api/packages?name=${encodeURIComponent(packageName)}${cacheBuster}&format=json${externalsParam}`
-        );
-        if (!response.ok) {
-          throw new Error(`Failed to load package: ${response.statusText}`);
-        }
-
-        const bundleData = await response.json();
-        __code = bundleData.__code;
-        __exports = bundleData.__exports;
+      const response = await fetch(
+        `/api/packages?name=${encodeURIComponent(packageName)}${versionParam}${externalsParam}`,
+        { cache: "no-cache" }
+      );
+      if (!response.ok) {
+        throw new Error(`Failed to load package: ${response.statusText}`);
       }
 
+      const code = await response.text();
       const moduleUrl = URL.createObjectURL(
-        new Blob([__code], { type: "application/javascript" })
+        new Blob([code], { type: "application/javascript" })
       );
       const moduleResult = await import(/* @vite-ignore */ moduleUrl);
       URL.revokeObjectURL(moduleUrl);
@@ -160,11 +77,6 @@ async function loadSinglePackage(
         const packageExports = moduleResult.default || moduleResult;
         (globalThis as any)[globalName] = packageExports;
         (window as any)[globalName] = packageExports;
-
-        loadedPackages.set(packageName, {
-          exports: __exports || Object.keys(packageExports),
-          globalName,
-        });
       }
 
       const safeName = packageName.replace(/[^a-zA-Z0-9]/g, "_");
@@ -180,7 +92,8 @@ async function loadSinglePackage(
       }
 
       return executedResult;
-    } catch {
+    } catch (err) {
+      console.error(`[getPackages] Failed to load "${packageName}":`, err);
       packagesObject[packageName] = null;
       return null;
     } finally {
@@ -290,37 +203,23 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
     return packagesObject;
   }
 
-  const metadataMap = new Map<string, PackageMetadataResponse>();
-  const metadataStart = performance.now();
-  await Promise.all(
-    packagesToLoad.map(async (pkgName) => {
-      const metadata = await fetchPackageMetadata(pkgName);
-      metadataMap.set(pkgName, metadata);
-    })
-  );
-  if (PERF_ENABLED) {
-    console.log(
-      `[Extension Perf] getPackages: fetchMetadata ${packagesToLoad.length} pkgs: ${(performance.now() - metadataStart).toFixed(1)}ms`
-    );
-  }
+  const loadStart = performance.now();
+  const loadedExternals: string[] = [];
 
-  const sortedPackages = topologicalSort(packagesToLoad, metadataMap);
-
-  for (const pkgName of sortedPackages) {
-    const pkgStart = performance.now();
-    await loadSinglePackage(pkgName, packagesObject, {
-      useCacheBuster: true,
-      silent: true,
-      useCachedBundle: true,
-    });
-    if (PERF_ENABLED) {
-      console.log(
-        `[Extension Perf] getPackages: load "${pkgName}": ${(performance.now() - pkgStart).toFixed(1)}ms`
-      );
+  for (const pkgName of packagesToLoad) {
+    await loadSinglePackage(pkgName, packagesObject, loadedExternals);
+    if (packagesObject[pkgName] != null) {
+      loadedExternals.push(pkgName);
     }
   }
 
-  const failedPackages = sortedPackages.filter(
+  if (PERF_ENABLED) {
+    console.log(
+      `[Extension Perf] getPackages: load ${packagesToLoad.length} pkgs: ${(performance.now() - loadStart).toFixed(1)}ms`
+    );
+  }
+
+  const failedPackages = packagesToLoad.filter(
     (pkgName) => packagesObject[pkgName] === null || packagesObject[pkgName] === undefined
   );
 

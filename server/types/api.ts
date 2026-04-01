@@ -1,9 +1,3 @@
-export interface ExternalPackage {
-  name: string;
-  globalName: string;
-  exports: string[];
-}
-
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
