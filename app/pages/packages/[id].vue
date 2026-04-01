@@ -61,7 +61,7 @@
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :loading="loading"
-            :excluded="['installedBy', 'type', 'status', 'lastError', 'installTimeout']"
+            :excluded="['installedBy', 'type', 'status', 'lastError']"
             :field-map="{
               name: {
                 disabled: true,
@@ -263,19 +263,7 @@ async function handleUpdate() {
     return;
   }
 
-  if (packageData.value?.type === 'App') {
-    await fetchAppPackages();
-    toast.add({
-      title: "Success",
-      description: "Package updated successfully",
-      color: "success",
-    });
-    formEditorRef.value?.confirmChanges();
-    formChanges.update(form.value);
-    await loadPackage();
-  } else {
-    await loadPackage();
-  }
+  await loadPackage();
 }
 
 async function handleUninstall() {
@@ -311,10 +299,7 @@ function handlePackageEvent(event: string, data: any) {
   const currentId = String(packageId);
   const eventId = String(data?.id);
 
-  console.log('[PackageDetail] WS event received:', event, { eventId, currentId, match: eventId === currentId, data });
-
   if (eventId !== currentId) return;
-  console.log('[PackageDetail] Event matched, processing:', event);
 
   if (event === '$system:package:installed') {
     loadPackage().then(() => {
@@ -326,11 +311,6 @@ function handlePackageEvent(event: string, data: any) {
         formEditorRef.value?.confirmChanges();
       }
     });
-    toast.add({
-      title: "Package ready",
-      description: `${data.name}@${data.version} installed successfully`,
-      color: "success",
-    });
   } else if (event === '$system:package:failed') {
     loadPackage().then(() => {
       const d = packageData.value;
@@ -338,11 +318,6 @@ function handlePackageEvent(event: string, data: any) {
         form.value = { ...d };
         formChanges.update(d);
       }
-    });
-    toast.add({
-      title: "Operation failed",
-      description: data.error || `Failed to ${data.operation} ${data.name}`,
-      color: "error",
     });
   } else if (event === '$system:package:uninstalled') {
     navigateTo('/packages', { replace: true });

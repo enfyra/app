@@ -161,7 +161,7 @@
             v-model="form"
             v-model:errors="errors"
             :table-name="tableName"
-            :excluded="['type', 'installedBy', 'name', 'status', 'lastError', 'installTimeout']"
+            :excluded="['type', 'installedBy', 'name', 'status', 'lastError']"
           />
         </UForm>
       </CommonFormCard>

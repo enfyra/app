@@ -5,95 +5,64 @@ import {
   createError,
 } from "h3";
 import { $fetch } from "ofetch";
-import { packageManagementService } from "../utils/package";
+import { packageManagementService, getValidAuthHeaders } from "../utils/package";
 
 export default defineEventHandler(async (event) => {
-  const method = event.method;
-
   try {
-    let body = await readBody(event);
+    const body = await readBody(event);
+    const config = useRuntimeConfig();
+    const apiUrl = (config.public as any).apiUrl;
+    const cookieHeader = getHeader(event, "cookie") || "";
+    const headers = {
+      cookie: cookieHeader,
+      authorization: event.context.proxyHeaders?.authorization || "",
+    };
 
-    if (!body.type || body.type !== 'App') {
-      const config = useRuntimeConfig();
-      const apiPath = event.path.replace("/api", "");
-      const targetUrl = `${config.public.apiUrl}${apiPath}`;
-
-      const response = await $fetch(targetUrl, {
-        method: method as any,
-        headers: {
-          cookie: getHeader(event, "cookie") || "",
-          authorization: event.context.proxyHeaders?.authorization || "",
-          "Content-Type": "application/json",
-        },
-        body: body || undefined,
+    if (body.type !== 'App') {
+      return await $fetch(`${apiUrl}/package_definition`, {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body,
       });
-
-      return response;
     }
 
-    if (body.type === 'App') {
-      const config = useRuntimeConfig();
-      const apiPath = event.path.replace("/api", "");
-      const targetUrl = `${(config.public as any).apiUrl}${apiPath}`;
+    const savedPackage = await $fetch(`${apiUrl}/package_definition`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: { ...body, status: 'installing' },
+    }) as any;
 
-      let savedPackage: any;
+    const packageId = savedPackage?.data?.[0]?.id || savedPackage?.data?.[0]?._id;
 
+    const bgInstall = async () => {
       try {
-        savedPackage = await $fetch(targetUrl, {
-          method: method as any,
-          headers: {
-            cookie: getHeader(event, "cookie") || "",
-            authorization: event.context.proxyHeaders?.authorization || "",
-            "Content-Type": "application/json",
-          },
-          body: body || undefined,
-        });
-      } catch (dbError: any) {
-        throw createError({
-          statusCode: dbError.statusCode || 500,
-          statusMessage: dbError.message || "Failed to save package to database",
-        });
-      }
-
-      try {
-        const installResult = await packageManagementService.installPackage({
+        const result = await packageManagementService.installPackage({
           name: body.name,
           version: body.version || 'latest',
           flags: body.flags || '',
         });
 
-        return savedPackage;
-      } catch (installError: any) {
-        const packageId = savedPackage?.data?.[0]?.id || savedPackage?.data?.[0]?._id;
-
-        if (packageId) {
-          try {
-            await $fetch(`${(config.public as any).apiUrl}/package_definition/${packageId}`, {
-              method: "DELETE",
-              headers: {
-                cookie: getHeader(event, "cookie") || "",
-                authorization: event.context.proxyHeaders?.authorization || "",
-              },
-            });
-          } catch (deleteError) {
-            console.error("Failed to rollback package after install error:", deleteError);
-          }
-        }
-
-        throw createError({
-          statusCode: 500,
-          statusMessage: `Package installation failed, rolled back: ${installError.message}`,
+        const authHeaders = await getValidAuthHeaders(cookieHeader, apiUrl);
+        await $fetch(`${apiUrl}/package_definition/${packageId}`, {
+          method: "PATCH",
+          headers: { ...authHeaders, "Content-Type": "application/json" },
+          body: { status: 'installed', version: result.version, lastError: null },
         });
+      } catch (error: any) {
+        const authHeaders = await getValidAuthHeaders(cookieHeader, apiUrl);
+        await $fetch(`${apiUrl}/package_definition/${packageId}`, {
+          method: "PATCH",
+          headers: { ...authHeaders, "Content-Type": "application/json" },
+          body: { status: 'failed', lastError: error.message },
+        }).catch(() => {});
       }
-    }
-  } catch (error: any) {
-    if (error.statusCode) {
-      throw error;
-    }
+    };
 
-    throw createError({
-      statusCode: 500,
-      statusMessage: error.message || `Failed to process package definition ${method}`,
-    });
+    bgInstall().catch((e) => console.error('[App POST] background install error:', e.message));
+
+    return savedPackage;
+  } catch (error: any) {
+    if (error.statusCode) throw error;
+    throw createError({ statusCode: 500, statusMessage: error.message || 'Failed to process package definition' });
   }
 });

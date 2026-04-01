@@ -276,19 +276,9 @@ function handleSystemEvent(event: string, data: any) {
     } else {
       pendingOps.value.delete(id);
     }
-    toast.add({
-      title: "Package ready",
-      description: `${name}@${data.version || 'latest'} installed successfully`,
-      color: "success",
-    });
     loadPackages();
   } else if (event === '$system:package:uninstalled') {
     pendingOps.value.delete(id);
-    toast.add({
-      title: "Package removed",
-      description: `${name} has been uninstalled`,
-      color: "success",
-    });
     loadPackages();
   } else if (event === '$system:package:failed') {
     if (data?.packages) {
@@ -296,11 +286,6 @@ function handleSystemEvent(event: string, data: any) {
     } else {
       pendingOps.value.delete(id);
     }
-    toast.add({
-      title: "Operation failed",
-      description: data.error || `Failed to ${data.operation} ${name}`,
-      color: "error",
-    });
     loadPackages();
   }
 }
