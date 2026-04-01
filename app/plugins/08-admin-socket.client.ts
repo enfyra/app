@@ -3,6 +3,13 @@ import { io, type Socket } from 'socket.io-client';
 export default defineNuxtPlugin(() => {
   const toast = useToast();
 
+  const shouldToastConnection = () => {
+    if (typeof document === 'undefined') return true;
+    if (document.visibilityState !== 'visible') return false;
+    if (typeof document.hasFocus === 'function' && !document.hasFocus()) return false;
+    return true;
+  };
+
   const socket: Socket = io('/admin', {
     reconnection: true,
     reconnectionAttempts: 10,
@@ -10,6 +17,7 @@ export default defineNuxtPlugin(() => {
   });
 
   socket.on('connected', (data: any) => {
+    if (!shouldToastConnection()) return;
     toast.add({
       title: 'WebSocket',
       description: 'Connected to server',
@@ -18,6 +26,7 @@ export default defineNuxtPlugin(() => {
   });
 
   socket.on('connect_error', (err: Error) => {
+    if (!shouldToastConnection()) return;
     toast.add({
       title: 'WebSocket',
       description: `Connection failed: ${err.message}`,
@@ -26,6 +35,7 @@ export default defineNuxtPlugin(() => {
   });
 
   socket.on('disconnect', (reason: string) => {
+    if (!shouldToastConnection()) return;
     if (reason === 'io server disconnect' || reason === 'transport close') {
       toast.add({
         title: 'WebSocket',
@@ -36,6 +46,7 @@ export default defineNuxtPlugin(() => {
   });
 
   socket.io.on('reconnect', () => {
+    if (!shouldToastConnection()) return;
     toast.add({
       title: 'WebSocket',
       description: 'Reconnected',
@@ -44,6 +55,7 @@ export default defineNuxtPlugin(() => {
   });
 
   socket.io.on('reconnect_failed', () => {
+    if (!shouldToastConnection()) return;
     toast.add({
       title: 'WebSocket',
       description: 'Reconnection failed after multiple attempts',
