@@ -161,7 +161,7 @@
             v-model="form"
             v-model:errors="errors"
             :table-name="tableName"
-            :excluded="['type', 'installedBy', 'name']"
+            :excluded="['type', 'installedBy', 'name', 'status', 'lastError', 'installTimeout']"
           />
         </UForm>
       </CommonFormCard>
@@ -284,13 +284,12 @@ async function handleCreate() {
 
   if (packageType.value === 'App') {
     await fetchAppPackages();
+    toast.add({
+      title: "Package installed",
+      description: `${form.value.name} has been installed`,
+      color: "success",
+    });
   }
-
-  toast.add({
-    title: "Package installed successfully",
-    description: `${form.value.name} has been installed as a ${packageType.value} package`,
-    color: "success",
-  });
 
   await navigateTo(`/packages/${packageId}`, {
     replace: true,

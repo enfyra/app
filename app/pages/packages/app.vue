@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    
+
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -51,7 +51,7 @@
               : []),
           ]"
           :actions="[]"
-          :header-actions="getHeaderActions(pkg)"
+          :header-actions="[]"
         />
       </div>
 
@@ -98,6 +98,7 @@ const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
 const { fetchAppPackages } = useGlobalState();
+const { $adminSocket } = useNuxtApp();
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -215,4 +216,19 @@ watch(
   },
   { immediate: true }
 );
+
+onMounted(() => {
+  if ($adminSocket) {
+    $adminSocket.on('$system:package:uninstalled', () => {
+      loadPackages();
+      fetchAppPackages();
+    });
+  }
+});
+
+onUnmounted(() => {
+  if ($adminSocket) {
+    $adminSocket.off('$system:package:uninstalled');
+  }
+});
 </script>

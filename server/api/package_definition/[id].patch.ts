@@ -21,21 +21,26 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    let body = await readBody(event);
-
+    const body = await readBody(event);
+    console.log('[PATCH proxy] START id=', id);
     const config = useRuntimeConfig();
-    const apiPath = event.path.replace("/api", "");
-    const targetUrl = `${config.public.apiUrl}${apiPath}`;
+    const apiUrl = (config.public as any).apiUrl;
 
-    const getResponse = await $fetch(`${config.public.apiUrl}/package_definition/${id}`, {
+    const getResponse = await $fetch(`${apiUrl}/package_definition`, {
       method: "GET",
       headers: {
         cookie: getHeader(event, "cookie") || "",
         authorization: event.context.proxyHeaders?.authorization || "",
       },
+      query: {
+        filter: JSON.stringify({ id: { _eq: id } }),
+        limit: 1,
+      },
     });
 
-    const packageRecord = getResponse?.data?.[0];
+    const packageRecord = (getResponse as any)?.data?.[0];
+
+    console.log('[PATCH proxy] GET done, packageRecord=', packageRecord?.name, packageRecord?.type);
 
     if (!packageRecord) {
       throw createError({
@@ -44,46 +49,33 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    if (packageRecord.type === 'App') {
-      if (body.version && body.version !== packageRecord.version) {
-        try {
-          await packageManagementService.installPackage({
-            name: packageRecord.name,
-            version: body.version,
-            flags: body.flags || '',
-          });
-        } catch (installError: any) {
-          throw createError({
-            statusCode: 500,
-            statusMessage: `Failed to update package: ${installError.message}`,
-          });
-        }
+    if (packageRecord.type === 'App' && body.version && body.version !== packageRecord.version) {
+      try {
+        await packageManagementService.installPackage({
+          name: packageRecord.name,
+          version: body.version,
+          flags: body.flags || '',
+        });
+      } catch (installError: any) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: `Failed to update package: ${installError.message}`,
+        });
       }
-
-      const response = await $fetch(targetUrl, {
-        method: "PATCH",
-        headers: {
-          cookie: getHeader(event, "cookie") || "",
-          authorization: event.context.proxyHeaders?.authorization || "",
-          "Content-Type": "application/json",
-        },
-        body: body || undefined,
-      });
-
-      return response;
     }
 
-    const response = await $fetch(targetUrl, {
+    console.log('[PATCH proxy] calling PATCH to', `${apiUrl}/package_definition/${id}`);
+    const patchResponse = await $fetch(`${apiUrl}/package_definition/${id}`, {
       method: "PATCH",
       headers: {
         cookie: getHeader(event, "cookie") || "",
         authorization: event.context.proxyHeaders?.authorization || "",
         "Content-Type": "application/json",
       },
-      body: body || undefined,
+      body,
     });
-
-    return response;
+    console.log('[PATCH proxy] PATCH done, response status=', (patchResponse as any)?.statusCode);
+    return patchResponse;
   } catch (error: any) {
     if (error.statusCode) {
       throw error;

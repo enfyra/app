@@ -4,14 +4,17 @@ export default defineNuxtPlugin(() => {
   const toast = useToast();
 
   const socket: Socket = io('/admin', {
-    transports: ['polling', 'websocket'],
     reconnection: true,
     reconnectionAttempts: 10,
     reconnectionDelay: 2000,
   });
 
   socket.on('connected', (data: any) => {
-    console.log('[AdminSocket] Connected:', data);
+    toast.add({
+      title: 'WebSocket',
+      description: 'Connected to server',
+      color: 'success',
+    });
   });
 
   socket.on('connect_error', (err: Error) => {
@@ -44,6 +47,30 @@ export default defineNuxtPlugin(() => {
     toast.add({
       title: 'WebSocket',
       description: 'Reconnection failed after multiple attempts',
+      color: 'error',
+    });
+  });
+
+  socket.on('$system:package:installed', (data: any) => {
+    toast.add({
+      title: 'Package ready',
+      description: `${data.name}@${data.version} installed successfully`,
+      color: 'success',
+    });
+  });
+
+  socket.on('$system:package:uninstalled', (data: any) => {
+    toast.add({
+      title: 'Package removed',
+      description: `${data.name} has been uninstalled`,
+      color: 'success',
+    });
+  });
+
+  socket.on('$system:package:failed', (data: any) => {
+    toast.add({
+      title: 'Package operation failed',
+      description: data.error || `Failed to ${data.operation} ${data.name}`,
       color: 'error',
     });
   });

@@ -3,7 +3,27 @@
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <CommonFormCard>
         <UAlert
-          v-if="packageData?.type === 'Server'"
+          v-if="isTransitioning"
+          :icon="statusConfig.icon"
+          :title="statusConfig.title"
+          :description="statusConfig.description"
+          :color="statusConfig.color"
+          variant="soft"
+          class="mb-6"
+        />
+
+        <UAlert
+          v-if="packageData?.status === 'failed' && packageData?.lastError"
+          icon="lucide:alert-triangle"
+          title="Last Error"
+          :description="packageData.lastError"
+          color="error"
+          variant="soft"
+          class="mb-6"
+        />
+
+        <UAlert
+          v-if="packageData?.type === 'Server' && packageData?.status === 'installed'"
           icon="lucide:code-2"
           title="Usage in Handlers & Hooks"
           color="info"
@@ -41,7 +61,7 @@
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :loading="loading"
-            :excluded="['installedBy', 'type']"
+            :excluded="['installedBy', 'type', 'status', 'lastError', 'installTimeout']"
             :field-map="{
               name: {
                 disabled: true,
@@ -59,6 +79,7 @@ const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
 const { fetchAppPackages } = useGlobalState();
+const { $adminSocket } = useNuxtApp();
 const packageId = route.params.id as string;
 const tableName = "package_definition";
 
@@ -86,6 +107,40 @@ const {
 });
 
 const packageData = computed(() => apiData.value?.data?.[0]);
+
+const isTransitioning = computed(() => {
+  const s = packageData.value?.status;
+  return s === 'installing' || s === 'updating' || s === 'uninstalling';
+});
+
+const statusConfig = computed(() => {
+  const s = packageData.value?.status;
+  switch (s) {
+    case 'installing':
+      return {
+        icon: 'lucide:loader',
+        title: 'Installing...',
+        description: `${packageData.value?.name} is being installed. This page will update automatically.`,
+        color: 'info' as const,
+      };
+    case 'updating':
+      return {
+        icon: 'lucide:loader',
+        title: 'Updating...',
+        description: `${packageData.value?.name} is being updated. This page will update automatically.`,
+        color: 'info' as const,
+      };
+    case 'uninstalling':
+      return {
+        icon: 'lucide:loader',
+        title: 'Uninstalling...',
+        description: `${packageData.value?.name} is being uninstalled.`,
+        color: 'warning' as const,
+      };
+    default:
+      return { icon: '', title: '', description: '', color: 'info' as const };
+  }
+});
 
 const {
   execute: updatePackage,
@@ -118,7 +173,7 @@ async function handleReset() {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
     formEditorRef.value?.confirmChanges();
-    
+
     toast.add({
       title: "Reset Complete",
       color: "success",
@@ -148,7 +203,8 @@ useHeaderActionRegistry([
     size: "md",
     order: 2,
     onClick: handleUninstall,
-    loading: computed(() => deleting.value),
+    loading: computed(() => deleting.value || packageData.value?.status === 'uninstalling'),
+    disabled: computed(() => isTransitioning.value),
     permission: {
       and: [
         {
@@ -167,8 +223,8 @@ useHeaderActionRegistry([
     size: "md",
     order: 999,
     submit: handleUpdate,
-    loading: computed(() => updating.value),
-    disabled: computed(() => !hasFormChanges.value),
+    loading: computed(() => updating.value || packageData.value?.status === 'updating'),
+    disabled: computed(() => !hasFormChanges.value || isTransitioning.value),
     permission: {
       and: [
         {
@@ -209,18 +265,17 @@ async function handleUpdate() {
 
   if (packageData.value?.type === 'App') {
     await fetchAppPackages();
+    toast.add({
+      title: "Success",
+      description: "Package updated successfully",
+      color: "success",
+    });
+    formEditorRef.value?.confirmChanges();
+    formChanges.update(form.value);
+    await loadPackage();
+  } else {
+    await loadPackage();
   }
-
-  toast.add({
-    title: "Success",
-    description: "Package updated successfully",
-    color: "success",
-  });
-
-  formEditorRef.value?.confirmChanges();
-  formChanges.update(form.value);
-  
-  await loadPackage();
 }
 
 async function handleUninstall() {
@@ -241,17 +296,57 @@ async function handleUninstall() {
 
   if (packageData.value?.type === 'App') {
     await fetchAppPackages();
+    toast.add({
+      title: "Success",
+      description: `Package ${packageData.value?.name} uninstalled successfully`,
+      color: "success",
+    });
+    await navigateTo('/packages', { replace: true });
+  } else {
+    await loadPackage();
   }
+}
 
-  toast.add({
-    title: "Success",
-    description: `Package ${packageData.value?.name} uninstalled successfully`,
-    color: "success",
-  });
+function handlePackageEvent(event: string, data: any) {
+  const currentId = String(packageId);
+  const eventId = String(data?.id);
 
-  await navigateTo('/packages', {
-    replace: true,
-  });
+  console.log('[PackageDetail] WS event received:', event, { eventId, currentId, match: eventId === currentId, data });
+
+  if (eventId !== currentId) return;
+  console.log('[PackageDetail] Event matched, processing:', event);
+
+  if (event === '$system:package:installed') {
+    loadPackage().then(() => {
+      const d = packageData.value;
+      if (d) {
+        form.value = { ...d };
+        formChanges.update(d);
+        hasFormChanges.value = false;
+        formEditorRef.value?.confirmChanges();
+      }
+    });
+    toast.add({
+      title: "Package ready",
+      description: `${data.name}@${data.version} installed successfully`,
+      color: "success",
+    });
+  } else if (event === '$system:package:failed') {
+    loadPackage().then(() => {
+      const d = packageData.value;
+      if (d) {
+        form.value = { ...d };
+        formChanges.update(d);
+      }
+    });
+    toast.add({
+      title: "Operation failed",
+      description: data.error || `Failed to ${data.operation} ${data.name}`,
+      color: "error",
+    });
+  } else if (event === '$system:package:uninstalled') {
+    navigateTo('/packages', { replace: true });
+  }
 }
 
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -267,5 +362,35 @@ watch(packageData, (data) => {
 
 onMounted(() => {
   initializeForm();
+
+  if ($adminSocket) {
+    const events = [
+      '$system:package:installed',
+      '$system:package:installing',
+      '$system:package:updating',
+      '$system:package:uninstalling',
+      '$system:package:uninstalled',
+      '$system:package:failed',
+    ];
+    for (const event of events) {
+      $adminSocket.on(event, (data: any) => handlePackageEvent(event, data));
+    }
+  }
+});
+
+onUnmounted(() => {
+  if ($adminSocket) {
+    const events = [
+      '$system:package:installed',
+      '$system:package:installing',
+      '$system:package:updating',
+      '$system:package:uninstalling',
+      '$system:package:uninstalled',
+      '$system:package:failed',
+    ];
+    for (const event of events) {
+      $adminSocket.off(event);
+    }
+  }
 });
 </script>
