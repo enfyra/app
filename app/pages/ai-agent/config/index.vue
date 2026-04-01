@@ -62,9 +62,11 @@
           @click="navigateToDetail(config)"
         >
           <template #title>
-            <div class="flex items-center gap-2">
-                <h3 class="font-semibold text-white">{{ config.provider || 'AI Provider' }}</h3>
-                <UBadge variant="subtle" color="primary" size="sm">
+            <div class="flex min-w-0 flex-1 items-center gap-2">
+                <h3 class="text-sm md:text-base font-semibold text-gray-800 dark:text-white/90 min-w-0 flex-1 truncate">
+                  {{ config.provider || 'AI Provider' }}
+                </h3>
+                <UBadge variant="subtle" color="neutral" size="sm">
                   {{ config.model || 'N/A' }}
                 </UBadge>
                 <UBadge
