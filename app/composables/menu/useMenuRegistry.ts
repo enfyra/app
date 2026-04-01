@@ -1,5 +1,10 @@
 import { resolveComponent, markRaw } from "vue";
 
+function normalizePath(path?: string): string {
+  if (!path) return "";
+  return path.startsWith("/") ? path : "/" + path;
+}
+
 export function useMenuRegistry() {
   const menuItems = useState<MenuItem[]>("menu-items", () => []);
   const { getId } = useDatabase();
@@ -22,7 +27,7 @@ export function useMenuRegistry() {
       return {
         ...item,
         icon: item.icon || 'lucide:circle',
-        route: item.route || item.path,
+        route: normalizePath(item.route || item.path),
         position: (item as any).position || 'top' as const,
         items: children.length > 0 ? children.map(buildMenuTree) : (item.children || []).map(buildMenuTree),
         order: item.order || 0,
@@ -117,7 +122,7 @@ export function useMenuRegistry() {
           return {
             ...child,
             id: String(childId),
-            route: child.path,
+            route: normalizePath(child.path),
             children: childId ? buildChildren(childId) : [],
           };
         });
@@ -133,7 +138,7 @@ export function useMenuRegistry() {
       registerMenuItem({
         ...item,
         id: String(itemId),
-        route: item.path || "",
+        route: normalizePath(item.path),
         parent: parentId ? String(parentId) : undefined,
         children,
       } as any);

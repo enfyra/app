@@ -1,6 +1,14 @@
 <template>
   <div class="space-y-6">
-    
+
+    <UAlert
+      v-if="pendingOps.size > 0"
+      icon="lucide:loader"
+      :title="pendingBannerTitle"
+      color="info"
+      variant="soft"
+    />
+
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -37,6 +45,19 @@
               },
               value: pkg.version,
             },
+            ...(pkg.status && pkg.status !== 'installed'
+              ? [
+                  {
+                    label: 'Status',
+                    component: 'UBadge',
+                    props: {
+                      variant: 'soft',
+                      color: pkg.status === 'failed' ? 'error' : 'warning',
+                    },
+                    value: pkg.status,
+                  },
+                ]
+              : []),
             {
               label: 'Installed',
               value: new Date(pkg.createdAt).toLocaleDateString(),
@@ -49,18 +70,22 @@
                   },
                 ]
               : []),
-            {
-              label: 'Usage',
-              value: `$ctx.$pkgs.${pkg.name.replace(/[@\/\-]/g, '')}`,
-              component: 'code',
-              props: {
-                class:
-                  'text-xs font-mono text-green-600 bg-green-50 px-2 py-1 rounded hover:text-white',
-              },
-            },
+            ...(pkg.status === 'installed'
+              ? [
+                  {
+                    label: 'Usage',
+                    value: `$ctx.$pkgs.${pkg.name.replace(/[@\/\-]/g, '')}`,
+                    component: 'code',
+                    props: {
+                      class:
+                        'text-xs font-mono text-green-600 bg-green-50 px-2 py-1 rounded hover:text-white',
+                    },
+                  },
+                ]
+              : []),
           ]"
           :actions="[]"
-          :header-actions="getHeaderActions(pkg)"
+          :header-actions="[]"
         />
       </div>
 
@@ -106,6 +131,15 @@ const route = useRoute();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
+const { $adminSocket } = useNuxtApp();
+
+const pendingOps = ref(new Map<string, string>());
+
+const pendingBannerTitle = computed(() => {
+  const ops = Array.from(pendingOps.value.values());
+  if (ops.length === 1) return ops[0];
+  return `${ops.length} package operations in progress...`;
+});
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -171,19 +205,15 @@ async function deletePackage(pkgId: any, pkgName: string) {
   if (!isConfirmed) return;
 
   deletingPackages.value.add(pkgId);
+  pendingOps.value.set(pkgId, `Uninstalling ${pkgName}...`);
 
   try {
     await removePackage({ id: pkgId });
 
     if (removePackageError.value) {
+      pendingOps.value.delete(pkgId);
       return;
     }
-
-    toast.add({
-      title: "Success",
-      description: `Package ${pkgName} uninstalled successfully`,
-      color: "success",
-    });
 
     await loadPackages();
   } finally {
@@ -201,7 +231,8 @@ function getHeaderActions(pkg: any) {
         icon: "i-heroicons-trash",
         variant: "outline",
         color: "error",
-        loading: deletingPackages.value.has(pkgId),
+        loading: deletingPackages.value.has(pkgId) || pkg.status === 'uninstalling',
+        disabled: pkg.status && pkg.status !== 'installed' && pkg.status !== 'failed',
       },
       onClick: (e?: Event) => {
         e?.stopPropagation();
@@ -218,4 +249,69 @@ watch(
   },
   { immediate: true }
 );
+
+function handleSystemEvent(event: string, data: any) {
+  const id = String(data?.id);
+  const name = data?.name || data?.packages?.map((p: any) => p.name).join(', ') || '';
+
+  if (event === '$system:package:installing') {
+    if (data?.packages) {
+      for (const p of data.packages) {
+        pendingOps.value.set(String(p.id), `Installing ${p.name}...`);
+      }
+    } else if (id) {
+      pendingOps.value.set(id, `Installing ${name}...`);
+    }
+    loadPackages();
+    return;
+  } else if (event === '$system:package:updating') {
+    pendingOps.value.set(id, `Updating ${name}...`);
+    loadPackages();
+  } else if (event === '$system:package:uninstalling') {
+    pendingOps.value.set(id, `Uninstalling ${name}...`);
+    loadPackages();
+  } else if (event === '$system:package:installed') {
+    if (data?.packages) {
+      for (const p of data.packages) pendingOps.value.delete(String(p.id));
+    } else {
+      pendingOps.value.delete(id);
+    }
+    loadPackages();
+  } else if (event === '$system:package:uninstalled') {
+    pendingOps.value.delete(id);
+    loadPackages();
+  } else if (event === '$system:package:failed') {
+    if (data?.packages) {
+      for (const p of data.packages) pendingOps.value.delete(String(p.id));
+    } else {
+      pendingOps.value.delete(id);
+    }
+    loadPackages();
+  }
+}
+
+const systemEvents = [
+  '$system:package:installing',
+  '$system:package:updating',
+  '$system:package:uninstalling',
+  '$system:package:installed',
+  '$system:package:uninstalled',
+  '$system:package:failed',
+];
+
+onMounted(() => {
+  if ($adminSocket) {
+    for (const event of systemEvents) {
+      $adminSocket.on(event, (data: any) => handleSystemEvent(event, data));
+    }
+  }
+});
+
+onUnmounted(() => {
+  if ($adminSocket) {
+    for (const event of systemEvents) {
+      $adminSocket.off(event);
+    }
+  }
+});
 </script>

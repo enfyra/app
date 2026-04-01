@@ -109,6 +109,21 @@ export default defineAppConfig({
           color: "warning",
           variant: "ghost",
           class: "text-warning-600 dark:text-warning-400 hover:bg-warning-50 dark:hover:bg-warning-500/10"
+        },
+        {
+          color: "info",
+          variant: "solid",
+          class: "bg-info-600 text-white shadow-theme-xs hover:bg-info-700 disabled:bg-info-300 dark:bg-info-500 dark:hover:bg-info-600",
+        },
+        {
+          color: "info",
+          variant: "soft",
+          class: "bg-info-50 text-info-700 dark:bg-info-500/15 dark:text-info-400 hover:bg-info-100 dark:hover:bg-info-500/20"
+        },
+        {
+          color: "info",
+          variant: "ghost",
+          class: "text-info-700 dark:text-info-400 hover:bg-info-50 dark:hover:bg-info-500/10"
         }
       ],
     },
@@ -141,6 +156,11 @@ export default defineAppConfig({
           color: "warning",
           variant: "soft",
           class: "bg-warning-50 text-warning-600 dark:bg-warning-500/15 dark:text-warning-400"
+        },
+        {
+          color: "info",
+          variant: "soft",
+          class: "bg-info-50 text-info-700 dark:bg-info-500/15 dark:text-info-400"
         },
       ]
     },
@@ -251,6 +271,31 @@ export default defineAppConfig({
         ].join(" "),
         icon: "text-white",
       },
+    },
+
+    alert: {
+      compoundVariants: [
+        {
+          color: "info",
+          variant: "soft",
+          class: {
+            root: "bg-info-50 dark:bg-info-500/10",
+            icon: "text-info-600 dark:text-info-400",
+            title: "text-info-800 dark:text-info-200",
+            description: "text-info-700 dark:text-info-300",
+          }
+        },
+        {
+          color: "info",
+          variant: "outline",
+          class: {
+            root: "ring-info-300 dark:ring-info-700",
+            icon: "text-info-600 dark:text-info-400",
+            title: "text-info-800 dark:text-info-200",
+            description: "text-info-700 dark:text-info-300",
+          }
+        },
+      ]
     },
     notification: {
       slots: {

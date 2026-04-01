@@ -58,6 +58,7 @@ useHeaderActionRegistry([
     icon: "lucide:save",
     variant: "solid",
     color: "primary",
+    order: 999,
     submit: handleCreate,
     loading: computed(() => createLoading.value),
     permission: {
@@ -93,11 +94,6 @@ async function handleCreate() {
   await executeCreateFlow({ body });
 
   if (createError.value) {
-    toast.add({
-      title: "Error",
-      description: createError.value.message,
-      color: "error",
-    });
     return;
   }
 

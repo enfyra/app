@@ -3,6 +3,7 @@ const props = defineProps<{
   modelValue: boolean;
   event: any;
   gatewayId: string | number;
+  gatewayPath: string;
 }>();
 
 const emit = defineEmits<{
@@ -19,6 +20,52 @@ const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
+
+const testPayloadJson = ref('');
+const testing = ref(false);
+const testResult = ref<any>(null);
+const testPayloadPlaceholder = '{\n  "text": "hello"\n}';
+const showTestPanel = ref(false);
+
+const rawTestEventName =
+  computed(() =>
+    form.value?.eventName ??
+    (form.value as any)?.event_name ??
+    form.value?.name ??
+    props.event?.eventName ??
+    props.event?.name ??
+    Object.entries(form.value || {}).find(([k]) => k.toLowerCase() === 'eventname')?.[1] ??
+    '');
+const testEventName = computed(() => String(rawTestEventName.value || '').trim());
+const rawTestScript = computed(() => {
+  const direct =
+    form.value?.handlerScript ??
+    (form.value as any)?.handler_script ??
+    (form.value as any)?.script ??
+    (form.value as any)?.logic ??
+    (form.value as any)?.code ??
+    props.event?.handlerScript ??
+    props.event?.script ??
+    props.event?.logic ??
+    '';
+  if (direct) return direct;
+  const byKey = Object.entries(form.value || {}).find(([k, v]) => typeof v === 'string' && k.toLowerCase().includes('script'))?.[1];
+  return byKey ?? '';
+});
+const testScript = computed(() => String(rawTestScript.value || '').trim());
+const canRunTest = computed(() => !!testEventName.value && !!testScript.value);
+
+const {
+  execute: runTest,
+  pending: testPending,
+  error: testError,
+  data: testData,
+} = useApi(() => `/admin/test/run`, {
+  method: 'post',
+  errorContext: 'Test WebSocket Event',
+  immediate: false,
+  lazy: true,
+});
 
 defineExpose({
   hasFormChanges,
@@ -136,22 +183,12 @@ async function handleSave() {
     });
 
     if (updateError.value) {
-      toast.add({
-        title: "Error",
-        description: updateError.value.message || "Failed to update event",
-        color: "error",
-      });
       return;
     }
   } else {
     await createEvent({ body: form.value });
 
     if (createError.value) {
-      toast.add({
-        title: "Error",
-        description: createError.value.message || "Failed to create event",
-        color: "error",
-      });
       return;
     }
   }
@@ -165,6 +202,48 @@ async function handleSave() {
   hasFormChanges.value = false;
   emit('save');
   emit('update:modelValue', false);
+}
+
+async function handleTest() {
+  showTestPanel.value = true;
+  if (!canRunTest.value) return;
+
+  let payload: any = {};
+  if (testPayloadJson.value?.trim()) {
+    try {
+      payload = JSON.parse(testPayloadJson.value);
+    } catch {
+      toast.add({ title: 'Invalid JSON', color: 'error', description: 'Test payload JSON is invalid.' });
+      return;
+    }
+  }
+
+  const eventName = testEventName.value;
+  const script = testScript.value;
+  const timeoutMs = Number(form.value?.timeout || 5000);
+
+  testing.value = true;
+  testResult.value = null;
+  try {
+    await runTest({
+      body: {
+        kind: 'websocket_event',
+        ...(props.gatewayPath ? { gatewayPath: props.gatewayPath } : {}),
+        eventName,
+        timeoutMs,
+        payload,
+        script,
+      },
+    });
+
+    if (testError.value) {
+      testResult.value = { success: false, error: testError.value.message };
+      return;
+    }
+    testResult.value = testData.value;
+  } finally {
+    testing.value = false;
+  }
 }
 </script>
 
@@ -196,23 +275,110 @@ async function handleSave() {
     </template>
 
     <template #footer>
-      <div class="flex items-center justify-end gap-2 w-full">
-        <UButton
-          variant="outline"
-          color="neutral"
-          @click="isOpen = false"
-        >
-          Cancel
-        </UButton>
-        <UButton
-          variant="solid"
-          color="primary"
-          :loading="updateLoading || createLoading"
-          :disabled="!hasFormChanges || updateLoading || createLoading"
-          @click="handleSave"
-        >
-          {{ event && getId(event) ? 'Update' : 'Create' }}
-        </UButton>
+      <div class="w-full space-y-4">
+        <div class="flex items-center justify-between gap-2">
+          <UButton
+            variant="soft"
+            color="secondary"
+            @click="showTestPanel = !showTestPanel"
+          >
+            {{ showTestPanel ? 'Hide test' : 'Test' }}
+          </UButton>
+
+          <div class="flex items-center justify-end gap-2">
+          <UButton
+            variant="outline"
+            color="neutral"
+            @click="isOpen = false"
+          >
+            Cancel
+          </UButton>
+          <UButton
+            variant="solid"
+            color="primary"
+            :loading="updateLoading || createLoading"
+            :disabled="!hasFormChanges || updateLoading || createLoading"
+            @click="handleSave"
+          >
+            {{ event && getId(event) ? 'Update' : 'Create' }}
+          </UButton>
+          </div>
+        </div>
+
+        <div v-if="showTestPanel" class="pt-3 border-t border-gray-200 dark:border-gray-800">
+          <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/20 p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <UIcon name="lucide:flask-conical" class="w-4 h-4 text-primary" />
+                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Test event handler</div>
+              </div>
+              <UButton
+                size="sm"
+                color="primary"
+                variant="solid"
+                :loading="testing || testPending"
+                :disabled="!canRunTest"
+                @click="handleTest"
+              >
+                Test
+              </UButton>
+            </div>
+
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              Runs the current <span class="font-mono">handlerScript</span> via <span class="font-mono">/admin/test/run</span> and returns result, logs, and emitted events.
+            </div>
+
+            <div v-if="!canRunTest" class="text-xs text-amber-700 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 p-2">
+              <span v-if="!testEventName">Please fill <span class="font-mono">eventName</span> above to enable testing.</span>
+              <span v-else>Please fill <span class="font-mono">handlerScript</span> above to enable testing.</span>
+            </div>
+
+            <div>
+              <div class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Payload (JSON)</div>
+              <FormCodeEditorLazy
+                v-model="testPayloadJson"
+                language="json"
+                height="180px"
+                class="text-xs"
+              />
+              <div v-if="!testPayloadJson?.trim()" class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-mono">
+                {{ testPayloadPlaceholder }}
+              </div>
+            </div>
+
+            <div v-if="testResult" class="space-y-2">
+              <div class="flex items-center gap-2">
+                <UIcon
+                  :name="testResult.success ? 'lucide:check-circle' : 'lucide:x-circle'"
+                  class="w-4 h-4"
+                  :class="testResult.success ? 'text-emerald-600' : 'text-rose-600'"
+                />
+                <div class="text-xs font-medium" :class="testResult.success ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'">
+                  {{ testResult.success ? 'Test passed' : 'Test failed' }}
+                </div>
+              </div>
+
+              <div v-if="testResult.error" class="text-xs text-rose-700 dark:text-rose-300 rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 p-2">
+                {{ testResult.error?.message || testResult.error }}
+              </div>
+
+              <div v-if="testResult.logs?.length" class="space-y-1">
+                <div class="text-xs font-medium text-gray-600 dark:text-gray-300">Logs</div>
+                <pre class="text-[11px] font-mono rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 p-2 overflow-auto max-h-[160px] whitespace-pre-wrap">{{ JSON.stringify(testResult.logs, null, 2) }}</pre>
+              </div>
+
+              <div v-if="testResult.emitted?.length" class="space-y-1">
+                <div class="text-xs font-medium text-gray-600 dark:text-gray-300">Emitted</div>
+                <pre class="text-[11px] font-mono rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 p-2 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.emitted, null, 2) }}</pre>
+              </div>
+
+              <div v-if="testResult.result !== undefined" class="space-y-1">
+                <div class="text-xs font-medium text-gray-600 dark:text-gray-300">Result</div>
+                <pre class="text-[11px] font-mono rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 p-2 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </template>
   </CommonDrawer>

@@ -94,6 +94,7 @@ useHeaderActionRegistry([
     icon: "lucide:rotate-ccw",
     variant: "outline",
     color: "warning",
+    order: 1,
     disabled: computed(
       () =>
         loading.value ||
@@ -111,6 +112,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "error",
     size: "md",
+    order: 2,
     loading: computed(() => deleteLoading.value),
     onClick: deleteUser,
     permission: {
@@ -129,6 +131,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     size: "md",
+    order: 999,
     loading: computed(() => updateLoading.value),
     disabled: computed(() => !hasFormChanges.value),
     submit: saveUser,

@@ -58,7 +58,8 @@ interface Message {
     outputTokens: number
   }
   metadata?: {
-    boundToolsCount?: number
+    /** Count of tools chosen by server router (legacy: boundToolsCount from boundTools). */
+    routedToolsCount?: number
     usedToolsCount?: number
     durationMs?: number
     cacheHitTokens?: number
@@ -301,10 +302,12 @@ const sendMessage = async () => {
               }
               const meta = json.data.metadata
               if (meta && typeof meta === 'object') {
-                const bound = Array.isArray(meta.boundTools) ? meta.boundTools.length : undefined
+                const routed =
+                  Array.isArray(meta.routedToolNames) ? meta.routedToolNames.length
+                  : Array.isArray(meta.boundTools) ? meta.boundTools.length : undefined
                 const used = typeof meta.usedToolsCount === 'number' ? meta.usedToolsCount : (Array.isArray(meta.usedTools) ? meta.usedTools.length : undefined)
                 botMessage.metadata = {
-                  boundToolsCount: bound,
+                  routedToolsCount: routed,
                   usedToolsCount: used,
                   durationMs: typeof meta.durationMs === 'number' ? meta.durationMs : undefined,
                   cacheHitTokens: typeof meta.cacheHitTokens === 'number' ? meta.cacheHitTokens : undefined,
@@ -531,16 +534,16 @@ const formatTime = (date: Date) => {
                       {{ message.tokens.inputTokens.toLocaleString() }} in / {{ message.tokens.outputTokens.toLocaleString() }} out
                     </span>
                     <span
-                      v-if="message.type === 'bot' && message.metadata && (message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null || message.metadata.durationMs != null)"
+                      v-if="message.type === 'bot' && message.metadata && (message.metadata.routedToolsCount != null || message.metadata.usedToolsCount != null || message.metadata.durationMs != null)"
                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-100 dark:bg-violet-900/40 text-[11px] font-medium text-violet-700 dark:text-violet-400 token-info select-text"
                       style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
                     >
                       <Icon name="lucide:wrench" class="w-3 h-3 flex-shrink-0" />
-                      <template v-if="message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null">
-                        {{ message.metadata.usedToolsCount ?? '—' }}/{{ message.metadata.boundToolsCount ?? '—' }} tools
+                      <template v-if="message.metadata.routedToolsCount != null || message.metadata.usedToolsCount != null">
+                        {{ message.metadata.usedToolsCount ?? '—' }}/{{ message.metadata.routedToolsCount ?? '—' }} tools
                       </template>
                       <template v-if="message.metadata.durationMs != null">
-                        <span v-if="message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null"> · </span>
+                        <span v-if="message.metadata.routedToolsCount != null || message.metadata.usedToolsCount != null"> · </span>
                         {{ (message.metadata.durationMs / 1000).toFixed(1) }}s
                       </template>
                     </span>

@@ -6,6 +6,7 @@ const props = defineProps<{
   reservedNames?: string[];
 }>();
 
+const { confirm } = useConfirm();
 const relations = useModel(props, "modelValue");
 
 const isEditing = ref(false);
@@ -116,6 +117,17 @@ async function saveRelation() {
   isEditing.value = false;
   currentRelation.value = null;
 }
+
+async function removeRelation(index: number) {
+  const rel = relations.value?.[index];
+  const displayName = String(rel?.propertyName ?? "Unnamed");
+  const ok = await confirm({
+    title: "Remove Relation",
+    content: `Remove relation "${displayName}"? You can still cancel by discarding changes before saving.`,
+  });
+  if (!ok) return;
+  relations.value.splice(index, 1);
+}
 </script>
 
 <template>
@@ -157,7 +169,7 @@ async function saveRelation() {
         size="xs"
         :disabled="rel.isSystem"
         class="lg:hover:cursor-pointer mr-2"
-        @click.stop="relations.splice(index, 1)"
+        @click.stop="removeRelation(index)"
       />
     </div>
 

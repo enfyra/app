@@ -15,10 +15,8 @@ export default defineEventHandler(async (event) => {
   const reqUrl = event.node.req.url || '';
   const origin = event.node.req.headers.origin;
 
-  // Set CORS headers
   const allowedOrigins = getCorsOrigins();
   if (allowedOrigins.length === 0) {
-    // No origins configured, allow all
     event.node.res.setHeader('Access-Control-Allow-Origin', origin || '*');
   } else if (origin && allowedOrigins.includes(origin)) {
     event.node.res.setHeader('Access-Control-Allow-Origin', origin);
@@ -29,7 +27,6 @@ export default defineEventHandler(async (event) => {
   event.node.res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   event.node.res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
-  // Socket.IO path - no rewrite needed, namespace is in query/connection
   const targetPath = reqUrl;
 
   const targetUrl = new URL(backendUrl);
@@ -37,6 +34,7 @@ export default defineEventHandler(async (event) => {
   const httpModule = isHttps ? https : http;
 
   return new Promise((resolve, reject) => {
+    const proxyHeaders = event.context.proxyHeaders || {};
     const options = {
       hostname: targetUrl.hostname,
       port: targetUrl.port || (isHttps ? 443 : 80),
@@ -44,20 +42,19 @@ export default defineEventHandler(async (event) => {
       method: event.node.req.method || 'GET',
       headers: {
         ...event.node.req.headers,
+        ...proxyHeaders,
         host: targetUrl.host,
         origin: backendUrl,
       },
     };
 
     const proxyReq = httpModule.request(options, (proxyRes) => {
-      // Set response headers from backend first
       Object.entries(proxyRes.headers).forEach(([key, value]) => {
         if (value !== undefined) {
           event.node.res.setHeader(key, value);
         }
       });
 
-      // Override CORS headers after backend headers
       event.node.res.setHeader('Access-Control-Allow-Origin', origin || '*');
       event.node.res.setHeader('Access-Control-Allow-Credentials', 'true');
       event.node.res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
@@ -65,7 +62,6 @@ export default defineEventHandler(async (event) => {
 
       event.node.res.statusCode = proxyRes.statusCode || 200;
 
-      // Pipe response
       proxyRes.on('data', (chunk) => {
         event.node.res.write(chunk);
       });
@@ -83,7 +79,6 @@ export default defineEventHandler(async (event) => {
       resolve(undefined);
     });
 
-    // Pipe request body
     event.node.req.pipe(proxyReq);
   });
 });

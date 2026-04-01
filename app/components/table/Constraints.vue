@@ -5,6 +5,7 @@ const props = defineProps<{
   columnNames: string[];
 }>();
 
+const { confirm } = useConfirm();
 const table = useModel(props, "modelValue");
 
 function addGroup(list: string[][]) {
@@ -31,6 +32,30 @@ function removeGroup(list: string[][], groupIndex: number | string) {
   const idx = Number(groupIndex);
   if (!list) return;
   list.splice(idx, 1);
+}
+
+async function removeUniqueGroupConfirm(groupIndex: number | string) {
+  const idx = Number(groupIndex);
+  const group = table.value?.uniques?.[idx];
+  const label = Array.isArray(group) ? group.filter(Boolean).join(", ") : "";
+  const ok = await confirm({
+    title: "Remove Unique Constraint",
+    content: `Remove this unique constraint${label ? ` (${label})` : ""}? You can still cancel by discarding changes before saving.`,
+  });
+  if (!ok) return;
+  removeGroup(table.value.uniques, idx);
+}
+
+async function removeIndexGroupConfirm(groupIndex: number | string) {
+  const idx = Number(groupIndex);
+  const group = table.value?.indexes?.[idx];
+  const label = Array.isArray(group) ? group.filter(Boolean).join(", ") : "";
+  const ok = await confirm({
+    title: "Remove Index",
+    content: `Remove this index${label ? ` (${label})` : ""}? You can still cancel by discarding changes before saving.`,
+  });
+  if (!ok) return;
+  removeGroup(table.value.indexes, idx);
 }
 
 function removeFieldFromGroup(list: string[][], groupIndex: number | string, fieldIndex: number | string) {
@@ -151,7 +176,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           color="error"
           variant="ghost"
           size="md"
-          @click="removeGroup(table.uniques, gIndex)"
+          @click="removeUniqueGroupConfirm(gIndex)"
           :disabled="table.isSystem"
         />
       </div>
@@ -216,7 +241,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           color="error"
           variant="ghost"
           size="md"
-          @click="removeGroup(table.indexes, gIndex)"
+          @click="removeIndexGroupConfirm(gIndex)"
           :disabled="table.isSystem"
         />
       </div>

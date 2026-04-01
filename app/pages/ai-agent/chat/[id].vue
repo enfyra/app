@@ -65,7 +65,7 @@ interface Message {
     outputTokens: number
   }
   metadata?: {
-    boundToolsCount?: number
+    routedToolsCount?: number
     usedToolsCount?: number
     durationMs?: number
     cacheHitTokens?: number
@@ -235,13 +235,15 @@ watch(historyData, (data) => {
         const toolCallsDisplay = buildToolCallsDisplay(item)
         const rawMeta = parseJsonField(item.metadata) ?? item.metadata
         const metadata = (rawMeta && typeof rawMeta === 'object') ? (() => {
-          const bound = Array.isArray(rawMeta.boundTools) ? rawMeta.boundTools.length : undefined
+          const routed =
+            Array.isArray(rawMeta.routedToolNames) ? rawMeta.routedToolNames.length
+            : Array.isArray(rawMeta.boundTools) ? rawMeta.boundTools.length : undefined
           const used = typeof rawMeta.usedToolsCount === 'number' ? rawMeta.usedToolsCount : (Array.isArray(rawMeta.usedTools) ? rawMeta.usedTools.length : undefined)
           const duration = typeof rawMeta.durationMs === 'number' ? rawMeta.durationMs : undefined
           const cacheTokens = typeof rawMeta.cacheHitTokens === 'number' ? rawMeta.cacheHitTokens : undefined
           const cachePct = typeof rawMeta.cacheHitPct === 'number' ? rawMeta.cacheHitPct : undefined
-          const hasAny = bound != null || used != null || duration != null || cacheTokens != null || cachePct != null
-          return hasAny ? { boundToolsCount: bound, usedToolsCount: used, durationMs: duration, cacheHitTokens: cacheTokens, cacheHitPct: cachePct } : undefined
+          const hasAny = routed != null || used != null || duration != null || cacheTokens != null || cachePct != null
+          return hasAny ? { routedToolsCount: routed, usedToolsCount: used, durationMs: duration, cacheHitTokens: cacheTokens, cacheHitPct: cachePct } : undefined
         })() : undefined
         return {
           id: item.id.toString(),
@@ -475,10 +477,12 @@ const sendMessage = async () => {
               }
               const meta = json.data.metadata
               if (meta && typeof meta === 'object') {
-                const bound = Array.isArray(meta.boundTools) ? meta.boundTools.length : undefined
+                const routed =
+                  Array.isArray(meta.routedToolNames) ? meta.routedToolNames.length
+                  : Array.isArray(meta.boundTools) ? meta.boundTools.length : undefined
                 const used = typeof meta.usedToolsCount === 'number' ? meta.usedToolsCount : (Array.isArray(meta.usedTools) ? meta.usedTools.length : undefined)
                 botMessage.metadata = {
-                  boundToolsCount: bound,
+                  routedToolsCount: routed,
                   usedToolsCount: used,
                   durationMs: typeof meta.durationMs === 'number' ? meta.durationMs : undefined,
                   cacheHitTokens: typeof meta.cacheHitTokens === 'number' ? meta.cacheHitTokens : undefined,
@@ -804,16 +808,16 @@ onBeforeUnmount(async () => {
                       </template>
                     </span>
                     <span
-                      v-if="message.type === 'bot' && message.metadata && (message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null || message.metadata.durationMs != null)"
+                      v-if="message.type === 'bot' && message.metadata && (message.metadata.routedToolsCount != null || message.metadata.usedToolsCount != null || message.metadata.durationMs != null)"
                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-100 dark:bg-violet-900/30 text-[11px] font-medium text-violet-700 dark:text-violet-400 token-info select-text"
                       style="user-select: text; -webkit-user-select: text; -moz-user-select: text;"
                     >
                       <Icon name="lucide:wrench" class="w-3 h-3 flex-shrink-0" />
-                      <template v-if="message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null">
-                        {{ message.metadata.usedToolsCount ?? '—' }}/{{ message.metadata.boundToolsCount ?? '—' }} tools
+                      <template v-if="message.metadata.routedToolsCount != null || message.metadata.usedToolsCount != null">
+                        {{ message.metadata.usedToolsCount ?? '—' }}/{{ message.metadata.routedToolsCount ?? '—' }} tools
                       </template>
                       <template v-if="message.metadata.durationMs != null">
-                        <span v-if="message.metadata.boundToolsCount != null || message.metadata.usedToolsCount != null"> · </span>
+                        <span v-if="message.metadata.routedToolsCount != null || message.metadata.usedToolsCount != null"> · </span>
                         {{ (message.metadata.durationMs / 1000).toFixed(1) }}s
                       </template>
                     </span>

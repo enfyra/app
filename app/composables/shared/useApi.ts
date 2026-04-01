@@ -10,6 +10,7 @@ interface ExecuteOptions {
   ids?: (string | number)[];
   body?: any;
   query?: any;
+  headers?: Record<string, string>;
   files?: FormData[];
   batchSize?: number;
   concurrent?: number;
@@ -57,6 +58,10 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         .replace(/^\/+/, "");
       const finalBody = executeOpts?.body || unref(body);
       const finalQuery = executeOpts?.query || unref(query);
+      const finalHeaders = {
+        ...(options.headers || {}),
+        ...(executeOpts?.headers || {}),
+      };
 
       const isBatchOperation =
         !options.disableBatch &&
@@ -87,7 +92,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
             return $fetch(finalPath, {
               method: method as any,
               body: fileObj,
-              headers: options.headers,
+              headers: finalHeaders,
               query: finalQuery,
             }) as Promise<T>;
           })
@@ -106,7 +111,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
             return $fetch<T>(fullPath, {
               method: method as any,
               body: finalBody ? toRaw(finalBody) : undefined,
-              headers: options.headers,
+              headers: finalHeaders,
               query: finalQuery,
             });
           })
@@ -124,7 +129,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       const response = await $fetch<T>(fullPath, {
         method: method as any,
         body: finalBody ? toRaw(finalBody) : undefined,
-        headers: options.headers,
+        headers: finalHeaders,
         query: finalQuery,
       });
 
@@ -132,23 +137,19 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       status.value = "success";
       return response;
     } catch (err) {
-      const apiError = handleError(err, errorContext, (error, context) => {
-        let errorMessage = error?.data?.message || error?.message || "An error occurred";
-
+      const apiError = handleError(err, errorContext);
+      const handled = onError ? onError(apiError, errorContext) === true : false;
+      if (!handled) {
+        let errorMessage = apiError?.data?.message || apiError?.message || "An error occurred";
         if (Array.isArray(errorMessage)) {
           errorMessage = errorMessage.join(". ");
         }
-
         toast.add({
           title: "Error",
           description: errorMessage,
           color: "error",
         });
-
-        if (onError) {
-          onError(error, context);
-        }
-      });
+      }
       error.value = apiError;
       status.value = "error";
       return null;

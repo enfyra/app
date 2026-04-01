@@ -175,9 +175,7 @@ async function save() {
   const payload = getCleanTablePayload();
   await createTable({ body: payload });
 
-  if (createError.value) {
-    return;
-  }
+  if (createError.value) return;
 
   await fetchSchema();
 

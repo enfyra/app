@@ -1,5 +1,12 @@
 @layer base {
   :root {
+    --ui-primary: #a855f7;
+    --ui-secondary: #06b6d4;
+    --ui-success: #12b76a;
+    --ui-info: #06b6d4;
+    --ui-warning: #f79009;
+    --ui-error: #f04438;
+
     --brand-violet-deep: #6D28D9;
     --brand-violet-electric: #8B5CF6;
     --brand-violet-bright: #A78BFA;
