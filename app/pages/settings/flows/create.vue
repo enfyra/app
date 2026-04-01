@@ -94,11 +94,6 @@ async function handleCreate() {
   await executeCreateFlow({ body });
 
   if (createError.value) {
-    toast.add({
-      title: "Error",
-      description: createError.value.message,
-      color: "error",
-    });
     return;
   }
 

@@ -183,22 +183,12 @@ async function handleSave() {
     });
 
     if (updateError.value) {
-      toast.add({
-        title: "Error",
-        description: updateError.value.message || "Failed to update event",
-        color: "error",
-      });
       return;
     }
   } else {
     await createEvent({ body: form.value });
 
     if (createError.value) {
-      toast.add({
-        title: "Error",
-        description: createError.value.message || "Failed to create event",
-        color: "error",
-      });
       return;
     }
   }

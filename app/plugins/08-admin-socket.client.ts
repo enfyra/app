@@ -10,19 +10,10 @@ export default defineNuxtPlugin(() => {
     return true;
   };
 
-  const socket: Socket = io('/admin', {
+  const socket: Socket = io('/enfyra-admin', {
     reconnection: true,
     reconnectionAttempts: 10,
     reconnectionDelay: 2000,
-  });
-
-  socket.on('connected', (data: any) => {
-    if (!shouldToastConnection()) return;
-    toast.add({
-      title: 'WebSocket',
-      description: 'Connected to server',
-      color: 'success',
-    });
   });
 
   socket.on('connect_error', (err: Error) => {

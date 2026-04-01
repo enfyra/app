@@ -335,11 +335,6 @@ async function updateGateway() {
   await executeUpdate({ body, id: String(pageId.value) });
 
   if (updateError.value) {
-    toast.add({
-      title: "Error",
-      description: updateError.value.message,
-      color: "error",
-    });
     return;
   }
 
@@ -394,11 +389,6 @@ async function deleteGateway() {
   await executeDelete({ id: String(pageId.value) });
 
   if (deleteError.value) {
-    toast.add({
-      title: "Error",
-      description: deleteError.value.message || "Failed to delete WebSocket gateway",
-      color: "error",
-    });
     return;
   }
 
@@ -419,11 +409,6 @@ async function toggleEventStatus(event: any) {
   });
 
   if (toggleEventError.value) {
-    toast.add({
-      title: "Error",
-      description: toggleEventError.value.message || "Failed to toggle event status",
-      color: "error",
-    });
     return;
   }
 
@@ -450,11 +435,6 @@ async function deleteEvent(event: any) {
   await executeDeleteEvent({ id: eventId });
 
   if (deleteEventError.value) {
-    toast.add({
-      title: "Error",
-      description: deleteEventError.value.message || "Failed to delete event",
-      color: "error",
-    });
     return;
   }
 

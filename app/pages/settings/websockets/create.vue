@@ -126,11 +126,6 @@ async function handleCreate() {
   await executeCreateGateway({ body });
 
   if (createError.value) {
-    toast.add({
-      title: "Error",
-      description: createError.value.message,
-      color: "error",
-    });
     return;
   }
 

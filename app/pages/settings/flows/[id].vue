@@ -470,7 +470,6 @@ async function saveFlowSettings() {
   delete body.updatedAt;
   await updateFlowApi({ body, id: flowId });
   if (updateError.value) {
-    toast.add({ title: "Error", description: updateError.value.message, color: "error" });
     return;
   }
   toast.add({ title: "Success", description: "Flow settings saved!", color: "success" });
@@ -686,12 +685,12 @@ async function saveStep() {
     };
     if (editingStepId.value) {
       await updateStepApi({ body, id: editingStepId.value });
-      if (updateStepError.value) { toast.add({ title: "Error", description: updateStepError.value.message, color: "error" }); return; }
+      if (updateStepError.value) return;
       toast.add({ title: "Success", description: "Step updated!", color: "success" });
     } else {
       body.flow = { id: Number(flowId) };
       await createStepApi({ body });
-      if (createStepError.value) { toast.add({ title: "Error", description: createStepError.value.message, color: "error" }); return; }
+      if (createStepError.value) return;
       toast.add({ title: "Success", description: "Step created!", color: "success" });
     }
     stepDrawerOpen.value = false;
@@ -739,7 +738,7 @@ async function deleteCurrentStep() {
 async function triggerFlow() {
   const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Trigger Flow" });
   await triggerApi({ body: { payload: { trigger: 'manual' } } });
-  if (triggerError.value) { toast.add({ title: "Error", description: triggerError.value.message, color: "error" }); return; }
+  if (triggerError.value) return;
   toast.add({ title: "Success", description: "Flow triggered!", color: "success" });
   await refreshExecutions();
   pollTimers.forEach(t => clearTimeout(t));
@@ -781,7 +780,7 @@ async function rerunExecution() {
   const payload = parsedContext.value?.$payload || {};
   const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Re-run Flow" });
   await triggerApi({ body: { payload } });
-  if (triggerError.value) { toast.add({ title: "Error", description: triggerError.value.message, color: "error" }); return; }
+  if (triggerError.value) return;
   toast.add({ title: "Success", description: "Flow re-triggered with same payload!", color: "success" });
   execDrawerOpen.value = false;
   await refreshExecutions();
