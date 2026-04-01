@@ -18,40 +18,18 @@ export default defineNuxtPlugin(() => {
 
   socket.on('connect_error', (err: Error) => {
     if (!shouldToastConnection()) return;
-    toast.add({
-      title: 'WebSocket',
-      description: `Connection failed: ${err.message}`,
-      color: 'error',
-    });
   });
 
   socket.on('disconnect', (reason: string) => {
     if (!shouldToastConnection()) return;
-    if (reason === 'io server disconnect' || reason === 'transport close') {
-      toast.add({
-        title: 'WebSocket',
-        description: 'Disconnected from server',
-        color: 'warning',
-      });
-    }
   });
 
   socket.io.on('reconnect', () => {
     if (!shouldToastConnection()) return;
-    toast.add({
-      title: 'WebSocket',
-      description: 'Reconnected',
-      color: 'success',
-    });
   });
 
   socket.io.on('reconnect_failed', () => {
     if (!shouldToastConnection()) return;
-    toast.add({
-      title: 'WebSocket',
-      description: 'Reconnection failed after multiple attempts',
-      color: 'error',
-    });
   });
 
   socket.on('$system:package:installed', (data: any) => {
