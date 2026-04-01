@@ -3,9 +3,7 @@ import { defineEventHandler, getQuery, createError } from "h3";
 const cache = new Map<string, { code: string; timestamp: number }>();
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 
-function getCdnBase(): string {
-  return (process.env.PACKAGE_CDN_URL || "https://esm.sh").replace(/\/+$/, "");
-}
+const CDN_BASE = "https://esm.sh";
 
 function toGlobalName(pkgName: string): string {
   return pkgName.replace(/[^a-zA-Z0-9]/g, "_").replace(/^(\d)/, "_$1");
@@ -96,8 +94,7 @@ export default defineEventHandler(async (event) => {
     return cached.code;
   }
 
-  const cdnBase = getCdnBase();
-  const code = await fetchBundle(cdnBase, spec, externals);
+  const code = await fetchBundle(CDN_BASE, spec, externals);
   cache.set(cacheKey, { code, timestamp: Date.now() });
 
   event.node.res.setHeader("Content-Type", "application/javascript; charset=utf-8");
