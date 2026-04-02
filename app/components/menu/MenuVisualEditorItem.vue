@@ -21,6 +21,7 @@ const emit = defineEmits<{
 }>();
 
 const { getId } = useDatabase();
+const isDndUpdating = useState('menu-dnd-updating', () => false);
 
 const childrenItems = ref<MenuTreeItem[]>(props.item.children || []);
 const isExpanded = ref(true);
@@ -52,19 +53,10 @@ function isDescendant(menuId: string | number, potentialParentId: string | numbe
 }
 
 function handleChildrenReorder(event: DragEvent) {
-  if (!props.allMenus || !event.moved) return;
+  if (!props.allMenus) return;
   
   const parentId = getId(props.item);
   if (!parentId) return;
-  
-  console.log('[handleChildrenReorder] Event:', event);
-  console.log('[handleChildrenReorder] Parent ID:', parentId);
-  console.log('[handleChildrenReorder] Children items:', childrenItems.value.map((c, idx) => ({
-    id: getId(c),
-    label: c.label,
-    index: idx,
-    currentOrder: props.allMenus?.find(m => String(getId(m)) === String(getId(c)))?.order
-  })));
   
   const updatedMenus: MenuDefinition[] = [];
   const allMenus = props.allMenus;
@@ -75,26 +67,22 @@ function handleChildrenReorder(event: DragEvent) {
     
     const originalMenu = allMenus.find(m => String(getId(m)) === String(childMenuId));
     if (!originalMenu) return;
-    
-    const oldOrder = originalMenu.order;
-    if (oldOrder !== index) {
-      console.log(`[handleChildrenReorder] Menu ${childMenuId} (${originalMenu.label}): oldOrder=${oldOrder}, newOrder=${index}`);
+
+    const currentParentId = getId(originalMenu.parent) || null;
+    const nextParentId = parentId;
+    const currentOrder = originalMenu.order;
+    const nextOrder = index;
+
+    if (String(currentParentId) !== String(nextParentId) || currentOrder !== nextOrder) {
       updatedMenus.push({
         ...originalMenu,
-        order: index
+        parent: { id: parentId } as any,
+        order: nextOrder
       });
     }
   });
-  
-  console.log('[handleChildrenReorder] Updated menus:', updatedMenus.map(m => ({
-    id: getId(m),
-    label: m.label,
-    order: m.order
-  })));
-  
-  if (updatedMenus.length > 0) {
-    emit('reorder-menus', updatedMenus);
-  }
+
+  if (updatedMenus.length > 0) emit('reorder-menus', updatedMenus);
 }
 
 const menuItems = computed(() => {
@@ -327,6 +315,12 @@ function handleCancelMove() {
   <div>
     <div
       v-if="item.isDropdown"
+      class="menu-group-wrapper"
+      :style="{
+        '--dnd-bar-left': `${12 + (level || 0) * 12}px`
+      }"
+    >
+    <div
       :class="[
         'menu-item-dropdown-header flex items-center !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
         (level || 0) > 0 ? 'pl-3 md:pl-6' : 'pl-3',
@@ -464,17 +458,22 @@ function handleCancelMove() {
         <draggable
           v-model="childrenItems"
           :animation="200"
+          :disabled="isDndUpdating"
           handle=".drag-handle"
           ghost-class="ghost-item"
           chosen-class="chosen-item"
           drag-class="dragging-item"
-          :group="{ name: 'menu-items', pull: false, put: false }"
+          :group="{ name: 'menu-items', pull: true, put: true }"
           @change="handleChildrenReorder"
           item-key="id"
           :class="[
-            'space-y-1 mt-1',
-            (level || 0) > 0 ? 'pl-4 md:pl-6' : 'pl-4 md:pl-6'
+            'menu-children drop-zone space-y-1 mt-1 pr-2 py-2 rounded-xl',
+            'bg-transparent'
           ]"
+          :style="{
+            paddingLeft: `${24 + ((level || 0) + 1) * 12}px`,
+            '--dnd-bar-left': `${12 + (level || 0) * 12}px`
+          }"
         >
         <template #item="{ element: child }">
           <MenuVisualEditorItem
@@ -495,14 +494,18 @@ function handleCancelMove() {
       </draggable>
       </div>
     </div>
+    </div>
     <div
       v-else
       :class="[
         'menu-item flex items-center !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
-        (level || 0) > 0 ? 'pl-4 md:pl-6' : '',
+        '',
         isMoving ? 'ring-2 ring-violet-500 bg-violet-500/10 dark:bg-violet-500/20' : '',
         isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-violet-500/5 dark:hover:bg-violet-500/10'
       ]"
+      :style="{
+        paddingLeft: `${12 + (level || 0) * 12}px`
+      }"
       @click="handleItemClick(item)"
     >
       <UIcon
@@ -617,6 +620,42 @@ function handleCancelMove() {
 </template>
 
 <style scoped>
+.menu-group-wrapper {
+  position: relative;
+}
+
+.menu-group-wrapper::before {
+  content: '';
+  position: absolute;
+  left: var(--dnd-bar-left, 10px);
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: rgba(148, 163, 184, 0.55);
+  pointer-events: none;
+}
+
+.menu-group-wrapper:has(.drop-zone:has(.sortable-ghost))::before,
+.menu-group-wrapper:has(.drop-zone:has(.ghost-item))::before {
+  background: rgba(139, 92, 246, 0.85);
+}
+
+.drop-zone {
+  position: relative;
+}
+
+.drop-zone::before {
+  content: '';
+  position: absolute;
+  left: var(--dnd-bar-left, 10px);
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: rgba(148, 163, 184, 0.55);
+}
+
 .drop-zone {
   position: relative;
 }
@@ -624,6 +663,17 @@ function handleCancelMove() {
 .drop-zone:has(.sortable-ghost) {
   background-color: rgba(139, 92, 246, 0.05);
   border-color: rgb(139, 92, 246);
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.35);
+}
+
+.drop-zone:has(.sortable-ghost)::before,
+.drop-zone:has(.ghost-item)::before {
+  background: rgba(139, 92, 246, 0.85);
+}
+
+.menu-group:has(.drop-zone:has(.sortable-ghost)),
+.menu-group:has(.drop-zone:has(.ghost-item)) {
+  background: rgba(139, 92, 246, 0.05);
 }
 
 .menu-visual-editor-item :deep(.sortable-ghost) {

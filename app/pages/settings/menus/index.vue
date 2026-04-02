@@ -15,6 +15,8 @@ const { execute: updateMenuApi } = useApi(() => '/menu_definition', {
   errorContext: 'Update Menu Order',
 });
 
+const isDndUpdating = useState('menu-dnd-updating', () => false);
+
 registerPageHeader({
   title: "Menu Manager",
   description: "Configure and manage navigation menus visually",
@@ -416,13 +418,16 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
   const originalMenuDefinitions = menuDefinitions.value?.data ? JSON.parse(JSON.stringify(menuDefinitions.value.data)) : [];
   const originalMenuItems = JSON.parse(JSON.stringify(menuItems.value));
 
+  if (isDndUpdating.value) return;
+  isDndUpdating.value = true;
+
   const updatePromises = updatedMenus.map(async (menu) => {
     const menuId = getId(menu);
     if (!menuId) return;
 
-    const body: { order: number } = {
-      order: menu.order
-    };
+    const body: { order: number; parent?: number | string | null } = { order: menu.order };
+    const parentId = getId((menu as any).parent);
+    body.parent = parentId ? parentId : null;
 
     await updateMenuApi({
       id: menuId,
@@ -450,6 +455,8 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
       description: "Failed to update menu order. Please try again.",
       color: "error",
     });
+  } finally {
+    isDndUpdating.value = false;
   }
 }
 
