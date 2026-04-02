@@ -12,11 +12,15 @@ const emit = defineEmits<{
   remove: [];
 }>();
 
+const dndRafId = ref<number | null>(null);
+const endZoneEl = ref<HTMLElement | null>(null);
+
 const {
   startDrag,
   setDropTarget,
   setEndZoneDropTarget,
   clearDropTarget,
+  canDrop,
   executeDrop,
   endDrag,
   isDragging,
@@ -107,7 +111,15 @@ function onDragStart(index: number, event: DragEvent) {
 
   event.stopPropagation();
 
-  startDrag(props.group, index);
+  if (dndRafId.value !== null && typeof cancelAnimationFrame !== 'undefined') {
+    cancelAnimationFrame(dndRafId.value);
+  }
+  dndRafId.value = typeof requestAnimationFrame !== 'undefined'
+    ? requestAnimationFrame(() => {
+        dndRafId.value = null;
+        startDrag(props.group, index);
+      })
+    : null;
 
   const item = props.group.conditions[index];
   if (item && event.dataTransfer) {
@@ -126,16 +138,42 @@ function onItemDragOver(index: number, event: DragEvent) {
     event.dataTransfer.dropEffect = 'move';
   }
 
-  const target = event.currentTarget as HTMLElement;
-  const rect = target.getBoundingClientRect();
-  const midY = rect.top + rect.height / 2;
+  const isLast = index === props.group.conditions.length - 1;
+  if (isLast) {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    if (event.clientY >= rect.bottom - 10) {
+      setEndZoneDropTarget(props.group);
+      return;
+    }
+  }
 
-  const position = event.clientY < midY ? 'before' : 'after';
+  const position = index === 0 ? (() => {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    return event.clientY < midY ? 'before' : 'after';
+  })() : 'after';
+  if (!canDrop(props.group, index)) {
+    clearDropTarget();
+    return;
+  }
   setDropTarget(props.group, index, position);
 }
 
 function onItemDragLeave(event: DragEvent) {
   event.stopPropagation();
+  const current = event.currentTarget as HTMLElement | null;
+  const related = (event as any).relatedTarget as Node | null;
+  if (current && related && current.contains(related)) {
+    return;
+  }
+  if (related && endZoneEl.value && endZoneEl.value.contains(related)) {
+    return;
+  }
+  if (!related) {
+    return;
+  }
   clearDropTarget();
 }
 
@@ -145,16 +183,53 @@ function onItemDrop(index: number, event: DragEvent) {
   event.preventDefault();
   event.stopPropagation();
 
+  const isLast = index === props.group.conditions.length - 1;
+  if (isLast) {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    if (event.clientY >= rect.bottom - 10) {
+      setEndZoneDropTarget(props.group);
+      const result = executeDrop(props.group);
+      if (result.success) {
+        if (result.sourceGroupId === props.group.id || result.targetGroupId === props.group.id) {
+          updateGroup();
+        }
+      } else {
+        endDrag();
+      }
+      return;
+    }
+  }
+
+  const position = index === 0 ? (() => {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    return event.clientY < midY ? 'before' : 'after';
+  })() : 'after';
+  if (!canDrop(props.group, index)) {
+    clearDropTarget();
+    endDrag();
+    return;
+  }
+  setDropTarget(props.group, index, position);
+
   const result = executeDrop(props.group);
 
   if (result.success) {
     if (result.sourceGroupId === props.group.id || result.targetGroupId === props.group.id) {
       updateGroup();
     }
+  } else {
+    endDrag();
   }
 }
 
 function onDragEnd() {
+  if (dndRafId.value !== null && typeof cancelAnimationFrame !== 'undefined') {
+    cancelAnimationFrame(dndRafId.value);
+    dndRafId.value = null;
+  }
   endDrag();
 }
 
@@ -162,10 +237,8 @@ function getDropClass(index: number): string {
   const indicator = getDropIndicator(props.group, index);
   if (!indicator) return '';
 
-  if (indicator === 'before') {
-    return 'border-t-2 border-t-primary-400';
-  }
-  return 'border-b-2 border-b-primary-400';
+  if (indicator === 'before') return 'drop-indicator drop-indicator--before';
+  return 'drop-indicator drop-indicator--after';
 }
 
 function isItemDragging(index: number): boolean {
@@ -182,12 +255,11 @@ function onEndZoneDragOver(event: DragEvent) {
     event.dataTransfer.dropEffect = 'move';
   }
 
-  setEndZoneDropTarget(props.group);
+  if (!isGroupEndZoneActive()) setEndZoneDropTarget(props.group);
 }
 
 function onEndZoneDragLeave(event: DragEvent) {
   event.stopPropagation();
-  clearDropTarget();
 }
 
 function onEndZoneDrop(event: DragEvent) {
@@ -196,12 +268,15 @@ function onEndZoneDrop(event: DragEvent) {
   event.preventDefault();
   event.stopPropagation();
 
+  setEndZoneDropTarget(props.group);
   const result = executeDrop(props.group);
 
   if (result.success) {
     if (result.sourceGroupId === props.group.id || result.targetGroupId === props.group.id) {
       updateGroup();
     }
+  } else {
+    endDrag();
   }
 }
 
@@ -232,11 +307,17 @@ const { isMobile, isTablet } = useScreen();
       </span>
     </div>
 
-    <div :class="(isMobile || isTablet) ? 'space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700' : 'space-y-2 pl-4 border-l-2 border-gray-200 dark:border-gray-700'">
+    <div
+      :class="[
+        (isMobile || isTablet) ? 'space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700' : 'space-y-2 pl-4 border-l-2 border-gray-200 dark:border-gray-700',
+        ''
+      ]"
+    >
       <template v-for="(item, index) in group.conditions" :key="item.id">
         <div
           :class="[
-            'transition-all duration-150',
+            'relative',
+            isDragging() ? 'transition-none' : 'transition-all duration-150',
             getDropClass(index),
             isItemDragging(index) ? 'opacity-50 scale-[0.98]' : '',
           ]"
@@ -246,7 +327,7 @@ const { isMobile, isTablet } = useScreen();
         >
           <div class="flex items-start gap-1">
             <div
-              v-if="!readonly && group.conditions.length > 1"
+              v-if="!readonly"
               :draggable="true"
               class="flex-shrink-0 pt-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
               @dragstart="(e) => onDragStart(index, e)"
@@ -323,17 +404,18 @@ const { isMobile, isTablet } = useScreen();
 
       <div
         v-if="!readonly && isDragging()"
+        ref="endZoneEl"
         :class="[
-          'min-h-[40px] rounded-lg border-2 border-dashed transition-all duration-150',
+          'h-10 rounded-lg border-2 border-dashed transition-all duration-150',
+          'mt-2 mb-2',
           isGroupEndZoneActive()
             ? 'border-primary-400 bg-primary-50 dark:bg-primary-950/30'
             : 'border-gray-300 dark:border-gray-600'
         ]"
         @dragover="onEndZoneDragOver"
-        @dragleave="onEndZoneDragLeave"
         @drop="onEndZoneDrop"
       >
-        <div class="flex items-center justify-center h-10 text-xs text-gray-400 dark:text-gray-500">
+        <div class="flex items-center justify-center h-10 text-xs text-gray-400 dark:text-gray-500 select-none">
           <UIcon name="lucide:plus" class="w-4 h-4 mr-1" />
           Drop here
         </div>
@@ -360,3 +442,52 @@ const { isMobile, isTablet } = useScreen();
     </div>
   </div>
 </template>
+
+<style scoped>
+.drop-indicator::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0) 0%, rgba(139, 92, 246, 0.98) 18%, rgba(139, 92, 246, 0.98) 82%, rgba(139, 92, 246, 0) 100%);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.4), 0 14px 28px rgba(139, 92, 246, 0.24);
+  pointer-events: none;
+}
+
+.drop-indicator::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: rgba(139, 92, 246, 0.95);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7), 0 10px 22px rgba(139, 92, 246, 0.22);
+  pointer-events: none;
+}
+
+.drop-indicator--before::before {
+  top: 6px;
+}
+
+.drop-indicator--after::before {
+  bottom: 6px;
+}
+
+.drop-indicator--before::after {
+  left: 6px;
+  top: 6px;
+}
+
+.drop-indicator--after::after {
+  left: 6px;
+  bottom: 6px;
+}
+
+.drop-indicator {
+  transition: padding 150ms ease;
+  padding-top: 22px;
+  padding-bottom: 22px;
+}
+</style>

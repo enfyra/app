@@ -3,6 +3,7 @@ import type { FilterCondition, FilterGroup } from '~/utils/common/filter/filter-
 interface DragState {
   sourceGroup: FilterGroup;
   sourceIndex: number;
+  sourceGroupId: string;
   item: FilterCondition | FilterGroup | null;
 }
 
@@ -32,29 +33,64 @@ export function useFilterDragDrop() {
     dragState.value = {
       sourceGroup,
       sourceIndex,
+      sourceGroupId: sourceGroup.id,
       item,
     };
   }
 
   function setDropTarget(group: FilterGroup, index: number, position: 'before' | 'after') {
+    const current = dropTarget.value;
+    if (
+      current
+      && !isEndZone.value
+      && current.group === group
+      && current.index === index
+      && current.position === position
+    ) {
+      return;
+    }
+
     dropTarget.value = { group, index, position };
     isEndZone.value = false;
   }
 
   function setEndZoneDropTarget(group: FilterGroup) {
-    dropTarget.value = { group, index: group.conditions.length, position: 'after' };
+    const idx = group.conditions.length;
+    const current = dropTarget.value;
+    if (
+      current
+      && isEndZone.value
+      && current.group === group
+      && current.index === idx
+      && current.position === 'after'
+    ) {
+      return;
+    }
+
+    dropTarget.value = { group, index: idx, position: 'after' };
     isEndZone.value = true;
   }
 
   function clearDropTarget() {
+    if (!dropTarget.value && !isEndZone.value) return;
     dropTarget.value = null;
     isEndZone.value = false;
   }
 
-  function canDrop(targetGroup: FilterGroup, targetIndex: number): boolean {
+  function canDrop(targetGroup: FilterGroup, targetIndex: number, position?: 'before' | 'after'): boolean {
     if (!dragState.value) return false;
-    if (dragState.value.sourceGroup === targetGroup && dragState.value.sourceIndex === targetIndex) {
-      return false;
+    if (dragState.value.sourceGroupId === targetGroup.id) {
+      const sourceIndex = dragState.value.sourceIndex;
+      if (sourceIndex === targetIndex) return false;
+      if (position) {
+        let insertIndex = targetIndex;
+        if (sourceIndex < targetIndex) {
+          insertIndex = position === 'before' ? targetIndex - 1 : targetIndex;
+        } else {
+          insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
+        }
+        if (insertIndex === sourceIndex) return false;
+      }
     }
     return true;
   }
@@ -69,7 +105,7 @@ export function useFilterDragDrop() {
 
     const { group: targetGroupActual, index: targetIndex, position } = dropTarget.value;
 
-    if (sourceGroup === targetGroupActual) {
+    if (dragState.value.sourceGroupId === targetGroupActual.id) {
       const newConditions = [...sourceGroup.conditions];
       const [movedItem] = newConditions.splice(sourceIndex, 1);
 
@@ -99,7 +135,7 @@ export function useFilterDragDrop() {
 
       let insertIndex = targetIndex;
       if (position === 'after') {
-        insertIndex = targetIndex;
+        insertIndex = targetIndex + 1;
       } else {
         insertIndex = Math.max(0, targetIndex);
       }

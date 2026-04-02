@@ -16,8 +16,13 @@ export default defineNuxtPlugin(() => {
     reconnectionDelay: 2000,
   });
 
+  socket.on('connect', () => {
+    console.log('Connected to admin socket');
+  });
+
   socket.on('connect_error', (err: Error) => {
     if (!shouldToastConnection()) return;
+    console.error('Connection error:', err);
   });
 
   socket.on('disconnect', (reason: string) => {

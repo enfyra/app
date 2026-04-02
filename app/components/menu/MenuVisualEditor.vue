@@ -22,6 +22,7 @@ const emit = defineEmits<{
 }>();
 
 const { getId } = useDatabase();
+const isDndUpdating = useState('menu-dnd-updating', () => false);
 
 function buildChildren(parentId: string | number | null, allMenus: MenuDefinition[]): MenuTreeItem[] {
   if (!parentId) return [];
@@ -67,18 +68,6 @@ watch(menuTree, (newTree) => {
   menuTreeItems.value = newTree;
 }, { deep: true });
 
-const isDragging = useState('menu-dragging', () => false);
-
-function handleRootDragStart() {
-  isDragging.value = true;
-}
-
-function handleRootDragEnd() {
-  setTimeout(() => {
-    isDragging.value = false;
-  }, 100);
-}
-
 const movingMenuId = useState<string | number | null>('moving-menu-id', () => null);
 
 function handleMoveMenu(menu: MenuDefinition) {
@@ -110,16 +99,6 @@ function handleMoveToRoot() {
 }
 
 function handleRootReorder(event: DragEvent) {
-  if (!event.moved) return;
-  
-  console.log('[handleRootReorder] Event:', event);
-  console.log('[handleRootReorder] Root items:', menuTreeItems.value.map((item, idx) => ({
-    id: getId(item),
-    label: item.label,
-    index: idx,
-    currentOrder: props.menus.find(m => String(getId(m)) === String(getId(item)))?.order
-  })));
-  
   const updatedMenus: MenuDefinition[] = [];
   
   menuTreeItems.value.forEach((item, index) => {
@@ -128,33 +107,32 @@ function handleRootReorder(event: DragEvent) {
     
     const originalMenu = props.menus.find(m => String(getId(m)) === String(itemMenuId));
     if (!originalMenu) return;
-    
-    const oldOrder = originalMenu.order;
-    if (oldOrder !== index) {
-      console.log(`[handleRootReorder] Menu ${itemMenuId} (${originalMenu.label}): oldOrder=${oldOrder}, newOrder=${index}`);
+
+    const currentParentId = getId(originalMenu.parent) || null;
+    const nextParentId = null;
+    const currentOrder = originalMenu.order;
+    const nextOrder = index;
+
+    if (String(currentParentId) !== String(nextParentId) || currentOrder !== nextOrder) {
       updatedMenus.push({
         ...originalMenu,
-        order: index
+        parent: null as any,
+        order: nextOrder
       });
     }
   });
-  
-  console.log('[handleRootReorder] Updated menus:', updatedMenus.map(m => ({
-    id: getId(m),
-    label: m.label,
-    order: m.order
-  })));
-  
-  if (updatedMenus.length > 0) {
-    emit('reorder-menus', updatedMenus);
-  }
+
+  if (updatedMenus.length > 0) emit('reorder-menus', updatedMenus);
 }
 
 
 </script>
 
 <template>
-  <div class="menu-visual-editor overflow-hidden">
+  <div
+    class="menu-visual-editor overflow-hidden"
+    :class="isDndUpdating ? 'pointer-events-none opacity-60 select-none' : ''"
+  >
     <div v-if="menuTree.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
       <UIcon name="lucide:navigation" class="w-12 h-12 text-gray-400 mb-3" />
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">No menu items available</p>
@@ -181,14 +159,15 @@ function handleRootReorder(event: DragEvent) {
         <draggable
           v-model="menuTreeItems"
           :animation="200"
+          :disabled="isDndUpdating"
           handle=".drag-handle"
           ghost-class="ghost-item"
           chosen-class="chosen-item"
           drag-class="dragging-item"
-          :group="{ name: 'menu-items', pull: false, put: false }"
+          :group="{ name: 'menu-items', pull: true, put: true }"
           @change="handleRootReorder"
           item-key="id"
-          class="space-y-2"
+          class="space-y-2 drop-zone"
         >
           <template #item="{ element: item }">
             <MenuVisualEditorItem
