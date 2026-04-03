@@ -216,12 +216,16 @@ watch(
   { immediate: true, deep: true }
 );
 
+let isConfirming = false;
+
 watch(
   () => props.modelValue,
   (newValue, oldValue) => {
     if (Object.keys(originalData.value).length === 0) {
       return;
     }
+
+    if (isConfirming) return;
 
     if (
       newValue &&
@@ -278,11 +282,15 @@ async function validateAllUniqueFields(): Promise<boolean> {
 }
 
 function confirmChanges() {
-  if (props.modelValue && Object.keys(props.modelValue).length > 0) {
-    originalData.value = JSON.parse(JSON.stringify(props.modelValue));
-    formChanges.update(props.modelValue);
-    emit("hasChanged", false);
-  }
+  isConfirming = true;
+  nextTick(() => {
+    if (props.modelValue && Object.keys(props.modelValue).length > 0) {
+      originalData.value = JSON.parse(JSON.stringify(props.modelValue));
+      formChanges.update(props.modelValue);
+      emit("hasChanged", false);
+    }
+    isConfirming = false;
+  });
 }
 
 onMounted(() => {
