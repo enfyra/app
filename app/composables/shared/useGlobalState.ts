@@ -2,8 +2,6 @@
 export const useGlobalState = () => {
   const settings = useState<any>("global:settings", () => {});
   const storageConfigs = useState<any[]>("global:storage:configs", () => []);
-  const aiConfigs = useState<any[]>("global:ai:configs", () => []);
-  const aiConfig = useState<any>("global:ai:config", () => {});
   const appPackages = useState<any[]>("global:app:packages", () => []);
   const packageCacheState = useState<Map<string, any>>("global:app:packages:cache", () => new Map());
   const packageCacheTimestamp = useState<number>("global:app:packages:cache:timestamp", () => 0);
@@ -53,24 +51,6 @@ export const useGlobalState = () => {
   });
 
   const {
-    data: aiConfigData,
-    execute: executeFetchAiConfig,
-  } = useApi(() => "/ai_config_definition", {
-    query: {
-      fields: "*",
-      limit: -1,
-      sort: "-createdAt",
-      filter: {
-        isEnabled: {
-          _eq: true,
-        },
-      }
-    },
-
-    errorContext: "Fetch AI Config",
-  });
-
-  const {
     data: appPackagesData,
     execute: executeFetchAppPackages,
   } = useApi(() => "/package_definition", {
@@ -94,13 +74,6 @@ export const useGlobalState = () => {
   async function fetchStorageConfigs() {
     await executeFetchStorageConfigs();
     storageConfigs.value = storageConfigsData.value?.data || [];
-  }
-
-  async function fetchAiConfig() {
-    await executeFetchAiConfig();
-    const data = aiConfigData.value?.data || [];
-    aiConfigs.value = data;
-    aiConfig.value = data[0] || {};
   }
 
   async function fetchAppPackages() {
@@ -155,9 +128,6 @@ export const useGlobalState = () => {
     fetchSetting,
     storageConfigs,
     fetchStorageConfigs,
-    aiConfigs,
-    aiConfig,
-    fetchAiConfig,
     appPackages,
     fetchAppPackages,
     packageCacheState,

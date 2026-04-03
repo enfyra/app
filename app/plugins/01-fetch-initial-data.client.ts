@@ -1,6 +1,6 @@
 export default defineNuxtPlugin(async () => {
   const { schemas, fetchSchema } = useSchema();
-  const { fetchSetting, fetchStorageConfigs, fetchAiConfig, fetchAppPackages } = useGlobalState();
+  const { fetchSetting, fetchStorageConfigs, fetchAppPackages } = useGlobalState();
   const { loadRoutes } = useRoutes();
   const { fetchMenuDefinitions } = useMenuApi();
 
@@ -8,7 +8,6 @@ export default defineNuxtPlugin(async () => {
     fetchSchema(),
     fetchSetting(),
     fetchStorageConfigs(),
-    fetchAiConfig(),
     fetchAppPackages(),
     loadRoutes(),
     fetchMenuDefinitions(),
