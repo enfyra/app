@@ -1,10 +1,8 @@
 <script setup lang="ts">
 
-const { schemas, fetchSchema, schemaLoading } = useSchema();
+const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const toast = useToast();
-const { registerDataMenuItems } = useMenuRegistry();
-const { loadRoutes } = useRoutes();
 const { getId } = useDatabase();
 const errors = ref<Record<string, string>>({});
 const table = reactive<any>({
@@ -176,14 +174,6 @@ async function save() {
   await createTable({ body: payload });
 
   if (createError.value) return;
-
-  await fetchSchema();
-
-  await loadRoutes();
-
-  await nextTick();
-
-  await registerDataMenuItems(Object.values(schemas.value));
 
   toast.add({
     title: "Success",

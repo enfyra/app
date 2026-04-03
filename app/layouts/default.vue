@@ -89,6 +89,14 @@
 </template>
 
 <script setup lang="ts">
+await useInitialData();
+await useMenuInit();
+useAppSettings();
+useRouterErrorHandler();
+useMobileMenuAction();
+useNavigationActions();
+useAdminSocket();
+
 const { sidebarVisible, routeLoading, setSidebarVisible } =
   useGlobalState();
 const { width } = useScreen();

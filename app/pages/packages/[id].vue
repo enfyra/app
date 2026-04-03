@@ -79,7 +79,7 @@ const route = useRoute();
 const toast = useToast();
 const { confirm } = useConfirm();
 const { fetchAppPackages } = useGlobalState();
-const { $adminSocket } = useNuxtApp();
+const { adminSocket: $adminSocket } = useAdminSocket();
 const packageId = route.params.id as string;
 const tableName = "package_definition";
 

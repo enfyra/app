@@ -1,10 +1,8 @@
 <script setup lang="ts">
 const route = useRoute();
-const { schemas, fetchSchema, forceRefreshSchema, schemaLoading } = useSchema();
+const { schemas, forceRefreshSchema, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const toast = useToast();
-const { registerDataMenuItems } = useMenuRegistry();
-const { loadRoutes } = useRoutes();
 const { retryUntilFresh } = useServerSync();
 const { getId } = useDatabase();
 const tableName = "table_definition";
@@ -205,9 +203,6 @@ async function afterPatchSuccess() {
     }
   );
 
-  await loadRoutes();
-  registerDataMenuItems(Object.values(schemas.value));
-
   await fetchTableData();
   const updatedData = tableData.value?.data?.[0];
   if (updatedData) {
@@ -262,9 +257,6 @@ async function afterDeleteSuccess(deletedTableName: string) {
     () => forceRefreshSchema(),
     () => !!schemas.value[deletedTableName]
   );
-
-  await loadRoutes();
-  registerDataMenuItems(Object.values(schemas.value));
 
   toast.add({
     title: "Success",

@@ -1,4 +1,4 @@
-export default defineNuxtPlugin(() => {
+export function useAppSettings() {
   const route = useRoute();
   const router = useRouter();
   const { settings } = useGlobalState();
@@ -8,14 +8,12 @@ export default defineNuxtPlugin(() => {
   function updateAppTitleAndFavicon(newSettings: any) {
     if (!newSettings || Object.keys(newSettings).length === 0) return;
 
-    const projectName = newSettings.projectName;
-    const projectDescription = newSettings.projectDescription;
     const projectFavicon = newSettings.projectFavicon;
 
     if (projectFavicon) {
       const linkId = "dynamic-favicon";
       const existingLink = document.getElementById(linkId);
-      
+
       if (existingLink) {
         existingLink.remove();
       }
@@ -43,16 +41,16 @@ export default defineNuxtPlugin(() => {
     }
 
     const pathSegments = path.split('/').filter(Boolean);
-    
+
     let bestMatch: any = null;
     let bestMatchLength = 0;
-    
+
     for (const item of menuItems.value) {
       const itemRoute = item.route || item.path;
       if (!itemRoute) continue;
 
       const itemSegments = itemRoute.split('/').filter(Boolean);
-      
+
       if (itemSegments.length === 0) continue;
 
       if (itemSegments.length !== pathSegments.length) continue;
@@ -88,7 +86,7 @@ export default defineNuxtPlugin(() => {
 
   function findParentMenu(path: string) {
     const pathSegments = path.split('/').filter(Boolean);
-    
+
     for (let i = pathSegments.length - 1; i > 0; i--) {
       const parentPath = '/' + pathSegments.slice(0, i).join('/');
       const parentMenu = menuItems.value.find(
@@ -132,10 +130,10 @@ export default defineNuxtPlugin(() => {
     } else if (path.startsWith('/settings/')) {
       const segments = path.split('/').filter(Boolean);
       const settingType = segments[1];
-      
+
       if (settingType && segments.length === 2) {
         const menuItem = findMenuByRoute(path);
-        
+
         if (menuItem && menuItem.label && menuItem.route === path) {
           title = menuItem.label;
           if (menuItem.description) {
@@ -236,4 +234,4 @@ export default defineNuxtPlugin(() => {
 
   watch(() => schemas.value, scheduleTitleUpdate, { deep: true });
   watch(() => menuItems.value, scheduleTitleUpdate, { deep: true });
-});
+}

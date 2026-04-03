@@ -1,5 +1,5 @@
-export default defineNuxtPlugin(async () => {
-  const { schemas, fetchSchema } = useSchema();
+export async function useInitialData() {
+  const { fetchSchema } = useSchema();
   const { fetchSetting, fetchStorageConfigs, fetchAppPackages } = useGlobalState();
   const { loadRoutes } = useRoutes();
   const { fetchMenuDefinitions } = useMenuApi();
@@ -12,5 +12,4 @@ export default defineNuxtPlugin(async () => {
     loadRoutes(),
     fetchMenuDefinitions(),
   ]);
-});
-
+}

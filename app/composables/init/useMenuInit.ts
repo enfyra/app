@@ -1,6 +1,6 @@
-import SidebarUserInfo from "../components/sidebar/UserInfo.vue";
+import SidebarUserInfo from "~/components/sidebar/UserInfo.vue";
 
-export default defineNuxtPlugin(async () => {
+export async function useMenuInit() {
   const { logout } = useAuth();
 
   const {
@@ -79,5 +79,4 @@ export default defineNuxtPlugin(async () => {
       if (ok) await logout();
     },
   } as any);
-});
-
+}

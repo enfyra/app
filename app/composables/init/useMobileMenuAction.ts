@@ -1,4 +1,4 @@
-export default defineNuxtPlugin(() => {
+export function useMobileMenuAction() {
   const { toggleSidebar } = useGlobalState();
   const { width } = useScreen();
 
@@ -22,4 +22,4 @@ export default defineNuxtPlugin(() => {
       order: 0,
     },
   ]);
-});
+}
