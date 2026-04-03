@@ -24,9 +24,6 @@ export const TABLE_DETAIL_PATH_MAP: Record<string, string> = {
   // Packages
   package_definition: "/packages",
 
-  // AI
-  ai_config_definition: "/ai-agent/config",
-  ai_conversation_definition: "/ai-agent/chat",
 };
 
 export function getDetailPathForTable(tableName: string, id: string | number): string | null {
