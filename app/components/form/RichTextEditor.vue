@@ -372,8 +372,10 @@ const createCustomFormatsExtension = (): Extension => {
   });
 };
 
+let lastEmittedHtml = ensureString(props.modelValue);
+
 const editor = useEditor({
-  content: ensureString(props.modelValue),
+  content: lastEmittedHtml,
   extensions: [
     StarterKit.configure({
       codeBlock: false,
@@ -432,7 +434,11 @@ const editor = useEditor({
   onBlur: ({ editor }) => {
     try {
       if (editor && isMounted.value) {
-        emit('update:modelValue', editor.getHTML());
+        const html = editor.getHTML();
+        if (html !== lastEmittedHtml) {
+          lastEmittedHtml = html;
+          emit('update:modelValue', html);
+        }
       }
     } catch {
     }
@@ -443,6 +449,7 @@ const editor = useEditor({
   onCreate: ({ editor }) => {
     if (editor) {
       isMounted.value = true;
+      lastEmittedHtml = editor.getHTML();
       canUndo.value = editor.can().undo();
       canRedo.value = editor.can().redo();
     }
@@ -451,7 +458,11 @@ const editor = useEditor({
     canUndo.value = editor.can().undo();
     canRedo.value = editor.can().redo();
     if (editor && isMounted.value) {
-      emit('update:modelValue', editor.getHTML());
+      const html = editor.getHTML();
+      if (html !== lastEmittedHtml) {
+        lastEmittedHtml = html;
+        emit('update:modelValue', html);
+      }
     }
   },
 });
@@ -460,7 +471,9 @@ watch(
   () => props.modelValue,
   (value) => {
     if (editor.value && value !== editor.value.getHTML()) {
-      editor.value.commands.setContent(ensureString(value));
+      const content = ensureString(value);
+      editor.value.commands.setContent(content);
+      lastEmittedHtml = editor.value.getHTML();
     }
   }
 );

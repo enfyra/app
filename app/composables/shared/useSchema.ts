@@ -255,7 +255,16 @@ export function useSchema(tableName?: string | Ref<string>) {
     return {
       originalData: readonly(originalData),
       update: (data) => { originalData.value = JSON.parse(JSON.stringify(data)); },
-      checkChanges: (data) => JSON.stringify(originalData.value) !== JSON.stringify(data),
+      checkChanges: (data) => {
+        const normalize = (obj: Record<string, any>) => {
+          const result: Record<string, any> = {};
+          for (const key of Object.keys(obj)) {
+            result[key] = obj[key] === "" ? null : obj[key];
+          }
+          return result;
+        };
+        return JSON.stringify(normalize(originalData.value)) !== JSON.stringify(normalize(data));
+      },
       discardChanges: () => JSON.parse(JSON.stringify(originalData.value)),
     };
   }
