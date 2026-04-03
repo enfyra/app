@@ -131,7 +131,7 @@ const route = useRoute();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
-const { $adminSocket } = useNuxtApp();
+const { adminSocket: $adminSocket } = useAdminSocket();
 
 const pendingOps = ref(new Map<string, string>());
 

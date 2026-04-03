@@ -89,38 +89,61 @@ const activeGroups = computed(() => {
 const expandedGroups = ref<Set<string>>(new Set());
 const searchQuery = ref('');
 
-onMounted(() => {
-  const saved = localStorage.getItem('sidebar-expanded-groups');
-  if (saved) {
+const SIDEBAR_EXPANDED_KEY = 'sidebar-expanded-groups';
+const hasStoredSidebarExpandedPreference = ref(false);
+
+function collectDefaultExpandedMenuIds(groups: any[]): string[] {
+  const ids: string[] = [];
+  function walkDropdownItems(items: any[]) {
+    for (const item of items) {
+      if (item.type === 'Dropdown Menu' && item.items?.length) {
+        ids.push(String(item.id));
+        walkDropdownItems(item.items);
+      }
+    }
+  }
+  for (const group of groups) {
+    if (group.component) continue;
+    if (group.type === 'Menu') continue;
+    if (group.items?.length) {
+      ids.push(String(group.id));
+      walkDropdownItems(group.items);
+    }
+  }
+  return ids;
+}
+
+function applyDefaultExpandedGroups() {
+  expandedGroups.value = new Set(collectDefaultExpandedMenuIds(menuGroups.value));
+}
+
+if (import.meta.client) {
+  const raw = localStorage.getItem(SIDEBAR_EXPANDED_KEY);
+  if (raw !== null) {
     try {
-      expandedGroups.value = new Set(JSON.parse(saved));
-    } catch (e) {}
-  } else {
-    menuGroups.value.forEach(group => expandedGroups.value.add(group.id));
-  }
-});
-
-watch(expandedGroups, (newVal) => {
-  localStorage.setItem('sidebar-expanded-groups', JSON.stringify([...newVal]));
-}, { deep: true });
-
-watch(searchQuery, (newQuery) => {
-  if (newQuery.trim()) {
-    visibleGroups.value.forEach(group => {
-      if (group.items?.length) expandedGroups.value.add(group.id);
-    });
-  }
-});
-
-function toggleGroup(groupId: string) {
-  if (expandedGroups.value.has(groupId)) {
-    expandedGroups.value.delete(groupId);
-  } else {
-    expandedGroups.value.add(groupId);
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        expandedGroups.value = new Set(parsed.map((id) => String(id)));
+        hasStoredSidebarExpandedPreference.value = true;
+      }
+    } catch {
+    }
   }
 }
 
-const isGroupExpanded = (groupId: string) => expandedGroups.value.has(groupId);
+function toggleGroup(groupId: string) {
+  hasStoredSidebarExpandedPreference.value = true;
+  const id = String(groupId);
+  const next = new Set(expandedGroups.value);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  expandedGroups.value = next;
+}
+
+const isGroupExpanded = (groupId: string) => expandedGroups.value.has(String(groupId));
 const handleMenuClick = () => {
   if (width.value <= 1024) setSidebarVisible(false);
 };
@@ -151,6 +174,31 @@ const visibleGroups = computed(() => {
       if (group.type === 'Menu') return true;
       return group.items?.length > 0;
     });
+});
+
+watch(
+  () => menuGroups.value,
+  () => {
+    if (!hasStoredSidebarExpandedPreference.value) {
+      applyDefaultExpandedGroups();
+    }
+  },
+  { deep: true, immediate: true }
+);
+
+watch(expandedGroups, (newVal) => {
+  if (!hasStoredSidebarExpandedPreference.value) return;
+  if (!import.meta.client) return;
+  localStorage.setItem(SIDEBAR_EXPANDED_KEY, JSON.stringify([...newVal]));
+});
+
+watch(searchQuery, (newQuery) => {
+  if (!newQuery.trim()) return;
+  const next = new Set(expandedGroups.value);
+  visibleGroups.value.forEach((group) => {
+    if (group.items?.length) next.add(String(group.id));
+  });
+  expandedGroups.value = next;
 });
 
 </script>

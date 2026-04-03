@@ -98,7 +98,7 @@ const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
 const { fetchAppPackages } = useGlobalState();
-const { $adminSocket } = useNuxtApp();
+const { adminSocket: $adminSocket } = useAdminSocket();
 
 const { registerPageHeader } = usePageHeaderRegistry();
 

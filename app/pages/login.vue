@@ -126,6 +126,19 @@
             >
               Sign in
             </UButton>
+
+            <UButton
+              v-if="showDemoLogin"
+              type="button"
+              size="lg"
+              variant="outline"
+              color="neutral"
+              class="w-full"
+              :loading="demoLoading"
+              @click="handleDemoLogin"
+            >
+              Try demo account
+            </UButton>
           </div>
         </UForm>
       </div>
@@ -136,8 +149,18 @@
 <script setup lang="ts">
 const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
+const DEMO_LOGIN_EMAIL = "enfyra@admin.com";
+const DEMO_LOGIN_PASSWORD = "1234";
+
+const runtimeConfig = useRuntimeConfig();
+const showDemoLogin = computed(() => {
+  const v = runtimeConfig.public.demoLoginPrefill as boolean | string | undefined;
+  return v === true || v === "true" || v === "1";
+});
+
 const { login } = useAuth();
 const toast = useToast();
+const demoLoading = ref(false);
 const form = reactive({
   email: "",
   password: "",
@@ -158,6 +181,28 @@ async function handleLogin() {
       icon: "lucide:octagon-x",
       color: "error",
     });
+  }
+}
+
+async function handleDemoLogin() {
+  demoLoading.value = true;
+  try {
+    const ok = await login({
+      email: DEMO_LOGIN_EMAIL,
+      password: DEMO_LOGIN_PASSWORD,
+      remember: true,
+    });
+    if (ok) window.location.reload();
+    else {
+      toast.add({
+        title: "Demo login failed",
+        description: "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.",
+        icon: "lucide:octagon-x",
+        color: "error",
+      });
+    }
+  } finally {
+    demoLoading.value = false;
   }
 }
 

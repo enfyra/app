@@ -24,6 +24,7 @@ const { getId } = useDatabase();
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
+const showSystem = ref(false);
 
 const filterLabel = computed(() => {
   const activeCount = currentFilter.value.conditions.length;
@@ -44,9 +45,16 @@ const {
   execute: fetchRoutes,
 } = useApi(() => "/route_definition", {
   query: computed(() => {
+    const conditions: any[] = [];
+    if (!showSystem.value) {
+      conditions.push({ isSystem: { _eq: false } });
+    }
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
-      : {};
+      : null;
+    if (filterQuery) {
+      conditions.push(filterQuery);
+    }
 
     return {
       fields: getIncludeFields(),
@@ -54,7 +62,7 @@ const {
       meta: "*",
       page: page.value,
       limit: pageLimit,
-      ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
+      ...(conditions.length > 0 && { filter: { _and: conditions } }),
     };
   }),
   errorContext: "Fetch Routes",
@@ -62,13 +70,32 @@ const {
 
 const routesData = computed(() => apiData.value?.data || []);
 const total = computed(() => {
-  
-  const hasFilters = hasActiveFilters(currentFilter.value);
-  if (hasFilters) {
-    
+  if (hasActiveFilters(currentFilter.value) || !showSystem.value) {
     return apiData.value?.meta?.filterCount ?? 0;
   }
   return apiData.value?.meta?.totalCount || 0;
+});
+
+useSubHeaderActionRegistry({
+  id: "toggle-system-routes",
+  icon: "lucide:shield",
+  get label() {
+    return showSystem.value ? "Hide System" : "Show System";
+  },
+  get variant() {
+    return showSystem.value ? "solid" as const : "outline" as const;
+  },
+  get color() {
+    return showSystem.value ? "warning" as const : "neutral" as const;
+  },
+  size: "md",
+  side: "right",
+  order: 0,
+  onClick: () => {
+    showSystem.value = !showSystem.value;
+    page.value = 1;
+    fetchRoutes();
+  },
 });
 
 useHeaderActionRegistry([

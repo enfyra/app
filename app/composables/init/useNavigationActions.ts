@@ -1,6 +1,6 @@
 import CommonBreadCrumbs from "~/components/common/BreadCrumbs.vue";
 
-export default defineNuxtPlugin(() => {
+export function useNavigationActions() {
   const route = useRoute();
   const router = useRouter();
   const { isMobile, isTablet } = useScreen();
@@ -59,4 +59,4 @@ export default defineNuxtPlugin(() => {
       order: 2
     },
   ]);
-});
+}

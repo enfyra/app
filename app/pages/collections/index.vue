@@ -19,6 +19,7 @@ const { isTablet } = useScreen();
 const { schemas } = useSchema();
 
 const searchQuery = ref("");
+const showSystem = ref(false);
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 watch(searchQuery, (newVal) => {
@@ -63,35 +64,67 @@ const SearchInput = defineComponent({
   },
 });
 
-useSubHeaderActionRegistry({
-  id: "search-collections",
-  component: SearchInput,
-  side: "right",
-});
+useSubHeaderActionRegistry([
+  {
+    id: "toggle-system-collections",
+    icon: "lucide:shield",
+    get label() {
+      return showSystem.value ? "Hide System" : "Show System";
+    },
+    get variant() {
+      return showSystem.value ? "solid" as const : "outline" as const;
+    },
+    get color() {
+      return showSystem.value ? "warning" as const : "neutral" as const;
+    },
+    size: "md",
+    side: "right",
+    order: 0,
+    onClick: () => {
+      showSystem.value = !showSystem.value;
+      page.value = 1;
+      fetchCollections();
+    },
+  },
+  {
+    id: "search-collections",
+    component: SearchInput,
+    side: "right",
+    order: 1,
+  },
+]);
 
 const {
   data: apiData,
   pending: loading,
   execute: fetchCollections,
 } = useApi(() => "/table_definition", {
-  query: computed(() => ({
-    fields: "*",
-    sort: "-createdAt",
-    meta: "totalCount,filterCount",
-    page: page.value,
-    limit: pageLimit,
-    ...(searchQuery.value && {
-      filter: {
-        name: { _contains: searchQuery.value },
-      },
-    }),
-  })),
+  query: computed(() => {
+    const conditions: any[] = [];
+    if (!showSystem.value) {
+      conditions.push({ isSystem: { _eq: false } });
+    }
+    if (searchQuery.value) {
+      conditions.push({ name: { _contains: searchQuery.value } });
+    }
+    return {
+      fields: "*",
+      sort: "-createdAt",
+      meta: "totalCount,filterCount",
+      page: page.value,
+      limit: pageLimit,
+      ...(conditions.length > 0 && {
+        filter: { _and: conditions },
+      }),
+    };
+  }),
   errorContext: "Fetch Collections",
 });
 
 const collections = computed(() => apiData.value?.data || []);
+const hasFilter = computed(() => searchQuery.value || !showSystem.value);
 const total = computed(() => {
-  if (searchQuery.value) {
+  if (hasFilter.value) {
     return apiData.value?.meta?.filterCount ?? 0;
   }
   return apiData.value?.meta?.totalCount || 0;
