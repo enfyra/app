@@ -11,7 +11,7 @@ const emit = defineEmits<{
   'menu-click': [];
 }>();
 
-const isExpanded = computed(() => props.expandedGroups.has(props.item.id));
+const isExpanded = computed(() => props.expandedGroups.has(String(props.item.id)));
 </script>
 
 <template>

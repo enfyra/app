@@ -84,6 +84,7 @@ export default defineNuxtConfig({
     public: {
       dbType: process.env.DB_TYPE || 'mysql',
       apiUrl: process.env.API_URL?.replace(/\/+$/, ''),
+      demoLoginPrefill: process.env.NUXT_PUBLIC_DEMO_LOGIN_PREFILL === 'true',
     },
   },
   routeRules: {
