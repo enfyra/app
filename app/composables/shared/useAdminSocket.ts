@@ -7,6 +7,7 @@ export function useAdminSocket() {
 
   if (!socket) {
     socket = io('/enfyra-admin', {
+      transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,
