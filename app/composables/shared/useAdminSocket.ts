@@ -10,7 +10,7 @@ export function useAdminSocket() {
   const menuRegistry = useMenuRegistry();
 
   if (!socket) {
-    socket = io('/enfyra-admin', {
+    socket = io('/ws/enfyra-admin', {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,

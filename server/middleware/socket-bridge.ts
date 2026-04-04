@@ -3,6 +3,8 @@ import { useRuntimeConfig } from 'nitropack/runtime/internal/config';
 import { Server as EngineServer } from 'engine.io';
 import { WebSocket } from 'ws';
 
+import { stripWsNs, addWsNs } from '../utils/ws-namespace';
+
 let engine: EngineServer | null = null;
 
 function getWsUrl() {
@@ -53,17 +55,14 @@ function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
       const frame = rawData.toString();
       const type = frame[0];
       if (type === '0') {
-        // Engine.IO OPEN from upstream — mark ready, flush buffer
         ready = true;
         for (const msg of buffer) {
-          upstream.send(typeof msg === 'string' ? '4' + msg : msg);
+          upstream.send(msg);
         }
         buffer.length = 0;
       } else if (type === '4') {
-        // Engine.IO MESSAGE — forward content to browser
-        browserSocket.send(frame.slice(1));
+        browserSocket.send(addWsNs(frame.slice(1)));
       } else if (type === '2') {
-        // Engine.IO PING — respond with PONG
         upstream.send('3');
       } else if (type === '1') {
         browserSocket.close();
@@ -82,10 +81,11 @@ function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
     });
 
     browserSocket.on('message', (data: string | Buffer) => {
+      const rewritten = typeof data === 'string' ? '4' + stripWsNs(data) : data;
       if (ready && upstream.readyState === WebSocket.OPEN) {
-        upstream.send(typeof data === 'string' ? '4' + data : data);
+        upstream.send(rewritten);
       } else {
-        buffer.push(data);
+        buffer.push(rewritten);
       }
     });
 
