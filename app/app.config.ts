@@ -297,12 +297,6 @@ export default defineAppConfig({
         },
       ]
     },
-    toast: {
-      slots: {
-        root: "min-w-0 max-w-full overflow-visible",
-        progress: "absolute bottom-0 inset-x-0 h-0.5 rounded-full",
-      },
-    },
     notification: {
       slots: {
         root: "min-w-0 max-w-full",

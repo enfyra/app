@@ -121,10 +121,11 @@ const {
 });
 
 const passwordForm = ref({
-  currentPassword: "",
   newPassword: "",
   confirmPassword: "",
 });
+const showPassword = reactive({ new: false, confirm: false });
+const passwordModalOpen = ref(false);
 const passwordErrors = ref<Record<string, string>>({});
 
 async function handleReset() {
@@ -147,6 +148,18 @@ async function handleReset() {
     });
   }
 }
+
+useSubHeaderActionRegistry([
+  {
+    id: "change-password",
+    label: "Change Password",
+    icon: "lucide:key-round",
+    variant: "outline",
+    color: "neutral",
+    side: "right",
+    onClick: () => { passwordModalOpen.value = true; },
+  },
+]);
 
 useHeaderActionRegistry([
   {
@@ -204,9 +217,6 @@ async function saveProfile() {
 
 function validatePasswordForm() {
   const errs: Record<string, string> = {};
-  if (!passwordForm.value.currentPassword) {
-    errs.currentPassword = "Current password is required";
-  }
   if (!passwordForm.value.newPassword) {
     errs.newPassword = "New password is required";
   } else if (passwordForm.value.newPassword.length < 6) {
@@ -231,7 +241,6 @@ async function handleChangePassword() {
 
   await changePasswordApi({
     body: {
-      currentPassword: passwordForm.value.currentPassword,
       password: passwordForm.value.newPassword,
     },
   });
@@ -246,11 +255,13 @@ async function handleChangePassword() {
     description: "Password updated successfully!",
   });
   passwordForm.value = {
-    currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   };
   passwordErrors.value = {};
+  showPassword.new = false;
+  showPassword.confirm = false;
+  passwordModalOpen.value = false;
 }
 
 onMounted(() => {
@@ -332,66 +343,81 @@ onMounted(() => {
         />
       </div>
 
-      <div class="surface-card rounded-xl p-6">
-        <div class="mb-5">
-          <h3 class="text-base font-semibold text-[var(--text-primary)]">Change Password</h3>
-          <p class="text-sm text-[var(--text-tertiary)] mt-0.5">Update your login credentials</p>
-        </div>
-        <UForm :state="passwordForm" @submit="handleChangePassword" class="space-y-5 max-w-md">
-          <UFormField
-            label="Current password"
-            :error="passwordErrors.currentPassword"
-            required
-          >
-            <UInput
-              v-model="passwordForm.currentPassword"
-              type="password"
-              placeholder="Enter current password"
-              size="md"
-              class="w-full"
-              autocomplete="current-password"
-            />
-          </UFormField>
-          <UFormField
-            label="New password"
-            :error="passwordErrors.newPassword"
-            required
-          >
-            <UInput
-              v-model="passwordForm.newPassword"
-              type="password"
-              placeholder="Enter new password"
-              size="md"
-              class="w-full"
-              autocomplete="new-password"
-            />
-          </UFormField>
-          <UFormField
-            label="Confirm new password"
-            :error="passwordErrors.confirmPassword"
-            required
-          >
-            <UInput
-              v-model="passwordForm.confirmPassword"
-              type="password"
-              placeholder="Confirm new password"
-              size="md"
-              class="w-full"
-              autocomplete="new-password"
-            />
-          </UFormField>
-          <UButton
-            type="submit"
-            color="primary"
-            variant="soft"
-            size="md"
-            :loading="passwordLoading"
-            :disabled="passwordLoading"
-          >
-            Update password
-          </UButton>
-        </UForm>
-      </div>
     </template>
   </div>
+
+  <CommonModal v-model="passwordModalOpen">
+    <template #title>Change Password</template>
+    <template #body>
+      <UForm id="password-form" :state="passwordForm" @submit="handleChangePassword" class="space-y-5">
+        <UFormField
+          label="New password"
+          :error="passwordErrors.newPassword"
+          required
+        >
+          <UInput
+            v-model="passwordForm.newPassword"
+            :type="showPassword.new ? 'text' : 'password'"
+            placeholder="Enter new password"
+            size="md"
+            class="w-full"
+            autocomplete="new-password"
+          >
+            <template #trailing>
+              <UIcon
+                :name="showPassword.new ? 'lucide:eye-off' : 'lucide:eye'"
+                class="w-4 h-4 text-[var(--text-quaternary)] cursor-pointer hover:text-[var(--text-secondary)]"
+                @click="showPassword.new = !showPassword.new"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+        <UFormField
+          label="Confirm new password"
+          :error="passwordErrors.confirmPassword"
+          required
+        >
+          <UInput
+            v-model="passwordForm.confirmPassword"
+            :type="showPassword.confirm ? 'text' : 'password'"
+            placeholder="Confirm new password"
+            size="md"
+            class="w-full"
+            autocomplete="new-password"
+          >
+            <template #trailing>
+              <UIcon
+                :name="showPassword.confirm ? 'lucide:eye-off' : 'lucide:eye'"
+                class="w-4 h-4 text-[var(--text-quaternary)] cursor-pointer hover:text-[var(--text-secondary)]"
+                @click="showPassword.confirm = !showPassword.confirm"
+              />
+            </template>
+          </UInput>
+        </UFormField>
+      </UForm>
+    </template>
+    <template #footer>
+      <div class="flex justify-end gap-2 w-full">
+        <UButton
+          variant="outline"
+          color="neutral"
+          size="md"
+          @click="passwordModalOpen = false"
+        >
+          Cancel
+        </UButton>
+        <UButton
+          type="submit"
+          form="password-form"
+          color="primary"
+          variant="solid"
+          size="md"
+          :loading="passwordLoading"
+          :disabled="passwordLoading"
+        >
+          Update password
+        </UButton>
+      </div>
+    </template>
+  </CommonModal>
 </template>
