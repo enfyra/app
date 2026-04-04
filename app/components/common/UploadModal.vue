@@ -23,7 +23,7 @@
           <slot name="header-content" />
           <div
             ref="dropZone"
-            class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-10 text-center transition-all duration-200 lg:hover:border-primary-400"
+            class="border-2 border-dashed border-[var(--border-strong)] rounded-xl p-10 text-center transition-all duration-200 lg:hover:border-primary-400"
             :class="{
               'border-primary-500 bg-primary-50 dark:bg-primary-950 scale-105':
                 isDragOver && !isLoading,
@@ -38,15 +38,15 @@
             <div class="space-y-4">
               <UIcon
                 name="i-heroicons-cloud-arrow-up"
-                class="text-gray-400 mx-auto text-8xl"
+                class="text-[var(--text-quaternary)] mx-auto text-8xl"
               />
               <div class="space-y-2">
                 <p
-                  class="text-base font-medium text-gray-900 dark:text-gray-100"
+                  class="text-base font-medium text-[var(--text-primary)]"
                 >
                   {{ dragText }}
                 </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-sm text-[var(--text-tertiary)]">
                   {{ acceptText }}
                 </p>
               </div>
@@ -89,12 +89,12 @@
                   </div>
                   <div class="min-w-0 flex-1">
                     <p
-                      class="text-base font-medium text-gray-900 dark:text-gray-100 truncate"
+                      class="text-base font-medium text-[var(--text-primary)] truncate"
                       :title="file.name"
                     >
                       {{ file.name }}
                     </p>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-[var(--text-tertiary)]">
                       {{ formatFileSize(file.size) }}
                     </p>
                   </div>

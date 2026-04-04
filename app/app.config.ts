@@ -58,7 +58,7 @@ export default defineAppConfig({
         {
           color: "primary",
           variant: "outline",
-          class: "bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
+          class: "bg-[var(--surface-default)] text-brand-600 dark:text-primary ring-1 ring-inset ring-brand-400/40 dark:ring-primary/30 hover:bg-brand-50 dark:hover:bg-primary/10"
         },
         {
           color: "error",
@@ -78,7 +78,7 @@ export default defineAppConfig({
         {
           color: "error",
           variant: "outline",
-          class: "bg-white text-error-600 ring-1 ring-inset ring-error-300 hover:bg-error-50 dark:bg-gray-800 dark:text-error-500 dark:ring-error-700 dark:hover:bg-error-500/10 disabled:hover:bg-white dark:disabled:hover:bg-gray-800"
+          class: "bg-[var(--surface-default)] text-error-600 ring-1 ring-inset ring-error-300 hover:bg-error-50 dark:text-error-500 dark:ring-error-700 dark:hover:bg-error-500/10 disabled:hover:bg-[var(--surface-default)]"
         },
         {
           color: "success",
@@ -167,31 +167,31 @@ export default defineAppConfig({
     input: {
       slots: {
         base: [
-          "h-11 w-full rounded-lg border border-gray-300 dark:border-gray-700",
-          "bg-transparent dark:bg-gray-900",
+          "h-11 w-full rounded-lg border border-[var(--border-strong)]",
+          "bg-transparent dark:bg-[var(--surface-muted)]",
           "px-4 py-2.5 text-sm",
-          "text-gray-800 dark:text-white/90",
+          "text-[var(--text-primary)]",
           "shadow-theme-xs",
-          "placeholder:text-gray-400 dark:placeholder:text-white/30",
+          "placeholder:text-[var(--text-quaternary)]",
           "focus:border-brand-300 dark:focus:border-brand-800",
           "focus:outline-none focus:ring-3 focus:ring-brand-500/10",
           "transition-all duration-300",
           "aria-[invalid=true]:border-error-300 dark:aria-[invalid=true]:border-error-700",
           "aria-[invalid=true]:ring-error-500/10",
           "disabled:cursor-not-allowed disabled:opacity-50",
-          "disabled:border-gray-100 disabled:bg-gray-50 dark:disabled:border-gray-800 dark:disabled:bg-white/[0.03]",
+          "disabled:border-[var(--border-subtle)] disabled:bg-[var(--surface-muted)]",
         ].join(" "),
       },
     },
     textarea: {
       slots: {
         base: [
-          "w-full rounded-lg border border-gray-300 dark:border-gray-700",
-          "bg-transparent dark:bg-gray-900",
+          "w-full rounded-lg border border-[var(--border-strong)]",
+          "bg-transparent dark:bg-[var(--surface-muted)]",
           "px-4 py-2.5 text-sm min-h-[44px]",
-          "text-gray-800 dark:text-white/90",
+          "text-[var(--text-primary)]",
           "shadow-theme-xs",
-          "placeholder:text-gray-400 dark:placeholder:text-white/30",
+          "placeholder:text-[var(--text-quaternary)]",
           "focus:border-brand-300 dark:focus:border-brand-800",
           "focus:outline-none focus:ring-3 focus:ring-brand-500/10",
           "transition-all duration-300",
@@ -199,24 +199,24 @@ export default defineAppConfig({
           "aria-[invalid=true]:border-error-300 dark:aria-[invalid=true]:border-error-700",
           "aria-[invalid=true]:ring-error-500/10",
           "disabled:cursor-not-allowed disabled:opacity-50",
-          "disabled:border-gray-100 disabled:bg-gray-50 dark:disabled:border-gray-800 dark:disabled:bg-white/[0.03]",
+          "disabled:border-[var(--border-subtle)] disabled:bg-[var(--surface-muted)]",
         ].join(" "),
       },
     },
     select: {
       slots: {
         base: [
-          "h-11 w-full rounded-lg border border-gray-300 dark:border-gray-700",
-          "bg-transparent dark:bg-gray-900",
+          "h-11 w-full rounded-lg border border-[var(--border-strong)]",
+          "bg-transparent dark:bg-[var(--surface-muted)]",
           "px-4 py-2.5 pr-11 text-sm",
-          "text-gray-800 dark:text-white/90",
+          "text-[var(--text-primary)]",
           "shadow-theme-xs",
           "appearance-none",
           "focus:border-brand-300 dark:focus:border-brand-800",
           "focus:outline-none focus:ring-3 focus:ring-brand-500/10",
           "transition-all duration-300",
           "disabled:cursor-not-allowed disabled:opacity-50",
-          "disabled:border-gray-100 disabled:bg-gray-50 dark:disabled:border-gray-800 dark:disabled:bg-white/[0.03]",
+          "disabled:border-[var(--border-subtle)] disabled:bg-[var(--surface-muted)]",
         ],
         item: [
           'cursor-pointer hover:bg-primary-500/20'
@@ -226,22 +226,22 @@ export default defineAppConfig({
     formField: {
       slots: {
         root: "space-y-1.5",
-        label: "mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400",
-        description: "text-theme-xs text-gray-500 dark:text-gray-400",
+        label: "mb-1.5 block text-sm font-medium text-[var(--text-secondary)]",
+        description: "text-theme-xs text-[var(--text-tertiary)]",
         error: "mt-1.5 text-theme-xs text-error-500",
       },
     },
     card: {
       slots: {
-        root: "rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] transition-all duration-300 overflow-hidden relative group",
+        root: "rounded-xl border border-[var(--border-default)] bg-[var(--surface-default)] transition-all duration-300 overflow-hidden relative group",
       },
     },
     drawer: {
       slots: {
-        root: "bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800",
-        header: "border-b border-gray-200 dark:border-gray-800 px-6 py-4",
+        root: "bg-[var(--surface-default)] border-l border-[var(--border-default)]",
+        header: "border-b border-[var(--border-default)] px-6 py-4",
         body: "flex-1 pb-4 px-6",
-        footer: "border-t border-gray-200 dark:border-gray-800 px-6 py-4",
+        footer: "border-t border-[var(--border-default)] px-6 py-4",
       },
     },
     switch: {
@@ -251,7 +251,7 @@ export default defineAppConfig({
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "data-[state=checked]:bg-brand-500 dark:data-[state=checked]:bg-brand-500",
-          "data-[state=unchecked]:bg-gray-300 dark:data-[state=unchecked]:bg-gray-600",
+          "data-[state=unchecked]:bg-[var(--border-strong)]",
         ].join(" "),
         thumb: [
           "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
@@ -265,7 +265,7 @@ export default defineAppConfig({
         base: [
           "rounded",
           "transition-all duration-300",
-          "border-2 border-gray-300 dark:border-gray-600",
+          "border-2 border-[var(--border-strong)]",
           "data-[state=checked]:bg-primary data-[state=checked]:border-primary",
           "focus-visible:ring-[3px] focus-visible:ring-purple-500/20",
         ].join(" "),
@@ -297,6 +297,12 @@ export default defineAppConfig({
         },
       ]
     },
+    toast: {
+      slots: {
+        root: "min-w-0 max-w-full overflow-visible",
+        progress: "absolute bottom-0 inset-x-0 h-0.5 rounded-full",
+      },
+    },
     notification: {
       slots: {
         root: "min-w-0 max-w-full",
@@ -304,6 +310,34 @@ export default defineAppConfig({
         description: "min-w-0 break-words overflow-wrap-anywhere",
         wrapper: "min-w-0",
       },
+    },
+    navigationMenu: {
+      compoundVariants: [
+        {
+          disabled: false,
+          active: false,
+          variant: "pill",
+          class: {
+            link: "hover:!text-[var(--text-tertiary)] hover:before:!bg-transparent transition-colors before:!transition-none",
+            linkLeadingIcon: "group-hover:!text-[var(--text-tertiary)] transition-colors",
+          },
+        },
+        {
+          variant: "pill",
+          active: true,
+          highlight: true,
+          class: {
+            link: "before:bg-[var(--surface-default)] before:shadow-xs before:border before:border-[var(--border-default)] before:!transition-none text-[var(--text-secondary)] hover:!text-[var(--text-secondary)] hover:before:!bg-[var(--surface-default)] hover:before:!border-[var(--border-default)]",
+            linkLeadingIcon: "!text-[var(--text-secondary)] group-hover:!text-[var(--text-secondary)]",
+          },
+        },
+        {
+          active: true,
+          class: {
+            childLink: "before:bg-[var(--surface-default)] before:shadow-xs before:border before:border-[var(--border-default)] before:!transition-none text-[var(--text-secondary)] hover:!text-[var(--text-secondary)] hover:before:!bg-[var(--surface-default)]",
+          },
+        },
+      ],
     },
     contextMenu: {
       slots: {

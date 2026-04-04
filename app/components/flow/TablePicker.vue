@@ -12,16 +12,16 @@
     @update:model-value="onSelect"
   >
     <template #leading>
-      <UIcon name="i-lucide-database" class="w-4 h-4 text-gray-400" />
+      <UIcon name="i-lucide-database" class="w-4 h-4 text-[var(--text-quaternary)]" />
     </template>
     <template #item="{ item }">
       <div class="flex items-center gap-2 w-full">
-        <UIcon name="i-lucide-table-2" class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+        <UIcon name="i-lucide-table-2" class="w-3.5 h-3.5 text-[var(--text-quaternary)] flex-shrink-0" />
         <span class="text-sm truncate">{{ item.label }}</span>
       </div>
     </template>
     <template #empty>
-      <span class="text-xs text-gray-400 px-2">{{ isLoading ? 'Searching...' : 'No tables found' }}</span>
+      <span class="text-xs text-[var(--text-quaternary)] px-2">{{ isLoading ? 'Searching...' : 'No tables found' }}</span>
     </template>
   </UInputMenu>
 </template>

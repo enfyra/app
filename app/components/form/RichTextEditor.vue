@@ -634,8 +634,8 @@ const handleButtonClick = (action: () => void, event: MouseEvent) => {
 const getButtonClass = (active: boolean, disabled = false) => {
   return [
     'p-2 rounded transition-colors',
-    disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-700',
-    active ? 'bg-gray-300 dark:bg-gray-600' : '',
+    disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--surface-muted)]',
+    active ? 'bg-[var(--border-strong)]' : '',
   ];
 };
 
@@ -929,25 +929,25 @@ onUnmounted(() => {
 
     <div
       v-if="editor"
-      class="rich-text-editor-wrapper inline-block w-full relative rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent dark:bg-gray-900"
+      class="rich-text-editor-wrapper inline-block w-full relative rounded-lg border border-[var(--border-strong)] bg-transparent dark:bg-[var(--surface-muted)]"
       :class="[
-        props.disabled ? 'cursor-not-allowed opacity-50 border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03]' : '',
+        props.disabled ? 'cursor-not-allowed opacity-50 border-[var(--border-subtle)] bg-[var(--surface-muted)]' : '',
       ]"
     >
       <div
         ref="containerRef"
         class="relative flex flex-col rounded-lg overflow-hidden"
         :class="[
-          props.disabled ? 'bg-gray-50 dark:bg-gray-800/50' : 'bg-transparent dark:bg-gray-900',
+          props.disabled ? 'bg-[var(--surface-muted)]' : 'bg-transparent dark:bg-[var(--surface-muted)]',
           !isResizing ? 'transition-[height] duration-300 ease-out' : ''
         ]"
         :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
       >
-      <div class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2 flex items-start gap-1 shrink-0"
+      <div class="border-b border-[var(--border-default)] bg-[var(--surface-muted)] p-2 flex items-start gap-1 shrink-0"
            :class="{ 'pointer-events-none': props.disabled }">
         <div class="flex flex-wrap gap-1 items-center flex-1">
           <template v-for="(group, groupIndex) in toolbarButtons" :key="'group-' + groupIndex">
-            <div v-if="groupIndex > 0" class="w-px bg-gray-200 dark:bg-gray-700 mx-1 self-stretch"></div>
+            <div v-if="groupIndex > 0" class="w-px bg-[var(--border-default)] mx-1 self-stretch"></div>
             <button
               v-for="key in group"
               :key="key"
@@ -970,7 +970,7 @@ onUnmounted(() => {
             </button>
           </template>
         </div>
-        <div class="w-px bg-gray-200 dark:bg-gray-700 self-stretch mx-1"></div>
+        <div class="w-px bg-[var(--border-default)] self-stretch mx-1"></div>
         <div class="flex gap-1 shrink-0 items-center">
           <button
             :class="getButtonClass(false, disabled || !canUndo)"
@@ -1007,12 +1007,12 @@ onUnmounted(() => {
       <div
         ref="resizeHandleRef"
         @mousedown="handleMouseDown"
-        class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-gray-600/50 dark:hover:bg-gray-500/50 transition-colors group z-50 select-none"
-        :class="{ 'bg-gray-600/50 dark:bg-gray-500/50': isResizing, 'pointer-events-none': props.disabled }"
+        class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-[var(--surface-muted)] transition-colors group z-50 select-none"
+        :class="{ 'bg-[var(--surface-muted)]': isResizing, 'pointer-events-none': props.disabled }"
         style="touch-action: none; pointer-events: auto;"
       >
         <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
-          <div class="w-12 h-0.5 bg-gray-500 dark:bg-gray-400 group-hover:bg-gray-400 dark:group-hover:bg-gray-300 rounded-full"></div>
+          <div class="w-12 h-0.5 bg-[var(--text-quaternary)] group-hover:bg-[var(--text-tertiary)] rounded-full"></div>
         </div>
       </div>
     </div>
@@ -1022,86 +1022,86 @@ onUnmounted(() => {
       <div
         v-if="tableMenuOpen && tableMenuStyle"
         ref="tableMenuRef"
-        class="fixed z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg py-1 min-w-[180px]"
+        class="fixed z-50 bg-[var(--surface-default)] border border-[var(--border-strong)] rounded-md shadow-lg py-1 min-w-[180px]"
         :style="{ top: tableMenuStyle.top, left: tableMenuStyle.left, maxHeight: '300px', overflowY: 'auto' }"
         @click.stop
       >
-        <div class="px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+        <div class="px-3 py-1 text-xs font-medium text-[var(--text-tertiary)] border-b border-[var(--border-default)]">
           Table Options
         </div>
         <button
           @click="addRowBefore"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:arrow-up" class="w-4 h-4" />
           Add Row Before
         </button>
         <button
           @click="addRowAfter"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:arrow-down" class="w-4 h-4" />
           Add Row After
         </button>
         <button
           @click="deleteRow"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:trash-2" class="w-4 h-4" />
           Delete Row
         </button>
-        <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+        <div class="border-t border-[var(--border-default)] my-1"></div>
         <button
           @click="addColumnBefore"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:arrow-left" class="w-4 h-4" />
           Add Column Before
         </button>
         <button
           @click="addColumnAfter"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:arrow-right" class="w-4 h-4" />
           Add Column After
         </button>
         <button
           @click="deleteColumn"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:trash-2" class="w-4 h-4" />
           Delete Column
         </button>
-        <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+        <div class="border-t border-[var(--border-default)] my-1"></div>
         <button
           @click="toggleHeaderRow"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:panel-top" class="w-4 h-4" />
           Toggle Header Row
         </button>
         <button
           @click="toggleHeaderColumn"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:columns" class="w-4 h-4" />
           Toggle Header Column
         </button>
         <button
           @click="mergeCells"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:combine" class="w-4 h-4" />
           Merge Cells
         </button>
         <button
           @click="splitCell"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
         >
           <Icon name="lucide:square" class="w-4 h-4" />
           Split Cell
         </button>
-        <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+        <div class="border-t border-[var(--border-default)] my-1"></div>
         <button
           @click="deleteTable"
           class="w-full px-3 py-2 text-left text-sm hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2"
@@ -1117,13 +1117,13 @@ onUnmounted(() => {
       <template #title>Add Link</template>
       <template #body>
         <div class="space-y-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">URL</label>
+          <label class="block text-sm font-medium text-[var(--text-secondary)]">URL</label>
           <input
             v-model="linkUrl"
             type="text"
             placeholder="https://example.com"
             autofocus
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="w-full px-3 py-2 border border-[var(--border-strong)] rounded-md bg-[var(--surface-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary-500"
             @keydown.enter="confirmLink"
           />
         </div>
@@ -1132,7 +1132,7 @@ onUnmounted(() => {
         <div class="flex justify-end gap-2">
           <button
             type="button"
-            class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            class="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] rounded-md transition-colors"
             @click="linkModalOpen = false"
           >
             Cancel
@@ -1152,13 +1152,13 @@ onUnmounted(() => {
       <template #title>Add Image</template>
       <template #body>
         <div class="space-y-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Image URL</label>
+          <label class="block text-sm font-medium text-[var(--text-secondary)]">Image URL</label>
           <input
             v-model="imageUrl"
             type="text"
             placeholder="https://example.com/image.jpg"
             autofocus
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            class="w-full px-3 py-2 border border-[var(--border-strong)] rounded-md bg-[var(--surface-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary-500"
             @keydown.enter="confirmImage"
           />
         </div>
@@ -1167,7 +1167,7 @@ onUnmounted(() => {
         <div class="flex justify-end gap-2">
           <button
             type="button"
-            class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            class="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] rounded-md transition-colors"
             @click="imageModalOpen = false"
           >
             Cancel
@@ -1189,17 +1189,17 @@ onUnmounted(() => {
         <div class="grid grid-cols-3 gap-2">
           <button
             @click="addRowBefore"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
           >
-            <Icon name="lucide:arrow-up" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <span class="text-xs text-gray-600 dark:text-gray-300">Row Above</span>
+            <Icon name="lucide:arrow-up" class="w-5 h-5 text-[var(--text-tertiary)]" />
+            <span class="text-xs text-[var(--text-secondary)]">Row Above</span>
           </button>
           <button
             @click="addRowAfter"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
           >
-            <Icon name="lucide:arrow-down" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <span class="text-xs text-gray-600 dark:text-gray-300">Row Below</span>
+            <Icon name="lucide:arrow-down" class="w-5 h-5 text-[var(--text-tertiary)]" />
+            <span class="text-xs text-[var(--text-secondary)]">Row Below</span>
           </button>
           <button
             @click="deleteRow"
@@ -1210,17 +1210,17 @@ onUnmounted(() => {
           </button>
           <button
             @click="addColumnBefore"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
           >
-            <Icon name="lucide:arrow-left" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <span class="text-xs text-gray-600 dark:text-gray-300">Col Left</span>
+            <Icon name="lucide:arrow-left" class="w-5 h-5 text-[var(--text-tertiary)]" />
+            <span class="text-xs text-[var(--text-secondary)]">Col Left</span>
           </button>
           <button
             @click="addColumnAfter"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
           >
-            <Icon name="lucide:arrow-right" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <span class="text-xs text-gray-600 dark:text-gray-300">Col Right</span>
+            <Icon name="lucide:arrow-right" class="w-5 h-5 text-[var(--text-tertiary)]" />
+            <span class="text-xs text-[var(--text-secondary)]">Col Right</span>
           </button>
           <button
             @click="deleteColumn"
@@ -1231,27 +1231,27 @@ onUnmounted(() => {
           </button>
           <button
             @click="toggleHeaderRow"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
           >
-            <Icon name="lucide:panel-top" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <span class="text-xs text-gray-600 dark:text-gray-300">Header Row</span>
+            <Icon name="lucide:panel-top" class="w-5 h-5 text-[var(--text-tertiary)]" />
+            <span class="text-xs text-[var(--text-secondary)]">Header Row</span>
           </button>
           <button
             @click="mergeCells"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
           >
-            <Icon name="lucide:merge" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <span class="text-xs text-gray-600 dark:text-gray-300">Merge</span>
+            <Icon name="lucide:merge" class="w-5 h-5 text-[var(--text-tertiary)]" />
+            <span class="text-xs text-[var(--text-secondary)]">Merge</span>
           </button>
           <button
             @click="splitCell"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
           >
-            <Icon name="lucide:split" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            <span class="text-xs text-gray-600 dark:text-gray-300">Split</span>
+            <Icon name="lucide:split" class="w-5 h-5 text-[var(--text-tertiary)]" />
+            <span class="text-xs text-[var(--text-secondary)]">Split</span>
           </button>
         </div>
-        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="mt-4 pt-4 border-t border-[var(--border-default)]">
           <button
             @click="deleteTable"
             class="w-full flex items-center justify-center gap-2 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

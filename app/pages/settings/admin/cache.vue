@@ -94,28 +94,28 @@ async function handleReload(action: typeof reloadActions[0]) {
     <div class="max-w-2xl">
       <CommonFormCard>
         <div class="space-y-4">
-          <p class="text-sm text-gray-600 dark:text-gray-400">
+          <p class="text-sm text-[var(--text-tertiary)]">
             Reload server-side caches after making changes to routes, tables, or schema. Use when changes are not reflected immediately.
           </p>
           <div class="grid gap-3 sm:grid-cols-2">
             <div
               v-for="action in reloadActions"
               :key="action.id"
-              class="flex items-start gap-4 rounded-xl border border-gray-200 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-800/30 p-4 transition-colors hover:border-gray-300 dark:hover:border-gray-600"
+              class="flex items-start gap-4 rounded-xl border border-[var(--border-default)] bg-[var(--surface-muted)] p-4 transition-colors hover:border-[var(--border-strong)]"
             >
               <div
                 :class="[
                   'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg',
-                  action.color === 'primary' ? 'bg-primary-500/20 text-primary-600 dark:text-primary-400' : 'bg-gray-200 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400',
+                  action.color === 'primary' ? 'bg-primary-500/20 text-primary-600 dark:text-primary-400' : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)]',
                 ]"
               >
                 <UIcon :name="action.icon" class="h-5 w-5" />
               </div>
               <div class="min-w-0 flex-1">
-                <h3 class="font-medium text-gray-900 dark:text-white">
+                <h3 class="font-medium text-[var(--text-primary)]">
                   {{ action.label }}
                 </h3>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                <p class="mt-0.5 text-xs text-[var(--text-tertiary)]">
                   {{ action.description }}
                 </p>
                 <UButton

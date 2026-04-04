@@ -34,7 +34,7 @@
         <CommonFormCard>
           <template #header>
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Flow Steps</h3>
+              <h3 class="text-lg font-semibold text-[var(--text-primary)]">Flow Steps</h3>
               <UButton icon="lucide:plus" size="sm" variant="solid" color="primary" @click="() => openCreateStep()">
                 Add Step
               </UButton>
@@ -56,7 +56,7 @@
         <CommonFormCard>
           <template #header>
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Executions</h3>
+              <h3 class="text-lg font-semibold text-[var(--text-primary)]">Recent Executions</h3>
               <UButton icon="i-lucide-refresh-cw" size="sm" variant="solid" color="neutral" :loading="execLoading" @click="refreshExecutions">Reload</UButton>
             </div>
           </template>
@@ -64,17 +64,17 @@
             <div
               v-for="exec in executions"
               :key="exec.id"
-              class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+              class="flex items-center justify-between p-3 bg-[var(--surface-muted)] rounded-lg text-sm cursor-pointer hover:bg-[var(--surface-muted)] transition-colors"
               @click="openExecution(exec)"
             >
               <div class="flex items-center gap-3">
                 <span class="w-2 h-2 rounded-full flex-shrink-0" :class="statusDotClass(exec.status)" />
                 <UBadge :color="getStatusColor(exec.status)" variant="soft" size="xs">{{ exec.status }}</UBadge>
-                <span class="text-gray-500 text-xs">{{ formatTime(exec.startedAt) }}</span>
+                <span class="text-[var(--text-tertiary)] text-xs">{{ formatTime(exec.startedAt) }}</span>
               </div>
               <div class="flex items-center gap-2">
-                <span v-if="exec.duration" class="text-gray-400 text-xs font-mono">{{ exec.duration }}ms</span>
-                <UIcon name="i-lucide-chevron-right" class="w-4 h-4 text-gray-400" />
+                <span v-if="exec.duration" class="text-[var(--text-quaternary)] text-xs font-mono">{{ exec.duration }}ms</span>
+                <UIcon name="i-lucide-chevron-right" class="w-4 h-4 text-[var(--text-quaternary)]" />
               </div>
             </div>
           </div>
@@ -83,7 +83,7 @@
               Load More
             </UButton>
           </div>
-          <p v-else-if="executions.length === 0" class="text-sm text-gray-400 text-center py-8">No executions yet. Click "Run Now" to trigger this flow.</p>
+          <p v-else-if="executions.length === 0" class="text-sm text-[var(--text-quaternary)] text-center py-8">No executions yet. Click "Run Now" to trigger this flow.</p>
         </CommonFormCard>
       </div>
 
@@ -100,12 +100,12 @@
         <div class="p-4 space-y-4">
           <UFormField label="Key" required class="w-full" :error="stepErrors.key">
             <UInput v-model="stepForm.key" placeholder="e.g. check_user" class="w-full" :color="stepErrors.key ? 'error' : undefined" @input="stepErrors.key = ''" />
-            <template #hint><span class="text-[10px]">Reference via <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">@FLOW.{{ stepForm.key || 'key' }}</code></span></template>
+            <template #hint><span class="text-[10px]">Reference via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW.{{ stepForm.key || 'key' }}</code></span></template>
           </UFormField>
 
           <UFormField label="Timeout" class="w-full">
             <UInput v-model.number="stepForm.timeout" type="number" class="w-full">
-              <template #trailing><span class="text-xs text-gray-400">ms</span></template>
+              <template #trailing><span class="text-xs text-[var(--text-quaternary)]">ms</span></template>
             </UInput>
           </UFormField>
 
@@ -113,7 +113,7 @@
             <USelect v-model="stepForm.type" :items="stepTypeOptions" value-key="value" class="w-full" :color="stepErrors.type ? 'error' : undefined" />
           </UFormField>
 
-          <div class="p-3 rounded-lg border" :class="stepErrors.config ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-800' : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800'">
+          <div class="p-3 rounded-lg border" :class="stepErrors.config ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-800' : 'bg-[var(--surface-muted)] border-[var(--border-default)]'">
             <p v-if="stepErrors.config" class="text-xs text-red-500 mb-2">{{ stepErrors.config }}</p>
             <FlowStepConfigEditor
               :type="stepForm.type"
@@ -131,10 +131,10 @@
             </UFormField>
           </div>
 
-          <div v-if="stepForm.parentId && !editingStepId" class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-sm">
-            <span class="text-gray-500">Branch:</span>
+          <div v-if="stepForm.parentId && !editingStepId" class="p-3 rounded-lg bg-[var(--surface-muted)] text-sm">
+            <span class="text-[var(--text-tertiary)]">Branch:</span>
             <UBadge :color="stepForm.branch === 'true' ? 'success' : 'error'" variant="soft" size="xs" class="ml-2">{{ stepForm.branch }}</UBadge>
-            <span class="text-gray-500 ml-2">of</span>
+            <span class="text-[var(--text-tertiary)] ml-2">of</span>
             <span class="font-medium ml-1">{{ getConditionLabel(stepForm.parentId) }}</span>
           </div>
           <div v-else-if="conditionSteps.length > 0" class="grid grid-cols-2 gap-3">
@@ -149,13 +149,13 @@
       </template>
       <template #footer>
         <div class="w-full">
-          <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+          <div class="px-4 py-3 border-t border-[var(--border-default)]">
             <UFormField label="Test Payload (optional)" class="w-full">
               <UTextarea v-model="testPayloadJson" :rows="2" class="w-full font-mono text-xs" placeholder='{"orderId": 123, "email": "test@test.com"}' />
-              <template #hint><span class="text-[10px]">Accessible via <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">@PAYLOAD</code> in step code</span></template>
+              <template #hint><span class="text-[10px]">Accessible via <code class="bg-[var(--surface-muted)] px-1 rounded">@PAYLOAD</code> in step code</span></template>
             </UFormField>
           </div>
-          <div v-if="testResult" class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+          <div v-if="testResult" class="px-4 py-3 border-t border-[var(--border-default)]">
             <div class="flex items-center gap-2 mb-2">
               <UIcon :name="testResult.success ? 'i-lucide-check-circle' : 'i-lucide-x-circle'" :class="testResult.success ? 'text-green-500' : 'text-red-500'" class="w-4 h-4" />
               <span class="text-xs font-medium" :class="testResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
@@ -163,9 +163,9 @@
               </span>
             </div>
             <div v-if="testResult.error" class="p-2 rounded bg-red-50 dark:bg-red-900/20 text-xs text-red-600 dark:text-red-400 break-words">{{ testResult.error }}</div>
-            <pre v-else-if="testResult.result !== undefined" class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-mono text-gray-700 dark:text-gray-300 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
+            <pre v-else-if="testResult.result !== undefined" class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono text-[var(--text-secondary)] overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
           </div>
-          <div class="flex gap-2 w-full p-4 border-t border-gray-200 dark:border-gray-700">
+          <div class="flex gap-2 w-full p-4 border-t border-[var(--border-default)]">
             <UButton v-if="editingStepId" color="error" variant="soft" @click="deleteCurrentStep">Delete</UButton>
             <UButton v-if="editingStepId" variant="soft" icon="i-lucide-copy" @click="duplicateStep">Duplicate</UButton>
             <UButton v-if="!testing" color="warning" variant="soft" icon="i-lucide-flask-conical" @click="testCurrentStep">Test</UButton>
@@ -190,20 +190,20 @@
       <template #body>
         <div v-if="selectedExec" class="p-4 space-y-4">
           <div class="grid grid-cols-2 gap-3">
-            <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-              <p class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Status</p>
+            <div class="p-3 rounded-lg bg-[var(--surface-muted)]">
+              <p class="text-[10px] uppercase tracking-wide text-[var(--text-tertiary)] mb-1">Status</p>
               <UBadge :color="getStatusColor(selectedExec.status)" variant="soft">{{ selectedExec.status }}</UBadge>
             </div>
-            <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-              <p class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Duration</p>
+            <div class="p-3 rounded-lg bg-[var(--surface-muted)]">
+              <p class="text-[10px] uppercase tracking-wide text-[var(--text-tertiary)] mb-1">Duration</p>
               <p class="text-sm font-mono">{{ selectedExec.duration ? `${selectedExec.duration}ms` : '-' }}</p>
             </div>
-            <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-              <p class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Started</p>
+            <div class="p-3 rounded-lg bg-[var(--surface-muted)]">
+              <p class="text-[10px] uppercase tracking-wide text-[var(--text-tertiary)] mb-1">Started</p>
               <p class="text-xs">{{ formatTime(selectedExec.startedAt) }}</p>
             </div>
-            <div class="p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-              <p class="text-[10px] uppercase tracking-wide text-gray-500 mb-1">Completed</p>
+            <div class="p-3 rounded-lg bg-[var(--surface-muted)]">
+              <p class="text-[10px] uppercase tracking-wide text-[var(--text-tertiary)] mb-1">Completed</p>
               <p class="text-xs">{{ formatTime(selectedExec.completedAt) }}</p>
             </div>
           </div>
@@ -227,19 +227,19 @@
           </div>
 
           <div v-if="execStepTimeline.length > 0" class="space-y-2">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Steps</p>
+            <p class="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Steps</p>
             <div v-for="s in execStepTimeline" :key="s.key" class="p-2 rounded-lg border" :class="stepTimelineClass(s)">
               <div class="flex items-center gap-2 cursor-pointer" @click="toggleStepResult(s.key)">
                 <UIcon :name="stepTimelineIcon(s)" class="w-3.5 h-3.5 flex-shrink-0" :class="stepTimelineIconColor(s)" />
-                <span class="text-xs font-medium flex-1" :class="s.status === 'skipped' ? 'text-gray-400' : ''">{{ s.key }}</span>
+                <span class="text-xs font-medium flex-1" :class="s.status === 'skipped' ? 'text-[var(--text-quaternary)]' : ''">{{ s.key }}</span>
                 <UBadge v-if="s.type === 'condition' && s.branch" :color="s.branch === 'true' ? 'success' : 'error'" variant="soft" size="xs">{{ s.branch }}</UBadge>
                 <UBadge v-if="s.status === 'skipped'" color="neutral" variant="soft" size="xs">skipped</UBadge>
                 <UBadge v-if="s.retries" color="warning" variant="soft" size="xs">{{ s.retries }} retries</UBadge>
-                <span v-if="s.duration" class="text-[10px] font-mono text-gray-400">{{ s.duration }}ms</span>
-                <UIcon v-if="parsedContext[s.key]" :name="expandedSteps[s.key] ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3 text-gray-400" />
+                <span v-if="s.duration" class="text-[10px] font-mono text-[var(--text-quaternary)]">{{ s.duration }}ms</span>
+                <UIcon v-if="parsedContext[s.key]" :name="expandedSteps[s.key] ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3 text-[var(--text-quaternary)]" />
               </div>
-              <p v-if="s.status === 'skipped' && s.reason" class="text-[10px] text-gray-400 mt-1 pl-5">{{ s.reason }}</p>
-              <pre v-if="expandedSteps[s.key] && parsedContext[s.key]" class="mt-1 p-2 rounded bg-gray-100 dark:bg-gray-900 text-[10px] font-mono text-gray-600 dark:text-gray-400 overflow-auto max-h-[120px] whitespace-pre-wrap">{{ JSON.stringify(parsedContext[s.key], null, 2) }}</pre>
+              <p v-if="s.status === 'skipped' && s.reason" class="text-[10px] text-[var(--text-quaternary)] mt-1 pl-5">{{ s.reason }}</p>
+              <pre v-if="expandedSteps[s.key] && parsedContext[s.key]" class="mt-1 p-2 rounded bg-[var(--surface-muted)] text-[10px] font-mono text-[var(--text-tertiary)] overflow-auto max-h-[120px] whitespace-pre-wrap">{{ JSON.stringify(parsedContext[s.key], null, 2) }}</pre>
             </div>
           </div>
           <UButton v-if="selectedExec?.status === 'failed'" color="primary" variant="soft" icon="i-lucide-rotate-ccw" block class="mt-3" @click="rerunExecution">

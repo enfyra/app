@@ -302,14 +302,14 @@ const { isMobile, isTablet } = useScreen();
         size="xs"
         class="w-20"
       />
-      <span v-else class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">
+      <span v-else class="text-xs px-2 py-1 bg-[var(--surface-muted)] rounded">
         {{ group.operator.toUpperCase() }}
       </span>
     </div>
 
     <div
       :class="[
-        (isMobile || isTablet) ? 'space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-700' : 'space-y-2 pl-4 border-l-2 border-gray-200 dark:border-gray-700',
+        (isMobile || isTablet) ? 'space-y-2 pl-2 border-l-2 border-[var(--border-default)]' : 'space-y-2 pl-4 border-l-2 border-[var(--border-default)]',
         ''
       ]"
     >
@@ -329,7 +329,7 @@ const { isMobile, isTablet } = useScreen();
             <div
               v-if="!readonly"
               :draggable="true"
-              class="flex-shrink-0 pt-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing"
+              class="flex-shrink-0 pt-2 text-[var(--text-quaternary)] hover:text-[var(--text-secondary)] cursor-grab active:cursor-grabbing"
               @dragstart="(e) => onDragStart(index, e)"
               @dragend="onDragEnd"
             >
@@ -350,7 +350,7 @@ const { isMobile, isTablet } = useScreen();
                 @remove="removeItem"
               />
 
-              <div v-else :class="(isMobile || isTablet) ? 'border border-gray-200 dark:border-gray-700 rounded-lg p-2' : 'border border-gray-200 dark:border-gray-700 rounded-lg p-3'">
+              <div v-else :class="(isMobile || isTablet) ? 'border border-[var(--border-default)] rounded-lg p-2' : 'border border-[var(--border-default)] rounded-lg p-3'">
 
                 <div
                   v-if="item.relationContext"
@@ -358,7 +358,7 @@ const { isMobile, isTablet } = useScreen();
                 >
                   <span class="font-medium">Filtering in relation:</span>
                   {{ item.relationContext }}
-                  <span class="text-gray-500 dark:text-gray-400"
+                  <span class="text-[var(--text-tertiary)]"
                     >({{
                       getTargetTableNameForGroup(
                         item,
@@ -410,12 +410,12 @@ const { isMobile, isTablet } = useScreen();
           'mt-2 mb-2',
           isGroupEndZoneActive()
             ? 'border-primary-400 bg-primary-50 dark:bg-primary-950/30'
-            : 'border-gray-300 dark:border-gray-600'
+            : 'border-[var(--border-strong)]'
         ]"
         @dragover="onEndZoneDragOver"
         @drop="onEndZoneDrop"
       >
-        <div class="flex items-center justify-center h-10 text-xs text-gray-400 dark:text-gray-500 select-none">
+        <div class="flex items-center justify-center h-10 text-xs text-[var(--text-quaternary)] select-none">
           <UIcon name="lucide:plus" class="w-4 h-4 mr-1" />
           Drop here
         </div>

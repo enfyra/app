@@ -1,13 +1,25 @@
 <script setup lang="ts">
-import MenuItemRenderer from './MenuItemRenderer.vue';
-
 const route = useRoute();
+const router = useRouter();
 const { menuGroups } = useMenuRegistry();
 const { checkPermissionCondition } = usePermissions();
-const { isMobile, isTablet, width } = useScreen();
-const { setSidebarVisible, settings } = useGlobalState();
+const { width } = useScreen();
+const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
 const { metadataReloading } = useAdminSocket();
+
+if (import.meta.client) {
+  const saved = localStorage.getItem('sidebar-open');
+  if (saved !== null && width.value > 1024) {
+    sidebarVisible.value = saved === 'true';
+  }
+}
+
+watch(sidebarVisible, (val) => {
+  if (import.meta.client && width.value > 1024) {
+    localStorage.setItem('sidebar-open', String(val));
+  }
+});
 
 const faviconUrl = computed(() => {
   if (!settings.value?.projectFavicon) return null;
@@ -18,370 +30,163 @@ const faviconUrl = computed(() => {
   return getFileUrl(favicon);
 });
 
-function findActiveRoutes(items: any[], active: Set<string>, currentPath: string) {
-  const isRouteMatch = (routePath: string) =>
-    currentPath === routePath ||
-    (currentPath.startsWith(routePath) &&
-     (currentPath[routePath.length] === '/' || currentPath[routePath.length] === undefined));
-
-  for (const item of items) {
-    const itemRoute = item.route || item.path;
-    if (itemRoute && isRouteMatch(itemRoute)) {
-      active.add(itemRoute);
-    }
-
-    if (item.items && item.items.length > 0) {
-      findActiveRoutes(item.items, active, currentPath);
-    }
-  }
-}
-
-const activeRoutes = computed(() => {
-  const active = new Set<string>();
-  const currentPath = route.path;
-
-  const isRouteMatch = (routePath: string) =>
-    currentPath === routePath ||
-    (currentPath.startsWith(routePath) &&
-     (currentPath[routePath.length] === '/' || currentPath[routePath.length] === undefined));
-
-  for (const group of visibleGroups.value) {
-    if (group.route && isRouteMatch(group.route)) {
-      active.add(group.route);
-    }
-
-    if (group.items && group.items.length > 0) {
-      findActiveRoutes(group.items, active, currentPath);
-    }
-  }
-
-  return active;
-});
-
-const activeGroups = computed(() => {
-  const active = new Set<string>();
-
-  for (const group of visibleGroups.value) {
-    if (group.route && activeRoutes.value.has(group.route)) {
-      active.add(group.id);
-      continue;
-    }
-
-    if (group.items) {
-      const hasActiveItem = group.items.some((item: any) => {
-        const itemRoute = item.route || item.path;
-        if (itemRoute && activeRoutes.value.has(itemRoute)) return true;
-
-        return item.children?.some((child: any) => {
-          const childRoute = child.route || child.path;
-          return childRoute && activeRoutes.value.has(childRoute);
-        });
-      });
-
-      if (hasActiveItem) {
-        active.add(group.id);
-      }
-    }
-  }
-
-  return active;
-});
-
-const expandedGroups = ref<Set<string>>(new Set());
-const searchQuery = ref('');
-
-const SIDEBAR_EXPANDED_KEY = 'sidebar-expanded-groups';
-const hasStoredSidebarExpandedPreference = ref(false);
-
-function collectDefaultExpandedMenuIds(groups: any[]): string[] {
-  const ids: string[] = [];
-  function walkDropdownItems(items: any[]) {
-    for (const item of items) {
-      if (item.type === 'Dropdown Menu' && item.items?.length) {
-        ids.push(String(item.id));
-        walkDropdownItems(item.items);
-      }
-    }
-  }
-  for (const group of groups) {
-    if (group.component) continue;
-    if (group.type === 'Menu') continue;
-    if (group.items?.length) {
-      ids.push(String(group.id));
-      walkDropdownItems(group.items);
-    }
-  }
-  return ids;
-}
-
-function applyDefaultExpandedGroups() {
-  expandedGroups.value = new Set(collectDefaultExpandedMenuIds(menuGroups.value));
-}
-
-if (import.meta.client) {
-  const raw = localStorage.getItem(SIDEBAR_EXPANDED_KEY);
-  if (raw !== null) {
-    try {
-      const parsed = JSON.parse(raw) as unknown;
-      if (Array.isArray(parsed)) {
-        expandedGroups.value = new Set(parsed.map((id) => String(id)));
-        hasStoredSidebarExpandedPreference.value = true;
-      }
-    } catch {
-    }
-  }
-}
-
-function toggleGroup(groupId: string) {
-  hasStoredSidebarExpandedPreference.value = true;
-  const id = String(groupId);
-  const next = new Set(expandedGroups.value);
-  if (next.has(id)) {
-    next.delete(id);
-  } else {
-    next.add(id);
-  }
-  expandedGroups.value = next;
-}
-
-const isGroupExpanded = (groupId: string) => expandedGroups.value.has(String(groupId));
-const handleMenuClick = () => {
-  if (width.value <= 1024) setSidebarVisible(false);
-};
-
 const visibleGroups = computed(() => {
-  const query = searchQuery.value.toLowerCase().trim();
-
   return menuGroups.value
     .filter(group => !group.permission || checkPermissionCondition(group.permission))
     .map(group => {
       const permittedItems = group.items?.filter((item: any) =>
         !item.permission || checkPermissionCondition(item.permission)
       ) || [];
-
-      if (!query || group.label.toLowerCase().includes(query)) {
-        return { ...group, items: permittedItems };
-      }
-
-      const matchedItems = permittedItems.filter((item: any) =>
-        item.label.toLowerCase().includes(query) ||
-        item.items?.some((child: any) => child.label.toLowerCase().includes(query))
-      );
-
-      return { ...group, items: matchedItems };
-    })
-    .filter(group => {
-      if (!query) return true;
-      if (group.type === 'Menu') return true;
-      return group.items?.length > 0;
+      return { ...group, items: permittedItems };
     });
 });
 
-watch(
-  () => menuGroups.value,
-  () => {
-    if (!hasStoredSidebarExpandedPreference.value) {
-      applyDefaultExpandedGroups();
+function isRouteActive(itemRoute?: string): boolean {
+  if (!itemRoute) return false;
+  const currentPath = route.path;
+  return currentPath === itemRoute ||
+    (currentPath.startsWith(itemRoute) && (currentPath[itemRoute.length] === '/' || currentPath[itemRoute.length] === undefined));
+}
+
+function convertItem(item: any): any {
+  const itemRoute = item.route || item.path || undefined;
+  const result: any = {
+    label: item.label,
+    icon: item.icon || 'lucide:circle',
+  };
+
+  if (item.type === 'Dropdown Menu' && item.items?.length) {
+    result.children = item.items.map((child: any) => {
+      const childRoute = child.route || child.path || undefined;
+      return {
+        label: child.label,
+        icon: child.icon || 'lucide:circle',
+        to: childRoute,
+        active: isRouteActive(childRoute),
+      };
+    });
+    result.defaultOpen = true;
+  } else {
+    result.to = itemRoute;
+    result.active = isRouteActive(itemRoute);
+  }
+
+  return result;
+}
+
+const navigationItems = computed(() => {
+  const topGroups = visibleGroups.value.filter(g => g.position !== 'bottom' && !g.component);
+
+  const groups: any[][] = [];
+
+  for (const group of topGroups) {
+    if (group.type === 'Menu') {
+      const groupRoute = group.route || group.path || undefined;
+      groups.push([{
+        label: group.label,
+        icon: group.icon,
+        to: groupRoute,
+        active: isRouteActive(groupRoute),
+      }]);
+      continue;
     }
-  },
-  { deep: true, immediate: true }
-);
 
-watch(expandedGroups, (newVal) => {
-  if (!hasStoredSidebarExpandedPreference.value) return;
-  if (!import.meta.client) return;
-  localStorage.setItem(SIDEBAR_EXPANDED_KEY, JSON.stringify([...newVal]));
+    if (!group.items || group.items.length === 0) continue;
+
+    const items: any[] = [
+      { label: group.label, type: 'label' as const },
+    ];
+
+    for (const item of group.items) {
+      items.push(convertItem(item));
+    }
+
+    groups.push(items);
+  }
+
+  return groups;
 });
 
-watch(searchQuery, (newQuery) => {
-  if (!newQuery.trim()) return;
-  const next = new Set(expandedGroups.value);
-  visibleGroups.value.forEach((group) => {
-    if (group.items?.length) next.add(String(group.id));
-  });
-  expandedGroups.value = next;
+const componentGroups = computed(() => {
+  return visibleGroups.value.filter(g => g.position !== 'bottom' && g.component);
 });
 
+const bottomGroups = computed(() => {
+  return visibleGroups.value.filter(g => g.position === 'bottom');
+});
+
+const isDesktopCollapsed = computed(() => !sidebarVisible.value && width.value > 1024);
+
+router.afterEach(() => {
+  if (width.value <= 1024) {
+    setSidebarVisible(false);
+  }
+});
 </script>
 
 <template>
-  <nav class="flex flex-col h-full relative" style="height: 100dvh;">
-
-    <div class="h-16 flex items-center justify-between px-5 py-8 relative" style="border-bottom: 1px solid var(--glass-border);">
-      <div class="flex items-center gap-3">
-        <div class="relative">
-          <div class="relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
-            <UIcon v-if="metadataReloading" name="lucide:loader-circle" class="text-brand-500 animate-spin" size="25" />
-            <img v-else-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
-            <UIcon v-else name="lucide:database" class="w-5 h-5 text-brand-500" />
-          </div>
+  <USidebar
+    v-model:open="sidebarVisible"
+    variant="inset"
+    collapsible="icon"
+    :style="{ '--sidebar-width': '290px' }"
+    :ui="{
+      container: 'h-full !z-[99999]',
+      body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto p-4',
+      footer: 'flex flex-col gap-1.5 overflow-hidden w-full !px-2 !pt-2 !pb-0',
+    }"
+  >
+    <template #title="{ state }">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <div class="relative w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+          <UIcon v-if="metadataReloading" name="lucide:loader-circle" class="text-primary animate-spin" size="20" />
+          <img v-else-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
+          <UIcon v-else name="lucide:database" class="w-5 h-5 text-primary" />
         </div>
-        <div>
-          <span class="font-semibold text-gray-900 dark:text-white/90 text-base">{{ settings?.projectName || 'Enfyra' }}</span>
-          <p class="text-xs text-gray-500 dark:text-gray-400">{{ settings?.projectDescription || 'CMS' }}</p>
-        </div>
+        <template v-if="state === 'expanded'">
+          <span class="font-semibold text-sm truncate">{{ settings?.projectName || 'Enfyra' }}</span>
+        </template>
       </div>
-    </div>
+    </template>
+    <template #description="{ state }">
+      <p v-if="state === 'expanded'" class="text-xs text-[var(--text-quaternary)] truncate ps-11">{{ settings?.projectDescription || 'CMS' }}</p>
+    </template>
 
-    <div class="px-3 pt-4 pb-2">
-      <div class="relative">
-        <input
-        v-model="searchQuery"
-          type="text"
-        placeholder="Search menu..."
-          class="h-10 w-full rounded-xl glass-input px-4 py-2.5 pl-10 text-sm text-gray-800 dark:text-white/90 placeholder:text-gray-400 dark:placeholder:text-white/30 focus:border-violet-500/40 dark:focus:border-violet-500/30 focus:outline-none focus:ring-3 focus:ring-violet-500/10"
-          :class="searchQuery ? 'pr-10' : ''"
+    <template #default="{ state }">
+      <div v-for="group in componentGroups" :key="group.id" class="mb-3">
+        <component v-if="state === 'expanded'" :is="group.component" v-bind="group.componentProps || {}" />
+      </div>
+
+      <UNavigationMenu
+        :items="navigationItems"
+        orientation="vertical"
+        :collapsed="state === 'collapsed'"
+        :tooltip="state === 'collapsed'"
+        highlight
+        highlight-color="primary"
+        color="primary"
+        :ui="{
+          list: 'isolate min-w-0 space-y-1',
+          link: 'py-2 px-2.5 overflow-hidden gap-2.5 after:w-[2px] group-data-[state=collapsed]/sidebar:after:hidden group-data-[state=collapsed]/sidebar:py-1 group-data-[state=collapsed]/sidebar:px-1.5',
+          linkLeadingIcon: 'size-5 shrink-0 text-[var(--text-quaternary)]',
+          separator: 'my-3 border-b border-[var(--border-default)] group-data-[state=collapsed]/sidebar:my-1',
+          childList: 'ms-[13px] border-s-2 border-primary/30 space-y-0.5 group-data-[state=collapsed]/sidebar:border-transparent group-data-[state=collapsed]/sidebar:ms-0',
+          childItem: 'ps-1.5 -ms-px',
+          childLink: 'py-1.5 px-2.5',
+        }"
       />
-        <UIcon name="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
-        <button
-          v-if="searchQuery"
-          @click="searchQuery = ''"
-          class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-        >
-          <UIcon name="lucide:x" class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+    </template>
 
-    <div class="flex-1 overflow-y-auto py-3 custom-scrollbar">
-      <div
-        v-if="visibleGroups.filter(g => g.position !== 'bottom').length === 0"
-        class="flex flex-col items-center justify-center py-12 px-4 text-center"
-      >
-        <UIcon name="lucide:search-x" class="w-12 h-12 text-gray-400 dark:text-gray-500 mb-3" />
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          {{ searchQuery ? 'No menu items found' : 'No menu items available' }}
-        </p>
-        <p v-if="searchQuery" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          Try a different search term
-        </p>
-      </div>
-
-      <div class="space-y-6 relative">
-        <template
-          v-for="group in visibleGroups.filter(g => g.position !== 'bottom')"
-          :key="group.id"
-        >
-            <div
-              v-if="group.component"
-              class="space-y-1 px-3"
-            >
-              <component
-                :is="group.component"
-                v-bind="group.componentProps || {}"
-              />
-            </div>
-
-            <div
-              v-else-if="group.type === 'Menu'"
-              class="space-y-1 px-3"
-            >
-              <NuxtLink
-                v-if="group.route || group.path"
-                :to="(group.route || group.path)!"
-                @click="handleMenuClick"
-                :class="[
-                  'menu-item group',
-                  ((group.route || group.path) && activeRoutes.has((group.route || group.path)!)) ? 'menu-item-active' : 'menu-item-inactive'
-                ]"
-              >
-                <span :class="((group.route || group.path) && activeRoutes.has((group.route || group.path)!)) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'">
-                <UIcon
-                  :name="group.icon"
-                  class="w-5 h-5 flex-shrink-0"
-                />
-                </span>
-                <span class="menu-item-text">{{ group.label }}</span>
-              </NuxtLink>
-              <div
-                v-else
-                :class="[
-                  'menu-item group',
-                  'menu-item-inactive'
-                ]"
-              >
-                <span class="menu-item-icon-inactive">
-                <UIcon
-                  :name="group.icon"
-                  class="w-5 h-5 flex-shrink-0"
-                />
-                </span>
-                <span class="menu-item-text">{{ group.label }}</span>
-              </div>
-            </div>
-
-            <div v-else>
-        <button
-          @click="toggleGroup(group.id)"
-          class="w-full flex items-center justify-between px-6 py-2 text-xs uppercase tracking-wider transition-colors group cursor-pointer text-gray-400 dark:text-gray-500"
-        >
-          <span>{{ group.label }}</span>
-          <UIcon
-            :name="'lucide:chevron-right'"
-            :class="[
-              'w-4 h-4 transition-transform duration-300 ease-out',
-              isGroupExpanded(group.id) ? 'rotate-90 text-violet-400' : 'text-gray-500 dark:text-gray-400'
-            ]"
+    <template #footer>
+      <template v-for="group in bottomGroups" :key="group.id" >
+        <PermissionGate :condition="group.permission as any">
+          <component
+            v-if="group.component"
+            :is="group.component"
+            v-bind="{ ...(group.componentProps || {}), collapsed: isDesktopCollapsed }"
           />
-        </button>
-
-        <div
-          :class="[
-            'grid transition-all duration-300 ease-out',
-            isGroupExpanded(group.id) && group.items && group.items.length > 0 ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-          ]"
-        >
-          <div class="overflow-hidden">
-            <div
-              v-if="group.items && group.items.length > 0"
-              class="space-y-1.5 px-3 mt-2"
-            >
-          <template v-for="item in group.items" :key="item.id">
-            <PermissionGate :condition="item.permission as any">
-              <MenuItemRenderer
-                :item="item"
-                :level="0"
-                :active-routes="activeRoutes"
-                :expanded-groups="expandedGroups"
-                @toggle-group="toggleGroup"
-                @menu-click="handleMenuClick"
-              />
-            </PermissionGate>
-          </template>
-            </div>
-          </div>
-        </div>
-            </div>
-          </template>
-        </div>
-    </div>
-
-    <div v-if="visibleGroups.some(g => g.position === 'bottom')" class="relative" style="border-top: 1px solid var(--glass-border);">
-      <template v-for="(group, index) in visibleGroups.filter(g => g.position === 'bottom')" :key="group.id">
-        <div :class="index > 0 ? 'glass-subtle' : ''">
-          <PermissionGate :condition="group.permission as any">
-            <div :class="(isMobile || isTablet) ? 'p-2' : 'p-4'">
-              <component
-                v-if="group.component"
-                :is="group.component"
-                v-bind="group.componentProps || {}"
-              />
-              <UButton
-                v-else
-                @click="group.onClick"
-                :icon="group.icon"
-                :label="group.label"
-                variant="ghost"
-                color="error"
-                :class="[
-                  'w-full justify-start',
-                  group.class ? group.class : ''
-                ]"
-              />
-            </div>
-          </PermissionGate>
-        </div>
+        </PermissionGate>
       </template>
-    </div>
-  </nav>
+    </template>
+  </USidebar>
 </template>

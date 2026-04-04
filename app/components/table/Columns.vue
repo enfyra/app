@@ -430,7 +430,7 @@ watch(
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'" v-if="currentColumn">
           
           <div
-            :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 bg-white dark:bg-gray-800/50' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 bg-white dark:bg-gray-800/50'"
+            :class="(isMobile || isTablet) ? 'surface-card rounded-lg p-3' : 'surface-card rounded-xl p-6'"
           >
             <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
               <UIcon name="lucide:edit-3" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />
@@ -466,7 +466,7 @@ watch(
 
       <template #footer>
         
-        <div :class="(isMobile || isTablet) ? 'bg-white dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3' : 'bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/30 p-4'">
+        <div :class="(isMobile || isTablet) ? 'surface-card rounded-lg p-3' : 'surface-card rounded-xl p-4'">
           <div class="flex items-center justify-between">
             <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
               <UIcon
@@ -508,7 +508,7 @@ watch(
       </template>
       <template #body>
         <div class="space-y-4">
-          <p class="text-sm text-gray-700 dark:text-gray-300 text-center">
+          <p class="text-sm text-[var(--text-secondary)] text-center">
             You have unsaved changes to this column. Are you sure you want to close? All changes will be lost.
           </p>
         </div>

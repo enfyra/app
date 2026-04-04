@@ -389,7 +389,7 @@ onMounted(() => {
             <div class="text-base font-semibold leading-6">
               Review Changes
             </div>
-            <div class="mt-0.5 text-sm text-gray-600 dark:text-gray-300">
+            <div class="mt-0.5 text-sm text-[var(--text-tertiary)]">
               {{ schemaConfirmSubtitle }}
             </div>
           </div>
@@ -397,15 +397,15 @@ onMounted(() => {
       </template>
       <template #body>
         <div class="space-y-4">
-          <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/20 px-4 py-3">
+          <div class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-muted)] px-4 py-3">
             <div class="flex items-center justify-between gap-3">
               <div class="min-w-0">
-                <div class="text-sm text-gray-700 dark:text-gray-200">
-                  <span class="text-gray-500 dark:text-gray-400">Table</span>
+                <div class="text-sm text-[var(--text-secondary)]">
+                  <span class="text-[var(--text-tertiary)]">Table</span>
                   <span class="mx-2">·</span>
                   <span class="font-bold font-mono">{{ schemaConfirmTableName }}</span>
                 </div>
-                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <div class="mt-1 text-xs text-[var(--text-tertiary)]">
                   Operation: update
                 </div>
               </div>
@@ -422,8 +422,8 @@ onMounted(() => {
 
           <div class="space-y-2">
             <div class="flex items-center justify-between">
-              <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Change summary</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">Review before confirming</div>
+              <div class="text-sm font-semibold text-[var(--text-primary)]">Change summary</div>
+              <div class="text-xs text-[var(--text-tertiary)]">Review before confirming</div>
             </div>
 
             <div v-if="schemaConfirmDetails?.warning" class="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 px-4 py-3">
@@ -437,16 +437,16 @@ onMounted(() => {
             </div>
 
             <div class="grid grid-cols-1 gap-3">
-              <div v-if="modalRenamedColumns.length" class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/20 px-4 py-3">
+              <div v-if="modalRenamedColumns.length" class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-muted)] px-4 py-3">
                 <div class="flex items-center justify-between">
-                  <div class="text-sm font-medium text-gray-900 dark:text-gray-100">Renamed columns</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ modalRenamedColumns.length }}</div>
+                  <div class="text-sm font-medium text-[var(--text-primary)]">Renamed columns</div>
+                  <div class="text-xs text-[var(--text-tertiary)]">{{ modalRenamedColumns.length }}</div>
                 </div>
                 <ul class="mt-2 space-y-1.5">
                   <li v-for="c in modalRenamedColumns" :key="c.from + '->' + c.to" class="flex items-center gap-2 text-sm">
-                    <span class="rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 px-2 py-1 font-mono">{{ c.from }}</span>
-                    <Icon name="lucide:arrow-right" class="h-4 w-4 text-gray-400" />
-                    <span class="rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 px-2 py-1 font-mono">{{ c.to }}</span>
+                    <span class="rounded-md bg-[var(--surface-muted)] border border-[var(--border-default)] px-2 py-1 font-mono">{{ c.from }}</span>
+                    <Icon name="lucide:arrow-right" class="h-4 w-4 text-[var(--text-quaternary)]" />
+                    <span class="rounded-md bg-[var(--surface-muted)] border border-[var(--border-default)] px-2 py-1 font-mono">{{ c.to }}</span>
                   </li>
                 </ul>
               </div>
@@ -475,22 +475,22 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div v-if="modalChangedColumns.length" class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/20 px-4 py-3">
+              <div v-if="modalChangedColumns.length" class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-muted)] px-4 py-3">
                 <div class="flex items-center justify-between">
-                  <div class="text-sm font-medium text-gray-900 dark:text-gray-100">Modified columns</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ modalChangedColumns.length }}</div>
+                  <div class="text-sm font-medium text-[var(--text-primary)]">Modified columns</div>
+                  <div class="text-xs text-[var(--text-tertiary)]">{{ modalChangedColumns.length }}</div>
                 </div>
                 <div class="mt-2 flex flex-wrap gap-2">
-                  <span v-for="c in modalChangedColumns" :key="c" class="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 px-2.5 py-1 text-xs font-mono text-gray-900 dark:text-gray-100">
+                  <span v-for="c in modalChangedColumns" :key="c" class="inline-flex items-center rounded-full bg-[var(--surface-muted)] border border-[var(--border-default)] px-2.5 py-1 text-xs font-mono text-[var(--text-primary)]">
                     {{ c }}
                   </span>
                 </div>
               </div>
 
-              <div v-if="modalAddedUniques.length || modalRemovedUniques.length" class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/20 px-4 py-3">
+              <div v-if="modalAddedUniques.length || modalRemovedUniques.length" class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-muted)] px-4 py-3">
                 <div class="flex items-center justify-between">
-                  <div class="text-sm font-medium text-gray-900 dark:text-gray-100">Unique constraints</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">
+                  <div class="text-sm font-medium text-[var(--text-primary)]">Unique constraints</div>
+                  <div class="text-xs text-[var(--text-tertiary)]">
                     <span v-if="modalAddedUniques.length">+{{ modalAddedUniques.length }}</span>
                     <span v-if="modalAddedUniques.length && modalRemovedUniques.length" class="mx-1">·</span>
                     <span v-if="modalRemovedUniques.length">-{{ modalRemovedUniques.length }}</span>
@@ -514,10 +514,10 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div v-if="modalAddedIndexes.length || modalRemovedIndexes.length" class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/20 px-4 py-3">
+              <div v-if="modalAddedIndexes.length || modalRemovedIndexes.length" class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-muted)] px-4 py-3">
                 <div class="flex items-center justify-between">
-                  <div class="text-sm font-medium text-gray-900 dark:text-gray-100">Indexes</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">
+                  <div class="text-sm font-medium text-[var(--text-primary)]">Indexes</div>
+                  <div class="text-xs text-[var(--text-tertiary)]">
                     <span v-if="modalAddedIndexes.length">+{{ modalAddedIndexes.length }}</span>
                     <span v-if="modalAddedIndexes.length && modalRemovedIndexes.length" class="mx-1">·</span>
                     <span v-if="modalRemovedIndexes.length">-{{ modalRemovedIndexes.length }}</span>
@@ -559,12 +559,12 @@ onMounted(() => {
 
           <div v-if="schemaConfirmDetails?.requiredConfirmHash" class="space-y-1">
             <div class="flex items-center justify-between">
-              <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Confirm hash</div>
+              <div class="text-sm font-semibold text-[var(--text-primary)]">Confirm hash</div>
               <UButton size="xs" variant="ghost" @click="copyConfirmHash">
                 Copy
               </UButton>
             </div>
-            <div class="text-xs font-mono break-all rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 px-4 py-3">
+            <div class="text-xs font-mono break-all rounded-xl border border-[var(--border-default)] bg-[var(--surface-muted)] px-4 py-3">
               {{ schemaConfirmDetails.requiredConfirmHash }}
             </div>
           </div>

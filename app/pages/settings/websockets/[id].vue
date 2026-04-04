@@ -40,7 +40,7 @@
 
     <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Event Handlers</h3>
+        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Event Handlers</h3>
         <UButton
           icon="lucide:plus"
           size="sm"

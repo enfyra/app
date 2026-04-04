@@ -267,8 +267,8 @@ function getFileIconAndColor(mimetype: string): {
   if (!mimetype)
     return {
       icon: "lucide:file",
-      color: "text-gray-600 dark:text-gray-300",
-      background: "bg-gray-100 dark:bg-gray-800",
+      color: "text-[var(--text-secondary)]",
+      background: "bg-[var(--surface-muted)]",
     };
 
   if (mimetype.startsWith("image/"))
@@ -309,8 +309,8 @@ function getFileIconAndColor(mimetype: string): {
     };
   return {
     icon: "lucide:file",
-    color: "text-gray-600 dark:text-gray-300",
-    background: "bg-gray-100 dark:bg-gray-800",
+    color: "text-[var(--text-secondary)]",
+    background: "bg-[var(--surface-muted)]",
   };
 }
 </script>
@@ -321,7 +321,7 @@ function getFileIconAndColor(mimetype: string): {
     <div class="space-y-6">
       
       <div
-        class="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 shadow-xl overflow-hidden"
+        class="surface-card rounded-xl shadow-xl overflow-hidden"
         v-if="!pending || !isMounted"
       >
         <div class="flex justify-center p-4">
@@ -356,7 +356,7 @@ function getFileIconAndColor(mimetype: string): {
       </div>
 
       <div
-        class="space-y-4 bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 p-6"
+        class="space-y-4 surface-card rounded-xl p-6"
       >
         <div class="flex items-center gap-3">
           <UIcon name="lucide:edit-3" class="w-5 h-5" />
@@ -382,7 +382,7 @@ function getFileIconAndColor(mimetype: string): {
         </UForm>
       </div>
 
-      <div class="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700/50 p-6">
+      <div class="surface-card rounded-xl p-6">
         <PermissionManager
           table-name="file_permission_definition"
           :current-field-id="{ field: 'file', value: fileId }"

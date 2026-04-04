@@ -4,8 +4,8 @@
       <CommonFormCard>
         <div class="mb-8">
           <div class="flex items-center justify-between mb-4">
-            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Package Type</label>
-            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <label class="text-sm font-medium text-[var(--text-secondary)]">Package Type</label>
+            <div class="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
               <UIcon name="lucide:info" class="w-3 h-3" />
               <span>Choose where to install the package</span>
             </div>
@@ -18,7 +18,7 @@
                 'relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-200',
                 packageType === 'Server'
                   ? 'border-cyan-600 dark:border-cyan-500 bg-cyan-50 dark:bg-cyan-950/60 shadow-lg shadow-cyan-200/50 dark:shadow-cyan-500/10'
-                  : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/30 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50',
+                  : 'border-[var(--border-strong)] bg-[var(--surface-default)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]',
               ]"
             >
               <div class="flex items-start gap-4">
@@ -27,7 +27,7 @@
                     'flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200',
                     packageType === 'Server'
                       ? 'bg-cyan-200/80 dark:bg-cyan-500/25 text-cyan-700 dark:text-cyan-200'
-                      : 'bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 group-hover:text-gray-700 dark:group-hover:text-gray-300',
+                      : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)] group-hover:bg-[var(--surface-muted)] group-hover:text-[var(--text-secondary)]',
                   ]"
                 >
                   <UIcon name="lucide:server" class="w-6 h-6" />
@@ -38,7 +38,7 @@
                     <span
                       :class="[
                         'font-semibold text-base',
-                        packageType === 'Server' ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-gray-200',
+                        packageType === 'Server' ? 'text-[var(--text-primary)]' : 'text-[var(--text-primary)]',
                       ]"
                     >
                       Server Package
@@ -51,7 +51,7 @@
                       <span>Selected</span>
                     </div>
                   </div>
-                  <p class="text-sm text-gray-700 dark:text-gray-400">
+                  <p class="text-sm text-[var(--text-secondary)]">
                     Use in handlers & hooks via
                     <code class="px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/40 text-cyan-800 dark:text-cyan-200 text-xs font-mono">$ctx.$pkgs</code>
                   </p>
@@ -65,7 +65,7 @@
                 'relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-200',
                 packageType === 'App'
                   ? 'border-cyan-600 dark:border-cyan-500 bg-cyan-50 dark:bg-cyan-950/60 shadow-lg shadow-cyan-200/50 dark:shadow-cyan-500/10'
-                  : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800/30 hover:border-gray-400 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50',
+                  : 'border-[var(--border-strong)] bg-[var(--surface-default)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]',
               ]"
             >
               <div class="flex items-start gap-4">
@@ -74,7 +74,7 @@
                     'flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200',
                     packageType === 'App'
                       ? 'bg-cyan-200/80 dark:bg-cyan-500/25 text-cyan-700 dark:text-cyan-200'
-                      : 'bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 group-hover:text-gray-700 dark:group-hover:text-gray-300',
+                      : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)] group-hover:bg-[var(--surface-muted)] group-hover:text-[var(--text-secondary)]',
                   ]"
                 >
                   <UIcon name="lucide:package-2" class="w-6 h-6" />
@@ -85,7 +85,7 @@
                     <span
                       :class="[
                         'font-semibold text-base',
-                        packageType === 'App' ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-gray-200',
+                        packageType === 'App' ? 'text-[var(--text-primary)]' : 'text-[var(--text-primary)]',
                       ]"
                     >
                       App Package
@@ -98,9 +98,9 @@
                       <span>Selected</span>
                     </div>
                   </div>
-                  <p class="text-sm text-gray-700 dark:text-gray-400">
+                  <p class="text-sm text-[var(--text-secondary)]">
                     Use in extensions and components
-                    <span class="text-gray-600 dark:text-gray-500">via import</span>
+                    <span class="text-[var(--text-tertiary)]">via import</span>
                   </p>
                 </div>
               </div>
@@ -140,7 +140,7 @@
 
         <div class="mb-6">
           <div class="space-y-3">
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label class="block text-sm font-medium text-[var(--text-secondary)]">
               Search NPM Package
             </label>
 

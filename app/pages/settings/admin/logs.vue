@@ -442,40 +442,40 @@ onMounted(async () => {
 
       <div v-else class="space-y-6">
         <div v-if="stats && !selectedFile" class="grid gap-4 grid-cols-1 md:grid-cols-3">
-          <div class="glass-card rounded-xl p-4">
+          <div class="rounded-xl p-4 surface-card">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
                 <UIcon name="lucide:files" class="w-5 h-5 text-white" />
               </div>
               <div>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                <p class="text-2xl font-bold text-[var(--text-primary)]">
                   {{ stats.fileCount ?? 0 }}
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Total Files</p>
+                <p class="text-xs text-[var(--text-tertiary)]">Total Files</p>
               </div>
             </div>
           </div>
-          <div class="glass-card rounded-xl p-4">
+          <div class="rounded-xl p-4 surface-card">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
                 <UIcon name="lucide:hard-drive" class="w-5 h-5 text-white" />
               </div>
               <div>
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                <p class="text-2xl font-bold text-[var(--text-primary)]">
                   {{ stats.totalSizeFormatted ?? "N/A" }}
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Total Size</p>
+                <p class="text-xs text-[var(--text-tertiary)]">Total Size</p>
               </div>
             </div>
           </div>
-          <div class="glass-card rounded-xl p-4">
+          <div class="rounded-xl p-4 surface-card">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
                 <UIcon name="lucide:clock" class="w-5 h-5 text-white" />
               </div>
               <div>
-                <p class="text-sm font-bold text-gray-900 dark:text-white">Live</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Monitoring</p>
+                <p class="text-sm font-bold text-[var(--text-primary)]">Live</p>
+                <p class="text-xs text-[var(--text-tertiary)]">Monitoring</p>
               </div>
             </div>
           </div>

@@ -3,8 +3,8 @@
     <template #header>
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Handlers</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <h3 class="text-lg font-semibold text-[var(--text-primary)]">Handlers</h3>
+          <p class="text-sm text-[var(--text-tertiary)] mt-1">
             Handlers for this route
           </p>
         </div>
@@ -34,7 +34,7 @@
           'p-4 rounded-lg border transition-colors cursor-pointer',
           handler._isDefault
             ? 'border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20 hover:border-primary-300 dark:hover:border-primary-700'
-            : 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 hover:border-gray-300 dark:hover:border-gray-700'
+            : 'border-[var(--border-default)] bg-[var(--surface-muted)] hover:border-[var(--border-strong)]'
         ]"
         @click="$emit('edit', handler)"
       >
@@ -58,7 +58,7 @@
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                <h4 class="text-sm font-semibold text-[var(--text-primary)]">
                   {{ handler.name || handler.logic?.substring(0, 30) || 'Unnamed Handler' }}
                 </h4>
                 <UBadge
@@ -88,7 +88,7 @@
               </div>
               <p
                 v-if="handler.description"
-                class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                class="text-xs text-[var(--text-tertiary)] mt-1"
               >
                 {{ handler.description }}
               </p>

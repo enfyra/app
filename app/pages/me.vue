@@ -278,10 +278,10 @@ onMounted(() => {
                 <UIcon name="lucide:user-circle" class="w-5 h-5 text-brand-500" />
               </div>
               <div>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h2 class="text-lg font-semibold text-[var(--text-primary)]">
                   Personal Information
                 </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-sm text-[var(--text-tertiary)]">
                   Update your account information
                 </p>
               </div>
@@ -310,10 +310,10 @@ onMounted(() => {
                 <UIcon name="lucide:link" class="w-5 h-5 text-emerald-500" />
               </div>
               <div>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h2 class="text-lg font-semibold text-[var(--text-primary)]">
                   Linked OAuth Accounts
                 </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-sm text-[var(--text-tertiary)]">
                   Accounts connected to your profile
                 </p>
               </div>
@@ -361,10 +361,10 @@ onMounted(() => {
                 <UIcon name="lucide:lock" class="w-5 h-5 text-amber-500" />
               </div>
               <div>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h2 class="text-lg font-semibold text-[var(--text-primary)]">
                   Change Password
                 </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-sm text-[var(--text-tertiary)]">
                   Update your login password
                 </p>
               </div>

@@ -301,9 +301,9 @@ useSubHeaderActionRegistry([
     <div class="min-h-[400px] space-y-8">
       <div class="space-y-8">
         
-        <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] shadow-theme-md overflow-hidden">
-          <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+        <div class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-default)] shadow-theme-md overflow-hidden">
+          <div class="px-5 py-4 border-b border-[var(--border-default)]">
+            <h2 class="text-lg font-semibold text-[var(--text-primary)]">
               Folders
             </h2>
           </div>
@@ -324,9 +324,9 @@ useSubHeaderActionRegistry([
           </div>
         </div>
 
-        <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] shadow-theme-md overflow-hidden">
-          <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+        <div class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-default)] shadow-theme-md overflow-hidden">
+          <div class="px-5 py-4 border-b border-[var(--border-default)]">
+            <h2 class="text-lg font-semibold text-[var(--text-primary)]">
               Files
             </h2>
           </div>

@@ -289,8 +289,8 @@ const { isMobile, isTablet } = useScreen();
     <div
       v-for="item in data"
       :key="getId(item)"
-      class="border rounded-lg overflow-hidden hover:bg-gray-200 dark:hover:bg-white/15 transition-colors"
-      :class="isSelected(getId(item)) ? 'border-primary-400' : 'border-gray-200 dark:border-gray-700'"
+      class="border rounded-lg overflow-hidden hover:bg-[var(--surface-muted)] transition-colors"
+      :class="isSelected(getId(item)) ? 'border-primary-400' : 'border-[var(--border-default)]'"
     >
       
       <div
@@ -322,7 +322,7 @@ const { isMobile, isTablet } = useScreen();
           </div>
         </button>
 
-        <div :class="(isMobile || isTablet) ? 'flex items-center gap-0.5 px-1 border-l border-gray-200 dark:border-gray-700 flex-shrink-0' : 'flex items-center gap-1 px-2 border-l border-gray-200 dark:border-gray-700 flex-shrink-0'">
+        <div :class="(isMobile || isTablet) ? 'flex items-center gap-0.5 px-1 border-l border-[var(--border-default)] flex-shrink-0' : 'flex items-center gap-1 px-2 border-l border-[var(--border-default)] flex-shrink-0'">
           <UButton
             :icon="isExpanded(getId(item)) ? 'lucide:chevron-up' : 'lucide:chevron-down'"
             :size="(isMobile || isTablet) ? 'xs' : 'sm'"
@@ -346,7 +346,7 @@ const { isMobile, isTablet } = useScreen();
 
       <div
         v-if="isExpanded(getId(item))"
-        :class="(isMobile || isTablet) ? 'border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/20 px-2 py-2' : 'border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/20 px-4 py-3'"
+        :class="(isMobile || isTablet) ? 'border-t border-[var(--border-default)] bg-[var(--surface-muted)] px-2 py-2' : 'border-t border-[var(--border-default)] bg-[var(--surface-muted)] px-4 py-3'"
       >
         <div :class="(isMobile || isTablet) ? 'grid grid-cols-1 gap-2 text-xs' : 'grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm'">
           <div

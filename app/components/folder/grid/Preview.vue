@@ -11,7 +11,7 @@
 
     <div
       class="absolute inset-0 opacity-30"
-      style="background: radial-gradient(circle at center, #7C3AED20 0%, transparent 70%)"
+      style="background: radial-gradient(circle at center, var(--brand-violet-deep-20, #7C3AED20) 0%, transparent 70%)"
     />
 
     <div
@@ -20,7 +20,7 @@
       <UIcon
         :name="folder.icon"
         :size="96"
-        style="color: #7C3AED; filter: drop-shadow(0 4px 12px rgba(124, 58, 237, 0.3))"
+        style="color: var(--brand-violet-deep); filter: drop-shadow(0 4px 12px rgba(124, 58, 237, 0.3))"
       />
     </div>
   </div>

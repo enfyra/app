@@ -1,63 +1,81 @@
 <script setup lang="ts">
-const colorMode = useColorMode();
-const { me } = useAuth();
-const { width } = useScreen();
-const { setSidebarVisible } = useGlobalState();
+defineProps<{
+  collapsed?: boolean;
+}>();
 
-const userEmail = computed(() => {
-  if (!me.value) return '';
-  return me.value.email || '';
+const { me, logout } = useAuth();
+const { confirm } = useConfirm();
+const colorMode = useColorMode();
+const router = useRouter();
+
+const userEmail = computed(() => me.value?.email || '');
+
+const userInitial = computed(() => {
+  const email = userEmail.value;
+  if (!email) return '?';
+  return email.charAt(0).toUpperCase();
 });
 
 const isDark = computed(() => colorMode.value === 'dark');
 
 function toggleTheme() {
-  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark';
+  colorMode.preference = isDark.value ? 'light' : 'dark';
 }
 
-function handleProfileClick() {
-  if (width.value <= 1024) setSidebarVisible(false);
-}
+const items = computed(() => [
+  [{
+    label: 'Profile',
+    icon: 'lucide:user',
+    onSelect: () => router.push('/me'),
+  }, {
+    label: isDark.value ? 'Dark' : 'Light',
+    icon: isDark.value ? 'lucide:moon' : 'lucide:sun',
+    slot: 'theme' as const,
+    isDark: isDark.value,
+    onToggle: toggleTheme,
+    onSelect: toggleTheme,
+  }],
+  [{
+    label: 'Logout',
+    icon: 'lucide:log-out',
+    color: 'error' as const,
+    onSelect: async () => {
+      const ok = await confirm({ content: 'Are you sure you want to logout?' });
+      if (ok) await logout();
+    },
+  }],
+]);
 </script>
 
 <template>
-  <div class="flex items-center justify-start gap-3 w-full">
-    <div v-if="userEmail" class="flex items-center gap-2 min-w-0 flex-1">
-      <UBadge
-        color="primary"
-        variant="soft"
-        class="min-w-0 overflow-hidden normal-case flex-1 text-sm"
-      >
-        <span class="truncate block">{{ userEmail }}</span>
-      </UBadge>
-      <NuxtLink
-        to="/me"
-        class="shrink-0"
-        active-class="[&_button]:bg-brand-50 [&_button]:text-brand-500 dark:[&_button]:bg-brand-500/15 dark:[&_button]:text-brand-400"
-        @click="handleProfileClick"
-      >
-        <UButton
-          icon="lucide:user"
-          variant="ghost"
-          color="neutral"
-          size="md"
-          aria-label="Edit profile"
+  <div class="border-t border-[var(--border-default)] pt-2">
+    <UDropdownMenu :items="items" :content="{ side: 'right', align: 'end' }">
+      <template #theme-trailing="{ item }">
+        <USwitch
+          class="ms-4"
+          size="sm"
+          :model-value="(item as any).isDark"
+          @update:model-value="(item as any).onToggle()"
+          @click.stop
         />
-      </NuxtLink>
-    </div>
-    <div v-else class="text-sm text-gray-500 dark:text-gray-400 truncate flex-1">
-      No user info
-    </div>
-
-    <UButton
-      :icon="isDark ? 'lucide:sun' : 'lucide:moon'"
-      variant="ghost"
-      color="neutral"
-      size="sm"
-      @click="toggleTheme"
-      :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-      class="shrink-0 ml-auto"
-    />
+      </template>
+      <button
+        v-if="collapsed"
+        class="flex items-center justify-center w-full rounded-md p-1.5 border border-[var(--border-default)] bg-[var(--surface-default)] shadow-xs transition-all hover:shadow-md hover:border-[var(--border-strong)] cursor-pointer"
+      >
+        <UAvatar :text="userInitial" size="xs" />
+      </button>
+      <button
+        v-else
+        class="flex items-center gap-2 w-full rounded-md p-1.5 border border-[var(--border-default)] bg-[var(--surface-default)] shadow-xs transition-all hover:shadow-md hover:border-[var(--border-strong)] text-left cursor-pointer"
+      >
+        <UAvatar :text="userInitial" size="xs" />
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium truncate text-[var(--text-secondary)] leading-tight">{{ userEmail || 'No user' }}</p>
+          <p class="text-xs truncate text-[var(--text-tertiary)] leading-tight">Account</p>
+        </div>
+        <UIcon name="lucide:chevrons-up-down" class="w-4 h-4 text-[var(--text-tertiary)] shrink-0" />
+      </button>
+    </UDropdownMenu>
   </div>
 </template>
-

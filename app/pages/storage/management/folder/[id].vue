@@ -274,7 +274,7 @@ useHeaderActionRegistry([
     >
       
       <div v-if="folderTotal > pageLimit" class="flex items-center gap-2">
-        <span class="text-sm text-gray-600 dark:text-gray-400">Folders:</span>
+        <span class="text-sm text-[var(--text-tertiary)]">Folders:</span>
         <UPagination
           v-model:page="folderPage"
           :items-per-page="pageLimit"
@@ -293,7 +293,7 @@ useHeaderActionRegistry([
       </div>
 
       <div v-if="fileTotal > pageLimit" class="flex items-center gap-2">
-        <span class="text-sm text-gray-600 dark:text-gray-400">Files:</span>
+        <span class="text-sm text-[var(--text-tertiary)]">Files:</span>
         <UPagination
           v-model:page="filePage"
           :items-per-page="pageLimit"
@@ -323,7 +323,7 @@ useHeaderActionRegistry([
     >
       <template #header-content>
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label class="block text-sm font-medium text-[var(--text-secondary)] mb-2">
             Storage Location
           </label>
           <USelectMenu

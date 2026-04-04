@@ -134,13 +134,13 @@ function handleRootReorder(event: DragEvent) {
     :class="isDndUpdating ? 'pointer-events-none opacity-60 select-none' : ''"
   >
     <div v-if="menuTree.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
-      <UIcon name="lucide:navigation" class="w-12 h-12 text-gray-400 mb-3" />
-      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">No menu items available</p>
+      <UIcon name="lucide:navigation" class="w-12 h-12 text-[var(--text-quaternary)] mb-3" />
+      <p class="text-sm text-[var(--text-tertiary)] mb-4">No menu items available</p>
     </div>
     
     <div v-else class="space-y-4">
       <div class="menu-preview-container">
-      <div class="menu-preview glass-card rounded-2xl p-4">
+      <div class="menu-preview rounded-2xl p-4 surface-card">
         <div
           v-if="canMoveToRoot"
           class="mb-2 p-2 border-2 border-dashed border-violet-400 dark:border-violet-500 rounded-xl bg-violet-500/10 dark:bg-violet-500/20"

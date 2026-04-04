@@ -11,63 +11,27 @@ const props = defineProps<{
   size?: "sm" | "md" | "lg";
 }>();
 
-const defaultTitle = "No data available";
-const defaultIcon = "lucide:database";
-const defaultSize = "md";
-
-const iconSize = computed(() => {
-  switch (props.size || defaultSize) {
-    case "sm":
-      return "!w-[32px] !h-[32px]";
-    case "lg":
-      return "!w-[64px] !h-[64px]";
-    default:
-      return "!w-[48px] !h-[48px]";
-  }
-});
-
-const textSize = computed(() => {
-  switch (props.size || defaultSize) {
-    case "sm":
-      return "!text-[14px]";
-    case "lg":
-      return "!text-[18px]";
-    default:
-      return "!text-[16px]";
-  }
+const mappedActions = computed(() => {
+  if (!props.action) return undefined;
+  return [
+    {
+      label: props.action.label,
+      icon: props.action.icon,
+      variant: "soft" as const,
+      color: "primary" as const,
+      size: "sm" as const,
+      onClick: props.action.onClick,
+    },
+  ];
 });
 </script>
 
 <template>
-  <div
-    role="status"
-    aria-live="polite"
-    class="flex flex-col items-center justify-center py-8 gap-3"
-  >
-    <UIcon
-      :name="props.icon || defaultIcon"
-      :class="`${iconSize} text-gray-400 dark:text-gray-500`"
-    />
-    <div class="text-center">
-      <p :class="`${textSize} font-medium text-gray-800 dark:text-white/90`">
-        {{ props.title || defaultTitle }}
-      </p>
-      <p
-        v-if="props.description"
-        :class="`${textSize} text-sm text-gray-500 dark:text-gray-400 mt-1`"
-      >
-        {{ props.description }}
-      </p>
-    </div>
-    <UButton
-      v-if="props.action"
-      :icon="props.action.icon"
-      @click="props.action.onClick"
-      size="sm"
-      variant="soft"
-      color="primary"
-    >
-      {{ props.action.label }}
-    </UButton>
-  </div>
+  <UEmpty
+    :icon="props.icon || 'lucide:database'"
+    :title="props.title || 'No data available'"
+    :description="props.description"
+    :actions="mappedActions"
+    :size="props.size || 'md'"
+  />
 </template>

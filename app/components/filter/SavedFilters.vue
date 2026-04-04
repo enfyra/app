@@ -140,10 +140,10 @@ watch(
 </script>
 
 <template>
-  <div class="border-t border-gray-200 dark:border-gray-800 pt-4 mt-4">
+  <div class="border-t border-[var(--border-default)] pt-4 mt-4">
     
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-semibold text-gray-800 dark:text-white/90">Saved Filters</h3>
+      <h3 class="text-sm font-semibold text-[var(--text-primary)]">Saved Filters</h3>
       <UButton
         v-if="savedFilters.length > 0"
         @click="clearAllFilters"
@@ -170,7 +170,7 @@ watch(
 
     <div v-if="!searchQuery && popularFilters.length > 0" class="mb-4">
       <div
-        class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1"
+        class="text-xs font-medium text-[var(--text-tertiary)] mb-2 flex items-center gap-1"
       >
         <UIcon name="lucide:trending-up" class="w-3 h-3" />
         Most Used
@@ -183,10 +183,10 @@ watch(
           @click="applySavedFilter(filter)"
         >
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">
+            <div class="text-sm font-medium text-[var(--text-primary)] truncate">
               {{ filter.name }}
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <div class="text-xs text-[var(--text-tertiary)] mt-1">
               {{ filter.useCount }} uses
             </div>
           </div>
@@ -196,7 +196,7 @@ watch(
     </div>
 
     <div v-if="filteredSavedFilters.length > 0" class="space-y-1">
-      <div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+      <div class="text-xs font-medium text-[var(--text-tertiary)] mb-2">
         {{ searchQuery ? "Search Results" : "All Saved Filters" }}
       </div>
 
@@ -204,14 +204,14 @@ watch(
         <div
           v-for="filter in filteredSavedFilters"
           :key="filter.id"
-          class="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-800 lg:hover:border-gray-300 dark:lg:hover:border-gray-700 lg:hover:bg-gray-50 dark:lg:hover:bg-white/5 cursor-pointer transition-all duration-200 group"
+          class="flex items-center justify-between p-3 rounded-lg surface-card-hover cursor-pointer transition-all duration-200 group"
           @click="applySavedFilter(filter)"
         >
           <div class="flex-1 min-w-0">
-            <div class="text-sm font-medium text-gray-800 dark:text-white/90 truncate">
+            <div class="text-sm font-medium text-[var(--text-primary)] truncate">
               {{ filter.name }}
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <div class="text-xs text-[var(--text-tertiary)] mt-1">
               {{ formatFilterDate(filter.lastUsed) }} • {{ filter.useCount }} uses
             </div>
           </div>
@@ -247,12 +247,12 @@ watch(
     <div v-else-if="savedFilters.length === 0" class="text-center py-8">
       <UIcon
         name="lucide:bookmark"
-        class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2"
+        class="w-8 h-8 text-[var(--text-quaternary)] mx-auto mb-2"
       />
-      <div class="text-sm text-gray-500 dark:text-gray-400 text-center mb-3">
+      <div class="text-sm text-[var(--text-tertiary)] text-center mb-3">
         No saved filters yet
       </div>
-      <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+      <div class="text-xs text-[var(--text-tertiary)] text-center">
         Apply filters and click "Save" to bookmark your favorite filter
         combinations
       </div>
@@ -264,9 +264,9 @@ watch(
     >
       <UIcon
         name="lucide:search-x"
-        class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2"
+        class="w-8 h-8 text-[var(--text-quaternary)] mx-auto mb-2"
       />
-      <div class="text-sm text-gray-500 dark:text-gray-400 text-center">
+      <div class="text-sm text-[var(--text-tertiary)] text-center">
         No filters found for "{{ searchQuery }}"
       </div>
     </div>
@@ -290,7 +290,7 @@ watch(
       <template #body>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-800 dark:text-white/90 mb-2">
+            <label class="block text-sm font-medium text-[var(--text-primary)] mb-2">
               Filter Name
             </label>
             <UInput

@@ -20,12 +20,12 @@ const folderIconName = computed(() => {
 });
 
 const folderIconColor = computed(() => {
-  if (!selectedFolder.value) return "#7C3AED";
+  if (!selectedFolder.value) return "var(--brand-violet-deep)";
   const colorClass = getFolderIconColor(selectedFolder.value);
-  
+
   if (colorClass.includes("blue")) return "#3B82F6";
   if (colorClass.includes("amber")) return "#F59E0B";
-  return "#7C3AED";
+  return "var(--brand-violet-deep)";
 });
 </script>
 
@@ -72,7 +72,7 @@ const folderIconColor = computed(() => {
                   style="
                     background: rgba(124, 58, 237, 0.1);
                     border-color: rgba(124, 58, 237, 0.3);
-                    color: #7C3AED;
+                    color: var(--brand-violet-deep);
                   "
                 >
                   <UIcon name="lucide:shield" class="w-3.5 h-3.5" />
@@ -81,14 +81,14 @@ const folderIconColor = computed(() => {
               </div>
               <p
                 v-if="selectedFolder.itemCount !== undefined"
-                class="text-sm text-gray-400"
+                class="text-sm text-[var(--text-quaternary)]"
               >
                 {{ selectedFolder.itemCount }} {{ selectedFolder.itemCount === 1 ? 'item' : 'items' }}
               </p>
             </div>
           </div>
 
-          <div class="p-5 rounded-xl bg-gray-900/50">
+          <div class="p-5 rounded-xl bg-[var(--surface-muted)]">
             <div class="flex items-start gap-3">
               <UIcon
                 name="lucide:file-text"
@@ -113,7 +113,7 @@ const folderIconColor = computed(() => {
 
           <div class="grid grid-cols-2 gap-4">
             
-            <div class="p-5 rounded-xl bg-gray-900/50">
+            <div class="p-5 rounded-xl bg-[var(--surface-muted)]">
               <div class="flex items-start gap-3">
                 <UIcon
                   name="lucide:calendar"
@@ -134,7 +134,7 @@ const folderIconColor = computed(() => {
               </div>
             </div>
 
-            <div class="p-5 rounded-xl bg-gray-900/50">
+            <div class="p-5 rounded-xl bg-[var(--surface-muted)]">
               <div class="flex items-start gap-3">
                 <UIcon
                   name="lucide:clock"
@@ -156,7 +156,7 @@ const folderIconColor = computed(() => {
             </div>
           </div>
 
-          <div class="p-5 rounded-xl bg-gray-900/50 space-y-4">
+          <div class="p-5 rounded-xl bg-[var(--surface-muted)] space-y-4">
             <div
               class="text-xs text-gray-500 uppercase mb-4"
               style="letter-spacing: 0.05em; font-weight: 500"
@@ -171,7 +171,7 @@ const folderIconColor = computed(() => {
               />
               <div class="flex-1 min-w-0">
                 <div class="text-xs mb-1 text-gray-500">ID</div>
-                <code class="text-xs px-2 py-1 rounded font-mono text-gray-400 bg-gray-950">
+                <code class="text-xs px-2 py-1 rounded font-mono text-[var(--text-quaternary)] bg-[var(--surface-muted)]">
                   {{ selectedFolder.id }}
                 </code>
               </div>

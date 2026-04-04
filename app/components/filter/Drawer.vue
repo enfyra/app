@@ -112,7 +112,7 @@ const { isMobile, isTablet } = useScreen();
           <UIcon name="i-lucide-filter" :class="(isMobile || isTablet) ? 'w-6 h-6' : 'w-8 h-8 mt-1'" />
           <div class="min-w-0 flex-1">
             <h3 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg font-semibold'">Filter {{ tableName }}</h3>
-            <p class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p class="text-xs md:text-sm text-[var(--text-tertiary)] mt-1">
               {{
                 hasActiveConditions
                   ? `${localFilter.conditions.length} condition(s) configured`
@@ -126,7 +126,7 @@ const { isMobile, isTablet } = useScreen();
 
       <template #body>
         <div class="space-y-4">
-          <div class="text-sm text-gray-600 dark:text-gray-400">
+          <div class="text-sm text-[var(--text-tertiary)]">
             Build your filter conditions below. Use AND/OR operators to combine
             multiple criteria. Drag to reorder conditions.
           </div>
@@ -155,7 +155,7 @@ const { isMobile, isTablet } = useScreen();
 
       <template #footer>
         <div class="flex items-center justify-between">
-          <div class="hidden md:block text-sm text-gray-500 dark:text-gray-400">
+          <div class="hidden md:block text-sm text-[var(--text-tertiary)]">
             {{
               hasActiveConditions
                 ? "Ready to apply filters"

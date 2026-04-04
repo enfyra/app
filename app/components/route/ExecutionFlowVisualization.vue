@@ -3,8 +3,8 @@
     <template #header>
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div class="flex-shrink-0 min-w-0">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Execution Flow</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <h3 class="text-lg font-semibold text-[var(--text-primary)]">Execution Flow</h3>
+          <p class="text-sm text-[var(--text-tertiary)] mt-1">
             Execution flow grouped by HTTP method. Click on any node to edit.
           </p>
         </div>
@@ -49,7 +49,7 @@
       <p class="text-xs text-amber-700 dark:text-amber-300/90">Please add Available Methods in the form above to display the execution flow for each HTTP method.</p>
     </div>
 
-    <div v-else-if="allNodes.length > 0" class="h-[500px] border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900/50">
+    <div v-else-if="allNodes.length > 0" class="h-[500px] border border-[var(--border-default)] rounded-lg overflow-hidden bg-[var(--surface-muted)]">
       <VueFlow
         ref="vueFlowRef"
         :nodes="allNodes"
@@ -73,7 +73,7 @@
 
     <div
       v-else
-      class="text-center py-12 text-gray-500 dark:text-gray-400"
+      class="text-center py-12 text-[var(--text-tertiary)]"
     >
       <UIcon name="lucide:git-branch" class="w-12 h-12 mx-auto mb-3 opacity-50" />
       <p class="text-sm">No handlers or hooks configured for this route</p>
@@ -192,7 +192,7 @@ const nodeTypes = markRaw({
     props: ['data', 'id'],
     setup(props: any) {
       return () => h('div', {
-        class: 'px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 relative',
+        class: 'px-1.5 py-0.5 rounded bg-[var(--surface-muted)] border border-[var(--border-default)] relative',
         style: { height: '40px', display: 'flex', alignItems: 'center' },
       }, [
         h(Handle, {
@@ -201,7 +201,7 @@ const nodeTypes = markRaw({
           style: { top: '50%', transform: 'translateY(-50%)', opacity: 0 },
         }),
         h('span', {
-          class: 'text-[7px] font-semibold text-gray-900 dark:text-white uppercase tracking-wide',
+          class: 'text-[7px] font-semibold text-[var(--text-primary)] uppercase tracking-wide',
         }, props.data.label),
       ]);
     },

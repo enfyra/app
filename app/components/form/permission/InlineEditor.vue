@@ -45,7 +45,7 @@
 
         <template #footer>
           <div
-            class="flex justify-end gap-3 rounded-xl border border-muted/30 p-4 bg-gray-800/50"
+            class="flex justify-end gap-3 rounded-xl border border-muted/30 p-4 bg-[var(--surface-muted)]"
           >
             <UButton
               icon="lucide:check"

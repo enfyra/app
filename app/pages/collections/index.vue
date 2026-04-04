@@ -54,7 +54,7 @@ const SearchInput = defineComponent({
         }),
         searchQuery.value
           ? h("button", {
-              class: "absolute right-2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer",
+              class: "absolute right-2 p-1 text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] cursor-pointer",
               onClick: () => (searchQuery.value = ""),
             }, [
               h(UIcon, { name: "lucide:x", class: "w-4 h-4" }),
@@ -212,7 +212,7 @@ function getGradientForCollection(id: any): string | undefined {
             v-for="collection in collections"
             :key="collection.id"
             @click="navigateTo(`/collections/${collection.name}`)"
-            class="relative rounded-2xl border border-gray-200/60 dark:border-white/5 bg-white dark:bg-zinc-900/40 cursor-pointer group transition-all duration-300 hover:border-violet-300/50 dark:hover:border-violet-500/30 hover:shadow-lg dark:hover:shadow-xl overflow-hidden"
+            class="relative rounded-2xl surface-card-hover cursor-pointer group overflow-hidden"
             :class="isTablet ? 'p-5' : 'p-5 md:p-6'"
           >
             <div
@@ -236,22 +236,22 @@ function getGradientForCollection(id: any): string | undefined {
 
             <div class="flex items-end justify-between">
               <div class="flex-1">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90 mb-1">
+                <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">
                   {{ collection.name || "Untitled Collection" }}
                 </h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">
+                <p class="text-sm text-[var(--text-tertiary)] mb-4 line-clamp-2">
                   {{ collection.description || "No description" }}
                 </p>
 
                 <div class="flex items-center gap-4">
                     <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Fields</p>
-                    <p class="mt-1 font-semibold text-gray-800 dark:text-white/90">
+                    <p class="text-sm text-[var(--text-tertiary)]">Fields</p>
+                    <p class="mt-1 font-semibold text-[var(--text-primary)]">
                         {{ getFieldCount(collection.name) }}
                     </p>
                   </div>
                   <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Type</p>
+                    <p class="text-sm text-[var(--text-tertiary)]">Type</p>
                     <span
                       :class="[
                         'mt-1 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
@@ -288,14 +288,14 @@ function getGradientForCollection(id: any): string | undefined {
               item: 'h-9 w-9 rounded-xl transition-all duration-300',
             }"
           />
-          <p class="hidden md:block text-sm text-gray-400">
+          <p class="hidden md:block text-sm text-[var(--text-quaternary)]">
             Showing
-            <span class="text-gray-700 dark:text-gray-200"
+            <span class="text-[var(--text-secondary)]"
               >{{ (page - 1) * pageLimit + 1 }}-{{
                 Math.min(page * pageLimit, total)
               }}</span
             >
-            of <span class="text-gray-700 dark:text-gray-200">{{ total }}</span> results
+            of <span class="text-[var(--text-secondary)]">{{ total }}</span> results
           </p>
         </div>
       </div>

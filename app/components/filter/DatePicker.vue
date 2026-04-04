@@ -43,7 +43,7 @@
             </div>
           </template>
         </UPopover>
-        <span class="text-xs text-gray-500">and</span>
+        <span class="text-xs text-[var(--text-tertiary)]">and</span>
         <UPopover v-model:open="showTo">
           <UButton
             variant="outline"

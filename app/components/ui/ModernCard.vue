@@ -2,11 +2,11 @@
   <component
     :is="animated ? 'div' : 'div'"
     ref="cardRef"
-    class="rounded-2xl relative overflow-hidden"
+    class="relative overflow-hidden"
     :class="[
+      variant !== 'form' && 'rounded-2xl surface-card',
+      variant !== 'form' && sizeClasses[size],
       variantClasses,
-      sizeClasses[size],
-      glassEffect ? 'glass-card' : '',
       elevated && 'shadow-theme-md',
       className,
     ]"
@@ -27,10 +27,6 @@
       class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/60 to-transparent"
     />
 
-    <div
-      v-if="variant === 'settings'"
-      class="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-    />
 
     <div class="relative z-10">
       <slot />
@@ -48,7 +44,6 @@ interface Props {
   size?: CardSize;
   elevated?: boolean;
   animated?: boolean;
-  glassEffect?: boolean;
   accentBorder?: boolean;
   className?: string;
   animationDelay?: string;
@@ -59,7 +54,6 @@ const props = withDefaults(defineProps<Props>(), {
   size: "md",
   elevated: false,
   animated: false,
-  glassEffect: true,
   accentBorder: false,
   className: "",
   animationDelay: "0ms",
@@ -76,22 +70,10 @@ const sizeClasses = {
 
 const variantClasses = computed(() => {
   const variants = {
-    form: [
-      "glass-card",
-    ].join(" "),
-    settings: [
-      "glass-card-hover",
-      "group cursor-pointer",
-    ].join(" "),
-    stats: [
-      "glass-card",
-      props.elevated && "shadow-glow",
-    ]
-      .filter(Boolean)
-      .join(" "),
-    simple: [
-      "glass-card",
-    ].join(" "),
+    form: "",
+    settings: "group cursor-pointer transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-md",
+    stats: props.elevated ? "shadow-glow" : "",
+    simple: "",
   };
 
   return variants[props.variant];

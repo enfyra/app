@@ -39,7 +39,7 @@
         <div
           v-for="permission in permissions"
           :key="permission.id"
-          class="bg-white dark:bg-gray-800/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700/50"
+          class="surface-card rounded-xl p-4"
         >
           <PermissionGate
             :condition="{
@@ -54,7 +54,7 @@
                 <div class="flex-1 min-w-0 space-y-3">
                   <div class="flex items-center gap-2">
                     <UIcon name="lucide:shield" class="w-4 h-4 text-primary-500" />
-                    <span class="font-medium text-gray-900 dark:text-gray-100">
+                    <span class="font-medium text-[var(--text-primary)]">
                       {{ permission.description || "Permission" }}
                     </span>
                     <UBadge
@@ -85,12 +85,12 @@
                         m.method === 'POST' ? 'bg-info-500/20 text-info-600 dark:text-info-400' :
                         m.method === 'PUT' || m.method === 'PATCH' ? 'bg-warning-500/20 text-warning-600 dark:text-warning-400' :
                         m.method === 'DELETE' ? 'bg-error-500/20 text-error-600 dark:text-error-400' :
-                        'bg-gray-500/20 text-gray-600 dark:text-gray-400'
+                        'bg-[var(--surface-muted)] text-[var(--text-tertiary)]'
                       ]"
                     >
                       {{ m.method }}
                     </button>
-                    <span v-if="!permission.methods?.length" class="text-xs text-gray-400">
+                    <span v-if="!permission.methods?.length" class="text-xs text-[var(--text-quaternary)]">
                       No methods
                     </span>
                   </div>
@@ -99,7 +99,7 @@
                   <div
                     :class="[
                       'w-2 h-2 rounded-full',
-                      permission.isEnabled ? 'bg-success-500' : 'bg-gray-300 dark:bg-gray-600'
+                      permission.isEnabled ? 'bg-success-500' : 'bg-[var(--border-strong)]'
                     ]"
                   />
                   <PermissionGate
@@ -117,7 +117,7 @@
                       :disabled="deleting === permission.id"
                     />
                   </PermissionGate>
-                  <UIcon name="lucide:chevron-right" class="w-4 h-4 text-gray-400" />
+                  <UIcon name="lucide:chevron-right" class="w-4 h-4 text-[var(--text-quaternary)]" />
                 </div>
               </div>
             </div>
@@ -130,7 +130,7 @@
             <div class="flex-1 min-w-0 space-y-3">
               <div class="flex items-center gap-2">
                 <UIcon name="lucide:shield" class="w-4 h-4 text-primary-500" />
-                <span class="font-medium text-gray-900 dark:text-gray-100">
+                <span class="font-medium text-[var(--text-primary)]">
                   {{ permission.description || "Permission" }}
                 </span>
                 <UBadge
@@ -152,7 +152,7 @@
                     m.method === 'POST' ? 'bg-info-500/20 text-info-600 dark:text-info-400' :
                     m.method === 'PUT' || m.method === 'PATCH' ? 'bg-warning-500/20 text-warning-600 dark:text-warning-400' :
                     m.method === 'DELETE' ? 'bg-error-500/20 text-error-600 dark:text-error-400' :
-                    'bg-gray-500/20 text-gray-600 dark:text-gray-400'
+                    'bg-[var(--surface-muted)] text-[var(--text-tertiary)]'
                   ]"
                 >
                   {{ m.method }}
@@ -163,7 +163,7 @@
               <div
                 :class="[
                   'w-2 h-2 rounded-full',
-                  permission.isEnabled ? 'bg-success-500' : 'bg-gray-300 dark:bg-gray-600'
+                  permission.isEnabled ? 'bg-success-500' : 'bg-[var(--border-strong)]'
                 ]"
               />
               <PermissionGate
@@ -216,7 +216,7 @@
 
         <template #body>
           <div
-            class="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-muted/50 rounded-lg p-4"
+            class="surface-card rounded-lg p-4"
           >
             <FormEditorLazy
               v-model="permissionForm"
@@ -229,7 +229,7 @@
         </template>
         <template #footer>
           <div
-            class="flex justify-end border border-gray-200 dark:border-muted/50 rounded-lg p-4 bg-white dark:bg-gray-800/50"
+            class="flex justify-end border border-[var(--border-default)] rounded-lg p-4 surface-card"
           >
             <UButton @click="savePermission" :loading="saving" :disabled="saving" color="primary">
               {{ isEditing ? "Update" : "Create" }}

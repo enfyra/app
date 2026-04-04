@@ -5,7 +5,7 @@
       :model-value="modelValue" 
       @update:model-value="emit('update:modelValue', $event)"
     />
-    <span class="text-sm text-gray-600">
+    <span class="text-sm text-[var(--text-tertiary)]">
       {{ modelValue ? 'Is empty' : 'Is not empty' }}
     </span>
   </div>
@@ -46,7 +46,7 @@
       class="w-24"
       placeholder="From"
     />
-    <span class="text-xs text-gray-500">and</span>
+    <span class="text-xs text-[var(--text-tertiary)]">and</span>
     <UInput
       :model-value="modelValue?.[1] || ''"
       @update:model-value="handleRangeUpdate(1, $event)"

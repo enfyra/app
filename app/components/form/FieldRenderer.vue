@@ -484,7 +484,7 @@ function getComponentConfigByKey(key: string) {
           componentProps: {
             ...componentPropsBase,
             type: "text",
-            class: "w-full bg-gray-100",
+            class: "w-full bg-[var(--surface-muted)]",
             modelValue: ensureString(props.formData[key]),
             "onUpdate:modelValue": (val: string) => {
               updateFormData(key, val);
