@@ -1,11 +1,6 @@
-import http from 'node:http';
-import https from 'node:https';
-import { URL } from 'node:url';
-import { getCorsOrigins } from '../middleware/cors';
-
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
-  const backendUrl = config.public.apiUrl;
+  const backendUrl = config.public.apiUrl?.replace(/\/+$/, '');
 
   if (!backendUrl) {
     console.error('[socket.io proxy] API_URL not configured');
@@ -13,72 +8,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const reqUrl = event.node.req.url || '';
-  const origin = event.node.req.headers.origin;
+  const targetUrl = `${backendUrl}${reqUrl}`;
 
-  const allowedOrigins = getCorsOrigins();
-  if (allowedOrigins.length === 0) {
-    event.node.res.setHeader('Access-Control-Allow-Origin', origin || '*');
-  } else if (origin && allowedOrigins.includes(origin)) {
-    event.node.res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    event.node.res.setHeader('Access-Control-Allow-Origin', '*');
-  }
-  event.node.res.setHeader('Access-Control-Allow-Credentials', 'true');
-  event.node.res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  event.node.res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-
-  const targetPath = reqUrl;
-
-  const targetUrl = new URL(backendUrl);
-  const isHttps = targetUrl.protocol === 'https:';
-  const httpModule = isHttps ? https : http;
-
-  return new Promise((resolve, reject) => {
-    const proxyHeaders = event.context.proxyHeaders || {};
-    const options = {
-      hostname: targetUrl.hostname,
-      port: targetUrl.port || (isHttps ? 443 : 80),
-      path: targetPath,
-      method: event.node.req.method || 'GET',
-      headers: {
-        ...event.node.req.headers,
-        ...proxyHeaders,
-        host: targetUrl.host,
-        origin: backendUrl,
-      },
-    };
-
-    const proxyReq = httpModule.request(options, (proxyRes) => {
-      Object.entries(proxyRes.headers).forEach(([key, value]) => {
-        if (value !== undefined) {
-          event.node.res.setHeader(key, value);
-        }
-      });
-
-      event.node.res.setHeader('Access-Control-Allow-Origin', origin || '*');
-      event.node.res.setHeader('Access-Control-Allow-Credentials', 'true');
-      event.node.res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-      event.node.res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-
-      event.node.res.statusCode = proxyRes.statusCode || 200;
-
-      proxyRes.on('data', (chunk) => {
-        event.node.res.write(chunk);
-      });
-
-      proxyRes.on('end', () => {
-        event.node.res.end();
-        resolve(undefined);
-      });
-    });
-
-    proxyReq.on('error', (err) => {
-      console.error('[socket.io proxy] Error:', err.message);
-      event.node.res.statusCode = 500;
-      event.node.res.end(JSON.stringify({ error: err.message }));
-      resolve(undefined);
-    });
-
-    event.node.req.pipe(proxyReq);
+  return proxyRequest(event, targetUrl, {
+    headers: {
+      ...event.context.proxyHeaders,
+    },
   });
 });
