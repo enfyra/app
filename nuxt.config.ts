@@ -96,9 +96,4 @@ export default defineNuxtConfig({
       cache: false,
     },
   },
-  nitro: {
-    experimental: {
-      websocket: true,
-    },
-  },
 });

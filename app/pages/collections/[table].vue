@@ -1,9 +1,8 @@
 <script setup lang="ts">
 const route = useRoute();
-const { schemas, forceRefreshSchema, schemaLoading } = useSchema();
+const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const toast = useToast();
-const { retryUntilFresh } = useServerSync();
 const { getId } = useDatabase();
 const tableName = "table_definition";
 const { getIncludeFields } = useSchema(tableName);
@@ -191,18 +190,6 @@ async function patchTable() {
 }
 
 async function afterPatchSuccess() {
-  const expectedUpdatedAt = patchTableData.value?.data?.[0]?.updatedAt;
-  const targetTableName = String(route.params.table);
-
-  await retryUntilFresh(
-    () => forceRefreshSchema(),
-    () => {
-      if (!expectedUpdatedAt) return false;
-      const cached = schemas.value[targetTableName];
-      return !cached?.updatedAt || new Date(cached.updatedAt) < new Date(expectedUpdatedAt);
-    }
-  );
-
   await fetchTableData();
   const updatedData = tableData.value?.data?.[0];
   if (updatedData) {
@@ -252,12 +239,7 @@ async function handleDelete() {
   await afterDeleteSuccess(String(route.params.table));
 }
 
-async function afterDeleteSuccess(deletedTableName: string) {
-  await retryUntilFresh(
-    () => forceRefreshSchema(),
-    () => !!schemas.value[deletedTableName]
-  );
-
+async function afterDeleteSuccess(_deletedTableName: string) {
   toast.add({
     title: "Success",
     color: "success",
