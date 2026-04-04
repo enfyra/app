@@ -48,7 +48,6 @@ const items = computed(() => [
 </script>
 
 <template>
-  <div class="border-t border-[var(--border-default)] pt-2">
     <UDropdownMenu :items="items" :content="{ side: 'right', align: 'end' }">
       <template #theme-trailing="{ item }">
         <USwitch
@@ -77,5 +76,4 @@ const items = computed(() => [
         <UIcon name="lucide:chevrons-up-down" class="w-4 h-4 text-[var(--text-tertiary)] shrink-0" />
       </button>
     </UDropdownMenu>
-  </div>
 </template>

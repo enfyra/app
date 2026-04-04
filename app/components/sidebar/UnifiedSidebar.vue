@@ -133,7 +133,7 @@ router.afterEach(() => {
     :ui="{
       container: 'h-full !z-[99999]',
       body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto p-4',
-      footer: 'flex flex-col gap-1.5 overflow-hidden w-full !px-2 !pt-2 !pb-0',
+      footer: 'flex flex-col gap-1.5 overflow-hidden w-full p-2',
     }"
   >
     <template #title="{ state }">

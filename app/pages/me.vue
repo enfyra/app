@@ -2,7 +2,6 @@
 const toast = useToast();
 const { confirm } = useConfirm();
 const { validateForm } = useFormValidation("user_definition");
-const { me } = useAuth();
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -140,7 +139,7 @@ async function handleReset() {
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
-    
+
     toast.add({
       title: "Reset Complete",
       color: "success",
@@ -260,7 +259,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-8 max-w-[1000px]">
+  <div class="space-y-6 max-w-[1000px]">
     <CommonEmptyState
       v-if="!loading && !apiData?.data?.[0]"
       title="Profile not found"
@@ -270,166 +269,129 @@ onMounted(() => {
     />
 
     <template v-else>
-      <section class="space-y-6">
-        <CommonFormCard>
-          <template #header>
-            <div class="flex items-center gap-3">
-              <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-500/10 dark:bg-brand-500/20">
-                <UIcon name="lucide:user-circle" class="w-5 h-5 text-brand-500" />
-              </div>
-              <div>
-                <h2 class="text-lg font-semibold text-[var(--text-primary)]">
-                  Personal Information
-                </h2>
-                <p class="text-sm text-[var(--text-tertiary)]">
-                  Update your account information
-                </p>
-              </div>
-            </div>
-          </template>
-          <UForm :state="form" @submit="saveProfile">
-            <FormEditorLazy
-              ref="formEditorRef"
-              v-model="form"
-              v-model:errors="errors"
-              @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-              table-name="user_definition"
-              :excluded="['isRootAdmin', 'isSystem', 'allowedRoutePermissions', 'createdAt', 'updatedAt', 'password']"
-              :field-map="fieldMap"
-              :loading="loading"
-              mode="update"
-              layout="grid"
-            />
-          </UForm>
-        </CommonFormCard>
-
-        <CommonFormCard>
-          <template #header>
-            <div class="flex items-center gap-3">
-              <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20">
-                <UIcon name="lucide:link" class="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <h2 class="text-lg font-semibold text-[var(--text-primary)]">
-                  Linked OAuth Accounts
-                </h2>
-                <p class="text-sm text-[var(--text-tertiary)]">
-                  Accounts connected to your profile
-                </p>
-              </div>
-            </div>
-          </template>
-          <CommonLoadingState
-            v-if="oauthLoading"
-            title="Loading..."
-            description="Fetching linked accounts"
-            size="sm"
-            type="card"
+      <div class="surface-card rounded-xl p-6">
+        <div class="mb-5">
+          <h3 class="text-base font-semibold text-[var(--text-primary)]">Personal Information</h3>
+          <p class="text-sm text-[var(--text-tertiary)] mt-0.5">Update your account details and preferences</p>
+        </div>
+        <UForm :state="form" @submit="saveProfile">
+          <FormEditorLazy
+            ref="formEditorRef"
+            v-model="form"
+            v-model:errors="errors"
+            @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+            table-name="user_definition"
+            :excluded="['isRootAdmin', 'isSystem', 'allowedRoutePermissions', 'createdAt', 'updatedAt', 'password']"
+            :field-map="fieldMap"
+            :loading="loading"
+            mode="update"
+            layout="grid"
           />
+        </UForm>
+      </div>
+
+      <div class="surface-card rounded-xl p-6">
+        <div class="mb-5">
+          <h3 class="text-base font-semibold text-[var(--text-primary)]">Linked Accounts</h3>
+          <p class="text-sm text-[var(--text-tertiary)] mt-0.5">OAuth providers connected to your profile</p>
+        </div>
+        <CommonLoadingState
+          v-if="oauthLoading"
+          title="Loading..."
+          description="Fetching linked accounts"
+          size="sm"
+          type="card"
+        />
+        <div v-else-if="oauthAccounts.length > 0" class="divide-y divide-[var(--border-subtle)]">
           <div
-            v-else-if="oauthAccounts.length > 0"
-            class="grid grid-cols-1 md:grid-cols-2 gap-4"
+            v-for="account in oauthAccounts"
+            :key="account.id ?? account._id"
+            class="flex items-center gap-3 py-3 cursor-pointer transition-colors group"
+            @click="navigateToOauthAccount(account)"
           >
-            <CommonSettingsCard
-              v-for="account in oauthAccounts"
-              :key="account.id ?? account._id"
-              :title="getProviderLabel(account.provider)"
-              :description="`Connected as ${maskProviderId(account.providerUserId ?? '')}`"
-              :icon="getProviderIcon(account.provider)"
-              icon-color="primary"
-              card-class="cursor-pointer transition-all"
-              @click="navigateToOauthAccount(account)"
-              :stats="[
-                { label: 'Provider', value: getProviderLabel(account.provider) },
-                { label: 'Provider ID', value: maskProviderId(account.providerUserId) },
-              ]"
-            />
-          </div>
-          <CommonEmptyState
-            v-else
-            title="No linked accounts"
-            description="Connect your account with Google, GitHub, or other providers"
-            icon="lucide:link"
-            size="sm"
-          />
-        </CommonFormCard>
-
-        <CommonFormCard>
-          <template #header>
-            <div class="flex items-center gap-3">
-              <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20">
-                <UIcon name="lucide:lock" class="w-5 h-5 text-amber-500" />
-              </div>
-              <div>
-                <h2 class="text-lg font-semibold text-[var(--text-primary)]">
-                  Change Password
-                </h2>
-                <p class="text-sm text-[var(--text-tertiary)]">
-                  Update your login password
-                </p>
-              </div>
+            <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--surface-muted)]">
+              <UIcon :name="getProviderIcon(account.provider)" class="w-5 h-5 text-[var(--text-secondary)]" />
             </div>
-          </template>
-          <UForm :state="passwordForm" @submit="handleChangePassword" class="space-y-5 max-w-md">
-            <UFormField
-              label="Current password"
-              :error="passwordErrors.currentPassword"
-              required
-            >
-              <UInput
-                v-model="passwordForm.currentPassword"
-                type="password"
-                placeholder="••••••••"
-                icon="lucide:lock"
-                size="md"
-                class="w-full"
-                autocomplete="current-password"
-              />
-            </UFormField>
-            <UFormField
-              label="New password"
-              :error="passwordErrors.newPassword"
-              required
-            >
-              <UInput
-                v-model="passwordForm.newPassword"
-                type="password"
-                placeholder="••••••••"
-                icon="lucide:key"
-                size="md"
-                class="w-full"
-                autocomplete="new-password"
-              />
-            </UFormField>
-            <UFormField
-              label="Confirm new password"
-              :error="passwordErrors.confirmPassword"
-              required
-            >
-              <UInput
-                v-model="passwordForm.confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                icon="lucide:key-round"
-                size="md"
-                class="w-full"
-                autocomplete="new-password"
-              />
-            </UFormField>
-            <UButton
-              type="submit"
-              color="primary"
-              variant="soft"
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-[var(--text-primary)]">
+                {{ getProviderLabel(account.provider) }}
+              </p>
+              <p class="text-xs text-[var(--text-tertiary)]">
+                {{ maskProviderId(account.providerUserId ?? '') }}
+              </p>
+            </div>
+            <UIcon name="lucide:chevron-right" class="w-4 h-4 text-[var(--text-quaternary)] group-hover:text-[var(--text-tertiary)] transition-colors flex-shrink-0" />
+          </div>
+        </div>
+        <CommonEmptyState
+          v-else
+          title="No linked accounts"
+          description="Connect your account with Google, GitHub, or other providers"
+          icon="lucide:link"
+          size="sm"
+        />
+      </div>
+
+      <div class="surface-card rounded-xl p-6">
+        <div class="mb-5">
+          <h3 class="text-base font-semibold text-[var(--text-primary)]">Change Password</h3>
+          <p class="text-sm text-[var(--text-tertiary)] mt-0.5">Update your login credentials</p>
+        </div>
+        <UForm :state="passwordForm" @submit="handleChangePassword" class="space-y-5 max-w-md">
+          <UFormField
+            label="Current password"
+            :error="passwordErrors.currentPassword"
+            required
+          >
+            <UInput
+              v-model="passwordForm.currentPassword"
+              type="password"
+              placeholder="Enter current password"
               size="md"
-              :loading="passwordLoading"
-              :disabled="passwordLoading"
-              icon="lucide:shield-check"
-            >
-              Update password
-            </UButton>
-          </UForm>
-        </CommonFormCard>
-      </section>
+              class="w-full"
+              autocomplete="current-password"
+            />
+          </UFormField>
+          <UFormField
+            label="New password"
+            :error="passwordErrors.newPassword"
+            required
+          >
+            <UInput
+              v-model="passwordForm.newPassword"
+              type="password"
+              placeholder="Enter new password"
+              size="md"
+              class="w-full"
+              autocomplete="new-password"
+            />
+          </UFormField>
+          <UFormField
+            label="Confirm new password"
+            :error="passwordErrors.confirmPassword"
+            required
+          >
+            <UInput
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              placeholder="Confirm new password"
+              size="md"
+              class="w-full"
+              autocomplete="new-password"
+            />
+          </UFormField>
+          <UButton
+            type="submit"
+            color="primary"
+            variant="soft"
+            size="md"
+            :loading="passwordLoading"
+            :disabled="passwordLoading"
+          >
+            Update password
+          </UButton>
+        </UForm>
+      </div>
     </template>
   </div>
 </template>
