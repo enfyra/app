@@ -7,6 +7,7 @@ const { checkPermissionCondition } = usePermissions();
 const { isMobile, isTablet, width } = useScreen();
 const { setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
+const { metadataReloading } = useAdminSocket();
 
 const faviconUrl = computed(() => {
   if (!settings.value?.projectFavicon) return null;
@@ -210,7 +211,8 @@ watch(searchQuery, (newQuery) => {
       <div class="flex items-center gap-3">
         <div class="relative">
           <div class="relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden">
-            <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
+            <UIcon v-if="metadataReloading" name="lucide:loader-circle" class="text-brand-500 animate-spin" size="25" />
+            <img v-else-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
             <UIcon v-else name="lucide:database" class="w-5 h-5 text-brand-500" />
           </div>
         </div>

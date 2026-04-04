@@ -1,9 +1,13 @@
 import { io, type Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
+const metadataReloading = ref(false);
 
 export function useAdminSocket() {
   const toast = useToast();
+  const schema = useSchema();
+  const routes = useRoutes();
+  const menuRegistry = useMenuRegistry();
 
   if (!socket) {
     socket = io('/enfyra-admin', {
@@ -40,16 +44,15 @@ export function useAdminSocket() {
       if (!shouldToastConnection()) return;
     });
 
-    socket.on('$system:metadata:reloaded', () => {
-      setTimeout(async () => {
-        const { forceRefreshSchema, schemas } = useSchema();
-        const { loadRoutes } = useRoutes();
-        const { registerDataMenuItems } = useMenuRegistry();
-
-        await forceRefreshSchema();
-        await loadRoutes();
-        await registerDataMenuItems(Object.values(schemas.value));
-      }, 1000);
+    socket.on('$system:metadata:reload', async (data: { status: string }) => {
+      if (data.status === 'pending') {
+        metadataReloading.value = true;
+      } else if (data.status === 'done') {
+        await schema.forceRefreshSchema();
+        await routes.loadRoutes();
+        await menuRegistry.registerDataMenuItems(Object.values(schema.schemas.value));
+        metadataReloading.value = false;
+      }
     });
 
     socket.on('$system:package:installed', (data: any) => {
@@ -77,5 +80,5 @@ export function useAdminSocket() {
     });
   }
 
-  return { adminSocket: socket };
+  return { adminSocket: socket, metadataReloading };
 }
