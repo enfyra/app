@@ -316,9 +316,6 @@ function handleCancelMove() {
     <div
       v-if="item.isDropdown"
       class="menu-group-wrapper"
-      :style="{
-        '--dnd-bar-left': `${12 + (level || 0) * 12}px`
-      }"
     >
     <div
       :class="[
@@ -473,7 +470,7 @@ function handleCancelMove() {
           ]"
           :style="{
             paddingLeft: `${24 + ((level || 0) + 1) * 12}px`,
-            '--dnd-bar-left': `${12 + (level || 0) * 12}px`
+            '--dnd-bar-left': `${52 + ((level || 0) + 1) * 24}px`
           }"
         >
         <template #item="{ element: child }">
@@ -626,23 +623,6 @@ function handleCancelMove() {
   position: relative;
 }
 
-.menu-group-wrapper::before {
-  content: '';
-  position: absolute;
-  left: var(--dnd-bar-left, 10px);
-  top: 10px;
-  bottom: 10px;
-  width: 2px;
-  border-radius: 2px;
-  background: rgba(148, 163, 184, 0.55);
-  pointer-events: none;
-}
-
-.menu-group-wrapper:has(.drop-zone:has(.sortable-ghost))::before,
-.menu-group-wrapper:has(.drop-zone:has(.ghost-item))::before {
-  background: rgba(139, 92, 246, 0.85);
-}
-
 .drop-zone {
   position: relative;
 }
@@ -651,15 +631,12 @@ function handleCancelMove() {
   content: '';
   position: absolute;
   left: var(--dnd-bar-left, 10px);
-  top: 10px;
-  bottom: 10px;
+  top: 8px;
+  bottom: 8px;
   width: 2px;
   border-radius: 2px;
   background: rgba(148, 163, 184, 0.55);
-}
-
-.drop-zone {
-  position: relative;
+  pointer-events: none;
 }
 
 .drop-zone:has(.sortable-ghost) {
@@ -671,11 +648,6 @@ function handleCancelMove() {
 .drop-zone:has(.sortable-ghost)::before,
 .drop-zone:has(.ghost-item)::before {
   background: rgba(139, 92, 246, 0.85);
-}
-
-.menu-group:has(.drop-zone:has(.sortable-ghost)),
-.menu-group:has(.drop-zone:has(.ghost-item)) {
-  background: rgba(139, 92, 246, 0.05);
 }
 
 .menu-visual-editor-item :deep(.sortable-ghost) {
