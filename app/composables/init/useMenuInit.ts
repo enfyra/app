@@ -1,14 +1,11 @@
 import SidebarUserInfo from "~/components/sidebar/UserInfo.vue";
 
 export async function useMenuInit() {
-  const { logout } = useAuth();
-
   const {
     registerAllMenusFromApi,
     registerDataMenuItemsFromRoutes,
     registerMenuItem,
   } = useMenuRegistry();
-  const { confirm } = useConfirm();
   const routes = useState<any[]>('routes:all', () => []);
 
   const { menuDefinitions } = useMenuApi();
@@ -64,19 +61,5 @@ export async function useMenuInit() {
     order: 9998,
     position: "bottom",
     component: SidebarUserInfo,
-  } as any);
-
-  registerMenuItem({
-    id: "logout",
-    label: "Logout",
-    icon: "lucide:log-out",
-    route: "",
-    type: "Menu",
-    order: 9999,
-    position: "bottom",
-    onClick: async () => {
-      const ok = await confirm({ content: "Are you sure you want to logout?" });
-      if (ok) await logout();
-    },
   } as any);
 }

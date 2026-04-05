@@ -87,7 +87,7 @@ async function createNewRecord() {
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
           
-          <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-6'">
+          <div :class="(isMobile || isTablet) ? 'bg-[var(--surface-muted)] rounded-lg border border-muted/30 p-3' : 'bg-[var(--surface-muted)] rounded-xl border border-muted/30 p-6'">
             <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
               <UIcon name="lucide:edit-3" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />
               <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-foreground' : 'text-lg font-semibold text-foreground'">Form Fields</h3>
@@ -99,7 +99,7 @@ async function createNewRecord() {
             />
           </div>
 
-          <div :class="(isMobile || isTablet) ? 'bg-gray-800/50 rounded-lg border border-muted/30 p-3' : 'bg-gray-800/50 rounded-xl border border-muted/30 p-4'">
+          <div :class="(isMobile || isTablet) ? 'bg-[var(--surface-muted)] rounded-lg border border-muted/30 p-3' : 'bg-[var(--surface-muted)] rounded-xl border border-muted/30 p-4'">
             <div class="flex items-center justify-between">
               <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
                 <UIcon

@@ -26,17 +26,13 @@ export interface HeaderStyleConfig {
 }
 
 const defaultHeaderStyle: HeaderStyleConfig = {
-  background: "rgba(21, 27, 46, 0.5)",
+  background: "rgba(198, 212, 255, 0.5)",
   borderColor: "var(--border-subtle)",
   borderWidth: "1px",
 
   position: "sticky",
   top: "0",
   zIndex: 40,
-
-  backdropBlur: true,
-  backdropBlurAmount: "20px",
-  shadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
 
   paddingX: "1.5rem", 
   paddingY: "1rem", 

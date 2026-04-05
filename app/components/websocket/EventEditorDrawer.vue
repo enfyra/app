@@ -305,12 +305,12 @@ async function handleTest() {
           </div>
         </div>
 
-        <div v-if="showTestPanel" class="pt-3 border-t border-gray-200 dark:border-gray-800">
-          <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/20 p-4 space-y-3">
+        <div v-if="showTestPanel" class="pt-3 border-t border-[var(--border-default)]">
+          <div class="rounded-xl border border-[var(--border-default)] surface-card p-4 space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <UIcon name="lucide:flask-conical" class="w-4 h-4 text-primary" />
-                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Test event handler</div>
+                <div class="text-sm font-semibold text-[var(--text-primary)]">Test event handler</div>
               </div>
               <UButton
                 size="sm"
@@ -324,7 +324,7 @@ async function handleTest() {
               </UButton>
             </div>
 
-            <div class="text-xs text-gray-500 dark:text-gray-400">
+            <div class="text-xs text-[var(--text-tertiary)]">
               Runs the current <span class="font-mono">handlerScript</span> via <span class="font-mono">/admin/test/run</span> and returns result, logs, and emitted events.
             </div>
 
@@ -334,14 +334,14 @@ async function handleTest() {
             </div>
 
             <div>
-              <div class="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Payload (JSON)</div>
+              <div class="text-xs font-medium text-[var(--text-tertiary)] mb-1">Payload (JSON)</div>
               <FormCodeEditorLazy
                 v-model="testPayloadJson"
                 language="json"
                 height="180px"
                 class="text-xs"
               />
-              <div v-if="!testPayloadJson?.trim()" class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-mono">
+              <div v-if="!testPayloadJson?.trim()" class="mt-1 text-[11px] text-[var(--text-tertiary)] font-mono">
                 {{ testPayloadPlaceholder }}
               </div>
             </div>
@@ -363,18 +363,18 @@ async function handleTest() {
               </div>
 
               <div v-if="testResult.logs?.length" class="space-y-1">
-                <div class="text-xs font-medium text-gray-600 dark:text-gray-300">Logs</div>
-                <pre class="text-[11px] font-mono rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 p-2 overflow-auto max-h-[160px] whitespace-pre-wrap">{{ JSON.stringify(testResult.logs, null, 2) }}</pre>
+                <div class="text-xs font-medium text-[var(--text-tertiary)]">Logs</div>
+                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[160px] whitespace-pre-wrap">{{ JSON.stringify(testResult.logs, null, 2) }}</pre>
               </div>
 
               <div v-if="testResult.emitted?.length" class="space-y-1">
-                <div class="text-xs font-medium text-gray-600 dark:text-gray-300">Emitted</div>
-                <pre class="text-[11px] font-mono rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 p-2 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.emitted, null, 2) }}</pre>
+                <div class="text-xs font-medium text-[var(--text-tertiary)]">Emitted</div>
+                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.emitted, null, 2) }}</pre>
               </div>
 
               <div v-if="testResult.result !== undefined" class="space-y-1">
-                <div class="text-xs font-medium text-gray-600 dark:text-gray-300">Result</div>
-                <pre class="text-[11px] font-mono rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black/40 p-2 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
+                <div class="text-xs font-medium text-[var(--text-tertiary)]">Result</div>
+                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
               </div>
             </div>
           </div>

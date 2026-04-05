@@ -52,7 +52,7 @@ const showTitle = computed(() =>
       v-else-if="loadingType === 'spinner'"
       type="crescent"
       :size="size"
-      color="#7C3AED"
+      color="var(--brand-violet-electric)"
     />
     
     <CommonLoadingSkeleton 
@@ -100,7 +100,7 @@ const showTitle = computed(() =>
 
     <div v-if="showTitle" class="text-center">
       <p :class="[
-        'font-medium text-gray-700 dark:text-gray-300',
+        'font-medium text-[var(--text-secondary)]',
         size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-lg' : 'text-base'
       ]">
         {{ props.title || defaultTitle }}
@@ -108,7 +108,7 @@ const showTitle = computed(() =>
       <p
         v-if="props.description"
         :class="[
-          'text-gray-500 dark:text-gray-400 mt-1',
+          'text-[var(--text-tertiary)] mt-1',
           size === 'sm' ? 'text-xs' : 'text-sm'
         ]"
       >

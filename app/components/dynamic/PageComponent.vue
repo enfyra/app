@@ -33,9 +33,11 @@
   <PermissionGate
     v-else-if="extensionComponent"
     :condition="menuResponse?.data[0]?.permission ?? { allowAll: true }"
+    class="flex-1 flex flex-col"
   >
     <component
       :is="extensionComponent"
+      class="flex-1"
     />
   </PermissionGate>
 

@@ -46,7 +46,7 @@ function close() {
       :handle="props.handle"
       :class="props.class"
       :ui="{
-        content: 'glass-modal',
+        content: 'surface-card',
         header: 'pb-0',
         body: 'pt-4',
       }"

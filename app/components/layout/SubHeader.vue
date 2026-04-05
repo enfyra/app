@@ -1,6 +1,6 @@
 <template>
   <div
-    class="h-12 flex items-center shrink-0 relative overflow-hidden border-b border-gray-200 dark:border-gray-800"
+    class="h-12 flex items-center shrink-0 relative overflow-hidden border-b border-[var(--border-default)]"
     :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
   >
 
@@ -43,7 +43,7 @@
               action.class,
               (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
               (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                ? '!bg-white !border !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                ? '!bg-[var(--surface-default)] !border !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
                 : ''
             ]"
           />
@@ -86,7 +86,7 @@
               action.class,
               (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
               (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                ? '!bg-white !border !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                ? '!bg-[var(--surface-default)] !border !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
                 : ''
             ]"
           />

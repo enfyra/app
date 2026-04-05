@@ -6,7 +6,7 @@
     >
       <div class="flex items-center gap-2 mb-4">
         <UIcon name="lucide:layers" class="text-info" size="18" />
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Schema Structure</h3>
+        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Schema Structure</h3>
       </div>
       <ClientOnly>
         <VueJsonPretty
@@ -15,7 +15,7 @@
           :show-line="false"
           :deep="4"
           :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          :class="colorMode.value === 'dark' ? 'bg-gray-900 rounded-lg p-4' : 'bg-white rounded-lg p-4 border border-gray-200'"
+          class="surface-card rounded-lg p-4"
         />
       </ClientOnly>
     </div>
@@ -25,7 +25,7 @@
     >
       <div class="flex items-center gap-2 mb-4">
         <UIcon name="lucide:code" class="text-green-500" size="18" />
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 class="text-lg font-semibold text-[var(--text-primary)]">
           Example POST Request
         </h3>
       </div>
@@ -36,7 +36,7 @@
           :show-line="false"
           :deep="3"
           :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          :class="colorMode.value === 'dark' ? 'bg-gray-900 rounded-lg p-4' : 'bg-white rounded-lg p-4 border border-gray-200'"
+          class="surface-card rounded-lg p-4"
         />
       </ClientOnly>
     </div>
@@ -46,10 +46,10 @@
     >
       <div class="flex items-center gap-2 mb-4">
         <UIcon name="lucide:edit" class="text-yellow-500" size="18" />
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 class="text-lg font-semibold text-[var(--text-primary)]">
           Example PATCH Request
         </h3>
-        <span class="text-xs text-gray-600 dark:text-gray-400 ml-auto">
+        <span class="text-xs text-[var(--text-tertiary)] ml-auto">
           Only send fields you want to update
         </span>
       </div>
@@ -60,7 +60,7 @@
           :show-line="false"
           :deep="3"
           :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          :class="colorMode.value === 'dark' ? 'bg-gray-900 rounded-lg p-4' : 'bg-white rounded-lg p-4 border border-gray-200'"
+          class="surface-card rounded-lg p-4"
         />
       </ClientOnly>
     </div>
@@ -75,7 +75,7 @@
           class="text-secondary-500"
           size="18"
         />
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Validation Rules</h3>
+        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Validation Rules</h3>
       </div>
       <ClientOnly>
         <VueJsonPretty
@@ -84,7 +84,7 @@
           :show-line="false"
           :deep="3"
           :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          :class="colorMode.value === 'dark' ? 'bg-gray-900 rounded-lg p-4' : 'bg-white rounded-lg p-4 border border-gray-200'"
+          class="surface-card rounded-lg p-4"
         />
       </ClientOnly>
     </div>
@@ -95,7 +95,7 @@
     >
       <div class="flex items-center gap-2 mb-4">
         <UIcon name="lucide:git-branch" class="text-purple-500" size="18" />
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Relations</h3>
+        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Relations</h3>
       </div>
       <ClientOnly>
         <VueJsonPretty
@@ -104,7 +104,7 @@
           :show-line="false"
           :deep="2"
           :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          :class="colorMode.value === 'dark' ? 'bg-gray-900 rounded-lg p-4' : 'bg-white rounded-lg p-4 border border-gray-200'"
+          class="surface-card rounded-lg p-4"
         />
       </ClientOnly>
     </div>
@@ -121,7 +121,7 @@
           name="lucide:database-zap"
           class="w-12 h-12 text-muted-foreground mx-auto mb-2"
         />
-        <p class="text-gray-600 dark:text-gray-400">
+        <p class="text-[var(--text-tertiary)]">
           {{ schemaLoading ? 'Loading schema...' : 'No schema data available' }}
         </p>
       </div>

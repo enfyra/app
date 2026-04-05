@@ -1,5 +1,5 @@
 <template>
-  <div class="flex items-center gap-3 p-3 border-b border-gray-600">
+  <div class="flex items-center gap-3 p-3 border-b border-[var(--border-default)]">
     
     <div class="relative group">
       <div

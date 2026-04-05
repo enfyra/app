@@ -18,7 +18,7 @@
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-0.5 flex-wrap mb-0.5">
-              <h5 class="text-[8px] font-semibold text-gray-900 dark:text-white truncate leading-tight max-w-[100px]">
+              <h5 class="text-[8px] font-semibold text-[var(--text-primary)] truncate leading-tight max-w-[100px]">
                 {{ data.label || 'Unnamed' }}
               </h5>
               <UBadge
@@ -119,7 +119,7 @@ const contextMenuItems = computed(() => {
 
 const nodeClass = computed(() => {
   const baseClass = props.data.enabled === false 
-    ? 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/40'
+    ? 'border-[var(--border-default)] bg-[var(--surface-muted)]'
     : '';
   
   if (props.data.isDefault) {
@@ -134,7 +134,7 @@ const nodeClass = computed(() => {
     case 'posthook':
       return `${baseClass} border-secondary-200 dark:border-secondary-800 bg-secondary-50 dark:bg-secondary-900/20 hover:border-secondary-300 dark:hover:border-secondary-700`;
     default:
-      return `${baseClass} border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50`;
+      return `${baseClass} border-[var(--border-default)] bg-[var(--surface-muted)]`;
   }
 });
 
@@ -151,7 +151,7 @@ const iconClass = computed(() => {
     case 'posthook':
       return 'w-6 h-6 rounded bg-secondary-100 dark:bg-secondary-900/40 flex items-center justify-center flex-shrink-0 text-secondary-600 dark:text-secondary-400';
     default:
-      return 'w-6 h-6 rounded bg-gray-100 dark:bg-gray-900/40 flex items-center justify-center flex-shrink-0 text-gray-600 dark:text-gray-400';
+      return 'w-6 h-6 rounded bg-[var(--surface-muted)] flex items-center justify-center flex-shrink-0 text-[var(--text-tertiary)]';
   }
 });
 

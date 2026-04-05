@@ -65,7 +65,7 @@
         >
           <template #title>
             <div class="flex items-center gap-2">
-                <h3 class="font-semibold text-white">{{ config.name }}</h3>
+                <h3 class="font-semibold text-[var(--text-primary)]">{{ config.name }}</h3>
                 <UBadge variant="subtle" :color="getStorageBadgeColor(config)" size="sm">
                   {{ config.type || config.driver }}
                 </UBadge>
@@ -81,7 +81,7 @@
           <template #footer>
             <div class="flex items-center justify-between w-full">
               <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-400">Status:</span>
+                <span class="text-xs text-[var(--text-quaternary)]">Status:</span>
                 <USwitch
                   v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['update'] }] })"
                   :model-value="config.isEnabled"
@@ -134,8 +134,8 @@
           item: 'h-9 w-9 rounded-xl transition-all duration-300',
         }"
       />
-      <p class="hidden md:block text-sm text-gray-400">
-        Showing <span class="text-gray-700 dark:text-gray-200">{{ (page - 1) * limit + 1 }}-{{ Math.min(page * limit, total) }}</span> of <span class="text-gray-700 dark:text-gray-200">{{ total }}</span> results
+      <p class="hidden md:block text-sm text-[var(--text-quaternary)]">
+        Showing <span class="text-[var(--text-secondary)]">{{ (page - 1) * limit + 1 }}-{{ Math.min(page * limit, total) }}</span> of <span class="text-[var(--text-secondary)]">{{ total }}</span> results
       </p>
     </div>
   </div>

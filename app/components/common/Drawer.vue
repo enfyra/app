@@ -56,7 +56,7 @@ function close() {
       :class="drawerClass"
       :ui="{
         container: 'h-[100dvh]',
-        content: 'overflow-hidden glass-panel',
+        content: 'overflow-hidden bg-[var(--surface-default)]',
         header: 'px-6 py-4 flex items-center justify-between flex-shrink-0',
         body: 'flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar',
         footer: 'flex-shrink-0 px-6 py-4',

@@ -100,12 +100,12 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
         }"
       >
         <h1
-              class="font-semibold tracking-tight text-gray-800 dark:text-white/90"
+              class="font-semibold tracking-tight text-[var(--text-primary)]"
           :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-xl') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-4xl' : 'text-3xl')"
         >
           {{ title }}
         </h1>
-            <p v-if="description" :class="[(isMobile || isTablet) ? 'text-xs' : 'text-sm', 'text-gray-500 dark:text-gray-400']">
+            <p v-if="description" :class="[(isMobile || isTablet) ? 'text-xs' : 'text-sm', 'text-[var(--text-tertiary)]']">
           {{ description }}
         </p>
           </div>
@@ -143,7 +143,7 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
                   action.class,
                   (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
                   (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                    ? '!bg-white !border !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                    ? '!bg-[var(--surface-default)] !border !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
                     : ''
                 ]"
               />
@@ -180,7 +180,7 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
                   action.class,
                   (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
                   (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                    ? '!bg-white !border !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+                    ? '!bg-[var(--surface-default)] !border !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
                     : ''
                 ]"
               />
@@ -201,7 +201,7 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
           v-for="(stat, index) in stats"
           :key="index"
           :class="[
-            'border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] relative overflow-hidden group transition-all duration-300',
+            'surface-card relative overflow-hidden group transition-all duration-300',
             (isMobile || isTablet) ? 'rounded-lg' : 'rounded-xl',
             isStatsFocus ? ((isMobile || isTablet) ? 'p-3' : 'p-6') : ((isMobile || isTablet) ? 'p-2.5' : 'p-4')
           ]"
@@ -218,12 +218,12 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
 
           <div class="relative">
             <div
-              class="font-semibold text-gray-800 dark:text-white/90"
+              class="font-semibold text-[var(--text-primary)]"
               :class="(isMobile || isTablet) ? (isStatsFocus ? 'text-xl' : 'text-lg') : (isStatsFocus ? 'text-3xl' : 'text-2xl')"
             >
               {{ stat.value }}
             </div>
-            <div :class="[(isMobile || isTablet) ? 'text-xs mt-0.5' : 'text-sm mt-1', 'text-gray-500 dark:text-gray-400']">
+            <div :class="[(isMobile || isTablet) ? 'text-xs mt-0.5' : 'text-sm mt-1', 'text-[var(--text-tertiary)]']">
               {{ stat.label }}
             </div>
           </div>

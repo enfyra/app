@@ -5,7 +5,7 @@
         <template #header>
           <div class="flex items-center gap-2">
             <UIcon name="lucide:database" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Main Table</h3>
+            <h3 class="text-lg font-semibold text-[var(--text-primary)]">Main Table</h3>
           </div>
         </template>
         <div class="p-4 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20">
@@ -14,11 +14,11 @@
               <UIcon name="lucide:table" class="w-6 h-6 text-primary-600 dark:text-primary-400" />
             </div>
             <div class="flex-1">
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">This route is the main route for table:</p>
-              <h4 class="text-base font-semibold text-gray-900 dark:text-white">
+              <p class="text-sm text-[var(--text-tertiary)] mb-1">This route is the main route for table:</p>
+              <h4 class="text-base font-semibold text-[var(--text-primary)]">
                 {{ mainTableInfo.name || mainTableInfo.tableName || 'Unknown Table' }}
               </h4>
-              <p v-if="mainTableInfo.description" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p v-if="mainTableInfo.description" class="text-xs text-[var(--text-tertiary)] mt-1">
                 {{ mainTableInfo.description }}
               </p>
             </div>

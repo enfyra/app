@@ -30,7 +30,7 @@
             <UInput :model-value="fullUrl" disabled class="w-full font-mono text-[11px]" :title="fullUrl" />
             <UButton v-if="fullUrl.length > 60" size="xs" variant="ghost" class="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" @click="showFullUrl = !showFullUrl">{{ showFullUrl ? 'Hide' : 'Full' }}</UButton>
           </div>
-          <pre v-if="showFullUrl" class="text-[10px] font-mono text-gray-500 dark:text-gray-400 break-all whitespace-pre-wrap px-1">{{ fullUrl }}</pre>
+          <pre v-if="showFullUrl" class="text-[10px] font-mono text-[var(--text-tertiary)] break-all whitespace-pre-wrap px-1">{{ fullUrl }}</pre>
         </div>
 
         <div v-if="methodWarning" class="flex items-center gap-2 p-2.5 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-xs text-yellow-700 dark:text-yellow-300">
@@ -43,13 +43,13 @@
         </UFormField>
 
         <div v-if="['POST', 'PATCH'].includes(method)">
-          <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">Request Body</h4>
+          <h4 class="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Request Body</h4>
           <FormCodeEditorLazy v-model="body" language="json" height="160px" class="w-full" />
         </div>
 
         <div v-if="method !== 'DELETE'">
           <div class="flex items-center justify-between mb-2">
-            <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-300">Query Parameters</h4>
+            <h4 class="text-xs font-semibold text-[var(--text-tertiary)]">Query Parameters</h4>
             <UButton size="xs" variant="ghost" icon="i-lucide-plus" @click="addQueryParam">Add</UButton>
           </div>
           <div class="space-y-1.5">
@@ -64,11 +64,11 @@
 
         <div v-if="method !== 'DELETE' && mainTableName && schemas && Object.keys(schemas).length > 0" class="space-y-4">
           <div v-if="method === 'GET'">
-            <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">Filter</h4>
+            <h4 class="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Filter</h4>
             <FilterBuilder v-model="filterObject" :schemas="schemas" :table-name="mainTableName" />
           </div>
           <div>
-            <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">Response Fields</h4>
+            <h4 class="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Response Fields</h4>
             <div class="flex flex-wrap gap-1.5">
               <UButton v-for="col in selectableColumns" :key="col" :color="selectedFields.includes(col) ? 'primary' : 'neutral'" :variant="selectedFields.includes(col) ? 'solid' : 'outline'" size="xs" @click="toggleField(col)">{{ col }}</UButton>
               <UButton size="xs" variant="ghost" color="neutral" @click="selectedFields = selectableColumns.map(c => c)">All</UButton>
@@ -77,16 +77,16 @@
           </div>
         </div>
 
-        <div v-if="response !== null" class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
+        <div v-if="response !== null" class="border-t border-[var(--border-default)] pt-4 space-y-2">
           <div class="flex flex-wrap items-center gap-2">
-            <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-300">Response</h4>
+            <h4 class="text-xs font-semibold text-[var(--text-tertiary)]">Response</h4>
             <UBadge :color="statusColor" variant="soft" size="xs">{{ response.status }}</UBadge>
-            <span class="text-[11px] text-gray-400 font-mono">{{ response.duration }}ms</span>
-            <span class="text-[11px] text-gray-400">{{ responseSize }}</span>
+            <span class="text-[11px] text-[var(--text-quaternary)] font-mono">{{ response.duration }}ms</span>
+            <span class="text-[11px] text-[var(--text-quaternary)]">{{ responseSize }}</span>
             <div class="flex-1" />
             <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyResponse">Copy</UButton>
           </div>
-          <pre class="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-xs font-mono overflow-auto max-h-[300px] whitespace-pre-wrap" :class="response.status >= 400 ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'">{{ response.body }}</pre>
+          <pre class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono overflow-auto max-h-[300px] whitespace-pre-wrap" :class="response.status >= 400 ? 'text-red-600 dark:text-red-400' : 'text-[var(--text-secondary)]'">{{ response.body }}</pre>
         </div>
 
         <div v-if="responseError" class="p-2.5 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-xs text-red-600 dark:text-red-400">

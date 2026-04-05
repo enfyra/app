@@ -7,10 +7,10 @@
       :disabled="moveState.moveMode"
     >
       <div
-        class="relative rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] transition-all duration-200 overflow-hidden cursor-pointer hover:shadow-theme-md"
+        class="relative rounded-xl border border-[var(--border-default)] bg-[var(--surface-default)] transition-all duration-200 overflow-hidden cursor-pointer hover:shadow-theme-md"
         :class="{
           'border-brand-500 shadow-theme-md': selectedItems.includes(file.id),
-          'hover:border-gray-300 dark:hover:border-gray-700': !selectedItems.includes(file.id),
+          'hover:border-[var(--border-strong)]': !selectedItems.includes(file.id),
         }"
         :style="{
           borderWidth: selectedItems.includes(file.id) ? '2px' : '1px',
@@ -45,7 +45,7 @@
           />
             </div>
 
-            <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
+            <div class="flex items-center justify-between text-sm text-[var(--text-tertiary)] mb-3">
             <span>{{ file.size }}</span>
             <span>{{ file.modifiedAt }}</span>
               </div>
@@ -66,7 +66,7 @@
                   class="h-8 w-8 p-0"
                   @click.stop
                 >
-                  <UIcon name="lucide:more-vertical" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <UIcon name="lucide:more-vertical" class="w-4 h-4 text-[var(--text-tertiary)]" />
                 </UButton>
               </UDropdownMenu>
             </div>
@@ -74,7 +74,7 @@
 
           <div
             v-if="isSelectionMode"
-            class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-white dark:bg-gray-800 shadow-theme-xs"
+            class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-[var(--surface-default)] shadow-theme-xs"
             @click.stop="handleCheckboxClick"
           >
             <UCheckbox
@@ -380,7 +380,7 @@ const getFileIconBgClass = () => {
   if (mimetype.startsWith('audio/')) {
     return 'bg-primary-50 dark:bg-primary-500/20';
   }
-  return 'bg-gray-50 dark:bg-gray-500/20';
+  return 'bg-[var(--surface-muted)]';
 };
 
 const getFileIconColor = () => {

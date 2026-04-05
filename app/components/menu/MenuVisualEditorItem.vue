@@ -331,15 +331,15 @@ function handleCancelMove() {
     >
         <UIcon
           name="lucide:grip-vertical"
-          class="w-4 h-4 text-gray-400 dark:text-gray-500 drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
+          class="w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
           @click.stop
         />
         <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 text-violet-500 dark:text-violet-400" />
-        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ item.label }}</span>
+        <span class="text-sm font-medium text-[var(--text-secondary)]">{{ item.label }}</span>
         <UIcon 
           v-if="isSystemMenu" 
           name="lucide:lock" 
-          class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 ml-1" 
+          class="w-3.5 h-3.5 text-[var(--text-quaternary)] ml-1" 
           title="System menu - cannot be edited"
         />
         <UDropdownMenu
@@ -391,7 +391,7 @@ function handleCancelMove() {
           <button
             v-if="item.isDropdown && (childrenItems.length > 0 || item.children?.length > 0)"
             @click.stop="isExpanded = !isExpanded"
-            class="w-5 h-5 flex items-center justify-center transition-colors duration-150 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            class="w-5 h-5 flex items-center justify-center transition-colors duration-150 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
           >
             <UIcon
               name="lucide:chevron-right"
@@ -510,15 +510,15 @@ function handleCancelMove() {
     >
       <UIcon
         name="lucide:grip-vertical"
-        class="w-4 h-4 text-gray-400 dark:text-gray-500 drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
+        class="w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
         @click.stop
       />
       <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 text-violet-500 dark:text-violet-400" />
-      <span class="text-sm text-gray-700 dark:text-gray-300">{{ item.label }}</span>
+      <span class="text-sm text-[var(--text-secondary)]">{{ item.label }}</span>
       <UIcon 
         v-if="isSystemMenu" 
         name="lucide:lock" 
-        class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 ml-1" 
+        class="w-3.5 h-3.5 text-[var(--text-quaternary)] ml-1" 
         title="System menu - cannot be edited"
       />
       <UDropdownMenu

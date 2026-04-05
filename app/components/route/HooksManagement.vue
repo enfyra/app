@@ -3,8 +3,8 @@
     <template #header>
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Hooks</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <h3 class="text-lg font-semibold text-[var(--text-primary)]">Hooks</h3>
+          <p class="text-sm text-[var(--text-tertiary)] mt-1">
             Pre-hooks execute before handlers, post-hooks execute after. Priority determines execution order.
           </p>
         </div>
@@ -41,7 +41,7 @@
       <div
         v-for="hook in sortedHooks"
         :key="getId(hook)"
-        class="p-4 rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer"
+        class="p-4 rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] hover:border-[var(--border-strong)] transition-colors cursor-pointer"
         @click="$emit('edit', hook)"
       >
         <div class="flex items-center justify-between">
@@ -51,7 +51,7 @@
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
-                <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                <h4 class="text-sm font-semibold text-[var(--text-primary)]">
                   {{ hook.name || 'Unnamed Hook' }}
                 </h4>
                 
@@ -112,7 +112,7 @@
               </div>
               <p
                 v-if="hook.description"
-                class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                class="text-xs text-[var(--text-tertiary)] mt-1"
               >
                 {{ hook.description }}
               </p>

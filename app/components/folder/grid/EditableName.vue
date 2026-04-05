@@ -10,7 +10,7 @@
         @keyup.escape="!editingLoading && $emit('cancel-edit')"
         :disabled="editingLoading"
         :data-editing-id="folder.id"
-        class="flex-1 min-w-0 max-w-full text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-300 dark:border-primary rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        class="flex-1 min-w-0 max-w-full text-xs font-semibold bg-[var(--surface-default)] border border-[var(--border-strong)] rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary text-[var(--text-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
         style="letter-spacing: -0.01em"
         @click.stop
       />
@@ -46,7 +46,7 @@
       class="flex items-center gap-2 flex-1 min-w-0"
     >
       <h3
-        class="font-semibold text-gray-800 dark:text-white/90 truncate flex-1 min-w-0 text-base leading-tight"
+        class="font-semibold text-[var(--text-primary)] truncate flex-1 min-w-0 text-base leading-tight"
         style="letter-spacing: -0.01em; font-weight: 600;"
         :title="folder.displayName"
       >

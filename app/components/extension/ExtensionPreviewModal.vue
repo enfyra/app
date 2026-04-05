@@ -14,7 +14,7 @@
       <div v-if="previewLoading" class="flex items-center justify-center h-[70vh]">
         <div class="text-center">
           <UIcon name="i-heroicons-arrow-path" class="w-10 h-10 animate-spin mx-auto mb-4 text-primary-500" />
-          <p class="text-sm text-gray-600 dark:text-gray-400 font-medium">
+          <p class="text-sm text-[var(--text-tertiary)] font-medium">
             {{ previewLoadingMessage }}
           </p>
         </div>
@@ -25,7 +25,7 @@
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
             <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-red-500 dark:text-red-400" />
           </div>
-          <h4 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Compilation Error</h4>
+          <h4 class="text-lg font-semibold mb-3 text-[var(--text-primary)]">Compilation Error</h4>
           <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
             <p class="text-sm text-red-700 dark:text-red-300 whitespace-pre-wrap text-left">{{ previewError }}</p>
           </div>
@@ -53,7 +53,7 @@
           />
         </div>
 
-        <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+        <div class="rounded-xl border border-[var(--border-default)] surface-card shadow-sm overflow-hidden">
           <div class="p-8 min-h-[60vh]">
             <component :is="previewComponent" v-if="isValidComponent" />
           </div>
@@ -65,8 +65,8 @@
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center">
             <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-yellow-500 dark:text-yellow-400" />
           </div>
-          <h4 class="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Component Render Error</h4>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
+          <h4 class="text-lg font-semibold mb-3 text-[var(--text-primary)]">Component Render Error</h4>
+          <p class="text-sm text-[var(--text-tertiary)]">
             Component đã được compile nhưng không thể render. Có thể do package dependencies chưa được load đúng cách.
           </p>
         </div>

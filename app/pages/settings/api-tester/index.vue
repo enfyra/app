@@ -9,19 +9,19 @@
 
       <div v-else class="space-y-6">
         <div v-if="customRoutes.length > 0">
-          <p class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-3">Your Routes <UBadge size="xs" variant="soft" color="neutral" class="ml-1">{{ customRoutes.length }}</UBadge></p>
+          <p class="text-sm font-semibold text-[var(--text-tertiary)] mb-3">Your Routes <UBadge size="xs" variant="soft" color="neutral" class="ml-1">{{ customRoutes.length }}</UBadge></p>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3">
             <div
               v-for="r in customRoutes"
               :key="r.id"
-              class="glass-card-hover group p-3 rounded-lg cursor-pointer transition-all"
+              class="group p-3 rounded-lg cursor-pointer surface-card-hover"
               @click="openTest(r)"
             >
               <div class="flex items-center gap-2 mb-2">
                 <div class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-primary-100 dark:bg-primary-900/40">
                   <UIcon :name="r.icon || 'lucide:code-2'" class="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
                 </div>
-                <p class="text-xs font-semibold font-mono text-gray-800 dark:text-gray-200 truncate flex-1">{{ r.path }}</p>
+                <p class="text-xs font-semibold font-mono text-[var(--text-primary)] truncate flex-1">{{ r.path }}</p>
                 <UBadge v-if="!r.isEnabled" color="warning" variant="soft" size="xs">Off</UBadge>
               </div>
               <div class="flex gap-1">
@@ -34,23 +34,23 @@
 
         <div>
           <button class="flex items-center gap-2 mb-3" @click="toggleSystemRoutes">
-            <UIcon :name="systemExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="w-4 h-4 text-gray-400" />
-            <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">System Routes</span>
+            <UIcon :name="systemExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="w-4 h-4 text-[var(--text-quaternary)]" />
+            <span class="text-sm font-semibold text-[var(--text-tertiary)]">System Routes</span>
             <UBadge v-if="systemRoutes.length > 0" size="xs" variant="soft" color="neutral">{{ filteredSystemRoutes.length }}</UBadge>
-            <span v-if="systemLoading" class="w-3 h-3 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin" />
+            <span v-if="systemLoading" class="w-3 h-3 border-2 border-[var(--border-strong)] border-t-primary-500 rounded-full animate-spin" />
           </button>
           <div v-if="systemExpanded && filteredSystemRoutes.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3">
             <div
               v-for="r in filteredSystemRoutes"
               :key="r.id"
-              class="glass-card-hover group p-3 rounded-lg cursor-pointer transition-all"
+              class="group p-3 rounded-lg cursor-pointer surface-card-hover"
               @click="openTest(r)"
             >
               <div class="flex items-center gap-2 mb-2">
-                <div class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-gray-100 dark:bg-gray-700">
-                  <UIcon :name="r.icon || 'lucide:settings'" class="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                <div class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-[var(--surface-muted)]">
+                  <UIcon :name="r.icon || 'lucide:settings'" class="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
                 </div>
-                <p class="text-xs font-semibold font-mono text-gray-800 dark:text-gray-200 truncate flex-1">{{ r.path }}</p>
+                <p class="text-xs font-semibold font-mono text-[var(--text-primary)] truncate flex-1">{{ r.path }}</p>
               </div>
               <div class="flex gap-1">
                 <UBadge v-for="m in getRouteMethods(r)" :key="m" :color="methodColor(m)" variant="soft" size="xs">{{ m }}</UBadge>

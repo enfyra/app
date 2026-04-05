@@ -2,7 +2,7 @@
   <div class="space-y-3 w-full">
     <!-- Script -->
     <template v-if="type === 'script'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Must <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">return</code> a value. Access repos via <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">#table_name</code>, previous steps via <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">@FLOW.step_key</code>, input via <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">@PAYLOAD</code>.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Must <code class="bg-[var(--surface-muted)] px-1 rounded">return</code> a value. Access repos via <code class="bg-[var(--surface-muted)] px-1 rounded">#table_name</code>, previous steps via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW.step_key</code>, input via <code class="bg-[var(--surface-muted)] px-1 rounded">@PAYLOAD</code>.</p>
       <UFormField label="Code" class="w-full">
         <FormCodeEditorLazy :model-value="fields.code" @update:model-value="update('code', $event)" language="javascript" :enfyra-autocomplete="true" height="220px" class="w-full" />
       </UFormField>
@@ -10,7 +10,7 @@
 
     <!-- Condition -->
     <template v-else-if="type === 'condition'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Uses JS truthy/falsy. <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">return user</code> (truthy if exists), <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">return null</code> (falsy). Each branch executes different child steps.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Uses JS truthy/falsy. <code class="bg-[var(--surface-muted)] px-1 rounded">return user</code> (truthy if exists), <code class="bg-[var(--surface-muted)] px-1 rounded">return null</code> (falsy). Each branch executes different child steps.</p>
       <UFormField label="Condition Code" class="w-full">
         <FormCodeEditorLazy :model-value="fields.code" @update:model-value="update('code', $event)" language="javascript" :enfyra-autocomplete="true" height="120px" class="w-full" />
       </UFormField>
@@ -18,12 +18,12 @@
 
     <!-- Query -->
     <template v-else-if="type === 'query'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Fetch records from a table.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Fetch records from a table.</p>
       <UFormField label="Table" class="w-full">
         <FlowTablePicker :model-value="fields.table" @update:model-value="onQueryTableChange($event)" />
       </UFormField>
       <div v-if="fields.table && schemas && Object.keys(schemas).length > 0" class="w-full">
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Filter</p>
+        <p class="text-xs font-medium text-[var(--text-tertiary)] mb-2">Filter</p>
         <FilterBuilder
           v-model="queryFilter"
           :schemas="schemas"
@@ -31,7 +31,7 @@
           @update:model-value="onFilterChange"
         />
       </div>
-      <div v-else-if="fields.table" class="w-full text-xs text-gray-400 py-2">Loading schema...</div>
+      <div v-else-if="fields.table" class="w-full text-xs text-[var(--text-quaternary)] py-2">Loading schema...</div>
       <div class="grid grid-cols-2 gap-3 w-full">
         <UFormField label="Limit" class="w-full">
           <UInput :model-value="fields.limit" @update:model-value="updateNumber('limit', $event)" type="number" placeholder="10" class="w-full" />
@@ -44,7 +44,7 @@
 
     <!-- Create -->
     <template v-else-if="type === 'create'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Create a new record in a table.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Create a new record in a table.</p>
       <UFormField label="Table" class="w-full">
         <FlowTablePicker :model-value="fields.table" @update:model-value="update('table', $event)" />
       </UFormField>
@@ -55,7 +55,7 @@
 
     <!-- Update -->
     <template v-else-if="type === 'update'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Update an existing record by ID.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Update an existing record by ID.</p>
       <UFormField label="Table" class="w-full">
         <FlowTablePicker :model-value="fields.table" @update:model-value="update('table', $event)" />
       </UFormField>
@@ -69,7 +69,7 @@
 
     <!-- Delete -->
     <template v-else-if="type === 'delete'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Delete a record by ID.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Delete a record by ID.</p>
       <UFormField label="Table" class="w-full">
         <FlowTablePicker :model-value="fields.table" @update:model-value="update('table', $event)" />
       </UFormField>
@@ -80,7 +80,7 @@
 
     <!-- HTTP -->
     <template v-else-if="type === 'http'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Send an HTTP request to an external API.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Send an HTTP request to an external API.</p>
       <UFormField label="URL" class="w-full">
         <UInput :model-value="fields.url" @update:model-value="update('url', $event)" placeholder="https://api.example.com/webhook" class="w-full" />
       </UFormField>
@@ -97,7 +97,7 @@
 
     <!-- Trigger Flow -->
     <template v-else-if="type === 'trigger_flow'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Trigger another flow asynchronously.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Trigger another flow asynchronously.</p>
       <UFormField label="Flow Name" class="w-full">
         <UInput :model-value="fields.flowName" @update:model-value="update('flowName', $event)" placeholder="send-welcome-email" class="w-full" />
       </UFormField>
@@ -108,17 +108,17 @@
 
     <!-- Sleep -->
     <template v-else-if="type === 'sleep'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Pause execution for a specified duration.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Pause execution for a specified duration.</p>
       <UFormField label="Duration" class="w-full">
         <UInput :model-value="fields.ms" @update:model-value="updateNumber('ms', $event)" type="number" placeholder="5000" class="w-full">
-          <template #trailing><span class="text-xs text-gray-400">ms</span></template>
+          <template #trailing><span class="text-xs text-[var(--text-quaternary)]">ms</span></template>
         </UInput>
       </UFormField>
     </template>
 
     <!-- Log -->
     <template v-else-if="type === 'log'">
-      <p class="text-[11px] text-gray-500 dark:text-gray-400">Log a message to the execution output.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Log a message to the execution output.</p>
       <UFormField label="Message" class="w-full">
         <UInput :model-value="fields.message" @update:model-value="update('message', $event)" placeholder="Processing complete" class="w-full" />
       </UFormField>

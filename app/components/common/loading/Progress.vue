@@ -45,7 +45,7 @@ const strokeDashoffset = computed(() =>
 
 <template>
   
-  <div v-if="type === 'linear'" :class="['w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden', progressHeight]">
+  <div v-if="type === 'linear'" :class="['w-full bg-[var(--surface-muted)] rounded-full overflow-hidden', progressHeight]">
     <div 
       v-if="indeterminate"
       :class="[progressHeight, `bg-${color}`, 'rounded-full animate-pulse w-1/3']"
@@ -75,7 +75,7 @@ const strokeDashoffset = computed(() =>
         cx="50%"
         cy="50%"
         :r="radius"
-        :stroke="color === 'purple-500' ? '#7C3AED' : color"
+        :stroke="color === 'purple-500' ? 'var(--brand-violet-electric)' : color"
         stroke-width="2"
         fill="none"
         :stroke-dasharray="circumference"

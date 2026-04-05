@@ -77,10 +77,10 @@ onUnmounted(() => {
     <Transition name="fade">
       <div
         v-if="filename"
-        class="fixed inset-0 z-50 bg-white dark:bg-gray-950"
+        class="fixed inset-0 z-50 bg-[var(--surface-default)]"
       >
         <div class="h-full flex flex-col">
-          <div class="flex flex-col gap-3 px-4 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+          <div class="flex flex-col gap-3 px-4 md:px-6 py-3 border-b border-[var(--border-default)] bg-[var(--surface-muted)]">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <UButton
@@ -94,8 +94,8 @@ onUnmounted(() => {
                   <UIcon name="lucide:file-text" class="w-4 h-4 text-white" />
                 </div>
                 <div class="min-w-0">
-                  <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ filename }}</h3>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                  <h3 class="font-semibold text-[var(--text-primary)] truncate">{{ filename }}</h3>
+                  <p class="text-xs text-[var(--text-tertiary)]">
                     {{ isSearchMode ? `${searchResultCount} results` : `${lines.length} lines` }}
                   </p>
                 </div>
@@ -193,7 +193,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950">
+          <div class="flex-1 overflow-auto bg-[var(--surface-muted)]">
             <div v-if="loading || searchLoading" class="flex items-center justify-center h-full">
               <CommonLoadingState :label="isSearchMode ? 'Searching...' : 'Loading log content...'" />
             </div>
@@ -202,7 +202,7 @@ onUnmounted(() => {
               <div class="text-center space-y-3">
                 <UIcon name="lucide:alert-triangle" class="w-12 h-12 text-rose-400 mx-auto" />
                 <p class="text-rose-400 font-medium text-lg">{{ error }}</p>
-                <p class="text-gray-500">Check permissions or try again</p>
+                <p class="text-[var(--text-tertiary)]">Check permissions or try again</p>
                 <UButton size="sm" variant="soft" color="neutral" @click="handleClose">
                   Go back
                 </UButton>
@@ -211,8 +211,8 @@ onUnmounted(() => {
 
             <div v-else-if="lines.length === 0" class="flex items-center justify-center h-full">
               <div class="text-center space-y-3">
-                <UIcon name="lucide:file-x" class="w-12 h-12 text-gray-500 mx-auto" />
-                <p class="text-gray-400 text-lg">
+                <UIcon name="lucide:file-x" class="w-12 h-12 text-[var(--text-tertiary)] mx-auto" />
+                <p class="text-[var(--text-quaternary)] text-lg">
                   {{ isSearchMode ? 'No search results found' : 'No log content found' }}
                 </p>
                 <UButton v-if="isSearchMode" size="sm" variant="soft" color="neutral" @click="handleClearSearch">
@@ -228,10 +228,10 @@ onUnmounted(() => {
               <div
                 v-for="(line, index) in lines"
                 :key="index"
-                class="flex gap-3 px-2 py-1 rounded hover:bg-gray-200/50 dark:hover:bg-gray-800/50"
+                class="flex gap-3 px-2 py-1 rounded hover:bg-[var(--surface-muted)]"
               >
-                <span class="text-gray-400 dark:text-gray-600 select-none w-8 text-right shrink-0 font-mono text-xs">{{ index + 1 }}</span>
-                <pre class="whitespace-pre-wrap break-all flex-1 font-mono text-xs text-gray-700 dark:text-gray-300">{{ line }}</pre>
+                <span class="text-[var(--text-quaternary)] select-none w-8 text-right shrink-0 font-mono text-xs">{{ index + 1 }}</span>
+                <pre class="whitespace-pre-wrap break-all flex-1 font-mono text-xs text-[var(--text-secondary)]">{{ line }}</pre>
               </div>
               <div v-if="hasMore && !isSearchMode" class="flex justify-center py-6">
                 <UButton

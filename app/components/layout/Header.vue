@@ -34,7 +34,7 @@
             action.class,
             (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
             (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-              ? '!bg-white !border-2 !border-gray-400 !text-gray-800 hover:!bg-gray-100 hover:!border-gray-500 dark:!bg-gray-800 dark:!border-gray-600 dark:!text-gray-200 dark:hover:!bg-gray-700'
+              ? '!bg-[var(--surface-default)] !border-2 !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
               : ''
           ]"
         />

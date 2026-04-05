@@ -25,13 +25,16 @@ export function useNavigationActions() {
     {
       id: "navigation-back-button",
       icon: "lucide:arrow-left",
-      variant: "outline",
+      variant: "ghost",
       color: "neutral",
-      size: (isMobile || isTablet) ? 'lg' : 'sm',
+      size: "lg",
       side: "left",
       class: 'cursor-pointer',
       get disabled() {
         return !canGoBack.value;
+      },
+      get show() {
+        return isMobile.value || isTablet.value;
       },
       onClick: goBack,
       global: true,

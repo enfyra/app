@@ -13,7 +13,7 @@
         size="xs"
         class="w-20"
       />
-      <span v-else class="text-xs px-2 py-1 bg-gray-100 rounded">
+      <span v-else class="text-xs px-2 py-1 bg-[var(--surface-muted)] rounded">
         {{ group.type.toUpperCase() }}
       </span>
     </div>

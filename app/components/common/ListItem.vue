@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'group bg-white dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-300',
+      'group surface-card-hover rounded-lg transition-all duration-300',
       clickable ? 'cursor-pointer' : '',
       (isMobile || isTablet) ? 'p-3' : 'p-4'
     ]"
@@ -35,14 +35,14 @@
         <slot name="content">
           <div v-if="title || $slots.title" class="flex items-center gap-2 mb-1.5 md:mb-2">
             <slot name="title">
-              <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-gray-800 dark:text-white/90 truncate' : 'text-base font-semibold text-gray-800 dark:text-white/90'">
+              <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-[var(--text-primary)] truncate' : 'text-base font-semibold text-[var(--text-primary)]'">
                 {{ title }}
               </h3>
             </slot>
             <slot name="badges" />
           </div>
           <slot name="description">
-            <p v-if="description" :class="(isMobile || isTablet) ? 'text-xs text-gray-500 dark:text-gray-400' : 'text-sm text-gray-500 dark:text-gray-400'">
+            <p v-if="description" :class="(isMobile || isTablet) ? 'text-xs text-[var(--text-tertiary)]' : 'text-sm text-[var(--text-tertiary)]'">
               {{ description }}
             </p>
           </slot>
@@ -55,7 +55,7 @@
       </div>
     </div>
 
-    <div v-if="$slots.footer" class="flex items-center justify-between gap-2 pt-2 mt-2 border-t border-gray-200 dark:border-gray-800">
+    <div v-if="$slots.footer" class="flex items-center justify-between gap-2 pt-2 mt-2 border-t border-[var(--border-default)]">
       <slot name="footer" />
     </div>
   </div>

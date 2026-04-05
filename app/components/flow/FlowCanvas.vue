@@ -1,5 +1,5 @@
 <template>
-  <div class="flow-canvas-container border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden bg-gray-50 dark:bg-gray-900/50" style="width: 100%; height: 100%; min-height: 350px;">
+  <div class="flow-canvas-container border border-[var(--border-default)] rounded-lg overflow-hidden bg-[var(--surface-muted)]" style="width: 100%; height: 100%; min-height: 350px;">
     <VueFlow
       ref="vueFlowRef"
       :nodes="nodes"

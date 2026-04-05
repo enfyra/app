@@ -16,7 +16,7 @@
 
     <div
       v-else
-      class="text-xs text-gray-500 italic"
+      class="text-xs text-[var(--text-tertiary)] italic"
     >
       No items added yet
     </div>

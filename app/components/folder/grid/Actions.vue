@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="!moveMode"
-    class="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700 opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 mt-auto"
+    class="flex items-center gap-2 pt-2 border-t border-[var(--border-subtle)] opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 mt-auto"
   >
     <UButton
       icon="lucide:folder-open"
@@ -26,9 +26,9 @@
   
   <div
     v-else
-    class="flex items-center justify-center pt-2 border-t border-gray-100 dark:border-gray-700 mt-auto"
+    class="flex items-center justify-center pt-2 border-t border-[var(--border-subtle)] mt-auto"
   >
-    <span class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+    <span class="text-xs text-[var(--text-tertiary)] flex items-center gap-1">
       <UIcon name="lucide:move" class="w-3 h-3" />
       Move mode active
     </span>

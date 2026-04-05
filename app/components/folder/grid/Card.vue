@@ -4,10 +4,10 @@
   >
     <UContextMenu :items="getContextMenuItems()" :disabled="isFolderDisabled">
       <div
-        class="relative rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] transition-all duration-200 cursor-pointer overflow-hidden hover:shadow-theme-md"
+        class="relative rounded-xl border border-[var(--border-default)] bg-[var(--surface-default)] transition-all duration-200 cursor-pointer overflow-hidden hover:shadow-theme-md"
         :class="{
           'border-brand-500 shadow-theme-md': props.selectedItems.includes(props.folder.id),
-          'hover:border-gray-300 dark:hover:border-gray-700': !props.selectedItems.includes(props.folder.id),
+          'hover:border-[var(--border-strong)]': !props.selectedItems.includes(props.folder.id),
         }"
         :style="{
           borderWidth: props.selectedItems.includes(props.folder.id) ? '2px' : '1px',
@@ -32,7 +32,7 @@
 
         <div
           v-if="isSelectionMode"
-          class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-white dark:bg-gray-800 shadow-theme-xs"
+          class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-[var(--surface-default)] shadow-theme-xs"
             @click.stop="$emit('toggle-selection', folder.id)"
           >
             <UCheckbox
@@ -61,7 +61,7 @@
           />
             </div>
 
-            <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
+            <div class="flex items-center justify-between text-sm text-[var(--text-tertiary)] mb-3">
               <span>{{ folder.itemCount }}</span>
               <span>{{ folder.size || '0 B' }}</span>
           </div>
@@ -74,7 +74,7 @@
                   class="h-8 w-8 p-0"
                   @click.stop
                 >
-                  <UIcon name="lucide:more-vertical" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <UIcon name="lucide:more-vertical" class="w-4 h-4 text-[var(--text-tertiary)]" />
                 </UButton>
               </UDropdownMenu>
             </div>

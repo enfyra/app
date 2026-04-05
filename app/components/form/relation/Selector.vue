@@ -211,7 +211,7 @@ const { isMobile, isTablet } = useScreen();
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
 
           <div
-            :class="(isMobile || isTablet) ? 'rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 shadow-sm bg-white dark:bg-gray-800/50' : 'rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 shadow-sm bg-white dark:bg-gray-800/50'"
+            :class="(isMobile || isTablet) ? 'rounded-lg border border-[var(--border-default)] p-3 shadow-sm bg-[var(--surface-default)]' : 'rounded-xl border border-[var(--border-default)] p-6 shadow-sm bg-[var(--surface-default)]'"
           >
             <div :class="(isMobile || isTablet) ? 'flex items-center justify-between mb-3' : 'flex items-center justify-between mb-4'">
               <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
@@ -307,7 +307,7 @@ const { isMobile, isTablet } = useScreen();
           </div>
 
           <div
-            :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-gray-200 dark:border-gray-700/30 p-3 bg-white dark:bg-gray-800/50' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-gray-200 dark:border-gray-700/30 p-6 bg-white dark:bg-gray-800/50'"
+            :class="(isMobile || isTablet) ? 'bg-gradient-to-r from-background/50 to-muted/10 rounded-lg border border-[var(--border-default)] p-3 bg-[var(--surface-default)]' : 'bg-gradient-to-r from-background/50 to-muted/10 rounded-xl border border-[var(--border-default)] p-6 bg-[var(--surface-default)]'"
           >
 
             <CommonLoadingState
@@ -355,7 +355,7 @@ const { isMobile, isTablet } = useScreen();
         </div>
       </template>
       <template #footer>
-        <div :class="(isMobile || isTablet) ? '' : 'rounded-xl border border-gray-200 dark:border-gray-700/30 p-4 bg-white dark:bg-gray-800/50'">
+        <div :class="(isMobile || isTablet) ? '' : 'rounded-xl border border-[var(--border-default)] p-4 bg-[var(--surface-default)]'">
           <FormRelationPagination
             :page="page"
             :total="total"

@@ -12,7 +12,7 @@
         <div class="flex items-center justify-center p-8">
           <div class="flex items-center gap-3">
             <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-            <span class="text-sm text-gray-600">Loading filter...</span>
+            <span class="text-sm text-[var(--text-tertiary)]">Loading filter...</span>
           </div>
         </div>
       </template>

@@ -111,7 +111,7 @@ const fileColumns = computed(() => [
         h("div", { class: "min-w-0 flex-1" }, [
           h(
             "p",
-            { class: "font-medium text-gray-900 dark:text-white truncate" },
+            { class: "font-medium text-[var(--text-primary)] truncate" },
             file.filename || file.displayName || "Unknown File"
           ),
         ]),
@@ -338,12 +338,12 @@ function getContextMenuItems(file: any) {
       >
         <UIcon
           name="lucide:file"
-          class="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4"
+          class="w-16 h-16 text-[var(--text-quaternary)] mx-auto mb-4"
         />
-        <p class="text-lg font-medium text-gray-500 dark:text-gray-400">
+        <p class="text-lg font-medium text-[var(--text-tertiary)]">
           {{ emptyTitle }}
         </p>
-        <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">{{ emptyDescription }}</p>
+        <p class="text-sm text-[var(--text-quaternary)] mt-1">{{ emptyDescription }}</p>
       </div>
     </Transition>
   </div>

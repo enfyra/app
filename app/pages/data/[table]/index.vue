@@ -391,7 +391,7 @@ useHeaderActionRegistry([
       <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
         <UIcon name="i-lucide-filter" class="w-4 h-4 text-white" />
       </div>
-      <span class="font-medium text-gray-200">
+      <span class="font-medium text-[var(--text-disabled)]">
         {{ currentFilter.conditions.length }} active filter{{ currentFilter.conditions.length > 1 ? 's' : '' }}
       </span>
       <UButton
@@ -438,9 +438,9 @@ useHeaderActionRegistry([
             item: 'h-9 w-9 rounded-xl transition-all duration-300',
           }"
         />
-        <p class="hidden md:block text-sm text-gray-600 dark:text-gray-400">
-          Showing <span class="text-gray-700 dark:text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span>
-          of <span class="text-gray-700 dark:text-gray-200">{{ total }}</span> results
+        <p class="hidden md:block text-sm text-[var(--text-tertiary)]">
+          Showing <span class="text-[var(--text-secondary)]">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span>
+          of <span class="text-[var(--text-secondary)]">{{ total }}</span> results
         </p>
       </div>
     </div>

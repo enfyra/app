@@ -23,11 +23,11 @@
             <div class="flex items-start gap-2 flex-1 min-w-0">
               <UIcon
                 :name="item.icon"
-                class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5"
+                class="w-4 h-4 text-[var(--text-quaternary)] flex-shrink-0 mt-0.5"
               />
               <div class="flex-1 min-w-0">
                 <div class="font-medium text-sm truncate">{{ item.label }}</div>
-                <div class="text-xs text-gray-500 truncate">
+                <div class="text-xs text-[var(--text-tertiary)] truncate">
                   {{ item.description }}
                 </div>
               </div>
@@ -78,14 +78,14 @@
       </UInputMenu>
     </div>
 
-    <div class="flex items-center justify-between text-xs text-gray-500">
+    <div class="flex items-center justify-between text-xs text-[var(--text-tertiary)]">
       <div class="flex items-center gap-1">
         <UIcon name="lucide:lightbulb" class="w-3 h-3" />
         <span>Popular: axios, lodash, express, moment</span>
       </div>
       <div
         v-if="searchTerm && searchTerm.length >= 2 && !loading"
-        class="text-gray-400"
+        class="text-[var(--text-quaternary)]"
       >
         ↵ Enter to select
       </div>
@@ -116,12 +116,12 @@
 
             <p
               v-if="selectedPackage.description"
-              class="text-xs text-gray-400 line-clamp-2 leading-relaxed"
+              class="text-xs text-[var(--text-quaternary)] line-clamp-2 leading-relaxed"
             >
               {{ selectedPackage.description }}
             </p>
 
-            <div class="flex items-center gap-3 text-xs text-gray-500">
+            <div class="flex items-center gap-3 text-xs text-[var(--text-tertiary)]">
               <div class="flex items-center gap-1">
                 <UIcon name="lucide:user" class="w-3 h-3" />
                 <span>{{ selectedPackage.author }}</span>
@@ -144,7 +144,7 @@
               icon="lucide:external-link"
               :to="selectedPackage.links?.npm"
               target="_blank"
-              class="hover:bg-gray-700/50"
+              class="hover:bg-[var(--surface-muted)]"
             />
             <UButton
               variant="ghost"
@@ -152,7 +152,7 @@
               size="xs"
               icon="lucide:x"
               @click="clearSelection"
-              class="hover:bg-gray-700/50"
+              class="hover:bg-[var(--surface-muted)]"
             />
           </div>
         </div>

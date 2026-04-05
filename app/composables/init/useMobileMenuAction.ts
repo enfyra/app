@@ -1,21 +1,16 @@
 export function useMobileMenuAction() {
   const { toggleSidebar } = useGlobalState();
-  const { width } = useScreen();
 
   useHeaderActionRegistry([
     {
-      id: "mobile-menu-toggle",
-      icon: "lucide:menu",
-      variant: "solid",
-      size: "lg",
+      id: "sidebar-toggle",
+      icon: "lucide:panel-left",
+      variant: "ghost",
+      color: "neutral",
+      size: "md",
       side: "left",
-      color: "secondary",
-      class: " flex-shrink-0",
       onClick: toggleSidebar,
       global: true,
-      get show() {
-        return width.value <= 1024;
-      },
       permission: {
         allowAll: true,
       },

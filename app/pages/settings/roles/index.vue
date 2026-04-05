@@ -190,8 +190,8 @@ watch(
           item: 'h-9 w-9 rounded-xl transition-all duration-300',
         }"
       />
-      <p class="hidden md:block text-sm text-gray-400">
-        Showing <span class="text-gray-700 dark:text-gray-200">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of <span class="text-gray-700 dark:text-gray-200">{{ total }}</span> results
+      <p class="hidden md:block text-sm text-[var(--text-quaternary)]">
+        Showing <span class="text-[var(--text-secondary)]">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span> of <span class="text-[var(--text-secondary)]">{{ total }}</span> results
       </p>
     </div>
   </div>

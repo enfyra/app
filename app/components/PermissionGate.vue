@@ -1,5 +1,5 @@
 <template>
-  <div v-bind="$attrs" :style="!hasPermission ? { display: 'contents' } : undefined" class="h-full">
+  <div v-bind="$attrs" :style="!hasPermission ? { display: 'contents' } : undefined" class="h-full w-full">
     <slot v-if="hasPermission" />
   </div>
 </template>

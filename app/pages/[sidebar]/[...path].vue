@@ -1,5 +1,7 @@
 <template>
-  <DynamicPageComponent :path="path" />
+  <div class="flex-1 flex flex-col">
+    <DynamicPageComponent :path="path" />
+  </div>
 </template>
 
 <script setup lang="ts">

@@ -67,11 +67,11 @@ const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
-  <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+  <div class="border-t border-[var(--border-default)] pt-4 mt-4">
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
         <UIcon name="lucide:code-2" class="w-4 h-4 text-muted-foreground" />
-        <span class="text-sm font-medium text-gray-800 dark:text-white/90">Filter Preview</span>
+        <span class="text-sm font-medium text-[var(--text-primary)]">Filter Preview</span>
       </div>
       <UButton
         :icon="showPreview ? 'lucide:chevron-up' : 'lucide:chevron-down'"
@@ -112,7 +112,7 @@ const { isMobile, isTablet } = useScreen();
             v-if="formattedQuery"
             class="text-xs text-green-400 font-mono whitespace-pre-wrap break-all"
           >{{ formattedQuery }}</pre>
-          <div v-else class="text-xs text-gray-500">
+          <div v-else class="text-xs text-[var(--text-tertiary)]">
             No filter query generated
           </div>
         </div>

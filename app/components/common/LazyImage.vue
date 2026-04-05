@@ -10,7 +10,7 @@
       :style="loadingStyle"
     >
       <div
-        class="absolute inset-0 bg-gray-200 dark:bg-gray-700"
+        class="absolute inset-0 bg-[var(--surface-muted)]"
         :class="shapeClasses"
       />
 
@@ -32,7 +32,7 @@
       v-show="hasError && !isRetrying"
       :class="[
         'absolute inset-0 flex flex-col items-center justify-center',
-        'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500',
+        'bg-[var(--surface-muted)] text-[var(--text-quaternary)]',
         shapeClasses,
       ]"
     >

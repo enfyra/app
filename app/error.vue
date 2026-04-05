@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden bg-white dark:bg-gray-900"
+    class="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden bg-[var(--surface-chrome)]"
     role="main"
     aria-labelledby="error-title"
   >
@@ -12,7 +12,7 @@
     <div class="relative mx-auto w-full max-w-[472px] text-center z-10">
         <h1
           id="error-title"
-        class="mb-8 font-bold text-gray-800 dark:text-white/90 text-title-md xl:text-title-2xl"
+        class="mb-8 font-bold text-[var(--text-primary)] text-title-md xl:text-title-2xl"
           aria-live="assertive"
         >
           {{ error.statusCode || "500" }}
@@ -23,19 +23,19 @@
           <UIcon name="lucide:shield-x" class="w-full h-full text-error-500" />
         </div>
         <div v-else-if="error.statusCode === 404" class="w-64 h-64 flex items-center justify-center">
-          <UIcon name="lucide:file-question" class="w-full h-full text-gray-400 dark:text-gray-600" />
+          <UIcon name="lucide:file-question" class="w-full h-full text-[var(--text-quaternary)]" />
         </div>
         <div v-else class="w-32 h-32 flex items-center justify-center">
           <UIcon name="lucide:alert-circle" class="w-full h-full text-error-500" />
         </div>
       </div>
 
-      <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90 mb-2">
+      <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-2">
           {{ error.statusMessage || "Server Error" }}
         </h2>
 
       <p
-        class="mt-4 mb-8 text-base text-gray-500 dark:text-gray-400 sm:text-lg max-w-md mx-auto"
+        class="mt-4 mb-8 text-base text-[var(--text-tertiary)] sm:text-lg max-w-md mx-auto"
         role="alert"
       >
           {{ errorDescription }}
