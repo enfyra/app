@@ -39,7 +39,6 @@ function close() {
 </script>
 
 <template>
-  <Teleport to="body">
     <UModal
       v-if="hasContent"
       v-model:open="isOpen"
@@ -76,6 +75,5 @@ function close() {
         <slot v-if="hasFooter" name="footer" />
       </template>
     </UModal>
-  </Teleport>
 </template>
 

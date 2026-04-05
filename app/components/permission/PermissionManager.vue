@@ -192,7 +192,6 @@
       />
     </Transition>
 
-    <Teleport to="body">
       <UDrawer
       :handle="false"
         v-model:open="showDrawer"
@@ -237,7 +236,6 @@
           </div>
         </template>
       </UDrawer>
-    </Teleport>
   </div>
 </template>
 

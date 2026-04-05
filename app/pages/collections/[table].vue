@@ -636,7 +636,6 @@ onMounted(() => {
       />
     </Transition>
 
-    <Teleport to="body">
       <UModal
         v-model:open="showSchemaViewer"
         :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-2xl max-w-4xl'"
@@ -671,6 +670,5 @@ onMounted(() => {
           <CollectionSchemaViewer v-if="table?.name" :table-name="table.name" />
         </template>
       </UModal>
-    </Teleport>
   </div>
 </template>

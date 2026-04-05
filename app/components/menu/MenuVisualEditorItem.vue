@@ -345,6 +345,7 @@ function handleCancelMove() {
         <UDropdownMenu
           v-if="menuItems.length > 0"
           :items="[menuItems]"
+          :modal="false"
           :content="{
             side: 'bottom',
           }"
@@ -524,9 +525,10 @@ function handleCancelMove() {
       <UDropdownMenu
         v-if="menuItems.length > 0"
         :items="[menuItems]"
+        :modal="false"
         :popper="{ placement: 'bottom-end' }"
         :content="{
-          
+
         }"
       >
         <UButton

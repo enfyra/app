@@ -46,46 +46,44 @@ function close() {
 </script>
 
 <template>
-  <Teleport to="body">
-    <UDrawer
-      v-if="hasContent"
-      :handle="false"
-      handle-only
-      v-model:open="isOpen"
-      :direction="props.direction"
-      :class="drawerClass"
-      :ui="{
-        container: 'h-[100dvh]',
-        content: 'overflow-hidden bg-[var(--surface-default)]',
-        header: 'px-6 py-4 flex items-center justify-between flex-shrink-0',
-        body: 'flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar',
-        footer: 'flex-shrink-0 px-6 py-4',
-      }"
-    >
-      <template #header>
-        <div v-if="hasHeader" class="flex items-center justify-between w-full ">
-          <div class="flex-1 min-w-0">
-            <slot name="header" />
-          </div>
-          <UButton
-            icon="lucide:x"
-            color="error"
-            variant="soft"
-            :size="(isMobile || isTablet) ? 'lg' : 'xl'"
-            :class="(isMobile || isTablet) ? 'rounded-full !aspect-square flex-shrink-0' : 'flex-shrink-0'"
-            @click="close"
-          />
+  <UDrawer
+    v-if="hasContent"
+    :handle="false"
+    handle-only
+    v-model:open="isOpen"
+    :direction="props.direction"
+    :class="drawerClass"
+    :ui="{
+      container: 'h-[100dvh]',
+      content: 'overflow-hidden bg-[var(--surface-default)]',
+      header: 'px-6 py-4 flex items-center justify-between flex-shrink-0',
+      body: 'flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar',
+      footer: 'flex-shrink-0 px-6 py-4',
+    }"
+  >
+    <template #header>
+      <div v-if="hasHeader" class="flex items-center justify-between w-full ">
+        <div class="flex-1 min-w-0">
+          <slot name="header" />
         </div>
-      </template>
+        <UButton
+          icon="lucide:x"
+          color="error"
+          variant="soft"
+          :size="(isMobile || isTablet) ? 'lg' : 'xl'"
+          :class="(isMobile || isTablet) ? 'rounded-full !aspect-square flex-shrink-0' : 'flex-shrink-0'"
+          @click="close"
+        />
+      </div>
+    </template>
 
-      <template #body>
-        <slot name="body" />
-      </template>
+    <template #body>
+      <slot name="body" />
+    </template>
 
-      <template #footer>
-        <slot v-if="hasFooter" name="footer" />
-      </template>
-    </UDrawer>
-  </Teleport>
+    <template #footer>
+      <slot v-if="hasFooter" name="footer" />
+    </template>
+  </UDrawer>
 </template>
 

@@ -640,3 +640,11 @@
 [data-slot="progress"] [data-slot="indicator"] {
   transition: transform 0.1s linear !important;
 }
+
+[data-state="closed"][data-vaul-overlay],
+[data-state="closed"][data-vaul-drawer],
+[data-state="closed"][data-slot="overlay"],
+[data-state="closed"][data-slot="content"],
+[data-state="closed"][role="dialog"] {
+  pointer-events: none !important;
+}

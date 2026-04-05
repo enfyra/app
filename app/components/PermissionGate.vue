@@ -7,6 +7,8 @@
 <script setup lang="ts">
 import type { PermissionGateProps } from "~/types";
 
+defineOptions({ inheritAttrs: false });
+
 const props = withDefaults(defineProps<PermissionGateProps>(), {
   mode: "any",
 });
