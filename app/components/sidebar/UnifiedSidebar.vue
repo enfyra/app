@@ -206,7 +206,6 @@ router.afterEach(() => {
       <div
         v-if="canScrollDown && state === 'expanded'"
         class="sticky bottom-0 w-full flex items-center justify-center pointer-events-none py-0.5"
-        :style="{ background: 'linear-gradient(to top, var(--surface-chrome) 30%, transparent)' }"
       >
         <UIcon name="lucide:chevrons-down" class="w-3.5 h-3.5 text-[var(--text-quaternary)] animate-bounce" />
       </div>

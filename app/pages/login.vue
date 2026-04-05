@@ -50,7 +50,7 @@
       </div>
     </div>
 
-    <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[var(--surface-chrome)]">
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-slate-200 via-gray-100 to-indigo-200 dark:from-gray-700 dark:via-gray-800 dark:to-indigo-950">
       <div class="w-full max-w-md">
         <div class="lg:hidden flex items-center gap-3 mb-8">
           <div class="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl">
@@ -60,10 +60,10 @@
         </div>
 
         <div class="mb-10">
-          <h1 class="text-3xl font-bold text-[var(--text-primary)] mb-2">
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Sign in to your account
           </h1>
-          <p class="text-[var(--text-tertiary)]">
+          <p class="text-gray-600 dark:text-gray-400">
             Welcome back! Please enter your details.
           </p>
         </div>
@@ -72,7 +72,7 @@
           <div class="space-y-6">
             
             <div>
-              <label for="email" class="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+              <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
               </label>
               <UInput
@@ -92,7 +92,7 @@
             </div>
 
             <div>
-              <label for="password" class="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+              <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <UInput
@@ -112,7 +112,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <USwitch v-model="form.remember" size="sm" />
-                <label for="remember" class="text-sm text-[var(--text-tertiary)] cursor-pointer select-none">
+                <label for="remember" class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
                   Remember me
                 </label>
               </div>
