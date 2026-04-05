@@ -132,8 +132,8 @@ router.afterEach(() => {
     :style="{ '--sidebar-width': '290px' }"
     :ui="{
       container: 'h-full !z-[99999]',
-      body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto p-4',
-      footer: 'flex flex-col gap-1.5 overflow-hidden w-full p-2',
+      body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto',
+      footer: 'flex flex-col gap-1.5 overflow-hidden w-full p-0 pl-3',
     }"
   >
     <template #title="{ state }">

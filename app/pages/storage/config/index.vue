@@ -65,7 +65,7 @@
         >
           <template #title>
             <div class="flex items-center gap-2">
-                <h3 class="font-semibold text-white">{{ config.name }}</h3>
+                <h3 class="font-semibold text-[var(--text-primary)]">{{ config.name }}</h3>
                 <UBadge variant="subtle" :color="getStorageBadgeColor(config)" size="sm">
                   {{ config.type || config.driver }}
                 </UBadge>
