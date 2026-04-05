@@ -83,7 +83,6 @@ const cancelChanges = () => {
       Columns
     </UButton>
 
-    <Teleport to="body">
       <UModal v-model:open="isOpen">
         <template #header>
           <div class="flex justify-between items-center w-full">
@@ -131,6 +130,5 @@ const cancelChanges = () => {
           </div>
         </template>
       </UModal>
-    </Teleport>
   </div>
 </template>

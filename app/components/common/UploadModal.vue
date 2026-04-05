@@ -1,5 +1,4 @@
 <template>
-  <Teleport to="body">
     <UModal v-model:open="isOpen">
       <template #header>
         <div class="flex justify-between items-center w-full gap-3">
@@ -147,7 +146,6 @@
         </div>
       </template>
     </UModal>
-  </Teleport>
 </template>
 
 <script setup lang="ts">

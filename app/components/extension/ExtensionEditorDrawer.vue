@@ -220,7 +220,7 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
 </script>
 
 <template>
-  <CommonDrawer 
+  <CommonDrawer
     v-model="isOpen"
     direction="right"
     :class="'w-full max-w-full'"

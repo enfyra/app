@@ -117,6 +117,31 @@ const bottomGroups = computed(() => {
 
 const isDesktopCollapsed = computed(() => !sidebarVisible.value && width.value > 1024);
 
+const scrollAnchor = ref<HTMLElement | null>(null);
+const canScrollDown = ref(false);
+let scrollEl: Element | null = null;
+
+function checkScroll() {
+  if (!scrollEl) return;
+  canScrollDown.value = scrollEl.scrollTop + scrollEl.clientHeight < scrollEl.scrollHeight - 8;
+}
+
+onMounted(() => {
+  nextTick(() => {
+    scrollEl = scrollAnchor.value?.closest('[data-slot="body"]') || null;
+    if (scrollEl) {
+      scrollEl.addEventListener('scroll', checkScroll, { passive: true });
+      checkScroll();
+    }
+  });
+});
+
+onUnmounted(() => {
+  if (scrollEl) scrollEl.removeEventListener('scroll', checkScroll);
+});
+
+watch(navigationItems, () => nextTick(checkScroll), { deep: true });
+
 router.afterEach(() => {
   if (width.value <= 1024) {
     setSidebarVisible(false);
@@ -175,6 +200,16 @@ router.afterEach(() => {
           childLink: 'py-1.5 px-2.5',
         }"
       />
+
+      <div ref="scrollAnchor" />
+
+      <div
+        v-if="canScrollDown && state === 'expanded'"
+        class="sticky bottom-0 w-full flex items-center justify-center pointer-events-none py-0.5"
+        :style="{ background: 'linear-gradient(to top, var(--surface-chrome) 30%, transparent)' }"
+      >
+        <UIcon name="lucide:chevrons-down" class="w-3.5 h-3.5 text-[var(--text-quaternary)] animate-bounce" />
+      </div>
     </template>
 
     <template #footer>
