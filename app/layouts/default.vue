@@ -42,7 +42,7 @@
       <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
 
       <section class="flex-1 min-h-0 overflow-y-auto relative">
-        <div class="px-4 py-4 lg:px-6 lg:py-6 flex flex-col flex-1 h-full">
+        <div class="px-4 py-4 lg:px-6 lg:py-6 flex flex-col flex-1 min-h-full">
           <slot />
         </div>
       </section>
