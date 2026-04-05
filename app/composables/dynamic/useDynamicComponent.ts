@@ -1,4 +1,4 @@
-import { markRaw } from "vue";
+import { markRaw, defineComponent, onMounted, onUnmounted, h } from "vue";
 
 import { availableComponents, getComposablesForPreview } from "./registry";
 import { useExtensionPerf } from "./useExtensionPerf";
@@ -25,6 +25,41 @@ import {
   findComponentInWindow
 } from "./runtime";
 import type { PreviewState } from "./types";
+
+function wrapWithCssLifecycle(
+  component: any,
+  extensionName: string,
+): any {
+  const extensionCss = component.__extensionCss;
+  if (!extensionCss) return component;
+
+  delete component.__extensionCss;
+
+  return markRaw(
+    defineComponent({
+      name: `ExtCss_${extensionName}`,
+      components: component.components,
+      setup(_props, { attrs, slots }) {
+        const styleId = `ext-style-${extensionName}`;
+
+        onMounted(() => {
+          if (!document.getElementById(styleId)) {
+            const s = document.createElement("style");
+            s.id = styleId;
+            s.textContent = extensionCss;
+            document.head.appendChild(s);
+          }
+        });
+
+        onUnmounted(() => {
+          document.getElementById(styleId)?.remove();
+        });
+
+        return () => h(component, attrs, slots);
+      },
+    })
+  );
+}
 
 export const useDynamicComponent = () => {
   const perf = useExtensionPerf();
@@ -79,9 +114,10 @@ export const useDynamicComponent = () => {
         components: availableComponents,
       });
 
-      setCachedComponent(extensionName, wrappedComponent, updatedAt);
+      const finalComponent = wrapWithCssLifecycle(wrappedComponent, extensionName);
+      setCachedComponent(extensionName, finalComponent, updatedAt);
 
-      return markRaw(wrappedComponent);
+      return finalComponent;
     } catch (error: any) {
       throw new Error(`Failed to load component: ${error?.message || error}`);
     }
@@ -144,7 +180,7 @@ export const useDynamicComponent = () => {
         components: availableComponents,
       });
 
-      return markRaw(wrappedComponent);
+      return wrapWithCssLifecycle(wrappedComponent, extensionName);
     } catch (error: any) {
       throw new Error(`Failed to load preview component: ${error?.message || error}`);
     }
