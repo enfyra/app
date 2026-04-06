@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormTableSelect } from '#components';
 
 const props = defineProps<{
   modelValue: any[];
@@ -247,6 +248,9 @@ async function removeRelation(index: number) {
                 type: {
                   type: 'enum',
                   options: relationTypes,
+                },
+                targetTable: {
+                  component: FormTableSelect,
                 },
               }"
             />
