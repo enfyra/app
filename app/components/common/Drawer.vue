@@ -33,8 +33,10 @@ const { isMobile, isTablet } = useScreen();
 const drawerClass = computed(() => {
   const baseClass = props.class || '';
   const responsiveClass = (isMobile.value || isTablet.value)
-    ? ''
-    : 'min-w-xl max-w-xl';
+    ? 'w-full max-w-full'
+    : props.direction === 'right'
+      ? 'min-w-xl max-w-xl'
+      : 'min-w-xl max-w-xl';
   return `${responsiveClass} ${baseClass}`.trim();
 });
 
@@ -50,7 +52,6 @@ function close() {
     handle-only
     v-model:open="isOpen"
     :direction="props.direction"
-    :inset="isMobile || isTablet"
     :class="drawerClass"
     :ui="{
       container: 'h-[100dvh]',
