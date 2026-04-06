@@ -3,7 +3,7 @@
     v-model="localOpen"
     :handle="false"
     direction="right"
-    class="w-full max-w-full"
+    full-width
   >
     <template #header>
       <h2 class="text-xl font-semibold">Edit Handler</h2>
