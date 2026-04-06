@@ -6,11 +6,13 @@ const props = withDefaults(
     class?: string;
     handle?: boolean;
     handleOnly?: boolean;
+    fullWidth?: boolean;
   }>(),
   {
     direction: 'right',
     handle: false,
     handleOnly: false,
+    fullWidth: false,
   }
 );
 
@@ -30,15 +32,6 @@ const isOpen = computed({
 
 const { isMobile, isTablet } = useScreen();
 
-const drawerClass = computed(() => {
-  const baseClass = props.class || '';
-  const responsiveClass = (isMobile.value || isTablet.value)
-    ? 'w-full max-w-full'
-    : props.direction === 'right'
-      ? 'min-w-xl max-w-xl'
-      : 'min-w-xl max-w-xl';
-  return `${responsiveClass} ${baseClass}`.trim();
-});
 
 function close() {
   isOpen.value = false;
@@ -52,13 +45,13 @@ function close() {
     handle-only
     v-model:open="isOpen"
     :direction="props.direction"
-    :class="drawerClass"
+    :inset="true"
     :ui="{
       container: 'h-[100dvh]',
-      content: 'overflow-hidden bg-[var(--surface-default)]',
-      header: 'px-6 py-4 flex items-center justify-between flex-shrink-0',
-      body: 'flex-1 overflow-y-auto min-h-0 px-6 custom-scrollbar',
-      footer: 'flex-shrink-0 px-6 py-4',
+      content: `overflow-hidden bg-[var(--surface-default)] ${props.fullWidth ? 'w-full' : '!w-[36rem] !max-w-[calc(100%-2rem)]'}`,
+      header: 'pt-0 pb-2 flex items-center justify-between flex-shrink-0',
+      body: 'flex-1 overflow-y-auto min-h-0 px-2 md:px-4 custom-scrollbar',
+      footer: 'mb-2 md:mb-4',
     }"
   >
     <template #header>

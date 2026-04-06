@@ -5,6 +5,7 @@ const props = withDefaults(
     class?: string;
     handle?: boolean;
     preventClose?: boolean;
+    ui?: Record<string, string>;
   }>(),
   {
     handle: false,
@@ -33,9 +34,13 @@ const isOpen = computed({
 
 const { isMobile, isTablet } = useScreen();
 
-function close() {
-  isOpen.value = false;
-}
+const mergedUi = computed(() => ({
+  content: 'surface-card',
+  header: 'pb-0',
+  body: 'pt-4',
+  ...props.ui,
+}));
+
 </script>
 
 <template>
@@ -44,11 +49,7 @@ function close() {
       v-model:open="isOpen"
       :handle="props.handle"
       :class="props.class"
-      :ui="{
-        content: 'surface-card',
-        header: 'pb-0',
-        body: 'pt-4',
-      }"
+      :ui="mergedUi"
       :close="{
         color: 'error',
         variant: 'soft',

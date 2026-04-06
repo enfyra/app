@@ -90,7 +90,7 @@
       <CommonEmptyState v-else title="Flow not found" icon="lucide:workflow" size="lg" />
     </Transition>
 
-    <CommonDrawer v-model="stepDrawerOpen" direction="right" class="w-full max-w-full">
+    <CommonDrawer v-model="stepDrawerOpen" direction="right" full-width>
       <template #header>
         <div class="flex items-center justify-between w-full">
           <h3 class="text-lg font-semibold">{{ editingStepId ? 'Edit Step' : 'New Step' }}</h3>

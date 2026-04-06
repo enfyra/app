@@ -239,9 +239,9 @@ export default defineAppConfig({
     drawer: {
       slots: {
         root: "bg-[var(--surface-default)] border-l border-[var(--border-default)]",
-        header: "border-b border-[var(--border-default)] px-6 py-4",
+        header: "border-b border-[var(--border-default)] py-4",
         body: "flex-1 pb-4 px-6",
-        footer: "border-t border-[var(--border-default)] px-6 py-4",
+        footer: "border-t border-[var(--border-default)] py-4",
       },
     },
     switch: {

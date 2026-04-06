@@ -24,14 +24,12 @@ const { getId } = useDatabase();
 const { isMobile, isTablet } = useScreen();
 const isDndUpdating = useState('menu-dnd-updating', () => false);
 
-const isCompact = computed(() => isMobile.value || isTablet.value);
-
 const childrenStyle = computed(() => {
   const lvl = (props.level || 0) + 1;
-  if (isCompact.value) {
+  if (isMobile.value) {
     return {
-      paddingLeft: `${12 + lvl * 8}px`,
-      '--dnd-bar-left': `${20 + lvl * 8}px`
+      paddingLeft: `${16 + lvl * 8}px`,
+      '--dnd-bar-left': `${24 + lvl * 8}px`
     };
   }
   return {
