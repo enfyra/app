@@ -159,7 +159,6 @@ const showDemoLogin = computed(() => {
 });
 
 const { login } = useAuth();
-const route = useRoute();
 const toast = useToast();
 const demoLoading = ref(false);
 const form = reactive({
@@ -174,11 +173,8 @@ const error = reactive<{ email: string | null; password: string | null }>({
 
 async function handleLogin() {
   const ok = await login(form);
-  if (ok) {
-    const redirect = (route.query.redirect as string) || "/";
-    window.location.href = redirect;
-    return;
-  } else {
+  if (ok) window.location.reload();
+  else {
     toast.add({
       title: "Login failed!",
       description: "Invalid email or password",
@@ -196,11 +192,8 @@ async function handleDemoLogin() {
       password: DEMO_LOGIN_PASSWORD,
       remember: true,
     });
-    if (ok) {
-      const redirect = (route.query.redirect as string) || "/";
-      window.location.href = redirect;
-      return;
-    } else {
+    if (ok) window.location.reload();
+    else {
       toast.add({
         title: "Demo login failed",
         description: "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.",

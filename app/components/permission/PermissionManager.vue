@@ -1,14 +1,15 @@
 <template>
   <div class="space-y-4">
 
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <UIcon :name="icon || 'lucide:shield'" class="w-5 h-5" />
-        <h3 class="text-lg font-semibold">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <UIcon :name="icon || 'lucide:shield'" class="w-5 h-5 shrink-0" />
+        <h3 class="text-lg font-semibold truncate">
           {{ title || `Permissions for ${tableName}` }}
         </h3>
       </div>
       <PermissionGate
+        class="!w-auto !h-auto shrink-0"
         :condition="{
           or: [{ route: `/${permissionTableName}`, actions: ['create'] }],
         }"
@@ -183,40 +184,26 @@
           </div>
         </div>
       </div>
-      <CommonEmptyState
-        v-else
-        title="No permissions found"
-        description="No permissions found for this table. Click 'Add Permission' to create one."
-        icon="lucide:shield-off"
-        size="sm"
-      />
+      <div v-else class="surface-card rounded-xl p-4">
+        <CommonEmptyState
+          title="No permissions found"
+          description="No permissions found for this table. Click 'Add Permission' to create one."
+          icon="lucide:shield-off"
+          size="sm"
+        />
+      </div>
     </Transition>
 
-      <UDrawer
-      :handle="false"
-        v-model:open="showDrawer"
+      <CommonDrawer
+        v-model="showDrawer"
         direction="right"
-        :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-3xl'"
-        :ui="{
-          header:
-            'border-b border-muted text-muted pb-2 flex items-center justify-between',
-        }"
       >
         <template #header>
-          <h2>{{ isEditing ? "Edit Permission" : "Create Permission" }}</h2>
-          <UButton
-            icon="lucide:x"
-            variant="soft"
-            color="error"
-            size="lg"
-            @click="closeDrawer"
-          />
+          <h2 class="text-lg font-semibold">{{ isEditing ? "Edit Permission" : "Create Permission" }}</h2>
         </template>
 
         <template #body>
-          <div
-            class="surface-card rounded-lg p-4"
-          >
+          <div class="surface-card rounded-lg p-4">
             <FormEditorLazy
               v-model="permissionForm"
               v-model:errors="permissionErrors"
@@ -227,15 +214,13 @@
           </div>
         </template>
         <template #footer>
-          <div
-            class="flex justify-end border border-[var(--border-default)] rounded-lg p-4 surface-card"
-          >
+          <div class="flex justify-end border border-[var(--border-default)] rounded-lg p-4 surface-card">
             <UButton @click="savePermission" :loading="saving" :disabled="saving" color="primary">
               {{ isEditing ? "Update" : "Create" }}
             </UButton>
           </div>
         </template>
-      </UDrawer>
+      </CommonDrawer>
   </div>
 </template>
 
@@ -246,7 +231,6 @@ const toast = useToast();
 const { confirm } = useConfirm();
 const { checkPermissionCondition } = usePermissions();
 const { isMounted } = useMounted();
-const { isMobile, isTablet } = useScreen();
 
 interface Permission {
   id: string;
