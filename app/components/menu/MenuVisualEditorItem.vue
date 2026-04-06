@@ -21,7 +21,24 @@ const emit = defineEmits<{
 }>();
 
 const { getId } = useDatabase();
+const { isMobile, isTablet } = useScreen();
 const isDndUpdating = useState('menu-dnd-updating', () => false);
+
+const isCompact = computed(() => isMobile.value || isTablet.value);
+
+const childrenStyle = computed(() => {
+  const lvl = (props.level || 0) + 1;
+  if (isCompact.value) {
+    return {
+      paddingLeft: `${12 + lvl * 8}px`,
+      '--dnd-bar-left': `${20 + lvl * 8}px`
+    };
+  }
+  return {
+    paddingLeft: `${24 + lvl * 12}px`,
+    '--dnd-bar-left': `${52 + lvl * 24}px`
+  };
+});
 
 const childrenItems = ref<MenuTreeItem[]>(props.item.children || []);
 const isExpanded = ref(true);
@@ -319,7 +336,7 @@ function handleCancelMove() {
     >
     <div
       :class="[
-        'menu-item-dropdown-header flex items-center !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
+        'menu-item-dropdown-header flex items-center flex-wrap !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
         (level || 0) > 0 ? 'pl-3 md:pl-6' : 'pl-3',
         isMoving ? 'ring-2 ring-violet-500 bg-violet-500/10 dark:bg-violet-500/20' : '',
         isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-violet-500/5 dark:hover:bg-violet-500/10'
@@ -328,15 +345,15 @@ function handleCancelMove() {
     >
         <UIcon
           name="lucide:grip-vertical"
-          class="w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
+          class="hidden md:block w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
           @click.stop
         />
-        <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 text-violet-500 dark:text-violet-400" />
-        <span class="text-sm font-medium text-[var(--text-secondary)]">{{ item.label }}</span>
-        <UIcon 
-          v-if="isSystemMenu" 
-          name="lucide:lock" 
-          class="w-3.5 h-3.5 text-[var(--text-quaternary)] ml-1" 
+        <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 shrink-0 text-violet-500 dark:text-violet-400" />
+        <span class="text-sm font-medium text-[var(--text-secondary)] truncate">{{ item.label }}</span>
+        <UIcon
+          v-if="isSystemMenu"
+          name="lucide:lock"
+          class="w-3.5 h-3.5 shrink-0 text-[var(--text-quaternary)]"
           title="System menu - cannot be edited"
         />
         <UDropdownMenu
@@ -352,7 +369,6 @@ function handleCancelMove() {
             color="neutral"
             variant="soft"
             icon="lucide:more-vertical"
-            class="ml-1"
             @click.stop
           />
         </UDropdownMenu>
@@ -419,6 +435,7 @@ function handleCancelMove() {
             variant="soft"
             color="warning"
             size="xs"
+            class="hidden md:inline-flex"
           >
             System
           </UBadge>
@@ -427,6 +444,7 @@ function handleCancelMove() {
             variant="soft"
             color="neutral"
             size="xs"
+            class="hidden md:inline-flex"
           >
             Custom
           </UBadge>
@@ -435,7 +453,7 @@ function handleCancelMove() {
             variant="soft"
             color="primary"
             size="xs"
-            class="cursor-pointer"
+            class="hidden md:inline-flex cursor-pointer"
             :title="`Extension: ${item.extension.name || item.extension.description || getId(item.extension) || item.extension.extensionId}`"
             @click.stop="navigateTo(`/settings/extensions/${getId(item.extension) || item.extension.extensionId}`)"
           >
@@ -468,10 +486,7 @@ function handleCancelMove() {
             'menu-children drop-zone space-y-1 mt-1 pr-2 py-2 rounded-xl',
             'bg-transparent'
           ]"
-          :style="{
-            paddingLeft: `${24 + ((level || 0) + 1) * 12}px`,
-            '--dnd-bar-left': `${52 + ((level || 0) + 1) * 24}px`
-          }"
+          :style="childrenStyle"
         >
         <template #item="{ element: child }">
           <MenuVisualEditorItem
@@ -496,8 +511,7 @@ function handleCancelMove() {
     <div
       v-else
       :class="[
-        'menu-item flex items-center !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
-        '',
+        'menu-item flex items-center flex-wrap !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
         isMoving ? 'ring-2 ring-violet-500 bg-violet-500/10 dark:bg-violet-500/20' : '',
         isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-violet-500/5 dark:hover:bg-violet-500/10'
       ]"
@@ -508,15 +522,15 @@ function handleCancelMove() {
     >
       <UIcon
         name="lucide:grip-vertical"
-        class="w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
+        class="hidden md:block w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
         @click.stop
       />
-      <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 text-violet-500 dark:text-violet-400" />
-      <span class="text-sm text-[var(--text-secondary)]">{{ item.label }}</span>
-      <UIcon 
-        v-if="isSystemMenu" 
-        name="lucide:lock" 
-        class="w-3.5 h-3.5 text-[var(--text-quaternary)] ml-1" 
+      <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 shrink-0 text-violet-500 dark:text-violet-400" />
+      <span class="text-sm text-[var(--text-secondary)] truncate">{{ item.label }}</span>
+      <UIcon
+        v-if="isSystemMenu"
+        name="lucide:lock"
+        class="w-3.5 h-3.5 shrink-0 text-[var(--text-quaternary)]"
         title="System menu - cannot be edited"
       />
       <UDropdownMenu
@@ -533,7 +547,6 @@ function handleCancelMove() {
           color="neutral"
           variant="soft"
           icon="lucide:more-vertical"
-          class="ml-1"
           @click.stop
         />
       </UDropdownMenu>
@@ -580,6 +593,7 @@ function handleCancelMove() {
           variant="soft"
           color="warning"
           size="xs"
+          class="hidden md:inline-flex"
         >
           System
         </UBadge>
@@ -588,6 +602,7 @@ function handleCancelMove() {
           variant="soft"
           color="neutral"
           size="xs"
+          class="hidden md:inline-flex"
         >
           Custom
         </UBadge>
@@ -596,7 +611,7 @@ function handleCancelMove() {
           variant="soft"
           color="primary"
           size="xs"
-          class="cursor-pointer"
+          class="hidden md:inline-flex cursor-pointer"
           :title="`Extension: ${item.extension.name || item.extension.description || getId(item.extension) || item.extension.extensionId}`"
           @click.stop="navigateTo(`/settings/extensions/${getId(item.extension) || item.extension.extensionId}`)"
         >
@@ -608,6 +623,7 @@ function handleCancelMove() {
           variant="soft"
           color="neutral"
           size="xs"
+          class="hidden md:inline-flex"
           title="No extension - Right click to create"
         >
           <UIcon name="lucide:puzzle" class="w-3 h-3 mr-1" />
