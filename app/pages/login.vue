@@ -159,6 +159,7 @@ const showDemoLogin = computed(() => {
 });
 
 const { login } = useAuth();
+const route = useRoute();
 const toast = useToast();
 const demoLoading = ref(false);
 const form = reactive({
@@ -171,9 +172,15 @@ const error = reactive<{ email: string | null; password: string | null }>({
   password: null,
 });
 
+function redirectAfterLogin() {
+  const redirect = route.query.redirect as string | undefined;
+  if (redirect) window.location.href = redirect;
+  else window.location.reload();
+}
+
 async function handleLogin() {
   const ok = await login(form);
-  if (ok) window.location.reload();
+  if (ok) redirectAfterLogin();
   else {
     toast.add({
       title: "Login failed!",
@@ -192,7 +199,7 @@ async function handleDemoLogin() {
       password: DEMO_LOGIN_PASSWORD,
       remember: true,
     });
-    if (ok) window.location.reload();
+    if (ok) redirectAfterLogin();
     else {
       toast.add({
         title: "Demo login failed",
