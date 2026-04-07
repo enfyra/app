@@ -68,12 +68,21 @@
             <FilterBuilder v-model="filterObject" :schemas="schemas" :table-name="mainTableName" />
           </div>
           <div>
-            <h4 class="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Response Fields</h4>
-            <div class="flex flex-wrap gap-1.5">
-              <UButton v-for="col in selectableColumns" :key="col" :color="selectedFields.includes(col) ? 'primary' : 'neutral'" :variant="selectedFields.includes(col) ? 'solid' : 'outline'" size="xs" @click="toggleField(col)">{{ col }}</UButton>
-              <UButton size="xs" variant="ghost" color="neutral" @click="selectedFields = selectableColumns.map(c => c)">All</UButton>
-              <UButton size="xs" variant="ghost" color="neutral" @click="selectedFields = []">Clear</UButton>
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-xs font-semibold text-[var(--text-tertiary)]">Response Fields</h4>
+              <div class="flex gap-1">
+                <UButton size="xs" variant="ghost" color="neutral" @click="selectedFields = []">Clear</UButton>
+              </div>
             </div>
+
+            <RouteFieldPickerNode
+              :schemas="schemas!"
+              :table-name="mainTableName!"
+              prefix=""
+              :selected-fields="selectedFields"
+              @toggle="toggleField($event)"
+              @toggle-all="handleToggleAll"
+            />
           </div>
         </div>
 
@@ -152,8 +161,9 @@ watch(() => props.modelValue, (open) => {
     responseError.value = '';
     recordId.value = '';
     filterObject.value = createEmptyFilter();
+    const hasTable = !!props.mainTableName;
     queryParams.value = [
-      { key: 'limit', value: '50', enabled: true },
+      { key: 'limit', value: '10', enabled: hasTable },
       { key: 'sort', value: '-createdAt', enabled: false },
     ];
     const available = httpMethods.filter(m => isMethodAvailable(m));
@@ -194,12 +204,20 @@ function addQueryParam() {
   queryParams.value.push({ key: '', value: '', enabled: true });
 }
 
-const selectableColumns = computed(() => props.columns || []);
-
-function toggleField(col: string) {
-  const idx = selectedFields.value.indexOf(col);
+function toggleField(field: string) {
+  const idx = selectedFields.value.indexOf(field);
   if (idx >= 0) selectedFields.value.splice(idx, 1);
-  else selectedFields.value.push(col);
+  else selectedFields.value.push(field);
+}
+
+function handleToggleAll(prefix: string) {
+  const p = prefix + '.';
+  const hasAny = selectedFields.value.some(f => f.startsWith(p));
+  if (hasAny) {
+    selectedFields.value = selectedFields.value.filter(f => !f.startsWith(p));
+  } else {
+    selectedFields.value = [...selectedFields.value, `${prefix}.*`];
+  }
 }
 
 const fullUrl = computed(() => {
@@ -215,7 +233,7 @@ const fullUrl = computed(() => {
       if (filterQ && Object.keys(filterQ).length > 0) params.set('filter', JSON.stringify(filterQ));
     }
     if (method.value === 'GET' && selectedFields.value.length > 0) params.set('fields', selectedFields.value.join(','));
-    const qs = params.toString();
+    const qs = decodeURIComponent(params.toString());
     if (qs) url += `?${qs}`;
   }
   return url;
