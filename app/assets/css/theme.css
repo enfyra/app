@@ -40,6 +40,7 @@
     --surface-default: #ffffff;
     --surface-muted: #f1f5f9;
     --surface-overlay: rgba(0, 0, 0, 0.4);
+    --surface-header: #f5f3ff;
 
     /* legacy aliases (used by existing code - point to new tokens) */
     --bg-surface: var(--surface-default);
@@ -136,6 +137,7 @@
     --surface-default: #1e1e22;
     --surface-muted: #2a2a2e;
     --surface-overlay: rgba(0, 0, 0, 0.6);
+    --surface-header: #1a1a2e;
 
     --bg-surface: var(--surface-default);
     --bg-elevated: var(--surface-default);

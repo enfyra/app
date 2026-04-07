@@ -396,11 +396,11 @@ function getColumnLabel(columnId: string) {
     </div>
 
     <div
-      class="hidden lg:block bg-[var(--surface-default)] rounded-lg border border-[var(--border-default)] overflow-hidden"
+      class="hidden lg:block surface-card rounded-2xl overflow-hidden"
     >
       <div class="max-w-full overflow-x-auto overflow-y-auto custom-scrollbar">
         <table class="min-w-full divide-y divide-[var(--border-default)]" aria-label="Data table">
-          <thead class="bg-[var(--surface-muted)]">
+          <thead class="bg-[var(--surface-header)]">
             <tr>
               <th
                 v-for="header in table?.getFlatHeaders() || []"

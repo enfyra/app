@@ -4,8 +4,8 @@
     ref="cardRef"
     class="relative overflow-hidden"
     :class="[
-      variant !== 'form' && 'rounded-2xl surface-card',
-      variant !== 'form' && sizeClasses[size],
+      'rounded-2xl surface-card',
+      sizeClasses[size],
       variantClasses,
       elevated && 'shadow-theme-md',
       className,

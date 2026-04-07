@@ -19,7 +19,7 @@
       }"
       id="main-content"
     >
-      <header class="sticky top-0 flex w-full z-50" :style="{ borderBottom: '1px solid var(--border-default)', background: 'var(--surface-muted)' }">
+      <header class="sticky top-0 flex w-full z-50" :style="{ borderBottom: '1px solid var(--border-default)', background: 'var(--surface-header)' }">
         <div class="flex flex-col items-center justify-between grow lg:flex-row">
           <div class="flex items-center justify-between w-full gap-2 sm:gap-4 lg:justify-normal lg:border-b-0 h-16">
             <div class="flex items-center justify-between gap-4 flex-1 px-4 lg:px-6">
@@ -41,7 +41,7 @@
 
       <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
 
-      <section class="flex-1 min-h-0 overflow-y-auto relative">
+      <section class="flex-1 min-h-0 overflow-y-auto relative" :style="{ background: 'var(--surface-muted)' }">
         <div class="px-4 py-4 lg:px-6 lg:py-6 flex flex-col flex-1 min-h-full">
           <slot />
         </div>
