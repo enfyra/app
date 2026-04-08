@@ -9,11 +9,8 @@ export function proxyToAPI(event: H3Event, customPath?: string) {
   const headers: Record<string, string> = {
     ...(event.context.proxyHeaders || {}),
   };
-  const pathKey = (rawPath || "/").replace(/\/+$/, "") || "/";
   const accept = getRequestHeader(event, "accept");
-  if (accept && pathKey === "/graphql") {
-    headers.accept = accept;
-  }
+  headers.accept = accept || "";
 
   return proxyRequest(event, targetUrl, {
     headers,
