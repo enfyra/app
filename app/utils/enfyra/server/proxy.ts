@@ -10,7 +10,7 @@ export function proxyToAPI(event: H3Event, customPath?: string) {
     ...(event.context.proxyHeaders || {}),
   };
   const accept = getRequestHeader(event, "accept");
-  headers.accept = accept || "";
+  if(accept) headers.accept = accept || "";
 
   return proxyRequest(event, targetUrl, {
     headers,

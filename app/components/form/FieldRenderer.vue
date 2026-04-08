@@ -467,10 +467,14 @@ function getComponentConfigByKey(key: string) {
         componentProps: {
           ...componentPropsBase,
           modelValue: ensureString(props.formData[key]),
-          "onUpdate:modelValue": (val: string) => {
+          "onUpdate:modelValue": (val: string[] | null) => {
             updateFormData(key, val);
           },
           isNullable: column?.isNullable === true,
+          hint: config.hint,
+          emptyMessage: config.emptyMessage,
+          normalizeOrigin: config.normalizeOrigin === true,
+          monospace: config.monospace === true,
           ...(hasError && { error: props.errors[key] }),
         },
         fieldProps,

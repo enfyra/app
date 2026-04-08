@@ -1,42 +1,64 @@
 <template>
   <div class="space-y-3">
-    <div v-if="displayArray.length > 0" class="flex flex-wrap gap-2">
-      <UBadge
+    <p
+      v-if="hint"
+      class="text-xs leading-relaxed text-[var(--text-secondary)]"
+    >
+      {{ hint }}
+    </p>
+
+    <ul
+      v-if="displayArray.length > 0"
+      class="divide-y divide-[var(--border-default)] overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--surface-default)]"
+    >
+      <li
         v-for="(item, index) in displayArray"
         :key="index"
-        color="primary"
-        variant="outline"
-        class="cursor-pointer hover:bg-red-500 hover:text-white hover:!border-red-500 transition-all duration-200"
-        size="lg"
-        @click="removeItem(index)"
+        class="flex min-h-11 items-center gap-2 px-3 py-2.5"
       >
-        {{ item }}
-      </UBadge>
-    </div>
+        <span
+          :class="[
+            'min-w-0 flex-1 truncate text-sm text-[var(--text-primary)]',
+            monospace ? 'font-mono' : '',
+          ]"
+          :title="item"
+        >{{ item }}</span>
+        <UButton
+          v-if="!disabled"
+          icon="i-lucide-x"
+          color="error"
+          variant="ghost"
+          size="xs"
+          class="shrink-0"
+          :aria-label="'Remove ' + item"
+          @click="removeItem(index)"
+        />
+      </li>
+    </ul>
 
     <div
       v-else
-      class="text-xs text-[var(--text-tertiary)] italic"
+      class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--surface-muted)]/40 px-4 py-5 text-center text-sm text-[var(--text-tertiary)]"
     >
-      No items added yet
+      {{ emptyMessage }}
     </div>
 
-    <div class="relative">
+    <div v-if="!disabled" class="relative">
       <UInput
         v-model="newOption"
-        placeholder="Enter new item"
-        class="w-full"
+        :placeholder="placeholder"
+        :class="['w-full', monospace && 'font-mono text-sm']"
         @keyup.enter="addOption"
       >
         <template #trailing>
           <UButton
-            @click="addOption"
-            icon="lucide:plus"
+            icon="i-lucide-plus"
             color="primary"
             variant="solid"
             size="md"
-            :disabled="!newOption.trim()"
             class="rounded-md"
+            :disabled="!newOption.trim()"
+            @click="addOption"
           />
         </template>
       </UInput>
@@ -45,78 +67,88 @@
 </template>
 
 <script setup lang="ts">
+import { parseFieldArrayValue } from "~/utils/components/form";
+
 interface Props {
   modelValue?: string[] | string | null;
   disabled?: boolean;
   isNullable?: boolean;
+  placeholder?: string;
+  hint?: string;
+  emptyMessage?: string;
+  normalizeOrigin?: boolean;
+  monospace?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  placeholder: "Enter new item",
+  emptyMessage: "No items yet. Add one below.",
+  normalizeOrigin: false,
+  monospace: false,
+});
+
 const emit = defineEmits<{
   "update:modelValue": [value: string[] | null];
 }>();
 
 const newOption = ref("");
 
-const displayArray = computed(() => {
-  if (!props.modelValue) return [];
+const displayArray = computed(() => parseFieldArrayValue(props.modelValue));
 
-  if (Array.isArray(props.modelValue)) {
-    return props.modelValue;
-  }
-
+function normalizeOriginValue(raw: string): string {
+  const t = raw.trim();
+  if (!t) return "";
   try {
-    if (props.modelValue.startsWith("[") && props.modelValue.endsWith("]")) {
-      const content = props.modelValue.slice(1, -1);
-      if (!content.trim()) return [];
-
-      return content
-        .split(",")
-        .map((item: string) => {
-          let cleaned = item.trim();
-          if (
-            (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
-            (cleaned.startsWith("'") && cleaned.endsWith("'"))
-          ) {
-            cleaned = cleaned.slice(1, -1);
-          }
-
-          cleaned = cleaned.replace(/\\"/g, '"').replace(/\\'/g, "'");
-          return cleaned;
-        })
-        .filter((item: string) => item.length > 0);
-    }
-    return [];
+    return new URL(t).origin;
   } catch {
-    return [];
+    return t;
   }
-});
+}
+
+function originKey(s: string): string {
+  return normalizeOriginValue(s).toLowerCase();
+}
 
 function addOption() {
-  if (!newOption.value.trim()) return;
-  const currentArray = [...displayArray.value];
-  currentArray.push(newOption.value.trim());
-  emit("update:modelValue", currentArray);
+  const raw = newOption.value.trim();
+  if (!raw) return;
+
+  if (props.normalizeOrigin) {
+    const normalized = normalizeOriginValue(raw);
+    if (!normalized) return;
+
+    const keys = new Set(displayArray.value.map((o) => originKey(o)));
+    if (keys.has(originKey(normalized))) {
+      newOption.value = "";
+      return;
+    }
+
+    emit("update:modelValue", [...displayArray.value, normalized]);
+    newOption.value = "";
+    return;
+  }
+
+  emit("update:modelValue", [...displayArray.value, raw]);
   newOption.value = "";
 }
 
 function removeItem(index: number) {
-  const currentArray = [...displayArray.value];
-  currentArray.splice(index, 1);
+  const next = [...displayArray.value];
+  next.splice(index, 1);
 
-  if (props.isNullable && currentArray.length === 0) {
+  if (props.isNullable && next.length === 0) {
     emit("update:modelValue", null);
   } else {
-    emit("update:modelValue", currentArray);
+    emit("update:modelValue", next);
   }
 }
 
 watch(
   () => props.modelValue,
-  (newValue) => {
+  () => {
     newOption.value = "";
 
-    if (props.isNullable && Array.isArray(newValue) && newValue.length === 0) {
+    if (props.isNullable && Array.isArray(props.modelValue) && props.modelValue.length === 0) {
       emit("update:modelValue", null);
     }
   }

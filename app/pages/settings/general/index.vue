@@ -89,7 +89,17 @@ const {
 const setting = ref<Record<string, any>>({});
 
 const fieldMap = {
-  corsAllowedOrigins: { type: 'array-tags' },
+  corsAllowedOrigins: {
+    type: "array-tags",
+    fieldProps: { class: "col-span-2" },
+    hint:
+      "Full origins only (scheme, host, port). Example: https://app.example.com or http://localhost:3000. An empty list allows every origin (see server CORS rules).",
+    placeholder: "https://your-app.example.com",
+    emptyMessage:
+      "No origins in the list. Any origin will be allowed until you add entries.",
+    normalizeOrigin: true,
+    monospace: true,
+  },
 };
 
 async function initializeForm() {
