@@ -10,7 +10,7 @@
     </template>
     <template #body>
       <div class="space-y-6">
-        <CommonFormCard>
+        <CommonFormCard :bordered="false">
           <UForm :state="localForm" @submit="$emit('save')">
             <FormEditorLazy
               v-model="localForm"

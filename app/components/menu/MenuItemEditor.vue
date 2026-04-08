@@ -342,18 +342,22 @@ async function handleSave() {
     </template>
 
     <template #body>
-      <div class="space-y-4">
-        <FormEditorLazy
-          ref="formEditorRef"
-          v-model="form"
-          v-model:errors="errors"
-          @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-          :table-name="tableName"
-          :excluded="excludedFields"
-          :field-map="typeMap"
-          :loading="loading"
-          :current-record-id="props.menu ? getId(props.menu) : null"
-        />
+      <div class="space-y-6">
+        <CommonFormCard :bordered="false">
+          <UForm :state="form" @submit="handleSave">
+            <FormEditorLazy
+              ref="formEditorRef"
+              v-model="form"
+              v-model:errors="errors"
+              @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+              :table-name="tableName"
+              :excluded="excludedFields"
+              :field-map="typeMap"
+              :loading="loading"
+              :current-record-id="props.menu ? getId(props.menu) : null"
+            />
+          </UForm>
+        </CommonFormCard>
       </div>
     </template>
 

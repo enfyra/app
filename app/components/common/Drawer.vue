@@ -50,7 +50,7 @@ function close() {
       container: 'h-[100dvh]',
       content: `overflow-hidden bg-[var(--surface-default)] ${props.fullWidth ? 'w-full' : '!w-[36rem] !max-w-[calc(100%-2rem)]'}`,
       header: 'pt-0 pb-2 flex items-center justify-between flex-shrink-0',
-      body: 'flex-1 overflow-y-auto min-h-0 px-2 md:px-4 custom-scrollbar',
+      body: 'flex-1 overflow-y-auto min-h-0 custom-scrollbar',
       footer: 'mb-2 md:mb-4',
     }"
   >

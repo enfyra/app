@@ -9,6 +9,7 @@ const props = defineProps<{
     icon?: string;
   };
   size?: "sm" | "md" | "lg";
+  variant?: "outline" | "naked" | "soft" | "subtle" | "solid";
 }>();
 
 const mappedActions = computed(() => {
@@ -33,5 +34,6 @@ const mappedActions = computed(() => {
     :description="props.description"
     :actions="mappedActions"
     :size="props.size || 'md'"
+    :variant="props.variant || 'outline'"
   />
 </template>

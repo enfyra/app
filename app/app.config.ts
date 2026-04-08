@@ -1,5 +1,33 @@
 export default defineAppConfig({
   ui: {
+    empty: {
+      slots: {
+        title: "text-pretty font-medium text-[var(--text-primary)]",
+        description: "text-balance text-center text-[var(--text-secondary)]",
+        avatar: "text-[var(--text-tertiary)]",
+      },
+      variants: {
+        variant: {
+          outline: {
+            root: "bg-[var(--surface-default)] ring-1 ring-[var(--border-default)]",
+            description: "text-balance text-center text-[var(--text-secondary)]",
+          },
+          naked: {
+            description: "text-balance text-center text-[var(--text-secondary)]",
+          },
+          soft: {
+            description: "text-balance text-center text-[var(--text-secondary)]",
+          },
+          subtle: {
+            description: "text-balance text-center text-[var(--text-secondary)]",
+          },
+          solid: {
+            title: "text-pretty font-medium text-inverted",
+            description: "text-balance text-center text-dimmed",
+          },
+        },
+      },
+    },
     pagination: {
       slots: {
         root: 'w-full', 
@@ -240,7 +268,7 @@ export default defineAppConfig({
       slots: {
         root: "bg-[var(--surface-default)] border-l border-[var(--border-default)]",
         header: "border-b border-[var(--border-default)] py-4",
-        body: "flex-1 pb-4 px-6",
+        body: "flex-1 pb-4",
         footer: "border-t border-[var(--border-default)] py-4",
       },
     },
