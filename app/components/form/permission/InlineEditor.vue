@@ -29,7 +29,6 @@
       :handle="false"
       v-model="showModal"
       direction="right"
-      nested
       :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-3xl'"
     >
       <template #header>

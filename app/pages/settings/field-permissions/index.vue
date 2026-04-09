@@ -7,7 +7,7 @@ const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
-const { getIncludeFields } = useSchema("field_permission_definition");
+
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 
 registerPageHeader({
@@ -88,7 +88,7 @@ const {
 
     return {
       fields:
-        "id,name,updatedAt,effect,decision,action,condition,role.id,role.name,table.id,table.name,column.id,column.name,relation.id,relation.propertyName,allowedUsers.id,allowedUsers.email,allowedUsers.name",
+        "id,name,updatedAt,effect,decision,action,condition,role.id,role.name,column.id,column.name,relation.id,relation.propertyName,allowedUsers.id,allowedUsers.email,allowedUsers.name",
       sort: "-updatedAt",
       meta: "*",
       page: page.value,

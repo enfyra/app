@@ -216,32 +216,6 @@ onMounted(() => {
       </CommonFormCard>
     </div>
 
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <CommonFormCard>
-        <template #header>
-          <div class="flex items-center justify-between gap-3 w-full">
-            <div class="flex items-center gap-2 min-w-0">
-              <UIcon name="lucide:lock" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <h3 class="text-lg font-semibold text-[var(--text-primary)]">
-                Field permissions
-              </h3>
-            </div>
-            <UButton
-              icon="lucide:arrow-right"
-              variant="soft"
-              color="neutral"
-              size="sm"
-              @click="navigateTo(`/settings/field-permissions?user=${route.params.id}`)"
-            >
-              Manage
-            </UButton>
-          </div>
-        </template>
-        <div class="text-sm text-[var(--text-tertiary)]">
-          Create user-specific overrides for specific columns/relations.
-        </div>
-      </CommonFormCard>
-    </div>
   </div>
 
   <CommonEmptyState

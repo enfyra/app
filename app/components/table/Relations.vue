@@ -20,7 +20,7 @@ const relationErrors = ref<Record<number, Record<string, string>>>({});
 
 const { generateEmptyForm, validate } = useSchema("relation_definition");
 const { isMobile, isTablet } = useScreen();
-const { getIncludeFields: getFieldPermIncludeFields, generateEmptyForm: generateFieldPermEmptyForm } = useSchema("field_permission_definition");
+const { generateEmptyForm: generateFieldPermEmptyForm } = useSchema("field_permission_definition");
 
 const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
@@ -38,22 +38,6 @@ function updatePublishedBaseline(v: any) {
   hasFormChanges.value = true;
 }
 
-const tableIdForFieldPermSummary = computed(() => {
-  const first = Array.isArray(relations.value) && relations.value.length ? relations.value[0] : null;
-  const base = currentRelation.value || first;
-  return (
-    base?.sourceTable?.id ??
-    base?.sourceTable?._id ??
-    base?.sourceTableId ??
-    base?.sourceTable ??
-    base?.table?.id ??
-    base?.table?._id ??
-    base?.tableId ??
-    base?.table ??
-    null
-  );
-});
-
 const {
   data: fieldPermData,
   pending: fieldPermLoading,
@@ -61,7 +45,7 @@ const {
 } = useApi(() => "/field_permission_definition", {
   query: computed(() => ({
     fields:
-      "id,name,updatedAt,effect,decision,action,condition,role.id,role.name,allowedUsers.id,allowedUsers.email,allowedUsers.name,column.id,relation.id,table.id",
+      "id,name,updatedAt,effect,decision,action,condition,role.id,role.name,allowedUsers.id,allowedUsers.email,allowedUsers.name,column.id,relation.id",
     sort: "-updatedAt",
     limit: 50,
     filter: canManageFieldPermissions.value
@@ -74,39 +58,29 @@ const {
 
 const fieldPermItems = computed(() => fieldPermData.value?.data || []);
 
-const {
-  data: fieldPermSummaryData,
-  pending: fieldPermSummaryLoading,
-  execute: fetchFieldPermSummary,
-} = useApi(() => "/field_permission_definition", {
-  query: computed(() => ({
-    fields: "id,effect,decision,column.id,relation.id,table.id",
-    sort: "-updatedAt",
-    limit: 500,
-    filter: tableIdForFieldPermSummary.value
-      ? { table: { id: { _eq: String(tableIdForFieldPermSummary.value) } } }
-      : { id: { _eq: "__none__" } },
-  })),
-  immediate: false,
-  watch: false,
-  errorContext: "Fetch Field Permissions Summary",
-});
-
 const fieldPermSummaryByRelationId = computed(() => {
   const out: Record<string, { total: number; allow: number; deny: number }> = {};
-  const items = (fieldPermSummaryData.value as any)?.data || [];
-  for (const it of items) {
-    const relId = it?.relation?.id ?? it?.relation?._id ?? null;
-    if (!relId) continue;
-    const key = String(relId);
-    if (!out[key]) out[key] = { total: 0, allow: 0, deny: 0 };
-    out[key].total += 1;
-    const effect = String(it?.effect ?? it?.decision ?? "allow");
-    if (effect === "deny") out[key].deny += 1;
-    else out[key].allow += 1;
+  for (const rel of relations.value || []) {
+    const perms: any[] = Array.isArray(rel.fieldPermissions) ? rel.fieldPermissions : [];
+    if (!perms.length) continue;
+    const key = String(rel.id ?? rel._id);
+    out[key] = { total: perms.length, allow: 0, deny: 0 };
+    for (const p of perms) {
+      if (String(p?.effect ?? p?.decision ?? "allow") === "deny") out[key].deny += 1;
+      else out[key].allow += 1;
+    }
   }
   return out;
 });
+
+function syncRelationPermSummary() {
+  if (!currentRelation.value) return;
+  const relId = String(currentRelation.value.id ?? currentRelation.value._id);
+  const idx = relations.value.findIndex(r => String(r.id ?? r._id) === relId);
+  if (idx !== -1) {
+    relations.value[idx] = { ...relations.value[idx], fieldPermissions: fieldPermItems.value };
+  }
+}
 
 function getFieldPermEffect(item: any): string {
   return String(item?.effect ?? item?.decision ?? "allow");
@@ -137,14 +111,6 @@ watch(
   }
 );
 
-watch(
-  () => [tableIdForFieldPermSummary.value, relations.value?.length],
-  async ([tableId]) => {
-    if (!tableId) return;
-    await fetchFieldPermSummary();
-  },
-  { immediate: true }
-);
 
 const showFieldPermDrawer = ref(false);
 const fieldPermForm = ref<Record<string, any>>({});
@@ -203,21 +169,10 @@ function openCreateFieldPerm() {
   const base = generateFieldPermEmptyForm();
   const baselinePublished = !!currentRelation.value?.isPublished;
   const prefillEffect = baselinePublished ? "deny" : "allow";
-  const tableId =
-    currentRelation.value?.sourceTable?.id ??
-    currentRelation.value?.sourceTable?._id ??
-    currentRelation.value?.sourceTableId ??
-    currentRelation.value?.sourceTable ??
-    currentRelation.value?.table?.id ??
-    currentRelation.value?.table?._id ??
-    currentRelation.value?.tableId ??
-    currentRelation.value?.table ??
-    null;
   fieldPermForm.value = {
     ...base,
     relation: { id: String(currentRelation.value.id) },
     column: null,
-    ...(tableId ? { table: typeof tableId === "object" ? tableId : { id: String(tableId) } } : {}),
     ...(base.effect !== undefined
       ? { effect: prefillEffect }
       : base.decision !== undefined
@@ -258,7 +213,7 @@ async function quickDeleteFieldPerm(item: any) {
     toast.add({ title: "Success", description: "Rule deleted", color: "success" });
     confirmDeleteFieldPermId.value = null;
     await fetchFieldPerms();
-    await fetchFieldPermSummary();
+    syncRelationPermSummary();
   } finally {
     if (deletingFieldPermId.value === id) deletingFieldPermId.value = null;
   }
@@ -310,7 +265,7 @@ async function saveFieldPerm() {
     }
     showFieldPermDrawer.value = false;
     await fetchFieldPerms();
-    await fetchFieldPermSummary();
+    syncRelationPermSummary();
   } finally {
     fieldPermSaving.value = false;
   }
@@ -741,6 +696,7 @@ async function removeRelation(index: number) {
           v-model="showFieldPermDrawer"
           v-model:form="fieldPermForm"
           v-model:errors="fieldPermErrors"
+          nested
           :loading="isFieldPermBusy"
           :excluded="['column', 'relation', 'table']"
           :mode="fieldPermMode"

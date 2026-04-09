@@ -4,7 +4,7 @@
     :handle="false"
     direction="right"
     :show-close="false"
-    nested
+    :nested="nested"
   >
     <template #header>
       <div class="flex items-start justify-between gap-3 w-full">
@@ -94,6 +94,7 @@ interface Props {
   subtitle?: string;
   excluded?: string[];
   mode?: "create" | "update";
+  nested?: boolean;
   form: Record<string, any>;
   errors: Record<string, string>;
   loading: boolean;
@@ -104,6 +105,7 @@ const props = withDefaults(defineProps<Props>(), {
   title: "Field Permission",
   subtitle: "Create or update field-level rules",
   mode: "create",
+  nested: false,
 });
 
 const emit = defineEmits<{
@@ -131,7 +133,7 @@ const localErrors = computed({
 });
 
 const excluded = computed(() => {
-  const base = ["allowedUsers"];
+  const base = ["allowedUsers", "table"];
   const extra = Array.isArray(props.excluded) ? props.excluded : [];
   return Array.from(new Set([...base, ...extra]));
 });

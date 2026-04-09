@@ -34,7 +34,13 @@ const {
   execute: fetchTableData,
 } = useApi(() => "/table_definition", {
   query: computed(() => ({
-    fields: getIncludeFields(),
+    fields: [
+      getIncludeFields(),
+      "columns.fieldPermissions.id",
+      "columns.fieldPermissions.effect",
+      "relations.fieldPermissions.id",
+      "relations.fieldPermissions.effect",
+    ].join(","),
     filter: {
       name: {
         _eq: route.params.table,

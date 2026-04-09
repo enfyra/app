@@ -3,7 +3,6 @@
     :handle="false"
     v-model="isOpen"
     direction="right"
-    nested
     :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-2xl'"
   >
     <template #header>

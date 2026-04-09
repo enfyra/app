@@ -22,7 +22,6 @@
       :handle="false"
       v-model="showDrawer"
       direction="right"
-      nested
       :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-xl'"
     >
       <template #header>
