@@ -24,7 +24,7 @@ function handleError(
 ): ApiError {
   const apiError: ApiError = {
     message: error?.message || error?.data?.message || error?.response?.data?.message || "Request failed",
-    status: error?.status || error?.response?.status,
+    status: error?.status || error?.statusCode || error?.response?.status,
     data: error?.data || error?.response?.data,
     response: error?.response || error,
   };
@@ -139,6 +139,12 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
     } catch (err) {
       const apiError = handleError(err, errorContext);
       const handled = onError ? onError(apiError, errorContext) === true : false;
+      if (!handled && apiError.status === 401 && import.meta.client) {
+        window.location.reload();
+        error.value = apiError;
+        status.value = "error";
+        return null;
+      }
       if (!handled) {
         let errorMessage = apiError?.data?.message || apiError?.message || "An error occurred";
         if (Array.isArray(errorMessage)) {

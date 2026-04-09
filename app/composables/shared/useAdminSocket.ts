@@ -1,5 +1,7 @@
 import { io, type Socket } from 'socket.io-client';
 
+import { ENFYRA_SOCKET_AUTH_ERROR } from '~/constants/enfyra';
+
 let socket: Socket | null = null;
 const metadataReloading = ref(false);
 
@@ -28,6 +30,7 @@ export function useAdminSocket() {
     });
 
     socket.on('connect_error', (err: Error) => {
+      if (err?.message === ENFYRA_SOCKET_AUTH_ERROR) return;
       if (!shouldToastConnection()) return;
       console.error('Connection error:', err);
     });
