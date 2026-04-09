@@ -391,18 +391,21 @@ async function deletePermission(permission: Permission) {
   if (!confirmed) return;
 
   deleting.value = permission.id;
-  await deletePermissionApi({ id: permission.id });
+  try {
+    await deletePermissionApi({ id: permission.id });
 
-  if (deleteError.value) return; 
+    if (deleteError.value) return;
 
-  toast.add({
-    title: "Permission Deleted",
-    description: "Permission has been deleted successfully",
-    color: "success",
-  });
+    toast.add({
+      title: "Permission Deleted",
+      description: "Permission has been deleted successfully",
+      color: "success",
+    });
 
-  await fetchPermissions();
-  deleting.value = null;
+    await fetchPermissions();
+  } finally {
+    deleting.value = null;
+  }
 }
 
 onMounted(() => {

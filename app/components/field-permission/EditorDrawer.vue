@@ -120,7 +120,6 @@ const { schema, definition } = useSchema(toRef(props, "tableName"));
 
 const hasChanged = ref(false);
 const showDiscardModal = ref(false);
-const { isMobile, isTablet } = useScreen();
 
 const localForm = computed({
   get: () => props.form,
@@ -226,26 +225,6 @@ const isConditionValid = computed(
 function handleSaveClick() {
   emit("save");
 }
-
-watch(
-  () => ({
-    open: props.modelValue,
-    loading: props.loading,
-    hasChanged: hasChanged.value,
-    isConditionValid: isConditionValid.value,
-    conditionParseError: conditionParse.value.error,
-    conditionErrors: conditionErrors.value,
-    conditionPreview: conditionText.value.slice(0, 200),
-    role: (localForm.value as any)?.role ?? null,
-    allowedUsersLen: Array.isArray((localForm.value as any)?.allowedUsers)
-      ? ((localForm.value as any)?.allowedUsers || []).length
-      : null,
-  }),
-  (v) => {
-    return v;
-  },
-  { deep: true }
-);
 
 function handleCancel() {
   if (hasChanged.value) {
