@@ -201,6 +201,7 @@ const { isMobile, isTablet } = useScreen();
     handle-only
     v-model="isDrawerOpen"
     direction="right"
+    nested
   >
     <template #header>
       <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg'">

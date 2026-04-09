@@ -40,7 +40,6 @@
         <div
           v-for="permission in permissions"
           :key="permission.id"
-          class="surface-card rounded-xl p-4"
         >
           <PermissionGate
             :condition="{
@@ -184,7 +183,7 @@
           </div>
         </div>
       </div>
-      <div v-else class="surface-card rounded-xl p-4">
+      <div v-else>
         <CommonEmptyState
           title="No permissions found"
           description="No permissions found for this table. Click 'Add Permission' to create one."

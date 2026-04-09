@@ -115,7 +115,21 @@ const bottomGroups = computed(() => {
   return visibleGroups.value.filter(g => g.position === 'bottom');
 });
 
-const isDesktopCollapsed = computed(() => !sidebarVisible.value && width.value > 1024);
+const isMobile = computed(() => width.value <= 1024);
+const isDesktopCollapsed = computed(() => !isMobile.value && !sidebarVisible.value);
+
+const navMenuUi = computed(() => ({
+  list: 'isolate min-w-0 space-y-1',
+  link: [
+    'py-2 px-2.5 overflow-hidden gap-2.5 after:w-[2px] group-data-[state=collapsed]/sidebar:after:hidden group-data-[state=collapsed]/sidebar:py-1 group-data-[state=collapsed]/sidebar:px-1.5',
+    isMobile.value ? 'max-lg:before:bg-[var(--surface-muted)]' : '',
+  ],
+  linkLeadingIcon: 'size-5 shrink-0 text-[var(--text-quaternary)]',
+  separator: 'my-3 border-b border-[var(--border-default)] group-data-[state=collapsed]/sidebar:my-1',
+  childList: 'ms-[13px] border-s-2 border-primary/30 space-y-0.5 group-data-[state=collapsed]/sidebar:border-transparent group-data-[state=collapsed]/sidebar:ms-0',
+  childItem: 'ps-1.5 -ms-px',
+  childLink: 'py-1.5 px-2.5',
+}));
 
 const scrollAnchor = ref<HTMLElement | null>(null);
 const canScrollDown = ref(false);
@@ -191,15 +205,7 @@ router.afterEach(() => {
         highlight
         highlight-color="primary"
         color="primary"
-        :ui="{
-          list: 'isolate min-w-0 space-y-1',
-          link: 'py-2 px-2.5 overflow-hidden gap-2.5 after:w-[2px] group-data-[state=collapsed]/sidebar:after:hidden group-data-[state=collapsed]/sidebar:py-1 group-data-[state=collapsed]/sidebar:px-1.5',
-          linkLeadingIcon: 'size-5 shrink-0 text-[var(--text-quaternary)]',
-          separator: 'my-3 border-b border-[var(--border-default)] group-data-[state=collapsed]/sidebar:my-1',
-          childList: 'ms-[13px] border-s-2 border-primary/30 space-y-0.5 group-data-[state=collapsed]/sidebar:border-transparent group-data-[state=collapsed]/sidebar:ms-0',
-          childItem: 'ps-1.5 -ms-px',
-          childLink: 'py-1.5 px-2.5',
-        }"
+        :ui="navMenuUi"
       />
 
       <div ref="scrollAnchor" />

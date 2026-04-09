@@ -160,7 +160,7 @@ onMounted(() => {
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :loading="loading"
-            :excluded="['isInit', 'id', 'createdAt', 'updatedAt']"
+            :excluded="['id', 'createdAt', 'updatedAt']"
             :field-map="fieldMap"
           />
         </UForm>

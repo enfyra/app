@@ -10,7 +10,7 @@
       :errors="errors"
       :loading="props.loading"
       :mode="props.mode"
-      :is-unique-field="isFieldInUnique(field.name || field.propertyName || '')"
+      :is-unique-field="isUniqueFieldEffective(field.name || field.propertyName || '')"
       :unique-check-status="getCheckStatus(field.name || field.propertyName || '').status"
       :unique-check-message="getCheckStatus(field.name || field.propertyName || '').message"
       @update:form-data="updateFormData"
@@ -118,6 +118,16 @@ const fieldMapWithGenerated = computed(() => {
 
   return result;
 });
+
+function isUniqueCheckDisabled(key: string): boolean {
+  const config = (props.fieldMap as any)?.[key];
+  if (!config || typeof config !== "object") return false;
+  return config.disableUniqueCheck === true;
+}
+
+function isUniqueFieldEffective(key: string): boolean {
+  return isFieldInUnique(key) && !isUniqueCheckDisabled(key);
+}
 
 const visibleFields = computed(() => {
   let fields = definition.value;
@@ -238,7 +248,7 @@ watch(
 
     if (newValue && oldValue) {
       for (const key of Object.keys(newValue)) {
-        if (newValue[key] !== oldValue[key] && isFieldInUnique(key)) {
+        if (newValue[key] !== oldValue[key] && isUniqueFieldEffective(key)) {
           resetCheck(key);
         }
       }
@@ -251,7 +261,7 @@ function getUniqueFieldsNeedingCheck(): string[] {
   const fieldsNeedingCheck: string[] = [];
   for (const field of visibleFields.value) {
     const key = field.name || field.propertyName;
-    if (key && isFieldInUnique(key)) {
+    if (key && isUniqueFieldEffective(key)) {
       const status = getCheckStatus(key);
       if (status.status !== 'valid') {
         fieldsNeedingCheck.push(key);
@@ -265,7 +275,7 @@ async function validateAllUniqueFields(): Promise<boolean> {
   const allUniqueFields: string[] = [];
   for (const field of visibleFields.value) {
     const key = field.name || field.propertyName;
-    if (key && isFieldInUnique(key)) {
+    if (key && isUniqueFieldEffective(key)) {
       allUniqueFields.push(key);
     }
   }
