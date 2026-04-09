@@ -2,10 +2,10 @@
   <component
     :is="animated ? 'div' : 'div'"
     ref="cardRef"
-    class="relative overflow-hidden"
     :class="[
-      'rounded-2xl surface-card',
-      sizeClasses[size],
+      'relative overflow-hidden',
+      borderless ? 'rounded-none bg-transparent border-0 shadow-none p-0' : 'rounded-2xl surface-card',
+      !borderless && sizeClasses[size],
       variantClasses,
       elevated && 'shadow-theme-md',
       className,
@@ -45,6 +45,7 @@ interface Props {
   elevated?: boolean;
   animated?: boolean;
   accentBorder?: boolean;
+  borderless?: boolean;
   className?: string;
   animationDelay?: string;
 }
@@ -55,6 +56,7 @@ const props = withDefaults(defineProps<Props>(), {
   elevated: false,
   animated: false,
   accentBorder: false,
+  borderless: false,
   className: "",
   animationDelay: "0ms",
 });

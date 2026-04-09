@@ -156,9 +156,10 @@ router.afterEach(() => {
     collapsible="icon"
     :style="{ '--sidebar-width': '290px' }"
     :ui="{
-      container: 'h-full !z-[99999] md:pb-4 md:pl-2',
+      container: 'h-full !z-[99999] md:pb-4 md:pl-2 group-data-[state=collapsed]/sidebar:md:pl-0',
+      inner: 'dark:!bg-[var(--surface-chrome)]',
       body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto border-0',
-      footer: 'flex flex-col gap-1.5 overflow-hidden w-full p-0 md:pl-2 max-md:p-2',
+      footer: 'flex flex-col gap-1.5 overflow-hidden w-full p-0 px-2 max-lg:pb-2',
     }"
   >
     <template #title="{ state }">

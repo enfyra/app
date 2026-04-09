@@ -366,6 +366,7 @@ function getColumnLabel(columnId: string) {
 
       <div v-if="!loading && props.data.length === 0" class="py-8 text-center">
         <CommonEmptyState
+          variant="naked"
           title="No data available"
           description="There are no records to display"
           icon="lucide:database"
@@ -399,8 +400,8 @@ function getColumnLabel(columnId: string) {
       class="hidden lg:block surface-card rounded-2xl overflow-hidden"
     >
       <div class="max-w-full overflow-x-auto overflow-y-auto custom-scrollbar">
-        <table class="min-w-full divide-y divide-[var(--border-default)]" aria-label="Data table">
-          <thead class="bg-[var(--surface-header)]">
+        <table class="min-w-full divide-y divide-[var(--table-header-border)]" aria-label="Data table">
+          <thead class="bg-[var(--table-header-bg)]">
             <tr>
               <th
                 v-for="header in table?.getFlatHeaders() || []"
@@ -415,7 +416,7 @@ function getColumnLabel(columnId: string) {
                     ? 'overflow-hidden'
                     : '',
                   header.column.getCanSort() &&
-                    'cursor-pointer select-none hover:bg-[var(--surface-muted)] transition-colors',
+                    'cursor-pointer select-none hover:bg-[var(--table-header-hover-bg)] transition-colors',
                 ]"
                 @click="header.column.getToggleSortingHandler()?.($event)"
                 scope="col"
@@ -436,7 +437,7 @@ function getColumnLabel(columnId: string) {
                 >
                   <p
                     v-if="typeof header.column.columnDef.header === 'string'"
-                    class="font-medium text-[var(--text-tertiary)] text-theme-xs truncate min-w-0 flex-1"
+                    class="font-medium text-[var(--table-header-color)] text-theme-xs truncate min-w-0 flex-1"
                     :title="header.column.columnDef.header"
                   >
                     {{ header.column.columnDef.header }}
@@ -455,13 +456,13 @@ function getColumnLabel(columnId: string) {
                         ? 'i-lucide-chevron-down'
                         : 'i-lucide-chevrons-up-down'
                     "
-                    class="w-4 h-4 text-[var(--text-tertiary)] flex-shrink-0"
+                    class="w-4 h-4 text-[var(--table-header-color)] flex-shrink-0"
                   />
                 </div>
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-[var(--border-subtle)]">
+          <tbody class="divide-y divide-[var(--table-cell-border)]">
             <template v-if="loading">
               <tr v-for="i in (props.skeletonRows || 5)" :key="`skeleton-${i}`" class="animate-pulse">
                 <td
@@ -515,7 +516,7 @@ function getColumnLabel(columnId: string) {
                   >
                     <p
                   v-if="typeof cell.column.columnDef.cell !== 'function'"
-                  class="text-[var(--text-tertiary)] text-theme-sm w-full truncate"
+                  class="text-[var(--table-cell-color)] text-theme-sm w-full truncate"
                       :title="String(cell.getValue())"
                     >
                       {{ cell.getValue() }}
@@ -535,7 +536,7 @@ function getColumnLabel(columnId: string) {
                   'group cursor-pointer transition-all duration-200',
                   selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
                     ? 'bg-brand-50 dark:bg-brand-500/10'
-                    : 'hover:bg-brand-50 dark:hover:bg-brand-500/20',
+                    : 'hover:bg-[var(--surface-muted)]',
                 ]"
                 @click="handleRowClick(row.original)"
               >
@@ -557,7 +558,7 @@ function getColumnLabel(columnId: string) {
                 >
                   <p
                     v-if="typeof cell.column.columnDef.cell !== 'function'"
-                    class="text-[var(--text-tertiary)] text-theme-sm w-full truncate"
+                    class="text-[var(--table-cell-color)] text-theme-sm w-full truncate"
                     :title="String(cell.getValue())"
                   >
                     {{ cell.getValue() }}
@@ -576,6 +577,7 @@ function getColumnLabel(columnId: string) {
                 class="px-4 py-8 text-center"
               >
                 <CommonEmptyState
+                  variant="naked"
                   title="No data available"
                   description="There are no records to display"
                   icon="lucide:database"

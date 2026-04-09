@@ -104,9 +104,11 @@
 
     /* ── Content: Tables, Prose, Editor ── */
     --table-header-bg: #f1f5f9;
-    --table-header-color: #0f172a;
+    --table-header-color: var(--text-primary);
     --table-header-border: #94a3b8;
+    --table-header-hover-bg: #e2e8f0;
     --table-cell-border: #cbd5e1;
+    --table-cell-color: var(--text-secondary);
     --caret-color: #1f2937;
     --prose-placeholder: #94a3b8;
     --prose-blockquote-border: #cbd5e1;
@@ -132,8 +134,8 @@
   }
 
   .dark {
-    --bg-app: #09090b;
-    --surface-chrome: #09090b;
+    --bg-app: color-mix(in srgb, #09090b 95%, rgb(255 255 255) 5%);
+    --surface-chrome: color-mix(in srgb, #09090b 95%, rgb(255 255 255) 5%);
     --surface-default: #1e1e22;
     --surface-muted: #2a2a2e;
     --surface-overlay: rgba(0, 0, 0, 0.6);
@@ -143,7 +145,7 @@
     --bg-elevated: var(--surface-default);
     --bg-elevated-high: var(--surface-muted);
     --bg-overlay: var(--surface-overlay);
-    --bg-input: #2a2a2e;
+    --bg-input: var(--surface-muted);
 
     --text-primary: #fafafa;
     --text-secondary: #d4d4d8;
@@ -174,9 +176,11 @@
     --glow-subtle: 0 0 60px rgba(139, 92, 246, 0.1), 0 0 120px rgba(34, 211, 238, 0.04);
 
     --table-header-bg: #27272a;
-    --table-header-color: #f3f4f6;
+    --table-header-color: var(--text-primary);
     --table-header-border: #3f3f46;
+    --table-header-hover-bg: #3f3f46;
     --table-cell-border: #27272a;
+    --table-cell-color: var(--text-secondary);
     --caret-color: #e5e7eb;
     --prose-placeholder: #6b7280;
     --prose-blockquote-border: #3f3f46;

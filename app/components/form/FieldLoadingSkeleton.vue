@@ -33,7 +33,7 @@
 
     <div
       v-else-if="type === 'array-tags'"
-      class="h-8 animate-pulse rounded skeleton-base"
+      class="h-36 animate-pulse rounded-lg skeleton-base"
     />
 
     <div

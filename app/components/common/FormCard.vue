@@ -1,5 +1,5 @@
 <template>
-  <UiModernCard variant="form" :size="size" :class="className">
+  <UiModernCard variant="form" :size="size" :borderless="!bordered" :class="className">
     <div
       v-if="title || description || $slots.header"
       class="mb-6"
@@ -31,10 +31,12 @@ interface Props {
   description?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  bordered?: boolean;
 }
 
 withDefaults(defineProps<Props>(), {
   size: 'md',
   className: '',
+  bordered: true,
 });
 </script>

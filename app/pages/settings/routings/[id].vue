@@ -65,6 +65,13 @@
         @toggle-hook="toggleHook"
       />
 
+      <GuardRouteGuardSection
+        :guards="routeGuards"
+        :global-guards="globalGuards"
+        :loading="guardsLoading"
+        @create-guard="openCreateGuardDrawer"
+      />
+
       <CommonFormCard>
         <PermissionManager
           table-name="route_permission_definition"
@@ -114,6 +121,15 @@
     :route-id="routeId"
     @save="updateHook"
     @cancel="handleCancelEditHook"
+  />
+
+  <GuardCreateForRouteDrawer
+    v-model="showCreateGuardDrawer"
+    v-model:form="guardForm"
+    v-model:errors="guardErrors"
+    :loading="createGuardLoading"
+    @save="saveGuard"
+    @cancel="showCreateGuardDrawer = false"
   />
 
   <RouteApiTestModal
@@ -1288,11 +1304,102 @@ async function deleteHook(hook: any) {
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
 
+const {
+  data: routeGuardsData,
+  pending: routeGuardsLoading,
+  execute: fetchRouteGuards,
+} = useApi(() => '/guard_definition', {
+  query: computed(() => ({
+    fields: '*,route.id,route.path,methods.method,parent',
+    filter: {
+      _and: [
+        { route: { id: { _eq: routeId.value } } },
+        { parent: { _null: true } },
+      ],
+    },
+    sort: ['priority'],
+  })),
+  errorContext: 'Fetch Route Guards',
+});
+
+const {
+  data: globalGuardsData,
+  pending: globalGuardsLoading,
+  execute: fetchGlobalGuards,
+} = useApi(() => '/guard_definition', {
+  query: computed(() => ({
+    fields: '*,route.id,route.path,methods.method,parent',
+    filter: {
+      _and: [
+        { isGlobal: { _eq: true } },
+        { parent: { _null: true } },
+      ],
+    },
+    sort: ['priority'],
+  })),
+  errorContext: 'Fetch Global Guards',
+});
+
+const routeGuards = computed(() => routeGuardsData.value?.data || []);
+const globalGuards = computed(() => globalGuardsData.value?.data || []);
+const guardsLoading = computed(() => routeGuardsLoading.value || globalGuardsLoading.value);
+
+const showCreateGuardDrawer = ref(false);
+const guardForm = ref<Record<string, any>>({});
+const guardErrors = ref<Record<string, string>>({});
+
+const {
+  error: createGuardError,
+  execute: executeCreateGuard,
+  pending: createGuardLoading,
+} = useApi(() => '/guard_definition', {
+  method: 'post',
+  errorContext: 'Create Guard',
+});
+
+function openCreateGuardDrawer() {
+  guardForm.value = {
+    name: '',
+    description: '',
+    position: 'pre_auth',
+    combinator: 'and',
+    priority: 0,
+    isEnabled: true,
+    isGlobal: false,
+    route: { id: routeId.value },
+  };
+  guardErrors.value = {};
+  showCreateGuardDrawer.value = true;
+}
+
+async function saveGuard() {
+  if (!guardForm.value.name || !guardForm.value.position) {
+    toast.add({
+      title: 'Validation Error',
+      description: 'Name and position are required',
+      color: 'error',
+    });
+    return;
+  }
+
+  await executeCreateGuard({ body: guardForm.value });
+
+  if (createGuardError.value) return;
+
+  toast.add({
+    title: 'Guard created successfully',
+    color: 'success',
+  });
+
+  showCreateGuardDrawer.value = false;
+  await Promise.all([fetchRouteGuards(), fetchGlobalGuards()]);
+}
+
 watch(
   () => routeData.value?.data?.[0],
   async (newRoute) => {
     if (newRoute) {
-      await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
+      await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks(), fetchRouteGuards(), fetchGlobalGuards()]);
     }
   },
   { immediate: true }
@@ -1300,6 +1407,6 @@ watch(
 
 onMounted(async () => {
   await initializeForm();
-  await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
+  await Promise.all([fetchHandlers(), fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks(), fetchRouteGuards(), fetchGlobalGuards()]);
 });
 </script>
