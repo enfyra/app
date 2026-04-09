@@ -138,8 +138,14 @@ async function handleSaveSetting() {
   });
   errors.value = {};
 
+  await loadSetting();
+  const freshData = apiData.value?.data?.[0];
+  if (freshData) {
+    setting.value = { ...freshData };
+    formChanges.update(freshData);
+  }
+
   formEditorRef.value?.confirmChanges();
-  formChanges.update(setting.value);
 }
 
 onMounted(() => {
@@ -160,7 +166,7 @@ onMounted(() => {
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :loading="loading"
-            :excluded="['isInit', 'id', 'createdAt', 'updatedAt']"
+            :excluded="['id', 'createdAt', 'updatedAt']"
             :field-map="fieldMap"
           />
         </UForm>

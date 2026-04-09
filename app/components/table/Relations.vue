@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { FormTableSelect } from '#components';
+import { validateFieldPermissionScope } from "~/utils/field-permissions/scope";
+import { parseConditionJson, validateFieldPermissionCondition } from "~/utils/field-permissions/condition";
 
 const props = defineProps<{
   modelValue: any[];
@@ -7,7 +9,7 @@ const props = defineProps<{
   reservedNames?: string[];
 }>();
 
-const { confirm } = useConfirm();
+const toast = useToast();
 const relations = useModel(props, "modelValue");
 
 const isEditing = ref(false);
@@ -18,12 +20,256 @@ const relationErrors = ref<Record<number, Record<string, string>>>({});
 
 const { generateEmptyForm, validate } = useSchema("relation_definition");
 const { isMobile, isTablet } = useScreen();
+const { generateEmptyForm: generateFieldPermEmptyForm } = useSchema("field_permission_definition");
 
 const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const localRelationsWithKeys = computed(() => relations.value.map((r: any, i: number) => ({ ...r, _localKey: i })));
 const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
+
+const canManageFieldPermissions = computed(() => {
+  return !isNew.value && !!currentRelation.value?.id;
+});
+
+function updatePublishedBaseline(v: any) {
+  if (!currentRelation.value) return;
+  currentRelation.value.isPublished = !!v;
+  hasFormChanges.value = true;
+}
+
+const {
+  data: fieldPermData,
+  pending: fieldPermLoading,
+  execute: fetchFieldPerms,
+} = useApi(() => "/field_permission_definition", {
+  query: computed(() => ({
+    fields:
+      "id,name,updatedAt,effect,decision,action,condition,role.id,role.name,allowedUsers.id,allowedUsers.email,allowedUsers.name,column.id,relation.id",
+    sort: "-updatedAt",
+    limit: 50,
+    filter: canManageFieldPermissions.value
+      ? { relation: { id: { _eq: String(currentRelation.value.id) } } }
+      : { id: { _eq: "__none__" } },
+  })),
+  immediate: false,
+  errorContext: "Fetch Field Permissions",
+});
+
+const fieldPermItems = computed(() => fieldPermData.value?.data || []);
+
+const fieldPermSummaryByRelationId = computed(() => {
+  const out: Record<string, { total: number; allow: number; deny: number }> = {};
+  for (const rel of relations.value || []) {
+    const perms: any[] = Array.isArray(rel.fieldPermissions) ? rel.fieldPermissions : [];
+    if (!perms.length) continue;
+    const key = String(rel.id ?? rel._id);
+    out[key] = { total: perms.length, allow: 0, deny: 0 };
+    for (const p of perms) {
+      if (String(p?.effect ?? p?.decision ?? "allow") === "deny") out[key].deny += 1;
+      else out[key].allow += 1;
+    }
+  }
+  return out;
+});
+
+function syncRelationPermSummary() {
+  if (!currentRelation.value) return;
+  const relId = String(currentRelation.value.id ?? currentRelation.value._id);
+  const idx = relations.value.findIndex(r => String(r.id ?? r._id) === relId);
+  if (idx !== -1) {
+    relations.value[idx] = { ...relations.value[idx], fieldPermissions: fieldPermItems.value };
+  }
+}
+
+function getFieldPermEffect(item: any): string {
+  return String(item?.effect ?? item?.decision ?? "allow");
+}
+
+function getFieldPermActionsLabel(item: any): string {
+  const raw = item?.action ?? item?.actions ?? null;
+  const actions = Array.isArray(raw) ? raw : raw != null && raw !== "" ? [raw] : [];
+  return actions.length ? actions.join(", ") : "read";
+}
+
+function getFieldPermScopeLabel(item: any): string {
+  const users = item?.allowedUsers;
+  if (Array.isArray(users) && users.length > 0) {
+    const u = users[0];
+    return u?.email ? String(u.email) : u?.name ? String(u.name) : "User";
+  }
+  if (item?.role?.name) return `Role: ${item.role.name}`;
+  return "Scope";
+}
+
+watch(
+  () => [isEditing.value, currentRelation.value?.id],
+  async () => {
+    if (!isEditing.value) return;
+    if (!canManageFieldPermissions.value) return;
+    await fetchFieldPerms();
+  }
+);
+
+
+const showFieldPermDrawer = ref(false);
+const fieldPermForm = ref<Record<string, any>>({});
+const fieldPermErrors = ref<Record<string, string>>({});
+const fieldPermSaving = ref(false);
+const fieldPermMode = ref<"create" | "update">("create");
+const editingFieldPermId = ref<string | null>(null);
+const deletingFieldPermId = ref<string | null>(null);
+const confirmDeleteFieldPermId = ref<string | null>(null);
+let confirmDeleteFieldPermTimer: ReturnType<typeof setTimeout> | null = null;
+
+const { execute: createFieldPerm, pending: createFieldPermPending, error: createFieldPermError } = useApi(
+  () => "/field_permission_definition",
+  { method: "post", errorContext: "Create Field Permission" }
+);
+
+const { execute: patchFieldPerm, pending: patchFieldPermPending, error: patchFieldPermError } = useApi(
+  () => `/field_permission_definition/${editingFieldPermId.value || ""}`,
+  { method: "patch", errorContext: "Update Field Permission", immediate: false, watch: false }
+);
+
+const { execute: deleteFieldPerm, pending: deleteFieldPermPending, error: deleteFieldPermError } = useApi(
+  () => "/field_permission_definition",
+  { method: "delete", errorContext: "Delete Field Permission", immediate: false, watch: false }
+);
+
+const isFieldPermBusy = computed(() => {
+  return (
+    fieldPermSaving.value ||
+    createFieldPermPending.value ||
+    patchFieldPermPending.value ||
+    deleteFieldPermPending.value
+  );
+});
+
+watch(
+  () => [fieldPermForm.value?.role, fieldPermForm.value?.allowedUsers],
+  () => {
+    const role = fieldPermForm.value?.role;
+    const users = fieldPermForm.value?.allowedUsers;
+    const hasRole = role != null && role !== "";
+    const hasUser = Array.isArray(users) && users.length > 0;
+    if (!hasRole && !hasUser) return;
+    if (!fieldPermErrors.value?.role) return;
+    const next = { ...(fieldPermErrors.value || {}) };
+    delete next.role;
+    fieldPermErrors.value = next;
+  },
+  { deep: true }
+);
+
+function openCreateFieldPerm() {
+  if (!canManageFieldPermissions.value) return;
+  fieldPermMode.value = "create";
+  editingFieldPermId.value = null;
+  const base = generateFieldPermEmptyForm();
+  const baselinePublished = !!currentRelation.value?.isPublished;
+  const prefillEffect = baselinePublished ? "deny" : "allow";
+  fieldPermForm.value = {
+    ...base,
+    relation: { id: String(currentRelation.value.id) },
+    column: null,
+    ...(base.effect !== undefined
+      ? { effect: prefillEffect }
+      : base.decision !== undefined
+        ? { decision: prefillEffect }
+        : { effect: prefillEffect }),
+  };
+  fieldPermErrors.value = {};
+  showFieldPermDrawer.value = true;
+}
+
+function openEditFieldPerm(item: any) {
+  if (!canManageFieldPermissions.value) return;
+  fieldPermMode.value = "update";
+  editingFieldPermId.value = String(getId(item));
+  fieldPermForm.value = JSON.parse(JSON.stringify(item || {}));
+  fieldPermErrors.value = {};
+  showFieldPermDrawer.value = true;
+}
+
+async function quickDeleteFieldPerm(item: any) {
+  if (isFieldPermBusy.value) return;
+  const id = String(getId(item));
+
+  if (confirmDeleteFieldPermId.value !== id) {
+    confirmDeleteFieldPermId.value = id;
+    if (confirmDeleteFieldPermTimer) clearTimeout(confirmDeleteFieldPermTimer);
+    confirmDeleteFieldPermTimer = setTimeout(() => {
+      if (confirmDeleteFieldPermId.value === id) confirmDeleteFieldPermId.value = null;
+      confirmDeleteFieldPermTimer = null;
+    }, 4000);
+    return;
+  }
+
+  deletingFieldPermId.value = id;
+  try {
+    await deleteFieldPerm({ id });
+    if (deleteFieldPermError.value) return;
+    toast.add({ title: "Success", description: "Rule deleted", color: "success" });
+    confirmDeleteFieldPermId.value = null;
+    await fetchFieldPerms();
+    syncRelationPermSummary();
+  } finally {
+    if (deletingFieldPermId.value === id) deletingFieldPermId.value = null;
+  }
+}
+
+async function saveFieldPerm() {
+  if (isFieldPermBusy.value) return;
+  fieldPermSaving.value = true;
+  try {
+    const body: any = { ...fieldPermForm.value };
+
+    const scope = validateFieldPermissionScope(body);
+    if (!scope.ok) {
+      fieldPermErrors.value = { ...fieldPermErrors.value, role: scope.message };
+      toast.add({ title: "Validation Error", description: scope.message, color: "error" });
+      return;
+    }
+
+    if (body?.condition != null && body.condition !== "") {
+      const parsed =
+        typeof body.condition === "string" ? parseConditionJson(body.condition) : { condition: body.condition, error: null };
+      if ((parsed as any).error) {
+        toast.add({ title: "Validation Error", description: (parsed as any).error, color: "error" });
+        return;
+      }
+      const v = validateFieldPermissionCondition((parsed as any).condition);
+      if (!v.ok) {
+        toast.add({ title: "Validation Error", description: v.errors[0] || "Invalid condition", color: "error" });
+        return;
+      }
+      body.condition = (parsed as any).condition;
+    } else {
+      body.condition = null;
+    }
+    if (fieldPermMode.value === "update" && editingFieldPermId.value) {
+      await patchFieldPerm({ body });
+      if (patchFieldPermError.value) {
+        toast.add({ title: "Error", description: "Failed to update rule", color: "error" });
+        return;
+      }
+      toast.add({ title: "Success", description: "Field permission updated", color: "success" });
+    } else {
+      await createFieldPerm({ body });
+      if (createFieldPermError.value) {
+        toast.add({ title: "Error", description: "Failed to create rule", color: "error" });
+        return;
+      }
+      toast.add({ title: "Success", description: "Field permission created", color: "success" });
+    }
+    showFieldPermDrawer.value = false;
+    await fetchFieldPerms();
+    syncRelationPermSummary();
+  } finally {
+    fieldPermSaving.value = false;
+  }
+}
 
 function handleDrawerClose() {
   
@@ -161,6 +407,22 @@ async function removeRelation(index: number) {
           }}
         </UBadge>
         <UBadge size="xs" color="info" v-if="rel.isNullable">nullable</UBadge>
+        <UBadge
+          v-if="fieldPermSummaryByRelationId[String(rel.id)]?.total"
+          size="xs"
+          variant="soft"
+          color="secondary"
+        >
+          Perm: {{ fieldPermSummaryByRelationId[String(rel.id)].total }}
+        </UBadge>
+        <UBadge
+          v-if="fieldPermSummaryByRelationId[String(rel.id)]?.total"
+          size="xs"
+          variant="soft"
+          color="neutral"
+        >
+          A{{ fieldPermSummaryByRelationId[String(rel.id)].allow }}/D{{ fieldPermSummaryByRelationId[String(rel.id)].deny }}
+        </UBadge>
       </div>
 
       <UButton
@@ -195,7 +457,8 @@ async function removeRelation(index: number) {
     @update:model-value="(open) => { if (!open) handleDrawerClose() }"
   >
     <template #header>
-      <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
+      <div class="flex items-start justify-between gap-3 w-full">
+        <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3 min-w-0 flex-1'">
         <div
           :class="(isMobile || isTablet) ? 'w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg flex-shrink-0' : 'w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg'"
         >
@@ -212,6 +475,7 @@ async function removeRelation(index: number) {
             }}
           </p>
         </div>
+      </div>
       </div>
     </template>
 
@@ -238,6 +502,7 @@ async function removeRelation(index: number) {
                 'createdAt',
                 'updatedAt',
                 'isSystem',
+                'isPublished',
               
                 'sourceTable',
                 'junctionTableName',
@@ -254,6 +519,140 @@ async function removeRelation(index: number) {
                 },
               }"
             />
+          </div>
+
+          <div
+            v-if="canManageFieldPermissions"
+            :class="(isMobile || isTablet) ? 'surface-card rounded-lg p-3' : 'surface-card rounded-xl p-6'"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <UIcon name="lucide:lock" class="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold text-[var(--text-primary)] truncate">
+                    Field permissions
+                  </div>
+                  <div class="text-xs text-[var(--text-tertiary)] truncate">
+                    Relation: {{ currentRelation?.propertyName }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <UButton
+                  variant="soft"
+                  color="neutral"
+                  size="sm"
+                  icon="lucide:plus"
+                  @click="openCreateFieldPerm"
+                >
+                  Create rule
+                </UButton>
+              </div>
+            </div>
+
+            <div class="mt-4 space-y-3">
+              <div class="rounded-lg border border-[var(--border-default)] p-3 surface-muted">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider">
+                      Published baseline
+                    </div>
+                    <div class="text-sm font-medium text-[var(--text-primary)] mt-1">
+                      {{ currentRelation?.isPublished ? "Published" : "Unpublished" }}
+                    </div>
+                    <div class="text-xs text-[var(--text-tertiary)] mt-1">
+                      Unpublished masks reads to <span class="font-mono">null</span> and blocks query operators and writes (403) unless overridden.
+                    </div>
+                  </div>
+
+                  <USwitch
+                    :model-value="!!currentRelation?.isPublished"
+                    @update:model-value="updatePublishedBaseline"
+                  />
+                </div>
+              </div>
+
+              <div class="rounded-lg border border-[var(--border-default)] p-3">
+                <CommonLoadingState
+                  v-if="fieldPermLoading"
+                  title="Loading permissions..."
+                  size="sm"
+                  type="form"
+                  context="inline"
+                />
+
+                <div v-else class="space-y-3">
+                  <div v-if="fieldPermItems.length" class="space-y-2">
+                    <div
+                      v-for="it in fieldPermItems"
+                      :key="getId(it)"
+                      :class="[
+                        'cursor-pointer transition-colors',
+                        'hover:bg-[var(--surface-muted)]',
+                        String(getId(it)) === confirmDeleteFieldPermId ? 'bg-[var(--surface-muted)]' : '',
+                      ]"
+                      @click="openEditFieldPerm(it)"
+                    >
+                      <div class="flex items-start justify-between gap-3 py-2">
+                        <div class="min-w-0">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <UBadge
+                              variant="soft"
+                              :color="getFieldPermEffect(it) === 'deny' ? 'error' : 'success'"
+                            >
+                              {{ getFieldPermEffect(it).toUpperCase() }}
+                            </UBadge>
+                            <UBadge variant="soft" color="neutral">
+                              {{ getFieldPermActionsLabel(it) }}
+                            </UBadge>
+                            <UBadge variant="soft" color="secondary">
+                              {{ getFieldPermScopeLabel(it) }}
+                            </UBadge>
+                            <UBadge
+                              v-if="it?.condition"
+                              variant="soft"
+                              color="info"
+                            >
+                              Condition
+                            </UBadge>
+                          </div>
+                          <div
+                            v-if="it?.name"
+                            class="text-sm font-medium text-[var(--text-primary)] mt-2 truncate"
+                          >
+                            {{ it.name }}
+                          </div>
+                          <div v-else class="text-xs text-[var(--text-tertiary)] mt-2">
+                            Click to edit this rule.
+                          </div>
+                        </div>
+
+                        <UButton
+                          :icon="String(getId(it)) === confirmDeleteFieldPermId ? 'lucide:check' : 'lucide:trash-2'"
+                          :variant="String(getId(it)) === confirmDeleteFieldPermId ? 'solid' : 'ghost'"
+                          :color="String(getId(it)) === confirmDeleteFieldPermId ? 'warning' : 'error'"
+                          size="xs"
+                          class="rounded-full !aspect-square flex-shrink-0"
+                          :loading="String(getId(it)) === deletingFieldPermId"
+                          :disabled="isFieldPermBusy"
+                          @click.stop="quickDeleteFieldPerm(it)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <CommonEmptyState
+                    v-else
+                    title="No rules yet"
+                    description="Create a rule to allow/deny read/create/update for this relation."
+                    icon="lucide:lock"
+                    size="sm"
+                    variant="naked"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </template>
@@ -292,6 +691,20 @@ async function removeRelation(index: number) {
             </div>
           </div>
         </div>
+
+        <FieldPermissionEditorDrawer
+          v-model="showFieldPermDrawer"
+          v-model:form="fieldPermForm"
+          v-model:errors="fieldPermErrors"
+          nested
+          :loading="isFieldPermBusy"
+          :excluded="['column', 'relation', 'table']"
+          :mode="fieldPermMode"
+          :title="fieldPermMode === 'update' ? 'Edit field permission' : 'Create field permission'"
+          :subtitle="fieldPermMode === 'update' ? 'Update this rule for the current relation' : 'This rule applies to the current relation'"
+          @save="saveFieldPerm"
+          @cancel="showFieldPermDrawer = false"
+        />
       </template>
     </CommonDrawer>
 
@@ -320,4 +733,5 @@ async function removeRelation(index: number) {
         </div>
       </template>
     </CommonModal>
+
 </template>

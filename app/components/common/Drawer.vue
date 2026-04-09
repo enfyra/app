@@ -7,12 +7,18 @@ const props = withDefaults(
     handle?: boolean;
     handleOnly?: boolean;
     fullWidth?: boolean;
+    showClose?: boolean;
+    zIndex?: number;
+    nested?: boolean;
   }>(),
   {
     direction: 'right',
     handle: false,
     handleOnly: false,
     fullWidth: false,
+    showClose: true,
+    zIndex: 1000,
+    nested: false,
   }
 );
 
@@ -46,6 +52,8 @@ function close() {
     v-model:open="isOpen"
     :direction="props.direction"
     :inset="true"
+    :nested="props.nested"
+    :style="props.zIndex ? { zIndex: props.zIndex } : undefined"
     :ui="{
       container: 'h-[100dvh]',
       content: `overflow-hidden bg-[var(--surface-default)] ${props.fullWidth ? 'w-full' : '!w-[36rem] !max-w-[calc(100%-2rem)]'}`,

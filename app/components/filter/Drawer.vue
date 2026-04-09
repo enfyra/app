@@ -3,6 +3,7 @@ const props = defineProps<{
   modelValue: boolean;
   tableName: string;
   currentFilter?: FilterGroup; 
+  nested?: boolean;
 }>();
 
 const { schemas } = useSchema();
@@ -104,6 +105,7 @@ const { isMobile, isTablet } = useScreen();
     :model-value="modelValue"
     @update:model-value="(value) => (value ? null : handleClose())"
     direction="right"
+    :nested="props.nested === true"
     :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-2xl max-w-2xl'"
   >
     <template #header>

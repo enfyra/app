@@ -7,11 +7,11 @@ const emit = defineEmits<{
   "update:modelValue": [value: any];
 }>();
 
-const { schemas } = useSchema();
+const { schemas, fetchSchema, schemaLoading } = useSchema();
 const { getId } = useDatabase();
 
 const items = computed(() =>
-  Object.values(schemas.value).map((schema: any) => ({
+  Object.values(schemas.value || {}).map((schema: any) => ({
     label: schema.name,
     value: getId(schema),
   }))
@@ -33,6 +33,11 @@ function onSelect(item: any) {
     emit("update:modelValue", item.value);
   }
 }
+
+onMounted(async () => {
+  if (items.value.length > 0) return;
+  await fetchSchema();
+});
 </script>
 
 <template>
@@ -42,6 +47,7 @@ function onSelect(item: any) {
     placeholder="Search table..."
     class="w-full"
     by="value"
+    :disabled="schemaLoading && items.length === 0"
     @update:model-value="onSelect"
   >
     <template #leading>
@@ -54,7 +60,9 @@ function onSelect(item: any) {
       </div>
     </template>
     <template #empty>
-      <span class="text-xs text-muted-foreground px-2">No tables found</span>
+      <span class="text-xs text-muted-foreground px-2">
+        {{ schemaLoading ? 'Loading tables...' : 'No tables found' }}
+      </span>
     </template>
   </UInputMenu>
 </template>

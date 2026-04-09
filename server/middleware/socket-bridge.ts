@@ -27,24 +27,106 @@ type EngineSocket = {
   request: IncomingMessage;
 };
 
+const UPSTREAM_MAX_RETRIES = 10;
+const UPSTREAM_RETRY_BASE = 2000;
+const UPSTREAM_RETRY_MAX = 15_000;
+const UPSTREAM_BUFFER_CAP = 50;
+
 function startBridge(
   browserSocket: EngineSocket,
   upstreamHeaders: Record<string, string>,
   pendingBrowser: (string | Buffer)[],
 ): (data: string | Buffer) => void {
   const wsUrl = getWsUrl();
-  const upstream = new WebSocket(
-    `${wsUrl}/socket.io/?EIO=4&transport=websocket`,
-    { headers: upstreamHeaders },
-  );
   const buffer: (string | Buffer)[] = [];
+  let upstream: WebSocket | null = null;
   let ready = false;
+  let browserClosed = false;
+  let hasConnectedOnce = false;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
+  let retryCount = 0;
+
+  function connectUpstream() {
+    ready = false;
+    const ws = new WebSocket(
+      `${wsUrl}/socket.io/?EIO=4&transport=websocket`,
+      { headers: upstreamHeaders },
+    );
+    upstream = ws;
+
+    ws.on('message', (rawData: Buffer | string, isBinary: boolean) => {
+      if (upstream !== ws) return;
+      if (isBinary) {
+        browserSocket.send(rawData as Buffer);
+        return;
+      }
+      const frame = rawData.toString();
+      const type = frame[0];
+      if (type === '0') {
+        ready = true;
+        retryCount = 0;
+        if (hasConnectedOnce) {
+          ws.send('40/enfyra-admin,');
+        }
+        hasConnectedOnce = true;
+        for (const msg of buffer) {
+          ws.send(msg);
+        }
+        buffer.length = 0;
+      } else if (type === '4') {
+        browserSocket.send(addWsNs(frame.slice(1)));
+      } else if (type === '2') {
+        ws.send('3');
+      } else if (type === '1') {
+        browserSocket.close();
+      }
+    });
+
+    ws.on('close', () => {
+      ready = false;
+      if (upstream === ws && !browserClosed) scheduleRetry();
+    });
+
+    ws.on('error', () => {});
+  }
+
+  function scheduleRetry() {
+    if (browserClosed) return;
+    if (retryCount >= UPSTREAM_MAX_RETRIES) {
+      try {
+        browserSocket.close();
+      } catch {}
+      return;
+    }
+    const delay = Math.min(
+      UPSTREAM_RETRY_BASE * 2 ** retryCount,
+      UPSTREAM_RETRY_MAX,
+    );
+    retryCount++;
+    retryTimer = setTimeout(() => {
+      if (!browserClosed) connectUpstream();
+    }, delay);
+  }
+
+  function cleanup() {
+    browserClosed = true;
+    if (retryTimer) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+    if (upstream) {
+      try {
+        upstream.close();
+      } catch {}
+      upstream = null;
+    }
+  }
 
   const forwardFromBrowser = (data: string | Buffer) => {
     const rewritten = typeof data === 'string' ? '4' + stripWsNs(data) : data;
-    if (ready && upstream.readyState === WebSocket.OPEN) {
+    if (ready && upstream?.readyState === WebSocket.OPEN) {
       upstream.send(rewritten);
-    } else {
+    } else if (buffer.length < UPSTREAM_BUFFER_CAP) {
       buffer.push(rewritten);
     }
   };
@@ -54,44 +136,9 @@ function startBridge(
   }
   pendingBrowser.length = 0;
 
-  upstream.on('message', (rawData: Buffer | string, isBinary: boolean) => {
-    if (isBinary) {
-      browserSocket.send(rawData as Buffer);
-      return;
-    }
-    const frame = rawData.toString();
-    const type = frame[0];
-    if (type === '0') {
-      ready = true;
-      for (const msg of buffer) {
-        upstream.send(msg);
-      }
-      buffer.length = 0;
-    } else if (type === '4') {
-      browserSocket.send(addWsNs(frame.slice(1)));
-    } else if (type === '2') {
-      upstream.send('3');
-    } else if (type === '1') {
-      browserSocket.close();
-    }
-  });
+  browserSocket.on('close', cleanup);
 
-  upstream.on('close', () => {
-    try {
-      browserSocket.close();
-    } catch {}
-  });
-  upstream.on('error', () => {
-    try {
-      browserSocket.close();
-    } catch {}
-  });
-
-  browserSocket.on('close', () => {
-    try {
-      upstream.close();
-    } catch {}
-  });
+  connectUpstream();
 
   return forwardFromBrowser;
 }

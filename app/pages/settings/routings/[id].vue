@@ -9,20 +9,22 @@
           </div>
         </template>
         <div class="p-4 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-lg bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
-              <UIcon name="lucide:table" class="w-6 h-6 text-primary-600 dark:text-primary-400" />
+          <div class="flex flex-col md:flex-row md:items-center gap-3">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="w-12 h-12 shrink-0 rounded-lg bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
+                <UIcon name="lucide:table" class="w-6 h-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-[var(--text-tertiary)] mb-1">This route is the main route for table:</p>
+                <h4 class="text-base font-semibold text-[var(--text-primary)]">
+                  {{ mainTableInfo.name || mainTableInfo.tableName || 'Unknown Table' }}
+                </h4>
+                <p v-if="mainTableInfo.description" class="text-xs text-[var(--text-tertiary)] mt-1">
+                  {{ mainTableInfo.description }}
+                </p>
+              </div>
             </div>
-            <div class="flex-1">
-              <p class="text-sm text-[var(--text-tertiary)] mb-1">This route is the main route for table:</p>
-              <h4 class="text-base font-semibold text-[var(--text-primary)]">
-                {{ mainTableInfo.name || mainTableInfo.tableName || 'Unknown Table' }}
-              </h4>
-              <p v-if="mainTableInfo.description" class="text-xs text-[var(--text-tertiary)] mt-1">
-                {{ mainTableInfo.description }}
-              </p>
-            </div>
-            <UBadge size="lg" variant="soft" color="primary">
+            <UBadge size="lg" variant="soft" color="primary" class="shrink-0 self-start md:self-center">
               Main Route
             </UBadge>
           </div>
@@ -37,7 +39,7 @@
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
-            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks']"
+            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards']"
             :field-map="typeMap"
             :loading="loading"
           />

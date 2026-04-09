@@ -14,8 +14,9 @@ export function useAdminSocket() {
   if (!socket) {
     socket = io('/ws/enfyra-admin', {
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,
+      reconnectionDelayMax: 30_000,
     });
 
     const shouldToastConnection = () => {
