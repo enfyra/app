@@ -513,7 +513,7 @@ async function removeRelation(index: number) {
           variant="soft"
           color="secondary"
         >
-          Perm: {{ fieldPermSummaryByRelationId[String(rel.id)].total }}
+          Perm: {{ fieldPermSummaryByRelationId[String(rel.id)]?.total }}
         </UBadge>
         <UBadge
           v-if="fieldPermSummaryByRelationId[String(rel.id)]?.total"
@@ -521,7 +521,7 @@ async function removeRelation(index: number) {
           variant="soft"
           color="neutral"
         >
-          A{{ fieldPermSummaryByRelationId[String(rel.id)].allow }}/D{{ fieldPermSummaryByRelationId[String(rel.id)].deny }}
+          A{{ fieldPermSummaryByRelationId[String(rel.id)]?.allow }}/D{{ fieldPermSummaryByRelationId[String(rel.id)]?.deny }}
         </UBadge>
       </div>
 
@@ -614,6 +614,7 @@ async function removeRelation(index: number) {
             </div>
             <TableInverseRelationInfo
               v-if="isInverseRelation(currentRelation)"
+              class="mb-5 md:mb-6"
               :relation="currentRelation"
               :table-options="tableOptions"
             />
@@ -719,7 +720,7 @@ async function removeRelation(index: number) {
                   <div v-if="fieldPermItems.length" class="space-y-2">
                     <div
                       v-for="it in fieldPermItems"
-                      :key="getId(it)"
+                      :key="`fp-${String(getId(it) ?? '')}`"
                       :class="[
                         'cursor-pointer transition-colors rounded-lg px-3',
                         'border border-[var(--border-default)]',

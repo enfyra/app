@@ -5,7 +5,7 @@
       :key="field.name || field.propertyName"
       :key-name="(field.name || field.propertyName) as string"
       :form-data="modelValue"
-      :column-map="fieldMap"
+      :column-map="extendedColumnMap"
       :field-map="fieldMapWithGenerated"
       :errors="errors"
       :loading="props.loading"
@@ -25,6 +25,14 @@
 </template>
 
 <script setup lang="ts">
+import {
+  applyFieldPositions,
+  sortDefinitionFieldsByKey,
+} from '~/utils/form/field-order';
+import { debugFormEditorFieldOrder } from '~/utils/form/field-order-debug';
+import { FORM_EDITOR_VIRTUAL_EMIT_KEY } from '~/utils/form/form-editor-context';
+import type { FormEditorVirtualEmitPayload, FormEditorVirtualField } from '~/types/form-editor';
+
 const props = withDefaults(
   defineProps<{
     modelValue: Record<string, any>;
@@ -33,6 +41,7 @@ const props = withDefaults(
     excluded?: string[];
     includes?: string[];
     fieldMap?: Record<string, any>;
+    virtualFields?: FormEditorVirtualField[];
     loading?: boolean;
     mode?: 'create' | 'update';
     layout?: 'stack' | 'grid';
@@ -40,11 +49,15 @@ const props = withDefaults(
     uniqueCheckMode?: 'api' | 'local';
     uniqueLocalRecords?: any[];
     uniqueLocalSelfKey?: string | number | null;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    fieldPositions?: Record<string, number>;
   }>(),
   {
     excluded: () => [],
     includes: () => [],
     fieldMap: () => ({}),
+    virtualFields: () => [],
     loading: false,
     mode: 'update',
     layout: 'stack',
@@ -52,6 +65,7 @@ const props = withDefaults(
     uniqueCheckMode: 'api',
     uniqueLocalRecords: () => [],
     uniqueLocalSelfKey: null,
+    sortOrder: 'asc',
   }
 );
 
@@ -59,11 +73,32 @@ const emit = defineEmits<{
   "update:modelValue": [value: Record<string, any>];
   "update:errors": [errors: Record<string, string>];
   "hasChanged": [hasChanged: boolean];
+  virtualFieldEmit: [payload: FormEditorVirtualEmitPayload];
 }>();
 
-const { definition, fieldMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
+const { definition, fieldMap: schemaColumnMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
   props.tableName
 );
+
+const extendedColumnMap = computed(() => {
+  const m = new Map(schemaColumnMap.value);
+  for (const vf of props.virtualFields) {
+    const k = vf.name || vf.propertyName;
+    if (!k) continue;
+    m.set(k, {
+      ...vf,
+      fieldType: vf.fieldType || "column",
+      isVirtual: true,
+    });
+  }
+  return m;
+});
+
+function handleVirtualFieldEmit(payload: FormEditorVirtualEmitPayload) {
+  emit("virtualFieldEmit", payload);
+}
+
+provide(FORM_EDITOR_VIRTUAL_EMIT_KEY, handleVirtualFieldEmit);
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
 
@@ -129,8 +164,23 @@ function isUniqueFieldEffective(key: string): boolean {
   return isFieldInUnique(key) && !isUniqueCheckDisabled(key);
 }
 
-const visibleFields = computed(() => {
-  let fields = definition.value;
+const filteredFormFields = computed(() => {
+  const defKeys = new Set(
+    definition.value
+      .map((f: { name?: string; propertyName?: string }) => f.name || f.propertyName)
+      .filter(Boolean) as string[],
+  );
+  let fields = [...definition.value];
+  for (const vf of props.virtualFields) {
+    const k = vf.name || vf.propertyName;
+    if (!k || defKeys.has(k)) continue;
+    defKeys.add(k);
+    fields.push({
+      ...vf,
+      fieldType: vf.fieldType || "column",
+      isVirtual: true,
+    } as FormEditorVirtualField);
+  }
 
   const foreignKeyColumns = new Set<string>();
   fields.forEach((field: any) => {
@@ -160,6 +210,7 @@ const visibleFields = computed(() => {
     if (!key) return false;
     if (props.loading) return true;
     if (field.fieldType === "relation") return true;
+    if (field.isVirtual === true) return true;
 
     const hasKey = key in props.modelValue;
     return hasKey;
@@ -177,7 +228,62 @@ const visibleFields = computed(() => {
     return true;
   });
 
-  return sortFieldsByOrder(fields);
+  return fields;
+});
+
+const visibleFields = computed(() => {
+  const fields = filteredFormFields.value;
+  const fk = (f: { name?: string; propertyName?: string }) =>
+    f.name || f.propertyName || '';
+  const filteredKeys = fields.map(fk);
+
+  if (props.loading) {
+    const out = sortFieldsByOrder(fields);
+    if (import.meta.dev && props.fieldPositions && Object.keys(props.fieldPositions).length > 0) {
+      debugFormEditorFieldOrder({
+        tableName: props.tableName,
+        branch: 'loading-true',
+        fieldPositions: props.fieldPositions,
+        filteredKeys,
+        resultKeys: out.map(fk),
+        note: 'fieldPositions skipped until loading is false',
+      });
+    }
+    return out;
+  }
+
+  let ordered = fields;
+  if (props.sortBy && props.sortBy.length > 0) {
+    ordered = sortDefinitionFieldsByKey(
+      fields,
+      props.sortBy,
+      props.sortOrder ?? 'asc',
+    );
+  } else {
+    ordered = sortFieldsByOrder(fields);
+  }
+
+  const afterSortKeys = ordered.map(fk);
+
+  if (props.fieldPositions && Object.keys(props.fieldPositions).length > 0) {
+    const prev = ordered;
+    ordered = applyFieldPositions(ordered, props.fieldPositions);
+    if (import.meta.dev) {
+      debugFormEditorFieldOrder({
+        tableName: props.tableName,
+        branch: 'fieldPositions',
+        fieldPositions: props.fieldPositions,
+        filteredKeys,
+        afterSortKeys,
+        resultKeys: ordered.map(fk),
+        unchanged:
+          prev.length === ordered.length &&
+          prev.every((f, i) => fk(f) === fk(ordered[i]!)),
+      });
+    }
+  }
+
+  return ordered;
 });
 
 function updateFormData(key: string, value: any) {

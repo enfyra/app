@@ -34,7 +34,6 @@ const UPSTREAM_BUFFER_CAP = 50;
 
 function startBridge(
   browserSocket: EngineSocket,
-  upstreamHeaders: Record<string, string>,
   pendingBrowser: (string | Buffer)[],
 ): (data: string | Buffer) => void {
   const wsUrl = getWsUrl();
@@ -46,11 +45,23 @@ function startBridge(
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let retryCount = 0;
 
-  function connectUpstream() {
+  async function connectUpstream() {
+    if (browserClosed) return;
     ready = false;
+    const auth = await resolveSocketBridgeAuth(
+      browserSocket.request as IncomingMessage,
+    );
+    if (!auth.ok) {
+      sendSocketBridgeAuthError(browserSocket);
+      cleanup();
+      try {
+        browserSocket.close();
+      } catch {}
+      return;
+    }
     const ws = new WebSocket(
       `${wsUrl}/socket.io/?EIO=4&transport=websocket`,
-      { headers: upstreamHeaders },
+      { headers: auth.upstreamHeaders },
     );
     upstream = ws;
 
@@ -104,7 +115,7 @@ function startBridge(
     );
     retryCount++;
     retryTimer = setTimeout(() => {
-      if (!browserClosed) connectUpstream();
+      if (!browserClosed) void connectUpstream();
     }, delay);
   }
 
@@ -138,7 +149,7 @@ function startBridge(
 
   browserSocket.on('close', cleanup);
 
-  connectUpstream();
+  void connectUpstream();
 
   return forwardFromBrowser;
 }
@@ -180,7 +191,7 @@ function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
         } catch {}
         return;
       }
-      relay = startBridge(browserSocket, auth.upstreamHeaders, pendingBrowser);
+      relay = startBridge(browserSocket, pendingBrowser);
     })();
   });
 }

@@ -12,6 +12,8 @@
             :excluded="excluded"
             :field-map="fieldMap"
             :loading="loading"
+            :field-positions="fieldPermissionFormPositions"
+            :virtual-fields="fieldPermissionVirtualFields"
             @has-changed="(v) => (hasFormChanges = v)"
           />
         </UForm>
@@ -31,6 +33,17 @@
 <script setup lang="ts">
 import { parseConditionJson, validateFieldPermissionCondition } from "~/utils/field-permissions/condition";
 import { validateFieldPermissionScope } from "~/utils/field-permissions/scope";
+import type { FormEditorVirtualField } from "~/types/form-editor";
+
+const fieldPermissionFormPositions = {
+  action: 1,
+  effect: 2,
+  config: 3,
+};
+
+const fieldPermissionVirtualFields: FormEditorVirtualField[] = [
+  { name: "config", fieldType: "relation", label: "Config" },
+];
 
 const route = useRoute();
 const toast = useToast();
@@ -52,11 +65,27 @@ registerPageHeader({
   gradient: "purple",
 });
 
-const excluded = computed(() => ["id", "createdAt", "updatedAt"]);
+const excluded = computed(() => ["id", "createdAt", "updatedAt", "role"]);
 const fieldMap = computed(() => ({
   action: { disableUniqueCheck: true },
-  actions: { disableUniqueCheck: true },
-  role: { disableUniqueCheck: true },
+  config: {
+    label: "Config",
+    disableUniqueCheck: true,
+    component: resolveComponent("FormFieldPermissionConfig"),
+    componentProps: {
+      formData: form.value,
+      modelValue: form.value?.role,
+      "onUpdate:modelValue": (val: any) => {
+        form.value = { ...form.value, role: val };
+      },
+      onUpdateRole: (role: any) => {
+        form.value = { ...form.value, role };
+      },
+      onUpdateAllowedUsers: (users: any[]) => {
+        form.value = { ...form.value, allowedUsers: users };
+      },
+    },
+  },
 }));
 
 watch(
@@ -140,7 +169,7 @@ async function handleReset() {
     content: "Are you sure you want to discard all changes? All modifications will be lost.",
   });
   if (!ok) return;
-  form.value = formChanges.discardChanges();
+  form.value = formChanges.discardChanges(form.value);
   hasFormChanges.value = false;
   toast.add({ title: "Reset Complete", color: "success", description: "All changes have been discarded." });
 }

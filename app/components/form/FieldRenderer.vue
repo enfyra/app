@@ -12,6 +12,9 @@ import {
 
 import FieldLoadingSkeleton from "./FieldLoadingSkeleton.vue";
 
+import { FORM_EDITOR_VIRTUAL_EMIT_KEY } from "~/utils/form/form-editor-context";
+import type { FormEditorVirtualEmitPayload } from "~/types/form-editor";
+
 const props = defineProps<{
   keyName: string;
   formData: Record<string, any>;
@@ -27,6 +30,21 @@ const emit = defineEmits<{
   "update:formData": [key: string, value: any];
   "update:errors": [errors: Record<string, string>];
 }>();
+
+const formEditorVirtualEmit = inject(FORM_EDITOR_VIRTUAL_EMIT_KEY, null);
+
+function attachVirtualEmit(
+  key: string,
+  componentProps: Record<string, any>,
+): Record<string, any> {
+  if (!formEditorVirtualEmit) return componentProps;
+  return {
+    ...componentProps,
+    formEditorEmit: (detail: Omit<FormEditorVirtualEmitPayload, "key">) => {
+      formEditorVirtualEmit({ key, ...detail });
+    },
+  };
+}
 
 function toJsonEditorString(value: any): string {
   if (value === null || value === undefined) return "";
@@ -86,12 +104,12 @@ function getComponentConfigByKey(key: string) {
   if (config.component) {
     return {
       component: typeof config.component === 'string' ? resolveComponent(config.component) : config.component,
-      componentProps: {
+      componentProps: attachVirtualEmit(key, {
         modelValue: props.formData[key],
         'onUpdate:modelValue': (val: any) => updateFormData(key, val),
         class: 'w-full',
         ...config.componentProps,
-      },
+      }),
     };
   }
 
