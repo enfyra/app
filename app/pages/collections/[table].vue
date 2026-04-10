@@ -620,6 +620,7 @@ onMounted(() => {
                 <TableColumns v-model="table.columns" />
                 <TableRelations
                   v-model="table.relations"
+                  :table-id="getId(table)"
                   :table-options="
                     Object.values(schemas).map((schema: any) => ({
                       label: schema?.name,

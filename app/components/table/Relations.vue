@@ -7,9 +7,11 @@ const props = defineProps<{
   modelValue: any[];
   tableOptions: { label: string; value: any }[];
   reservedNames?: string[];
+  tableId?: number | string;
 }>();
 
 const toast = useToast();
+const { confirm } = useConfirm();
 const relations = useModel(props, "modelValue");
 
 const isEditing = ref(false);
@@ -21,6 +23,103 @@ const relationErrors = ref<Record<number, Record<string, string>>>({});
 const { generateEmptyForm, validate } = useSchema("relation_definition");
 const { isMobile, isTablet } = useScreen();
 const { generateEmptyForm: generateFieldPermEmptyForm } = useSchema("field_permission_definition");
+
+const showInverseModal = ref(false);
+const inverseModalTarget = ref<any>(null);
+const inversePropertyNameInput = ref('');
+
+const {
+  data: incomingRelData,
+  execute: fetchIncomingRelations,
+} = useApi(() => "/relation_definition", {
+  query: computed(() => ({
+    fields: 'id,propertyName,type,sourceTable.id,sourceTable.name,mappedBy.id',
+    filter: props.tableId
+      ? { targetTable: { id: { _eq: String(props.tableId) } } }
+      : { id: { _eq: '__none__' } },
+    limit: 100,
+  })),
+  immediate: false,
+  errorContext: 'Fetch Incoming Relations',
+});
+
+const incomingRelations = computed(() => {
+  if (!incomingRelData.value?.data) return [];
+  const existingIds = new Set(
+    relations.value
+      .filter((r: any) => r.id)
+      .map((r: any) => String(r.id)),
+  );
+  const inverseMappedIds = new Set(
+    relations.value
+      .filter((r: any) => r.mappedBy?.id)
+      .map((r: any) => String(r.mappedBy.id)),
+  );
+  const pendingMappedByNames = new Set(
+    relations.value
+      .filter((r: any) => r.mappedBy && typeof r.mappedBy === 'string')
+      .map((r: any) => r.mappedBy),
+  );
+  return incomingRelData.value.data.filter((r: any) => {
+    if (r.mappedBy?.id) return false;
+    if (existingIds.has(String(r.id))) return false;
+    if (inverseMappedIds.has(String(r.id))) return false;
+    if (pendingMappedByNames.has(r.propertyName)) return false;
+    return true;
+  });
+});
+
+function isInverseRelation(rel: any): boolean {
+  if (rel.mappedBy?.id) return true;
+  if (rel.mappedBy && typeof rel.mappedBy === 'string') return true;
+  return false;
+}
+
+function getInverseType(type: string): string {
+  if (type === 'many-to-one') return 'one-to-many';
+  if (type === 'one-to-many') return 'many-to-one';
+  return type;
+}
+
+function openInverseModal(incoming: any) {
+  inverseModalTarget.value = incoming;
+  inversePropertyNameInput.value = '';
+  showInverseModal.value = true;
+}
+
+function confirmCreateInverse() {
+  const incoming = inverseModalTarget.value;
+  if (!incoming || !inversePropertyNameInput.value?.trim()) return;
+  const name = inversePropertyNameInput.value.trim();
+  if (!TABLE_NAME_FIELD_REGEX.test(name)) {
+    toast.add({ title: 'Invalid name', description: 'Property name must be a valid identifier', color: 'error' });
+    return;
+  }
+  const exists = relations.value.some((r: any) => r.propertyName === name);
+  if (exists) {
+    toast.add({ title: 'Duplicate', description: 'A relation with this name already exists', color: 'error' });
+    return;
+  }
+  const inverseType = getInverseType(incoming.type);
+  const sourceTableId = typeof incoming.sourceTable === 'object'
+    ? incoming.sourceTable.id
+    : incoming.sourceTable;
+  relations.value.push({
+    propertyName: name,
+    type: inverseType,
+    targetTable: { id: sourceTableId },
+    mappedBy: incoming.propertyName,
+    isNullable: true,
+    isPublished: true,
+  });
+  showInverseModal.value = false;
+  inverseModalTarget.value = null;
+  inversePropertyNameInput.value = '';
+}
+
+watch(() => props.tableId, async (id) => {
+  if (id) await fetchIncomingRelations();
+}, { immediate: true });
 
 const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
@@ -398,11 +497,12 @@ async function removeRelation(index: number) {
           {{ rel.propertyName || "Unnamed" }}
         </span>
 
+        <UBadge v-if="isInverseRelation(rel)" size="xs" variant="soft" color="warning">inverse</UBadge>
         <UBadge size="xs" color="info" v-if="rel.type">{{ rel.type }}</UBadge>
         <UBadge size="xs" color="info" v-if="rel.targetTable || rel.targetTableName">
           →
           {{
-            props.tableOptions.find((t) => t.value === rel.targetTable || t.value === rel.targetTableName)
+            props.tableOptions.find((t) => t.value === rel.targetTable || t.value === (typeof rel.targetTable === 'object' ? rel.targetTable?.id : rel.targetTableName))
               ?.label ?? (typeof rel.targetTable === 'string' ? rel.targetTable : rel.targetTableName ?? 'Unknown')
           }}
         </UBadge>
@@ -433,6 +533,30 @@ async function removeRelation(index: number) {
         :disabled="rel.isSystem"
         class="lg:hover:cursor-pointer mr-2"
         @click.stop="removeRelation(index)"
+      />
+    </div>
+
+    <div
+      v-for="incoming in incomingRelations"
+      :key="'incoming-' + incoming.id"
+      class="flex items-center justify-between rounded-lg border border-dashed border-muted opacity-60 hover:opacity-100 transition"
+    >
+      <div class="flex items-center gap-2 flex-1 px-4 py-3">
+        <UIcon name="lucide:arrow-down-left" class="w-4 h-4 text-muted-foreground" />
+        <span class="text-sm text-muted-foreground">
+          {{ incoming.sourceTable?.name ?? 'unknown' }}.{{ incoming.propertyName }}
+        </span>
+        <UBadge size="xs" variant="soft" color="neutral">{{ incoming.type }}</UBadge>
+        <UBadge size="xs" variant="soft" color="neutral">incoming</UBadge>
+      </div>
+      <UButton
+        icon="lucide:plus"
+        label="Create Inverse"
+        color="primary"
+        variant="soft"
+        size="xs"
+        class="mr-2"
+        @click.stop="openInverseModal(incoming)"
       />
     </div>
 
@@ -488,6 +612,11 @@ async function removeRelation(index: number) {
                 Relation Properties
               </h3>
             </div>
+            <TableInverseRelationInfo
+              v-if="isInverseRelation(currentRelation)"
+              :relation="currentRelation"
+              :table-options="tableOptions"
+            />
             <FormEditorLazy
               ref="formEditorRef"
               v-model="currentRelation"
@@ -497,17 +626,16 @@ async function removeRelation(index: number) {
               unique-check-mode="local"
               :unique-local-records="localRelationsWithKeys"
               :unique-local-self-key="localSelfKey"
-              :excluded="[
-                'id',
-                'createdAt',
-                'updatedAt',
-                'isSystem',
-                'isPublished',
-              
-                'sourceTable',
-                'junctionTableName',
-                'junctionSourceColumn',
-                'junctionTargetColumn'
+              :excluded="isInverseRelation(currentRelation) ? [
+                'id', 'createdAt', 'updatedAt', 'isSystem', 'isPublished',
+                'sourceTable', 'junctionTableName', 'junctionSourceColumn', 'junctionTargetColumn',
+                'type', 'targetTable', 'isNullable', 'isUpdatable', 'mappedBy', 'onDelete', 'metadata',
+                'fieldPermissions'
+              ] : [
+                'id', 'createdAt', 'updatedAt', 'isSystem', 'isPublished',
+                'sourceTable', 'junctionTableName', 'junctionSourceColumn', 'junctionTargetColumn',
+                'mappedBy',
+                'fieldPermissions'
               ]"
               :field-map="{
                 type: {
@@ -518,6 +646,11 @@ async function removeRelation(index: number) {
                   component: FormTableSelect,
                 },
               }"
+            />
+            <TableInverseToggle
+              v-if="!isInverseRelation(currentRelation) && !currentRelation?.id"
+              v-model="currentRelation.inversePropertyName"
+              class="mt-3"
             />
           </div>
 
@@ -588,13 +721,14 @@ async function removeRelation(index: number) {
                       v-for="it in fieldPermItems"
                       :key="getId(it)"
                       :class="[
-                        'cursor-pointer transition-colors',
+                        'cursor-pointer transition-colors rounded-lg px-3',
+                        'border border-[var(--border-default)]',
                         'hover:bg-[var(--surface-muted)]',
                         String(getId(it)) === confirmDeleteFieldPermId ? 'bg-[var(--surface-muted)]' : '',
                       ]"
                       @click="openEditFieldPerm(it)"
                     >
-                      <div class="flex items-start justify-between gap-3 py-2">
+                      <div class="flex items-start justify-between gap-3 py-3">
                         <div class="min-w-0">
                           <div class="flex flex-wrap items-center gap-2">
                             <UBadge
@@ -708,8 +842,8 @@ async function removeRelation(index: number) {
       </template>
     </CommonDrawer>
 
-    <CommonModal 
-      v-model="showCloseConfirm" 
+    <CommonModal
+      v-model="showCloseConfirm"
       :handle="false"
     >
       <template #title>
@@ -729,6 +863,50 @@ async function removeRelation(index: number) {
           </UButton>
           <UButton @click="discardChanges">
             Discard Changes
+          </UButton>
+        </div>
+      </template>
+    </CommonModal>
+
+    <CommonModal
+      v-model="showInverseModal"
+      :handle="false"
+    >
+      <template #title>
+        <div class="text-lg font-semibold">Create Inverse Relation</div>
+      </template>
+      <template #body>
+        <div class="space-y-4" v-if="inverseModalTarget">
+          <p class="text-sm text-[var(--text-secondary)]">
+            Create an inverse for
+            <span class="font-semibold text-[var(--text-primary)]">{{ inverseModalTarget.sourceTable?.name }}.{{ inverseModalTarget.propertyName }}</span>
+            ({{ inverseModalTarget.type }})
+          </p>
+          <p class="text-sm text-[var(--text-secondary)]">
+            This will create a <span class="font-semibold">{{ getInverseType(inverseModalTarget.type) }}</span> relation on this table.
+          </p>
+          <UFormField label="Property Name" required class="w-full">
+            <UInput
+              v-model="inversePropertyNameInput"
+              placeholder="e.g. orders, comments, children"
+              autofocus
+              class="w-full"
+              @keydown.enter="confirmCreateInverse"
+            />
+          </UFormField>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2 w-full">
+          <UButton variant="ghost" @click="showInverseModal = false">
+            Cancel
+          </UButton>
+          <UButton
+            color="primary"
+            :disabled="!inversePropertyNameInput?.trim()"
+            @click="confirmCreateInverse"
+          >
+            Create
           </UButton>
         </div>
       </template>

@@ -795,13 +795,14 @@ watch(
                       v-for="it in fieldPermItems"
                       :key="getId(it)"
                       :class="[
-                        'cursor-pointer transition-colors',
+                        'cursor-pointer transition-colors rounded-lg px-3',
+                        'border border-[var(--border-default)]',
                         'hover:bg-[var(--surface-muted)]',
                         String(getId(it)) === confirmDeleteFieldPermId ? 'bg-[var(--surface-muted)]' : '',
                       ]"
                       @click="openEditFieldPerm(it)"
                     >
-                      <div class="flex items-start justify-between gap-3 py-2">
+                      <div class="flex items-start justify-between gap-3 py-3">
                         <div class="min-w-0">
                           <div class="flex flex-wrap items-center gap-2">
                             <UBadge
