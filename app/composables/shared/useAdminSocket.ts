@@ -3,8 +3,6 @@ import { io, type Socket } from 'socket.io-client';
 import { ENFYRA_SOCKET_AUTH_ERROR } from '~/constants/enfyra';
 
 let socket: Socket | null = null;
-let metadataReloadHideTimer: ReturnType<typeof setTimeout> | null = null;
-const METADATA_RELOAD_HIDE_MS = 200;
 export const metadataReloading = ref(false);
 
 export function useAdminSocket() {
@@ -52,22 +50,12 @@ export function useAdminSocket() {
 
     socket.on('$system:metadata:reload', async (data: { status: string }) => {
       if (data.status === 'pending') {
-        if (metadataReloadHideTimer) {
-          clearTimeout(metadataReloadHideTimer);
-          metadataReloadHideTimer = null;
-        }
         metadataReloading.value = true;
       } else if (data.status === 'done') {
         await schema.forceRefreshSchema();
         await routes.loadRoutes();
         await menuRegistry.registerDataMenuItems(Object.values(schema.schemas.value));
-        if (metadataReloadHideTimer) {
-          clearTimeout(metadataReloadHideTimer);
-        }
-        metadataReloadHideTimer = setTimeout(() => {
-          metadataReloading.value = false;
-          metadataReloadHideTimer = null;
-        }, METADATA_RELOAD_HIDE_MS);
+        metadataReloading.value = false;
       }
     });
 
