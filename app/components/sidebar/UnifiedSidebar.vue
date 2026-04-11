@@ -6,7 +6,6 @@ const { checkPermissionCondition } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
-const { metadataReloading } = useAdminSocket();
 
 if (import.meta.client) {
   const saved = localStorage.getItem('sidebar-open');
@@ -179,8 +178,7 @@ router.afterEach(() => {
     <template #title="{ state }">
       <div class="flex items-center gap-3 overflow-hidden">
         <div class="relative w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
-          <UIcon v-if="metadataReloading" name="lucide:loader-circle" class="text-primary animate-spin" size="20" />
-          <img v-else-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
+          <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
           <UIcon v-else name="lucide:database" class="w-5 h-5 text-primary" />
         </div>
         <template v-if="state === 'expanded'">
