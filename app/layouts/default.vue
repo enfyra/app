@@ -29,6 +29,22 @@
         </div>
       </header>
 
+      <Transition name="metadata-banner">
+        <div
+          v-if="metadataReloading"
+          key="metadata-banner"
+          class="shrink-0 overflow-hidden"
+        >
+          <UBanner
+            color="neutral"
+            icon="lucide:loader-circle"
+            title="Loading metadata…"
+            class="border-b border-[var(--border-default)] shrink-0"
+            :ui="{ icon: 'animate-spin' }"
+          />
+        </div>
+      </Transition>
+
       <CommonPageHeader
         v-if="hasPageHeader"
         :key="`${pageHeader!.title}-${pageHeader?.description || ''}-${pageHeader?.variant || 'default'}-${pageHeader?.gradient || 'none'}-${pageHeader?.leadingIcon ?? ''}-${pageHeader?.hideLeadingIcon ? '0' : '1'}`"
@@ -59,6 +75,8 @@
 </template>
 
 <script setup lang="ts">
+import { metadataReloading } from '~/composables/shared/useAdminSocket';
+
 await useInitialData();
 await useMenuInit();
 useAppSettings();
