@@ -9,7 +9,7 @@ export default defineAppConfig({
       variants: {
         variant: {
           outline: {
-            root: "bg-[var(--surface-default)] ring-1 ring-[var(--border-default)]",
+            root: "bg-[var(--surface-default)] ring-1 ring-[var(--surface-panel-ring)]",
             description: "text-balance text-center text-[var(--text-secondary)]",
           },
           naked: {

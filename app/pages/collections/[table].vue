@@ -258,6 +258,11 @@ const schemaConfirmTableName = computed(() =>
   String(schemaConfirmDetails.value?.tableName || table.value?.name || ''),
 );
 
+const modalOwningSideInverseWarnings = computed(() => {
+  const v = schemaConfirmDetails.value?.owningSideInverseCascadeWarnings;
+  return Array.isArray(v) ? v : [];
+});
+
 const isSchemaConfirmDestructive = computed(() => {
   return !!schemaConfirmDetails.value?.isDestructive;
 });
@@ -273,6 +278,9 @@ const schemaConfirmBadgeText = computed(() => {
 });
 
 const schemaConfirmSubtitle = computed(() => {
+  if (modalOwningSideInverseWarnings.value.length > 0) {
+    return 'You are removing owning-side relations. Inverse relation rows on other tables will be deleted as well.';
+  }
   if (isSchemaConfirmDestructive.value) {
     return 'Destructive change detected (drops). Please review carefully.';
   }
@@ -438,6 +446,44 @@ onMounted(() => {
                 <div class="text-sm text-amber-900 dark:text-amber-100">
                   <div class="font-medium">Warning</div>
                   <div class="mt-0.5 text-amber-800/90 dark:text-amber-100/90">{{ schemaConfirmDetails.warning }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-if="modalOwningSideInverseWarnings.length"
+              class="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 px-4 py-3"
+            >
+              <div class="flex items-start gap-3">
+                <Icon name="lucide:link-2-off" class="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" />
+                <div class="min-w-0 text-sm text-amber-900 dark:text-amber-100">
+                  <div class="font-medium">Inverse relations will be removed</div>
+                  <p class="mt-1 text-amber-800/90 dark:text-amber-100/90">
+                    These relations are the owning side. Deleting them also deletes the inverse
+                    <code class="rounded bg-amber-100/80 px-1 py-0.5 font-mono text-xs dark:bg-amber-950/50">relation_definition</code>
+                    rows on the other tables listed below.
+                  </p>
+                  <div class="mt-3 space-y-3">
+                    <div
+                      v-for="(w, wIdx) in modalOwningSideInverseWarnings"
+                      :key="w.owningRelationId + '-' + wIdx"
+                      class="rounded-lg border border-amber-200/80 bg-white/60 dark:border-amber-900/50 dark:bg-amber-950/20 px-3 py-2"
+                    >
+                      <div class="font-mono text-xs font-semibold text-amber-950 dark:text-amber-50">
+                        {{ w.owningSourceTableName }}.{{ w.owningPropertyName }}
+                        <span class="font-normal text-amber-700/80 dark:text-amber-200/80">(owning)</span>
+                      </div>
+                      <ul class="mt-2 list-inside list-disc space-y-1 text-xs text-amber-900/95 dark:text-amber-100/95">
+                        <li
+                          v-for="inv in w.cascadeDeletesInverseRelations"
+                          :key="inv.relationId"
+                        >
+                          <span class="font-mono">{{ inv.inverseSourceTableName }}.{{ inv.propertyName }}</span>
+                          <span class="text-amber-700/80 dark:text-amber-300/80"> — inverse will be deleted</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

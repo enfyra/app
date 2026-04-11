@@ -10,6 +10,8 @@ export interface PageHeaderConfig {
   stats?: PageHeaderStat[];
   variant?: "default" | "minimal" | "stats-focus";
   gradient?: "purple" | "blue" | "cyan" | "none";
+  leadingIcon?: string;
+  hideLeadingIcon?: boolean;
 }
 
 export const usePageHeaderRegistry = () => {

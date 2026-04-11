@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { FormEditorVirtualEmitPayload, FormEditorVirtualField } from '~/types/form-editor';
+import type {
+  FormEditorSection,
+  FormEditorVirtualEmitPayload,
+  FormEditorVirtualField,
+} from '~/types/form-editor';
 
 defineOptions({
   inheritAttrs: false,
@@ -24,6 +28,7 @@ const props = withDefaults(
                       sortOrder?: 'asc' | 'desc';
                       fieldPositions?: Record<string, number>;
                       virtualFields?: FormEditorVirtualField[];
+                      sections?: FormEditorSection[];
                     }>(),
   {
     mode: 'update',
@@ -34,6 +39,7 @@ const props = withDefaults(
     uniqueLocalSelfKey: null,
     sortOrder: 'asc',
     virtualFields: () => [],
+    sections: () => [],
   }
 );
 

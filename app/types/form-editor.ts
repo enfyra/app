@@ -9,3 +9,13 @@ export type FormEditorVirtualEmitPayload = {
 export type FormEditorVirtualField = TableDefinitionField & {
   name: string;
 };
+
+export type FormEditorSection = {
+  id: string;
+  title?: string;
+  hideHeading?: boolean;
+  headingClass?: string;
+  class?: string;
+  rootClass?: string;
+  fields: string[];
+};

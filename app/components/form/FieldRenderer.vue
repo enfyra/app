@@ -91,6 +91,28 @@ function updateErrors(errors: Record<string, string>) {
   emit("update:errors", errors);
 }
 
+function mergeControlClass(
+  componentProps: Record<string, unknown> | undefined,
+  kind: "field" | "boolean" = "field",
+): string {
+  const raw = componentProps?.class;
+  const base =
+    kind === "boolean"
+      ? "w-auto max-w-full shrink-0 min-w-0"
+      : "w-full min-w-0";
+  if (raw == null) {
+    return base;
+  }
+  if (typeof raw === "string" && raw.trim()) {
+    return `${base} ${raw.trim()}`;
+  }
+  if (Array.isArray(raw)) {
+    const s = raw.filter(Boolean).join(" ").trim();
+    return s ? `${base} ${s}` : base;
+  }
+  return base;
+}
+
 function getComponentConfigByKey(key: string) {
   const column = props.columnMap.get(key);
   const isRelation = column?.fieldType === "relation";
@@ -102,13 +124,15 @@ function getComponentConfigByKey(key: string) {
       : manualConfig || {};
 
   if (config.component) {
+    const customCp = { ...(config.componentProps || {}) } as Record<string, unknown>;
+    delete customCp.class;
     return {
       component: typeof config.component === 'string' ? resolveComponent(config.component) : config.component,
       componentProps: attachVirtualEmit(key, {
         modelValue: props.formData[key],
         'onUpdate:modelValue': (val: any) => updateFormData(key, val),
-        class: 'w-full',
-        ...config.componentProps,
+        ...customCp,
+        class: mergeControlClass(config.componentProps as Record<string, unknown> | undefined),
       }),
     };
   }
@@ -124,12 +148,15 @@ function getComponentConfigByKey(key: string) {
     ...config.fieldProps,
   };
 
+  const userComponentProps = { ...(config.componentProps || {}) } as Record<string, unknown>;
+  delete userComponentProps.class;
+
   const componentPropsBase = {
     disabled,
     placeholder: config.placeholder || column?.placeholder || key,
-    class: "w-full",
     id: props.fieldId,
-    ...config.componentProps,
+    ...userComponentProps,
+    class: mergeControlClass(config.componentProps as Record<string, unknown> | undefined),
 
     ...(hasError && !isSimpleJsonField && { error: props.errors[key] }),
   };
@@ -191,6 +218,10 @@ function getComponentConfigByKey(key: string) {
         component: USwitch,
         componentProps: {
           ...componentPropsBase,
+          class: mergeControlClass(
+            config.componentProps as Record<string, unknown> | undefined,
+            "boolean",
+          ),
           modelValue: ensureBoolean(props.formData[key]),
           "onUpdate:modelValue": (val: boolean) => {
             updateFormData(key, val);
@@ -401,7 +432,7 @@ function getComponentConfigByKey(key: string) {
           rows: 4,
           variant: "subtle",
           autoresize: true,
-          class: "w-full font-mono text-xs",
+          class: `${componentPropsBase.class} font-mono text-xs`.trim(),
           modelValue: ensureString(props.formData[key]),
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
@@ -506,7 +537,7 @@ function getComponentConfigByKey(key: string) {
           componentProps: {
             ...componentPropsBase,
             type: "text",
-            class: "w-full bg-[var(--surface-muted)]",
+            class: `${componentPropsBase.class} bg-[var(--surface-muted)]`.trim(),
             modelValue: ensureString(props.formData[key]),
             "onUpdate:modelValue": (val: string) => {
               updateFormData(key, val);
@@ -524,9 +555,8 @@ function getComponentConfigByKey(key: string) {
       return {
         component: resolveComponent("FormRichTextEditorLazy"),
         componentProps: {
-
+          ...componentPropsBase,
           modelValue: ensureString(props.formData[key]),
-
           editorConfig: richTextConfig,
           disabled,
           "onUpdate:modelValue": (val: string) => {
@@ -543,6 +573,7 @@ function getComponentConfigByKey(key: string) {
       return {
         component: resolveComponent("FormUuidField"),
         componentProps: {
+          ...componentPropsBase,
           modelValue: ensureString(props.formData[key]),
           disabled: disabled,
           isPrimary: column?.isPrimary || false,
@@ -558,6 +589,7 @@ function getComponentConfigByKey(key: string) {
       return {
         component: resolveComponent("FormPermissionInlineEditor"),
         componentProps: {
+          ...componentPropsBase,
           modelValue: props.formData[key],
           disabled: disabled,
           "onUpdate:modelValue": (val: any) => {
@@ -572,6 +604,7 @@ function getComponentConfigByKey(key: string) {
       return {
         component: FormDateField,
         componentProps: {
+          ...componentPropsBase,
           disabled: disabled,
           modelValue: props.formData[key],
           "onUpdate:modelValue": (val: Date | null) => {
@@ -667,9 +700,13 @@ function getComponentType(): string {
       <FieldLoadingSkeleton :type="getComponentType()" />
     </div>
 
-    <div v-else class="field-input">
-      <UFormField :error="getComponentType() === 'simple-json' ? undefined : errorMessage">
+    <div v-else class="field-input w-full min-w-0">
+      <UFormField
+        class="block w-full min-w-0"
+        :error="getComponentType() === 'simple-json' ? undefined : errorMessage"
+      >
         <div
+          class="w-full min-w-0"
           :class="[
             showCustomErrorOutline
               ? 'rounded-md border-2 border-red-500'

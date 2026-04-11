@@ -53,7 +53,7 @@
           />
         </div>
 
-        <div class="rounded-xl border border-[var(--border-default)] surface-card shadow-sm overflow-hidden">
+        <div class="surface-card rounded-xl overflow-hidden">
           <div class="p-8 min-h-[60vh]">
             <component :is="previewComponent" v-if="isValidComponent" />
           </div>

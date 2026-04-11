@@ -271,6 +271,9 @@ export default {
         },
       },
       boxShadow: {
+        'panel-sm': 'var(--shadow-sm), 0 0 0 1px var(--surface-panel-ring)',
+        'panel-md':
+          '0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06), 0 0 0 1px var(--surface-panel-ring)',
         'theme-xs': '0px 1px 2px 0px rgba(16, 24, 40, 0.05)',
         'theme-sm': '0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06)',
         'theme-md': '0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06)',

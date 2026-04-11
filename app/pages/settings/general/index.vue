@@ -88,10 +88,40 @@ const {
 
 const setting = ref<Record<string, any>>({});
 
+const generalFormSections = [
+  {
+    id: "project",
+    class: "border-b border-[var(--border-subtle)] pb-8",
+    fields: ["projectName", "projectFavicon", "projectDescription",  "isInit"],
+    
+  },
+  {
+    id: "cors",
+    class: "border-b border-[var(--border-subtle)] pb-8",
+    fields: ["corsAllowedOrigins"],
+  },
+  {
+    id: "limits",
+    fields: ["maxQueryDepth", "maxUploadFileSize", "maxRequestBodySize"],
+  },
+];
+
 const fieldMap = {
+  isInit: {
+    fieldProps: { class: "md:col-span-1 w-full min-w-0" },
+  },
+  projectName: {
+    fieldProps: { class: "md:col-span-1 w-full min-w-0" },
+  },
+  projectDescription: {
+    fieldProps: { class: "md:col-span-1 w-full min-w-0" },
+  },
+  projectFavicon: {
+    fieldProps: { class: "md:col-span-1 w-full min-w-0" },
+  },
   corsAllowedOrigins: {
     type: "array-tags",
-    fieldProps: { class: "col-span-2" },
+    fieldProps: { class: "w-full min-w-0 md:col-span-2" },
     hint:
       "Full origins only (scheme, host, port). Example: https://app.example.com or http://localhost:3000. An empty list allows every origin (see server CORS rules).",
     placeholder: "https://your-app.example.com",
@@ -99,6 +129,15 @@ const fieldMap = {
       "No origins in the list. Any origin will be allowed until you add entries.",
     normalizeOrigin: true,
     monospace: true,
+  },
+  maxQueryDepth: {
+    fieldProps: { class: "md:col-span-1" },
+  },
+  maxUploadFileSize: {
+    fieldProps: { class: "md:col-span-1" },
+  },
+  maxRequestBodySize: {
+    fieldProps: { class: "md:col-span-1" },
   },
 };
 
@@ -154,23 +193,34 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-      <CommonFormCard>
-        <UForm @submit="handleSaveSetting" :state="setting">
+  <div class="max-w-[1000px] px-4 pb-10 sm:px-6 lg:px-0">
+    <div class="surface-card overflow-hidden rounded-2xl">
+      <div class="relative px-6 py-8 sm:px-8">
+        <CommonLoadingState
+          v-if="loading"
+          title="Loading settings…"
+          description="Fetching configuration from the server"
+          size="sm"
+          type="form"
+          context="inline"
+          class="min-h-[12rem]"
+        />
+        <UForm v-else @submit="handleSaveSetting" :state="setting">
           <FormEditorLazy
             ref="formEditorRef"
             table-name="setting_definition"
             mode="update"
+            layout="grid"
             v-model="setting"
             v-model:errors="errors"
-            @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            :loading="loading"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
+            :loading="false"
             :excluded="['id', 'createdAt', 'updatedAt']"
+            :sections="generalFormSections"
             :field-map="fieldMap"
           />
         </UForm>
-      </CommonFormCard>
+      </div>
     </div>
   </div>
 </template>
