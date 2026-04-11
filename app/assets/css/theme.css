@@ -67,6 +67,8 @@
     --border-input: #94a3b8;
     --border-neutral: #cbd5e1;
 
+    --surface-panel-ring: color-mix(in srgb, var(--border-default) 60%, transparent);
+
     /* ── Shadows ── */
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -159,6 +161,8 @@
     --border-accent: rgba(139, 92, 246, 0.4);
     --border-input: rgba(255, 255, 255, 0.1);
     --border-neutral: rgba(255, 255, 255, 0.08);
+
+    --surface-panel-ring: color-mix(in srgb, var(--border-default) 50%, transparent);
 
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);

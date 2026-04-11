@@ -7,9 +7,9 @@
       :disabled="moveState.moveMode"
     >
       <div
-        class="relative rounded-xl border border-[var(--border-default)] bg-[var(--surface-default)] transition-all duration-200 overflow-hidden cursor-pointer hover:shadow-theme-md"
+        class="relative rounded-xl surface-card transition-all duration-200 overflow-hidden cursor-pointer hover:shadow-panel-md"
         :class="{
-          'border-brand-500 shadow-theme-md': selectedItems.includes(file.id),
+          'border-brand-500 shadow-panel-md': selectedItems.includes(file.id),
           'hover:border-[var(--border-strong)]': !selectedItems.includes(file.id),
         }"
         :style="{

@@ -1,11 +1,14 @@
 <template>
-  <div :class="props.layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6' : 'space-y-6'">
+  <div
+    v-if="!hasSections"
+    :class="layoutClass"
+  >
     <FormField
       v-for="field in visibleFields"
       :key="field.name || field.propertyName"
       :key-name="(field.name || field.propertyName) as string"
       :form-data="modelValue"
-      :column-map="fieldMap"
+      :column-map="extendedColumnMap"
       :field-map="fieldMapWithGenerated"
       :errors="errors"
       :loading="props.loading"
@@ -16,15 +19,112 @@
       @update:form-data="updateFormData"
       @update:errors="updateErrors"
       @check-unique="handleCheckUnique"
-      :class="[
-        'relative group',
-        props.layout === 'grid' && field.fieldType === 'relation' ? 'md:col-span-2' : ''
-      ]"
+      :class="fieldRowClass(field)"
     />
+  </div>
+  <div
+    v-else
+    class="space-y-10"
+  >
+    <div
+      v-for="block in sectionBlocks"
+      :key="block.id"
+      :class="block.rootClass"
+    >
+      <p
+        v-if="block.title && !block.hideHeading"
+        :class="block.headingClass ?? defaultSectionHeadingClass"
+      >
+        {{ block.title }}
+      </p>
+      <div
+        v-if="block.class"
+        :class="block.class"
+      >
+        <div :class="layoutClass">
+          <FormField
+            v-for="field in block.fields"
+            :key="field.name || field.propertyName"
+            :key-name="(field.name || field.propertyName) as string"
+            :form-data="modelValue"
+            :column-map="extendedColumnMap"
+            :field-map="fieldMapWithGenerated"
+            :errors="errors"
+            :loading="props.loading"
+            :mode="props.mode"
+            :is-unique-field="isUniqueFieldEffective(field.name || field.propertyName || '')"
+            :unique-check-status="getCheckStatus(field.name || field.propertyName || '').status"
+            :unique-check-message="getCheckStatus(field.name || field.propertyName || '').message"
+            @update:form-data="updateFormData"
+            @update:errors="updateErrors"
+            @check-unique="handleCheckUnique"
+            :class="fieldRowClass(field)"
+          />
+        </div>
+      </div>
+      <div
+        v-else
+        :class="layoutClass"
+      >
+        <FormField
+          v-for="field in block.fields"
+          :key="field.name || field.propertyName"
+          :key-name="(field.name || field.propertyName) as string"
+          :form-data="modelValue"
+          :column-map="extendedColumnMap"
+          :field-map="fieldMapWithGenerated"
+          :errors="errors"
+          :loading="props.loading"
+          :mode="props.mode"
+          :is-unique-field="isUniqueFieldEffective(field.name || field.propertyName || '')"
+          :unique-check-status="getCheckStatus(field.name || field.propertyName || '').status"
+          :unique-check-message="getCheckStatus(field.name || field.propertyName || '').message"
+          @update:form-data="updateFormData"
+          @update:errors="updateErrors"
+          @check-unique="handleCheckUnique"
+          :class="fieldRowClass(field)"
+        />
+      </div>
+    </div>
+    <div
+      v-if="orphanSectionFields.length"
+      :class="layoutClass"
+    >
+      <FormField
+        v-for="field in orphanSectionFields"
+        :key="field.name || field.propertyName"
+        :key-name="(field.name || field.propertyName) as string"
+        :form-data="modelValue"
+        :column-map="extendedColumnMap"
+        :field-map="fieldMapWithGenerated"
+        :errors="errors"
+        :loading="props.loading"
+        :mode="props.mode"
+        :is-unique-field="isUniqueFieldEffective(field.name || field.propertyName || '')"
+        :unique-check-status="getCheckStatus(field.name || field.propertyName || '').status"
+        :unique-check-message="getCheckStatus(field.name || field.propertyName || '').message"
+        @update:form-data="updateFormData"
+        @update:errors="updateErrors"
+        @check-unique="handleCheckUnique"
+        :class="fieldRowClass(field)"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import {
+  applyFieldPositions,
+  sortDefinitionFieldsByKey,
+} from '~/utils/form/field-order';
+import { debugFormEditorFieldOrder } from '~/utils/form/field-order-debug';
+import { FORM_EDITOR_VIRTUAL_EMIT_KEY } from '~/utils/form/form-editor-context';
+import type {
+  FormEditorSection,
+  FormEditorVirtualEmitPayload,
+  FormEditorVirtualField,
+} from '~/types/form-editor';
+
 const props = withDefaults(
   defineProps<{
     modelValue: Record<string, any>;
@@ -33,6 +133,7 @@ const props = withDefaults(
     excluded?: string[];
     includes?: string[];
     fieldMap?: Record<string, any>;
+    virtualFields?: FormEditorVirtualField[];
     loading?: boolean;
     mode?: 'create' | 'update';
     layout?: 'stack' | 'grid';
@@ -40,11 +141,16 @@ const props = withDefaults(
     uniqueCheckMode?: 'api' | 'local';
     uniqueLocalRecords?: any[];
     uniqueLocalSelfKey?: string | number | null;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    fieldPositions?: Record<string, number>;
+    sections?: FormEditorSection[];
   }>(),
   {
     excluded: () => [],
     includes: () => [],
     fieldMap: () => ({}),
+    virtualFields: () => [],
     loading: false,
     mode: 'update',
     layout: 'stack',
@@ -52,18 +158,77 @@ const props = withDefaults(
     uniqueCheckMode: 'api',
     uniqueLocalRecords: () => [],
     uniqueLocalSelfKey: null,
+    sortOrder: 'asc',
+    sections: () => [],
   }
 );
+
+const defaultSectionHeadingClass =
+  'mb-4 text-xs font-semibold uppercase tracking-wider text-[var(--text-quaternary)]';
+
+const layoutClass = computed(() =>
+  props.layout === 'grid'
+    ? 'grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6'
+    : 'space-y-6',
+);
+
+function fieldRowClass(field: { fieldType?: string }) {
+  return [
+    'relative group',
+    props.layout === 'grid' && field.fieldType === 'relation' ? 'md:col-span-2' : '',
+  ];
+}
+
+const hasSections = computed(
+  () => props.sections != null && props.sections.length > 0,
+);
+
+const effectiveIncludesKeys = computed(() => {
+  if (props.includes.length > 0) {
+    return props.includes;
+  }
+  if (props.sections && props.sections.length > 0) {
+    const u = new Set<string>();
+    for (const s of props.sections) {
+      for (const k of s.fields) {
+        u.add(k);
+      }
+    }
+    return [...u];
+  }
+  return [];
+});
 
 const emit = defineEmits<{
   "update:modelValue": [value: Record<string, any>];
   "update:errors": [errors: Record<string, string>];
   "hasChanged": [hasChanged: boolean];
+  virtualFieldEmit: [payload: FormEditorVirtualEmitPayload];
 }>();
 
-const { definition, fieldMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
+const { definition, fieldMap: schemaColumnMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
   props.tableName
 );
+
+const extendedColumnMap = computed(() => {
+  const m = new Map(schemaColumnMap.value);
+  for (const vf of props.virtualFields) {
+    const k = vf.name || vf.propertyName;
+    if (!k) continue;
+    m.set(k, {
+      ...vf,
+      fieldType: vf.fieldType || "column",
+      isVirtual: true,
+    });
+  }
+  return m;
+});
+
+function handleVirtualFieldEmit(payload: FormEditorVirtualEmitPayload) {
+  emit("virtualFieldEmit", payload);
+}
+
+provide(FORM_EDITOR_VIRTUAL_EMIT_KEY, handleVirtualFieldEmit);
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
 
@@ -129,8 +294,23 @@ function isUniqueFieldEffective(key: string): boolean {
   return isFieldInUnique(key) && !isUniqueCheckDisabled(key);
 }
 
-const visibleFields = computed(() => {
-  let fields = definition.value;
+const filteredFormFields = computed(() => {
+  const defKeys = new Set(
+    definition.value
+      .map((f: { name?: string; propertyName?: string }) => f.name || f.propertyName)
+      .filter(Boolean) as string[],
+  );
+  let fields = [...definition.value];
+  for (const vf of props.virtualFields) {
+    const k = vf.name || vf.propertyName;
+    if (!k || defKeys.has(k)) continue;
+    defKeys.add(k);
+    fields.push({
+      ...vf,
+      fieldType: vf.fieldType || "column",
+      isVirtual: true,
+    } as FormEditorVirtualField);
+  }
 
   const foreignKeyColumns = new Set<string>();
   fields.forEach((field: any) => {
@@ -139,10 +319,10 @@ const visibleFields = computed(() => {
     }
   });
 
-  if (props.includes.length > 0) {
+  if (effectiveIncludesKeys.value.length > 0) {
     fields = fields.filter((field: any) => {
       const key = field.name || field.propertyName;
-      return key && props.includes.includes(key);
+      return key && effectiveIncludesKeys.value.includes(key);
     });
   }
 
@@ -160,6 +340,7 @@ const visibleFields = computed(() => {
     if (!key) return false;
     if (props.loading) return true;
     if (field.fieldType === "relation") return true;
+    if (field.isVirtual === true) return true;
 
     const hasKey = key in props.modelValue;
     return hasKey;
@@ -177,7 +358,127 @@ const visibleFields = computed(() => {
     return true;
   });
 
-  return sortFieldsByOrder(fields);
+  return fields;
+});
+
+const visibleFields = computed(() => {
+  const fields = filteredFormFields.value;
+  const fk = (f: { name?: string; propertyName?: string }) =>
+    f.name || f.propertyName || '';
+  const filteredKeys = fields.map(fk);
+
+  if (props.loading) {
+    const out = sortFieldsByOrder(fields);
+    if (import.meta.dev && props.fieldPositions && Object.keys(props.fieldPositions).length > 0) {
+      debugFormEditorFieldOrder({
+        tableName: props.tableName,
+        branch: 'loading-true',
+        fieldPositions: props.fieldPositions,
+        filteredKeys,
+        resultKeys: out.map(fk),
+        note: 'fieldPositions skipped until loading is false',
+      });
+    }
+    return out;
+  }
+
+  let ordered = fields;
+  if (props.sortBy && props.sortBy.length > 0) {
+    ordered = sortDefinitionFieldsByKey(
+      fields,
+      props.sortBy,
+      props.sortOrder ?? 'asc',
+    );
+  } else {
+    ordered = sortFieldsByOrder(fields);
+  }
+
+  const afterSortKeys = ordered.map(fk);
+
+  if (props.fieldPositions && Object.keys(props.fieldPositions).length > 0) {
+    const prev = ordered;
+    ordered = applyFieldPositions(ordered, props.fieldPositions);
+    if (import.meta.dev) {
+      debugFormEditorFieldOrder({
+        tableName: props.tableName,
+        branch: 'fieldPositions',
+        fieldPositions: props.fieldPositions,
+        filteredKeys,
+        afterSortKeys,
+        resultKeys: ordered.map(fk),
+        unchanged:
+          prev.length === ordered.length &&
+          prev.every((f, i) => fk(f) === fk(ordered[i]!)),
+      });
+    }
+  }
+
+  return ordered;
+});
+
+const sectionBlocks = computed(() => {
+  if (!props.sections || props.sections.length === 0) {
+    return [];
+  }
+  const visibility = visibleFields.value;
+  const fk = (f: { name?: string; propertyName?: string }) =>
+    f.name || f.propertyName || '';
+  const byKey = new Map<string, (typeof visibility)[0]>();
+  for (const f of visibility) {
+    const k = fk(f);
+    if (k) {
+      byKey.set(k, f);
+    }
+  }
+  const assignedKeys = new Set<string>();
+  const sectionFieldLists = props.sections.map((s) => {
+    const list: typeof visibility = [];
+    for (const key of s.fields) {
+      if (assignedKeys.has(key)) {
+        continue;
+      }
+      const f = byKey.get(key);
+      if (f) {
+        list.push(f);
+        assignedKeys.add(key);
+      }
+    }
+    return list;
+  });
+  return props.sections.map((s, i) => ({
+    id: s.id,
+    title: s.title,
+    hideHeading: s.hideHeading,
+    headingClass: s.headingClass,
+    class: s.class,
+    rootClass: s.rootClass,
+    fields: sectionFieldLists[i]!,
+  }));
+});
+
+const orphanSectionFields = computed(() => {
+  if (!props.sections || props.sections.length === 0) {
+    return [];
+  }
+  const fk = (f: { name?: string; propertyName?: string }) =>
+    f.name || f.propertyName || '';
+  const inSection = new Set(
+    sectionBlocks.value.flatMap((b) => b.fields.map((f) => fk(f)).filter(Boolean)),
+  );
+  return visibleFields.value.filter((f) => {
+    const k = fk(f);
+    return k && !inSection.has(k);
+  });
+});
+
+const fieldsInRenderOrder = computed(() => {
+  if (!hasSections.value) {
+    return visibleFields.value;
+  }
+  return [
+    ...sectionBlocks.value.flatMap((b) => b.fields),
+    ...orphanSectionFields.value,
+  ];
 });
 
 function updateFormData(key: string, value: any) {
@@ -191,7 +492,7 @@ function updateErrors(errors: Record<string, string>) {
 
 function scrollToFirstError() {
   const errs = props.errors || {};
-  const firstKey = visibleFields.value
+  const firstKey = fieldsInRenderOrder.value
     .map((f: any) => f.name || f.propertyName)
     .find((k: any) => k && errs[k]);
   if (!firstKey) return;

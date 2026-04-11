@@ -91,9 +91,9 @@ const defaultCalendarDate = new CalendarDate(
 const showModal = ref(false);
 const showFrom = ref(false);
 const showTo = ref(false);
-const tempValue = shallowRef(defaultCalendarDate);
-const tempFrom = shallowRef(defaultCalendarDate);
-const tempTo = shallowRef(defaultCalendarDate);
+const tempValue = shallowRef<any>(defaultCalendarDate);
+const tempFrom = shallowRef<any>(defaultCalendarDate);
+const tempTo = shallowRef<any>(defaultCalendarDate);
 
 watch(showModal, (v) => {
   if (v) {

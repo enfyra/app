@@ -306,7 +306,7 @@ async function handleTest() {
         </div>
 
         <div v-if="showTestPanel" class="pt-3 border-t border-[var(--border-default)]">
-          <div class="rounded-xl border border-[var(--border-default)] surface-card p-4 space-y-3">
+          <div class="surface-card rounded-xl p-4 space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <UIcon name="lucide:flask-conical" class="w-4 h-4 text-primary" />

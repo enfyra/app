@@ -30,6 +30,8 @@
               :field-map="fieldMap"
               :excluded="excluded"
               :mode="props.mode"
+              :field-positions="fieldPermissionFormPositions"
+              :virtual-fields="fieldPermissionVirtualFields"
             />
           </UForm>
         </CommonFormCard>
@@ -86,6 +88,7 @@
 
 <script setup lang="ts">
 import { parseConditionJson, validateFieldPermissionCondition } from "~/utils/field-permissions/condition";
+import type { FormEditorVirtualField } from "~/types/form-editor";
 
 interface Props {
   modelValue: boolean;
@@ -118,6 +121,20 @@ const emit = defineEmits<{
 
 const { schema, definition } = useSchema(toRef(props, "tableName"));
 
+const fieldPermissionFormPositions = computed(() => {
+  if (props.tableName !== "field_permission_definition") return undefined;
+  if (props.mode === "update") {
+    return { action: 1, effect: 2, config: 3 };
+  }
+  return { action: 0, effect: 1, config: 2 };
+});
+
+const fieldPermissionVirtualFields = computed<FormEditorVirtualField[]>(() =>
+  props.tableName === "field_permission_definition"
+    ? [{ name: "config", fieldType: "relation", label: "Config" }]
+    : [],
+);
+
 const hasChanged = ref(false);
 const showDiscardModal = ref(false);
 
@@ -133,6 +150,9 @@ const localErrors = computed({
 
 const excluded = computed(() => {
   const base = ["allowedUsers", "table"];
+  if (props.tableName === "field_permission_definition") {
+    base.push("role");
+  }
   const extra = Array.isArray(props.excluded) ? props.excluded : [];
   return Array.from(new Set([...base, ...extra]));
 });
@@ -249,12 +269,16 @@ const fieldMap = computed(() => {
     actions: {
       disableUniqueCheck: true,
     },
-    role: {
+    config: {
       label: "Config",
       disableUniqueCheck: true,
       component: resolveComponent("FormFieldPermissionConfig"),
       componentProps: {
         formData: localForm.value,
+        modelValue: localForm.value?.role,
+        "onUpdate:modelValue": (val: any) => {
+          localForm.value = { ...localForm.value, role: val };
+        },
         onUpdateRole: (role: any) => {
           localForm.value = { ...localForm.value, role };
         },

@@ -10,6 +10,8 @@ interface Props {
   stats?: StatCard[];
   variant?: "default" | "minimal" | "stats-focus";
   gradient?: "purple" | "blue" | "cyan" | "none";
+  leadingIcon?: string;
+  hideLeadingIcon?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -17,7 +19,43 @@ const props = withDefaults(defineProps<Props>(), {
   stats: () => [],
   variant: "default",
   gradient: "none",
+  hideLeadingIcon: false,
 });
+
+const route = useRoute();
+const { findMenuIconForPath } = useMenuRegistry();
+
+const resolvedLeadingIcon = computed(() => {
+  if (props.hideLeadingIcon) {
+    return undefined;
+  }
+  if (props.leadingIcon !== undefined) {
+    return props.leadingIcon || undefined;
+  }
+  return findMenuIconForPath(route.path);
+});
+
+const leadingIconShellClass = computed(() => {
+  const isMin = props.variant === "minimal";
+  const base = isMin
+    ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+    : "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl";
+  const g = props.gradient;
+  if (g === "purple") {
+    return `${base} bg-gradient-to-br from-violet-500/25 to-fuchsia-500/20 text-violet-600 dark:from-violet-400/20 dark:to-fuchsia-500/15 dark:text-violet-300`;
+  }
+  if (g === "blue") {
+    return `${base} bg-gradient-to-br from-indigo-500/25 to-cyan-500/15 text-indigo-600 dark:from-indigo-400/20 dark:to-cyan-400/15 dark:text-indigo-300`;
+  }
+  if (g === "cyan") {
+    return `${base} bg-gradient-to-br from-cyan-500/25 to-primary/20 text-cyan-600 dark:from-cyan-400/20 dark:to-primary/25 dark:text-cyan-300`;
+  }
+  return `${base} bg-[var(--surface-muted)] text-[var(--text-secondary)] ring-1 ring-[var(--border-subtle)]`;
+});
+
+const leadingIconGlyphClass = computed(() =>
+  props.variant === "minimal" ? "h-5 w-5" : "h-6 w-6",
+);
 
 const { subHeaderActions } = useSubHeaderActionRegistry();
 const { isMobile, isTablet } = useScreen();
@@ -42,15 +80,21 @@ const hasActions = computed(() => {
   return leftActions.value.length > 0 || rightActions.value.length > 0;
 });
 
-const gradientStyle = computed(() => {
-  const gradients = {
-    purple: "radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.2) 0%, transparent 50%), radial-gradient(at 100% 100%, rgba(232, 121, 249, 0.1) 0%, transparent 50%)",
-    blue: "radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.2) 0%, transparent 50%), radial-gradient(at 0% 100%, rgba(34, 211, 238, 0.1) 0%, transparent 50%)",
-    cyan: "radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.15) 0%, transparent 50%), radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.1) 0%, transparent 50%)",
-    none: undefined,
-  };
-
-  return gradients[props.gradient];
+const headerStripClass = computed(() => {
+  const g = props.gradient;
+  if (g === "none") {
+    return "";
+  }
+  if (g === "cyan") {
+    return "bg-gradient-to-r from-cyan-500/[0.07] via-[var(--surface-muted)]/80 to-transparent dark:from-cyan-400/[0.09] dark:via-[var(--surface-muted)]/50 dark:to-transparent";
+  }
+  if (g === "purple") {
+    return "bg-gradient-to-r from-violet-500/[0.08] via-[var(--surface-muted)]/78 to-transparent dark:from-violet-400/[0.09] dark:via-[var(--surface-muted)]/48 dark:to-transparent";
+  }
+  if (g === "blue") {
+    return "bg-gradient-to-r from-indigo-500/[0.08] via-[var(--surface-muted)]/78 to-transparent dark:from-indigo-400/[0.09] dark:via-[var(--surface-muted)]/48 dark:to-transparent";
+  }
+  return "";
 });
 
 const isMinimal = computed(() => props.variant === "minimal");
@@ -71,14 +115,28 @@ onMounted(() => {
   triggerAnimation();
 });
 
-watch(() => [props.title, props.description, props.variant, props.gradient, props.stats], () => {
-  triggerAnimation();
-}, { deep: true });
+watch(
+  () => [
+    props.title,
+    props.description,
+    props.variant,
+    props.gradient,
+    props.stats,
+    resolvedLeadingIcon.value,
+    props.leadingIcon,
+    props.hideLeadingIcon,
+  ],
+  () => {
+    triggerAnimation();
+  },
+  { deep: true },
+);
 </script>
 
 <template>
   <div
     class="relative overflow-hidden"
+    :class="headerStripClass"
     :style="{
       borderBottomColor: 'var(--border-default)',
       borderBottomWidth: '1px',
@@ -89,25 +147,38 @@ watch(() => [props.title, props.description, props.variant, props.gradient, prop
     <div class="relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', isMinimal ? ((isMobile || isTablet) ? 'py-3' : 'py-4') : ((isMobile || isTablet) ? 'py-4' : 'py-5')]">
       <div class="flex flex-col gap-4" :class="(isMobile || isTablet) ? '' : 'flex-row items-center justify-between'">
         
-        <div class="flex-1 min-w-0">
-      <div
-        :class="(isMobile || isTablet) ? 'space-y-0.5' : 'space-y-1'"
-        class="transition-all duration-400"
-        :style="{
-          opacity: isVisible ? 1 : 0,
-          transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-          transitionDelay: '100ms',
-        }"
-      >
-        <h1
+        <div class="flex min-w-0 flex-1 items-start gap-4">
+          <div
+            v-if="resolvedLeadingIcon"
+            :class="leadingIconShellClass"
+            aria-hidden="true"
+          >
+            <UIcon
+              :name="resolvedLeadingIcon"
+              :class="leadingIconGlyphClass"
+            />
+          </div>
+          <div
+            :class="(isMobile || isTablet) ? 'space-y-0.5' : 'space-y-1'"
+            class="min-w-0 flex-1 transition-all duration-400"
+            :style="{
+              opacity: isVisible ? 1 : 0,
+              transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+              transitionDelay: '100ms',
+            }"
+          >
+            <h1
               class="font-semibold tracking-tight text-[var(--text-primary)]"
-          :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-xl') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-4xl' : 'text-3xl')"
-        >
-          {{ title }}
-        </h1>
-            <p v-if="description" :class="[(isMobile || isTablet) ? 'text-xs' : 'text-sm', 'text-[var(--text-tertiary)]']">
-          {{ description }}
-        </p>
+              :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-xl') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-4xl' : 'text-3xl')"
+            >
+              {{ title }}
+            </h1>
+            <p
+              v-if="description"
+              :class="[(isMobile || isTablet) ? 'text-xs' : 'text-sm', 'text-[var(--text-tertiary)]']"
+            >
+              {{ description }}
+            </p>
           </div>
         </div>
 

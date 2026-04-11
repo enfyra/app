@@ -301,7 +301,7 @@ useSubHeaderActionRegistry([
     <div class="min-h-[400px] space-y-8">
       <div class="space-y-8">
         
-        <div class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-default)] shadow-theme-md overflow-hidden">
+        <div class="surface-card rounded-xl overflow-hidden">
           <div class="px-5 py-4 border-b border-[var(--border-default)]">
             <h2 class="text-lg font-semibold text-[var(--text-primary)]">
               Folders
@@ -324,7 +324,7 @@ useSubHeaderActionRegistry([
           </div>
         </div>
 
-        <div class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-default)] shadow-theme-md overflow-hidden">
+        <div class="surface-card rounded-xl overflow-hidden">
           <div class="px-5 py-4 border-b border-[var(--border-default)]">
             <h2 class="text-lg font-semibold text-[var(--text-primary)]">
               Files

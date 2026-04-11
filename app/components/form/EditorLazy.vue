@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import type {
+  FormEditorSection,
+  FormEditorVirtualEmitPayload,
+  FormEditorVirtualField,
+} from '~/types/form-editor';
+
 defineOptions({
   inheritAttrs: false,
 });
@@ -18,6 +24,11 @@ const props = withDefaults(
                       uniqueCheckMode?: 'api' | 'local';
                       uniqueLocalRecords?: any[];
                       uniqueLocalSelfKey?: string | number | null;
+                      sortBy?: string;
+                      sortOrder?: 'asc' | 'desc';
+                      fieldPositions?: Record<string, number>;
+                      virtualFields?: FormEditorVirtualField[];
+                      sections?: FormEditorSection[];
                     }>(),
   {
     mode: 'update',
@@ -26,6 +37,9 @@ const props = withDefaults(
     uniqueCheckMode: 'api',
     uniqueLocalRecords: () => [],
     uniqueLocalSelfKey: null,
+    sortOrder: 'asc',
+    virtualFields: () => [],
+    sections: () => [],
   }
 );
 
@@ -33,6 +47,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: Record<string, any>];
   "update:errors": [errors: Record<string, string>];
   "hasChanged": [hasChanged: boolean];
+  virtualFieldEmit: [payload: FormEditorVirtualEmitPayload];
 }>();
 
 const formEditorRef = ref();
@@ -60,6 +75,7 @@ defineExpose({
       @update:model-value="(value) => emit('update:modelValue', value)"
       @update:errors="(errors) => emit('update:errors', errors)"
       @has-changed="(hasChanged) => emit('hasChanged', hasChanged)"
+      @virtual-field-emit="(p) => emit('virtualFieldEmit', p)"
     />
     <template #fallback>
       <CommonLoadingState

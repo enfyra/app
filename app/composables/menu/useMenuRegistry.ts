@@ -5,6 +5,14 @@ function normalizePath(path?: string): string {
   return path.startsWith("/") ? path : "/" + path;
 }
 
+function normalizePathForMatch(path?: string): string {
+  const n = normalizePath(path);
+  if (n.length > 1 && n.endsWith("/")) {
+    return n.slice(0, -1);
+  }
+  return n;
+}
+
 export function useMenuRegistry() {
   const menuItems = useState<MenuItem[]>("menu-items", () => []);
   const { getId } = useDatabase();
@@ -293,6 +301,23 @@ export function useMenuRegistry() {
     });
   };
 
+  const findMenuIconForPath = (fullPath: string): string | undefined => {
+    const normalized = normalizePathForMatch(fullPath.split("?")[0]);
+    let bestLen = -1;
+    let bestIcon: string | undefined;
+    for (const item of menuItems.value) {
+      const r = normalizePathForMatch(item.route || item.path);
+      if (!r || !item.icon) continue;
+      if (normalized === r || normalized.startsWith(`${r}/`)) {
+        if (r.length > bestLen) {
+          bestLen = r.length;
+          bestIcon = item.icon;
+        }
+      }
+    }
+    return bestIcon;
+  };
+
   return {
     menuItems,
     menuGroups,
@@ -308,5 +333,7 @@ export function useMenuRegistry() {
     registerDataMenuItems,
     registerDataMenuItemsFromRoutes,
     reregisterExtensionMenus,
+
+    findMenuIconForPath,
   };
 }

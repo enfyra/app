@@ -179,6 +179,34 @@ const effectiveErrors = computed(() => {
   }
   return props.errors;
 });
+
+const booleanFieldAttrs = computed(() => {
+  const p = { ...fieldProps.value } as Record<string, unknown>;
+  delete p.class;
+  return p;
+});
+
+const booleanOuterClass = computed(() => {
+  const fpClass = fieldProps.value.class;
+  const custom = fieldConfig.value.booleanWrapperClass;
+  const defaults =
+    isMobile.value || isTablet.value
+      ? "flex w-full min-w-0 flex-col gap-2 py-3"
+      : "flex w-full min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3 sm:justify-start";
+  return [fpClass, custom ?? defaults];
+});
+
+const nonBooleanFieldAttrs = computed(() => {
+  const p = { ...fieldProps.value } as Record<string, unknown>;
+  delete p.class;
+  return p;
+});
+
+const nonBooleanOuterClass = computed(() => {
+  const fpClass = fieldProps.value.class;
+  const extra = fieldConfig.value.fieldWrapperClass;
+  return ["space-y-2 w-full min-w-0", fpClass, extra];
+});
 </script>
 
 <template>
@@ -186,13 +214,13 @@ const effectiveErrors = computed(() => {
   <div :id="scrollId"></div>
   <div
     v-if="isBooleanField"
-    v-bind="fieldProps"
-    :class="(isMobile || isTablet) ? 'flex items-center justify-between py-4 border-t' : 'flex items-center justify-between py-4 border-t border-b'"
-    :style="{
-      borderColor: 'var(--border-subtle)',
-    }"
+    v-bind="booleanFieldAttrs"
+    :class="booleanOuterClass"
   >
-    <div v-if="!fieldConfig.hideLabel" class="space-y-0.5">
+    <div
+      v-if="!fieldConfig.hideLabel"
+      class="min-w-0 w-full space-y-0.5 sm:flex-1"
+    >
       <label
         :for="fieldId"
         class="text-sm font-medium"
@@ -208,20 +236,22 @@ const effectiveErrors = computed(() => {
       />
     </div>
 
-    <FormFieldRenderer
-      :key-name="keyName"
-      :form-data="formData"
-      :column-map="columnMap"
+    <div class="shrink-0">
+      <FormFieldRenderer
+        :key-name="keyName"
+        :form-data="formData"
+        :column-map="columnMap"
         :field-map="fieldMap"
-      :errors="effectiveErrors"
-      :field-id="fieldId"
-      @update:form-data="updateFormData"
-      @update:errors="updateErrors"
-      :loading="props.loading"
-    />
+        :errors="effectiveErrors"
+        :field-id="fieldId"
+        @update:form-data="updateFormData"
+        @update:errors="updateErrors"
+        :loading="props.loading"
+      />
+    </div>
   </div>
 
-  <div v-else v-bind="fieldProps" class="space-y-2">
+  <div v-else v-bind="nonBooleanFieldAttrs" :class="nonBooleanOuterClass">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-1">
         <label

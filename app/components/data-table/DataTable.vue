@@ -308,7 +308,7 @@ function getColumnLabel(columnId: string) {
           <div
             v-for="(row, index) in table.getRowModel().rows"
           :key="row.id"
-          class="rounded-2xl p-4 cursor-pointer transition-all border border-[var(--border-default)] bg-[var(--surface-default)] hover:bg-[var(--surface-muted)] shadow-sm"
+          class="surface-card rounded-2xl p-4 cursor-pointer transition-all hover:bg-[var(--surface-muted)]"
           @click="handleRowClick(row.original)"
         >
           <div class="flex items-start justify-between mb-3 pb-3 border-b border-[var(--border-default)]">

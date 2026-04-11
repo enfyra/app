@@ -631,7 +631,7 @@ watch(
           variant="soft"
           color="secondary"
         >
-          Perm: {{ fieldPermSummaryByColumnId[String(column.id)].total }}
+          Perm: {{ fieldPermSummaryByColumnId[String(column.id)]?.total }}
         </UBadge>
         <UBadge
           v-if="fieldPermSummaryByColumnId[String(column.id)]?.total"
@@ -639,7 +639,7 @@ watch(
           variant="soft"
           color="neutral"
         >
-          A{{ fieldPermSummaryByColumnId[String(column.id)].allow }}/D{{ fieldPermSummaryByColumnId[String(column.id)].deny }}
+          A{{ fieldPermSummaryByColumnId[String(column.id)]?.allow }}/D{{ fieldPermSummaryByColumnId[String(column.id)]?.deny }}
         </UBadge>
       </div>
 
@@ -793,15 +793,16 @@ watch(
                   <div v-if="fieldPermItems.length" class="space-y-2">
                     <div
                       v-for="it in fieldPermItems"
-                      :key="getId(it)"
+                      :key="`fp-${String(getId(it) ?? '')}`"
                       :class="[
-                        'cursor-pointer transition-colors',
+                        'cursor-pointer transition-colors rounded-lg px-3',
+                        'border border-[var(--border-default)]',
                         'hover:bg-[var(--surface-muted)]',
                         String(getId(it)) === confirmDeleteFieldPermId ? 'bg-[var(--surface-muted)]' : '',
                       ]"
                       @click="openEditFieldPerm(it)"
                     >
-                      <div class="flex items-start justify-between gap-3 py-2">
+                      <div class="flex items-start justify-between gap-3 py-3">
                         <div class="min-w-0">
                           <div class="flex flex-wrap items-center gap-2">
                             <UBadge

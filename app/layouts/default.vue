@@ -31,12 +31,14 @@
 
       <CommonPageHeader
         v-if="hasPageHeader"
-        :key="`${pageHeader!.title}-${pageHeader?.description || ''}-${pageHeader?.variant || 'default'}-${pageHeader?.gradient || 'none'}`"
+        :key="`${pageHeader!.title}-${pageHeader?.description || ''}-${pageHeader?.variant || 'default'}-${pageHeader?.gradient || 'none'}-${pageHeader?.leadingIcon ?? ''}-${pageHeader?.hideLeadingIcon ? '0' : '1'}`"
         :title="pageHeader!.title"
         :description="pageHeader?.description"
         :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
         :variant="pageHeader?.variant"
         :gradient="pageHeader?.gradient"
+        :leading-icon="pageHeader?.leadingIcon"
+        :hide-leading-icon="pageHeader?.hideLeadingIcon"
       />
 
       <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
