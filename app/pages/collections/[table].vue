@@ -14,6 +14,10 @@ const schemaConfirmModalOpen = ref(false);
 const schemaConfirmDetails = ref<any>(null);
 const schemaConfirmLoading = ref(false);
 
+const deleteModalOpen = ref(false);
+const deleteConfirmText = ref("");
+const deleteConfirmError = ref(false);
+
 const hasFormChanges = ref(false);
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
@@ -233,13 +237,19 @@ async function handleReset() {
   }
 }
 
-async function handleDelete() {
-  const ok = await confirm({
-    title: 'Delete Table',
-    content: `Are you sure you want to delete table "${table.value?.name}"? This action cannot be undone.`,
-  });
-  if (!ok) return;
+function handleDelete() {
+  deleteModalOpen.value = true;
+  deleteConfirmText.value = "";
+  deleteConfirmError.value = false;
+}
 
+async function executeDelete() {
+  if (deleteConfirmText.value !== table.value?.name) {
+    deleteConfirmError.value = true;
+    return;
+  }
+
+  deleteModalOpen.value = false;
   await executeDeleteTable({ id: getId(table.value) });
   if (deleteError.value) return;
   await afterDeleteSuccess(String(route.params.table));
@@ -642,6 +652,83 @@ onMounted(() => {
         </div>
       </template>
     </CommonModal>
+
+    <UModal
+      v-model:open="deleteModalOpen"
+      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-md'"
+    >
+      <template #header>
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center"
+          >
+            <UIcon name="lucide:trash-2" class="text-rose-600 dark:text-rose-400" />
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold text-[var(--text-primary)]">
+              Delete Collection
+            </h2>
+            <p class="text-sm text-[var(--text-tertiary)]">
+              This action cannot be undone
+            </p>
+          </div>
+        </div>
+      </template>
+      <template #body>
+        <div class="space-y-4">
+          <div class="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 px-4 py-3">
+            <div class="flex items-start gap-3">
+              <UIcon name="lucide:alert-triangle" class="mt-0.5 w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+              <div class="text-sm text-rose-900 dark:text-rose-100">
+                <p class="font-medium">Warning: Destructive Action</p>
+                <p class="mt-1 text-rose-800/90 dark:text-rose-100/90">
+                  All data in this collection will be permanently deleted. This includes all records, columns, and relations.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[var(--text-primary)]">
+              Type the collection name to confirm
+            </label>
+            <p class="text-xs text-[var(--text-tertiary)]">
+              Please type <span class="font-mono font-semibold text-[var(--text-primary)]">{{ table?.name }}</span> to confirm deletion
+            </p>
+            <UInput
+              v-model="deleteConfirmText"
+              :placeholder="`Type '${table?.name}' to confirm`"
+              size="lg"
+              :color="deleteConfirmError ? 'error' : 'neutral'"
+              class="w-full"
+              @update:model-value="deleteConfirmError = false"
+            />
+            <p v-if="deleteConfirmError" class="text-xs text-rose-600 dark:text-rose-400">
+              Collection name does not match. Please type exactly: {{ table?.name }}
+            </p>
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 w-full">
+          <UButton variant="ghost" class="justify-center" @click="deleteModalOpen = false">
+            Cancel
+          </UButton>
+          <UButton
+            color="error"
+            :loading="deleting"
+            :disabled="deleteConfirmText !== table?.name"
+            class="justify-center"
+            @click="executeDelete"
+          >
+            <span class="inline-flex items-center gap-2">
+              <UIcon name="lucide:trash-2" class="w-4 h-4" />
+              Delete Collection
+            </span>
+          </UButton>
+        </div>
+      </template>
+    </UModal>
 
     <Transition name="loading-fade" mode="out-in">
       <div v-if="!isMounted || loading" class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
