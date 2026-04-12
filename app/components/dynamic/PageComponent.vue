@@ -66,7 +66,23 @@ const props = defineProps<Props>();
 
 const { loadDynamicComponent, getCachedComponent, getCachedExtensionMeta, setCachedExtensionMeta } = useDynamicComponent();
 const { setRouteLoading } = useGlobalState();
+const { menuItems } = useMenuRegistry();
 const perf = useExtensionPerf();
+
+const normalizedPath = computed(() => {
+  const p = props.path || "";
+  return p.startsWith("/") ? p : `/${p}`;
+});
+
+const isPathRegisteredInMenu = () => {
+  const target = normalizedPath.value;
+  return menuItems.value.some((item) => {
+    const route = item.route || item.path;
+    if (!route) return false;
+    const normalized = route.startsWith("/") ? route : `/${route}`;
+    return normalized === target;
+  });
+};
 
 const error = ref<string | null>(null);
 const extensionComponent = ref<any>(null);
@@ -110,6 +126,16 @@ const tryLoadFromCache = (): boolean => {
 
 const loadMatchingExtension = async () => {
   error.value = null;
+
+  if (!isPathRegisteredInMenu()) {
+    showError({
+      statusCode: 404,
+      statusMessage: "Page Not Found",
+      message: `No menu found for route: ${normalizedPath.value}`,
+      fatal: true,
+    });
+    return;
+  }
 
   if (tryLoadFromCache()) {
     isLoading.value = false;

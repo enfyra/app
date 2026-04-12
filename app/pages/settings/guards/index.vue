@@ -41,7 +41,7 @@ const {
 } = useApi(() => '/guard_definition', {
   query: computed(() => {
     const conditions: any[] = [
-      { parent: { _null: true } },
+      { parent: { _is_null: true } },
     ];
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)

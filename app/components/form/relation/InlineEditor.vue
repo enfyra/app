@@ -75,7 +75,7 @@ function shortenId(id: string | number): string {
   return str.length > 12 ? `${str.slice(0, 4)}…${str.slice(-3)}` : str;
 }
 
-function navigateToDetail(item: any) {
+async function navigateToDetail(item: any) {
   const tableName = props.relationMeta?.targetTableName;
   if (!tableName) return;
 
@@ -85,7 +85,7 @@ function navigateToDetail(item: any) {
   const url =
     getDetailPathForTable(tableName, itemId) ??
     `/data/${tableName}/${itemId}`;
-  window.open(url, "_blank");
+  await navigateTo(url);
 }
 </script>
 

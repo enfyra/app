@@ -21,7 +21,7 @@
       >
         <CommonSettingsCard
           v-for="gateway in gateways"
-          :key="gateway.id"
+          :key="String(getId(gateway) ?? gateway.path)"
           :title="gateway.path"
           :description="gateway.description || 'WebSocket gateway'"
           :icon="getGatewayIcon(gateway)"
@@ -48,11 +48,11 @@
             },
             {
               label: 'Events',
-              value: getEventCount(gateway.id),
+              value: getEventCount(getId(gateway)),
             },
             {
               label: 'Connections',
-              value: getConnectionCount(gateway.id),
+              value: getConnectionCount(getId(gateway)),
             },
           ]"
           @click="navigateToDetail(gateway)"
@@ -173,12 +173,14 @@ function getGatewayIcon(gateway: any) {
   return "i-lucide-radio-tower";
 }
 
-function getEventCount(gatewayId: string | number): number {
-  const gateway = gateways.value.find((g: any) => g.id === gatewayId);
+function getEventCount(gatewayId: string | number | null | undefined): number {
+  if (gatewayId == null) return 0;
+  const gateway = gateways.value.find((g: any) => getId(g) == gatewayId);
   return gateway?.events?.length || 0;
 }
 
-function getConnectionCount(gatewayId: string | number): number {
+function getConnectionCount(gatewayId: string | number | null | undefined): number {
+  if (gatewayId == null) return 0;
   return connectionCounts.value[gatewayId] || 0;
 }
 
@@ -188,13 +190,18 @@ function navigateToDetail(gateway: any) {
 
 function getHeaderActions(gateway: any) {
   const actions = [];
+  const id = getId(gateway);
+  if (id == null) {
+    return actions;
+  }
+  const idKey = String(id);
 
   if (checkPermissionCondition({ or: [{ route: '/websocket_definition', actions: ['update'] }] })) {
     actions.push({
       component: 'USwitch',
       props: {
         'model-value': gateway.isEnabled,
-        disabled: getGatewayLoader(gateway.id.toString()).isLoading
+        disabled: getGatewayLoader(idKey).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleGatewayStatus(gateway)
@@ -233,12 +240,14 @@ function getGatewayLoader(gatewayId: string) {
 }
 
 const toggleGatewayStatus = async (gateway: any) => {
-  const loader = getGatewayLoader(gateway.id.toString());
+  const id = getId(gateway);
+  if (id == null) return;
+  const loader = getGatewayLoader(String(id));
   const newStatus = !gateway.isEnabled;
 
   if (apiData.value?.data) {
     const gatewayIndex = apiData.value.data.findIndex(
-      (g: any) => g.id === gateway.id
+      (g: any) => getId(g) === id
     );
     if (gatewayIndex !== -1) {
       apiData.value.data[gatewayIndex].isEnabled = newStatus;
@@ -250,14 +259,14 @@ const toggleGatewayStatus = async (gateway: any) => {
       body: {
         isEnabled: newStatus,
       },
-      id: gateway.id,
+      id,
     })
   );
 
   if (updateError.value) {
     if (apiData.value?.data) {
       const gatewayIndex = apiData.value.data.findIndex(
-        (g: any) => g.id === gateway.id
+        (g: any) => getId(g) === id
       );
       if (gatewayIndex !== -1) {
         apiData.value.data[gatewayIndex].isEnabled = !newStatus;
@@ -292,7 +301,9 @@ const deleteGateway = async (gateway: any) => {
   });
 
   if (isConfirmed) {
-    await deleteGatewayApi({ id: gateway.id });
+    const id = getId(gateway);
+    if (id == null) return;
+    await deleteGatewayApi({ id });
 
     if (deleteError.value) {
       return;

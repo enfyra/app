@@ -37,6 +37,8 @@ watch(searchQuery, (newVal) => {
 
 const targetTableName = computed(() => props.relationMeta?.targetTableName || "");
 
+const { getColumnFields, fetchSchema } = useSchema(targetTableName);
+
 const { isMounted } = useMounted();
 
 const targetRoute = computed(() => `/${targetTableName.value}`);
@@ -59,7 +61,7 @@ const {
       : {};
 
     const query: Record<string, any> = {
-      fields: "*",
+      fields: getColumnFields(),
       page: page.value,
       limit,
       meta: "totalCount,filterCount",
@@ -116,13 +118,13 @@ function apply() {
   emit("apply", selected.value);
 }
 
-function navigateToDetail(item: any) {
+async function navigateToDetail(item: any) {
   const itemId = getId(item);
   if (!itemId || !targetTableName.value) return;
   const url =
     getDetailPathForTable(targetTableName.value, itemId) ??
     `/data/${targetTableName.value}/${itemId}`;
-  window.open(url, "_blank");
+  await navigateTo(url);
 }
 
 async function handleFilterApply(filter: FilterGroup) {
@@ -180,6 +182,7 @@ watch(
     if (newVal) {
       searchQuery.value = "";
       searchDebounced.value = "";
+      await fetchSchema();
       await fetchDataWithValidation();
     }
   }
