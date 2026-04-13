@@ -27,6 +27,30 @@
             }"
             :loading="loading"
           />
+
+          <div
+            class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
+          >
+            <UButton
+              v-if="hasFormChanges"
+              label="Reset"
+              icon="lucide:rotate-ccw"
+              variant="outline"
+              color="warning"
+              :disabled="!hasFormChanges"
+              @click="handleReset"
+            />
+            <UButton
+              v-if="canUpdateGateway"
+              label="Save"
+              icon="lucide:save"
+              variant="solid"
+              color="primary"
+              type="submit"
+              :loading="updateLoading"
+              :disabled="!hasFormChanges"
+            />
+          </div>
         </UForm>
       </CommonFormCard>
     </div>
@@ -230,19 +254,14 @@ const {
   errorContext: "Delete Event",
 });
 
+const { checkPermissionCondition } = usePermissions();
+const canUpdateGateway = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: "/websocket_definition", actions: ["update"] }],
+  })
+);
+
 useHeaderActionRegistry([
-  {
-    id: "reset-websocket",
-    label: "Reset",
-    icon: "lucide:rotate-ccw",
-    variant: "outline",
-    color: "warning",
-    size: "md",
-    order: 1,
-    disabled: computed(() => !hasFormChanges.value),
-    onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
-  },
   {
     id: "delete-websocket",
     label: "Delete",
@@ -259,26 +278,6 @@ useHeaderActionRegistry([
         {
           route: "/websocket_definition",
           actions: ["delete"],
-        },
-      ],
-    },
-  },
-  {
-    id: "save-websocket",
-    label: "Save",
-    icon: "lucide:save",
-    variant: "solid",
-    color: "primary",
-    size: "md",
-    order: 999,
-    submit: updateGateway,
-    loading: computed(() => updateLoading.value),
-    disabled: computed(() => !hasFormChanges.value),
-    permission: {
-      and: [
-        {
-          route: "/websocket_definition",
-          actions: ["update"],
         },
       ],
     },

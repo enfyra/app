@@ -37,13 +37,13 @@ export function useFilterHistory(tableName: string) {
         '_ilike': 'contains',
         '_in': 'in',
         '_nin': 'not in',
-        '_null': 'is empty',
-        '_nnull': 'is not empty'
+        '_is_null': 'is empty',
+        '_is_not_null': 'is not empty'
       };
       
       const displayOperator = operatorDisplayMap[operator] || operator;
       
-      if (!value && (operator === 'null' || operator === 'nnull')) {
+      if (!value && (operator === '_is_null' || operator === '_is_not_null')) {
         return `${field} ${displayOperator}`;
       }
       

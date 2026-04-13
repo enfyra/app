@@ -128,7 +128,7 @@ const localRelationsWithKeys = computed(() => relations.value.map((r: any, i: nu
 const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
 
 const canManageFieldPermissions = computed(() => {
-  return !isNew.value && !!currentRelation.value?.id;
+  return !isNew.value && !!getId(currentRelation.value);
 });
 
 function updatePublishedBaseline(v: any) {
@@ -162,7 +162,7 @@ const fieldPermSummaryByRelationId = computed(() => {
   for (const rel of relations.value || []) {
     const perms: any[] = Array.isArray(rel.fieldPermissions) ? rel.fieldPermissions : [];
     if (!perms.length) continue;
-    const key = String(rel.id ?? rel._id);
+    const key = String(getId(rel));
     out[key] = { total: perms.length, allow: 0, deny: 0 };
     for (const p of perms) {
       if (String(p?.effect ?? p?.decision ?? "allow") === "deny") out[key].deny += 1;
@@ -174,8 +174,8 @@ const fieldPermSummaryByRelationId = computed(() => {
 
 function syncRelationPermSummary() {
   if (!currentRelation.value) return;
-  const relId = String(currentRelation.value.id ?? currentRelation.value._id);
-  const idx = relations.value.findIndex(r => String(r.id ?? r._id) === relId);
+  const relId = String(getId(currentRelation.value));
+  const idx = relations.value.findIndex(r => String(getId(r)) === relId);
   if (idx !== -1) {
     relations.value[idx] = { ...relations.value[idx], fieldPermissions: fieldPermItems.value };
   }
@@ -508,20 +508,20 @@ async function removeRelation(index: number) {
         </UBadge>
         <UBadge size="xs" color="info" v-if="rel.isNullable">nullable</UBadge>
         <UBadge
-          v-if="fieldPermSummaryByRelationId[String(rel.id)]?.total"
+          v-if="fieldPermSummaryByRelationId[String(getId(rel))]?.total"
           size="xs"
           variant="soft"
           color="secondary"
         >
-          Perm: {{ fieldPermSummaryByRelationId[String(rel.id)]?.total }}
+          Perm: {{ fieldPermSummaryByRelationId[String(getId(rel))]?.total }}
         </UBadge>
         <UBadge
-          v-if="fieldPermSummaryByRelationId[String(rel.id)]?.total"
+          v-if="fieldPermSummaryByRelationId[String(getId(rel))]?.total"
           size="xs"
           variant="soft"
           color="neutral"
         >
-          A{{ fieldPermSummaryByRelationId[String(rel.id)]?.allow }}/D{{ fieldPermSummaryByRelationId[String(rel.id)]?.deny }}
+          A{{ fieldPermSummaryByRelationId[String(getId(rel))]?.allow }}/D{{ fieldPermSummaryByRelationId[String(getId(rel))]?.deny }}
         </UBadge>
       </div>
 

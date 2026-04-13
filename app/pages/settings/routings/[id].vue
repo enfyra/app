@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1200px] lg:max-w-[1200px] md:w-full space-y-6">
+    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
       <CommonFormCard v-if="mainTableInfo">
         <template #header>
           <div class="flex items-center gap-2">
@@ -43,6 +43,30 @@
             :field-map="typeMap"
             :loading="loading"
           />
+
+          <div
+            class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
+          >
+            <UButton
+              v-if="hasFormChanges"
+              label="Reset"
+              icon="lucide:rotate-ccw"
+              variant="outline"
+              color="warning"
+              :disabled="!hasFormChanges"
+              @click="handleReset"
+            />
+            <UButton
+              v-if="canUpdateRoute"
+              label="Save"
+              icon="lucide:save"
+              variant="solid"
+              color="primary"
+              type="submit"
+              :loading="updateLoading"
+              :disabled="!hasFormChanges"
+            />
+          </div>
         </UForm>
       </CommonFormCard>
 
@@ -186,19 +210,14 @@ const typeMap = ref<Record<string, any>>({});
 
 const routeId = computed(() => route.params.id as string);
 
+const { checkPermissionCondition } = usePermissions();
+const canUpdateRoute = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: "/route_definition", actions: ["update"] }],
+  })
+);
+
 useHeaderActionRegistry([
-  {
-    id: "reset-routing",
-    label: "Reset",
-    icon: "lucide:rotate-ccw",
-    variant: "outline",
-    color: "warning",
-    size: "md",
-    order: 1,
-    disabled: computed(() => !hasFormChanges.value),
-    onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
-  },
   {
     id: "delete-routing",
     label: "Delete",
@@ -215,26 +234,6 @@ useHeaderActionRegistry([
         {
           route: "/route_definition",
           actions: ["delete"],
-        },
-      ],
-    },
-  },
-  {
-    id: "save-routing",
-    label: "Save",
-    icon: "lucide:save",
-    variant: "solid",
-    color: "primary",
-    size: "md",
-    order: 999,
-    submit: updateRoute,
-    loading: computed(() => updateLoading.value),
-    disabled: computed(() => !hasFormChanges.value),
-    permission: {
-      and: [
-        {
-          route: "/route_definition",
-          actions: ["update"],
         },
       ],
     },
@@ -562,11 +561,11 @@ const mainTableInfo = computed(() => {
 
 const defaultHandler = computed(() => {
   if (!mainTableInfo.value || handlers.value.length > 0) return null;
-  
+
   return {
     _isDefault: true,
-    name: `Default handler for ${mainTableInfo.value.name || mainTableInfo.value.tableName || 'table'}`,
-    description: 'This is a default handler. Click to create a custom handler.',
+    name: 'Built-in logic',
+    description: `Built-in CRUD logic for ${mainTableInfo.value.name || mainTableInfo.value.tableName || 'table'}.`,
   };
 });
 
@@ -1316,7 +1315,7 @@ const {
     filter: {
       _and: [
         { route: { id: { _eq: routeId.value } } },
-        { parent: { _null: true } },
+        { parent: { _is_null: true } },
       ],
     },
     sort: ['priority'],
@@ -1334,7 +1333,7 @@ const {
     filter: {
       _and: [
         { isGlobal: { _eq: true } },
-        { parent: { _null: true } },
+        { parent: { _is_null: true } },
       ],
     },
     sort: ['priority'],

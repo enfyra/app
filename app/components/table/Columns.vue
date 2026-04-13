@@ -26,7 +26,7 @@ const localColumnsWithKeys = computed(() => columns.value.map((c: any, i: number
 const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
 
 const canManageFieldPermissions = computed(() => {
-  return editingIndex.value !== null && !!currentColumn.value?.id;
+  return editingIndex.value !== null && !!getId(currentColumn.value);
 });
 
 function updatePublishedBaseline(v: any) {
@@ -60,7 +60,7 @@ const fieldPermSummaryByColumnId = computed(() => {
   for (const col of columns.value || []) {
     const perms: any[] = Array.isArray(col.fieldPermissions) ? col.fieldPermissions : [];
     if (!perms.length) continue;
-    const key = String(col.id ?? col._id);
+    const key = String(getId(col));
     out[key] = { total: perms.length, allow: 0, deny: 0 };
     for (const p of perms) {
       if (String(p?.effect ?? p?.decision ?? "allow") === "deny") out[key].deny += 1;
@@ -72,8 +72,8 @@ const fieldPermSummaryByColumnId = computed(() => {
 
 function syncColumnPermSummary() {
   if (!currentColumn.value) return;
-  const colId = String(currentColumn.value.id ?? currentColumn.value._id);
-  const idx = columns.value.findIndex(c => String(c.id ?? c._id) === colId);
+  const colId = String(getId(currentColumn.value));
+  const idx = columns.value.findIndex(c => String(getId(c)) === colId);
   if (idx !== -1) {
     columns.value[idx] = { ...columns.value[idx], fieldPermissions: fieldPermItems.value };
   }
@@ -626,20 +626,20 @@ watch(
           >nullable</UBadge
         >
         <UBadge
-          v-if="fieldPermSummaryByColumnId[String(column.id)]?.total"
+          v-if="fieldPermSummaryByColumnId[String(getId(column))]?.total"
           size="xs"
           variant="soft"
           color="secondary"
         >
-          Perm: {{ fieldPermSummaryByColumnId[String(column.id)]?.total }}
+          Perm: {{ fieldPermSummaryByColumnId[String(getId(column))]?.total }}
         </UBadge>
         <UBadge
-          v-if="fieldPermSummaryByColumnId[String(column.id)]?.total"
+          v-if="fieldPermSummaryByColumnId[String(getId(column))]?.total"
           size="xs"
           variant="soft"
           color="neutral"
         >
-          A{{ fieldPermSummaryByColumnId[String(column.id)]?.allow }}/D{{ fieldPermSummaryByColumnId[String(column.id)]?.deny }}
+          A{{ fieldPermSummaryByColumnId[String(getId(column))]?.allow }}/D{{ fieldPermSummaryByColumnId[String(getId(column))]?.deny }}
         </UBadge>
       </div>
 
@@ -723,6 +723,7 @@ watch(
                 'isPublished',
                 'isPrimary',
                 'table',
+                'fieldPermissions',
               ]"
               :field-map="typeMap"
             />

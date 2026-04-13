@@ -17,7 +17,7 @@
 
       <div v-else-if="flow" class="w-full max-w-[1000px] space-y-6">
         <CommonFormCard>
-          <UForm :state="editForm">
+          <UForm :state="editForm" @submit="saveFlowSettings">
             <FormEditorLazy
               v-model="editForm"
               :table-name="'flow_definition'"
@@ -28,6 +28,21 @@
               @has-changed="(v: boolean) => hasFormChanges = v"
               mode="update"
             />
+
+            <div
+              class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
+            >
+              <UButton
+                v-if="canUpdateFlow"
+                label="Save"
+                icon="lucide:save"
+                variant="solid"
+                color="primary"
+                type="submit"
+                :loading="saveFlowPending"
+                :disabled="!hasFormChanges"
+              />
+            </div>
           </UForm>
         </CommonFormCard>
 
@@ -410,25 +425,18 @@ async function refreshExecOverlay() {
   }
 }
 
-const { execute: updateFlowApi, error: updateError } = useApi(() => `/flow_definition`, { method: "patch", errorContext: "Update Flow" });
+const { execute: updateFlowApi, error: updateError, pending: saveFlowPending } = useApi(() => `/flow_definition`, { method: "patch", errorContext: "Update Flow" });
+
+const { checkPermissionCondition } = usePermissions();
+const canUpdateFlow = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: "/flow_definition", actions: ["update"] }],
+  })
+);
 const { execute: createStepApi, error: createStepError } = useApi(() => `/flow_step_definition`, { method: "post", errorContext: "Create Step" });
 const { execute: updateStepApi, error: updateStepError } = useApi(() => `/flow_step_definition`, { method: "patch", errorContext: "Update Step" });
 const { execute: deleteStepApi, error: deleteStepError } = useApi(() => `/flow_step_definition`, { method: "delete", errorContext: "Delete Step" });
 
-useHeaderActionRegistry([
-  {
-    id: "save-flow",
-    label: "Save",
-    icon: "lucide:save",
-    variant: "solid",
-    color: "primary",
-    size: "md",
-    order: 999,
-    onClick: saveFlowSettings,
-    disabled: computed(() => !hasFormChanges.value),
-    permission: { and: [{ route: "/flow_definition", actions: ["update"] }] },
-  },
-]);
 
 useSubHeaderActionRegistry([
   {

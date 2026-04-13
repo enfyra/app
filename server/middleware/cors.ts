@@ -22,7 +22,7 @@ async function fetchAllowedOrigins(): Promise<string[]> {
       return [];
     }
 
-    const response = await fetch(`${apiUrl}/setting_definition`, {
+    const response = await fetch(`${apiUrl.replace(/\/+$/, '')}/cors_origin_definition?fields=value,isEnabled&limit=0`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -35,15 +35,12 @@ async function fetchAllowedOrigins(): Promise<string[]> {
     }
 
     const data = await response.json();
-    let settings = data?.data || data;
-    
-    if (Array.isArray(settings) && settings.length > 0) {
-      settings = settings[0];
-    }
-    
-    const corsOrigins = settings?.corsAllowedOrigins || [];
-    
-    return Array.isArray(corsOrigins) ? corsOrigins : [];
+    const rows = Array.isArray(data?.data) ? data.data : [];
+
+    return rows
+      .filter((row: any) => row?.isEnabled !== false && typeof row?.value === 'string')
+      .map((row: any) => row.value.trim())
+      .filter((v: string) => v.length > 0);
   } catch (error: any) {
     console.error('[CORS] Error fetching origins:', error.message);
     return [];

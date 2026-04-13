@@ -13,6 +13,30 @@
             :field-map="fieldMap"
             :loading="loading"
           />
+
+          <div
+            class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
+          >
+            <UButton
+              v-if="hasFormChanges"
+              label="Reset"
+              icon="lucide:rotate-ccw"
+              variant="outline"
+              color="warning"
+              :disabled="!hasFormChanges"
+              @click="handleReset"
+            />
+            <UButton
+              v-if="canUpdateGuard"
+              label="Save"
+              icon="lucide:save"
+              variant="solid"
+              color="primary"
+              type="submit"
+              :loading="updateLoading"
+              :disabled="!hasFormChanges"
+            />
+          </div>
         </UForm>
       </CommonFormCard>
 
@@ -242,19 +266,14 @@ registerPageHeader({
 
 const guardId = computed(() => route.params.id as string);
 
+const { checkPermissionCondition } = usePermissions();
+const canUpdateGuard = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: '/guard_definition', actions: ['update'] }],
+  })
+);
+
 useHeaderActionRegistry([
-  {
-    id: 'reset-guard',
-    label: 'Reset',
-    icon: 'lucide:rotate-ccw',
-    variant: 'outline',
-    color: 'warning',
-    size: 'md',
-    order: 1,
-    disabled: computed(() => !hasFormChanges.value),
-    onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
-  },
   {
     id: 'delete-guard',
     label: 'Delete',
@@ -270,26 +289,6 @@ useHeaderActionRegistry([
         {
           route: '/guard_definition',
           actions: ['delete'],
-        },
-      ],
-    },
-  },
-  {
-    id: 'save-guard',
-    label: 'Save',
-    icon: 'lucide:save',
-    variant: 'solid',
-    color: 'primary',
-    size: 'md',
-    order: 999,
-    submit: updateGuard,
-    loading: computed(() => updateLoading.value),
-    disabled: computed(() => !hasFormChanges.value),
-    permission: {
-      and: [
-        {
-          route: '/guard_definition',
-          actions: ['update'],
         },
       ],
     },

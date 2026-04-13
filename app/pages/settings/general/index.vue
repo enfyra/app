@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const toast = useToast();
 const { confirm } = useConfirm();
+const { checkPermissionCondition } = usePermissions();
 const errors = ref<Record<string, string>>({});
 
 const { validateForm } = useFormValidation("setting_definition");
@@ -40,39 +41,11 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
-  {
-    id: "reset-settings",
-    label: "Reset",
-    icon: "lucide:rotate-ccw",
-    variant: "outline",
-    color: "warning",
-    order: 1,
-    disabled: computed(() => !hasFormChanges.value),
-    onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
-  },
-  {
-    id: "save-settings",
-    label: "Save",
-    icon: "lucide:save",
-    variant: "solid",
-    color: "primary",
-    size: "md",
-    order: 999,
-    submit: handleSaveSetting,
-    loading: computed(() => saveLoading.value),
-    disabled: computed(() => !hasFormChanges.value),
-    permission: {
-      and: [
-        {
-          route: "/setting",
-          actions: ["update"],
-        },
-      ],
-    },
-  },
-]);
+const canUpdateSetting = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: "/setting", actions: ["update"] }],
+  })
+);
 
 const {
   data: apiData,
@@ -93,12 +66,7 @@ const generalFormSections = [
     id: "project",
     class: "border-b border-[var(--border-subtle)] pb-8",
     fields: ["projectName", "projectFavicon", "projectDescription",  "isInit"],
-    
-  },
-  {
-    id: "cors",
-    class: "border-b border-[var(--border-subtle)] pb-8",
-    fields: ["corsAllowedOrigins"],
+
   },
   {
     id: "limits",
@@ -118,17 +86,6 @@ const fieldMap = {
   },
   projectFavicon: {
     fieldProps: { class: "md:col-span-1 w-full min-w-0" },
-  },
-  corsAllowedOrigins: {
-    type: "array-tags",
-    fieldProps: { class: "w-full min-w-0 md:col-span-2" },
-    hint:
-      "Full origins only (scheme, host, port). Example: https://app.example.com or http://localhost:3000. An empty list allows every origin (see server CORS rules).",
-    placeholder: "https://your-app.example.com",
-    emptyMessage:
-      "No origins in the list. Any origin will be allowed until you add entries.",
-    normalizeOrigin: true,
-    monospace: true,
   },
   maxQueryDepth: {
     fieldProps: { class: "md:col-span-1" },
@@ -193,7 +150,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-[1000px] px-4 pb-10 sm:px-6 lg:px-0">
+  <div class="max-w-[1000px] space-y-6 px-4 pb-10 sm:px-6 lg:px-0">
     <div class="surface-card overflow-hidden rounded-2xl">
       <div class="relative px-6 py-8 sm:px-8">
         <CommonLoadingState
@@ -219,7 +176,46 @@ onMounted(() => {
             :sections="generalFormSections"
             :field-map="fieldMap"
           />
+
+          <div
+            class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
+          >
+            <UButton
+              v-if="hasFormChanges"
+              label="Reset"
+              icon="lucide:rotate-ccw"
+              variant="outline"
+              color="warning"
+              :disabled="!hasFormChanges"
+              @click="handleReset"
+            />
+            <UButton
+              v-if="canUpdateSetting"
+              label="Save"
+              icon="lucide:save"
+              variant="solid"
+              color="primary"
+              type="submit"
+              :loading="saveLoading"
+              :disabled="!hasFormChanges"
+            />
+          </div>
         </UForm>
+      </div>
+    </div>
+
+    <div class="surface-card overflow-hidden rounded-2xl">
+      <div class="relative px-6 py-8 sm:px-8">
+        <div class="mb-6">
+          <h3 class="mb-1 text-lg font-semibold text-[var(--text-primary)]">
+            CORS Allowed Origins
+          </h3>
+          <p class="text-sm text-[var(--text-tertiary)]">
+            Manage the list of origins allowed to call the API. Changes take
+            effect immediately.
+          </p>
+        </div>
+        <CommonCorsOriginList />
       </div>
     </div>
   </div>
