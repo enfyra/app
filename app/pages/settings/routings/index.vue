@@ -24,8 +24,28 @@ const { getId } = useDatabase();
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
-const showSystem = ref(false);
-const showCollectionRoutes = ref(false);
+const showSystem = ref(route.query.system === 'true');
+const showCollectionRoutes = ref(route.query.collectionRoutes === 'true');
+
+watch(() => route.query.system, (v) => { showSystem.value = v === 'true' })
+watch(() => route.query.collectionRoutes, (v) => { showCollectionRoutes.value = v === 'true' })
+
+watch(showSystem, (v) => {
+  if ((route.query.system === 'true') !== v) {
+    const query = { ...route.query }
+    if (v) query.system = 'true'
+    else delete query.system
+    router.replace({ query })
+  }
+})
+watch(showCollectionRoutes, (v) => {
+  if ((route.query.collectionRoutes === 'true') !== v) {
+    const query = { ...route.query }
+    if (v) query.collectionRoutes = 'true'
+    else delete query.collectionRoutes
+    router.replace({ query })
+  }
+})
 
 const filterLabel = computed(() => {
   const activeCount = currentFilter.value.conditions.length;
@@ -73,7 +93,13 @@ const {
 });
 
 const routesData = computed(() => apiData.value?.data || []);
-const total = computed(() => apiData.value?.meta?.filterCount ?? 0);
+const total = computed(() => {
+  const meta = apiData.value?.meta
+  if (showSystem.value && showCollectionRoutes.value && !hasActiveFilters(currentFilter.value)) {
+    return meta?.totalCount ?? 0
+  }
+  return meta?.filterCount ?? 0
+});
 
 useSubHeaderActionRegistry([
   {

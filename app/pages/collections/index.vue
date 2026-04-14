@@ -19,7 +19,19 @@ const { isTablet } = useScreen();
 const { schemas } = useSchema();
 
 const searchQuery = ref("");
-const showSystem = ref(false);
+const showSystem = ref(route.query.system === 'true');
+const router = useRouter();
+
+watch(() => route.query.system, (v) => { showSystem.value = v === 'true' })
+
+watch(showSystem, (v) => {
+  if ((route.query.system === 'true') !== v) {
+    const query = { ...route.query }
+    if (v) query.system = 'true'
+    else delete query.system
+    router.replace({ query })
+  }
+})
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 watch(searchQuery, (newVal) => {
@@ -122,13 +134,7 @@ const {
 });
 
 const collections = computed(() => apiData.value?.data || []);
-const hasFilter = computed(() => searchQuery.value || !showSystem.value);
-const total = computed(() => {
-  if (hasFilter.value) {
-    return apiData.value?.meta?.filterCount ?? 0;
-  }
-  return apiData.value?.meta?.totalCount || 0;
-});
+const total = computed(() => apiData.value?.meta?.filterCount ?? 0);
 
 useHeaderActionRegistry({
   id: "create-collection",
