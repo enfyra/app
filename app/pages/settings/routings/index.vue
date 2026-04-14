@@ -73,12 +73,7 @@ const {
 });
 
 const routesData = computed(() => apiData.value?.data || []);
-const total = computed(() => {
-  if (hasActiveFilters(currentFilter.value) || !showSystem.value) {
-    return apiData.value?.meta?.filterCount ?? 0;
-  }
-  return apiData.value?.meta?.totalCount || 0;
-});
+const total = computed(() => apiData.value?.meta?.filterCount ?? 0);
 
 useSubHeaderActionRegistry([
   {
