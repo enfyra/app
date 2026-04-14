@@ -163,6 +163,7 @@ async function saveUser() {
     description: "User updated!",
   });
   errors.value = {};
+  hasFormChanges.value = false;
 
   await fetchUser();
   const freshData = apiData.value?.data?.[0];

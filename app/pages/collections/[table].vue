@@ -44,6 +44,7 @@ const {
       "columns.fieldPermissions.effect",
       "relations.fieldPermissions.id",
       "relations.fieldPermissions.effect",
+      "gqlConfig.isEnabled",
     ].join(","),
     filter: {
       name: {
@@ -89,7 +90,7 @@ useHeaderActionRegistry([
         !hasFormChanges.value
     ),
     onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
+    show: computed(() => activeTab.value === 'schema' && hasFormChanges.value),
   },
   {
     id: "delete-table",
@@ -99,6 +100,7 @@ useHeaderActionRegistry([
     color: "error",
     order: 2,
     loading: computed(() => deleting.value),
+    show: computed(() => activeTab.value === 'schema'),
     disabled: computed(
       () =>
         (table.value?.isSystem &&
@@ -123,6 +125,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     order: 999,
+    show: computed(() => activeTab.value === 'schema'),
     loading: computed(() => saving.value || schemaLoading.value),
     disabled: computed(
       () =>
@@ -145,6 +148,18 @@ useHeaderActionRegistry([
 ]);
 
 const showSchemaViewer = ref(false);
+const showRouteApiTest = ref(false);
+
+const activeTab = ref((route.query.tab as string) || 'schema')
+const tabItems = [
+  { label: 'Schema', icon: 'i-lucide-table-2', value: 'schema' },
+  { label: 'Routes', icon: 'i-lucide-route', value: 'routes' },
+]
+
+watch(activeTab, (tab) => {
+  const query = { ...route.query, tab }
+  navigateTo({ query }, { replace: true })
+})
 
 useSubHeaderActionRegistry([
   {
@@ -154,7 +169,18 @@ useSubHeaderActionRegistry([
     variant: "solid",
     color: "secondary",
     size: "md",
+    show: computed(() => activeTab.value === 'schema'),
     onClick: () => (showSchemaViewer.value = true),
+  },
+  {
+    id: "test-api",
+    label: "Test API",
+    icon: "lucide:play",
+    variant: "soft",
+    color: "warning",
+    size: "md",
+    show: computed(() => activeTab.value === 'routes'),
+    onClick: () => (showRouteApiTest.value = true),
   },
 ]);
 
@@ -162,8 +188,9 @@ async function initializeForm() {
   await fetchTableData();
   const data = tableData.value?.data?.[0];
   if (data) {
+    data.graphqlEnabled = data.gqlConfig?.isEnabled === true;
     table.value = data;
-    formChanges.update(data); 
+    formChanges.update(data);
     hasFormChanges.value = false;
   }
 }
@@ -741,31 +768,42 @@ onMounted(() => {
         </CommonFormCard>
       </div>
 
-      <UForm v-else-if="table" @submit.prevent="save" :state="table">
-        <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-          <CommonFormCard>
-            <TableForm v-model="table" @save="save">
-              <div class="space-y-6">
-                <TableConstraints
-                  v-model="table"
-                  :column-names="table.columns?.map((c:any) => c?.name)"
-                />
-                <TableColumns v-model="table.columns" />
-                <TableRelations
-                  v-model="table.relations"
-                  :table-id="getId(table)"
-                  :table-options="
-                    Object.values(schemas).map((schema: any) => ({
-                      label: schema?.name,
-                      value: getId(schema),
-                    }))
-                  "
-                />
-              </div>
-            </TableForm>
-          </CommonFormCard>
+      <div v-else-if="table" class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+          <UTabs v-model="activeTab" :items="tabItems" :content="false" variant="link" color="neutral" class="mb-4" />
+
+          <UForm @submit.prevent="save" :state="table">
+            <div v-show="activeTab === 'schema'">
+              <CommonFormCard>
+                <TableForm v-model="table" @save="save">
+                  <div class="space-y-6">
+                    <TableConstraints
+                      v-model="table"
+                      :column-names="table.columns?.map((c:any) => c?.name)"
+                    />
+                    <TableColumns v-model="table.columns" />
+                    <TableRelations
+                      v-model="table.relations"
+                      :table-id="getId(table)"
+                      :table-options="
+                        Object.values(schemas).map((schema: any) => ({
+                          label: schema?.name,
+                          value: getId(schema),
+                        }))
+                      "
+                    />
+                  </div>
+                </TableForm>
+              </CommonFormCard>
+            </div>
+          </UForm>
+
+          <CollectionRouteTab
+            v-if="activeTab === 'routes'"
+            :table-name="route.params.table"
+            :external-api-test="showRouteApiTest"
+            @close-api-test="showRouteApiTest = false"
+          />
         </div>
-      </UForm>
 
       <CommonEmptyState
         v-else

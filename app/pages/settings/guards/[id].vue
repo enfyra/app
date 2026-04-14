@@ -548,6 +548,7 @@ async function updateGuard() {
     description: 'Guard updated!',
   });
   errors.value = {};
+  hasFormChanges.value = false;
 
   await fetchGuard();
   const freshData = guardData.value?.data?.[0];
@@ -850,6 +851,7 @@ async function handleToggleGuard(guard: any, enabled: boolean) {
   });
 
   if (String(getId(guard)) === String(guardId.value)) {
+    hasFormChanges.value = false;
     await fetchGuard();
     const freshData = guardData.value?.data?.[0];
     if (freshData) {

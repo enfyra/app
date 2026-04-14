@@ -201,6 +201,7 @@ async function updateConfig() {
     description: "OAuth configuration updated!",
   });
   errors.value = {};
+  hasFormChanges.value = false;
 
   await executeGetConfig();
   const freshData = configData.value?.data?.[0];

@@ -133,6 +133,7 @@ async function handleSaveSetting() {
     color: "success",
   });
   errors.value = {};
+  hasFormChanges.value = false;
 
   await loadSetting();
   const freshData = apiData.value?.data?.[0];

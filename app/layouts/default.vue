@@ -36,7 +36,7 @@
           class="shrink-0 overflow-hidden"
         >
           <UBanner
-            :color="isMetadataReloading ? 'neutral' : 'success'"
+            :color="isMetadataReloading ? 'neutral' : 'primary'"
             :icon="isMetadataReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
             :title="isMetadataReloading ? 'Loading metadata…' : `Metadata updated (${metadataReloadCountdown}s)`"
             class="border-b border-[var(--border-default)] shrink-0"
@@ -80,6 +80,7 @@
   <div id="others-overlay"></div>
 
   <CommonGlobalConfirm />
+  <CommonGlobalNotify />
   <FolderDetailModal />
   <RouteLoading :show="routeLoading" message="Navigating..." />
 </template>

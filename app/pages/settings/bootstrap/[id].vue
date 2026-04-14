@@ -188,6 +188,7 @@ async function save() {
     description: "Bootstrap script updated!",
   });
   errors.value = {};
+  hasFormChanges.value = false;
 
   await executeGetScript();
   const freshData = scriptData.value?.data?.[0];

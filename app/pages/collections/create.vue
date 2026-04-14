@@ -9,6 +9,7 @@ const table = reactive<any>({
   name: "",
   description: "",
   isSingleRecord: false,
+  graphqlEnabled: false,
   columns: [],
   relations: [],
   uniques: [],

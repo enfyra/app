@@ -255,6 +255,7 @@ async function updateExtension() {
     description: "Extension updated!",
   });
   errors.value = {};
+  hasFormChanges.value = false;
 
   await executeGetExtension();
   const freshData = extensionData.value?.data?.[0];

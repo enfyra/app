@@ -385,6 +385,7 @@ async function updateRoute() {
     description: "Route updated!",
   });
   errors.value = {};
+  hasFormChanges.value = false;
 
   const expectedUpdatedAt = updateRouteData.value?.data?.[0]?.updatedAt;
   const routeId = String(route.params.id);

@@ -177,6 +177,7 @@ async function save() {
     description: "Role updated!",
   });
   errors.value = {};
+  hasFormChanges.value = false;
 
   await fetchRole();
   const freshData = apiData.value?.data?.[0];

@@ -25,6 +25,7 @@ const { getId } = useDatabase();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 const showSystem = ref(false);
+const showCollectionRoutes = ref(false);
 
 const filterLabel = computed(() => {
   const activeCount = currentFilter.value.conditions.length;
@@ -48,6 +49,9 @@ const {
     const conditions: any[] = [];
     if (!showSystem.value) {
       conditions.push({ isSystem: { _eq: false } });
+    }
+    if (!showCollectionRoutes.value) {
+      conditions.push({ mainTable: { _is_null: true } });
     }
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
@@ -76,27 +80,50 @@ const total = computed(() => {
   return apiData.value?.meta?.totalCount || 0;
 });
 
-useSubHeaderActionRegistry({
-  id: "toggle-system-routes",
-  icon: "lucide:shield",
-  get label() {
-    return showSystem.value ? "Hide System" : "Show System";
+useSubHeaderActionRegistry([
+  {
+    id: "toggle-system-routes",
+    icon: "lucide:shield",
+    get label() {
+      return showSystem.value ? "Hide System" : "Show System";
+    },
+    get variant() {
+      return showSystem.value ? "solid" as const : "outline" as const;
+    },
+    get color() {
+      return showSystem.value ? "warning" as const : "neutral" as const;
+    },
+    size: "md",
+    side: "right",
+    order: 0,
+    onClick: () => {
+      showSystem.value = !showSystem.value;
+      page.value = 1;
+      fetchRoutes();
+    },
   },
-  get variant() {
-    return showSystem.value ? "solid" as const : "outline" as const;
+  {
+    id: "toggle-collection-routes",
+    icon: "lucide:table",
+    get label() {
+      return showCollectionRoutes.value ? "Hide Collection Routes" : "Collection Routes";
+    },
+    get variant() {
+      return showCollectionRoutes.value ? "solid" as const : "outline" as const;
+    },
+    get color() {
+      return showCollectionRoutes.value ? "info" as const : "neutral" as const;
+    },
+    size: "md",
+    side: "right",
+    order: 1,
+    onClick: () => {
+      showCollectionRoutes.value = !showCollectionRoutes.value;
+      page.value = 1;
+      fetchRoutes();
+    },
   },
-  get color() {
-    return showSystem.value ? "warning" as const : "neutral" as const;
-  },
-  size: "md",
-  side: "right",
-  order: 0,
-  onClick: () => {
-    showSystem.value = !showSystem.value;
-    page.value = 1;
-    fetchRoutes();
-  },
-});
+]);
 
 useHeaderActionRegistry([
   {
