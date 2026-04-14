@@ -31,17 +31,27 @@
 
       <Transition name="metadata-banner">
         <div
-          v-if="metadataReloading"
+          v-if="showMetadataBanner"
           key="metadata-banner"
           class="shrink-0 overflow-hidden"
         >
           <UBanner
-            color="neutral"
-            icon="lucide:loader-circle"
-            title="Loading metadata…"
+            :color="isMetadataReloading ? 'neutral' : 'success'"
+            :icon="isMetadataReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
+            :title="isMetadataReloading ? 'Loading metadata…' : `Metadata updated (${metadataReloadCountdown}s)`"
             class="border-b border-[var(--border-default)] shrink-0"
-            :ui="{ icon: 'animate-spin' }"
-          />
+            :ui="{ icon: isMetadataReloading ? 'animate-spin' : '' }"
+          >
+            <template #close>
+              <UButton
+                v-if="!isMetadataReloading"
+                icon="lucide:x"
+                variant="ghost"
+                size="xs"
+                @click="dismissMetadataBanner"
+              />
+            </template>
+          </UBanner>
         </div>
       </Transition>
 
@@ -75,7 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import { metadataReloading } from '~/composables/shared/useAdminSocket';
+import { metadataReloading, metadataReloadDone, metadataReloadCountdown, dismissMetadataBanner } from '~/composables/shared/useAdminSocket';
 
 await useInitialData();
 await useMenuInit();
@@ -91,4 +101,7 @@ const { subHeaderActions } = useSubHeaderActionRegistry();
 const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
 
 const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
+
+const showMetadataBanner = computed(() => metadataReloading.value || metadataReloadDone.value);
+const isMetadataReloading = computed(() => metadataReloading.value);
 </script>
