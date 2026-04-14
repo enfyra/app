@@ -8,7 +8,7 @@ const props = defineProps<{
   tableId?: number | string;
 }>();
 
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const relations = useModel(props, "modelValue");
 
@@ -89,12 +89,12 @@ function confirmCreateInverse() {
   if (!incoming || !inversePropertyNameInput.value?.trim()) return;
   const name = inversePropertyNameInput.value.trim();
   if (!TABLE_NAME_FIELD_REGEX.test(name)) {
-    toast.add({ title: 'Invalid name', description: 'Property name must be a valid identifier', color: 'error' });
+    notify.error("Invalid name", "Property name must be a valid identifier");
     return;
   }
   const exists = relations.value.some((r: any) => r.propertyName === name);
   if (exists) {
-    toast.add({ title: 'Duplicate', description: 'A relation with this name already exists', color: 'error' });
+    notify.error("Duplicate", "A relation with this name already exists");
     return;
   }
   const inverseType = getInverseType(incoming.type);
@@ -172,7 +172,6 @@ async function onPermChanged() {
   relations.value[idx] = { ...relations.value[idx], fieldPermissions: perms };
 }
 
-const notify = useNotify();
 
 function handleShieldClick(rel: any) {
   if (getId(rel)) {

@@ -146,7 +146,7 @@
 const page = ref(1);
 const limit = 9;
 
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { createLoader } = useLoader();
 const { checkPermissionCondition } = usePermissions();
@@ -282,13 +282,9 @@ const toggleConfigStatus = async (config: any) => {
 
   await fetchGlobalStorageConfigs();
 
-  toast.add({
-    title: "Success",
-    description: `Storage configuration "${config.name}" has been ${
+  notify.success("Success", `Storage configuration "${config.name}" has been ${
       newStatus ? "activated" : "deactivated"
-    } successfully!`,
-    color: "success",
-  });
+    } successfully!`);
 };
 
 const { execute: deleteConfigApi, error: deleteError } = useApi(
@@ -318,11 +314,7 @@ const deleteConfig = async (config: any) => {
 
     await fetchGlobalStorageConfigs();
 
-    toast.add({
-      title: "Success",
-      description: `Storage configuration "${config.name}" has been deleted successfully!`,
-      color: "success",
-    });
+    notify.success("Success", `Storage configuration "${config.name}" has been deleted successfully!`);
   }
 };
 

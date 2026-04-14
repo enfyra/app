@@ -54,12 +54,8 @@ function handleFolderClick(folder: any) {
     moveState.value.moveMode &&
     (moveState.value.selectedFolderIds || []).includes(getId(folder))
   ) {
-    const toast = useToast();
-    toast.add({
-      title: "Cannot navigate",
-      description: "You cannot move a folder into itself.",
-      color: "warning",
-    });
+    const notify = useNotify();
+    notify.warning("Cannot navigate", "You cannot move a folder into itself.");
     return;
   }
   navigateTo(`/storage/management/folder/${getId(folder)}`);
@@ -67,12 +63,8 @@ function handleFolderClick(folder: any) {
 
 function handleFileClick(file: any) {
   if (moveState.value.moveMode) {
-    const toast = useToast();
-    toast.add({
-      title: "Cannot open file",
-      description: "Cancel move mode to access files.",
-      color: "info",
-    });
+    const notify = useNotify();
+    notify.info("Cannot open file", "Cancel move mode to access files.");
     return;
   }
 

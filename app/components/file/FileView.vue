@@ -71,12 +71,8 @@ function downloadFile(file: any) {
 function copyFileUrl(file: any) {
   if (file.assetUrl) {
     navigator.clipboard.writeText(window.location.origin + file.assetUrl);
-    const toast = useToast();
-    toast.add({
-      title: "Success",
-      description: "URL copied to clipboard",
-      color: "success",
-    });
+    const notify = useNotify();
+    notify.success("Success", "URL copied to clipboard");
   }
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const route = useRoute();
 const router = useRouter();
 const { confirm } = useConfirm();
@@ -166,7 +166,7 @@ async function removeItem(item: any) {
 
   await deleteApi({ id: getId(item) });
   if (deleteError.value) return;
-  toast.add({ title: "Success", description: "Rule deleted", color: "success" });
+  notify.success("Success", "Rule deleted");
   await fetchPermissions();
 }
 

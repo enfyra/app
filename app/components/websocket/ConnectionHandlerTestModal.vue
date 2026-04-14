@@ -86,7 +86,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean];
 }>();
 
-const toast = useToast();
+const notify = useNotify();
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -127,7 +127,7 @@ async function run() {
     try {
       payload = JSON.parse(payloadJson.value);
     } catch {
-      toast.add({ title: 'Invalid JSON', color: 'error', description: 'Test payload JSON is invalid.' });
+      notify.error("Invalid JSON", "Test payload JSON is invalid.");
       return;
     }
   }

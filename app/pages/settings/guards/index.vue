@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
@@ -219,11 +219,7 @@ async function toggleEnabled(guard: any) {
     return;
   }
 
-  toast.add({
-    title: 'Success',
-    description: `Guard ${newEnabled ? 'enabled' : 'disabled'} successfully`,
-    color: 'success',
-  });
+  notify.success('Success', `Guard ${newEnabled ? 'enabled' : 'disabled'} successfully`);
 }
 
 async function deleteGuard(guard: any) {
@@ -241,11 +237,7 @@ async function deleteGuard(guard: any) {
 
     await fetchGuards();
 
-    toast.add({
-      title: 'Success',
-      description: `Guard "${guard.name}" has been deleted successfully!`,
-      color: 'success',
-    });
+    notify.success('Success', `Guard "${guard.name}" has been deleted successfully!`);
   }
 }
 </script>

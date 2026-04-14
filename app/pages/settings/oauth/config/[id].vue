@@ -37,7 +37,7 @@ definePageMeta({
 });
 
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 
 const tableName = "oauth_config_definition";
@@ -64,11 +64,7 @@ async function handleReset() {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
 
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -195,11 +191,7 @@ async function updateConfig() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "OAuth configuration updated!",
-  });
+  notify.success("Success", "OAuth configuration updated!");
   errors.value = {};
   hasFormChanges.value = false;
 
@@ -226,11 +218,7 @@ async function deleteConfig() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: "OAuth configuration deleted successfully",
-    color: "success"
-  });
+  notify.success("Success", "OAuth configuration deleted successfully");
   await navigateTo("/settings/oauth/config");
 }
 

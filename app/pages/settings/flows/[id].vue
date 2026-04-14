@@ -274,7 +274,7 @@ definePageMeta({ layout: "default", title: "Flow Editor" });
 
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
@@ -480,7 +480,7 @@ async function saveFlowSettings() {
   if (updateError.value) {
     return;
   }
-  toast.add({ title: "Success", description: "Flow settings saved!", color: "success" });
+  notify.success("Success", "Flow settings saved!");
   hasFormChanges.value = false;
   await fetchFlow();
 }
@@ -612,7 +612,7 @@ async function testCurrentStep() {
   try {
     config = stepForm.value.configJson ? JSON.parse(stepForm.value.configJson) : {};
   } catch {
-    toast.add({ title: "Error", description: "Invalid JSON in config", color: "error" });
+    notify.error("Error", "Invalid JSON in config");
     return;
   }
   testing.value = true;
@@ -694,12 +694,12 @@ async function saveStep() {
     if (editingStepId.value) {
       await updateStepApi({ body, id: editingStepId.value });
       if (updateStepError.value) return;
-      toast.add({ title: "Success", description: "Step updated!", color: "success" });
+      notify.success("Success", "Step updated!");
     } else {
       body.flow = { id: Number(flowId) };
       await createStepApi({ body });
       if (createStepError.value) return;
-      toast.add({ title: "Success", description: "Step created!", color: "success" });
+      notify.success("Success", "Step created!");
     }
     stepDrawerOpen.value = false;
     await fetchFlow();
@@ -738,7 +738,7 @@ async function deleteCurrentStep() {
   if (!ok) return;
   await deleteStepApi({ id: editingStepId.value });
   if (deleteStepError.value) return;
-  toast.add({ title: "Success", description: "Step deleted.", color: "success" });
+  notify.success("Success", "Step deleted.");
   stepDrawerOpen.value = false;
   await fetchFlow();
 }
@@ -747,7 +747,7 @@ async function triggerFlow() {
   const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Trigger Flow" });
   await triggerApi({ body: { payload: { trigger: 'manual' } } });
   if (triggerError.value) return;
-  toast.add({ title: "Success", description: "Flow triggered!", color: "success" });
+  notify.success("Success", "Flow triggered!");
   await refreshExecutions();
   pollTimers.forEach(t => clearTimeout(t));
   pollTimers.length = 0;
@@ -789,7 +789,7 @@ async function rerunExecution() {
   const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Re-run Flow" });
   await triggerApi({ body: { payload } });
   if (triggerError.value) return;
-  toast.add({ title: "Success", description: "Flow re-triggered with same payload!", color: "success" });
+  notify.success("Success", "Flow re-triggered with same payload!");
   execDrawerOpen.value = false;
   await refreshExecutions();
   pollTimers.push(setTimeout(() => refreshExecutions(), 2000));

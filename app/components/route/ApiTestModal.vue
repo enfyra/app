@@ -130,7 +130,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean];
 }>();
 
-const toast = useToast();
+const notify = useNotify();
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -257,7 +257,7 @@ const responseSize = computed(() => {
 async function copyResponse() {
   if (!response.value?.body) return;
   await navigator.clipboard.writeText(response.value.body);
-  toast.add({ title: 'Copied', color: 'success' });
+  notify.success("Copied");
 }
 
 async function sendRequest() {

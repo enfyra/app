@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const { me } = useAuth();
 const { fetchAppPackages } = useGlobalState();
 
@@ -284,11 +284,7 @@ async function handleCreate() {
 
   if (packageType.value === 'App') {
     await fetchAppPackages();
-    toast.add({
-      title: "Package installed",
-      description: `${form.value.name} has been installed`,
-      color: "success",
-    });
+    notify.success("Package installed", `${form.value.name} has been installed`);
   }
 
   await navigateTo(`/packages/${packageId}`, {

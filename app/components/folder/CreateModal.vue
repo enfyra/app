@@ -9,7 +9,7 @@ const emit = defineEmits<{
   created: [];
 }>();
 
-const toast = useToast();
+const notify = useNotify();
 const newFolder = ref<Record<string, any>>({});
 const { generateEmptyForm, validate } = useSchema("folder_definition");
 const createErrors = ref<Record<string, string>>({});
@@ -45,11 +45,7 @@ async function handleCreate() {
 
   if (!isValid) {
     createErrors.value = errors;
-    toast.add({
-      title: "Missing information",
-      color: "error",
-      description: "Please fill in all required fields.",
-    });
+    notify.error("Missing information", "Please fill in all required fields.");
     return;
   }
 
@@ -59,11 +55,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "New folder created successfully!",
-  });
+  notify.success("Success", "New folder created successfully!");
 
   emit("created");
 

@@ -2,7 +2,7 @@
 
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { isMounted } = useMounted();
 const { updateFileTimestamp } = useGlobalState();
@@ -80,11 +80,7 @@ async function handleReset() {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
     
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -192,12 +188,7 @@ async function saveFile() {
     formChanges.update(freshData);
   }
 
-  const toast = useToast();
-  toast.add({
-    title: "Success",
-    description: "File updated successfully!",
-    color: "success",
-  });
+  notify.success("Success", "File updated successfully!");
 
   formEditorRef.value?.confirmChanges();
 }
@@ -215,11 +206,7 @@ async function deleteFile() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: "File deleted successfully",
-    color: "success",
-  });
+  notify.success("Success", "File deleted successfully");
   await navigateTo("/storage/management");
 }
 
@@ -247,11 +234,7 @@ async function handleReplaceFileSuccess(files: File | File[]) {
 
   updateFileTimestamp(fileId);
 
-  toast.add({
-    title: "Success",
-    description: "File replaced successfully!",
-    color: "success",
-  });
+  notify.success("Success", "File replaced successfully!");
 }
 
 const pageTitle = computed(() => {

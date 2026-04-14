@@ -145,12 +145,8 @@ function handleFileClick() {
   if (props.isSelectionMode) {
     emit("toggle-selection", props.file.id);
   } else if (moveState.value.moveMode) {
-    const toast = useToast();
-    toast.add({
-      title: "Cannot open file",
-      description: "Cancel move mode to access files.",
-      color: "info",
-    });
+    const notify = useNotify();
+    notify.info("Cannot open file", "Cancel move mode to access files.");
     return;
   } else {
     emit("file-click", props.file);
@@ -220,12 +216,8 @@ async function saveEdit() {
     originalName.value = "";
     editingLoading.value = false;
 
-    const toast = useToast();
-    toast.add({
-      title: "Success",
-      description: "File renamed successfully!",
-      color: "success",
-    });
+    const notify = useNotify();
+    notify.success("Success", "File renamed successfully!");
 
     emit("refresh-files");
   } catch (error) {

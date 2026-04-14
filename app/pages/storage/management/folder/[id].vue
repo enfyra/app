@@ -172,11 +172,7 @@ async function handleFileUpload(files: File | File[]) {
   showUploadModal.value = false;
   selectedStorage.value = undefined;
 
-  useToast().add({
-    title: "Success",
-    description: `${fileArray.length} file(s) uploaded successfully`,
-    color: "success",
-  });
+  useNotify().success("Success", `${fileArray.length} file(s) uploaded successfully`);
 }
 
 watch(

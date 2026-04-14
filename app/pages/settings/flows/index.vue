@@ -90,7 +90,7 @@ import { getTriggerColor } from '~/utils/flow.constants';
 const page = ref(1);
 const limit = 9;
 
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { createLoader } = useLoader();
 const { checkPermissionCondition } = usePermissions();
@@ -204,11 +204,7 @@ const toggleFlowStatus = async (flow: any) => {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `Flow "${flow.name}" has been ${newStatus ? "activated" : "deactivated"} successfully!`,
-    color: "success",
-  });
+  notify.success("Success", `Flow "${flow.name}" has been ${newStatus ? "activated" : "deactivated"} successfully!`);
 };
 
 const { execute: deleteFlowApi, error: deleteError } = useApi(
@@ -228,11 +224,7 @@ const deleteFlow = async (flow: any) => {
     await deleteFlowApi({ id: flow.id });
     if (deleteError.value) return;
     await fetchFlows();
-    toast.add({
-      title: "Success",
-      description: `Flow "${flow.name}" has been deleted successfully!`,
-      color: "success",
-    });
+    notify.success("Success", `Flow "${flow.name}" has been deleted successfully!`);
   }
 };
 

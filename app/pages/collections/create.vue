@@ -2,7 +2,7 @@
 
 const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
-const toast = useToast();
+const notify = useNotify();
 const { getId } = useDatabase();
 const errors = ref<Record<string, string>>({});
 const table = reactive<any>({
@@ -97,11 +97,7 @@ function validateAll() {
   const { isMongoDB } = useDatabase();
   if (!isMongoDB.value && table.columns.length === 0 && table.relations.length === 0) {
     errors.value["fields"] = "At least one column or relation is required";
-    toast.add({
-      title: "Validation Error",
-      color: "error",
-      description: "Please add at least one column or relation to the table",
-    });
+    notify.error("Validation Error", "Please add at least one column or relation to the table");
   }
 
   const allFieldNames = [
@@ -176,11 +172,7 @@ async function save() {
 
   if (createError.value) return;
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "New table created!",
-  });
+  notify.success("Success", "New table created!");
 
   const newTableName = createData.value?.data?.[0]?.name;
   if (newTableName) {

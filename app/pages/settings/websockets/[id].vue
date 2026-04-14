@@ -162,7 +162,7 @@ definePageMeta({
 });
 
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { getId } = useDatabase();
 
@@ -340,11 +340,7 @@ async function updateGateway() {
   hasFormChanges.value = false;
   formChanges.update(form.value);
 
-  toast.add({
-    title: "Success",
-    description: `WebSocket gateway has been updated successfully!`,
-    color: "success",
-  });
+  notify.success("Success", `WebSocket gateway has been updated successfully!`);
 
   await fetchGatewayDetail();
 
@@ -368,11 +364,7 @@ async function handleReset() {
   form.value = formChanges.discardChanges(form.value);
   hasFormChanges.value = false;
 
-  toast.add({
-    title: "Reset Complete",
-    color: "success",
-    description: "All changes have been discarded.",
-  });
+  notify.success("Reset Complete", "All changes have been discarded.");
 }
 
 async function deleteGateway() {
@@ -391,11 +383,7 @@ async function deleteGateway() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: "WebSocket gateway has been deleted successfully",
-    color: "success",
-  });
+  notify.success("Success", "WebSocket gateway has been deleted successfully");
 
   await navigateTo("/settings/websockets");
 }
@@ -411,11 +399,7 @@ async function toggleEventStatus(event: any) {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `Event has been ${event.isEnabled ? 'disabled' : 'enabled'}.`,
-    color: "success",
-  });
+  notify.success("Success", `Event has been ${event.isEnabled ? 'disabled' : 'enabled'}.`);
 
   await fetchEvents();
 }
@@ -437,11 +421,7 @@ async function deleteEvent(event: any) {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `Event "${event.eventName}" has been deleted.`,
-    color: "success",
-  });
+  notify.success("Success", `Event "${event.eventName}" has been deleted.`);
 
   await fetchEvents();
 }

@@ -46,7 +46,7 @@ const fieldPermissionVirtualFields: FormEditorVirtualField[] = [
 ];
 
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 
 const id = computed(() => String(route.params.id));
@@ -171,7 +171,7 @@ async function handleReset() {
   if (!ok) return;
   form.value = formChanges.discardChanges(form.value);
   hasFormChanges.value = false;
-  toast.add({ title: "Reset Complete", color: "success", description: "All changes have been discarded." });
+  notify.success("Reset Complete", "All changes have been discarded.");
 }
 
 async function save() {
@@ -180,20 +180,20 @@ async function save() {
   const scope = validateFieldPermissionScope(body);
   if (!scope.ok) {
     errors.value = { ...errors.value, role: scope.message };
-    toast.add({ title: "Validation Error", description: scope.message, color: "error" });
+    notify.error("Validation Error", scope.message);
     return;
   }
 
   const cond = normalizeConditionBeforeSave(body);
   if (!cond.ok) {
-    toast.add({ title: "Validation Error", description: cond.message, color: "error" });
+    notify.error("Validation Error", cond.message);
     return;
   }
 
   await patchApi({ body });
   if (patchError.value) return;
 
-  toast.add({ title: "Success", color: "success", description: "Rule updated!" });
+  notify.success("Success", "Rule updated!");
   errors.value = {};
   hasFormChanges.value = false;
 
@@ -213,7 +213,7 @@ async function remove() {
   await deleteApi();
   if (deleteError.value) return;
 
-  toast.add({ title: "Success", color: "success", description: "Rule deleted" });
+  notify.success("Success", "Rule deleted");
   await navigateTo("/settings/field-permissions", { replace: true });
 }
 

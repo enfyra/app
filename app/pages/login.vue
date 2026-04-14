@@ -160,7 +160,7 @@ const showDemoLogin = computed(() => {
 
 const { login } = useAuth();
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const demoLoading = ref(false);
 const form = reactive({
   email: "",
@@ -182,12 +182,7 @@ async function handleLogin() {
   const ok = await login(form);
   if (ok) redirectAfterLogin();
   else {
-    toast.add({
-      title: "Login failed!",
-      description: "Invalid email or password",
-      icon: "lucide:octagon-x",
-      color: "error",
-    });
+    notify.error("Login failed!", "Invalid email or password");
   }
 }
 
@@ -201,12 +196,7 @@ async function handleDemoLogin() {
     });
     if (ok) redirectAfterLogin();
     else {
-      toast.add({
-        title: "Demo login failed",
-        description: "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.",
-        icon: "lucide:octagon-x",
-        color: "error",
-      });
+      notify.error("Demo login failed", "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.");
     }
   } finally {
     demoLoading.value = false;

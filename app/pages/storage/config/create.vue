@@ -25,7 +25,7 @@ definePageMeta({
   title: "Create Storage Configuration",
 });
 
-const toast = useToast();
+const notify = useNotify();
 const { me } = useAuth();
 const { getIdFieldName } = useDatabase();
 const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
@@ -129,10 +129,7 @@ async function handleCreate() {
 
   await fetchGlobalStorageConfigs();
 
-  toast.add({
-    title: "Storage configuration created successfully",
-    color: "success",
-  });
+  notify.success("Storage configuration created successfully");
 
   const { getId } = useDatabase();
   await navigateTo(`/storage/config/${getId(createData.value.data[0])}`, {

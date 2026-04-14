@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { checkPermissionCondition } = usePermissions();
 const { me } = useAuth();
@@ -72,17 +72,9 @@ async function handleReload(action: typeof reloadActions[0]) {
       credentials: "include",
     });
 
-    toast.add({
-      title: "Reload successful",
-      description: (response as any)?.message || `${action.label} reloaded`,
-      color: "success",
-    });
+    notify.success("Reload successful", (response as any)?.message || `${action.label} reloaded`);
   } catch (err: any) {
-    toast.add({
-      title: "Reload failed",
-      description: err?.data?.message || err?.message || "An error occurred",
-      color: "error",
-    });
+    notify.error("Reload failed", err?.data?.message || err?.message || "An error occurred");
   } finally {
     loadingMap.value[action.id] = false;
   }

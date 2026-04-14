@@ -2,7 +2,7 @@
 const route = useRoute();
 const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
-const toast = useToast();
+const notify = useNotify();
 const { getId } = useDatabase();
 const tableName = "table_definition";
 const { getIncludeFields } = useSchema(tableName);
@@ -233,11 +233,7 @@ async function afterPatchSuccess() {
     table.value = updatedData;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Table structure updated!",
-  });
+  notify.success("Success", "Table structure updated!");
 
   formChanges.update(table.value);
   hasFormChanges.value = false;
@@ -256,11 +252,7 @@ async function handleReset() {
     table.value = formChanges.discardChanges(table.value);
     hasFormChanges.value = false;
     
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -283,11 +275,7 @@ async function executeDelete() {
 }
 
 async function afterDeleteSuccess(_deletedTableName: string) {
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Table deleted!",
-  });
+  notify.success("Success", "Table deleted!");
   await navigateTo(`/collections`);
 }
 
@@ -329,11 +317,7 @@ async function copyConfirmHash() {
   if (!hash) return;
   try {
     await navigator.clipboard.writeText(String(hash));
-    toast.add({
-      title: "Copied",
-      color: "success",
-      description: "Confirm hash copied to clipboard",
-    });
+    notify.success("Copied", "Confirm hash copied to clipboard");
   } catch {
   }
 }

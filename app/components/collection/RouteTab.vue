@@ -8,7 +8,7 @@ const emit = defineEmits<{
   'close-api-test': []
 }>()
 
-const toast = useToast()
+const notify = useNotify()
 const { confirm } = useConfirm()
 const { getId } = useDatabase()
 const { loadRoutes } = useRoutes()
@@ -21,7 +21,7 @@ const { generateEmptyForm: generateHandlerEmptyForm, validate: validateHandler }
 const { generateEmptyForm: generatePreHookEmptyForm, validate: validatePreHook } = useSchema('pre_hook_definition')
 const { generateEmptyForm: generatePostHookEmptyForm, validate: validatePostHook } = useSchema('post_hook_definition')
 
-const routeId = ref<string | null>(null)
+const routeId = ref<string | undefined>(undefined)
 
 const {
   data: routeData,
@@ -100,7 +100,7 @@ async function updateRoute() {
 
   if (updateRouteError.value) return
 
-  toast.add({ title: 'Success', color: 'success', description: 'Route updated!' })
+  notify.success("Success", "Route updated!")
   errors.value = {}
   hasFormChanges.value = false
 
@@ -128,7 +128,7 @@ async function handleReset() {
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value)
     hasFormChanges.value = false
-    toast.add({ title: 'Reset Complete', color: 'success', description: 'All changes have been discarded.' })
+    notify.success("Reset Complete", "All changes have been discarded.")
   }
 }
 
@@ -315,14 +315,14 @@ async function saveHandler() {
   const { isValid, errors } = validateHandler(handlerForm.value)
   if (!isValid) {
     handlerErrors.value = errors
-    toast.add({ title: 'Validation error', description: 'Please check the fields with errors.', color: 'error' })
+    notify.error("Validation error", "Please check the fields with errors.")
     return
   }
 
   await executeCreateHandler({ body: handlerForm.value })
   if (createHandlerError.value) return
 
-  toast.add({ title: 'Handler created successfully', color: 'success' })
+  notify.success("Handler created successfully")
   showCreateHandlerDrawer.value = false
   await fetchHandlers()
 }
@@ -381,14 +381,14 @@ async function updateHandler() {
   const { isValid, errors } = validateHandler(editHandlerForm.value)
   if (!isValid) {
     editHandlerErrors.value = errors
-    toast.add({ title: 'Validation error', description: 'Please check the fields with errors.', color: 'error' })
+    notify.error("Validation error", "Please check the fields with errors.")
     return
   }
 
   await executeUpdateHandler({ id: editingHandlerId.value, body: editHandlerForm.value })
   if (updateHandlerError.value) return
 
-  toast.add({ title: 'Handler updated successfully', color: 'success' })
+  notify.success("Handler updated successfully")
   showEditHandlerDrawer.value = false
   await fetchHandlers()
 }
@@ -410,7 +410,7 @@ async function deleteHandler(handler: any) {
   await deleteHandlerApi({ id: getId(handler) })
   if (deleteHandlerError.value) return
 
-  toast.add({ title: 'Success', description: 'Handler deleted successfully', color: 'success' })
+  notify.success("Success", "Handler deleted successfully")
   await fetchHandlers()
 }
 
@@ -454,7 +454,7 @@ async function saveHook() {
 
   if (!isValid) {
     hookErrors.value = errors
-    toast.add({ title: 'Validation error', description: 'Please check the fields with errors.', color: 'error' })
+    notify.error("Validation error", "Please check the fields with errors.")
     return
   }
 
@@ -466,7 +466,7 @@ async function saveHook() {
     if (createPostHookError.value) return
   }
 
-  toast.add({ title: `${isPreHook ? 'Pre' : 'Post'}-Hook created successfully`, color: 'success' })
+  notify.success(`${isPreHook ? 'Pre' : 'Post'}-Hook created successfully`)
   showCreateHookDrawer.value = false
   await refreshAll()
 }
@@ -554,7 +554,7 @@ async function updateHook() {
 
   if (!isValid) {
     editHookErrors.value = errors
-    toast.add({ title: 'Validation error', description: 'Please check the fields with errors.', color: 'error' })
+    notify.error("Validation error", "Please check the fields with errors.")
     return
   }
 
@@ -567,7 +567,7 @@ async function updateHook() {
   const updateError = isPreHook ? updatePreHookError : updatePostHookError
   if (updateError.value) return
 
-  toast.add({ title: `${isPreHook ? 'Pre' : 'Post'}-Hook updated successfully`, color: 'success' })
+  notify.success(`${isPreHook ? 'Pre' : 'Post'}-Hook updated successfully`)
   showEditHookDrawer.value = false
   await refreshAll()
 }
@@ -595,11 +595,7 @@ async function toggleHook(hook: any, enabled: boolean) {
     return
   }
 
-  toast.add({
-    title: 'Success',
-    description: `${isPreHook ? 'Pre' : 'Post'}-Hook ${enabled ? 'enabled' : 'disabled'} successfully`,
-    color: 'success',
-  })
+  notify.success('Success', `${isPreHook ? 'Pre' : 'Post'}-Hook ${enabled ? 'enabled' : 'disabled'} successfully`)
   await refreshAll()
 }
 
@@ -629,11 +625,7 @@ async function deleteHook(hook: any) {
   await deleteApi({ id: getId(hook) })
   if (deleteError.value) return
 
-  toast.add({
-    title: 'Success',
-    description: `${isPreHook ? 'Pre' : 'Post'}-Hook deleted successfully`,
-    color: 'success',
-  })
+  notify.success('Success', `${isPreHook ? 'Pre' : 'Post'}-Hook deleted successfully`)
   await refreshAll()
 }
 
@@ -700,14 +692,14 @@ function openCreateGuardDrawer() {
 
 async function saveGuard() {
   if (!guardForm.value.name || !guardForm.value.position) {
-    toast.add({ title: 'Validation Error', description: 'Name and position are required', color: 'error' })
+    notify.error("Validation Error", "Name and position are required")
     return
   }
 
   await executeCreateGuard({ body: guardForm.value })
   if (createGuardError.value) return
 
-  toast.add({ title: 'Guard created successfully', color: 'success' })
+  notify.success("Guard created successfully")
   showCreateGuardDrawer.value = false
   await Promise.all([fetchRouteGuards(), fetchGlobalGuards()])
 }

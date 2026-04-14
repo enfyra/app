@@ -100,7 +100,7 @@ function shouldNavigateToErrorPage(apiError: ApiError): boolean {
 }
 
 export function useApi<T = any>(url: string | (() => string), options: any = {}) {
-  const toast = useToast();
+  const notify = useNotify();
   const { method = "get", body, query, errorContext, onError, disableErrorPage } = options;
 
   const data = ref<T | null>(null);
@@ -251,11 +251,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         if (Array.isArray(errorMessage)) {
           errorMessage = errorMessage.join(". ");
         }
-        toast.add({
-          title: "Error",
-          description: errorMessage,
-          color: "error",
-        });
+        notify.error("Error", errorMessage);
       }
       error.value = apiError;
       status.value = "error";

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { checkPermissionCondition } = usePermissions();
 const { me } = useAuth();
@@ -136,18 +136,10 @@ async function searchInLog(query: string) {
     searchResults.value = results;
 
     if (results.length === 0) {
-      toast.add({
-        title: "No results",
-        description: `No logs found for "${query}"`,
-        color: "warning",
-      });
+      notify.warning("No results", `No logs found for "${query}"`);
     }
   } catch (err: any) {
-    toast.add({
-      title: "Search failed",
-      description: err?.data?.message || err?.message || "Could not search logs",
-      color: "error",
-    });
+    notify.error("Search failed", err?.data?.message || err?.message || "Could not search logs");
     searchResults.value = [];
   } finally {
     searchLoading.value = false;
@@ -240,11 +232,7 @@ async function loadLogContent(file?: string, append: boolean = false) {
     }
   } catch (err: any) {
     logError.value = err?.data?.message || err?.message || "Failed to load log content";
-    toast.add({
-      title: "Failed to load log",
-      description: logError.value || "Failed to load log content",
-      color: "error",
-    });
+    notify.error("Failed to load log", logError.value || "Failed to load log content");
   } finally {
     logLoading.value = false;
     loadingMore.value = false;
@@ -353,13 +341,9 @@ async function downloadLog(file?: any) {
     a.click();
     URL.revokeObjectURL(url);
 
-    toast.add({ title: "Download started", color: "success" });
+    notify.success("Download started");
   } catch (err: any) {
-    toast.add({
-      title: "Download failed",
-      description: err?.message || "Could not download file",
-      color: "error",
-    });
+    notify.error("Download failed", err?.message || "Could not download file");
   }
 }
 
@@ -368,9 +352,9 @@ async function copyToClipboard() {
   if (!content) return;
   try {
     await navigator.clipboard.writeText(content);
-    toast.add({ title: "Copied to clipboard", color: "success" });
+    notify.success("Copied to clipboard");
   } catch {
-    toast.add({ title: "Failed to copy", color: "error" });
+    notify.error("Failed to copy");
   }
 }
 

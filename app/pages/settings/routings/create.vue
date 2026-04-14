@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const { loadRoutes } = useRoutes();
 
 const tableName = "route_definition";
@@ -98,10 +98,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "Route created successfully",
-    color: "success",
-  });
+  notify.success("Route created successfully");
 
   await loadRoutes();
 

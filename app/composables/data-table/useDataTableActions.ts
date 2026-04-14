@@ -7,7 +7,7 @@ export function useDataTableActions(
   const selectedRows = ref<any[]>([]);
   const isSelectionMode = ref(false);
 
-  const toast = useToast();
+  const notify = useNotify();
   const { confirm } = useConfirm();
   const { createLoader } = useLoader();
   const { getId } = useDatabase();
@@ -39,11 +39,7 @@ export function useDataTableActions(
         return;
       }
 
-      toast.add({
-        title: "Success",
-        description: "Record deleted successfully",
-        color: "success",
-      });
+      notify.success("Success", "Record deleted successfully");
       await fetchData();
     });
   }
@@ -82,11 +78,7 @@ export function useDataTableActions(
         return;
       }
 
-      toast.add({
-        title: "Success",
-        description: `${rows.length} record(s) deleted successfully`,
-        color: "success",
-      });
+      notify.success("Success", `${rows.length} record(s) deleted successfully`);
 
       resetSelection();
       await fetchData();

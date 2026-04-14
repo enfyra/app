@@ -27,7 +27,7 @@ definePageMeta({
   title: "Create OAuth Configuration",
 });
 
-const toast = useToast();
+const notify = useNotify();
 
 const tableName = "oauth_config_definition";
 
@@ -87,10 +87,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "OAuth provider configured successfully",
-    color: "success",
-  });
+  notify.success("OAuth provider configured successfully");
 
   const { getId } = useDatabase();
   await navigateTo(`/settings/oauth/config/${getId(createData.value.data[0])}`, {

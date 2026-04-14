@@ -27,7 +27,7 @@ export function dismissMetadataBanner() {
 }
 
 export function useAdminSocket() {
-  const toast = useToast();
+  const notify = useNotify();
   const schema = useSchema();
   const routes = useRoutes();
   const menuRegistry = useMenuRegistry();
@@ -97,27 +97,15 @@ export function useAdminSocket() {
     });
 
     socket.on('$system:package:installed', (data: any) => {
-      toast.add({
-        title: 'Package ready',
-        description: `${data.name}@${data.version} installed successfully`,
-        color: 'success',
-      });
+      notify.success('Package ready', `${data.name}@${data.version} installed successfully`);
     });
 
     socket.on('$system:package:uninstalled', (data: any) => {
-      toast.add({
-        title: 'Package removed',
-        description: `${data.name} has been uninstalled`,
-        color: 'success',
-      });
+      notify.success('Package removed', `${data.name} has been uninstalled`);
     });
 
     socket.on('$system:package:failed', (data: any) => {
-      toast.add({
-        title: 'Package operation failed',
-        description: data.error || `Failed to ${data.operation} ${data.name}`,
-        color: 'error',
-      });
+      notify.error('Package operation failed', data.error || `Failed to ${data.operation} ${data.name}`);
     });
   }
 

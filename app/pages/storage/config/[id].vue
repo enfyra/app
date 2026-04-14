@@ -35,7 +35,7 @@ definePageMeta({
 });
 
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { me } = useAuth();
 const { getIdFieldName } = useDatabase();
@@ -100,11 +100,11 @@ async function handleReset() {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
 
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
+    notify.success("Reset Complete", "All changes have been discarded.");
+    notify.success("Reset Complete", "All changes have been discarded.");
+    notify.success("Reset Complete", "All changes have been discarded.");
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -234,11 +234,11 @@ async function updateConfig() {
 
   await fetchGlobalStorageConfigs();
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Storage configuration updated!",
-  });
+  notify.success("Success", "Storage configuration updated!");
+  notify.success("Success", "Storage configuration updated!");
+  notify.success("Success", "Storage configuration updated!");
+  notify.success("Success", "Storage configuration updated!");
+  notify.success("Success", "Storage configuration updated!");
   errors.value = {};
 }
 
@@ -257,11 +257,7 @@ async function deleteConfig() {
 
   await fetchGlobalStorageConfigs();
 
-  toast.add({
-    title: "Success",
-    description: "Storage configuration deleted successfully",
-    color: "success"
-  });
+  notify.success("Success", "Storage configuration deleted successfully");
   await navigateTo("/storage/config");
 }
 

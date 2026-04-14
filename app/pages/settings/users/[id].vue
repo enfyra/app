@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { validateForm } = useFormValidation("user_definition");
 
@@ -79,11 +79,7 @@ async function handleReset() {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
     
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -157,11 +153,7 @@ async function saveUser() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "User updated!",
-  });
+  notify.success("Success", "User updated!");
   errors.value = {};
   hasFormChanges.value = false;
 
@@ -187,10 +179,7 @@ async function deleteUser() {
     return;
   }
 
-  toast.add({
-    title: "User deleted",
-    color: "success",
-  });
+  notify.success("User deleted");
   await navigateTo("/settings/users");
 }
 

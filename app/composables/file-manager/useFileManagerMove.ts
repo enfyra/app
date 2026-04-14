@@ -10,7 +10,7 @@ export function useFileManagerMove() {
   
   const route = useRoute();
   const { confirm } = useConfirm();
-  const toast = useToast();
+  const notify = useNotify();
 
   const {
     execute: patchFiles,
@@ -87,11 +87,7 @@ export function useFileManagerMove() {
     if (!isConfirmed) return;
 
     if (destinationId && folderIds.includes(destinationId)) {
-      toast.add({
-        title: "Invalid move",
-        description: "A folder cannot be moved into itself.",
-        color: "warning",
-      });
+      notify.warning("Invalid move", "A folder cannot be moved into itself.");
       return;
     }
 
@@ -110,18 +106,10 @@ export function useFileManagerMove() {
     }
 
     if (!hasError) {
-      toast.add({
-        title: "Success",
-        description: `${totalCount} item(s) moved successfully!`,
-        color: "success",
-      });
+      notify.success("Success", `${totalCount} item(s) moved successfully!`);
       onSuccess?.();
     } else {
-      toast.add({
-        title: "Move failed",
-        description: "Please try again.",
-        color: "error",
-      });
+      notify.error("Move failed", "Please try again.");
     }
 
     return !hasError;

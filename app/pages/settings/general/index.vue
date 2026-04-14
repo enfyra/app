@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { checkPermissionCondition } = usePermissions();
 const errors = ref<Record<string, string>>({});
@@ -33,11 +33,7 @@ async function handleReset() {
     setting.value = formChanges.discardChanges(setting.value);
     hasFormChanges.value = false;
     
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -127,11 +123,7 @@ async function handleSaveSetting() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: "Configuration saved successfully",
-    color: "success",
-  });
+  notify.success("Success", "Configuration saved successfully");
   errors.value = {};
   hasFormChanges.value = false;
 

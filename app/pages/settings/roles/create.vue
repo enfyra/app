@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 
 const tableName = "role_definition";
 
@@ -77,10 +77,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "Role created successfully",
-    color: "success",
-  });
+  notify.success("Role created successfully");
 
   await navigateTo(`/settings/roles/${getId(createData.value?.data[0])}`, {
     replace: true,

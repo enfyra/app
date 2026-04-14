@@ -102,7 +102,7 @@
 const page = ref(1);
 const limit = 9;
 
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { createLoader } = useLoader();
 const { checkPermissionCondition } = usePermissions();
@@ -275,13 +275,9 @@ const toggleGatewayStatus = async (gateway: any) => {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `WebSocket gateway "${gateway.path}" has been ${
+  notify.success("Success", `WebSocket gateway "${gateway.path}" has been ${
       newStatus ? "activated" : "deactivated"
-    } successfully!`,
-    color: "success",
-  });
+    } successfully!`);
 };
 
 const { execute: deleteGatewayApi, error: deleteError } = useApi(
@@ -311,11 +307,7 @@ const deleteGateway = async (gateway: any) => {
 
     await fetchGateways();
 
-    toast.add({
-      title: "Success",
-      description: `WebSocket gateway "${gateway.path}" has been deleted successfully!`,
-      color: "success",
-    });
+    notify.success("Success", `WebSocket gateway "${gateway.path}" has been deleted successfully!`);
   }
 };
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
@@ -77,11 +77,7 @@ async function deleteScript(id: number) {
     return;
   }
 
-  toast.add({ 
-    title: "Success",
-    description: "Bootstrap script deleted successfully", 
-    color: "success" 
-  });
+  notify.success("Success", "Bootstrap script deleted successfully");
   await fetchBootstrapScripts();
 }
 

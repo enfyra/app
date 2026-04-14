@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const tableName = 'guard_definition';
 
 const createForm = ref<Record<string, any>>({});
@@ -85,10 +85,7 @@ async function handleCreate() {
 
   if (createError.value) return;
 
-  toast.add({
-    title: 'Guard created successfully',
-    color: 'success',
-  });
+  notify.success('Guard created successfully');
 
   await navigateTo(`/settings/guards/${getId(createData.value.data[0])}`, {
     replace: true,

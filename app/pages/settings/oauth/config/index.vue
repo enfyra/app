@@ -71,7 +71,7 @@ interface OAuthConfigDefinition {
 const page = ref(1);
 const limit = 9;
 
-const toast = useToast();
+const notify = useNotify();
 const { createLoader } = useLoader();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
@@ -230,13 +230,9 @@ const toggleConfigStatus = async (config: OAuthConfigDefinition) => {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `${getProviderLabel(config.provider)} OAuth has been ${
+  notify.success("Success", `${getProviderLabel(config.provider)} OAuth has been ${
       newStatus ? "enabled" : "disabled"
-    } successfully!`,
-    color: "success",
-  });
+    } successfully!`);
 };
 
 watch(

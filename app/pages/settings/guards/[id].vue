@@ -240,7 +240,7 @@
 import draggable from 'vuedraggable';
 
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { getId } = useDatabase();
 const { isMobile, isTablet } = useScreen();
@@ -542,11 +542,7 @@ async function updateGuard() {
   await executeUpdateGuard({ id: route.params.id as string, body });
   if (updateError.value) return;
 
-  toast.add({
-    title: 'Success',
-    color: 'success',
-    description: 'Guard updated!',
-  });
+  notify.success('Success', 'Guard updated!');
   errors.value = {};
   hasFormChanges.value = false;
 
@@ -570,11 +566,7 @@ async function handleReset() {
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
-    toast.add({
-      title: 'Reset Complete',
-      color: 'success',
-      description: 'All changes have been discarded.',
-    });
+    notify.success('Reset Complete', 'All changes have been discarded.');
   }
 }
 
@@ -589,11 +581,7 @@ async function deleteGuard() {
   await executeDeleteGuard({ id: route.params.id as string });
   if (deleteError.value) return;
 
-  toast.add({
-    title: 'Success',
-    description: 'Guard deleted successfully',
-    color: 'success',
-  });
+  notify.success('Success', 'Guard deleted successfully');
   await navigateTo('/settings/guards');
 }
 
@@ -645,11 +633,7 @@ watch(
 
 async function saveRule() {
   if (!ruleForm.value.type) {
-    toast.add({
-      title: 'Validation Error',
-      description: 'Please select a rule type',
-      color: 'error',
-    });
+    notify.error('Validation Error', 'Please select a rule type');
     return;
   }
 
@@ -664,7 +648,7 @@ async function saveRule() {
   await executeCreateRule({ body });
   if (createRuleError.value) return;
 
-  toast.add({ title: 'Rule created successfully', color: 'success' });
+  notify.success('Rule created successfully');
   showCreateRuleDrawer.value = false;
   await fetchRules();
 }
@@ -705,7 +689,7 @@ async function saveEditRule() {
   await executeUpdateRule({ id: editingRuleId.value, body });
   if (updateRuleError.value) return;
 
-  toast.add({ title: 'Rule updated successfully', color: 'success' });
+  notify.success('Rule updated successfully');
   showEditRuleDrawer.value = false;
   await fetchRules();
 }
@@ -727,7 +711,7 @@ async function handleDeleteRule(rule: any) {
   await deleteRuleApi({ id: getId(rule) });
   if (deleteRuleError.value) return;
 
-  toast.add({ title: 'Rule deleted successfully', color: 'success' });
+  notify.success('Rule deleted successfully');
   await fetchRules();
 }
 
@@ -760,18 +744,14 @@ function handleAddChild(targetGuard: any) {
 
 async function saveChild() {
   if (!childForm.value.name) {
-    toast.add({
-      title: 'Validation Error',
-      description: 'Please enter a name',
-      color: 'error',
-    });
+    notify.error('Validation Error', 'Please enter a name');
     return;
   }
 
   await executeCreateChild({ body: childForm.value });
   if (createChildError.value) return;
 
-  toast.add({ title: 'Sub-guard created successfully', color: 'success' });
+  notify.success('Sub-guard created successfully');
   showCreateChildDrawer.value = false;
   await fetchDescendants();
 }
@@ -814,7 +794,7 @@ async function saveEditChild() {
   });
   if (updateChildError.value) return;
 
-  toast.add({ title: 'Guard updated successfully', color: 'success' });
+  notify.success('Guard updated successfully');
   showEditChildDrawer.value = false;
   await fetchDescendants();
 }
@@ -831,7 +811,7 @@ async function handleDeleteGuard(guard: any) {
   await executeDeleteGuard({ id: getId(guard) });
   if (deleteError.value) return;
 
-  toast.add({ title: 'Guard deleted successfully', color: 'success' });
+  notify.success('Guard deleted successfully');
   await Promise.all([fetchDescendants(), fetchRules()]);
 }
 
@@ -844,11 +824,7 @@ async function handleToggleGuard(guard: any, enabled: boolean) {
   await toggleGuardApi({ id: getId(guard), body: { isEnabled: enabled } });
   if (toggleGuardError.value) return;
 
-  toast.add({
-    title: 'Success',
-    description: `Guard ${enabled ? 'enabled' : 'disabled'}`,
-    color: 'success',
-  });
+  notify.success('Success', `Guard ${enabled ? 'enabled' : 'disabled'}`);
 
   if (String(getId(guard)) === String(guardId.value)) {
     hasFormChanges.value = false;

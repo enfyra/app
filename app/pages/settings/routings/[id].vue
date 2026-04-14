@@ -181,7 +181,7 @@
 <script setup lang="ts">
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { routes, loadRoutes } = useRoutes();
 const { retryUntilFresh } = useServerSync();
@@ -379,11 +379,7 @@ async function updateRoute() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Route updated!",
-  });
+  notify.success("Success", "Route updated!");
   errors.value = {};
   hasFormChanges.value = false;
 
@@ -425,11 +421,7 @@ async function handleReset() {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
 
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -447,11 +439,7 @@ async function deleteRoute() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: "Route deleted successfully",
-    color: "success"
-  });
+  notify.success("Success", "Route deleted successfully");
 
   await retryUntilFresh(
     () => loadRoutes(),
@@ -680,11 +668,7 @@ async function saveHandler() {
 
   if (!isValid) {
     handlerErrors.value = errors;
-    toast.add({
-      title: "Validation error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
+    notify.error("Validation error", "Please check the fields with errors.");
     return;
   }
 
@@ -694,10 +678,7 @@ async function saveHandler() {
     return;
   }
 
-  toast.add({
-    title: "Handler created successfully",
-    color: "success",
-  });
+  notify.success("Handler created successfully");
 
   showCreateHandlerDrawer.value = false;
   await fetchHandlers();
@@ -801,11 +782,7 @@ async function updateHandler() {
 
   if (!isValid) {
     editHandlerErrors.value = errors;
-    toast.add({
-      title: "Validation error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
+    notify.error("Validation error", "Please check the fields with errors.");
     return;
   }
 
@@ -818,10 +795,7 @@ async function updateHandler() {
     return;
   }
 
-  toast.add({
-    title: "Handler updated successfully",
-    color: "success",
-  });
+  notify.success("Handler updated successfully");
 
   showEditHandlerDrawer.value = false;
   await fetchHandlers();
@@ -851,11 +825,7 @@ async function deleteHandler(handler: any) {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: "Handler deleted successfully",
-    color: "success",
-  });
+  notify.success("Success", "Handler deleted successfully");
 
   await fetchHandlers();
 }
@@ -957,11 +927,7 @@ async function saveHook() {
 
   if (!isValid) {
     hookErrors.value = errors;
-    toast.add({
-      title: "Validation error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
+    notify.error("Validation error", "Please check the fields with errors.");
     return;
   }
 
@@ -979,10 +945,7 @@ async function saveHook() {
     }
   }
 
-  toast.add({
-    title: `${isPreHook ? 'Pre' : 'Post'}-Hook created successfully`,
-    color: "success",
-  });
+  notify.success(`${isPreHook ? 'Pre' : 'Post'}-Hook created successfully`);
 
   showCreateHookDrawer.value = false;
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
@@ -1187,11 +1150,7 @@ async function updateHook() {
 
   if (!isValid) {
     editHookErrors.value = errors;
-    toast.add({
-      title: "Validation error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
+    notify.error("Validation error", "Please check the fields with errors.");
     return;
   }
 
@@ -1213,10 +1172,7 @@ async function updateHook() {
     return;
   }
 
-  toast.add({
-    title: `${isPreHook ? 'Pre' : 'Post'}-Hook updated successfully`,
-    color: "success",
-  });
+  notify.success(`${isPreHook ? 'Pre' : 'Post'}-Hook updated successfully`);
 
   showEditHookDrawer.value = false;
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
@@ -1268,11 +1224,7 @@ async function toggleHook(hook: any, enabled: boolean) {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `${isPreHook ? 'Pre' : 'Post'}-Hook ${enabled ? "enabled" : "disabled"} successfully`,
-    color: "success",
-  });
+  notify.success("Success", `${isPreHook ? 'Pre' : 'Post'}-Hook ${enabled ? "enabled" : "disabled"} successfully`);
 
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
@@ -1297,11 +1249,7 @@ async function deleteHook(hook: any) {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `${isPreHook ? 'Pre' : 'Post'}-Hook deleted successfully`,
-    color: "success",
-  });
+  notify.success("Success", `${isPreHook ? 'Pre' : 'Post'}-Hook deleted successfully`);
 
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
@@ -1376,11 +1324,7 @@ function openCreateGuardDrawer() {
 
 async function saveGuard() {
   if (!guardForm.value.name || !guardForm.value.position) {
-    toast.add({
-      title: 'Validation Error',
-      description: 'Name and position are required',
-      color: 'error',
-    });
+    notify.error('Validation Error', 'Name and position are required');
     return;
   }
 
@@ -1388,10 +1332,7 @@ async function saveGuard() {
 
   if (createGuardError.value) return;
 
-  toast.add({
-    title: 'Guard created successfully',
-    color: 'success',
-  });
+  notify.success('Guard created successfully');
 
   showCreateGuardDrawer.value = false;
   await Promise.all([fetchRouteGuards(), fetchGlobalGuards()]);

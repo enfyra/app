@@ -89,7 +89,7 @@ interface CorsOrigin {
   isEnabled: boolean;
 }
 
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { getId } = useDatabase();
 
@@ -175,11 +175,7 @@ async function addOrigin() {
   if (createError.value) return;
 
   newOrigin.value = "";
-  toast.add({
-    title: "Success",
-    description: "CORS origin added.",
-    color: "success",
-  });
+  notify.success("Success", "CORS origin added.");
   await fetchOrigins();
 }
 
@@ -190,13 +186,7 @@ async function toggleEnabled(origin: CorsOrigin, value: boolean) {
 
   if (updateError.value) return;
 
-  toast.add({
-    title: "Success",
-    description: value
-      ? `Enabled ${origin.value}`
-      : `Disabled ${origin.value}`,
-    color: "success",
-  });
+notify.success("Success")
   await fetchOrigins();
 }
 
@@ -215,11 +205,7 @@ async function removeOrigin(origin: CorsOrigin) {
 
   if (deleteError.value) return;
 
-  toast.add({
-    title: "Success",
-    description: "CORS origin removed.",
-    color: "success",
-  });
+  notify.success("Success", "CORS origin removed.");
   await fetchOrigins();
 }
 

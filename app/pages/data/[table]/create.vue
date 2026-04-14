@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const newRecord = ref<Record<string, any>>({});
 const tableName = route.params.table as string;
 const { generateEmptyForm } = useSchema(tableName);
@@ -62,11 +62,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "New record created!",
-  });
+  notify.success("Success", "New record created!");
 
   await navigateTo(
     `/data/${route.params.table}/${getId(createData.value?.data[0])}`,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
@@ -353,11 +353,7 @@ async function toggleEnabled(routeItem: any) {
   await loadRoutes();
   await registerDataMenuItems(Object.values(schemas.value));
 
-  toast.add({
-    title: "Success",
-    description: `Route ${newEnabled ? "enabled" : "disabled"} successfully`,
-    color: "success",
-  });
+  notify.success("Success", `Route ${newEnabled ? "enabled" : "disabled"} successfully`);
 }
 
 async function deleteRoute(routeItem: any) {
@@ -384,11 +380,7 @@ async function deleteRoute(routeItem: any) {
     await loadRoutes();
     await registerDataMenuItems(Object.values(schemas.value));
 
-    toast.add({
-      title: "Success",
-      description: `Route "${routeItem.path}" has been deleted successfully!`,
-      color: "success",
-    });
+    notify.success("Success", `Route "${routeItem.path}" has been deleted successfully!`);
   }
 }
 

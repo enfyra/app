@@ -11,7 +11,7 @@ const emit = defineEmits<{
   'save': [];
 }>();
 
-const toast = useToast();
+const notify = useNotify();
 const tableName = "websocket_event_definition";
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getIdFieldName, getId } = useDatabase();
@@ -158,21 +158,13 @@ async function handleSave() {
 
   if (!isValid) {
     errors.value = validationErrors;
-    toast.add({
-      title: "Validation Error",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
+    notify.error("Validation Error", "Please fill in all required fields.");
     return;
   }
 
   const uniqueOk = await formEditorRef.value?.validateAllUniqueFields?.();
   if (uniqueOk === false) {
-    toast.add({
-      title: "Duplicate value",
-      color: "error",
-      description: "Please verify all unique fields before saving.",
-    });
+    notify.error("Duplicate value", "Please verify all unique fields before saving.");
     return;
   }
 
@@ -193,11 +185,7 @@ async function handleSave() {
     }
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: props.event && getId(props.event) ? "Event updated!" : "Event created!",
-  });
+notify.success("Success")
 
   hasFormChanges.value = false;
   emit('save');
@@ -213,7 +201,7 @@ async function handleTest() {
     try {
       payload = JSON.parse(testPayloadJson.value);
     } catch {
-      toast.add({ title: 'Invalid JSON', color: 'error', description: 'Test payload JSON is invalid.' });
+      notify.error("Invalid JSON", "Test payload JSON is invalid.");
       return;
     }
   }

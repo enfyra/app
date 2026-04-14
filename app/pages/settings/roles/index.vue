@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const page = ref(1);
 const pageLimit = 10;
 const route = useRoute();
@@ -80,11 +80,7 @@ async function deleteRole(id: string) {
     return;
   }
 
-  toast.add({ 
-    title: "Success",
-    description: "Role deleted successfully", 
-    color: "success" 
-  });
+  notify.success("Success", "Role deleted successfully");
   await fetchRoles();
 }
 

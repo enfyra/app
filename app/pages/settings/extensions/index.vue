@@ -99,7 +99,7 @@
 const page = ref(1);
 const limit = 9;
 
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { createLoader } = useLoader();
 const { checkPermissionCondition } = usePermissions();
@@ -271,13 +271,9 @@ const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `Extension "${extension.name}" has been ${
+  notify.success("Success", `Extension "${extension.name}" has been ${
       newStatus ? "activated" : "deactivated"
-    } successfully!`,
-    color: "success",
-  });
+    } successfully!`);
 };
 
 const { execute: deleteExtensionApi, error: deleteError } = useApi(
@@ -305,11 +301,7 @@ const deleteExtension = async (extension: ExtensionDefinition) => {
 
     await fetchExtensions();
 
-    toast.add({
-      title: "Success",
-      description: `Extension "${extension.id}" has been deleted successfully!`,
-      color: "success",
-    });
+    notify.success("Success", `Extension "${extension.id}" has been deleted successfully!`);
   }
 };
 

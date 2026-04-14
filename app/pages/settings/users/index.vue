@@ -120,7 +120,7 @@ const { getId } = useDatabase();
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
-const toast = useToast();
+const notify = useNotify();
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -260,11 +260,7 @@ function getHeaderActions(user: any) {
 async function deleteUser(user: any) {
   
   if (user.isRootAdmin) {
-    toast.add({
-      title: "Error",
-      description: "Cannot delete root administrator account",
-      color: "error",
-    });
+    notify.error("Error", "Cannot delete root administrator account");
     return;
   }
 
@@ -294,13 +290,9 @@ async function deleteUser(user: any) {
 
     await fetchUsers();
 
-    toast.add({
-      title: "Success",
-      description: `User "${
+    notify.success("Success", `User "${
         user.name || user.email
-      }" has been deleted successfully!`,
-      color: "success",
-    });
+      }" has been deleted successfully!`);
   }
 }
 
