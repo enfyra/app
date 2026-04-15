@@ -2,10 +2,10 @@
 const { current, dismiss } = useNotify()
 
 const typeConfig = {
-  success: { icon: 'lucide:check-circle', color: 'success' as const, ring: 'ring-green-200 dark:ring-green-800/40', bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400' },
-  error: { icon: 'lucide:x-circle', color: 'error' as const, ring: 'ring-red-200 dark:ring-red-800/40', bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400' },
-  warning: { icon: 'lucide:alert-triangle', color: 'warning' as const, ring: 'ring-amber-200 dark:ring-amber-800/40', bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' },
-  info: { icon: 'lucide:info', color: 'info' as const, ring: 'ring-blue-200 dark:ring-blue-800/40', bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' },
+  success: { icon: 'lucide:check-circle-2', color: 'success' as const, bg: 'bg-emerald-50 dark:bg-emerald-500/10', border: 'border-l-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+  error: { icon: 'lucide:x-circle', color: 'error' as const, bg: 'bg-red-50 dark:bg-red-500/10', border: 'border-l-red-500', text: 'text-red-600 dark:text-red-400' },
+  warning: { icon: 'lucide:triangle-alert', color: 'warning' as const, bg: 'bg-amber-50 dark:bg-amber-500/10', border: 'border-l-amber-500', text: 'text-amber-600 dark:text-amber-400' },
+  info: { icon: 'lucide:info', color: 'info' as const, bg: 'bg-blue-50 dark:bg-blue-500/10', border: 'border-l-blue-500', text: 'text-blue-600 dark:text-blue-400' },
 }
 
 const cfg = computed(() => {
@@ -30,55 +30,37 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="notify">
-      <div
-        v-if="current"
-        class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-      >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click.self />
-
-        <div
-          class="relative surface-card rounded-2xl shadow-xl ring-1 p-6 w-full max-w-sm space-y-4"
-          :class="cfg.ring"
-        >
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-              :class="cfg.bg"
-            >
-              <UIcon :name="cfg.icon" :class="cfg.text" class="w-5 h-5" />
-            </div>
-            <span class="text-lg font-semibold text-[var(--text-primary)]">{{ current.title }}</span>
-          </div>
-
-          <p
-            v-if="current.description"
-            class="text-sm text-[var(--text-secondary)] break-words pl-[52px]"
+  <UModal
+    v-if="current"
+    :open="true"
+    :close="false"
+    :overlay="true"
+    :ui="{
+      overlay: 'bg-black/20 backdrop-blur-[2px]',
+      content: 'surface-card max-w-xs rounded-xl overflow-hidden',
+    }"
+    @update:open="dismiss"
+  >
+    <template #body>
+      <div class="border-l-4 p-5" :class="[cfg.border]">
+        <div class="flex items-start gap-3">
+          <div
+            class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+            :class="cfg.bg"
           >
-            {{ current.description }}
-          </p>
-
-          <div class="flex justify-end pt-1">
-            <UButton :color="cfg.color" @click="dismiss">
-              Got it
-            </UButton>
+            <UIcon :name="cfg.icon" :class="cfg.text" class="w-4 h-4" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-sm font-semibold text-[var(--text-primary)]">{{ current?.title }}</div>
+            <p
+              v-if="current?.description"
+              class="text-xs text-[var(--text-tertiary)] mt-1 break-words"
+            >
+              {{ current.description }}
+            </p>
           </div>
         </div>
       </div>
-    </Transition>
-  </Teleport>
+    </template>
+  </UModal>
 </template>
-
-<style scoped>
-.notify-enter-active { transition: all 200ms ease-out; }
-.notify-leave-active { transition: all 150ms ease-in; }
-.notify-enter-from,
-.notify-leave-to {
-  opacity: 0;
-}
-.notify-enter-from .surface-card,
-.notify-leave-to .surface-card {
-  transform: scale(0.95);
-}
-</style>

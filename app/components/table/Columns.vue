@@ -36,10 +36,10 @@ const fieldPermSummaryByColumnId = computed(() => {
 });
 
 const showPermModal = ref(false);
-const permModalTarget = ref<{ id: string; name: string }>({ id: "", name: "" });
+const permModalTarget = ref<{ id: string; name: string; baseline?: "allow" | "deny" }>({ id: "", name: "" });
 
 function openPermModal(column: any) {
-  permModalTarget.value = { id: String(getId(column)), name: column.name || "Unnamed" };
+  permModalTarget.value = { id: String(getId(column)), name: column.name || "Unnamed", baseline: column.isPublished ? "allow" : "deny" };
   showPermModal.value = true;
 }
 
@@ -500,6 +500,7 @@ watch(
     :target-id="permModalTarget.id"
     target-type="column"
     :target-name="permModalTarget.name"
+    :baseline="permModalTarget.baseline"
     @changed="onPermChanged"
   />
 

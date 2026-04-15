@@ -141,10 +141,10 @@ const fieldPermSummaryByRelationId = computed(() => {
 });
 
 const showPermModal = ref(false);
-const permModalTarget = ref<{ id: string; name: string }>({ id: "", name: "" });
+const permModalTarget = ref<{ id: string; name: string; baseline?: "allow" | "deny" }>({ id: "", name: "" });
 
 function openPermModal(relation: any) {
-  permModalTarget.value = { id: String(getId(relation)), name: relation.propertyName || "Unnamed" };
+  permModalTarget.value = { id: String(getId(relation)), name: relation.propertyName || "Unnamed", baseline: relation.isPublished ? "allow" : "deny" };
   showPermModal.value = true;
 }
 
@@ -410,6 +410,7 @@ async function removeRelation(index: number) {
     :target-id="permModalTarget.id"
     target-type="relation"
     :target-name="permModalTarget.name"
+    :baseline="permModalTarget.baseline"
     @changed="onPermChanged"
   />
 

@@ -7,6 +7,7 @@ const props = defineProps<{
   targetId: string | number
   targetType: "column" | "relation"
   targetName: string
+  baseline?: "allow" | "deny"
 }>()
 
 const open = defineModel<boolean>("open", { required: true })
@@ -89,15 +90,17 @@ function openCreateForm() {
   fieldPermMode.value = "create"
   editingFieldPermId.value = null
   const base = generateFieldPermEmptyForm()
+  const baseline = props.baseline || "allow"
+  const presetEffect = baseline === "allow" ? "deny" : "allow"
   fieldPermForm.value = {
     ...base,
     [props.targetType]: { id: String(props.targetId) },
     [props.targetType === "column" ? "relation" : "column"]: null,
     ...(base.effect !== undefined
-      ? { effect: "deny" }
+      ? { effect: presetEffect }
       : base.decision !== undefined
-        ? { decision: "deny" }
-        : { effect: "deny" }),
+        ? { decision: presetEffect }
+        : { effect: presetEffect }),
   }
   fieldPermErrors.value = {}
   viewMode.value = "form"
@@ -346,9 +349,9 @@ onUnmounted(() => {
               :key="`fp-${String(getId(it) ?? '')}`"
               :class="[
                 'cursor-pointer transition-colors rounded-lg px-3',
-                'border border-[var(--border-default)]',
-                'hover:bg-[var(--surface-muted)]',
-                String(getId(it)) === confirmDeleteFieldPermId ? 'bg-[var(--surface-muted)]' : '',
+                String(getId(it)) === confirmDeleteFieldPermId
+                  ? 'border border-red-400/50 dark:border-red-500/50 bg-red-50/50 dark:bg-red-950/30'
+                  : 'border border-[var(--border-default)] hover:bg-[var(--surface-muted)]',
               ]"
               @click="openEditForm(it)"
             >
@@ -387,15 +390,28 @@ onUnmounted(() => {
                 </div>
 
                 <UButton
-                  :icon="String(getId(it)) === confirmDeleteFieldPermId ? 'lucide:check' : 'lucide:trash-2'"
-                  :variant="String(getId(it)) === confirmDeleteFieldPermId ? 'solid' : 'ghost'"
-                  :color="String(getId(it)) === confirmDeleteFieldPermId ? 'warning' : 'error'"
+                  v-if="String(getId(it)) !== confirmDeleteFieldPermId"
+                  icon="lucide:trash-2"
+                  variant="ghost"
+                  color="error"
                   size="xs"
                   class="rounded-full !aspect-square flex-shrink-0"
-                  :loading="String(getId(it)) === deletingFieldPermId"
                   :disabled="isFieldPermBusy"
                   @click.stop="quickDeleteFieldPerm(it)"
                 />
+                <UButton
+                  v-else
+                  icon="lucide:check"
+                  variant="solid"
+                  color="error"
+                  size="xs"
+                  class="rounded-full flex-shrink-0 gap-1 animate-pulse"
+                  :loading="String(getId(it)) === deletingFieldPermId"
+                  :disabled="isFieldPermBusy"
+                  @click.stop="quickDeleteFieldPerm(it)"
+                >
+                  Sure?
+                </UButton>
               </div>
             </div>
           </div>
