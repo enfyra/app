@@ -117,7 +117,6 @@ import {
   applyFieldPositions,
   sortDefinitionFieldsByKey,
 } from '~/utils/form/field-order';
-import { debugFormEditorFieldOrder } from '~/utils/form/field-order-debug';
 import { FORM_EDITOR_VIRTUAL_EMIT_KEY } from '~/utils/form/form-editor-context';
 import type {
   FormEditorSection,
@@ -382,18 +381,7 @@ const visibleFields = computed(() => {
   const filteredKeys = fields.map(fk);
 
   if (props.loading) {
-    const out = sortFieldsByOrder(fields);
-    if (import.meta.dev && props.fieldPositions && Object.keys(props.fieldPositions).length > 0) {
-      debugFormEditorFieldOrder({
-        tableName: props.tableName,
-        branch: 'loading-true',
-        fieldPositions: props.fieldPositions,
-        filteredKeys,
-        resultKeys: out.map(fk),
-        note: 'fieldPositions skipped until loading is false',
-      });
-    }
-    return out;
+    return sortFieldsByOrder(fields);
   }
 
   let ordered = fields;
@@ -410,21 +398,7 @@ const visibleFields = computed(() => {
   const afterSortKeys = ordered.map(fk);
 
   if (props.fieldPositions && Object.keys(props.fieldPositions).length > 0) {
-    const prev = ordered;
     ordered = applyFieldPositions(ordered, props.fieldPositions);
-    if (import.meta.dev) {
-      debugFormEditorFieldOrder({
-        tableName: props.tableName,
-        branch: 'fieldPositions',
-        fieldPositions: props.fieldPositions,
-        filteredKeys,
-        afterSortKeys,
-        resultKeys: ordered.map(fk),
-        unchanged:
-          prev.length === ordered.length &&
-          prev.every((f, i) => fk(f) === fk(ordered[i]!)),
-      });
-    }
   }
 
   return ordered;

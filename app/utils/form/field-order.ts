@@ -1,7 +1,5 @@
 import type { TableDefinitionField } from '~/types/database';
 
-import { debugApplyFieldPositions } from '~/utils/form/field-order-debug';
-
 function fieldKey(f: TableDefinitionField): string {
   return String(f.name || f.propertyName || '');
 }
@@ -51,7 +49,6 @@ export function applyFieldPositions(
   const n = fields.length;
   const fieldKeys = fields.map(fieldKey);
   if (n === 0) {
-    debugApplyFieldPositions({ step: 'skip', reason: 'empty fields', positions });
     return fields;
   }
 
@@ -64,13 +61,6 @@ export function applyFieldPositions(
     positionKeys.filter((k) => fields.some((f) => fieldKey(f) === k)),
   );
   if (pinnedKeys.size === 0) {
-    debugApplyFieldPositions({
-      step: 'no-op',
-      reason: 'no position key matches any field name',
-      positionKeys,
-      fieldKeys,
-      unmatchedPositionKeys: unmatched,
-    });
     return fields;
   }
 
@@ -135,12 +125,5 @@ export function applyFieldPositions(
       seen.add(k);
     }
   }
-  const result = out.slice(0, n);
-  debugApplyFieldPositions({
-    step: 'applied',
-    pinnedKeys: [...pinnedKeys],
-    beforeKeys: fieldKeys,
-    afterKeys: result.map(fieldKey),
-  });
-  return result;
+  return out.slice(0, n);
 }
