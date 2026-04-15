@@ -164,7 +164,7 @@ definePageMeta({
 const route = useRoute();
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 
 const tableName = "websocket_definition";
 
@@ -200,14 +200,14 @@ const {
 } = useApi(() => `/websocket_definition`, {
   query: computed(() => ({
     fields: ["*"].join(","),
-    filter: 
-        { id: { _eq: pageId.value } },
+    filter:
+        { [getIdFieldName()]: { _eq: pageId.value } },
     
   })),
   errorContext: "Fetch WebSocket Gateway",
 });
 
-const gatewayId = computed(() => gatewayData.value?.data?.[0]?.id || gatewayData.value?.data?.[0]?._id);
+const gatewayId = computed(() => getId(gatewayData.value?.data?.[0]));
 
 const { data: eventsData, execute: fetchEvents } = useApi(() => "/websocket_event_definition", {
   query: computed(() => ({

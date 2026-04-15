@@ -36,6 +36,7 @@ const { confirm } = useConfirm();
 
 const id = route.params.id as string;
 const tableName = "bootstrap_script_definition";
+const { getIdFieldName } = useDatabase();
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
@@ -129,7 +130,7 @@ const {
   pending: loading,
   execute: executeGetScript,
 } = useApi(`/${tableName}`, {
-  query: { fields: getIncludeFields(), filter: { id: { _eq: id } } },
+  query: { fields: getIncludeFields(), filter: { [getIdFieldName()]: { _eq: id } } },
   errorContext: "Fetch Bootstrap Script",
 });
 
@@ -167,7 +168,7 @@ async function save() {
   const { getId } = useDatabase();
   const userId = getId(me.value);
   if (userId) {
-    form.value.updatedBy = { id: userId };
+    form.value.updatedBy = { [getIdFieldName()]: userId };
   }
 
   if (!await validateForm(form.value, errors)) return;

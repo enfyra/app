@@ -41,6 +41,8 @@ const fieldPermissionFormPositions = {
   config: 3,
 };
 
+const { getIdFieldName } = useDatabase();
+
 const fieldPermissionVirtualFields: FormEditorVirtualField[] = [
   { name: "config", fieldType: "relation", label: "Config" },
 ];
@@ -65,7 +67,7 @@ registerPageHeader({
   gradient: "purple",
 });
 
-const excluded = computed(() => ["id", "createdAt", "updatedAt", "role"]);
+const excluded = computed(() => [getIdFieldName(), "createdAt", "updatedAt", "role"]);
 const fieldMap = computed(() => ({
   action: { disableUniqueCheck: true },
   config: {
@@ -111,7 +113,7 @@ const {
 } = useApi(() => "/field_permission_definition", {
   query: computed(() => ({
     fields: getIncludeFields(),
-    filter: { id: { _eq: id.value } },
+    filter: { [getIdFieldName()]: { _eq: id.value } },
     limit: 1,
   })),
   errorContext: "Fetch Field Permission",

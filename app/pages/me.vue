@@ -300,7 +300,7 @@ onMounted(() => {
         <div v-else-if="oauthAccounts.length > 0" class="divide-y divide-[var(--border-subtle)]">
           <div
             v-for="account in oauthAccounts"
-            :key="account.id ?? account._id"
+            :key="getId(account)"
             class="flex items-center gap-3 py-3 cursor-pointer transition-colors group"
             @click="navigateToOauthAccount(account)"
           >

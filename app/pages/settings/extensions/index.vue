@@ -199,7 +199,7 @@ function getHeaderActions(extension: ExtensionDefinition) {
       component: 'USwitch',
       props: {
         'model-value': extension.isEnabled,
-        disabled: getExtensionLoader((extension.id ?? extension._id ?? '').toString()).isLoading
+        disabled: getExtensionLoader(String(getId(extension) ?? '')).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleExtensionStatus(extension)
@@ -238,7 +238,7 @@ function getExtensionLoader(extensionId: string) {
 }
 
 const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
-  const loader = getExtensionLoader((extension.id ?? extension._id ?? '').toString());
+  const loader = getExtensionLoader(String(getId(extension) ?? ''));
   const newStatus = !extension.isEnabled;
 
   if (apiData.value?.data) {

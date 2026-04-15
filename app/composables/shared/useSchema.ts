@@ -128,7 +128,7 @@ export function useSchema(tableName?: string | Ref<string>) {
   }
 
   const editableFields = computed(() => {
-    const excluded = ["id", "createdAt", "updatedAt", "isSystem", "isRootAdmin"];
+    const excluded = [getIdFieldName(), "createdAt", "updatedAt", "isSystem", "isRootAdmin"];
 
     const foreignKeyColumns = new Set<string>();
     definition.value.forEach((field: any) => {

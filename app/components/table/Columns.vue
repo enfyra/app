@@ -51,8 +51,8 @@ const {
     fields: "id,effect,decision",
     limit: 50,
     filter: permModalTarget.value.id
-      ? { column: { id: { _eq: permModalTarget.value.id } } }
-      : { id: { _eq: "__none__" } },
+      ? { column: { [getIdFieldName()]: { _eq: permModalTarget.value.id } } }
+      : { [getIdFieldName()]: { _eq: "__none__" } },
   })),
   immediate: false,
   errorContext: "Refresh Column Permissions",

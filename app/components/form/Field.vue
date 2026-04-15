@@ -47,6 +47,7 @@ function handleCheckUnique() {
 }
 
 const column = computed(() => props.columnMap.get(props.keyName));
+
 const displayLabel = computed(() => {
   if (fieldConfig.value.hideLabel) return '';
   return (fieldConfig.value.label || column.value?.label || props.keyName) as string;

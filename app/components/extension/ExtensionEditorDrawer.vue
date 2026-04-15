@@ -42,7 +42,7 @@ const {
       if (extensionId) {
         return {
           fields: getIncludeFields(),
-          filter: { id: { _eq: extensionId } },
+          filter: { [getIdFieldName()]: { _eq: extensionId } },
         };
       }
     }
@@ -99,7 +99,7 @@ watch(() => isOpen.value, async (open) => {
         form.value = { ...data, type: 'page' };
         const menuId = getId(props.menu);
         if (menuId) {
-          form.value.menu = { id: menuId };
+          form.value.menu = { [getIdFieldName()]: menuId };
         }
         hasFormChanges.value = false;
       }
@@ -108,7 +108,7 @@ watch(() => isOpen.value, async (open) => {
       form.value.type = 'page';
       const menuId = getId(props.menu);
       if (menuId) {
-        form.value.menu = { id: menuId };
+        form.value.menu = { [getIdFieldName()]: menuId };
       }
       errors.value = {};
       hasFormChanges.value = false;

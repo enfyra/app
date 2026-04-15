@@ -122,6 +122,8 @@ useHeaderActionRegistry([
   },
 ]);
 
+const { getIdFieldName } = useDatabase();
+
 const {
   data: configData,
   pending: loading,
@@ -129,7 +131,7 @@ const {
 } = useApi(() => `/${tableName}`, {
   query: {
     fields: getIncludeFields(),
-    filter: { id: { _eq: route.params.id } },
+    filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: "Fetch OAuth Config",
 });

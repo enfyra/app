@@ -33,7 +33,8 @@ watch(isOpen, (newVal) => {
     newFolder.value = generateEmptyForm();
 
     if (props.parentId) {
-      newFolder.value.parent = { id: props.parentId };
+      const { getIdFieldName } = useDatabase();
+      newFolder.value.parent = { [getIdFieldName()]: props.parentId };
     }
 
     createErrors.value = {};

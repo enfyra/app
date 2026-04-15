@@ -59,6 +59,7 @@ defineOptions({
 });
 
 const { loadDynamicComponent, getCachedComponent, getCachedExtensionMeta, setCachedExtensionMeta } = useDynamicComponent();
+const { getIdFieldName } = useDatabase();
 
 const error = ref<string | null>(null);
 const widgetComponent = ref<any>(null);
@@ -73,7 +74,7 @@ const {
     fields: "*",
     filter: {
       _and: [
-        { id: { _eq: props.id } },
+        { [getIdFieldName()]: { _eq: props.id } },
         { isEnabled: { _eq: true } },
         { type: { _eq: "widget" } },
       ],

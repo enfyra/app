@@ -13,6 +13,7 @@ const open = defineModel<boolean>("open", { required: true })
 const emit = defineEmits<{ changed: [] }>()
 
 const notify = useNotify()
+const { getIdFieldName } = useDatabase()
 const { getId } = useDatabase()
 const { isMobile, isTablet } = useScreen()
 const { generateEmptyForm: generateFieldPermEmptyForm } = useSchema("field_permission_definition")
@@ -31,7 +32,7 @@ const {
     sort: "-updatedAt",
     limit: 50,
     filter: {
-      [props.targetType]: { id: { _eq: String(props.targetId) } },
+      [props.targetType]: { [getIdFieldName()]: { _eq: String(props.targetId) } },
     },
   })),
   immediate: false,

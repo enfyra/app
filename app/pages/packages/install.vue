@@ -242,11 +242,11 @@ watch(() => route.query.type, (newType) => {
 function initializeForm() {
   form.value = generateEmptyForm();
 
-  const { getId } = useDatabase();
+  const { getId, getIdFieldName } = useDatabase();
   const userId = getId(me.value);
   if (userId) {
     form.value.installedBy = {
-      id: userId,
+      [getIdFieldName()]: userId,
     };
   }
 }

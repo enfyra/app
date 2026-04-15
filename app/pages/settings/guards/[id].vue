@@ -242,7 +242,7 @@ import draggable from 'vuedraggable';
 const route = useRoute();
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 const { isMobile, isTablet } = useScreen();
 
 const tableName = 'guard_definition';
@@ -302,7 +302,7 @@ const {
 } = useApi(`/${tableName}`, {
   query: {
     fields: getIncludeFields(),
-    filter: { id: { _eq: route.params.id } },
+    filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: 'Fetch Guard',
 });
@@ -617,7 +617,7 @@ function handleAddRule(targetGuard: any) {
     priority: 0,
     isEnabled: true,
     description: '',
-    guard: { id: getId(targetGuard) },
+    guard: { [getIdFieldName()]: getId(targetGuard) },
   };
   showCreateRuleDrawer.value = true;
 }
@@ -737,7 +737,7 @@ function handleAddChild(targetGuard: any) {
     combinator: 'and',
     priority: 0,
     isEnabled: true,
-    parent: { id: getId(targetGuard) },
+    parent: { [getIdFieldName()]: getId(targetGuard) },
   };
   showCreateChildDrawer.value = true;
 }

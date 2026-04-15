@@ -69,10 +69,10 @@ onMounted(() => {
   createForm.value = generateEmptyForm();
   
   const { me } = useAuth();
-  const { getId } = useDatabase();
+  const { getId, getIdFieldName } = useDatabase();
   const userId = getId(me.value);
   if (userId) {
-    createForm.value.createdBy = { id: userId };
+    createForm.value.createdBy = { [getIdFieldName()]: userId };
   }
 });
 

@@ -277,7 +277,7 @@ const router = useRouter();
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { isMounted } = useMounted();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const flowId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
@@ -340,7 +340,7 @@ const stepForm = ref({
 registerPageHeader({ title: "Flow Editor", gradient: "purple" });
 
 const { data: flowData, pending: loading, execute: fetchFlow } = useApi(
-  () => `/flow_definition?filter={"id":{"_eq":"${flowId}"}}&fields=*,steps.*,steps.parent.id&limit=1`,
+  () => `/flow_definition?filter={"${getIdFieldName()}":{"_eq":"${flowId}"}}&fields=*,steps.*,steps.parent.id&limit=1`,
   { errorContext: "Fetch Flow" }
 );
 
@@ -394,7 +394,7 @@ const { data: latestExecData, execute: fetchLatestExecDetail } = useApi(
   () => {
     const latest = allExecutions.value[0];
     if (!latest) return '/flow_execution_definition?limit=0';
-    return `/flow_execution_definition?filter={"id":{"_eq":"${latest.id}"}}&fields=id,status,completedSteps,currentStep,error&limit=1`;
+    return `/flow_execution_definition?filter={"${getIdFieldName()}":{"_eq":"${getId(latest)}"}}&fields=id,status,completedSteps,currentStep,error&limit=1`;
   },
   { errorContext: "Fetch Latest Exec Detail" }
 );
@@ -502,7 +502,7 @@ watch(stepDrawerOpen, (isOpen) => {
 watch(execDrawerOpen, (isOpen) => {
   if (execDrawerUpdating.value) return;
   if (isOpen && selectedExec.value) {
-    router.push({ query: { ...route.query, exec: String(selectedExec.value.id) } });
+    router.push({ query: { ...route.query, exec: String(getId(selectedExec.value)) } });
   } else {
     const q = { ...route.query };
     delete q.exec;
@@ -696,7 +696,7 @@ async function saveStep() {
       if (updateStepError.value) return;
       notify.success("Success", "Step updated!");
     } else {
-      body.flow = { id: Number(flowId) };
+      body.flow = { [getIdFieldName()]: flowId };
       await createStepApi({ body });
       if (createStepError.value) return;
       notify.success("Success", "Step created!");
@@ -779,7 +779,7 @@ async function refreshExecutions() {
 }
 
 const { execute: fetchExecDetail, data: execDetailData } = useApi(
-  () => `/flow_execution_definition?filter={"id":{"_eq":"${selectedExec.value?.id}"}}&fields=id,status,startedAt,completedAt,duration,currentStep,completedSteps,error,context&limit=1`,
+  () => `/flow_execution_definition?filter={"${getIdFieldName()}":{"_eq":"${getId(selectedExec.value)}"}}&fields=id,status,startedAt,completedAt,duration,currentStep,completedSteps,error,context&limit=1`,
   { errorContext: "Fetch Execution Detail" }
 );
 

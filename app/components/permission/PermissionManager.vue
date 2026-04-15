@@ -228,6 +228,7 @@ import { UIcon } from "#components";
 
 const notify = useNotify();
 const { confirm } = useConfirm();
+const { getId, getIdFieldName } = useDatabase();
 const { checkPermissionCondition } = usePermissions();
 const { isMounted } = useMounted();
 
@@ -271,7 +272,7 @@ const {
   query: {
     filter: {
       [props.currentFieldId.field]: {
-        id: { _eq: props.currentFieldId.value },
+        [getIdFieldName()]: { _eq: props.currentFieldId.value },
       },
     },
   },
@@ -348,7 +349,7 @@ async function savePermission() {
     
     await updatePermission({
       body: permissionForm.value,
-      id: currentPermission.value.id,
+      id: getId(currentPermission.value),
     });
 
     if (updateError.value) return; 

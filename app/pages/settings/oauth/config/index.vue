@@ -179,7 +179,7 @@ function getHeaderActions(config: OAuthConfigDefinition) {
       component: 'USwitch',
       props: {
         'model-value': config.isEnabled,
-        disabled: getConfigLoader((config.id ?? config._id ?? '').toString()).isLoading
+        disabled: getConfigLoader(String(getId(config) ?? '')).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleConfigStatus(config)
@@ -197,7 +197,7 @@ function getConfigLoader(configId: string) {
 }
 
 const toggleConfigStatus = async (config: OAuthConfigDefinition) => {
-  const loader = getConfigLoader((config.id ?? config._id ?? '').toString());
+  const loader = getConfigLoader(String(getId(config) ?? ''));
   const newStatus = !config.isEnabled;
 
   if (apiData.value?.data) {

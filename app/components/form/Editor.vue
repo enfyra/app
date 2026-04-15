@@ -7,7 +7,7 @@
       v-for="field in visibleFields"
       :key="field.name || field.propertyName"
       :key-name="(field.name || field.propertyName) as string"
-      :form-data="modelValue"
+      :form-data="normalizedModelValue"
       :column-map="extendedColumnMap"
       :field-map="fieldMapWithGenerated"
       :errors="errors"
@@ -46,7 +46,7 @@
             v-for="field in block.fields"
             :key="field.name || field.propertyName"
             :key-name="(field.name || field.propertyName) as string"
-            :form-data="modelValue"
+            :form-data="normalizedModelValue"
             :column-map="extendedColumnMap"
             :field-map="fieldMapWithGenerated"
             :errors="errors"
@@ -70,7 +70,7 @@
           v-for="field in block.fields"
           :key="field.name || field.propertyName"
           :key-name="(field.name || field.propertyName) as string"
-          :form-data="modelValue"
+          :form-data="normalizedModelValue"
           :column-map="extendedColumnMap"
           :field-map="fieldMapWithGenerated"
           :errors="errors"
@@ -94,7 +94,7 @@
         v-for="field in orphanSectionFields"
         :key="field.name || field.propertyName"
         :key-name="(field.name || field.propertyName) as string"
-        :form-data="modelValue"
+        :form-data="normalizedModelValue"
         :column-map="extendedColumnMap"
         :field-map="fieldMapWithGenerated"
         :errors="errors"
@@ -209,6 +209,21 @@ const emit = defineEmits<{
 const { definition, fieldMap: schemaColumnMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
   props.tableName
 );
+const { getId, getIdFieldName, isMongoDB } = useDatabase();
+
+const normalizedModelValue = computed(() => {
+  const mv = props.modelValue;
+  if (!mv || typeof mv !== 'object') return mv;
+  const idField = getIdFieldName();
+  const altField = idField === 'id' ? '_id' : 'id';
+  let result = mv;
+  if (idField in mv && !(altField in mv)) {
+    result = { ...mv, [altField]: mv[idField] };
+  } else if (altField in mv && !(idField in mv)) {
+    result = { ...mv, [idField]: mv[altField] };
+  }
+  return result;
+});
 
 const extendedColumnMap = computed(() => {
   const m = new Map(schemaColumnMap.value);
@@ -234,8 +249,7 @@ const originalData = ref<Record<string, any>>({});
 
 const formEditorRegistry = useFormEditorRegistry();
 
-const { getId } = useDatabase();
-const currentRecordIdRef = computed(() => props.currentRecordId ?? (props.mode === 'update' ? getId(props.modelValue) : null));
+const currentRecordIdRef = computed(() => props.currentRecordId ?? (props.mode === 'update' ? getId(normalizedModelValue.value) : null));
 const uniquesRef = computed(() => schema.value?.uniques || null);
 const uniqueCheckModeRef = computed(() => props.uniqueCheckMode || 'api');
 const uniqueLocalRecordsRef = computed(() => props.uniqueLocalRecords || []);
@@ -342,7 +356,7 @@ const filteredFormFields = computed(() => {
     if (field.fieldType === "relation") return true;
     if (field.isVirtual === true) return true;
 
-    const hasKey = key in props.modelValue;
+    const hasKey = key in normalizedModelValue.value;
     return hasKey;
   });
 

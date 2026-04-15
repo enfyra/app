@@ -185,7 +185,8 @@ const notify = useNotify();
 const { confirm } = useConfirm();
 const { routes, loadRoutes } = useRoutes();
 const { retryUntilFresh } = useServerSync();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
+const idField = getIdFieldName();
 
 const tableName = "route_definition";
 const hasFormChanges = ref(false);
@@ -259,7 +260,7 @@ const {
 } = useApi(`/${tableName}`, {
   query: {
     fields: getIncludeFields(),
-    filter: { id: { _eq: route.params.id } },
+    filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: "Fetch Route",
 });
@@ -460,7 +461,7 @@ const {
   query: computed(() => ({
     fields: getHandlerIncludeFields(),
     filter: {
-      route: { id: { _eq: routeId.value } },
+      route: { [getIdFieldName()]: { _eq: routeId.value } },
     },
   })),
   errorContext: "Fetch Handlers",
@@ -474,7 +475,7 @@ const {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
     filter: {
-      route: { id: { _eq: routeId.value } },
+      route: { [getIdFieldName()]: { _eq: routeId.value } },
     },
     sort: ["priority"],
   })),
@@ -489,7 +490,7 @@ const {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
     filter: {
-      route: { id: { _eq: routeId.value } },
+      route: { [getIdFieldName()]: { _eq: routeId.value } },
     },
     sort: ["priority"],
   })),
@@ -621,7 +622,7 @@ watch(() => route.query.createHandler, (value) => {
     showCreateHandlerDrawer.value = shouldOpen;
     if (shouldOpen) {
       handlerForm.value = generateHandlerEmptyForm();
-      handlerForm.value.route = { id: routeId.value };
+      handlerForm.value.route = { [idField]: routeId.value };
       handlerErrors.value = {};
     } else {
       handlerForm.value = {};
@@ -649,7 +650,7 @@ watch(showCreateHandlerDrawer, (isOpen) => {
 
 function createHandler(methodObject?: { method: string; id?: string }) {
   handlerForm.value = generateHandlerEmptyForm();
-  handlerForm.value.route = { id: routeId.value };
+  handlerForm.value.route = { [idField]: routeId.value };
 
   if (methodObject) {
     handlerForm.value.method = methodObject;
@@ -705,7 +706,7 @@ const {
 } = useApi(() => `/route_handler_definition`, {
   query: computed(() => ({
     fields: getHandlerIncludeFields(),
-    filter: { id: { _eq: editingHandlerId.value } },
+    filter: { [getIdFieldName()]: { _eq: editingHandlerId.value } },
   })),
   errorContext: "Fetch Handler",
   immediate: false,
@@ -714,7 +715,7 @@ const {
 watch(editHandlerData, (data) => {
   if (data?.data?.[0]) {
     editHandlerForm.value = { ...data.data[0] };
-    editHandlerForm.value.route = { id: routeId.value };
+    editHandlerForm.value.route = { [idField]: routeId.value };
   }
 });
 
@@ -767,7 +768,7 @@ async function editHandler(handler: any) {
   editingHandlerId.value = getId(handler);
   editHandlerErrors.value = {};
   await fetchEditHandler();
-  editHandlerForm.value.route = { id: routeId.value };
+  editHandlerForm.value.route = { [idField]: routeId.value };
   showEditHandlerDrawer.value = true;
 }
 
@@ -875,7 +876,7 @@ watch(() => route.query.createHook, (value) => {
       } else {
         hookForm.value = generatePreHookEmptyForm(); // default to pre
       }
-      hookForm.value.route = { id: routeId.value };
+      hookForm.value.route = { [idField]: routeId.value };
       hookErrors.value = {};
     } else {
       hookForm.value = {};
@@ -911,7 +912,7 @@ function createHook(type?: 'pre' | 'post') {
   } else {
     hookForm.value = generatePostHookEmptyForm();
   }
-  hookForm.value.route = { id: routeId.value };
+  hookForm.value.route = { [idField]: routeId.value };
   hookErrors.value = {};
   showCreateHookDrawer.value = true;
 }
@@ -985,7 +986,7 @@ const {
 } = useApi(() => `/pre_hook_definition`, {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
-    filter: { id: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
+    filter: { [getIdFieldName()]: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
   })),
   errorContext: "Fetch Pre-Hook",
   immediate: false,
@@ -998,7 +999,7 @@ const {
 } = useApi(() => `/post_hook_definition`, {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
-    filter: { id: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
+    filter: { [getIdFieldName()]: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
   })),
   errorContext: "Fetch Post-Hook",
   immediate: false,
@@ -1022,7 +1023,7 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         if (editPreHookData.value?.data?.[0]) {
           editHookType.value = 'pre';
           editHookForm.value = { ...editPreHookData.value.data[0] };
-          editHookForm.value.route = { id: routeId.value };
+          editHookForm.value.route = { [idField]: routeId.value };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -1034,7 +1035,7 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         if (editPostHookData.value?.data?.[0]) {
           editHookType.value = 'post';
           editHookForm.value = { ...editPostHookData.value.data[0] };
-          editHookForm.value.route = { id: routeId.value };
+          editHookForm.value.route = { [idField]: routeId.value };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -1047,12 +1048,12 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         if (editPreHookData.value?.data?.[0]) {
           editHookType.value = 'pre';
           editHookForm.value = { ...editPreHookData.value.data[0] };
-          editHookForm.value.route = { id: routeId.value };
+          editHookForm.value.route = { [idField]: routeId.value };
           showEditHookDrawer.value = true;
         } else if (editPostHookData.value?.data?.[0]) {
           editHookType.value = 'post';
           editHookForm.value = { ...editPostHookData.value.data[0] };
-          editHookForm.value.route = { id: routeId.value };
+          editHookForm.value.route = { [idField]: routeId.value };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -1113,7 +1114,7 @@ async function editHook(hook: any) {
     if (editPreHookData.value?.data?.[0]) {
       editHookType.value = 'pre';
       editHookForm.value = { ...editPreHookData.value.data[0] };
-      editHookForm.value.route = { id: routeId.value };
+      editHookForm.value.route = { [idField]: routeId.value };
       showEditHookDrawer.value = true;
       router.push({
         query: { ...route.query, editHook: hookId, editHookType: 'pre' }
@@ -1124,7 +1125,7 @@ async function editHook(hook: any) {
     if (editPostHookData.value?.data?.[0]) {
       editHookType.value = 'post';
       editHookForm.value = { ...editPostHookData.value.data[0] };
-      editHookForm.value.route = { id: routeId.value };
+      editHookForm.value.route = { [idField]: routeId.value };
       showEditHookDrawer.value = true;
       router.push({
         query: { ...route.query, editHook: hookId, editHookType: 'post' }
@@ -1263,7 +1264,7 @@ const {
     fields: '*,route.id,route.path,methods.method,parent',
     filter: {
       _and: [
-        { route: { id: { _eq: routeId.value } } },
+        { route: { [getIdFieldName()]: { _eq: routeId.value } } },
         { parent: { _is_null: true } },
       ],
     },

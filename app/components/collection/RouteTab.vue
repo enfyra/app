@@ -10,7 +10,8 @@ const emit = defineEmits<{
 
 const notify = useNotify()
 const { confirm } = useConfirm()
-const { getId } = useDatabase()
+const { getId, getIdFieldName } = useDatabase()
+const idField = getIdFieldName()
 const { loadRoutes } = useRoutes()
 const { schemas } = useSchema()
 const { getIncludeFields: getRouteIncludeFields } = useSchema('route_definition')
@@ -139,7 +140,7 @@ const {
 } = useApi(() => '/route_handler_definition', {
   query: computed(() => ({
     fields: getHandlerIncludeFields(),
-    filter: routeId.value ? { route: { id: { _eq: routeId.value } } } : undefined,
+    filter: routeId.value ? { route: { [getIdFieldName()]: { _eq: routeId.value } } } : undefined,
   })),
   errorContext: 'Fetch Handlers',
   immediate: false,
@@ -152,7 +153,7 @@ const {
 } = useApi(() => '/pre_hook_definition', {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
-    filter: routeId.value ? { route: { id: { _eq: routeId.value } } } : undefined,
+    filter: routeId.value ? { route: { [getIdFieldName()]: { _eq: routeId.value } } } : undefined,
     sort: ['priority'],
   })),
   errorContext: 'Fetch Pre-Hooks',
@@ -166,7 +167,7 @@ const {
 } = useApi(() => '/post_hook_definition', {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
-    filter: routeId.value ? { route: { id: { _eq: routeId.value } } } : undefined,
+    filter: routeId.value ? { route: { [getIdFieldName()]: { _eq: routeId.value } } } : undefined,
     sort: ['priority'],
   })),
   errorContext: 'Fetch Post-Hooks',
@@ -301,7 +302,7 @@ const {
 
 function createHandler(methodObject?: { method: string; id?: string }) {
   handlerForm.value = generateHandlerEmptyForm()
-  handlerForm.value.route = { id: routeId.value }
+  handlerForm.value.route = { [idField]: routeId.value }
   if (methodObject) handlerForm.value.method = methodObject
   handlerErrors.value = {}
   showCreateHandlerDrawer.value = true
@@ -347,7 +348,7 @@ const {
 } = useApi(() => '/route_handler_definition', {
   query: computed(() => ({
     fields: getHandlerIncludeFields(),
-    filter: { id: { _eq: editingHandlerId.value } },
+    filter: { [getIdFieldName()]: { _eq: editingHandlerId.value } },
   })),
   errorContext: 'Fetch Handler',
   immediate: false,
@@ -356,7 +357,7 @@ const {
 watch(editHandlerData, (data) => {
   if (data?.data?.[0]) {
     editHandlerForm.value = { ...data.data[0] }
-    editHandlerForm.value.route = { id: routeId.value }
+    editHandlerForm.value.route = { [idField]: routeId.value }
   }
 })
 
@@ -368,7 +369,7 @@ async function editHandler(handler: any) {
   editingHandlerId.value = getId(handler)
   editHandlerErrors.value = {}
   await fetchEditHandler()
-  editHandlerForm.value.route = { id: routeId.value }
+  editHandlerForm.value.route = { [idField]: routeId.value }
   showEditHandlerDrawer.value = true
 }
 
@@ -438,7 +439,7 @@ const createHookLoading = computed(() => createPreHookLoading.value || createPos
 function createHook(type?: 'pre' | 'post') {
   hookType.value = type || 'pre'
   hookForm.value = hookType.value === 'pre' ? generatePreHookEmptyForm() : generatePostHookEmptyForm()
-  hookForm.value.route = { id: routeId.value }
+  hookForm.value.route = { [idField]: routeId.value }
   hookErrors.value = {}
   showCreateHookDrawer.value = true
 }
@@ -497,7 +498,7 @@ const {
 } = useApi(() => '/pre_hook_definition', {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
-    filter: { id: { _eq: editingHookId.value } },
+    filter: { [getIdFieldName()]: { _eq: editingHookId.value } },
   })),
   errorContext: 'Fetch Pre-Hook',
   immediate: false,
@@ -509,7 +510,7 @@ const {
 } = useApi(() => '/post_hook_definition', {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
-    filter: { id: { _eq: editingHookId.value } },
+    filter: { [getIdFieldName()]: { _eq: editingHookId.value } },
   })),
   errorContext: 'Fetch Post-Hook',
   immediate: false,
@@ -528,14 +529,14 @@ async function editHook(hook: any) {
     await fetchEditPreHook()
     if (editPreHookData.value?.data?.[0]) {
       editHookForm.value = { ...editPreHookData.value.data[0] }
-      editHookForm.value.route = { id: routeId.value }
+      editHookForm.value.route = { [idField]: routeId.value }
       showEditHookDrawer.value = true
     }
   } else {
     await fetchEditPostHook()
     if (editPostHookData.value?.data?.[0]) {
       editHookForm.value = { ...editPostHookData.value.data[0] }
-      editHookForm.value.route = { id: routeId.value }
+      editHookForm.value.route = { [idField]: routeId.value }
       showEditHookDrawer.value = true
     }
   }

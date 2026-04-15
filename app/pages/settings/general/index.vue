@@ -2,6 +2,7 @@
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { checkPermissionCondition } = usePermissions();
+const { getIdFieldName } = useDatabase();
 const errors = ref<Record<string, string>>({});
 
 const { validateForm } = useFormValidation("setting_definition");
@@ -107,7 +108,7 @@ const {
   execute: saveSetting,
   pending: saveLoading,
   error: saveError,
-} = useApi(() => `/setting_definition/${setting.value.id}`, {
+} = useApi(() => `/setting_definition/${getId(setting.value)}`, {
   method: "patch",
   errorContext: "Save Settings",
 });
@@ -165,7 +166,7 @@ onMounted(() => {
             v-model:errors="errors"
             @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             :loading="false"
-            :excluded="['id', 'createdAt', 'updatedAt']"
+            :excluded="[getIdFieldName(), 'createdAt', 'updatedAt']"
             :sections="generalFormSections"
             :field-map="fieldMap"
           />

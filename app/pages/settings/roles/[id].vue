@@ -114,6 +114,7 @@ useHeaderActionRegistry([
 const errors = ref<Record<string, string>>({});
 
 const { validateForm } = useFormValidation(tableName);
+const { getIdFieldName } = useDatabase();
 
 const {
   data: apiData,
@@ -122,7 +123,7 @@ const {
 } = useApi(() => `/${tableName}`, {
   query: computed(() => ({
     fields: getIncludeFields(),
-    filter: { id: { _eq: id } },
+    filter: { [getIdFieldName()]: { _eq: id } },
   })),
   errorContext: "Fetch Role",
 });

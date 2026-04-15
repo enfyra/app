@@ -78,6 +78,7 @@
 const route = useRoute();
 const notify = useNotify();
 const { confirm } = useConfirm();
+const { getIdFieldName } = useDatabase();
 const { fetchAppPackages } = useGlobalState();
 const { adminSocket: $adminSocket } = useAdminSocket();
 const packageId = route.params.id as string;
@@ -100,7 +101,7 @@ const {
   query: {
     fields: "*",
     filter: {
-      id: { _eq: packageId },
+      [getIdFieldName()]: { _eq: packageId },
     },
   },
   errorContext: "Load Package Details",

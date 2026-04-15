@@ -10,6 +10,7 @@ const props = defineProps<{
 
 const notify = useNotify();
 const { confirm } = useConfirm();
+const { getIdFieldName } = useDatabase();
 const relations = useModel(props, "modelValue");
 
 const isEditing = ref(false);
@@ -32,8 +33,8 @@ const {
   query: computed(() => ({
     fields: 'id,propertyName,type,sourceTable.id,sourceTable.name,mappedBy.id',
     filter: props.tableId
-      ? { targetTable: { id: { _eq: String(props.tableId) } } }
-      : { id: { _eq: '__none__' } },
+      ? { targetTable: { [getIdFieldName()]: { _eq: String(props.tableId) } } }
+      : { [getIdFieldName()]: { _eq: '__none__' } },
     limit: 100,
   })),
   immediate: false,
@@ -155,8 +156,8 @@ const {
     fields: "id,effect,decision",
     limit: 50,
     filter: permModalTarget.value.id
-      ? { relation: { id: { _eq: permModalTarget.value.id } } }
-      : { id: { _eq: "__none__" } },
+      ? { relation: { [getIdFieldName()]: { _eq: permModalTarget.value.id } } }
+      : { [getIdFieldName()]: { _eq: "__none__" } },
   })),
   immediate: false,
   errorContext: "Refresh Relation Permissions",

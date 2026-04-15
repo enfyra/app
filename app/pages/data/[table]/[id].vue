@@ -5,6 +5,7 @@ const notify = useNotify();
 const tableName = route.params.table as string;
 const { schemas, useFormChanges } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
+const { getId, getIdFieldName } = useDatabase();
 const updateErrors = ref<Record<string, string>>({});
 
 const schema = computed(() => schemas.value[tableName]);
@@ -32,7 +33,7 @@ onMounted(async () => {
   await initializeForm();
 });
 
-watch(() => currentRecord.value.id, (id) => {
+watch(() => getId(currentRecord.value), (id) => {
   if (id) {
     registerPageHeader({
       title: `${route.params.table}: ${id}`,
@@ -49,7 +50,7 @@ const {
   query: computed(() => ({
     fields: "*",
     filter: {
-      id: {
+      [getIdFieldName()]: {
         _eq: route.params.id,
       },
     },

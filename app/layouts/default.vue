@@ -39,19 +39,11 @@
             :color="isMetadataReloading ? 'neutral' : 'primary'"
             :icon="isMetadataReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
             :title="isMetadataReloading ? 'Loading metadata…' : `Metadata updated (${metadataReloadCountdown}s)`"
-            class="border-b border-[var(--border-default)] shrink-0"
+            :close="!isMetadataReloading"
+            class="border-b border-[var(--border-default)] shrink-0 opacity-90"
             :ui="{ icon: isMetadataReloading ? 'animate-spin' : '' }"
-          >
-            <template #close>
-              <UButton
-                v-if="!isMetadataReloading"
-                icon="lucide:x"
-                variant="ghost"
-                size="xs"
-                @click="dismissMetadataBanner"
-              />
-            </template>
-          </UBanner>
+            @close="dismissMetadataBanner"
+          />
         </div>
       </Transition>
 
