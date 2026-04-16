@@ -59,6 +59,7 @@ onUnmounted(() => {
               {{ current.description }}
             </p>
           </div>
+          <UButton icon="lucide:x" variant="solid" color="error" size="xs" class="flex-shrink-0 -mt-1 -mr-2 rounded-full" @click="dismiss" />
         </div>
       </div>
     </template>

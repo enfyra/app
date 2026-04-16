@@ -272,6 +272,11 @@ export default defineAppConfig({
         footer: "border-t border-[var(--border-default)] py-4",
       },
     },
+    modal: {
+      slots: {
+        overlay: 'bg-black/20 backdrop-blur-[2px]',
+      },
+    },
     switch: {
       slots: {
         base: [

@@ -693,15 +693,14 @@ async function saveStep() {
       parent: stepForm.value.parentId ? { id: stepForm.value.parentId } : null,
       branch: stepForm.value.parentId ? stepForm.value.branch : null,
     };
+    const isEdit = !!editingStepId.value;
     if (editingStepId.value) {
       await updateStepApi({ body, id: editingStepId.value });
       if (updateStepError.value) return;
-      notify.success("Success", "Step updated!");
     } else {
       body.flow = { [getIdFieldName()]: flowId };
       await createStepApi({ body });
       if (createStepError.value) return;
-      notify.success("Success", "Step created!");
     }
     stepDrawerOpen.value = false;
     await fetchFlow();

@@ -345,6 +345,14 @@ let skipCrudWatch = false
 const crudTableName = computed(() => props.type === 'create' ? (fields.value.table || '') : '')
 const { generateEmptyForm: generateCrudEmptyForm } = useSchema(crudTableName)
 
+watch(crudTableName, async (name) => {
+  if (!name || props.type !== 'create') return
+  await nextTick()
+  skipCrudWatch = true
+  crudFormData.value = generateCrudEmptyForm()
+  nextTick(() => { skipCrudWatch = false })
+})
+
 watch(crudFormData, (val) => {
   if (skipCrudWatch) return
   const cleaned = { ...val }
