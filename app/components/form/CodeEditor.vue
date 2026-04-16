@@ -101,8 +101,14 @@ watch(currentHeight, () => {
     containerRef.value.style.height = currentHeight.value;
   }
   nextTick(() => {
-    if (editorView.value) {
+    if (editorView.value && codeMirrorModules.value?.StateEffect) {
       editorView.value.requestMeasure();
+      if (extensions.value.length > 0) {
+        editorView.value.dispatch({
+          effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
+        });
+      }
+      editorView.value.dispatch({});
     }
   });
 });
@@ -124,7 +130,13 @@ function setupResizeObserver() {
     if (editorView.value && !isResizing.value) {
       if (resizeTimeout) clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        editorView.value?.requestMeasure();
+        if (!editorView.value) return;
+        editorView.value.requestMeasure();
+        if (codeMirrorModules.value?.StateEffect && extensions.value.length > 0) {
+          editorView.value.dispatch({
+            effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
+          });
+        }
       }, 100);
     }
   });
@@ -139,14 +151,15 @@ onMounted(async () => {
       containerRef.value.style.height = currentHeight.value;
     }
 
-    const stopWatch = watch(
+    let stopWatch: (() => void) | undefined;
+    stopWatch = watch(
       [extensions, editorRef],
       ([exts, ref]) => {
         if (editorView.value || !ref || exts.length === 0) return;
         createEditor(exts);
         if (!editorView.value) return;
         watchExtensions(extensions);
-        stopWatch();
+        stopWatch?.();
         nextTick(() => {
           if (editorRef.value) editorRef.value.style.height = "100%";
           setupResizeObserver();
@@ -277,8 +290,14 @@ function handleMouseUp(e?: MouseEvent) {
   }
   
   nextTick(() => {
-    if (editorView.value) {
+    if (editorView.value && codeMirrorModules.value?.StateEffect) {
       editorView.value.requestMeasure();
+      if (extensions.value.length > 0) {
+        editorView.value.dispatch({
+          effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
+        });
+      }
+      editorView.value.dispatch({});
     }
   });
 }

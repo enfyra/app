@@ -13,10 +13,27 @@ const cfg = computed(() => {
   return typeConfig[type as keyof typeof typeConfig] ?? typeConfig.info
 })
 
+const open = ref(false)
+
+watch(current, async (v) => {
+  if (v) {
+    await nextTick()
+    open.value = true
+  } else {
+    open.value = false
+  }
+})
+
+function handleClose() {
+  if (!open.value) return
+  open.value = false
+  setTimeout(() => dismiss(), 250)
+}
+
 function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter' && current.value) {
+  if (e.key === 'Enter' && open.value) {
     e.preventDefault()
-    dismiss()
+    handleClose()
   }
 }
 
@@ -32,14 +49,14 @@ onUnmounted(() => {
 <template>
   <UModal
     v-if="current"
-    :open="true"
+    v-model:open="open"
     :close="false"
     :overlay="true"
     :ui="{
       overlay: 'bg-black/20 backdrop-blur-[2px] z-[200]',
       content: ['surface-card w-full max-w-sm rounded-2xl shadow-xl ring-1 overflow-hidden z-[200]', cfg.ring],
     }"
-    @update:open="dismiss"
+    @update:open="(v) => { if (!v) handleClose() }"
   >
     <template #body>
       <div class="space-y-4">
@@ -61,7 +78,7 @@ onUnmounted(() => {
         </p>
 
         <div class="flex justify-end pt-1">
-          <UButton :color="cfg.color" @click="dismiss">
+          <UButton :color="cfg.color" @click="handleClose">
             Got it
           </UButton>
         </div>
