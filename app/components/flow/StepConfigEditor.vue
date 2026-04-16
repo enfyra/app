@@ -2,7 +2,7 @@
   <div class="space-y-3 w-full">
     <!-- Script -->
     <template v-if="type === 'script'">
-      <p class="text-[11px] text-[var(--text-tertiary)]">Must <code class="bg-[var(--surface-muted)] px-1 rounded">return</code> a value. Access repos via <code class="bg-[var(--surface-muted)] px-1 rounded">#table_name</code>, previous steps via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW.step_key</code>, input via <code class="bg-[var(--surface-muted)] px-1 rounded">@PAYLOAD</code>.</p>
+      <p class="text-[11px] text-[var(--text-tertiary)]">Must <code class="bg-[var(--surface-muted)] px-1 rounded">return</code> a value. Access repos via <code class="bg-[var(--surface-muted)] px-1 rounded">#table_name</code>, previous steps via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW.step_key</code>, input via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW_PAYLOAD</code>.</p>
       <UFormField label="Code" class="w-full">
         <FormCodeEditorLazy :model-value="fields.code" @update:model-value="update('code', $event)" language="javascript" :enfyra-autocomplete="true" height="220px" class="w-full" />
       </UFormField>
@@ -22,49 +22,87 @@
       <UFormField label="Table" class="w-full">
         <FlowTablePicker :model-value="fields.table" @update:model-value="onQueryTableChange($event)" />
       </UFormField>
-      <div v-if="fields.table && schemas && Object.keys(schemas).length > 0" class="w-full">
-        <p class="text-xs font-medium text-[var(--text-tertiary)] mb-2">Filter</p>
-        <FilterBuilder
-          v-model="queryFilter"
-          :schemas="schemas"
-          :table-name="fields.table"
-          @update:model-value="onFilterChange"
-        />
-      </div>
-      <div v-else-if="fields.table" class="w-full text-xs text-[var(--text-quaternary)] py-2">Loading schema...</div>
-      <div class="grid grid-cols-2 gap-3 w-full">
+      <div v-if="fields.table && schemas && Object.keys(schemas).length > 0" class="w-full space-y-2">
+        <div class="rounded-lg border border-[var(--border-default)] p-3">
+          <p class="text-xs font-semibold text-[var(--text-secondary)] mb-2">Fields</p>
+          <RouteFieldPickerNode
+            :schemas="schemas"
+            :table-name="fields.table"
+            prefix=""
+            :selected-fields="selectedQueryFields"
+            @toggle="toggleQueryField($event)"
+            @toggle-all="handleToggleAllFields($event)"
+          />
+        </div>
+        <div class="rounded-lg border border-[var(--border-default)] p-3">
+          <p class="text-xs font-semibold text-[var(--text-secondary)] mb-2">Filter</p>
+          <FilterBuilder
+            v-model="queryFilter"
+            :schemas="schemas"
+            :table-name="fields.table"
+            @update:model-value="onFilterChange"
+          />
+        </div>
+        <div class="rounded-lg border border-[var(--border-default)] p-3">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-xs font-semibold text-[var(--text-secondary)]">Sort</p>
+            <UButton size="xs" variant="ghost" icon="lucide:plus" @click="addSortRow">Add</UButton>
+          </div>
+          <div v-if="sortRows.length" class="space-y-1.5">
+            <div v-for="(row, idx) in sortRows" :key="idx" class="flex gap-2 items-center">
+              <USelect v-model="row.field" :items="queryColumnOptions" value-key="value" placeholder="Field" class="flex-1" size="sm" @update:model-value="onSortChange" />
+              <USelect v-model="row.dir" :items="[{label: 'Ascending', value: 'asc'}, {label: 'Descending', value: 'desc'}]" value-key="value" class="w-32" size="sm" @update:model-value="onSortChange" />
+              <UButton size="xs" variant="ghost" color="error" icon="lucide:x" class="flex-shrink-0" @click="sortRows.splice(idx, 1); onSortChange()" />
+            </div>
+          </div>
+          <p v-else class="text-xs text-[var(--text-quaternary)]">No sort rules</p>
+        </div>
         <UFormField label="Limit" class="w-full">
           <UInput :model-value="fields.limit" @update:model-value="updateNumber('limit', $event)" type="number" placeholder="10" class="w-full" />
         </UFormField>
-        <UFormField label="Fields" class="w-full">
-          <UInput :model-value="fields.fields" @update:model-value="update('fields', $event)" placeholder="id,name,email" class="w-full" />
-        </UFormField>
       </div>
+      <div v-else-if="fields.table" class="w-full text-xs text-[var(--text-quaternary)] py-2">Loading schema...</div>
     </template>
 
     <!-- Create -->
     <template v-else-if="type === 'create'">
       <p class="text-[11px] text-[var(--text-tertiary)]">Create a new record in a table.</p>
       <UFormField label="Table" class="w-full">
-        <FlowTablePicker :model-value="fields.table" @update:model-value="update('table', $event)" />
+        <FlowTablePicker :model-value="fields.table" @update:model-value="onCrudTableChange($event)" />
       </UFormField>
-      <UFormField label="Data" class="w-full">
-        <FormCodeEditorLazy :model-value="stringifyField('data')" @update:model-value="updateJson('data', $event)" language="json" height="140px" class="w-full" />
-      </UFormField>
+      <FormEditorLazy
+        v-if="fields.table"
+        v-model="crudFormData"
+        v-model:errors="crudErrors"
+        :table-name="fields.table"
+        :excluded="crudExcludedFields"
+        mode="create"
+      />
     </template>
 
     <!-- Update -->
     <template v-else-if="type === 'update'">
       <p class="text-[11px] text-[var(--text-tertiary)]">Update an existing record by ID.</p>
       <UFormField label="Table" class="w-full">
-        <FlowTablePicker :model-value="fields.table" @update:model-value="update('table', $event)" />
+        <FlowTablePicker :model-value="fields.table" @update:model-value="onCrudTableChange($event)" />
       </UFormField>
       <UFormField label="Record ID" class="w-full">
-        <UInput :model-value="fields.id" @update:model-value="update('id', $event)" placeholder="1" class="w-full" />
+        <UInput :model-value="fields.id" @update:model-value="update('id', $event)" placeholder="1 or @FLOW.step.result.id" class="w-full" />
       </UFormField>
-      <UFormField label="Data" class="w-full">
-        <FormCodeEditorLazy :model-value="stringifyField('data')" @update:model-value="updateJson('data', $event)" language="json" height="120px" class="w-full" />
-      </UFormField>
+      <div v-if="fields.table" class="rounded-lg border border-[var(--border-default)] p-3">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs font-semibold text-[var(--text-secondary)]">Fields</p>
+          <UButton size="xs" variant="ghost" icon="lucide:plus" @click="addUpdateRow">Add</UButton>
+        </div>
+        <div v-if="updateRows.length" class="space-y-1.5">
+          <div v-for="(row, idx) in updateRows" :key="idx" class="flex gap-2 items-center">
+            <USelect v-model="row.field" :items="queryColumnOptions" value-key="value" placeholder="Field" class="flex-1" size="sm" @update:model-value="onUpdateRowChange" />
+            <UInput v-model="row.value" placeholder="Value" class="flex-1 font-mono text-xs" size="sm" @update:model-value="onUpdateRowChange" />
+            <UButton size="xs" variant="ghost" color="error" icon="lucide:x" class="flex-shrink-0" @click="updateRows.splice(idx, 1); onUpdateRowChange()" />
+          </div>
+        </div>
+        <p v-else class="text-xs text-[var(--text-quaternary)]">No fields to update</p>
+      </div>
     </template>
 
     <!-- Delete -->
@@ -216,7 +254,10 @@ function onQueryTableChange(tableName: string) {
   const current = { ...fields.value };
   current.table = tableName;
   delete current.filter;
+  delete current.fields;
+  delete current.sort;
   queryFilter.value = createEmptyFilter();
+  sortRows.value = [];
   emit('update:configJson', JSON.stringify(current, null, 2));
 }
 
@@ -228,4 +269,143 @@ function onFilterChange(filter: FilterGroup) {
     update('filter', undefined);
   }
 }
+
+// --- Query: Field Picker ---
+const selectedQueryFields = computed<string[]>(() => {
+  const raw = fields.value.fields
+  if (!raw || typeof raw !== 'string') return []
+  return raw.split(',').map((f: string) => f.trim()).filter(Boolean)
+})
+
+function toggleQueryField(field: string) {
+  const current = [...selectedQueryFields.value]
+  const idx = current.indexOf(field)
+  if (idx >= 0) current.splice(idx, 1)
+  else current.push(field)
+  update('fields', current.length ? current.join(',') : undefined)
+}
+
+function handleToggleAllFields(prefix: string) {
+  const current = [...selectedQueryFields.value]
+  const matching = current.filter(f => f.startsWith(prefix + '.') || f === prefix)
+  if (matching.length > 0) {
+    const filtered = current.filter(f => !f.startsWith(prefix + '.') && f !== prefix)
+    update('fields', filtered.length ? filtered.join(',') : undefined)
+  }
+}
+
+// --- Query: Sort ---
+interface SortRow { field: string; dir: 'asc' | 'desc' }
+
+const sortRows = ref<SortRow[]>([])
+
+const queryColumnOptions = computed(() => {
+  if (!fields.value.table) return []
+  const allSchemas = schemas?.value ?? schemas
+  if (!allSchemas || !Object.keys(allSchemas).length) return []
+  const schema = allSchemas[fields.value.table]
+  if (!schema) return []
+  const def = schema.definition || []
+  const fkCols = new Set(
+    def.filter((f: any) => f.fieldType === 'relation' && f.foreignKeyColumn).map((f: any) => f.foreignKeyColumn)
+  )
+  return def
+    .filter((f: any) => f.fieldType === 'column' && f.name && !fkCols.has(f.name))
+    .map((f: any) => ({ label: f.name, value: f.name }))
+})
+
+function addSortRow() {
+  sortRows.value.push({ field: '', dir: 'asc' })
+}
+
+function onSortChange() {
+  const valid = sortRows.value.filter(r => r.field)
+  if (valid.length) {
+    update('sort', valid.map(r => `${r.dir === 'desc' ? '-' : '+'}${r.field}`))
+  } else {
+    update('sort', undefined)
+  }
+}
+
+function parseSortToRows(sort: any): SortRow[] {
+  if (!sort) return []
+  const arr = Array.isArray(sort) ? sort : []
+  return arr.map((s: string) => ({
+    field: s.startsWith('-') || s.startsWith('+') ? s.slice(1) : s,
+    dir: s.startsWith('-') ? 'desc' as const : 'asc' as const,
+  })).filter((r: SortRow) => r.field)
+}
+
+// --- CRUD: Create Form ---
+const crudErrors = ref<Record<string, string>>({})
+const crudExcludedFields = computed(() => ['id', '_id', 'createdAt', 'updatedAt', 'isSystem', 'isPublished'])
+const crudFormData = ref<Record<string, any>>({})
+let skipCrudWatch = false
+
+const crudTableName = computed(() => props.type === 'create' ? (fields.value.table || '') : '')
+const { generateEmptyForm: generateCrudEmptyForm } = useSchema(crudTableName)
+
+watch(crudFormData, (val) => {
+  if (skipCrudWatch) return
+  const cleaned = { ...val }
+  Object.keys(cleaned).forEach(k => {
+    if (cleaned[k] === undefined || cleaned[k] === null || cleaned[k] === '') delete cleaned[k]
+  })
+  update('data', Object.keys(cleaned).length ? cleaned : undefined)
+}, { deep: true })
+
+// --- CRUD: Update Rows ---
+interface UpdateRow { field: string; value: string }
+const updateRows = ref<UpdateRow[]>([])
+
+function addUpdateRow() {
+  updateRows.value.push({ field: '', value: '' })
+}
+
+function onUpdateRowChange() {
+  const data: Record<string, any> = {}
+  for (const r of updateRows.value) {
+    if (r.field && r.value !== '') {
+      data[r.field] = r.value
+    }
+  }
+  update('data', Object.keys(data).length ? data : undefined)
+}
+
+function parseDataToUpdateRows(data: any): UpdateRow[] {
+  if (!data || typeof data !== 'object') return []
+  return Object.entries(data).map(([field, value]) => ({
+    field,
+    value: String(value ?? ''),
+  }))
+}
+
+function onCrudTableChange(tableName: string) {
+  const current = { ...fields.value }
+  current.table = tableName
+  delete current.data
+  if (props.type === 'create') {
+    skipCrudWatch = true
+    crudFormData.value = generateCrudEmptyForm()
+    nextTick(() => { skipCrudWatch = false })
+  } else if (props.type === 'update') {
+    updateRows.value = []
+  }
+  emit('update:configJson', JSON.stringify(current, null, 2))
+}
+
+// --- Init from configJson ---
+watch(() => props.configJson, () => {
+  if (props.type === 'query') {
+    sortRows.value = parseSortToRows(fields.value.sort)
+  }
+  if (props.type === 'create') {
+    skipCrudWatch = true
+    crudFormData.value = fields.value.data ? JSON.parse(JSON.stringify(fields.value.data)) : generateCrudEmptyForm()
+    nextTick(() => { skipCrudWatch = false })
+  }
+  if (props.type === 'update') {
+    updateRows.value = fields.value.data ? parseDataToUpdateRows(fields.value.data) : []
+  }
+}, { immediate: true })
 </script>

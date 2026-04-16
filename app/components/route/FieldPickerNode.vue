@@ -94,12 +94,14 @@ function hasAnySelected(relName: string): boolean {
       >{{ col }}</UButton>
     </div>
 
-    <div v-for="rel in relations" :key="rel.name" class="rounded-lg border border-[var(--border-default)] overflow-hidden">
+    <div v-for="rel in relations" :key="rel.name" class="rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] overflow-hidden">
       <button
         type="button"
-        class="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs hover:bg-[var(--surface-muted)] transition-colors"
+        class="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs bg-neutral-200 dark:bg-neutral-900"
+        :class="[
+          rel.canExpand ? '' : 'cursor-default'
+        ]"
         @click="rel.canExpand && toggleExpand(rel.name)"
-        :class="{ 'cursor-default': !rel.canExpand }"
       >
         <UIcon
           v-if="rel.canExpand"
@@ -128,7 +130,7 @@ function hasAnySelected(relName: string): boolean {
         :class="expanded.has(rel.name) ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'"
       >
         <div class="overflow-hidden">
-          <div class="px-2.5 pb-2 pt-1.5 border-t border-[var(--border-default)]">
+          <div class="px-2.5 pb-2 pt-1.5 border-t border-[var(--border-default)] bg-[var(--surface-default)] rounded-b-lg">
             <FieldPickerNode
               :schemas="schemas"
               :table-name="rel.targetTable!"

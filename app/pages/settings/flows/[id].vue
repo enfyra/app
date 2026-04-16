@@ -107,8 +107,13 @@
 
     <CommonDrawer v-model="stepDrawerOpen" direction="right" full-width>
       <template #header>
-        <div class="flex items-center justify-between w-full">
-          <h3 class="text-lg font-semibold">{{ editingStepId ? 'Edit Step' : 'New Step' }}</h3>
+        <div class="flex items-center gap-2 w-full min-w-0">
+          <h3 class="text-lg font-semibold flex-shrink-0">{{ editingStepId ? 'Edit Step' : 'New Step' }}</h3>
+          <template v-if="stepForm.parentId">
+            <span class="text-[var(--text-quaternary)]">·</span>
+            <UBadge color="secondary" variant="soft" size="md">{{ getConditionLabel(stepForm.parentId) }}</UBadge>
+            <UBadge :color="stepForm.branch === 'true' ? 'success' : 'error'" variant="soft" size="md">{{ stepForm.branch === 'true' ? 'True' : 'False' }}</UBadge>
+          </template>
         </div>
       </template>
       <template #body>
@@ -146,13 +151,7 @@
             </UFormField>
           </div>
 
-          <div v-if="stepForm.parentId && !editingStepId" class="p-3 rounded-lg bg-[var(--surface-muted)] text-sm">
-            <span class="text-[var(--text-tertiary)]">Branch:</span>
-            <UBadge :color="stepForm.branch === 'true' ? 'success' : 'error'" variant="soft" size="xs" class="ml-2">{{ stepForm.branch }}</UBadge>
-            <span class="text-[var(--text-tertiary)] ml-2">of</span>
-            <span class="font-medium ml-1">{{ getConditionLabel(stepForm.parentId) }}</span>
-          </div>
-          <div v-else-if="conditionSteps.length > 0" class="grid grid-cols-2 gap-3">
+          <div v-if="!stepForm.parentId && conditionStepOptions.length > 1" class="grid grid-cols-2 gap-3">
             <UFormField label="Attach to Condition" class="w-full">
               <USelect v-model="stepForm.parentId" :items="conditionStepOptions" value-key="value" class="w-full" placeholder="None (root level)" />
             </UFormField>
@@ -164,10 +163,10 @@
       </template>
       <template #footer>
         <div class="w-full">
-          <div class="px-4 py-3 border-t border-[var(--border-default)]">
+          <div class="px-4 py-3">
             <UFormField label="Test Payload (optional)" class="w-full">
               <UTextarea v-model="testPayloadJson" :rows="2" class="w-full font-mono text-xs" placeholder='{"orderId": 123, "email": "test@test.com"}' />
-              <template #hint><span class="text-[10px]">Accessible via <code class="bg-[var(--surface-muted)] px-1 rounded">@PAYLOAD</code> in step code</span></template>
+              <template #hint><span class="text-[10px]">Accessible via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW_PAYLOAD</code> in step code</span></template>
             </UFormField>
           </div>
           <div v-if="testResult" class="px-4 py-3 border-t border-[var(--border-default)]">
@@ -281,7 +280,7 @@ const { getId, getIdFieldName } = useDatabase();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const flowId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
-const pollTimers: ReturnType<typeof setTimeout>[] = [];
+const { adminSocket } = useAdminSocket();
 const stepDrawerOpen = ref(false);
 const editingStepId = ref<string | number | null>(null);
 const savingStep = ref(false);
@@ -316,7 +315,9 @@ const flowFieldMap = computed(() => ({
 const conditionSteps = computed(() => steps.value.filter((s: any) => s.type === 'condition'));
 const conditionStepOptions = computed(() => [
   { label: 'None (root level)', value: null },
-  ...conditionSteps.value.map((s: any) => ({ label: s.key, value: getId(s) })),
+  ...conditionSteps.value
+    .filter((s: any) => !editingStepId.value || String(getId(s)) !== String(editingStepId.value))
+    .map((s: any) => ({ label: s.key, value: getId(s) })),
 ]);
 
 function getConditionLabel(parentId: any): string {
@@ -456,10 +457,11 @@ onMounted(async () => {
   await fetchExecutions();
   await refreshExecOverlay();
   syncEditForm();
+  adminSocket?.on('flow:execution', onFlowExecution);
 });
 
 onUnmounted(() => {
-  pollTimers.forEach(t => clearTimeout(t));
+  adminSocket?.off('flow:execution', onFlowExecution);
 });
 
 function syncEditForm() {
@@ -747,12 +749,15 @@ async function triggerFlow() {
   const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Trigger Flow" });
   await triggerApi({ body: { payload: { trigger: 'manual' } } });
   if (triggerError.value) return;
-  notify.success("Success", "Flow triggered!");
-  await refreshExecutions();
-  pollTimers.forEach(t => clearTimeout(t));
-  pollTimers.length = 0;
-  pollTimers.push(setTimeout(() => refreshExecutions(), 2000));
-  pollTimers.push(setTimeout(() => refreshExecutions(), 5000));
+  notify.success("Flow triggered");
+}
+
+function onFlowExecution(data: { flowId?: string | number; status: string; [key: string]: any }) {
+  const matchId = String(data.flowId ?? data.flow_id ?? data.id) === String(flowId)
+  if (!matchId) return
+  if (data.status === 'completed' || data.status === 'failed') {
+    refreshExecutions()
+  }
 }
 
 function getStatusColor(status: string) {
@@ -789,10 +794,8 @@ async function rerunExecution() {
   const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Re-run Flow" });
   await triggerApi({ body: { payload } });
   if (triggerError.value) return;
-  notify.success("Success", "Flow re-triggered with same payload!");
+  notify.success("Flow re-triggered");
   execDrawerOpen.value = false;
-  await refreshExecutions();
-  pollTimers.push(setTimeout(() => refreshExecutions(), 2000));
 }
 
 async function openExecution(exec: any) {
