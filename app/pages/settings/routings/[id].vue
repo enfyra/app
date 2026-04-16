@@ -295,6 +295,10 @@ watch(() => routeData.value?.data?.[0], (currentRoute) => {
       type: 'methods-selector',
       allowedMethodsKey: 'availableMethods'
     },
+    skipRoleGuardMethods: {
+      type: 'methods-selector',
+      allowedMethodsKey: 'availableMethods'
+    },
     availableMethods: {
       type: 'methods-selector'
     }
@@ -344,13 +348,15 @@ const mainTableColumns = computed(() => {
   return cols.map((c: any) => c.name || c.propertyName).filter(Boolean);
 });
 
-function filterPublishedToAvailable(body: Record<string, any>) {
+function filterDependentMethods(body: Record<string, any>) {
   const available = body.availableMethods || [];
   const availableSet = new Set(available.filter((m: any) => m?.method).map((m: any) => m.method));
-  if (Array.isArray(body.publishedMethods)) {
-    body.publishedMethods = availableSet.size > 0
-      ? body.publishedMethods.filter((m: any) => m?.method && availableSet.has(m.method))
-      : [];
+  for (const key of ['publishedMethods', 'skipRoleGuardMethods'] as const) {
+    if (Array.isArray(body[key])) {
+      body[key] = availableSet.size > 0
+        ? body[key].filter((m: any) => m?.method && availableSet.has(m.method))
+        : [];
+    }
   }
 }
 
@@ -367,7 +373,7 @@ async function updateRoute() {
   if (!form.value) return;
 
   const body = { ...form.value };
-  filterPublishedToAvailable(body);
+  filterDependentMethods(body);
 
   if (!await validateForm(body, errors)) return;
 
