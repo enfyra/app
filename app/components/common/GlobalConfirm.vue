@@ -33,6 +33,10 @@ onUnmounted(() => {
   <CommonModal
     v-model="isVisible"
     :handle="false"
+    :ui="{
+      overlay: 'z-[150]',
+      content: 'surface-card z-[150]',
+    }"
   >
       <template #title>
         <div class="flex items-center justify-between w-full">

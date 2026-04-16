@@ -14,6 +14,7 @@ const open = defineModel<boolean>("open", { required: true })
 const emit = defineEmits<{ changed: [] }>()
 
 const notify = useNotify()
+const { confirm } = useConfirm()
 const { getIdFieldName } = useDatabase()
 const { getId } = useDatabase()
 const { isMobile, isTablet } = useScreen()
@@ -48,8 +49,6 @@ const fieldPermSaving = ref(false)
 const fieldPermMode = ref<"create" | "update">("create")
 const editingFieldPermId = ref<string | null>(null)
 const deletingFieldPermId = ref<string | null>(null)
-const confirmDeleteFieldPermId = ref<string | null>(null)
-let confirmDeleteFieldPermTimer: ReturnType<typeof setTimeout> | null = null
 
 const { execute: createFieldPerm, pending: createFieldPermPending, error: createFieldPermError } = useApi(
   () => "/field_permission_definition",
@@ -124,22 +123,19 @@ async function quickDeleteFieldPerm(item: any) {
   if (isFieldPermBusy.value) return
   const id = String(getId(item))
 
-  if (confirmDeleteFieldPermId.value !== id) {
-    confirmDeleteFieldPermId.value = id
-    if (confirmDeleteFieldPermTimer) clearTimeout(confirmDeleteFieldPermTimer)
-    confirmDeleteFieldPermTimer = setTimeout(() => {
-      if (confirmDeleteFieldPermId.value === id) confirmDeleteFieldPermId.value = null
-      confirmDeleteFieldPermTimer = null
-    }, 4000)
-    return
-  }
+  const ok = await confirm({
+    title: "Delete Rule",
+    content: "Are you sure you want to delete this permission rule? This action cannot be undone.",
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  })
+  if (!ok) return
 
   deletingFieldPermId.value = id
   try {
     await deleteFieldPerm({ id })
     if (deleteFieldPermError.value) return
     notify.success("Rule deleted")
-    confirmDeleteFieldPermId.value = null
     await fetchFieldPerms()
     emit("changed")
   } finally {
@@ -305,14 +301,6 @@ watch(open, async (isOpen) => {
     await fetchFieldPerms()
   } else {
     viewMode.value = "list"
-    confirmDeleteFieldPermId.value = null
-  }
-})
-
-onUnmounted(() => {
-  if (confirmDeleteFieldPermTimer) {
-    clearTimeout(confirmDeleteFieldPermTimer)
-    confirmDeleteFieldPermTimer = null
   }
 })
 </script>
@@ -347,12 +335,7 @@ onUnmounted(() => {
             <div
               v-for="it in fieldPermItems"
               :key="`fp-${String(getId(it) ?? '')}`"
-              :class="[
-                'cursor-pointer transition-colors rounded-lg px-3',
-                String(getId(it)) === confirmDeleteFieldPermId
-                  ? 'border border-red-400/50 dark:border-red-500/50 bg-red-50/50 dark:bg-red-950/30'
-                  : 'border border-[var(--border-default)] hover:bg-[var(--surface-muted)]',
-              ]"
+              class="cursor-pointer transition-colors rounded-lg px-3 border border-[var(--border-default)] hover:bg-[var(--surface-muted)]"
               @click="openEditForm(it)"
             >
               <div class="flex items-start justify-between gap-3 py-3">
@@ -390,28 +373,15 @@ onUnmounted(() => {
                 </div>
 
                 <UButton
-                  v-if="String(getId(it)) !== confirmDeleteFieldPermId"
                   icon="lucide:trash-2"
                   variant="ghost"
                   color="error"
                   size="xs"
                   class="rounded-full !aspect-square flex-shrink-0"
-                  :disabled="isFieldPermBusy"
-                  @click.stop="quickDeleteFieldPerm(it)"
-                />
-                <UButton
-                  v-else
-                  icon="lucide:check"
-                  variant="solid"
-                  color="error"
-                  size="xs"
-                  class="rounded-full flex-shrink-0 gap-1 animate-pulse"
                   :loading="String(getId(it)) === deletingFieldPermId"
                   :disabled="isFieldPermBusy"
                   @click.stop="quickDeleteFieldPerm(it)"
-                >
-                  Sure?
-                </UButton>
+                />
               </div>
             </div>
           </div>

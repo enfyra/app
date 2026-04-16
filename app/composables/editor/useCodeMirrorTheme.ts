@@ -17,15 +17,13 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
     return isRef(codeMirrorModules) ? codeMirrorModules.value : codeMirrorModules
   })
 
-  const themeCompartmentRef = ref<any>(null)
-
-  watch(modules, (m) => {
-    if (m?.Compartment && !themeCompartmentRef.value) {
-      themeCompartmentRef.value = new m.Compartment()
-    }
-  }, { immediate: true })
-
-  const themeCompartment = computed(() => themeCompartmentRef.value)
+  let _compartment: any = null
+  const themeCompartment = computed(() => {
+    const m = modules.value
+    if (!m?.Compartment) return null
+    if (!_compartment) _compartment = new m.Compartment()
+    return _compartment
+  })
 
   const customTheme = computed(() => {
     const m = modules.value

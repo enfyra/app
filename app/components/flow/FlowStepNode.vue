@@ -119,8 +119,6 @@ const description = computed(() => {
   if (t === 'add') return 'Click to add a new step';
   if (t === 'script' || t === 'condition') return config.code?.substring(0, 60);
   if (t === 'query') return `Query ${config.table}`;
-  if (t === 'create') return `Create in ${config.table}`;
-  if (t === 'update') return `Update ${config.table}`;
   if (t === 'delete') return `Delete from ${config.table}`;
   if (t === 'http') return `${config.method || 'GET'} ${config.url?.substring(0, 40)}`;
   if (t === 'trigger_flow') return `Trigger: ${config.flowName || config.flowId}`;

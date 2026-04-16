@@ -64,47 +64,6 @@
       <div v-else-if="fields.table" class="w-full text-xs text-[var(--text-quaternary)] py-2">Loading schema...</div>
     </template>
 
-    <!-- Create -->
-    <template v-else-if="type === 'create'">
-      <p class="text-[11px] text-[var(--text-tertiary)]">Create a new record in a table.</p>
-      <UFormField label="Table" class="w-full">
-        <FlowTablePicker :model-value="fields.table" @update:model-value="onCrudTableChange($event)" />
-      </UFormField>
-      <FormEditorLazy
-        v-if="fields.table"
-        v-model="crudFormData"
-        v-model:errors="crudErrors"
-        :table-name="fields.table"
-        :excluded="crudExcludedFields"
-        mode="create"
-      />
-    </template>
-
-    <!-- Update -->
-    <template v-else-if="type === 'update'">
-      <p class="text-[11px] text-[var(--text-tertiary)]">Update an existing record by ID.</p>
-      <UFormField label="Table" class="w-full">
-        <FlowTablePicker :model-value="fields.table" @update:model-value="onCrudTableChange($event)" />
-      </UFormField>
-      <UFormField label="Record ID" class="w-full">
-        <UInput :model-value="fields.id" @update:model-value="update('id', $event)" placeholder="1 or @FLOW.step.result.id" class="w-full" />
-      </UFormField>
-      <div v-if="fields.table" class="rounded-lg border border-[var(--border-default)] p-3">
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-xs font-semibold text-[var(--text-secondary)]">Fields</p>
-          <UButton size="xs" variant="ghost" icon="lucide:plus" @click="addUpdateRow">Add</UButton>
-        </div>
-        <div v-if="updateRows.length" class="space-y-1.5">
-          <div v-for="(row, idx) in updateRows" :key="idx" class="flex gap-2 items-center">
-            <USelect v-model="row.field" :items="queryColumnOptions" value-key="value" placeholder="Field" class="flex-1" size="sm" @update:model-value="onUpdateRowChange" />
-            <UInput v-model="row.value" placeholder="Value" class="flex-1 font-mono text-xs" size="sm" @update:model-value="onUpdateRowChange" />
-            <UButton size="xs" variant="ghost" color="error" icon="lucide:x" class="flex-shrink-0" @click="updateRows.splice(idx, 1); onUpdateRowChange()" />
-          </div>
-        </div>
-        <p v-else class="text-xs text-[var(--text-quaternary)]">No fields to update</p>
-      </div>
-    </template>
-
     <!-- Delete -->
     <template v-else-if="type === 'delete'">
       <p class="text-[11px] text-[var(--text-tertiary)]">Delete a record by ID.</p>
@@ -136,11 +95,12 @@
     <!-- Trigger Flow -->
     <template v-else-if="type === 'trigger_flow'">
       <p class="text-[11px] text-[var(--text-tertiary)]">Trigger another flow asynchronously.</p>
-      <UFormField label="Flow Name" class="w-full">
+      <UFormField label="Flow Name" required class="w-full">
         <UInput :model-value="fields.flowName" @update:model-value="update('flowName', $event)" placeholder="send-welcome-email" class="w-full" />
       </UFormField>
-      <UFormField label="Or Flow ID" class="w-full">
-        <UInput :model-value="fields.flowId" @update:model-value="updateNumber('flowId', $event)" type="number" placeholder="2" class="w-full" />
+      <UFormField label="Payload" class="w-full">
+        <FormCodeEditorLazy :model-value="stringifyField('payload')" @update:model-value="updateJson('payload', $event)" language="json" height="120px" class="w-full" />
+        <template #hint><span class="text-[10px]">Accessible via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW_PAYLOAD</code> in target flow steps</span></template>
       </UFormField>
     </template>
 
@@ -336,84 +296,10 @@ function parseSortToRows(sort: any): SortRow[] {
   })).filter((r: SortRow) => r.field)
 }
 
-// --- CRUD: Create Form ---
-const crudErrors = ref<Record<string, string>>({})
-const crudExcludedFields = computed(() => ['id', '_id', 'createdAt', 'updatedAt', 'isSystem', 'isPublished'])
-const crudFormData = ref<Record<string, any>>({})
-let skipCrudWatch = false
-
-const crudTableName = computed(() => props.type === 'create' ? (fields.value.table || '') : '')
-const { generateEmptyForm: generateCrudEmptyForm } = useSchema(crudTableName)
-
-watch(crudTableName, async (name) => {
-  if (!name || props.type !== 'create') return
-  await nextTick()
-  skipCrudWatch = true
-  crudFormData.value = generateCrudEmptyForm()
-  nextTick(() => { skipCrudWatch = false })
-})
-
-watch(crudFormData, (val) => {
-  if (skipCrudWatch) return
-  const cleaned = { ...val }
-  Object.keys(cleaned).forEach(k => {
-    if (cleaned[k] === undefined || cleaned[k] === null || cleaned[k] === '') delete cleaned[k]
-  })
-  update('data', Object.keys(cleaned).length ? cleaned : undefined)
-}, { deep: true })
-
-// --- CRUD: Update Rows ---
-interface UpdateRow { field: string; value: string }
-const updateRows = ref<UpdateRow[]>([])
-
-function addUpdateRow() {
-  updateRows.value.push({ field: '', value: '' })
-}
-
-function onUpdateRowChange() {
-  const data: Record<string, any> = {}
-  for (const r of updateRows.value) {
-    if (r.field && r.value !== '') {
-      data[r.field] = r.value
-    }
-  }
-  update('data', Object.keys(data).length ? data : undefined)
-}
-
-function parseDataToUpdateRows(data: any): UpdateRow[] {
-  if (!data || typeof data !== 'object') return []
-  return Object.entries(data).map(([field, value]) => ({
-    field,
-    value: String(value ?? ''),
-  }))
-}
-
-function onCrudTableChange(tableName: string) {
-  const current = { ...fields.value }
-  current.table = tableName
-  delete current.data
-  if (props.type === 'create') {
-    skipCrudWatch = true
-    crudFormData.value = generateCrudEmptyForm()
-    nextTick(() => { skipCrudWatch = false })
-  } else if (props.type === 'update') {
-    updateRows.value = []
-  }
-  emit('update:configJson', JSON.stringify(current, null, 2))
-}
-
 // --- Init from configJson ---
 watch(() => props.configJson, () => {
   if (props.type === 'query') {
     sortRows.value = parseSortToRows(fields.value.sort)
-  }
-  if (props.type === 'create') {
-    skipCrudWatch = true
-    crudFormData.value = fields.value.data ? JSON.parse(JSON.stringify(fields.value.data)) : generateCrudEmptyForm()
-    nextTick(() => { skipCrudWatch = false })
-  }
-  if (props.type === 'update') {
-    updateRows.value = fields.value.data ? parseDataToUpdateRows(fields.value.data) : []
   }
 }, { immediate: true })
 </script>

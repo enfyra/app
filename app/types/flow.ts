@@ -1,4 +1,4 @@
-export type StepType = 'script' | 'condition' | 'query' | 'create' | 'update' | 'delete' | 'http' | 'trigger_flow' | 'sleep' | 'log';
+export type StepType = 'script' | 'condition' | 'query' | 'delete' | 'http' | 'trigger_flow' | 'sleep' | 'log';
 export type StepErrorHandling = 'stop' | 'skip' | 'retry';
 export type TriggerType = 'schedule' | 'manual';
 export type BranchType = 'true' | 'false' | null;

@@ -14,7 +14,6 @@ const errors = ref<Record<string, string>>({});
 
 const { generateEmptyForm, validate } = useSchema("column_definition");
 const { deleteIds, getIdFieldName, isMongoDB } = useDatabase();
-const showCloseConfirm = ref(false);
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const localColumnsWithKeys = computed(() => columns.value.map((c: any, i: number) => ({ ...c, _localKey: i })));
@@ -78,13 +77,16 @@ function handleShieldClick(column: any) {
   }
 }
 
-function handleDrawerClose() {
-  
-  if (hasFormChanges.value) {
-    showCloseConfirm.value = true;
-    
-    isEditing.value = true;
-  }
+async function handleDrawerClose() {
+  if (!hasFormChanges.value) return;
+  isEditing.value = true;
+  const ok = await confirm({
+    title: "Unsaved Changes",
+    content: "You have unsaved changes to this column. Are you sure you want to close? All changes will be lost.",
+    confirmText: "Discard Changes",
+    cancelText: "Cancel",
+  });
+  if (ok) discardChanges();
 }
 
 function cancelDrawer() {
@@ -92,11 +94,8 @@ function cancelDrawer() {
 }
 
 function discardChanges() {
-  
   formEditorRef.value?.confirmChanges();
-  
   errors.value = {};
-  showCloseConfirm.value = false;
   isEditing.value = false;
   isNew.value = false;
   currentColumn.value = null;
@@ -605,31 +604,5 @@ watch(
         </div>
       </template>
     </CommonDrawer>
-
-    <CommonModal 
-      v-model="showCloseConfirm" 
-      :handle="false"
-    >
-      <template #title>
-        <div class="text-lg font-semibold">Unsaved Changes</div>
-      </template>
-      <template #body>
-        <div class="space-y-4">
-          <p class="text-sm text-[var(--text-secondary)] text-center">
-            You have unsaved changes to this column. Are you sure you want to close? All changes will be lost.
-          </p>
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2 w-full">
-          <UButton variant="ghost" @click="showCloseConfirm = false">
-            Cancel
-          </UButton>
-          <UButton @click="discardChanges">
-            Discard Changes
-          </UButton>
-        </div>
-      </template>
-    </CommonModal>
 
 </template>

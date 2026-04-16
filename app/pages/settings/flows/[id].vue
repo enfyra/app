@@ -119,7 +119,7 @@
       <template #body>
         <div class="p-4 space-y-4">
           <UFormField label="Key" required class="w-full" :error="stepErrors.key">
-            <UInput v-model="stepForm.key" placeholder="e.g. check_user" class="w-full" :color="stepErrors.key ? 'error' : undefined" @input="stepErrors.key = ''" />
+            <UInput v-model="stepForm.key" placeholder="e.g. check_user" class="w-full" />
             <template #hint><span class="text-[10px]">Reference via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW.{{ stepForm.key || 'key' }}</code></span></template>
           </UFormField>
 
@@ -130,7 +130,7 @@
           </UFormField>
 
           <UFormField label="Type" required class="w-full" :error="stepErrors.type">
-            <USelect v-model="stepForm.type" :items="stepTypeOptions" value-key="value" class="w-full" :color="stepErrors.type ? 'error' : undefined" />
+            <USelect v-model="stepForm.type" :items="stepTypeOptions" value-key="value" class="w-full" />
           </UFormField>
 
           <div class="p-3 rounded-lg border" :class="stepErrors.config ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-800' : 'bg-[var(--surface-muted)] border-[var(--border-default)]'">
@@ -336,6 +336,13 @@ const stepForm = ref({
   retryAttempts: 0,
   parentId: null as any,
   branch: undefined as string | undefined,
+});
+
+watch(() => stepForm.value.key, () => {
+  if (stepErrors.value.key) stepErrors.value.key = '';
+});
+watch(() => stepForm.value.type, () => {
+  if (stepErrors.value.type) stepErrors.value.type = '';
 });
 
 registerPageHeader({ title: "Flow Editor", gradient: "purple" });
