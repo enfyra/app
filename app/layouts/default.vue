@@ -31,18 +31,18 @@
 
       <Transition name="metadata-banner">
         <div
-          v-if="showMetadataBanner"
+          v-if="showReloadBanner"
           key="metadata-banner"
           class="shrink-0 overflow-hidden"
         >
           <UBanner
-            :color="isMetadataReloading ? 'neutral' : 'primary'"
-            :icon="isMetadataReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
-            :title="isMetadataReloading ? 'Loading metadata…' : `Metadata updated (${metadataReloadCountdown}s)`"
-            :close="!isMetadataReloading"
+            color="neutral"
+            :icon="isReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
+            :title="bannerTitle"
+            :close="!isReloading"
             class="border-b border-[var(--border-default)] shrink-0 opacity-90"
-            :ui="{ icon: isMetadataReloading ? 'animate-spin' : '' }"
-            @close="dismissMetadataBanner"
+            :ui="{ icon: isReloading ? 'animate-spin' : '' }"
+            @close="dismissReloadBanner"
           />
         </div>
       </Transition>
@@ -78,7 +78,13 @@
 </template>
 
 <script setup lang="ts">
-import { metadataReloading, metadataReloadDone, metadataReloadCountdown, dismissMetadataBanner } from '~/composables/shared/useAdminSocket';
+import {
+  isReloading,
+  showReloadBanner,
+  reloadLabels,
+  reloadDoneCountdown,
+  dismissReloadBanner,
+} from '~/composables/shared/useAdminSocket';
 
 await useInitialData();
 await useMenuInit();
@@ -95,6 +101,13 @@ const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
 
 const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
 
-const showMetadataBanner = computed(() => metadataReloading.value || metadataReloadDone.value);
-const isMetadataReloading = computed(() => metadataReloading.value);
+const bannerTitle = computed(() => {
+  if (isReloading.value) {
+    const labels = reloadLabels.value;
+    if (labels.length === 0) return 'Reloading…';
+    if (labels.length === 1) return `Reloading ${labels[0]}…`;
+    return `Reloading ${labels.join(', ')}…`;
+  }
+  return `Reload complete (${reloadDoneCountdown.value}s)`;
+});
 </script>

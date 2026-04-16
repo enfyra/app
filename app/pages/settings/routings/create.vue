@@ -7,7 +7,7 @@
             v-model="createForm"
             :table-name="tableName"
             v-model:errors="createErrors"
-            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks']"
+            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards']"
             :field-map="fieldMap"
             mode="create"
           />
