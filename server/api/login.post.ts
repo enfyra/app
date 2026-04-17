@@ -31,9 +31,17 @@ export default defineEventHandler(async (event) => {
 
     const { accessToken, refreshToken, expTime } = response;
 
-    setCookie(event, ACCESS_TOKEN_KEY, accessToken);
-    setCookie(event, REFRESH_TOKEN_KEY, refreshToken);
-    setCookie(event, EXP_TIME_KEY, String(expTime));
+    const isDev = process.dev;
+    const cookieOptions = {
+      httpOnly: true,
+      secure: !isDev,
+      sameSite: "lax" as const,
+      path: "/",
+    };
+
+    setCookie(event, ACCESS_TOKEN_KEY, accessToken, cookieOptions);
+    setCookie(event, REFRESH_TOKEN_KEY, refreshToken, cookieOptions);
+    setCookie(event, EXP_TIME_KEY, String(expTime), cookieOptions);
 
     return response;
   } catch (err: any) {
