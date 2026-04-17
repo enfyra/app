@@ -6,11 +6,13 @@ interface CorsCache {
 }
 
 const CACHE_TTL = 5 * 60 * 1000;
+const ERROR_COOLDOWN = 30 * 1000;
 
 let cachedCorsData: CorsCache = {
   origins: [],
   timestamp: 0,
 };
+let lastFetchError = 0;
 
 async function fetchAllowedOrigins(): Promise<string[]> {
   try {
@@ -42,6 +44,7 @@ async function fetchAllowedOrigins(): Promise<string[]> {
       .map((row: any) => row.value.trim())
       .filter((v: string) => v.length > 0);
   } catch (error: any) {
+    lastFetchError = Date.now();
     console.error('[CORS] Error fetching origins:', error.message);
     return [];
   }
@@ -50,12 +53,13 @@ async function fetchAllowedOrigins(): Promise<string[]> {
 export async function getValidatedOrigins(): Promise<string[]> {
   const now = Date.now();
   const isCacheExpired = now - cachedCorsData.timestamp > CACHE_TTL;
-  
-  if (isCacheExpired || cachedCorsData.origins.length === 0) {
+  const inErrorCooldown = now - lastFetchError < ERROR_COOLDOWN;
+
+  if (isCacheExpired && !inErrorCooldown) {
     const origins = await fetchAllowedOrigins();
     cachedCorsData = { origins, timestamp: now };
   }
-  
+
   return cachedCorsData.origins;
 }
 
