@@ -31,10 +31,9 @@ export default defineEventHandler(async (event) => {
 
     const { accessToken, refreshToken, expTime } = response;
 
-    const isDev = process.dev;
     const cookieOptions = {
       httpOnly: true,
-      secure: !isDev,
+      secure: !process.dev,
       sameSite: "lax" as const,
       path: "/",
     };
