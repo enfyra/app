@@ -1,72 +1,69 @@
 <template>
-  <div
-    class="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden bg-[var(--surface-chrome)]"
-    role="main"
-    aria-labelledby="error-title"
-  >
-    
-    <div class="absolute inset-0 opacity-5 dark:opacity-10">
-      <div class="absolute inset-0" style="background-image: radial-gradient(circle, #000 1px, transparent 1px); background-size: 24px 24px;"></div>
-        </div>
-
-    <div class="relative mx-auto w-full max-w-[472px] text-center z-10">
+  <NuxtLayout>
+    <div
+      class="relative flex flex-col items-center justify-center min-h-[calc(100vh-var(--header-height,64px)-var(--subheader-height,0px))] p-6 overflow-hidden"
+      role="main"
+      aria-labelledby="error-title"
+    >
+      <div class="relative mx-auto w-full max-w-[472px] text-center">
         <h1
           id="error-title"
-        class="mb-8 font-bold text-[var(--text-primary)] text-title-md xl:text-title-2xl"
+          class="mb-8 font-bold text-[var(--text-primary)] text-title-md xl:text-title-2xl"
           aria-live="assertive"
         >
           {{ error.statusCode || "500" }}
         </h1>
 
-      <div class="flex justify-center mb-6">
-        <div v-if="error.statusCode === 403" class="w-32 h-32 flex items-center justify-center">
-          <UIcon name="lucide:shield-x" class="w-full h-full text-error-500" />
+        <div class="flex justify-center mb-6">
+          <div v-if="error.statusCode === 403" class="w-32 h-32 flex items-center justify-center">
+            <UIcon name="lucide:shield-x" class="w-full h-full text-error-500" />
+          </div>
+          <div v-else-if="error.statusCode === 404" class="w-64 h-64 flex items-center justify-center">
+            <UIcon name="lucide:file-question" class="w-full h-full text-[var(--text-quaternary)]" />
+          </div>
+          <div v-else class="w-32 h-32 flex items-center justify-center">
+            <UIcon name="lucide:alert-circle" class="w-full h-full text-error-500" />
+          </div>
         </div>
-        <div v-else-if="error.statusCode === 404" class="w-64 h-64 flex items-center justify-center">
-          <UIcon name="lucide:file-question" class="w-full h-full text-[var(--text-quaternary)]" />
-        </div>
-        <div v-else class="w-32 h-32 flex items-center justify-center">
-          <UIcon name="lucide:alert-circle" class="w-full h-full text-error-500" />
-        </div>
-      </div>
 
-      <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-2">
+        <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-2">
           {{ error.statusMessage || "Server Error" }}
         </h2>
 
-      <p
-        class="mt-4 mb-8 text-base text-[var(--text-tertiary)] sm:text-lg max-w-md mx-auto"
-        role="alert"
-      >
+        <p
+          class="mt-4 mb-8 text-base text-[var(--text-tertiary)] sm:text-lg max-w-md mx-auto"
+          role="alert"
+        >
           {{ errorDescription }}
         </p>
 
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
-        <UButton
-          icon="lucide:home"
-          size="lg"
-          variant="solid"
-          color="primary"
-          @click="handleError"
-          aria-label="Go back to homepage"
-          class="w-full sm:w-auto"
-        >
-          Back to Home Page
-        </UButton>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <UButton
+            icon="lucide:home"
+            size="lg"
+            variant="solid"
+            color="primary"
+            @click="handleError"
+            aria-label="Go back to homepage"
+            class="w-full sm:w-auto"
+          >
+            Back to Home Page
+          </UButton>
 
           <UButton
-          variant="outline"
+            variant="outline"
             icon="lucide:refresh-cw"
-          size="lg"
+            size="lg"
             @click="refresh"
             aria-label="Refresh the page"
-          class="w-full sm:w-auto"
+            class="w-full sm:w-auto"
           >
             Try Again
           </UButton>
+        </div>
       </div>
     </div>
-  </div>
+  </NuxtLayout>
 </template>
 
 <script setup lang="ts">

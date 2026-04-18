@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
 
     const cookieOptions = {
       httpOnly: true,
-      secure: !process.dev,
+      secure: !import.meta.dev,
       sameSite: "lax" as const,
       path: "/",
     };
