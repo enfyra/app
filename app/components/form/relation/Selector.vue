@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { resolveRelationDetailPath } from '~/utils/relation-detail-paths';
+
 const props = defineProps<{
   relationMeta: any;
   selectedIds: any[];
@@ -119,12 +121,17 @@ function apply() {
 }
 
 async function navigateToDetail(item: any) {
+  if (!targetTableName.value) return;
+
+  const url = resolveRelationDetailPath(targetTableName.value, item);
+  if (url) {
+    await navigateTo(url);
+    return;
+  }
+
   const itemId = getId(item);
-  if (!itemId || !targetTableName.value) return;
-  const url =
-    getDetailPathForTable(targetTableName.value, itemId) ??
-    `/data/${targetTableName.value}/${itemId}`;
-  await navigateTo(url);
+  if (!itemId) return;
+  await navigateTo(`/data/${targetTableName.value}/${itemId}`);
 }
 
 async function handleFilterApply(filter: FilterGroup) {
