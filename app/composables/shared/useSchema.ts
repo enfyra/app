@@ -6,6 +6,7 @@ import type {
   FormChangesState,
   ColumnType,
 } from "~/types/database";
+import { getForeignKeyColumnSet } from "~/utils/schema";
 
 const TIMESTAMP_FIELDS: { name: string; type: ColumnType }[] = [
   { name: "createdAt", type: "timestamp" },
@@ -130,12 +131,7 @@ export function useSchema(tableName?: string | Ref<string>) {
   const editableFields = computed(() => {
     const excluded = [getIdFieldName(), "createdAt", "updatedAt", "isSystem", "isRootAdmin"];
 
-    const foreignKeyColumns = new Set<string>();
-    definition.value.forEach((field: any) => {
-      if (field.fieldType === "relation" && field.foreignKeyColumn) {
-        foreignKeyColumns.add(field.foreignKeyColumn);
-      }
-    });
+    const foreignKeyColumns = getForeignKeyColumnSet(definition.value);
 
     return sortFieldsByOrder(
       definition.value.filter(f => {
@@ -191,12 +187,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     const errors: Record<string, string> = {};
     let isValid = true;
 
-    const foreignKeyColumns = new Set<string>();
-    definition.value.forEach((field: any) => {
-      if (field.fieldType === "relation" && field.foreignKeyColumn) {
-        foreignKeyColumns.add(field.foreignKeyColumn);
-      }
-    });
+    const foreignKeyColumns = getForeignKeyColumnSet(definition.value);
 
     for (const [key, value] of Object.entries(record)) {
       if (foreignKeyColumns.has(key)) continue;
@@ -241,8 +232,9 @@ export function useSchema(tableName?: string | Ref<string>) {
   function getColumnFields(): string {
     if (!definition.value.length) return "*";
 
+    const foreignKeyColumns = getForeignKeyColumnSet(definition.value);
     const columnFields = definition.value
-      .filter(f => f.fieldType === "column")
+      .filter(f => f.fieldType === "column" && f.name && !foreignKeyColumns.has(f.name))
       .map(f => f.name)
       .filter(Boolean);
 

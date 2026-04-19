@@ -1,3 +1,13 @@
+export function getForeignKeyColumnSet(definition: any[]): Set<string> {
+  const set = new Set<string>();
+  for (const field of definition) {
+    if (field?.fieldType === "relation" && field.foreignKeyColumn) {
+      set.add(field.foreignKeyColumn);
+    }
+  }
+  return set;
+}
+
 export function getTargetTableName(
   relation: any,
   schemas?: Record<string, any>

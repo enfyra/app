@@ -297,17 +297,17 @@ async function removeRelation(index: number) {
     <div
       v-for="(rel, index) in relations"
       :key="rel.id ?? index"
-      class="flex items-center justify-between rounded-lg border border-muted lg:hover:bg-muted/50 transition"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-muted lg:hover:bg-muted/50 transition cursor-pointer"
+      @click="editRelation(rel, index)"
     >
-      <div
-        class="flex items-center gap-2 flex-1 cursor-pointer px-4 py-3"
-        @click="editRelation(rel, index)"
-      >
-        <UIcon name="lucide:link" class="w-4 h-4 text-muted-foreground" />
-        <span class="text-sm font-medium">
+      <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
+        <UIcon name="lucide:link" class="w-4 h-4 text-muted-foreground shrink-0" />
+        <span class="text-sm font-medium truncate flex-1 min-w-0" :title="rel.propertyName || 'Unnamed'">
           {{ rel.propertyName || "Unnamed" }}
         </span>
+      </div>
 
+      <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
         <UBadge v-if="isInverseRelation(rel)" size="xs" variant="soft" color="warning">inverse</UBadge>
         <UBadge size="xs" color="info" v-if="rel.type">{{ rel.type }}</UBadge>
         <UBadge size="xs" color="info" v-if="rel.targetTable || rel.targetTableName">
@@ -336,7 +336,7 @@ async function removeRelation(index: number) {
         </UBadge>
       </div>
 
-      <div class="flex items-center gap-1 mr-2">
+      <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
         <UTooltip v-if="getId(rel) && !isInverseRelation(rel)" :text="rel.isPublished ? 'Published' : 'Unpublished'">
           <UButton
             :icon="rel.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
@@ -370,13 +370,18 @@ async function removeRelation(index: number) {
     <div
       v-for="incoming in incomingRelations"
       :key="'incoming-' + incoming.id"
-      class="flex items-center justify-between rounded-lg border border-dashed border-muted opacity-60 hover:opacity-100 transition"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-dashed border-muted opacity-60 hover:opacity-100 transition"
     >
-      <div class="flex items-center gap-2 flex-1 px-4 py-3">
-        <UIcon name="lucide:arrow-down-left" class="w-4 h-4 text-muted-foreground" />
-        <span class="text-sm text-muted-foreground">
+      <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
+        <UIcon name="lucide:arrow-down-left" class="w-4 h-4 text-muted-foreground shrink-0" />
+        <span
+          class="text-sm text-muted-foreground truncate flex-1 min-w-0"
+          :title="`${incoming.sourceTable?.name ?? 'unknown'}.${incoming.propertyName}`"
+        >
           {{ incoming.sourceTable?.name ?? 'unknown' }}.{{ incoming.propertyName }}
         </span>
+      </div>
+      <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
         <UBadge size="xs" variant="soft" color="neutral">{{ incoming.type }}</UBadge>
         <UBadge size="xs" variant="soft" color="neutral">incoming</UBadge>
       </div>
@@ -386,7 +391,7 @@ async function removeRelation(index: number) {
         color="primary"
         variant="soft"
         size="xs"
-        class="mr-2"
+        class="shrink-0 order-2 lg:order-3"
         @click.stop="openInverseModal(incoming)"
       />
     </div>

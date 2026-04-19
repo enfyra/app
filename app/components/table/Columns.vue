@@ -42,6 +42,18 @@ function openPermModal(column: any) {
   showPermModal.value = true;
 }
 
+const showRuleModal = ref(false);
+const ruleModalTarget = ref<{ id: string; name: string; type: string }>({ id: "", name: "", type: "" });
+
+function openRuleModal(column: any) {
+  ruleModalTarget.value = {
+    id: String(getId(column)),
+    name: column.name || "Unnamed",
+    type: column.type || "varchar",
+  };
+  showRuleModal.value = true;
+}
+
 const {
   data: permRefreshData,
   execute: refreshColumnPerms,
@@ -74,6 +86,14 @@ function handleShieldClick(column: any) {
     openPermModal(column);
   } else {
     notify.info("Field Permissions", "You can add field permissions after saving the collection.");
+  }
+}
+
+function handleRuleClick(column: any) {
+  if (getId(column)) {
+    openRuleModal(column);
+  } else {
+    notify.info("Column Rules", "You can add validation rules after saving the collection.");
   }
 }
 
@@ -416,18 +436,17 @@ watch(
     <div
       v-for="(column, index) in columns"
       :key="column.id ?? index"
-      class="flex items-center justify-between rounded-lg border border-muted lg:hover:bg-muted/50 transition"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-muted lg:hover:bg-muted/50 transition cursor-pointer"
+      @click="editColumn(column, index)"
     >
-      
-      <div
-        class="flex items-center gap-2 flex-1 cursor-pointer px-4 py-3"
-        @click="editColumn(column, index)"
-      >
-        <UIcon name="lucide:type" class="w-4 h-4 text-muted-foreground" />
-        <span class="text-sm font-medium">
+      <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
+        <UIcon name="lucide:type" class="w-4 h-4 text-muted-foreground shrink-0" />
+        <span class="text-sm font-medium truncate flex-1 min-w-0" :title="column.name || 'Unnamed'">
           {{ column.name || "Unnamed" }}
         </span>
+      </div>
 
+      <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
         <UBadge size="xs" color="info" v-if="column.type">
           {{ column.type }}
         </UBadge>
@@ -452,7 +471,7 @@ watch(
         </UBadge>
       </div>
 
-      <div class="flex items-center gap-1 mr-2">
+      <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
         <UTooltip v-if="getId(column) && column.name !== getIdFieldName()" :text="column.isPublished ? 'Published' : 'Unpublished'">
           <UButton
             :icon="column.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
@@ -472,6 +491,16 @@ watch(
           class="lg:hover:cursor-pointer"
           @click.stop="handleShieldClick(column)"
         />
+        <UTooltip v-if="column.name !== getIdFieldName()" text="Validation rules">
+          <UButton
+            icon="lucide:ruler"
+            color="info"
+            variant="ghost"
+            size="xs"
+            class="lg:hover:cursor-pointer"
+            @click.stop="handleRuleClick(column)"
+          />
+        </UTooltip>
         <UButton
           icon="lucide:trash"
           color="error"
@@ -501,6 +530,13 @@ watch(
     :target-name="permModalTarget.name"
     :baseline="permModalTarget.baseline"
     @changed="onPermChanged"
+  />
+
+  <ColumnRuleManageModal
+    v-model:open="showRuleModal"
+    :column-id="ruleModalTarget.id"
+    :column-name="ruleModalTarget.name"
+    :column-type="ruleModalTarget.type"
   />
 
   <CommonDrawer
@@ -563,6 +599,7 @@ watch(
                 'isPrimary',
                 'table',
                 'fieldPermissions',
+                'rules',
               ]"
               :field-map="typeMap"
             />
