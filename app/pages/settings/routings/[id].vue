@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1200px] lg:max-w-[1200px] md:w-full space-y-6">
+    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
       <CommonFormCard v-if="mainTableInfo">
         <template #header>
           <div class="flex items-center gap-2">
@@ -43,6 +43,30 @@
             :field-map="typeMap"
             :loading="loading"
           />
+
+          <div
+            class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
+          >
+            <UButton
+              v-if="hasFormChanges"
+              label="Reset"
+              icon="lucide:rotate-ccw"
+              variant="outline"
+              color="warning"
+              :disabled="!hasFormChanges"
+              @click="handleReset"
+            />
+            <UButton
+              v-if="canUpdateRoute"
+              label="Save"
+              icon="lucide:save"
+              variant="solid"
+              color="primary"
+              type="submit"
+              :loading="updateLoading"
+              :disabled="!hasFormChanges"
+            />
+          </div>
         </UForm>
       </CommonFormCard>
 
@@ -157,11 +181,12 @@
 <script setup lang="ts">
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { routes, loadRoutes } = useRoutes();
 const { retryUntilFresh } = useServerSync();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
+const idField = getIdFieldName();
 
 const tableName = "route_definition";
 const hasFormChanges = ref(false);
@@ -186,19 +211,14 @@ const typeMap = ref<Record<string, any>>({});
 
 const routeId = computed(() => route.params.id as string);
 
+const { checkPermissionCondition } = usePermissions();
+const canUpdateRoute = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: "/route_definition", actions: ["update"] }],
+  })
+);
+
 useHeaderActionRegistry([
-  {
-    id: "reset-routing",
-    label: "Reset",
-    icon: "lucide:rotate-ccw",
-    variant: "outline",
-    color: "warning",
-    size: "md",
-    order: 1,
-    disabled: computed(() => !hasFormChanges.value),
-    onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
-  },
   {
     id: "delete-routing",
     label: "Delete",
@@ -215,26 +235,6 @@ useHeaderActionRegistry([
         {
           route: "/route_definition",
           actions: ["delete"],
-        },
-      ],
-    },
-  },
-  {
-    id: "save-routing",
-    label: "Save",
-    icon: "lucide:save",
-    variant: "solid",
-    color: "primary",
-    size: "md",
-    order: 999,
-    submit: updateRoute,
-    loading: computed(() => updateLoading.value),
-    disabled: computed(() => !hasFormChanges.value),
-    permission: {
-      and: [
-        {
-          route: "/route_definition",
-          actions: ["update"],
         },
       ],
     },
@@ -260,7 +260,7 @@ const {
 } = useApi(`/${tableName}`, {
   query: {
     fields: getIncludeFields(),
-    filter: { id: { _eq: route.params.id } },
+    filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: "Fetch Route",
 });
@@ -292,6 +292,10 @@ watch(() => routeData.value?.data?.[0], (currentRoute) => {
       disabled: hasAssociatedTable
     },
     publishedMethods: {
+      type: 'methods-selector',
+      allowedMethodsKey: 'availableMethods'
+    },
+    skipRoleGuardMethods: {
       type: 'methods-selector',
       allowedMethodsKey: 'availableMethods'
     },
@@ -344,13 +348,15 @@ const mainTableColumns = computed(() => {
   return cols.map((c: any) => c.name || c.propertyName).filter(Boolean);
 });
 
-function filterPublishedToAvailable(body: Record<string, any>) {
+function filterDependentMethods(body: Record<string, any>) {
   const available = body.availableMethods || [];
   const availableSet = new Set(available.filter((m: any) => m?.method).map((m: any) => m.method));
-  if (Array.isArray(body.publishedMethods)) {
-    body.publishedMethods = availableSet.size > 0
-      ? body.publishedMethods.filter((m: any) => m?.method && availableSet.has(m.method))
-      : [];
+  for (const key of ['publishedMethods', 'skipRoleGuardMethods'] as const) {
+    if (Array.isArray(body[key])) {
+      body[key] = availableSet.size > 0
+        ? body[key].filter((m: any) => m?.method && availableSet.has(m.method))
+        : [];
+    }
   }
 }
 
@@ -367,7 +373,7 @@ async function updateRoute() {
   if (!form.value) return;
 
   const body = { ...form.value };
-  filterPublishedToAvailable(body);
+  filterDependentMethods(body);
 
   if (!await validateForm(body, errors)) return;
 
@@ -380,12 +386,9 @@ async function updateRoute() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Route updated!",
-  });
+  notify.success("Success", "Route updated!");
   errors.value = {};
+  hasFormChanges.value = false;
 
   const expectedUpdatedAt = updateRouteData.value?.data?.[0]?.updatedAt;
   const routeId = String(route.params.id);
@@ -425,11 +428,7 @@ async function handleReset() {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
 
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -447,11 +446,7 @@ async function deleteRoute() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: "Route deleted successfully",
-    color: "success"
-  });
+  notify.success("Success", "Route deleted successfully");
 
   await retryUntilFresh(
     () => loadRoutes(),
@@ -472,7 +467,7 @@ const {
   query: computed(() => ({
     fields: getHandlerIncludeFields(),
     filter: {
-      route: { id: { _eq: routeId.value } },
+      route: { [getIdFieldName()]: { _eq: routeId.value } },
     },
   })),
   errorContext: "Fetch Handlers",
@@ -486,7 +481,7 @@ const {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
     filter: {
-      route: { id: { _eq: routeId.value } },
+      route: { [getIdFieldName()]: { _eq: routeId.value } },
     },
     sort: ["priority"],
   })),
@@ -501,7 +496,7 @@ const {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
     filter: {
-      route: { id: { _eq: routeId.value } },
+      route: { [getIdFieldName()]: { _eq: routeId.value } },
     },
     sort: ["priority"],
   })),
@@ -562,11 +557,11 @@ const mainTableInfo = computed(() => {
 
 const defaultHandler = computed(() => {
   if (!mainTableInfo.value || handlers.value.length > 0) return null;
-  
+
   return {
     _isDefault: true,
-    name: `Default handler for ${mainTableInfo.value.name || mainTableInfo.value.tableName || 'table'}`,
-    description: 'This is a default handler. Click to create a custom handler.',
+    name: 'Built-in logic',
+    description: `Built-in CRUD logic for ${mainTableInfo.value.name || mainTableInfo.value.tableName || 'table'}.`,
   };
 });
 
@@ -633,7 +628,7 @@ watch(() => route.query.createHandler, (value) => {
     showCreateHandlerDrawer.value = shouldOpen;
     if (shouldOpen) {
       handlerForm.value = generateHandlerEmptyForm();
-      handlerForm.value.route = { id: routeId.value };
+      handlerForm.value.route = { [idField]: routeId.value };
       handlerErrors.value = {};
     } else {
       handlerForm.value = {};
@@ -661,7 +656,7 @@ watch(showCreateHandlerDrawer, (isOpen) => {
 
 function createHandler(methodObject?: { method: string; id?: string }) {
   handlerForm.value = generateHandlerEmptyForm();
-  handlerForm.value.route = { id: routeId.value };
+  handlerForm.value.route = { [idField]: routeId.value };
 
   if (methodObject) {
     handlerForm.value.method = methodObject;
@@ -680,11 +675,7 @@ async function saveHandler() {
 
   if (!isValid) {
     handlerErrors.value = errors;
-    toast.add({
-      title: "Validation error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
+    notify.error("Validation error", "Please check the fields with errors.");
     return;
   }
 
@@ -694,10 +685,7 @@ async function saveHandler() {
     return;
   }
 
-  toast.add({
-    title: "Handler created successfully",
-    color: "success",
-  });
+  notify.success("Handler created successfully");
 
   showCreateHandlerDrawer.value = false;
   await fetchHandlers();
@@ -724,7 +712,7 @@ const {
 } = useApi(() => `/route_handler_definition`, {
   query: computed(() => ({
     fields: getHandlerIncludeFields(),
-    filter: { id: { _eq: editingHandlerId.value } },
+    filter: { [getIdFieldName()]: { _eq: editingHandlerId.value } },
   })),
   errorContext: "Fetch Handler",
   immediate: false,
@@ -733,7 +721,7 @@ const {
 watch(editHandlerData, (data) => {
   if (data?.data?.[0]) {
     editHandlerForm.value = { ...data.data[0] };
-    editHandlerForm.value.route = { id: routeId.value };
+    editHandlerForm.value.route = { [idField]: routeId.value };
   }
 });
 
@@ -786,7 +774,7 @@ async function editHandler(handler: any) {
   editingHandlerId.value = getId(handler);
   editHandlerErrors.value = {};
   await fetchEditHandler();
-  editHandlerForm.value.route = { id: routeId.value };
+  editHandlerForm.value.route = { [idField]: routeId.value };
   showEditHandlerDrawer.value = true;
 }
 
@@ -801,11 +789,7 @@ async function updateHandler() {
 
   if (!isValid) {
     editHandlerErrors.value = errors;
-    toast.add({
-      title: "Validation error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
+    notify.error("Validation error", "Please check the fields with errors.");
     return;
   }
 
@@ -818,10 +802,7 @@ async function updateHandler() {
     return;
   }
 
-  toast.add({
-    title: "Handler updated successfully",
-    color: "success",
-  });
+  notify.success("Handler updated successfully");
 
   showEditHandlerDrawer.value = false;
   await fetchHandlers();
@@ -851,11 +832,7 @@ async function deleteHandler(handler: any) {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: "Handler deleted successfully",
-    color: "success",
-  });
+  notify.success("Success", "Handler deleted successfully");
 
   await fetchHandlers();
 }
@@ -905,7 +882,7 @@ watch(() => route.query.createHook, (value) => {
       } else {
         hookForm.value = generatePreHookEmptyForm(); // default to pre
       }
-      hookForm.value.route = { id: routeId.value };
+      hookForm.value.route = { [idField]: routeId.value };
       hookErrors.value = {};
     } else {
       hookForm.value = {};
@@ -941,7 +918,7 @@ function createHook(type?: 'pre' | 'post') {
   } else {
     hookForm.value = generatePostHookEmptyForm();
   }
-  hookForm.value.route = { id: routeId.value };
+  hookForm.value.route = { [idField]: routeId.value };
   hookErrors.value = {};
   showCreateHookDrawer.value = true;
 }
@@ -957,11 +934,7 @@ async function saveHook() {
 
   if (!isValid) {
     hookErrors.value = errors;
-    toast.add({
-      title: "Validation error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
+    notify.error("Validation error", "Please check the fields with errors.");
     return;
   }
 
@@ -979,10 +952,7 @@ async function saveHook() {
     }
   }
 
-  toast.add({
-    title: `${isPreHook ? 'Pre' : 'Post'}-Hook created successfully`,
-    color: "success",
-  });
+  notify.success(`${isPreHook ? 'Pre' : 'Post'}-Hook created successfully`);
 
   showCreateHookDrawer.value = false;
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
@@ -1022,7 +992,7 @@ const {
 } = useApi(() => `/pre_hook_definition`, {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
-    filter: { id: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
+    filter: { [getIdFieldName()]: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
   })),
   errorContext: "Fetch Pre-Hook",
   immediate: false,
@@ -1035,7 +1005,7 @@ const {
 } = useApi(() => `/post_hook_definition`, {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
-    filter: { id: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
+    filter: { [getIdFieldName()]: { _eq: editingHookId.value ? String(editingHookId.value) : null } },
   })),
   errorContext: "Fetch Post-Hook",
   immediate: false,
@@ -1059,7 +1029,7 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         if (editPreHookData.value?.data?.[0]) {
           editHookType.value = 'pre';
           editHookForm.value = { ...editPreHookData.value.data[0] };
-          editHookForm.value.route = { id: routeId.value };
+          editHookForm.value.route = { [idField]: routeId.value };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -1071,7 +1041,7 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         if (editPostHookData.value?.data?.[0]) {
           editHookType.value = 'post';
           editHookForm.value = { ...editPostHookData.value.data[0] };
-          editHookForm.value.route = { id: routeId.value };
+          editHookForm.value.route = { [idField]: routeId.value };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -1084,12 +1054,12 @@ watch(() => [route.query.editHook, route.query.editHookType], async ([hookId, ho
         if (editPreHookData.value?.data?.[0]) {
           editHookType.value = 'pre';
           editHookForm.value = { ...editPreHookData.value.data[0] };
-          editHookForm.value.route = { id: routeId.value };
+          editHookForm.value.route = { [idField]: routeId.value };
           showEditHookDrawer.value = true;
         } else if (editPostHookData.value?.data?.[0]) {
           editHookType.value = 'post';
           editHookForm.value = { ...editPostHookData.value.data[0] };
-          editHookForm.value.route = { id: routeId.value };
+          editHookForm.value.route = { [idField]: routeId.value };
           showEditHookDrawer.value = true;
         } else {
           editingHookId.value = null;
@@ -1150,7 +1120,7 @@ async function editHook(hook: any) {
     if (editPreHookData.value?.data?.[0]) {
       editHookType.value = 'pre';
       editHookForm.value = { ...editPreHookData.value.data[0] };
-      editHookForm.value.route = { id: routeId.value };
+      editHookForm.value.route = { [idField]: routeId.value };
       showEditHookDrawer.value = true;
       router.push({
         query: { ...route.query, editHook: hookId, editHookType: 'pre' }
@@ -1161,7 +1131,7 @@ async function editHook(hook: any) {
     if (editPostHookData.value?.data?.[0]) {
       editHookType.value = 'post';
       editHookForm.value = { ...editPostHookData.value.data[0] };
-      editHookForm.value.route = { id: routeId.value };
+      editHookForm.value.route = { [idField]: routeId.value };
       showEditHookDrawer.value = true;
       router.push({
         query: { ...route.query, editHook: hookId, editHookType: 'post' }
@@ -1187,11 +1157,7 @@ async function updateHook() {
 
   if (!isValid) {
     editHookErrors.value = errors;
-    toast.add({
-      title: "Validation error",
-      description: "Please check the fields with errors.",
-      color: "error",
-    });
+    notify.error("Validation error", "Please check the fields with errors.");
     return;
   }
 
@@ -1213,10 +1179,7 @@ async function updateHook() {
     return;
   }
 
-  toast.add({
-    title: `${isPreHook ? 'Pre' : 'Post'}-Hook updated successfully`,
-    color: "success",
-  });
+  notify.success(`${isPreHook ? 'Pre' : 'Post'}-Hook updated successfully`);
 
   showEditHookDrawer.value = false;
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
@@ -1268,11 +1231,7 @@ async function toggleHook(hook: any, enabled: boolean) {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `${isPreHook ? 'Pre' : 'Post'}-Hook ${enabled ? "enabled" : "disabled"} successfully`,
-    color: "success",
-  });
+  notify.success("Success", `${isPreHook ? 'Pre' : 'Post'}-Hook ${enabled ? "enabled" : "disabled"} successfully`);
 
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
@@ -1297,11 +1256,7 @@ async function deleteHook(hook: any) {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `${isPreHook ? 'Pre' : 'Post'}-Hook deleted successfully`,
-    color: "success",
-  });
+  notify.success("Success", `${isPreHook ? 'Pre' : 'Post'}-Hook deleted successfully`);
 
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
@@ -1315,8 +1270,8 @@ const {
     fields: '*,route.id,route.path,methods.method,parent',
     filter: {
       _and: [
-        { route: { id: { _eq: routeId.value } } },
-        { parent: { _null: true } },
+        { route: { [getIdFieldName()]: { _eq: routeId.value } } },
+        { parent: { _is_null: true } },
       ],
     },
     sort: ['priority'],
@@ -1334,7 +1289,7 @@ const {
     filter: {
       _and: [
         { isGlobal: { _eq: true } },
-        { parent: { _null: true } },
+        { parent: { _is_null: true } },
       ],
     },
     sort: ['priority'],
@@ -1376,11 +1331,7 @@ function openCreateGuardDrawer() {
 
 async function saveGuard() {
   if (!guardForm.value.name || !guardForm.value.position) {
-    toast.add({
-      title: 'Validation Error',
-      description: 'Name and position are required',
-      color: 'error',
-    });
+    notify.error('Validation Error', 'Name and position are required');
     return;
   }
 
@@ -1388,10 +1339,7 @@ async function saveGuard() {
 
   if (createGuardError.value) return;
 
-  toast.add({
-    title: 'Guard created successfully',
-    color: 'success',
-  });
+  notify.success('Guard created successfully');
 
   showCreateGuardDrawer.value = false;
   await Promise.all([fetchRouteGuards(), fetchGlobalGuards()]);

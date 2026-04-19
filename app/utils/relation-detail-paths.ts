@@ -1,10 +1,5 @@
-/**
- * Map table names to their dedicated detail page paths.
- * When a relation points to one of these tables, the "view detail" button
- * will navigate to the settings/custom page instead of /data/{table}/{id}.
- *
- * Add or modify entries here when new settings pages are added.
- */
+import { getId } from '~/utils/common/helpers';
+
 export const TABLE_DETAIL_PATH_MAP: Record<string, string> = {
   // Settings
   user_definition: "/settings/users",
@@ -23,11 +18,33 @@ export const TABLE_DETAIL_PATH_MAP: Record<string, string> = {
 
   // Packages
   package_definition: "/packages",
+};
 
+type DetailPathResolver = (item: any) => string | null;
+
+const CUSTOM_PATH_RESOLVERS: Record<string, DetailPathResolver> = {
+  table_definition: (item) => {
+    const name = item?.name;
+    return name ? `/collections/${name}` : null;
+  },
 };
 
 export function getDetailPathForTable(tableName: string, id: string | number): string | null {
   const basePath = TABLE_DETAIL_PATH_MAP[tableName];
   if (!basePath) return null;
   return `${basePath}/${id}`;
+}
+
+export function resolveRelationDetailPath(tableName: string, item: any): string | null {
+  const resolver = CUSTOM_PATH_RESOLVERS[tableName];
+  console.log('[resolveRelationDetailPath]', { tableName, hasResolver: !!resolver, item });
+  if (resolver) {
+    const result = resolver(item);
+    console.log('[resolveRelationDetailPath] custom result:', result);
+    return result;
+  }
+
+  const id = getId(item);
+  if (!id) return null;
+  return getDetailPathForTable(tableName, id);
 }

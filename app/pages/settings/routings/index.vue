@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
@@ -24,7 +24,28 @@ const { getId } = useDatabase();
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
-const showSystem = ref(false);
+const showSystem = ref(route.query.system === 'true');
+const showCollectionRoutes = ref(route.query.collectionRoutes === 'true');
+
+watch(() => route.query.system, (v) => { showSystem.value = v === 'true' })
+watch(() => route.query.collectionRoutes, (v) => { showCollectionRoutes.value = v === 'true' })
+
+watch(showSystem, (v) => {
+  if ((route.query.system === 'true') !== v) {
+    const query = { ...route.query }
+    if (v) query.system = 'true'
+    else delete query.system
+    router.replace({ query })
+  }
+})
+watch(showCollectionRoutes, (v) => {
+  if ((route.query.collectionRoutes === 'true') !== v) {
+    const query = { ...route.query }
+    if (v) query.collectionRoutes = 'true'
+    else delete query.collectionRoutes
+    router.replace({ query })
+  }
+})
 
 const filterLabel = computed(() => {
   const activeCount = currentFilter.value.conditions.length;
@@ -49,6 +70,9 @@ const {
     if (!showSystem.value) {
       conditions.push({ isSystem: { _eq: false } });
     }
+    if (!showCollectionRoutes.value) {
+      conditions.push({ mainTable: { _is_null: true } });
+    }
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
       : null;
@@ -70,33 +94,57 @@ const {
 
 const routesData = computed(() => apiData.value?.data || []);
 const total = computed(() => {
-  if (hasActiveFilters(currentFilter.value) || !showSystem.value) {
-    return apiData.value?.meta?.filterCount ?? 0;
+  const meta = apiData.value?.meta
+  if (showSystem.value && showCollectionRoutes.value && !hasActiveFilters(currentFilter.value)) {
+    return meta?.totalCount ?? 0
   }
-  return apiData.value?.meta?.totalCount || 0;
+  return meta?.filterCount ?? 0
 });
 
-useSubHeaderActionRegistry({
-  id: "toggle-system-routes",
-  icon: "lucide:shield",
-  get label() {
-    return showSystem.value ? "Hide System" : "Show System";
+useSubHeaderActionRegistry([
+  {
+    id: "toggle-system-routes",
+    icon: "lucide:shield",
+    get label() {
+      return showSystem.value ? "Hide System" : "Show System";
+    },
+    get variant() {
+      return showSystem.value ? "solid" as const : "outline" as const;
+    },
+    get color() {
+      return showSystem.value ? "warning" as const : "neutral" as const;
+    },
+    size: "md",
+    side: "right",
+    order: 0,
+    onClick: () => {
+      showSystem.value = !showSystem.value;
+      page.value = 1;
+      fetchRoutes();
+    },
   },
-  get variant() {
-    return showSystem.value ? "solid" as const : "outline" as const;
+  {
+    id: "toggle-collection-routes",
+    icon: "lucide:table",
+    get label() {
+      return showCollectionRoutes.value ? "Hide Collection Routes" : "Collection Routes";
+    },
+    get variant() {
+      return showCollectionRoutes.value ? "solid" as const : "outline" as const;
+    },
+    get color() {
+      return showCollectionRoutes.value ? "info" as const : "neutral" as const;
+    },
+    size: "md",
+    side: "right",
+    order: 1,
+    onClick: () => {
+      showCollectionRoutes.value = !showCollectionRoutes.value;
+      page.value = 1;
+      fetchRoutes();
+    },
   },
-  get color() {
-    return showSystem.value ? "warning" as const : "neutral" as const;
-  },
-  size: "md",
-  side: "right",
-  order: 0,
-  onClick: () => {
-    showSystem.value = !showSystem.value;
-    page.value = 1;
-    fetchRoutes();
-  },
-});
+]);
 
 useHeaderActionRegistry([
   {
@@ -305,11 +353,7 @@ async function toggleEnabled(routeItem: any) {
   await loadRoutes();
   await registerDataMenuItems(Object.values(schemas.value));
 
-  toast.add({
-    title: "Success",
-    description: `Route ${newEnabled ? "enabled" : "disabled"} successfully`,
-    color: "success",
-  });
+  notify.success("Success", `Route ${newEnabled ? "enabled" : "disabled"} successfully`);
 }
 
 async function deleteRoute(routeItem: any) {
@@ -336,11 +380,7 @@ async function deleteRoute(routeItem: any) {
     await loadRoutes();
     await registerDataMenuItems(Object.values(schemas.value));
 
-    toast.add({
-      title: "Success",
-      description: `Route "${routeItem.path}" has been deleted successfully!`,
-      color: "success",
-    });
+    notify.success("Success", `Route "${routeItem.path}" has been deleted successfully!`);
   }
 }
 

@@ -76,8 +76,9 @@
 
 <script setup lang="ts">
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
+const { getIdFieldName } = useDatabase();
 const { fetchAppPackages } = useGlobalState();
 const { adminSocket: $adminSocket } = useAdminSocket();
 const packageId = route.params.id as string;
@@ -100,7 +101,7 @@ const {
   query: {
     fields: "*",
     filter: {
-      id: { _eq: packageId },
+      [getIdFieldName()]: { _eq: packageId },
     },
   },
   errorContext: "Load Package Details",
@@ -174,11 +175,11 @@ async function handleReset() {
     hasFormChanges.value = false;
     formEditorRef.value?.confirmChanges();
 
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
+    notify.success("Reset Complete", "All changes have been discarded.");
+    notify.success("Reset Complete", "All changes have been discarded.");
+    notify.success("Reset Complete", "All changes have been discarded.");
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -284,11 +285,7 @@ async function handleUninstall() {
 
   if (packageData.value?.type === 'App') {
     await fetchAppPackages();
-    toast.add({
-      title: "Success",
-      description: `Package ${packageData.value?.name} uninstalled successfully`,
-      color: "success",
-    });
+    notify.success("Success", `Package ${packageData.value?.name} uninstalled successfully`);
     await navigateTo('/packages', { replace: true });
   } else {
     await loadPackage();

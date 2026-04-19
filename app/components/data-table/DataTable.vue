@@ -211,22 +211,22 @@ function getStatusField(row: any) {
   return null
 }
 
-function getStatusClass(status: string | null) {
-  if (!status) return ''
+function getStatusBadgeColor(status: string | null) {
+  if (!status) return 'neutral'
   const lowerStatus = status.toLowerCase()
-  if (lowerStatus.includes('active') || lowerStatus === 'yes') {
-    return 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400'
+  if (lowerStatus.includes('active') || lowerStatus === 'yes' || lowerStatus.includes('success')) {
+    return 'success'
   }
-  if (lowerStatus.includes('inactive') || lowerStatus === 'no') {
-    return 'bg-[var(--surface-muted)] text-[var(--text-secondary)]'
+  if (lowerStatus.includes('pending') || lowerStatus.includes('warning')) {
+    return 'warning'
   }
-  if (lowerStatus.includes('pending')) {
-    return 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'
+  if (lowerStatus.includes('completed') || lowerStatus.includes('info')) {
+    return 'info'
   }
-  if (lowerStatus.includes('completed')) {
-    return 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400'
+  if (lowerStatus.includes('error') || lowerStatus.includes('failed') || lowerStatus.includes('reject')) {
+    return 'error'
   }
-  return 'bg-[var(--surface-muted)] text-[var(--text-secondary)]'
+  return 'neutral'
 }
 
 function getVisibleCellsForCard(row: any) {
@@ -305,92 +305,118 @@ function getColumnLabel(columnId: string) {
       
       <div class="lg:hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div
+          <article
             v-for="(row, index) in table.getRowModel().rows"
-          :key="row.id"
-          class="surface-card rounded-2xl p-4 cursor-pointer transition-all hover:bg-[var(--surface-muted)]"
-          @click="handleRowClick(row.original)"
-        >
-          <div class="flex items-start justify-between mb-3 pb-3 border-b border-[var(--border-default)]">
-            <div class="flex-1 min-w-0 overflow-hidden">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs text-[var(--text-tertiary)]">
-                  ID: {{ getId(row.original) }}
-                </span>
-              </div>
-              <h4 class="text-base font-semibold text-[var(--text-primary)] truncate" :title="String(getPrimaryFieldValue(row))">
-                {{ getPrimaryFieldValue(row) }}
-              </h4>
-            </div>
-            <span
-              v-if="getStatusField(row)"
-              class="rounded-full px-2.5 py-0.5 text-theme-xs font-medium capitalize flex-shrink-0"
-              :class="getStatusClass(getStatusField(row))"
-            >
-              {{ getStatusField(row) }}
-            </span>
-          </div>
-
-          <div class="space-y-2.5 mb-3">
-            <div
-              v-for="cell in getVisibleCellsForCard(row)"
-              :key="cell.id"
-              class="flex items-center justify-between text-sm gap-2"
-            >
-              <span class="text-[var(--text-tertiary)] shrink-0">{{ getColumnLabel(cell.column.id) }}</span>
-              <span class="text-[var(--text-primary)] font-medium text-right flex-1 min-w-0 overflow-hidden truncate" :title="String(cell.getValue())">
-                <component
-                  v-if="typeof cell.column.columnDef.cell === 'function'"
-                  :is="cell.column.columnDef.cell"
-                  v-bind="cell.getContext()"
-                />
-                <span v-else class="truncate block">{{ cell.getValue() }}</span>
-              </span>
-            </div>
-          </div>
-
-          <div
-            v-if="getCreatedAtValue(row) || getUpdatedAtValue(row)"
-            class="flex items-center gap-4 pt-3 border-t border-[var(--border-default)] text-xs text-[var(--text-tertiary)]"
+            :key="row.id"
+            class="surface-card rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:bg-[var(--surface-muted)] active:scale-[0.99]"
+            :class="selectedRows.some((selectedRow) => getId(selectedRow) === getId(row.original)) ? 'ring-2 ring-[var(--color-primary-500)]' : ''"
+            @click="handleRowClick(row.original)"
           >
-            <span v-if="getCreatedAtValue(row)">
-              Created: {{ formatDateTime(getCreatedAtValue(row)) }}
-            </span>
-            <span v-if="getCreatedAtValue(row) && getUpdatedAtValue(row)">•</span>
-            <span v-if="getUpdatedAtValue(row)">
-              Updated: {{ formatDateTime(getUpdatedAtValue(row)) }}
-            </span>
-          </div>
-        </div>
-      </div>
+            <header class="flex items-start gap-3 p-4">
+              <div v-if="props.selectable" class="pt-0.5 flex-shrink-0" @click.stop>
+                <input
+                  type="checkbox"
+                  class="rounded w-4 h-4 cursor-pointer"
+                  :checked="row.getIsSelected()"
+                  :disabled="!row.getCanSelect()"
+                  @change="row.getToggleSelectedHandler()($event)"
+                  :aria-label="`Select row ${row.index + 1}`"
+                />
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4
+                  class="text-[15px] font-semibold text-[var(--text-primary)] truncate leading-snug"
+                  :title="String(getPrimaryFieldValue(row))"
+                >
+                  {{ getPrimaryFieldValue(row) }}
+                </h4>
+                <p class="text-[11px] text-[var(--text-tertiary)] font-mono mt-1 truncate">
+                  #{{ getId(row.original) }}
+                </p>
+              </div>
+              <UBadge
+                v-if="getStatusField(row)"
+                :color="getStatusBadgeColor(getStatusField(row))"
+                variant="soft"
+                size="sm"
+                class="flex-shrink-0 capitalize"
+                :label="getStatusField(row)"
+              />
+            </header>
 
-      <div v-if="!loading && props.data.length === 0" class="py-8 text-center">
-        <CommonEmptyState
-          variant="naked"
-          title="No data available"
-          description="There are no records to display"
-          icon="lucide:database"
-          size="sm"
-        />
-      </div>
-      <div v-if="loading" class="lg:hidden space-y-3">
+            <dl
+              v-if="getVisibleCellsForCard(row).length > 0"
+              class="px-4 pb-3 border-t border-[var(--border-default)] pt-3 grid grid-cols-2 gap-x-4 gap-y-3"
+            >
+              <div
+                v-for="cell in getVisibleCellsForCard(row)"
+                :key="cell.id"
+                class="min-w-0"
+              >
+                <dt class="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)] mb-1 truncate">
+                  {{ getColumnLabel(cell.column.id) }}
+                </dt>
+                <dd class="text-sm text-[var(--text-primary)] break-words min-w-0">
+                  <component
+                    v-if="typeof cell.column.columnDef.cell === 'function'"
+                    :is="cell.column.columnDef.cell"
+                    v-bind="cell.getContext()"
+                  />
+                  <span v-else-if="cell.getValue() !== null && cell.getValue() !== undefined && cell.getValue() !== ''" class="line-clamp-2">
+                    {{ cell.getValue() }}
+                  </span>
+                  <span v-else class="text-[var(--text-tertiary)] italic">—</span>
+                </dd>
+              </div>
+            </dl>
+
+            <footer
+              v-if="getCreatedAtValue(row) || getUpdatedAtValue(row)"
+              class="px-4 py-2.5 border-t border-[var(--border-default)] bg-[var(--surface-muted)]/40 flex items-center gap-1.5 text-[11px] text-[var(--text-tertiary)]"
+            >
+              <UIcon name="lucide:clock-3" class="w-3 h-3 flex-shrink-0" />
+              <span class="truncate">
+                <template v-if="getUpdatedAtValue(row)">
+                  Updated {{ formatDateTime(getUpdatedAtValue(row)) }}
+                </template>
+                <template v-else>
+                  Created {{ formatDateTime(getCreatedAtValue(row)) }}
+                </template>
+              </span>
+            </footer>
+          </article>
+        </div>
+
+        <div v-if="!loading && props.data.length === 0" class="py-8 text-center">
+          <CommonEmptyState
+            variant="naked"
+            title="No data available"
+            description="There are no records to display"
+            icon="lucide:database"
+            size="sm"
+          />
+        </div>
+        <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div
           v-for="i in (props.skeletonRows || 5)"
           :key="`mobile-skeleton-${i}`"
-          class="rounded-2xl p-4 border border-[var(--border-default)] bg-[var(--surface-default)] animate-pulse"
+          class="surface-card rounded-xl overflow-hidden animate-pulse"
         >
-          <div class="flex items-start justify-between mb-3 pb-3 border-b border-[var(--border-default)]">
+          <div class="flex items-start gap-3 p-4">
             <div class="flex-1 space-y-2">
-              <div class="h-3 skeleton-base rounded w-16"></div>
-              <div class="h-5 skeleton-base rounded w-3/4"></div>
+              <div class="h-4 skeleton-base rounded w-3/4"></div>
+              <div class="h-3 skeleton-base rounded w-20"></div>
             </div>
-            <div class="h-6 skeleton-base rounded w-20"></div>
+            <div class="h-5 skeleton-base rounded-full w-16"></div>
           </div>
-          <div class="space-y-2.5">
-            <div v-for="j in 3" :key="j" class="flex items-center justify-between">
-              <div class="h-3 skeleton-base rounded w-24"></div>
-              <div class="h-3 skeleton-base rounded w-32"></div>
+          <div class="px-4 pb-3 border-t border-[var(--border-default)] pt-3 grid grid-cols-2 gap-x-4 gap-y-3">
+            <div v-for="j in 4" :key="j" class="space-y-1.5">
+              <div class="h-2.5 skeleton-base rounded w-16"></div>
+              <div class="h-3.5 skeleton-base rounded w-24"></div>
             </div>
+          </div>
+          <div class="px-4 py-2.5 border-t border-[var(--border-default)] bg-[var(--surface-muted)]/40">
+            <div class="h-3 skeleton-base rounded w-40"></div>
           </div>
         </div>
       </div>

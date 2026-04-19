@@ -66,7 +66,7 @@ export async function refreshAccessToken(
 
     const cookieOptions = {
       httpOnly: true,
-      secure: true,
+      secure: !import.meta.dev,
       sameSite: "lax" as const,
       path: "/",
     };
@@ -78,9 +78,10 @@ export async function refreshAccessToken(
     return newAccessToken;
   } catch (error) {
     console.warn("Token refresh failed:", error);
-    deleteCookie(event, ACCESS_TOKEN_KEY);
-    deleteCookie(event, REFRESH_TOKEN_KEY);
-    deleteCookie(event, EXP_TIME_KEY);
+    const deleteOptions = { path: "/" };
+    deleteCookie(event, ACCESS_TOKEN_KEY, deleteOptions);
+    deleteCookie(event, REFRESH_TOKEN_KEY, deleteOptions);
+    deleteCookie(event, EXP_TIME_KEY, deleteOptions);
     throw error;
   }
 }

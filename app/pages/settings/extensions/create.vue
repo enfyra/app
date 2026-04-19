@@ -32,11 +32,7 @@
       @upload="handleUpload"
       @error="
         (message) =>
-          toast.add({
-            title: 'Upload Error',
-            description: message,
-            color: 'error',
-          })
+          notify.error('Upload Error', message)
       "
     />
 
@@ -53,7 +49,7 @@ definePageMeta({
   title: "Create Extension",
 });
 
-const toast = useToast();
+const notify = useNotify();
 
 const tableName = "extension_definition";
 
@@ -152,10 +148,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "Extension created successfully",
-    color: "success",
-  });
+  notify.success("Extension created successfully");
 
   const { getId } = useDatabase();
   await navigateTo(`/settings/extensions/${getId(createData.value.data[0])}`, {
@@ -174,20 +167,12 @@ async function handleUpload(files: File | File[]) {
       const fileContent = await readFileContent(file);
       createForm.value.code = fileContent;
 
-      toast.add({
-        title: "File Loaded",
-        description: `File "${file.name}" content has been loaded into the code field`,
-        color: "success",
-      });
+      notify.success("File Loaded", `File "${file.name}" content has been loaded into the code field`);
     }
 
     showUploadModal.value = false;
   } catch (error) {
-    toast.add({
-      title: "Upload Error",
-      description: "Failed to read file content",
-      color: "error",
-    });
+    notify.error("Upload Error", "Failed to read file content");
   } finally {
     uploadLoading.value = false;
   }

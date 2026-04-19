@@ -32,6 +32,12 @@ const UPSTREAM_RETRY_BASE = 2000;
 const UPSTREAM_RETRY_MAX = 15_000;
 const UPSTREAM_BUFFER_CAP = 50;
 
+function safeSend(socket: { send: (data: string | Buffer) => void }, data: string | Buffer) {
+  try {
+    socket.send(data);
+  } catch {}
+}
+
 function startBridge(
   browserSocket: EngineSocket,
   pendingBrowser: (string | Buffer)[],
@@ -48,17 +54,24 @@ function startBridge(
   async function connectUpstream() {
     if (browserClosed) return;
     ready = false;
-    const auth = await resolveSocketBridgeAuth(
-      browserSocket.request as IncomingMessage,
-    );
+
+    let auth: Awaited<ReturnType<typeof resolveSocketBridgeAuth>>;
+    try {
+      auth = await resolveSocketBridgeAuth(
+        browserSocket.request as IncomingMessage,
+      );
+    } catch {
+      scheduleRetry();
+      return;
+    }
+
     if (!auth.ok) {
       sendSocketBridgeAuthError(browserSocket);
       cleanup();
-      try {
-        browserSocket.close();
-      } catch {}
+      try { browserSocket.close(); } catch {}
       return;
     }
+
     const ws = new WebSocket(
       `${wsUrl}/socket.io/?EIO=4&transport=websocket`,
       { headers: auth.upstreamHeaders },
@@ -68,7 +81,7 @@ function startBridge(
     ws.on('message', (rawData: Buffer | string, isBinary: boolean) => {
       if (upstream !== ws) return;
       if (isBinary) {
-        browserSocket.send(rawData as Buffer);
+        safeSend(browserSocket, rawData as Buffer);
         return;
       }
       const frame = rawData.toString();
@@ -77,19 +90,19 @@ function startBridge(
         ready = true;
         retryCount = 0;
         if (hasConnectedOnce) {
-          ws.send('40/enfyra-admin,');
+          safeSend(ws, '40/enfyra-admin,');
         }
         hasConnectedOnce = true;
         for (const msg of buffer) {
-          ws.send(msg);
+          safeSend(ws, msg);
         }
         buffer.length = 0;
       } else if (type === '4') {
-        browserSocket.send(addWsNs(frame.slice(1)));
+        safeSend(browserSocket, addWsNs(frame.slice(1)));
       } else if (type === '2') {
-        ws.send('3');
+        safeSend(ws, '3');
       } else if (type === '1') {
-        browserSocket.close();
+        try { browserSocket.close(); } catch {}
       }
     });
 
@@ -104,9 +117,7 @@ function startBridge(
   function scheduleRetry() {
     if (browserClosed) return;
     if (retryCount >= UPSTREAM_MAX_RETRIES) {
-      try {
-        browserSocket.close();
-      } catch {}
+      try { browserSocket.close(); } catch {}
       return;
     }
     const delay = Math.min(
@@ -115,7 +126,7 @@ function startBridge(
     );
     retryCount++;
     retryTimer = setTimeout(() => {
-      if (!browserClosed) void connectUpstream();
+      if (!browserClosed) void connectUpstream().catch(() => {});
     }, delay);
   }
 
@@ -126,9 +137,7 @@ function startBridge(
       retryTimer = null;
     }
     if (upstream) {
-      try {
-        upstream.close();
-      } catch {}
+      try { upstream.close(); } catch {}
       upstream = null;
     }
   }
@@ -136,7 +145,7 @@ function startBridge(
   const forwardFromBrowser = (data: string | Buffer) => {
     const rewritten = typeof data === 'string' ? '4' + stripWsNs(data) : data;
     if (ready && upstream?.readyState === WebSocket.OPEN) {
-      upstream.send(rewritten);
+      safeSend(upstream, rewritten);
     } else if (buffer.length < UPSTREAM_BUFFER_CAP) {
       buffer.push(rewritten);
     }
@@ -149,7 +158,7 @@ function startBridge(
 
   browserSocket.on('close', cleanup);
 
-  void connectUpstream();
+  void connectUpstream().catch(() => {});
 
   return forwardFromBrowser;
 }
@@ -181,17 +190,19 @@ function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
     });
 
     void (async () => {
-      const auth = await resolveSocketBridgeAuth(
-        browserSocket.request as IncomingMessage,
-      );
-      if (!auth.ok) {
-        sendSocketBridgeAuthError(browserSocket);
-        try {
-          browserSocket.close();
-        } catch {}
-        return;
+      try {
+        const auth = await resolveSocketBridgeAuth(
+          browserSocket.request as IncomingMessage,
+        );
+        if (!auth.ok) {
+          sendSocketBridgeAuthError(browserSocket);
+          try { browserSocket.close(); } catch {}
+          return;
+        }
+        relay = startBridge(browserSocket, pendingBrowser);
+      } catch {
+        try { browserSocket.close(); } catch {}
       }
-      relay = startBridge(browserSocket, pendingBrowser);
     })();
   });
 }

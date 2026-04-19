@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 
 const tableName = "bootstrap_script_definition";
 
@@ -69,10 +69,10 @@ onMounted(() => {
   createForm.value = generateEmptyForm();
   
   const { me } = useAuth();
-  const { getId } = useDatabase();
+  const { getId, getIdFieldName } = useDatabase();
   const userId = getId(me.value);
   if (userId) {
-    createForm.value.createdBy = { id: userId };
+    createForm.value.createdBy = { [getIdFieldName()]: userId };
   }
 });
 
@@ -85,10 +85,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "Bootstrap script created successfully",
-    color: "success",
-  });
+  notify.success("Bootstrap script created successfully");
 
   const { getId } = useDatabase();
   await navigateTo(`/settings/bootstrap/${getId(createData.value.data[0])}`, {

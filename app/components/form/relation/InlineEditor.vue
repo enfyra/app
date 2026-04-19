@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { resolveRelationDetailPath } from '~/utils/relation-detail-paths';
+
 const props = defineProps<{
   relationMeta: any;
   modelValue: any;
@@ -75,17 +77,24 @@ function shortenId(id: string | number): string {
   return str.length > 12 ? `${str.slice(0, 4)}…${str.slice(-3)}` : str;
 }
 
-function navigateToDetail(item: any) {
+async function navigateToDetail(item: any) {
   const tableName = props.relationMeta?.targetTableName;
+  console.log('[InlineEditor] navigateToDetail', { tableName, item, keys: Object.keys(item || {}) });
+
   if (!tableName) return;
 
-  const itemId = getId(item);
-  if (!itemId) return;
+  const url = resolveRelationDetailPath(tableName, item);
+  console.log('[InlineEditor] resolved url:', url);
 
-  const url =
-    getDetailPathForTable(tableName, itemId) ??
-    `/data/${tableName}/${itemId}`;
-  window.open(url, "_blank");
+  if (url) {
+    await navigateTo(url);
+    return;
+  }
+
+  const itemId = getId(item);
+  console.log('[InlineEditor] fallback, itemId:', itemId);
+  if (!itemId) return;
+  await navigateTo(`/data/${tableName}/${itemId}`);
 }
 </script>
 

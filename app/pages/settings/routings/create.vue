@@ -7,7 +7,7 @@
             v-model="createForm"
             :table-name="tableName"
             v-model:errors="createErrors"
-            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks']"
+            :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards']"
             :field-map="fieldMap"
             mode="create"
           />
@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const { loadRoutes } = useRoutes();
 
 const tableName = "route_definition";
@@ -32,6 +32,7 @@ const { registerPageHeader } = usePageHeaderRegistry();
 
 const fieldMap = {
   publishedMethods: { type: 'methods-selector', allowedMethodsKey: 'availableMethods' },
+  skipRoleGuardMethods: { type: 'methods-selector', allowedMethodsKey: 'availableMethods' },
   availableMethods: { type: 'methods-selector' },
 };
 
@@ -76,19 +77,21 @@ onMounted(() => {
   createForm.value = generateEmptyForm();
 });
 
-function filterPublishedToAvailable(body: Record<string, any>) {
+function filterDependentMethods(body: Record<string, any>) {
   const available = body.availableMethods || [];
   const availableSet = new Set(available.filter((m: any) => m?.method).map((m: any) => m.method));
-  if (Array.isArray(body.publishedMethods)) {
-    body.publishedMethods = availableSet.size > 0
-      ? body.publishedMethods.filter((m: any) => m?.method && availableSet.has(m.method))
-      : [];
+  for (const key of ['publishedMethods', 'skipRoleGuardMethods'] as const) {
+    if (Array.isArray(body[key])) {
+      body[key] = availableSet.size > 0
+        ? body[key].filter((m: any) => m?.method && availableSet.has(m.method))
+        : [];
+    }
   }
 }
 
 async function handleCreate() {
   const body = { ...createForm.value };
-  filterPublishedToAvailable(body);
+  filterDependentMethods(body);
 
   if (!await validateForm(body, createErrors)) return;
 
@@ -98,10 +101,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "Route created successfully",
-    color: "success",
-  });
+  notify.success("Route created successfully");
 
   await loadRoutes();
 

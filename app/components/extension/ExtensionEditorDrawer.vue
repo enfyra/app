@@ -11,7 +11,7 @@ const emit = defineEmits<{
   'save': [];
 }>();
 
-const toast = useToast();
+const notify = useNotify();
 const tableName = "extension_definition";
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getId, getIdFieldName } = useDatabase();
@@ -42,7 +42,7 @@ const {
       if (extensionId) {
         return {
           fields: getIncludeFields(),
-          filter: { id: { _eq: extensionId } },
+          filter: { [getIdFieldName()]: { _eq: extensionId } },
         };
       }
     }
@@ -99,7 +99,7 @@ watch(() => isOpen.value, async (open) => {
         form.value = { ...data, type: 'page' };
         const menuId = getId(props.menu);
         if (menuId) {
-          form.value.menu = { id: menuId };
+          form.value.menu = { [getIdFieldName()]: menuId };
         }
         hasFormChanges.value = false;
       }
@@ -108,7 +108,7 @@ watch(() => isOpen.value, async (open) => {
       form.value.type = 'page';
       const menuId = getId(props.menu);
       if (menuId) {
-        form.value.menu = { id: menuId };
+        form.value.menu = { [getIdFieldName()]: menuId };
       }
       errors.value = {};
       hasFormChanges.value = false;
@@ -125,21 +125,13 @@ async function handleSave() {
 
   if (!isValid) {
     errors.value = validationErrors;
-    toast.add({
-      title: "Validation Error",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
+    notify.error("Validation Error", "Please fill in all required fields.");
     return;
   }
 
   const uniqueOk = await formEditorRef.value?.validateAllUniqueFields?.();
   if (uniqueOk === false) {
-    toast.add({
-      title: "Duplicate value",
-      color: "error",
-      description: "Please verify all unique fields before saving.",
-    });
+    notify.error("Duplicate value", "Please verify all unique fields before saving.");
     return;
   }
 
@@ -173,11 +165,7 @@ async function handleSave() {
     }
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: props.menu?.extension ? "Extension updated!" : "Extension created!",
-  });
+notify.success("Success")
 
   hasFormChanges.value = false;
   emit('save');
@@ -200,17 +188,9 @@ async function handleUpload(files: File | File[]) {
     form.value.code = content;
     showUploadModal.value = false;
 
-    toast.add({
-      title: "Success",
-      description: "Extension code uploaded successfully",
-      color: "success",
-    });
+    notify.success("Success", "Extension code uploaded successfully");
   } catch (error) {
-    toast.add({
-      title: "Upload Error",
-      description: "Failed to read file content",
-      color: "error",
-    });
+    notify.error("Upload Error", "Failed to read file content");
   } finally {
     uploadLoading.value = false;
   }
@@ -310,14 +290,7 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
     uploading-text="Uploading..."
     :loading="uploadLoading"
     @upload="handleUpload"
-    @error="
-      (message) =>
-        toast.add({
-          title: 'Upload Error',
-          description: message,
-          color: 'error',
-        })
-    "
+    @error="(message) => notify.error('Upload Error', message)"
   />
 
   <ExtensionPreviewModal

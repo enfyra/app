@@ -13,6 +13,8 @@ export default defineEventHandler(async (event) => {
 
   const refreshToken = getCookie(event, REFRESH_TOKEN_KEY);
 
+  const deleteOptions = { path: "/" };
+
   try {
     const result = await $fetch(normalizeUrl(apiUrl, "/auth/logout"), {
       method: "POST",
@@ -25,15 +27,15 @@ export default defineEventHandler(async (event) => {
       },
     });
 
-    deleteCookie(event, ACCESS_TOKEN_KEY);
-    deleteCookie(event, REFRESH_TOKEN_KEY);
-    deleteCookie(event, EXP_TIME_KEY);
+    deleteCookie(event, ACCESS_TOKEN_KEY, deleteOptions);
+    deleteCookie(event, REFRESH_TOKEN_KEY, deleteOptions);
+    deleteCookie(event, EXP_TIME_KEY, deleteOptions);
 
     return result;
   } catch (err: any) {
-    deleteCookie(event, ACCESS_TOKEN_KEY);
-    deleteCookie(event, REFRESH_TOKEN_KEY);
-    deleteCookie(event, EXP_TIME_KEY);
+    deleteCookie(event, ACCESS_TOKEN_KEY, deleteOptions);
+    deleteCookie(event, REFRESH_TOKEN_KEY, deleteOptions);
+    deleteCookie(event, EXP_TIME_KEY, deleteOptions);
 
     return { success: false, message: "Logout completed locally" };
   }

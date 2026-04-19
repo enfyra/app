@@ -13,6 +13,30 @@
             :field-map="fieldMap"
             :loading="loading"
           />
+
+          <div
+            class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
+          >
+            <UButton
+              v-if="hasFormChanges"
+              label="Reset"
+              icon="lucide:rotate-ccw"
+              variant="outline"
+              color="warning"
+              :disabled="!hasFormChanges"
+              @click="handleReset"
+            />
+            <UButton
+              v-if="canUpdateGuard"
+              label="Save"
+              icon="lucide:save"
+              variant="solid"
+              color="primary"
+              type="submit"
+              :loading="updateLoading"
+              :disabled="!hasFormChanges"
+            />
+          </div>
         </UForm>
       </CommonFormCard>
 
@@ -216,9 +240,9 @@
 import draggable from 'vuedraggable';
 
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 const { isMobile, isTablet } = useScreen();
 
 const tableName = 'guard_definition';
@@ -242,19 +266,14 @@ registerPageHeader({
 
 const guardId = computed(() => route.params.id as string);
 
+const { checkPermissionCondition } = usePermissions();
+const canUpdateGuard = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: '/guard_definition', actions: ['update'] }],
+  })
+);
+
 useHeaderActionRegistry([
-  {
-    id: 'reset-guard',
-    label: 'Reset',
-    icon: 'lucide:rotate-ccw',
-    variant: 'outline',
-    color: 'warning',
-    size: 'md',
-    order: 1,
-    disabled: computed(() => !hasFormChanges.value),
-    onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
-  },
   {
     id: 'delete-guard',
     label: 'Delete',
@@ -274,26 +293,6 @@ useHeaderActionRegistry([
       ],
     },
   },
-  {
-    id: 'save-guard',
-    label: 'Save',
-    icon: 'lucide:save',
-    variant: 'solid',
-    color: 'primary',
-    size: 'md',
-    order: 999,
-    submit: updateGuard,
-    loading: computed(() => updateLoading.value),
-    disabled: computed(() => !hasFormChanges.value),
-    permission: {
-      and: [
-        {
-          route: '/guard_definition',
-          actions: ['update'],
-        },
-      ],
-    },
-  },
 ]);
 
 const {
@@ -303,7 +302,7 @@ const {
 } = useApi(`/${tableName}`, {
   query: {
     fields: getIncludeFields(),
-    filter: { id: { _eq: route.params.id } },
+    filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: 'Fetch Guard',
 });
@@ -543,12 +542,9 @@ async function updateGuard() {
   await executeUpdateGuard({ id: route.params.id as string, body });
   if (updateError.value) return;
 
-  toast.add({
-    title: 'Success',
-    color: 'success',
-    description: 'Guard updated!',
-  });
+  notify.success('Success', 'Guard updated!');
   errors.value = {};
+  hasFormChanges.value = false;
 
   await fetchGuard();
   const freshData = guardData.value?.data?.[0];
@@ -570,11 +566,7 @@ async function handleReset() {
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
-    toast.add({
-      title: 'Reset Complete',
-      color: 'success',
-      description: 'All changes have been discarded.',
-    });
+    notify.success('Reset Complete', 'All changes have been discarded.');
   }
 }
 
@@ -589,11 +581,7 @@ async function deleteGuard() {
   await executeDeleteGuard({ id: route.params.id as string });
   if (deleteError.value) return;
 
-  toast.add({
-    title: 'Success',
-    description: 'Guard deleted successfully',
-    color: 'success',
-  });
+  notify.success('Success', 'Guard deleted successfully');
   await navigateTo('/settings/guards');
 }
 
@@ -629,7 +617,7 @@ function handleAddRule(targetGuard: any) {
     priority: 0,
     isEnabled: true,
     description: '',
-    guard: { id: getId(targetGuard) },
+    guard: { [getIdFieldName()]: getId(targetGuard) },
   };
   showCreateRuleDrawer.value = true;
 }
@@ -645,11 +633,7 @@ watch(
 
 async function saveRule() {
   if (!ruleForm.value.type) {
-    toast.add({
-      title: 'Validation Error',
-      description: 'Please select a rule type',
-      color: 'error',
-    });
+    notify.error('Validation Error', 'Please select a rule type');
     return;
   }
 
@@ -664,7 +648,7 @@ async function saveRule() {
   await executeCreateRule({ body });
   if (createRuleError.value) return;
 
-  toast.add({ title: 'Rule created successfully', color: 'success' });
+  notify.success('Rule created successfully');
   showCreateRuleDrawer.value = false;
   await fetchRules();
 }
@@ -705,7 +689,7 @@ async function saveEditRule() {
   await executeUpdateRule({ id: editingRuleId.value, body });
   if (updateRuleError.value) return;
 
-  toast.add({ title: 'Rule updated successfully', color: 'success' });
+  notify.success('Rule updated successfully');
   showEditRuleDrawer.value = false;
   await fetchRules();
 }
@@ -727,7 +711,7 @@ async function handleDeleteRule(rule: any) {
   await deleteRuleApi({ id: getId(rule) });
   if (deleteRuleError.value) return;
 
-  toast.add({ title: 'Rule deleted successfully', color: 'success' });
+  notify.success('Rule deleted successfully');
   await fetchRules();
 }
 
@@ -753,25 +737,21 @@ function handleAddChild(targetGuard: any) {
     combinator: 'and',
     priority: 0,
     isEnabled: true,
-    parent: { id: getId(targetGuard) },
+    parent: { [getIdFieldName()]: getId(targetGuard) },
   };
   showCreateChildDrawer.value = true;
 }
 
 async function saveChild() {
   if (!childForm.value.name) {
-    toast.add({
-      title: 'Validation Error',
-      description: 'Please enter a name',
-      color: 'error',
-    });
+    notify.error('Validation Error', 'Please enter a name');
     return;
   }
 
   await executeCreateChild({ body: childForm.value });
   if (createChildError.value) return;
 
-  toast.add({ title: 'Sub-guard created successfully', color: 'success' });
+  notify.success('Sub-guard created successfully');
   showCreateChildDrawer.value = false;
   await fetchDescendants();
 }
@@ -814,7 +794,7 @@ async function saveEditChild() {
   });
   if (updateChildError.value) return;
 
-  toast.add({ title: 'Guard updated successfully', color: 'success' });
+  notify.success('Guard updated successfully');
   showEditChildDrawer.value = false;
   await fetchDescendants();
 }
@@ -831,7 +811,7 @@ async function handleDeleteGuard(guard: any) {
   await executeDeleteGuard({ id: getId(guard) });
   if (deleteError.value) return;
 
-  toast.add({ title: 'Guard deleted successfully', color: 'success' });
+  notify.success('Guard deleted successfully');
   await Promise.all([fetchDescendants(), fetchRules()]);
 }
 
@@ -844,13 +824,10 @@ async function handleToggleGuard(guard: any, enabled: boolean) {
   await toggleGuardApi({ id: getId(guard), body: { isEnabled: enabled } });
   if (toggleGuardError.value) return;
 
-  toast.add({
-    title: 'Success',
-    description: `Guard ${enabled ? 'enabled' : 'disabled'}`,
-    color: 'success',
-  });
+  notify.success('Success', `Guard ${enabled ? 'enabled' : 'disabled'}`);
 
   if (String(getId(guard)) === String(guardId.value)) {
+    hasFormChanges.value = false;
     await fetchGuard();
     const freshData = guardData.value?.data?.[0];
     if (freshData) {

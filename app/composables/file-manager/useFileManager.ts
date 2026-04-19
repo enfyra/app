@@ -13,7 +13,7 @@ export function useFileManager(parentFilter?: any) {
 
   const { data: folders, pending, execute: refreshFolders } = apiCall;
 
-  const toast = useToast();
+  const notify = useNotify();
   const { confirm } = useConfirm();
   const { getId } = useDatabase();
 
@@ -81,11 +81,7 @@ export function useFileManager(parentFilter?: any) {
         await refreshFolders();
       }
 
-      toast.add({
-        title: "Success",
-        description: `Folder "${folder.name}" has been deleted successfully!`,
-        color: "success",
-      });
+      notify.success("Success", `Folder "${folder.name}" has been deleted successfully!`);
     }
   }
 
@@ -122,11 +118,7 @@ export function useFileManager(parentFilter?: any) {
         await refreshFolders();
       }
 
-      toast.add({
-        title: "Success",
-        description: `${folderList.length} folder(s) deleted successfully!`,
-        color: "success",
-      });
+      notify.success("Success", `${folderList.length} folder(s) deleted successfully!`);
     }
   }
 
@@ -149,11 +141,7 @@ export function useFileManager(parentFilter?: any) {
         refreshCallback();
       }
 
-      toast.add({
-        title: "Success",
-        description: `File "${file.filename || file.displayName}" has been deleted successfully!`,
-        color: "success",
-      });
+      notify.success("Success", `File "${file.filename || file.displayName}" has been deleted successfully!`);
     }
   }
 
@@ -178,11 +166,7 @@ export function useFileManager(parentFilter?: any) {
         refreshCallback();
       }
 
-      toast.add({
-        title: "Success",
-        description: `${fileIds.length} file(s) deleted successfully!`,
-        color: "success",
-      });
+      notify.success("Success", `${fileIds.length} file(s) deleted successfully!`);
     }
   }
 

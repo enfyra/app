@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 
 const id = route.params.id as string;
@@ -55,11 +55,7 @@ async function handleReset() {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
     
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -118,6 +114,7 @@ useHeaderActionRegistry([
 const errors = ref<Record<string, string>>({});
 
 const { validateForm } = useFormValidation(tableName);
+const { getIdFieldName } = useDatabase();
 
 const {
   data: apiData,
@@ -126,7 +123,7 @@ const {
 } = useApi(() => `/${tableName}`, {
   query: computed(() => ({
     fields: getIncludeFields(),
-    filter: { id: { _eq: id } },
+    filter: { [getIdFieldName()]: { _eq: id } },
   })),
   errorContext: "Fetch Role",
 });
@@ -171,12 +168,9 @@ async function save() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Role updated!",
-  });
+  notify.success("Success", "Role updated!");
   errors.value = {};
+  hasFormChanges.value = false;
 
   await fetchRole();
   const freshData = apiData.value?.data?.[0];
@@ -201,11 +195,7 @@ async function deleteRole() {
     return;
   }
 
-  toast.add({ 
-    title: "Success",
-    description: "Role deleted successfully", 
-    color: "success" 
-  });
+  notify.success("Success", "Role deleted successfully");
   await navigateTo("/settings/roles");
 }
 

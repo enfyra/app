@@ -35,6 +35,7 @@ const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const tableName = "oauth_account_definition";
+const { getId, getIdFieldName } = useDatabase();
 
 const {
   data: apiData,
@@ -43,7 +44,7 @@ const {
 } = useApi(() => `/${tableName}`, {
   query: computed(() => ({
     fields: "*,user.id,user._id,user.email,user.name",
-    filter: { id: { _eq: route.params.id } },
+    filter: { [getIdFieldName()]: { _eq: route.params.id } },
   })),
   errorContext: "Fetch OAuth Account",
 });

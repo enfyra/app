@@ -193,12 +193,8 @@ async function saveEdit() {
     originalName.value = "";
     editingLoading.value = false;
 
-    const toast = useToast();
-    toast.add({
-      title: "Success",
-      description: "Folder renamed successfully!",
-      color: "success",
-    });
+    const notify = useNotify();
+    notify.success("Success", "Folder renamed successfully!");
 
     emit("refresh-folders");
   } catch (error) {

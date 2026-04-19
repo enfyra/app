@@ -12,7 +12,7 @@ const emit = defineEmits<{
   'save': [menu: MenuDefinition];
 }>();
 
-const toast = useToast();
+const notify = useNotify();
 const tableName = "menu_definition";
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getIdFieldName, getId } = useDatabase();
@@ -281,21 +281,13 @@ async function handleSave() {
 
   if (!isValid) {
     errors.value = validationErrors;
-    toast.add({
-      title: "Validation Error",
-      description: "Please fill in all required fields.",
-      color: "error",
-    });
+    notify.error("Validation Error", "Please fill in all required fields.");
     return;
   }
 
   const uniqueOk = await formEditorRef.value?.validateAllUniqueFields?.();
   if (uniqueOk === false) {
-    toast.add({
-      title: "Duplicate value",
-      color: "error",
-      description: "Please verify all unique fields before saving.",
-    });
+    notify.error("Duplicate value", "Please verify all unique fields before saving.");
     return;
   }
 
@@ -316,11 +308,7 @@ async function handleSave() {
     }
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: props.menu ? "Menu updated!" : "Menu created!",
-  });
+notify.success("Success")
 
   hasFormChanges.value = false;
   emit('save', form.value as MenuDefinition);

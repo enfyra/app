@@ -1,12 +1,12 @@
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const route = useRoute();
 const router = useRouter();
 const { confirm } = useConfirm();
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const { registerPageHeader } = usePageHeaderRegistry();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
 
@@ -54,16 +54,16 @@ const filterColor = computed(() =>
 function buildQuickFilter(): Record<string, any> | null {
   const conditions: any[] = [];
   if (quickScope.value.column) {
-    conditions.push({ column: { id: { _eq: quickScope.value.column } } });
+    conditions.push({ column: { [getIdFieldName()]: { _eq: quickScope.value.column } } });
   }
   if (quickScope.value.relation) {
-    conditions.push({ relation: { id: { _eq: quickScope.value.relation } } });
+    conditions.push({ relation: { [getIdFieldName()]: { _eq: quickScope.value.relation } } });
   }
   if (quickScope.value.role) {
-    conditions.push({ role: { id: { _eq: quickScope.value.role } } });
+    conditions.push({ role: { [getIdFieldName()]: { _eq: quickScope.value.role } } });
   }
   if (quickScope.value.user) {
-    conditions.push({ allowedUsers: { id: { _eq: quickScope.value.user } } });
+    conditions.push({ allowedUsers: { [getIdFieldName()]: { _eq: quickScope.value.user } } });
   }
   if (conditions.length === 0) return null;
   if (conditions.length === 1) return conditions[0];
@@ -166,7 +166,7 @@ async function removeItem(item: any) {
 
   await deleteApi({ id: getId(item) });
   if (deleteError.value) return;
-  toast.add({ title: "Success", description: "Rule deleted", color: "success" });
+  notify.success("Success", "Rule deleted");
   await fetchPermissions();
 }
 

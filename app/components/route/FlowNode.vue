@@ -1,10 +1,11 @@
 <template>
   <UContextMenu :items="contextMenuItems" :disabled="!canDelete">
     <div
-      class="flow-node group cursor-pointer transition-all relative"
+      class="flow-node group transition-all relative"
       :class="[
         nodeClass,
-        data.enabled === false ? 'disabled-state' : ''
+        data.enabled === false ? 'disabled-state' : '',
+        data.isDefault ? 'cursor-default' : 'cursor-pointer',
       ]"
       @click="handleClick"
     >
@@ -19,7 +20,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-0.5 flex-wrap mb-0.5">
               <h5 class="text-[8px] font-semibold text-[var(--text-primary)] truncate leading-tight max-w-[100px]">
-                {{ data.label || 'Unnamed' }}
+                {{ data.isDefault ? 'Built-in logic' : (data.label || 'Unnamed') }}
               </h5>
               <UBadge
                 v-if="data.isDefault"
@@ -28,7 +29,7 @@
                 color="primary"
                 class="text-[7px] px-0.5 py-0 leading-none"
               >
-                Default
+                Built-in
               </UBadge>
               <UBadge
                 v-if="!data.route && !data.isDefault"
@@ -79,6 +80,7 @@ interface Props {
 const props = defineProps<Props>();
 
 function handleClick() {
+  if (props.data?.isDefault) return;
   if (props.onClick) {
     props.onClick();
   }
@@ -123,9 +125,9 @@ const nodeClass = computed(() => {
     : '';
   
   if (props.data.isDefault) {
-    return `${baseClass} border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20 hover:border-primary-300 dark:hover:border-primary-700`;
+    return `${baseClass} border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20`;
   }
-  
+
   switch (props.type) {
     case 'prehook':
       return `${baseClass} border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20 hover:border-primary-300 dark:hover:border-primary-700`;

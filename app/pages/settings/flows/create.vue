@@ -24,7 +24,7 @@ definePageMeta({
   title: "Create Flow",
 });
 
-const toast = useToast();
+const notify = useNotify();
 const router = useRouter();
 
 const tableName = "flow_definition";
@@ -97,11 +97,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `Flow "${createForm.value.name}" has been created successfully!`,
-    color: "success",
-  });
+  notify.success("Success", `Flow "${createForm.value.name}" has been created successfully!`);
 
   const createdId = createData.value?.data?.[0]?.id;
   router.push(createdId ? `/settings/flows/${createdId}` : '/settings/flows');

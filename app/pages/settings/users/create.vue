@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 
 const tableName = "user_definition";
 
@@ -75,10 +75,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "User created successfully",
-    color: "success",
-  });
+  notify.success("User created successfully");
 
   const { getId } = useDatabase();
   await navigateTo(`/settings/users/${getId(createData.value?.data[0])}`, {

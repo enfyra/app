@@ -100,7 +100,7 @@ export function useFilterQuery() {
     return filter.conditions.some((condition) => {
       if ("field" in condition) {
         if (!condition.field || !condition.operator) return false;
-        if (condition.operator === "_null" || condition.operator === "_nnull") return true;
+        if (condition.operator === "_is_null" || condition.operator === "_is_not_null") return true;
         return condition.value !== null && condition.value !== undefined && condition.value !== "";
       } else {
         return hasActiveFilters(condition);

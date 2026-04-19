@@ -17,7 +17,7 @@
 
       <div v-else-if="flow" class="w-full max-w-[1000px] space-y-6">
         <CommonFormCard>
-          <UForm :state="editForm">
+          <UForm :state="editForm" @submit="saveFlowSettings">
             <FormEditorLazy
               v-model="editForm"
               :table-name="'flow_definition'"
@@ -28,6 +28,21 @@
               @has-changed="(v: boolean) => hasFormChanges = v"
               mode="update"
             />
+
+            <div
+              class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
+            >
+              <UButton
+                v-if="canUpdateFlow"
+                label="Save"
+                icon="lucide:save"
+                variant="solid"
+                color="primary"
+                type="submit"
+                :loading="saveFlowPending"
+                :disabled="!hasFormChanges"
+              />
+            </div>
           </UForm>
         </CommonFormCard>
 
@@ -92,14 +107,19 @@
 
     <CommonDrawer v-model="stepDrawerOpen" direction="right" full-width>
       <template #header>
-        <div class="flex items-center justify-between w-full">
-          <h3 class="text-lg font-semibold">{{ editingStepId ? 'Edit Step' : 'New Step' }}</h3>
+        <div class="flex items-center gap-2 w-full min-w-0">
+          <h3 class="text-lg font-semibold flex-shrink-0">{{ editingStepId ? 'Edit Step' : 'New Step' }}</h3>
+          <template v-if="stepForm.parentId">
+            <span class="text-[var(--text-quaternary)]">·</span>
+            <UBadge color="secondary" variant="soft" size="md">{{ getConditionLabel(stepForm.parentId) }}</UBadge>
+            <UBadge :color="stepForm.branch === 'true' ? 'success' : 'error'" variant="soft" size="md">{{ stepForm.branch === 'true' ? 'True' : 'False' }}</UBadge>
+          </template>
         </div>
       </template>
       <template #body>
         <div class="p-4 space-y-4">
           <UFormField label="Key" required class="w-full" :error="stepErrors.key">
-            <UInput v-model="stepForm.key" placeholder="e.g. check_user" class="w-full" :color="stepErrors.key ? 'error' : undefined" @input="stepErrors.key = ''" />
+            <UInput v-model="stepForm.key" placeholder="e.g. check_user" class="w-full" />
             <template #hint><span class="text-[10px]">Reference via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW.{{ stepForm.key || 'key' }}</code></span></template>
           </UFormField>
 
@@ -110,7 +130,7 @@
           </UFormField>
 
           <UFormField label="Type" required class="w-full" :error="stepErrors.type">
-            <USelect v-model="stepForm.type" :items="stepTypeOptions" value-key="value" class="w-full" :color="stepErrors.type ? 'error' : undefined" />
+            <USelect v-model="stepForm.type" :items="stepTypeOptions" value-key="value" class="w-full" />
           </UFormField>
 
           <div class="p-3 rounded-lg border" :class="stepErrors.config ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-800' : 'bg-[var(--surface-muted)] border-[var(--border-default)]'">
@@ -131,13 +151,7 @@
             </UFormField>
           </div>
 
-          <div v-if="stepForm.parentId && !editingStepId" class="p-3 rounded-lg bg-[var(--surface-muted)] text-sm">
-            <span class="text-[var(--text-tertiary)]">Branch:</span>
-            <UBadge :color="stepForm.branch === 'true' ? 'success' : 'error'" variant="soft" size="xs" class="ml-2">{{ stepForm.branch }}</UBadge>
-            <span class="text-[var(--text-tertiary)] ml-2">of</span>
-            <span class="font-medium ml-1">{{ getConditionLabel(stepForm.parentId) }}</span>
-          </div>
-          <div v-else-if="conditionSteps.length > 0" class="grid grid-cols-2 gap-3">
+          <div v-if="!stepForm.parentId && conditionStepOptions.length > 1" class="grid grid-cols-2 gap-3">
             <UFormField label="Attach to Condition" class="w-full">
               <USelect v-model="stepForm.parentId" :items="conditionStepOptions" value-key="value" class="w-full" placeholder="None (root level)" />
             </UFormField>
@@ -149,10 +163,10 @@
       </template>
       <template #footer>
         <div class="w-full">
-          <div class="px-4 py-3 border-t border-[var(--border-default)]">
+          <div class="px-4 py-3">
             <UFormField label="Test Payload (optional)" class="w-full">
               <UTextarea v-model="testPayloadJson" :rows="2" class="w-full font-mono text-xs" placeholder='{"orderId": 123, "email": "test@test.com"}' />
-              <template #hint><span class="text-[10px]">Accessible via <code class="bg-[var(--surface-muted)] px-1 rounded">@PAYLOAD</code> in step code</span></template>
+              <template #hint><span class="text-[10px]">Accessible via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW_PAYLOAD</code> in step code</span></template>
             </UFormField>
           </div>
           <div v-if="testResult" class="px-4 py-3 border-t border-[var(--border-default)]">
@@ -259,14 +273,14 @@ definePageMeta({ layout: "default", title: "Flow Editor" });
 
 const route = useRoute();
 const router = useRouter();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { isMounted } = useMounted();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const flowId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
-const pollTimers: ReturnType<typeof setTimeout>[] = [];
+const { adminSocket } = useAdminSocket();
 const stepDrawerOpen = ref(false);
 const editingStepId = ref<string | number | null>(null);
 const savingStep = ref(false);
@@ -301,7 +315,9 @@ const flowFieldMap = computed(() => ({
 const conditionSteps = computed(() => steps.value.filter((s: any) => s.type === 'condition'));
 const conditionStepOptions = computed(() => [
   { label: 'None (root level)', value: null },
-  ...conditionSteps.value.map((s: any) => ({ label: s.key, value: getId(s) })),
+  ...conditionSteps.value
+    .filter((s: any) => !editingStepId.value || String(getId(s)) !== String(editingStepId.value))
+    .map((s: any) => ({ label: s.key, value: getId(s) })),
 ]);
 
 function getConditionLabel(parentId: any): string {
@@ -322,10 +338,17 @@ const stepForm = ref({
   branch: undefined as string | undefined,
 });
 
+watch(() => stepForm.value.key, () => {
+  if (stepErrors.value.key) stepErrors.value.key = '';
+});
+watch(() => stepForm.value.type, () => {
+  if (stepErrors.value.type) stepErrors.value.type = '';
+});
+
 registerPageHeader({ title: "Flow Editor", gradient: "purple" });
 
 const { data: flowData, pending: loading, execute: fetchFlow } = useApi(
-  () => `/flow_definition?filter={"id":{"_eq":"${flowId}"}}&fields=*,steps.*,steps.parent.id&limit=1`,
+  () => `/flow_definition?filter={"${getIdFieldName()}":{"_eq":"${flowId}"}}&fields=*,steps.*,steps.parent.id&limit=1`,
   { errorContext: "Fetch Flow" }
 );
 
@@ -379,7 +402,7 @@ const { data: latestExecData, execute: fetchLatestExecDetail } = useApi(
   () => {
     const latest = allExecutions.value[0];
     if (!latest) return '/flow_execution_definition?limit=0';
-    return `/flow_execution_definition?filter={"id":{"_eq":"${latest.id}"}}&fields=id,status,completedSteps,currentStep,error&limit=1`;
+    return `/flow_execution_definition?filter={"${getIdFieldName()}":{"_eq":"${getId(latest)}"}}&fields=id,status,completedSteps,currentStep,error&limit=1`;
   },
   { errorContext: "Fetch Latest Exec Detail" }
 );
@@ -410,25 +433,18 @@ async function refreshExecOverlay() {
   }
 }
 
-const { execute: updateFlowApi, error: updateError } = useApi(() => `/flow_definition`, { method: "patch", errorContext: "Update Flow" });
+const { execute: updateFlowApi, error: updateError, pending: saveFlowPending } = useApi(() => `/flow_definition`, { method: "patch", errorContext: "Update Flow" });
+
+const { checkPermissionCondition } = usePermissions();
+const canUpdateFlow = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: "/flow_definition", actions: ["update"] }],
+  })
+);
 const { execute: createStepApi, error: createStepError } = useApi(() => `/flow_step_definition`, { method: "post", errorContext: "Create Step" });
 const { execute: updateStepApi, error: updateStepError } = useApi(() => `/flow_step_definition`, { method: "patch", errorContext: "Update Step" });
 const { execute: deleteStepApi, error: deleteStepError } = useApi(() => `/flow_step_definition`, { method: "delete", errorContext: "Delete Step" });
 
-useHeaderActionRegistry([
-  {
-    id: "save-flow",
-    label: "Save",
-    icon: "lucide:save",
-    variant: "solid",
-    color: "primary",
-    size: "md",
-    order: 999,
-    onClick: saveFlowSettings,
-    disabled: computed(() => !hasFormChanges.value),
-    permission: { and: [{ route: "/flow_definition", actions: ["update"] }] },
-  },
-]);
 
 useSubHeaderActionRegistry([
   {
@@ -448,10 +464,11 @@ onMounted(async () => {
   await fetchExecutions();
   await refreshExecOverlay();
   syncEditForm();
+  adminSocket?.on('flow:execution', onFlowExecution);
 });
 
 onUnmounted(() => {
-  pollTimers.forEach(t => clearTimeout(t));
+  adminSocket?.off('flow:execution', onFlowExecution);
 });
 
 function syncEditForm() {
@@ -472,7 +489,7 @@ async function saveFlowSettings() {
   if (updateError.value) {
     return;
   }
-  toast.add({ title: "Success", description: "Flow settings saved!", color: "success" });
+  notify.success("Success", "Flow settings saved!");
   hasFormChanges.value = false;
   await fetchFlow();
 }
@@ -494,7 +511,7 @@ watch(stepDrawerOpen, (isOpen) => {
 watch(execDrawerOpen, (isOpen) => {
   if (execDrawerUpdating.value) return;
   if (isOpen && selectedExec.value) {
-    router.push({ query: { ...route.query, exec: String(selectedExec.value.id) } });
+    router.push({ query: { ...route.query, exec: String(getId(selectedExec.value)) } });
   } else {
     const q = { ...route.query };
     delete q.exec;
@@ -604,7 +621,7 @@ async function testCurrentStep() {
   try {
     config = stepForm.value.configJson ? JSON.parse(stepForm.value.configJson) : {};
   } catch {
-    toast.add({ title: "Error", description: "Invalid JSON in config", color: "error" });
+    notify.error("Error", "Invalid JSON in config");
     return;
   }
   testing.value = true;
@@ -683,15 +700,14 @@ async function saveStep() {
       parent: stepForm.value.parentId ? { id: stepForm.value.parentId } : null,
       branch: stepForm.value.parentId ? stepForm.value.branch : null,
     };
+    const isEdit = !!editingStepId.value;
     if (editingStepId.value) {
       await updateStepApi({ body, id: editingStepId.value });
       if (updateStepError.value) return;
-      toast.add({ title: "Success", description: "Step updated!", color: "success" });
     } else {
-      body.flow = { id: Number(flowId) };
+      body.flow = { [getIdFieldName()]: flowId };
       await createStepApi({ body });
       if (createStepError.value) return;
-      toast.add({ title: "Success", description: "Step created!", color: "success" });
     }
     stepDrawerOpen.value = false;
     await fetchFlow();
@@ -730,7 +746,7 @@ async function deleteCurrentStep() {
   if (!ok) return;
   await deleteStepApi({ id: editingStepId.value });
   if (deleteStepError.value) return;
-  toast.add({ title: "Success", description: "Step deleted.", color: "success" });
+  notify.success("Success", "Step deleted.");
   stepDrawerOpen.value = false;
   await fetchFlow();
 }
@@ -739,12 +755,15 @@ async function triggerFlow() {
   const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Trigger Flow" });
   await triggerApi({ body: { payload: { trigger: 'manual' } } });
   if (triggerError.value) return;
-  toast.add({ title: "Success", description: "Flow triggered!", color: "success" });
-  await refreshExecutions();
-  pollTimers.forEach(t => clearTimeout(t));
-  pollTimers.length = 0;
-  pollTimers.push(setTimeout(() => refreshExecutions(), 2000));
-  pollTimers.push(setTimeout(() => refreshExecutions(), 5000));
+  notify.success("Flow triggered");
+}
+
+function onFlowExecution(data: { flowId?: string | number; status: string; [key: string]: any }) {
+  const matchId = String(data.flowId ?? data.flow_id ?? data.id) === String(flowId)
+  if (!matchId) return
+  if (data.status === 'completed' || data.status === 'failed') {
+    refreshExecutions()
+  }
 }
 
 function getStatusColor(status: string) {
@@ -771,7 +790,7 @@ async function refreshExecutions() {
 }
 
 const { execute: fetchExecDetail, data: execDetailData } = useApi(
-  () => `/flow_execution_definition?filter={"id":{"_eq":"${selectedExec.value?.id}"}}&fields=id,status,startedAt,completedAt,duration,currentStep,completedSteps,error,context&limit=1`,
+  () => `/flow_execution_definition?filter={"${getIdFieldName()}":{"_eq":"${getId(selectedExec.value)}"}}&fields=id,status,startedAt,completedAt,duration,currentStep,completedSteps,error,context&limit=1`,
   { errorContext: "Fetch Execution Detail" }
 );
 
@@ -781,10 +800,8 @@ async function rerunExecution() {
   const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Re-run Flow" });
   await triggerApi({ body: { payload } });
   if (triggerError.value) return;
-  toast.add({ title: "Success", description: "Flow re-triggered with same payload!", color: "success" });
+  notify.success("Flow re-triggered");
   execDrawerOpen.value = false;
-  await refreshExecutions();
-  pollTimers.push(setTimeout(() => refreshExecutions(), 2000));
 }
 
 async function openExecution(exec: any) {

@@ -46,7 +46,7 @@ definePageMeta({
   title: "Create WebSocket Gateway",
 });
 
-const toast = useToast();
+const notify = useNotify();
 const router = useRouter();
 const { createLoader } = useLoader();
 const { confirm } = useConfirm();
@@ -129,11 +129,7 @@ async function handleCreate() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `WebSocket gateway "${createForm.value.path}" has been created successfully!`,
-    color: "success",
-  });
+  notify.success("Success", `WebSocket gateway "${createForm.value.path}" has been created successfully!`);
 
   router.push('/settings/websockets');
 }

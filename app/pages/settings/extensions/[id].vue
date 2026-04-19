@@ -42,11 +42,7 @@
     @upload="handleUpload"
     @error="
       (message) =>
-        toast.add({
-          title: 'Upload Error',
-          description: message,
-          color: 'error',
-        })
+        notify.error('Upload Error', message)
     "
   />
 
@@ -63,7 +59,7 @@ definePageMeta({
 });
 
 const route = useRoute();
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 
 const tableName = "extension_definition";
@@ -94,11 +90,7 @@ async function handleReset() {
     form.value = formChanges.discardChanges(form.value);
     hasFormChanges.value = false;
     
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -185,6 +177,8 @@ useHeaderActionRegistry([
   },
 ]);
 
+const { getIdFieldName } = useDatabase();
+
 const {
   data: extensionData,
   pending: loading,
@@ -192,7 +186,7 @@ const {
 } = useApi(() => `/${tableName}`, {
   query: {
     fields: getIncludeFields(),
-    filter: { id: { _eq: route.params.id } },
+    filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: "Fetch Extension",
 });
@@ -249,12 +243,9 @@ async function updateExtension() {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Extension updated!",
-  });
+  notify.success("Success", "Extension updated!");
   errors.value = {};
+  hasFormChanges.value = false;
 
   await executeGetExtension();
   const freshData = extensionData.value?.data?.[0];
@@ -279,11 +270,7 @@ async function deleteExtension() {
     return;
   }
 
-  toast.add({ 
-    title: "Success",
-    description: "Extension deleted successfully", 
-    color: "success" 
-  });
+  notify.success("Success", "Extension deleted successfully");
   await navigateTo("/settings/extensions");
 }
 
@@ -299,17 +286,9 @@ async function handleUpload(files: File | File[]) {
     form.value.code = content;
     showUploadModal.value = false;
 
-    toast.add({
-      title: "Success",
-      description: "Extension code uploaded successfully",
-      color: "success",
-    });
+    notify.success("Success", "Extension code uploaded successfully");
   } catch (error) {
-    toast.add({
-      title: "Upload Error",
-      description: "Failed to read file content",
-      color: "error",
-    });
+    notify.error("Upload Error", "Failed to read file content");
   } finally {
     uploadLoading.value = false;
   }

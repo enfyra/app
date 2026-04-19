@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { MenuDefinition } from '~/types';
 
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const tableName = "menu_definition";
 const { generateEmptyForm } = useSchema(tableName);
@@ -219,20 +219,12 @@ async function toggleEnabled(payload: { menu: MenuDefinition; enabled: boolean }
 
   await refreshMenus();
 
-  toast.add({
-    title: "Success",
-    description: `Menu ${newEnabled ? "enabled" : "disabled"} successfully`,
-    color: "success",
-  });
+  notify.success("Success", `Menu ${newEnabled ? "enabled" : "disabled"} successfully`);
 }
 
 async function deleteMenu(menuItem: MenuDefinition) {
   if (menuItem.isSystem) {
-    toast.add({
-      title: "Cannot Delete",
-      description: "System menus cannot be deleted",
-      color: "error",
-    });
+    notify.error("Cannot Delete", "System menus cannot be deleted");
     return;
   }
 
@@ -260,11 +252,7 @@ async function deleteMenu(menuItem: MenuDefinition) {
 
     await refreshMenus();
 
-    toast.add({
-      title: "Success",
-      description: `Menu "${menuItem.label}" has been deleted successfully!`,
-      color: "success",
-    });
+    notify.success("Success", `Menu "${menuItem.label}" has been deleted successfully!`);
   }
 }
 
@@ -310,11 +298,7 @@ async function handleDeleteExtension(menu: MenuDefinition) {
 
   await refreshMenus();
 
-  toast.add({
-    title: "Success",
-    description: `Extension deleted successfully!`,
-    color: "success",
-  });
+  notify.success("Success", `Extension deleted successfully!`);
 }
 
 async function handleMoveMenu(menu: MenuDefinition) {
@@ -405,11 +389,7 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
 
   await refreshMenus();
 
-  toast.add({
-    title: "Success",
-    description: "Menu moved successfully!",
-    color: "success",
-  });
+  notify.success("Success", "Menu moved successfully!");
 }
 
 async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
@@ -439,22 +419,14 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
     await Promise.all(updatePromises);
     await refreshMenus();
 
-    toast.add({
-      title: "Success",
-      description: "Menu order updated successfully!",
-      color: "success",
-    });
+    notify.success("Success", "Menu order updated successfully!");
   } catch (error) {
     if (menuDefinitions.value && originalMenuDefinitions.length > 0) {
       menuDefinitions.value.data = originalMenuDefinitions;
     }
     menuItems.value = originalMenuItems;
     await refreshMenus();
-    toast.add({
-      title: "Error",
-      description: "Failed to update menu order. Please try again.",
-      color: "error",
-    });
+    notify.error("Error", "Failed to update menu order. Please try again.");
   } finally {
     isDndUpdating.value = false;
   }

@@ -617,6 +617,18 @@ function getComponentConfigByKey(key: string) {
     }
 
     case "int":
+      if (column?.isPrimary && column?.isGenerated) {
+        return {
+          component: UInput,
+          componentProps: {
+            ...componentPropsBase,
+            type: "text",
+            modelValue: ensureString(props.formData[key]),
+            readonly: true,
+          },
+          fieldProps,
+        };
+      }
       return {
         component: UInput,
         componentProps: {

@@ -21,7 +21,7 @@
       >
         <CommonSettingsCard
           v-for="account in accounts"
-          :key="account.id ?? account._id"
+          :key="getId(account)"
           :title="getProviderLabel(account.provider)"
           :description="getUserEmail(account)"
           :icon="getProviderIcon(account.provider)"

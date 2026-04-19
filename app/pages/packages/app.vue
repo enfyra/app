@@ -92,7 +92,7 @@
 const page = ref(1);
 const limit = 9;
 const { confirm } = useConfirm();
-const toast = useToast();
+const notify = useNotify();
 const route = useRoute();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
@@ -177,11 +177,7 @@ async function deletePackage(pkgId: any, pkgName: string) {
 
     await fetchAppPackages();
 
-    toast.add({
-      title: "Success",
-      description: `Package ${pkgName} uninstalled successfully`,
-      color: "success",
-    });
+    notify.success("Success", `Package ${pkgName} uninstalled successfully`);
 
     await loadPackages();
   } finally {

@@ -2,7 +2,7 @@
 const route = useRoute();
 const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
-const toast = useToast();
+const notify = useNotify();
 const { getId } = useDatabase();
 const tableName = "table_definition";
 const { getIncludeFields } = useSchema(tableName);
@@ -13,6 +13,10 @@ const table = ref<any>();
 const schemaConfirmModalOpen = ref(false);
 const schemaConfirmDetails = ref<any>(null);
 const schemaConfirmLoading = ref(false);
+
+const deleteModalOpen = ref(false);
+const deleteConfirmText = ref("");
+const deleteConfirmError = ref(false);
 
 const hasFormChanges = ref(false);
 const { useFormChanges } = useSchema();
@@ -40,6 +44,7 @@ const {
       "columns.fieldPermissions.effect",
       "relations.fieldPermissions.id",
       "relations.fieldPermissions.effect",
+      "gqlConfig.isEnabled",
     ].join(","),
     filter: {
       name: {
@@ -85,7 +90,7 @@ useHeaderActionRegistry([
         !hasFormChanges.value
     ),
     onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
+    show: computed(() => activeTab.value === 'schema' && hasFormChanges.value),
   },
   {
     id: "delete-table",
@@ -95,6 +100,7 @@ useHeaderActionRegistry([
     color: "error",
     order: 2,
     loading: computed(() => deleting.value),
+    show: computed(() => activeTab.value === 'schema'),
     disabled: computed(
       () =>
         (table.value?.isSystem &&
@@ -119,6 +125,7 @@ useHeaderActionRegistry([
     variant: "solid",
     color: "primary",
     order: 999,
+    show: computed(() => activeTab.value === 'schema'),
     loading: computed(() => saving.value || schemaLoading.value),
     disabled: computed(
       () =>
@@ -141,6 +148,18 @@ useHeaderActionRegistry([
 ]);
 
 const showSchemaViewer = ref(false);
+const showRouteApiTest = ref(false);
+
+const activeTab = ref((route.query.tab as string) || 'schema')
+const tabItems = [
+  { label: 'Schema', icon: 'i-lucide-table-2', value: 'schema' },
+  { label: 'Routes', icon: 'i-lucide-route', value: 'routes' },
+]
+
+watch(activeTab, (tab) => {
+  const query = { ...route.query, tab }
+  navigateTo({ query }, { replace: true })
+})
 
 useSubHeaderActionRegistry([
   {
@@ -150,7 +169,18 @@ useSubHeaderActionRegistry([
     variant: "solid",
     color: "secondary",
     size: "md",
+    show: computed(() => activeTab.value === 'schema'),
     onClick: () => (showSchemaViewer.value = true),
+  },
+  {
+    id: "test-api",
+    label: "Test API",
+    icon: "lucide:play",
+    variant: "soft",
+    color: "warning",
+    size: "md",
+    show: computed(() => activeTab.value === 'routes'),
+    onClick: () => (showRouteApiTest.value = true),
   },
 ]);
 
@@ -158,8 +188,9 @@ async function initializeForm() {
   await fetchTableData();
   const data = tableData.value?.data?.[0];
   if (data) {
+    data.graphqlEnabled = data.gqlConfig?.isEnabled === true;
     table.value = data;
-    formChanges.update(data); 
+    formChanges.update(data);
     hasFormChanges.value = false;
   }
 }
@@ -202,11 +233,7 @@ async function afterPatchSuccess() {
     table.value = updatedData;
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Table structure updated!",
-  });
+  notify.success("Success", "Table structure updated!");
 
   formChanges.update(table.value);
   hasFormChanges.value = false;
@@ -225,32 +252,30 @@ async function handleReset() {
     table.value = formChanges.discardChanges(table.value);
     hasFormChanges.value = false;
     
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
-async function handleDelete() {
-  const ok = await confirm({
-    title: 'Delete Table',
-    content: `Are you sure you want to delete table "${table.value?.name}"? This action cannot be undone.`,
-  });
-  if (!ok) return;
+function handleDelete() {
+  deleteModalOpen.value = true;
+  deleteConfirmText.value = "";
+  deleteConfirmError.value = false;
+}
 
+async function executeDelete() {
+  if (deleteConfirmText.value !== table.value?.name) {
+    deleteConfirmError.value = true;
+    return;
+  }
+
+  deleteModalOpen.value = false;
   await executeDeleteTable({ id: getId(table.value) });
   if (deleteError.value) return;
   await afterDeleteSuccess(String(route.params.table));
 }
 
 async function afterDeleteSuccess(_deletedTableName: string) {
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Table deleted!",
-  });
+  notify.success("Success", "Table deleted!");
   await navigateTo(`/collections`);
 }
 
@@ -292,11 +317,7 @@ async function copyConfirmHash() {
   if (!hash) return;
   try {
     await navigator.clipboard.writeText(String(hash));
-    toast.add({
-      title: "Copied",
-      color: "success",
-      description: "Confirm hash copied to clipboard",
-    });
+    notify.success("Copied", "Confirm hash copied to clipboard");
   } catch {
   }
 }
@@ -643,6 +664,83 @@ onMounted(() => {
       </template>
     </CommonModal>
 
+    <UModal
+      v-model:open="deleteModalOpen"
+      :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-md'"
+    >
+      <template #header>
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center"
+          >
+            <UIcon name="lucide:trash-2" class="text-rose-600 dark:text-rose-400" />
+          </div>
+          <div>
+            <h2 class="text-lg font-semibold text-[var(--text-primary)]">
+              Delete Collection
+            </h2>
+            <p class="text-sm text-[var(--text-tertiary)]">
+              This action cannot be undone
+            </p>
+          </div>
+        </div>
+      </template>
+      <template #body>
+        <div class="space-y-4">
+          <div class="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 px-4 py-3">
+            <div class="flex items-start gap-3">
+              <UIcon name="lucide:alert-triangle" class="mt-0.5 w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+              <div class="text-sm text-rose-900 dark:text-rose-100">
+                <p class="font-medium">Warning: Destructive Action</p>
+                <p class="mt-1 text-rose-800/90 dark:text-rose-100/90">
+                  All data in this collection will be permanently deleted. This includes all records, columns, and relations.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm font-medium text-[var(--text-primary)]">
+              Type the collection name to confirm
+            </label>
+            <p class="text-xs text-[var(--text-tertiary)]">
+              Please type <span class="font-mono font-semibold text-[var(--text-primary)]">{{ table?.name }}</span> to confirm deletion
+            </p>
+            <UInput
+              v-model="deleteConfirmText"
+              :placeholder="`Type '${table?.name}' to confirm`"
+              size="lg"
+              :color="deleteConfirmError ? 'error' : 'neutral'"
+              class="w-full"
+              @update:model-value="deleteConfirmError = false"
+            />
+            <p v-if="deleteConfirmError" class="text-xs text-rose-600 dark:text-rose-400">
+              Collection name does not match. Please type exactly: {{ table?.name }}
+            </p>
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 w-full">
+          <UButton variant="ghost" class="justify-center" @click="deleteModalOpen = false">
+            Cancel
+          </UButton>
+          <UButton
+            color="error"
+            :loading="deleting"
+            :disabled="deleteConfirmText !== table?.name"
+            class="justify-center"
+            @click="executeDelete"
+          >
+            <span class="inline-flex items-center gap-2">
+              <UIcon name="lucide:trash-2" class="w-4 h-4" />
+              Delete Collection
+            </span>
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+
     <Transition name="loading-fade" mode="out-in">
       <div v-if="!isMounted || loading" class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
         <CommonFormCard>
@@ -654,31 +752,42 @@ onMounted(() => {
         </CommonFormCard>
       </div>
 
-      <UForm v-else-if="table" @submit.prevent="save" :state="table">
-        <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-          <CommonFormCard>
-            <TableForm v-model="table" @save="save">
-              <div class="space-y-6">
-                <TableConstraints
-                  v-model="table"
-                  :column-names="table.columns?.map((c:any) => c?.name)"
-                />
-                <TableColumns v-model="table.columns" />
-                <TableRelations
-                  v-model="table.relations"
-                  :table-id="getId(table)"
-                  :table-options="
-                    Object.values(schemas).map((schema: any) => ({
-                      label: schema?.name,
-                      value: getId(schema),
-                    }))
-                  "
-                />
-              </div>
-            </TableForm>
-          </CommonFormCard>
+      <div v-else-if="table" class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+          <UTabs v-model="activeTab" :items="tabItems" :content="false" variant="link" color="neutral" class="mb-4" />
+
+          <UForm @submit.prevent="save" :state="table">
+            <div v-show="activeTab === 'schema'">
+              <CommonFormCard>
+                <TableForm v-model="table" @save="save">
+                  <div class="space-y-6">
+                    <TableConstraints
+                      v-model="table"
+                      :column-names="table.columns?.map((c:any) => c?.name)"
+                    />
+                    <TableColumns v-model="table.columns" />
+                    <TableRelations
+                      v-model="table.relations"
+                      :table-id="getId(table)"
+                      :table-options="
+                        Object.values(schemas).map((schema: any) => ({
+                          label: schema?.name,
+                          value: getId(schema),
+                        }))
+                      "
+                    />
+                  </div>
+                </TableForm>
+              </CommonFormCard>
+            </div>
+          </UForm>
+
+          <CollectionRouteTab
+            v-if="activeTab === 'routes'"
+            :table-name="route.params.table"
+            :external-api-test="showRouteApiTest"
+            @close-api-test="showRouteApiTest = false"
+          />
         </div>
-      </UForm>
 
       <CommonEmptyState
         v-else

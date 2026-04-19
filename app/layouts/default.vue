@@ -31,16 +31,18 @@
 
       <Transition name="metadata-banner">
         <div
-          v-if="metadataReloading"
+          v-if="showReloadBanner"
           key="metadata-banner"
           class="shrink-0 overflow-hidden"
         >
           <UBanner
             color="neutral"
-            icon="lucide:loader-circle"
-            title="Loading metadata…"
-            class="border-b border-[var(--border-default)] shrink-0"
-            :ui="{ icon: 'animate-spin' }"
+            :icon="isReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
+            :title="bannerTitle"
+            :close="!isReloading"
+            class="border-b border-[var(--border-default)] shrink-0 opacity-90"
+            :ui="{ icon: isReloading ? 'animate-spin' : '' }"
+            @close="dismissReloadBanner"
           />
         </div>
       </Transition>
@@ -70,12 +72,19 @@
   <div id="others-overlay"></div>
 
   <CommonGlobalConfirm />
+  <CommonGlobalNotify />
   <FolderDetailModal />
   <RouteLoading :show="routeLoading" message="Navigating..." />
 </template>
 
 <script setup lang="ts">
-import { metadataReloading } from '~/composables/shared/useAdminSocket';
+import {
+  isReloading,
+  showReloadBanner,
+  reloadLabels,
+  reloadDoneCountdown,
+  dismissReloadBanner,
+} from '~/composables/shared/useAdminSocket';
 
 await useInitialData();
 await useMenuInit();
@@ -91,4 +100,14 @@ const { subHeaderActions } = useSubHeaderActionRegistry();
 const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
 
 const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
+
+const bannerTitle = computed(() => {
+  if (isReloading.value) {
+    const labels = reloadLabels.value;
+    if (labels.length === 0) return 'Reloading…';
+    if (labels.length === 1) return `Reloading ${labels[0]}…`;
+    return `Reloading ${labels.join(', ')}…`;
+  }
+  return `Reload complete (${reloadDoneCountdown.value}s)`;
+});
 </script>

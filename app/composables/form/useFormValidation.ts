@@ -1,7 +1,7 @@
 export function useFormValidation(tableName: string) {
   const { validate } = useSchema(tableName);
   const formEditorRegistry = useFormEditorRegistry();
-  const toast = useToast();
+  const notify = useNotify();
 
   async function validateForm(
     record: Record<string, any>,
@@ -11,21 +11,13 @@ export function useFormValidation(tableName: string) {
 
     if (!result.isValid) {
       errors.value = result.errors;
-      toast.add({
-        title: "Missing information",
-        color: "error",
-        description: "Please fill in all required fields.",
-      });
+      notify.error("Missing information", "Please fill in all required fields.");
       return false;
     }
 
     const uniqueValid = await formEditorRegistry.value?.validateAllUniqueFields();
     if (uniqueValid === false) {
-      toast.add({
-        title: "Duplicate value",
-        color: "error",
-        description: "Please verify all unique fields before saving.",
-      });
+      notify.error("Duplicate value", "Please verify all unique fields before saving.");
       return false;
     }
 

@@ -126,7 +126,7 @@
 const page = ref(1);
 const limit = 9;
 const { confirm } = useConfirm();
-const toast = useToast();
+const notify = useNotify();
 const route = useRoute();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();

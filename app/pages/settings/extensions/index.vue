@@ -99,7 +99,7 @@
 const page = ref(1);
 const limit = 9;
 
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
 const { createLoader } = useLoader();
 const { checkPermissionCondition } = usePermissions();
@@ -199,7 +199,7 @@ function getHeaderActions(extension: ExtensionDefinition) {
       component: 'USwitch',
       props: {
         'model-value': extension.isEnabled,
-        disabled: getExtensionLoader((extension.id ?? extension._id ?? '').toString()).isLoading
+        disabled: getExtensionLoader(String(getId(extension) ?? '')).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleExtensionStatus(extension)
@@ -238,7 +238,7 @@ function getExtensionLoader(extensionId: string) {
 }
 
 const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
-  const loader = getExtensionLoader((extension.id ?? extension._id ?? '').toString());
+  const loader = getExtensionLoader(String(getId(extension) ?? ''));
   const newStatus = !extension.isEnabled;
 
   if (apiData.value?.data) {
@@ -271,13 +271,9 @@ const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `Extension "${extension.name}" has been ${
+  notify.success("Success", `Extension "${extension.name}" has been ${
       newStatus ? "activated" : "deactivated"
-    } successfully!`,
-    color: "success",
-  });
+    } successfully!`);
 };
 
 const { execute: deleteExtensionApi, error: deleteError } = useApi(
@@ -305,11 +301,7 @@ const deleteExtension = async (extension: ExtensionDefinition) => {
 
     await fetchExtensions();
 
-    toast.add({
-      title: "Success",
-      description: `Extension "${extension.id}" has been deleted successfully!`,
-      color: "success",
-    });
+    notify.success("Success", `Extension "${extension.id}" has been deleted successfully!`);
   }
 };
 

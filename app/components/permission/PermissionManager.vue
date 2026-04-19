@@ -226,8 +226,9 @@
 <script setup lang="ts">
 import { UIcon } from "#components";
 
-const toast = useToast();
+const notify = useNotify();
 const { confirm } = useConfirm();
+const { getId, getIdFieldName } = useDatabase();
 const { checkPermissionCondition } = usePermissions();
 const { isMounted } = useMounted();
 
@@ -271,7 +272,7 @@ const {
   query: {
     filter: {
       [props.currentFieldId.field]: {
-        id: { _eq: props.currentFieldId.value },
+        [getIdFieldName()]: { _eq: props.currentFieldId.value },
       },
     },
   },
@@ -311,11 +312,7 @@ const saving = computed(() => creating.value || updating.value);
 function createNewPermission() {
   
   if (!props.currentFieldId) {
-    toast.add({
-      title: "Error",
-      description: "Cannot create permission: missing field ID context",
-      color: "error",
-    });
+    notify.error("Error", "Cannot create permission: missing field ID context");
     return; 
   }
 
@@ -352,7 +349,7 @@ async function savePermission() {
     
     await updatePermission({
       body: permissionForm.value,
-      id: currentPermission.value.id,
+      id: getId(currentPermission.value),
     });
 
     if (updateError.value) return; 
@@ -369,14 +366,10 @@ async function savePermission() {
 
   closeDrawer();
 
-  const toast = useToast();
-  toast.add({
-    title: "Success",
-    description: `Permission ${
+  const notify = useNotify();
+  notify.success("Success", `Permission ${
       isEditing.value ? "updated" : "created"
-    } successfully!`,
-    color: "success",
-  });
+    } successfully!`);
 }
 
 async function deletePermission(permission: Permission) {
@@ -396,11 +389,7 @@ async function deletePermission(permission: Permission) {
 
     if (deleteError.value) return;
 
-    toast.add({
-      title: "Permission Deleted",
-      description: "Permission has been deleted successfully",
-      color: "success",
-    });
+    notify.success("Permission Deleted", "Permission has been deleted successfully");
 
     await fetchPermissions();
   } finally {

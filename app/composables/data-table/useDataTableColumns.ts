@@ -182,14 +182,11 @@ export function useDataTableColumns() {
           : "neutral";
         const badgeVariant = options?.badgeVariant || "soft";
 
-        return h(
-          UBadge,
-          {
-            color: badgeColor,
-            variant: badgeVariant,
-          },
-          badgeText
-        );
+        return h(UBadge, {
+          color: badgeColor,
+          variant: badgeVariant,
+          label: badgeText,
+        });
 
       case "custom":
         return options?.formatter ? options.formatter(value, row) : value;

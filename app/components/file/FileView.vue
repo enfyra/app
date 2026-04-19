@@ -45,7 +45,7 @@ const { getFileUrl } = useFileUrl();
 const transformedFiles = computed(() => {
   return props.files.map((file: any) => ({
     ...file,
-    assetUrl: getFileUrl(file.id),
+    assetUrl: getFileUrl(getId(file)),
     displayName: file.filename || file.title || "Untitled",
     formattedUpdatedAt: formatDate(file.updatedAt || ""),
   }));
@@ -71,12 +71,8 @@ function downloadFile(file: any) {
 function copyFileUrl(file: any) {
   if (file.assetUrl) {
     navigator.clipboard.writeText(window.location.origin + file.assetUrl);
-    const toast = useToast();
-    toast.add({
-      title: "Success",
-      description: "URL copied to clipboard",
-      color: "success",
-    });
+    const notify = useNotify();
+    notify.success("Success", "URL copied to clipboard");
   }
 }
 
@@ -191,7 +187,7 @@ const fileColumns = computed(() => [
       {
         label: "Details",
         icon: "i-lucide-info",
-        onSelect: (file) => navigateTo(`/storage/management/file/${file.id}`),
+        onSelect: (file) => navigateTo(`/storage/management/file/${getId(file)}`),
       },
       ...(canDeleteFile
         ? [
@@ -216,11 +212,11 @@ function toggleItemSelection(fileId: string) {
 }
 
 function handleSelectionChange(selectedRows: any[]) {
-  const selectedIds = selectedRows.map((row) => row.id);
+  const selectedIds = selectedRows.map((row) => getId(row));
   const currentSelected = [...props.selectedItems];
 
   const currentFileSelections = currentSelected.filter((id) =>
-    props.files.some((file) => file.id === id)
+    props.files.some((file) => getId(file) === id)
   );
 
   currentFileSelections.forEach((itemId) => {
@@ -264,7 +260,7 @@ function getContextMenuItems(file: any) {
         label: "Details",
         icon: "lucide:info",
         onSelect: () => {
-          navigateTo(`/storage/management/file/${file.id}`);
+          navigateTo(`/storage/management/file/${getId(file)}`);
         },
       },
     ],

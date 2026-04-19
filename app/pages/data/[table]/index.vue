@@ -270,7 +270,7 @@ const columns = computed(() => {
           return hasDeletePermission;
         },
         onSelect: (row: Record<string, any>) => {
-          handleDelete(row.id);
+          handleDelete(getId(row));
         },
       },
     ],

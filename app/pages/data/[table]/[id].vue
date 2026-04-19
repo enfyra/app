@@ -1,10 +1,11 @@
 <script setup lang="ts">
 const route = useRoute();
 
-const toast = useToast();
+const notify = useNotify();
 const tableName = route.params.table as string;
 const { schemas, useFormChanges } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
+const { getId, getIdFieldName } = useDatabase();
 const updateErrors = ref<Record<string, string>>({});
 
 const schema = computed(() => schemas.value[tableName]);
@@ -32,7 +33,7 @@ onMounted(async () => {
   await initializeForm();
 });
 
-watch(() => currentRecord.value.id, (id) => {
+watch(() => getId(currentRecord.value), (id) => {
   if (id) {
     registerPageHeader({
       title: `${route.params.table}: ${id}`,
@@ -49,7 +50,7 @@ const {
   query: computed(() => ({
     fields: "*",
     filter: {
-      id: {
+      [getIdFieldName()]: {
         _eq: route.params.id,
       },
     },
@@ -87,11 +88,7 @@ async function handleUpdate() {
     formEditorRegistry.value?.confirmChanges();
   }
 
-  toast.add({
-    title: "Success",
-    color: "success",
-    description: "Record updated!",
-  });
+  notify.success("Success", "Record updated!");
   updateErrors.value = {};
 }
 
@@ -126,10 +123,7 @@ async function deleteRecord() {
     return;
   }
 
-  toast.add({
-    title: "Record deleted",
-    color: "success",
-  });
+  notify.success("Record deleted");
   await navigateTo(`/data/${route.params.table}`);
 }
 
@@ -146,11 +140,7 @@ async function handleReset() {
     currentRecord.value = formChanges.discardChanges(currentRecord.value);
     hasFormChanges.value = false;
     
-    toast.add({
-      title: "Reset Complete",
-      color: "success",
-      description: "All changes have been discarded.",
-    });
+    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 

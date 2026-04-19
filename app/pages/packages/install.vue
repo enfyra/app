@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-const toast = useToast();
+const notify = useNotify();
 const { me } = useAuth();
 const { fetchAppPackages } = useGlobalState();
 
@@ -242,11 +242,11 @@ watch(() => route.query.type, (newType) => {
 function initializeForm() {
   form.value = generateEmptyForm();
 
-  const { getId } = useDatabase();
+  const { getId, getIdFieldName } = useDatabase();
   const userId = getId(me.value);
   if (userId) {
     form.value.installedBy = {
-      id: userId,
+      [getIdFieldName()]: userId,
     };
   }
 }
@@ -284,11 +284,7 @@ async function handleCreate() {
 
   if (packageType.value === 'App') {
     await fetchAppPackages();
-    toast.add({
-      title: "Package installed",
-      description: `${form.value.name} has been installed`,
-      color: "success",
-    });
+    notify.success("Package installed", `${form.value.name} has been installed`);
   }
 
   await navigateTo(`/packages/${packageId}`, {

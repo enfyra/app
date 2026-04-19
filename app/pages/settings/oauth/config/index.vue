@@ -71,7 +71,7 @@ interface OAuthConfigDefinition {
 const page = ref(1);
 const limit = 9;
 
-const toast = useToast();
+const notify = useNotify();
 const { createLoader } = useLoader();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
@@ -179,7 +179,7 @@ function getHeaderActions(config: OAuthConfigDefinition) {
       component: 'USwitch',
       props: {
         'model-value': config.isEnabled,
-        disabled: getConfigLoader((config.id ?? config._id ?? '').toString()).isLoading
+        disabled: getConfigLoader(String(getId(config) ?? '')).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleConfigStatus(config)
@@ -197,7 +197,7 @@ function getConfigLoader(configId: string) {
 }
 
 const toggleConfigStatus = async (config: OAuthConfigDefinition) => {
-  const loader = getConfigLoader((config.id ?? config._id ?? '').toString());
+  const loader = getConfigLoader(String(getId(config) ?? ''));
   const newStatus = !config.isEnabled;
 
   if (apiData.value?.data) {
@@ -230,13 +230,9 @@ const toggleConfigStatus = async (config: OAuthConfigDefinition) => {
     return;
   }
 
-  toast.add({
-    title: "Success",
-    description: `${getProviderLabel(config.provider)} OAuth has been ${
+  notify.success("Success", `${getProviderLabel(config.provider)} OAuth has been ${
       newStatus ? "enabled" : "disabled"
-    } successfully!`,
-    color: "success",
-  });
+    } successfully!`);
 };
 
 watch(
