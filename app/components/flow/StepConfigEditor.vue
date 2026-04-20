@@ -266,11 +266,8 @@ const queryColumnOptions = computed(() => {
   const schema = allSchemas[fields.value.table]
   if (!schema) return []
   const def = schema.definition || []
-  const fkCols = new Set(
-    def.filter((f: any) => f.fieldType === 'relation' && f.foreignKeyColumn).map((f: any) => f.foreignKeyColumn)
-  )
   return def
-    .filter((f: any) => f.fieldType === 'column' && f.name && !fkCols.has(f.name))
+    .filter((f: any) => f.fieldType === 'column' && f.name)
     .map((f: any) => ({ label: f.name, value: f.name }))
 })
 

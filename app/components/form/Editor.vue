@@ -325,13 +325,6 @@ const filteredFormFields = computed(() => {
     } as FormEditorVirtualField);
   }
 
-  const foreignKeyColumns = new Set<string>();
-  fields.forEach((field: any) => {
-    if (field.fieldType === "relation" && field.foreignKeyColumn) {
-      foreignKeyColumns.add(field.foreignKeyColumn);
-    }
-  });
-
   if (effectiveIncludesKeys.value.length > 0) {
     fields = fields.filter((field: any) => {
       const key = field.name || field.propertyName;
@@ -344,7 +337,6 @@ const filteredFormFields = computed(() => {
     if (!key) return false;
     if (props.excluded.includes(key)) return false;
     if (["isSystem", "isRootAdmin"].includes(key)) return false;
-    if (field.fieldType === "column" && foreignKeyColumns.has(key)) return false;
     return true;
   });
 

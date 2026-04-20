@@ -18,6 +18,23 @@ const deleteModalOpen = ref(false);
 const deleteConfirmText = ref("");
 const deleteConfirmError = ref(false);
 
+const constraintFieldNames = computed<string[]>(() => {
+  const t = table.value;
+  if (!t) return [];
+  const fkSet = new Set<string>(
+    (t.relations || [])
+      .map((r: any) => r?.foreignKeyColumn)
+      .filter(Boolean)
+  );
+  const cols = (t.columns || [])
+    .map((c: any) => c?.name)
+    .filter((n: string) => n && !fkSet.has(n));
+  const rels = (t.relations || [])
+    .map((r: any) => r?.propertyName)
+    .filter(Boolean);
+  return [...cols, ...rels];
+});
+
 const hasFormChanges = ref(false);
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
@@ -42,8 +59,10 @@ const {
       getIncludeFields(),
       "columns.fieldPermissions.id",
       "columns.fieldPermissions.effect",
+      "columns.rules.id",
       "relations.fieldPermissions.id",
       "relations.fieldPermissions.effect",
+      "relations.rules.id",
       "gqlConfig.isEnabled",
     ].join(","),
     filter: {
@@ -762,7 +781,7 @@ onMounted(() => {
                   <div class="space-y-6">
                     <TableConstraints
                       v-model="table"
-                      :column-names="table.columns?.map((c:any) => c?.name)"
+                      :column-names="constraintFieldNames"
                     />
                     <TableColumns v-model="table.columns" />
                     <TableRelations

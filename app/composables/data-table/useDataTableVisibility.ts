@@ -11,7 +11,7 @@ export function useDataTableVisibility(
     if (!schema?.definition) return new Set();
 
     const columnFields = schema.definition
-      .filter((field: TableDefinitionField) => field.fieldType === "column")
+      .filter((field: TableDefinitionField) => field.fieldType === "column" && !!field.name)
       .map((field: TableDefinitionField) => field.name)
       .filter((name: string | undefined): name is string => !!name);
 

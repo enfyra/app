@@ -10,6 +10,7 @@ const table = reactive<any>({
   description: "",
   isSingleRecord: false,
   graphqlEnabled: false,
+  validateBody: true,
   columns: [],
   relations: [],
   uniques: [],
@@ -20,6 +21,21 @@ const { registerPageHeader } = usePageHeaderRegistry();
 registerPageHeader({
   title: "Create New Table",
   gradient: "purple",
+});
+
+const constraintFieldNames = computed<string[]>(() => {
+  const fkSet = new Set<string>(
+    (table.relations || [])
+      .map((r: any) => r?.foreignKeyColumn)
+      .filter(Boolean)
+  );
+  const cols = (table.columns || [])
+    .map((c: any) => c?.name)
+    .filter((n: string) => n && !fkSet.has(n));
+  const rels = (table.relations || [])
+    .map((r: any) => r?.propertyName)
+    .filter(Boolean);
+  return [...cols, ...rels];
 });
 
 const nameError = ref<string | null>(null);
@@ -206,10 +222,7 @@ async function save() {
           <div class="space-y-6">
             <TableConstraints
               v-model="table"
-              :column-names="[
-                ...table.columns.map((c: any) => c.name),
-                ...table.relations.map((r: any) => r.propertyName),
-              ]"
+              :column-names="constraintFieldNames"
             />
             <TableColumns
               v-model="table.columns"

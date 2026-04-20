@@ -6,7 +6,6 @@ import type {
   FormChangesState,
   ColumnType,
 } from "~/types/database";
-
 const TIMESTAMP_FIELDS: { name: string; type: ColumnType }[] = [
   { name: "createdAt", type: "timestamp" },
   { name: "updatedAt", type: "timestamp" },
@@ -55,9 +54,15 @@ export function useSchema(tableName?: string | Ref<string>) {
     for (const t of tables) {
       if (schemas.value[t.name]) continue;
 
+      const foreignKeyColumns = new Set<string>();
+      (t.relations || []).forEach((rel: any) => {
+        if (rel?.foreignKeyColumn) foreignKeyColumns.add(rel.foreignKeyColumn);
+      });
+
       const definition: TableDefinitionField[] = [];
 
       (t.columns || []).forEach((col: any) => {
+        if (col?.name && foreignKeyColumns.has(col.name)) return;
         definition.push({ ...col, fieldType: "column" } as TableDefinitionField);
       });
 
@@ -130,17 +135,10 @@ export function useSchema(tableName?: string | Ref<string>) {
   const editableFields = computed(() => {
     const excluded = [getIdFieldName(), "createdAt", "updatedAt", "isSystem", "isRootAdmin"];
 
-    const foreignKeyColumns = new Set<string>();
-    definition.value.forEach((field: any) => {
-      if (field.fieldType === "relation" && field.foreignKeyColumn) {
-        foreignKeyColumns.add(field.foreignKeyColumn);
-      }
-    });
-
     return sortFieldsByOrder(
       definition.value.filter(f => {
         const key = f.name || f.propertyName;
-        return key && !excluded.includes(key) && !foreignKeyColumns.has(key);
+        return key && !excluded.includes(key);
       })
     );
   });
@@ -191,16 +189,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     const errors: Record<string, string> = {};
     let isValid = true;
 
-    const foreignKeyColumns = new Set<string>();
-    definition.value.forEach((field: any) => {
-      if (field.fieldType === "relation" && field.foreignKeyColumn) {
-        foreignKeyColumns.add(field.foreignKeyColumn);
-      }
-    });
-
     for (const [key, value] of Object.entries(record)) {
-      if (foreignKeyColumns.has(key)) continue;
-
       const field = getField(key);
       if (!field) continue;
       if (field.fieldType === "relation" && field.inversePropertyName) continue;
@@ -242,7 +231,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     if (!definition.value.length) return "*";
 
     const columnFields = definition.value
-      .filter(f => f.fieldType === "column")
+      .filter(f => f.fieldType === "column" && f.name)
       .map(f => f.name)
       .filter(Boolean);
 

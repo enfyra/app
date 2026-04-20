@@ -19,20 +19,22 @@ const formEditorRef = ref();
 const localColumnsWithKeys = computed(() => columns.value.map((c: any, i: number) => ({ ...c, _localKey: i })));
 const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
 
-const fieldPermSummaryByColumnId = computed(() => {
-  const out: Record<string, { total: number; allow: number; deny: number }> = {};
-  for (const col of columns.value || []) {
-    const perms: any[] = Array.isArray(col.fieldPermissions) ? col.fieldPermissions : [];
-    if (!perms.length) continue;
-    const key = String(getId(col));
-    out[key] = { total: perms.length, allow: 0, deny: 0 };
-    for (const p of perms) {
-      if (String(p?.effect ?? p?.decision ?? "allow") === "deny") out[key].deny += 1;
-      else out[key].allow += 1;
-    }
-  }
-  return out;
-});
+const permCountOverride = ref<Record<string, number>>({});
+const ruleCountOverride = ref<Record<string, number>>({});
+
+function getPermCount(column: any): number {
+  const id = String(getId(column) ?? "");
+  if (id && id in permCountOverride.value) return permCountOverride.value[id];
+  const perms = Array.isArray(column?.fieldPermissions) ? column.fieldPermissions : [];
+  return perms.length;
+}
+
+function getRuleCount(column: any): number {
+  const id = String(getId(column) ?? "");
+  if (id && id in ruleCountOverride.value) return ruleCountOverride.value[id];
+  const rules = Array.isArray(column?.rules) ? column.rules : [];
+  return rules.length;
+}
 
 const showPermModal = ref(false);
 const permModalTarget = ref<{ id: string; name: string; baseline?: "allow" | "deny" }>({ id: "", name: "" });
@@ -40,6 +42,18 @@ const permModalTarget = ref<{ id: string; name: string; baseline?: "allow" | "de
 function openPermModal(column: any) {
   permModalTarget.value = { id: String(getId(column)), name: column.name || "Unnamed", baseline: column.isPublished ? "allow" : "deny" };
   showPermModal.value = true;
+}
+
+const showRuleModal = ref(false);
+const ruleModalTarget = ref<{ id: string; name: string; type: string }>({ id: "", name: "", type: "" });
+
+function openRuleModal(column: any) {
+  ruleModalTarget.value = {
+    id: String(getId(column)),
+    name: column.name || "Unnamed",
+    type: column.type || "varchar",
+  };
+  showRuleModal.value = true;
 }
 
 const {
@@ -60,11 +74,32 @@ const {
 async function onPermChanged() {
   const targetId = permModalTarget.value.id;
   if (!targetId) return;
-  const idx = columns.value.findIndex(c => String(getId(c)) === targetId);
-  if (idx === -1) return;
   await refreshColumnPerms();
   const perms = (permRefreshData.value as any)?.data || [];
-  columns.value[idx] = { ...columns.value[idx], fieldPermissions: perms };
+  permCountOverride.value = { ...permCountOverride.value, [targetId]: perms.length };
+}
+
+const {
+  data: ruleRefreshData,
+  execute: refreshColumnRules,
+} = useApi(() => "/column_rule_definition", {
+  query: computed(() => ({
+    fields: "id",
+    limit: 100,
+    filter: ruleModalTarget.value.id
+      ? { column: { [getIdFieldName()]: { _eq: ruleModalTarget.value.id } } }
+      : { [getIdFieldName()]: { _eq: "__none__" } },
+  })),
+  immediate: false,
+  errorContext: "Refresh Column Rules",
+})
+
+async function onRuleChanged() {
+  const targetId = ruleModalTarget.value.id;
+  if (!targetId) return;
+  await refreshColumnRules();
+  const rules = (ruleRefreshData.value as any)?.data || [];
+  ruleCountOverride.value = { ...ruleCountOverride.value, [targetId]: rules.length };
 }
 
 const notify = useNotify();
@@ -74,6 +109,14 @@ function handleShieldClick(column: any) {
     openPermModal(column);
   } else {
     notify.info("Field Permissions", "You can add field permissions after saving the collection.");
+  }
+}
+
+function handleRuleClick(column: any) {
+  if (getId(column)) {
+    openRuleModal(column);
+  } else {
+    notify.info("Column Rules", "You can add validation rules after saving the collection.");
   }
 }
 
@@ -416,43 +459,26 @@ watch(
     <div
       v-for="(column, index) in columns"
       :key="column.id ?? index"
-      class="flex items-center justify-between rounded-lg border border-muted lg:hover:bg-muted/50 transition"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-muted lg:hover:bg-muted/50 transition cursor-pointer"
+      @click="editColumn(column, index)"
     >
-      
-      <div
-        class="flex items-center gap-2 flex-1 cursor-pointer px-4 py-3"
-        @click="editColumn(column, index)"
-      >
-        <UIcon name="lucide:type" class="w-4 h-4 text-muted-foreground" />
-        <span class="text-sm font-medium">
+      <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
+        <UIcon name="lucide:type" class="w-4 h-4 text-muted-foreground shrink-0" />
+        <span class="text-sm font-medium truncate flex-1 min-w-0" :title="column.name || 'Unnamed'">
           {{ column.name || "Unnamed" }}
         </span>
+      </div>
 
+      <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
         <UBadge size="xs" color="info" v-if="column.type">
           {{ column.type }}
         </UBadge>
         <UBadge size="xs" color="info" v-if="column.isNullable"
           >nullable</UBadge
         >
-        <UBadge
-          v-if="fieldPermSummaryByColumnId[String(getId(column))]?.total"
-          size="xs"
-          variant="soft"
-          color="secondary"
-        >
-          Perm: {{ fieldPermSummaryByColumnId[String(getId(column))]?.total }}
-        </UBadge>
-        <UBadge
-          v-if="fieldPermSummaryByColumnId[String(getId(column))]?.total"
-          size="xs"
-          variant="soft"
-          color="neutral"
-        >
-          A{{ fieldPermSummaryByColumnId[String(getId(column))]?.allow }}/D{{ fieldPermSummaryByColumnId[String(getId(column))]?.deny }}
-        </UBadge>
       </div>
 
-      <div class="flex items-center gap-1 mr-2">
+      <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
         <UTooltip v-if="getId(column) && column.name !== getIdFieldName()" :text="column.isPublished ? 'Published' : 'Unpublished'">
           <UButton
             :icon="column.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
@@ -463,15 +489,40 @@ watch(
             @click.stop="column.isPublished = !column.isPublished"
           />
         </UTooltip>
-        <UButton
-          v-if="column.name !== getIdFieldName()"
-          icon="lucide:shield"
-          color="secondary"
-          variant="ghost"
-          size="xs"
-          class="lg:hover:cursor-pointer"
-          @click.stop="handleShieldClick(column)"
-        />
+        <UTooltip v-if="column.name !== getIdFieldName()" :text="`Field permissions (${getPermCount(column)})`">
+          <UChip
+            :text="String(getPermCount(column))"
+            size="md"
+            color="secondary"
+            :show="true"
+          >
+            <UButton
+              icon="lucide:shield"
+              color="secondary"
+              variant="ghost"
+              size="xs"
+              class="lg:hover:cursor-pointer"
+              @click.stop="handleShieldClick(column)"
+            />
+          </UChip>
+        </UTooltip>
+        <UTooltip v-if="column.name !== getIdFieldName()" :text="`Validation rules (${getRuleCount(column)})`">
+          <UChip
+            :text="String(getRuleCount(column))"
+            size="md"
+            color="info"
+            :show="true"
+          >
+            <UButton
+              icon="lucide:ruler"
+              color="info"
+              variant="ghost"
+              size="xs"
+              class="lg:hover:cursor-pointer"
+              @click.stop="handleRuleClick(column)"
+            />
+          </UChip>
+        </UTooltip>
         <UButton
           icon="lucide:trash"
           color="error"
@@ -501,6 +552,14 @@ watch(
     :target-name="permModalTarget.name"
     :baseline="permModalTarget.baseline"
     @changed="onPermChanged"
+  />
+
+  <ColumnRuleManageModal
+    v-model:open="showRuleModal"
+    :column-id="ruleModalTarget.id"
+    :column-name="ruleModalTarget.name"
+    :column-type="ruleModalTarget.type"
+    @changed="onRuleChanged"
   />
 
   <CommonDrawer
@@ -563,6 +622,7 @@ watch(
                 'isPrimary',
                 'table',
                 'fieldPermissions',
+                'rules',
               ]"
               :field-map="typeMap"
             />

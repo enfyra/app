@@ -87,7 +87,36 @@ const { isMobile, isTablet } = useScreen();
         :checked="table.graphqlEnabled || false"
       />
     </div>
-    
+
+    <div
+      :class="(isMobile || isTablet) ? 'flex items-center justify-between py-4 border-t' : 'flex items-center justify-between py-4 border-b'"
+      :style="{
+        borderColor: 'var(--border-subtle)',
+      }"
+    >
+      <div class="space-y-0.5">
+        <label
+          for="field-validateBody"
+          class="text-sm font-medium"
+          :style="{ color: 'var(--text-primary)' }"
+        >
+          Validate Body
+        </label>
+        <p
+          class="text-xs"
+          :style="{ color: 'var(--text-tertiary)' }"
+        >
+          When enabled, POST and PATCH request bodies are validated server-side against column types and column rules. Disable for legacy or test tables that need to accept arbitrary payloads.
+        </p>
+      </div>
+
+      <USwitch
+        id="field-validateBody"
+        v-model="table.validateBody"
+        :checked="table.validateBody"
+      />
+    </div>
+
     <slot />
   </div>
 </template>

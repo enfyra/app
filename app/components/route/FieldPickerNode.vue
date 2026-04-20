@@ -20,17 +20,9 @@ const visitedTables = props.visited ?? [];
 const schema = computed(() => props.schemas?.[props.tableName]);
 const definition = computed(() => schema.value?.definition || []);
 
-const fkColumns = computed(() => {
-  const fks = new Set<string>();
-  definition.value
-    .filter((f: any) => f.fieldType === 'relation' && f.foreignKeyColumn)
-    .forEach((f: any) => fks.add(f.foreignKeyColumn));
-  return fks;
-});
-
 const columns = computed(() =>
   definition.value
-    .filter((f: any) => f.fieldType === 'column' && f.name && !fkColumns.value.has(f.name))
+    .filter((f: any) => f.fieldType === 'column' && f.name)
     .map((f: any) => f.name as string)
 );
 
