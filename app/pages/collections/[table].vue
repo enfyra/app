@@ -59,8 +59,10 @@ const {
       getIncludeFields(),
       "columns.fieldPermissions.id",
       "columns.fieldPermissions.effect",
+      "columns.rules.id",
       "relations.fieldPermissions.id",
       "relations.fieldPermissions.effect",
+      "relations.rules.id",
       "gqlConfig.isEnabled",
     ].join(","),
     filter: {

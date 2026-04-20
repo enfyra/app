@@ -124,20 +124,14 @@ const formEditorRef = ref();
 const localRelationsWithKeys = computed(() => relations.value.map((r: any, i: number) => ({ ...r, _localKey: i })));
 const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
 
-const fieldPermSummaryByRelationId = computed(() => {
-  const out: Record<string, { total: number; allow: number; deny: number }> = {};
-  for (const rel of relations.value || []) {
-    const perms: any[] = Array.isArray(rel.fieldPermissions) ? rel.fieldPermissions : [];
-    if (!perms.length) continue;
-    const key = String(getId(rel));
-    out[key] = { total: perms.length, allow: 0, deny: 0 };
-    for (const p of perms) {
-      if (String(p?.effect ?? p?.decision ?? "allow") === "deny") out[key].deny += 1;
-      else out[key].allow += 1;
-    }
-  }
-  return out;
-});
+const permCountOverride = ref<Record<string, number>>({});
+
+function getPermCount(relation: any): number {
+  const id = String(getId(relation) ?? "");
+  if (id && id in permCountOverride.value) return permCountOverride.value[id];
+  const perms = Array.isArray(relation?.fieldPermissions) ? relation.fieldPermissions : [];
+  return perms.length;
+}
 
 const showPermModal = ref(false);
 const permModalTarget = ref<{ id: string; name: string; baseline?: "allow" | "deny" }>({ id: "", name: "" });
@@ -165,11 +159,9 @@ const {
 async function onPermChanged() {
   const targetId = permModalTarget.value.id;
   if (!targetId) return;
-  const idx = relations.value.findIndex(r => String(getId(r)) === targetId);
-  if (idx === -1) return;
   await refreshRelationPerms();
   const perms = (permRefreshData.value as any)?.data || [];
-  relations.value[idx] = { ...relations.value[idx], fieldPermissions: perms };
+  permCountOverride.value = { ...permCountOverride.value, [targetId]: perms.length };
 }
 
 
@@ -318,22 +310,6 @@ async function removeRelation(index: number) {
           }}
         </UBadge>
         <UBadge size="xs" color="info" v-if="rel.isNullable">nullable</UBadge>
-        <UBadge
-          v-if="fieldPermSummaryByRelationId[String(getId(rel))]?.total"
-          size="xs"
-          variant="soft"
-          color="secondary"
-        >
-          Perm: {{ fieldPermSummaryByRelationId[String(getId(rel))]?.total }}
-        </UBadge>
-        <UBadge
-          v-if="fieldPermSummaryByRelationId[String(getId(rel))]?.total"
-          size="xs"
-          variant="soft"
-          color="neutral"
-        >
-          A{{ fieldPermSummaryByRelationId[String(getId(rel))]?.allow }}/D{{ fieldPermSummaryByRelationId[String(getId(rel))]?.deny }}
-        </UBadge>
       </div>
 
       <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
@@ -347,14 +323,23 @@ async function removeRelation(index: number) {
             @click.stop="rel.isPublished = !rel.isPublished"
           />
         </UTooltip>
-        <UButton
-          icon="lucide:shield"
-          color="secondary"
-          variant="ghost"
-          size="xs"
-          class="lg:hover:cursor-pointer"
-          @click.stop="handleShieldClick(rel)"
-        />
+        <UTooltip :text="`Field permissions (${getPermCount(rel)})`">
+          <UChip
+            :text="String(getPermCount(rel))"
+            size="md"
+            color="secondary"
+            :show="true"
+          >
+            <UButton
+              icon="lucide:shield"
+              color="secondary"
+              variant="ghost"
+              size="xs"
+              class="lg:hover:cursor-pointer"
+              @click.stop="handleShieldClick(rel)"
+            />
+          </UChip>
+        </UTooltip>
         <UButton
           icon="lucide:trash"
           color="error"

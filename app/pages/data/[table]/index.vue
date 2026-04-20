@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import ColumnSelector from "~/components/data-table/ColumnSelector.vue";
-import { getForeignKeyColumnSet } from "~/utils/schema";
 
 const route = useRoute();
 const router = useRouter();
@@ -199,13 +198,11 @@ const columns = computed(() => {
   const schema = schemas.value[tableName];
   if (!schema?.definition) return [];
 
-  const fkSet = getForeignKeyColumnSet(schema.definition);
   const dataColumns = schema.definition
     .filter(
       (field) =>
         field.fieldType === "column" &&
         field.name &&
-        !fkSet.has(field.name) &&
         visibleColumns.value.has(field.name)
     )
     .sort((a, b) => {

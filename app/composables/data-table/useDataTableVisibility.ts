@@ -1,5 +1,3 @@
-import { getForeignKeyColumnSet } from "~/utils/schema";
-
 export function useDataTableVisibility(
   tableName: string,
   schemas: Ref<SchemaCollection> | any
@@ -12,9 +10,8 @@ export function useDataTableVisibility(
     const schema = schemas.value[tableName];
     if (!schema?.definition) return new Set();
 
-    const fkSet = getForeignKeyColumnSet(schema.definition);
     const columnFields = schema.definition
-      .filter((field: TableDefinitionField) => field.fieldType === "column" && !!field.name && !fkSet.has(field.name!))
+      .filter((field: TableDefinitionField) => field.fieldType === "column" && !!field.name)
       .map((field: TableDefinitionField) => field.name)
       .filter((name: string | undefined): name is string => !!name);
 
@@ -138,10 +135,9 @@ export function useDataTableVisibility(
     const schema = schemas.value[tableName];
     if (!schema?.definition) return [];
 
-    const fkSet = getForeignKeyColumnSet(schema.definition);
     const items = schema.definition
       .filter((field: TableDefinitionField) => field.fieldType === "column")
-      .filter((field: TableDefinitionField) => !!field.name && !fkSet.has(field.name!))
+      .filter((field: TableDefinitionField) => !!field.name)
       .map((field: TableDefinitionField) => ({
         label: field.label || field.name || '',
         type: "checkbox" as const,

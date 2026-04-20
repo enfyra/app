@@ -26,6 +26,8 @@ const props = defineProps<{
 
 const open = defineModel<boolean>("open", { required: true })
 
+const emit = defineEmits<{ changed: [] }>()
+
 const notify = useNotify()
 const { confirm } = useConfirm()
 const { getIdFieldName, getId } = useDatabase()
@@ -186,6 +188,7 @@ async function toggleEnabled(item: Rule) {
       return
     }
     await fetchRules()
+    emit("changed")
   } finally {
     editingId.value = null
   }
@@ -207,6 +210,7 @@ async function quickDelete(item: Rule) {
     if (deleteErr.value) return
     notify.success("Rule deleted")
     await fetchRules()
+    emit("changed")
   } finally {
     if (deletingId.value === id) deletingId.value = null
   }
@@ -262,6 +266,7 @@ async function saveRule() {
     }
     viewMode.value = "list"
     await fetchRules()
+    emit("changed")
   } finally {
     saving.value = false
   }
