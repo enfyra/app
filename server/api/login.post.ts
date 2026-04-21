@@ -50,12 +50,23 @@ export default defineEventHandler(async (event) => {
     let errorMessage = "Authentication failed";
     let errorCode = "AUTHENTICATION_ERROR";
 
-    if (errorData?.error) {
-      const msg = errorData.error.message || errorData.message;
-      errorMessage = typeof msg === "string" ? msg : errorMessage;
-      const code = errorData.error.code;
-      errorCode = typeof code === "string" ? code : errorCode;
-    }
+    const pickMessage = (value: unknown): string | null => {
+      if (typeof value === "string" && value.length > 0) return value;
+      if (Array.isArray(value) && value.length > 0) {
+        return value.map((v) => String(v)).join("; ");
+      }
+      return null;
+    };
+
+    const candidate =
+      pickMessage(errorData?.error?.message) ??
+      pickMessage(errorData?.message) ??
+      pickMessage(err?.statusMessage) ??
+      pickMessage(err?.message);
+    if (candidate) errorMessage = candidate;
+
+    const code = errorData?.error?.code;
+    if (typeof code === "string" && code.length > 0) errorCode = code;
 
     return sendError(
       event,

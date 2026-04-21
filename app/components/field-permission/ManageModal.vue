@@ -3,71 +3,40 @@ import { parseConditionJson, validateFieldPermissionCondition } from "~/utils/fi
 import { validateFieldPermissionScope } from "~/utils/field-permissions/scope"
 import type { FormEditorVirtualField } from "~/types/form-editor"
 
+type Permission = Record<string, any> & {
+  id?: string | number
+  _tmpId?: string
+}
+
 const props = defineProps<{
-  targetId: string | number
   targetType: "column" | "relation"
   targetName: string
   baseline?: "allow" | "deny"
 }>()
 
 const open = defineModel<boolean>("open", { required: true })
-const emit = defineEmits<{ changed: [] }>()
+const permissions = defineModel<Permission[]>("permissions", { required: true })
 
 const notify = useNotify()
 const { confirm } = useConfirm()
-const { getIdFieldName } = useDatabase()
-const { getId } = useDatabase()
 const { isMobile, isTablet } = useScreen()
 const { generateEmptyForm: generateFieldPermEmptyForm } = useSchema("field_permission_definition")
 
 type ViewMode = "list" | "form"
 const viewMode = ref<ViewMode>("list")
 
-const {
-  data: fieldPermData,
-  pending: fieldPermLoading,
-  execute: fetchFieldPerms,
-} = useApi(() => "/field_permission_definition", {
-  query: computed(() => ({
-    fields:
-      "id,name,updatedAt,effect,decision,action,condition,role.id,role.name,allowedUsers.id,allowedUsers.email,allowedUsers.name,column.id,relation.id",
-    sort: "-updatedAt",
-    limit: 50,
-    filter: {
-      [props.targetType]: { [getIdFieldName()]: { _eq: String(props.targetId) } },
-    },
-  })),
-  immediate: false,
-  errorContext: "Fetch Field Permissions",
-})
-
-const fieldPermItems = computed(() => fieldPermData.value?.data || [])
+const fieldPermItems = computed(() => permissions.value || [])
 
 const fieldPermForm = ref<Record<string, any>>({})
 const fieldPermErrors = ref<Record<string, string>>({})
-const fieldPermSaving = ref(false)
 const fieldPermMode = ref<"create" | "update">("create")
-const editingFieldPermId = ref<string | null>(null)
-const deletingFieldPermId = ref<string | null>(null)
+const editingKey = ref<string | null>(null)
 
-const { execute: createFieldPerm, pending: createFieldPermPending, error: createFieldPermError } = useApi(
-  () => "/field_permission_definition",
-  { method: "post", errorContext: "Create Field Permission" },
-)
-
-const { execute: patchFieldPerm, pending: patchFieldPermPending, error: patchFieldPermError } = useApi(
-  () => `/field_permission_definition/${editingFieldPermId.value || ""}`,
-  { method: "patch", errorContext: "Update Field Permission", immediate: false, watch: false },
-)
-
-const { execute: deleteFieldPerm, pending: deleteFieldPermPending, error: deleteFieldPermError } = useApi(
-  () => "/field_permission_definition",
-  { method: "delete", errorContext: "Delete Field Permission", immediate: false, watch: false },
-)
-
-const isFieldPermBusy = computed(() =>
-  fieldPermSaving.value || createFieldPermPending.value || patchFieldPermPending.value || deleteFieldPermPending.value,
-)
+function permKey(p: Permission): string {
+  if (p.id != null) return `id:${String(p.id)}`
+  if (p._tmpId) return `tmp:${p._tmpId}`
+  return `tmp:${Math.random().toString(36).slice(2)}`
+}
 
 watch(
   () => [fieldPermForm.value?.role, fieldPermForm.value?.allowedUsers],
@@ -87,13 +56,12 @@ watch(
 
 function openCreateForm() {
   fieldPermMode.value = "create"
-  editingFieldPermId.value = null
+  editingKey.value = null
   const base = generateFieldPermEmptyForm()
   const baseline = props.baseline || "allow"
   const presetEffect = baseline === "allow" ? "deny" : "allow"
   fieldPermForm.value = {
     ...base,
-    [props.targetType]: { id: String(props.targetId) },
     [props.targetType === "column" ? "relation" : "column"]: null,
     ...(base.effect !== undefined
       ? { effect: presetEffect }
@@ -105,10 +73,9 @@ function openCreateForm() {
   viewMode.value = "form"
 }
 
-function openEditForm(item: any) {
-  if (isFieldPermBusy.value) return
+function openEditForm(item: Permission) {
   fieldPermMode.value = "update"
-  editingFieldPermId.value = String(getId(item))
+  editingKey.value = permKey(item)
   fieldPermForm.value = JSON.parse(JSON.stringify(item || {}))
   fieldPermErrors.value = {}
   viewMode.value = "form"
@@ -119,81 +86,60 @@ function cancelForm() {
   fieldPermErrors.value = {}
 }
 
-async function quickDeleteFieldPerm(item: any) {
-  if (isFieldPermBusy.value) return
-  const id = String(getId(item))
-
+async function quickDeleteFieldPerm(item: Permission) {
   const ok = await confirm({
     title: "Delete Rule",
-    content: "Are you sure you want to delete this permission rule? This action cannot be undone.",
+    content: "Delete this permission rule? Changes apply when you save the table.",
     confirmText: "Delete",
     cancelText: "Cancel",
   })
   if (!ok) return
-
-  deletingFieldPermId.value = id
-  try {
-    await deleteFieldPerm({ id })
-    if (deleteFieldPermError.value) return
-    notify.success("Rule deleted")
-    await fetchFieldPerms()
-    emit("changed")
-  } finally {
-    if (deletingFieldPermId.value === id) deletingFieldPermId.value = null
-  }
+  const key = permKey(item)
+  permissions.value = (permissions.value || []).filter((p) => permKey(p) !== key)
 }
 
-async function saveFieldPerm() {
-  if (isFieldPermBusy.value) return
-  fieldPermSaving.value = true
-  try {
-    const body: any = { ...fieldPermForm.value }
+function saveFieldPerm() {
+  const body: any = { ...fieldPermForm.value }
 
-    const scope = validateFieldPermissionScope(body)
-    if (!scope.ok) {
-      fieldPermErrors.value = { ...fieldPermErrors.value, role: scope.message }
-      notify.error("Validation Error", scope.message)
+  const scope = validateFieldPermissionScope(body)
+  if (!scope.ok) {
+    fieldPermErrors.value = { ...fieldPermErrors.value, role: scope.message }
+    notify.error("Validation Error", scope.message)
+    return
+  }
+
+  if (body?.condition != null && body.condition !== "") {
+    const parsed =
+      typeof body.condition === "string" ? parseConditionJson(body.condition) : { condition: body.condition, error: null }
+    if ((parsed as any).error) {
+      notify.error("Validation Error", (parsed as any).error)
       return
     }
-
-    if (body?.condition != null && body.condition !== "") {
-      const parsed =
-        typeof body.condition === "string" ? parseConditionJson(body.condition) : { condition: body.condition, error: null }
-      if ((parsed as any).error) {
-        notify.error("Validation Error", (parsed as any).error)
-        return
-      }
-      const v = validateFieldPermissionCondition((parsed as any).condition)
-      if (!v.ok) {
-        notify.error("Validation Error", v.errors[0] || "Invalid condition")
-        return
-      }
-      body.condition = (parsed as any).condition
-    } else {
-      body.condition = null
+    const v = validateFieldPermissionCondition((parsed as any).condition)
+    if (!v.ok) {
+      notify.error("Validation Error", v.errors[0] || "Invalid condition")
+      return
     }
-
-    if (fieldPermMode.value === "update" && editingFieldPermId.value) {
-      await patchFieldPerm({ body })
-      if (patchFieldPermError.value) {
-        notify.error("Error", "Failed to update rule")
-        return
-      }
-      notify.success("Field permission updated")
-    } else {
-      await createFieldPerm({ body })
-      if (createFieldPermError.value) {
-        notify.error("Error", "Failed to create rule")
-        return
-      }
-      notify.success("Field permission created")
-    }
-    viewMode.value = "list"
-    await fetchFieldPerms()
-    emit("changed")
-  } finally {
-    fieldPermSaving.value = false
+    body.condition = (parsed as any).condition
+  } else {
+    body.condition = null
   }
+
+  const list = (permissions.value || []).slice()
+  if (fieldPermMode.value === "update" && editingKey.value) {
+    const idx = list.findIndex((p) => permKey(p) === editingKey.value)
+    const existing = idx !== -1 ? list[idx] : null
+    if (existing) {
+      body.id = existing.id
+      if (existing._tmpId) body._tmpId = existing._tmpId
+      list[idx] = body
+    }
+  } else {
+    body._tmpId = `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    list.push(body)
+  }
+  permissions.value = list
+  viewMode.value = "list"
 }
 
 function getFieldPermEffect(item: any): string {
@@ -295,10 +241,9 @@ const conditionErrors = computed(() => {
 
 const isConditionValid = computed(() => !conditionParse.value.error && conditionValidation.value.ok)
 
-watch(open, async (isOpen) => {
+watch(open, (isOpen) => {
   if (isOpen) {
     viewMode.value = "list"
-    await fetchFieldPerms()
   } else {
     viewMode.value = "list"
   }
@@ -322,19 +267,28 @@ watch(open, async (isOpen) => {
           {{ targetType === "column" ? "Column" : "Relation" }}: <span class="font-medium text-[var(--text-primary)]">{{ targetName }}</span>
         </div>
 
-        <CommonLoadingState
-          v-if="fieldPermLoading"
-          title="Loading permissions..."
-          size="sm"
-          type="form"
-          context="inline"
-        />
+        <div
+          class="flex gap-3 rounded-lg border border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/40 p-3"
+        >
+          <UIcon
+            name="lucide:alert-triangle"
+            class="w-5 h-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5"
+          />
+          <div class="text-sm text-amber-900 dark:text-amber-200">
+            <div class="font-semibold mb-1">Changes are staged</div>
+            <div class="text-xs">
+              Add / edit / delete / toggle here only updates the local form.
+              Click <strong>Save</strong> on the table form to persist everything in one atomic request.
+              Closing this modal or resetting the table form discards pending changes.
+            </div>
+          </div>
+        </div>
 
-        <div v-else class="space-y-3">
+        <div class="space-y-3">
           <div v-if="fieldPermItems.length" class="space-y-2">
             <div
               v-for="it in fieldPermItems"
-              :key="`fp-${String(getId(it) ?? '')}`"
+              :key="permKey(it)"
               class="cursor-pointer transition-colors rounded-lg px-3 border border-[var(--border-default)] hover:bg-[var(--surface-muted)]"
               @click="openEditForm(it)"
             >
@@ -378,8 +332,6 @@ watch(open, async (isOpen) => {
                   color="error"
                   size="xs"
                   class="rounded-full !aspect-square flex-shrink-0"
-                  :loading="String(getId(it)) === deletingFieldPermId"
-                  :disabled="isFieldPermBusy"
                   @click.stop="quickDeleteFieldPerm(it)"
                 />
               </div>
@@ -429,7 +381,7 @@ watch(open, async (isOpen) => {
       <div class="flex justify-end gap-2 w-full">
         <template v-if="viewMode === 'list'">
           <UButton variant="ghost" @click="open = false">
-            Close
+            Done
           </UButton>
           <UButton
             icon="lucide:plus"
@@ -443,8 +395,7 @@ watch(open, async (isOpen) => {
             Cancel
           </UButton>
           <UButton
-            :loading="fieldPermSaving"
-            :disabled="fieldPermSaving || !isConditionValid"
+            :disabled="!isConditionValid"
             @click="saveFieldPerm"
           >
             {{ fieldPermMode === "update" ? "Update" : "Create" }}

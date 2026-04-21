@@ -124,53 +124,42 @@ const formEditorRef = ref();
 const localRelationsWithKeys = computed(() => relations.value.map((r: any, i: number) => ({ ...r, _localKey: i })));
 const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
 
-const permCountOverride = ref<Record<string, number>>({});
-
 function getPermCount(relation: any): number {
-  const id = String(getId(relation) ?? "");
-  if (id && id in permCountOverride.value) return permCountOverride.value[id];
   const perms = Array.isArray(relation?.fieldPermissions) ? relation.fieldPermissions : [];
   return perms.length;
 }
 
 const showPermModal = ref(false);
-const permModalTarget = ref<{ id: string; name: string; baseline?: "allow" | "deny" }>({ id: "", name: "" });
+const permModalIndex = ref<number>(-1);
+const permModalTarget = computed(() => {
+  const rel = relations.value?.[permModalIndex.value];
+  return {
+    name: rel?.propertyName || "Unnamed",
+    baseline: (rel?.isPublished ? "allow" : "deny") as "allow" | "deny",
+  };
+});
 
-function openPermModal(relation: any) {
-  permModalTarget.value = { id: String(getId(relation)), name: relation.propertyName || "Unnamed", baseline: relation.isPublished ? "allow" : "deny" };
+const activePerms = computed<any[]>({
+  get: () => {
+    const rel = relations.value?.[permModalIndex.value];
+    return Array.isArray(rel?.fieldPermissions) ? rel.fieldPermissions : [];
+  },
+  set: (next: any[]) => {
+    const idx = permModalIndex.value;
+    if (idx < 0 || !relations.value?.[idx]) return;
+    const nextRels = relations.value.slice();
+    nextRels[idx] = { ...nextRels[idx], fieldPermissions: next };
+    relations.value = nextRels;
+  },
+});
+
+const tooltipsDisabled = computed(
+  () => showPermModal.value || isEditing.value || showInverseModal.value,
+);
+
+function handleShieldClick(rel: any, index: number) {
+  permModalIndex.value = index;
   showPermModal.value = true;
-}
-
-const {
-  data: permRefreshData,
-  execute: refreshRelationPerms,
-} = useApi(() => "/field_permission_definition", {
-  query: computed(() => ({
-    fields: "id,effect,decision",
-    limit: 50,
-    filter: permModalTarget.value.id
-      ? { relation: { [getIdFieldName()]: { _eq: permModalTarget.value.id } } }
-      : { [getIdFieldName()]: { _eq: "__none__" } },
-  })),
-  immediate: false,
-  errorContext: "Refresh Relation Permissions",
-})
-
-async function onPermChanged() {
-  const targetId = permModalTarget.value.id;
-  if (!targetId) return;
-  await refreshRelationPerms();
-  const perms = (permRefreshData.value as any)?.data || [];
-  permCountOverride.value = { ...permCountOverride.value, [targetId]: perms.length };
-}
-
-
-function handleShieldClick(rel: any) {
-  if (getId(rel)) {
-    openPermModal(rel);
-  } else {
-    notify.info("Field Permissions", "You can add field permissions after saving the collection.");
-  }
 }
 
 async function handleDrawerClose() {
@@ -313,7 +302,12 @@ async function removeRelation(index: number) {
       </div>
 
       <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
-        <UTooltip v-if="getId(rel) && !isInverseRelation(rel)" :text="rel.isPublished ? 'Published' : 'Unpublished'">
+        <UTooltip
+          v-if="getId(rel) && !isInverseRelation(rel)"
+          :text="rel.isPublished ? 'Published' : 'Unpublished'"
+          :delay-duration="0"
+          :disabled="tooltipsDisabled"
+        >
           <UButton
             :icon="rel.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
             :color="rel.isPublished ? 'success' : 'neutral'"
@@ -323,7 +317,11 @@ async function removeRelation(index: number) {
             @click.stop="rel.isPublished = !rel.isPublished"
           />
         </UTooltip>
-        <UTooltip :text="`Field permissions (${getPermCount(rel)})`">
+        <UTooltip
+          :text="`Field permissions (${getPermCount(rel)})`"
+          :delay-duration="0"
+          :disabled="tooltipsDisabled"
+        >
           <UChip
             :text="String(getPermCount(rel))"
             size="md"
@@ -336,7 +334,7 @@ async function removeRelation(index: number) {
               variant="ghost"
               size="xs"
               class="lg:hover:cursor-pointer"
-              @click.stop="handleShieldClick(rel)"
+              @click.stop="handleShieldClick(rel, index)"
             />
           </UChip>
         </UTooltip>
@@ -396,11 +394,10 @@ async function removeRelation(index: number) {
 
   <FieldPermissionManageModal
     v-model:open="showPermModal"
-    :target-id="permModalTarget.id"
+    v-model:permissions="activePerms"
     target-type="relation"
     :target-name="permModalTarget.name"
     :baseline="permModalTarget.baseline"
-    @changed="onPermChanged"
   />
 
   <CommonDrawer

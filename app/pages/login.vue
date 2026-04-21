@@ -70,7 +70,27 @@
 
         <UForm :state="form" @submit="handleLogin" aria-label="Login form">
           <div class="space-y-6">
-            
+            <div
+              v-if="loginError"
+              role="alert"
+              aria-live="assertive"
+              class="flex items-start gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-200"
+            >
+              <UIcon name="lucide:alert-triangle" class="mt-0.5 size-4 shrink-0" />
+              <div class="min-w-0 flex-1 break-words">
+                <div class="font-semibold mb-0.5">Login failed</div>
+                <div>{{ loginError }}</div>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 text-red-500/70 hover:text-red-700 dark:text-red-300/70 dark:hover:text-red-100"
+                aria-label="Dismiss error"
+                @click="loginError = null"
+              >
+                <UIcon name="lucide:x" class="size-4" />
+              </button>
+            </div>
+
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
@@ -171,6 +191,7 @@ const error = reactive<{ email: string | null; password: string | null }>({
   email: null,
   password: null,
 });
+const loginError = ref<string | null>(null);
 
 function redirectAfterLogin() {
   const redirect = route.query.redirect as string | undefined;
@@ -179,25 +200,32 @@ function redirectAfterLogin() {
 }
 
 async function handleLogin() {
-  const ok = await login(form);
-  if (ok) redirectAfterLogin();
-  else {
-    notify.error("Login failed!", "Invalid email or password");
+  loginError.value = null;
+  const res = await login(form);
+  if (res.ok) {
+    redirectAfterLogin();
+    return;
   }
+  loginError.value = res.message;
+  notify.error("Login failed", res.message);
 }
 
 async function handleDemoLogin() {
   demoLoading.value = true;
+  loginError.value = null;
   try {
-    const ok = await login({
+    const res = await login({
       email: DEMO_LOGIN_EMAIL,
       password: DEMO_LOGIN_PASSWORD,
       remember: true,
     });
-    if (ok) redirectAfterLogin();
-    else {
-      notify.error("Demo login failed", "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.");
+    if (res.ok) {
+      redirectAfterLogin();
+      return;
     }
+    const hint = "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.";
+    loginError.value = `${res.message} (${hint})`;
+    notify.error("Demo login failed", loginError.value);
   } finally {
     demoLoading.value = false;
   }
