@@ -14,6 +14,7 @@
             size="sm"
             variant="solid"
             color="success"
+            :disabled="canCreateHandler === false"
             @click="$emit('createHandler')"
           >
             Add Handler
@@ -99,6 +100,7 @@ interface Props {
   getId: (item: any) => string;
   hasMainTable?: boolean;
   defaultHandler?: any;
+  canCreateHandler?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -107,7 +109,7 @@ const emit = defineEmits<{
   editHandler: [handler: any];
   editHook: [hook: any];
   createHandler: [methodObject?: { method: string; id?: string }];
-  createHook: [type: 'pre' | 'post'];
+  createHook: [type: 'pre' | 'post', method?: string, priority?: number];
   deleteHandler: [handler: any];
   deleteHook: [hook: any];
   toggleHook: [hook: any, enabled: boolean];
@@ -203,6 +205,55 @@ const nodeTypes = markRaw({
         h('span', {
           class: 'text-[7px] font-semibold text-[var(--text-primary)] uppercase tracking-wide',
         }, props.data.label),
+      ]);
+    },
+  }),
+  addAction: markRaw({
+    props: ['data', 'id'],
+    setup(props: any) {
+      return () => h('div', {
+        style: { position: 'relative', height: '28px', display: 'inline-flex', alignItems: 'center' },
+      }, [
+        h(Handle, {
+          type: 'target',
+          position: Position.Left,
+          style: { top: '50%', left: 0, transform: 'translate(-50%, -50%)', opacity: 0, pointerEvents: 'none' },
+        }),
+        h(Handle, {
+          type: 'source',
+          position: Position.Right,
+          style: { top: '50%', right: 0, left: 'auto', transform: 'translate(50%, -50%)', opacity: 0, pointerEvents: 'none' },
+        }),
+        h('button', {
+          type: 'button',
+          title: props.data.tooltip,
+          style: {
+            height: '28px',
+            padding: '0 12px',
+            borderRadius: '9999px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '4px',
+            cursor: 'pointer',
+            color: '#fff',
+            fontSize: '11px',
+            fontWeight: '600',
+            lineHeight: '1',
+            letterSpacing: '0.02em',
+            whiteSpace: 'nowrap',
+            border: 'none',
+            background: props.data.color,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+            transition: 'transform 120ms ease',
+          },
+          onMouseenter: (e: any) => { e.currentTarget.style.transform = 'scale(1.05)'; },
+          onMouseleave: (e: any) => { e.currentTarget.style.transform = 'scale(1)'; },
+          onClick: (e: Event) => { e.stopPropagation(); props.data.onClick(); },
+        }, [
+          h('span', { style: { fontSize: '14px', lineHeight: '1' } }, '+'),
+          h('span', null, props.data.label),
+        ]),
       ]);
     },
   }),
@@ -324,23 +375,81 @@ const methodGroups = computed(() => {
     group.postHooks.sort((a: any, b: any) => (props.getAfterHookPriority(a) || 0) - (props.getAfterHookPriority(b) || 0));
   });
 
-  return Object.values(groups).filter((group) => 
-    group.preHooks.length > 0 || group.handler || group.postHooks.length > 0
-  );
+  return Object.values(groups);
 });
 
 const allNodes = computed(() => {
+  return flowGraph.value.nodes;
+});
+
+const allEdges = computed(() => flowGraph.value.edges);
+
+const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
   const nodes: any[] = [];
+  const edges: any[] = [];
   const methodList = methodGroups.value;
   const nodeWidth = 140;
   const rowHeight = 80;
   const startX = 20;
   const startY = 40;
-  const nodeSpacing = 30;
+  const nodeSpacing = 24;
+  const actionBtnHeight = 28;
+  const actionBtnSpacing = 16;
+  const actionBtnWidths: Record<string, number> = {
+    'Pre-Hook': 92,
+    'Handler': 88,
+    'Post-Hook': 96,
+  };
+
+  const edgeStyle = { stroke: '#94a3b8', strokeWidth: 2, strokeDasharray: '5,5' };
+
 
   methodList.forEach((group, groupIndex) => {
     const groupY = startY + (groupIndex * rowHeight);
+    const actionBtnY = groupY + (40 - actionBtnHeight) / 2;
     let currentX = startX;
+    let lastNodeId: string | null = null;
+
+    const connectFrom = (nextId: string) => {
+      if (lastNodeId) {
+        edges.push({
+          id: `edge-${lastNodeId}-${nextId}`,
+          source: lastNodeId,
+          target: nextId,
+          type: 'straight',
+          animated: true,
+          style: edgeStyle,
+        });
+      }
+      lastNodeId = nextId;
+    };
+
+    const pushActionNode = (id: string, color: string, label: string, tooltip: string, onClick: () => void) => {
+      nodes.push({
+        id,
+        type: 'addAction',
+        position: { x: currentX, y: actionBtnY },
+        data: { color, label, tooltip, onClick },
+        draggable: false,
+        selectable: false,
+        connectable: false,
+      });
+      connectFrom(id);
+      currentX += (actionBtnWidths[label] || 90) + actionBtnSpacing;
+    };
+
+    const pushFlowNode = (id: string, type: string, data: any) => {
+      nodes.push({
+        id,
+        type,
+        position: { x: currentX, y: groupY },
+        data,
+        draggable: false,
+        selectable: false,
+      });
+      connectFrom(id);
+      currentX += nodeWidth + nodeSpacing;
+    };
 
     const methodLabelId = `method-${group.method}`;
     nodes.push({
@@ -351,130 +460,112 @@ const allNodes = computed(() => {
       draggable: false,
       selectable: false,
     });
-
+    lastNodeId = methodLabelId;
     currentX += 60;
 
+    const hasRealHandler = !!(group.handler && !group.handler._isDefault && !group.handler.isDefault);
+
+    // Pre-hook zone: [+] placed before start, then after each LOCAL hook.
+    // Globals are rendered inline (no adjacent [+]) and excluded from positional index.
+    let prePriorityIdx = 0;
+    pushActionNode(
+      `add-prehook-${group.method}-start`,
+      '#8b5cf6',
+      'Pre-Hook',
+      group.preHooks.length > 0
+        ? `Insert pre-hook at start`
+        : `Add pre-hook for ${group.method}`,
+      () => emit('createHook', 'pre', group.method, 0),
+    );
     group.preHooks.forEach((hook: any) => {
-      const nodeId = `prehook-${group.method}-${props.getId(hook)}`;
-      nodes.push({
-        id: nodeId,
-        type: 'prehook',
-        position: { x: currentX, y: groupY },
-        data: {
+      pushFlowNode(
+        `prehook-${group.method}-${props.getId(hook)}`,
+        'prehook',
+        {
           ...hook,
           label: hook.name || 'Unnamed Hook',
           priority: props.getPreHookPriority(hook) || 0,
           enabled: hook.isEnabled !== false,
           route: hook.route,
         },
-        draggable: false,
-        selectable: false,
-      });
-      currentX += nodeWidth + nodeSpacing;
+      );
+      if (!hook.isGlobal) {
+        prePriorityIdx += 1;
+        const priority = prePriorityIdx;
+        pushActionNode(
+          `add-prehook-${group.method}-after-${props.getId(hook)}`,
+          '#8b5cf6',
+          'Pre-Hook',
+          `Add pre-hook after "${hook.name || 'hook'}"`,
+          () => emit('createHook', 'pre', group.method, priority),
+        );
+      }
     });
 
+    // Handler zone: real handler OR +Handler button
     if (group.handler) {
       const handlerId = `handler-${group.method}-${group.handler._isDefault ? 'default' : props.getId(group.handler)}`;
       const methodObject = group.handler._isDefault
         ? (methodLookup.value[group.method] || { method: group.method })
         : group.handler.method;
-      nodes.push({
-        id: handlerId,
-        type: 'handler',
-        position: { x: currentX, y: groupY },
-        data: {
-          ...group.handler,
-          label: group.handler.name || group.handler.logic?.substring(0, 20) || 'Unnamed Handler',
-          isDefault: group.handler._isDefault || false,
-          enabled: group.handler.isEnabled !== false,
-          _method: group.method,
-          _methodObject: methodObject,
-        },
-        draggable: false,
-        selectable: false,
+      pushFlowNode(handlerId, 'handler', {
+        ...group.handler,
+        label: group.handler.name || group.handler.logic?.substring(0, 20) || 'Unnamed Handler',
+        isDefault: group.handler._isDefault || false,
+        enabled: group.handler.isEnabled !== false,
+        _method: group.method,
+        _methodObject: methodObject,
       });
-      currentX += nodeWidth + nodeSpacing;
+    }
+    if (!hasRealHandler) {
+      pushActionNode(
+        `add-handler-${group.method}`,
+        '#10b981',
+        'Handler',
+        `Add handler for ${group.method}`,
+        () => emit('createHandler', methodLookup.value[group.method] || { method: group.method }),
+      );
     }
 
+    // Post-hook zone: [+] placed before start, then after each LOCAL hook.
+    // Globals are rendered inline (no adjacent [+]) and excluded from positional index.
+    let postPriorityIdx = 0;
+    pushActionNode(
+      `add-posthook-${group.method}-start`,
+      '#06b6d4',
+      'Post-Hook',
+      group.postHooks.length > 0
+        ? `Insert post-hook at start`
+        : `Add post-hook for ${group.method}`,
+      () => emit('createHook', 'post', group.method, 0),
+    );
     group.postHooks.forEach((hook: any) => {
-      const hookId = `posthook-${group.method}-${props.getId(hook)}`;
-      nodes.push({
-        id: hookId,
-        type: 'posthook',
-        position: { x: currentX, y: groupY },
-        data: {
+      pushFlowNode(
+        `posthook-${group.method}-${props.getId(hook)}`,
+        'posthook',
+        {
           ...hook,
           label: hook.name || 'Unnamed Hook',
           priority: props.getAfterHookPriority(hook) || 0,
           enabled: hook.isEnabled !== false,
           route: hook.route,
         },
-        draggable: false,
-        selectable: false,
-      });
-      currentX += nodeWidth + nodeSpacing;
+      );
+      if (!hook.isGlobal) {
+        postPriorityIdx += 1;
+        const priority = postPriorityIdx;
+        pushActionNode(
+          `add-posthook-${group.method}-after-${props.getId(hook)}`,
+          '#06b6d4',
+          'Post-Hook',
+          `Add post-hook after "${hook.name || 'hook'}"`,
+          () => emit('createHook', 'post', group.method, priority),
+        );
+      }
     });
   });
 
-  return nodes;
-});
-
-const allEdges = computed(() => {
-  const edges: any[] = [];
-  const methodList = methodGroups.value;
-
-  methodList.forEach((group) => {
-    const methodPrefix = group.method;
-    const methodLabelId = `method-${methodPrefix}`;
-    let lastNodeId: string | null = methodLabelId;
-
-    group.preHooks.forEach((hook: any, index: number) => {
-      const nodeId = `prehook-${methodPrefix}-${props.getId(hook)}`;
-      
-      edges.push({
-        id: `edge-${lastNodeId}-${nodeId}`,
-        source: lastNodeId,
-        target: nodeId,
-        type: 'straight',
-        animated: true,
-        style: { stroke: '#94a3b8', strokeWidth: 2, strokeDasharray: '5,5' },
-      });
-
-      lastNodeId = nodeId;
-    });
-
-    if (group.handler) {
-      const handlerId = `handler-${methodPrefix}-${group.handler._isDefault ? 'default' : props.getId(group.handler)}`;
-      
-      edges.push({
-        id: `edge-${lastNodeId}-${handlerId}`,
-        source: lastNodeId,
-        target: handlerId,
-        type: 'straight',
-        animated: true,
-        style: { stroke: '#94a3b8', strokeWidth: 2, strokeDasharray: '5,5' },
-      });
-      
-      lastNodeId = handlerId;
-    }
-
-    group.postHooks.forEach((hook: any) => {
-      const hookId = `posthook-${methodPrefix}-${props.getId(hook)}`;
-      
-      edges.push({
-        id: `edge-${lastNodeId}-${hookId}`,
-        source: lastNodeId,
-        target: hookId,
-        type: 'straight',
-        animated: true,
-        style: { stroke: '#94a3b8', strokeWidth: 2, strokeDasharray: '5,5' },
-      });
-
-      lastNodeId = hookId;
-    });
-  });
-
-  return edges;
+  return { nodes, edges };
 });
 
 function handleNodeClick(event: any) {

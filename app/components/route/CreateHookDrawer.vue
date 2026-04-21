@@ -16,7 +16,7 @@
               v-model="localForm"
               v-model:errors="localErrors"
               :table-name="hookType === 'pre' ? 'pre_hook_definition' : 'post_hook_definition'"
-              :excluded="['route', 'isSystem']"
+              :excluded="excludedFields"
               :field-map="fieldMap"
               mode="create"
             />
@@ -29,7 +29,7 @@
         <UButton
           variant="outline"
           color="neutral"
-          @click="$emit('cancel')"
+          @click="handleCancel"
         >
           Cancel
         </UButton>
@@ -37,7 +37,7 @@
           variant="solid"
           color="primary"
           :loading="loading"
-          :disabled="loading"
+          :disabled="loading || !hasChanged"
           @click="$emit('save')"
         >
           Create Hook
@@ -45,6 +45,21 @@
       </div>
     </template>
   </CommonDrawer>
+
+  <CommonModal v-model="showDiscardModal">
+    <template #title>Discard Changes</template>
+    <template #body>
+      <div class="text-sm text-[var(--text-secondary)]">
+        You have unsaved changes. Are you sure you want to close? All changes will be lost.
+      </div>
+    </template>
+    <template #footer>
+      <div class="flex justify-end gap-2 w-full">
+        <UButton variant="ghost" @click="showDiscardModal = false">Cancel</UButton>
+        <UButton @click="confirmDiscard">Discard Changes</UButton>
+      </div>
+    </template>
+  </CommonModal>
 </template>
 
 <script setup lang="ts">
@@ -55,6 +70,8 @@ interface Props {
   loading: boolean;
   hookType?: 'pre' | 'post';
   routeId?: string;
+  allowedMethods?: string[];
+  lockMethod?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -68,6 +85,10 @@ const emit = defineEmits<{
   save: [];
   cancel: [];
 }>();
+
+const initialSnapshot = ref<string | null>(null);
+const hasChanged = ref(false);
+const showDiscardModal = ref(false);
 
 const localOpen = computed({
   get: () => props.modelValue,
@@ -84,8 +105,49 @@ const localErrors = computed({
   set: (value) => emit('update:errors', value),
 });
 
-const fieldMap = {
-  methods: { type: 'methods-selector', componentProps: { excludeGqlMethods: true } },
-};
-</script>
+const fieldMap = computed(() => ({
+  methods: {
+    type: 'methods-selector',
+    componentProps: {
+      excludeGqlMethods: true,
+      ...(props.allowedMethods ? { allowedMethods: props.allowedMethods } : {}),
+    },
+  },
+}));
 
+const excludedFields = computed(() => {
+  const base = ['route', 'isSystem'];
+  if (props.lockMethod) base.push('methods');
+  return base;
+});
+
+watch(() => props.modelValue, async (isOpen) => {
+  if (isOpen) {
+    await nextTick();
+    initialSnapshot.value = stableStringify(props.form);
+    hasChanged.value = false;
+  } else {
+    initialSnapshot.value = null;
+    hasChanged.value = false;
+  }
+}, { immediate: true });
+
+watch(() => props.form, (newForm) => {
+  if (!props.modelValue || initialSnapshot.value === null) return;
+  hasChanged.value = stableStringify(newForm) !== initialSnapshot.value;
+}, { deep: true });
+
+function handleCancel() {
+  if (hasChanged.value) {
+    showDiscardModal.value = true;
+  } else {
+    emit('cancel');
+  }
+}
+
+function confirmDiscard() {
+  showDiscardModal.value = false;
+  hasChanged.value = false;
+  emit('cancel');
+}
+</script>
