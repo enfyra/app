@@ -7,7 +7,7 @@
             v-model="createForm"
             :table-name="tableName"
             :errors="createErrors"
-            :excluded="['compiledCode', 'createdBy', 'updatedBy']"
+            :excluded="['compiledCode', 'createdBy', 'updatedBy', 'extensionId']"
             :field-map="{
               code: { type: 'code', language: 'vue', height: '400px' },
             }"
@@ -137,8 +137,9 @@ async function handleCreate() {
   const { me } = useAuth();
   const { getIdFieldName } = useDatabase();
   const idField = getIdFieldName();
+  const { extensionId, compiledCode, ...rest } = createForm.value;
   const body = {
-    ...createForm.value,
+    ...rest,
     createdBy: { [idField]: (me.value as any)?.[idField] }
   };
 
