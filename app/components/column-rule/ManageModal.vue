@@ -11,48 +11,27 @@ type RuleType =
 
 type Rule = {
   id?: string | number
-  ruleType: RuleType | string
+  _tmpId?: string
+  ruleType: string
   value: any
   message: string | null
   isEnabled: boolean
-  column?: { id: string | number }
 }
 
 const props = defineProps<{
-  columnId: string | number
   columnName: string
   columnType: string
 }>()
 
 const open = defineModel<boolean>("open", { required: true })
-
-const emit = defineEmits<{ changed: [] }>()
+const rules = defineModel<Rule[]>("rules", { required: true })
 
 const notify = useNotify()
 const { confirm } = useConfirm()
-const { getIdFieldName, getId } = useDatabase()
+const { getId } = useDatabase()
 
 type ViewMode = "list" | "form"
 const viewMode = ref<ViewMode>("list")
-
-const {
-  data: rulesData,
-  pending: rulesLoading,
-  execute: fetchRules,
-} = useApi(() => "/column_rule_definition", {
-  query: computed(() => ({
-    fields: "id,ruleType,value,message,isEnabled,column.id",
-    sort: "id",
-    limit: 100,
-    filter: {
-      column: { [getIdFieldName()]: { _eq: String(props.columnId) } },
-    },
-  })),
-  immediate: false,
-  errorContext: "Fetch Column Rules",
-})
-
-const rules = computed<Rule[]>(() => (rulesData.value as any)?.data || [])
 
 const form = ref<Rule>({
   ruleType: "min",
@@ -60,29 +39,9 @@ const form = ref<Rule>({
   message: null,
   isEnabled: true,
 })
-const editingId = ref<string | null>(null)
+const editingKey = ref<string | null>(null)
 const mode = ref<"create" | "update">("create")
-const saving = ref(false)
-const deletingId = ref<string | null>(null)
 
-const { execute: createRule, pending: creating, error: createErr } = useApi(
-  () => "/column_rule_definition",
-  { method: "post", errorContext: "Create Column Rule", immediate: false, watch: false },
-)
-const { execute: patchRule, pending: patching, error: patchErr } = useApi(
-  () => `/column_rule_definition/${editingId.value || ""}`,
-  { method: "patch", errorContext: "Update Column Rule", immediate: false, watch: false },
-)
-const { execute: deleteRule, pending: deleting, error: deleteErr } = useApi(
-  () => "/column_rule_definition",
-  { method: "delete", errorContext: "Delete Column Rule", immediate: false, watch: false },
-)
-
-const isBusy = computed(
-  () => saving.value || creating.value || patching.value || deleting.value,
-)
-
-// ruleType options filtered by column type
 const ALL_RULE_TYPES: { value: RuleType; label: string; desc: string }[] = [
   { value: "min", label: "Min (number)", desc: "Minimum numeric value" },
   { value: "max", label: "Max (number)", desc: "Maximum numeric value" },
@@ -105,11 +64,17 @@ function typesForColumn(colType: string): RuleType[] {
   return []
 }
 
+function ruleKey(r: Rule): string {
+  if (r.id != null) return `id:${String(r.id)}`
+  if (r._tmpId) return `tmp:${r._tmpId}`
+  return `tmp:${Math.random().toString(36).slice(2)}`
+}
+
 const usedRuleTypes = computed(() => {
   const used = new Set<string>()
-  for (const r of rules.value) {
+  for (const r of rules.value || []) {
     if (r.ruleType === "custom") continue
-    if (mode.value === "update" && editingId.value && String(getId(r)) === editingId.value) continue
+    if (mode.value === "update" && editingKey.value && ruleKey(r) === editingKey.value) continue
     used.add(r.ruleType)
   }
   return used
@@ -122,35 +87,6 @@ const availableRuleTypes = computed(() => {
     disabled: usedRuleTypes.value.has(rt.value),
   }))
 })
-
-function openCreateForm() {
-  mode.value = "create"
-  editingId.value = null
-  const firstAvailable = availableRuleTypes.value.find((rt) => !rt.disabled)
-  if (!firstAvailable) {
-    notify.info("No rules available", "This column type has no applicable validation rules.")
-    return
-  }
-  form.value = {
-    ruleType: firstAvailable.value,
-    value: defaultValueFor(firstAvailable.value),
-    message: null,
-    isEnabled: true,
-  }
-  viewMode.value = "form"
-}
-
-function openEditForm(item: Rule) {
-  if (isBusy.value) return
-  mode.value = "update"
-  editingId.value = String(getId(item))
-  form.value = JSON.parse(JSON.stringify(item))
-  viewMode.value = "form"
-}
-
-function cancelForm() {
-  viewMode.value = "list"
-}
 
 function defaultValueFor(ruleType: string): any {
   switch (ruleType) {
@@ -170,6 +106,34 @@ function defaultValueFor(ruleType: string): any {
   }
 }
 
+function openCreateForm() {
+  mode.value = "create"
+  editingKey.value = null
+  const firstAvailable = availableRuleTypes.value.find((rt) => !rt.disabled)
+  if (!firstAvailable) {
+    notify.info("No rules available", "This column type has no applicable validation rules.")
+    return
+  }
+  form.value = {
+    ruleType: firstAvailable.value,
+    value: defaultValueFor(firstAvailable.value),
+    message: null,
+    isEnabled: true,
+  }
+  viewMode.value = "form"
+}
+
+function openEditForm(item: Rule) {
+  mode.value = "update"
+  editingKey.value = ruleKey(item)
+  form.value = JSON.parse(JSON.stringify(item))
+  viewMode.value = "form"
+}
+
+function cancelForm() {
+  viewMode.value = "list"
+}
+
 watch(
   () => form.value.ruleType,
   (next, prev) => {
@@ -177,43 +141,26 @@ watch(
   },
 )
 
-async function toggleEnabled(item: Rule) {
-  if (isBusy.value) return
-  const id = String(getId(item))
-  editingId.value = id
-  try {
-    await patchRule({ body: { isEnabled: !item.isEnabled } })
-    if (patchErr.value) {
-      notify.error("Error", "Failed to toggle rule")
-      return
-    }
-    await fetchRules()
-    emit("changed")
-  } finally {
-    editingId.value = null
-  }
+function toggleEnabled(item: Rule) {
+  const list = (rules.value || []).slice()
+  const key = ruleKey(item)
+  const idx = list.findIndex((r) => ruleKey(r) === key)
+  if (idx === -1) return
+  const existing = list[idx]!
+  list[idx] = { ...existing, isEnabled: !existing.isEnabled }
+  rules.value = list
 }
 
 async function quickDelete(item: Rule) {
-  if (isBusy.value) return
-  const id = String(getId(item))
   const ok = await confirm({
     title: "Delete Rule",
-    content: `Delete rule "${item.ruleType}"? This cannot be undone.`,
+    content: `Delete rule "${item.ruleType}"? Changes apply when you save the table.`,
     confirmText: "Delete",
     cancelText: "Cancel",
   })
   if (!ok) return
-  deletingId.value = id
-  try {
-    await deleteRule({ id })
-    if (deleteErr.value) return
-    notify.success("Rule deleted")
-    await fetchRules()
-    emit("changed")
-  } finally {
-    if (deletingId.value === id) deletingId.value = null
-  }
+  const key = ruleKey(item)
+  rules.value = (rules.value || []).filter((r) => ruleKey(r) !== key)
 }
 
 function validateForm(): string | null {
@@ -239,37 +186,33 @@ function validateForm(): string | null {
   return null
 }
 
-async function saveRule() {
-  if (isBusy.value) return
+function saveRule() {
   const err = validateForm()
   if (err) {
     notify.error("Validation Error", err)
     return
   }
-  saving.value = true
-  try {
-    const body: any = {
-      ruleType: form.value.ruleType,
-      value: form.value.value,
-      message: form.value.message || null,
-      isEnabled: form.value.isEnabled !== false,
-      column: { id: String(props.columnId) },
-    }
-    if (mode.value === "update" && editingId.value) {
-      await patchRule({ body })
-      if (patchErr.value) return
-      notify.success("Rule updated")
-    } else {
-      await createRule({ body })
-      if (createErr.value) return
-      notify.success("Rule created")
-    }
-    viewMode.value = "list"
-    await fetchRules()
-    emit("changed")
-  } finally {
-    saving.value = false
+  const next: Rule = {
+    ruleType: form.value.ruleType,
+    value: form.value.value,
+    message: form.value.message || null,
+    isEnabled: form.value.isEnabled !== false,
   }
+  const list = (rules.value || []).slice()
+  if (mode.value === "update" && editingKey.value) {
+    const idx = list.findIndex((r) => ruleKey(r) === editingKey.value)
+    const existing = idx !== -1 ? list[idx] : null
+    if (existing) {
+      next.id = existing.id
+      next._tmpId = existing._tmpId
+      list[idx] = next
+    }
+  } else {
+    next._tmpId = `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+    list.push(next)
+  }
+  rules.value = list
+  viewMode.value = "list"
 }
 
 function ruleSummary(r: Rule): string {
@@ -292,11 +235,8 @@ function ruleSummary(r: Rule): string {
   }
 }
 
-watch(open, async (isOpen) => {
-  if (isOpen) {
-    viewMode.value = "list"
-    if (props.columnId) await fetchRules()
-  }
+watch(open, (isOpen) => {
+  if (isOpen) viewMode.value = "list"
 })
 </script>
 
@@ -336,24 +276,16 @@ watch(open, async (isOpen) => {
             <div class="font-semibold mb-1">How rules apply</div>
             <div class="text-xs">
               Rules are <strong>added on top</strong> of the column's type and required check — never replace them.
-              Example: <code class="font-mono">min: 10</code> on an <code class="font-mono">int</code> column still requires a number, still respects <code class="font-mono">isNullable</code>, and additionally enforces ≥ 10.
+              Changes are staged here and persist when you save the table.
             </div>
           </div>
         </div>
 
-        <CommonLoadingState
-          v-if="rulesLoading"
-          title="Loading rules..."
-          size="sm"
-          type="form"
-          context="inline"
-        />
-
-        <div v-else class="space-y-2">
-          <div v-if="rules.length" class="space-y-2">
+        <div class="space-y-2">
+          <div v-if="(rules || []).length" class="space-y-2">
             <div
               v-for="r in rules"
-              :key="`rule-${String(getId(r) ?? '')}`"
+              :key="ruleKey(r)"
               class="rounded-lg border border-[var(--border-default)] overflow-hidden"
             >
               <div
@@ -383,8 +315,6 @@ watch(open, async (isOpen) => {
                     color="error"
                     size="xs"
                     class="rounded-full !aspect-square flex-shrink-0"
-                    :loading="String(getId(r)) === deletingId"
-                    :disabled="isBusy"
                     @click.stop="quickDelete(r)"
                   />
                 </div>
@@ -396,7 +326,6 @@ watch(open, async (isOpen) => {
                 <span class="text-sm text-[var(--text-primary)]">Enabled</span>
                 <USwitch
                   :model-value="r.isEnabled"
-                  :disabled="isBusy"
                   @update:model-value="toggleEnabled(r)"
                   @click.stop
                 />
@@ -407,7 +336,7 @@ watch(open, async (isOpen) => {
           <CommonEmptyState
             v-else
             title="No rules yet"
-            description="Add validation rules like required, min/max, pattern, format."
+            description="Add validation rules like min/max, pattern, format."
             icon="lucide:ruler"
             size="sm"
             variant="naked"
@@ -419,10 +348,11 @@ watch(open, async (isOpen) => {
         <div>
           <label class="block text-sm font-medium mb-1">Rule type</label>
           <USelect
-            v-model="form.ruleType"
+            :model-value="form.ruleType as RuleType"
             :items="availableRuleTypes.map(rt => ({ label: rt.label, value: rt.value, disabled: rt.disabled }))"
             class="w-full"
             :disabled="mode === 'update'"
+            @update:model-value="(v: any) => (form.ruleType = v)"
           />
         </div>
 
@@ -436,7 +366,12 @@ watch(open, async (isOpen) => {
           <label class="block text-sm font-medium mb-1">
             Custom error message (optional)
           </label>
-          <UInput v-model="form.message" placeholder="e.g. 'Email is invalid'" class="w-full" />
+          <UInput
+            :model-value="form.message ?? ''"
+            placeholder="e.g. 'Email is invalid'"
+            class="w-full"
+            @update:model-value="(v) => (form.message = (v as string) || null)"
+          />
         </div>
 
         <div class="flex items-center gap-2">
@@ -449,12 +384,12 @@ watch(open, async (isOpen) => {
     <template #footer>
       <div class="flex justify-end gap-2 w-full">
         <template v-if="viewMode === 'list'">
-          <UButton variant="ghost" @click="open = false">Close</UButton>
+          <UButton variant="ghost" @click="open = false">Done</UButton>
           <UButton icon="lucide:plus" @click="openCreateForm">Add rule</UButton>
         </template>
         <template v-else>
           <UButton variant="ghost" @click="cancelForm">Cancel</UButton>
-          <UButton :loading="saving" :disabled="saving" @click="saveRule">
+          <UButton @click="saveRule">
             {{ mode === "update" ? "Update" : "Create" }}
           </UButton>
         </template>

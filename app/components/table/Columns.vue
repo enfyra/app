@@ -19,105 +19,76 @@ const formEditorRef = ref();
 const localColumnsWithKeys = computed(() => columns.value.map((c: any, i: number) => ({ ...c, _localKey: i })));
 const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
 
-const permCountOverride = ref<Record<string, number>>({});
-const ruleCountOverride = ref<Record<string, number>>({});
-
 function getPermCount(column: any): number {
-  const id = String(getId(column) ?? "");
-  if (id && id in permCountOverride.value) return permCountOverride.value[id];
   const perms = Array.isArray(column?.fieldPermissions) ? column.fieldPermissions : [];
   return perms.length;
 }
 
 function getRuleCount(column: any): number {
-  const id = String(getId(column) ?? "");
-  if (id && id in ruleCountOverride.value) return ruleCountOverride.value[id];
   const rules = Array.isArray(column?.rules) ? column.rules : [];
   return rules.length;
 }
 
 const showPermModal = ref(false);
-const permModalTarget = ref<{ id: string; name: string; baseline?: "allow" | "deny" }>({ id: "", name: "" });
+const permModalIndex = ref<number>(-1);
+const permModalTarget = computed(() => {
+  const col = columns.value?.[permModalIndex.value];
+  return {
+    name: col?.name || "Unnamed",
+    baseline: (col?.isPublished ? "allow" : "deny") as "allow" | "deny",
+  };
+});
 
-function openPermModal(column: any) {
-  permModalTarget.value = { id: String(getId(column)), name: column.name || "Unnamed", baseline: column.isPublished ? "allow" : "deny" };
+const showRuleModal = ref(false);
+const ruleModalIndex = ref<number>(-1);
+const ruleModalTarget = computed(() => {
+  const col = columns.value?.[ruleModalIndex.value];
+  return {
+    name: col?.name || "Unnamed",
+    type: col?.type || "varchar",
+  };
+});
+
+const activeRules = computed<any[]>({
+  get: () => {
+    const col = columns.value?.[ruleModalIndex.value];
+    return Array.isArray(col?.rules) ? col.rules : [];
+  },
+  set: (next: any[]) => {
+    const idx = ruleModalIndex.value;
+    if (idx < 0 || !columns.value?.[idx]) return;
+    const nextCols = columns.value.slice();
+    nextCols[idx] = { ...nextCols[idx], rules: next };
+    columns.value = nextCols;
+  },
+});
+
+const activePerms = computed<any[]>({
+  get: () => {
+    const col = columns.value?.[permModalIndex.value];
+    return Array.isArray(col?.fieldPermissions) ? col.fieldPermissions : [];
+  },
+  set: (next: any[]) => {
+    const idx = permModalIndex.value;
+    if (idx < 0 || !columns.value?.[idx]) return;
+    const nextCols = columns.value.slice();
+    nextCols[idx] = { ...nextCols[idx], fieldPermissions: next };
+    columns.value = nextCols;
+  },
+});
+
+const tooltipsDisabled = computed(
+  () => showPermModal.value || showRuleModal.value || isEditing.value,
+);
+
+function handleShieldClick(column: any, index: number) {
+  permModalIndex.value = index;
   showPermModal.value = true;
 }
 
-const showRuleModal = ref(false);
-const ruleModalTarget = ref<{ id: string; name: string; type: string }>({ id: "", name: "", type: "" });
-
-function openRuleModal(column: any) {
-  ruleModalTarget.value = {
-    id: String(getId(column)),
-    name: column.name || "Unnamed",
-    type: column.type || "varchar",
-  };
+function handleRuleClick(column: any, index: number) {
+  ruleModalIndex.value = index;
   showRuleModal.value = true;
-}
-
-const {
-  data: permRefreshData,
-  execute: refreshColumnPerms,
-} = useApi(() => "/field_permission_definition", {
-  query: computed(() => ({
-    fields: "id,effect,decision",
-    limit: 50,
-    filter: permModalTarget.value.id
-      ? { column: { [getIdFieldName()]: { _eq: permModalTarget.value.id } } }
-      : { [getIdFieldName()]: { _eq: "__none__" } },
-  })),
-  immediate: false,
-  errorContext: "Refresh Column Permissions",
-})
-
-async function onPermChanged() {
-  const targetId = permModalTarget.value.id;
-  if (!targetId) return;
-  await refreshColumnPerms();
-  const perms = (permRefreshData.value as any)?.data || [];
-  permCountOverride.value = { ...permCountOverride.value, [targetId]: perms.length };
-}
-
-const {
-  data: ruleRefreshData,
-  execute: refreshColumnRules,
-} = useApi(() => "/column_rule_definition", {
-  query: computed(() => ({
-    fields: "id",
-    limit: 100,
-    filter: ruleModalTarget.value.id
-      ? { column: { [getIdFieldName()]: { _eq: ruleModalTarget.value.id } } }
-      : { [getIdFieldName()]: { _eq: "__none__" } },
-  })),
-  immediate: false,
-  errorContext: "Refresh Column Rules",
-})
-
-async function onRuleChanged() {
-  const targetId = ruleModalTarget.value.id;
-  if (!targetId) return;
-  await refreshColumnRules();
-  const rules = (ruleRefreshData.value as any)?.data || [];
-  ruleCountOverride.value = { ...ruleCountOverride.value, [targetId]: rules.length };
-}
-
-const notify = useNotify();
-
-function handleShieldClick(column: any) {
-  if (getId(column)) {
-    openPermModal(column);
-  } else {
-    notify.info("Field Permissions", "You can add field permissions after saving the collection.");
-  }
-}
-
-function handleRuleClick(column: any) {
-  if (getId(column)) {
-    openRuleModal(column);
-  } else {
-    notify.info("Column Rules", "You can add validation rules after saving the collection.");
-  }
 }
 
 async function handleDrawerClose() {
@@ -479,7 +450,12 @@ watch(
       </div>
 
       <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
-        <UTooltip v-if="getId(column) && column.name !== getIdFieldName()" :text="column.isPublished ? 'Published' : 'Unpublished'">
+        <UTooltip
+          v-if="column.name !== getIdFieldName()"
+          :text="column.isPublished ? 'Published' : 'Unpublished'"
+          :delay-duration="0"
+          :disabled="tooltipsDisabled"
+        >
           <UButton
             :icon="column.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
             :color="column.isPublished ? 'success' : 'neutral'"
@@ -489,7 +465,12 @@ watch(
             @click.stop="column.isPublished = !column.isPublished"
           />
         </UTooltip>
-        <UTooltip v-if="column.name !== getIdFieldName()" :text="`Field permissions (${getPermCount(column)})`">
+        <UTooltip
+          v-if="column.name !== getIdFieldName()"
+          :text="`Field permissions (${getPermCount(column)})`"
+          :delay-duration="0"
+          :disabled="tooltipsDisabled"
+        >
           <UChip
             :text="String(getPermCount(column))"
             size="md"
@@ -502,11 +483,16 @@ watch(
               variant="ghost"
               size="xs"
               class="lg:hover:cursor-pointer"
-              @click.stop="handleShieldClick(column)"
+              @click.stop="handleShieldClick(column, index)"
             />
           </UChip>
         </UTooltip>
-        <UTooltip v-if="column.name !== getIdFieldName()" :text="`Validation rules (${getRuleCount(column)})`">
+        <UTooltip
+          v-if="column.name !== getIdFieldName()"
+          :text="`Validation rules (${getRuleCount(column)})`"
+          :delay-duration="0"
+          :disabled="tooltipsDisabled"
+        >
           <UChip
             :text="String(getRuleCount(column))"
             size="md"
@@ -519,7 +505,7 @@ watch(
               variant="ghost"
               size="xs"
               class="lg:hover:cursor-pointer"
-              @click.stop="handleRuleClick(column)"
+              @click.stop="handleRuleClick(column, index)"
             />
           </UChip>
         </UTooltip>
@@ -547,19 +533,17 @@ watch(
 
   <FieldPermissionManageModal
     v-model:open="showPermModal"
-    :target-id="permModalTarget.id"
+    v-model:permissions="activePerms"
     target-type="column"
     :target-name="permModalTarget.name"
     :baseline="permModalTarget.baseline"
-    @changed="onPermChanged"
   />
 
   <ColumnRuleManageModal
     v-model:open="showRuleModal"
-    :column-id="ruleModalTarget.id"
+    v-model:rules="activeRules"
     :column-name="ruleModalTarget.name"
     :column-type="ruleModalTarget.type"
-    @changed="onRuleChanged"
   />
 
   <CommonDrawer

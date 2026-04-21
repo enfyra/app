@@ -20,10 +20,26 @@ export function useAuth() {
       });
 
       me.value = (response as any)?.data?.[0] || null;
-      return response;
-    } catch (error) {
+      return { ok: true as const, data: response };
+    } catch (error: any) {
       console.error("[Auth] Login error:", error);
-      return null;
+      const data = error?.data ?? error?.response?._data;
+      const raw =
+        data?.statusMessage ??
+        data?.message ??
+        error?.statusMessage ??
+        error?.message;
+      const message = Array.isArray(raw)
+        ? raw.join(". ")
+        : typeof raw === "string" && raw.length > 0
+          ? raw
+          : "Login failed";
+      return {
+        ok: false as const,
+        message,
+        statusCode: error?.statusCode ?? data?.statusCode,
+        code: data?.data?.code ?? data?.code,
+      };
     } finally {
       isLoading.value = false;
     }
