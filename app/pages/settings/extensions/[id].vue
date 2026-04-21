@@ -9,7 +9,7 @@
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
-            :excluded="['createdAt', 'updatedAt', 'isSystem', 'compiledCode']"
+            :excluded="['createdAt', 'updatedAt', 'isSystem', 'compiledCode', 'extensionId']"
             :field-map="{
               code: { type: 'code', language: 'vue', height: '400px' },
             }"
@@ -229,8 +229,9 @@ async function updateExtension() {
   const { me } = useAuth();
   const { getIdFieldName } = useDatabase();
   const idField = getIdFieldName();
+  const { extensionId, compiledCode, ...rest } = form.value;
   const body = {
-    ...form.value,
+    ...rest,
     updatedBy: { [idField]: (me.value as any)?.[idField] }
   };
 
