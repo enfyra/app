@@ -29,6 +29,7 @@ const createErrors = ref<Record<string, string>>({});
 const { generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
+const { getId } = useDatabase();
 
 const fieldMap = {
   publishedMethods: { type: 'methods-selector', allowedMethodsKey: 'availableMethods' },
@@ -87,6 +88,13 @@ function filterDependentMethods(body: Record<string, any>) {
         : [];
     }
   }
+  for (const key of ['availableMethods', 'publishedMethods', 'skipRoleGuardMethods'] as const) {
+    if (Array.isArray(body[key])) {
+      body[key] = body[key]
+        .map((m: any) => ({ id: getId(m) }))
+        .filter((m: any) => m.id != null);
+    }
+  }
 }
 
 async function handleCreate() {
@@ -109,7 +117,6 @@ async function handleCreate() {
   const { schemas } = useSchema();
   await registerDataMenuItems(Object.values(schemas.value));
 
-  const { getId } = useDatabase();
   await navigateTo(`/settings/routings/${getId(createData.value.data[0])}`, {
     replace: true,
   });

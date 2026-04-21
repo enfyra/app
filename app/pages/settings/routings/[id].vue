@@ -82,10 +82,11 @@
         :get-id="getId"
         :has-main-table="!!mainTableInfo"
         :default-handler="defaultHandler"
+        :can-create-handler="canCreateHandler"
         @edit-handler="editHandler"
         @edit-hook="editHook"
         @create-handler="createHandler($event)"
-        @create-hook="createHook"
+        @create-hook="(type, method, priority) => createHook(type, method, priority)"
         @delete-handler="deleteHandler"
         @delete-hook="deleteHook"
         @toggle-hook="toggleHook"
@@ -114,6 +115,8 @@
     v-model:form="handlerForm"
     v-model:errors="handlerErrors"
     :loading="createHandlerLoading"
+    :allowed-methods="handlerAvailableMethods"
+    :lock-method="handlerLockedMethod"
     @save="saveHandler"
     @cancel="handleCancelHandler"
   />
@@ -125,6 +128,8 @@
     :loading="createHookLoading"
     :hook-type="hookType || 'pre'"
     :route-id="routeId"
+    :allowed-methods="availableMethodStrings"
+    :lock-method="hookLockedMethod"
     @save="saveHook"
     @cancel="handleCancelHook"
   />
@@ -134,6 +139,7 @@
     v-model:form="editHandlerForm"
     v-model:errors="editHandlerErrors"
     :loading="updateHandlerLoading"
+    :allowed-methods="availableMethodStrings"
     @save="updateHandler"
     @cancel="handleCancelEditHandler"
   />
@@ -145,6 +151,7 @@
     :loading="updateHookLoading"
     :hook-type="editHookType || 'pre'"
     :route-id="routeId"
+    :allowed-methods="availableMethodStrings"
     @save="updateHook"
     @cancel="handleCancelEditHook"
   />
@@ -169,13 +176,6 @@
     :columns="mainTableColumns"
   />
 
-  <CommonEmptyState
-    v-if="!loading && !routeData?.data?.[0]"
-    title="Route not found"
-    description="The requested route could not be loaded"
-    icon="lucide:route"
-    size="sm"
-  />
 </template>
 
 <script setup lang="ts">
@@ -264,6 +264,8 @@ const {
   },
   errorContext: "Fetch Route",
 });
+
+useNotFoundGuard(loading, () => !!routeData.value?.data?.[0], 'Route not found');
 
 watch(() => routeData.value?.data?.[0]?.path, (path) => {
   if (path) {
@@ -356,6 +358,13 @@ function filterDependentMethods(body: Record<string, any>) {
       body[key] = availableSet.size > 0
         ? body[key].filter((m: any) => m?.method && availableSet.has(m.method))
         : [];
+    }
+  }
+  for (const key of ['availableMethods', 'publishedMethods', 'skipRoleGuardMethods'] as const) {
+    if (Array.isArray(body[key])) {
+      body[key] = body[key]
+        .map((m: any) => ({ id: getId(m) }))
+        .filter((m: any) => m.id != null);
     }
   }
 }
@@ -534,6 +543,18 @@ const {
 });
 
 const handlers = computed(() => handlersData.value?.data || []);
+const handlerOccupiedMethods = computed(() => {
+  const set = new Set<string>();
+  for (const h of handlers.value as any[]) {
+    const m = h?.method?.method;
+    if (m) set.add(m);
+  }
+  return set;
+});
+const handlerAvailableMethods = computed(() =>
+  availableMethodStrings.value.filter((m: string) => !handlerOccupiedMethods.value.has(m))
+);
+const canCreateHandler = computed(() => handlerAvailableMethods.value.length > 0);
 const routePreHooks = computed(() => preHooksData.value?.data || []);
 const routePostHooks = computed(() => postHooksData.value?.data || []);
 const globalPreHooks = computed(() => globalPreHooksData.value?.data || []);
@@ -603,9 +624,23 @@ function getAfterHookPriority(hook: any): number | null {
 
 const hooksLoading = computed(() => preHooksLoading.value || postHooksLoading.value || globalPreHooksLoading.value || globalPostHooksLoading.value);
 
+const methodsCache = useState<any[]>('methods-cache', () => []);
+
+function resolveMethodObject(methodStr: string): { method: string; id?: string } {
+  const cached = methodsCache.value.find((m: any) => m?.method === methodStr);
+  if (cached) {
+    const id = getId(cached);
+    return id != null ? { id, method: methodStr } : { method: methodStr };
+  }
+  return { method: methodStr };
+}
+
 const showCreateHandlerDrawer = ref(false);
 const handlerForm = ref<Record<string, any>>({});
 const handlerErrors = ref<Record<string, string>>({});
+const handlerLockedMethod = ref(false);
+const hookLockedMethod = ref(false);
+const hookFromInsertButton = ref(false);
 
 const { generateEmptyForm: generateHandlerEmptyForm, validate: validateHandler } = useSchema("route_handler_definition");
 
@@ -623,6 +658,13 @@ const isHandlerDrawerUpdatingFromRoute = ref(false);
 
 watch(() => route.query.createHandler, (value) => {
   const shouldOpen = value === 'true';
+  if (shouldOpen && !canCreateHandler.value) {
+    notify.warning('No methods available', 'All available methods already have handlers.');
+    const newQuery = { ...route.query };
+    delete newQuery.createHandler;
+    router.replace({ query: newQuery });
+    return;
+  }
   if (showCreateHandlerDrawer.value !== shouldOpen) {
     isHandlerDrawerUpdatingFromRoute.value = true;
     showCreateHandlerDrawer.value = shouldOpen;
@@ -655,11 +697,27 @@ watch(showCreateHandlerDrawer, (isOpen) => {
 });
 
 function createHandler(methodObject?: { method: string; id?: string }) {
+  if (methodObject) {
+    if (handlerOccupiedMethods.value.has(methodObject.method)) {
+      notify.warning('Handler exists', `This route already has a handler for ${methodObject.method}.`);
+      return;
+    }
+  } else if (!canCreateHandler.value) {
+    notify.warning('No methods available', 'All available methods already have handlers.');
+    return;
+  }
+
   handlerForm.value = generateHandlerEmptyForm();
   handlerForm.value.route = { [idField]: routeId.value };
 
   if (methodObject) {
-    handlerForm.value.method = methodObject;
+    const resolved = methodObject.id != null
+      ? methodObject
+      : resolveMethodObject(methodObject.method);
+    handlerForm.value.method = resolved;
+    handlerLockedMethod.value = true;
+  } else {
+    handlerLockedMethod.value = false;
   }
 
   handlerErrors.value = {};
@@ -668,6 +726,7 @@ function createHandler(methodObject?: { method: string; id?: string }) {
 
 function handleCancelHandler() {
   showCreateHandlerDrawer.value = false;
+  handlerLockedMethod.value = false;
 }
 
 async function saveHandler() {
@@ -685,9 +744,8 @@ async function saveHandler() {
     return;
   }
 
-  notify.success("Handler created successfully");
-
   showCreateHandlerDrawer.value = false;
+  handlerLockedMethod.value = false;
   await fetchHandlers();
 }
 
@@ -802,8 +860,6 @@ async function updateHandler() {
     return;
   }
 
-  notify.success("Handler updated successfully");
-
   showEditHandlerDrawer.value = false;
   await fetchHandlers();
 }
@@ -911,7 +967,7 @@ watch(showCreateHookDrawer, (isOpen) => {
 
 const hookType = ref<'pre' | 'post' | null>(null);
 
-function createHook(type?: 'pre' | 'post') {
+function createHook(type?: 'pre' | 'post', method?: string, priority?: number) {
   hookType.value = type || 'pre';
   if (hookType.value === 'pre') {
     hookForm.value = generatePreHookEmptyForm();
@@ -919,12 +975,29 @@ function createHook(type?: 'pre' | 'post') {
     hookForm.value = generatePostHookEmptyForm();
   }
   hookForm.value.route = { [idField]: routeId.value };
+
+  if (method) {
+    hookForm.value.methods = [resolveMethodObject(method)];
+    hookLockedMethod.value = true;
+  } else {
+    hookLockedMethod.value = false;
+  }
+
+  if (priority != null) {
+    hookForm.value.priority = priority;
+    hookFromInsertButton.value = true;
+  } else {
+    hookFromInsertButton.value = false;
+  }
+
   hookErrors.value = {};
   showCreateHookDrawer.value = true;
 }
 
 function handleCancelHook() {
   showCreateHookDrawer.value = false;
+  hookLockedMethod.value = false;
+  hookFromInsertButton.value = false;
 }
 
 async function saveHook() {
@@ -936,6 +1009,21 @@ async function saveHook() {
     hookErrors.value = errors;
     notify.error("Validation error", "Please check the fields with errors.");
     return;
+  }
+
+  if (hookFromInsertButton.value) {
+    const targetPriority = Number(hookForm.value.priority) || 0;
+    const localHooks = isPreHook ? routePreHooks.value : routePostHooks.value;
+    const toShift = localHooks
+      .filter((h: any) => !h.isGlobal && (Number(h.priority) || 0) >= targetPriority)
+      .sort((a: any, b: any) => (Number(b.priority) || 0) - (Number(a.priority) || 0));
+    const patch = isPreHook ? executeUpdatePreHook : executeUpdatePostHook;
+    for (const h of toShift) {
+      await patch({
+        id: getId(h),
+        body: { priority: (Number(h.priority) || 0) + 1 },
+      });
+    }
   }
 
   const hookData = { ...hookForm.value };
@@ -952,9 +1040,9 @@ async function saveHook() {
     }
   }
 
-  notify.success(`${isPreHook ? 'Pre' : 'Post'}-Hook created successfully`);
-
   showCreateHookDrawer.value = false;
+  hookLockedMethod.value = false;
+  hookFromInsertButton.value = false;
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
 }
 
@@ -1178,8 +1266,6 @@ async function updateHook() {
   if (updateHookError.value) {
     return;
   }
-
-  notify.success(`${isPreHook ? 'Pre' : 'Post'}-Hook updated successfully`);
 
   showEditHookDrawer.value = false;
   await Promise.all([fetchPreHooks(), fetchPostHooks(), fetchGlobalPreHooks(), fetchGlobalPostHooks()]);
