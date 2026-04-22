@@ -937,6 +937,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       :allowed-methods="availableMethodStrings"
       @save="updateHook"
       @cancel="handleCancelEditHook"
+      @delete="deleteHook({ ...editHookForm, _hookType: editHookType, [getIdFieldName()]: editingHookId })"
     />
 
     <GuardCreateForRouteDrawer
