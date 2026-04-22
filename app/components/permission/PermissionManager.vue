@@ -36,7 +36,7 @@
         context="page"
       />
 
-      <div v-else-if="permissions.length > 0" class="space-y-3">
+      <div v-else-if="permissions.length > 0" class="space-y-2">
         <div
           v-for="permission in permissions"
           :key="permission.id"
@@ -48,60 +48,54 @@
           >
             <div
               @click="editPermission(permission)"
-              class="cursor-pointer rounded-lg p-2 -m-2"
+              class="surface-card rounded-lg p-3 cursor-pointer hover:bg-[var(--surface-muted)] transition-colors"
             >
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex-1 min-w-0 space-y-3">
-                  <div class="flex items-center gap-2">
-                    <UIcon name="lucide:shield" class="w-4 h-4 text-primary-500" />
-                    <span class="font-medium text-[var(--text-primary)]">
-                      {{ permission.description || "Permission" }}
-                    </span>
-                    <UBadge
-                      v-if="permission.role"
-                      color="secondary"
-                      variant="soft"
-                      size="xs"
-                    >
-                      {{ permission.role.name }}
-                    </UBadge>
-                    <UBadge
-                      v-if="permission.allowedUsers?.length"
-                      color="info"
-                      variant="soft"
-                      size="xs"
-                    >
-                      {{ permission.allowedUsers.length }} user{{ permission.allowedUsers.length > 1 ? 's' : '' }}
-                    </UBadge>
-                  </div>
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <button
-                      v-for="m in permission.methods"
-                      :key="m.method"
-                      type="button"
-                      class="px-2 py-0.5 rounded text-xs font-mono font-medium"
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div
+                    :class="[
+                      'w-2 h-2 rounded-full shrink-0',
+                      permission.isEnabled ? 'bg-success-500' : 'bg-[var(--border-strong)]'
+                    ]"
+                  />
+                  <span class="font-medium text-sm text-[var(--text-primary)] truncate">
+                    {{ permission.description || "Permission" }}
+                  </span>
+                  <UBadge
+                    v-if="permission.role"
+                    color="secondary"
+                    variant="soft"
+                    size="xs"
+                  >
+                    {{ permission.role.name }}
+                  </UBadge>
+                  <UBadge
+                    v-if="permission.allowedUsers?.length"
+                    color="info"
+                    variant="soft"
+                    size="xs"
+                  >
+                    {{ permission.allowedUsers.length }} user{{ permission.allowedUsers.length > 1 ? 's' : '' }}
+                  </UBadge>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <template v-for="m in permission.methods" :key="m.method">
+                    <span
+                      class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold"
                       :class="[
-                        m.method === 'GET' ? 'bg-success-500/20 text-success-600 dark:text-success-400' :
-                        m.method === 'POST' ? 'bg-info-500/20 text-info-600 dark:text-info-400' :
-                        m.method === 'PUT' || m.method === 'PATCH' ? 'bg-warning-500/20 text-warning-600 dark:text-warning-400' :
-                        m.method === 'DELETE' ? 'bg-error-500/20 text-error-600 dark:text-error-400' :
+                        m.method === 'GET' ? 'bg-success-500/15 text-success-600 dark:text-success-400' :
+                        m.method === 'POST' ? 'bg-info-500/15 text-info-600 dark:text-info-400' :
+                        m.method === 'PUT' || m.method === 'PATCH' ? 'bg-warning-500/15 text-warning-600 dark:text-warning-400' :
+                        m.method === 'DELETE' ? 'bg-error-500/15 text-error-600 dark:text-error-400' :
                         'bg-[var(--surface-muted)] text-[var(--text-tertiary)]'
                       ]"
                     >
                       {{ m.method }}
-                    </button>
-                    <span v-if="!permission.methods?.length" class="text-xs text-[var(--text-quaternary)]">
-                      No methods
                     </span>
-                  </div>
-                </div>
-                <div class="flex items-center gap-2 flex-shrink-0">
-                  <div
-                    :class="[
-                      'w-2 h-2 rounded-full',
-                      permission.isEnabled ? 'bg-success-500' : 'bg-[var(--border-strong)]'
-                    ]"
-                  />
+                  </template>
+                  <span v-if="!permission.methods?.length" class="text-[10px] text-[var(--text-quaternary)]">
+                    No methods
+                  </span>
                   <PermissionGate
                     :condition="{
                       or: [{ route: `/${permissionTableName}`, actions: ['delete'] }],
@@ -112,12 +106,12 @@
                       color="error"
                       variant="ghost"
                       size="xs"
+                      class="ml-1"
                       @click.stop="deletePermission(permission)"
                       :loading="deleting === permission.id"
                       :disabled="deleting === permission.id"
                     />
                   </PermissionGate>
-                  <UIcon name="lucide:chevron-right" class="w-4 h-4 text-[var(--text-quaternary)]" />
                 </div>
               </div>
             </div>
@@ -125,12 +119,17 @@
 
           <div
             v-if="!checkPermissionCondition({ or: [{ route: `/${permissionTableName}`, actions: ['update'] }] })"
-            class="flex items-start justify-between gap-4"
+            class="surface-card rounded-lg p-3 opacity-60"
           >
-            <div class="flex-1 min-w-0 space-y-3">
-              <div class="flex items-center gap-2">
-                <UIcon name="lucide:shield" class="w-4 h-4 text-primary-500" />
-                <span class="font-medium text-[var(--text-primary)]">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <div
+                  :class="[
+                    'w-2 h-2 rounded-full shrink-0',
+                    permission.isEnabled ? 'bg-success-500' : 'bg-[var(--border-strong)]'
+                  ]"
+                />
+                <span class="font-medium text-sm text-[var(--text-primary)] truncate">
                   {{ permission.description || "Permission" }}
                 </span>
                 <UBadge
@@ -142,43 +141,36 @@
                   {{ permission.role.name }}
                 </UBadge>
               </div>
-              <div class="flex items-center gap-2 flex-wrap">
-                <span
-                  v-for="m in permission.methods"
-                  :key="m.method"
-                  class="px-2 py-0.5 rounded text-xs font-mono font-medium"
-                  :class="[
-                    m.method === 'GET' ? 'bg-success-500/20 text-success-600 dark:text-success-400' :
-                    m.method === 'POST' ? 'bg-info-500/20 text-info-600 dark:text-info-400' :
-                    m.method === 'PUT' || m.method === 'PATCH' ? 'bg-warning-500/20 text-warning-600 dark:text-warning-400' :
-                    m.method === 'DELETE' ? 'bg-error-500/20 text-error-600 dark:text-error-400' :
-                    'bg-[var(--surface-muted)] text-[var(--text-tertiary)]'
-                  ]"
+              <div class="flex items-center gap-1 shrink-0">
+                <template v-for="m in permission.methods" :key="m.method">
+                  <span
+                    class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold"
+                    :class="[
+                      m.method === 'GET' ? 'bg-success-500/15 text-success-600 dark:text-success-400' :
+                      m.method === 'POST' ? 'bg-info-500/15 text-info-600 dark:text-info-400' :
+                      m.method === 'PUT' || m.method === 'PATCH' ? 'bg-warning-500/15 text-warning-600 dark:text-warning-400' :
+                      m.method === 'DELETE' ? 'bg-error-500/15 text-error-600 dark:text-error-400' :
+                      'bg-[var(--surface-muted)] text-[var(--text-tertiary)]'
+                    ]"
+                  >
+                    {{ m.method }}
+                  </span>
+                </template>
+                <PermissionGate
+                  :condition="{ or: [{ route: `/${permissionTableName}`, actions: ['delete'] }] }"
                 >
-                  {{ m.method }}
-                </span>
+                  <UButton
+                    icon="lucide:trash"
+                    color="error"
+                    variant="ghost"
+                    size="xs"
+                    class="ml-1"
+                    @click.stop="deletePermission(permission)"
+                    :loading="deleting === permission.id"
+                    :disabled="deleting === permission.id"
+                  />
+                </PermissionGate>
               </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div
-                :class="[
-                  'w-2 h-2 rounded-full',
-                  permission.isEnabled ? 'bg-success-500' : 'bg-[var(--border-strong)]'
-                ]"
-              />
-              <PermissionGate
-                :condition="{ or: [{ route: `/${permissionTableName}`, actions: ['delete'] }] }"
-              >
-                <UButton
-                  icon="lucide:trash"
-                  color="error"
-                  variant="ghost"
-                  size="xs"
-                  @click.stop="deletePermission(permission)"
-                  :loading="deleting === permission.id"
-                  :disabled="deleting === permission.id"
-                />
-              </PermissionGate>
             </div>
           </div>
         </div>
@@ -206,6 +198,7 @@
             <FormEditorLazy
               v-model="permissionForm"
               v-model:errors="permissionErrors"
+              @has-changed="(v: boolean) => hasFormChanges = v"
               :table-name="permissionTableName"
               :excluded="[props.currentFieldId?.field as string]"
               :field-map="fieldMap"
@@ -213,8 +206,22 @@
           </div>
         </template>
         <template #footer>
-          <div class="flex justify-end border border-[var(--border-default)] rounded-lg p-4 surface-card">
-            <UButton @click="savePermission" :loading="saving" :disabled="saving" color="primary">
+          <div class="flex justify-end gap-3 border border-[var(--border-default)] rounded-lg p-4 surface-card">
+            <UButton
+              v-if="hasFormChanges"
+              label="Reset"
+              icon="lucide:rotate-ccw"
+              variant="outline"
+              color="warning"
+              :disabled="!hasFormChanges"
+              @click="handleReset"
+            />
+            <UButton
+              @click="savePermission"
+              :loading="saving"
+              :disabled="!hasFormChanges || saving"
+              color="primary"
+            >
               {{ isEditing ? "Update" : "Create" }}
             </UButton>
           </div>
@@ -255,6 +262,10 @@ const currentPermission = ref<Permission | null>(null);
 const permissionForm = ref<Record<string, any>>({});
 const permissionErrors = ref<Record<string, string>>({});
 const deleting = ref<string | number | null>(null);
+const hasFormChanges = ref(false);
+
+const { useFormChanges } = useSchema();
+const formChanges = useFormChanges();
 
 const permissionTableName = computed(() => props.tableName);
 
@@ -310,10 +321,9 @@ const permissions = computed(() => permissionsData.value?.data || []);
 const saving = computed(() => creating.value || updating.value);
 
 function createNewPermission() {
-  
   if (!props.currentFieldId) {
     notify.error("Error", "Cannot create permission: missing field ID context");
-    return; 
+    return;
   }
 
   isEditing.value = false;
@@ -325,6 +335,8 @@ function createNewPermission() {
     id: props.currentFieldId.value,
   };
 
+  formChanges.update(permissionForm.value);
+  hasFormChanges.value = false;
   permissionErrors.value = {};
   showDrawer.value = true;
 }
@@ -333,8 +345,23 @@ function editPermission(permission: Permission) {
   isEditing.value = true;
   currentPermission.value = permission;
   permissionForm.value = { ...permission };
+  formChanges.update(permission);
+  hasFormChanges.value = false;
   permissionErrors.value = {};
   showDrawer.value = true;
+}
+
+async function handleReset() {
+  const ok = await confirm({
+    title: 'Reset Changes',
+    content: 'Are you sure you want to discard all changes?',
+  });
+  if (!ok) return;
+
+  if (isEditing.value && currentPermission.value) {
+    permissionForm.value = formChanges.discardChanges(permissionForm.value);
+  }
+  hasFormChanges.value = false;
 }
 
 function closeDrawer() {
@@ -345,31 +372,40 @@ function closeDrawer() {
 }
 
 async function savePermission() {
-  if (isEditing.value && currentPermission.value) {
-    
+  const wasEditing = isEditing.value
+
+  const hasRole = !!permissionForm.value.role
+  const hasUsers = Array.isArray(permissionForm.value.allowedUsers) && permissionForm.value.allowedUsers.length > 0
+  if (!hasRole && !hasUsers) {
+    permissionErrors.value = {
+      role: 'Select a role or at least one user',
+      allowedUsers: 'Select a role or at least one user',
+    }
+    return
+  }
+
+  if (wasEditing && currentPermission.value) {
     await updatePermission({
       body: permissionForm.value,
       id: getId(currentPermission.value),
     });
 
-    if (updateError.value) return; 
+    if (updateError.value) return;
   } else {
-    
     await createPermission({
       body: permissionForm.value,
     });
 
-    if (createError.value) return; 
+    if (createError.value) return;
   }
+
+  showDrawer.value = false;
 
   await fetchPermissions();
 
-  closeDrawer();
-
-  const notify = useNotify();
-  notify.success("Success", `Permission ${
-      isEditing.value ? "updated" : "created"
-    } successfully!`);
+  currentPermission.value = null;
+  permissionForm.value = {};
+  permissionErrors.value = {};
 }
 
 async function deletePermission(permission: Permission) {

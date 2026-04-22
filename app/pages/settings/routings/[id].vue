@@ -363,8 +363,11 @@ function filterDependentMethods(body: Record<string, any>) {
   for (const key of ['availableMethods', 'publishedMethods', 'skipRoleGuardMethods'] as const) {
     if (Array.isArray(body[key])) {
       body[key] = body[key]
-        .map((m: any) => ({ id: getId(m) }))
-        .filter((m: any) => m.id != null);
+        .map((m: any) => {
+          const id = getId(m);
+          return id != null ? { id, method: m.method } : null;
+        })
+        .filter(Boolean);
     }
   }
 }

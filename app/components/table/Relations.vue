@@ -18,39 +18,73 @@ const editingIndex = ref<number | null>(null);
 const currentRelation = ref<any>(null);
 const relationErrors = ref<Record<number, Record<string, string>>>({});
 
-const { schemas, generateEmptyForm, validate } = useSchema("relation_definition");
+const { schemas, forceRefreshSchema, generateEmptyForm, validate } = useSchema("relation_definition");
 const { isMobile, isTablet } = useScreen();
+
+watch(() => props.tableId, async (id) => {
+  if (!id) return;
+  const tableId = String(id);
+  const entry = Object.values(schemas.value).find(
+    (s: any) => String(s.id) === tableId,
+  );
+  if (!entry || !(entry as any).relations) await forceRefreshSchema();
+}, { immediate: true });
 
 const showInverseModal = ref(false);
 const inverseModalTarget = ref<any>(null);
 const inversePropertyNameInput = ref('');
 
+const currentTableMetadata = computed(() => {
+  if (!props.tableId) return null;
+  const tableId = String(props.tableId);
+  for (const table of Object.values(schemas.value)) {
+    if (String((table as any).id) === tableId) return table as any;
+  }
+  return null;
+});
+
+const metadataInverseRelIds = computed(() => {
+  const ids = new Set<string>();
+  if (!currentTableMetadata.value) return ids;
+  for (const rel of currentTableMetadata.value.relations || []) {
+    if (rel.mappedById) ids.add(String(rel.mappedById));
+  }
+  return ids;
+});
+
 const incomingRelations = computed(() => {
   if (!props.tableId) return [];
   const tableId = String(props.tableId);
-  const existingIds = new Set(
-    relations.value
-      .filter((r: any) => r.id)
-      .map((r: any) => String(r.id)),
-  );
-  const ownMappedByTargetIds = new Set(
-    relations.value
-      .filter((r: any) => r.mappedById || r.mappedBy?.id)
-      .map((r: any) => String(r.mappedById ?? r.mappedBy?.id)),
-  );
-  const pendingMappedByNames = new Set(
-    relations.value
-      .filter((r: any) => r.mappedBy && typeof r.mappedBy === 'string')
-      .map((r: any) => r.mappedBy),
-  );
+  const ownMappedByNames = new Set<string>();
+  for (const r of relations.value) {
+    if (r.mappedBy && typeof r.mappedBy === 'string') ownMappedByNames.add(r.mappedBy);
+  }
+  if (currentTableMetadata.value) {
+    for (const rel of currentTableMetadata.value.relations || []) {
+      if (rel.mappedBy && typeof rel.mappedBy === 'string') ownMappedByNames.add(rel.mappedBy);
+    }
+  }
+  const ownInverseTargets = new Map<string, string>();
+  for (const r of relations.value) {
+    const targetId = typeof r.targetTable === 'object' ? String(r.targetTable?.id) : String(r.targetTable ?? '');
+    if (targetId && r.type) ownInverseTargets.set(targetId, r.type);
+  }
+  if (currentTableMetadata.value) {
+    for (const rel of currentTableMetadata.value.relations || []) {
+      const targetId = String(rel.targetTableId);
+      if (targetId && rel.type && !ownInverseTargets.has(targetId)) {
+        ownInverseTargets.set(targetId, rel.type);
+      }
+    }
+  }
   const incoming: any[] = [];
   for (const table of Object.values(schemas.value)) {
     for (const rel of (table as any).relations || []) {
       if (String(rel.targetTableId) !== tableId) continue;
-      if (existingIds.has(String(rel.id))) continue;
-      if (rel.mappedById && existingIds.has(String(rel.mappedById))) continue;
-      if (ownMappedByTargetIds.has(String(rel.id))) continue;
-      if (pendingMappedByNames.has(rel.propertyName)) continue;
+      if (ownMappedByNames.has(rel.propertyName)) continue;
+      if (metadataInverseRelIds.value.has(String(rel.id))) continue;
+      const ownType = ownInverseTargets.get(String(rel.sourceTableId));
+      if (ownType && getInverseType(ownType) === rel.type) continue;
       incoming.push(rel);
     }
   }
@@ -60,7 +94,24 @@ const incomingRelations = computed(() => {
 function isInverseRelation(rel: any): boolean {
   if (rel.mappedBy?.id) return true;
   if (rel.mappedBy && typeof rel.mappedBy === 'string') return true;
+  if (currentTableMetadata.value) {
+    const match = currentTableMetadata.value.relations?.find(
+      (r: any) => String(r.id) === String(rel.id),
+    );
+    if (match?.mappedBy || match?.mappedById) return true;
+  }
   return false;
+}
+
+function resolveTargetTableName(rel: any): string | null {
+  if (typeof rel.targetTable === 'object' && rel.targetTable?.id) {
+    const match = props.tableOptions.find(
+      (t) => String(t.value) === String(rel.targetTable.id),
+    );
+    return match?.label ?? null;
+  }
+  if (typeof rel.targetTable === 'string') return rel.targetTable;
+  return rel.targetTableName ?? null;
 }
 
 function getInverseType(type: string): string {
@@ -89,7 +140,7 @@ function confirmCreateInverse() {
     return;
   }
   const inverseType = getInverseType(incoming.type);
-  const sourceTableId = incoming.sourceTableId ?? incoming.sourceTable?.id ?? incoming.sourceTable;
+  const sourceTableId = String(incoming.sourceTableId ?? incoming.sourceTable?.id ?? incoming.sourceTable);
   relations.value.push({
     propertyName: name,
     type: inverseType,
@@ -277,10 +328,7 @@ async function removeRelation(index: number) {
         <UBadge size="xs" color="info" v-if="rel.type">{{ rel.type }}</UBadge>
         <UBadge size="xs" color="info" v-if="rel.targetTable || rel.targetTableName">
           →
-          {{
-            props.tableOptions.find((t) => t.value === rel.targetTable || t.value === (typeof rel.targetTable === 'object' ? rel.targetTable?.id : rel.targetTableName))
-              ?.label ?? (typeof rel.targetTable === 'string' ? rel.targetTable : rel.targetTableName ?? 'Unknown')
-          }}
+          {{ resolveTargetTableName(rel) ?? 'Unknown' }}
         </UBadge>
         <UBadge size="xs" color="info" v-if="rel.isNullable">nullable</UBadge>
       </div>

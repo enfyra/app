@@ -14,8 +14,9 @@ export function useNotify() {
   const current = computed(() => queue.value[0] ?? null)
 
   function hasOpenOverlay() {
-    if (document.querySelector('[data-vaul-drawer-direction]')) return true
+    if (document.querySelector('[data-vaul-overlay]')) return true
     if (document.querySelector('[role="dialog"][data-state="open"]')) return true
+    if (document.body.style.overflow === 'hidden') return true
     return false
   }
 
@@ -25,26 +26,29 @@ export function useNotify() {
 
     return new Promise((resolve) => {
       let settled = false
-      const finish = () => {
+      const finish = (reason: string) => {
         if (settled) return
         settled = true
         observer.disconnect()
         clearTimeout(timeout)
+        const vaulOverlay = !!document.querySelector('[data-vaul-overlay]')
+        const bodyOverflow = document.body.style.overflow
+        console.log(`[useNotify] waitForCleanBody resolved via ${reason}`, { vaulOverlay, bodyOverflow })
         resolve()
       }
 
       const observer = new MutationObserver(() => {
-        if (!hasOpenOverlay()) finish()
+        if (!hasOpenOverlay()) finish('observer')
       })
 
       observer.observe(document.body, {
         attributes: true,
-        attributeFilter: ['data-state', 'data-vaul-drawer-direction'],
+        attributeFilter: ['data-state', 'style'],
         childList: true,
         subtree: true,
       })
 
-      const timeout = setTimeout(finish, 200)
+      const timeout = setTimeout(() => finish('timeout(500ms)'), 500)
     })
   }
 
