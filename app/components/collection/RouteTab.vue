@@ -73,12 +73,14 @@ const {
 function filterPublishedToAvailable(body: Record<string, any>) {
   const available = body.availableMethods || []
   const availableSet = new Set(available.filter((m: any) => m?.method).map((m: any) => m.method))
-  if (Array.isArray(body.publishedMethods)) {
-    body.publishedMethods = availableSet.size > 0
-      ? body.publishedMethods.filter((m: any) => m?.method && availableSet.has(m.method))
-      : []
+  for (const key of ['publishedMethods', 'skipRoleGuardMethods'] as const) {
+    if (Array.isArray(body[key])) {
+      body[key] = availableSet.size > 0
+        ? body[key].filter((m: any) => m?.method && availableSet.has(m.method))
+        : []
+    }
   }
-  for (const key of ['availableMethods', 'publishedMethods'] as const) {
+  for (const key of ['availableMethods', 'publishedMethods', 'skipRoleGuardMethods'] as const) {
     if (Array.isArray(body[key])) {
       body[key] = body[key]
         .map((m: any) => ({ id: getId(m) }))
@@ -286,6 +288,10 @@ watch(() => routeData.value?.data?.[0], async (newRoute) => {
 
     typeMap.value = {
       publishedMethods: {
+        type: 'methods-selector',
+        allowedMethodsKey: 'availableMethods'
+      },
+      skipRoleGuardMethods: {
         type: 'methods-selector',
         allowedMethodsKey: 'availableMethods'
       },
