@@ -10,7 +10,6 @@ const props = defineProps<{
 
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { getIdFieldName } = useDatabase();
 const relations = useModel(props, "modelValue");
 
 const isEditing = ref(false);
@@ -19,52 +18,43 @@ const editingIndex = ref<number | null>(null);
 const currentRelation = ref<any>(null);
 const relationErrors = ref<Record<number, Record<string, string>>>({});
 
-const { generateEmptyForm, validate } = useSchema("relation_definition");
+const { schemas, generateEmptyForm, validate } = useSchema("relation_definition");
 const { isMobile, isTablet } = useScreen();
 
 const showInverseModal = ref(false);
 const inverseModalTarget = ref<any>(null);
 const inversePropertyNameInput = ref('');
 
-const {
-  data: incomingRelData,
-  execute: fetchIncomingRelations,
-} = useApi(() => "/relation_definition", {
-  query: computed(() => ({
-    fields: 'id,propertyName,type,sourceTable.id,sourceTable.name,mappedBy.id',
-    filter: props.tableId
-      ? { targetTable: { [getIdFieldName()]: { _eq: String(props.tableId) } } }
-      : { [getIdFieldName()]: { _eq: '__none__' } },
-    limit: 100,
-  })),
-  immediate: false,
-  errorContext: 'Fetch Incoming Relations',
-});
-
 const incomingRelations = computed(() => {
-  if (!incomingRelData.value?.data) return [];
+  if (!props.tableId) return [];
+  const tableId = String(props.tableId);
   const existingIds = new Set(
     relations.value
       .filter((r: any) => r.id)
       .map((r: any) => String(r.id)),
   );
-  const inverseMappedIds = new Set(
+  const ownMappedByTargetIds = new Set(
     relations.value
-      .filter((r: any) => r.mappedBy?.id)
-      .map((r: any) => String(r.mappedBy.id)),
+      .filter((r: any) => r.mappedById || r.mappedBy?.id)
+      .map((r: any) => String(r.mappedById ?? r.mappedBy?.id)),
   );
   const pendingMappedByNames = new Set(
     relations.value
       .filter((r: any) => r.mappedBy && typeof r.mappedBy === 'string')
       .map((r: any) => r.mappedBy),
   );
-  return incomingRelData.value.data.filter((r: any) => {
-    if (r.mappedBy?.id) return false;
-    if (existingIds.has(String(r.id))) return false;
-    if (inverseMappedIds.has(String(r.id))) return false;
-    if (pendingMappedByNames.has(r.propertyName)) return false;
-    return true;
-  });
+  const incoming: any[] = [];
+  for (const table of Object.values(schemas.value)) {
+    for (const rel of (table as any).relations || []) {
+      if (String(rel.targetTableId) !== tableId) continue;
+      if (existingIds.has(String(rel.id))) continue;
+      if (rel.mappedById && existingIds.has(String(rel.mappedById))) continue;
+      if (ownMappedByTargetIds.has(String(rel.id))) continue;
+      if (pendingMappedByNames.has(rel.propertyName)) continue;
+      incoming.push(rel);
+    }
+  }
+  return incoming;
 });
 
 function isInverseRelation(rel: any): boolean {
@@ -99,9 +89,7 @@ function confirmCreateInverse() {
     return;
   }
   const inverseType = getInverseType(incoming.type);
-  const sourceTableId = typeof incoming.sourceTable === 'object'
-    ? incoming.sourceTable.id
-    : incoming.sourceTable;
+  const sourceTableId = incoming.sourceTableId ?? incoming.sourceTable?.id ?? incoming.sourceTable;
   relations.value.push({
     propertyName: name,
     type: inverseType,
@@ -114,10 +102,6 @@ function confirmCreateInverse() {
   inverseModalTarget.value = null;
   inversePropertyNameInput.value = '';
 }
-
-watch(() => props.tableId, async (id) => {
-  if (id) await fetchIncomingRelations();
-}, { immediate: true });
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -359,9 +343,9 @@ async function removeRelation(index: number) {
         <UIcon name="lucide:arrow-down-left" class="w-4 h-4 text-muted-foreground shrink-0" />
         <span
           class="text-sm text-muted-foreground truncate flex-1 min-w-0"
-          :title="`${incoming.sourceTable?.name ?? 'unknown'}.${incoming.propertyName}`"
+          :title="`${incoming.sourceTableName ?? 'unknown'}.${incoming.propertyName}`"
         >
-          {{ incoming.sourceTable?.name ?? 'unknown' }}.{{ incoming.propertyName }}
+          {{ incoming.sourceTableName ?? 'unknown' }}.{{ incoming.propertyName }}
         </span>
       </div>
       <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
@@ -532,7 +516,7 @@ async function removeRelation(index: number) {
         <div class="space-y-4" v-if="inverseModalTarget">
           <p class="text-sm text-[var(--text-secondary)]">
             Create an inverse for
-            <span class="font-semibold text-[var(--text-primary)]">{{ inverseModalTarget.sourceTable?.name }}.{{ inverseModalTarget.propertyName }}</span>
+            <span class="font-semibold text-[var(--text-primary)]">{{ inverseModalTarget.sourceTableName ?? 'unknown' }}.{{ inverseModalTarget.propertyName }}</span>
             ({{ inverseModalTarget.type }})
           </p>
           <p class="text-sm text-[var(--text-secondary)]">
