@@ -52,8 +52,6 @@ export function useSchema(tableName?: string | Ref<string>) {
 
   function processAndCacheSchemas(tables: any[]) {
     for (const t of tables) {
-      if (schemas.value[t.name]) continue;
-
       const foreignKeyColumns = new Set<string>();
       (t.relations || []).forEach((rel: any) => {
         if (rel?.foreignKeyColumn) foreignKeyColumns.add(rel.foreignKeyColumn);

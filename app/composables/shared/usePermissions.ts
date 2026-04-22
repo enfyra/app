@@ -46,7 +46,7 @@ export function usePermissions() {
     if (!routePermissions.length) return false;
 
     const hasMethodPermission = routePermissions.some((permission: any) =>
-      permission.methods.some((methodObj: any) => methodObj.method === method)
+      permission.methods?.some((methodObj: any) => methodObj.method === method)
     );
 
     if (hasMethodPermission) {

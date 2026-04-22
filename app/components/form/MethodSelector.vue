@@ -70,48 +70,44 @@ const availableMethods = computed(() => {
   return list;
 });
 
-const selectedMethod = computed(() => {
-  if (!props.modelValue) return null;
-  return props.modelValue.method || null;
-});
-
-const selectedMethods = computed(() => {
-  if (!props.multiple || !Array.isArray(props.modelValue)) return [];
-  return props.modelValue.map((m: any) => m.method);
+const selectedIds = computed(() => {
+  if (props.multiple) {
+    if (!Array.isArray(props.modelValue)) return new Set<string>();
+    return new Set(props.modelValue.map((m: any) => getId(m)).filter(Boolean));
+  }
+  const id = getId(props.modelValue);
+  return id ? new Set([id]) : new Set<string>();
 });
 
 function selectMethod(methodObj: any) {
   if (props.disabled) return;
 
-  const methodString = methodObj.method;
+  const targetId = getId(methodObj);
 
   if (props.multiple) {
     const currentArray = Array.isArray(props.modelValue) ? props.modelValue : [];
-    const existingIndex = currentArray.findIndex((m: any) => m.method === methodString);
+    const existingIndex = currentArray.findIndex((m: any) => getId(m) === targetId);
 
     if (existingIndex >= 0) {
       const newArray = [...currentArray];
       newArray.splice(existingIndex, 1);
       emit('update:modelValue', newArray);
     } else {
-      const newMethod = getId(methodObj) ? methodObj : { method: methodString };
+      const newMethod = targetId ? methodObj : { method: methodObj.method };
       emit('update:modelValue', [...currentArray, newMethod]);
     }
   } else {
-    if (selectedMethod.value === methodString) {
+    if (targetId && selectedIds.value.has(targetId)) {
       emit('update:modelValue', null);
     } else {
-      const newMethod = getId(methodObj) ? methodObj : { method: methodString };
+      const newMethod = targetId ? methodObj : { method: methodObj.method };
       emit('update:modelValue', newMethod);
     }
   }
 }
 
-function isSelected(method: string): boolean {
-  if (props.multiple) {
-    return selectedMethods.value.includes(method);
-  }
-  return selectedMethod.value === method;
+function isSelected(methodObj: any): boolean {
+  return selectedIds.value.has(getId(methodObj));
 }
 
 function getMethodColor(method: string): 'success' | 'info' | 'warning' | 'error' | 'neutral' {
@@ -121,16 +117,28 @@ function getMethodColor(method: string): 'success' | 'info' | 'warning' | 'error
 watch([() => props.modelValue, () => props.allowedMethods], () => {
   const allowed = props.allowedMethods;
   if (!Array.isArray(allowed)) return;
-  const allowedSet = new Set(allowed);
+
+  const allowedIds = new Set<string>();
+  for (const methodStr of allowed) {
+    const cached = methodsCache.value.find((m: any) => m?.method === methodStr);
+    if (cached) {
+      const id = getId(cached);
+      if (id) allowedIds.add(id);
+    }
+  }
+
   if (props.multiple && Array.isArray(props.modelValue)) {
-    const filtered = allowedSet.size > 0
-      ? props.modelValue.filter((m: any) => m?.method && allowedSet.has(m.method))
+    const filtered = allowedIds.size > 0
+      ? props.modelValue.filter((m: any) => allowedIds.has(getId(m)))
       : [];
     if (filtered.length !== props.modelValue.length) {
       emit('update:modelValue', filtered);
     }
-  } else if (props.modelValue?.method && (allowedSet.size === 0 || !allowedSet.has(props.modelValue.method))) {
-    emit('update:modelValue', null);
+  } else if (props.modelValue) {
+    const currentId = getId(props.modelValue);
+    if (currentId && (allowedIds.size === 0 || !allowedIds.has(currentId))) {
+      emit('update:modelValue', null);
+    }
   }
 }, { immediate: true });
 
@@ -149,16 +157,16 @@ onMounted(async () => {
     <UButton
       v-for="m in availableMethods"
       :key="getId(m) || m.method"
-      :color="isSelected(m.method) ? getMethodColor(m.method) : 'neutral'"
-      :variant="isSelected(m.method) ? 'solid' : 'outline'"
+      :color="isSelected(m) ? getMethodColor(m.method) : 'neutral'"
+      :variant="isSelected(m) ? 'solid' : 'outline'"
       size="xs"
       :disabled="disabled"
-      :aria-pressed="isSelected(m.method)"
+      :aria-pressed="isSelected(m)"
       class="font-mono text-xs font-semibold"
       @click="selectMethod(m)"
     >
       {{ m.method }}
-      <UIcon v-if="isSelected(m.method)" name="lucide:check" class="size-3.5 shrink-0 ml-1" />
+      <UIcon v-if="isSelected(m)" name="lucide:check" class="size-3.5 shrink-0 ml-1" />
     </UButton>
   </div>
 </template>
