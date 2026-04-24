@@ -56,6 +56,7 @@ const UButtonStub = defineComponent({
 describe('CommonModal', () => {
   it('blocks close when preventClose is true', async () => {
     const wrapper = await mountSuspended(CommonModal, {
+      route: '/login',
       props: {
         modelValue: true,
         preventClose: true,
@@ -78,6 +79,7 @@ describe('CommonModal', () => {
 
   it('emits close when preventClose is false', async () => {
     const wrapper = await mountSuspended(CommonModal, {
+      route: '/login',
       props: {
         modelValue: true,
       },
@@ -101,6 +103,7 @@ describe('CommonModal', () => {
 describe('CommonDrawer', () => {
   it('emits close when drawer overlay requests close', async () => {
     const wrapper = await mountSuspended(CommonDrawer, {
+      route: '/login',
       props: {
         modelValue: true,
       },
@@ -123,6 +126,7 @@ describe('CommonDrawer', () => {
 
   it('hides the close button when showClose is false', async () => {
     const wrapper = await mountSuspended(CommonDrawer, {
+      route: '/login',
       props: {
         modelValue: true,
         showClose: false,

@@ -1,6 +1,18 @@
 import { vi } from 'vitest'
 
 if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'colorMode', {
+    configurable: true,
+    writable: true,
+    value: {
+      preference: 'light',
+      value: 'light',
+      getColorScheme: () => 'light',
+      addColorScheme: vi.fn(),
+      removeColorScheme: vi.fn(),
+    },
+  })
+
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation((query: string) => ({
