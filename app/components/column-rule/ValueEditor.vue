@@ -23,7 +23,7 @@ function setNumber(v: any) {
 
 function parseRegexInput(input: string): { pattern: string; flags: string } {
   const m = /^\/(.+)\/([gimsuy]*)$/.exec(input)
-  if (m) return { pattern: m[1], flags: m[2] || "" }
+  if (m) return { pattern: m[1] ?? "", flags: m[2] || "" }
   return { pattern: input, flags: "" }
 }
 

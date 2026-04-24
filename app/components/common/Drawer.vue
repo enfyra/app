@@ -68,6 +68,7 @@ function close() {
           <slot name="header" />
         </div>
         <UButton
+          v-if="props.showClose"
           icon="lucide:x"
           color="error"
           variant="soft"
@@ -87,4 +88,3 @@ function close() {
     </template>
   </UDrawer>
 </template>
-

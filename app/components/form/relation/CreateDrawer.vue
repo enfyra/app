@@ -9,7 +9,14 @@ const emit = defineEmits(["update:modelValue", "created", "update:selected"]);
 
 const show = computed({
   get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
+  set: (val) => {
+    if (val) {
+      emit("update:modelValue", val);
+      return;
+    }
+
+    handleClose();
+  },
 });
 
 const { getId, getIdFieldName } = useDatabase();
@@ -31,6 +38,8 @@ const {
 
 const createForm = ref(generateEmptyForm());
 const createErrors = ref({});
+const hasFormChanges = ref(false);
+const showDiscardModal = ref(false);
 const { isMobile, isTablet } = useScreen();
 
 watch(show, (val) => {
@@ -38,6 +47,10 @@ watch(show, (val) => {
     createForm.value = generateEmptyForm({
       excluded: [props.relationMeta.inversePropertyName],
     });
+    hasFormChanges.value = false;
+  } else {
+    showDiscardModal.value = false;
+    hasFormChanges.value = false;
   }
 });
 
@@ -56,7 +69,22 @@ async function createNewRecord() {
     { [getIdFieldName()]: getId(createdRecord) },
   ]);
   emit("created");
-  show.value = false;
+  emit("update:modelValue", false);
+}
+
+function handleClose() {
+  if (hasFormChanges.value) {
+    showDiscardModal.value = true;
+    return;
+  }
+
+  emit("update:modelValue", false);
+}
+
+function confirmDiscard() {
+  showDiscardModal.value = false;
+  hasFormChanges.value = false;
+  emit("update:modelValue", false);
 }
 </script>
 
@@ -94,6 +122,7 @@ async function createNewRecord() {
             </div>
             <FormEditorLazy
               v-model="createForm"
+              @has-changed="(changed) => (hasFormChanges = changed)"
               :table-name="targetTableNameResolved"
               :errors="createErrors"
             />
@@ -113,6 +142,14 @@ async function createNewRecord() {
               </div>
               <div :class="(isMobile || isTablet) ? 'flex gap-1.5 w-full justify-end' : 'flex gap-3'">
                 <UButton
+                  variant="outline"
+                  color="error"
+                  @click="handleClose"
+                  :size="(isMobile || isTablet) ? 'sm' : 'md'"
+                >
+                  Cancel
+                </UButton>
+                <UButton
                   icon="lucide:plus"
                   @click="createNewRecord"
                   :loading="creating"
@@ -128,4 +165,19 @@ async function createNewRecord() {
         </div>
       </template>
     </CommonDrawer>
+
+  <CommonModal v-model="showDiscardModal">
+    <template #title>Discard Changes</template>
+    <template #body>
+      <div class="text-sm text-[var(--text-secondary)]">
+        You have unsaved changes. Are you sure you want to close? All changes will be lost.
+      </div>
+    </template>
+    <template #footer>
+      <div class="flex justify-end gap-2 w-full">
+        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
+        <UButton @click="confirmDiscard">Discard Changes</UButton>
+      </div>
+    </template>
+  </CommonModal>
 </template>

@@ -244,7 +244,20 @@ watch(open, (isOpen) => {
   <CommonModal v-model="open" :handle="false">
     <template #title>
       <div class="flex items-center gap-2">
-        <UIcon name="lucide:ruler" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <UButton
+          v-if="viewMode === 'form'"
+          icon="lucide:arrow-left"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          class="rounded-full !aspect-square -ml-1"
+          @click="cancelForm"
+        />
+        <UIcon
+          v-else
+          name="lucide:ruler"
+          class="w-5 h-5 text-blue-600 dark:text-blue-400"
+        />
         <span class="text-lg font-semibold">
           {{
             viewMode === "form"
@@ -388,7 +401,6 @@ watch(open, (isOpen) => {
           <UButton icon="lucide:plus" @click="openCreateForm">Add rule</UButton>
         </template>
         <template v-else>
-          <UButton variant="ghost" @click="cancelForm">Cancel</UButton>
           <UButton @click="saveRule">
             {{ mode === "update" ? "Update" : "Create" }}
           </UButton>

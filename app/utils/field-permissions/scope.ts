@@ -7,7 +7,7 @@ function normalizeId(v: any): string | null {
 export function validateFieldPermissionScope(body: any): { ok: true } | { ok: false; message: string } {
   const roleId = normalizeId(body?.role);
   const users = body?.allowedUsers;
-  const hasUser = Array.isArray(users) && users.length > 0 && !!normalizeId(users[0]);
+  const hasUser = Array.isArray(users) && users.some((user) => !!normalizeId(user));
 
   if (roleId && hasUser) {
     return { ok: false, message: "Choose either role or user (not both)" };
@@ -19,4 +19,3 @@ export function validateFieldPermissionScope(body: any): { ok: true } | { ok: fa
 
   return { ok: true };
 }
-

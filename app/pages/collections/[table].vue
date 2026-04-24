@@ -809,7 +809,7 @@ onMounted(() => {
 
           <CollectionRouteTab
             v-if="activeTab === 'routes'"
-            :table-name="route.params.table"
+            :table-name="String(route.params.table ?? '')"
             :external-api-test="showRouteApiTest"
             @close-api-test="showRouteApiTest = false"
           />

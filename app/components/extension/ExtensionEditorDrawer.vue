@@ -20,6 +20,8 @@ const { me } = useAuth();
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
+const showDiscardModal = ref(false);
+const initialSnapshot = ref<string | null>(null);
 const formEditorRef = ref();
 const loading = ref(false);
 const showUploadModal = ref(false);
@@ -28,7 +30,14 @@ const showPreviewModal = ref(false);
 
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: (value) => {
+    if (value) {
+      emit('update:modelValue', value);
+      return;
+    }
+
+    handleClose();
+  },
 });
 
 const {
@@ -101,6 +110,8 @@ watch(() => isOpen.value, async (open) => {
         if (menuId) {
           form.value.menu = { [getIdFieldName()]: menuId };
         }
+        await nextTick();
+        initialSnapshot.value = stableStringify(form.value);
         hasFormChanges.value = false;
       }
     } else {
@@ -111,11 +122,15 @@ watch(() => isOpen.value, async (open) => {
         form.value.menu = { [getIdFieldName()]: menuId };
       }
       errors.value = {};
+      await nextTick();
+      initialSnapshot.value = stableStringify(form.value);
       hasFormChanges.value = false;
     }
   } else {
     form.value = {};
     errors.value = {};
+    initialSnapshot.value = null;
+    showDiscardModal.value = false;
     hasFormChanges.value = false;
   }
 });
@@ -173,7 +188,21 @@ notify.success("Success")
 }
 
 function handleClose() {
-  isOpen.value = false;
+  const hasUnsavedChanges = hasFormChanges.value
+    || (props.modelValue && initialSnapshot.value !== null && stableStringify(form.value) !== initialSnapshot.value);
+
+  if (hasUnsavedChanges) {
+    showDiscardModal.value = true;
+    return;
+  }
+
+  emit('update:modelValue', false);
+}
+
+function confirmDiscard() {
+  showDiscardModal.value = false;
+  hasFormChanges.value = false;
+  emit('update:modelValue', false);
 }
 
 async function handleUpload(files: File | File[]) {
@@ -259,7 +288,7 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
         <div class="flex items-center gap-2">
           <UButton
             variant="outline"
-            color="neutral"
+            color="error"
             @click="handleClose"
           >
             Cancel
@@ -297,5 +326,19 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
     v-model="showPreviewModal"
     :code="form?.code || ''"
   />
-</template>
 
+  <CommonModal v-model="showDiscardModal">
+    <template #title>Discard Changes</template>
+    <template #body>
+      <div class="text-sm text-[var(--text-secondary)]">
+        You have unsaved changes. Are you sure you want to close? All changes will be lost.
+      </div>
+    </template>
+    <template #footer>
+      <div class="flex justify-end gap-2 w-full">
+        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
+        <UButton @click="confirmDiscard">Discard Changes</UButton>
+      </div>
+    </template>
+  </CommonModal>
+</template>

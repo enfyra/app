@@ -343,17 +343,6 @@ const filteredFormFields = computed(() => {
   fields = fields.filter((field: any) => {
     const key = field.name || field.propertyName;
     if (!key) return false;
-    if (props.loading) return true;
-    if (field.fieldType === "relation") return true;
-    if (field.isVirtual === true) return true;
-
-    const hasKey = key in normalizedModelValue.value;
-    return hasKey;
-  });
-
-  fields = fields.filter((field: any) => {
-    const key = field.name || field.propertyName;
-    if (!key) return false;
 
     const fieldConfig = fieldMapWithGenerated.value[key];
     if (fieldConfig && fieldConfig.excluded === true) {

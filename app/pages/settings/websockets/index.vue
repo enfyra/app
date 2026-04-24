@@ -98,6 +98,7 @@
 </template>
 
 <script setup lang="ts">
+import type { SettingsCardAction, SettingsCardHeaderAction } from '~/types/ui';
 
 const page = ref(1);
 const limit = 9;
@@ -189,7 +190,7 @@ function navigateToDetail(gateway: any) {
 }
 
 function getHeaderActions(gateway: any) {
-  const actions = [];
+  const actions: SettingsCardHeaderAction[] = [];
   const id = getId(gateway);
   if (id == null) {
     return actions;
@@ -212,24 +213,25 @@ function getHeaderActions(gateway: any) {
 }
 
 function getFooterActions(gateway: any) {
+  const actions: SettingsCardAction[] = [];
   const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/websocket_definition', actions: ['delete'] }] });
 
-  return [
-    {
-      label: 'Delete',
-      props: {
-        icon: 'i-lucide-trash-2',
-        variant: 'solid',
-        color: 'error',
-        size: 'sm',
-      },
-      disabled: !hasDeletePermission || gateway.isSystem,
-      onClick: (e?: Event) => {
-        e?.stopPropagation();
-        deleteGateway(gateway);
-      },
-    }
-  ];
+  actions.push({
+    label: 'Delete',
+    props: {
+      icon: 'i-lucide-trash-2',
+      variant: 'solid',
+      color: 'error',
+      size: 'sm',
+    },
+    disabled: !hasDeletePermission || gateway.isSystem,
+    onClick: (e?: Event) => {
+      e?.stopPropagation();
+      deleteGateway(gateway);
+    },
+  });
+
+  return actions;
 }
 
 function getGatewayLoader(gatewayId: string) {

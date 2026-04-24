@@ -1,18 +1,13 @@
 import {
   defineEventHandler,
   readBody,
-  setCookie,
   createError,
   sendError,
   getHeader,
 } from "h3";
 import { $fetch } from "ofetch";
-import {
-  ACCESS_TOKEN_KEY,
-  REFRESH_TOKEN_KEY,
-  EXP_TIME_KEY,
-} from "~/constants/enfyra";
 import { normalizeUrl } from "~/utils/api/url";
+import { setAuthCookies } from "../utils/auth-cookies";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
@@ -31,16 +26,7 @@ export default defineEventHandler(async (event) => {
 
     const { accessToken, refreshToken, expTime } = response;
 
-    const cookieOptions = {
-      httpOnly: true,
-      secure: !import.meta.dev,
-      sameSite: "lax" as const,
-      path: "/",
-    };
-
-    setCookie(event, ACCESS_TOKEN_KEY, accessToken, cookieOptions);
-    setCookie(event, REFRESH_TOKEN_KEY, refreshToken, cookieOptions);
-    setCookie(event, EXP_TIME_KEY, String(expTime), cookieOptions);
+    setAuthCookies(event, { accessToken, refreshToken, expTime });
 
     return response;
   } catch (err: any) {

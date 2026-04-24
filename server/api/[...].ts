@@ -4,6 +4,7 @@ import {
   getQuery,
   sendRedirect,
 } from "h3";
+import { getNuxtAppOrigin, requireValidRedirectUrl } from "../utils/oauth";
 import { proxyToAPI } from "~/utils/enfyra/server/proxy";
 
 const OAUTH_PROVIDERS = ["google", "facebook", "github"];
@@ -41,18 +42,15 @@ export default defineEventHandler(async (event) => {
   if (event.method === "GET" && oauthMatch) {
     const provider = oauthMatch[1];
     const query = getQuery(event);
-    const redirectParam = query.redirect as string;
-    if (!redirectParam) {
-      throw createError({ statusCode: 400, message: "Redirect URL is required" });
-    }
+    const redirectParam = requireValidRedirectUrl(query.redirect);
     if (!apiUrl) {
       throw createError({ statusCode: 500, message: "API URL not configured" });
     }
-    const backendUrl = `${apiUrl.replace(/\/+$/, "")}/auth/${provider}?redirect=${encodeURIComponent(redirectParam)}`;
+    const appOrigin = getNuxtAppOrigin(event);
+    const backendUrl = `${apiUrl.replace(/\/+$/, "")}/auth/${provider}?redirect=${encodeURIComponent(redirectParam)}&appOrigin=${encodeURIComponent(appOrigin)}`;
     const response = await fetch(backendUrl, { redirect: "manual" });
     const location = response.headers.get("location") || response.headers.get("Location");
     if (location && response.status >= 300 && response.status < 400) {
-      console.log("[Enfyra OAuth] Redirecting to:", location);
       return sendRedirect(event, location, 302);
     }
     throw createError({ statusCode: 502, message: "Failed to get OAuth URL from backend" });

@@ -104,6 +104,21 @@
       v-model="showRoutePicker"
       @select="onRouteSelect"
     />
+
+    <CommonModal v-model="showDiscardModal">
+      <template #title>Discard Changes</template>
+      <template #body>
+        <div class="text-sm text-[var(--text-secondary)]">
+          You have unsaved changes. Are you sure you want to close? All changes will be lost.
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex justify-end gap-2 w-full">
+          <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
+          <UButton @click="confirmDiscard">Discard Changes</UButton>
+        </div>
+      </template>
+    </CommonModal>
 </template>
 
 <script setup lang="ts">
@@ -122,7 +137,14 @@ const emit = defineEmits<{
 
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit("update:modelValue", value),
+  set: (value) => {
+    if (value) {
+      emit("update:modelValue", value);
+      return;
+    }
+
+    handleClose();
+  },
 });
 
 const localPermission = ref<any>({
@@ -131,6 +153,9 @@ const localPermission = ref<any>({
 });
 
 const showRoutePicker = ref(false);
+const hasChanged = ref(false);
+const showDiscardModal = ref(false);
+const initialSnapshot = ref("");
 
 const isValid = computed(() => {
   return !!(
@@ -146,9 +171,39 @@ watch(
         ...newPermission,
         actions: [...(newPermission.actions || [])],
       };
+    } else {
+      localPermission.value = {
+        route: "",
+        actions: [],
+      };
     }
   },
   { immediate: true, deep: true }
+);
+
+watch(
+  () => props.modelValue,
+  async (open) => {
+    if (open) {
+      await nextTick();
+      initialSnapshot.value = stableStringify(localPermission.value);
+      hasChanged.value = false;
+      return;
+    }
+
+    showDiscardModal.value = false;
+    hasChanged.value = false;
+  },
+  { immediate: true }
+);
+
+watch(
+  () => localPermission.value,
+  (value) => {
+    if (!props.modelValue) return;
+    hasChanged.value = stableStringify(value) !== initialSnapshot.value;
+  },
+  { deep: true }
 );
 
 function toggleAction(action: string) {
@@ -176,6 +231,21 @@ function getActionIcon(action: string): string {
 
 function close() {
   emit("update:modelValue", false);
+}
+
+function handleClose() {
+  if (hasChanged.value) {
+    showDiscardModal.value = true;
+    return;
+  }
+
+  close();
+}
+
+function confirmDiscard() {
+  showDiscardModal.value = false;
+  hasChanged.value = false;
+  close();
 }
 
 function onRouteSelect(route: any) {

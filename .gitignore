@@ -39,3 +39,6 @@ AI_MEMORY_FE.md
 coverage/
 
 CLAUDE.md
+AGENTS.md
+.mcp.json
+.cursor/

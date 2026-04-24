@@ -13,6 +13,8 @@ const notify = useNotify();
 const newFolder = ref<Record<string, any>>({});
 const { generateEmptyForm, validate } = useSchema("folder_definition");
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const showDiscardModal = ref(false);
 
 const {
   pending: createLoading,
@@ -25,7 +27,14 @@ const {
 
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit("update:modelValue", value),
+  set: (value) => {
+    if (value) {
+      emit("update:modelValue", value);
+      return;
+    }
+
+    handleClose();
+  },
 });
 
 watch(isOpen, (newVal) => {
@@ -38,6 +47,10 @@ watch(isOpen, (newVal) => {
     }
 
     createErrors.value = {};
+    hasFormChanges.value = false;
+  } else {
+    showDiscardModal.value = false;
+    hasFormChanges.value = false;
   }
 });
 
@@ -60,7 +73,22 @@ async function handleCreate() {
 
   emit("created");
 
-  isOpen.value = false;
+  emit("update:modelValue", false);
+}
+
+function handleClose() {
+  if (hasFormChanges.value) {
+    showDiscardModal.value = true;
+    return;
+  }
+
+  emit("update:modelValue", false);
+}
+
+function confirmDiscard() {
+  showDiscardModal.value = false;
+  hasFormChanges.value = false;
+  emit("update:modelValue", false);
 }
 </script>
 
@@ -77,6 +105,7 @@ async function handleCreate() {
           <FormEditorLazy
             :model-value="newFolder"
             @update:model-value="(value) => (newFolder = value)"
+            @has-changed="(changed) => (hasFormChanges = changed)"
             :errors="createErrors"
             @update:errors="(errors) => (createErrors = errors)"
             table-name="folder_definition"
@@ -86,7 +115,14 @@ async function handleCreate() {
       </template>
 
       <template #footer>
-        <div class="flex justify-end w-full">
+        <div class="flex justify-end gap-2 w-full">
+          <UButton
+            variant="outline"
+            color="error"
+            @click="handleClose"
+          >
+            Cancel
+          </UButton>
           <UButton
             variant="solid"
             color="primary"
@@ -100,4 +136,19 @@ async function handleCreate() {
         </div>
       </template>
     </CommonModal>
+
+  <CommonModal v-model="showDiscardModal">
+    <template #title>Discard Changes</template>
+    <template #body>
+      <div class="text-sm text-[var(--text-secondary)]">
+        You have unsaved changes. Are you sure you want to close? All changes will be lost.
+      </div>
+    </template>
+    <template #footer>
+      <div class="flex justify-end gap-2 w-full">
+        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
+        <UButton @click="confirmDiscard">Discard Changes</UButton>
+      </div>
+    </template>
+  </CommonModal>
 </template>

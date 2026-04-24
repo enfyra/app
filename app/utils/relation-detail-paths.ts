@@ -4,7 +4,7 @@ export const TABLE_DETAIL_PATH_MAP: Record<string, string> = {
   // Settings
   user_definition: "/settings/users",
   role_definition: "/settings/roles",
-  route_definition: "/settings/routings",
+  route_definition: "/settings/routes",
   extension_definition: "/settings/extensions",
   websocket_definition: "/settings/websockets",
   bootstrap_script_definition: "/settings/bootstrap",
@@ -37,11 +37,8 @@ export function getDetailPathForTable(tableName: string, id: string | number): s
 
 export function resolveRelationDetailPath(tableName: string, item: any): string | null {
   const resolver = CUSTOM_PATH_RESOLVERS[tableName];
-  console.log('[resolveRelationDetailPath]', { tableName, hasResolver: !!resolver, item });
   if (resolver) {
-    const result = resolver(item);
-    console.log('[resolveRelationDetailPath] custom result:', result);
-    return result;
+    return resolver(item);
   }
 
   const id = getId(item);

@@ -185,7 +185,7 @@
             <UButton v-if="!testing" color="warning" variant="soft" icon="i-lucide-flask-conical" @click="testCurrentStep">Test</UButton>
             <UButton v-else color="error" variant="soft" icon="i-lucide-x" @click="cancelTest">Cancel</UButton>
             <div class="flex-1" />
-            <UButton variant="ghost" @click="closeStepDrawer">Cancel</UButton>
+            <UButton variant="ghost" color="error" @click="closeStepDrawer">Cancel</UButton>
             <UButton color="primary" @click="saveStep" :loading="savingStep">
               {{ editingStepId ? 'Update' : 'Create' }}
             </UButton>

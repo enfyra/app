@@ -7,11 +7,8 @@
             v-model="createForm"
             :table-name="tableName"
             :errors="createErrors"
-            :excluded="[]"
-            :field-map="{
-              scope: { type: 'text', placeholder: 'openid,email,profile' },
-              redirectUri: { type: 'text', placeholder: 'https://your-app.com/api/auth/callback' },
-            }"
+            :excluded="excludedFields"
+            :field-map="fieldMap"
             @update:errors="(errors) => (createErrors = errors)"
             mode="create"
           />
@@ -22,6 +19,8 @@
 </template>
 
 <script setup lang="ts">
+import { validateOAuthConfigForm } from "~/utils/oauth-config";
+
 definePageMeta({
   layout: "default",
   title: "Create OAuth Configuration",
@@ -33,6 +32,21 @@ const tableName = "oauth_config_definition";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const excludedFields = computed(() =>
+  createForm.value?.autoSetCookies === true ? ["appCallbackUrl"] : []
+);
+const fieldMap = computed(() => ({
+  scope: { type: "text", placeholder: "openid,email,profile" },
+  redirectUri: {
+    type: "text",
+    placeholder: "https://api.example.com/auth/google/callback",
+  },
+  appCallbackUrl: {
+    type: "text",
+    placeholder: "https://client.example.com/oauth/callback",
+    excluded: createForm.value?.autoSetCookies === true,
+  },
+}));
 
 const { generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -80,6 +94,7 @@ onMounted(() => {
 
 async function handleCreate() {
   if (!await validateForm(createForm.value, createErrors)) return;
+  if (!validateOAuthConfigForm(createForm.value, createErrors.value)) return;
 
   await executeCreateConfig({ body: createForm.value });
 
