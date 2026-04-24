@@ -309,7 +309,7 @@ function getColumnLabel(columnId: string) {
             v-for="(row, index) in table.getRowModel().rows"
             :key="row.id"
             class="surface-card rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:bg-[var(--surface-muted)] active:scale-[0.99]"
-            :class="selectedRows.some((selectedRow) => getId(selectedRow) === getId(row.original)) ? 'ring-2 ring-[var(--color-primary-500)]' : ''"
+            :class="selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original)) ? 'ring-2 ring-[var(--color-primary-500)]' : ''"
             @click="handleRowClick(row.original)"
           >
             <header class="flex items-start gap-3 p-4">
@@ -340,7 +340,7 @@ function getColumnLabel(columnId: string) {
                 variant="soft"
                 size="sm"
                 class="flex-shrink-0 capitalize"
-                :label="getStatusField(row)"
+                :label="getStatusField(row) ?? undefined"
               />
             </header>
 
