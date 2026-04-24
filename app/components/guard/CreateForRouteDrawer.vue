@@ -27,7 +27,7 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-3">
-        <UButton variant="outline" color="neutral" @click="handleCancel">
+        <UButton variant="outline" color="error" @click="handleCancel">
           Cancel
         </UButton>
         <UButton
@@ -52,7 +52,7 @@
     </template>
     <template #footer>
       <div class="flex justify-end gap-2 w-full">
-        <UButton variant="ghost" @click="showDiscardModal = false">Cancel</UButton>
+        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
         <UButton @click="confirmDiscard">Discard Changes</UButton>
       </div>
     </template>

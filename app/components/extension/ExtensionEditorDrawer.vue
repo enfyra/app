@@ -259,7 +259,7 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
         <div class="flex items-center gap-2">
           <UButton
             variant="outline"
-            color="neutral"
+            color="error"
             @click="handleClose"
           >
             Cancel

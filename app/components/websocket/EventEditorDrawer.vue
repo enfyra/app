@@ -276,7 +276,7 @@ async function handleTest() {
           <div class="flex items-center justify-end gap-2">
           <UButton
             variant="outline"
-            color="neutral"
+            color="error"
             @click="isOpen = false"
           >
             Cancel

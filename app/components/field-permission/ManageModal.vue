@@ -254,7 +254,20 @@ watch(open, (isOpen) => {
   <CommonModal v-model="open" :handle="false">
     <template #title>
       <div class="flex items-center gap-2">
-        <UIcon name="lucide:shield" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+        <UButton
+          v-if="viewMode === 'form'"
+          icon="lucide:arrow-left"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          class="rounded-full !aspect-square -ml-1"
+          @click="cancelForm"
+        />
+        <UIcon
+          v-else
+          name="lucide:shield"
+          class="w-5 h-5 text-purple-600 dark:text-purple-400"
+        />
         <span class="text-lg font-semibold">
           {{ viewMode === "form" ? (fieldPermMode === "update" ? "Edit Permission" : "Create Permission") : "Field Permissions" }}
         </span>
@@ -391,9 +404,6 @@ watch(open, (isOpen) => {
           </UButton>
         </template>
         <template v-else>
-          <UButton variant="ghost" @click="cancelForm">
-            Cancel
-          </UButton>
           <UButton
             :disabled="!isConditionValid"
             @click="saveFieldPerm"
