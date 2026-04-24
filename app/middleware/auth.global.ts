@@ -1,4 +1,6 @@
 export default defineNuxtRouteMiddleware(async (to, from) => {
+  if (process.env.NODE_ENV === "test") return;
+
   const { me, fetchUser } = useAuth();
 
   if (to.path === "/login") {

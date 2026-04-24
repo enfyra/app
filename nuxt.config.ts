@@ -44,6 +44,14 @@ export default defineNuxtConfig({
         { name: "theme-color", content: "#3b82f6" },
         { name: "color-scheme", content: "light" },
       ],
+      link: [
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap",
+        },
+      ],
       title: "Enfyra App - Content Management System",
       style: [
         {

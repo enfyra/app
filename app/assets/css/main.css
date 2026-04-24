@@ -10,10 +10,7 @@
 @import "./vue-flow.css";
 @import "./richtext-editor.css";
 @import "prosemirror-tables/style/tables.css";
-
 @layer base {
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
-
   html {
     font-family: 'Outfit', 'Manrope', system-ui, sans-serif;
     background: var(--bg-app);
