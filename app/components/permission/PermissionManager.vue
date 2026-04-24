@@ -186,7 +186,7 @@
     </Transition>
 
       <CommonDrawer
-        v-model="showDrawer"
+        v-model="drawerOpen"
         direction="right"
       >
         <template #header>
@@ -208,6 +208,13 @@
         <template #footer>
           <div class="flex justify-end gap-3 border border-[var(--border-default)] rounded-lg p-4 surface-card">
             <UButton
+              label="Cancel"
+              icon="lucide:x"
+              variant="outline"
+              color="error"
+              @click="handleDrawerClose"
+            />
+            <UButton
               v-if="hasFormChanges"
               label="Reset"
               icon="lucide:rotate-ccw"
@@ -227,6 +234,21 @@
           </div>
         </template>
       </CommonDrawer>
+
+      <CommonModal v-model="showDiscardModal">
+        <template #title>Discard Changes</template>
+        <template #body>
+          <div class="text-sm text-[var(--text-secondary)]">
+            You have unsaved changes. Are you sure you want to close? All changes will be lost.
+          </div>
+        </template>
+        <template #footer>
+          <div class="flex justify-end gap-2 w-full">
+            <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
+            <UButton @click="confirmDiscard">Discard Changes</UButton>
+          </div>
+        </template>
+      </CommonModal>
   </div>
 </template>
 
@@ -263,6 +285,7 @@ const permissionForm = ref<Record<string, any>>({});
 const permissionErrors = ref<Record<string, string>>({});
 const deleting = ref<string | number | null>(null);
 const hasFormChanges = ref(false);
+const showDiscardModal = ref(false);
 
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
@@ -320,6 +343,18 @@ const {
 const permissions = computed(() => permissionsData.value?.data || []);
 const saving = computed(() => creating.value || updating.value);
 
+const drawerOpen = computed({
+  get: () => showDrawer.value,
+  set: (value) => {
+    if (value) {
+      showDrawer.value = true;
+      return;
+    }
+
+    handleDrawerClose();
+  },
+});
+
 function createNewPermission() {
   if (!props.currentFieldId) {
     notify.error("Error", "Cannot create permission: missing field ID context");
@@ -369,6 +404,22 @@ function closeDrawer() {
   currentPermission.value = null;
   permissionForm.value = {};
   permissionErrors.value = {};
+  hasFormChanges.value = false;
+  showDiscardModal.value = false;
+}
+
+function handleDrawerClose() {
+  if (hasFormChanges.value) {
+    showDiscardModal.value = true;
+    return;
+  }
+
+  closeDrawer();
+}
+
+function confirmDiscard() {
+  showDiscardModal.value = false;
+  closeDrawer();
 }
 
 async function savePermission() {

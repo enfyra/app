@@ -20,6 +20,8 @@ const { getIdFieldName, getId } = useDatabase();
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
+const showDiscardModal = ref(false);
+const initialSnapshot = ref<string | null>(null);
 const baseParentPath = ref<string>('');
 const formEditorRef = ref();
 
@@ -29,7 +31,14 @@ defineExpose({
 
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: (value) => {
+    if (value) {
+      emit('update:modelValue', value);
+      return;
+    }
+
+    handleCancel();
+  },
 });
 
 const {
@@ -116,6 +125,7 @@ watch(() => isOpen.value, async (open) => {
       if (formEditorRef.value?.confirmChanges) {
         formEditorRef.value.confirmChanges();
       }
+      initialSnapshot.value = stableStringify(form.value);
       hasFormChanges.value = false;
     } else {
       form.value = generateEmptyForm();
@@ -124,11 +134,15 @@ watch(() => isOpen.value, async (open) => {
         form.value.parent = menuWithParent.parent;
       }
       errors.value = {};
+      await nextTick();
+      initialSnapshot.value = stableStringify(form.value);
       hasFormChanges.value = false;
     }
   } else {
     form.value = {};
     errors.value = {};
+    initialSnapshot.value = null;
+    showDiscardModal.value = false;
     hasFormChanges.value = false;
   }
 });
@@ -315,6 +329,24 @@ notify.success("Success")
   emit('update:modelValue', false);
 }
 
+function handleCancel() {
+  const hasUnsavedChanges = hasFormChanges.value
+    || (props.modelValue && initialSnapshot.value !== null && stableStringify(form.value) !== initialSnapshot.value);
+
+  if (hasUnsavedChanges) {
+    showDiscardModal.value = true;
+    return;
+  }
+
+  emit('update:modelValue', false);
+}
+
+function confirmDiscard() {
+  showDiscardModal.value = false;
+  hasFormChanges.value = false;
+  emit('update:modelValue', false);
+}
+
 </script>
 
 <template>
@@ -354,7 +386,7 @@ notify.success("Success")
         <UButton
           variant="outline"
           color="neutral"
-          @click="isOpen = false"
+          @click="handleCancel"
         >
           Cancel
         </UButton>
@@ -370,4 +402,19 @@ notify.success("Success")
       </div>
     </template>
   </CommonDrawer>
+
+  <CommonModal v-model="showDiscardModal">
+    <template #title>Discard Changes</template>
+    <template #body>
+      <div class="text-sm text-[var(--text-secondary)]">
+        You have unsaved changes. Are you sure you want to close? All changes will be lost.
+      </div>
+    </template>
+    <template #footer>
+      <div class="flex justify-end gap-2 w-full">
+        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
+        <UButton @click="confirmDiscard">Discard Changes</UButton>
+      </div>
+    </template>
+  </CommonModal>
 </template>

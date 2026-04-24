@@ -100,7 +100,14 @@ const showDiscardModal = ref(false);
 
 const localOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
+  set: (value) => {
+    if (value) {
+      emit('update:modelValue', value);
+      return;
+    }
+
+    handleCancel();
+  },
 });
 
 const localForm = computed({
