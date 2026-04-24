@@ -9,11 +9,8 @@
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
-            :excluded="['createdAt', 'updatedAt', 'isSystem']"
-            :field-map="{
-              scope: { type: 'varchar', placeholder: 'openid,email,profile' },
-              redirectUri: { type: 'varchar', placeholder: 'https://your-app.com/api/auth/callback' },
-            }"
+            :excluded="excludedFields"
+            :field-map="fieldMap"
             :loading="loading"
           />
         </UForm>
@@ -31,6 +28,8 @@
 </template>
 
 <script setup lang="ts">
+import { validateOAuthConfigForm } from "~/utils/oauth-config";
+
 definePageMeta({
   layout: "default",
   title: "OAuth Configuration Detail",
@@ -50,6 +49,25 @@ const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
+const excludedFields = computed(() => {
+  const fields = ["createdAt", "updatedAt", "isSystem"];
+  if (form.value?.autoSetCookies === true) {
+    fields.push("appCallbackUrl");
+  }
+  return fields;
+});
+const fieldMap = computed(() => ({
+  scope: { type: "varchar", placeholder: "openid,email,profile" },
+  redirectUri: {
+    type: "varchar",
+    placeholder: "https://api.example.com/auth/google/callback",
+  },
+  appCallbackUrl: {
+    type: "varchar",
+    placeholder: "https://client.example.com/oauth/callback",
+    excluded: form.value?.autoSetCookies === true,
+  },
+}));
 
 async function handleReset() {
   const ok = await confirm({
@@ -183,6 +201,7 @@ async function updateConfig() {
   if (!form.value) return;
 
   if (!await validateForm(form.value, errors)) return;
+  if (!validateOAuthConfigForm(form.value, errors.value)) return;
 
   await executeUpdateConfig({
     id: route.params.id as string,

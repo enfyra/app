@@ -74,7 +74,7 @@
   <CommonGlobalConfirm />
   <CommonGlobalNotify />
   <FolderDetailModal />
-  <RouteLoading :show="routeLoading" message="Navigating..." />
+  <CommonRouteLoading :show="routeLoading" message="Navigating..." />
 </template>
 
 <script setup lang="ts">

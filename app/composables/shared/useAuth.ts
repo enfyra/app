@@ -2,6 +2,7 @@ import { ref, computed } from "vue";
 import type { User, LoginPayload, OAuthProvider } from "~/types";
 import { $fetch } from "ofetch";
 import { normalizeUrl, getAppUrl } from "~/utils/api/url";
+import { resolveOAuthRedirectTarget } from "~/utils/auth";
 
 const me = ref<User | null>(null);
 const isLoading = ref<boolean>(false);
@@ -96,14 +97,15 @@ export function useAuth() {
 
   const isLoggedIn = computed(() => !!me.value);
 
-  const oauthLogin = (provider: OAuthProvider) => {
+  const oauthLogin = (provider: OAuthProvider, redirect?: string) => {
     if (typeof window === "undefined") {
       console.error("[Auth] oauthLogin can only be called on the client side");
       return;
     }
 
     const currentUrl = window.location.href;
-    const path = `/api/auth/${provider}?redirect=${encodeURIComponent(currentUrl)}`;
+    const targetUrl = resolveOAuthRedirectTarget(redirect, currentUrl);
+    const path = `/api/auth/${provider}?redirect=${encodeURIComponent(targetUrl)}`;
     window.location.href = path.startsWith("/") ? path : `/${path}`;
   };
 

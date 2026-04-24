@@ -147,6 +147,38 @@
               Sign in
             </UButton>
 
+            <div v-if="oauthProviders.length > 0" class="space-y-3">
+              <div class="flex items-center gap-3">
+                <div class="h-px flex-1 bg-gray-300 dark:bg-gray-700" />
+                <span class="text-xs font-medium uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
+                  Or continue with
+                </span>
+                <div class="h-px flex-1 bg-gray-300 dark:bg-gray-700" />
+              </div>
+
+              <div class="grid gap-3">
+                <UButton
+                  v-for="provider in oauthProviders"
+                  :key="provider.provider"
+                  type="button"
+                  size="lg"
+                  variant="outline"
+                  color="neutral"
+                  class="w-full justify-center"
+                  :loading="oauthLoadingProvider === provider.provider"
+                  @click="handleOAuthLogin(provider.provider)"
+                >
+                  <template #leading>
+                    <UIcon
+                      :name="getOAuthProviderIcon(provider.provider)"
+                      class="size-5"
+                    />
+                  </template>
+                  Continue with {{ getOAuthProviderLabel(provider.provider) }}
+                </UButton>
+              </div>
+            </div>
+
             <UButton
               v-if="showDemoLogin"
               type="button"
@@ -167,6 +199,8 @@
 </template>
 
 <script setup lang="ts">
+import type { OAuthProvider } from "~/types";
+
 const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 const DEMO_LOGIN_EMAIL = "enfyra@admin.com";
@@ -178,10 +212,11 @@ const showDemoLogin = computed(() => {
   return v === true || v === "true" || v === "1";
 });
 
-const { login } = useAuth();
+const { login, oauthLogin } = useAuth();
 const route = useRoute();
 const notify = useNotify();
 const demoLoading = ref(false);
+const oauthLoadingProvider = ref<OAuthProvider | null>(null);
 const form = reactive({
   email: "",
   password: "",
@@ -192,11 +227,45 @@ const error = reactive<{ email: string | null; password: string | null }>({
   password: null,
 });
 const loginError = ref<string | null>(null);
+const {
+  data: oauthProviderData,
+  execute: fetchOAuthProviders,
+} = useApi<{ data?: { provider: OAuthProvider }[] }>(() => "/auth/providers", {
+  errorContext: "Fetch OAuth Providers",
+  disableErrorPage: true,
+  onError: () => true,
+});
+
+const oauthProviders = computed(
+  () => oauthProviderData.value?.data ?? []
+);
 
 function redirectAfterLogin() {
   const redirect = route.query.redirect as string | undefined;
   if (redirect) window.location.href = redirect;
   else window.location.reload();
+}
+
+function getOAuthProviderIcon(provider: OAuthProvider) {
+  switch (provider) {
+    case "google":
+      return "logos:google-icon";
+    case "facebook":
+      return "logos:facebook";
+    case "github":
+      return "mdi:github";
+  }
+}
+
+function getOAuthProviderLabel(provider: OAuthProvider) {
+  switch (provider) {
+    case "google":
+      return "Google";
+    case "facebook":
+      return "Facebook";
+    case "github":
+      return "GitHub";
+  }
 }
 
 async function handleLogin() {
@@ -231,6 +300,11 @@ async function handleDemoLogin() {
   }
 }
 
+function handleOAuthLogin(provider: OAuthProvider) {
+  oauthLoadingProvider.value = provider;
+  oauthLogin(provider, route.query.redirect as string | undefined);
+}
+
 watch(
   () => form.email,
   (newVal) => {
@@ -257,6 +331,10 @@ watch(
 
 definePageMeta({
   layout: false,
+});
+
+onMounted(async () => {
+  await fetchOAuthProviders();
 });
 </script>
 

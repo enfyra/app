@@ -1,4 +1,4 @@
-import CommonBreadCrumbs from "~/components/common/BreadCrumbs.vue";
+import CommonBreadcrumbs from "~/components/common/Breadcrumbs.vue";
 
 export function useNavigationActions() {
   const route = useRoute();
@@ -45,7 +45,7 @@ export function useNavigationActions() {
     },
     {
       id: "navigation-breadcrumbs",
-      component: CommonBreadCrumbs,
+      component: CommonBreadcrumbs,
       side: "left",
       get props() {
         return {
