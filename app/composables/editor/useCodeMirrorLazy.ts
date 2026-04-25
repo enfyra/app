@@ -31,7 +31,7 @@ export const useCodeMirrorLazy = () => {
         import('@codemirror/commands'),
         import('@codemirror/autocomplete'),
         import('@codemirror/language'),
-        import('@codemirror/highlight'),
+        import('@lezer/highlight'),
         import('@codemirror/lint'),
         import('@codemirror/search'),
         import('@codemirror/lang-javascript'),
@@ -45,6 +45,7 @@ export const useCodeMirrorLazy = () => {
         lineNumbers: viewModule.lineNumbers,
         highlightActiveLine: viewModule.highlightActiveLine,
         keymap: viewModule.keymap,
+        ViewPlugin: viewModule.ViewPlugin,
         drawSelection: viewModule.drawSelection,
         dropCursor: viewModule.dropCursor,
         rectangularSelection: viewModule.rectangularSelection,
@@ -71,6 +72,7 @@ export const useCodeMirrorLazy = () => {
         foldKeymap: languageModule.foldKeymap,
         indentOnInput: languageModule.indentOnInput,
         indentService: languageModule.indentService,
+        forceParsing: languageModule.forceParsing,
         HighlightStyle: languageModule.HighlightStyle,
         defaultHighlightStyle: languageModule.defaultHighlightStyle,
         syntaxHighlighting: languageModule.syntaxHighlighting,
@@ -109,4 +111,3 @@ export const useCodeMirrorLazy = () => {
     reset,
   }
 }
-
