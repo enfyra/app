@@ -4,7 +4,7 @@
     <template v-if="type === 'script'">
       <p class="text-[11px] text-[var(--text-tertiary)]">Must <code class="bg-[var(--surface-muted)] px-1 rounded">return</code> a value. Access repos via <code class="bg-[var(--surface-muted)] px-1 rounded">#table_name</code>, previous steps via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW.step_key</code>, input via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW_PAYLOAD</code>.</p>
       <UFormField label="Code" class="w-full">
-        <FormCodeEditorLazy :model-value="fields.code" @update:model-value="update('code', $event)" language="javascript" :enfyra-autocomplete="true" height="220px" class="w-full" />
+        <FormCodeEditorLazy :model-value="fields.code" @update:model-value="update('code', $event)" language="typescript" :enfyra-autocomplete="true" height="220px" class="w-full" />
       </UFormField>
     </template>
 
@@ -12,7 +12,7 @@
     <template v-else-if="type === 'condition'">
       <p class="text-[11px] text-[var(--text-tertiary)]">Uses JS truthy/falsy. <code class="bg-[var(--surface-muted)] px-1 rounded">return user</code> (truthy if exists), <code class="bg-[var(--surface-muted)] px-1 rounded">return null</code> (falsy). Each branch executes different child steps.</p>
       <UFormField label="Condition Code" class="w-full">
-        <FormCodeEditorLazy :model-value="fields.code" @update:model-value="update('code', $event)" language="javascript" :enfyra-autocomplete="true" height="120px" class="w-full" />
+        <FormCodeEditorLazy :model-value="fields.code" @update:model-value="update('code', $event)" language="typescript" :enfyra-autocomplete="true" height="120px" class="w-full" />
       </UFormField>
     </template>
 

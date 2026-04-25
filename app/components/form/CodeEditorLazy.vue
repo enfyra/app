@@ -7,6 +7,7 @@
       :height="props.height"
       :class="props.class"
       :enfyra-autocomplete="props.enfyraAutocomplete"
+      :ts-diagnostics-enabled="props.tsDiagnosticsEnabled"
       @update:model-value="(value) => $emit('update:modelValue', value)"
       @diagnostics="(diags) => $emit('diagnostics', diags)"
     />
@@ -28,10 +29,11 @@ defineOptions({
 
 const props = defineProps<{
   modelValue?: string;
-  language?: "javascript" | "vue" | "json" | "html";
+  language?: "javascript" | "typescript" | "vue" | "json" | "html";
   height?: string;
   class?: string;
   enfyraAutocomplete?: boolean | 'vue';
+  tsDiagnosticsEnabled?: boolean;
 }>();
 
 defineEmits<{

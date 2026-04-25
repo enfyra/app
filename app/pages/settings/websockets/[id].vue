@@ -13,10 +13,10 @@
             :field-map="{
               connectionHandlerScript: {
                 type: 'code',
-                language: 'javascript',
+                language: 'typescript',
                 height: '400px',
                 label: 'Connection Handler Script',
-                description: 'JavaScript code to execute when client connects'
+                description: 'TypeScript code to execute when client connects'
               },
               connectionHandlerTimeout: {
                 type: 'number',

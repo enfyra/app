@@ -303,7 +303,7 @@ const editForm = ref<Record<string, any>>({});
 const TriggerConfigEditor = resolveComponent('FlowTriggerConfigEditor');
 
 const flowFieldMap = computed(() => ({
-  name: { description: `@DISPATCH.trigger('${editForm.value.name || 'name'}')` },
+  name: { description: `@TRIGGER('${editForm.value.name || 'name'}')` },
   triggerConfig: {
     label: 'Trigger Configuration',
     hideDescription: true,

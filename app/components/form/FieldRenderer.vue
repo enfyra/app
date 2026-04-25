@@ -32,6 +32,7 @@ const emit = defineEmits<{
 }>();
 
 const formEditorVirtualEmit = inject(FORM_EDITOR_VIRTUAL_EMIT_KEY, null);
+const tsDiagnosticsDisabled = ref(false);
 
 function attachVirtualEmit(
   key: string,
@@ -91,6 +92,35 @@ function updateErrors(errors: Record<string, string>) {
   emit("update:errors", errors);
 }
 
+function getFieldConfig(key: string) {
+  const manualConfig = props.fieldMap?.[key];
+  return typeof manualConfig === "string"
+    ? { type: manualConfig }
+    : manualConfig || {};
+}
+
+function getFinalType(key: string): string {
+  const column = props.columnMap.get(key);
+  const config = getFieldConfig(key);
+  return config.type || column?.type || "text";
+}
+
+function getCodeLanguage(key: string): "javascript" | "typescript" | "vue" | "json" | "html" {
+  const config = getFieldConfig(key);
+  return config.language || "typescript";
+}
+
+function disableTsDiagnostics() {
+  tsDiagnosticsDisabled.value = true;
+  const updated = { ...props.errors };
+  delete updated[props.keyName];
+  updateErrors(updated);
+}
+
+function enableTsDiagnostics() {
+  tsDiagnosticsDisabled.value = false;
+}
+
 function mergeControlClass(
   componentProps: Record<string, unknown> | undefined,
   kind: "field" | "boolean" = "field",
@@ -117,11 +147,7 @@ function getComponentConfigByKey(key: string) {
   const column = props.columnMap.get(key);
   const isRelation = column?.fieldType === "relation";
 
-  const manualConfig = props.fieldMap?.[key];
-  const config =
-    typeof manualConfig === "string"
-      ? { type: manualConfig }
-      : manualConfig || {};
+  const config = getFieldConfig(key);
 
   if (config.component) {
     const customCp = { ...(config.componentProps || {}) } as Record<string, unknown>;
@@ -137,7 +163,7 @@ function getComponentConfigByKey(key: string) {
     };
   }
 
-  const finalType = config.type || column?.type;
+  const finalType = getFinalType(key);
   const isSystemField = key === "createdAt" || key === "updatedAt";
   const disabled = config.disabled ?? isSystemField;
   const hasError = !!props.errors?.[key];
@@ -477,7 +503,7 @@ function getComponentConfigByKey(key: string) {
         };
       }
 
-      const codeLanguage = config.language || "javascript";
+      const codeLanguage = getCodeLanguage(key);
       return {
         component: resolveComponent("FormCodeEditorLazy"),
         componentProps: {
@@ -485,7 +511,8 @@ function getComponentConfigByKey(key: string) {
           modelValue: ensureString(props.formData[key]),
           language: codeLanguage,
           height: config.height || "300px",
-          enfyraAutocomplete: codeLanguage === 'javascript' ? true : codeLanguage === 'vue' ? 'vue' : undefined,
+          enfyraAutocomplete: codeLanguage === 'javascript' || codeLanguage === 'typescript' ? true : codeLanguage === 'vue' ? 'vue' : undefined,
+          tsDiagnosticsEnabled: codeLanguage !== 'typescript' || !tsDiagnosticsDisabled.value,
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },
@@ -661,6 +688,9 @@ function getComponentConfigByKey(key: string) {
 const componentConfig = computed(() => getComponentConfigByKey(props.keyName));
 const errorMessage = computed(() => props.errors?.[props.keyName]);
 const hasError = computed(() => !!errorMessage.value);
+const isTypeScriptCodeField = computed(
+  () => getFinalType(props.keyName) === "code" && getCodeLanguage(props.keyName) === "typescript"
+);
 
 const isRelationColumn = computed(() => {
   return props.columnMap.get(props.keyName)?.fieldType === "relation";
@@ -694,13 +724,7 @@ const showCustomErrorOutline = computed(
 );
 
 function getComponentType(): string {
-  const column = props.columnMap.get(props.keyName);
-  const manualConfig = props.fieldMap?.[props.keyName];
-  const config =
-    typeof manualConfig === "string"
-      ? { type: manualConfig }
-      : manualConfig || {};
-  return config.type || column?.type || "text";
+  return getFinalType(props.keyName);
 }
 
 </script>
@@ -715,7 +739,7 @@ function getComponentType(): string {
     <div v-else class="field-input w-full min-w-0">
       <UFormField
         class="block w-full min-w-0"
-        :error="getComponentType() === 'simple-json' ? undefined : errorMessage"
+        :error="getComponentType() === 'simple-json' || isTypeScriptCodeField ? undefined : errorMessage"
       >
         <div
           class="w-full min-w-0"
@@ -736,6 +760,38 @@ function getComponentType(): string {
         >
           {{ errorMessage }}
         </p>
+        <div
+          v-if="isTypeScriptCodeField && hasError && errorMessage"
+          class="mt-2 flex flex-wrap items-start justify-between gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300"
+        >
+          <span class="min-w-0 flex-1">{{ errorMessage }}</span>
+          <UButton
+            type="button"
+            size="xs"
+            variant="soft"
+            color="neutral"
+            icon="lucide:badge-x"
+            label="Disable TS check"
+            class="shrink-0"
+            @click.stop="disableTsDiagnostics"
+          />
+        </div>
+        <div
+          v-else-if="isTypeScriptCodeField && tsDiagnosticsDisabled"
+          class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-300"
+        >
+          <span>TypeScript diagnostics are disabled for this field.</span>
+          <UButton
+            type="button"
+            size="xs"
+            variant="soft"
+            color="neutral"
+            icon="lucide:badge-check"
+            label="Enable TS check"
+            class="shrink-0"
+            @click.stop="enableTsDiagnostics"
+          />
+        </div>
       </UFormField>
     </div>
   </div>

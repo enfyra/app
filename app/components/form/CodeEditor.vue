@@ -1,9 +1,10 @@
 <script setup lang="ts">
 const props = defineProps<{
   modelValue?: string;
-  language?: "javascript" | "vue" | "json" | "html";
+  language?: "javascript" | "typescript" | "vue" | "json" | "html";
   height?: string;
   enfyraAutocomplete?: boolean | 'vue';
+  tsDiagnosticsEnabled?: boolean;
 }>();
 
 const emit = defineEmits(["update:modelValue", "diagnostics"]);
@@ -28,7 +29,7 @@ const { initCodeMirror, codeMirrorModules } = useCodeMirrorLazy()
 
 const { themeCompartment, themeExtensions, customHighlightStyle } = useCodeMirrorTheme(currentHeight, codeMirrorModules, colorMode);
 
-const { editorRef, createEditor, recreateEditor, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
+const { editorRef, createEditor, reconfigureEditor, recreateEditor, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
   modelValue: toRef(props, "modelValue"),
   emit,
   codeMirrorModules: codeMirrorModules
@@ -46,7 +47,7 @@ const extensions = computed(() => {
   
   const setup = getBasicSetup(props.language, (diags: any[]) => {
     emit("diagnostics", diags);
-  }, props.enfyraAutocomplete)
+  }, props.enfyraAutocomplete, props.language !== "typescript" || props.tsDiagnosticsEnabled !== false)
   
   if (!Array.isArray(setup) || setup.length === 0) {
     return []
@@ -201,6 +202,16 @@ onUnmounted(() => {
 
 watch(() => props.language, () => {
   emit("diagnostics", []);
+});
+
+watch(() => props.tsDiagnosticsEnabled, (enabled) => {
+  if (!enabled) emit("diagnostics", []);
+  if (editorView.value) {
+    nextTick(() => {
+      reconfigureEditor(extensions.value);
+      applyGuttersBorder();
+    });
+  }
 });
 
 function handleMouseDown(e: MouseEvent) {

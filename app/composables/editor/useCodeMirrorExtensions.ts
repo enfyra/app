@@ -1,6 +1,21 @@
-import { ENFYRA_COMPLETIONS, ENFYRA_METHOD_COMPLETIONS, VUE_COMPLETIONS, VUE_COMPONENT_COMPLETIONS } from '~/utils/editor-completions.constants';
+import {
+  ENFYRA_CACHE_COMPLETIONS,
+  ENFYRA_COMPLETIONS,
+  ENFYRA_CTX_COMPLETIONS,
+  ENFYRA_FLOW_COMPLETIONS,
+  ENFYRA_HELPER_COMPLETIONS,
+  ENFYRA_METHOD_COMPLETIONS,
+  ENFYRA_SOCKET_COMPLETIONS,
+  ENFYRA_THROW_COMPLETIONS,
+  VUE_COMPLETIONS,
+  VUE_COMPONENT_COMPLETIONS,
+} from '~/utils/editor-completions.constants';
+import { lintEnfyraTypeScript } from '~/utils/editor/enfyraTypeScriptLinter';
 
 export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
+  type CodeLanguage = "javascript" | "vue" | "json" | "html" | "typescript";
+
+  const ENFYRA_MACROS = new Set(ENFYRA_COMPLETIONS.map((item) => item.label));
 
   const modules = computed(() => {
     if (!codeMirrorModules) return null
@@ -8,34 +23,129 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
   })
 
   const getModules = () => modules.value
-  function isInComment(doc: any, absolutePos: number): boolean {
-    const fullText = doc.toString()
-    const beforePos = fullText.substring(0, absolutePos)
-    
-    const lineCommentIndex = beforePos.lastIndexOf('//')
-    if (lineCommentIndex !== -1) {
-      const afterComment = fullText.substring(lineCommentIndex + 2, absolutePos)
-      if (!afterComment.includes('\n')) {
-        return true
+  function collectEnfyraRanges(text: string): Array<{ from: number; to: number; kind: 'macro' | 'repo' | 'package' | 'standaloneAt' }> {
+    const ranges: Array<{ from: number; to: number; kind: 'macro' | 'repo' | 'package' | 'standaloneAt' }> = []
+    const len = text.length
+    const CODE = 0
+    const STRING_DOUBLE = 1
+    const STRING_SINGLE = 2
+    const TEMPLATE = 3
+    const COMMENT_LINE = 4
+    const COMMENT_BLOCK = 5
+    let state = CODE
+    let pos = 0
+    let templateExprDepth = 0
+    let braceDepth = 0
+
+    const isUpperMacroChar = (char: string) => /[A-Z0-9_]/.test(char)
+    const isIdentifierStart = (char: string) => /[A-Za-z_]/.test(char)
+    const isIdentifierChar = (char: string) => /[A-Za-z0-9_]/.test(char)
+
+    while (pos < len) {
+      const char = text[pos]
+      const next = text[pos + 1]
+
+      if (state === CODE) {
+        if (char === '"') {
+          state = STRING_DOUBLE
+          pos++
+        } else if (char === "'") {
+          state = STRING_SINGLE
+          pos++
+        } else if (char === '`') {
+          state = TEMPLATE
+          pos++
+        } else if (char === '/' && next === '/') {
+          state = COMMENT_LINE
+          pos += 2
+        } else if (char === '/' && next === '*') {
+          state = COMMENT_BLOCK
+          pos += 2
+        } else if (char === '@') {
+          const start = pos
+          pos++
+          while (pos < len && isUpperMacroChar(text[pos])) pos++
+          const token = text.slice(start, pos)
+          if (ENFYRA_MACROS.has(token)) {
+            ranges.push({ from: start, to: pos, kind: 'macro' })
+          } else if (token === '@') {
+            ranges.push({ from: start, to: pos, kind: 'standaloneAt' })
+          }
+        } else if (char === '#' || char === '%') {
+          const start = pos
+          const kind = char === '#' ? 'repo' : 'package'
+          pos++
+          if (pos < len && isIdentifierStart(text[pos])) {
+            pos++
+            while (pos < len && isIdentifierChar(text[pos])) pos++
+            ranges.push({ from: start, to: pos, kind })
+          }
+        } else if (char === '{') {
+          if (templateExprDepth > 0) braceDepth++
+          pos++
+        } else if (char === '}' && templateExprDepth > 0) {
+          if (braceDepth > 0) {
+            braceDepth--
+          } else {
+            templateExprDepth--
+            state = TEMPLATE
+          }
+          pos++
+        } else {
+          pos++
+        }
+      } else if (state === STRING_DOUBLE) {
+        if (char === '\\') {
+          pos += 2
+        } else if (char === '"') {
+          state = CODE
+          pos++
+        } else {
+          pos++
+        }
+      } else if (state === STRING_SINGLE) {
+        if (char === '\\') {
+          pos += 2
+        } else if (char === "'") {
+          state = CODE
+          pos++
+        } else {
+          pos++
+        }
+      } else if (state === TEMPLATE) {
+        if (char === '\\') {
+          pos += 2
+        } else if (char === '`') {
+          state = CODE
+          pos++
+        } else if (char === '$' && next === '{') {
+          pos += 2
+          templateExprDepth++
+          state = CODE
+        } else {
+          pos++
+        }
+      } else if (state === COMMENT_LINE) {
+        if (char === '\n') state = CODE
+        pos++
+      } else if (state === COMMENT_BLOCK) {
+        if (char === '*' && next === '/') {
+          pos += 2
+          state = CODE
+        } else {
+          pos++
+        }
       }
     }
-    
-    const blockCommentStart = beforePos.lastIndexOf('/*')
-    if (blockCommentStart !== -1) {
-      const blockCommentEnd = fullText.indexOf('*/', blockCommentStart)
-      if (blockCommentEnd === -1 || blockCommentStart + 2 + blockCommentEnd >= absolutePos) {
-        return true
-      }
-    }
-    
-    return false
+
+    return ranges
   }
 
   function buildEnfyraDecorations(view: any): any {
     const m = getModules()
     if (!m) return null
     const builder = new m.RangeSetBuilder()
-    const doc = view.state.doc
+    const text = view.state.doc.toString()
 
     const templateDecoration = m.Decoration.mark({
       tagName: "span",
@@ -79,78 +189,17 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
 
     const allDecorations: Array<{ from: number; to: number; decoration: any }> = []
 
-    for (let i = 1; i <= doc.lines; i++) {
-      const line = doc.line(i)
-      const text = line.text
-
-      const templateRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS|SOCKET|DISPATCH|FLOW|FLOW_LAST|FLOW_META|FLOW_PAYLOAD)\b/g
-      const templateWithBracketRegex = /@(CACHE|REPOS|HELPERS|LOGS|ERRORS|BODY|DATA|STATUS|PARAMS|QUERY|USER|REQ|RES|SHARE|API|UPLOADED_FILE|PKGS|SOCKET|DISPATCH|FLOW|FLOW_LAST|FLOW_META|FLOW_PAYLOAD)\s*\[(['"])([^'"]*)\1\]/g
-      const throwRegex = /@THROW\d*/g
-
-      const matchedRanges: Array<{ from: number; to: number }> = []
-      let match
-
-      while ((match = templateWithBracketRegex.exec(text)) !== null) {
-        const absolutePos = line.from + match.index
-        if (!isInComment(doc, absolutePos)) {
-          const fullMatch = match[0]
-          allDecorations.push({ from: absolutePos, to: absolutePos + fullMatch.length, decoration: templateDecoration })
-          matchedRanges.push({ from: absolutePos, to: absolutePos + fullMatch.length })
-        }
-      }
-
-      while ((match = templateRegex.exec(text)) !== null) {
-        const absolutePos = line.from + match.index
-        if (!isInComment(doc, absolutePos)) {
-          const isAlreadyMatched = matchedRanges.some(range =>
-            absolutePos >= range.from && absolutePos < range.to
-          )
-          if (!isAlreadyMatched) {
-            allDecorations.push({ from: absolutePos, to: absolutePos + match[0].length, decoration: templateDecoration })
-            matchedRanges.push({ from: absolutePos, to: absolutePos + match[0].length })
-          }
-        }
-      }
-
-      while ((match = throwRegex.exec(text)) !== null) {
-        const absolutePos = line.from + match.index
-        if (!isInComment(doc, absolutePos)) {
-          allDecorations.push({ from: absolutePos, to: absolutePos + match[0].length, decoration: throwDecoration })
-          matchedRanges.push({ from: absolutePos, to: absolutePos + match[0].length })
-        }
-      }
-
-      const allAtRegex = /@/g
-      while ((match = allAtRegex.exec(text)) !== null) {
-        const absolutePos = line.from + match.index
-        if (!isInComment(doc, absolutePos)) {
-          const isMatched = matchedRanges.some(range =>
-            absolutePos >= range.from && absolutePos < range.to
-          )
-          if (!isMatched) {
-            const nextChar = text[match.index + 1]
-            if (!nextChar) {
-              allDecorations.push({ from: absolutePos, to: absolutePos + 1, decoration: standaloneAtDecoration })
-            }
-          }
-        }
-      }
-
-      const tableRegex = /#([a-zA-Z_][a-zA-Z0-9_]*)\b/g
-      while ((match = tableRegex.exec(text)) !== null) {
-        const absolutePos = line.from + match.index
-        if (!isInComment(doc, absolutePos)) {
-          allDecorations.push({ from: absolutePos, to: absolutePos + match[0].length, decoration: tableAccessDecoration })
-        }
-      }
-
-      const percentageRegex = /%([a-zA-Z_][a-zA-Z0-9_]*)\b/g
-      while ((match = percentageRegex.exec(text)) !== null) {
-        const absolutePos = line.from + match.index
-        if (!isInComment(doc, absolutePos)) {
-          allDecorations.push({ from: absolutePos, to: absolutePos + match[0].length, decoration: percentageDecoration })
-        }
-      }
+    for (const range of collectEnfyraRanges(text)) {
+      const decoration = range.kind === 'repo'
+        ? tableAccessDecoration
+        : range.kind === 'package'
+          ? percentageDecoration
+          : range.kind === 'standaloneAt'
+            ? standaloneAtDecoration
+            : range.from >= 0 && text.slice(range.from, range.to).startsWith('@THROW')
+              ? throwDecoration
+              : templateDecoration
+      allDecorations.push({ from: range.from, to: range.to, decoration })
     }
 
     allDecorations.sort((a, b) => a.from - b.from)
@@ -240,7 +289,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     })
   })
 
-  function getLanguageExtension(language?: "javascript" | "vue" | "json" | "html" | "typescript") {
+  function getLanguageExtension(language?: CodeLanguage) {
     const m = getModules()
     if (!m) return null
     switch (language) {
@@ -248,37 +297,70 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
         return m.vue();
       case "html":
         return m.html();
+      case "typescript":
+        return m.javascript({ jsx: true, typescript: true });
       case "javascript":
       default:
         return m.javascript({ jsx: true, typescript: false });
     }
   }
 
-  const createLinter = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
+  const createLinter = (language?: CodeLanguage, onDiagnostics?: (diags: any[]) => void) => {
     const m = getModules()
     if (!m) return () => []
     return m.linter(async (view: any) => {
-      const diagnostics: any[] = [];
+      let diagnostics: any[] = [];
+
+      if (language === 'typescript') {
+        diagnostics = await lintEnfyraTypeScript(view.state.doc.toString());
+      }
       
       if (onDiagnostics) {
         onDiagnostics(diagnostics);
       }
       
       return diagnostics;
-    });
+    }, { delay: 350 });
   };
 
   function enfyraCompletionSource(m: any) {
     return (context: any) => {
-      const before = context.matchBefore(/[@#%][\w.]*/);
-      if (!before) {
-        const dotBefore = context.matchBefore(/\.\w*/);
-        if (dotBefore) {
-          return { from: dotBefore.from, options: ENFYRA_METHOD_COMPLETIONS };
-        }
-        return null;
+      const ctxMember = context.matchBefore(/\$ctx\.[\w$]*/);
+      if (ctxMember) {
+        return { from: ctxMember.from + '$ctx.'.length, options: ENFYRA_CTX_COMPLETIONS.filter((item) => item.label !== '$ctx') };
       }
-      return { from: before.from, options: ENFYRA_COMPLETIONS };
+
+      const ctxRoot = context.matchBefore(/\$[\w$]*/);
+      if (ctxRoot) {
+        return { from: ctxRoot.from, options: ENFYRA_CTX_COMPLETIONS.filter((item) => item.label === '$ctx') };
+      }
+
+      const member = context.matchBefore(/(?:\$ctx\.\$helpers|\$ctx\.\$cache|\$ctx\.\$socket|\$ctx\.\$throw|\$ctx\.\$flow|\$ctx\.\$repos(?:\.[A-Za-z_$][\w$]*)?|@HELPERS|@CACHE|@SOCKET|@THROW|@FLOW|@REPOS(?:\.[A-Za-z_$][\w$]*)?|#[A-Za-z_][\w]*|%[A-Za-z_][\w]*)\.[\w$]*/);
+      if (member) {
+        const text = member.text;
+        const lastDot = text.lastIndexOf('.');
+        const target = text.slice(0, lastDot);
+        const from = member.from + lastDot + 1;
+        if (target === '$ctx.$helpers' || target === '@HELPERS') return { from, options: ENFYRA_HELPER_COMPLETIONS };
+        if (target === '$ctx.$cache' || target === '@CACHE') return { from, options: ENFYRA_CACHE_COMPLETIONS };
+        if (target === '$ctx.$socket' || target === '@SOCKET') return { from, options: ENFYRA_SOCKET_COMPLETIONS };
+        if (target === '$ctx.$throw' || target === '@THROW') return { from, options: ENFYRA_THROW_COMPLETIONS };
+        if (target === '$ctx.$flow' || target === '@FLOW') return { from, options: ENFYRA_FLOW_COMPLETIONS };
+        if (target.startsWith('#') || target.startsWith('%') || /^(@REPOS|\$ctx\.\$repos)\.[A-Za-z_$][\w$]*$/.test(target)) {
+          return { from, options: ENFYRA_METHOD_COMPLETIONS };
+        }
+      }
+
+      const macro = context.matchBefore(/@[\w]*/);
+      if (macro) return { from: macro.from, options: ENFYRA_COMPLETIONS };
+
+      const repo = context.matchBefore(/#[\w]*/);
+      if (repo) return { from: repo.from, options: [{ label: '#table_name', type: 'variable', detail: '$ctx.$repos.table_name' }] };
+
+      const pkg = context.matchBefore(/%[\w]*/);
+      if (pkg) return { from: pkg.from, options: [{ label: '%package_name', type: 'variable', detail: '$ctx.$pkgs.package_name' }] };
+
+      return null;
     };
   }
 
@@ -290,7 +372,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     };
   }
 
-  const getBasicSetup = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void, enfyraAutocomplete?: boolean | 'vue') => {
+  const getBasicSetup = (language?: CodeLanguage, onDiagnostics?: (diags: any[]) => void, enfyraAutocomplete?: boolean | 'vue', lintEnabled = true) => {
     const m = getModules()
     if (!m) return []
     
@@ -314,7 +396,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       }),
       m.highlightSelectionMatches(),
       m.indentUnit.of("  "),
-      createLinter(language, onDiagnostics),
+      createLinter(lintEnabled ? language : undefined, onDiagnostics),
       m.lintGutter(),
       m.keymap.of([
         {
@@ -393,7 +475,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     if (language === 'vue') {
       const indent = vueIndentService.value
       if (indent) setup.push(indent);
-    } else if (language === 'javascript' || language === 'html' || language === 'json') {
+    } else if (language === 'javascript' || language === 'typescript' || language === 'html' || language === 'json') {
       setup.push(m.indentOnInput());
     }
     
