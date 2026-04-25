@@ -1,20 +1,29 @@
 export function useDatabase() {
-  const config = useRuntimeConfig();
-  const dbType = config.public.dbType as 'postgres' | 'mysql' | 'mongodb' | 'mariadb';
+  type MetadataDatabaseType = 'postgres' | 'mysql' | 'mongodb' | 'mariadb' | 'sqlite';
 
-  const isMongoDB = computed(() => dbType === 'mongodb');
+  const dbContext = useState<{
+    dbType: MetadataDatabaseType | null;
+    pkField: 'id' | '_id' | null;
+  }>("database:context", () => ({
+    dbType: null,
+    pkField: null,
+  }));
+
+  const dbType = computed(() => dbContext.value.dbType);
+  const isMongoDB = computed(() => dbType.value === 'mongodb');
 
   const getIdFieldName = (): 'id' | '_id' => {
-    return dbType === 'mongodb' ? '_id' : 'id';
+    return dbContext.value.pkField || (isMongoDB.value ? '_id' : 'id');
   };
 
   const getId = (item: any): any => {
     if (!item) return null;
     
-    let rawId = isMongoDB.value ? item._id ?? item.id : item.id ?? item._id;
+    const idField = getIdFieldName();
+    let rawId = idField === '_id' ? item._id ?? item.id : item.id ?? item._id;
     
     while (rawId && typeof rawId === 'object') {
-      rawId = isMongoDB.value ? rawId._id ?? rawId.id : rawId.id ?? rawId._id;
+      rawId = idField === '_id' ? rawId._id ?? rawId.id : rawId.id ?? rawId._id;
     }
     
     return rawId;
@@ -48,4 +57,3 @@ export function useDatabase() {
     createIdFilter,
   };
 }
-

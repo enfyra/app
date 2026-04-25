@@ -164,18 +164,21 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
 
   const enfyraSyntaxPlugin = computed(() => {
     const m = getModules()
-    if (!m) return null
-    return m.StateField.define({
-    create(state: any) {
-      return buildEnfyraDecorations({ state } as any)
-    },
-    update(decorations: any, transaction: any) {
-      if (transaction.docChanged) {
-        return buildEnfyraDecorations({ state: transaction.state } as any)
+    if (!m?.ViewPlugin) return null
+    return m.ViewPlugin.fromClass(class {
+      decorations: any
+
+      constructor(view: any) {
+        this.decorations = buildEnfyraDecorations(view) || m.Decoration.none
       }
-      return decorations.map(transaction.changes)
-    },
-      provide: (f: any) => m.EditorView.decorations.from(f)
+
+      update(update: any) {
+        if (update.docChanged || update.viewportChanged) {
+          this.decorations = buildEnfyraDecorations(update.view) || m.Decoration.none
+        }
+      }
+    }, {
+      decorations: (plugin: any) => plugin.decorations
     })
   })
 

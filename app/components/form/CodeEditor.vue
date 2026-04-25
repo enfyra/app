@@ -28,10 +28,8 @@ const { initCodeMirror, codeMirrorModules } = useCodeMirrorLazy()
 
 const { themeCompartment, themeExtensions, customHighlightStyle } = useCodeMirrorTheme(currentHeight, codeMirrorModules, colorMode);
 
-const { code, editorRef, createEditor, watchExtensions, destroyEditor, editorView } = useCodeMirrorEditor({
-  modelValue: props.modelValue,
-  language: props.language,
-  height: currentHeight.value,
+const { editorRef, createEditor, recreateEditor, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
+  modelValue: toRef(props, "modelValue"),
   emit,
   codeMirrorModules: codeMirrorModules
 });
@@ -73,7 +71,7 @@ const extensions = computed(() => {
   if (enfyraSyntaxPlugin?.value) {
     exts.push(enfyraSyntaxPlugin.value)
   }
-  
+
   return exts
 });
 
@@ -100,20 +98,11 @@ watch(currentHeight, () => {
   if (containerRef.value) {
     containerRef.value.style.height = currentHeight.value;
   }
-  nextTick(() => {
-    if (editorView.value && codeMirrorModules.value?.StateEffect) {
-      editorView.value.requestMeasure();
-      if (extensions.value.length > 0) {
-        editorView.value.dispatch({
-          effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
-        });
-      }
-      editorView.value.dispatch({});
-    }
-  });
 });
 
-const resizeObserverRef = ref<ResizeObserver | null>(null);
+let resizeFinalizeTimeout: ReturnType<typeof setTimeout> | null = null;
+let resizeRemountTimeout: ReturnType<typeof setTimeout> | null = null;
+let initialMountTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function applyGuttersBorder() {
   if (!editorView.value) return;
@@ -123,24 +112,37 @@ function applyGuttersBorder() {
   }
 }
 
-function setupResizeObserver() {
-  if (!editorRef.value || !containerRef.value) return;
-  let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
-  resizeObserverRef.value = new ResizeObserver(() => {
-    if (editorView.value && !isResizing.value) {
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        if (!editorView.value) return;
-        editorView.value.requestMeasure();
-        if (codeMirrorModules.value?.StateEffect && extensions.value.length > 0) {
-          editorView.value.dispatch({
-            effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
-          });
-        }
-      }, 100);
+function finishResizeSync() {
+  if (resizeFinalizeTimeout) {
+    clearTimeout(resizeFinalizeTimeout);
+    resizeFinalizeTimeout = null;
+  }
+  if (resizeRemountTimeout) {
+    clearTimeout(resizeRemountTimeout);
+    resizeRemountTimeout = null;
+  }
+  resizeRemountTimeout = window.setTimeout(() => {
+    resizeRemountTimeout = null;
+    if (editorRef.value) {
+      editorRef.value.style.height = "100%";
     }
-  });
-  resizeObserverRef.value.observe(containerRef.value);
+    recreateEditor(extensions.value);
+    nextTick(() => {
+      applyGuttersBorder();
+    });
+  }, 60);
+}
+
+function scheduleResizeFinishFallback() {
+  if (resizeFinalizeTimeout) clearTimeout(resizeFinalizeTimeout);
+  resizeFinalizeTimeout = setTimeout(() => {
+    finishResizeSync();
+  }, 380);
+}
+
+function handleHeightTransitionEnd(event: TransitionEvent) {
+  if (event.target !== containerRef.value || event.propertyName !== "height") return;
+  finishResizeSync();
 }
 
 onMounted(async () => {
@@ -155,16 +157,19 @@ onMounted(async () => {
     stopWatch = watch(
       [extensions, editorRef],
       ([exts, ref]) => {
-        if (editorView.value || !ref || exts.length === 0) return;
-        createEditor(exts);
-        if (!editorView.value) return;
-        watchExtensions(extensions);
-        stopWatch?.();
-        nextTick(() => {
-          if (editorRef.value) editorRef.value.style.height = "100%";
-          setupResizeObserver();
-          applyGuttersBorder();
-        });
+        if (editorView.value || !ref || exts.length === 0 || initialMountTimeout) return;
+        initialMountTimeout = window.setTimeout(() => {
+          initialMountTimeout = null;
+          if (editorView.value || !editorRef.value || extensions.value.length === 0) return;
+          createEditor(extensions.value);
+          if (!editorView.value) return;
+          stopWatch?.();
+          nextTick(() => {
+            if (editorRef.value) editorRef.value.style.height = "100%";
+            applyGuttersBorder();
+            updateEditorSize();
+          });
+        }, 60);
       },
       { immediate: true, flush: 'post' }
     );
@@ -174,8 +179,14 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  if (resizeObserverRef.value) {
-    resizeObserverRef.value.disconnect();
+  if (resizeFinalizeTimeout) {
+    clearTimeout(resizeFinalizeTimeout);
+  }
+  if (resizeRemountTimeout) {
+    clearTimeout(resizeRemountTimeout);
+  }
+  if (initialMountTimeout) {
+    clearTimeout(initialMountTimeout);
   }
   destroyEditor();
   document.removeEventListener("mousemove", handleMouseMove);
@@ -207,10 +218,6 @@ function handleMouseDown(e: MouseEvent) {
       width: `${rect.width}px`,
       height: `${rect.height}px`
     };
-  }
-  
-  if (resizeObserverRef.value && containerRef.value) {
-    resizeObserverRef.value.unobserve(containerRef.value);
   }
   
   document.addEventListener("mousemove", handleMouseMove, { passive: false });
@@ -275,30 +282,15 @@ function handleMouseUp(e?: MouseEvent) {
   document.body.style.userSelect = "";
   document.body.style.cursor = "";
   
-  if (resizeObserverRef.value && containerRef.value) {
-    resizeObserverRef.value.observe(containerRef.value);
-  }
-  
-  currentHeight.value = finalHeight;
-  
-  if (containerRef.value) {
-    containerRef.value.style.height = finalHeight;
-  }
-  
   if (editorRef.value) {
     editorRef.value.style.height = "100%";
   }
   
   nextTick(() => {
-    if (editorView.value && codeMirrorModules.value?.StateEffect) {
-      editorView.value.requestMeasure();
-      if (extensions.value.length > 0) {
-        editorView.value.dispatch({
-          effects: codeMirrorModules.value.StateEffect.reconfigure.of(extensions.value),
-        });
-      }
-      editorView.value.dispatch({});
-    }
+    requestAnimationFrame(() => {
+      currentHeight.value = finalHeight;
+      scheduleResizeFinishFallback();
+    });
   });
 }
 </script>
@@ -307,6 +299,7 @@ function handleMouseUp(e?: MouseEvent) {
   <div 
     ref="containerRef" 
     class="rounded-md overflow-hidden relative"
+    @transitionend="handleHeightTransitionEnd"
     :class="[
       !isResizing ? 'transition-[height] duration-300 ease-out' : '',
       'border border-[var(--border-strong)]'

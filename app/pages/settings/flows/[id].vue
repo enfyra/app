@@ -464,6 +464,7 @@ onMounted(async () => {
   await fetchExecutions();
   await refreshExecOverlay();
   syncEditForm();
+  await syncDrawersFromQuery(route.query);
   adminSocket?.on('flow:execution', onFlowExecution);
 });
 
@@ -520,17 +521,51 @@ watch(execDrawerOpen, (isOpen) => {
 });
 
 watch(() => route.query, (q) => {
-  if (!q.editStep && stepDrawerOpen.value) {
+  void syncDrawersFromQuery(q);
+});
+
+function getQueryValue(value: unknown): string | undefined {
+  if (Array.isArray(value)) return value[0] ? String(value[0]) : undefined;
+  return value ? String(value) : undefined;
+}
+
+async function syncDrawersFromQuery(q: typeof route.query) {
+  const editStep = getQueryValue(q.editStep);
+  if (editStep) {
+    if (editStep === 'new') {
+      if (!stepDrawerOpen.value || editingStepId.value !== null) {
+        stepDrawerUpdating.value = true;
+        openCreateStep();
+        nextTick(() => { stepDrawerUpdating.value = false; });
+      }
+    } else {
+      const step = steps.value.find((item: any) => String(getId(item)) === editStep);
+      if (step && (!stepDrawerOpen.value || String(editingStepId.value) !== editStep)) {
+        stepDrawerUpdating.value = true;
+        onSelectStep(step);
+        nextTick(() => { stepDrawerUpdating.value = false; });
+      }
+    }
+  } else if (stepDrawerOpen.value) {
     stepDrawerUpdating.value = true;
     stepDrawerOpen.value = false;
     nextTick(() => { stepDrawerUpdating.value = false; });
   }
-  if (!q.exec && execDrawerOpen.value) {
+
+  const execId = getQueryValue(q.exec);
+  if (execId) {
+    const exec = executions.value.find((item: any) => String(getId(item)) === execId) || { [getIdFieldName()]: execId };
+    if (!execDrawerOpen.value || !selectedExec.value || String(getId(selectedExec.value)) !== execId) {
+      execDrawerUpdating.value = true;
+      await openExecution(exec);
+      nextTick(() => { execDrawerUpdating.value = false; });
+    }
+  } else if (execDrawerOpen.value) {
     execDrawerUpdating.value = true;
     execDrawerOpen.value = false;
     nextTick(() => { execDrawerUpdating.value = false; });
   }
-});
+}
 
 function onSelectStep(step: any | null) {
   if (!step) return;

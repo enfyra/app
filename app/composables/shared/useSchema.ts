@@ -11,24 +11,40 @@ const TIMESTAMP_FIELDS: { name: string; type: ColumnType }[] = [
   { name: "updatedAt", type: "timestamp" },
 ];
 
+type MetadataDatabaseType = 'postgres' | 'mysql' | 'mongodb' | 'mariadb' | 'sqlite';
+type MetadataDatabaseContext = {
+  dbType: MetadataDatabaseType | null;
+  pkField: 'id' | '_id' | null;
+};
+type MetadataResponse = {
+  data: any[];
+  dbType?: MetadataDatabaseType;
+  pkField?: 'id' | '_id';
+};
+
 export function useSchema(tableName?: string | Ref<string>) {
   const schemas = useState<SchemaCollection>("schemas:data", () => ({}));
+  const dbContext = useState<MetadataDatabaseContext>("database:context", () => ({
+    dbType: null,
+    pkField: null,
+  }));
   const schemaLoading = ref(false);
   const { getIdFieldName } = useDatabase();
 
   const {
     execute: executeMetadata,
     data: metadataData,
-  } = useApi<{ data: any[] }>("/metadata", {
+  } = useApi<MetadataResponse>("/metadata", {
     errorContext: "Fetch Schema",
   });
 
   async function fetchSchema() {
-    if (Object.keys(schemas.value).length > 0) return;
+    if (Object.keys(schemas.value).length > 0 && dbContext.value.pkField) return;
 
     schemaLoading.value = true;
     try {
       await executeMetadata();
+      updateDatabaseContext(metadataData.value);
       processAndCacheSchemas(metadataData.value?.data || []);
     } catch (error) {
       console.error('[useSchema] Error fetching schema:', error);
@@ -42,6 +58,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     schemaLoading.value = true;
     try {
       await executeMetadata();
+      updateDatabaseContext(metadataData.value);
       processAndCacheSchemas(metadataData.value?.data || []);
     } catch (error) {
       console.error('[useSchema] Error refreshing schema:', error);
@@ -95,6 +112,13 @@ export function useSchema(tableName?: string | Ref<string>) {
         definition,
       } as TableSchema;
     }
+  }
+
+  function updateDatabaseContext(metadata: MetadataResponse | null | undefined) {
+    dbContext.value = {
+      dbType: metadata?.dbType ?? null,
+      pkField: metadata?.pkField ?? null,
+    };
   }
 
   function updateSchemas(tables: any[]) {

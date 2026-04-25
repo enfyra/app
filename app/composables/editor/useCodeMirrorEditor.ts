@@ -1,17 +1,17 @@
 interface UseCodeMirrorEditorOptions {
-  modelValue?: string;
-  language?: "javascript" | "vue" | "json" | "html";
-  height?: string;
+  modelValue?: string | Ref<string | undefined>;
   emit: (event: "update:modelValue" | "diagnostics", ...args: any[]) => void;
   codeMirrorModules?: any;
 }
 
 export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
-  const { modelValue, language, height, emit, codeMirrorModules } = options;
+  const { modelValue, emit, codeMirrorModules } = options;
 
-  const code = ref(ensureString(modelValue));
+  const getModelValue = () => ensureString(isRef(modelValue) ? modelValue.value : modelValue);
+  const code = ref(getModelValue());
   const editorRef = ref<HTMLDivElement>();
   const editorView = ref<any>();
+  let updateListenerExtension: any = null;
   
   const modules = computed(() => {
     if (!codeMirrorModules) return null
@@ -19,11 +19,10 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
   })
 
   watch(
-    () => modelValue,
+    () => getModelValue(),
     (newValue) => {
-      const stringValue = ensureString(newValue);
-      if (code.value !== stringValue) {
-        code.value = stringValue;
+      if (code.value !== newValue) {
+        code.value = newValue;
       }
     }
   );
@@ -35,11 +34,26 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
 
   let keyupHandler: (() => void) | null = null;
 
+  function getEditorExtensions(extensions: any[]) {
+    return updateListenerExtension
+      ? [...extensions, updateListenerExtension]
+      : extensions;
+  }
+
+  function reconfigureEditor(extensions: any[]) {
+    const m = modules.value
+    if (!editorView.value || !m?.StateEffect || extensions.length === 0) return
+    editorView.value.dispatch({
+      effects: m.StateEffect.reconfigure.of(getEditorExtensions(extensions)),
+    });
+    editorView.value.requestMeasure();
+  }
+
   function createEditor(extensions: any[]) {
     const m = modules.value
     if (!m?.EditorView || !editorRef.value) return
 
-    const updateListenerExtension = m.EditorView.updateListener.of((update: any) => {
+    updateListenerExtension = m.EditorView.updateListener.of((update: any) => {
       if (update.docChanged) {
         code.value = update.state.doc.toString();
       }
@@ -47,10 +61,7 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
 
     editorView.value = new m.EditorView({
       doc: code.value,
-      extensions: [
-        ...extensions,
-        updateListenerExtension,
-      ],
+      extensions: getEditorExtensions(extensions),
       parent: editorRef.value,
     });
 
@@ -70,21 +81,8 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
         editorRef.value.style.height = parent.style.height;
       }
     }
-  }
 
-  function watchExtensions(extensions: ComputedRef<any[]>) {
-    watch(
-      extensions,
-      (newExtensions) => {
-        const m = modules.value
-        if (editorView.value && m?.StateEffect && newExtensions.length > 0) {
-          editorView.value.dispatch({
-            effects: m.StateEffect.reconfigure.of(newExtensions),
-          });
-        }
-      },
-      { deep: true }
-    );
+    editorView.value?.requestMeasure();
   }
 
   watch(code, (newCode, oldCode) => {
@@ -98,6 +96,7 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
             insert: newCode,
           },
         });
+        editorView.value.requestMeasure();
       }
     }
   });
@@ -109,6 +108,12 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     }
     editorView.value?.destroy();
     editorView.value = null;
+    updateListenerExtension = null;
+  }
+
+  function recreateEditor(extensions: any[]) {
+    destroyEditor();
+    createEditor(extensions);
   }
 
   function updateEditorSize() {
@@ -128,7 +133,8 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     editorRef,
     editorView,
     createEditor,
-    watchExtensions,
+    reconfigureEditor,
+    recreateEditor,
     destroyEditor,
     updateEditorSize
   };
