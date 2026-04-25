@@ -1,4 +1,2 @@
 API_URL=http://localhost:1105/
-# DB_TYPE=postgres
-DB_TYPE=mongodb
 PORT=3000
