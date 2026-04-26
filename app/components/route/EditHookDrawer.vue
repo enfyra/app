@@ -16,7 +16,7 @@
               v-model="localForm"
               v-model:errors="localErrors"
               :table-name="hookType === 'pre' ? 'pre_hook_definition' : 'post_hook_definition'"
-              :excluded="['route', 'isSystem']"
+              :excluded="excludedFields"
               :field-map="fieldMap"
               mode="update"
             />
@@ -79,6 +79,7 @@ interface Props {
   hookType?: 'pre' | 'post';
   routeId?: string;
   allowedMethods?: string[];
+  lockMethod?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -129,6 +130,12 @@ const fieldMap = computed(() => ({
     },
   },
 }));
+
+const excludedFields = computed(() => {
+  const base = ['route', 'isSystem'];
+  if (props.lockMethod) base.push('methods');
+  return base;
+});
 
 watch(() => props.modelValue, async (isOpen) => {
   if (isOpen) {

@@ -200,8 +200,16 @@ onUnmounted(() => {
   }
 });
 
-watch(() => props.language, () => {
+watch(() => props.language, async () => {
+  if (!editorView.value || extensions.value.length === 0) return;
   emit("diagnostics", []);
+  await nextTick();
+  recreateEditor(extensions.value);
+  nextTick(() => {
+    if (editorRef.value) editorRef.value.style.height = "100%";
+    applyGuttersBorder();
+    updateEditorSize();
+  });
 });
 
 function handleMouseDown(e: MouseEvent) {

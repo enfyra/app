@@ -16,7 +16,7 @@
               v-model="localForm"
               v-model:errors="localErrors"
               :table-name="'route_handler_definition'"
-              :excluded="['createdBy', 'updatedBy', 'route']"
+              :excluded="excludedFields"
               :field-map="fieldMap"
               mode="update"
             />
@@ -70,6 +70,7 @@ interface Props {
   errors: Record<string, string>;
   loading: boolean;
   allowedMethods?: string[];
+  lockMethod?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -118,6 +119,12 @@ const fieldMap = computed(() => ({
   },
   sourceCode: { description: 'Must return a value. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.' },
 }));
+
+const excludedFields = computed(() => {
+  const base = ['createdBy', 'updatedBy', 'route'];
+  if (props.lockMethod) base.push('method');
+  return base;
+});
 
 watch(() => props.modelValue, async (isOpen) => {
   if (isOpen) {

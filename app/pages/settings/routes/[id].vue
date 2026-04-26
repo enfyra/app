@@ -140,6 +140,7 @@
     v-model:errors="editHandlerErrors"
     :loading="updateHandlerLoading"
     :allowed-methods="availableMethodStrings"
+    :lock-method="true"
     @save="updateHandler"
     @cancel="handleCancelEditHandler"
   />
@@ -152,6 +153,7 @@
     :hook-type="editHookType || 'pre'"
     :route-id="routeId"
     :allowed-methods="availableMethodStrings"
+    :lock-method="true"
     @save="updateHook"
     @cancel="handleCancelEditHook"
     @delete="deleteHook({ ...editHookForm, _hookType: editHookType, [getIdFieldName()]: editingHookId })"
