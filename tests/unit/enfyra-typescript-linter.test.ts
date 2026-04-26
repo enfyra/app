@@ -1,4 +1,4 @@
-import { lintEnfyraScript, lintEnfyraTypeScript } from '~/utils/editor/enfyraTypeScriptLinter'
+import { lintEnfyraScript, lintEnfyraTypeScript, lintVueSfcScripts } from '~/utils/editor/enfyraTypeScriptLinter'
 
 describe('lintEnfyraTypeScript', () => {
   it('reports TypeScript type errors', async () => {
@@ -49,5 +49,60 @@ await @TRIGGER('flow_name', { item })
     expect(typeDiagnostic).toBeTruthy()
     expect(typeDiagnostic!.from).toBeGreaterThan(source.indexOf('@BODY'))
     expect(source.slice(typeDiagnostic!.from, typeDiagnostic!.to)).toBe('value')
+  })
+
+  it('checks Vue script tags as strict JavaScript by default', async () => {
+    const source = `<template><div /></template>
+<script>
+a = b
+</script>`
+    const diagnostics = await lintVueSfcScripts(source)
+
+    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Cannot find name 'a'"))).toBe(true)
+    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Cannot find name 'b'"))).toBe(true)
+  })
+
+  it('rejects TypeScript syntax in Vue script tags without lang ts', async () => {
+    const source = `<script>
+const value: string = "ok"
+</script>`
+    const diagnostics = await lintVueSfcScripts(source)
+
+    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Type annotations can only be used in TypeScript files"))).toBe(true)
+  })
+
+  it('checks Vue script lang ts as TypeScript', async () => {
+    const source = `<script setup lang="ts">
+const value: string = 1
+</script>`
+    const diagnostics = await lintVueSfcScripts(source)
+
+    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Type 'number' is not assignable to type 'string'"))).toBe(true)
+  })
+
+  it('accepts common Vue imports in script lang ts', async () => {
+    const source = `<script setup lang="ts">
+import { ref } from 'vue'
+const value = ref<number>(1)
+</script>`
+    const diagnostics = await lintVueSfcScripts(source)
+
+    expect(diagnostics).toEqual([])
+  })
+
+  it('accepts Enfyra extension runtime globals in Vue script lang ts', async () => {
+    const source = `<script setup lang="ts">
+const { data, execute } = useApi(() => "/users", {
+  method: "post",
+})
+const { me } = useAuth()
+const pageHeader = usePageHeaderRegistry()
+const loaded = await getPackages(["lodash"])
+await navigateTo("/settings")
+console.log(data, execute, me, pageHeader, loaded, packages)
+</script>`
+    const diagnostics = await lintVueSfcScripts(source)
+
+    expect(diagnostics).toEqual([])
   })
 })

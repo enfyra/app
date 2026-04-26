@@ -112,6 +112,52 @@ declare function setTimeout(handler: (...args: any[]) => void, timeout?: number)
 declare function clearTimeout(id: number): void;
 declare function setInterval(handler: (...args: any[]) => void, timeout?: number): number;
 declare function clearInterval(id: number): void;
+declare const window: any;
+declare const document: any;
+declare const packages: Record<string, any>;
+declare function ref<T = any>(value?: T): any;
+declare function reactive<T extends object>(value: T): T;
+declare function computed<T = any>(getter: () => T): any;
+declare function watch(...args: any[]): any;
+declare function onMounted(fn: () => any): void;
+declare function onUnmounted(fn: () => any): void;
+declare function defineComponent(options: any): any;
+declare function h(...args: any[]): any;
+declare function useState(...args: any[]): any;
+declare function useRoute(...args: any[]): any;
+declare function useRouter(...args: any[]): any;
+declare function useApi(...args: any[]): any;
+declare function useToast(...args: any[]): any;
+declare function useSchema(...args: any[]): any;
+declare function useScreen(...args: any[]): any;
+declare function useGlobalState(...args: any[]): any;
+declare function usePermissions(...args: any[]): any;
+declare function useFilterQuery(...args: any[]): any;
+declare function useDataTableColumns(...args: any[]): any;
+declare function useHeaderActionRegistry(...args: any[]): any;
+declare function useSubHeaderActionRegistry(...args: any[]): any;
+declare function usePageHeaderRegistry(...args: any[]): any;
+declare function useConfirm(...args: any[]): any;
+declare function useAuth(...args: any[]): any;
+declare function useFetch(...args: any[]): any;
+declare function useAsyncData(...args: any[]): any;
+declare function useLazyFetch(...args: any[]): any;
+declare function useHead(...args: any[]): any;
+declare function useSeoMeta(...args: any[]): any;
+declare function useCookie(...args: any[]): any;
+declare function useNuxtApp(...args: any[]): any;
+declare function navigateTo(...args: any[]): any;
+declare function getPackages(packageNames?: string[]): Promise<Record<string, any>>;
+declare module 'vue' {
+  export const ref: typeof globalThis.ref;
+  export const reactive: typeof globalThis.reactive;
+  export const computed: typeof globalThis.computed;
+  export const watch: typeof globalThis.watch;
+  export const onMounted: typeof globalThis.onMounted;
+  export const onUnmounted: typeof globalThis.onUnmounted;
+  export const defineComponent: typeof globalThis.defineComponent;
+  export const h: typeof globalThis.h;
+}
 `;
 
 let typescriptModulePromise: Promise<TypeScriptModule> | null = null;
@@ -359,4 +405,118 @@ export async function lintEnfyraScript(
 
 export async function lintEnfyraTypeScript(source: string): Promise<Diagnostic[]> {
   return lintEnfyraScript(source, 'typescript');
+}
+
+interface VueScriptBlock {
+  content: string;
+  contentStart: number;
+  language: 'javascript' | 'typescript';
+  setup: boolean;
+}
+
+function parseVueScriptAttrs(attrs: string): Record<string, string | true> {
+  const result: Record<string, string | true> = {};
+  const attrRegex = /([A-Za-z_:][-A-Za-z0-9_:.]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+  let match: RegExpExecArray | null;
+  while ((match = attrRegex.exec(attrs)) !== null) {
+    result[match[1]] = match[2] ?? match[3] ?? match[4] ?? true;
+  }
+  return result;
+}
+
+function extractVueScriptBlocks(source: string): VueScriptBlock[] {
+  const blocks: VueScriptBlock[] = [];
+  const scriptRegex = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+  let match: RegExpExecArray | null;
+
+  while ((match = scriptRegex.exec(source)) !== null) {
+    const attrs = parseVueScriptAttrs(match[1] || '');
+    const language = attrs.lang === 'ts' || attrs.lang === 'typescript'
+      ? 'typescript'
+      : 'javascript';
+    const fullMatch = match[0] || '';
+    const openingTagEnd = fullMatch.indexOf('>') + 1;
+    blocks.push({
+      content: match[2] || '',
+      contentStart: match.index + openingTagEnd,
+      language,
+      setup: attrs.setup === true || attrs.setup === '',
+    });
+  }
+
+  return blocks;
+}
+
+async function lintVueScriptBlock(block: VueScriptBlock, index: number): Promise<Diagnostic[]> {
+  const ts = await loadTypeScript();
+  const transformed = transformEnfyraCode(block.content);
+  const fileName = `extension-script-${index}.${block.language === 'typescript' ? 'ts' : 'js'}`;
+  const libName = 'enfyra-vue-extension-lib.d.ts';
+  const suffix = block.setup ? '\nexport {}' : '';
+  const virtualSource = `${transformed.code}${suffix}`;
+  const virtualMap = [
+    ...transformed.sourceMap,
+    ...Array.from({ length: suffix.length }, () => -1),
+  ];
+
+  const compilerOptions: import('typescript').CompilerOptions = {
+    allowJs: block.language === 'javascript',
+    checkJs: block.language === 'javascript',
+    noEmit: true,
+    noLib: true,
+    noImplicitAny: false,
+    skipLibCheck: true,
+    strict: true,
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeJs,
+  };
+
+  const sourceFiles = new Map<string, string>([
+    [fileName, virtualSource],
+    [libName, libSource],
+  ]);
+
+  const host: import('typescript').CompilerHost = {
+    fileExists: (name) => sourceFiles.has(name),
+    getCanonicalFileName: (name) => name,
+    getCurrentDirectory: () => '',
+    getDefaultLibFileName: () => libName,
+    getDirectories: () => [],
+    getNewLine: () => '\n',
+    getSourceFile: (name, languageVersion) => {
+      const text = sourceFiles.get(name);
+      return text === undefined ? undefined : ts.createSourceFile(name, text, languageVersion, true);
+    },
+    readFile: (name) => sourceFiles.get(name),
+    useCaseSensitiveFileNames: () => true,
+    writeFile: () => {},
+  };
+
+  const program = ts.createProgram([fileName, libName], compilerOptions, host);
+  const diagnostics = ts.getPreEmitDiagnostics(program, program.getSourceFile(fileName));
+
+  return diagnostics
+    .map((diagnostic): Diagnostic | null => {
+      if (diagnostic.start === undefined || diagnostic.length === undefined) return null;
+      const sourceStart = virtualMap[diagnostic.start];
+      if (sourceStart === undefined || sourceStart < 0) return null;
+      const virtualEnd = Math.max(diagnostic.start + diagnostic.length - 1, diagnostic.start);
+      const sourceEnd = virtualMap[Math.min(virtualEnd, virtualMap.length - 1)];
+      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+      return {
+        from: block.contentStart + sourceStart,
+        to: block.contentStart + (sourceEnd !== undefined && sourceEnd >= sourceStart ? sourceEnd + 1 : sourceStart + 1),
+        severity: diagnostic.category === ts.DiagnosticCategory.Warning ? 'warning' : 'error',
+        message,
+      };
+    })
+    .filter((diagnostic): diagnostic is Diagnostic => Boolean(diagnostic));
+}
+
+export async function lintVueSfcScripts(source: string): Promise<Diagnostic[]> {
+  const blocks = extractVueScriptBlocks(source);
+  if (blocks.length === 0) return [];
+  const results = await Promise.all(blocks.map((block, index) => lintVueScriptBlock(block, index)));
+  return results.flat();
 }

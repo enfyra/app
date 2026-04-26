@@ -1,5 +1,13 @@
-import { ENFYRA_COMPLETIONS, ENFYRA_METHOD_COMPLETIONS, VUE_COMPLETIONS, VUE_COMPONENT_COMPLETIONS } from '~/utils/editor-completions.constants';
-import { lintEnfyraScript } from '~/utils/editor/enfyraTypeScriptLinter';
+import { ENFYRA_COMPLETIONS, ENFYRA_METHOD_COMPLETIONS, VUE_COMPLETIONS, VUE_COMPONENT_COMPLETIONS, VUE_SFC_TAG_COMPLETIONS, VUE_TEMPLATE_COMPLETIONS } from '~/utils/editor-completions.constants';
+
+type EnfyraTypeScriptLinterModule = typeof import('~/utils/editor/enfyraTypeScriptLinter');
+
+let enfyraTypeScriptLinterPromise: Promise<EnfyraTypeScriptLinterModule> | null = null;
+
+function loadEnfyraTypeScriptLinter() {
+  enfyraTypeScriptLinterPromise ??= import('~/utils/editor/enfyraTypeScriptLinter');
+  return enfyraTypeScriptLinterPromise;
+}
 
 export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
 
@@ -264,10 +272,14 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       let diagnostics: any[] = [];
 
       if (language === 'typescript' || language === 'javascript') {
+        const { lintEnfyraScript } = await loadEnfyraTypeScriptLinter();
         diagnostics = await lintEnfyraScript(
           view.state.doc.toString(),
           language,
         );
+      } else if (language === 'vue') {
+        const { lintVueSfcScripts } = await loadEnfyraTypeScriptLinter();
+        diagnostics = await lintVueSfcScripts(view.state.doc.toString());
       }
       
       if (onDiagnostics) {
@@ -294,9 +306,45 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
 
   function vueCompletionSource(m: any) {
     return (context: any) => {
-      const word = context.matchBefore(/[\w]*/);
-      if (!word || word.from === word.to) return null;
-      return { from: word.from, options: [...VUE_COMPLETIONS, ...VUE_COMPONENT_COMPLETIONS] };
+      const doc = context.state.doc.toString();
+      const before = doc.slice(0, context.pos);
+      const inTemplate =
+        before.lastIndexOf('<template') > before.lastIndexOf('</template>');
+      const inScript =
+        before.lastIndexOf('<script') > before.lastIndexOf('</script>');
+      const tagBefore = context.matchBefore(/<\/?[\w-]*/);
+      if (tagBefore) {
+        const prefixLength = tagBefore.text.startsWith('</') ? 2 : 1;
+        const tagOptions = inTemplate
+          ? [...VUE_COMPONENT_COMPLETIONS, ...VUE_TEMPLATE_COMPLETIONS]
+          : [...VUE_SFC_TAG_COMPLETIONS, ...VUE_COMPONENT_COMPLETIONS];
+        return {
+          from: tagBefore.from + prefixLength,
+          options: tagOptions,
+          validFor: /^[\w-]*$/,
+        };
+      }
+
+      const attrBefore = context.matchBefore(/(?:^|\s)(?:v-[\w-]*|[:@][\w:-]*)/);
+      if (inTemplate && attrBefore) {
+        const leadingWhitespace = /^\s/.test(attrBefore.text) ? 1 : 0;
+        return {
+          from: attrBefore.from + leadingWhitespace,
+          options: VUE_TEMPLATE_COMPLETIONS,
+          validFor: /^(?:v-[\w-]*|[:@][\w:-]*)$/,
+        };
+      }
+
+      const word = context.matchBefore(/[\w-]*/);
+      if (!word || (word.from === word.to && !context.explicit)) return null;
+      const options = inTemplate && !inScript
+        ? [...VUE_TEMPLATE_COMPLETIONS, ...VUE_COMPONENT_COMPLETIONS]
+        : [...VUE_COMPLETIONS, ...VUE_COMPONENT_COMPLETIONS];
+      return {
+        from: word.from,
+        options,
+        validFor: /^[\w-]*$/,
+      };
     };
   }
 

@@ -33,6 +33,41 @@ export const ENFYRA_METHOD_COMPLETIONS = [
 ];
 
 export const VUE_COMPLETIONS = [
+  {
+    label: 'sfc-ts',
+    type: 'snippet',
+    detail: 'Vue SFC with <script setup lang="ts">',
+    apply: `<template>
+  <div class="space-y-4">
+
+  </div>
+</template>
+
+<script setup lang="ts">
+
+</script>`,
+    boost: 99,
+  },
+  {
+    label: 'script-setup-ts',
+    type: 'snippet',
+    detail: '<script setup lang="ts">',
+    apply: `<script setup lang="ts">
+
+</script>`,
+    boost: 98,
+  },
+  {
+    label: 'template',
+    type: 'snippet',
+    detail: '<template> block',
+    apply: `<template>
+  <div>
+
+  </div>
+</template>`,
+    boost: 97,
+  },
   { label: 'ref', type: 'function', detail: 'Reactive reference' },
   { label: 'reactive', type: 'function', detail: 'Reactive object' },
   { label: 'computed', type: 'function', detail: 'Computed property' },
@@ -71,6 +106,33 @@ export const VUE_COMPLETIONS = [
   { label: 'useHead', type: 'function', detail: 'Nuxt: head meta' },
   { label: 'useToast', type: 'function', detail: 'Nuxt UI: toast notifications' },
   { label: 'useApi', type: 'function', detail: 'Enfyra: API client { data, execute, error, pending }' },
+  {
+    label: 'useApi-get',
+    type: 'snippet',
+    detail: 'Fetch records from an Enfyra API route',
+    apply: `const { data, pending, error, execute } = useApi(() => "/table_name", {
+  query: computed(() => ({
+    fields: "*",
+    limit: 20,
+  })),
+  immediate: true,
+})`,
+    boost: 90,
+  },
+  {
+    label: 'useApi-post',
+    type: 'snippet',
+    detail: 'Create a record through an Enfyra API route',
+    apply: `const { execute, pending, error } = useApi(() => "/table_name", {
+  method: "post",
+  errorContext: "Create Record",
+})
+
+async function save() {
+  await execute({ body: form.value })
+}`,
+    boost: 89,
+  },
   { label: 'useAuth', type: 'function', detail: 'Enfyra: { me, login, logout, isLoggedIn }' },
   { label: 'usePermissions', type: 'function', detail: 'Enfyra: { hasPermission, checkPermissionCondition }' },
   { label: 'useSchema', type: 'function', detail: 'Enfyra: { schemas, fetchSchema, definition, editableFields, generateEmptyForm }' },
@@ -79,34 +141,127 @@ export const VUE_COMPLETIONS = [
   { label: 'useConfirm', type: 'function', detail: 'Enfyra: { confirm({ title, content }) }' },
   { label: 'useHeaderActionRegistry', type: 'function', detail: 'Enfyra: register header actions' },
   { label: 'useSubHeaderActionRegistry', type: 'function', detail: 'Enfyra: register sub-header actions' },
+  { label: 'usePageHeaderRegistry', type: 'function', detail: 'Enfyra: register extension page header' },
+  {
+    label: 'page-header',
+    type: 'snippet',
+    detail: 'Register extension page header',
+    apply: `const pageHeader = usePageHeaderRegistry()
+
+onMounted(() => {
+  pageHeader.setPageHeader({
+    title: "Page Title",
+    description: "Page description",
+  })
+})`,
+    boost: 88,
+  },
+  {
+    label: 'header-action',
+    type: 'snippet',
+    detail: 'Register page header action',
+    apply: `const headerActions = useHeaderActionRegistry()
+
+onMounted(() => {
+  headerActions.registerAction({
+    id: "primary-action",
+    label: "Action",
+    icon: "lucide:plus",
+    color: "primary",
+    onClick: () => {},
+  })
+})`,
+    boost: 87,
+  },
   { label: 'useMenuRegistry', type: 'function', detail: 'Enfyra: { menuItems, registerMenuItem }' },
   { label: 'useFilterQuery', type: 'function', detail: 'Enfyra: { buildQuery, createEmptyFilter }' },
   { label: 'useDatabase', type: 'function', detail: 'Enfyra: { getId, getIdFieldName }' },
   { label: 'useRoutes', type: 'function', detail: 'Enfyra: route management' },
   { label: 'useHighlight', type: 'function', detail: 'Enfyra: code highlighting' },
   { label: 'useMounted', type: 'function', detail: 'Enfyra: { isMounted }' },
+  {
+    label: 'packages',
+    type: 'snippet',
+    detail: 'Use packages loaded by extension runtime',
+    apply: `const packageName = computed(() => packages["package-name"])`,
+    boost: 80,
+  },
+];
+
+export const VUE_SFC_TAG_COMPLETIONS = [
+  {
+    label: 'template',
+    type: 'snippet',
+    detail: '<template> block',
+    apply: `template>
+  <div class="space-y-4">
+
+  </div>
+</template>`,
+    boost: 100,
+  },
+  {
+    label: 'script setup lang="ts"',
+    type: 'snippet',
+    detail: '<script setup lang="ts"> block',
+    apply: `script setup lang="ts">
+
+</script>`,
+    boost: 99,
+  },
+  {
+    label: 'script setup',
+    type: 'snippet',
+    detail: '<script setup> block',
+    apply: `script setup>
+
+</script>`,
+    boost: 98,
+  },
+  {
+    label: 'style scoped',
+    type: 'snippet',
+    detail: '<style scoped> block',
+    apply: `style scoped>
+
+</style>`,
+    boost: 80,
+  },
+];
+
+export const VUE_TEMPLATE_COMPLETIONS = [
+  { label: 'v-if', type: 'keyword', detail: 'Conditional render', apply: 'v-if=""' },
+  { label: 'v-else-if', type: 'keyword', detail: 'Else-if conditional render', apply: 'v-else-if=""' },
+  { label: 'v-else', type: 'keyword', detail: 'Else conditional render' },
+  { label: 'v-for', type: 'keyword', detail: 'List render', apply: 'v-for="item in items" :key="item.id"' },
+  { label: 'v-model', type: 'keyword', detail: 'Two-way binding', apply: 'v-model=""' },
+  { label: 'v-show', type: 'keyword', detail: 'Display toggle', apply: 'v-show=""' },
+  { label: 'v-slot', type: 'keyword', detail: 'Slot binding', apply: 'v-slot=""' },
+  { label: ':class', type: 'property', detail: 'Class binding', apply: ':class=""' },
+  { label: ':style', type: 'property', detail: 'Style binding', apply: ':style=""' },
+  { label: ':disabled', type: 'property', detail: 'Disabled binding', apply: ':disabled=""' },
+  { label: ':loading', type: 'property', detail: 'Loading binding', apply: ':loading=""' },
+  { label: '@click', type: 'event', detail: 'Click handler', apply: '@click=""' },
+  { label: '@submit', type: 'event', detail: 'Submit handler', apply: '@submit=""' },
+  { label: '@update:model-value', type: 'event', detail: 'Nuxt UI model update', apply: '@update:model-value=""' },
+  { label: 'template-slot', type: 'snippet', detail: 'Named slot template', apply: 'template #default>\n  \n</template>' },
+  { label: 'UButton-primary', type: 'snippet', detail: 'Primary button', apply: 'UButton label="Save" color="primary" @click="" />' },
+  { label: 'UFormField-input', type: 'snippet', detail: 'Form field with input', apply: 'UFormField label="Name">\n  <UInput v-model="" />\n</UFormField>' },
+  { label: 'CommonEmptyState-basic', type: 'snippet', detail: 'Empty state', apply: 'CommonEmptyState title="No data" description="Nothing to show yet." icon="lucide:inbox" />' },
 ];
 
 export const VUE_COMPONENT_COMPLETIONS = [
-  { label: 'EmptyState', type: 'class', detail: 'Common: empty state display' },
-  { label: 'LoadingState', type: 'class', detail: 'Common: loading indicator' },
-  { label: 'ErrorState', type: 'class', detail: 'Common: error display' },
-  { label: 'PageHeader', type: 'class', detail: 'Common: page header' },
-  { label: 'FormCard', type: 'class', detail: 'Common: form container' },
-  { label: 'Modal', type: 'class', detail: 'Common: modal dialog' },
-  { label: 'Drawer', type: 'class', detail: 'Common: slide drawer' },
+  { label: 'CommonEmptyState', type: 'class', detail: 'Common: empty state display' },
+  { label: 'CommonLoadingState', type: 'class', detail: 'Common: loading indicator' },
+  { label: 'CommonSettingsCard', type: 'class', detail: 'Common: settings card' },
+  { label: 'CommonLazyImage', type: 'class', detail: 'Common: lazy image' },
+  { label: 'CommonUploadModal', type: 'class', detail: 'Common: upload modal' },
   { label: 'DataTable', type: 'class', detail: 'Data: sortable table' },
   { label: 'DataTableLazy', type: 'class', detail: 'Data: lazy-loaded table' },
   { label: 'FormEditor', type: 'class', detail: 'Form: metadata-driven editor' },
-  { label: 'FilterEditor', type: 'class', detail: 'Form: filter builder' },
-  { label: 'FieldSelector', type: 'class', detail: 'Form: field picker' },
-  { label: 'ColumnSelector', type: 'class', detail: 'Data: column picker' },
-  { label: 'FileManager', type: 'class', detail: 'File: file browser' },
-  { label: 'MenuRenderer', type: 'class', detail: 'Menu: render menu tree' },
+  { label: 'FilterDrawer', type: 'class', detail: 'Filter builder drawer' },
   { label: 'PermissionGate', type: 'class', detail: 'Permission: conditional render' },
-  { label: 'PermissionManager', type: 'class', detail: 'Permission: manager UI' },
-  { label: 'Widget', type: 'class', detail: 'Extension: embed widget by ID' },
-  { label: 'WebSocketManager', type: 'class', detail: 'WebSocket: connection manager' },
+  { label: 'DynamicWidgetComponent', type: 'class', detail: 'Extension: embed widget by ID' },
   { label: 'UButton', type: 'class', detail: 'Nuxt UI: button' },
   { label: 'UCard', type: 'class', detail: 'Nuxt UI: card' },
   { label: 'UInput', type: 'class', detail: 'Nuxt UI: input' },
@@ -117,4 +272,27 @@ export const VUE_COMPONENT_COMPLETIONS = [
   { label: 'USwitch', type: 'class', detail: 'Nuxt UI: switch toggle' },
   { label: 'UForm', type: 'class', detail: 'Nuxt UI: form wrapper' },
   { label: 'UFormField', type: 'class', detail: 'Nuxt UI: form field' },
+  { label: 'UCheckbox', type: 'class', detail: 'Nuxt UI: checkbox' },
+  { label: 'UCheckboxGroup', type: 'class', detail: 'Nuxt UI: checkbox group' },
+  { label: 'URadioGroup', type: 'class', detail: 'Nuxt UI: radio group' },
+  { label: 'UModal', type: 'class', detail: 'Nuxt UI: modal' },
+  { label: 'UDrawer', type: 'class', detail: 'Nuxt UI: drawer' },
+  { label: 'UDropdownMenu', type: 'class', detail: 'Nuxt UI: dropdown menu' },
+  { label: 'UTooltip', type: 'class', detail: 'Nuxt UI: tooltip' },
+  { label: 'UAlert', type: 'class', detail: 'Nuxt UI: alert' },
+  { label: 'UAvatar', type: 'class', detail: 'Nuxt UI: avatar' },
+  { label: 'UPagination', type: 'class', detail: 'Nuxt UI: pagination' },
+  { label: 'UTabs', type: 'class', detail: 'Nuxt UI: tabs' },
+  { label: 'UIcon', type: 'class', detail: 'Nuxt UI: icon' },
+  {
+    label: 'DataTable-example',
+    type: 'snippet',
+    detail: 'DataTable template example',
+    apply: `<DataTable
+  :data="data?.data || []"
+  :loading="pending"
+  :columns="columns"
+/>`,
+    boost: 86,
+  },
 ];
