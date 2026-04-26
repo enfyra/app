@@ -91,6 +91,25 @@ function updateErrors(errors: Record<string, string>) {
   emit("update:errors", errors);
 }
 
+function getFieldConfig(key: string) {
+  const manualConfig = props.fieldMap?.[key];
+  return typeof manualConfig === "string"
+    ? { type: manualConfig }
+    : manualConfig || {};
+}
+
+function getFinalType(key: string): string {
+  const column = props.columnMap.get(key);
+  const config = getFieldConfig(key);
+  return config.type || column?.type || "text";
+}
+
+function getCodeLanguage(key: string): "javascript" | "typescript" | "vue" | "json" | "html" {
+  const config = getFieldConfig(key);
+  if (config.language) return config.language;
+  return "typescript";
+}
+
 function mergeControlClass(
   componentProps: Record<string, unknown> | undefined,
   kind: "field" | "boolean" = "field",
@@ -477,7 +496,7 @@ function getComponentConfigByKey(key: string) {
         };
       }
 
-      const codeLanguage = config.language || "javascript";
+      const codeLanguage = getCodeLanguage(key);
       return {
         component: resolveComponent("FormCodeEditorLazy"),
         componentProps: {
@@ -485,7 +504,7 @@ function getComponentConfigByKey(key: string) {
           modelValue: ensureString(props.formData[key]),
           language: codeLanguage,
           height: config.height || "300px",
-          enfyraAutocomplete: codeLanguage === 'javascript' ? true : codeLanguage === 'vue' ? 'vue' : undefined,
+          enfyraAutocomplete: codeLanguage === 'javascript' || codeLanguage === 'typescript' ? true : codeLanguage === 'vue' ? 'vue' : undefined,
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },
@@ -689,10 +708,6 @@ const isCustomComponent = computed(() => {
   return isRelation || (finalType && customTypes.includes(finalType));
 });
 
-const showCustomErrorOutline = computed(
-  () => isCustomComponent.value && hasError.value && !isRelationColumn.value
-);
-
 function getComponentType(): string {
   const column = props.columnMap.get(props.keyName);
   const manualConfig = props.fieldMap?.[props.keyName];
@@ -719,11 +734,6 @@ function getComponentType(): string {
       >
         <div
           class="w-full min-w-0"
-          :class="[
-            showCustomErrorOutline
-              ? 'rounded-md border-2 border-red-500'
-              : ''
-          ]"
         >
           <component
             :is="componentConfig.component"

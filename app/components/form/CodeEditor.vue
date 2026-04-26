@@ -1,9 +1,10 @@
 <script setup lang="ts">
 const props = defineProps<{
   modelValue?: string;
-  language?: "javascript" | "vue" | "json" | "html";
+  language?: "javascript" | "typescript" | "vue" | "json" | "html";
   height?: string;
   enfyraAutocomplete?: boolean | 'vue';
+  error?: string;
 }>();
 
 const emit = defineEmits(["update:modelValue", "diagnostics"]);
@@ -302,7 +303,9 @@ function handleMouseUp(e?: MouseEvent) {
     @transitionend="handleHeightTransitionEnd"
     :class="[
       !isResizing ? 'transition-[height] duration-300 ease-out' : '',
-      'border border-[var(--border-strong)]'
+      props.error
+        ? 'border border-red-500 ring-2 ring-red-500/20'
+        : 'border border-[var(--border-strong)]'
     ]"
     :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
   >

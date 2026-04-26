@@ -6,6 +6,7 @@
       :language="props.language"
       :height="props.height"
       :class="props.class"
+      :error="props.error"
       :enfyra-autocomplete="props.enfyraAutocomplete"
       @update:model-value="(value) => $emit('update:modelValue', value)"
       @diagnostics="(diags) => $emit('diagnostics', diags)"
@@ -28,9 +29,10 @@ defineOptions({
 
 const props = defineProps<{
   modelValue?: string;
-  language?: "javascript" | "vue" | "json" | "html";
+  language?: "javascript" | "typescript" | "vue" | "json" | "html";
   height?: string;
   class?: string;
+  error?: string;
   enfyraAutocomplete?: boolean | 'vue';
 }>();
 

@@ -205,6 +205,8 @@ const emit = defineEmits<{
   virtualFieldEmit: [payload: FormEditorVirtualEmitPayload];
 }>();
 
+const ALWAYS_EXCLUDED_FIELDS = new Set(["scriptLanguage", "compiledCode"]);
+
 const { definition, fieldMap: schemaColumnMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
   props.tableName
 );
@@ -335,6 +337,7 @@ const filteredFormFields = computed(() => {
   fields = fields.filter((field: any) => {
     const key = field.name || field.propertyName;
     if (!key) return false;
+    if (ALWAYS_EXCLUDED_FIELDS.has(key)) return false;
     if (props.excluded.includes(key)) return false;
     if (["isSystem", "isRootAdmin"].includes(key)) return false;
     return true;

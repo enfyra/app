@@ -9,11 +9,11 @@
     <template #body>
       <div class="space-y-4">
         <div class="text-xs text-[var(--text-tertiary)]">
-          Runs <span class="font-mono">connectionHandlerScript</span> via <span class="font-mono">/admin/test/run</span> (<span class="font-mono">kind: "websocket_connection"</span>).
+          Runs <span class="font-mono">sourceCode</span> via <span class="font-mono">/admin/test/run</span> (<span class="font-mono">kind: "websocket_connection"</span>).
         </div>
 
         <div v-if="!canRun" class="text-xs text-amber-700 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 p-2">
-          Please fill <span class="font-mono">connectionHandlerScript</span> to enable testing.
+          Please fill <span class="font-mono">sourceCode</span> to enable testing.
         </div>
 
         <div>
@@ -79,6 +79,7 @@ const props = defineProps<{
   modelValue: boolean;
   gatewayPath?: string;
   script: string;
+  scriptLanguage?: string;
   timeoutMs?: number;
 }>();
 
@@ -145,6 +146,7 @@ async function run() {
         timeoutMs,
         payload,
         script: String(props.script || '').trim(),
+        scriptLanguage: props.scriptLanguage || 'typescript',
       },
     });
     if (error.value) {
