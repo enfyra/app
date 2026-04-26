@@ -3,6 +3,8 @@ import type { MenuDefinition } from '~/types';
 
 const notify = useNotify();
 const { confirm } = useConfirm();
+const route = useRoute();
+const router = useRouter();
 const tableName = "menu_definition";
 const { generateEmptyForm } = useSchema(tableName);
 const { schemas } = useSchema();
@@ -45,6 +47,154 @@ const selectedMenu = ref<MenuDefinition | null>(null);
 const menuItemEditorRef = ref();
 const showExtensionDrawer = ref(false);
 const selectedMenuForExtension = ref<MenuDefinition | null>(null);
+let isSwitchingDrawerFromAction = false;
+
+function queryValue(value: unknown): string | null {
+  if (Array.isArray(value)) {
+    return value[0] ? String(value[0]) : null;
+  }
+
+  return value == null ? null : String(value);
+}
+
+function createChildMenuDraft(parentMenu: MenuDefinition): MenuDefinition {
+  const newMenu = generateEmptyForm();
+  newMenu.type = 'Menu';
+  const parentId = getId(parentMenu);
+  newMenu.parent = parentId ? { id: parentId } : null;
+  newMenu.path = buildPathFromParentChain(parentMenu, menus.value);
+  return newMenu as MenuDefinition;
+}
+
+function getDrawerBaseQuery() {
+  const query = { ...route.query };
+  delete query.menuDrawer;
+  delete query.menuId;
+  delete query.parentMenuId;
+  delete query.extensionDrawer;
+  delete query.extensionMenuId;
+  return query;
+}
+
+function findMenuById(id: unknown) {
+  const targetId = queryValue(id);
+  if (!targetId) return null;
+  return menus.value.find((menu) => String(getId(menu)) === targetId) || null;
+}
+
+async function replaceDrawerQuery(query: Record<string, any>) {
+  await router.replace({ query: { ...getDrawerBaseQuery(), ...query } });
+}
+
+async function clearDrawerQuery() {
+  await router.replace({ query: getDrawerBaseQuery() });
+}
+
+async function openCreateMenuDrawer() {
+  isSwitchingDrawerFromAction = true;
+  selectedMenu.value = null;
+  showExtensionDrawer.value = false;
+  selectedMenuForExtension.value = null;
+  showEditModal.value = true;
+  try {
+    await replaceDrawerQuery({ menuDrawer: 'create' });
+  } finally {
+    await nextTick();
+    isSwitchingDrawerFromAction = false;
+  }
+}
+
+async function openEditMenuDrawer(menu: MenuDefinition) {
+  const menuId = getId(menu);
+  isSwitchingDrawerFromAction = true;
+  selectedMenu.value = menu;
+  showExtensionDrawer.value = false;
+  selectedMenuForExtension.value = null;
+  showEditModal.value = true;
+  try {
+    await replaceDrawerQuery({ menuDrawer: 'edit', menuId: menuId ? String(menuId) : undefined });
+  } finally {
+    await nextTick();
+    isSwitchingDrawerFromAction = false;
+  }
+}
+
+async function openChildMenuDrawer(parentMenu: MenuDefinition) {
+  const parentId = getId(parentMenu);
+  isSwitchingDrawerFromAction = true;
+  selectedMenu.value = createChildMenuDraft(parentMenu);
+  showExtensionDrawer.value = false;
+  selectedMenuForExtension.value = null;
+  showEditModal.value = true;
+  try {
+    await replaceDrawerQuery({
+      menuDrawer: 'create',
+      parentMenuId: parentId ? String(parentId) : undefined,
+    });
+  } finally {
+    await nextTick();
+    isSwitchingDrawerFromAction = false;
+  }
+}
+
+async function openExtensionDrawer(menu: MenuDefinition) {
+  const menuId = getId(menu);
+  isSwitchingDrawerFromAction = true;
+  selectedMenuForExtension.value = menu;
+  showEditModal.value = false;
+  selectedMenu.value = null;
+  showExtensionDrawer.value = true;
+  try {
+    await replaceDrawerQuery({
+      extensionDrawer: 'edit',
+      extensionMenuId: menuId ? String(menuId) : undefined,
+    });
+  } finally {
+    await nextTick();
+    isSwitchingDrawerFromAction = false;
+  }
+}
+
+function syncDrawersFromQuery() {
+  const menuDrawer = queryValue(route.query.menuDrawer);
+  const extensionDrawer = queryValue(route.query.extensionDrawer);
+
+  if (menuDrawer === 'create') {
+    const parentMenuId = queryValue(route.query.parentMenuId);
+    const parentMenu = findMenuById(parentMenuId);
+    if (parentMenuId && !parentMenu) return;
+    selectedMenu.value = parentMenu ? createChildMenuDraft(parentMenu) : null;
+    showExtensionDrawer.value = false;
+    selectedMenuForExtension.value = null;
+    showEditModal.value = true;
+    return;
+  }
+
+  if (menuDrawer === 'edit') {
+    const menu = findMenuById(route.query.menuId);
+    if (!menu) return;
+    selectedMenu.value = menu;
+    showExtensionDrawer.value = false;
+    selectedMenuForExtension.value = null;
+    showEditModal.value = true;
+    return;
+  }
+
+  if (extensionDrawer === 'edit') {
+    const menu = findMenuById(route.query.extensionMenuId);
+    if (!menu) return;
+    selectedMenuForExtension.value = menu;
+    showEditModal.value = false;
+    selectedMenu.value = null;
+    showExtensionDrawer.value = true;
+    return;
+  }
+
+  showEditModal.value = false;
+  selectedMenu.value = null;
+  showExtensionDrawer.value = false;
+  selectedMenuForExtension.value = null;
+}
 
 useHeaderActionRegistry([
   {
@@ -67,8 +217,7 @@ useHeaderActionRegistry([
           return;
         }
       }
-      selectedMenu.value = null;
-      showEditModal.value = true;
+      await openCreateMenuDrawer();
     },
     permission: {
       and: [
@@ -93,9 +242,8 @@ async function refreshMenus() {
   }
 }
 
-function handleEditMenu(menu: MenuDefinition) {
-  selectedMenu.value = menu;
-  showEditModal.value = true;
+async function handleEditMenu(menu: MenuDefinition) {
+  await openEditMenuDrawer(menu);
 }
 
 function buildPathFromParentChain(menu: MenuDefinition, allMenus: MenuDefinition[]): string {
@@ -129,20 +277,8 @@ function buildPathFromParentChain(menu: MenuDefinition, allMenus: MenuDefinition
   return '/';
 }
 
-function handleAddChildMenu(parentMenu: MenuDefinition) {
-  const newMenu = generateEmptyForm();
-  newMenu.type = 'Menu';
-  const parentId = getId(parentMenu);
-  newMenu.parent = parentId ? { id: parentId } : null;
-  
-  const basePath = buildPathFromParentChain(parentMenu, menus.value);
-  console.log('handleAddChildMenu - parentMenu:', parentMenu);
-  console.log('handleAddChildMenu - basePath:', basePath);
-  newMenu.path = basePath;
-  console.log('handleAddChildMenu - newMenu:', newMenu);
-  
-  selectedMenu.value = newMenu as MenuDefinition;
-  showEditModal.value = true;
+async function handleAddChildMenu(parentMenu: MenuDefinition) {
+  await openChildMenuDrawer(parentMenu);
 }
 
 async function handleAddStandaloneMenu() {
@@ -158,16 +294,14 @@ async function handleAddStandaloneMenu() {
       return;
     }
   }
-  const newMenu = generateEmptyForm();
-  newMenu.type = 'Menu';
-  selectedMenu.value = newMenu as MenuDefinition;
-  showEditModal.value = true;
+  await openCreateMenuDrawer();
 }
 
 async function handleSaveMenu() {
   await refreshMenus();
   showEditModal.value = false;
   selectedMenu.value = null;
+  await clearDrawerQuery();
 }
 
 async function toggleEnabled(payload: { menu: MenuDefinition; enabled: boolean }) {
@@ -256,15 +390,15 @@ async function deleteMenu(menuItem: MenuDefinition) {
   }
 }
 
-function handleEditExtension(menu: MenuDefinition) {
-  selectedMenuForExtension.value = menu;
-  showExtensionDrawer.value = true;
+async function handleEditExtension(menu: MenuDefinition) {
+  await openExtensionDrawer(menu);
 }
 
 async function handleSaveExtension() {
   await refreshMenus();
   showExtensionDrawer.value = false;
   selectedMenuForExtension.value = null;
+  await clearDrawerQuery();
 }
 
 async function handleDeleteExtension(menu: MenuDefinition) {
@@ -431,6 +565,28 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
     isDndUpdating.value = false;
   }
 }
+
+watch(
+  () => [route.query.menuDrawer, route.query.menuId, route.query.parentMenuId, route.query.extensionDrawer, route.query.extensionMenuId, menus.value.length],
+  () => syncDrawersFromQuery(),
+  { immediate: true }
+);
+
+watch(showEditModal, async (isOpen, wasOpen) => {
+  if (isSwitchingDrawerFromAction) return;
+  if (!isOpen && wasOpen && route.query.menuDrawer) {
+    selectedMenu.value = null;
+    await clearDrawerQuery();
+  }
+});
+
+watch(showExtensionDrawer, async (isOpen, wasOpen) => {
+  if (isSwitchingDrawerFromAction) return;
+  if (!isOpen && wasOpen && route.query.extensionDrawer) {
+    selectedMenuForExtension.value = null;
+    await clearDrawerQuery();
+  }
+});
 
 </script>
 

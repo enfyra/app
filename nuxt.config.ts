@@ -1,9 +1,11 @@
-import tailwindcss from "@tailwindcss/vite";
-
 export default defineNuxtConfig({
   srcDir: 'app',
   compatibilityDate: "2025-05-15",
   devtools: { enabled: true },
+  sourcemap: {
+    client: false,
+    server: false,
+  },
   devServer: {
     port: parseInt(process.env.PORT || "3000"),
   },
@@ -78,13 +80,21 @@ export default defineNuxtConfig({
     "~/app": "./app",
   },
   vite: {
-    plugins: [tailwindcss()],
     optimizeDeps: {
       exclude: ['console-browserify'],
     },
     build: {
+      chunkSizeWarningLimit: 4000,
+      sourcemap: false,
       rollupOptions: {
         external: ['util', 'assert'],
+        onwarn(warning, warn) {
+          if (warning.message.includes('Sourcemap is likely to be incorrect')) {
+            return;
+          }
+
+          warn(warning);
+        },
       },
     },
   },
