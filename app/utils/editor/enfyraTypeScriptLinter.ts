@@ -55,10 +55,23 @@ interface Number {}
 interface Object {}
 interface RegExp {}
 interface String {}
-interface Promise<T> {}
+interface PromiseLike<T> {
+  then<TResult1 = T, TResult2 = never>(
+    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+  ): PromiseLike<TResult1 | TResult2>;
+}
+interface Promise<T> extends PromiseLike<T> {}
+interface PromiseConstructor {
+  new <T>(executor: (resolve: (value: T | Promise<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
+  resolve<T>(value: T | Promise<T>): Promise<T>;
+}
+declare const Promise: PromiseConstructor;
 type PropertyKey = string | number | symbol;
 type Record<K extends PropertyKey, T> = { [P in K]: T };
 type Partial<T> = { [P in keyof T]?: T[P] };
+type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any;
+type Awaited<T> = T extends Promise<infer U> ? U : T;
 type EnfyraRepository = {
   find(args?: any): Promise<any[]>;
   findOne(args?: any): Promise<any>;
@@ -167,7 +180,7 @@ function loadTypeScript() {
   return typescriptModulePromise;
 }
 
-function transformEnfyraCode(source: string): TransformedCode {
+export function transformEnfyraCode(source: string): TransformedCode {
   const output: string[] = [];
   const sourceMap: number[] = [];
   const len = source.length;
@@ -361,10 +374,7 @@ export async function lintEnfyraScript(
     moduleResolution: ts.ModuleResolutionKind.NodeJs,
   };
 
-  const sourceFiles = new Map<string, string>([
-    [fileName, virtualSource],
-    [libName, libSource],
-  ]);
+  const sourceFiles = new Map<string, string>([[fileName, virtualSource]]);
 
   const host: import('typescript').CompilerHost = {
     fileExists: (name) => sourceFiles.has(name),
@@ -382,7 +392,7 @@ export async function lintEnfyraScript(
     writeFile: () => {},
   };
 
-  const program = ts.createProgram([fileName, libName], compilerOptions, host);
+  const program = ts.createProgram([fileName], compilerOptions, host);
   const diagnostics = ts.getPreEmitDiagnostics(program, program.getSourceFile(fileName));
 
   return diagnostics
@@ -401,6 +411,181 @@ export async function lintEnfyraScript(
       };
     })
     .filter((diagnostic): diagnostic is Diagnostic => Boolean(diagnostic));
+}
+
+export async function validateEnfyraObjectReturnScript(
+  source: string,
+  language: 'javascript' | 'typescript' = 'typescript',
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const trimmed = source.trim();
+  if (!trimmed) return { ok: true };
+
+  const ts = await loadTypeScript();
+  const transformed = transformEnfyraCode(source);
+  const fileName =
+    language === 'typescript' ? 'enfyra-object-script.ts' : 'enfyra-object-script.js';
+  const libName = 'enfyra-lib.d.ts';
+  const prefix = `${libSource}
+type __EnfyraPlainObject = { [key: string]: any } & { length?: never };
+async function __enfyra_runtime__(): Promise<__EnfyraPlainObject> {
+`;
+  const suffix = `
+}
+`;
+  const virtualSource = `${prefix}${transformed.code}${suffix}`;
+
+  const compilerOptions: import('typescript').CompilerOptions = {
+    allowJs: language === 'javascript',
+    checkJs: language === 'javascript',
+    noEmit: true,
+    noLib: true,
+    noImplicitAny: false,
+    skipLibCheck: true,
+    strict: true,
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeJs,
+  };
+
+  const sourceFiles = new Map<string, string>([[fileName, virtualSource]]);
+
+  const host: import('typescript').CompilerHost = {
+    fileExists: (name) => sourceFiles.has(name),
+    getCanonicalFileName: (name) => name,
+    getCurrentDirectory: () => '',
+    getDefaultLibFileName: () => libName,
+    getDirectories: () => [],
+    getNewLine: () => '\n',
+    getSourceFile: (name, languageVersion) => {
+      const text = sourceFiles.get(name);
+      return text === undefined ? undefined : ts.createSourceFile(name, text, languageVersion, true);
+    },
+    readFile: (name) => sourceFiles.get(name),
+    useCaseSensitiveFileNames: () => true,
+    writeFile: () => {},
+  };
+
+  const program = ts.createProgram([fileName], compilerOptions, host);
+  const diagnostics = ts.getPreEmitDiagnostics(program, program.getSourceFile(fileName));
+  const error = diagnostics.find((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error);
+
+  if (!error) return { ok: true };
+
+  return {
+    ok: false,
+    message: ts.flattenDiagnosticMessageText(error.messageText, '\n'),
+  };
+}
+
+export async function validateEnfyraRequiredReturnScript(
+  source: string,
+  language: 'javascript' | 'typescript' = 'typescript',
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const trimmed = source.trim();
+  if (!trimmed) {
+    return { ok: false, message: 'Script must return a value.' };
+  }
+
+  const ts = await loadTypeScript();
+  const transformed = transformEnfyraCode(source);
+  const fileName =
+    language === 'typescript' ? 'enfyra-return-script.ts' : 'enfyra-return-script.js';
+  const libName = 'enfyra-lib.d.ts';
+  const prefix = `${libSource}
+type __EnfyraReturnValue = {} | null;
+async function __enfyra_runtime__(): Promise<__EnfyraReturnValue> {
+`;
+  const suffix = `
+}
+`;
+  const virtualSource = `${prefix}${transformed.code}${suffix}`;
+
+  const compilerOptions: import('typescript').CompilerOptions = {
+    allowJs: language === 'javascript',
+    checkJs: language === 'javascript',
+    noEmit: true,
+    noLib: true,
+    noImplicitAny: false,
+    noImplicitReturns: true,
+    skipLibCheck: true,
+    strict: true,
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ESNext,
+    moduleResolution: ts.ModuleResolutionKind.NodeJs,
+  };
+
+  const sourceFiles = new Map<string, string>([[fileName, virtualSource]]);
+
+  const host: import('typescript').CompilerHost = {
+    fileExists: (name) => sourceFiles.has(name),
+    getCanonicalFileName: (name) => name,
+    getCurrentDirectory: () => '',
+    getDefaultLibFileName: () => libName,
+    getDirectories: () => [],
+    getNewLine: () => '\n',
+    getSourceFile: (name, languageVersion) => {
+      const text = sourceFiles.get(name);
+      return text === undefined ? undefined : ts.createSourceFile(name, text, languageVersion, true);
+    },
+    readFile: (name) => sourceFiles.get(name),
+    useCaseSensitiveFileNames: () => true,
+    writeFile: () => {},
+  };
+
+  const program = ts.createProgram([fileName], compilerOptions, host);
+  const diagnostics = ts.getPreEmitDiagnostics(program, program.getSourceFile(fileName));
+  const error = diagnostics.find((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error);
+
+  if (!error) return { ok: true };
+
+  return {
+    ok: false,
+    message: ts.flattenDiagnosticMessageText(error.messageText, '\n'),
+  };
+}
+
+export async function validateEnfyraNoReturnScript(
+  source: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const trimmed = source.trim();
+  if (!trimmed) return { ok: true };
+
+  const ts = await loadTypeScript();
+  const transformed = transformEnfyraCode(source);
+  const sourceFile = ts.createSourceFile(
+    'enfyra-no-return-script.ts',
+    transformed.code,
+    ts.ScriptTarget.ES2022,
+    true,
+    ts.ScriptKind.TS,
+  );
+
+  const hasReturn = (node: import('typescript').Node): boolean => {
+    if (
+      ts.isFunctionDeclaration(node) ||
+      ts.isFunctionExpression(node) ||
+      ts.isArrowFunction(node) ||
+      ts.isMethodDeclaration(node) ||
+      ts.isConstructorDeclaration(node) ||
+      ts.isGetAccessorDeclaration(node) ||
+      ts.isSetAccessorDeclaration(node)
+    ) {
+      return false;
+    }
+
+    if (ts.isReturnStatement(node)) {
+      return true;
+    }
+
+    return node.getChildren(sourceFile).some(hasReturn);
+  };
+
+  if (!sourceFile.statements.some(hasReturn)) return { ok: true };
+
+  return {
+    ok: false,
+    message: 'Post-hook scripts must update @DATA/$ctx.$data instead of returning a value.',
+  };
 }
 
 export async function lintEnfyraTypeScript(source: string): Promise<Diagnostic[]> {
