@@ -1,5 +1,6 @@
 import { defineComponent, h } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { describe, expect, it } from 'vitest'
 import CommonDrawer from '~/components/common/Drawer.vue'
 import CommonModal from '~/components/common/Modal.vue'
 

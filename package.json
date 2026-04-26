@@ -99,11 +99,13 @@
     "@types/lodash": "^4.17.20",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.10.1",
+    "@vue/language-core": "^3.2.7",
     "@vue/test-utils": "2.4.6",
     "happy-dom": "^20.9.0",
     "tailwindcss": "^4.1.10",
     "typescript": "^5.8.3",
     "vitest": "4.0.7",
+    "vue-tsc": "^3.2.7",
     "yarn": "^1.22.22"
   }
 }

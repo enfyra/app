@@ -144,7 +144,7 @@ const fields = computed(() => {
   }
 });
 
-const scriptLanguage = computed(() => 'typescript');
+const scriptLanguage = computed<'typescript'>(() => 'typescript');
 
 const sourceCode = computed(() => fields.value.sourceCode ?? fields.value.code ?? '');
 

@@ -72,16 +72,55 @@ type Record<K extends PropertyKey, T> = { [P in K]: T };
 type Partial<T> = { [P in keyof T]?: T[P] };
 type ReturnType<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : any;
 type Awaited<T> = T extends Promise<infer U> ? U : T;
-type EnfyraRepository = {
-  find(args?: any): Promise<any[]>;
-  findOne(args?: any): Promise<any>;
-  create(args?: any): Promise<any>;
-  update(args?: any): Promise<any>;
-  delete(args?: any): Promise<any>;
-  count(args?: any): Promise<number>;
-  aggregate(args?: any): Promise<any>;
+type EnfyraQueryResult<T = any> = {
+  data: T[];
+  meta?: {
+    totalCount?: number;
+    total_count?: number;
+    filterCount?: number;
+    filter_count?: number;
+    [key: string]: any;
+  };
   [key: string]: any;
 };
+type EnfyraFindArgs = {
+  filter?: any;
+  where?: any;
+  fields?: string | string[];
+  limit?: number;
+  sort?: string;
+  meta?: 'filterCount' | 'totalCount' | '*' | string | string[];
+  [key: string]: any;
+};
+type EnfyraCreateArgs = {
+  data: any;
+  fields?: string | string[];
+  [key: string]: any;
+};
+type EnfyraUpdateArgs = {
+  id: string | number;
+  data: any;
+  fields?: string | string[];
+  [key: string]: any;
+};
+type EnfyraDeleteArgs = {
+  id: string | number;
+  [key: string]: any;
+};
+type EnfyraDeleteResult = {
+  message: string;
+  statusCode: number;
+};
+type EnfyraRepository = {
+  find(args?: EnfyraFindArgs): Promise<EnfyraQueryResult>;
+  create(args: EnfyraCreateArgs): Promise<EnfyraQueryResult>;
+  update(args: EnfyraUpdateArgs): Promise<EnfyraQueryResult>;
+  delete(args: EnfyraDeleteArgs): Promise<EnfyraDeleteResult>;
+};
+type EnfyraRepos = {
+  main: EnfyraRepository;
+  secure: Record<string, EnfyraRepository>;
+} & Record<string, EnfyraRepository>;
 type EnfyraThrow = {
   (statusCode: number, message?: string): never;
   400(message: string): never;
@@ -108,7 +147,7 @@ type EnfyraContext = {
   $uploadedFile: any;
   $pkgs: Record<string, any>;
   $cache: Record<string, any>;
-  $repos: Record<string, EnfyraRepository>;
+  $repos: EnfyraRepos;
   $helpers: Record<string, any> & { $fetch: (...args: any[]) => Promise<any> };
   $logs: (...args: any[]) => any;
   $socket: Record<string, any>;
@@ -604,7 +643,9 @@ function parseVueScriptAttrs(attrs: string): Record<string, string | true> {
   const attrRegex = /([A-Za-z_:][-A-Za-z0-9_:.]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
   let match: RegExpExecArray | null;
   while ((match = attrRegex.exec(attrs)) !== null) {
-    result[match[1]] = match[2] ?? match[3] ?? match[4] ?? true;
+    const name = match[1];
+    if (!name) continue;
+    result[name] = match[2] ?? match[3] ?? match[4] ?? true;
   }
   return result;
 }

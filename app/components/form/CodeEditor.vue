@@ -195,9 +195,9 @@ watch(currentHeight, () => {
   }
 });
 
-let resizeFinalizeTimeout: ReturnType<typeof setTimeout> | null = null;
-let resizeRemountTimeout: ReturnType<typeof setTimeout> | null = null;
-let initialMountTimeout: ReturnType<typeof setTimeout> | null = null;
+let resizeFinalizeTimeout: number | null = null;
+let resizeRemountTimeout: number | null = null;
+let initialMountTimeout: number | null = null;
 
 function applyGuttersBorder() {
   if (!editorView.value) return;
@@ -209,11 +209,11 @@ function applyGuttersBorder() {
 
 function finishResizeSync() {
   if (resizeFinalizeTimeout) {
-    clearTimeout(resizeFinalizeTimeout);
+    window.clearTimeout(resizeFinalizeTimeout);
     resizeFinalizeTimeout = null;
   }
   if (resizeRemountTimeout) {
-    clearTimeout(resizeRemountTimeout);
+    window.clearTimeout(resizeRemountTimeout);
     resizeRemountTimeout = null;
   }
   resizeRemountTimeout = window.setTimeout(() => {
@@ -229,8 +229,8 @@ function finishResizeSync() {
 }
 
 function scheduleResizeFinishFallback() {
-  if (resizeFinalizeTimeout) clearTimeout(resizeFinalizeTimeout);
-  resizeFinalizeTimeout = setTimeout(() => {
+  if (resizeFinalizeTimeout) window.clearTimeout(resizeFinalizeTimeout);
+  resizeFinalizeTimeout = window.setTimeout(() => {
     finishResizeSync();
   }, 380);
 }
@@ -275,13 +275,13 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (resizeFinalizeTimeout) {
-    clearTimeout(resizeFinalizeTimeout);
+    window.clearTimeout(resizeFinalizeTimeout);
   }
   if (resizeRemountTimeout) {
-    clearTimeout(resizeRemountTimeout);
+    window.clearTimeout(resizeRemountTimeout);
   }
   if (initialMountTimeout) {
-    clearTimeout(initialMountTimeout);
+    window.clearTimeout(initialMountTimeout);
   }
   destroyEditor();
   document.removeEventListener("mousemove", handleMouseMove);
