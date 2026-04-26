@@ -14,6 +14,7 @@
               sourceCode: {
                 type: 'code',
                 height: '400px',
+                testRun: false,
                 label: 'Connection Handler Script',
                 description: 'JavaScript or TypeScript source code to execute when client connects'
               },
