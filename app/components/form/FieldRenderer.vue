@@ -107,6 +107,9 @@ function getFinalType(key: string): string {
 function getCodeLanguage(key: string): "javascript" | "typescript" | "vue" | "json" | "html" {
   const config = getFieldConfig(key);
   if (config.language) return config.language;
+  if (key === "sourceCode" && props.formData.scriptLanguage === "javascript") {
+    return "javascript";
+  }
   return "typescript";
 }
 

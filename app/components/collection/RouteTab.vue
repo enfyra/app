@@ -923,6 +923,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       v-model:errors="editHandlerErrors"
       :loading="updateHandlerLoading"
       :allowed-methods="availableMethodStrings"
+      :lock-method="true"
       @save="updateHandler"
       @cancel="handleCancelEditHandler"
     />
@@ -935,6 +936,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       :hook-type="editHookType"
       :route-id="routeId"
       :allowed-methods="availableMethodStrings"
+      :lock-method="true"
       @save="updateHook"
       @cancel="handleCancelEditHook"
       @delete="deleteHook({ ...editHookForm, _hookType: editHookType, [getIdFieldName()]: editingHookId })"

@@ -205,7 +205,7 @@ const emit = defineEmits<{
   virtualFieldEmit: [payload: FormEditorVirtualEmitPayload];
 }>();
 
-const ALWAYS_EXCLUDED_FIELDS = new Set(["scriptLanguage", "compiledCode"]);
+const ALWAYS_EXCLUDED_FIELDS = new Set(["compiledCode"]);
 
 const { definition, fieldMap: schemaColumnMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
   props.tableName
