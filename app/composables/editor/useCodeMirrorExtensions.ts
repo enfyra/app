@@ -1,4 +1,5 @@
 import { ENFYRA_COMPLETIONS, ENFYRA_METHOD_COMPLETIONS, VUE_COMPLETIONS, VUE_COMPONENT_COMPLETIONS } from '~/utils/editor-completions.constants';
+import { lintEnfyraScript } from '~/utils/editor/enfyraTypeScriptLinter';
 
 export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
 
@@ -248,6 +249,8 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
         return m.vue();
       case "html":
         return m.html();
+      case "typescript":
+        return m.javascript({ jsx: true, typescript: true });
       case "javascript":
       default:
         return m.javascript({ jsx: true, typescript: false });
@@ -258,7 +261,14 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     const m = getModules()
     if (!m) return () => []
     return m.linter(async (view: any) => {
-      const diagnostics: any[] = [];
+      let diagnostics: any[] = [];
+
+      if (language === 'typescript' || language === 'javascript') {
+        diagnostics = await lintEnfyraScript(
+          view.state.doc.toString(),
+          language,
+        );
+      }
       
       if (onDiagnostics) {
         onDiagnostics(diagnostics);

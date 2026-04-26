@@ -11,12 +11,11 @@
             :table-name="tableName"
             :excluded="['createdAt', 'updatedAt', 'isSystem', 'events']"
             :field-map="{
-              connectionHandlerScript: {
+              sourceCode: {
                 type: 'code',
-                language: 'javascript',
                 height: '400px',
                 label: 'Connection Handler Script',
-                description: 'JavaScript code to execute when client connects'
+                description: 'JavaScript or TypeScript source code to execute when client connects'
               },
               connectionHandlerTimeout: {
                 type: 'number',
@@ -58,7 +57,8 @@
     <WebsocketConnectionHandlerTestModal
       v-model="showConnTestModal"
       :gateway-path="String(form?.path || gateway?.path || '')"
-      :script="String(form?.connectionHandlerScript || '')"
+      :script="String(form?.sourceCode || '')"
+      :script-language="String(form?.scriptLanguage || 'typescript')"
       :timeout-ms="Number(form?.connectionHandlerTimeout || 5000)"
     />
 
@@ -296,7 +296,7 @@ useSubHeaderActionRegistry([
     onClick: () => {
       showConnTestModal.value = true;
     },
-    disabled: computed(() => !String(form.value?.connectionHandlerScript || '').trim()),
+    disabled: computed(() => !String(form.value?.sourceCode || '').trim()),
   },
 ]);
 

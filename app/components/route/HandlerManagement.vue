@@ -59,7 +59,7 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
                 <h4 class="text-sm font-semibold text-[var(--text-primary)]">
-                  {{ handler.name || handler.logic?.substring(0, 30) || 'Unnamed Handler' }}
+                  {{ handler.name || handler.sourceCode?.substring(0, 30) || handler.logic?.substring(0, 30) || 'Unnamed Handler' }}
                 </h4>
                 <UBadge
                   v-if="handler._isDefault"
@@ -142,4 +142,3 @@ defineEmits<{
   delete: [handler: any];
 }>();
 </script>
-

@@ -8,12 +8,11 @@
             :table-name="tableName"
             :errors="createErrors"
             :field-map="{
-              connectionHandlerScript: {
+              sourceCode: {
                 type: 'code',
-                language: 'javascript',
                 height: '400px',
                 label: 'Connection Handler Script',
-                description: 'JavaScript code to execute when client connects'
+                description: 'JavaScript or TypeScript source code to execute when client connects'
               },
               connectionHandlerTimeout: {
                 type: 'number',
@@ -32,7 +31,8 @@
     <WebsocketConnectionHandlerTestModal
       v-model="showConnTestModal"
       :gateway-path="String(createForm?.path || '')"
-      :script="String(createForm?.connectionHandlerScript || '')"
+      :script="String(createForm?.sourceCode || '')"
+      :script-language="String(createForm?.scriptLanguage || 'typescript')"
       :timeout-ms="Number(createForm?.connectionHandlerTimeout || 5000)"
     />
 
@@ -99,7 +99,7 @@ useSubHeaderActionRegistry([
     onClick: () => {
       showConnTestModal.value = true;
     },
-    disabled: computed(() => !String(createForm.value?.connectionHandlerScript || '').trim()),
+    disabled: computed(() => !String(createForm.value?.sourceCode || '').trim()),
   },
 ]);
 

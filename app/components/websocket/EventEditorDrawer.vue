@@ -41,11 +41,13 @@ const rawTestEventName =
 const testEventName = computed(() => String(rawTestEventName.value || '').trim());
 const rawTestScript = computed(() => {
   const direct =
+    form.value?.sourceCode ??
     form.value?.handlerScript ??
     (form.value as any)?.handler_script ??
     (form.value as any)?.script ??
     (form.value as any)?.logic ??
     (form.value as any)?.code ??
+    props.event?.sourceCode ??
     props.event?.handlerScript ??
     props.event?.script ??
     props.event?.logic ??
@@ -253,6 +255,7 @@ async function handleTest() {
         timeoutMs,
         payload,
         script,
+        scriptLanguage: form.value?.scriptLanguage || 'typescript',
       },
     });
 
@@ -345,12 +348,12 @@ async function handleTest() {
             </div>
 
             <div class="text-xs text-[var(--text-tertiary)]">
-              Runs the current <span class="font-mono">handlerScript</span> via <span class="font-mono">/admin/test/run</span> and returns result, logs, and emitted events.
+              Runs the current <span class="font-mono">sourceCode</span> via <span class="font-mono">/admin/test/run</span> and returns result, logs, and emitted events.
             </div>
 
             <div v-if="!canRunTest" class="text-xs text-amber-700 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 p-2">
               <span v-if="!testEventName">Please fill <span class="font-mono">eventName</span> above to enable testing.</span>
-              <span v-else>Please fill <span class="font-mono">handlerScript</span> above to enable testing.</span>
+              <span v-else>Please fill <span class="font-mono">sourceCode</span> above to enable testing.</span>
             </div>
 
             <div>

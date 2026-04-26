@@ -116,7 +116,7 @@ const fieldMap = computed(() => ({
       ...(props.allowedMethods ? { allowedMethods: props.allowedMethods } : {}),
     },
   },
-  logic: { description: 'Must return a value. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.' },
+  sourceCode: { description: 'Must return a value. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.' },
 }));
 
 watch(() => props.modelValue, async (isOpen) => {
