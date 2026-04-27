@@ -505,6 +505,7 @@ watch(stepDrawerOpen, (isOpen) => {
   } else {
     const q = { ...route.query };
     delete q.editStep;
+    delete q.editStepKey;
     router.replace({ query: q });
   }
 });
@@ -531,7 +532,8 @@ function getQueryValue(value: unknown): string | undefined {
 
 async function syncDrawersFromQuery(q: typeof route.query) {
   const editStep = getQueryValue(q.editStep);
-  if (editStep) {
+  const editStepKey = getQueryValue(q.editStepKey);
+  if (editStep || editStepKey) {
     if (editStep === 'new') {
       if (!stepDrawerOpen.value || editingStepId.value !== null) {
         stepDrawerUpdating.value = true;
@@ -539,8 +541,13 @@ async function syncDrawersFromQuery(q: typeof route.query) {
         nextTick(() => { stepDrawerUpdating.value = false; });
       }
     } else {
-      const step = steps.value.find((item: any) => String(getId(item)) === editStep);
-      if (step && (!stepDrawerOpen.value || String(editingStepId.value) !== editStep)) {
+      const step = steps.value.find((item: any) =>
+        editStepKey
+          ? String(item.key) === editStepKey
+          : String(getId(item)) === editStep,
+      );
+      const stepId = step ? String(getId(step)) : undefined;
+      if (step && (!stepDrawerOpen.value || String(editingStepId.value) !== stepId)) {
         stepDrawerUpdating.value = true;
         onSelectStep(step);
         nextTick(() => { stepDrawerUpdating.value = false; });
@@ -549,6 +556,9 @@ async function syncDrawersFromQuery(q: typeof route.query) {
   } else if (stepDrawerOpen.value) {
     stepDrawerUpdating.value = true;
     stepDrawerOpen.value = false;
+    const nextQuery = { ...route.query };
+    delete nextQuery.editStepKey;
+    if ('editStepKey' in route.query) router.replace({ query: nextQuery });
     nextTick(() => { stepDrawerUpdating.value = false; });
   }
 

@@ -49,7 +49,7 @@ const adminTools = computed(() => {
 </script>
 
 <template>
-  <div class="max-w-[1000px] space-y-6 px-4 pb-10 sm:px-6 lg:px-0">
+  <div class="max-w-[1000px] space-y-6 lg:px-0">
     <div v-if="adminTools.length > 0" class="grid gap-3 sm:grid-cols-2">
       <NuxtLink
         v-for="tool in adminTools"
