@@ -11,25 +11,25 @@ defineOptions({
 
 const props = withDefaults(
   defineProps<{
-                      modelValue: Record<string, any>;
-                      errors: Record<string, string>;
-                      tableName: string;
-                      excluded?: string[];
-                      includes?: string[];
-                      fieldMap?: Record<string, any>;
-                      loading?: boolean;
-                      mode?: 'create' | 'update';
-                      layout?: 'stack' | 'grid';
-                      currentRecordId?: string | number | null;
-                      uniqueCheckMode?: 'api' | 'local';
-                      uniqueLocalRecords?: any[];
-                      uniqueLocalSelfKey?: string | number | null;
-                      sortBy?: string;
-                      sortOrder?: 'asc' | 'desc';
-                      fieldPositions?: Record<string, number>;
-                      virtualFields?: FormEditorVirtualField[];
-                      sections?: FormEditorSection[];
-                    }>(),
+      modelValue: Record<string, any>;
+      errors: Record<string, string>;
+      tableName: string;
+      excluded?: string[];
+      includes?: string[];
+      fieldMap?: Record<string, any>;
+      loading?: boolean;
+      mode?: 'create' | 'update';
+      layout?: 'stack' | 'grid';
+      currentRecordId?: string | number | null;
+      uniqueCheckMode?: 'api' | 'local';
+      uniqueLocalRecords?: any[];
+      uniqueLocalSelfKey?: string | number | null;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+      fieldPositions?: Record<string, number>;
+      virtualFields?: FormEditorVirtualField[];
+      sections?: FormEditorSection[];
+    }>(),
   {
     mode: 'update',
     layout: 'stack',

@@ -144,7 +144,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-[1000px] space-y-6 px-4 pb-10 sm:px-6 lg:px-0">
+  <div class="max-w-[1000px] space-y-6 pb-10 lg:px-0">
     <div class="surface-card overflow-hidden rounded-2xl">
       <div class="relative px-6 py-8 sm:px-8">
         <CommonLoadingState

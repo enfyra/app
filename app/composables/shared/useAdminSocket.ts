@@ -1,6 +1,7 @@
 import { io, type Socket } from 'socket.io-client';
 
 import { ENFYRA_SOCKET_AUTH_ERROR } from '~/constants/enfyra';
+import type { RuntimeMetricsPayload } from '~/types/runtime-monitor';
 
 type ReloadPayload = {
   flow: string;
@@ -39,6 +40,8 @@ let socket: Socket | null = null;
 
 export const activeReloads = ref<ActiveReload[]>([]);
 export const reloadDoneCountdown = ref(0);
+export const runtimeMetricsByInstance = ref<Record<string, RuntimeMetricsPayload>>({});
+export const runtimeMetricsUpdatedAt = ref<number | null>(null);
 
 const isReloadingRef = computed(() => activeReloads.value.length > 0);
 const showReloadBannerRef = computed(
@@ -173,6 +176,16 @@ export function useAdminSocket() {
       }
     });
 
+    socket.on('$system:runtime:metrics', (data: RuntimeMetricsPayload) => {
+      const id = data?.instance?.id;
+      if (!id) return;
+      runtimeMetricsByInstance.value = {
+        ...runtimeMetricsByInstance.value,
+        [id]: data,
+      };
+      runtimeMetricsUpdatedAt.value = Date.now();
+    });
+
     socket.on('$system:package:installed', (data: any) => {
       notify.success('Package ready', `${data.name}@${data.version} installed successfully`);
     });
@@ -186,5 +199,12 @@ export function useAdminSocket() {
     });
   }
 
-  return { adminSocket: socket, activeReloads, isReloading, showReloadBanner };
+  return {
+    adminSocket: socket,
+    activeReloads,
+    isReloading,
+    showReloadBanner,
+    runtimeMetricsByInstance,
+    runtimeMetricsUpdatedAt,
+  };
 }

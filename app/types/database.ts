@@ -148,6 +148,11 @@ export interface TableDefinitionField {
   };
   createdAt?: string;
   updatedAt?: string;
+  metadataAccess?: {
+    read?: boolean;
+    create?: boolean;
+    update?: boolean;
+  };
 }
 
 export interface TableSchema {
