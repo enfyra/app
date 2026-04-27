@@ -149,7 +149,8 @@ export const runtimeTabGuides: Record<string, RuntimeGuide> = {
         title: 'DB Pool',
         items: [
           ['Used', 'Connections currently checked out by queries or transactions.'],
-          ['Free', 'Connections immediately available in the pool.'],
+          ['Available', 'Pool capacity that can still be assigned before requests wait. This is max minus used and pending.'],
+          ['Idle', 'Already-created DB connections sitting idle inside the pool. This can be lower than available after boot and is not a capacity error.'],
           ['Pending', 'Requests waiting for a DB connection. Any sustained pending count means DB pool capacity or query duration is the bottleneck.'],
         ],
       },

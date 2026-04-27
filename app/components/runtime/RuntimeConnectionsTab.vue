@@ -87,7 +87,9 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
                 class="font-medium"
                 :class="metricTextClass((row.pending ?? 0) >= 100 ? 'error' : (row.pending ?? 0) > 0 ? 'warning' : 'ok')"
               >
-                {{ row.used ?? 0 }} used · {{ row.free ?? 0 }} free · {{ row.pending ?? 0 }} pending
+                {{ row.used ?? 0 }} used · {{ row.available ?? 0 }} available ·
+                {{ row.idle ?? 0 }} idle · {{ row.pending ?? 0 }} pending
+                <span v-if="row.max != null"> · {{ row.max }} max</span>
               </span>
             </div>
             <div v-if="dbPoolRows(metrics).length === 0" class="text-[var(--text-tertiary)]">
