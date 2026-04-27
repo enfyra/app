@@ -28,7 +28,11 @@
 </template>
 
 <script setup lang="ts">
-import { validateOAuthConfigForm } from "~/utils/oauth-config";
+import {
+  buildOAuthRedirectUri,
+  validateOAuthConfigForm,
+  validateOAuthUserProvisioningScript,
+} from "~/utils/oauth-config";
 
 definePageMeta({
   layout: "default",
@@ -49,6 +53,7 @@ const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
+const appOrigin = ref("");
 const excludedFields = computed(() => {
   const fields = ["createdAt", "updatedAt", "isSystem"];
   if (form.value?.autoSetCookies === true) {
@@ -60,12 +65,17 @@ const fieldMap = computed(() => ({
   scope: { type: "varchar", placeholder: "openid,email,profile" },
   redirectUri: {
     type: "varchar",
-    placeholder: "https://api.example.com/auth/google/callback",
+    disabled: true,
+    placeholder: `${appOrigin.value || "https://app.example.com"}/api/auth/{provider}/callback`,
   },
   appCallbackUrl: {
     type: "varchar",
     placeholder: "https://client.example.com/oauth/callback",
     excluded: form.value?.autoSetCookies === true,
+  },
+  sourceCode: {
+    label: "User Provisioning Script",
+    description: "Must return an object merged into newly created OAuth users. Existing identity fields take precedence. Use @REPOS or #table_name when lookup is needed.",
   },
 }));
 
@@ -80,7 +90,8 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
-    hasFormChanges.value = false;
+    syncRedirectUri();
+    hasFormChanges.value = formChanges.checkChanges(form.value);
 
     notify.success("Reset Complete", "All changes have been discarded.");
   }
@@ -200,8 +211,10 @@ function getProviderLabel(provider: string) {
 async function updateConfig() {
   if (!form.value) return;
 
+  syncRedirectUri();
   if (!await validateForm(form.value, errors)) return;
   if (!validateOAuthConfigForm(form.value, errors.value)) return;
+  if (!await validateOAuthUserProvisioningScript(form.value, errors.value)) return;
 
   await executeUpdateConfig({
     id: route.params.id as string,
@@ -220,7 +233,9 @@ async function updateConfig() {
   const freshData = configData.value?.data?.[0];
   if (freshData) {
     form.value = { ...freshData };
-    formChanges.update(freshData);
+    form.value.scriptLanguage ||= "typescript";
+    syncRedirectUri();
+    formChanges.update(form.value);
   }
 
   formEditorRef.value?.confirmChanges();
@@ -248,11 +263,36 @@ async function initializeForm() {
   const data = configData.value?.data?.[0];
   if (data) {
     form.value = { ...data };
-    formChanges.update(data);
+    form.value.scriptLanguage ||= "typescript";
+    syncRedirectUri();
+    formChanges.update(form.value);
+    hasFormChanges.value = formChanges.checkChanges(form.value);
   }
 }
 
 onMounted(() => {
+  appOrigin.value = window.location.origin;
   initializeForm();
 });
+
+watch(
+  () => [form.value?.provider, appOrigin.value],
+  () => {
+    const previousRedirectUri = form.value?.redirectUri;
+    syncRedirectUri();
+    if (form.value?.redirectUri !== previousRedirectUri) {
+      hasFormChanges.value = formChanges.checkChanges(form.value);
+    }
+  }
+);
+
+function syncRedirectUri() {
+  const redirectUri = buildOAuthRedirectUri(
+    form.value?.provider,
+    appOrigin.value
+  );
+  if (redirectUri) {
+    form.value.redirectUri = redirectUri;
+  }
+}
 </script>

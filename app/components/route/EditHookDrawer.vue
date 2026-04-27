@@ -129,6 +129,11 @@ const fieldMap = computed(() => ({
       ...(props.allowedMethods ? { allowedMethods: props.allowedMethods } : {}),
     },
   },
+  sourceCode: {
+    description: props.hookType === 'post'
+      ? 'Do not return a value. Update @DATA or $ctx.$data instead.'
+      : 'Return is optional. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.',
+  },
 }));
 
 const excludedFields = computed(() => {

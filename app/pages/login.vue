@@ -334,6 +334,10 @@ definePageMeta({
 });
 
 onMounted(async () => {
+  const oauthError = route.query.error;
+  if (typeof oauthError === "string" && oauthError.length > 0) {
+    loginError.value = oauthError;
+  }
   await fetchOAuthProviders();
 });
 </script>

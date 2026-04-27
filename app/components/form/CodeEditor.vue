@@ -1,10 +1,28 @@
 <script setup lang="ts">
+import type { PermissionCondition } from "~/types/permissions";
+
+type TestRunConfig = {
+  kind?: string;
+  label?: string;
+  tableName?: string;
+  fieldName?: string;
+  timeoutMs?: number;
+  scriptLanguage?: "javascript" | "typescript";
+  body?: any;
+  data?: any;
+  params?: any;
+  query?: any;
+  permission?: PermissionCondition;
+  payload?: Record<string, any>;
+};
+
 const props = defineProps<{
   modelValue?: string;
   language?: "javascript" | "typescript" | "vue" | "json" | "html";
   height?: string;
   enfyraAutocomplete?: boolean | 'vue';
   error?: string;
+  testRun?: boolean | TestRunConfig;
 }>();
 
 const emit = defineEmits(["update:modelValue", "diagnostics"]);
@@ -22,8 +40,23 @@ const isResizing = ref(false);
 const startY = ref(0);
 const startHeight = ref(0);
 const previewStyle = ref<{ top: string; left: string; width: string; height: string } | null>(null);
+const showTestResult = ref(false);
 
 const colorMode = useColorMode();
+const notify = useNotify();
+const { checkPermissionCondition } = usePermissions();
+const {
+  execute: executeTestRun,
+  pending: testRunning,
+  error: testRunError,
+  data: testRunData,
+} = useApi(() => "/admin/test/run", {
+  method: "post",
+  errorContext: "Test Code",
+  disableErrorPage: true,
+  immediate: false,
+  lazy: true,
+});
 
 const { initCodeMirror, codeMirrorModules } = useCodeMirrorLazy()
 
@@ -41,6 +74,67 @@ const languageExtension = computed(() => {
   if (!codeMirrorModules.value) return null
   return getLanguageExtension(props.language)
 });
+
+const testRunConfig = computed<TestRunConfig | null>(() => {
+  if (props.testRun === false) return null;
+  if (props.testRun === undefined) return {};
+  return props.testRun === true ? {} : props.testRun;
+});
+
+const canShowTestRun = computed(() => {
+  const config = testRunConfig.value;
+  if (!config) return false;
+  if (props.language !== "javascript" && props.language !== "typescript") return false;
+  const permission = config.permission ?? {
+    and: [{ route: "/admin/test/run", actions: ["create"] }],
+  };
+  return checkPermissionCondition(permission);
+});
+
+const canRunTest = computed(() => {
+  return canShowTestRun.value && String(props.modelValue || "").trim().length > 0;
+});
+
+const testResultText = computed(() => {
+  const value = testRunData.value;
+  if (value === null || value === undefined) return "";
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+});
+
+async function runCodeTest() {
+  const config = testRunConfig.value;
+  const script = String(props.modelValue || "").trim();
+  if (!config || !script || testRunning.value) return;
+
+  await executeTestRun({
+    body: {
+      kind: config.kind || "script",
+      tableName: config.tableName,
+      fieldName: config.fieldName,
+      timeoutMs: config.timeoutMs ?? 5000,
+      script,
+      scriptLanguage:
+        config.scriptLanguage ||
+        (props.language === "javascript" ? "javascript" : "typescript"),
+      body: config.body,
+      data: config.data,
+      params: config.params,
+      query: config.query,
+      ...(config.payload || {}),
+    },
+  });
+
+  if (testRunError.value) {
+    notify.error("Test failed", testRunError.value.message);
+    return;
+  }
+
+  showTestResult.value = true;
+}
 
 const extensions = computed(() => {
   if (!codeMirrorModules.value || !themeCompartment.value) return []
@@ -101,9 +195,9 @@ watch(currentHeight, () => {
   }
 });
 
-let resizeFinalizeTimeout: ReturnType<typeof setTimeout> | null = null;
-let resizeRemountTimeout: ReturnType<typeof setTimeout> | null = null;
-let initialMountTimeout: ReturnType<typeof setTimeout> | null = null;
+let resizeFinalizeTimeout: number | null = null;
+let resizeRemountTimeout: number | null = null;
+let initialMountTimeout: number | null = null;
 
 function applyGuttersBorder() {
   if (!editorView.value) return;
@@ -115,11 +209,11 @@ function applyGuttersBorder() {
 
 function finishResizeSync() {
   if (resizeFinalizeTimeout) {
-    clearTimeout(resizeFinalizeTimeout);
+    window.clearTimeout(resizeFinalizeTimeout);
     resizeFinalizeTimeout = null;
   }
   if (resizeRemountTimeout) {
-    clearTimeout(resizeRemountTimeout);
+    window.clearTimeout(resizeRemountTimeout);
     resizeRemountTimeout = null;
   }
   resizeRemountTimeout = window.setTimeout(() => {
@@ -135,8 +229,8 @@ function finishResizeSync() {
 }
 
 function scheduleResizeFinishFallback() {
-  if (resizeFinalizeTimeout) clearTimeout(resizeFinalizeTimeout);
-  resizeFinalizeTimeout = setTimeout(() => {
+  if (resizeFinalizeTimeout) window.clearTimeout(resizeFinalizeTimeout);
+  resizeFinalizeTimeout = window.setTimeout(() => {
     finishResizeSync();
   }, 380);
 }
@@ -181,13 +275,13 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (resizeFinalizeTimeout) {
-    clearTimeout(resizeFinalizeTimeout);
+    window.clearTimeout(resizeFinalizeTimeout);
   }
   if (resizeRemountTimeout) {
-    clearTimeout(resizeRemountTimeout);
+    window.clearTimeout(resizeRemountTimeout);
   }
   if (initialMountTimeout) {
-    clearTimeout(initialMountTimeout);
+    window.clearTimeout(initialMountTimeout);
   }
   destroyEditor();
   document.removeEventListener("mousemove", handleMouseMove);
@@ -317,6 +411,26 @@ function handleMouseUp(e?: MouseEvent) {
     ]"
     :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
   >
+    <div
+      v-if="canShowTestRun"
+      class="absolute right-2 top-2 z-[60] flex items-center gap-2"
+      style="pointer-events: auto;"
+    >
+      <UTooltip text="Run code">
+        <UButton
+          type="button"
+          :icon="testRunning ? 'i-lucide-loader-2' : 'i-lucide-play'"
+          size="xs"
+          variant="soft"
+          color="primary"
+          :loading="testRunning"
+          :disabled="!canRunTest"
+          :label="testRunConfig?.label || 'Test'"
+          @click.stop="runCodeTest"
+        />
+      </UTooltip>
+    </div>
+
     <div ref="editorRef" class="codemirror-editor h-full" />
 
     <Teleport to="body">
@@ -340,6 +454,21 @@ function handleMouseUp(e?: MouseEvent) {
       </div>
     </div>
   </div>
+
+  <CommonModal v-model="showTestResult">
+    <template #title>Test Result</template>
+    <template #body>
+      <div class="space-y-3">
+        <UBadge
+          :color="(testRunData as any)?.success === false ? 'error' : 'success'"
+          variant="subtle"
+        >
+          {{ (testRunData as any)?.success === false ? 'Failed' : 'Passed' }}
+        </UBadge>
+        <pre class="max-h-[420px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap">{{ testResultText }}</pre>
+      </div>
+    </template>
+  </CommonModal>
 </template>
 
 <style scoped>

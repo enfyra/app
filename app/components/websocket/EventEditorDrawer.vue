@@ -22,6 +22,14 @@ const hasFormChanges = ref(false);
 const showDiscardModal = ref(false);
 const initialSnapshot = ref<string | null>(null);
 const formEditorRef = ref();
+const fieldMap = {
+  sourceCode: {
+    testRun: false,
+  },
+  handlerScript: {
+    testRun: false,
+  },
+};
 
 const testPayloadJson = ref('');
 const testing = ref(false);
@@ -292,6 +300,7 @@ async function handleTest() {
           @has-changed="(hasChanged) => hasFormChanges = hasChanged"
           :table-name="tableName"
           :excluded="['createdAt', 'updatedAt', 'isSystem', 'gateway']"
+          :field-map="fieldMap"
           :loading="loading"
         />
       </div>

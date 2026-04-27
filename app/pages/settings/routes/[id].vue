@@ -737,8 +737,9 @@ function handleCancelHandler() {
 
 async function saveHandler() {
   const { isValid, errors } = validateHandler(handlerForm.value);
+  const isReturnValid = await validateRouteHandlerReturn(handlerForm.value, errors);
 
-  if (!isValid) {
+  if (!isValid || !isReturnValid) {
     handlerErrors.value = errors;
     notify.error("Validation error", "Please check the fields with errors.");
     return;
@@ -850,8 +851,9 @@ async function updateHandler() {
   if (!editingHandlerId.value || !editHandlerForm.value) return;
 
   const { isValid, errors } = validateHandler(editHandlerForm.value);
+  const isReturnValid = await validateRouteHandlerReturn(editHandlerForm.value, errors);
 
-  if (!isValid) {
+  if (!isValid || !isReturnValid) {
     editHandlerErrors.value = errors;
     notify.error("Validation error", "Please check the fields with errors.");
     return;
@@ -1010,8 +1012,13 @@ async function saveHook() {
   const isPreHook = hookType.value === 'pre';
   const validate = isPreHook ? validatePreHook : validatePostHook;
   const { isValid, errors } = validate(hookForm.value);
+  const isReturnValid = await validateHookReturnContract(
+    hookForm.value,
+    errors,
+    isPreHook ? 'pre' : 'post',
+  );
 
-  if (!isValid) {
+  if (!isValid || !isReturnValid) {
     hookErrors.value = errors;
     notify.error("Validation error", "Please check the fields with errors.");
     return;
@@ -1248,8 +1255,13 @@ async function updateHook() {
   const isPreHook = editHookType.value === 'pre';
   const validate = isPreHook ? validatePreHook : validatePostHook;
   const { isValid, errors } = validate(editHookForm.value);
+  const isReturnValid = await validateHookReturnContract(
+    editHookForm.value,
+    errors,
+    isPreHook ? 'pre' : 'post',
+  );
 
-  if (!isValid) {
+  if (!isValid || !isReturnValid) {
     editHookErrors.value = errors;
     notify.error("Validation error", "Please check the fields with errors.");
     return;

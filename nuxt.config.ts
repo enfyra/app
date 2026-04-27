@@ -82,6 +82,27 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       exclude: ['console-browserify'],
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'socket.io-client',
+        'json5',
+        '@internationalized/date',
+        '@codemirror/commands',
+        '@codemirror/autocomplete',
+        '@codemirror/language',
+        '@lezer/highlight',
+        '@codemirror/lint',
+        '@codemirror/search',
+        '@codemirror/lang-javascript',
+        '@codemirror/lang-vue',
+        '@codemirror/lang-html',
+        '@uiw/codemirror-theme-vscode',
+        '@codemirror/view',
+        '@codemirror/state',
+        'typescript',
+        '@tanstack/vue-table',
+      ],
     },
     build: {
       chunkSizeWarningLimit: 4000,

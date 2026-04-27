@@ -24,6 +24,7 @@ const props = defineProps<{
   readonly?: boolean;
   loading?: boolean;
   fieldId?: string;
+  tableName?: string;
 }>();
 
 const emit = defineEmits<{
@@ -111,6 +112,26 @@ function getCodeLanguage(key: string): "javascript" | "typescript" | "vue" | "js
     return "javascript";
   }
   return "typescript";
+}
+
+function getCodeTestRunConfig(key: string) {
+  const config = getFieldConfig(key);
+  if (config.testRun === false) return undefined;
+  const language = getCodeLanguage(key);
+  if (language !== "javascript" && language !== "typescript") return undefined;
+  const base = {
+    kind: "script",
+    tableName: props.tableName,
+    fieldName: key,
+    scriptLanguage: language,
+  };
+  if (config.testRun && typeof config.testRun === "object") {
+    return {
+      ...base,
+      ...config.testRun,
+    };
+  }
+  return base;
 }
 
 function mergeControlClass(
@@ -508,6 +529,7 @@ function getComponentConfigByKey(key: string) {
           language: codeLanguage,
           height: config.height || "300px",
           enfyraAutocomplete: codeLanguage === 'javascript' || codeLanguage === 'typescript' ? true : codeLanguage === 'vue' ? 'vue' : undefined,
+          testRun: getCodeTestRunConfig(key),
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },

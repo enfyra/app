@@ -4,6 +4,7 @@ import type { UniqueCheckStatus } from '~/types/ui';
 const props = withDefaults(
   defineProps<{
   keyName: string;
+  tableName?: string;
   formData: Record<string, any>;
   columnMap: Map<string, any>;
   fieldMap?: Record<string, any>;
@@ -240,6 +241,7 @@ const nonBooleanOuterClass = computed(() => {
     <div class="shrink-0">
       <FormFieldRenderer
         :key-name="keyName"
+        :table-name="tableName"
         :form-data="formData"
         :column-map="columnMap"
         :field-map="fieldMap"
@@ -340,6 +342,7 @@ const nonBooleanOuterClass = computed(() => {
 
     <FormFieldRenderer
       :key-name="keyName"
+      :table-name="tableName"
       :form-data="formData"
       :column-map="columnMap"
         :field-map="fieldMap"

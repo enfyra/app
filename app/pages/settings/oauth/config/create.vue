@@ -19,7 +19,11 @@
 </template>
 
 <script setup lang="ts">
-import { validateOAuthConfigForm } from "~/utils/oauth-config";
+import {
+  buildOAuthRedirectUri,
+  validateOAuthConfigForm,
+  validateOAuthUserProvisioningScript,
+} from "~/utils/oauth-config";
 
 definePageMeta({
   layout: "default",
@@ -32,6 +36,7 @@ const tableName = "oauth_config_definition";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const appOrigin = ref("");
 const excludedFields = computed(() =>
   createForm.value?.autoSetCookies === true ? ["appCallbackUrl"] : []
 );
@@ -39,12 +44,17 @@ const fieldMap = computed(() => ({
   scope: { type: "text", placeholder: "openid,email,profile" },
   redirectUri: {
     type: "text",
-    placeholder: "https://api.example.com/auth/google/callback",
+    disabled: true,
+    placeholder: `${appOrigin.value || "https://app.example.com"}/api/auth/{provider}/callback`,
   },
   appCallbackUrl: {
     type: "text",
     placeholder: "https://client.example.com/oauth/callback",
     excluded: createForm.value?.autoSetCookies === true,
+  },
+  sourceCode: {
+    label: "User Provisioning Script",
+    description: "Must return an object merged into newly created OAuth users. Existing identity fields take precedence. Use @REPOS or #table_name when lookup is needed.",
   },
 }));
 
@@ -90,11 +100,31 @@ const {
 
 onMounted(() => {
   createForm.value = generateEmptyForm();
+  createForm.value.scriptLanguage ||= "typescript";
+  appOrigin.value = window.location.origin;
+  syncRedirectUri();
 });
 
+watch(
+  () => [createForm.value?.provider, appOrigin.value],
+  () => syncRedirectUri()
+);
+
+function syncRedirectUri() {
+  const redirectUri = buildOAuthRedirectUri(
+    createForm.value?.provider,
+    appOrigin.value
+  );
+  if (redirectUri) {
+    createForm.value.redirectUri = redirectUri;
+  }
+}
+
 async function handleCreate() {
+  syncRedirectUri();
   if (!await validateForm(createForm.value, createErrors)) return;
   if (!validateOAuthConfigForm(createForm.value, createErrors.value)) return;
+  if (!await validateOAuthUserProvisioningScript(createForm.value, createErrors.value)) return;
 
   await executeCreateConfig({ body: createForm.value });
 

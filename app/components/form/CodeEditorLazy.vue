@@ -8,6 +8,7 @@
       :class="props.class"
       :error="props.error"
       :enfyra-autocomplete="props.enfyraAutocomplete"
+      :test-run="props.testRun"
       @update:model-value="(value) => $emit('update:modelValue', value)"
       @diagnostics="(diags) => $emit('diagnostics', diags)"
     />
@@ -34,6 +35,7 @@ const props = defineProps<{
   class?: string;
   error?: string;
   enfyraAutocomplete?: boolean | 'vue';
+  testRun?: boolean | Record<string, any>;
 }>();
 
 defineEmits<{
