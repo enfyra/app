@@ -7,7 +7,7 @@
             v-model="createForm"
             :table-name="tableName"
             v-model:errors="createErrors"
-            :excluded="['children', 'rules', 'parent']"
+            :excluded="['createdAt', 'updatedAt', 'children', 'rules', 'parent']"
             :field-map="fieldMap"
             mode="create"
           />

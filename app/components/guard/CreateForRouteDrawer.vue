@@ -3,7 +3,6 @@
     v-model="localOpen"
     :handle="false"
     direction="right"
-    full-width
   >
     <template #header>
       <h2 class="text-xl font-semibold">Create Guard</h2>
@@ -16,7 +15,7 @@
               v-model="localForm"
               v-model:errors="localErrors"
               :table-name="'guard_definition'"
-              :excluded="['children', 'rules', 'parent', 'route', 'isGlobal', 'isSystem']"
+              :excluded="['createdAt', 'updatedAt', 'children', 'rules', 'parent', 'route', 'isGlobal', 'isSystem']"
               :field-map="fieldMap"
               mode="create"
               @has-changed="(v) => (hasChanged = v)"

@@ -121,7 +121,7 @@ const fieldMap = computed(() => ({
 }));
 
 const excludedFields = computed(() => {
-  const base = ['createdBy', 'updatedBy', 'route'];
+  const base = ['createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'route'];
   if (props.lockMethod) base.push('method');
   return base;
 });
