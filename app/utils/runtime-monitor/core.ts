@@ -61,17 +61,34 @@ export function queueTotal(queue: RuntimeQueueStats | null | undefined) {
 export function dbPoolRows(metrics: RuntimeMetricsPayload) {
   const pool = metrics.db?.pool;
   if (!pool) return [];
+  const normalize = (row: any) => {
+    const used = row?.used ?? 0;
+    const pending = row?.pending ?? 0;
+    const max = row?.max ?? null;
+    const idle = row?.idle ?? 0;
+    const available =
+      row?.available ??
+      (max == null ? 0 : Math.max(0, max - used - pending));
+    return {
+      ...row,
+      used,
+      pending,
+      idle,
+      available,
+      max,
+    };
+  };
   if (pool.master || Array.isArray(pool.replicas)) {
     return [
-      { name: 'master', ...(pool.master ?? {}) },
+      { name: 'master', ...normalize(pool.master ?? {}) },
       ...(pool.replicas ?? []).map((replica: any, index: number) => ({
         name: `replica ${index + 1}`,
         healthy: replica.healthy,
-        ...(replica.pool ?? {}),
+        ...normalize(replica.pool ?? {}),
       })),
     ];
   }
-  return [{ name: 'pool', ...pool }];
+  return [{ name: 'pool', ...normalize(pool) }];
 }
 
 export function websocketRows(metrics: RuntimeMetricsPayload) {
