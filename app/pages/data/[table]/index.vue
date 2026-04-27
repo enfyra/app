@@ -203,6 +203,7 @@ const columns = computed(() => {
       (field) =>
         field.fieldType === "column" &&
         field.name &&
+        field.metadataAccess?.read !== false &&
         visibleColumns.value.has(field.name)
     )
     .sort((a, b) => {

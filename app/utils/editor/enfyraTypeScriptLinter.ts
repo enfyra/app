@@ -113,6 +113,7 @@ type EnfyraDeleteResult = {
 };
 type EnfyraRepository = {
   find(args?: EnfyraFindArgs): Promise<EnfyraQueryResult>;
+  findOne(args?: EnfyraFindArgs): Promise<any>;
   create(args: EnfyraCreateArgs): Promise<EnfyraQueryResult>;
   update(args: EnfyraUpdateArgs): Promise<EnfyraQueryResult>;
   delete(args: EnfyraDeleteArgs): Promise<EnfyraDeleteResult>;

@@ -154,13 +154,23 @@ export function useSchema(tableName?: string | Ref<string>) {
     return fieldMap.value.get(key);
   }
 
+  function canReadField(field: TableDefinitionField): boolean {
+    return field.metadataAccess?.read !== false;
+  }
+
+  function canWriteField(field: TableDefinitionField): boolean {
+    const access = field.metadataAccess;
+    if (!access) return true;
+    return access.create === true || access.update === true;
+  }
+
   const editableFields = computed(() => {
     const excluded = [getIdFieldName(), "createdAt", "updatedAt", "isSystem", "isRootAdmin"];
 
     return sortFieldsByOrder(
       definition.value.filter(f => {
         const key = f.name || f.propertyName;
-        return key && !excluded.includes(key);
+        return key && !excluded.includes(key) && canWriteField(f);
       })
     );
   });
@@ -241,7 +251,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     if (!definition.value.length) return "*";
 
     const relations = definition.value
-      .filter(f => f.fieldType === "relation")
+      .filter(f => f.fieldType === "relation" && canReadField(f))
       .map(f => f.propertyName || f.name)
       .filter(Boolean)
       .map(name => `${name}.*`);
@@ -253,7 +263,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     if (!definition.value.length) return "*";
 
     const columnFields = definition.value
-      .filter(f => f.fieldType === "column" && f.name)
+      .filter(f => f.fieldType === "column" && f.name && canReadField(f))
       .map(f => f.name)
       .filter(Boolean);
 

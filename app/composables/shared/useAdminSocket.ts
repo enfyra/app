@@ -14,6 +14,195 @@ type ActiveReload = {
   startedAt: number;
 };
 
+export type RuntimeMetricsPayload = {
+  sampledAt: string;
+  intervalMs: number;
+  averages?: {
+    onlineMs: number;
+    samples: number;
+    rssMb: number;
+    heapUsedMb: number;
+    heapTotalMb: number;
+    externalMb: number;
+    eventLoopLagMs: number;
+    cpuRatio: number;
+    executorActiveTasks: number;
+    executorWaitingTasks: number;
+    executorP95TaskMs: number;
+    executorP99TaskMs: number;
+    executorMaxHeapRatio: number;
+    websocketConnections: number;
+    queueDepth: number;
+    queueFailed: number;
+    dbUsed: number;
+    dbFree: number;
+    dbPending: number;
+  };
+  hardware?: {
+    effectiveMemoryMb: number;
+    hostMemoryMb: number;
+    effectiveCpuCount: number;
+    hostCpuCount: number;
+    constrained: boolean;
+  };
+  instance: {
+    id: string;
+    pid: number;
+    uptimeSec: number;
+    rssMb: number;
+    heapUsedMb: number;
+    heapTotalMb: number;
+    heapLimitMb?: number;
+    externalMb: number;
+    eventLoopLagMs: number;
+    cpuRatio: number;
+  };
+  executor: {
+    tuning: {
+      maxConcurrentWorkers: number;
+      isolateMemoryLimitMb: number;
+      tasksPerWorkerCap: number;
+      isolatePoolSize: number;
+    };
+    pool: {
+      max: number;
+      activeTasks: number;
+      waitingTasks: number;
+      workers: Array<{
+        id: number;
+        activeTasks: number;
+        draining: boolean;
+        ageMs: number;
+        lastHeapRatio: number;
+        contextStats: Record<string, number>;
+      }>;
+    };
+    taskDoneTotal: number;
+    taskErrorTotal: number;
+    taskTimeoutTotal: number;
+    rotationsTotal: number;
+    crashesTotal: number;
+    avgTaskMs: number;
+    p95TaskMs: number;
+    p99TaskMs: number;
+    maxHeapRatio: number;
+  };
+  queues: Record<string, {
+    waiting: number;
+    active: number;
+    delayed: number;
+    failed: number;
+    failedJobs?: Array<{
+      id: string;
+      name: string;
+      flowId?: string | number;
+      flowName?: string;
+      failedReason?: string;
+      attemptsMade: number;
+      timestamp?: number;
+      finishedOn?: number;
+    }>;
+  } | null>;
+  websocket?: {
+    total: number;
+    namespaces: Array<{
+      path: string;
+      connected: number;
+      users: number;
+    }>;
+  };
+  db: any;
+  cluster?: {
+    enabled: boolean;
+    key: string;
+    instanceId: string;
+    activeCount: number;
+    staleAfterMs: number;
+    heartbeatIntervalMs: number;
+    reconcileIntervalMs: number;
+    instances: Array<{
+      id: string;
+      lastSeenAt: string;
+      ageMs: number;
+    }>;
+    serverMaxConnections: number | null;
+    reserveConnections: number | null;
+    targetPoolMax: number | null;
+    lastReconciledAt: string | null;
+  } | null;
+  app?: {
+    requests: {
+      total: number;
+      rps: number;
+      routes: Array<{
+        method: string;
+        route: string;
+        count: number;
+        rps: number;
+        avgMs: number;
+        p50Ms: number;
+        p95Ms: number;
+        p99Ms: number;
+        status2xx: number;
+        status3xx: number;
+        status4xx: number;
+        status5xx: number;
+      }>;
+    };
+    cache: {
+      recent: Array<{
+        flow: string;
+        table: string;
+        scope?: string;
+        status: 'success' | 'failed';
+        durationMs: number;
+        startedAt: string;
+        completedAt: string;
+        error?: string;
+        steps: Array<{
+          name: string;
+          durationMs: number;
+          status: 'success' | 'failed';
+          error?: string;
+        }>;
+      }>;
+    };
+    database: {
+      slowQueryThresholdMs: number;
+      totalErrors: number;
+      totalPoolAcquireTimeouts: number;
+      totalSlow: number;
+      queries: Array<{
+        op: string;
+        table: string;
+        count: number;
+        errors: number;
+        poolAcquireTimeouts: number;
+        slow: number;
+        avgMs: number;
+        p95Ms: number;
+        p99Ms: number;
+      }>;
+    };
+    flows: {
+      running: number;
+      completed: number;
+      failed: number;
+      rows: Array<{
+        flowId: string | number;
+        flowName: string;
+        running: number;
+        completed: number;
+        failed: number;
+        avgMs: number;
+        p95Ms: number;
+        failedSteps: Array<{ step: string; count: number }>;
+        slowSteps: Array<{ step: string; p95Ms: number }>;
+      }>;
+    };
+  };
+};
+
 const FLOW_LABELS: Record<string, string> = {
   metadata: 'Schema metadata',
   route: 'Routes',
@@ -39,6 +228,8 @@ let socket: Socket | null = null;
 
 export const activeReloads = ref<ActiveReload[]>([]);
 export const reloadDoneCountdown = ref(0);
+export const runtimeMetricsByInstance = ref<Record<string, RuntimeMetricsPayload>>({});
+export const runtimeMetricsUpdatedAt = ref<number | null>(null);
 
 const isReloadingRef = computed(() => activeReloads.value.length > 0);
 const showReloadBannerRef = computed(
@@ -173,6 +364,16 @@ export function useAdminSocket() {
       }
     });
 
+    socket.on('$system:runtime:metrics', (data: RuntimeMetricsPayload) => {
+      const id = data?.instance?.id;
+      if (!id) return;
+      runtimeMetricsByInstance.value = {
+        ...runtimeMetricsByInstance.value,
+        [id]: data,
+      };
+      runtimeMetricsUpdatedAt.value = Date.now();
+    });
+
     socket.on('$system:package:installed', (data: any) => {
       notify.success('Package ready', `${data.name}@${data.version} installed successfully`);
     });
@@ -186,5 +387,12 @@ export function useAdminSocket() {
     });
   }
 
-  return { adminSocket: socket, activeReloads, isReloading, showReloadBanner };
+  return {
+    adminSocket: socket,
+    activeReloads,
+    isReloading,
+    showReloadBanner,
+    runtimeMetricsByInstance,
+    runtimeMetricsUpdatedAt,
+  };
 }

@@ -87,6 +87,10 @@ export function usePermissions() {
   const checkPermissionCondition = (
     condition: PermissionCondition
   ): boolean => {
+    if (condition.rootAdmin === true) {
+      return !!me.value?.isRootAdmin;
+    }
+
     if (condition.allowAll === true) {
       return true;
     }

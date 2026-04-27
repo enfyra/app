@@ -102,6 +102,8 @@ export default defineNuxtConfig({
         '@codemirror/state',
         'typescript',
         '@tanstack/vue-table',
+        '@vue-flow/core',
+        '@vue-flow/controls',
       ],
     },
     build: {
