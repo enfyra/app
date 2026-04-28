@@ -205,8 +205,9 @@ const fieldMap = computed(() => ({
   },
   condition: {
     type: "code",
+    language: "json",
+    testRun: false,
     componentProps: {
-      language: "json",
       placeholder:
         '{\n  "_and": [\n    { "owner": { "id": { "_eq": "@USER.id" } } }\n  ]\n}',
     },

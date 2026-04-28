@@ -108,6 +108,7 @@ function getFinalType(key: string): string {
 function getCodeLanguage(key: string): "javascript" | "typescript" | "vue" | "json" | "html" {
   const config = getFieldConfig(key);
   if (config.language) return config.language;
+  if (config.componentProps?.language) return config.componentProps.language;
   if (key === "sourceCode" && props.formData.scriptLanguage === "javascript") {
     return "javascript";
   }
@@ -453,7 +454,7 @@ function getComponentConfigByKey(key: string) {
         componentProps: {
           ...componentPropsBase,
           modelValue: toJsonEditorString(props.formData[key]),
-          language: "javascript",
+          language: "json",
           height: config.height || "300px",
           "onUpdate:modelValue": (val: string) => {
             const parsed = tryParseJsonLike(val);
@@ -538,7 +539,7 @@ function getComponentConfigByKey(key: string) {
           language: codeLanguage,
           height: config.height || "300px",
           enfyraAutocomplete: codeLanguage === 'javascript' || codeLanguage === 'typescript' ? true : codeLanguage === 'vue' ? 'vue' : undefined,
-          testRun: getCodeTestRunConfig(key),
+          testRun: getCodeTestRunConfig(key) ?? false,
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
           },

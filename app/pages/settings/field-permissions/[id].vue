@@ -67,8 +67,12 @@ registerPageHeader({
   gradient: "purple",
 });
 
-const excluded = computed(() => [getIdFieldName(), "createdAt", "updatedAt", "role"]);
+const excluded = computed(() => ["createdAt", "updatedAt", "role"]);
 const fieldMap = computed(() => ({
+  [getIdFieldName()]: {
+    disabled: true,
+    disableUniqueCheck: true,
+  },
   action: { disableUniqueCheck: true },
   config: {
     label: "Config",
@@ -118,6 +122,17 @@ const {
   })),
   errorContext: "Fetch Field Permission",
 });
+
+watch(
+  id,
+  async () => {
+    errors.value = {};
+    form.value = {};
+    hasFormChanges.value = false;
+    await fetchRule();
+  },
+  { immediate: true }
+);
 
 watch(
   () => apiData.value?.data?.[0],
@@ -178,6 +193,7 @@ async function handleReset() {
 
 async function save() {
   const body: any = { ...form.value };
+  delete body[getIdFieldName()];
 
   const scope = validateFieldPermissionScope(body);
   if (!scope.ok) {
@@ -262,4 +278,3 @@ useHeaderActionRegistry([
   },
 ]);
 </script>
-
