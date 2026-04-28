@@ -12,6 +12,68 @@ export function getGlobalNameForPackage(packageName: string): string {
     .replace(/^(\d)/, "_$1");
 }
 
+function getPackageAliases(packageName: string): string[] {
+  const safeName = packageName.replace(/[^a-zA-Z0-9]/g, "_");
+  return safeName === packageName ? [packageName] : [packageName, safeName];
+}
+
+function getPackageFromObject(
+  packagesObject: Record<string, any>,
+  packageName: string,
+): any {
+  for (const alias of getPackageAliases(packageName)) {
+    if (packagesObject[alias] !== undefined) return packagesObject[alias];
+  }
+  return undefined;
+}
+
+function setPackageOnObject(
+  packagesObject: Record<string, any>,
+  packageName: string,
+  value: any,
+): void {
+  if (typeof window !== "undefined" && !(window as any).packages) {
+    (window as any).packages = packagesObject;
+  }
+  for (const alias of getPackageAliases(packageName)) {
+    packagesObject[alias] = value;
+    if (typeof window !== "undefined") {
+      (window as any).packages[alias] = value;
+    }
+  }
+}
+
+function deletePackageFromObject(
+  packagesObject: Record<string, any>,
+  packageName: string,
+): void {
+  for (const alias of getPackageAliases(packageName)) {
+    delete packagesObject[alias];
+    if (typeof window !== "undefined" && (window as any).packages) {
+      delete (window as any).packages[alias];
+    }
+  }
+}
+
+function getLoadedExternalNames(
+  packagesObject: Record<string, any>,
+  versionMap: Map<string, string>,
+): string[] {
+  return [...versionMap.keys()].filter((packageName) => {
+    const value = getPackageFromObject(packagesObject, packageName);
+    return value !== undefined && value !== null;
+  });
+}
+
+function normalizePackageToken(token: string): string {
+  const [withoutTsAlias] = token.trim().split(/\s+as\s+/);
+  const [withoutJsAlias] = (withoutTsAlias || "").split(":");
+  return (withoutJsAlias || "")
+    .trim()
+    .replace(/^\.\.\./, "")
+    .replace(/^['"]|['"]$/g, "");
+}
+
 async function fetchVersionMap(): Promise<Map<string, string>> {
   if (versionCache) return versionCache;
   try {
@@ -39,8 +101,9 @@ async function loadSinglePackage(
     return loadingPackages.get(packageName)!;
   }
 
-  if (packagesObject[packageName] !== undefined) {
-    return Promise.resolve(packagesObject[packageName]);
+  const existingPackage = getPackageFromObject(packagesObject, packageName);
+  if (existingPackage !== undefined) {
+    return Promise.resolve(existingPackage);
   }
 
   const promise = (async () => {
@@ -70,7 +133,7 @@ async function loadSinglePackage(
       const executedResult =
         moduleResult.default !== undefined ? moduleResult.default : moduleResult;
 
-      packagesObject[packageName] = executedResult;
+      setPackageOnObject(packagesObject, packageName, executedResult);
 
       if (typeof window !== "undefined") {
         const globalName = getGlobalNameForPackage(packageName);
@@ -79,22 +142,10 @@ async function loadSinglePackage(
         (window as any)[globalName] = packageExports;
       }
 
-      const safeName = packageName.replace(/[^a-zA-Z0-9]/g, "_");
-      if (safeName !== packageName) {
-        packagesObject[safeName] = executedResult;
-      }
-
-      if (typeof window !== "undefined") {
-        (window as any).packages[packageName] = executedResult;
-        if (safeName !== packageName) {
-          (window as any).packages[safeName] = executedResult;
-        }
-      }
-
       return executedResult;
     } catch (err) {
       console.error(`[getPackages] Failed to load "${packageName}":`, err);
-      packagesObject[packageName] = null;
+      setPackageOnObject(packagesObject, packageName, null);
       return null;
     } finally {
       loadingPackages.delete(packageName);
@@ -114,7 +165,7 @@ export function detectPackages(code: string): string[] {
     if (match[1]) {
       const items = match[1]
         .split(",")
-        .map((s) => s.trim().replace(/^['"]|['"]$/g, ""))
+        .map(normalizePackageToken)
         .filter(Boolean);
       packages.push(...items);
     }
@@ -127,7 +178,7 @@ export function detectPackages(code: string): string[] {
       const destructured = match[1];
       const items = destructured
         .split(",")
-        .map((s) => (s.trim().split(/\s+as\s+/)[0] ?? s).trim())
+        .map(normalizePackageToken)
         .filter(Boolean);
       packages.push(...items);
     }
@@ -155,10 +206,27 @@ export function detectPackages(code: string): string[] {
     }
   }
 
-  const invalidNames = new Set(["default", "ref", "loading", "value", "key"]);
+  const invalidNames = new Set(["default", "ref", "loading", "value", "key", "vue"]);
+  const importPattern =
+    /\bimport\s+(?:type\s+)?(?:[\w*\s{},]*\s+from\s+)?["']([^"']+)["']/g;
+  for (const match of code.matchAll(importPattern)) {
+    if (/^import\s+type\b/.test(match[0].trim())) continue;
+    if (match[1]) packages.push(match[1]);
+  }
+  const dynamicImportPattern = /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g;
+  for (const match of code.matchAll(dynamicImportPattern)) {
+    if (match[1]) packages.push(match[1]);
+  }
+
   const valid = (name: string) =>
     name.length > 0 &&
     !invalidNames.has(name) &&
+    !name.startsWith(".") &&
+    !name.startsWith("/") &&
+    !name.startsWith("#") &&
+    !name.startsWith("~") &&
+    !name.startsWith("@/") &&
+    !name.startsWith("~/") &&
     /^[@a-z0-9][\w./-]*$/.test(name);
 
   return [...new Set(packages)].filter(valid);
@@ -177,23 +245,25 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
     (window as any).packages = packagesObject;
   }
 
-  if (!packageNames || packageNames.length === 0) {
-    return packagesObject;
-  }
+  const versionMap = await fetchVersionMap();
+  const requestedPackageNames =
+    packageNames && packageNames.length > 0
+      ? packageNames
+      : [...versionMap.keys()];
 
-  const uniquePackageNames = [...new Set(packageNames)];
+  const uniquePackageNames = [...new Set(requestedPackageNames)];
   const packagesToLoad = uniquePackageNames.filter(
     (pkgName: string) =>
-      packagesObject[pkgName] === undefined
+      getPackageFromObject(packagesObject, pkgName) === undefined
   );
 
   const previouslyFailed = uniquePackageNames.filter(
-    (pkgName: string) => packagesObject[pkgName] === null
+    (pkgName: string) => getPackageFromObject(packagesObject, pkgName) === null
   );
 
   if (previouslyFailed.length > 0) {
     previouslyFailed.forEach((pkgName: string) => {
-      delete packagesObject[pkgName];
+      deletePackageFromObject(packagesObject, pkgName);
       loadingPackages.delete(pkgName);
     });
     packagesToLoad.push(...previouslyFailed);
@@ -204,13 +274,11 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
   }
 
   const loadStart = performance.now();
-  const loadedExternals: string[] = [];
 
   for (const pkgName of packagesToLoad) {
+    const loadedExternals = getLoadedExternalNames(packagesObject, versionMap)
+      .filter((name) => name !== pkgName);
     await loadSinglePackage(pkgName, packagesObject, loadedExternals);
-    if (packagesObject[pkgName] != null) {
-      loadedExternals.push(pkgName);
-    }
   }
 
   if (PERF_ENABLED) {
@@ -220,7 +288,10 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
   }
 
   const failedPackages = packagesToLoad.filter(
-    (pkgName) => packagesObject[pkgName] === null || packagesObject[pkgName] === undefined
+    (pkgName) => {
+      const value = getPackageFromObject(packagesObject, pkgName);
+      return value === null || value === undefined;
+    }
   );
 
   if (failedPackages.length > 0) {
