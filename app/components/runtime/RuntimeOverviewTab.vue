@@ -7,6 +7,7 @@ import {
   fmtNumber,
   fmtPercent,
   fmtSec,
+  hostHardwareLabel,
   hardwareCpuLabel,
   hardwareMemoryLabel,
   sampleAgeLabel,
@@ -139,10 +140,14 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
         <div class="rounded-lg border border-[var(--border-default)] p-3">
           <div class="text-xs font-medium text-[var(--text-tertiary)]">Hardware / Tuning</div>
           <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <div>RAM</div>
+            <div>Allocated RAM</div>
             <div class="text-right font-medium">{{ hardwareMemoryLabel(metrics) }}</div>
-            <div>CPU</div>
+            <div>Allocated CPU</div>
             <div class="text-right font-medium">{{ hardwareCpuLabel(metrics) }}</div>
+            <template v-if="metrics.hardware?.constrained">
+              <div>Host</div>
+              <div class="text-right font-medium text-[var(--text-tertiary)]">{{ hostHardwareLabel(metrics) }}</div>
+            </template>
             <div>Workers</div>
             <div class="text-right font-medium">{{ metrics.executor.tuning.maxConcurrentWorkers }}</div>
             <div>Isolate limit</div>
