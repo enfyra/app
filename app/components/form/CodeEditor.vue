@@ -25,7 +25,16 @@ const props = defineProps<{
   testRun?: boolean | TestRunConfig;
 }>();
 
+defineOptions({
+  inheritAttrs: false,
+});
+
 const emit = defineEmits(["update:modelValue", "diagnostics"]);
+const attrs = useAttrs();
+const containerAttrs = computed(() => {
+  const { class: _class, ...rest } = attrs;
+  return rest;
+});
 
 const initialHeight = props.height || "400px";
 const currentHeight = ref(initialHeight);
@@ -434,10 +443,12 @@ function handleMouseUp(e?: MouseEvent) {
 
 <template>
   <div 
+    v-bind="containerAttrs"
     ref="containerRef" 
     class="rounded-md overflow-hidden relative"
     @transitionend="handleHeightTransitionEnd"
     :class="[
+      attrs.class,
       !isResizing ? 'transition-[height] duration-300 ease-out' : '',
       props.error
         ? 'border border-red-500 ring-2 ring-red-500/20'

@@ -1,4 +1,9 @@
-import { lintEnfyraScript, lintEnfyraTypeScript, lintVueSfcScripts } from '~/utils/editor/enfyraTypeScriptLinter'
+import {
+  lintEnfyraScript,
+  lintEnfyraTypeScript,
+  lintVueSfcScripts,
+  validateEnfyraRequiredReturnScript,
+} from '~/utils/editor/enfyraTypeScriptLinter'
 
 describe('lintEnfyraTypeScript', () => {
   it('reports TypeScript type errors', async () => {
@@ -104,5 +109,31 @@ console.log(data, execute, me, pageHeader, loaded, packages)
     const diagnostics = await lintVueSfcScripts(source)
 
     expect(diagnostics).toEqual([])
+  })
+})
+
+describe('validateEnfyraRequiredReturnScript', () => {
+  it('rejects handler scripts without a return value', async () => {
+    const result = await validateEnfyraRequiredReturnScript('const value = @BODY.id')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.message).toContain('Script must return a value')
+    }
+  })
+
+  it('rejects bare return statements', async () => {
+    const result = await validateEnfyraRequiredReturnScript('return')
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.message).toContain('Script must return a value')
+    }
+  })
+
+  it('accepts handler scripts that return a value', async () => {
+    const result = await validateEnfyraRequiredReturnScript('return { data: @BODY }')
+
+    expect(result.ok).toBe(true)
   })
 })

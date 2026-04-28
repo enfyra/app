@@ -738,10 +738,9 @@ function handleCancelHandler() {
 }
 
 async function saveHandler() {
-  const { isValid, errors } = validateHandler(handlerForm.value);
-  const isReturnValid = await validateRouteHandlerReturn(handlerForm.value, errors);
+  const { isValid, errors } = await validateRouteHandlerForm(handlerForm.value, validateHandler);
 
-  if (!isValid || !isReturnValid) {
+  if (!isValid) {
     handlerErrors.value = errors;
     notify.error("Validation error", "Please check the fields with errors.");
     return;
@@ -852,10 +851,9 @@ function handleCancelEditHandler() {
 async function updateHandler() {
   if (!editingHandlerId.value || !editHandlerForm.value) return;
 
-  const { isValid, errors } = validateHandler(editHandlerForm.value);
-  const isReturnValid = await validateRouteHandlerReturn(editHandlerForm.value, errors);
+  const { isValid, errors } = await validateRouteHandlerForm(editHandlerForm.value, validateHandler);
 
-  if (!isValid || !isReturnValid) {
+  if (!isValid) {
     editHandlerErrors.value = errors;
     notify.error("Validation error", "Please check the fields with errors.");
     return;
@@ -1013,14 +1011,13 @@ function handleCancelHook() {
 async function saveHook() {
   const isPreHook = hookType.value === 'pre';
   const validate = isPreHook ? validatePreHook : validatePostHook;
-  const { isValid, errors } = validate(hookForm.value);
-  const isReturnValid = await validateHookReturnContract(
+  const { isValid, errors } = await validateRouteHookForm(
     hookForm.value,
-    errors,
+    validate,
     isPreHook ? 'pre' : 'post',
   );
 
-  if (!isValid || !isReturnValid) {
+  if (!isValid) {
     hookErrors.value = errors;
     notify.error("Validation error", "Please check the fields with errors.");
     return;
@@ -1256,14 +1253,13 @@ async function updateHook() {
 
   const isPreHook = editHookType.value === 'pre';
   const validate = isPreHook ? validatePreHook : validatePostHook;
-  const { isValid, errors } = validate(editHookForm.value);
-  const isReturnValid = await validateHookReturnContract(
+  const { isValid, errors } = await validateRouteHookForm(
     editHookForm.value,
-    errors,
+    validate,
     isPreHook ? 'pre' : 'post',
   );
 
-  if (!isValid || !isReturnValid) {
+  if (!isValid) {
     editHookErrors.value = errors;
     notify.error("Validation error", "Please check the fields with errors.");
     return;

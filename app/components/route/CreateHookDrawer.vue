@@ -120,24 +120,13 @@ const fieldMap = computed(() => ({
       ...(props.allowedMethods ? { allowedMethods: props.allowedMethods } : {}),
     },
   },
-  sourceCode: {
-    description: props.hookType === 'post'
-      ? 'Do not return a value. Update @DATA or $ctx.$data instead.'
-      : 'Return is optional. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.',
-    testRun: {
-      tableName: props.hookType === 'pre' ? 'pre_hook_definition' : 'post_hook_definition',
-      payload: {
-        routeId: props.routeId,
-      },
-    },
-  },
+  sourceCode: getRouteHookSourceCodeFieldConfig({
+    hookType: props.hookType,
+    routeId: props.routeId,
+  }),
 }));
 
-const excludedFields = computed(() => {
-  const base = ['createdAt', 'updatedAt', 'route', 'isSystem'];
-  if (props.lockMethod) base.push('methods');
-  return base;
-});
+const excludedFields = computed(() => getRouteHookExcludedFields(props.lockMethod));
 
 watch(() => props.modelValue, async (isOpen) => {
   if (isOpen) {
