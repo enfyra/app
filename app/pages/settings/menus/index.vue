@@ -9,6 +9,7 @@ const tableName = "menu_definition";
 const { generateEmptyForm } = useSchema(tableName);
 const { schemas } = useSchema();
 const { getId } = useDatabase();
+const { invalidateExtensionCache } = useDynamicComponent();
 
 const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
 
@@ -431,6 +432,12 @@ async function handleDeleteExtension(menu: MenuDefinition) {
   }
 
   await refreshMenus();
+  invalidateExtensionCache({
+    reason: "deleted",
+    id: extensionId,
+    extensionId: menu.extension.extensionId,
+    path: menu.path ?? null,
+  });
 
   notify.success("Success", `Extension deleted successfully!`);
 }

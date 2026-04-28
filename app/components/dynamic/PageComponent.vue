@@ -64,7 +64,14 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const { loadDynamicComponent, getCachedComponent, getCachedExtensionMeta, setCachedExtensionMeta } = useDynamicComponent();
+const {
+  loadDynamicComponent,
+  getCachedComponent,
+  getCachedExtensionMeta,
+  setCachedExtensionMeta,
+  extensionCacheInvalidation,
+  isExtensionInvalidationMatch,
+} = useDynamicComponent();
 const { setRouteLoading } = useGlobalState();
 const { menuItems } = useMenuRegistry();
 const perf = useExtensionPerf();
@@ -86,6 +93,7 @@ const isPathRegisteredInMenu = () => {
 
 const error = ref<string | null>(null);
 const extensionComponent = ref<any>(null);
+const currentExtensionMeta = ref<any>(null);
 const isLoading = ref(true);
 
 const {
@@ -117,6 +125,7 @@ const tryLoadFromCache = (): boolean => {
 
   const cachedComponent = getCachedComponent(cachedMeta.extensionId, cachedMeta.updatedAt);
   if (cachedComponent) {
+    currentExtensionMeta.value = cachedMeta;
     extensionComponent.value = cachedComponent;
     return true;
   }
@@ -170,6 +179,7 @@ const fetchAndLoadExtension = async () => {
     }
 
     const extension = menuItem.extension;
+    currentExtensionMeta.value = extension;
 
     if (!extension.isEnabled) {
       error.value = `Extension "${extension.name}" is currently disabled. Please contact an administrator to enable this extension.`;
@@ -200,6 +210,24 @@ const fetchAndLoadExtension = async () => {
   }
 };
 
+watch(extensionCacheInvalidation, async (invalidation) => {
+  const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(props.path) || menuResponse.value?.data?.[0]?.extension;
+  const invalidationPath = invalidation?.path;
+  const matchesPath = invalidationPath != null && (
+    String(invalidationPath) === props.path
+    || String(invalidationPath) === normalizedPath.value
+  );
+  if (!matchesPath && !isExtensionInvalidationMatch(currentExtension, invalidation)) return;
+
+  isLoading.value = true;
+  error.value = null;
+  extensionComponent.value = null;
+  setRouteLoading(true);
+  await fetchAndLoadExtension();
+  setRouteLoading(false);
+  isLoading.value = false;
+});
+
 const retry = () => {
   isLoading.value = true;
   loadMatchingExtension();
@@ -210,6 +238,7 @@ watch(
   () => {
     isLoading.value = true;
     extensionComponent.value = null;
+    currentExtensionMeta.value = null;
     loadMatchingExtension();
   },
   { immediate: true }

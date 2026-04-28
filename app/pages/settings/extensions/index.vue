@@ -104,6 +104,7 @@ const { confirm } = useConfirm();
 const { createLoader } = useLoader();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
+const { invalidateExtensionCache } = useDynamicComponent();
 
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
@@ -275,6 +276,12 @@ const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
   notify.success("Success", `Extension "${extension.name}" has been ${
       newStatus ? "activated" : "deactivated"
     } successfully!`);
+  invalidateExtensionCache({
+    reason: "status",
+    id: getId(extension),
+    extensionId: extension.extensionId,
+    path: extension.menu?.path ?? null,
+  });
 };
 
 const { execute: deleteExtensionApi, error: deleteError } = useApi(
@@ -302,6 +309,12 @@ const deleteExtension = async (extension: ExtensionDefinition) => {
 
     await fetchExtensions();
     await fetchMenuDefinitions();
+    invalidateExtensionCache({
+      reason: "deleted",
+      id: getId(extension),
+      extensionId: extension.extensionId,
+      path: extension.menu?.path ?? null,
+    });
 
     notify.success("Success", `Extension "${extension.id}" has been deleted successfully!`);
   }

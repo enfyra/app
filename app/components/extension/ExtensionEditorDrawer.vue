@@ -16,6 +16,7 @@ const tableName = "extension_definition";
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getId, getIdFieldName } = useDatabase();
 const { me } = useAuth();
+const { invalidateExtensionCache } = useDynamicComponent();
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -169,6 +170,14 @@ async function handleSave() {
     if (updateError.value) {
       return;
     }
+
+    invalidateExtensionCache({
+      reason: "updated",
+      id: extensionId,
+      extensionId: form.value.extensionId,
+      path: props.menu?.path ?? null,
+      updatedAt: form.value.updatedAt,
+    });
   } else {
     const body = {
       ...form.value,
@@ -180,6 +189,13 @@ async function handleSave() {
     if (createError.value) {
       return;
     }
+
+    invalidateExtensionCache({
+      reason: "created",
+      id: getId(props.menu?.extension),
+      extensionId: form.value.extensionId,
+      path: props.menu?.path ?? null,
+    });
   }
 
   hasFormChanges.value = false;

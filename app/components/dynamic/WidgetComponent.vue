@@ -58,11 +58,19 @@ defineOptions({
   inheritAttrs: false
 });
 
-const { loadDynamicComponent, getCachedComponent, getCachedExtensionMeta, setCachedExtensionMeta } = useDynamicComponent();
+const {
+  loadDynamicComponent,
+  getCachedComponent,
+  getCachedExtensionMeta,
+  setCachedExtensionMeta,
+  extensionCacheInvalidation,
+  isExtensionInvalidationMatch,
+} = useDynamicComponent();
 const { getIdFieldName } = useDatabase();
 
 const error = ref<string | null>(null);
 const widgetComponent = ref<any>(null);
+const currentExtensionMeta = ref<any>(null);
 const loading = ref(false);
 
 const {
@@ -91,6 +99,7 @@ const tryLoadFromCache = (): boolean => {
 
   const cachedComponent = getCachedComponent(cachedMeta.extensionId, cachedMeta.updatedAt);
   if (cachedComponent) {
+    currentExtensionMeta.value = cachedMeta;
     widgetComponent.value = cachedComponent;
     return true;
   }
@@ -125,6 +134,7 @@ const fetchAndLoadWidget = async () => {
     }
 
     const extension = extensionResponse.value.data[0];
+    currentExtensionMeta.value = extension;
 
     if (!extension.isEnabled) {
       error.value = `Widget "${extension.name}" is currently disabled. Please contact an administrator to enable this widget.`;
@@ -153,6 +163,19 @@ const fetchAndLoadWidget = async () => {
   }
 };
 
+watch(extensionCacheInvalidation, async (invalidation) => {
+  const widgetPath = `widget:${props.id}`;
+  const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(widgetPath) || extensionResponse.value?.data?.[0];
+  const matchesByRecordId = invalidation?.id != null && String(invalidation.id) === String(props.id);
+  if (!matchesByRecordId && !isExtensionInvalidationMatch(currentExtension, invalidation)) return;
+
+  loading.value = true;
+  error.value = null;
+  widgetComponent.value = null;
+  await fetchAndLoadWidget();
+  loading.value = false;
+});
+
 const retry = () => {
   loadMatchingWidget();
 };
@@ -160,6 +183,7 @@ const retry = () => {
 watch(
   () => props.id,
   () => {
+    currentExtensionMeta.value = null;
     loadMatchingWidget();
   },
   { immediate: true }

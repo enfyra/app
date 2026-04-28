@@ -3,9 +3,25 @@ const maxCacheSize = 50;
 const cacheHits = ref(0);
 const cacheMisses = ref(0);
 
+export type ExtensionCacheInvalidationReason = "created" | "updated" | "deleted" | "status";
+
+export interface ExtensionCacheInvalidation {
+  token: number;
+  reason: ExtensionCacheInvalidationReason;
+  id?: string | number | null;
+  extensionId?: string | number | null;
+  path?: string | null;
+  updatedAt?: string | Date | null;
+}
+
 export const extensionMetaCache = useState<Map<string, any>>(
   "extension-meta-cache",
   () => new Map()
+);
+
+export const extensionCacheInvalidation = useState<ExtensionCacheInvalidation | null>(
+  "extension-cache-invalidation",
+  () => null
 );
 
 function buildCacheKey(extensionName: string, updatedAt?: string | Date): string {
@@ -62,6 +78,76 @@ export function getCachedExtensionMeta(path: string): any {
 
 export function setCachedExtensionMeta(path: string, extensionData: any): void {
   extensionMetaCache.value.set(path, extensionData);
+}
+
+function getExtensionRecordId(extensionData: any): string | null {
+  const id = extensionData?.id ?? extensionData?._id;
+  return id == null ? null : String(id);
+}
+
+function getExtensionRuntimeId(extensionData: any): string | null {
+  const id = extensionData?.extensionId;
+  return id == null ? null : String(id);
+}
+
+function getPathVariants(path?: string | null): Set<string> {
+  if (!path) return new Set();
+  const rawPath = String(path);
+  const withLeadingSlash = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+  const withoutLeadingSlash = rawPath.startsWith("/") ? rawPath.slice(1) : rawPath;
+  return new Set([rawPath, withLeadingSlash, withoutLeadingSlash]);
+}
+
+function matchesExtensionInvalidation(
+  extensionData: any,
+  invalidation: Pick<ExtensionCacheInvalidation, "id" | "extensionId" | "path">
+): boolean {
+  const invalidationId = invalidation.id == null ? null : String(invalidation.id);
+  const invalidationExtensionId = invalidation.extensionId == null ? null : String(invalidation.extensionId);
+  const invalidationPath = invalidation.path == null ? null : String(invalidation.path);
+  const recordId = getExtensionRecordId(extensionData);
+  const runtimeId = getExtensionRuntimeId(extensionData);
+  const menuPath = extensionData?.menu?.path == null ? null : String(extensionData.menu.path);
+  const pathVariants = getPathVariants(invalidationPath);
+
+  return Boolean(
+    (invalidationId && recordId === invalidationId)
+    || (invalidationExtensionId && runtimeId === invalidationExtensionId)
+    || (menuPath && pathVariants.has(menuPath))
+  );
+}
+
+export function isExtensionInvalidationMatch(
+  extensionData: any,
+  invalidation: ExtensionCacheInvalidation | null
+): boolean {
+  if (!extensionData || !invalidation) return false;
+  return matchesExtensionInvalidation(extensionData, invalidation);
+}
+
+export function invalidateExtensionCache(
+  invalidation: Omit<ExtensionCacheInvalidation, "token">
+): void {
+  if (invalidation.extensionId != null) {
+    clearOldVersions(String(invalidation.extensionId));
+  }
+
+  const pathVariants = getPathVariants(invalidation.path);
+  for (const [path, extensionData] of extensionMetaCache.value) {
+    const matchesPath = pathVariants.has(String(path));
+    if (!matchesPath && !matchesExtensionInvalidation(extensionData, invalidation)) continue;
+
+    const runtimeId = getExtensionRuntimeId(extensionData);
+    if (runtimeId) {
+      clearOldVersions(runtimeId);
+    }
+    extensionMetaCache.value.delete(path);
+  }
+
+  extensionCacheInvalidation.value = {
+    ...invalidation,
+    token: (extensionCacheInvalidation.value?.token ?? 0) + 1,
+  };
 }
 
 export function clearCache(extensionId?: string): void {
