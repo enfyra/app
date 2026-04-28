@@ -152,15 +152,17 @@ async function handleSave() {
 
   const idField = getIdFieldName();
   const userId = getId(me.value);
+  const extensionId = props.menu?.extension ? getId(props.menu.extension) : null;
+  const isUpdate = Boolean(extensionId);
 
-  if (props.menu?.extension && getId(props.menu.extension)) {
+  if (isUpdate) {
     const body = {
       ...form.value,
       updatedBy: userId ? { [idField]: userId } : form.value.updatedBy,
     };
 
     await updateExtension({
-      id: getId(props.menu.extension),
+      id: extensionId,
       body,
     });
 
@@ -179,8 +181,6 @@ async function handleSave() {
       return;
     }
   }
-
-notify.success("Success")
 
   hasFormChanges.value = false;
   emit('save');

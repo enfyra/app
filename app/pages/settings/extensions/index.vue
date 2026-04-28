@@ -131,6 +131,7 @@ const {
   })),
   errorContext: "Fetch Extensions",
 });
+const { fetchMenuDefinitions } = useMenuApi();
 
 const extensions = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
@@ -300,6 +301,7 @@ const deleteExtension = async (extension: ExtensionDefinition) => {
     }
 
     await fetchExtensions();
+    await fetchMenuDefinitions();
 
     notify.success("Success", `Extension "${extension.id}" has been deleted successfully!`);
   }

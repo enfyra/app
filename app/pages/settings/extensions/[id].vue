@@ -71,6 +71,7 @@ const showPreviewModal = ref(false);
 const { getIncludeFields } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
+const { fetchMenuDefinitions } = useMenuApi();
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -272,6 +273,7 @@ async function deleteExtension() {
   }
 
   notify.success("Success", "Extension deleted successfully");
+  await fetchMenuDefinitions();
   await navigateTo("/settings/extensions");
 }
 
