@@ -48,10 +48,7 @@ export type RuntimeMetricsPayload = {
   };
   hardware?: {
     effectiveMemoryMb: number;
-    hostMemoryMb: number;
     effectiveCpuCount: number;
-    hostCpuCount: number;
-    constrained: boolean;
   };
   instance: {
     id: string;

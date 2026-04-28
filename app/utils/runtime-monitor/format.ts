@@ -64,12 +64,3 @@ export function hardwareCpuLabel(metrics: RuntimeMetricsPayload) {
   if (!effective) return '-';
   return String(effective);
 }
-
-export function hostHardwareLabel(metrics: RuntimeMetricsPayload) {
-  const hostMemory = metrics.hardware?.hostMemoryMb;
-  const hostCpu = metrics.hardware?.hostCpuCount;
-  if (!hostMemory && !hostCpu) return '-';
-  const memory = hostMemory ? fmtMb(hostMemory) : '-';
-  const cpu = hostCpu ? `${hostCpu} CPU` : '-';
-  return `${memory} / ${cpu}`;
-}
