@@ -121,6 +121,7 @@ export default defineNuxtConfig({
         '@tiptap/extension-code-block-lowlight',
         'lowlight',
         '@tiptap/core',
+        '@vue-flow/background',
       ],
     },
     build: {

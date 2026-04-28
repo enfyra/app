@@ -68,6 +68,7 @@ interface Props {
   form: Record<string, any>;
   errors: Record<string, string>;
   loading: boolean;
+  routeId?: string;
   allowedMethods?: string[];
   lockMethod?: boolean;
 }
@@ -116,7 +117,16 @@ const fieldMap = computed(() => ({
       ...(props.allowedMethods ? { allowedMethods: props.allowedMethods } : {}),
     },
   },
-  sourceCode: { description: 'Must return a value. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.' },
+  sourceCode: {
+    description: 'Must return a value. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.',
+    testRun: {
+      tableName: 'route_handler_definition',
+      payload: {
+        routeId: props.routeId,
+        method: localForm.value?.method?.method ?? localForm.value?.method,
+      },
+    },
+  },
 }));
 
 const excludedFields = computed(() => {

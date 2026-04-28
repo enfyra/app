@@ -133,6 +133,13 @@ const fieldMap = computed(() => ({
     description: props.hookType === 'post'
       ? 'Do not return a value. Update @DATA or $ctx.$data instead.'
       : 'Return is optional. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.',
+    testRun: {
+      tableName: props.hookType === 'pre' ? 'pre_hook_definition' : 'post_hook_definition',
+      payload: {
+        routeId: props.routeId,
+        hookId: localForm.value?.id ?? localForm.value?._id,
+      },
+    },
   },
 }));
 

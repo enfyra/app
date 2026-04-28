@@ -57,6 +57,7 @@
 
     <WebsocketConnectionHandlerTestModal
       v-model="showConnTestModal"
+      :gateway-id="gatewayId"
       :gateway-path="String(form?.path || gateway?.path || '')"
       :script="String(form?.sourceCode || '')"
       :script-language="String(form?.scriptLanguage || 'typescript')"

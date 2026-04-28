@@ -124,11 +124,20 @@ function getCodeTestRunConfig(key: string) {
     tableName: props.tableName,
     fieldName: key,
     scriptLanguage: language,
+    payload: {
+      recordId: props.formData?.id ?? props.formData?._id,
+      routeId: props.formData?.route?.id ?? props.formData?.route?._id,
+      method: props.formData?.method?.method ?? props.formData?.method,
+    },
   };
   if (config.testRun && typeof config.testRun === "object") {
     return {
       ...base,
       ...config.testRun,
+      payload: {
+        ...base.payload,
+        ...(config.testRun.payload || {}),
+      },
     };
   }
   return base;
