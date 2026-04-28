@@ -55,16 +55,12 @@ export function averageWindowLabel(metrics: RuntimeMetricsPayload) {
 
 export function hardwareMemoryLabel(metrics: RuntimeMetricsPayload) {
   const effective = metrics.hardware?.effectiveMemoryMb;
-  const host = metrics.hardware?.hostMemoryMb;
   if (!effective) return '-';
-  if (!host || Math.abs(host - effective) < 1) return fmtMb(effective);
-  return `${fmtMb(effective)} / ${fmtMb(host)}`;
+  return fmtMb(effective);
 }
 
 export function hardwareCpuLabel(metrics: RuntimeMetricsPayload) {
   const effective = metrics.hardware?.effectiveCpuCount;
-  const host = metrics.hardware?.hostCpuCount;
   if (!effective) return '-';
-  if (!host || host === effective) return String(effective);
-  return `${effective} / ${host}`;
+  return String(effective);
 }

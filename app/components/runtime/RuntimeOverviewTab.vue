@@ -139,9 +139,9 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
         <div class="rounded-lg border border-[var(--border-default)] p-3">
           <div class="text-xs font-medium text-[var(--text-tertiary)]">Hardware / Tuning</div>
           <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <div>RAM</div>
+            <div>Allocated RAM</div>
             <div class="text-right font-medium">{{ hardwareMemoryLabel(metrics) }}</div>
-            <div>CPU</div>
+            <div>Allocated CPU</div>
             <div class="text-right font-medium">{{ hardwareCpuLabel(metrics) }}</div>
             <div>Workers</div>
             <div class="text-right font-medium">{{ metrics.executor.tuning.maxConcurrentWorkers }}</div>

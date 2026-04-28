@@ -18,7 +18,7 @@
               v-model="form"
               v-model:errors="localErrors"
               :table-name="'guard_definition'"
-              :excluded="['children', 'rules', 'parent', 'route', 'isGlobal', 'isSystem', 'position', 'methods']"
+              :excluded="['createdAt', 'updatedAt', 'children', 'rules', 'parent', 'route', 'isGlobal', 'isSystem', 'position', 'methods']"
               :field-map="fieldMap"
               mode="create"
               @has-changed="(v) => (hasChanged = v)"

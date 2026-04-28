@@ -9,7 +9,7 @@
             v-model:errors="errors"
             @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             :table-name="tableName"
-            :excluded="['children', 'rules', 'parent']"
+            :excluded="['createdAt', 'updatedAt', 'children', 'rules', 'parent']"
             :field-map="fieldMap"
             :loading="loading"
           />
