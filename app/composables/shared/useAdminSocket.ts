@@ -7,12 +7,16 @@ type ReloadPayload = {
   flow: string;
   status: 'pending' | 'done';
   steps?: string[];
+  reloadId?: string;
+  instanceId?: string;
 };
 
 type ActiveReload = {
+  key: string;
   flow: string;
   steps: string[];
   startedAt: number;
+  instanceId?: string;
 };
 
 const FLOW_LABELS: Record<string, string> = {
@@ -139,21 +143,28 @@ export function useAdminSocket() {
     socket.on('$system:reload', async (data: ReloadPayload) => {
       const flow = data?.flow;
       if (!flow) return;
+      const key = data.reloadId || `${data.instanceId || 'default'}:${flow}`;
 
       if (data.status === 'pending') {
         reloadDoneCountdown.value = 0;
         clearReloadTimers();
-        if (!activeReloads.value.some((r) => r.flow === flow)) {
+        if (!activeReloads.value.some((r) => r.key === key)) {
           activeReloads.value = [
             ...activeReloads.value,
-            { flow, steps: data.steps ?? [flow], startedAt: Date.now() },
+            {
+              key,
+              flow,
+              steps: data.steps ?? [flow],
+              startedAt: Date.now(),
+              instanceId: data.instanceId,
+            },
           ];
         }
         return;
       }
 
       if (data.status === 'done') {
-        const entry = activeReloads.value.find((r) => r.flow === flow);
+        const entry = activeReloads.value.find((r) => r.key === key);
         const steps = entry?.steps ?? data.steps ?? [flow];
 
         const needsSchema = steps.includes('metadata') || steps.includes('graphql');
@@ -168,7 +179,7 @@ export function useAdminSocket() {
           );
         }
 
-        activeReloads.value = activeReloads.value.filter((r) => r.flow !== flow);
+        activeReloads.value = activeReloads.value.filter((r) => r.key !== key);
 
         if (activeReloads.value.length === 0) {
           startDoneCountdown();

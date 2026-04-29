@@ -152,6 +152,8 @@ export type RuntimeAppMetrics = {
   };
   cache: {
     recent: Array<{
+      instanceId?: string;
+      reloadId?: string;
       flow: string;
       table: string;
       scope?: string;

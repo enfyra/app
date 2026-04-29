@@ -164,17 +164,24 @@ export function useRuntimeMetrics() {
     return [...map.values()].sort((a, b) => b.rps - a.rps).slice(0, 20);
   });
 
-  const cacheReloadRows = computed(() =>
-    appMetricInstances.value
-      .flatMap((metrics) =>
-        (metrics.app?.cache.recent ?? []).map((row: RuntimeAppMetrics['cache']['recent'][number]) => ({
-          ...row,
-          instanceId: metrics.instanceId,
-        })),
-      )
+  const cacheReloadRows = computed(() => {
+    const map = new Map<string, RuntimeAppMetrics['cache']['recent'][number] & { instanceId: string }>();
+    for (const metrics of appMetricInstances.value) {
+      for (const row of metrics.app?.cache.recent ?? []) {
+        const instanceId = row.instanceId ?? metrics.instanceId;
+        const key = row.reloadId ?? `${instanceId}:${row.completedAt}:${row.flow}:${row.table}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            ...row,
+            instanceId,
+          });
+        }
+      }
+    }
+    return [...map.values()]
       .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
-      .slice(0, 20),
-  );
+      .slice(0, 20);
+  });
 
   const databaseRows = computed(() => {
     const map = new Map<string, any>();
