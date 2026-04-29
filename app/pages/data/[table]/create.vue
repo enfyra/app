@@ -56,16 +56,23 @@ useHeaderActionRegistry([
 async function handleCreate() {
   if (!await validateForm(newRecord.value, createErrors)) return;
 
-  await createRecord({ body: newRecord.value });
+  const response = await createRecord({ body: newRecord.value });
 
   if (createError.value) {
+    return;
+  }
+
+  const createdRecord = extractCreatedRecord(response ?? createData.value);
+  const createdId = getId(createdRecord);
+  if (createdId == null || String(createdId) === "") {
+    notify.error("Create failed", "The created record response did not include an id.");
     return;
   }
 
   notify.success("Success", "New record created!");
 
   await navigateTo(
-    `/data/${route.params.table}/${getId(createData.value?.data[0])}`,
+    `/data/${route.params.table}/${createdId}`,
     { replace: true }
   );
 }

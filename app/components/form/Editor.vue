@@ -210,6 +210,7 @@ const emit = defineEmits<{
 }>();
 
 const ALWAYS_EXCLUDED_FIELDS = new Set(["compiledCode"]);
+const CREATE_MODE_EXCLUDED_FIELDS = new Set(["createdAt", "updatedAt", "isSystem", "isRootAdmin"]);
 
 const { definition, fieldMap: schemaColumnMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
   props.tableName
@@ -343,6 +344,7 @@ const filteredFormFields = computed(() => {
     if (!key) return false;
     if (ALWAYS_EXCLUDED_FIELDS.has(key)) return false;
     if (props.excluded.includes(key)) return false;
+    if (props.mode === 'create' && (key === getIdFieldName() || CREATE_MODE_EXCLUDED_FIELDS.has(key))) return false;
     if (["isSystem", "isRootAdmin"].includes(key)) return false;
     return true;
   });
