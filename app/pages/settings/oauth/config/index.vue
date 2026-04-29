@@ -72,7 +72,7 @@ const page = ref(1);
 const limit = 9;
 
 const notify = useNotify();
-const { createLoader } = useLoader();
+const { getLoader: getConfigLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
@@ -106,7 +106,6 @@ const {
 const configs = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
-const configLoaders = ref<Record<string, any>>({});
 
 const { execute: updateConfig, error: updateError } = useApi(
   () => `/oauth_config_definition`,
@@ -187,13 +186,6 @@ function getHeaderActions(config: OAuthConfigDefinition) {
   }
 
   return actions;
-}
-
-function getConfigLoader(configId: string) {
-  if (!configLoaders.value[configId]) {
-    configLoaders.value[configId] = createLoader();
-  }
-  return configLoaders.value[configId];
 }
 
 const toggleConfigStatus = async (config: OAuthConfigDefinition) => {

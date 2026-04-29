@@ -1,5 +1,14 @@
+import type { ComputedRef } from 'vue';
+
+export type Loader = {
+  isLoading: ComputedRef<boolean>;
+  startLoading: () => void;
+  stopLoading: () => void;
+  withLoading: <T>(fn: () => Promise<T>) => Promise<T>;
+};
+
 export const useLoader = () => {
-  const createLoader = () => {
+  const createLoader = (): Loader => {
     const loadingState = ref(false);
 
     const isLoading = computed(() => loadingState.value);
@@ -32,3 +41,22 @@ export const useLoader = () => {
     createLoader,
   };
 };
+
+export function useKeyedLoaders() {
+  const { createLoader } = useLoader();
+  const loaders = new Map<string, Loader>();
+
+  function getLoader(key: string | number | null | undefined): Loader {
+    const normalized = String(key ?? '');
+    let loader = loaders.get(normalized);
+    if (!loader) {
+      loader = createLoader();
+      loaders.set(normalized, loader);
+    }
+    return loader;
+  }
+
+  return {
+    getLoader,
+  };
+}

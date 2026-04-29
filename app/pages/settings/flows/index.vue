@@ -92,7 +92,7 @@ const limit = 9;
 
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { createLoader } = useLoader();
+const { getLoader: getFlowLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 const { isMounted } = useMounted();
@@ -122,8 +122,6 @@ const {
 
 const flows = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
-
-const flowLoaders = ref<Record<string, any>>({});
 
 const { execute: updateFlow, error: updateError } = useApi(
   () => `/flow_definition`,
@@ -176,13 +174,6 @@ function getFooterActions(flow: any) {
       onClick: (e?: Event) => { e?.stopPropagation(); deleteFlow(flow); },
     },
   ];
-}
-
-function getFlowLoader(flowId: string) {
-  if (!flowLoaders.value[flowId]) {
-    flowLoaders.value[flowId] = createLoader();
-  }
-  return flowLoaders.value[flowId];
 }
 
 const toggleFlowStatus = async (flow: any) => {

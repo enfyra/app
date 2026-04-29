@@ -101,7 +101,7 @@ const limit = 9;
 
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { createLoader } = useLoader();
+const { getLoader: getExtensionLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 const { invalidateExtensionCache } = useDynamicComponent();
@@ -137,7 +137,6 @@ const { fetchMenuDefinitions } = useMenuApi();
 const extensions = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
-const extensionLoaders = ref<Record<string, any>>({});
 
 const { execute: updateExtension, error: updateError } = useApi(
   () => `/extension_definition`,
@@ -230,13 +229,6 @@ function getFooterActions(extension: ExtensionDefinition) {
       },
     }
   ];
-}
-
-function getExtensionLoader(extensionId: string) {
-  if (!extensionLoaders.value[extensionId]) {
-    extensionLoaders.value[extensionId] = createLoader();
-  }
-  return extensionLoaders.value[extensionId];
 }
 
 const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
