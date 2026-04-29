@@ -62,11 +62,13 @@ async function createNewRecord() {
     return;
   }
 
-  await createRecord({ body: createForm.value });
-  const createdRecord = createData.value?.data[0];
+  const response = await createRecord({ body: createForm.value });
+  const createdRecord = extractCreatedRecord(response ?? createData.value);
+  const createdId = getId(createdRecord);
+  if (createdId == null || String(createdId) === "") return;
   emit("update:selected", [
     ...props.selected,
-    { [getIdFieldName()]: getId(createdRecord) },
+    { [getIdFieldName()]: createdId },
   ]);
   emit("created");
   emit("update:modelValue", false);
