@@ -5,6 +5,7 @@ import RuntimeDatabaseTab from '~/components/runtime/RuntimeDatabaseTab.vue';
 import RuntimeFlowsTab from '~/components/runtime/RuntimeFlowsTab.vue';
 import RuntimeMetricGuide from '~/components/runtime/RuntimeMetricGuide.vue';
 import RuntimeOverviewTab from '~/components/runtime/RuntimeOverviewTab.vue';
+import RuntimeRedisTab from '~/components/runtime/RuntimeRedisTab.vue';
 import RuntimeRequestsTab from '~/components/runtime/RuntimeRequestsTab.vue';
 import RuntimeSummaryCards from '~/components/runtime/RuntimeSummaryCards.vue';
 import RuntimeWorkersTab from '~/components/runtime/RuntimeWorkersTab.vue';
@@ -54,7 +55,7 @@ registerPageHeader({
 </script>
 
 <template>
-  <div v-if="hasPermission" class="max-w-[1000px] space-y-6 pb-10">
+  <div v-if="hasPermission" class="w-full min-w-0 max-w-[1000px] space-y-6 overflow-hidden pb-10">
     <RuntimeSummaryCards :runtime="runtime" />
 
     <CommonEmptyState
@@ -115,6 +116,7 @@ registerPageHeader({
       <RuntimeOverviewTab v-if="runtime.activeTab === 'overview'" :runtime="runtime" />
       <RuntimeRequestsTab v-else-if="runtime.activeTab === 'requests'" :runtime="runtime" />
       <RuntimeCacheTab v-else-if="runtime.activeTab === 'cache'" :runtime="runtime" />
+      <RuntimeRedisTab v-else-if="runtime.activeTab === 'redis'" :runtime="runtime" />
       <RuntimeDatabaseTab v-else-if="runtime.activeTab === 'database'" :runtime="runtime" />
       <RuntimeFlowsTab v-else-if="runtime.activeTab === 'flows'" :runtime="runtime" />
       <RuntimeWorkersTab v-else-if="runtime.activeTab === 'workers'" :runtime="runtime" />

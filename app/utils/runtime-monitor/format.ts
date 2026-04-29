@@ -20,6 +20,14 @@ export function fmtMb(value: number) {
   return `${fmtNumber(value, value < 100 ? 1 : 0)}MB`;
 }
 
+export function fmtBytes(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return '-';
+  if (value >= 1024 * 1024 * 1024) return `${fmtNumber(value / (1024 * 1024 * 1024), 2)}GB`;
+  if (value >= 1024 * 1024) return `${fmtNumber(value / (1024 * 1024), 1)}MB`;
+  if (value >= 1024) return `${fmtNumber(value / 1024, 1)}KB`;
+  return `${fmtNumber(value)}B`;
+}
+
 export function fmtPercent(value: number) {
   return `${fmtNumber(value * 100, 0)}%`;
 }
