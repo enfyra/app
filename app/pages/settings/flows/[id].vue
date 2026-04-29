@@ -177,7 +177,29 @@
               </span>
             </div>
             <div v-if="testResult.error" class="p-2 rounded bg-red-50 dark:bg-red-900/20 text-xs text-red-600 dark:text-red-400 break-words">{{ testResult.error }}</div>
-            <pre v-else-if="testResult.result !== undefined" class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono text-[var(--text-secondary)] overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
+            <div v-else class="space-y-2">
+              <div v-if="testResult.result !== undefined" class="space-y-1">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Result</div>
+                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.result)">Copy</UButton>
+                </div>
+                <pre class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono text-[var(--text-secondary)] overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
+              </div>
+              <div v-if="testResult.logs?.length" class="space-y-1">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Logs</div>
+                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.logs)">Copy</UButton>
+                </div>
+                <pre class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono text-[var(--text-secondary)] overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.logs, null, 2) }}</pre>
+              </div>
+              <div v-if="testResult.emitted?.length" class="space-y-1">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Emitted</div>
+                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.emitted)">Copy</UButton>
+                </div>
+                <pre class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono text-[var(--text-secondary)] overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.emitted, null, 2) }}</pre>
+              </div>
+            </div>
           </div>
           <div class="flex gap-2 w-full p-4 border-t border-[var(--border-default)]">
             <UButton v-if="editingStepId" color="error" variant="soft" @click="deleteCurrentStep">Delete</UButton>
@@ -661,6 +683,12 @@ function cancelTest() {
   testResult.value = { success: false, error: 'Test cancelled', duration: 0 };
 }
 
+async function copyTestValue(value: any) {
+  const text = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+  await navigator.clipboard.writeText(text);
+  notify.success("Copied");
+}
+
 async function testCurrentStep() {
   let config;
   try {
@@ -688,7 +716,19 @@ async function testCurrentStep() {
         return;
       }
     }
-    await testApi({ body: { kind: 'flow_step', type: stepForm.value.type, config, timeout: stepForm.value.timeout || 5000, mockFlow } });
+    await testApi({
+      body: {
+        kind: 'flow_step',
+        id: editingStepId.value || undefined,
+        stepId: editingStepId.value || undefined,
+        flowId,
+        key: stepForm.value.key,
+        type: stepForm.value.type,
+        config,
+        timeout: stepForm.value.timeout || 5000,
+        mockFlow,
+      },
+    });
     if (testError.value) {
       testResult.value = { success: false, error: testError.value.message, duration: 0 };
     } else {

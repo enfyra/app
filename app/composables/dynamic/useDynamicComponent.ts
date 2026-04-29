@@ -11,6 +11,9 @@ import {
   getCacheStats,
   getCachedExtensionMeta,
   setCachedExtensionMeta,
+  extensionCacheInvalidation,
+  invalidateExtensionCache,
+  isExtensionInvalidationMatch,
   incrementCacheHits,
   incrementCacheMisses
 } from "./cache";
@@ -196,5 +199,8 @@ export const useDynamicComponent = () => {
     getCachedComponent,
     getCachedExtensionMeta,
     setCachedExtensionMeta,
+    extensionCacheInvalidation,
+    invalidateExtensionCache,
+    isExtensionInvalidationMatch,
   };
 };

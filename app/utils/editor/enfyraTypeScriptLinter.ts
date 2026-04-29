@@ -528,6 +528,37 @@ export async function validateEnfyraRequiredReturnScript(
 
   const ts = await loadTypeScript();
   const transformed = transformEnfyraCode(source);
+  const sourceFile = ts.createSourceFile(
+    language === 'typescript' ? 'enfyra-return-source.ts' : 'enfyra-return-source.js',
+    transformed.code,
+    ts.ScriptTarget.ES2022,
+    true,
+    language === 'typescript' ? ts.ScriptKind.TS : ts.ScriptKind.JS,
+  );
+  const hasTopLevelValueReturn = (node: import('typescript').Node): boolean => {
+    if (
+      ts.isFunctionDeclaration(node) ||
+      ts.isFunctionExpression(node) ||
+      ts.isArrowFunction(node) ||
+      ts.isMethodDeclaration(node) ||
+      ts.isConstructorDeclaration(node) ||
+      ts.isGetAccessorDeclaration(node) ||
+      ts.isSetAccessorDeclaration(node)
+    ) {
+      return false;
+    }
+
+    if (ts.isReturnStatement(node)) {
+      return Boolean(node.expression);
+    }
+
+    return node.getChildren(sourceFile).some(hasTopLevelValueReturn);
+  };
+
+  if (!sourceFile.statements.some(hasTopLevelValueReturn)) {
+    return { ok: false, message: 'Script must return a value.' };
+  }
+
   const fileName =
     language === 'typescript' ? 'enfyra-return-script.ts' : 'enfyra-return-script.js';
   const libName = 'enfyra-lib.d.ts';

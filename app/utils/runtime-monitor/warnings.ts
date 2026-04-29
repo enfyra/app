@@ -40,7 +40,7 @@ export function flowWarnings(metrics: RuntimeMetricsPayload) {
 
 export function databaseWarnings(metrics: RuntimeMetricsPayload) {
   const warnings: string[] = [];
-  const pendingDb = dbPoolRows(metrics).reduce((sum, row: any) => sum + (row.pending ?? 0), 0);
+  const pendingDb = dbPoolRows(metrics).reduce((sum, row) => sum + row.pending, 0);
   if (pendingDb > 0) warnings.push(`DB pool has ${pendingDb} pending request${pendingDb > 1 ? 's' : ''}.`);
   return warnings;
 }

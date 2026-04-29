@@ -8,7 +8,7 @@ const tableName = "route_definition";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
-const { createLoader } = useLoader();
+const { getLoader: getRouteLoader } = useKeyedLoaders();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -233,7 +233,6 @@ const { execute: deleteRouteApi, error: deleteError } = useApi(
   }
 );
 
-const routeLoaders = ref<Record<string, any>>({});
 
 const methodColorMap: Record<string, string> = {
   GET: 'info',
@@ -258,13 +257,6 @@ function getPublishedMethodsStat(routeItem: any) {
     })) : undefined,
     value: filtered.length ? undefined : '-',
   };
-}
-
-function getRouteLoader(routeId: string) {
-  if (!routeLoaders.value[routeId]) {
-    routeLoaders.value[routeId] = createLoader();
-  }
-  return routeLoaders.value[routeId];
 }
 
 function getRouteHeaderActions(routeItem: any) {

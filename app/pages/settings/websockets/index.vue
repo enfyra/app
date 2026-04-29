@@ -105,7 +105,7 @@ const limit = 9;
 
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { createLoader } = useLoader();
+const { getLoader: getGatewayLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
@@ -139,7 +139,6 @@ const {
 const gateways = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
-const gatewayLoaders = ref<Record<string, any>>({});
 const connectionCounts = ref<Record<string, number>>({});
 
 const { execute: updateGateway, error: updateError } = useApi(
@@ -232,13 +231,6 @@ function getFooterActions(gateway: any) {
   });
 
   return actions;
-}
-
-function getGatewayLoader(gatewayId: string) {
-  if (!gatewayLoaders.value[gatewayId]) {
-    gatewayLoaders.value[gatewayId] = createLoader();
-  }
-  return gatewayLoaders.value[gatewayId];
 }
 
 const toggleGatewayStatus = async (gateway: any) => {

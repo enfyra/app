@@ -22,7 +22,12 @@ const searchQuery = ref("");
 const showSystem = ref(route.query.system === 'true');
 const router = useRouter();
 
-watch(() => route.query.system, (v) => { showSystem.value = v === 'true' })
+watch(() => route.query.system, (v) => {
+  const next = v === 'true';
+  if (showSystem.value !== next) {
+    showSystem.value = next;
+  }
+});
 
 watch(showSystem, (v) => {
   if ((route.query.system === 'true') !== v) {
@@ -95,7 +100,6 @@ useSubHeaderActionRegistry([
     onClick: () => {
       showSystem.value = !showSystem.value;
       page.value = 1;
-      fetchCollections();
     },
   },
   {
@@ -155,9 +159,9 @@ useHeaderActionRegistry({
 });
 
 watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
+  () => [route.query.page, route.query.system],
+  async ([newPage]) => {
+    page.value = newPage ? Number(newPage) : 1;
     await fetchCollections();
   },
   { immediate: true }
@@ -287,7 +291,7 @@ function getGradientForCollection(id: any): string | undefined {
             :to="
               (p) => ({
                 path: route.path,
-                query: { page: p },
+                query: { ...route.query, page: p },
               })
             "
             :ui="{

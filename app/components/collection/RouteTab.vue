@@ -375,9 +375,8 @@ function handleCancelHandler() {
 }
 
 async function saveHandler() {
-  const { isValid, errors } = validateHandler(handlerForm.value)
-  const isReturnValid = await validateRouteHandlerReturn(handlerForm.value, errors)
-  if (!isValid || !isReturnValid) {
+  const { isValid, errors } = await validateRouteHandlerForm(handlerForm.value, validateHandler)
+  if (!isValid) {
     handlerErrors.value = errors
     notify.error("Validation error", "Please check the fields with errors.")
     return
@@ -442,9 +441,8 @@ function handleCancelEditHandler() {
 
 async function updateHandler() {
   if (!editingHandlerId.value || !editHandlerForm.value) return
-  const { isValid, errors } = validateHandler(editHandlerForm.value)
-  const isReturnValid = await validateRouteHandlerReturn(editHandlerForm.value, errors)
-  if (!isValid || !isReturnValid) {
+  const { isValid, errors } = await validateRouteHandlerForm(editHandlerForm.value, validateHandler)
+  if (!isValid) {
     editHandlerErrors.value = errors
     notify.error("Validation error", "Please check the fields with errors.")
     return
@@ -528,14 +526,13 @@ function handleCancelHook() {
 async function saveHook() {
   const isPreHook = hookType.value === 'pre'
   const validate = isPreHook ? validatePreHook : validatePostHook
-  const { isValid, errors } = validate(hookForm.value)
-  const isReturnValid = await validateHookReturnContract(
+  const { isValid, errors } = await validateRouteHookForm(
     hookForm.value,
-    errors,
+    validate,
     isPreHook ? 'pre' : 'post',
   )
 
-  if (!isValid || !isReturnValid) {
+  if (!isValid) {
     hookErrors.value = errors
     notify.error("Validation error", "Please check the fields with errors.")
     return
@@ -649,14 +646,13 @@ async function updateHook() {
 
   const isPreHook = editHookType.value === 'pre'
   const validate = isPreHook ? validatePreHook : validatePostHook
-  const { isValid, errors } = validate(editHookForm.value)
-  const isReturnValid = await validateHookReturnContract(
+  const { isValid, errors } = await validateRouteHookForm(
     editHookForm.value,
-    errors,
+    validate,
     isPreHook ? 'pre' : 'post',
   )
 
-  if (!isValid || !isReturnValid) {
+  if (!isValid) {
     editHookErrors.value = errors
     notify.error("Validation error", "Please check the fields with errors.")
     return
@@ -910,6 +906,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       v-model:form="handlerForm"
       v-model:errors="handlerErrors"
       :loading="createHandlerLoading"
+      :route-id="routeId"
       :allowed-methods="handlerAvailableMethods"
       :lock-method="handlerLockedMethod"
       @save="saveHandler"
@@ -934,6 +931,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       v-model:form="editHandlerForm"
       v-model:errors="editHandlerErrors"
       :loading="updateHandlerLoading"
+      :route-id="routeId"
       :allowed-methods="availableMethodStrings"
       :lock-method="true"
       @save="updateHandler"

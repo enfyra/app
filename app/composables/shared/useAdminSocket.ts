@@ -1,40 +1,35 @@
 import { io, type Socket } from 'socket.io-client';
 
 import { ENFYRA_SOCKET_AUTH_ERROR } from '~/constants/enfyra';
-import type { RuntimeMetricsPayload } from '~/types/runtime-monitor';
+import type {
+  RedisAdminKeyDetail,
+  RedisAdminKeysResponse,
+  RedisAdminOverview,
+  RuntimeMetricsPayload,
+} from '~/types/runtime-monitor';
+import { runtimeCacheFlowLabel } from '~/utils/runtime-monitor/cache';
 
 type ReloadPayload = {
   flow: string;
   status: 'pending' | 'done';
   steps?: string[];
+  reloadId?: string;
+  instanceId?: string;
 };
 
 type ActiveReload = {
+  key: string;
   flow: string;
   steps: string[];
   startedAt: number;
+  instanceId?: string;
 };
 
-const FLOW_LABELS: Record<string, string> = {
-  metadata: 'Schema metadata',
-  route: 'Routes',
-  graphql: 'GraphQL',
-  guard: 'Guards',
-  fieldPermission: 'Field permissions',
-  setting: 'Settings',
-  storage: 'Storage',
-  oauth: 'OAuth',
-  websocket: 'WebSockets',
-  package: 'Packages',
-  flow: 'Flows',
-  folder: 'Folders',
-  bootstrap: 'Bootstrap scripts',
-  all: 'All caches',
+type RedisSocketResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: { message?: string };
 };
-
-export function flowLabel(flow: string): string {
-  return FLOW_LABELS[flow] ?? flow;
-}
 
 let socket: Socket | null = null;
 
@@ -42,13 +37,16 @@ export const activeReloads = ref<ActiveReload[]>([]);
 export const reloadDoneCountdown = ref(0);
 export const runtimeMetricsByInstance = ref<Record<string, RuntimeMetricsPayload>>({});
 export const runtimeMetricsUpdatedAt = ref<number | null>(null);
+export const redisAdminOverview = ref<RedisAdminOverview | null>(null);
+export const redisAdminOverviewUpdatedAt = ref<number | null>(null);
+export const redisAdminKeyChange = ref<any | null>(null);
 
 const isReloadingRef = computed(() => activeReloads.value.length > 0);
 const showReloadBannerRef = computed(
   () => activeReloads.value.length > 0 || reloadDoneCountdown.value > 0,
 );
 const reloadLabelsRef = computed(() =>
-  activeReloads.value.map((r) => flowLabel(r.flow)),
+  activeReloads.value.map((r) => runtimeCacheFlowLabel(r.flow)),
 );
 
 export const isReloading = isReloadingRef;
@@ -139,21 +137,28 @@ export function useAdminSocket() {
     socket.on('$system:reload', async (data: ReloadPayload) => {
       const flow = data?.flow;
       if (!flow) return;
+      const key = data.reloadId || `${data.instanceId || 'default'}:${flow}`;
 
       if (data.status === 'pending') {
         reloadDoneCountdown.value = 0;
         clearReloadTimers();
-        if (!activeReloads.value.some((r) => r.flow === flow)) {
+        if (!activeReloads.value.some((r) => r.key === key)) {
           activeReloads.value = [
             ...activeReloads.value,
-            { flow, steps: data.steps ?? [flow], startedAt: Date.now() },
+            {
+              key,
+              flow,
+              steps: data.steps ?? [flow],
+              startedAt: Date.now(),
+              instanceId: data.instanceId,
+            },
           ];
         }
         return;
       }
 
       if (data.status === 'done') {
-        const entry = activeReloads.value.find((r) => r.flow === flow);
+        const entry = activeReloads.value.find((r) => r.key === key);
         const steps = entry?.steps ?? data.steps ?? [flow];
 
         const needsSchema = steps.includes('metadata') || steps.includes('graphql');
@@ -168,7 +173,7 @@ export function useAdminSocket() {
           );
         }
 
-        activeReloads.value = activeReloads.value.filter((r) => r.flow !== flow);
+        activeReloads.value = activeReloads.value.filter((r) => r.key !== key);
 
         if (activeReloads.value.length === 0) {
           startDoneCountdown();
@@ -186,6 +191,22 @@ export function useAdminSocket() {
       runtimeMetricsUpdatedAt.value = Date.now();
     });
 
+    socket.on('$system:redis:overview', (data: RedisAdminOverview) => {
+      redisAdminOverview.value = data;
+      redisAdminOverviewUpdatedAt.value = Date.now();
+    });
+
+    socket.on('$system:redis:key:changed', (data: any) => {
+      redisAdminKeyChange.value = {
+        ...data,
+        receivedAt: Date.now(),
+      };
+    });
+
+    socket.on('$system:redis:error', (data: { message?: string }) => {
+      notify.error('Redis read failed', data?.message || 'Redis admin socket request failed');
+    });
+
     socket.on('$system:package:installed', (data: any) => {
       notify.success('Package ready', `${data.name}@${data.version} installed successfully`);
     });
@@ -199,6 +220,41 @@ export function useAdminSocket() {
     });
   }
 
+  function redisRequest<T>(event: string, payload: Record<string, any> = {}) {
+    return new Promise<T>((resolve, reject) => {
+      if (!socket) {
+        reject(new Error('Admin socket is not connected'));
+        return;
+      }
+      const timer = setTimeout(() => {
+        reject(new Error('Redis admin socket request timed out'));
+      }, 30000);
+      socket.emit(event, payload, (response: RedisSocketResponse<T>) => {
+        clearTimeout(timer);
+        if (!response?.success) {
+          reject(new Error(response?.error?.message || 'Redis admin socket request failed'));
+          return;
+        }
+        resolve(response.data as T);
+      });
+    });
+  }
+
+  async function loadRedisOverview() {
+    const overview = await redisRequest<RedisAdminOverview>('$system:redis:overview:get');
+    redisAdminOverview.value = overview;
+    redisAdminOverviewUpdatedAt.value = Date.now();
+    return overview;
+  }
+
+  function loadRedisKeys(payload: { cursor?: string; pattern?: string; count?: number }) {
+    return redisRequest<RedisAdminKeysResponse>('$system:redis:keys:list', payload);
+  }
+
+  function loadRedisKey(payload: { key: string; limit?: number }) {
+    return redisRequest<RedisAdminKeyDetail>('$system:redis:key:get', payload);
+  }
+
   return {
     adminSocket: socket,
     activeReloads,
@@ -206,5 +262,11 @@ export function useAdminSocket() {
     showReloadBanner,
     runtimeMetricsByInstance,
     runtimeMetricsUpdatedAt,
+    redisAdminOverview,
+    redisAdminOverviewUpdatedAt,
+    redisAdminKeyChange,
+    loadRedisOverview,
+    loadRedisKeys,
+    loadRedisKey,
   };
 }

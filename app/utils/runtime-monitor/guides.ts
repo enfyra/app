@@ -92,6 +92,33 @@ export const runtimeTabGuides: Record<string, RuntimeGuide> = {
       },
     ],
   },
+  redis: {
+    title: 'Redis Guide',
+    description: 'These numbers show the Redis server used by Enfyra for queues, pub/sub, telemetry, and optional shared runtime cache.',
+    groups: [
+      {
+        title: 'Server And Hardware',
+        items: [
+          ['Version / mode / role', 'Redis process identity and replication role reported by Redis INFO.'],
+          ['OS / arch / system memory', 'Redis host details reported by Redis, useful when Redis runs next to the Enfyra server.'],
+          ['Used / max memory', 'Redis memory currently used compared with configured maxmemory. A high ratio means Redis eviction or write failures can happen depending on policy.'],
+          ['Allocated Redis Memory', 'The Enfyra-managed allocation for $cache user data. Runtime cache, BullMQ, Socket.IO, telemetry, and locks are system keys and are not counted against this allocation.'],
+          ['Fragmentation', 'Allocator fragmentation ratio. Sustained high values can explain Redis RSS being higher than dataset memory.'],
+        ],
+      },
+      {
+        title: 'Key Browser',
+        items: [
+          ['$cache quota', 'When $cache user data exceeds the allocated Redis memory, Enfyra evicts least-recently-used user cache keys only. System keys are not evicted by this quota.'],
+          ['System keys', 'Keys owned by runtime cache, Socket.IO, queues, telemetry, or locks. The server marks them read-only and blocks mutation.'],
+          ['Editable keys', 'Non-system keys can be overwritten, assigned TTL, persisted, or deleted through the admin API.'],
+          ['Current app scope', 'Searches are scoped to the current server NODE_NAME. Type runtime_cache:* instead of the full Redis prefix; the server adds the namespace before scanning or reading.'],
+          ['Search examples', 'Use * for all current app keys, runtime_cache:* for shared runtime cache, runtime_cache:route* for routes, runtime-monitor:* for telemetry, and *:failed for failed queue sets.'],
+          ['Realtime reads', 'Overview, list, and key detail reads use the admin websocket. Writes use REST and then refresh the websocket read state immediately.'],
+        ],
+      },
+    ],
+  },
   database: {
     title: 'Database Guide',
     description: 'These metrics show QueryBuilder pressure, slow operations, and DB/query errors.',

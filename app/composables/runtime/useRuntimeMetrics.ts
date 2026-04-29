@@ -1,15 +1,29 @@
 import {
+  redisAdminKeyChange,
+  redisAdminOverview,
+  redisAdminOverviewUpdatedAt,
   runtimeMetricsByInstance,
   runtimeMetricsUpdatedAt,
 } from '~/composables/shared/useAdminSocket';
 import type {
-  RuntimeAppMetrics,
+  RedisAdminKeyDetail,
+  RedisAdminKeySummary,
+  RedisAdminSetKeyInput,
+  RuntimeAppMetricInstance,
+  RuntimeAppTelemetryCluster,
+  RuntimeClusterStats,
   RuntimeGuide,
-  RuntimeMetricsPayload,
   RuntimeSeverity,
 } from '~/types/runtime-monitor';
 import { runtimeTabGuides } from '~/utils/runtime-monitor/guides';
 import { maxSeverity } from '~/utils/runtime-monitor/core';
+import { getRuntimeCacheReloadRows } from '~/utils/runtime-monitor/cache';
+import {
+  getRuntimeDatabaseRows,
+  getRuntimeFlowFailedJobRows,
+  getRuntimeFlowRows,
+  getRuntimeRequestRows,
+} from '~/utils/runtime-monitor/rows';
 import {
   databaseSeverity,
   flowSeverity,
@@ -29,6 +43,7 @@ const BASE_TAB_ITEMS = [
   { label: 'Overview', icon: 'i-lucide-layout-dashboard', value: 'overview' },
   { label: 'Requests', icon: 'i-lucide-radio-tower', value: 'requests' },
   { label: 'Cache', icon: 'i-lucide-refresh-cw', value: 'cache' },
+  { label: 'Redis', icon: 'i-lucide-hard-drive', value: 'redis' },
   { label: 'Database', icon: 'i-lucide-database', value: 'database' },
   { label: 'Flows', icon: 'i-lucide-git-branch', value: 'flows' },
   { label: 'Workers', icon: 'i-lucide-cpu', value: 'workers' },
@@ -37,10 +52,38 @@ const BASE_TAB_ITEMS = [
 
 export function useRuntimeMetrics() {
   const route = useRoute();
+  const adminSocket = useAdminSocket();
+  const redisSetApi = useApi<{ success: boolean; data: RedisAdminKeyDetail }>(
+    '/admin/redis/key',
+    { method: 'post', disableErrorPage: true },
+  );
+  const redisDeleteApi = useApi<{ success: boolean; data: { deleted: number } }>(
+    '/admin/redis/key',
+    { method: 'delete', disableErrorPage: true },
+  );
+  const redisTtlApi = useApi<{ success: boolean; data: RedisAdminKeySummary }>(
+    '/admin/redis/key/ttl',
+    { method: 'patch', disableErrorPage: true },
+  );
   const activeTab = ref((route.query.tab as string) || 'overview');
+  const nowMs = ref(Date.now());
+  let clockTimer: ReturnType<typeof setInterval> | null = null;
   if (!BASE_TAB_ITEMS.some((tab) => tab.value === activeTab.value)) {
     activeTab.value = 'overview';
   }
+
+  onMounted(() => {
+    clockTimer = setInterval(() => {
+      nowMs.value = Date.now();
+    }, 250);
+  });
+
+  onUnmounted(() => {
+    if (clockTimer) {
+      clearInterval(clockTimer);
+      clockTimer = null;
+    }
+  });
 
   watch(activeTab, (tab) => {
     navigateTo({ query: { ...route.query, tab } }, { replace: true });
@@ -81,13 +124,38 @@ export function useRuntimeMetrics() {
 
   const lastUpdatedLabel = computed(() => {
     if (!runtimeMetricsUpdatedAt.value) return 'Waiting';
-    const seconds = Math.max(0, Math.round((Date.now() - runtimeMetricsUpdatedAt.value) / 1000));
+    const seconds = Math.max(0, Math.round((nowMs.value - runtimeMetricsUpdatedAt.value) / 1000));
     return seconds === 0 ? 'Live' : `${seconds}s ago`;
   });
 
   const lastUpdatedAgeSec = computed(() => {
     if (!runtimeMetricsUpdatedAt.value) return Infinity;
-    return Math.max(0, Math.round((Date.now() - runtimeMetricsUpdatedAt.value) / 1000));
+    return Math.max(0, Math.round((nowMs.value - runtimeMetricsUpdatedAt.value) / 1000));
+  });
+
+  const sampleIntervalMs = computed(() => {
+    const intervals = instances.value
+      .map((item) => item.intervalMs)
+      .filter((value) => Number.isFinite(value) && value > 0);
+    return intervals.length > 0 ? Math.max(...intervals) : 2000;
+  });
+
+  const nextUpdateMs = computed(() => {
+    if (!runtimeMetricsUpdatedAt.value) return sampleIntervalMs.value;
+    const elapsed = nowMs.value - runtimeMetricsUpdatedAt.value;
+    return Math.max(0, sampleIntervalMs.value - elapsed);
+  });
+
+  const nextUpdateLabel = computed(() => {
+    if (!runtimeMetricsUpdatedAt.value) return 'waiting';
+    if (nextUpdateMs.value <= 0) return 'any moment';
+    return `${(nextUpdateMs.value / 1000).toFixed(1)}s`;
+  });
+
+  const nextUpdateProgress = computed(() => {
+    const interval = sampleIntervalMs.value;
+    if (!runtimeMetricsUpdatedAt.value || interval <= 0) return 0;
+    return Math.min(1, Math.max(0, 1 - nextUpdateMs.value / interval));
   });
 
   const latestSampledAt = computed(() => {
@@ -101,8 +169,8 @@ export function useRuntimeMetrics() {
   const clusterStats = computed(() => {
     const rows = instances.value
       .map((item) => item.cluster)
-      .filter(Boolean)
-      .sort((a: any, b: any) => {
+      .filter((cluster): cluster is RuntimeClusterStats => Boolean(cluster))
+      .sort((a, b) => {
         const at = Date.parse(a.lastReconciledAt ?? '') || 0;
         const bt = Date.parse(b.lastReconciledAt ?? '') || 0;
         return bt - at;
@@ -110,18 +178,21 @@ export function useRuntimeMetrics() {
     return rows[0] ?? null;
   });
 
-  const appMetricInstances = computed(() => {
+  const appMetricInstances = computed<RuntimeAppMetricInstance[]>(() => {
     const latest = instances.value
       .map((metrics) => metrics.appCluster)
-      .filter((cluster) => cluster?.instances?.length)
-      .sort((a: any, b: any) => {
-        const latestA = Math.max(...a.instances.map((item: any) => Date.parse(item.sampledAt) || 0));
-        const latestB = Math.max(...b.instances.map((item: any) => Date.parse(item.sampledAt) || 0));
+      .filter(
+        (cluster): cluster is RuntimeAppTelemetryCluster =>
+          Boolean(cluster?.instances?.length),
+      )
+      .sort((a, b) => {
+        const latestA = Math.max(...a.instances.map((item) => Date.parse(item.sampledAt) || 0));
+        const latestB = Math.max(...b.instances.map((item) => Date.parse(item.sampledAt) || 0));
         return latestB - latestA;
       })[0];
 
     if (latest?.instances?.length) {
-      return latest.instances.map((item: any) => ({
+      return latest.instances.map((item) => ({
         instanceId: item.instanceId,
         sampledAt: item.sampledAt,
         app: item.app,
@@ -136,123 +207,168 @@ export function useRuntimeMetrics() {
   });
 
   const requestRows = computed(() => {
-    const map = new Map<string, any>();
-    for (const metrics of appMetricInstances.value) {
-      for (const row of metrics.app?.requests.routes ?? []) {
-        const key = `${row.method}:${row.route}`;
-        const current = map.get(key) ?? {
-          method: row.method,
-          route: row.route,
-          count: 0,
-          rps: 0,
-          p50Ms: 0,
-          p95Ms: 0,
-          p99Ms: 0,
-          status4xx: 0,
-          status5xx: 0,
-        };
-        current.count += row.count;
-        current.rps += row.rps;
-        current.p50Ms = Math.max(current.p50Ms, row.p50Ms);
-        current.p95Ms = Math.max(current.p95Ms, row.p95Ms);
-        current.p99Ms = Math.max(current.p99Ms, row.p99Ms);
-        current.status4xx += row.status4xx;
-        current.status5xx += row.status5xx;
-        map.set(key, current);
-      }
-    }
-    return [...map.values()].sort((a, b) => b.rps - a.rps).slice(0, 20);
+    return getRuntimeRequestRows(appMetricInstances.value);
   });
 
-  const cacheReloadRows = computed(() =>
-    appMetricInstances.value
-      .flatMap((metrics) =>
-        (metrics.app?.cache.recent ?? []).map((row: RuntimeAppMetrics['cache']['recent'][number]) => ({
-          ...row,
-          instanceId: metrics.instanceId,
-        })),
-      )
-      .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
-      .slice(0, 20),
-  );
+  const cacheReloadRows = computed(() => {
+    return getRuntimeCacheReloadRows(appMetricInstances.value);
+  });
 
   const databaseRows = computed(() => {
-    const map = new Map<string, any>();
-    for (const metrics of appMetricInstances.value) {
-      for (const row of metrics.app?.database.queries ?? []) {
-        const key = `${row.context ?? 'runtime'}:${row.op}:${row.table}`;
-        const current = map.get(key) ?? {
-          context: row.context ?? 'runtime',
-          op: row.op,
-          table: row.table,
-          count: 0,
-          errors: 0,
-          poolAcquireTimeouts: 0,
-          slow: 0,
-          p95Ms: 0,
-          p99Ms: 0,
-        };
-        current.count += row.count;
-        current.errors += row.errors;
-        current.poolAcquireTimeouts += row.poolAcquireTimeouts ?? 0;
-        current.slow += row.slow;
-        current.p95Ms = Math.max(current.p95Ms, row.p95Ms);
-        current.p99Ms = Math.max(current.p99Ms, row.p99Ms);
-        map.set(key, current);
-      }
-    }
-    return [...map.values()].sort((a, b) => b.p95Ms - a.p95Ms).slice(0, 20);
+    return getRuntimeDatabaseRows(appMetricInstances.value);
   });
 
   const flowRows = computed(() => {
-    const map = new Map<string, any>();
-    for (const metrics of appMetricInstances.value) {
-      for (const row of metrics.app?.flows.rows ?? []) {
-        const key = String(row.flowId);
-        const current = map.get(key) ?? {
-          flowId: row.flowId,
-          flowName: row.flowName,
-          running: 0,
-          completed: 0,
-          failed: 0,
-          p95Ms: 0,
-          failedSteps: new Map<string, number>(),
-          slowSteps: new Map<string, number>(),
-        };
-        current.running += row.running;
-        current.completed += row.completed;
-        current.failed += row.failed;
-        current.p95Ms = Math.max(current.p95Ms, row.p95Ms);
-        for (const step of row.failedSteps) {
-          current.failedSteps.set(step.step, (current.failedSteps.get(step.step) ?? 0) + step.count);
-        }
-        for (const step of row.slowSteps) {
-          current.slowSteps.set(step.step, Math.max(current.slowSteps.get(step.step) ?? 0, step.p95Ms));
-        }
-        map.set(key, current);
-      }
-    }
-    return [...map.values()]
-      .map((row) => ({
-        ...row,
-        failedSteps: [...row.failedSteps.entries()].map(([step, count]) => ({ step, count })).sort((a, b) => b.count - a.count).slice(0, 3),
-        slowSteps: [...row.slowSteps.entries()].map(([step, p95Ms]) => ({ step, p95Ms })).sort((a, b) => b.p95Ms - a.p95Ms).slice(0, 3),
-      }))
-      .sort((a, b) => b.running - a.running || b.failed - a.failed || b.p95Ms - a.p95Ms)
-      .slice(0, 20);
+    return getRuntimeFlowRows(appMetricInstances.value);
   });
 
   const flowFailedJobRows = computed(() =>
-    instances.value
-      .flatMap((metrics) =>
-        (metrics.queues.flow?.failedJobs ?? []).map((job) => ({
-          ...job,
-          instanceId: metrics.instance.id,
-        })),
-      )
-      .sort((a, b) => (b.finishedOn ?? b.timestamp ?? 0) - (a.finishedOn ?? a.timestamp ?? 0))
-      .slice(0, 30),
+    getRuntimeFlowFailedJobRows(instances.value),
   );
+  const redisKeys = ref<RedisAdminKeySummary[]>([]);
+  const redisKeysCursor = ref('0');
+  const redisKeysPattern = ref('*');
+  const redisKeysPending = ref(false);
+  const redisDetailPending = ref(false);
+  const redisWritePending = ref(false);
+  const redisSelectedKey = ref<string | null>(null);
+  const redisSelectedDetail = ref<RedisAdminKeyDetail | null>(null);
+  const redisError = ref<string | null>(null);
+
+  function errorMessage(error: unknown) {
+    return error instanceof Error ? error.message : String(error || 'Request failed');
+  }
+
+  async function refreshRedisOverview() {
+    try {
+      redisError.value = null;
+      return await adminSocket.loadRedisOverview();
+    } catch (error) {
+      redisError.value = errorMessage(error);
+      return null;
+    }
+  }
+
+  async function scanRedisKeys(options: { reset?: boolean } = {}) {
+    redisKeysPending.value = true;
+    try {
+      redisError.value = null;
+      const reset = options.reset !== false;
+      const result = await adminSocket.loadRedisKeys({
+        cursor: reset ? '0' : redisKeysCursor.value,
+        pattern: redisKeysPattern.value || '*',
+        count: 10,
+      });
+      redisKeysCursor.value = result.cursor;
+      if (reset) {
+        redisKeys.value = result.keys;
+      } else {
+        const byKey = new Map(redisKeys.value.map((item) => [item.key, item]));
+        for (const key of result.keys) byKey.set(key.key, key);
+        redisKeys.value = [...byKey.values()];
+      }
+      return result;
+    } catch (error) {
+      redisError.value = errorMessage(error);
+      return null;
+    } finally {
+      redisKeysPending.value = false;
+    }
+  }
+
+  async function selectRedisKey(key: string) {
+    redisSelectedKey.value = key;
+    redisDetailPending.value = true;
+    try {
+      redisError.value = null;
+      redisSelectedDetail.value = await adminSocket.loadRedisKey({ key, limit: 100 });
+      return redisSelectedDetail.value;
+    } catch (error) {
+      redisError.value = errorMessage(error);
+      return null;
+    } finally {
+      redisDetailPending.value = false;
+    }
+  }
+
+  async function refreshRedisAfterWrite(key?: string | null, deleted = false) {
+    await Promise.all([
+      refreshRedisOverview(),
+      scanRedisKeys({ reset: true }),
+    ]);
+    if (!key) return;
+    if (deleted) {
+      if (redisSelectedKey.value === key) {
+        redisSelectedKey.value = null;
+        redisSelectedDetail.value = null;
+      }
+      return;
+    }
+    await selectRedisKey(key);
+  }
+
+  async function saveRedisKey(input: RedisAdminSetKeyInput) {
+    redisWritePending.value = true;
+    try {
+      const response = await redisSetApi.execute({ body: input }) as
+        | { success: boolean; data: RedisAdminKeyDetail }
+        | null;
+      if (response?.data) redisSelectedDetail.value = response.data;
+      await refreshRedisAfterWrite(input.key);
+      return response?.data ?? null;
+    } finally {
+      redisWritePending.value = false;
+    }
+  }
+
+  async function deleteRedisKey(key: string) {
+    redisWritePending.value = true;
+    try {
+      const response = await redisDeleteApi.execute({ query: { key } }) as
+        | { success: boolean; data: { deleted: number } }
+        | null;
+      await refreshRedisAfterWrite(key, true);
+      return response?.data ?? null;
+    } finally {
+      redisWritePending.value = false;
+    }
+  }
+
+  async function updateRedisKeyTtl(key: string, ttlSeconds: number | null) {
+    redisWritePending.value = true;
+    try {
+      const response = await redisTtlApi.execute({ body: { key, ttlSeconds } }) as
+        | { success: boolean; data: RedisAdminKeySummary }
+        | null;
+      await refreshRedisAfterWrite(key);
+      return response?.data ?? null;
+    } finally {
+      redisWritePending.value = false;
+    }
+  }
+
+  function clearRedisSelection() {
+    redisSelectedKey.value = null;
+    redisSelectedDetail.value = null;
+  }
+
+  watch(activeTab, (tab) => {
+    if (tab === 'redis' && !redisAdminOverview.value) {
+      void refreshRedisOverview();
+      void scanRedisKeys({ reset: true });
+    }
+  }, { immediate: true });
+
+  watch(redisAdminKeyChange, (change) => {
+    if (!change || activeTab.value !== 'redis') return;
+    if (change.operation === 'delete' && change.key === redisSelectedKey.value) {
+      redisSelectedKey.value = null;
+      redisSelectedDetail.value = null;
+    } else if (change.detail && change.key === redisSelectedKey.value) {
+      redisSelectedDetail.value = change.detail;
+    }
+    void scanRedisKeys({ reset: true });
+  });
 
   function updatedSeverity(): RuntimeSeverity {
     if (lastUpdatedAgeSec.value > 20) return 'error';
@@ -263,7 +379,7 @@ export function useRuntimeMetrics() {
   function clusterSeverity(): RuntimeSeverity {
     const cluster = clusterStats.value;
     if (!cluster?.enabled) return 'ok';
-    if (cluster.instances.some((item: any) => item.ageMs > cluster.staleAfterMs * 0.75)) {
+    if (cluster.instances.some((item) => item.ageMs > cluster.staleAfterMs * 0.75)) {
       return 'warning';
     }
     return 'ok';
@@ -283,6 +399,17 @@ export function useRuntimeMetrics() {
 
   function cacheTabSeverity(): RuntimeSeverity {
     return cacheReloadRows.value.some((row) => row.status === 'failed') ? 'error' : 'ok';
+  }
+
+  function redisTabSeverity(): RuntimeSeverity {
+    const overview = redisAdminOverview.value;
+    if (!overview) return redisError.value ? 'warning' : 'ok';
+    const used = overview.server.usedMemoryBytes ?? 0;
+    const max = overview.server.maxMemoryBytes ?? 0;
+    if (max > 0 && used / max >= 0.95) return 'error';
+    if (max > 0 && used / max >= 0.8) return 'warning';
+    if ((overview.server.memFragmentationRatio ?? 0) >= 2) return 'warning';
+    return 'ok';
   }
 
   function databaseQuerySeverity(): RuntimeSeverity {
@@ -305,6 +432,8 @@ export function useRuntimeMetrics() {
         return requestTabSeverity();
       case 'cache':
         return cacheTabSeverity();
+      case 'redis':
+        return redisTabSeverity();
       case 'database':
         return maxSeverity(...instances.value.map(databaseSeverity), databaseQuerySeverity());
       case 'flows':
@@ -326,6 +455,8 @@ export function useRuntimeMetrics() {
         return requestRows.value.filter((row) => row.status5xx > 0 || row.status4xx > 0 || row.p95Ms >= 1000 || row.p99Ms >= 1000).length;
       case 'cache':
         return cacheReloadRows.value.filter((row) => row.status === 'failed').length;
+      case 'redis':
+        return redisTabSeverity() === 'ok' ? 0 : 1;
       case 'database':
         return databaseRows.value.filter((row) => row.poolAcquireTimeouts > 0 || row.errors > 0 || row.slow > 0 || row.p95Ms >= 500).length + instances.value.reduce((sum, metrics) => sum + databaseWarnings(metrics).length, 0);
       case 'flows':
@@ -357,6 +488,10 @@ export function useRuntimeMetrics() {
     instances,
     totals,
     lastUpdatedLabel,
+    sampleIntervalMs,
+    nextUpdateMs,
+    nextUpdateLabel,
+    nextUpdateProgress,
     latestSampledAt,
     clusterStats,
     requestRows,
@@ -364,6 +499,24 @@ export function useRuntimeMetrics() {
     databaseRows,
     flowRows,
     flowFailedJobRows,
+    redisOverview: redisAdminOverview,
+    redisOverviewUpdatedAt: redisAdminOverviewUpdatedAt,
+    redisKeys,
+    redisKeysCursor,
+    redisKeysPattern,
+    redisKeysPending,
+    redisDetailPending,
+    redisWritePending,
+    redisSelectedKey,
+    redisSelectedDetail,
+    redisError,
+    refreshRedisOverview,
+    scanRedisKeys,
+    selectRedisKey,
+    saveRedisKey,
+    deleteRedisKey,
+    updateRedisKeyTtl,
+    clearRedisSelection,
     activeGuide,
     updatedSeverity,
     clusterSeverity,

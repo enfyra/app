@@ -71,6 +71,8 @@ const showPreviewModal = ref(false);
 const { getIncludeFields } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
+const { fetchMenuDefinitions } = useMenuApi();
+const { invalidateExtensionCache } = useDynamicComponent();
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -253,6 +255,13 @@ async function updateExtension() {
   if (freshData) {
     form.value = { ...freshData };
     formChanges.update(freshData);
+    invalidateExtensionCache({
+      reason: "updated",
+      id: route.params.id as string,
+      extensionId: freshData.extensionId,
+      path: freshData.menu?.path ?? null,
+      updatedAt: freshData.updatedAt,
+    });
   }
 
   formEditorRef.value?.confirmChanges();
@@ -272,6 +281,13 @@ async function deleteExtension() {
   }
 
   notify.success("Success", "Extension deleted successfully");
+  invalidateExtensionCache({
+    reason: "deleted",
+    id: route.params.id as string,
+    extensionId: form.value?.extensionId,
+    path: form.value?.menu?.path ?? null,
+  });
+  await fetchMenuDefinitions();
   await navigateTo("/settings/extensions");
 }
 

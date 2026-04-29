@@ -234,6 +234,12 @@ function confirmDiscard() {
   emit('update:modelValue', false);
 }
 
+async function copyTestValue(value: any) {
+  const text = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+  await navigator.clipboard.writeText(text);
+  notify.success("Copied");
+}
+
 async function handleTest() {
   showTestPanel.value = true;
   if (!canRunTest.value) return;
@@ -258,6 +264,9 @@ async function handleTest() {
     await runTest({
       body: {
         kind: 'websocket_event',
+        id: props.event ? getId(props.event) : undefined,
+        eventId: props.event ? getId(props.event) : undefined,
+        gatewayId: props.gatewayId,
         ...(props.gatewayPath ? { gatewayPath: props.gatewayPath } : {}),
         eventName,
         timeoutMs,
@@ -395,18 +404,27 @@ async function handleTest() {
               </div>
 
               <div v-if="testResult.logs?.length" class="space-y-1">
-                <div class="text-xs font-medium text-[var(--text-tertiary)]">Logs</div>
-                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[160px] whitespace-pre-wrap">{{ JSON.stringify(testResult.logs, null, 2) }}</pre>
+                <div class="flex items-center justify-between gap-2">
+                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Logs</div>
+                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.logs)">Copy</UButton>
+                </div>
+                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[160px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.logs, null, 2) }}</pre>
               </div>
 
               <div v-if="testResult.emitted?.length" class="space-y-1">
-                <div class="text-xs font-medium text-[var(--text-tertiary)]">Emitted</div>
-                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.emitted, null, 2) }}</pre>
+                <div class="flex items-center justify-between gap-2">
+                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Emitted</div>
+                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.emitted)">Copy</UButton>
+                </div>
+                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.emitted, null, 2) }}</pre>
               </div>
 
               <div v-if="testResult.result !== undefined" class="space-y-1">
-                <div class="text-xs font-medium text-[var(--text-tertiary)]">Result</div>
-                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[200px] whitespace-pre-wrap">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
+                <div class="flex items-center justify-between gap-2">
+                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Result</div>
+                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.result)">Copy</UButton>
+                </div>
+                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
               </div>
             </div>
           </div>

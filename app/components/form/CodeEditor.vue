@@ -25,7 +25,16 @@ const props = defineProps<{
   testRun?: boolean | TestRunConfig;
 }>();
 
+defineOptions({
+  inheritAttrs: false,
+});
+
 const emit = defineEmits(["update:modelValue", "diagnostics"]);
+const attrs = useAttrs();
+const containerAttrs = computed(() => {
+  const { class: _class, ...rest } = attrs;
+  return rest;
+});
 
 const initialHeight = props.height || "400px";
 const currentHeight = ref(initialHeight);
@@ -96,7 +105,7 @@ const canRunTest = computed(() => {
 });
 
 const testResultText = computed(() => {
-  const value = testRunData.value;
+  const value = (testRunData.value as any)?.result ?? testRunData.value;
   if (value === null || value === undefined) return "";
   try {
     return JSON.stringify(value, null, 2);
@@ -105,10 +114,43 @@ const testResultText = computed(() => {
   }
 });
 
+const testLogsText = computed(() => {
+  const logs = (testRunData.value as any)?.logs;
+  if (!Array.isArray(logs) || logs.length === 0) return "";
+  try {
+    return JSON.stringify(logs, null, 2);
+  } catch {
+    return String(logs);
+  }
+});
+
+const testEmittedText = computed(() => {
+  const emitted = (testRunData.value as any)?.emitted;
+  if (!Array.isArray(emitted) || emitted.length === 0) return "";
+  try {
+    return JSON.stringify(emitted, null, 2);
+  } catch {
+    return String(emitted);
+  }
+});
+
+const testErrorText = computed(() => {
+  const error = (testRunData.value as any)?.error;
+  if (!error) return "";
+  return error?.message || String(error);
+});
+
+async function copyTestValue(value: unknown) {
+  const text = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+  await navigator.clipboard.writeText(text);
+  notify.success("Copied");
+}
+
 async function runCodeTest() {
   const config = testRunConfig.value;
   const script = String(props.modelValue || "").trim();
   if (!config || !script || testRunning.value) return;
+  testRunData.value = null;
 
   await executeTestRun({
     body: {
@@ -130,6 +172,7 @@ async function runCodeTest() {
 
   if (testRunError.value) {
     notify.error("Test failed", testRunError.value.message);
+    showTestResult.value = true;
     return;
   }
 
@@ -400,10 +443,12 @@ function handleMouseUp(e?: MouseEvent) {
 
 <template>
   <div 
+    v-bind="containerAttrs"
     ref="containerRef" 
     class="rounded-md overflow-hidden relative"
     @transitionend="handleHeightTransitionEnd"
     :class="[
+      attrs.class,
       !isResizing ? 'transition-[height] duration-300 ease-out' : '',
       props.error
         ? 'border border-red-500 ring-2 ring-red-500/20'
@@ -465,7 +510,30 @@ function handleMouseUp(e?: MouseEvent) {
         >
           {{ (testRunData as any)?.success === false ? 'Failed' : 'Passed' }}
         </UBadge>
-        <pre class="max-h-[420px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap">{{ testResultText }}</pre>
+        <div v-if="testErrorText" class="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300">
+          {{ testErrorText }}
+        </div>
+        <div v-if="testResultText" class="space-y-1">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xs font-medium text-[var(--text-tertiary)]">Result</div>
+            <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue((testRunData as any)?.result ?? testRunData)">Copy</UButton>
+          </div>
+          <pre class="max-h-[260px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testResultText }}</pre>
+        </div>
+        <div v-if="testLogsText" class="space-y-1">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xs font-medium text-[var(--text-tertiary)]">Logs</div>
+            <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue((testRunData as any)?.logs)">Copy</UButton>
+          </div>
+          <pre class="max-h-[180px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testLogsText }}</pre>
+        </div>
+        <div v-if="testEmittedText" class="space-y-1">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xs font-medium text-[var(--text-tertiary)]">Emitted</div>
+            <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue((testRunData as any)?.emitted)">Copy</UButton>
+          </div>
+          <pre class="max-h-[180px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testEmittedText }}</pre>
+        </div>
       </div>
     </template>
   </CommonModal>

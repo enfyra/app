@@ -83,10 +83,10 @@
               <div class="flex items-center gap-2">
                 <span class="text-xs text-[var(--text-quaternary)]">Status:</span>
                 <USwitch
-                  v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['update'] }] })"
-                  :model-value="config.isEnabled"
-                  :disabled="getConfigLoader(String(getId(config))).isLoading"
-                  @update:model-value="toggleConfigStatus(config)"
+	                  v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['update'] }] })"
+	                  :model-value="config.isEnabled"
+	                  :disabled="isConfigLoading(config)"
+	                  @update:model-value="toggleConfigStatus(config)"
                   @click.stop
                 />
               </div>
@@ -148,7 +148,7 @@ const limit = 9;
 
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { createLoader } = useLoader();
+const { getLoader: getConfigLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
@@ -182,7 +182,6 @@ const {
 const storageConfigs = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
-const configLoaders = ref<Record<string, any>>({});
 
 const { execute: updateConfig, error: updateError } = useApi(
   () => `/storage_config_definition`,
@@ -238,11 +237,8 @@ function navigateToDetail(config: any) {
   navigateTo(`/storage/config/${getId(config)}`);
 }
 
-function getConfigLoader(configId: string) {
-  if (!configLoaders.value[configId]) {
-    configLoaders.value[configId] = createLoader();
-  }
-  return configLoaders.value[configId];
+function isConfigLoading(config: any) {
+  return getConfigLoader(String(getId(config))).isLoading.value;
 }
 
 const toggleConfigStatus = async (config: any) => {

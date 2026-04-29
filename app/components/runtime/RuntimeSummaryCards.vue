@@ -75,6 +75,18 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
       <div class="mt-1 truncate text-xs text-[var(--text-tertiary)]">
         {{ fmtDateTime(runtime.latestSampledAt) }}
       </div>
+      <div class="mt-2">
+        <div class="mb-1 flex items-center justify-between gap-2 text-xs text-[var(--text-tertiary)]">
+          <span>Next sample</span>
+          <span class="font-medium text-[var(--text-secondary)]">{{ runtime.nextUpdateLabel }}</span>
+        </div>
+        <div class="h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
+          <div
+            class="h-full rounded-full bg-primary-500 transition-[width] duration-200"
+            :style="{ width: `${runtime.nextUpdateProgress * 100}%` }"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>

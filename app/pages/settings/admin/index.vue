@@ -5,31 +5,18 @@ const { me } = useAuth();
 
 registerPageHeader({
   title: 'Admin',
-  description: 'Operational tools for cache, logs, and runtime health',
+  description: 'Operational tools for logs and runtime health',
   variant: 'default',
   gradient: 'blue',
 });
 
 const adminTools = computed(() => {
   const isRootAdmin = !!me.value?.isRootAdmin;
-  const canReload = isRootAdmin || checkPermissionCondition({
-    or: [
-      { route: '/route_definition', actions: ['update'] },
-      { route: '/admin/reload', actions: ['create'] },
-    ],
-  });
   const canReadLogs = isRootAdmin || checkPermissionCondition({
     or: [{ route: '/logs', actions: ['read'] }],
   });
 
   return [
-    {
-      title: 'Cache Reload',
-      description: 'Reload metadata, routes, GraphQL, and related runtime caches.',
-      icon: 'lucide:refresh-cw',
-      to: '/settings/admin/cache',
-      visible: canReload,
-    },
     {
       title: 'Server Logs',
       description: 'Inspect backend log files and search recent server events.',
@@ -41,7 +28,7 @@ const adminTools = computed(() => {
       title: 'Runtime Monitor',
       description: 'Watch process, executor, queue, websocket, and DB pool health.',
       icon: 'lucide:activity',
-      to: '/settings/admin/runtime',
+      to: '/settings/runtime',
       visible: isRootAdmin,
     },
   ].filter((tool) => tool.visible);

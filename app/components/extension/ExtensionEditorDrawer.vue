@@ -16,6 +16,7 @@ const tableName = "extension_definition";
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getId, getIdFieldName } = useDatabase();
 const { me } = useAuth();
+const { invalidateExtensionCache } = useDynamicComponent();
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -152,21 +153,31 @@ async function handleSave() {
 
   const idField = getIdFieldName();
   const userId = getId(me.value);
+  const extensionId = props.menu?.extension ? getId(props.menu.extension) : null;
+  const isUpdate = Boolean(extensionId);
 
-  if (props.menu?.extension && getId(props.menu.extension)) {
+  if (isUpdate) {
     const body = {
       ...form.value,
       updatedBy: userId ? { [idField]: userId } : form.value.updatedBy,
     };
 
     await updateExtension({
-      id: getId(props.menu.extension),
+      id: extensionId,
       body,
     });
 
     if (updateError.value) {
       return;
     }
+
+    invalidateExtensionCache({
+      reason: "updated",
+      id: extensionId,
+      extensionId: form.value.extensionId,
+      path: props.menu?.path ?? null,
+      updatedAt: form.value.updatedAt,
+    });
   } else {
     const body = {
       ...form.value,
@@ -178,9 +189,14 @@ async function handleSave() {
     if (createError.value) {
       return;
     }
-  }
 
-notify.success("Success")
+    invalidateExtensionCache({
+      reason: "created",
+      id: getId(props.menu?.extension),
+      extensionId: form.value.extensionId,
+      path: props.menu?.path ?? null,
+    });
+  }
 
   hasFormChanges.value = false;
   emit('save');

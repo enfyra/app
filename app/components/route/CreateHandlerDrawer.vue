@@ -68,6 +68,7 @@ interface Props {
   form: Record<string, any>;
   errors: Record<string, string>;
   loading: boolean;
+  routeId?: string;
   allowedMethods?: string[];
   lockMethod?: boolean;
 }
@@ -116,14 +117,13 @@ const fieldMap = computed(() => ({
       ...(props.allowedMethods ? { allowedMethods: props.allowedMethods } : {}),
     },
   },
-  sourceCode: { description: 'Must return a value. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.' },
+  sourceCode: getRouteHandlerSourceCodeFieldConfig({
+    routeId: props.routeId,
+    method: localForm.value?.method,
+  }),
 }));
 
-const excludedFields = computed(() => {
-  const base = ['createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'route'];
-  if (props.lockMethod) base.push('method');
-  return base;
-});
+const excludedFields = computed(() => getRouteHandlerExcludedFields(props.lockMethod));
 
 watch(() => props.modelValue, async (isOpen) => {
   if (isOpen) {
