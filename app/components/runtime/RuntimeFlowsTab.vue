@@ -8,12 +8,13 @@ import {
 } from '~/utils/runtime-monitor/core';
 import { flowSeverity } from '~/utils/runtime-monitor/severity';
 import { flowWarnings } from '~/utils/runtime-monitor/warnings';
+import type { RuntimeFlowFailedJobRow, RuntimeFlowRow } from '~/types/runtime-monitor';
 
 type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
 
 defineProps<{ runtime: RuntimeMetricsViewModel }>();
 
-function flowDebugTo(job: any) {
+function flowDebugTo(job: RuntimeFlowFailedJobRow) {
   const flowId = job.failedStepKey ? job.flowId : (job.sourceFlowId ?? job.flowId);
   const stepKey = job.failedStepKey ?? job.sourceStepKey;
   if (!flowId) return undefined;
@@ -23,14 +24,22 @@ function flowDebugTo(job: any) {
   };
 }
 
-function debugTarget(job: any) {
+function debugTarget(job: RuntimeFlowFailedJobRow) {
   if (job.failedStepKey) return `${job.flowName || job.flowId || '-'} / ${job.failedStepKey}`;
   if (job.sourceStepKey) return `${job.sourceFlowName || job.sourceFlowId || '-'} / ${job.sourceStepKey}`;
-  return job.flowName || job.flowId || '-';
+  return String(job.flowName || job.flowId || '-');
 }
 
-function flowSourceLabel(job: any) {
+function flowSourceLabel(job: RuntimeFlowFailedJobRow) {
   return String(job.sourceFlowName || job.sourceFlowId || '-');
+}
+
+function failedStepLabels(row: RuntimeFlowRow) {
+  return row.failedSteps.map((step) => `${step.step} (${step.count})`).join(', ') || '-';
+}
+
+function slowStepLabels(row: RuntimeFlowRow) {
+  return row.slowSteps.map((step) => `${step.step} ${fmtMs(step.p95Ms)}`).join(', ') || '-';
 }
 </script>
 
@@ -96,10 +105,10 @@ function flowSourceLabel(job: any) {
             </td>
             <td class="px-3 py-2 text-right">{{ fmtMs(row.p95Ms) }}</td>
             <td class="px-3 py-2 text-xs text-[var(--text-tertiary)]">
-              {{ row.failedSteps.map((step: any) => `${step.step} (${step.count})`).join(', ') || '-' }}
+              {{ failedStepLabels(row) }}
             </td>
             <td class="px-3 py-2 text-xs text-[var(--text-tertiary)]">
-              {{ row.slowSteps.map((step: any) => `${step.step} ${fmtMs(step.p95Ms)}`).join(', ') || '-' }}
+              {{ slowStepLabels(row) }}
             </td>
           </tr>
           <tr v-if="runtime.flowRows.length === 0">

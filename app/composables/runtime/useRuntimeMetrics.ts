@@ -3,14 +3,21 @@ import {
   runtimeMetricsUpdatedAt,
 } from '~/composables/shared/useAdminSocket';
 import type {
-  RuntimeAppMetrics,
+  RuntimeAppMetricInstance,
+  RuntimeAppTelemetryCluster,
+  RuntimeClusterStats,
   RuntimeGuide,
-  RuntimeMetricsPayload,
   RuntimeSeverity,
 } from '~/types/runtime-monitor';
 import { runtimeTabGuides } from '~/utils/runtime-monitor/guides';
 import { maxSeverity } from '~/utils/runtime-monitor/core';
 import { getRuntimeCacheReloadRows } from '~/utils/runtime-monitor/cache';
+import {
+  getRuntimeDatabaseRows,
+  getRuntimeFlowFailedJobRows,
+  getRuntimeFlowRows,
+  getRuntimeRequestRows,
+} from '~/utils/runtime-monitor/rows';
 import {
   databaseSeverity,
   flowSeverity,
@@ -102,8 +109,8 @@ export function useRuntimeMetrics() {
   const clusterStats = computed(() => {
     const rows = instances.value
       .map((item) => item.cluster)
-      .filter(Boolean)
-      .sort((a: any, b: any) => {
+      .filter((cluster): cluster is RuntimeClusterStats => Boolean(cluster))
+      .sort((a, b) => {
         const at = Date.parse(a.lastReconciledAt ?? '') || 0;
         const bt = Date.parse(b.lastReconciledAt ?? '') || 0;
         return bt - at;
@@ -111,18 +118,21 @@ export function useRuntimeMetrics() {
     return rows[0] ?? null;
   });
 
-  const appMetricInstances = computed(() => {
+  const appMetricInstances = computed<RuntimeAppMetricInstance[]>(() => {
     const latest = instances.value
       .map((metrics) => metrics.appCluster)
-      .filter((cluster) => cluster?.instances?.length)
-      .sort((a: any, b: any) => {
-        const latestA = Math.max(...a.instances.map((item: any) => Date.parse(item.sampledAt) || 0));
-        const latestB = Math.max(...b.instances.map((item: any) => Date.parse(item.sampledAt) || 0));
+      .filter(
+        (cluster): cluster is RuntimeAppTelemetryCluster =>
+          Boolean(cluster?.instances?.length),
+      )
+      .sort((a, b) => {
+        const latestA = Math.max(...a.instances.map((item) => Date.parse(item.sampledAt) || 0));
+        const latestB = Math.max(...b.instances.map((item) => Date.parse(item.sampledAt) || 0));
         return latestB - latestA;
       })[0];
 
     if (latest?.instances?.length) {
-      return latest.instances.map((item: any) => ({
+      return latest.instances.map((item) => ({
         instanceId: item.instanceId,
         sampledAt: item.sampledAt,
         app: item.app,
@@ -137,32 +147,7 @@ export function useRuntimeMetrics() {
   });
 
   const requestRows = computed(() => {
-    const map = new Map<string, any>();
-    for (const metrics of appMetricInstances.value) {
-      for (const row of metrics.app?.requests.routes ?? []) {
-        const key = `${row.method}:${row.route}`;
-        const current = map.get(key) ?? {
-          method: row.method,
-          route: row.route,
-          count: 0,
-          rps: 0,
-          p50Ms: 0,
-          p95Ms: 0,
-          p99Ms: 0,
-          status4xx: 0,
-          status5xx: 0,
-        };
-        current.count += row.count;
-        current.rps += row.rps;
-        current.p50Ms = Math.max(current.p50Ms, row.p50Ms);
-        current.p95Ms = Math.max(current.p95Ms, row.p95Ms);
-        current.p99Ms = Math.max(current.p99Ms, row.p99Ms);
-        current.status4xx += row.status4xx;
-        current.status5xx += row.status5xx;
-        map.set(key, current);
-      }
-    }
-    return [...map.values()].sort((a, b) => b.rps - a.rps).slice(0, 20);
+    return getRuntimeRequestRows(appMetricInstances.value);
   });
 
   const cacheReloadRows = computed(() => {
@@ -170,81 +155,15 @@ export function useRuntimeMetrics() {
   });
 
   const databaseRows = computed(() => {
-    const map = new Map<string, any>();
-    for (const metrics of appMetricInstances.value) {
-      for (const row of metrics.app?.database.queries ?? []) {
-        const key = `${row.context ?? 'runtime'}:${row.op}:${row.table}`;
-        const current = map.get(key) ?? {
-          context: row.context ?? 'runtime',
-          op: row.op,
-          table: row.table,
-          count: 0,
-          errors: 0,
-          poolAcquireTimeouts: 0,
-          slow: 0,
-          p95Ms: 0,
-          p99Ms: 0,
-        };
-        current.count += row.count;
-        current.errors += row.errors;
-        current.poolAcquireTimeouts += row.poolAcquireTimeouts ?? 0;
-        current.slow += row.slow;
-        current.p95Ms = Math.max(current.p95Ms, row.p95Ms);
-        current.p99Ms = Math.max(current.p99Ms, row.p99Ms);
-        map.set(key, current);
-      }
-    }
-    return [...map.values()].sort((a, b) => b.p95Ms - a.p95Ms).slice(0, 20);
+    return getRuntimeDatabaseRows(appMetricInstances.value);
   });
 
   const flowRows = computed(() => {
-    const map = new Map<string, any>();
-    for (const metrics of appMetricInstances.value) {
-      for (const row of metrics.app?.flows.rows ?? []) {
-        const key = String(row.flowId);
-        const current = map.get(key) ?? {
-          flowId: row.flowId,
-          flowName: row.flowName,
-          running: 0,
-          completed: 0,
-          failed: 0,
-          p95Ms: 0,
-          failedSteps: new Map<string, number>(),
-          slowSteps: new Map<string, number>(),
-        };
-        current.running += row.running;
-        current.completed += row.completed;
-        current.failed += row.failed;
-        current.p95Ms = Math.max(current.p95Ms, row.p95Ms);
-        for (const step of row.failedSteps) {
-          current.failedSteps.set(step.step, (current.failedSteps.get(step.step) ?? 0) + step.count);
-        }
-        for (const step of row.slowSteps) {
-          current.slowSteps.set(step.step, Math.max(current.slowSteps.get(step.step) ?? 0, step.p95Ms));
-        }
-        map.set(key, current);
-      }
-    }
-    return [...map.values()]
-      .map((row) => ({
-        ...row,
-        failedSteps: [...row.failedSteps.entries()].map(([step, count]) => ({ step, count })).sort((a, b) => b.count - a.count).slice(0, 3),
-        slowSteps: [...row.slowSteps.entries()].map(([step, p95Ms]) => ({ step, p95Ms })).sort((a, b) => b.p95Ms - a.p95Ms).slice(0, 3),
-      }))
-      .sort((a, b) => b.running - a.running || b.failed - a.failed || b.p95Ms - a.p95Ms)
-      .slice(0, 20);
+    return getRuntimeFlowRows(appMetricInstances.value);
   });
 
   const flowFailedJobRows = computed(() =>
-    instances.value
-      .flatMap((metrics) =>
-        (metrics.queues.flow?.failedJobs ?? []).map((job) => ({
-          ...job,
-          instanceId: metrics.instance.id,
-        })),
-      )
-      .sort((a, b) => (b.finishedOn ?? b.timestamp ?? 0) - (a.finishedOn ?? a.timestamp ?? 0))
-      .slice(0, 30),
+    getRuntimeFlowFailedJobRows(instances.value),
   );
 
   function updatedSeverity(): RuntimeSeverity {
@@ -256,7 +175,7 @@ export function useRuntimeMetrics() {
   function clusterSeverity(): RuntimeSeverity {
     const cluster = clusterStats.value;
     if (!cluster?.enabled) return 'ok';
-    if (cluster.instances.some((item: any) => item.ageMs > cluster.staleAfterMs * 0.75)) {
+    if (cluster.instances.some((item) => item.ageMs > cluster.staleAfterMs * 0.75)) {
       return 'warning';
     }
     return 'ok';

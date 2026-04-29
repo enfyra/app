@@ -21,6 +21,12 @@ export type RuntimeQueueStats = {
   }>;
 };
 
+export type RuntimeDbMetrics = {
+  type?: string;
+  pool?: unknown;
+  [key: string]: unknown;
+};
+
 export type RuntimeMetricsPayload = {
   sampledAt: string;
   intervalMs: number;
@@ -101,7 +107,7 @@ export type RuntimeMetricsPayload = {
       users: number;
     }>;
   };
-  db: any;
+  db: RuntimeDbMetrics;
   cluster?: {
     enabled: boolean;
     key: string;
@@ -208,6 +214,7 @@ export type RuntimeAppMetrics = {
 
 export type RuntimeCacheReloadMetric = RuntimeAppMetrics['cache']['recent'][number];
 export type RuntimeCacheReloadRow = RuntimeCacheReloadMetric & { instanceId: string };
+export type RuntimeAppTelemetryCluster = NonNullable<RuntimeMetricsPayload['appCluster']>;
 export type RuntimeAppMetricInstance = {
   instanceId: string;
   sampledAt: string;
@@ -249,9 +256,9 @@ export type RuntimeFlowRow = {
   failedSteps: Array<{ step: string; count: number }>;
   slowSteps: Array<{ step: string; p95Ms: number }>;
 };
-export type RuntimeFlowFailedJobRow = RuntimeQueueStats['failedJobs'] extends Array<infer T>
-  ? T & { instanceId: string }
-  : never;
+export type RuntimeFlowFailedJobRow = NonNullable<RuntimeQueueStats['failedJobs']>[number] & {
+  instanceId: string;
+};
 export type RuntimeClusterStats = NonNullable<RuntimeMetricsPayload['cluster']>;
 export type RuntimeDbPoolRow = {
   name: string;

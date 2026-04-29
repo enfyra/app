@@ -47,7 +47,7 @@ export function taskErrorSeverity(metrics: RuntimeMetricsPayload): RuntimeSeveri
 }
 
 export function dbSeverity(metrics: RuntimeMetricsPayload): RuntimeSeverity {
-  const pending = dbPoolRows(metrics).reduce((sum, row: any) => sum + (row.pending ?? 0), 0);
+  const pending = dbPoolRows(metrics).reduce((sum, row) => sum + row.pending, 0);
   if (pending >= 100) return 'error';
   if (pending > 0) return 'warning';
   return 'ok';

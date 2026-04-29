@@ -1,8 +1,24 @@
 import type {
+  RuntimeDbPoolRow,
   RuntimeMetricsPayload,
   RuntimeQueueStats,
   RuntimeSeverity,
 } from '~/types/runtime-monitor';
+
+type RuntimeDbPoolSource = {
+  used?: number;
+  pending?: number;
+  max?: number | null;
+  idle?: number;
+  available?: number;
+  healthy?: boolean;
+  master?: RuntimeDbPoolSource;
+  replicas?: Array<{
+    healthy?: boolean;
+    pool?: RuntimeDbPoolSource;
+  }>;
+  [key: string]: unknown;
+};
 
 export function severityRank(severity: RuntimeSeverity) {
   if (severity === 'error') return 2;
@@ -58,10 +74,14 @@ export function queueTotal(queue: RuntimeQueueStats | null | undefined) {
   return queue.waiting + queue.active + queue.delayed + queue.failed;
 }
 
-export function dbPoolRows(metrics: RuntimeMetricsPayload) {
-  const pool = metrics.db?.pool;
+export function dbPoolRows(metrics: RuntimeMetricsPayload): RuntimeDbPoolRow[] {
+  const pool = metrics.db?.pool as RuntimeDbPoolSource | undefined;
   if (!pool) return [];
-  const normalize = (row: any) => {
+  const normalize = (
+    name: string,
+    row: RuntimeDbPoolSource,
+    healthy?: boolean,
+  ): RuntimeDbPoolRow => {
     const used = row?.used ?? 0;
     const pending = row?.pending ?? 0;
     const max = row?.max ?? null;
@@ -70,25 +90,24 @@ export function dbPoolRows(metrics: RuntimeMetricsPayload) {
       row?.available ??
       (max == null ? 0 : Math.max(0, max - used - pending));
     return {
-      ...row,
+      name,
       used,
       pending,
       idle,
       available,
       max,
+      healthy,
     };
   };
   if (pool.master || Array.isArray(pool.replicas)) {
     return [
-      { name: 'master', ...normalize(pool.master ?? {}) },
-      ...(pool.replicas ?? []).map((replica: any, index: number) => ({
-        name: `replica ${index + 1}`,
-        healthy: replica.healthy,
-        ...normalize(replica.pool ?? {}),
-      })),
+      normalize('master', pool.master ?? {}),
+      ...(pool.replicas ?? []).map((replica, index) =>
+        normalize(`replica ${index + 1}`, replica.pool ?? {}, replica.healthy),
+      ),
     ];
   }
-  return [{ name: 'pool', ...normalize(pool) }];
+  return [normalize('pool', pool)];
 }
 
 export function websocketRows(metrics: RuntimeMetricsPayload) {

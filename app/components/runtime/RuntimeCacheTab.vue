@@ -5,6 +5,8 @@ import { activeReloads } from '~/composables/shared/useAdminSocket';
 import { runtimeCacheFlowLabel, runtimeCacheReloadRowKey } from '~/utils/runtime-monitor/cache';
 
 type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
+type ReloadResponse = { message?: string };
+type ReloadError = { data?: { message?: string }; message?: string };
 
 defineProps<{ runtime: RuntimeMetricsViewModel }>();
 
@@ -59,6 +61,11 @@ const reloadActions = [
 
 const loadingMap = ref<Record<string, boolean>>({});
 
+function reloadErrorMessage(error: unknown): string {
+  const err = error as ReloadError;
+  return err?.data?.message || err?.message || 'An error occurred';
+}
+
 async function handleReload(action: (typeof reloadActions)[number]) {
   loadingMap.value[action.id] = true;
   try {
@@ -67,19 +74,19 @@ async function handleReload(action: (typeof reloadActions)[number]) {
     const basePath = action.path.replace(/^\/+/, '');
     const fullUrl = `${normalizeUrl(apiUrl, '/api')}/${basePath}`;
 
-    const response = await $fetch(fullUrl, {
+    const response = await $fetch<ReloadResponse>(fullUrl, {
       method: 'POST',
       credentials: 'include',
     });
 
     notify.success(
       'Reload started',
-      (response as any)?.message || `${action.label} reload accepted`,
+      response?.message || `${action.label} reload accepted`,
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     notify.error(
       'Reload failed to start',
-      err?.data?.message || err?.message || 'An error occurred',
+      reloadErrorMessage(err),
     );
   } finally {
     loadingMap.value[action.id] = false;
@@ -118,7 +125,7 @@ async function handleReload(action: (typeof reloadActions)[number]) {
               :loading="loadingMap[action.id]"
               :disabled="loadingMap[action.id]"
               size="sm"
-              :color="action.color as any"
+              :color="action.color"
               variant="soft"
               class="mt-2"
               :icon="loadingMap[action.id] ? undefined : 'lucide:play'"
