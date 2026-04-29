@@ -89,8 +89,6 @@
 </template>
 
 <script setup lang="ts">
-import EditableName from "./FileGridEditableName.vue";
-
 interface Props {
   file: FileItem & {
     displayName: string;

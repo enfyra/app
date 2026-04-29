@@ -99,7 +99,6 @@ import type { AnyExtension } from '@tiptap/core'
 import { Extension } from '@tiptap/core'
 import { Mark } from '@tiptap/core'
 import { Node } from '@tiptap/core'
-import CommonModal from '../common/Modal.vue'
 import type { RichTextEditorConfig } from "../../../enfyra.config.types";
 import { enfyraConfig } from "../../../enfyra.config";
 

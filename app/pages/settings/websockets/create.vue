@@ -41,7 +41,6 @@
 </template>
 
 <script setup lang="ts">
-import WebsocketConnectionHandlerTestModal from '~/components/websocket/ConnectionHandlerTestModal.vue';
 definePageMeta({
   layout: "default",
   title: "Create WebSocket Gateway",

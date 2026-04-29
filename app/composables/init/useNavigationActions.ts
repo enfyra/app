@@ -1,4 +1,4 @@
-import CommonBreadcrumbs from "~/components/common/Breadcrumbs.vue";
+import { CommonBreadcrumbs } from "#components";
 
 export function useNavigationActions() {
   const route = useRoute();

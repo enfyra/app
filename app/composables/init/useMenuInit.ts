@@ -1,4 +1,4 @@
-import SidebarUserInfo from "~/components/sidebar/UserInfo.vue";
+import { SidebarUserInfo } from "#components";
 
 export async function useMenuInit() {
   const {

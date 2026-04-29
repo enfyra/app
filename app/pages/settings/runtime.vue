@@ -1,15 +1,4 @@
 <script setup lang="ts">
-import RuntimeCacheTab from '~/components/runtime/RuntimeCacheTab.vue';
-import RuntimeConnectionsTab from '~/components/runtime/RuntimeConnectionsTab.vue';
-import RuntimeDatabaseTab from '~/components/runtime/RuntimeDatabaseTab.vue';
-import RuntimeFlowsTab from '~/components/runtime/RuntimeFlowsTab.vue';
-import RuntimeMetricGuide from '~/components/runtime/RuntimeMetricGuide.vue';
-import RuntimeOverviewTab from '~/components/runtime/RuntimeOverviewTab.vue';
-import RuntimeRedisTab from '~/components/runtime/RuntimeRedisTab.vue';
-import RuntimeRequestsTab from '~/components/runtime/RuntimeRequestsTab.vue';
-import RuntimeSummaryCards from '~/components/runtime/RuntimeSummaryCards.vue';
-import RuntimeWorkersTab from '~/components/runtime/RuntimeWorkersTab.vue';
-
 const { registerPageHeader } = usePageHeaderRegistry();
 const { me } = useAuth();
 const runtime = useRuntimeMetrics();

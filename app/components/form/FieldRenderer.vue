@@ -10,8 +10,6 @@ import {
   UFormField,
 } from "#components";
 
-import FieldLoadingSkeleton from "./FieldLoadingSkeleton.vue";
-
 import { FORM_EDITOR_VIRTUAL_EMIT_KEY } from "~/utils/form/form-editor-context";
 import type { FormEditorVirtualEmitPayload } from "~/types/form-editor";
 

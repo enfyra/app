@@ -26,9 +26,9 @@
 import { VueFlow } from '@vue-flow/core';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
+import { FlowStepNode } from '#components';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
-import FlowStepNode from './FlowStepNode.vue';
 import type { FlowStep, FlowDefinition } from '~/types/flow';
 import {
   NODE_SPACING_Y, CENTER_X, START_Y, BRANCH_OFFSET_X,

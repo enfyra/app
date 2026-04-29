@@ -85,9 +85,9 @@
 <script setup lang="ts">
 import { VueFlow, Handle, Position } from '@vue-flow/core';
 import { Controls } from '@vue-flow/controls';
+import { RouteFlowNode as FlowNode } from '#components';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
-import FlowNode from './FlowNode.vue';
 
 interface Props {
   routeData?: any;

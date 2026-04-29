@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ColumnSelector from "~/components/data-table/ColumnSelector.vue";
+import { DataTableColumnSelector as ColumnSelector } from "#components";
 
 const route = useRoute();
 const router = useRouter();

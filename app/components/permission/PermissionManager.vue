@@ -253,8 +253,6 @@
 </template>
 
 <script setup lang="ts">
-import { UIcon } from "#components";
-
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { getId, getIdFieldName } = useDatabase();
