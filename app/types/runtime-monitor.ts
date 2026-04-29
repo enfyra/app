@@ -206,6 +206,64 @@ export type RuntimeAppMetrics = {
   };
 };
 
+export type RuntimeCacheReloadMetric = RuntimeAppMetrics['cache']['recent'][number];
+export type RuntimeCacheReloadRow = RuntimeCacheReloadMetric & { instanceId: string };
+export type RuntimeAppMetricInstance = {
+  instanceId: string;
+  sampledAt: string;
+  app?: RuntimeAppMetrics;
+};
+export type RuntimeRequestMetric = RuntimeAppMetrics['requests']['routes'][number];
+export type RuntimeRequestRow = Pick<
+  RuntimeRequestMetric,
+  | 'method'
+  | 'route'
+  | 'count'
+  | 'rps'
+  | 'p50Ms'
+  | 'p95Ms'
+  | 'p99Ms'
+  | 'status4xx'
+  | 'status5xx'
+>;
+export type RuntimeDatabaseMetric = RuntimeAppMetrics['database']['queries'][number];
+export type RuntimeDatabaseRow = {
+  context: string;
+  op: string;
+  table: string;
+  count: number;
+  errors: number;
+  poolAcquireTimeouts: number;
+  slow: number;
+  p95Ms: number;
+  p99Ms: number;
+};
+export type RuntimeFlowMetric = RuntimeAppMetrics['flows']['rows'][number];
+export type RuntimeFlowRow = {
+  flowId: string | number;
+  flowName: string;
+  running: number;
+  completed: number;
+  failed: number;
+  p95Ms: number;
+  failedSteps: Array<{ step: string; count: number }>;
+  slowSteps: Array<{ step: string; p95Ms: number }>;
+};
+export type RuntimeFlowFailedJobRow = RuntimeQueueStats['failedJobs'] extends Array<infer T>
+  ? T & { instanceId: string }
+  : never;
+export type RuntimeClusterStats = NonNullable<RuntimeMetricsPayload['cluster']>;
+export type RuntimeDbPoolRow = {
+  name: string;
+  used: number;
+  pending: number;
+  idle: number;
+  available: number;
+  max: number | null;
+  healthy?: boolean;
+  [key: string]: unknown;
+};
+
 export type RuntimeGuideGroup = {
   title: string;
   items: Array<[string, string]>;

@@ -2,6 +2,7 @@ import { io, type Socket } from 'socket.io-client';
 
 import { ENFYRA_SOCKET_AUTH_ERROR } from '~/constants/enfyra';
 import type { RuntimeMetricsPayload } from '~/types/runtime-monitor';
+import { runtimeCacheFlowLabel } from '~/utils/runtime-monitor/cache';
 
 type ReloadPayload = {
   flow: string;
@@ -19,27 +20,6 @@ type ActiveReload = {
   instanceId?: string;
 };
 
-const FLOW_LABELS: Record<string, string> = {
-  metadata: 'Schema metadata',
-  route: 'Routes',
-  graphql: 'GraphQL',
-  guard: 'Guards',
-  fieldPermission: 'Field permissions',
-  setting: 'Settings',
-  storage: 'Storage',
-  oauth: 'OAuth',
-  websocket: 'WebSockets',
-  package: 'Packages',
-  flow: 'Flows',
-  folder: 'Folders',
-  bootstrap: 'Bootstrap scripts',
-  all: 'All caches',
-};
-
-export function flowLabel(flow: string): string {
-  return FLOW_LABELS[flow] ?? flow;
-}
-
 let socket: Socket | null = null;
 
 export const activeReloads = ref<ActiveReload[]>([]);
@@ -52,7 +32,7 @@ const showReloadBannerRef = computed(
   () => activeReloads.value.length > 0 || reloadDoneCountdown.value > 0,
 );
 const reloadLabelsRef = computed(() =>
-  activeReloads.value.map((r) => flowLabel(r.flow)),
+  activeReloads.value.map((r) => runtimeCacheFlowLabel(r.flow)),
 );
 
 export const isReloading = isReloadingRef;

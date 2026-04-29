@@ -10,6 +10,7 @@ import type {
 } from '~/types/runtime-monitor';
 import { runtimeTabGuides } from '~/utils/runtime-monitor/guides';
 import { maxSeverity } from '~/utils/runtime-monitor/core';
+import { getRuntimeCacheReloadRows } from '~/utils/runtime-monitor/cache';
 import {
   databaseSeverity,
   flowSeverity,
@@ -165,22 +166,7 @@ export function useRuntimeMetrics() {
   });
 
   const cacheReloadRows = computed(() => {
-    const map = new Map<string, RuntimeAppMetrics['cache']['recent'][number] & { instanceId: string }>();
-    for (const metrics of appMetricInstances.value) {
-      for (const row of metrics.app?.cache.recent ?? []) {
-        const instanceId = row.instanceId ?? metrics.instanceId;
-        const key = row.reloadId ?? `${instanceId}:${row.completedAt}:${row.flow}:${row.table}`;
-        if (!map.has(key)) {
-          map.set(key, {
-            ...row,
-            instanceId,
-          });
-        }
-      }
-    }
-    return [...map.values()]
-      .sort((a, b) => Date.parse(b.completedAt) - Date.parse(a.completedAt))
-      .slice(0, 20);
+    return getRuntimeCacheReloadRows(appMetricInstances.value);
   });
 
   const databaseRows = computed(() => {

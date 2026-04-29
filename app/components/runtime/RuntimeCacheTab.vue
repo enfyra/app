@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { fmtDateTime, fmtMs } from '~/utils/runtime-monitor/format';
 import { metricTextClass } from '~/utils/runtime-monitor/core';
-import { activeReloads, flowLabel } from '~/composables/shared/useAdminSocket';
+import { activeReloads } from '~/composables/shared/useAdminSocket';
+import { runtimeCacheFlowLabel, runtimeCacheReloadRowKey } from '~/utils/runtime-monitor/cache';
 
 type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
 
@@ -94,7 +95,7 @@ async function handleReload(action: (typeof reloadActions)[number]) {
         v-if="activeReloads.length"
         class="mb-3 rounded-md border border-primary-500/20 bg-primary-500/10 px-3 py-2 text-sm text-primary-700 dark:text-primary-300"
       >
-        Reloading {{ activeReloads.map((item) => flowLabel(item.flow)).join(', ') }}
+        Reloading {{ activeReloads.map((item) => runtimeCacheFlowLabel(item.flow)).join(', ') }}
       </div>
       <div class="grid gap-3 sm:grid-cols-2">
         <div
@@ -135,7 +136,7 @@ async function handleReload(action: (typeof reloadActions)[number]) {
       <div class="grid gap-3">
         <div
           v-for="row in runtime.cacheReloadRows"
-          :key="`${row.instanceId}:${row.completedAt}:${row.flow}`"
+          :key="runtimeCacheReloadRowKey(row)"
           class="rounded-lg border border-[var(--border-default)] p-3"
         >
           <div class="flex flex-wrap items-center justify-between gap-3">
