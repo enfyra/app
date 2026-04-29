@@ -16,6 +16,8 @@ const formType = ref<RedisAdminValueType>('string');
 const formValue = ref('"value"');
 const formTtl = ref('');
 const ttlInput = ref('');
+const copiedKey = ref<string | null>(null);
+let copiedKeyTimer: ReturnType<typeof setTimeout> | null = null;
 
 const overview = computed(() => props.runtime.redisOverview);
 const selected = computed(() => props.runtime.redisSelectedDetail);
@@ -236,14 +238,31 @@ async function deleteKey() {
     cancelText: 'Cancel',
   });
   if (!ok) return;
-  await props.runtime.deleteRedisKey(selected.value.key);
-  notify.success('Redis key deleted', selected.value.key);
+  const result = await props.runtime.deleteRedisKey(selected.value.key);
+  if (result?.deleted) {
+    notify.success('Redis key deleted', selected.value.key);
+  } else {
+    notify.warning('Redis key not found', selected.value.key);
+  }
 }
 
 async function copyKey(key: string) {
-  await navigator.clipboard.writeText(key);
-  notify.success('Key copied', key);
+  try {
+    await navigator.clipboard.writeText(key);
+    copiedKey.value = key;
+    if (copiedKeyTimer) clearTimeout(copiedKeyTimer);
+    copiedKeyTimer = setTimeout(() => {
+      copiedKey.value = null;
+      copiedKeyTimer = null;
+    }, 1200);
+  } catch (error) {
+    notify.error('Copy failed', error instanceof Error ? error.message : String(error));
+  }
 }
+
+onBeforeUnmount(() => {
+  if (copiedKeyTimer) clearTimeout(copiedKeyTimer);
+});
 
 function newKey() {
   props.runtime.clearRedisSelection();
@@ -431,10 +450,11 @@ function newKey() {
               <button
                 type="button"
                 class="shrink-0 text-[var(--text-quaternary)] hover:text-[var(--text-primary)]"
+                :class="copiedKey === row.key ? 'text-success-500 hover:text-success-500' : ''"
                 title="Copy key"
                 @click.stop="copyKey(row.key)"
               >
-                <UIcon name="lucide:copy" class="h-4 w-4" />
+                <UIcon :name="copiedKey === row.key ? 'lucide:check' : 'lucide:copy'" class="h-4 w-4" />
               </button>
             </div>
             <div class="mt-3 grid grid-cols-3 gap-2 text-xs text-[var(--text-tertiary)]">
@@ -484,10 +504,11 @@ function newKey() {
                     <button
                       type="button"
                       class="shrink-0 text-[var(--text-quaternary)] hover:text-[var(--text-primary)]"
+                      :class="copiedKey === row.key ? 'text-success-500 hover:text-success-500' : ''"
                       title="Copy key"
                       @click.stop="copyKey(row.key)"
                     >
-                      <UIcon name="lucide:copy" class="h-4 w-4" />
+                      <UIcon :name="copiedKey === row.key ? 'lucide:check' : 'lucide:copy'" class="h-4 w-4" />
                     </button>
                   </div>
                   <div class="mt-0.5 flex flex-wrap gap-1">
