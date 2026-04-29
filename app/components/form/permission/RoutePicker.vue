@@ -21,13 +21,15 @@
         <div class="space-y-0">
           
           <div class="p-4 border-b border-muted">
-            <div class="flex justify-between items-center">
-              <div class="text-sm text-muted-foreground">
-                {{
-                  hasActiveFilters(currentFilter)
-                    ? "Filtered routes"
-                    : "All routes"
-                }}
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <FilterActiveSummary
+                v-if="hasActiveFilters(currentFilter)"
+                :count="activeFilterCount"
+                variant="inline"
+                @clear="clearFilter"
+              />
+              <div v-else class="text-sm text-[var(--text-tertiary)]">
+                All routes
               </div>
               <UButton
                 :variant="hasActiveFilters(currentFilter) ? 'solid' : 'outline'"
@@ -39,7 +41,7 @@
               >
                 {{
                   hasActiveFilters(currentFilter)
-                    ? `Filter (${currentFilter.conditions.length})`
+                    ? `Filter (${activeFilterCount})`
                     : "Filter"
                 }}
               </UButton>
@@ -179,9 +181,10 @@ const limit = 7;
 
 const { getIncludeFields } = useSchema("route_definition");
 
-const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
+const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
 const showFilterDrawer = ref(false);
+const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 
 const {
   data: apiData,

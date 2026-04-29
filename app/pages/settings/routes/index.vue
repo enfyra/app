@@ -7,7 +7,7 @@ const router = useRouter();
 const tableName = "route_definition";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
-const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
+const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { getLoader: getRouteLoader } = useKeyedLoaders();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
@@ -24,6 +24,7 @@ const { getId } = useDatabase();
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
+const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 const showSystem = ref(route.query.system === 'true');
 const showCollectionRoutes = ref(route.query.collectionRoutes === 'true');
 
@@ -48,7 +49,7 @@ watch(showCollectionRoutes, (v) => {
 })
 
 const filterLabel = computed(() => {
-  const activeCount = currentFilter.value.conditions.length;
+  const activeCount = activeFilterCount.value;
   return activeCount > 0 ? `Filters (${activeCount})` : "Filter";
 });
 
@@ -206,6 +207,10 @@ async function handleFilterApply(filter: FilterGroup) {
       query: newQuery,
     });
   }
+}
+
+async function clearFilters() {
+  await handleFilterApply(createEmptyFilter());
 }
 
 watch(
@@ -392,6 +397,12 @@ async function deleteRoute(routeItem: any) {
       </div>
 
       <div v-else class="space-y-6">
+        <FilterActiveSummary
+          v-if="hasActiveFilters(currentFilter)"
+          :count="activeFilterCount"
+          @clear="clearFilters"
+        />
+
         <div v-if="routesData.length" class="space-y-6">
           <div
             class="grid gap-4"

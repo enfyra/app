@@ -9,7 +9,7 @@ const total = ref(1);
 const page = ref(1);
 const pageLimit = 10;
 const data = ref([]);
-const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
+const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 const singleRecordIdMap = useState<Record<string, string>>('singleRecordIdMap', () => ({}));
@@ -64,8 +64,10 @@ watch(() => schemas.value[tableName]?.name || tableName, (name) => {
   }
 }, { immediate: true });
 
+const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
+
 const filterLabel = computed(() => {
-  const activeCount = currentFilter.value.conditions.length;
+  const activeCount = activeFilterCount.value;
   return activeCount > 0 ? `Filters (${activeCount})` : "Filter";
 });
 
@@ -344,7 +346,7 @@ useHeaderActionRegistry([
     },
     get key() {
       return `filter-${
-        currentFilter.value.conditions.length
+        activeFilterCount.value
       }-${hasActiveFilters(currentFilter.value)}`;
     },
     size: "md",
@@ -387,23 +389,8 @@ useHeaderActionRegistry([
 
     <div
       v-if="hasActiveFilters(currentFilter)"
-      class="flex items-center gap-2 p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30"
     >
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
-        <UIcon name="i-lucide-filter" class="w-4 h-4 text-white" />
-      </div>
-      <span class="font-medium text-[var(--text-disabled)]">
-        {{ currentFilter.conditions.length }} active filter{{ currentFilter.conditions.length > 1 ? 's' : '' }}
-      </span>
-      <UButton
-        icon="i-lucide-x"
-        size="xs"
-        variant="ghost"
-        @click="clearFilters"
-        class="ml-auto"
-      >
-        Clear
-      </UButton>
+      <FilterActiveSummary :count="activeFilterCount" @clear="clearFilters" />
     </div>
 
     <div class="space-y-6">

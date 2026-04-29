@@ -23,8 +23,9 @@ const showCreateDrawer = ref(false);
 const showFilterDrawer = ref(false);
 const searchQuery = ref("");
 const searchDebounced = ref("");
-const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
+const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
+const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 const { getId, getIdFieldName } = useDatabase();
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -242,7 +243,7 @@ const { isMobile, isTablet } = useScreen();
 
               <FormRelationActions
                 :has-active-filters="hasActiveFilters(currentFilter)"
-                :filter-count="currentFilter.conditions.length"
+                :filter-count="activeFilterCount"
                 :disabled="props.disabled"
                 @open-filter="openFilterDrawer"
                 @open-create="showCreateDrawer = true"
@@ -297,14 +298,12 @@ const { isMobile, isTablet } = useScreen();
               >
                 Search: "{{ searchDebounced }}"
               </UBadge>
-              <UBadge
+              <FilterActiveSummary
                 v-if="hasActiveFilters(currentFilter)"
-                variant="soft"
-                color="secondary"
-                size="xs"
-              >
-                {{ currentFilter.conditions.length }} filter(s)
-              </UBadge>
+                :count="activeFilterCount"
+                variant="inline"
+                :clearable="false"
+              />
               <UButton
                 size="xs"
                 variant="ghost"

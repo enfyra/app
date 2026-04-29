@@ -8,16 +8,16 @@ const props = defineProps<{
 
 const { schemas } = useSchema();
 const { addToHistory } = useFilterHistory(props.tableName);
-const { hasActiveFilters } = useFilterQuery();
+const { createEmptyFilter, hasActiveFilters, countActiveFilters } = useFilterQuery();
 
 const emit = defineEmits<{
   "update:modelValue": [value: boolean];
   apply: [filter: FilterGroup];
 }>();
 
-const { createEmptyFilter } = useFilterQuery();
 const localFilter = ref<FilterGroup>(createEmptyFilter());
 const originalFilter = ref<FilterGroup>(createEmptyFilter()); 
+const activeFilterCount = computed(() => countActiveFilters(localFilter.value));
 
 watch(
   () => props.currentFilter,
@@ -73,27 +73,7 @@ function applySavedFilter(filter: any) {
   emit("update:modelValue", false);
 }
 
-const hasActiveConditions = computed(() => {
-  return localFilter.value.conditions.some(
-    (condition: FilterCondition | FilterGroup) => {
-      if ("field" in condition) {
-        return condition.field && condition.operator;
-      } else {
-        return hasActiveFiltersLocal(condition);
-      }
-    }
-  );
-});
-
-function hasActiveFiltersLocal(group: FilterGroup): boolean {
-  return group.conditions.some((condition: FilterCondition | FilterGroup) => {
-    if ("field" in condition) {
-      return condition.field && condition.operator;
-    } else {
-      return hasActiveFiltersLocal(condition);
-    }
-  });
-}
+const hasActiveConditions = computed(() => activeFilterCount.value > 0);
 
 const { isMobile, isTablet } = useScreen();
 </script>
@@ -117,7 +97,7 @@ const { isMobile, isTablet } = useScreen();
             <p class="text-xs md:text-sm text-[var(--text-tertiary)] mt-1">
               {{
                 hasActiveConditions
-                  ? `${localFilter.conditions.length} condition(s) configured`
+                  ? `${activeFilterCount} condition${activeFilterCount === 1 ? "" : "s"} configured`
                   : "No filters applied"
               }}
             </p>

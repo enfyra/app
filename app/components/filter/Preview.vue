@@ -5,7 +5,7 @@ const props = defineProps<{
   schemas: Record<string, any>;
 }>();
 
-const { buildQuery } = useFilterQuery();
+const { buildQuery, countActiveFilters } = useFilterQuery();
 
 const filterQuery = computed(() => {
   try {
@@ -16,20 +16,8 @@ const filterQuery = computed(() => {
 });
 
 const conditionCount = computed(() => {
-  return countConditions(props.filter);
+  return countActiveFilters(props.filter);
 });
-
-function countConditions(group: FilterGroup): number {
-  let count = 0;
-  for (const condition of group.conditions) {
-    if ('field' in condition) {
-      count++;
-    } else {
-      count += countConditions(condition);
-    }
-  }
-  return count;
-}
 
 const groupCount = computed(() => {
   return countGroups(props.filter);

@@ -1,4 +1,5 @@
 import { generateFilterId } from '~/utils/common/filter/filter-operators';
+import { getActiveFilterCount } from '~/utils/common/filter/filter-utils';
 
 export interface FilterHistoryItem {
   id: string;
@@ -18,7 +19,7 @@ export function useFilterHistory(tableName: string) {
       return 'Empty Filter';
     }
     
-    const conditionCount = filter.conditions.length;
+    const conditionCount = getActiveFilterCount(filter);
     const firstCondition = filter.conditions[0];
     
     if (conditionCount === 1 && firstCondition.field) {

@@ -7,7 +7,7 @@ const router = useRouter();
 const tableName = 'guard_definition';
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
-const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
+const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -20,9 +20,10 @@ registerPageHeader({
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
+const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 
 const filterLabel = computed(() => {
-  const activeCount = currentFilter.value.conditions.length;
+  const activeCount = activeFilterCount.value;
   return activeCount > 0 ? `Filters (${activeCount})` : 'Filter';
 });
 
@@ -125,6 +126,10 @@ async function handleFilterApply(filter: FilterGroup) {
     delete newQuery.page;
     await router.replace({ query: newQuery });
   }
+}
+
+async function clearFilters() {
+  await handleFilterApply(createEmptyFilter());
 }
 
 watch(
@@ -256,6 +261,12 @@ async function deleteGuard(guard: any) {
       </div>
 
       <div v-else class="space-y-6">
+        <FilterActiveSummary
+          v-if="hasActiveFilters(currentFilter)"
+          :count="activeFilterCount"
+          @clear="clearFilters"
+        />
+
         <div v-if="guardsData.length" class="space-y-6">
           <div
             class="grid gap-4"

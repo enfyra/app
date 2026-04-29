@@ -1,5 +1,9 @@
 
+import { getActiveFilterCount } from "~/utils/common/filter/filter-utils";
+
 export function useFilterQuery() {
+  const countActiveFilters = getActiveFilterCount;
+
   function buildQuery(filter: FilterGroup): Record<string, any> {
     const filterObj = buildFilterObject(filter);
     return filterObj || {};
@@ -97,15 +101,7 @@ export function useFilterQuery() {
   }
 
   function hasActiveFilters(filter: FilterGroup): boolean {
-    return filter.conditions.some((condition) => {
-      if ("field" in condition) {
-        if (!condition.field || !condition.operator) return false;
-        if (condition.operator === "_is_null" || condition.operator === "_is_not_null") return true;
-        return condition.value !== null && condition.value !== undefined && condition.value !== "";
-      } else {
-        return hasActiveFilters(condition);
-      }
-    });
+    return countActiveFilters(filter) > 0;
   }
 
   function getFilterSummary(
@@ -179,6 +175,7 @@ export function useFilterQuery() {
     encodeFilterToUrl,
     createEmptyFilter,
     hasActiveFilters,
+    countActiveFilters,
     getFilterSummary,
   };
 }

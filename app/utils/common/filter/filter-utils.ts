@@ -1,5 +1,23 @@
-import type { FilterGroup, FieldOption } from "./filter-types";
+import type { FilterCondition, FilterGroup, FieldOption } from "./filter-types";
 import { getTargetTableName } from "~/utils/schema";
+
+export function isActiveFilterCondition(condition: FilterCondition): boolean {
+  if (!condition.field || !condition.operator) return false;
+  if (condition.operator === "_is_null" || condition.operator === "_is_not_null") return true;
+  return condition.value !== null && condition.value !== undefined && condition.value !== "";
+}
+
+export function getActiveFilterCount(filter?: FilterGroup | null): number {
+  if (!filter?.conditions?.length) return 0;
+
+  return filter.conditions.reduce((total, condition) => {
+    if ("field" in condition) {
+      return total + (isActiveFilterCondition(condition) ? 1 : 0);
+    }
+
+    return total + getActiveFilterCount(condition);
+  }, 0);
+}
 
 export function getTargetTableNameForGroup(
   group: FilterGroup,

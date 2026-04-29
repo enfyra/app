@@ -1,5 +1,11 @@
 <template>
   <div class="space-y-6">
+    <FilterActiveSummary
+      v-if="isMounted && !loading && hasActiveFilters(currentFilter)"
+      :count="activeFilterCount"
+      @clear="clearFilters"
+    />
+
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="!isMounted || loading"
@@ -111,7 +117,7 @@ const limit = 9;
 const tableName = "user_definition";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
-const { createEmptyFilter, buildQuery, hasActiveFilters } = useFilterQuery();
+const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const route = useRoute();
 const router = useRouter();
 const { isMounted } = useMounted();
@@ -120,6 +126,7 @@ const { getId } = useDatabase();
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
+const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 const notify = useNotify();
 
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -157,7 +164,7 @@ const users = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 const filterLabel = computed(() => {
-  const activeCount = currentFilter.value.conditions.length;
+  const activeCount = activeFilterCount.value;
   return activeCount > 0 ? `Filters (${activeCount})` : "Filter";
 });
 
@@ -229,6 +236,10 @@ async function handleFilterApply(filter: FilterGroup) {
       query: newQuery,
     });
   }
+}
+
+async function clearFilters() {
+  await handleFilterApply(createEmptyFilter());
 }
 
 function getHeaderActions(user: any) {
