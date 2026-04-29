@@ -79,6 +79,8 @@ function systemKindLabel(kind?: RedisAdminSystemKind) {
       return 'Socket.IO';
     case 'runtime_monitor':
       return 'runtime monitor';
+    case 'sql_pool_coordination':
+      return 'SQL pool';
     case 'system_lock':
       return 'system lock';
     default:
@@ -98,6 +100,8 @@ function systemKindColor(kind?: RedisAdminSystemKind) {
       return 'info';
     case 'runtime_monitor':
       return 'neutral';
+    case 'sql_pool_coordination':
+      return 'warning';
     case 'system_lock':
       return 'error';
     default:
@@ -219,11 +223,12 @@ async function saveKey() {
 async function applyTtl() {
   try {
     if (!selected.value || !canModifySelected.value) return;
+    const key = selected.value.key;
     await props.runtime.updateRedisKeyTtl(
-      selected.value.key,
+      key,
       positiveTtlOrNull(ttlInput.value),
     );
-    notify.success('TTL updated', selected.value.key);
+    notify.success('TTL updated', key);
   } catch (error) {
     notify.error('TTL update failed', error instanceof Error ? error.message : String(error));
   }
@@ -231,19 +236,26 @@ async function applyTtl() {
 
 async function deleteKey() {
   if (!selected.value || !canModifySelected.value) return;
+  const key = selected.value.key;
   const ok = await confirm({
     title: 'Delete Redis key',
-    content: selected.value.key,
+    content: key,
     confirmText: 'Delete',
     cancelText: 'Cancel',
   });
   if (!ok) return;
-  const result = await props.runtime.deleteRedisKey(selected.value.key);
+  const result = await props.runtime.deleteRedisKey(key);
   if (result?.deleted) {
-    notify.success('Redis key deleted', selected.value.key);
+    notify.success('Redis key deleted', key);
   } else {
-    notify.warning('Redis key not found', selected.value.key);
+    notify.warning('Redis key not found', key);
   }
+}
+
+async function persistSelectedKey() {
+  if (!selected.value || !canModifySelected.value) return;
+  const key = selected.value.key;
+  await props.runtime.updateRedisKeyTtl(key, null);
 }
 
 async function copyKey(key: string) {
@@ -517,7 +529,6 @@ function newKey() {
                     <UBadge v-if="row.systemKind" :color="systemKindColor(row.systemKind)" variant="soft" size="xs">
                       {{ systemKindLabel(row.systemKind) }}
                     </UBadge>
-                    <UBadge v-if="row.reason" color="neutral" variant="soft" size="xs">{{ row.reason }}</UBadge>
                   </div>
                 </td>
                 <td class="px-3 py-2 text-right">{{ row.size ?? '-' }}</td>
@@ -613,7 +624,7 @@ function newKey() {
             <UButton size="sm" icon="lucide:timer-reset" variant="soft" :disabled="!canModifySelected || runtime.redisWritePending" @click="applyTtl">
               Apply
             </UButton>
-            <UButton size="sm" icon="lucide:infinity" color="neutral" variant="soft" :disabled="!canModifySelected || runtime.redisWritePending" @click="runtime.updateRedisKeyTtl(selected.key, null)">
+            <UButton size="sm" icon="lucide:infinity" color="neutral" variant="soft" :disabled="!canModifySelected || runtime.redisWritePending" @click="persistSelectedKey">
               Persist
             </UButton>
           </div>
