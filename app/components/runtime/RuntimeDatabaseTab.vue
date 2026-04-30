@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { fmtMs } from '~/utils/runtime-monitor/format';
 import {
-  badgeColor,
   metricTextClass,
 } from '~/utils/runtime-monitor/core';
 import { databaseSeverity } from '~/utils/runtime-monitor/severity';
@@ -23,9 +22,10 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
       >
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="font-medium text-[var(--text-primary)]">{{ metrics.instance.id }}</div>
-          <UBadge :color="badgeColor(databaseSeverity(metrics))" variant="soft">
-            {{ databaseSeverity(metrics) === 'error' ? 'Critical' : databaseSeverity(metrics) === 'warning' ? 'Attention' : 'Healthy' }}
-          </UBadge>
+          <RuntimeStatusBadge
+            :severity="metrics.health?.database?.severity ?? databaseSeverity(metrics)"
+            :messages="metrics.health?.database?.messages ?? databaseWarnings(metrics)"
+          />
         </div>
 
         <div

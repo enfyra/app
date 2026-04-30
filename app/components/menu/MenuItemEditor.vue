@@ -86,6 +86,7 @@ const {
 const excludedFields = computed(() => {
   const baseExcluded = [
     "id",
+    "_id",
     "createdAt",
     "updatedAt",
     "isSystem",
@@ -110,6 +111,8 @@ const excludedFields = computed(() => {
 
   return baseExcluded;
 });
+
+const editorMode = computed(() => props.menu && getId(props.menu) ? 'update' : 'create');
 
 const typeMap = {
   permission: {
@@ -374,6 +377,7 @@ function confirmDiscard() {
               :excluded="excludedFields"
               :field-map="typeMap"
               :loading="loading"
+              :mode="editorMode"
               :current-record-id="props.menu ? getId(props.menu) : null"
             />
           </UForm>

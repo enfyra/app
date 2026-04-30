@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import {
+  isMongoPrimaryKeyColumn,
+  normalizeMongoPrimaryKeyColumn,
+} from '~/utils/schema/mongo-primary-key';
+
 const props = defineProps<{
   modelValue: any[];
   reservedNames?: string[];
@@ -18,6 +23,11 @@ const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const localColumnsWithKeys = computed(() => columns.value.map((c: any, i: number) => ({ ...c, _localKey: i })));
 const localSelfKey = computed(() => (editingIndex.value != null ? editingIndex.value : null));
+const displayColumns = computed(() =>
+  columns.value.map((column: any) =>
+    isMongoDB.value ? normalizeMongoPrimaryKeyColumn(column) : column,
+  ),
+);
 
 function getPermCount(column: any): number {
   const perms = Array.isArray(column?.fieldPermissions) ? column.fieldPermissions : [];
@@ -128,16 +138,23 @@ function createEmptyColumn(): any {
   return generateEmptyForm();
 }
 
+function normalizeColumnForDatabase(column: any): any {
+  return isMongoDB.value ? normalizeMongoPrimaryKeyColumn(column) : column;
+}
+
+function isPrimaryColumn(column: any): boolean {
+  if (!column) return false;
+  return isMongoDB.value
+    ? isMongoPrimaryKeyColumn(column)
+    : column.name === getIdFieldName() || column.isPrimary === true;
+}
+
 function editColumn(col: any, index: number) {
   isEditing.value = true;
 
   if (!col) return;
   editingIndex.value = index;
-  currentColumn.value = { ...toRaw(col) };
-
-  if (isMongoDB.value && currentColumn.value.name === getIdFieldName()) {
-    currentColumn.value.type = "uuid";
-  }
+  currentColumn.value = normalizeColumnForDatabase({ ...toRaw(col) });
 
   handleUuidType(currentColumn.value);
 }
@@ -180,7 +197,7 @@ async function saveColumn() {
     return;
   }
 
-  const newCol = { ...currentColumn.value };
+  const newCol = normalizeColumnForDatabase({ ...currentColumn.value });
 
   handleUuidType(newCol);
 
@@ -210,9 +227,7 @@ function addNewColumn() {
   editingIndex.value = null;
   deleteIds(currentColumn.value);
 
-  if (!currentColumn.value.type) {
-    currentColumn.value.type = isMongoDB.value ? "uuid" : "varchar";
-  }
+  if (!currentColumn.value.type) currentColumn.value.type = "varchar";
 
   handleUuidType(currentColumn.value);
 }
@@ -279,6 +294,7 @@ function getDefaultValueType(columnType: string) {
     case "richtext":
     case "varchar":
     case "uuid":
+    case "ObjectId":
       return "text";
 
     case "code":
@@ -298,21 +314,21 @@ function getDefaultValueType(columnType: string) {
 
 const typeMap = computed(() => {
   const currentType = currentColumn.value?.type;
-  const isPrimaryColumn = currentColumn.value?.name === getIdFieldName();
+  const editingPrimaryColumn = isPrimaryColumn(currentColumn.value);
 
   return {
     type: {
       type: "enum",
       options:
-        isPrimaryColumn
+        editingPrimaryColumn
           ? isMongoDB.value
-            ? columnTypes.filter((colType) => colType.value === "uuid") 
+            ? columnTypes.filter((colType) => colType.value === "ObjectId") 
             : columnTypes.filter((colType) => ["uuid", "int"].includes(colType.value)) 
           : columnTypes,
-      default: isPrimaryColumn && isMongoDB.value ? "uuid" : undefined, 
+      default: editingPrimaryColumn && isMongoDB.value ? "ObjectId" : undefined, 
     },
     name: {
-      disabled: currentColumn.value?.name === getIdFieldName(),
+      disabled: editingPrimaryColumn,
     },
     defaultValue: getDefaultValueType(currentType),
     
@@ -349,12 +365,17 @@ onMounted(() => {
   const primaryColumn = createEmptyColumn();
   const { getIdFieldName, isMongoDB } = useDatabase();
   primaryColumn.name = getIdFieldName();
-  primaryColumn.type = isMongoDB.value ? "uuid" : "int"; 
+  primaryColumn.type = isMongoDB.value ? "ObjectId" : "int"; 
   primaryColumn.isPrimary = true;
   primaryColumn.isGenerated = true;
   primaryColumn.isNullable = false;
   deleteIds(primaryColumn);
   if (!columns.value.length) columns.value.push(primaryColumn);
+  if (isMongoDB.value) {
+    columns.value = columns.value.map((column: any) =>
+      normalizeMongoPrimaryKeyColumn(column),
+    );
+  }
 });
 
 function handleTypeChange(newType: string, oldType: string) {
@@ -428,7 +449,7 @@ watch(
       Columns
     </div>
     <div
-      v-for="(column, index) in columns"
+      v-for="(column, index) in displayColumns"
       :key="column.id ?? index"
       class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-muted lg:hover:bg-muted/50 transition cursor-pointer"
       @click="editColumn(column, index)"
@@ -451,7 +472,7 @@ watch(
 
       <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
         <UTooltip
-          v-if="column.name !== getIdFieldName()"
+          v-if="!isPrimaryColumn(column)"
           :text="column.isPublished ? 'Published' : 'Unpublished'"
           :delay-duration="0"
           :disabled="tooltipsDisabled"
@@ -466,7 +487,7 @@ watch(
           />
         </UTooltip>
         <UTooltip
-          v-if="column.name !== getIdFieldName()"
+          v-if="!isPrimaryColumn(column)"
           :text="`Field permissions (${getPermCount(column)})`"
           :delay-duration="0"
           :disabled="tooltipsDisabled"
@@ -488,7 +509,7 @@ watch(
           </UChip>
         </UTooltip>
         <UTooltip
-          v-if="column.name !== getIdFieldName()"
+          v-if="!isPrimaryColumn(column)"
           :text="`Validation rules (${getRuleCount(column)})`"
           :delay-duration="0"
           :disabled="tooltipsDisabled"
@@ -595,7 +616,7 @@ watch(
               :unique-local-records="localColumnsWithKeys"
               :unique-local-self-key="localSelfKey"
               :includes="
-                currentColumn.name === getIdFieldName() ? ['name', 'type'] : undefined
+                isPrimaryColumn(currentColumn) ? ['name', 'type'] : undefined
               "
               :excluded="[
                 'isSystem',

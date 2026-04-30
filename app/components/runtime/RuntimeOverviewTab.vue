@@ -12,7 +12,6 @@ import {
   sampleAgeLabel,
 } from '~/utils/runtime-monitor/format';
 import {
-  badgeColor,
   metricTextClass,
 } from '~/utils/runtime-monitor/core';
 import {
@@ -38,9 +37,12 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
             SQL pool coordination heartbeat · stale after {{ fmtSec(runtime.clusterStats.staleAfterMs) }}
           </div>
         </div>
-        <UBadge :color="badgeColor(runtime.clusterSeverity())" variant="soft">
-          {{ runtime.clusterSeverity() === 'warning' ? 'Check samples' : 'Coordinated' }}
-        </UBadge>
+        <RuntimeStatusBadge
+          :severity="runtime.clusterSeverity()"
+          :messages="runtime.clusterSeverity() === 'warning' ? ['One or more cluster heartbeats are near the stale threshold.'] : []"
+          ok-label="Coordinated"
+          warning-label="Check samples"
+        />
       </div>
 
       <div class="mt-4 grid gap-3 sm:grid-cols-2">
@@ -114,9 +116,10 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
             {{ averageWindowLabel(metrics) }} · kept in Redis
           </div>
         </div>
-        <UBadge :color="badgeColor(overviewSeverity(metrics))" variant="soft">
-          {{ overviewSeverity(metrics) === 'error' ? 'Critical' : overviewSeverity(metrics) === 'warning' ? 'Attention' : 'Healthy' }}
-        </UBadge>
+        <RuntimeStatusBadge
+          :severity="metrics.health?.overview?.severity ?? overviewSeverity(metrics)"
+          :messages="metrics.health?.overview?.messages ?? overviewWarnings(metrics)"
+        />
       </div>
 
       <div

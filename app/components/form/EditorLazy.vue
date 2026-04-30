@@ -31,7 +31,6 @@ const props = withDefaults(
       sections?: FormEditorSection[];
     }>(),
   {
-    mode: 'update',
     layout: 'stack',
     currentRecordId: null,
     uniqueCheckMode: 'api',

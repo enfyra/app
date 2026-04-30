@@ -6,6 +6,10 @@ import type {
   FormChangesState,
   ColumnType,
 } from "~/types/database";
+import {
+  CREATE_RECORD_SYSTEM_FIELDS,
+  isCreateRecordSystemField,
+} from "~/utils/schema/system-fields";
 const TIMESTAMP_FIELDS: { name: string; type: ColumnType }[] = [
   { name: "createdAt", type: "timestamp" },
   { name: "updatedAt", type: "timestamp" },
@@ -29,8 +33,6 @@ export function useSchema(tableName?: string | Ref<string>) {
     pkField: null,
   }));
   const schemaLoading = ref(false);
-  const { getIdFieldName } = useDatabase();
-
   const {
     execute: executeMetadata,
     data: metadataData,
@@ -165,27 +167,25 @@ export function useSchema(tableName?: string | Ref<string>) {
   }
 
   const editableFields = computed(() => {
-    const excluded = [getIdFieldName(), "createdAt", "updatedAt", "isSystem", "isRootAdmin"];
-
     return sortFieldsByOrder(
       definition.value.filter(f => {
         const key = f.name || f.propertyName;
-        return key && !excluded.includes(key) && canWriteField(f);
+        return key && !isCreateRecordSystemField(key) && canWriteField(f);
       })
     );
   });
 
   function generateEmptyForm(options?: { excluded?: string[] }): Record<string, any> {
-    const allExcluded = [
-      "createdAt", "updatedAt", getIdFieldName(), "isSystem", "isRootAdmin",
-      ...(options?.excluded || [])
-    ];
+    const allExcluded = new Set([
+      ...CREATE_RECORD_SYSTEM_FIELDS,
+      ...(options?.excluded || []),
+    ]);
 
     const result: Record<string, any> = {};
 
     editableFields.value.forEach(f => {
       const key = f.name || f.propertyName;
-      if (!key || allExcluded.includes(key)) return;
+      if (!key || allExcluded.has(key)) return;
 
       if (f.defaultValue !== undefined) {
         result[key] = f.defaultValue;

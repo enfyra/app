@@ -2,6 +2,7 @@ import type { Ref } from 'vue';
 
 export const columnTypes = [
   { label: "UUID", value: "uuid", icon: "ph:key" },
+  { label: "ObjectId", value: "ObjectId", icon: "ph:key" },
   { label: "Integer", value: "int", icon: "tabler:123" },
   { label: "Float", value: "float", icon: "mdi:decimal" },
   { label: "Varchar", value: "varchar", icon: "mdi:format-text" },
@@ -32,6 +33,7 @@ export const relationTypes = [
 
 export type ColumnType = 
   | 'uuid'
+  | 'ObjectId'
   | 'varchar'
   | 'text'
   | 'int'

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { RedisAdminKeySummary, RedisAdminSystemKind, RedisAdminValueType } from '~/types/runtime-monitor';
-import { badgeColor, metricTextClass, shortText } from '~/utils/runtime-monitor/core';
+import { metricTextClass, shortText } from '~/utils/runtime-monitor/core';
 import { fmtBytes, fmtDateTime, fmtNumber, fmtSec } from '~/utils/runtime-monitor/format';
 
 type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
@@ -32,23 +32,13 @@ let copiedKeyTimer: ReturnType<typeof setTimeout> | null = null;
 
 const overview = computed(() => props.runtime.redisOverview);
 const selected = computed(() => props.runtime.redisSelectedDetail);
-const memoryRatio = computed(() => {
-  const used = overview.value?.server.usedMemoryBytes ?? 0;
-  const max = overview.value?.server.maxMemoryBytes ?? 0;
-  return max > 0 ? used / max : 0;
-});
 const maxMemoryLabel = computed(() => {
   const max = overview.value?.server.maxMemoryBytes;
   if (max === 0) return 'unlimited';
   return overview.value?.server.maxMemoryHuman || fmtBytes(max);
 });
-const redisSeverity = computed(() =>
-  memoryRatio.value >= 0.95
-    ? 'error'
-    : memoryRatio.value >= 0.8 || (overview.value?.server.memFragmentationRatio ?? 0) >= 2
-      ? 'warning'
-      : 'ok',
-);
+const redisSeverity = computed(() => overview.value?.health?.severity ?? 'ok');
+const redisWarnings = computed(() => overview.value?.health?.warnings ?? []);
 const canModifySelected = computed(() => selected.value?.modifiable !== false);
 const canLoadMore = computed(() => props.runtime.redisKeysCursor !== '0');
 const selectedLocked = computed(() => selected.value ? !canModifySelected.value : false);
@@ -407,9 +397,10 @@ function openCreateKey() {
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <UBadge :color="badgeColor(redisSeverity)" variant="soft">
-            {{ redisSeverity === 'error' ? 'Critical' : redisSeverity === 'warning' ? 'Attention' : 'Healthy' }}
-          </UBadge>
+          <RuntimeStatusBadge
+            :severity="redisSeverity"
+            :messages="redisWarnings"
+          />
           <UButton
             icon="lucide:refresh-cw"
             size="sm"
@@ -423,6 +414,19 @@ function openCreateKey() {
 
       <div v-if="runtime.redisError" class="mt-3 rounded-lg border border-warning-400/20 bg-warning-400/5 p-3 text-sm text-warning-700 dark:text-warning-300">
         {{ runtime.redisError }}
+      </div>
+
+      <div v-if="redisWarnings.length > 0" class="mt-3 rounded-lg border border-warning-400/20 bg-warning-400/5 p-3 text-sm text-warning-700 dark:text-warning-300">
+        <div class="flex items-center gap-2 font-medium">
+          <UIcon name="lucide:triangle-alert" class="h-4 w-4" />
+          Redis warnings
+        </div>
+        <ul class="mt-2 space-y-1">
+          <li v-for="warning in redisWarnings" :key="warning" class="flex gap-2">
+            <span>•</span>
+            <span>{{ warning }}</span>
+          </li>
+        </ul>
       </div>
 
       <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

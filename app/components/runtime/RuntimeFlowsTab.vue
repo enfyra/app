@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { fmtDateTime, fmtMs } from '~/utils/runtime-monitor/format';
 import {
-  badgeColor,
   metricTextClass,
   queueTotal,
   shortText,
@@ -59,9 +58,10 @@ function slowStepLabels(row: RuntimeFlowRow) {
               queue {{ queueTotal(metrics.queues.flow) }} · active {{ metrics.queues.flow?.active ?? 0 }} · failed {{ metrics.queues.flow?.failed ?? 0 }}
             </div>
           </div>
-          <UBadge :color="badgeColor(flowSeverity(metrics))" variant="soft">
-            {{ flowSeverity(metrics) === 'error' ? 'Critical' : flowSeverity(metrics) === 'warning' ? 'Attention' : 'Healthy' }}
-          </UBadge>
+          <RuntimeStatusBadge
+            :severity="metrics.health?.flows?.severity ?? flowSeverity(metrics)"
+            :messages="metrics.health?.flows?.messages ?? flowWarnings(metrics)"
+          />
         </div>
 
         <div

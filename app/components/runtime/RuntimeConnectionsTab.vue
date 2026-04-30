@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-  badgeColor,
   connectionQueueEntries,
   dbPoolRows,
   metricTextClass,
@@ -27,9 +26,10 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
     >
       <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div class="font-medium text-[var(--text-primary)]">{{ metrics.instance.id }}</div>
-        <UBadge :color="badgeColor(connectionSeverity(metrics))" variant="soft">
-          {{ connectionSeverity(metrics) === 'error' ? 'Critical' : connectionSeverity(metrics) === 'warning' ? 'Attention' : 'Healthy' }}
-        </UBadge>
+        <RuntimeStatusBadge
+          :severity="metrics.health?.connections?.severity ?? connectionSeverity(metrics)"
+          :messages="metrics.health?.connections?.messages ?? connectionWarnings(metrics)"
+        />
       </div>
 
       <div
