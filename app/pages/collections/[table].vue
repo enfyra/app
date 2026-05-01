@@ -807,7 +807,7 @@ onMounted(() => {
             </div>
           </UForm>
 
-          <CollectionRouteTab
+          <RouteEditorPanel
             v-if="activeTab === 'routes'"
             :table-name="String(route.params.table ?? '')"
             :external-api-test="showRouteApiTest"

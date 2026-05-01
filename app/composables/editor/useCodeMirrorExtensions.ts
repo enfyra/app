@@ -382,6 +382,23 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
             const pos = state.selection.main.head;
             const before = state.doc.sliceString(pos - 1, pos);
             const after = state.doc.sliceString(pos, pos + 1);
+            const line = state.doc.lineAt(pos);
+
+            if (language === "json") {
+              const beforeCursor = state.doc.sliceString(line.from, pos);
+              if (beforeCursor.trimEnd().endsWith(",")) {
+                const currentIndent = /^\s*/.exec(line.text)?.[0] || "";
+                view.dispatch({
+                  changes: {
+                    from: pos,
+                    to: pos,
+                    insert: `\n${currentIndent}`,
+                  },
+                  selection: { anchor: pos + 1 + currentIndent.length },
+                });
+                return true;
+              }
+            }
 
             const pairs = [
               { open: '{', close: '}' },
@@ -391,7 +408,6 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
 
             for (const pair of pairs) {
               if (before === pair.open && after === pair.close) {
-                const line = state.doc.lineAt(pos);
                 const currentIndent = /^\s*/.exec(line.text)?.[0] || '';
                 const indent = currentIndent + '  '; 
 

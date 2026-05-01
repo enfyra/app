@@ -1,7 +1,12 @@
 <script setup lang="ts">
 const props = defineProps<{
-  tableName: string
+  tableName?: string
+  routeId?: string
   externalApiTest?: boolean
+  showMainTableCard?: boolean
+  showEmptyState?: boolean
+  canUpdateRoute?: boolean
+  syncQuery?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -12,6 +17,8 @@ const notify = useNotify()
 const { confirm } = useConfirm()
 const { getId, getIdFieldName } = useDatabase()
 const idField = getIdFieldName()
+const currentPageRoute = useRoute()
+const router = useRouter()
 const { loadRoutes } = useRoutes()
 const { schemas } = useSchema()
 const { getIncludeFields: getRouteIncludeFields } = useSchema('route_definition')
@@ -22,7 +29,7 @@ const { generateEmptyForm: generateHandlerEmptyForm, validate: validateHandler }
 const { generateEmptyForm: generatePreHookEmptyForm, validate: validatePreHook } = useSchema('pre_hook_definition')
 const { generateEmptyForm: generatePostHookEmptyForm, validate: validatePostHook } = useSchema('post_hook_definition')
 
-const routeId = ref<string | undefined>(undefined)
+const routeId = ref<string | undefined>(props.routeId)
 
 const {
   data: routeData,
@@ -31,11 +38,13 @@ const {
 } = useApi(() => '/route_definition', {
   query: computed(() => ({
     fields: getRouteIncludeFields(),
-    filter: {
-      mainTable: { name: { _eq: props.tableName } },
-    },
+    filter: props.routeId
+      ? { [getIdFieldName()]: { _eq: props.routeId } }
+      : props.tableName
+        ? { mainTable: { name: { _eq: props.tableName } } }
+        : undefined,
   })),
-  errorContext: 'Fetch Collection Route',
+  errorContext: 'Fetch Route',
 })
 
 const availableMethodStrings = computed(() => {
@@ -50,7 +59,6 @@ const publishedMethodStrings = computed(() => {
   return methods.filter((m: any) => m?.method).map((m: any) => m.method)
 })
 
-const { retryUntilFresh } = useServerSync()
 const { validateForm } = useFormValidation('route_definition')
 const formEditorRef = ref()
 const form = ref<Record<string, any>>({})
@@ -242,12 +250,25 @@ const sortedAfterHooks = computed(() =>
   [...postHooks.value].sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0))
 )
 
+const mainTableInfo = computed(() => {
+  const data = routeData.value?.data?.[0]
+  if (props.tableName) return schemas.value?.[props.tableName] || data?.mainTable || null
+  if (!data?.mainTable) return null
+
+  const mainTableId = getId(data.mainTable)
+  if (!mainTableId) return data.mainTable
+
+  return Object.values(schemas.value).find((schema: any) => String(getId(schema)) === String(mainTableId)) || data.mainTable
+})
+
+const mainTableName = computed(() => mainTableInfo.value?.name || props.tableName)
+
 const defaultHandler = computed(() => {
-  if (handlers.value.length > 0) return null
+  if (!mainTableName.value || handlers.value.length > 0) return null
   return {
     _isDefault: true,
     name: 'Built-in logic',
-    description: `Built-in CRUD logic for ${props.tableName}.`,
+    description: `Built-in CRUD logic for ${mainTableName.value}.`,
   }
 })
 
@@ -265,7 +286,7 @@ function getAfterHookPriority(hook: any): number | null {
 }
 
 const mainTableColumns = computed(() => {
-  const tableSchema = schemas.value?.[props.tableName]
+  const tableSchema = mainTableName.value ? schemas.value?.[mainTableName.value] : null
   if (!tableSchema) return []
   const cols = tableSchema.columns || tableSchema.fields || []
   return cols.map((c: any) => c.name || c.propertyName).filter(Boolean)
@@ -290,6 +311,9 @@ watch(() => routeData.value?.data?.[0], async (newRoute) => {
     formChanges.update(newRoute)
 
     typeMap.value = {
+      isEnabled: {
+        disabled: !!mainTableInfo.value,
+      },
       publishedMethods: {
         type: 'methods-selector',
         allowedMethodsKey: 'availableMethods'
@@ -307,11 +331,14 @@ watch(() => routeData.value?.data?.[0], async (newRoute) => {
   }
 }, { immediate: true })
 
-onMounted(async () => {
+watch(() => props.routeId, async (newRouteId) => {
+  routeId.value = newRouteId
   await fetchRoute()
 })
 
-const isLoading = computed(() => routeLoading.value)
+onMounted(async () => {
+  await fetchRoute()
+})
 
 // --- Handler CRUD ---
 
@@ -738,7 +765,7 @@ const {
   query: computed(() => ({
     fields: '*,route.id,route.path,methods.method,parent',
     filter: routeId.value
-      ? { _and: [{ route: { id: { _eq: routeId.value } } }, { parent: { _is_null: true } }] }
+      ? { _and: [{ route: { [getIdFieldName()]: { _eq: routeId.value } } }, { parent: { _is_null: true } }] }
       : undefined,
     sort: ['priority'],
   })),
@@ -783,7 +810,7 @@ function openCreateGuardDrawer() {
     priority: 0,
     isEnabled: true,
     isGlobal: false,
-    route: { id: routeId.value },
+    route: { [idField]: routeId.value },
   }
   guardErrors.value = {}
   showCreateGuardDrawer.value = true
@@ -814,10 +841,132 @@ watch(showApiTestModal, (val) => {
 })
 
 const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
+
+function setSyncedQuery(patch: Record<string, string | undefined>) {
+  if (!props.syncQuery) return
+  const query = { ...currentPageRoute.query }
+  for (const [key, value] of Object.entries(patch)) {
+    if (value == null) delete query[key]
+    else query[key] = value
+  }
+  router.replace({ query })
+}
+
+watch(() => currentPageRoute.query.createHandler, (value) => {
+  if (!props.syncQuery) return
+  const shouldOpen = value === 'true'
+  if (shouldOpen && !showCreateHandlerDrawer.value) createHandler()
+  if (!shouldOpen && showCreateHandlerDrawer.value) showCreateHandlerDrawer.value = false
+}, { immediate: true })
+
+watch(showCreateHandlerDrawer, (isOpen) => {
+  setSyncedQuery({ createHandler: isOpen ? 'true' : undefined })
+})
+
+watch(() => currentPageRoute.query.editHandler, async (value) => {
+  if (!props.syncQuery) return
+  if (typeof value === 'string' && value && value !== editingHandlerId.value) {
+    editingHandlerId.value = value
+    editHandlerErrors.value = {}
+    await fetchEditHandler()
+    showEditHandlerDrawer.value = true
+    return
+  }
+  if (!value && showEditHandlerDrawer.value) {
+    showEditHandlerDrawer.value = false
+    editingHandlerId.value = null
+    editHandlerForm.value = {}
+    editHandlerErrors.value = {}
+  }
+}, { immediate: true })
+
+watch(showEditHandlerDrawer, (isOpen) => {
+  setSyncedQuery({ editHandler: isOpen && editingHandlerId.value ? editingHandlerId.value : undefined })
+})
+
+watch(() => currentPageRoute.query.createHook, (value) => {
+  if (!props.syncQuery) return
+  const shouldOpen = value === 'true' || value === 'pre' || value === 'post'
+  if (shouldOpen && !showCreateHookDrawer.value) createHook(value === 'post' ? 'post' : 'pre')
+  if (!shouldOpen && showCreateHookDrawer.value) showCreateHookDrawer.value = false
+}, { immediate: true })
+
+watch(showCreateHookDrawer, (isOpen) => {
+  setSyncedQuery({ createHook: isOpen ? hookType.value || 'pre' : undefined })
+})
+
+watch(() => [currentPageRoute.query.editHook, currentPageRoute.query.editHookType], async ([hookId, hookTypeParam]) => {
+  if (!props.syncQuery) return
+  if (typeof hookId === 'string' && hookId) {
+    const nextType = hookTypeParam === 'post' ? 'post' : 'pre'
+    if (hookId === editingHookId.value && nextType === editHookType.value && showEditHookDrawer.value) return
+    editingHookId.value = hookId
+    editHookType.value = nextType
+    editHookErrors.value = {}
+    if (nextType === 'pre') {
+      await fetchEditPreHook()
+      if (editPreHookData.value?.data?.[0]) {
+        editHookForm.value = { ...editPreHookData.value.data[0], route: { [idField]: routeId.value } }
+        showEditHookDrawer.value = true
+      }
+    } else {
+      await fetchEditPostHook()
+      if (editPostHookData.value?.data?.[0]) {
+        editHookForm.value = { ...editPostHookData.value.data[0], route: { [idField]: routeId.value } }
+        showEditHookDrawer.value = true
+      }
+    }
+    return
+  }
+  if (!hookId && showEditHookDrawer.value) {
+    showEditHookDrawer.value = false
+    editingHookId.value = null
+    editHookForm.value = {}
+    editHookErrors.value = {}
+    editHookType.value = 'pre'
+  }
+}, { immediate: true })
+
+watch(showEditHookDrawer, (isOpen) => {
+  setSyncedQuery({
+    editHook: isOpen && editingHookId.value ? editingHookId.value : undefined,
+    editHookType: isOpen && editHookType.value ? editHookType.value : undefined,
+  })
+})
 </script>
 
 <template>
   <div class="space-y-6">
+    <CommonFormCard v-if="showMainTableCard && mainTableInfo">
+      <template #header>
+        <div class="flex items-center gap-2">
+          <UIcon name="lucide:database" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
+          <h3 class="text-lg font-semibold text-[var(--text-primary)]">Main Table</h3>
+        </div>
+      </template>
+      <div class="p-4 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20">
+        <div class="flex flex-col md:flex-row md:items-center gap-3">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="w-12 h-12 shrink-0 rounded-lg bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
+              <UIcon name="lucide:table" class="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm text-[var(--text-tertiary)] mb-1">This route is the main route for table:</p>
+              <h4 class="text-base font-semibold text-[var(--text-primary)]">
+                {{ mainTableInfo.name || mainTableInfo.tableName || 'Unknown Table' }}
+              </h4>
+              <p v-if="mainTableInfo.description" class="text-xs text-[var(--text-tertiary)] mt-1">
+                {{ mainTableInfo.description }}
+              </p>
+            </div>
+          </div>
+          <UBadge size="lg" variant="soft" color="primary" class="shrink-0 self-start md:self-center">
+            Main Route
+          </UBadge>
+        </div>
+      </div>
+    </CommonFormCard>
+
     <CommonFormCard v-if="routeData?.data?.[0] || routeLoading">
       <UForm :state="form" @submit="updateRoute">
         <FormEditorLazy
@@ -842,6 +991,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
             @click="handleReset"
           />
           <UButton
+            v-if="canUpdateRoute !== false"
             label="Save"
             icon="lucide:save"
             variant="solid"
@@ -864,7 +1014,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       :get-pre-hook-priority="getPreHookPriority"
       :get-after-hook-priority="getAfterHookPriority"
       :get-id="getId"
-      :has-main-table="true"
+      :has-main-table="!!mainTableInfo"
       :can-create-handler="canCreateHandler"
       :default-handler="defaultHandler"
       @edit-handler="editHandler"
@@ -894,7 +1044,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
     </CommonFormCard>
 
     <CommonEmptyState
-      v-if="!routeLoading && !routeData?.data?.[0]"
+      v-if="showEmptyState !== false && !routeLoading && !routeData?.data?.[0]"
       title="No route configured"
       description="This collection does not have an associated route yet. Routes are automatically created when a collection is saved."
       icon="lucide:route"
@@ -907,6 +1057,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       v-model:errors="handlerErrors"
       :loading="createHandlerLoading"
       :route-id="routeId"
+      :route-path="routePath"
       :allowed-methods="handlerAvailableMethods"
       :lock-method="handlerLockedMethod"
       @save="saveHandler"
@@ -920,6 +1071,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       :loading="createHookLoading"
       :hook-type="hookType"
       :route-id="routeId"
+      :route-path="routePath"
       :allowed-methods="availableMethodStrings"
       :lock-method="hookLockedMethod"
       @save="saveHook"
@@ -932,6 +1084,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       v-model:errors="editHandlerErrors"
       :loading="updateHandlerLoading"
       :route-id="routeId"
+      :route-path="routePath"
       :allowed-methods="availableMethodStrings"
       :lock-method="true"
       @save="updateHandler"
@@ -945,6 +1098,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       :loading="updateHookLoading"
       :hook-type="editHookType"
       :route-id="routeId"
+      :route-path="routePath"
       :allowed-methods="availableMethodStrings"
       :lock-method="true"
       @save="updateHook"
@@ -967,7 +1121,7 @@ const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
       :available-methods="availableMethodStrings"
       :published-methods="publishedMethodStrings"
       :handlers="displayHandlers"
-      :main-table-name="tableName"
+      :main-table-name="mainTableName"
       :schemas="schemas"
       :columns="mainTableColumns"
     />

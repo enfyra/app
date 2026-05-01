@@ -4,6 +4,10 @@ import type { PermissionCondition } from "~/types/permissions";
 type TestRunConfig = {
   kind?: string;
   label?: string;
+  configure?: boolean;
+  method?: string;
+  methods?: string[];
+  routePath?: string;
   tableName?: string;
   fieldName?: string;
   timeoutMs?: number;
@@ -49,7 +53,13 @@ const isResizing = ref(false);
 const startY = ref(0);
 const startHeight = ref(0);
 const previewStyle = ref<{ top: string; left: string; width: string; height: string } | null>(null);
-const showTestResult = ref(false);
+const showTestSetup = ref(false);
+const testMethod = ref("GET");
+const testBody = ref("{\n  \n}");
+const testQueryParams = ref<{ key: string; value: string; enabled: boolean }[]>([]);
+const testRouteParams = ref<{ key: string; value: string }[]>([]);
+const testSetupError = ref("");
+let testSetupOpenFrame: number | null = null;
 
 const colorMode = useColorMode();
 const notify = useNotify();
@@ -102,6 +112,24 @@ const canShowTestRun = computed(() => {
 
 const canRunTest = computed(() => {
   return canShowTestRun.value && String(props.modelValue || "").trim().length > 0;
+});
+
+const isConfiguredTest = computed(() => !!testRunConfig.value?.configure);
+
+const testMethods = computed(() => {
+  const methods = testRunConfig.value?.methods?.filter(Boolean);
+  return methods && methods.length > 0 ? methods : ["GET", "POST", "PATCH", "DELETE"];
+});
+
+const testNeedsBody = computed(() => ["POST", "PATCH"].includes(testMethod.value));
+
+const testRouteParamNames = computed(() => {
+  const path = testRunConfig.value?.routePath || "";
+  const names = new Set<string>();
+  for (const match of path.matchAll(/:([A-Za-z_][A-Za-z0-9_]*)/g)) {
+    if (match[1]) names.add(match[1]);
+  }
+  return [...names];
 });
 
 const testResultValue = computed(() => {
@@ -164,13 +192,107 @@ const testErrorText = computed(() => {
   return error?.message || String(error);
 });
 
+const testRunFailed = computed(() => {
+  return !!testRunError.value || (testRunData.value as any)?.success === false;
+});
+
+const hasTestRunOutcome = computed(() => {
+  return !!testRunError.value || testRunData.value !== null;
+});
+
 async function copyTestValue(value: unknown) {
   const text = typeof value === "string" ? value : JSON.stringify(value, null, 2);
   await navigator.clipboard.writeText(text);
   notify.success("Copied");
 }
 
-async function runCodeTest() {
+function normalizeTestMethod(value: unknown): string {
+  if (typeof value === "string" && value) return value;
+  if (value && typeof value === "object" && "method" in value) {
+    const method = (value as any).method;
+    if (typeof method === "string" && method) return method;
+  }
+  return "GET";
+}
+
+function blurActiveElement() {
+  if (typeof document === "undefined") return;
+  const activeElement = document.activeElement;
+  if (activeElement instanceof HTMLElement) activeElement.blur();
+}
+
+function openTestSetupDrawer() {
+  blurActiveElement();
+  if (typeof window === "undefined") {
+    showTestSetup.value = true;
+    return;
+  }
+  if (testSetupOpenFrame) window.cancelAnimationFrame(testSetupOpenFrame);
+  testSetupOpenFrame = window.requestAnimationFrame(() => {
+    testSetupOpenFrame = null;
+    showTestSetup.value = true;
+  });
+}
+
+function openTestSetup() {
+  const config = testRunConfig.value;
+  if (!config || !canRunTest.value) return;
+  testMethod.value = normalizeTestMethod(config.method ?? config.payload?.method);
+  if (!testMethods.value.includes(testMethod.value)) {
+    testMethod.value = testMethods.value[0] || "GET";
+  }
+  testBody.value = "{\n  \n}";
+  testQueryParams.value = [
+    { key: "limit", value: "10", enabled: false },
+    { key: "sort", value: "-createdAt", enabled: false },
+  ];
+  testRouteParams.value = testRouteParamNames.value.map((key) => ({
+    key,
+    value: "",
+  }));
+  testSetupError.value = "";
+  testRunData.value = null;
+  openTestSetupDrawer();
+}
+
+function parseJsonInput(raw: string, label: string): any {
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+  const normalized = trimmed
+    .replace(/([{,]\s*)([A-Za-z_$][\w$]*)(\s*:)/g, '$1"$2"$3')
+    .replace(/,\s*([}\]])/g, "$1");
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    try {
+      return JSON.parse(normalized);
+    } catch {
+      throw new Error(`${label} must be valid JSON or a simple object literal.`);
+    }
+  }
+}
+
+function addTestQueryParam() {
+  testQueryParams.value.push({ key: "", value: "", enabled: true });
+}
+
+function buildTestQueryObject(): Record<string, string> {
+  const query: Record<string, string> = {};
+  for (const param of testQueryParams.value) {
+    if (param.enabled && param.key) query[param.key] = param.value;
+  }
+  return query;
+}
+
+function buildTestParamsObject(): Record<string, string> {
+  const params: Record<string, string> = {};
+  for (const param of testRouteParams.value) {
+    params[param.key] = param.value;
+  }
+  return params;
+}
+
+async function runCodeTest(overrides: Record<string, any> = {}, showResult = true) {
   const config = testRunConfig.value;
   const script = String(props.modelValue || "").trim();
   if (!config || !script || testRunning.value) return;
@@ -191,16 +313,43 @@ async function runCodeTest() {
       params: config.params,
       query: config.query,
       ...(config.payload || {}),
+      ...overrides,
     },
   });
 
   if (testRunError.value) {
     notify.error("Test failed", testRunError.value.message);
-    showTestResult.value = true;
+    if (showResult) openTestSetupDrawer();
     return;
   }
 
-  showTestResult.value = true;
+  if (showResult) openTestSetupDrawer();
+}
+
+async function runConfiguredCodeTest() {
+  testSetupError.value = "";
+  try {
+    const overrides: Record<string, any> = {
+      method: testMethod.value,
+      params: buildTestParamsObject(),
+      query: buildTestQueryObject(),
+    };
+    if (testNeedsBody.value) {
+      overrides.body = parseJsonInput(testBody.value, "Body");
+    }
+    await runCodeTest(overrides, false);
+  } catch (err: any) {
+    testSetupError.value = err?.message || "Invalid test input.";
+  }
+}
+
+function handleTestClick() {
+  if (testRunConfig.value?.configure) {
+    openTestSetup();
+    return;
+  }
+  testRunData.value = null;
+  runCodeTest();
 }
 
 const extensions = computed(() => {
@@ -350,6 +499,9 @@ onUnmounted(() => {
   if (initialMountTimeout) {
     window.clearTimeout(initialMountTimeout);
   }
+  if (testSetupOpenFrame) {
+    window.cancelAnimationFrame(testSetupOpenFrame);
+  }
   destroyEditor();
   document.removeEventListener("mousemove", handleMouseMove);
   document.removeEventListener("mouseup", handleMouseUp);
@@ -495,7 +647,8 @@ function handleMouseUp(e?: MouseEvent) {
           :loading="testRunning"
           :disabled="!canRunTest"
           :label="testRunConfig?.label || 'Test'"
-          @click.stop="runCodeTest"
+          @mousedown.prevent
+          @click.stop="handleTestClick"
         />
       </UTooltip>
     </div>
@@ -524,43 +677,122 @@ function handleMouseUp(e?: MouseEvent) {
     </div>
   </div>
 
-  <CommonModal v-model="showTestResult">
-    <template #title>Test Result</template>
+  <CommonDrawer v-model="showTestSetup" nested>
+    <template #header>
+      <div class="flex items-center gap-2">
+        <UIcon name="i-lucide-flask-conical" class="w-5 h-5 text-primary-500" />
+        <span>Test Code</span>
+      </div>
+    </template>
     <template #body>
-      <div class="space-y-3">
-        <UBadge
-          :color="(testRunData as any)?.success === false ? 'error' : 'success'"
-          variant="subtle"
-        >
-          {{ (testRunData as any)?.success === false ? 'Failed' : 'Passed' }}
-        </UBadge>
-        <div v-if="testErrorText" class="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300">
-          {{ testErrorText }}
-        </div>
-        <div v-if="testResultText" class="space-y-1">
-          <div class="flex items-center justify-between gap-2">
-            <div class="text-xs font-medium text-[var(--text-tertiary)]">Result</div>
-            <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResultValue)">Copy</UButton>
+      <div class="space-y-5">
+        <template v-if="isConfiguredTest">
+          <div class="flex flex-wrap gap-1.5">
+            <UButton
+              v-for="methodOption in testMethods"
+              :key="methodOption"
+              size="xs"
+              :variant="testMethod === methodOption ? 'solid' : 'outline'"
+              :color="testMethod === methodOption ? 'primary' : 'neutral'"
+              @click="testMethod = methodOption"
+            >
+              {{ methodOption }}
+            </UButton>
           </div>
-          <pre class="max-h-[260px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testResultText }}</pre>
-        </div>
-        <div v-if="testLogsText" class="space-y-1">
-          <div class="flex items-center justify-between gap-2">
-            <div class="text-xs font-medium text-[var(--text-tertiary)]">Logs</div>
-            <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue((testRunData as any)?.logs)">Copy</UButton>
+
+          <div v-if="testNeedsBody">
+            <h4 class="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Request Body</h4>
+            <FormCodeEditorLazy v-model="testBody" language="json" height="200px" class="w-full" />
           </div>
-          <pre class="max-h-[180px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testLogsText }}</pre>
-        </div>
-        <div v-if="testEmittedText" class="space-y-1">
-          <div class="flex items-center justify-between gap-2">
-            <div class="text-xs font-medium text-[var(--text-tertiary)]">Emitted</div>
-            <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue((testRunData as any)?.emitted)">Copy</UButton>
+
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-xs font-semibold text-[var(--text-tertiary)]">Query Parameters</h4>
+              <UButton size="xs" variant="ghost" icon="i-lucide-plus" @click="addTestQueryParam">Add</UButton>
+            </div>
+            <div class="space-y-1.5">
+              <div v-for="(param, idx) in testQueryParams" :key="idx" class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+                <USwitch v-model="param.enabled" size="xs" class="flex-shrink-0" />
+                <UInput v-model="param.key" placeholder="key" class="w-full sm:w-[150px] font-mono text-xs" :disabled="!param.enabled" />
+                <UInput v-model="param.value" placeholder="value" class="w-full sm:flex-1 font-mono text-xs min-w-0" :disabled="!param.enabled" />
+                <UButton size="xs" variant="ghost" color="error" icon="i-lucide-x" class="flex-shrink-0" @click="testQueryParams.splice(idx, 1)" />
+              </div>
+            </div>
           </div>
-          <pre class="max-h-[180px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testEmittedText }}</pre>
+
+          <div>
+            <h4 class="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Route Params</h4>
+            <div v-if="testRouteParams.length > 0" class="space-y-1.5">
+              <div v-for="param in testRouteParams" :key="param.key" class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+                <div class="w-full sm:w-[180px] rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] px-3 py-2 text-xs font-mono text-[var(--text-secondary)]">
+                  @PARAMS.{{ param.key }}
+                </div>
+                <UInput v-model="param.value" :placeholder="param.key" class="w-full sm:flex-1 font-mono text-xs min-w-0" />
+              </div>
+            </div>
+            <div v-else class="rounded-md border border-dashed border-[var(--border-default)] p-3 text-xs text-[var(--text-tertiary)]">
+              No route params detected from this route path.
+            </div>
+          </div>
+
+          <div v-if="testSetupError" class="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300">
+            {{ testSetupError }}
+          </div>
+        </template>
+
+        <div v-if="hasTestRunOutcome" :class="isConfiguredTest ? 'border-t border-[var(--border-default)] pt-5 space-y-3' : 'space-y-3'">
+          <div class="flex items-center justify-between gap-2">
+            <h4 class="text-xs font-semibold text-[var(--text-tertiary)]">Result</h4>
+            <UBadge
+              :color="testRunFailed ? 'error' : 'success'"
+              variant="subtle"
+            >
+              {{ testRunFailed ? 'Failed' : 'Passed' }}
+            </UBadge>
+          </div>
+
+          <div v-if="testRunError?.message" class="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300">
+            {{ testRunError.message }}
+          </div>
+          <div v-else-if="testErrorText" class="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300">
+            {{ testErrorText }}
+          </div>
+
+          <div v-if="testResultText" class="space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-xs font-medium text-[var(--text-tertiary)]">Data</div>
+              <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResultValue)">Copy</UButton>
+            </div>
+            <pre class="max-h-[260px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testResultText }}</pre>
+          </div>
+
+          <div v-if="testLogsText" class="space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-xs font-medium text-[var(--text-tertiary)]">Logs</div>
+              <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue((testRunData as any)?.logs)">Copy</UButton>
+            </div>
+            <pre class="max-h-[180px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testLogsText }}</pre>
+          </div>
+
+          <div v-if="testEmittedText" class="space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-xs font-medium text-[var(--text-tertiary)]">Emitted</div>
+              <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue((testRunData as any)?.emitted)">Copy</UButton>
+            </div>
+            <pre class="max-h-[180px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testEmittedText }}</pre>
+          </div>
         </div>
       </div>
     </template>
-  </CommonModal>
+    <template #footer>
+      <div v-if="isConfiguredTest" class="flex justify-end gap-2 w-full">
+        <UButton variant="ghost" color="neutral" @click="showTestSetup = false">Cancel</UButton>
+        <UButton color="primary" icon="i-lucide-play" :loading="testRunning" @click="runConfiguredCodeTest">
+          Run
+        </UButton>
+      </div>
+    </template>
+  </CommonDrawer>
 </template>
 
 <style scoped>
