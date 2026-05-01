@@ -135,3 +135,9 @@
 .item-grid-enter-active {
   z-index: 1;
 }
+
+.item-grid-leave-active {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
