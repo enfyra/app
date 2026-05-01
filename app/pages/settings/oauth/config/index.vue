@@ -2,7 +2,7 @@
   <div class="oauth-config-page">
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
-        v-if="!isMounted || loading"
+        v-if="showInitialLoading"
         title="Loading OAuth configurations..."
         description="Fetching OAuth provider settings"
         size="md"
@@ -10,14 +10,9 @@
         context="page"
       />
 
-      <div
+      <CommonAnimatedGrid
         v-else-if="configs.length > 0"
-        class="grid gap-4"
-        :class="
-          isTablet
-            ? 'grid-cols-2'
-            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
-        "
+        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
       >
         <CommonSettingsCard
           v-for="config in configs"
@@ -45,7 +40,7 @@
           @click="navigateToDetail(config)"
           :header-actions="getHeaderActions(config)"
         />
-      </div>
+      </CommonAnimatedGrid>
 
       <CommonEmptyState
         v-else
@@ -104,6 +99,7 @@ const {
 });
 
 const configs = computed(() => apiData.value?.data || []);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 

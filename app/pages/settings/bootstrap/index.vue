@@ -43,6 +43,7 @@ const { execute: removeScript, error: removeScriptError } = useApi(
 );
 
 const bootstrapScripts = computed(() => apiData.value?.data || []);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
 const total = computed(() => {
   return apiData.value?.meta?.totalCount || 0;
 });
@@ -95,7 +96,7 @@ watch(
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
-        v-if="!isMounted || loading"
+        v-if="showInitialLoading"
         title="Loading bootstrap scripts..."
         description="Fetching bootstrap scripts"
         size="sm"
@@ -103,12 +104,9 @@ watch(
         context="page"
       />
 
-      <div
+      <CommonAnimatedGrid
         v-else-if="bootstrapScripts.length"
-        class="grid gap-4"
-        :class="
-          isTablet ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
-        "
+        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
       >
         <CommonSettingsCard
           v-for="script in bootstrapScripts"
@@ -154,7 +152,7 @@ watch(
             }
           ]"
         />
-      </div>
+      </CommonAnimatedGrid>
 
       <CommonEmptyState
         v-else
@@ -166,7 +164,7 @@ watch(
     </Transition>
 
     <div
-      v-if="!loading && bootstrapScripts.length > 0 && total > pageLimit"
+      v-if="bootstrapScripts.length > 0 && total > pageLimit"
       class="flex items-center justify-between mt-6"
     >
       <UPagination

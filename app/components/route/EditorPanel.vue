@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import {
+  buildGuardBodyFromTemplate,
+  buildGuardRuleBodyFromTemplate,
+  getGuardTemplate,
+  getGuardTemplatesForScope,
+} from '~/utils/guard-templates'
+
 const props = defineProps<{
   tableName?: string
   routeId?: string
@@ -794,14 +801,23 @@ const guardsLoading = computed(() => routeGuardsLoading.value || globalGuardsLoa
 const showCreateGuardDrawer = ref(false)
 const guardForm = ref<Record<string, any>>({})
 const guardErrors = ref<Record<string, string>>({})
+const selectedGuardTemplate = ref<string | null>(null)
+const routeGuardTemplates = getGuardTemplatesForScope('route')
 
 const {
+  data: createGuardData,
   error: createGuardError,
   execute: executeCreateGuard,
   pending: createGuardLoading,
 } = useApi(() => '/guard_definition', { method: 'post', errorContext: 'Create Guard' })
 
+const {
+  error: createGuardRuleError,
+  execute: executeCreateGuardRule,
+} = useApi(() => '/guard_rule_definition', { method: 'post', errorContext: 'Create Guard Rule' })
+
 function openCreateGuardDrawer() {
+  selectedGuardTemplate.value = routeGuardTemplates[0]?.key || null
   guardForm.value = {
     name: '',
     description: '',
@@ -812,6 +828,7 @@ function openCreateGuardDrawer() {
     isGlobal: false,
     route: { [idField]: routeId.value },
   }
+  applySelectedGuardTemplate()
   guardErrors.value = {}
   showCreateGuardDrawer.value = true
 }
@@ -825,10 +842,41 @@ async function saveGuard() {
   await executeCreateGuard({ body: guardForm.value })
   if (createGuardError.value) return
 
+  const template = getGuardTemplate(selectedGuardTemplate.value)
+  const createdGuard = createGuardData.value?.data?.[0]
+  const createdGuardId = createdGuard ? getId(createdGuard) : null
+  if (template && createdGuardId) {
+    await executeCreateGuardRule({
+      body: buildGuardRuleBodyFromTemplate(template, {
+        idField,
+        guardId: createdGuardId,
+      }),
+    })
+    if (createGuardRuleError.value) return
+  }
+
   notify.success("Guard created successfully")
   showCreateGuardDrawer.value = false
+  selectedGuardTemplate.value = null
   await Promise.all([fetchRouteGuards(), fetchGlobalGuards()])
 }
+
+function applySelectedGuardTemplate() {
+  const template = getGuardTemplate(selectedGuardTemplate.value)
+  if (!template) return
+
+  guardForm.value = {
+    ...guardForm.value,
+    ...buildGuardBodyFromTemplate(template, {
+      scope: 'route',
+      idField,
+      routeId: routeId.value || null,
+      routePath: routePath.value,
+    }),
+  }
+}
+
+watch(selectedGuardTemplate, applySelectedGuardTemplate)
 
 const showApiTestModal = ref(false)
 
@@ -1110,6 +1158,8 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model="showCreateGuardDrawer"
       v-model:form="guardForm"
       v-model:errors="guardErrors"
+      v-model:selected-template="selectedGuardTemplate"
+      :templates="routeGuardTemplates"
       :loading="createGuardLoading"
       @save="saveGuard"
       @cancel="showCreateGuardDrawer = false"

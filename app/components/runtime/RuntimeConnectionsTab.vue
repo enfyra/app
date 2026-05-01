@@ -18,7 +18,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
 </script>
 
 <template>
-  <div class="grid gap-4">
+  <CommonAnimatedGrid grid-class="grid gap-4">
     <section
       v-for="metrics in runtime.instances"
       :key="metrics.instance.id"
@@ -99,5 +99,5 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
         </div>
       </div>
     </section>
-  </div>
+  </CommonAnimatedGrid>
 </template>

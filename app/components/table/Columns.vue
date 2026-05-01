@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { columnTypes, mongoColumnTypes } from '~/types/database';
 import {
   isMongoPrimaryKeyColumn,
   normalizeMongoPrimaryKeyColumn,
@@ -315,16 +316,18 @@ function getDefaultValueType(columnType: string) {
 const typeMap = computed(() => {
   const currentType = currentColumn.value?.type;
   const editingPrimaryColumn = isPrimaryColumn(currentColumn.value);
+  const availableColumnTypes = editingPrimaryColumn
+    ? isMongoDB.value
+      ? columnTypes.filter((colType) => colType.value === "ObjectId")
+      : columnTypes.filter((colType) => ["uuid", "int"].includes(colType.value))
+    : isMongoDB.value
+      ? mongoColumnTypes
+      : columnTypes.filter((colType) => colType.value !== "ObjectId");
 
   return {
     type: {
       type: "enum",
-      options:
-        editingPrimaryColumn
-          ? isMongoDB.value
-            ? columnTypes.filter((colType) => colType.value === "ObjectId") 
-            : columnTypes.filter((colType) => ["uuid", "int"].includes(colType.value)) 
-          : columnTypes,
+      options: availableColumnTypes,
       default: editingPrimaryColumn && isMongoDB.value ? "ObjectId" : undefined, 
     },
     name: {

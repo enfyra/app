@@ -1,7 +1,15 @@
 <script setup lang="ts">
+import {
+  buildGuardBodyFromTemplate,
+  buildGuardRuleBodyFromTemplate,
+  getGuardTemplate,
+  getGuardTemplatesForScope,
+} from '~/utils/guard-templates';
+import type { GuardScope } from '~/types/guard-template';
+
 const notify = useNotify();
 const page = ref(1);
-const pageLimit = 9;
+const pageLimit = 12;
 const route = useRoute();
 const router = useRouter();
 const tableName = 'guard_definition';
@@ -11,7 +19,8 @@ const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = 
 const { isTablet } = useScreen();
 const { isMounted } = useMounted();
 const { registerPageHeader } = usePageHeaderRegistry();
-const { getId } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
+const idField = getIdFieldName();
 
 registerPageHeader({
   title: 'Guard Manager',
@@ -20,6 +29,7 @@ registerPageHeader({
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
+const activeScope = ref<'all' | GuardScope>('all');
 const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 
 const filterLabel = computed(() => {
@@ -44,6 +54,12 @@ const {
     const conditions: any[] = [
       { parent: { _is_null: true } },
     ];
+    if (activeScope.value === 'global') {
+      conditions.push({ isGlobal: { _eq: true } });
+    } else if (activeScope.value === 'route') {
+      conditions.push({ isGlobal: { _eq: false } });
+    }
+
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
       : null;
@@ -64,6 +80,10 @@ const {
 });
 
 const guardsData = computed(() => apiData.value?.data || []);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const globalGuardCount = computed(() => guardsData.value.filter((guard: any) => guard.isGlobal).length);
+const routeGuardCount = computed(() => guardsData.value.filter((guard: any) => !guard.isGlobal).length);
+const enabledGuardCount = computed(() => guardsData.value.filter((guard: any) => guard.isEnabled).length);
 const total = computed(() => {
   if (hasActiveFilters(currentFilter.value)) {
     return apiData.value?.meta?.filterCount ?? 0;
@@ -99,12 +119,12 @@ useHeaderActionRegistry([
   },
   {
     id: 'create-guard',
-    label: 'Create Guard',
+    label: 'New Guard',
     icon: 'lucide:plus',
     variant: 'solid',
     color: 'primary',
     size: 'md',
-    to: '/settings/guards/create',
+    onClick: () => openCreateGuardDrawer('global'),
     permission: {
       and: [
         {
@@ -141,6 +161,31 @@ watch(
   { immediate: true },
 );
 
+watch(activeScope, async () => {
+  page.value = 1;
+  await fetchGuards();
+});
+
+const {
+  data: routesData,
+  execute: fetchRoutes,
+} = useApi(() => '/route_definition', {
+  query: {
+    fields: '*,availableMethods.method',
+    sort: 'path',
+    limit: 500,
+  },
+  immediate: false,
+  errorContext: 'Fetch Routes',
+});
+
+const routeOptions = computed(() =>
+  (routesData.value?.data || []).map((item: any) => ({
+    label: item.path,
+    value: getId(item),
+  })),
+);
+
 const { execute: updateGuardApi, error: updateError } = useApi(
   () => '/guard_definition',
   {
@@ -156,6 +201,78 @@ const { execute: deleteGuardApi, error: deleteError } = useApi(
     errorContext: 'Delete Guard',
   },
 );
+
+const {
+  data: createGuardData,
+  error: createGuardError,
+  execute: createGuardApi,
+  pending: createGuardLoading,
+} = useApi(() => '/guard_definition', {
+  method: 'post',
+  errorContext: 'Create Guard',
+});
+
+const {
+  error: createRuleError,
+  execute: createRuleApi,
+} = useApi(() => '/guard_rule_definition', {
+  method: 'post',
+  errorContext: 'Create Guard Rule',
+});
+
+const showCreateGuardDrawer = ref(false);
+const createScope = ref<GuardScope>('global');
+const selectedTemplate = ref<string | null>(null);
+const selectedRouteId = ref<string | null>(null);
+const createTemplates = computed(() => getGuardTemplatesForScope(createScope.value));
+
+async function openCreateGuardDrawer(scope: GuardScope) {
+  createScope.value = scope;
+  selectedTemplate.value = createTemplates.value[0]?.key || null;
+  selectedRouteId.value = null;
+  if (!routesData.value?.data?.length) await fetchRoutes();
+  showCreateGuardDrawer.value = true;
+}
+
+async function createGuardFromTemplate() {
+  const template = getGuardTemplate(selectedTemplate.value);
+  if (!template) {
+    notify.error('Validation Error', 'Select a guard template');
+    return;
+  }
+  if (createScope.value === 'route' && !selectedRouteId.value) {
+    notify.error('Validation Error', 'Select a route for this guard');
+    return;
+  }
+
+  const routeItem = (routesData.value?.data || []).find((item: any) => String(getId(item)) === String(selectedRouteId.value));
+
+  await createGuardApi({
+    body: buildGuardBodyFromTemplate(template, {
+      scope: createScope.value,
+      idField,
+      routeId: selectedRouteId.value,
+      routePath: routeItem?.path,
+    }),
+  });
+  if (createGuardError.value) return;
+
+  const createdGuard = createGuardData.value?.data?.[0];
+  const createdGuardId = createdGuard ? getId(createdGuard) : null;
+  if (createdGuardId) {
+    await createRuleApi({
+      body: buildGuardRuleBodyFromTemplate(template, {
+        idField,
+        guardId: createdGuardId,
+      }),
+    });
+    if (createRuleError.value) return;
+  }
+
+  showCreateGuardDrawer.value = false;
+  notify.success('Success', 'Guard created successfully');
+  await fetchGuards();
+}
 
 const positionColorMap: Record<string, string> = {
   pre_auth: 'warning',
@@ -250,7 +367,7 @@ async function deleteGuard(guard: any) {
 <template>
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
-      <div v-if="loading || !isMounted">
+      <div v-if="showInitialLoading">
         <CommonLoadingState
           title="Loading guards..."
           description="Fetching guard configuration"
@@ -261,6 +378,81 @@ async function deleteGuard(guard: any) {
       </div>
 
       <div v-else class="space-y-6">
+        <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div class="surface-card rounded-lg p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-quaternary)]">
+              Active
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
+              {{ enabledGuardCount }}
+            </p>
+            <p class="mt-1 text-xs text-[var(--text-tertiary)]">
+              Enabled root guards in this view
+            </p>
+          </div>
+          <div class="surface-card rounded-lg p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-quaternary)]">
+              Global
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
+              {{ globalGuardCount }}
+            </p>
+            <p class="mt-1 text-xs text-[var(--text-tertiary)]">
+              Apply to every detected route
+            </p>
+          </div>
+          <div class="surface-card rounded-lg p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-quaternary)]">
+              Route
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
+              {{ routeGuardCount }}
+            </p>
+            <p class="mt-1 text-xs text-[var(--text-tertiary)]">
+              Bound to one route
+            </p>
+          </div>
+        </section>
+
+        <section class="surface-card rounded-lg p-3">
+          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-wrap gap-2">
+              <UButton
+                v-for="item in [
+                  { label: 'All', value: 'all' },
+                  { label: 'Global', value: 'global' },
+                  { label: 'Route', value: 'route' },
+                ]"
+                :key="item.value"
+                size="sm"
+                :variant="activeScope === item.value ? 'solid' : 'soft'"
+                :color="activeScope === item.value ? 'primary' : 'neutral'"
+                @click="activeScope = item.value as any"
+              >
+                {{ item.label }}
+              </UButton>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <UButton
+                icon="lucide:globe-2"
+                label="Global template"
+                size="sm"
+                color="primary"
+                variant="solid"
+                @click="openCreateGuardDrawer('global')"
+              />
+              <UButton
+                icon="lucide:route"
+                label="Route template"
+                size="sm"
+                color="neutral"
+                variant="soft"
+                @click="openCreateGuardDrawer('route')"
+              />
+            </div>
+          </div>
+        </section>
+
         <FilterActiveSummary
           v-if="hasActiveFilters(currentFilter)"
           :count="activeFilterCount"
@@ -268,12 +460,11 @@ async function deleteGuard(guard: any) {
         />
 
         <div v-if="guardsData.length" class="space-y-6">
-          <div
-            class="grid gap-4"
-            :class="
+          <CommonAnimatedGrid
+            :grid-class="
               isTablet
-                ? 'grid-cols-2'
-                : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
+                ? 'grid gap-4 grid-cols-2'
+                : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
             "
           >
             <CommonSettingsCard
@@ -326,11 +517,11 @@ async function deleteGuard(guard: any) {
               :actions="getGuardFooterActions(guard)"
               :header-actions="getGuardHeaderActions(guard)"
             />
-          </div>
+          </CommonAnimatedGrid>
         </div>
 
         <CommonEmptyState
-          v-else-if="!loading"
+          v-else
           title="No guards found"
           description="No guard configurations have been created yet. Create a guard to add rate limiting or IP filtering."
           icon="lucide:shield"
@@ -338,7 +529,7 @@ async function deleteGuard(guard: any) {
         />
 
         <div
-          v-if="!loading && guardsData.length > 0 && total > pageLimit"
+          v-if="guardsData.length > 0 && total > pageLimit"
           class="flex items-center justify-between mt-6"
         >
           <UPagination
@@ -376,4 +567,92 @@ async function deleteGuard(guard: any) {
     :current-filter="currentFilter"
     @apply="handleFilterApply"
   />
+
+  <CommonDrawer
+    v-model="showCreateGuardDrawer"
+    :handle="false"
+    direction="right"
+  >
+    <template #header>
+      <h2 class="text-xl font-semibold">Create Guard</h2>
+    </template>
+
+    <template #body>
+      <div class="space-y-6">
+        <section class="space-y-3">
+          <UFormField label="Scope">
+            <div class="grid grid-cols-2 gap-2">
+              <UButton
+                :variant="createScope === 'global' ? 'solid' : 'soft'"
+                :color="createScope === 'global' ? 'primary' : 'neutral'"
+                icon="lucide:globe-2"
+                block
+                @click="createScope = 'global'"
+              >
+                Global
+              </UButton>
+              <UButton
+                :variant="createScope === 'route' ? 'solid' : 'soft'"
+                :color="createScope === 'route' ? 'primary' : 'neutral'"
+                icon="lucide:route"
+                block
+                @click="createScope = 'route'"
+              >
+                Route
+              </UButton>
+            </div>
+          </UFormField>
+
+          <UFormField
+            v-if="createScope === 'route'"
+            label="Route"
+            required
+          >
+            <USelect
+              v-model="selectedRouteId"
+              :items="routeOptions"
+              value-key="value"
+              class="w-full"
+              placeholder="Select route"
+            />
+          </UFormField>
+        </section>
+
+        <section class="space-y-3">
+          <div>
+            <h3 class="text-sm font-semibold text-[var(--text-primary)]">
+              Templates
+            </h3>
+            <p class="text-xs text-[var(--text-tertiary)]">
+              A template creates the root guard and the first rule in one step.
+            </p>
+          </div>
+          <GuardTemplateGrid
+            v-model="selectedTemplate"
+            :templates="createTemplates"
+          />
+        </section>
+      </div>
+    </template>
+
+    <template #footer>
+      <div class="flex justify-end gap-3">
+        <UButton
+          variant="outline"
+          color="neutral"
+          @click="showCreateGuardDrawer = false"
+        >
+          Cancel
+        </UButton>
+        <UButton
+          color="primary"
+          :loading="createGuardLoading"
+          :disabled="createGuardLoading"
+          @click="createGuardFromTemplate"
+        >
+          Create Guard
+        </UButton>
+      </div>
+    </template>
+  </CommonDrawer>
 </template>

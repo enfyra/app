@@ -139,6 +139,7 @@ const {
 
 const collections = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.filterCount ?? 0);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
 
 useHeaderActionRegistry({
   id: "create-collection",
@@ -202,7 +203,7 @@ function getGradientForCollection(id: any): string | undefined {
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
-        v-if="!isMounted || loading"
+        v-if="showInitialLoading"
         title="Loading collections..."
         description="Fetching table collections"
         size="sm"
@@ -210,12 +211,11 @@ function getGradientForCollection(id: any): string | undefined {
         context="page"
       />
       <div v-else-if="collections.length">
-        <div
-          class="grid gap-4"
-          :class="
+        <CommonAnimatedGrid
+          :grid-class="
             isTablet
-              ? 'grid-cols-2'
-              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+              ? 'grid gap-4 grid-cols-2'
+              : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
           "
         >
           <div
@@ -277,9 +277,9 @@ function getGradientForCollection(id: any): string | undefined {
               </div>
             </div>
           </div>
-        </div>
+        </CommonAnimatedGrid>
         <div
-          v-if="!loading && collections.length > 0 && total > pageLimit"
+          v-if="collections.length > 0 && total > pageLimit"
           class="flex items-center justify-between mt-6"
         >
           <UPagination

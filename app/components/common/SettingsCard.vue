@@ -30,7 +30,7 @@
           iconBgClass
         ]"
       >
-        <UIcon :name="icon" :class="(isMobile || isTablet) ? 'w-4 h-4 text-white' : 'w-5 h-5 text-white'" />
+        <UIcon :name="normalizedIcon" :class="(isMobile || isTablet) ? 'w-4 h-4 text-white' : 'w-5 h-5 text-white'" />
       </div>
 
       <div class="flex-1 min-w-0 self-start">
@@ -52,7 +52,7 @@
           :is="getComponent(action.component)"
           v-bind="{
             ...getDefaultProps(action.component, 'header'),
-            ...(action.props || {}),
+            ...resolveProps(action.props),
             ...((isMobile || isTablet) && action.component === 'UButton' ? { size: 'xs', class: 'rounded-full !aspect-square' } : {})
           }"
           @click="action.onClick"
@@ -81,7 +81,7 @@
                 v-for="(item, idx) in stat.values"
                 :key="idx"
                 :is="getComponent(stat.component)"
-                v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...(stat.props || {}), ...(item.props || {}) }"
+                v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...resolveProps(stat.props), ...resolveProps(item.props) }"
               >
                 {{ item.value }}
               </component>
@@ -89,7 +89,7 @@
             <component
               v-else-if="stat.component"
               :is="getComponent(stat.component)"
-              v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...(stat.props || {}) }"
+              v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...resolveProps(stat.props) }"
             >
               {{ stat.value }}
             </component>
@@ -110,7 +110,7 @@
                 v-for="(item, idx) in stat.values"
                 :key="idx"
                 :is="getComponent(stat.component)"
-                v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...(stat.props || {}), ...(item.props || {}) }"
+                v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...resolveProps(stat.props), ...resolveProps(item.props) }"
               >
                 {{ item.value }}
               </component>
@@ -118,7 +118,7 @@
             <component
               v-else-if="stat.component"
               :is="getComponent(stat.component)"
-              v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...(stat.props || {}) }"
+              v-bind="{ ...getDefaultProps(stat.component, 'stats'), ...resolveProps(stat.props) }"
             >
               {{ stat.value }}
             </component>
@@ -148,7 +148,7 @@
           v-for="action in actions"
           :key="action.label"
           v-bind="{
-            ...action.props,
+            ...resolveProps(action.props),
             ...((isMobile || isTablet) ? { size: 'xs', class: 'rounded-full !aspect-square' } : {})
           }"
           :to="action.to"
@@ -253,6 +253,16 @@ const getDefaultProps = (componentName?: string, context: 'header' | 'stats' = '
   if (!componentName) return {};
   return defaults[context]?.[componentName as keyof typeof defaults[typeof context]] || {};
 };
+
+function resolveProps(input?: Record<string, any>) {
+  if (!input) return {};
+
+  return Object.fromEntries(
+    Object.entries(input).map(([key, value]) => [key, unref(value)]),
+  );
+}
+
+const normalizedIcon = computed(() => props.icon.replace(/\s+/g, ''));
 
 const iconBgClass = computed(() => {
   const colorMap = {

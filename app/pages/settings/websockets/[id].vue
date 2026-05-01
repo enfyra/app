@@ -78,7 +78,10 @@
         </UButton>
       </div>
 
-      <div v-if="events.length > 0" class="grid gap-4 grid-cols-1 md:grid-cols-2">
+      <CommonAnimatedGrid
+        v-if="events.length > 0"
+        grid-class="grid gap-4 grid-cols-1 md:grid-cols-2"
+      >
         <CommonSettingsCard
           v-for="event in events"
           :key="event.id"
@@ -125,7 +128,7 @@
             }
           ]"
         />
-      </div>
+      </CommonAnimatedGrid>
 
       <CommonEmptyState
         v-else

@@ -20,6 +20,21 @@ export const columnTypes = [
   { label: "Enum", value: "enum", icon: "lucide:type" },
 ];
 
+export const mongoColumnTypes = [
+  { label: "UUID", value: "uuid", icon: "ph:key" },
+  { label: "String", value: "varchar", icon: "mdi:format-text" },
+  { label: "Number", value: "float", icon: "mdi:decimal" },
+  { label: "Integer", value: "int", icon: "tabler:123" },
+  { label: "Long", value: "bigint", icon: "tabler:123" },
+  { label: "Boolean", value: "boolean", icon: "mdi:toggle-switch" },
+  { label: "Date", value: "date", icon: "mdi:calendar" },
+  { label: "Rich Text", value: "richtext", icon: "mdi:format-text" },
+  { label: "Code", value: "code", icon: "mdi:code-braces-box" },
+  { label: "Object", value: "simple-json", icon: "mdi:code-json" },
+  { label: "Array Select", value: "array-select", icon: "mdi:format-list-bulleted" },
+  { label: "Enum", value: "enum", icon: "lucide:type" },
+];
+
 export const relationTypes = [
   {
     label: "One to One",

@@ -96,11 +96,12 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
       </div>
     </section>
 
-    <section
-      v-for="metrics in runtime.instances"
-      :key="metrics.instance.id"
-      class="surface-card rounded-lg p-4"
-    >
+    <CommonAnimatedGrid grid-class="grid gap-4">
+      <section
+        v-for="metrics in runtime.instances"
+        :key="metrics.instance.id"
+        class="surface-card rounded-lg p-4"
+      >
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-default)] pb-3">
         <div class="min-w-0">
           <div class="truncate font-medium text-[var(--text-primary)]">
@@ -189,6 +190,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
           </div>
         </div>
       </div>
-    </section>
+      </section>
+    </CommonAnimatedGrid>
   </div>
 </template>
