@@ -406,32 +406,15 @@ useHeaderActionRegistry([
         @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
       />
 
-      <div
+      <CommonPaginationBar
         v-if="Math.ceil(total / pageLimit) > 1"
-        class="flex items-center justify-between transition-opacity duration-200"
-        :class="loading ? 'opacity-70' : 'opacity-100'"
-      >
-        <UPagination
-          v-model:page="page"
-          :items-per-page="pageLimit"
-          :total="total"
-          show-edges
-          :sibling-count="1"
-          :to="
-            (p) => ({
-              path: route.path,
-              query: { ...route.query, page: p },
-            })
-          "
-          :ui="{
-            item: 'h-9 w-9 rounded-xl transition-all duration-300',
-          }"
-        />
-        <p class="hidden md:block text-sm text-[var(--text-tertiary)]">
-          Showing <span class="text-[var(--text-secondary)]">{{ (page - 1) * pageLimit + 1 }}-{{ Math.min(page * pageLimit, total) }}</span>
-          of <span class="text-[var(--text-secondary)]">{{ total }}</span> results
-        </p>
-      </div>
+        v-model:page="page"
+        :items-per-page="pageLimit"
+        :total="total"
+        :loading="loading"
+        :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+        :ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
+      />
     </div>
 
     <FilterDrawerLazy

@@ -248,24 +248,19 @@ useHeaderActionRegistry([
     />
 
     <div
-      class="flex justify-center gap-4 mt-6"
-      v-if="!rootPending && !filesPending"
+      v-if="folderTotal > limit || fileTotal > limit"
+      class="mt-6 flex flex-col justify-center gap-4 lg:flex-row"
     >
-      
       <div v-if="folderTotal > limit" class="flex items-center gap-2">
         <span class="text-sm text-[var(--text-tertiary)]">Folders:</span>
-        <UPagination
+        <CommonPaginationBar
           v-model:page="folderPage"
+          align="center"
           :items-per-page="limit"
           :total="folderTotal"
-          show-edges
-          :sibling-count="1"
-          :to="
-            (p) => ({
-              path: route.path,
-              query: { ...route.query, folderPage: p },
-            })
-          "
+          :loading="rootPending"
+          :show-range="false"
+          :to="(p) => ({ path: route.path, query: { ...route.query, folderPage: p } })"
           color="secondary"
           active-color="secondary"
         />
@@ -273,18 +268,14 @@ useHeaderActionRegistry([
 
       <div v-if="fileTotal > limit" class="flex items-center gap-2">
         <span class="text-sm text-[var(--text-tertiary)]">Files:</span>
-        <UPagination
+        <CommonPaginationBar
           v-model:page="filePage"
+          align="center"
           :items-per-page="limit"
           :total="fileTotal"
-          show-edges
-          :sibling-count="1"
-          :to="
-            (p) => ({
-              path: route.path,
-              query: { ...route.query, filePage: p },
-            })
-          "
+          :loading="filesPending"
+          :show-range="false"
+          :to="(p) => ({ path: route.path, query: { ...route.query, filePage: p } })"
           color="secondary"
           active-color="secondary"
         />
