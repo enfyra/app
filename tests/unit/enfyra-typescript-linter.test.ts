@@ -46,6 +46,24 @@ await @TRIGGER('flow_name', { item })
     expect(diagnostics).toEqual([])
   })
 
+  it('accepts DynamicRepository exists with a direct filter', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const used = await @REPOS.user_definition.exists({ email: { _eq: @BODY.email } })
+if (used) @THROW409('user_definition', 'email', @BODY.email)
+return { used }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
+  it('rejects stale DynamicRepository where option', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+return await @REPOS.user_definition.find({ where: { email: { _eq: @BODY.email } } })
+`)
+
+    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("'where'"))).toBe(true)
+  })
+
   it('maps diagnostics after Enfyra macros back to source positions', async () => {
     const source = 'const body = @BODY\nconst value: string = 1'
     const diagnostics = await lintEnfyraTypeScript(source)

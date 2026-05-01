@@ -104,9 +104,33 @@ const canRunTest = computed(() => {
   return canShowTestRun.value && String(props.modelValue || "").trim().length > 0;
 });
 
+const testResultValue = computed(() => {
+  const data = testRunData.value as any;
+  if (data && Object.prototype.hasOwnProperty.call(data, "result")) {
+    return data.result;
+  }
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    return Object.fromEntries(
+      Object.entries(data).filter(
+        ([key]) =>
+          key !== "success" &&
+          key !== "error" &&
+          key !== "logs" &&
+          key !== "emitted",
+      ),
+    );
+  }
+  return data;
+});
+
 const testResultText = computed(() => {
-  const value = (testRunData.value as any)?.result ?? testRunData.value;
+  const value = testResultValue.value;
   if (value === null || value === undefined) return "";
+  if (
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    Object.keys(value).length === 0
+  ) return "";
   try {
     return JSON.stringify(value, null, 2);
   } catch {
@@ -516,7 +540,7 @@ function handleMouseUp(e?: MouseEvent) {
         <div v-if="testResultText" class="space-y-1">
           <div class="flex items-center justify-between gap-2">
             <div class="text-xs font-medium text-[var(--text-tertiary)]">Result</div>
-            <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue((testRunData as any)?.result ?? testRunData)">Copy</UButton>
+            <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResultValue)">Copy</UButton>
           </div>
           <pre class="max-h-[260px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testResultText }}</pre>
         </div>
