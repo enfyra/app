@@ -106,6 +106,9 @@ export interface TableRelationResponse {
   targetTable: {
     id: number;
   };
+  foreignKeyColumn?: string | null;
+  referencedColumn?: string | null;
+  constraintName?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -157,6 +160,8 @@ export interface TableDefinitionField {
   inversePropertyName?: string | null;
   relationType?: RelationType;
   foreignKeyColumn?: string | null;
+  referencedColumn?: string | null;
+  constraintName?: string | null;
   sourceTable?: {
     id: number;
   };

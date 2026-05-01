@@ -95,27 +95,19 @@
       />
     </Transition>
 
-    <div
-      class="flex justify-center mt-4"
-      v-if="packages.length > 0"
-    >
-      <UPagination
-        v-if="total > limit"
-        v-model:page="page"
-        :items-per-page="limit"
-        :total="total"
-        show-edges
-        :sibling-count="1"
-        :to="
-          (p) => ({
-            path: route.path,
-            query: { ...route.query, page: p },
-          })
-        "
-        color="secondary"
-        active-color="secondary"
-      />
-    </div>
+    <CommonPaginationBar
+      v-if="packages.length > 0 && total > limit"
+      v-model:page="page"
+      class="mt-4"
+      align="center"
+      :items-per-page="limit"
+      :total="total"
+      :loading="loading"
+      :show-range="false"
+      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      color="secondary"
+      active-color="secondary"
+    />
   </div>
 </template>
 

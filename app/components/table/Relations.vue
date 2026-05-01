@@ -488,12 +488,14 @@ async function removeRelation(index: number) {
               :unique-local-self-key="localSelfKey"
               :excluded="isInverseRelation(currentRelation) ? [
                 'id', 'createdAt', 'updatedAt', 'isSystem', 'isPublished',
-                'sourceTable', 'junctionTableName', 'junctionSourceColumn', 'junctionTargetColumn',
+                'sourceTable', 'foreignKeyColumn', 'referencedColumn', 'constraintName',
+                'junctionTableName', 'junctionSourceColumn', 'junctionTargetColumn',
                 'type', 'targetTable', 'isNullable', 'isUpdatable', 'mappedBy', 'onDelete', 'metadata',
                 'fieldPermissions'
               ] : [
                 'id', 'createdAt', 'updatedAt', 'isSystem', 'isPublished',
-                'sourceTable', 'junctionTableName', 'junctionSourceColumn', 'junctionTargetColumn',
+                'sourceTable', 'foreignKeyColumn', 'referencedColumn', 'constraintName',
+                'junctionTableName', 'junctionSourceColumn', 'junctionTargetColumn',
                 'mappedBy',
                 'fieldPermissions'
               ]"

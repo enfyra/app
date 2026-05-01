@@ -528,35 +528,15 @@ async function deleteGuard(guard: any) {
           size="sm"
         />
 
-        <div
+        <CommonPaginationBar
           v-if="guardsData.length > 0 && total > pageLimit"
-          class="flex items-center justify-between mt-6"
-        >
-          <UPagination
-            v-model:page="page"
-            :items-per-page="pageLimit"
-            :total="total"
-            show-edges
-            :sibling-count="1"
-            :to="
-              (p) => ({
-                path: route.path,
-                query: { ...route.query, page: p },
-              })
-            "
-          />
-          <p class="hidden md:block text-sm text-[var(--text-quaternary)]">
-            Showing
-            <span class="text-[var(--text-secondary)]"
-              >{{ (page - 1) * pageLimit + 1 }}-{{
-                Math.min(page * pageLimit, total)
-              }}</span
-            >
-            of
-            <span class="text-[var(--text-secondary)]">{{ total }}</span>
-            results
-          </p>
-        </div>
+          v-model:page="page"
+          class="mt-6"
+          :items-per-page="pageLimit"
+          :total="total"
+          :loading="loading"
+          :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+        />
       </div>
     </Transition>
   </div>
