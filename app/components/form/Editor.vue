@@ -13,7 +13,7 @@
       :field-map="fieldMapWithGenerated"
       :errors="errors"
       :loading="props.loading"
-      :mode="props.mode"
+      :mode="effectiveMode"
       :is-unique-field="isUniqueFieldEffective(field.name || field.propertyName || '')"
       :unique-check-status="getCheckStatus(field.name || field.propertyName || '').status"
       :unique-check-message="getCheckStatus(field.name || field.propertyName || '').message"
@@ -53,7 +53,7 @@
             :field-map="fieldMapWithGenerated"
             :errors="errors"
             :loading="props.loading"
-            :mode="props.mode"
+            :mode="effectiveMode"
             :is-unique-field="isUniqueFieldEffective(field.name || field.propertyName || '')"
             :unique-check-status="getCheckStatus(field.name || field.propertyName || '').status"
             :unique-check-message="getCheckStatus(field.name || field.propertyName || '').message"
@@ -78,7 +78,7 @@
           :field-map="fieldMapWithGenerated"
           :errors="errors"
           :loading="props.loading"
-          :mode="props.mode"
+          :mode="effectiveMode"
           :is-unique-field="isUniqueFieldEffective(field.name || field.propertyName || '')"
           :unique-check-status="getCheckStatus(field.name || field.propertyName || '').status"
           :unique-check-message="getCheckStatus(field.name || field.propertyName || '').message"
@@ -103,7 +103,7 @@
         :field-map="fieldMapWithGenerated"
         :errors="errors"
         :loading="props.loading"
-        :mode="props.mode"
+        :mode="effectiveMode"
         :is-unique-field="isUniqueFieldEffective(field.name || field.propertyName || '')"
         :unique-check-status="getCheckStatus(field.name || field.propertyName || '').status"
         :unique-check-message="getCheckStatus(field.name || field.propertyName || '').message"
@@ -127,6 +127,7 @@ import type {
   FormEditorVirtualEmitPayload,
   FormEditorVirtualField,
 } from '~/types/form-editor';
+import { isCreateRecordSystemField } from '~/utils/schema/system-fields';
 
 const props = withDefaults(
   defineProps<{
@@ -155,7 +156,6 @@ const props = withDefaults(
     fieldMap: () => ({}),
     virtualFields: () => [],
     loading: false,
-    mode: 'update',
     layout: 'stack',
     currentRecordId: null,
     uniqueCheckMode: 'api',
@@ -210,12 +210,11 @@ const emit = defineEmits<{
 }>();
 
 const ALWAYS_EXCLUDED_FIELDS = new Set(["compiledCode"]);
-const CREATE_MODE_EXCLUDED_FIELDS = new Set(["createdAt", "updatedAt", "isSystem", "isRootAdmin"]);
 
 const { definition, fieldMap: schemaColumnMap, sortFieldsByOrder, useFormChanges, schema } = useSchema(
   props.tableName
 );
-const { getId, getIdFieldName, isMongoDB } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
 
 const normalizedModelValue = computed(() => {
   const mv = props.modelValue;
@@ -230,6 +229,12 @@ const normalizedModelValue = computed(() => {
   }
   return result;
 });
+
+const modelRecordId = computed(() => getId(normalizedModelValue.value));
+
+const effectiveMode = computed<'create' | 'update'>(() =>
+  props.mode ?? (props.currentRecordId != null || modelRecordId.value != null ? 'update' : 'create'),
+);
 
 const extendedColumnMap = computed(() => {
   const m = new Map(schemaColumnMap.value);
@@ -255,7 +260,9 @@ const originalData = ref<Record<string, any>>({});
 
 const formEditorRegistry = useFormEditorRegistry();
 
-const currentRecordIdRef = computed(() => props.currentRecordId ?? (props.mode === 'update' ? getId(normalizedModelValue.value) : null));
+const currentRecordIdRef = computed(() =>
+  props.currentRecordId ?? (effectiveMode.value === 'update' ? modelRecordId.value : null),
+);
 const uniquesRef = computed(() => schema.value?.uniques || null);
 const uniqueCheckModeRef = computed(() => props.uniqueCheckMode || 'api');
 const uniqueLocalRecordsRef = computed(() => props.uniqueLocalRecords || []);
@@ -344,7 +351,7 @@ const filteredFormFields = computed(() => {
     if (!key) return false;
     if (ALWAYS_EXCLUDED_FIELDS.has(key)) return false;
     if (props.excluded.includes(key)) return false;
-    if (props.mode === 'create' && (key === getIdFieldName() || CREATE_MODE_EXCLUDED_FIELDS.has(key))) return false;
+    if (effectiveMode.value === 'create' && isCreateRecordSystemField(key)) return false;
     if (["isSystem", "isRootAdmin"].includes(key)) return false;
     return true;
   });

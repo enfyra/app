@@ -404,12 +404,7 @@ export function useRuntimeMetrics() {
   function redisTabSeverity(): RuntimeSeverity {
     const overview = redisAdminOverview.value;
     if (!overview) return redisError.value ? 'warning' : 'ok';
-    const used = overview.server.usedMemoryBytes ?? 0;
-    const max = overview.server.maxMemoryBytes ?? 0;
-    if (max > 0 && used / max >= 0.95) return 'error';
-    if (max > 0 && used / max >= 0.8) return 'warning';
-    if ((overview.server.memFragmentationRatio ?? 0) >= 2) return 'warning';
-    return 'ok';
+    return overview.health?.severity ?? 'ok';
   }
 
   function databaseQuerySeverity(): RuntimeSeverity {
@@ -427,7 +422,7 @@ export function useRuntimeMetrics() {
   function tabSeverity(tab: string): RuntimeSeverity {
     switch (tab) {
       case 'overview':
-        return maxSeverity(clusterSeverity(), ...instances.value.map(overviewSeverity));
+        return maxSeverity(clusterSeverity(), ...instances.value.map((metrics) => metrics.health?.overview?.severity ?? overviewSeverity(metrics)));
       case 'requests':
         return requestTabSeverity();
       case 'cache':
@@ -435,13 +430,13 @@ export function useRuntimeMetrics() {
       case 'redis':
         return redisTabSeverity();
       case 'database':
-        return maxSeverity(...instances.value.map(databaseSeverity), databaseQuerySeverity());
+        return maxSeverity(...instances.value.map((metrics) => metrics.health?.database?.severity ?? databaseSeverity(metrics)), databaseQuerySeverity());
       case 'flows':
-        return maxSeverity(...instances.value.map(flowSeverity));
+        return maxSeverity(...instances.value.map((metrics) => metrics.health?.flows?.severity ?? flowSeverity(metrics)));
       case 'workers':
-        return maxSeverity(...instances.value.map(workerSeverity));
+        return maxSeverity(...instances.value.map((metrics) => metrics.health?.workers?.severity ?? workerSeverity(metrics)));
       case 'connections':
-        return maxSeverity(...instances.value.map(connectionSeverity));
+        return maxSeverity(...instances.value.map((metrics) => metrics.health?.connections?.severity ?? connectionSeverity(metrics)));
       default:
         return 'ok';
     }
@@ -450,21 +445,22 @@ export function useRuntimeMetrics() {
   function tabIssueCount(tab: string) {
     switch (tab) {
       case 'overview':
-        return (clusterSeverity() === 'ok' ? 0 : 1) + instances.value.reduce((sum, metrics) => sum + overviewWarnings(metrics).length, 0);
+        return (clusterSeverity() === 'ok' ? 0 : 1) + instances.value.reduce((sum, metrics) => sum + (metrics.health?.overview?.messages ?? overviewWarnings(metrics)).length, 0);
       case 'requests':
         return requestRows.value.filter((row) => row.status5xx > 0 || row.status4xx > 0 || row.p95Ms >= 1000 || row.p99Ms >= 1000).length;
       case 'cache':
         return cacheReloadRows.value.filter((row) => row.status === 'failed').length;
       case 'redis':
-        return redisTabSeverity() === 'ok' ? 0 : 1;
+        return redisAdminOverview.value?.health?.warnings?.length
+          || (redisTabSeverity() === 'ok' ? 0 : 1);
       case 'database':
-        return databaseRows.value.filter((row) => row.poolAcquireTimeouts > 0 || row.errors > 0 || row.slow > 0 || row.p95Ms >= 500).length + instances.value.reduce((sum, metrics) => sum + databaseWarnings(metrics).length, 0);
+        return databaseRows.value.filter((row) => row.poolAcquireTimeouts > 0 || row.errors > 0 || row.slow > 0 || row.p95Ms >= 500).length + instances.value.reduce((sum, metrics) => sum + (metrics.health?.database?.messages ?? databaseWarnings(metrics)).length, 0);
       case 'flows':
-        return instances.value.reduce((sum, metrics) => sum + flowWarnings(metrics).length, 0);
+        return instances.value.reduce((sum, metrics) => sum + (metrics.health?.flows?.messages ?? flowWarnings(metrics)).length, 0);
       case 'workers':
-        return instances.value.reduce((sum, metrics) => sum + workerWarnings(metrics).length, 0);
+        return instances.value.reduce((sum, metrics) => sum + (metrics.health?.workers?.messages ?? workerWarnings(metrics)).length, 0);
       case 'connections':
-        return instances.value.reduce((sum, metrics) => sum + connectionWarnings(metrics).length, 0);
+        return instances.value.reduce((sum, metrics) => sum + (metrics.health?.connections?.messages ?? connectionWarnings(metrics)).length, 0);
       default:
         return 0;
     }

@@ -407,8 +407,9 @@ useHeaderActionRegistry([
       />
 
       <div
-        v-if="!loading && Math.ceil(total / pageLimit) > 1"
-        class="flex items-center justify-between"
+        v-if="Math.ceil(total / pageLimit) > 1"
+        class="flex items-center justify-between transition-opacity duration-200"
+        :class="loading ? 'opacity-70' : 'opacity-100'"
       >
         <UPagination
           v-model:page="page"

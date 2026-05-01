@@ -70,6 +70,7 @@ interface Props {
   loading: boolean;
   hookType?: 'pre' | 'post';
   routeId?: string;
+  routePath?: string;
   allowedMethods?: string[];
   lockMethod?: boolean;
 }
@@ -123,6 +124,9 @@ const fieldMap = computed(() => ({
   sourceCode: getRouteHookSourceCodeFieldConfig({
     hookType: props.hookType,
     routeId: props.routeId,
+    routePath: props.routePath,
+    method: Array.isArray(localForm.value?.methods) ? localForm.value.methods[0] : undefined,
+    availableMethods: props.allowedMethods,
   }),
 }));
 

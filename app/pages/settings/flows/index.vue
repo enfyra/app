@@ -2,7 +2,7 @@
   <div class="flow-manager-page">
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
-        v-if="!isMounted || loading"
+        v-if="showInitialLoading"
         title="Loading flows..."
         description="Fetching flow configurations"
         size="md"
@@ -10,14 +10,9 @@
         context="page"
       />
 
-      <div
+      <CommonAnimatedGrid
         v-else-if="flows.length > 0"
-        class="grid gap-4"
-        :class="
-          isTablet
-            ? 'grid-cols-1'
-            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
-        "
+        :grid-class="isTablet ? 'grid gap-4 grid-cols-1' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
       >
         <CommonSettingsCard
           v-for="flow in flows"
@@ -53,7 +48,7 @@
           :header-actions="getHeaderActions(flow)"
           :actions="getFooterActions(flow)"
         />
-      </div>
+      </CommonAnimatedGrid>
 
       <CommonEmptyState
         v-else
@@ -65,7 +60,7 @@
     </Transition>
 
     <div
-      v-if="!loading && flows.length > 0 && total > limit"
+      v-if="flows.length > 0 && total > limit"
       class="flex items-center justify-between mt-6"
     >
       <UPagination
@@ -121,6 +116,7 @@ const {
 });
 
 const flows = computed(() => apiData.value?.data || []);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 const { execute: updateFlow, error: updateError } = useApi(

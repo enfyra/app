@@ -28,7 +28,7 @@
 
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
-        v-if="!isMounted || loading"
+        v-if="showInitialLoading"
         title="Loading permissions..."
         description="Fetching permission data"
         size="sm"
@@ -36,7 +36,10 @@
         context="page"
       />
 
-      <div v-else-if="permissions.length > 0" class="space-y-2">
+      <CommonAnimatedGrid
+        v-else-if="permissions.length > 0"
+        grid-class="space-y-2"
+      >
         <div
           v-for="permission in permissions"
           :key="permission.id"
@@ -174,7 +177,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </CommonAnimatedGrid>
       <div v-else>
         <CommonEmptyState
           title="No permissions found"
@@ -340,6 +343,7 @@ const {
 
 const permissions = computed(() => permissionsData.value?.data || []);
 const saving = computed(() => creating.value || updating.value);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !permissionsData.value));
 
 const drawerOpen = computed({
   get: () => showDrawer.value,

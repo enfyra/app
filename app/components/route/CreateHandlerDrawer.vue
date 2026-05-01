@@ -69,6 +69,7 @@ interface Props {
   errors: Record<string, string>;
   loading: boolean;
   routeId?: string;
+  routePath?: string;
   allowedMethods?: string[];
   lockMethod?: boolean;
 }
@@ -119,7 +120,9 @@ const fieldMap = computed(() => ({
   },
   sourceCode: getRouteHandlerSourceCodeFieldConfig({
     routeId: props.routeId,
+    routePath: props.routePath,
     method: localForm.value?.method,
+    availableMethods: props.allowedMethods,
   }),
 }));
 

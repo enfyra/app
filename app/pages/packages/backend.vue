@@ -11,7 +11,7 @@
 
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
-        v-if="!isMounted || loading"
+        v-if="showInitialLoading"
         title="Loading packages..."
         description="Fetching installed server packages"
         size="sm"
@@ -19,12 +19,9 @@
         context="page"
       />
 
-      <div
+      <CommonAnimatedGrid
         v-else-if="packages.length > 0"
-        class="grid gap-4"
-        :class="
-          isTablet ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-        "
+        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3'"
       >
         <CommonSettingsCard
           v-for="pkg in packages"
@@ -87,7 +84,7 @@
           :actions="[]"
           :header-actions="[]"
         />
-      </div>
+      </CommonAnimatedGrid>
 
       <CommonEmptyState
         v-else
@@ -100,7 +97,7 @@
 
     <div
       class="flex justify-center mt-4"
-      v-if="!loading && packages.length > 0"
+      v-if="packages.length > 0"
     >
       <UPagination
         v-if="total > limit"
@@ -182,6 +179,7 @@ const {
 });
 
 const packages = computed(() => apiData.value?.data || []);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 const { execute: removePackage, error: removePackageError } = useApi(

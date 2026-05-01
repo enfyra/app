@@ -59,7 +59,7 @@ const stats = computed(() => {
   return (statsData.value as any) || null;
 });
 
-const isInitialLoading = computed(() => logsPending.value || statsPending.value);
+const isInitialLoading = computed(() => (logsPending.value && !logsData.value) || (statsPending.value && !statsData.value));
 
 const filteredFiles = computed(() => {
   if (!fileSearchQuery.value) return files.value;
@@ -474,9 +474,8 @@ onMounted(async () => {
             icon="lucide:search"
           />
 
-          <div
-            class="grid gap-4"
-            :class="isTablet ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'"
+          <CommonAnimatedGrid
+            :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'"
           >
             <CommonSettingsCard
               v-for="file in filteredFiles"
@@ -498,7 +497,7 @@ onMounted(async () => {
               ]"
               @click="handleSelectFile(file)"
             />
-          </div>
+          </CommonAnimatedGrid>
 
           <CommonEmptyState
             v-if="filteredFiles.length === 0 && files.length > 0"

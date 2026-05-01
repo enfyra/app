@@ -1,5 +1,18 @@
 export type RuntimeSeverity = 'ok' | 'warning' | 'error';
 
+export type RuntimeHealthStatus = {
+  severity: RuntimeSeverity;
+  messages: string[];
+};
+
+export type RuntimeHealthSnapshot = {
+  overview: RuntimeHealthStatus;
+  workers: RuntimeHealthStatus;
+  flows: RuntimeHealthStatus;
+  database: RuntimeHealthStatus;
+  connections: RuntimeHealthStatus;
+};
+
 export type RedisAdminValueType =
   | 'string'
   | 'hash'
@@ -40,6 +53,10 @@ export type RedisAdminKeySummary = RedisAdminSystemMark & {
 
 export type RedisAdminOverview = {
   connected: boolean;
+  health: {
+    severity: RuntimeSeverity;
+    warnings: string[];
+  };
   keyCount: number;
   scanned: number;
   scanComplete: boolean;
@@ -214,6 +231,7 @@ export type RuntimeMetricsPayload = {
     }>;
   };
   db: RuntimeDbMetrics;
+  health?: RuntimeHealthSnapshot;
   cluster?: {
     enabled: boolean;
     key: string;

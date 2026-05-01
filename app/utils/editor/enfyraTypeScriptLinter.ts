@@ -85,12 +85,14 @@ type EnfyraQueryResult<T = any> = {
 };
 type EnfyraFindArgs = {
   filter?: any;
-  where?: any;
   fields?: string | string[];
+  page?: number;
   limit?: number;
   sort?: string;
   meta?: 'filterCount' | 'totalCount' | '*' | string | string[];
-  [key: string]: any;
+  deep?: Record<string, any>;
+  debugMode?: boolean | string;
+  aggregate?: any;
 };
 type EnfyraCreateArgs = {
   data: any;
@@ -114,6 +116,7 @@ type EnfyraDeleteResult = {
 type EnfyraRepository = {
   find(args?: EnfyraFindArgs): Promise<EnfyraQueryResult>;
   findOne(args?: EnfyraFindArgs): Promise<any>;
+  exists(filter: any): Promise<boolean>;
   create(args: EnfyraCreateArgs): Promise<EnfyraQueryResult>;
   update(args: EnfyraUpdateArgs): Promise<EnfyraQueryResult>;
   delete(args: EnfyraDeleteArgs): Promise<EnfyraDeleteResult>;

@@ -94,6 +94,7 @@ const {
 });
 
 const routesData = computed(() => apiData.value?.data || []);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
 const total = computed(() => {
   const meta = apiData.value?.meta
   if (showSystem.value && showCollectionRoutes.value && !hasActiveFilters(currentFilter.value)) {
@@ -386,7 +387,7 @@ async function deleteRoute(routeItem: any) {
 <template>
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
-      <div v-if="loading || !isMounted">
+      <div v-if="showInitialLoading">
         <CommonLoadingState
           title="Loading routes..."
           description="Fetching routing configuration"
@@ -404,12 +405,11 @@ async function deleteRoute(routeItem: any) {
         />
 
         <div v-if="routesData.length" class="space-y-6">
-          <div
-            class="grid gap-4"
-            :class="
+          <CommonAnimatedGrid
+            :grid-class="
               isTablet
-                ? 'grid-cols-2'
-                : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
+                ? 'grid gap-4 grid-cols-2'
+                : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
             "
           >
             <CommonSettingsCard
@@ -440,11 +440,11 @@ async function deleteRoute(routeItem: any) {
               :actions="getRouteFooterActions(routeItem)"
               :header-actions="getRouteHeaderActions(routeItem)"
             </CommonSettingsCard>
-          </div>
+          </CommonAnimatedGrid>
         </div>
 
         <CommonEmptyState
-          v-else-if="!loading"
+          v-else
           title="No routes found"
           description="No routing configurations have been created yet"
           icon="lucide:route"
@@ -452,7 +452,7 @@ async function deleteRoute(routeItem: any) {
         />
 
         <div
-          v-if="!loading && routesData.length > 0 && total > pageLimit"
+          v-if="routesData.length > 0 && total > pageLimit"
           class="flex items-center justify-between mt-6"
         >
           <UPagination

@@ -24,10 +24,16 @@ export function getRouteHandlerSourceCodeFieldConfig(options: {
   routeId?: string;
   handlerId?: string | number | null;
   method?: any;
+  availableMethods?: string[];
+  routePath?: string;
 }) {
   return {
     description: 'Must return a value. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.',
     testRun: {
+      configure: true,
+      method: options.method?.method ?? options.method,
+      methods: options.availableMethods,
+      routePath: options.routePath,
       tableName: 'route_handler_definition',
       payload: {
         routeId: options.routeId,
@@ -42,12 +48,19 @@ export function getRouteHookSourceCodeFieldConfig(options: {
   hookType: 'pre' | 'post';
   routeId?: string;
   hookId?: string | number | null;
+  method?: any;
+  availableMethods?: string[];
+  routePath?: string;
 }) {
   return {
     description: options.hookType === 'post'
       ? 'Do not return a value. Update @DATA or $ctx.$data instead.'
       : 'Return is optional. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.',
     testRun: {
+      configure: true,
+      method: options.method?.method ?? options.method,
+      methods: options.availableMethods,
+      routePath: options.routePath,
       tableName: options.hookType === 'pre' ? 'pre_hook_definition' : 'post_hook_definition',
       payload: {
         routeId: options.routeId,

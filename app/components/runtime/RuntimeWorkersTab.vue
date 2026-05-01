@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { fmtMs, fmtNumber } from '~/utils/runtime-monitor/format';
 import {
-  badgeColor,
   metricTextClass,
 } from '~/utils/runtime-monitor/core';
 import {
@@ -19,7 +18,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
 </script>
 
 <template>
-  <div class="grid gap-4">
+  <CommonAnimatedGrid grid-class="grid gap-4">
     <section
       v-for="metrics in runtime.instances"
       :key="metrics.instance.id"
@@ -27,9 +26,10 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
     >
       <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div class="font-medium text-[var(--text-primary)]">{{ metrics.instance.id }}</div>
-        <UBadge :color="badgeColor(workerSeverity(metrics))" variant="soft">
-          {{ workerSeverity(metrics) === 'error' ? 'Critical' : workerSeverity(metrics) === 'warning' ? 'Attention' : 'Healthy' }}
-        </UBadge>
+        <RuntimeStatusBadge
+          :severity="metrics.health?.workers?.severity ?? workerSeverity(metrics)"
+          :messages="metrics.health?.workers?.messages ?? workerWarnings(metrics)"
+        />
       </div>
 
       <div
@@ -100,5 +100,5 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
         </div>
       </div>
     </section>
-  </div>
+  </CommonAnimatedGrid>
 </template>

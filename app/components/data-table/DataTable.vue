@@ -146,6 +146,9 @@ const selectedRows = computed(() => {
   if (!table.value) return []
   return table.value.getSelectedRowModel().rows.map((row: any) => row.original);
 });
+const tableRows = computed(() => table.value?.getRowModel().rows || []);
+const showInitialLoading = computed(() => props.loading && props.data.length === 0);
+const isRefreshing = computed(() => props.loading && props.data.length > 0);
 
 watch(
   () => props.selectedItems,
@@ -304,9 +307,12 @@ function getColumnLabel(columnId: string) {
     <template v-else-if="table">
       
       <div class="lg:hidden">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <CommonAnimatedGrid
+          v-if="tableRows.length > 0"
+          grid-class="grid grid-cols-1 md:grid-cols-2 gap-3"
+        >
           <article
-            v-for="(row, index) in table.getRowModel().rows"
+            v-for="row in tableRows"
             :key="row.id"
             class="surface-card rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:bg-[var(--surface-muted)] active:scale-[0.99]"
             :class="selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original)) ? 'ring-2 ring-[var(--color-primary-500)]' : ''"
@@ -385,7 +391,7 @@ function getColumnLabel(columnId: string) {
               </span>
             </footer>
           </article>
-        </div>
+        </CommonAnimatedGrid>
 
         <div v-if="!loading && props.data.length === 0" class="py-8 text-center">
           <CommonEmptyState
@@ -396,7 +402,7 @@ function getColumnLabel(columnId: string) {
             size="sm"
           />
         </div>
-        <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div v-if="showInitialLoading" class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div
           v-for="i in (props.skeletonRows || 5)"
           :key="`mobile-skeleton-${i}`"
@@ -423,7 +429,8 @@ function getColumnLabel(columnId: string) {
     </div>
 
     <div
-      class="hidden lg:block surface-card rounded-2xl overflow-hidden"
+      class="hidden lg:block surface-card rounded-2xl overflow-hidden relative"
+      :class="isRefreshing ? 'after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-primary after:animate-pulse' : ''"
     >
       <div class="max-w-full overflow-x-auto overflow-y-auto custom-scrollbar">
         <table class="min-w-full divide-y divide-[var(--table-header-border)]" aria-label="Data table">
@@ -488,8 +495,11 @@ function getColumnLabel(columnId: string) {
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-[var(--table-cell-border)]">
-            <template v-if="loading">
+          <tbody
+            class="divide-y divide-[var(--table-cell-border)] transition-opacity duration-200"
+            :class="isRefreshing ? 'opacity-70' : 'opacity-100'"
+          >
+            <template v-if="showInitialLoading">
               <tr v-for="i in (props.skeletonRows || 5)" :key="`skeleton-${i}`" class="animate-pulse">
                 <td
                   v-for="(header, headerIndex) in table?.getFlatHeaders() || []"
@@ -508,7 +518,7 @@ function getColumnLabel(columnId: string) {
                 </td>
               </tr>
             </template>
-            <template v-else v-for="(row, index) in table?.getRowModel().rows || []" :key="row.id">
+            <template v-else v-for="row in tableRows" :key="row.id">
               
               <UContextMenu
                 v-if="props.contextMenuItems"

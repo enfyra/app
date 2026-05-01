@@ -2,7 +2,7 @@
   <div class="extension-manager-page">
     <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
-        v-if="!isMounted || loading"
+        v-if="showInitialLoading"
         title="Loading extensions..."
         description="Fetching extension registry"
         size="md"
@@ -10,14 +10,9 @@
         context="page"
       />
 
-      <div
+      <CommonAnimatedGrid
         v-else-if="extensions.length > 0"
-        class="grid gap-4"
-        :class="
-          isTablet
-            ? 'grid-cols-2'
-            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
-        "
+        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
       >
         <CommonSettingsCard
           v-for="extension in extensions"
@@ -56,7 +51,7 @@
           :header-actions="getHeaderActions(extension)"
           :actions="getFooterActions(extension)"
         </CommonSettingsCard>
-      </div>
+      </CommonAnimatedGrid>
 
       <CommonEmptyState
         v-else
@@ -68,7 +63,7 @@
     </Transition>
 
     <div
-      v-if="!loading && extensions.length > 0 && total > limit"
+      v-if="extensions.length > 0 && total > limit"
       class="flex items-center justify-between mt-6"
     >
       <UPagination
@@ -135,6 +130,7 @@ const {
 const { fetchMenuDefinitions } = useMenuApi();
 
 const extensions = computed(() => apiData.value?.data || []);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 

@@ -2,7 +2,7 @@
   <div class="storage-config-page">
     <Transition name="loading-fade" mode="out-in">
       <div
-        v-if="!isMounted || loading"
+        v-if="showInitialLoading"
         class="space-y-3"
       >
         <div
@@ -50,9 +50,9 @@
         </div>
       </div>
 
-      <div
+      <CommonAnimatedGrid
         v-else-if="storageConfigs.length > 0"
-        class="space-y-3"
+        grid-class="space-y-3"
       >
         <CommonListItem
           v-for="config in storageConfigs"
@@ -103,7 +103,7 @@
             </div>
           </template>
         </CommonListItem>
-      </div>
+      </CommonAnimatedGrid>
 
       <CommonEmptyState
         v-else
@@ -115,7 +115,7 @@
     </Transition>
 
     <div
-      v-if="!loading && storageConfigs.length > 0 && total > limit"
+      v-if="storageConfigs.length > 0 && total > limit"
       class="flex items-center justify-between mt-6"
     >
       <UPagination
@@ -181,6 +181,7 @@ const {
 
 const storageConfigs = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
 
 
 const { execute: updateConfig, error: updateError } = useApi(
