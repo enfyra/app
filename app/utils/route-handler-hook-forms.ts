@@ -31,6 +31,7 @@ export function getRouteHandlerSourceCodeFieldConfig(options: {
     description: 'Must return a value. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.',
     testRun: {
       configure: true,
+      nested: true,
       method: options.method?.method ?? options.method,
       methods: options.availableMethods,
       routePath: options.routePath,
@@ -58,6 +59,7 @@ export function getRouteHookSourceCodeFieldConfig(options: {
       : 'Return is optional. Use @BODY, @QUERY, @PARAMS, @USER, #table_name, @HELPERS.',
     testRun: {
       configure: true,
+      nested: true,
       method: options.method?.method ?? options.method,
       methods: options.availableMethods,
       routePath: options.routePath,
