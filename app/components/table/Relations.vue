@@ -140,7 +140,7 @@ function confirmCreateInverse() {
     return;
   }
   const inverseType = getInverseType(incoming.type);
-  const sourceTableId = String(incoming.sourceTableId ?? incoming.sourceTable?.id ?? incoming.sourceTable);
+  const sourceTableId = incoming.sourceTableId ?? incoming.sourceTable?.id ?? incoming.sourceTable;
   relations.value.push({
     propertyName: name,
     type: inverseType,

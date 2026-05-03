@@ -5,6 +5,7 @@ type TestRunConfig = {
   kind?: string;
   label?: string;
   configure?: boolean;
+  nested?: boolean;
   method?: string;
   methods?: string[];
   routePath?: string;
@@ -677,7 +678,7 @@ function handleMouseUp(e?: MouseEvent) {
     </div>
   </div>
 
-  <CommonDrawer v-model="showTestSetup" nested>
+  <CommonDrawer v-model="showTestSetup" :nested="testRunConfig?.nested === true">
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-flask-conical" class="w-5 h-5 text-primary-500" />
