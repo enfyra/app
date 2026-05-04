@@ -6,7 +6,7 @@ import {
   getGuardTemplatesForScope,
 } from '~/utils/guard-templates'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   tableName?: string
   routeId?: string
   externalApiTest?: boolean
@@ -14,7 +14,13 @@ const props = defineProps<{
   showEmptyState?: boolean
   canUpdateRoute?: boolean
   syncQuery?: boolean
-}>()
+}>(), {
+  externalApiTest: false,
+  showMainTableCard: false,
+  showEmptyState: true,
+  canUpdateRoute: true,
+  syncQuery: false,
+})
 
 const emit = defineEmits<{
   'close-api-test': []
@@ -159,6 +165,35 @@ async function handleReset() {
     notify.success("Reset Complete", "All changes have been discarded.")
   }
 }
+
+useHeaderActionRegistry([
+  {
+    id: 'reset-route',
+    label: 'Reset',
+    icon: 'lucide:rotate-ccw',
+    variant: 'outline',
+    color: 'warning',
+    order: 1,
+    show: computed(() => props.syncQuery !== true && hasFormChanges.value),
+    disabled: computed(() => routeLoading.value || updateLoading.value || !hasFormChanges.value),
+    onClick: handleReset,
+  },
+  {
+    id: 'save-route',
+    label: 'Save',
+    icon: 'lucide:save',
+    variant: 'solid',
+    color: 'primary',
+    order: 999,
+    show: computed(() => props.syncQuery !== true && !!routeData.value?.data?.[0] && props.canUpdateRoute !== false),
+    loading: computed(() => updateLoading.value),
+    disabled: computed(() => routeLoading.value || !routeId.value || !hasFormChanges.value),
+    onClick: updateRoute,
+    permission: {
+      and: [{ route: '/route_definition', actions: ['update'] }],
+    },
+  },
+])
 
 const {
   data: handlersData,

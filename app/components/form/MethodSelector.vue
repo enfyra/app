@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import {
+  filterMethodsByAllowedMethodNames,
+  getMethodIdentity,
+  getSelectedMethodIdentities,
+} from '~/utils/form/method-selector';
+
 const GQL_METHODS = ['GQL_QUERY', 'GQL_MUTATION'];
 
 const props = withDefaults(
@@ -70,23 +76,19 @@ const availableMethods = computed(() => {
   return list;
 });
 
-const selectedIds = computed(() => {
-  if (props.multiple) {
-    if (!Array.isArray(props.modelValue)) return new Set<string>();
-    return new Set(props.modelValue.map((m: any) => getId(m)).filter(Boolean));
-  }
-  const id = getId(props.modelValue);
-  return id ? new Set([id]) : new Set<string>();
+const selectedIdentities = computed(() => {
+  return getSelectedMethodIdentities(props.modelValue, props.multiple, getId);
 });
 
 function selectMethod(methodObj: any) {
   if (props.disabled) return;
 
   const targetId = getId(methodObj);
+  const targetIdentity = getMethodIdentity(methodObj, getId);
 
   if (props.multiple) {
     const currentArray = Array.isArray(props.modelValue) ? props.modelValue : [];
-    const existingIndex = currentArray.findIndex((m: any) => getId(m) === targetId);
+    const existingIndex = currentArray.findIndex((m: any) => getMethodIdentity(m, getId) === targetIdentity);
 
     if (existingIndex >= 0) {
       const newArray = [...currentArray];
@@ -97,7 +99,7 @@ function selectMethod(methodObj: any) {
       emit('update:modelValue', [...currentArray, newMethod]);
     }
   } else {
-    if (targetId && selectedIds.value.has(targetId)) {
+    if (targetIdentity && selectedIdentities.value.has(targetIdentity)) {
       emit('update:modelValue', null);
     } else {
       const newMethod = targetId ? methodObj : { method: methodObj.method };
@@ -107,7 +109,8 @@ function selectMethod(methodObj: any) {
 }
 
 function isSelected(methodObj: any): boolean {
-  return selectedIds.value.has(getId(methodObj));
+  const identity = getMethodIdentity(methodObj, getId);
+  return identity ? selectedIdentities.value.has(identity) : false;
 }
 
 function getMethodColor(method: string): 'success' | 'info' | 'warning' | 'error' | 'neutral' {
@@ -118,25 +121,14 @@ watch([() => props.modelValue, () => props.allowedMethods], () => {
   const allowed = props.allowedMethods;
   if (!Array.isArray(allowed)) return;
 
-  const allowedIds = new Set<string>();
-  for (const methodStr of allowed) {
-    const cached = methodsCache.value.find((m: any) => m?.method === methodStr);
-    if (cached) {
-      const id = getId(cached);
-      if (id) allowedIds.add(id);
-    }
-  }
-
   if (props.multiple && Array.isArray(props.modelValue)) {
-    const filtered = allowedIds.size > 0
-      ? props.modelValue.filter((m: any) => allowedIds.has(getId(m)))
-      : [];
+    const filtered = filterMethodsByAllowedMethodNames(props.modelValue, allowed);
     if (filtered.length !== props.modelValue.length) {
       emit('update:modelValue', filtered);
     }
   } else if (props.modelValue) {
-    const currentId = getId(props.modelValue);
-    if (currentId && (allowedIds.size === 0 || !allowedIds.has(currentId))) {
+    const filtered = filterMethodsByAllowedMethodNames(props.modelValue, allowed);
+    if (filtered === null) {
       emit('update:modelValue', null);
     }
   }

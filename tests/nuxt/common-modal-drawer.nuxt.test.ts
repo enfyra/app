@@ -55,6 +55,23 @@ const UButtonStub = defineComponent({
 })
 
 describe('CommonModal', () => {
+  it('defaults closed when modelValue is omitted', async () => {
+    const wrapper = await mountSuspended(CommonModal, {
+      route: '/login',
+      slots: {
+        title: () => 'Title',
+        body: () => 'Body',
+      },
+      global: {
+        stubs: {
+          UModal: UModalStub,
+        },
+      },
+    })
+
+    expect(wrapper.get('[data-testid="u-modal"]').attributes('data-open')).toBe('false')
+  })
+
   it('blocks close when preventClose is true', async () => {
     const wrapper = await mountSuspended(CommonModal, {
       route: '/login',
