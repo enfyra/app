@@ -1,13 +1,14 @@
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{
-    modelValue: boolean;
+    modelValue?: boolean;
     class?: string;
     handle?: boolean;
     preventClose?: boolean;
     ui?: Record<string, string>;
   }>(),
   {
+    modelValue: false,
     handle: false,
     preventClose: false,
   }
