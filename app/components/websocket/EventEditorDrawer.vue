@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { WebsocketEventDataShapeField } from '../../types/websocket-event-data-shape';
+import type {
+  WebsocketEventDataShapeField,
+  WebsocketNativeActionConfig,
+  WebsocketNativeFlowTriggerConfig,
+} from '../../types/websocket-event-data-shape';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -21,10 +25,13 @@ const { getIdFieldName, getId } = useDatabase();
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 const dataShape = ref<WebsocketEventDataShapeField[]>([]);
+const socketAction = ref<WebsocketNativeActionConfig | null>(null);
+const triggerFlow = ref<WebsocketNativeFlowTriggerConfig | null>(null);
 const hasFormChanges = ref(false);
 const showDiscardModal = ref(false);
 const initialSnapshot = ref<string | null>(null);
 const formEditorRef = ref();
+const dataShapeBuilderRef = ref();
 
 defineExpose({
   hasFormChanges,
@@ -95,6 +102,8 @@ watch(
         errors.value = {};
       }
       dataShape.value = createInitialDataShape(form.value);
+      socketAction.value = normalizeSocketAction(form.value.socketAction);
+      triggerFlow.value = normalizeTriggerFlow(form.value.triggerFlow);
       await nextTick();
       initialSnapshot.value = createSnapshot();
       hasFormChanges.value = false;
@@ -104,6 +113,8 @@ watch(
     form.value = {};
     errors.value = {};
     dataShape.value = [];
+    socketAction.value = null;
+    triggerFlow.value = null;
     initialSnapshot.value = null;
     showDiscardModal.value = false;
     hasFormChanges.value = false;
@@ -127,6 +138,15 @@ async function initializeForm() {
 }
 
 async function handleSave() {
+  if (dataShapeBuilderRef.value?.validate?.() === false) {
+    notify.error('Invalid Flow Payload', 'Trigger flow payload is invalid or incomplete.');
+    return;
+  }
+
+  form.value.dataShape = dataShape.value;
+  form.value.socketAction = dataShapeBuilderRef.value?.getSocketAction?.() ?? socketAction.value;
+  form.value.triggerFlow = dataShapeBuilderRef.value?.getTriggerFlow?.() ?? triggerFlow.value;
+
   const { isValid, errors: validationErrors } = validate(form.value);
 
   if (!isValid) {
@@ -191,11 +211,33 @@ function onDataShapeUpdate(value: WebsocketEventDataShapeField[]) {
   hasFormChanges.value = createSnapshot() !== initialSnapshot.value;
 }
 
+function onSocketActionUpdate(value: WebsocketNativeActionConfig | null) {
+  socketAction.value = value;
+  hasFormChanges.value = createSnapshot() !== initialSnapshot.value;
+}
+
+function onTriggerFlowUpdate(value: WebsocketNativeFlowTriggerConfig | null) {
+  triggerFlow.value = value;
+  hasFormChanges.value = createSnapshot() !== initialSnapshot.value;
+}
+
 function createSnapshot() {
   return stableStringify({
     form: form.value,
     dataShape: dataShape.value,
+    socketAction: socketAction.value,
+    triggerFlow: triggerFlow.value,
   });
+}
+
+function normalizeSocketAction(value: unknown): WebsocketNativeActionConfig | null {
+  if (!value || typeof value !== 'object') return null;
+  return value as WebsocketNativeActionConfig;
+}
+
+function normalizeTriggerFlow(value: unknown): WebsocketNativeFlowTriggerConfig | null {
+  if (!value || typeof value !== 'object') return null;
+  return value as WebsocketNativeFlowTriggerConfig;
 }
 
 function createInitialDataShape(record: Record<string, any>) {
@@ -274,8 +316,13 @@ function createInitialDataShape(record: Record<string, any>) {
         />
 
         <WebsocketDataShapeBuilder
+          ref="dataShapeBuilderRef"
           :model-value="dataShape"
+          :socket-action="socketAction"
+          :trigger-flow="triggerFlow"
           @update:model-value="onDataShapeUpdate"
+          @update:socket-action="onSocketActionUpdate"
+          @update:trigger-flow="onTriggerFlowUpdate"
         />
       </div>
     </template>

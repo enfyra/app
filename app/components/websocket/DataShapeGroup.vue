@@ -68,7 +68,7 @@ function removeField(index: number) {
 <template>
   <div
     :class="[
-      'space-y-2',
+      currentLevel > 0 ? 'space-y-2' : 'grid grid-cols-1 gap-2 xl:grid-cols-2',
       currentLevel > 0 ? 'border-l-2 border-[var(--border-default)] pl-3' : '',
     ]"
   >
@@ -129,7 +129,7 @@ function removeField(index: number) {
       />
     </div>
 
-    <div class="flex flex-wrap gap-2">
+    <div :class="['flex flex-wrap gap-2', currentLevel === 0 ? 'xl:col-span-2' : '']">
       <UButton icon="lucide:plus" size="xs" variant="soft" @click="addField">
         Add Field
       </UButton>
