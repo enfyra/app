@@ -122,6 +122,7 @@ function makeStepNode(step: any, x: number, y: number, isFirst = false, isLast =
       label: step.key,
       stepType: step.type,
       config: step.config,
+      sourceCode: step.sourceCode ?? step.config?.sourceCode ?? step.config?.code ?? null,
       timeout: step.timeout,
       onError: step.onError,
       retryAttempts: step.retryAttempts,

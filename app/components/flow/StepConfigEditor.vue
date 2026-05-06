@@ -2,17 +2,33 @@
   <div class="space-y-3 w-full">
     <!-- Script -->
     <template v-if="type === 'script'">
-      <p class="text-[11px] text-[var(--text-tertiary)]">Must <code class="bg-[var(--surface-muted)] px-1 rounded">return</code> a value. Access repos via <code class="bg-[var(--surface-muted)] px-1 rounded">#table_name</code>, previous steps via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW.step_key</code>, input via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW_PAYLOAD</code>.</p>
-      <UFormField label="Code" class="w-full">
-        <FormCodeEditorLazy :model-value="sourceCode" @update:model-value="update('sourceCode', $event)" :language="scriptLanguage" :enfyra-autocomplete="true" :test-run="false" height="220px" class="w-full" />
+      <UFormField label="sourceCode" class="w-full">
+        <FormCodeEditorLazy :model-value="sourceCode" @update:model-value="updateSourceCode" :language="scriptLanguage" :enfyra-autocomplete="true" :test-run="false" height="300px" class="w-full" />
+        <template #hint>
+          <span>Must return a value. Use @FLOW_PAYLOAD, @FLOW_LAST, @FLOW.step_key, #table_name, @HELPERS.</span>
+        </template>
+      </UFormField>
+      <UFormField label="scriptLanguage" required class="w-full">
+        <FormEnumPicker :model-value="scriptLanguage" :options="scriptLanguageOptions" required size="sm" layout="inline" @update:model-value="updateScriptLanguage" />
+        <template #hint>
+          <span>Language used by sourceCode before server compilation</span>
+        </template>
       </UFormField>
     </template>
 
     <!-- Condition -->
     <template v-else-if="type === 'condition'">
-      <p class="text-[11px] text-[var(--text-tertiary)]">Uses JS truthy/falsy. <code class="bg-[var(--surface-muted)] px-1 rounded">return user</code> (truthy if exists), <code class="bg-[var(--surface-muted)] px-1 rounded">return null</code> (falsy). Each branch executes different child steps.</p>
-      <UFormField label="Condition Code" class="w-full">
-        <FormCodeEditorLazy :model-value="sourceCode" @update:model-value="update('sourceCode', $event)" :language="scriptLanguage" :enfyra-autocomplete="true" :test-run="false" height="120px" class="w-full" />
+      <UFormField label="sourceCode" class="w-full">
+        <FormCodeEditorLazy :model-value="sourceCode" @update:model-value="updateSourceCode" :language="scriptLanguage" :enfyra-autocomplete="true" :test-run="false" height="220px" class="w-full" />
+        <template #hint>
+          <span>Must return a truthy or falsy value. Use @FLOW_PAYLOAD, @FLOW_LAST, @FLOW.step_key, #table_name, @HELPERS.</span>
+        </template>
+      </UFormField>
+      <UFormField label="scriptLanguage" required class="w-full">
+        <FormEnumPicker :model-value="scriptLanguage" :options="scriptLanguageOptions" required size="sm" layout="inline" @update:model-value="updateScriptLanguage" />
+        <template #hint>
+          <span>Language used by sourceCode before server compilation</span>
+        </template>
       </UFormField>
     </template>
 
@@ -127,14 +143,22 @@
 <script setup lang="ts">
 import type { StepType } from '~/types/flow';
 import type { FilterGroup, FilterCondition } from '~/utils/common/filter/filter-types';
+import type { ScriptLanguage } from '~/types/script-contract';
+import { normalizeScriptLanguage } from '~/utils/script-contract';
 
 interface Props {
   type: StepType | string;
   configJson: string;
+  sourceCode?: string | null;
+  scriptLanguage?: ScriptLanguage | string | null;
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits<{ 'update:configJson': [value: string] }>();
+const emit = defineEmits<{
+  'update:configJson': [value: string];
+  'update:sourceCode': [value: string | null];
+  'update:scriptLanguage': [value: ScriptLanguage];
+}>();
 
 const fields = computed(() => {
   try {
@@ -144,17 +168,25 @@ const fields = computed(() => {
   }
 });
 
-const scriptLanguage = computed<'typescript'>(() => 'typescript');
+const scriptLanguageOptions = [
+  { label: 'javascript', value: 'javascript' },
+  { label: 'typescript', value: 'typescript' },
+] satisfies { label: string; value: ScriptLanguage }[];
 
-const sourceCode = computed(() => fields.value.sourceCode ?? fields.value.code ?? '');
+const scriptLanguage = computed<ScriptLanguage>(() => normalizeScriptLanguage(props.scriptLanguage));
+
+const sourceCode = computed(() => props.sourceCode ?? fields.value.sourceCode ?? fields.value.code ?? '');
+
+function updateScriptLanguage(value: unknown) {
+  emit('update:scriptLanguage', normalizeScriptLanguage(value));
+}
+
+function updateSourceCode(value: string) {
+  emit('update:sourceCode', value === '' ? null : value);
+}
 
 function update(field: string, value: any) {
   const current = { ...fields.value };
-  if (field === 'sourceCode') {
-    current.scriptLanguage = 'typescript';
-    delete current.compiledCode;
-    delete current.code;
-  }
   if (value === '' || value === undefined || value === null) {
     delete current[field];
   } else {

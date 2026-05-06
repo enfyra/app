@@ -1,3 +1,5 @@
+import { normalizeScriptLanguage } from "~/utils/script-contract";
+
 export function isValidAbsoluteHttpUrl(value: unknown): value is string {
   if (typeof value !== "string" || value.length === 0) {
     return false;
@@ -75,7 +77,7 @@ export async function validateOAuthUserProvisioningScript(
   );
   const result = await validateEnfyraObjectReturnScript(
     sourceCode,
-    form.scriptLanguage === "javascript" ? "javascript" : "typescript"
+    normalizeScriptLanguage(form.scriptLanguage)
   );
 
   if (result.ok) {

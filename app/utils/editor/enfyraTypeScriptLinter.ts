@@ -45,16 +45,51 @@ const macroReplacements = new Map([
 ]);
 
 const libSource = `
-interface Array<T> { length: number; [n: number]: T; }
+interface Array<T> {
+  length: number;
+  [n: number]: T;
+  filter<S extends T>(predicate: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S[];
+  filter(predicate: (value: T, index: number, array: T[]) => any, thisArg?: any): T[];
+  [Symbol.iterator](): IterableIterator<T>;
+}
+interface ArrayConstructor {
+  isArray(arg: any): arg is any[];
+}
+declare const Array: ArrayConstructor;
 interface Boolean {}
+interface BooleanConstructor {
+  (value?: any): boolean;
+  new (value?: any): Boolean;
+}
+declare const Boolean: BooleanConstructor;
 interface CallableFunction {}
 interface Function {}
 interface IArguments {}
 interface NewableFunction {}
-interface Number {}
+interface Number {
+  toString(radix?: number): string;
+  valueOf(): number;
+}
+interface NumberConstructor {
+  (value?: any): number;
+  new (value?: any): Number;
+  isFinite(number: unknown): boolean;
+  isInteger(number: unknown): boolean;
+  isNaN(number: unknown): boolean;
+  parseFloat(string: string): number;
+  parseInt(string: string, radix?: number): number;
+}
+declare const Number: NumberConstructor;
 interface Object {}
 interface RegExp {}
-interface String {}
+interface String {
+  split(separator?: string | RegExp, limit?: number): string[];
+}
+interface StringConstructor {
+  (value?: any): string;
+  new (value?: any): String;
+}
+declare const String: StringConstructor;
 interface PromiseLike<T> {
   then<TResult1 = T, TResult2 = never>(
     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
@@ -67,6 +102,22 @@ interface PromiseConstructor {
   resolve<T>(value: T | Promise<T>): Promise<T>;
 }
 declare const Promise: PromiseConstructor;
+interface IteratorYieldResult<TYield> { done?: false; value: TYield; }
+interface IteratorReturnResult<TReturn> { done: true; value: TReturn; }
+type IteratorResult<T, TReturn = any> = IteratorYieldResult<T> | IteratorReturnResult<TReturn>;
+interface Iterator<T, TReturn = any, TNext = undefined> {
+  next(...args: [] | [TNext]): IteratorResult<T, TReturn>;
+}
+interface Iterable<T> {
+  [Symbol.iterator](): Iterator<T>;
+}
+interface IterableIterator<T> extends Iterator<T> {
+  [Symbol.iterator](): IterableIterator<T>;
+}
+interface SymbolConstructor {
+  readonly iterator: symbol;
+}
+declare const Symbol: SymbolConstructor;
 type PropertyKey = string | number | symbol;
 type Record<K extends PropertyKey, T> = { [P in K]: T };
 type Partial<T> = { [P in keyof T]?: T[P] };
