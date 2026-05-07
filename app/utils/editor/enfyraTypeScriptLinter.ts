@@ -95,7 +95,24 @@ interface NumberConstructor {
   parseInt(string: string, radix?: number): number;
 }
 declare const Number: NumberConstructor;
-interface Object {}
+interface Object {
+  hasOwnProperty(v: PropertyKey): boolean;
+  toString(): string;
+  valueOf(): Object;
+}
+interface ObjectConstructor {
+  (value?: any): any;
+  new (value?: any): Object;
+  assign<T extends object, U>(target: T, source: U): T & U;
+  create(o: object | null): any;
+  entries<T = any>(o: any): [string, T][];
+  getOwnPropertyDescriptor(o: any, p: PropertyKey): any;
+  getOwnPropertyDescriptors<T>(o: T): any;
+  hasOwn(o: object, v: PropertyKey): boolean;
+  keys(o: any): string[];
+  values<T = any>(o: any): T[];
+}
+declare const Object: ObjectConstructor;
 interface RegExp {}
 interface String {
   split(separator?: string | RegExp, limit?: number): string[];
