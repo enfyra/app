@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import type {
-  WebsocketEventDataShapeField,
-  WebsocketNativeActionConfig,
-  WebsocketNativeFlowTriggerConfig,
-} from '../../types/websocket-event-data-shape';
+import type { ScriptLanguage } from '~/types/script-contract';
+import { normalizeScriptLanguage } from '~/utils/script-contract';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -24,14 +21,14 @@ const { getIdFieldName, getId } = useDatabase();
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
-const dataShape = ref<WebsocketEventDataShapeField[]>([]);
-const socketAction = ref<WebsocketNativeActionConfig | null>(null);
-const triggerFlow = ref<WebsocketNativeFlowTriggerConfig | null>(null);
 const hasFormChanges = ref(false);
 const showDiscardModal = ref(false);
 const initialSnapshot = ref<string | null>(null);
 const formEditorRef = ref();
-const dataShapeBuilderRef = ref();
+const scriptLanguageOptions = [
+  { label: 'javascript', value: 'javascript' },
+  { label: 'typescript', value: 'typescript' },
+];
 
 defineExpose({
   hasFormChanges,
@@ -99,11 +96,12 @@ watch(
       } else {
         form.value = generateEmptyForm();
         form.value.gateway = props.gatewayId;
+        form.value.scriptLanguage = 'typescript';
+        form.value.sourceCode = createDefaultEventSourceCode();
+        form.value.compiledCode = null;
         errors.value = {};
       }
-      dataShape.value = createInitialDataShape(form.value);
-      socketAction.value = normalizeSocketAction(form.value.socketAction);
-      triggerFlow.value = normalizeTriggerFlow(form.value.triggerFlow);
+      normalizeEventScriptFields();
       await nextTick();
       initialSnapshot.value = createSnapshot();
       hasFormChanges.value = false;
@@ -112,9 +110,6 @@ watch(
 
     form.value = {};
     errors.value = {};
-    dataShape.value = [];
-    socketAction.value = null;
-    triggerFlow.value = null;
     initialSnapshot.value = null;
     showDiscardModal.value = false;
     hasFormChanges.value = false;
@@ -138,14 +133,12 @@ async function initializeForm() {
 }
 
 async function handleSave() {
-  if (dataShapeBuilderRef.value?.validate?.() === false) {
-    notify.error('Invalid Flow Payload', 'Trigger flow payload is invalid or incomplete.');
+  if (!String(form.value.sourceCode || '').trim()) {
+    errors.value.sourceCode = 'sourceCode is required.';
+    notify.error('Validation Error', 'Please provide an event handler script.');
     return;
   }
-
-  form.value.dataShape = dataShape.value;
-  form.value.socketAction = dataShapeBuilderRef.value?.getSocketAction?.() ?? socketAction.value;
-  form.value.triggerFlow = dataShapeBuilderRef.value?.getTriggerFlow?.() ?? triggerFlow.value;
+  form.value.scriptLanguage = normalizeScriptLanguage(form.value.scriptLanguage);
 
   const { isValid, errors: validationErrors } = validate(form.value);
 
@@ -178,8 +171,6 @@ async function handleSave() {
     }
   }
 
-  notify.success('Success');
-
   hasFormChanges.value = false;
   emit('save');
   emit('update:modelValue', false);
@@ -206,79 +197,35 @@ function confirmDiscard() {
   emit('update:modelValue', false);
 }
 
-function onDataShapeUpdate(value: WebsocketEventDataShapeField[]) {
-  dataShape.value = value;
+function updateSourceCode(value: string) {
+  form.value.sourceCode = value === '' ? null : value;
+  form.value.compiledCode = null;
   hasFormChanges.value = createSnapshot() !== initialSnapshot.value;
 }
 
-function onSocketActionUpdate(value: WebsocketNativeActionConfig | null) {
-  socketAction.value = value;
+function updateScriptLanguage(value: unknown) {
+  form.value.scriptLanguage = normalizeScriptLanguage(value);
+  form.value.compiledCode = null;
   hasFormChanges.value = createSnapshot() !== initialSnapshot.value;
 }
 
-function onTriggerFlowUpdate(value: WebsocketNativeFlowTriggerConfig | null) {
-  triggerFlow.value = value;
-  hasFormChanges.value = createSnapshot() !== initialSnapshot.value;
+function normalizeEventScriptFields() {
+  form.value.scriptLanguage = normalizeScriptLanguage(form.value.scriptLanguage);
+  form.value.sourceCode =
+    form.value.sourceCode === undefined ? null : form.value.sourceCode;
+  form.value.compiledCode = form.value.compiledCode ?? null;
 }
 
 function createSnapshot() {
   return stableStringify({
     form: form.value,
-    dataShape: dataShape.value,
-    socketAction: socketAction.value,
-    triggerFlow: triggerFlow.value,
   });
 }
 
-function normalizeSocketAction(value: unknown): WebsocketNativeActionConfig | null {
-  if (!value || typeof value !== 'object') return null;
-  return value as WebsocketNativeActionConfig;
-}
+function createDefaultEventSourceCode() {
+  return `const data = $ctx.$data || {};
 
-function normalizeTriggerFlow(value: unknown): WebsocketNativeFlowTriggerConfig | null {
-  if (!value || typeof value !== 'object') return null;
-  return value as WebsocketNativeFlowTriggerConfig;
-}
-
-function createInitialDataShape(record: Record<string, any>) {
-  const existing = normalizeWebsocketEventDataShape(
-    record.dataShape || record.inputSchema || record.payloadSchema,
-  );
-  if (existing.length) return existing;
-  return [
-    createWebsocketEventDataShapeField({
-      name: 'roomId',
-      type: 'string',
-      required: true,
-    }),
-    createWebsocketEventDataShapeField({
-      name: 'eventId',
-      type: 'string',
-      required: true,
-    }),
-    createWebsocketEventDataShapeField({
-      name: 'payload',
-      type: 'object',
-      required: true,
-      children: [
-        createWebsocketEventDataShapeField({
-          name: 'status',
-          type: 'string',
-          required: false,
-        }),
-        createWebsocketEventDataShapeField({
-          name: 'value',
-          type: 'number',
-          required: false,
-        }),
-      ],
-    }),
-    createWebsocketEventDataShapeField({
-      name: 'timestamp',
-      type: 'number',
-      required: true,
-    }),
-  ];
+$ctx.$socket.reply('event:received', data);`;
 }
 </script>
 
@@ -307,23 +254,48 @@ function createInitialDataShape(record: Record<string, any>) {
             'compiledCode',
             'handlerScript',
             'scriptLanguage',
-            'dataShape',
-            'socketAction',
-            'triggerFlow',
           ]"
           :loading="loading"
           @has-changed="(hasChanged) => (hasFormChanges = hasChanged || createSnapshot() !== initialSnapshot)"
         />
 
-        <WebsocketDataShapeBuilder
-          ref="dataShapeBuilderRef"
-          :model-value="dataShape"
-          :socket-action="socketAction"
-          :trigger-flow="triggerFlow"
-          @update:model-value="onDataShapeUpdate"
-          @update:socket-action="onSocketActionUpdate"
-          @update:trigger-flow="onTriggerFlowUpdate"
-        />
+        <div class="surface-card rounded-xl p-4 space-y-4">
+          <div>
+            <h3 class="text-base font-semibold text-[var(--text-primary)]">Event Handler Script</h3>
+            <p class="text-sm text-[var(--text-secondary)]">
+              Runs inline on the socket gateway. Use <span class="font-mono">@SOCKET</span>, <span class="font-mono">@DATA</span>, <span class="font-mono">@USER</span>, <span class="font-mono">@TRIGGER</span>, and <span class="font-mono">#table_name</span>.
+            </p>
+          </div>
+
+          <UFormField label="sourceCode" :error="errors.sourceCode" class="w-full">
+            <FormCodeEditorLazy
+              :model-value="String(form.sourceCode || '')"
+              :language="normalizeScriptLanguage(form.scriptLanguage)"
+              :enfyra-autocomplete="true"
+              :test-run="false"
+              height="420px"
+              class="w-full"
+              @update:model-value="updateSourceCode"
+            />
+            <template #hint>
+              <span>Return is optional. Emit replies or broadcasts explicitly in code.</span>
+            </template>
+          </UFormField>
+
+          <UFormField label="scriptLanguage" required class="w-full">
+            <FormEnumPicker
+              :model-value="normalizeScriptLanguage(form.scriptLanguage)"
+              :options="scriptLanguageOptions"
+              required
+              size="sm"
+              layout="inline"
+              @update:model-value="updateScriptLanguage"
+            />
+            <template #hint>
+              <span>Language used by sourceCode before server compilation.</span>
+            </template>
+          </UFormField>
+        </div>
       </div>
     </template>
 

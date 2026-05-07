@@ -11,6 +11,7 @@ import {
 import { stripWsNs, addWsNs } from '../utils/ws-namespace';
 
 let engine: EngineServer | null = null;
+const BRIDGE_ENGINE_PATH = '/ws/socket.io/';
 
 function getWsUrl() {
   const api = String(useRuntimeConfig().public.apiUrl ?? '').replace(
@@ -31,6 +32,10 @@ const UPSTREAM_MAX_RETRIES = 10;
 const UPSTREAM_RETRY_BASE = 2000;
 const UPSTREAM_RETRY_MAX = 15_000;
 const UPSTREAM_BUFFER_CAP = 50;
+
+function isBridgeEngineRequest(url: string | undefined) {
+  return url === '/ws/socket.io' || url?.startsWith(BRIDGE_ENGINE_PATH);
+}
 
 function safeSend(socket: { send: (data: string | Buffer) => void }, data: string | Buffer) {
   try {
@@ -165,13 +170,16 @@ function startBridge(
 
 function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
   engine = new EngineServer({
-    cors: { origin: '*' },
+    cors: {
+      origin: true,
+      credentials: true,
+    },
     transports: ['polling', 'websocket'],
   });
 
   type UpgradeArgs = Parameters<EngineServer['handleUpgrade']>;
   httpServer.on('upgrade', (req, socket, head) => {
-    if (req.url?.startsWith('/socket.io/')) {
+    if (isBridgeEngineRequest(req.url)) {
       engine!.handleUpgrade(
         req as UpgradeArgs[0],
         socket as UpgradeArgs[1],
@@ -213,7 +221,7 @@ export default defineEventHandler((event) => {
     if (server) initEngine(server);
   }
 
-  if (engine && (event.node.req.url || '').startsWith('/socket.io/')) {
+  if (engine && isBridgeEngineRequest(event.node.req.url || '')) {
     engine.handleRequest(event.node.req as Parameters<EngineServer['handleRequest']>[0], event.node.res);
     return new Promise<void>((resolve) => {
       event.node.res.on('finish', resolve);

@@ -120,6 +120,7 @@ export function useAdminSocket() {
     ensureStaleReloadPruner();
 
     socket = io('/ws/enfyra-admin', {
+      path: '/ws/socket.io',
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,

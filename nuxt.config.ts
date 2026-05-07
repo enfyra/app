@@ -149,7 +149,7 @@ export default defineNuxtConfig({
     '/api/packages/**': {
       swr: 86400,
     },
-    '/socket.io/**': {
+    '/ws/socket.io/**': {
       ssr: false,
       cache: false,
     },

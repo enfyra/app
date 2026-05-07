@@ -62,6 +62,21 @@ interface BooleanConstructor {
   new (value?: any): Boolean;
 }
 declare const Boolean: BooleanConstructor;
+interface Date {
+  toISOString(): string;
+  toLocaleString(...args: any[]): string;
+  toLocaleDateString(...args: any[]): string;
+  toLocaleTimeString(...args: any[]): string;
+  getTime(): number;
+}
+interface DateConstructor {
+  new (): Date;
+  new (value: any): Date;
+  (value?: any): string;
+  now(): number;
+  parse(value: string): number;
+}
+declare const Date: DateConstructor;
 interface CallableFunction {}
 interface Function {}
 interface IArguments {}
@@ -84,6 +99,14 @@ interface Object {}
 interface RegExp {}
 interface String {
   split(separator?: string | RegExp, limit?: number): string[];
+  trim(): string;
+  toLowerCase(): string;
+  toUpperCase(): string;
+  includes(searchString: string, position?: number): boolean;
+  startsWith(searchString: string, position?: number): boolean;
+  endsWith(searchString: string, endPosition?: number): boolean;
+  slice(start?: number, end?: number): string;
+  substring(start: number, end?: number): string;
 }
 interface StringConstructor {
   (value?: any): string;
