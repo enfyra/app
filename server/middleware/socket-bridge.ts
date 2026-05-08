@@ -8,6 +8,7 @@ import {
   resolveSocketBridgeAuth,
   sendSocketBridgeAuthError,
 } from '../utils/socket-bridge-auth';
+import { isTransientNetworkError } from '../utils/transient-network-error';
 import { stripWsNs, addWsNs } from '../utils/ws-namespace';
 
 let engine: EngineServer | null = null;
@@ -18,7 +19,7 @@ function getWsUrl() {
     /\/+$/,
     '',
   );
-  return api.replace(/^http/, 'ws');
+  return api.replace(/\/api$/, '').replace(/^http/, 'ws');
 }
 
 type EngineSocket = {
@@ -32,6 +33,12 @@ const UPSTREAM_MAX_RETRIES = 10;
 const UPSTREAM_RETRY_BASE = 2000;
 const UPSTREAM_RETRY_MAX = 15_000;
 const UPSTREAM_BUFFER_CAP = 50;
+function handleBridgeError(error: unknown) {
+  if (isTransientNetworkError(error)) return;
+  throw error;
+}
+
+function ignoreBridgeIoError(_error: unknown) {}
 
 function isBridgeEngineRequest(url: string | undefined) {
   return url === '/ws/socket.io' || url?.startsWith(BRIDGE_ENGINE_PATH);
@@ -162,6 +169,7 @@ function startBridge(
   pendingBrowser.length = 0;
 
   browserSocket.on('close', cleanup);
+  browserSocket.on('error', ignoreBridgeIoError);
 
   void connectUpstream().catch(() => {});
 
@@ -178,13 +186,20 @@ function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
   });
 
   type UpgradeArgs = Parameters<EngineServer['handleUpgrade']>;
+  engine.on('connection_error', ignoreBridgeIoError);
+
   httpServer.on('upgrade', (req, socket, head) => {
     if (isBridgeEngineRequest(req.url)) {
-      engine!.handleUpgrade(
-        req as UpgradeArgs[0],
-        socket as UpgradeArgs[1],
-        head as UpgradeArgs[2],
-      );
+      socket.on('error', ignoreBridgeIoError);
+      try {
+        engine!.handleUpgrade(
+          req as UpgradeArgs[0],
+          socket as UpgradeArgs[1],
+          head as UpgradeArgs[2],
+        );
+      } catch (error) {
+        if (!isTransientNetworkError(error)) throw error;
+      }
     }
   });
 
@@ -222,9 +237,16 @@ export default defineEventHandler((event) => {
   }
 
   if (engine && isBridgeEngineRequest(event.node.req.url || '')) {
-    engine.handleRequest(event.node.req as Parameters<EngineServer['handleRequest']>[0], event.node.res);
+    event.node.req.on('error', ignoreBridgeIoError);
+    event.node.res.on('error', ignoreBridgeIoError);
+    try {
+      engine.handleRequest(event.node.req as Parameters<EngineServer['handleRequest']>[0], event.node.res);
+    } catch (error) {
+      if (!isTransientNetworkError(error)) throw error;
+    }
     return new Promise<void>((resolve) => {
       event.node.res.on('finish', resolve);
+      event.node.res.on('close', resolve);
     });
   }
 });
