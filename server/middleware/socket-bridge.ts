@@ -9,7 +9,11 @@ import {
   sendSocketBridgeAuthError,
 } from '../utils/socket-bridge-auth';
 import { isTransientNetworkError } from '../utils/transient-network-error';
-import { stripWsNs, addWsNs } from '../utils/ws-namespace';
+import {
+  getSocketIoNamespace,
+  rewriteSocketIoNamespace,
+  stripWsNs,
+} from '../utils/ws-namespace';
 
 let engine: EngineServer | null = null;
 const BRIDGE_ENGINE_PATH = '/ws/socket.io/';
@@ -50,6 +54,10 @@ function safeSend(socket: { send: (data: string | Buffer) => void }, data: strin
   } catch {}
 }
 
+function toUpstreamFrame(data: string | Buffer) {
+  return typeof data === 'string' ? `4${data}` : data;
+}
+
 function startBridge(
   browserSocket: EngineSocket,
   pendingBrowser: (string | Buffer)[],
@@ -60,6 +68,7 @@ function startBridge(
   let ready = false;
   let browserClosed = false;
   let hasConnectedOnce = false;
+  const browserNamespacesByUpstream = new Map<string, string>();
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let retryCount = 0;
 
@@ -102,15 +111,27 @@ function startBridge(
         ready = true;
         retryCount = 0;
         if (hasConnectedOnce) {
-          safeSend(ws, '40/enfyra-admin,');
+          for (const upstreamNamespace of browserNamespacesByUpstream.keys()) {
+            safeSend(ws, `40${upstreamNamespace},`);
+          }
         }
         hasConnectedOnce = true;
         for (const msg of buffer) {
-          safeSend(ws, msg);
+          safeSend(ws, toUpstreamFrame(msg));
         }
         buffer.length = 0;
       } else if (type === '4') {
-        safeSend(browserSocket, addWsNs(frame.slice(1)));
+        const payload = frame.slice(1);
+        const upstreamNamespace = getSocketIoNamespace(payload);
+        const browserNamespace = upstreamNamespace
+          ? browserNamespacesByUpstream.get(upstreamNamespace)
+          : null;
+        safeSend(
+          browserSocket,
+          browserNamespace && browserNamespace !== upstreamNamespace
+            ? rewriteSocketIoNamespace(payload, browserNamespace)
+            : payload,
+        );
       } else if (type === '2') {
         safeSend(ws, '3');
       } else if (type === '1') {
@@ -155,9 +176,17 @@ function startBridge(
   }
 
   const forwardFromBrowser = (data: string | Buffer) => {
-    const rewritten = typeof data === 'string' ? '4' + stripWsNs(data) : data;
+    let rewritten = data;
+    if (typeof data === 'string') {
+      const browserNamespace = getSocketIoNamespace(data);
+      rewritten = stripWsNs(data);
+      const upstreamNamespace = getSocketIoNamespace(rewritten);
+      if (browserNamespace && upstreamNamespace) {
+        browserNamespacesByUpstream.set(upstreamNamespace, browserNamespace);
+      }
+    }
     if (ready && upstream?.readyState === WebSocket.OPEN) {
-      safeSend(upstream, rewritten);
+      safeSend(upstream, toUpstreamFrame(rewritten));
     } else if (buffer.length < UPSTREAM_BUFFER_CAP) {
       buffer.push(rewritten);
     }
