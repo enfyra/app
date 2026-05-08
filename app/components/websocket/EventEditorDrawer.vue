@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ScriptLanguage } from '~/types/script-contract';
 import { normalizeScriptLanguage } from '~/utils/script-contract';
+import { buildWebsocketEventSavePayload } from '~/utils/websocket-events';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -154,17 +155,19 @@ async function handleSave() {
     return;
   }
 
+  const payload = buildWebsocketEventSavePayload(form.value, props.gatewayId);
+
   if (props.event && getId(props.event)) {
     await updateEvent({
       id: getId(props.event),
-      body: form.value,
+      body: payload,
     });
 
     if (updateError.value) {
       return;
     }
   } else {
-    await createEvent({ body: form.value });
+    await createEvent({ body: payload });
 
     if (createError.value) {
       return;

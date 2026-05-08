@@ -84,7 +84,7 @@
       >
         <CommonSettingsCard
           v-for="event in events"
-          :key="event.id"
+          :key="getId(event)"
           :title="event.eventName"
           :description="event.description || 'No description'"
           icon="lucide:zap"
@@ -187,7 +187,10 @@ const selectedEvent = ref<any>(null);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
-const pageId = computed(() => route.params.id);
+const pageId = computed(() => {
+  const id = route.params.id;
+  return String(Array.isArray(id) ? id[0] ?? "" : id ?? "");
+});
 
 const showConnTestModal = ref(false);
 
@@ -210,13 +213,14 @@ const {
   errorContext: "Fetch WebSocket Gateway",
 });
 
-const gatewayId = computed(() => getId(gatewayData.value?.data?.[0]));
+const gatewayId = computed(() => pageId.value || getId(gatewayData.value?.data?.[0]));
 
 const { data: eventsData, execute: fetchEvents } = useApi(() => "/websocket_event_definition", {
   query: computed(() => ({
     fields: ["*"].join(","),
-    filter: gatewayId.value ? {
-      gateway: { _eq: gatewayId.value },
+    limit: -1,
+    filter: pageId.value ? {
+      gateway: { _eq: pageId.value },
     } : undefined,
   })),
   errorContext: "Fetch WebSocket Events",

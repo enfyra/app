@@ -81,6 +81,27 @@ interface CallableFunction {}
 interface Function {}
 interface IArguments {}
 interface NewableFunction {}
+interface Math {
+  readonly E: number;
+  readonly LN10: number;
+  readonly LN2: number;
+  readonly LOG10E: number;
+  readonly LOG2E: number;
+  readonly PI: number;
+  readonly SQRT1_2: number;
+  readonly SQRT2: number;
+  abs(x: number): number;
+  ceil(x: number): number;
+  floor(x: number): number;
+  max(...values: number[]): number;
+  min(...values: number[]): number;
+  pow(x: number, y: number): number;
+  random(): number;
+  round(x: number): number;
+  sign(x: number): number;
+  trunc(x: number): number;
+}
+declare const Math: Math;
 interface Number {
   toString(radix?: number): string;
   valueOf(): number;

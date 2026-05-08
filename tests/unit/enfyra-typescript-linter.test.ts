@@ -71,6 +71,17 @@ return { values, entries }
     expect(diagnostics).toEqual([])
   })
 
+  it('accepts common Math methods in admin scripts', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const createdAt = new Date().toISOString()
+const messageId = String(@BODY.messageId || ('rt_' + createdAt + '_' + String(@USER.id) + '_' + Math.random().toString(36).slice(2)))
+const bounded = Math.min(100, Math.max(0, Math.floor(@BODY.score || 0)))
+return { messageId, bounded }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
   it('rejects stale DynamicRepository where option', async () => {
     const diagnostics = await lintEnfyraTypeScript(`
 return await @REPOS.user_definition.find({ where: { email: { _eq: @BODY.email } } })
