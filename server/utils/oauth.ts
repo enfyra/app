@@ -25,6 +25,34 @@ export function requireValidRedirectUrl(value: unknown) {
   }
 }
 
+export function requireValidCookieBridgePrefix(value: unknown) {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  if (typeof value !== "string") {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Cookie bridge prefix must be a string",
+    });
+  }
+
+  if (
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("?") ||
+    value.includes("#") ||
+    value.includes("..")
+  ) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Cookie bridge prefix must be a relative absolute path",
+    });
+  }
+
+  return value;
+}
+
 export function getNuxtAppOrigin(event: H3Event) {
   return getRequestURL(event).origin;
 }
