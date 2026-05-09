@@ -252,6 +252,7 @@ export type RuntimeMetricsPayload = {
   } | null;
   appCluster?: {
     ttlMs: number;
+    activeCount?: number;
     instances: Array<{
       instanceId: string;
       sampledAt: string;

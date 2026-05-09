@@ -213,7 +213,7 @@ export function useRuntimeMetrics() {
     const staleAfterMs = latestAppCluster.value?.ttlMs ?? sampleIntervalMs.value * 5;
     return {
       enabled: appMetricInstances.value.length > 0,
-      activeCount: appMetricInstances.value.length,
+      activeCount: latestAppCluster.value?.activeCount ?? appMetricInstances.value.length,
       staleAfterMs,
       sampleIntervalMs: sampleIntervalMs.value,
       instances: appMetricInstances.value.map((item) => {
