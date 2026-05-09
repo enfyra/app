@@ -178,8 +178,8 @@ export function useRuntimeMetrics() {
     return rows[0] ?? null;
   });
 
-  const appMetricInstances = computed<RuntimeAppMetricInstance[]>(() => {
-    const latest = instances.value
+  const latestAppCluster = computed(() => {
+    return instances.value
       .map((metrics) => metrics.appCluster)
       .filter(
         (cluster): cluster is RuntimeAppTelemetryCluster =>
@@ -189,8 +189,11 @@ export function useRuntimeMetrics() {
         const latestA = Math.max(...a.instances.map((item) => Date.parse(item.sampledAt) || 0));
         const latestB = Math.max(...b.instances.map((item) => Date.parse(item.sampledAt) || 0));
         return latestB - latestA;
-      })[0];
+      })[0] ?? null;
+  });
 
+  const appMetricInstances = computed<RuntimeAppMetricInstance[]>(() => {
+    const latest = latestAppCluster.value;
     if (latest?.instances?.length) {
       return latest.instances.map((item) => ({
         instanceId: item.instanceId,
@@ -204,6 +207,26 @@ export function useRuntimeMetrics() {
       sampledAt: metrics.sampledAt,
       app: metrics.app,
     }));
+  });
+
+  const appClusterStats = computed(() => {
+    const staleAfterMs = latestAppCluster.value?.ttlMs ?? sampleIntervalMs.value * 5;
+    return {
+      enabled: appMetricInstances.value.length > 0,
+      activeCount: appMetricInstances.value.length,
+      staleAfterMs,
+      sampleIntervalMs: sampleIntervalMs.value,
+      instances: appMetricInstances.value.map((item) => {
+        const sampledAtMs = Date.parse(item.sampledAt);
+        return {
+          id: item.instanceId,
+          lastSeenAt: item.sampledAt,
+          ageMs: Number.isFinite(sampledAtMs)
+            ? Math.max(0, nowMs.value - sampledAtMs)
+            : staleAfterMs,
+        };
+      }),
+    };
   });
 
   const requestRows = computed(() => {
@@ -377,8 +400,8 @@ export function useRuntimeMetrics() {
   }
 
   function clusterSeverity(): RuntimeSeverity {
-    const cluster = clusterStats.value;
-    if (!cluster?.enabled) return 'ok';
+    const cluster = appClusterStats.value;
+    if (!cluster.enabled) return 'ok';
     if (cluster.instances.some((item) => item.ageMs > cluster.staleAfterMs * 0.75)) {
       return 'warning';
     }
@@ -489,6 +512,7 @@ export function useRuntimeMetrics() {
     nextUpdateLabel,
     nextUpdateProgress,
     latestSampledAt,
+    appClusterStats,
     clusterStats,
     requestRows,
     cacheReloadRows,

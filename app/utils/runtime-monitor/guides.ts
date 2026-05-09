@@ -12,8 +12,8 @@ export const runtimeTabGuides: Record<string, RuntimeGuide> = {
           ['Sampled at', 'The exact server timestamp when the snapshot was measured. If this is old, the admin socket is stale or the instance stopped emitting.'],
           ['Avg since boot', 'Average from this process boot until now. The counters are stored in Redis and reset when that process starts again.'],
           ['PID / Uptime', 'Use PID to match PM2 or OS logs. Uptime tells whether the process has restarted recently.'],
-          ['Cluster active', 'Active instance count detected from the same Redis heartbeat set used by SQL pool coordination. This is the source of truth for server process count.'],
-          ['Heartbeat age', 'How old each instance heartbeat is. Near the stale threshold means the process may be unhealthy or shutting down.'],
+          ['App active', 'Active instance count detected from runtime monitor samples scoped to the current NODE_NAME. This is the source of truth for this app process count.'],
+          ['Sample age', 'How old each instance runtime sample is. Near the stale threshold means the process may be unhealthy or shutting down.'],
         ],
       },
       {
