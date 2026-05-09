@@ -37,20 +37,15 @@ export function requireValidCookieBridgePrefix(value: unknown) {
     });
   }
 
-  if (
-    !value.startsWith("/") ||
-    value.startsWith("//") ||
-    value.includes("?") ||
-    value.includes("#") ||
-    value.includes("..")
-  ) {
+  const segment = value.trim().replace(/^\/+/, "").split(/[/?#]/)[0];
+  if (!segment || segment === ".." || segment.includes("..")) {
     throw createError({
       statusCode: 400,
-      statusMessage: "Cookie bridge prefix must be a relative absolute path",
+      statusMessage: "Cookie bridge prefix is invalid",
     });
   }
 
-  return value;
+  return `/${segment}`;
 }
 
 export function getNuxtAppOrigin(event: H3Event) {
