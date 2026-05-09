@@ -48,10 +48,29 @@ function redirectToExternalUrl(
   location: string,
   statusCode: 301 | 302 | 307 | 308,
 ) {
+  if (isLocalhostRedirect(location)) {
+    setResponseStatus(event, 200);
+    setHeader(event, "Content-Type", "text/html; charset=utf-8");
+    return redirectHtml(location);
+  }
+
   setResponseStatus(event, statusCode);
   setHeader(event, "Location", location);
   setHeader(event, "Content-Type", "text/html; charset=utf-8");
-  return `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=${escapeHtml(location)}"></head></html>`;
+  return redirectHtml(location);
+}
+
+function isLocalhostRedirect(location: string) {
+  try {
+    return new URL(location).hostname === "localhost";
+  } catch {
+    return false;
+  }
+}
+
+function redirectHtml(location: string) {
+  const escapedLocation = escapeHtml(location);
+  return `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=${escapedLocation}"><script>window.location.replace(${JSON.stringify(location)})</script></head></html>`;
 }
 
 function escapeHtml(value: string) {
