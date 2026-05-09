@@ -2,8 +2,10 @@ import {
   createError,
   defineEventHandler,
   getQuery,
-  sendRedirect,
+  setHeader,
+  setResponseStatus,
 } from "h3";
+import type { H3Event } from "h3";
 import { buildUrlWithQuery, requireValidRedirectUrl } from "../../utils/oauth";
 import { setAuthCookies } from "../../utils/auth-cookies";
 
@@ -16,7 +18,7 @@ export default defineEventHandler(async (event) => {
       : undefined;
 
   if (error) {
-    return sendRedirect(
+    return redirectToExternalUrl(
       event,
       buildUrlWithQuery(redirect, { error }),
       302
@@ -38,5 +40,24 @@ export default defineEventHandler(async (event) => {
 
   setAuthCookies(event, { accessToken, refreshToken, expTime });
 
-  return sendRedirect(event, redirect, 302);
+  return redirectToExternalUrl(event, redirect, 302);
 });
+
+function redirectToExternalUrl(
+  event: H3Event,
+  location: string,
+  statusCode: 301 | 302 | 307 | 308,
+) {
+  setResponseStatus(event, statusCode);
+  setHeader(event, "Location", location);
+  setHeader(event, "Content-Type", "text/html; charset=utf-8");
+  return `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=${escapeHtml(location)}"></head></html>`;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
