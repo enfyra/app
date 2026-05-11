@@ -56,6 +56,32 @@ return { used }
     expect(diagnostics).toEqual([])
   })
 
+  it('accepts common Object static methods in admin scripts', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const incomingFilter = @QUERY.filter ?? {}
+const scopeFilter = { owner_id: { _eq: @USER.id } }
+@QUERY.filter = Object.keys(incomingFilter).length
+  ? { _and: [incomingFilter, scopeFilter] }
+  : scopeFilter
+const values = Object.values(@BODY)
+const entries = Object.entries(@PARAMS)
+return { values, entries }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
+  it('accepts common Math methods in admin scripts', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const createdAt = new Date().toISOString()
+const messageId = String(@BODY.messageId || ('rt_' + createdAt + '_' + String(@USER.id) + '_' + Math.random().toString(36).slice(2)))
+const bounded = Math.min(100, Math.max(0, Math.floor(@BODY.score || 0)))
+return { messageId, bounded }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
   it('rejects stale DynamicRepository where option', async () => {
     const diagnostics = await lintEnfyraTypeScript(`
 return await @REPOS.user_definition.find({ where: { email: { _eq: @BODY.email } } })

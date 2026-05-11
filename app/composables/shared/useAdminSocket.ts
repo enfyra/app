@@ -55,6 +55,9 @@ export const reloadLabels = reloadLabelsRef;
 
 let reloadDoneTimer: ReturnType<typeof setTimeout> | null = null;
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
+let staleReloadInterval: ReturnType<typeof setInterval> | null = null;
+
+const RELOAD_STALE_MS = 45_000;
 
 function clearReloadTimers() {
   if (reloadDoneTimer) {
@@ -65,6 +68,22 @@ function clearReloadTimers() {
     clearInterval(countdownInterval);
     countdownInterval = null;
   }
+}
+
+function pruneStaleReloads() {
+  const now = Date.now();
+  const before = activeReloads.value.length;
+  activeReloads.value = activeReloads.value.filter(
+    (reload) => now - reload.startedAt < RELOAD_STALE_MS,
+  );
+  if (before > 0 && activeReloads.value.length === 0) {
+    startDoneCountdown();
+  }
+}
+
+function ensureStaleReloadPruner() {
+  if (staleReloadInterval) return;
+  staleReloadInterval = setInterval(pruneStaleReloads, 5_000);
 }
 
 export function dismissReloadBanner() {
@@ -98,7 +117,10 @@ export function useAdminSocket() {
   const menuRegistry = useMenuRegistry();
 
   if (!socket) {
+    ensureStaleReloadPruner();
+
     socket = io('/ws/enfyra-admin', {
+      path: '/ws/socket.io',
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,

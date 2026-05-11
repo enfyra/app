@@ -118,7 +118,7 @@ const description = computed(() => {
   if (t === 'trigger') return props.data.triggerInfo || '';
   if (t === 'add') return 'Click to add a new step';
   if (t === 'script' || t === 'condition') {
-    return (config.sourceCode ?? config.code)?.substring(0, 60);
+    return (props.data.sourceCode ?? config.sourceCode ?? config.code)?.substring(0, 60);
   }
   if (t === 'query') return `Query ${config.table}`;
   if (t === 'delete') return `Delete from ${config.table}`;

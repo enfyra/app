@@ -8,16 +8,22 @@ import {
   resolveSocketBridgeAuth,
   sendSocketBridgeAuthError,
 } from '../utils/socket-bridge-auth';
-import { stripWsNs, addWsNs } from '../utils/ws-namespace';
+import { isTransientNetworkError } from '../utils/transient-network-error';
+import {
+  getSocketIoNamespace,
+  rewriteSocketIoNamespace,
+  stripWsNs,
+} from '../utils/ws-namespace';
 
 let engine: EngineServer | null = null;
+const BRIDGE_ENGINE_PATH = '/ws/socket.io/';
 
 function getWsUrl() {
   const api = String(useRuntimeConfig().public.apiUrl ?? '').replace(
     /\/+$/,
     '',
   );
-  return api.replace(/^http/, 'ws');
+  return api.replace(/\/api$/, '').replace(/^http/, 'ws');
 }
 
 type EngineSocket = {
@@ -31,11 +37,25 @@ const UPSTREAM_MAX_RETRIES = 10;
 const UPSTREAM_RETRY_BASE = 2000;
 const UPSTREAM_RETRY_MAX = 15_000;
 const UPSTREAM_BUFFER_CAP = 50;
+function handleBridgeError(error: unknown) {
+  if (isTransientNetworkError(error)) return;
+  throw error;
+}
+
+function ignoreBridgeIoError(_error: unknown) {}
+
+function isBridgeEngineRequest(url: string | undefined) {
+  return url === '/ws/socket.io' || url?.startsWith(BRIDGE_ENGINE_PATH);
+}
 
 function safeSend(socket: { send: (data: string | Buffer) => void }, data: string | Buffer) {
   try {
     socket.send(data);
   } catch {}
+}
+
+function toUpstreamFrame(data: string | Buffer) {
+  return typeof data === 'string' ? `4${data}` : data;
 }
 
 function startBridge(
@@ -48,6 +68,7 @@ function startBridge(
   let ready = false;
   let browserClosed = false;
   let hasConnectedOnce = false;
+  const browserNamespacesByUpstream = new Map<string, string>();
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let retryCount = 0;
 
@@ -90,15 +111,27 @@ function startBridge(
         ready = true;
         retryCount = 0;
         if (hasConnectedOnce) {
-          safeSend(ws, '40/enfyra-admin,');
+          for (const upstreamNamespace of browserNamespacesByUpstream.keys()) {
+            safeSend(ws, `40${upstreamNamespace},`);
+          }
         }
         hasConnectedOnce = true;
         for (const msg of buffer) {
-          safeSend(ws, msg);
+          safeSend(ws, toUpstreamFrame(msg));
         }
         buffer.length = 0;
       } else if (type === '4') {
-        safeSend(browserSocket, addWsNs(frame.slice(1)));
+        const payload = frame.slice(1);
+        const upstreamNamespace = getSocketIoNamespace(payload);
+        const browserNamespace = upstreamNamespace
+          ? browserNamespacesByUpstream.get(upstreamNamespace)
+          : null;
+        safeSend(
+          browserSocket,
+          browserNamespace && browserNamespace !== upstreamNamespace
+            ? rewriteSocketIoNamespace(payload, browserNamespace)
+            : payload,
+        );
       } else if (type === '2') {
         safeSend(ws, '3');
       } else if (type === '1') {
@@ -143,9 +176,17 @@ function startBridge(
   }
 
   const forwardFromBrowser = (data: string | Buffer) => {
-    const rewritten = typeof data === 'string' ? '4' + stripWsNs(data) : data;
+    let rewritten = data;
+    if (typeof data === 'string') {
+      const browserNamespace = getSocketIoNamespace(data);
+      rewritten = stripWsNs(data);
+      const upstreamNamespace = getSocketIoNamespace(rewritten);
+      if (browserNamespace && upstreamNamespace) {
+        browserNamespacesByUpstream.set(upstreamNamespace, browserNamespace);
+      }
+    }
     if (ready && upstream?.readyState === WebSocket.OPEN) {
-      safeSend(upstream, rewritten);
+      safeSend(upstream, toUpstreamFrame(rewritten));
     } else if (buffer.length < UPSTREAM_BUFFER_CAP) {
       buffer.push(rewritten);
     }
@@ -157,6 +198,7 @@ function startBridge(
   pendingBrowser.length = 0;
 
   browserSocket.on('close', cleanup);
+  browserSocket.on('error', ignoreBridgeIoError);
 
   void connectUpstream().catch(() => {});
 
@@ -165,18 +207,28 @@ function startBridge(
 
 function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
   engine = new EngineServer({
-    cors: { origin: '*' },
+    cors: {
+      origin: true,
+      credentials: true,
+    },
     transports: ['polling', 'websocket'],
   });
 
   type UpgradeArgs = Parameters<EngineServer['handleUpgrade']>;
+  engine.on('connection_error', ignoreBridgeIoError);
+
   httpServer.on('upgrade', (req, socket, head) => {
-    if (req.url?.startsWith('/socket.io/')) {
-      engine!.handleUpgrade(
-        req as UpgradeArgs[0],
-        socket as UpgradeArgs[1],
-        head as UpgradeArgs[2],
-      );
+    if (isBridgeEngineRequest(req.url)) {
+      socket.on('error', ignoreBridgeIoError);
+      try {
+        engine!.handleUpgrade(
+          req as UpgradeArgs[0],
+          socket as UpgradeArgs[1],
+          head as UpgradeArgs[2],
+        );
+      } catch (error) {
+        if (!isTransientNetworkError(error)) throw error;
+      }
     }
   });
 
@@ -213,10 +265,17 @@ export default defineEventHandler((event) => {
     if (server) initEngine(server);
   }
 
-  if (engine && (event.node.req.url || '').startsWith('/socket.io/')) {
-    engine.handleRequest(event.node.req as Parameters<EngineServer['handleRequest']>[0], event.node.res);
+  if (engine && isBridgeEngineRequest(event.node.req.url || '')) {
+    event.node.req.on('error', ignoreBridgeIoError);
+    event.node.res.on('error', ignoreBridgeIoError);
+    try {
+      engine.handleRequest(event.node.req as Parameters<EngineServer['handleRequest']>[0], event.node.res);
+    } catch (error) {
+      if (!isTransientNetworkError(error)) throw error;
+    }
     return new Promise<void>((resolve) => {
       event.node.res.on('finish', resolve);
+      event.node.res.on('close', resolve);
     });
   }
 });

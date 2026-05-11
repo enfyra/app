@@ -138,7 +138,11 @@
             <FlowStepConfigEditor
               :type="stepForm.type"
               :config-json="stepForm.configJson"
+              :source-code="stepForm.sourceCode"
+              :script-language="stepForm.scriptLanguage"
               @update:config-json="stepForm.configJson = $event; stepErrors.config = ''"
+              @update:source-code="stepForm.sourceCode = $event; stepForm.compiledCode = null; stepErrors.config = ''"
+              @update:script-language="stepForm.scriptLanguage = $event; stepForm.compiledCode = null"
             />
           </div>
 
@@ -290,6 +294,10 @@
 <script setup lang="ts">
 import type { StepType, StepErrorHandling } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS, getExecutionStatusColor, getExecutionStatusDotClass, getStepTimelineIcon, getStepTimelineIconColor, getStepTimelineClass } from '~/utils/flow.constants';
+import {
+  normalizeScriptContract,
+  stripLegacyScriptFields,
+} from '~/utils/script-contract';
 
 definePageMeta({ layout: "default", title: "Flow Editor" });
 
@@ -353,12 +361,23 @@ const stepForm = ref({
   stepOrder: 0,
   type: 'script' as StepType,
   configJson: '',
+  sourceCode: null as string | null,
+  scriptLanguage: 'typescript' as 'javascript' | 'typescript',
+  compiledCode: null as string | null,
   timeout: 5000,
   onError: 'stop' as StepErrorHandling,
   retryAttempts: 0,
   parentId: null as any,
   branch: undefined as string | undefined,
 });
+
+function cleanStepConfig(config: any): Record<string, any> {
+  return stripLegacyScriptFields(config);
+}
+
+function parseStepConfigJson(raw: string): Record<string, any> {
+  return raw ? JSON.parse(raw) : {};
+}
 
 watch(() => stepForm.value.key, () => {
   if (stepErrors.value.key) stepErrors.value.key = '';
@@ -604,11 +623,21 @@ function onSelectStep(step: any | null) {
   testResult.value = null;
   stepErrors.value = {};
   editingStepId.value = getId(step);
+  const rawConfig = step.config && typeof step.config === 'object' ? step.config : {};
+  const config = cleanStepConfig(rawConfig);
+  const scriptContract = normalizeScriptContract({
+    sourceCode: step.sourceCode ?? rawConfig.sourceCode ?? rawConfig.code ?? null,
+    scriptLanguage: step.scriptLanguage ?? rawConfig.scriptLanguage,
+    compiledCode: step.compiledCode ?? rawConfig.compiledCode ?? null,
+  });
   stepForm.value = {
     key: step.key,
     stepOrder: step.stepOrder,
     type: step.type,
-    configJson: step.config ? JSON.stringify(step.config, null, 2) : '',
+    configJson: Object.keys(config).length ? JSON.stringify(config, null, 2) : '',
+    sourceCode: scriptContract.sourceCode,
+    scriptLanguage: scriptContract.scriptLanguage,
+    compiledCode: scriptContract.compiledCode,
     timeout: step.timeout || 5000,
     onError: step.onError || 'stop',
     retryAttempts: step.retryAttempts || 0,
@@ -637,6 +666,9 @@ function openCreateStep(context?: { parentId?: any; branch?: string; afterOrder?
     stepOrder: nextOrder,
     type: 'script',
     configJson: '',
+    sourceCode: null,
+    scriptLanguage: 'typescript',
+    compiledCode: null,
     timeout: 5000,
     onError: 'stop',
     retryAttempts: 0,
@@ -692,7 +724,7 @@ async function copyTestValue(value: any) {
 async function testCurrentStep() {
   let config;
   try {
-    config = stepForm.value.configJson ? JSON.parse(stepForm.value.configJson) : {};
+    config = cleanStepConfig(parseStepConfigJson(stepForm.value.configJson));
   } catch {
     notify.error("Error", "Invalid JSON in config");
     return;
@@ -725,6 +757,9 @@ async function testCurrentStep() {
         key: stepForm.value.key,
         type: stepForm.value.type,
         config,
+        sourceCode: stepForm.value.sourceCode,
+        scriptLanguage: stepForm.value.scriptLanguage,
+        compiledCode: stepForm.value.compiledCode,
         timeout: stepForm.value.timeout || 5000,
         mockFlow,
       },
@@ -763,7 +798,7 @@ async function saveStep() {
 
   let config;
   try {
-    config = stepForm.value.configJson ? JSON.parse(stepForm.value.configJson) : {};
+    config = cleanStepConfig(parseStepConfigJson(stepForm.value.configJson));
   } catch {
     stepErrors.value.config = 'Invalid JSON';
     hasError = true;
@@ -778,6 +813,9 @@ async function saveStep() {
       stepOrder: stepForm.value.stepOrder,
       type: stepForm.value.type,
       config,
+      sourceCode: stepForm.value.sourceCode,
+      scriptLanguage: stepForm.value.scriptLanguage,
+      compiledCode: stepForm.value.compiledCode,
       timeout: stepForm.value.timeout || 5000,
       onError: stepForm.value.onError || 'stop',
       retryAttempts: stepForm.value.retryAttempts || 0,

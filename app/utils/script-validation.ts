@@ -1,3 +1,5 @@
+import { normalizeScriptLanguage } from '~/utils/script-contract';
+
 export async function validateRouteHandlerReturn(
   form: Record<string, any>,
   errors: Record<string, string>,
@@ -8,7 +10,7 @@ export async function validateRouteHandlerReturn(
   );
   const result = await validateEnfyraRequiredReturnScript(
     sourceCode,
-    form.scriptLanguage === 'javascript' ? 'javascript' : 'typescript',
+    normalizeScriptLanguage(form.scriptLanguage),
   );
 
   if (result.ok) {

@@ -4,7 +4,10 @@ import {
   getQuery,
   sendRedirect,
 } from "h3";
-import { getNuxtAppOrigin, requireValidRedirectUrl } from "../utils/oauth";
+import {
+  requireValidCookieBridgePrefix,
+  requireValidRedirectUrl,
+} from "../utils/oauth";
 import { proxyToAPI } from "~/utils/enfyra/server/proxy";
 
 const OAUTH_PROVIDERS = ["google", "facebook", "github"];
@@ -46,8 +49,16 @@ export default defineEventHandler(async (event) => {
     if (!apiUrl) {
       throw createError({ statusCode: 500, message: "API URL not configured" });
     }
-    const appOrigin = getNuxtAppOrigin(event);
-    const backendUrl = `${apiUrl.replace(/\/+$/, "")}/auth/${provider}?redirect=${encodeURIComponent(redirectParam)}&appOrigin=${encodeURIComponent(appOrigin)}`;
+    const cookieBridgePrefix = requireValidCookieBridgePrefix(
+      query.cookieBridgePrefix
+    );
+    const backendUrl = new URL(
+      `${apiUrl.replace(/\/+$/, "")}/auth/${provider}`
+    );
+    backendUrl.searchParams.set("redirect", redirectParam);
+    if (cookieBridgePrefix) {
+      backendUrl.searchParams.set("cookieBridgePrefix", cookieBridgePrefix);
+    }
     const response = await fetch(backendUrl, { redirect: "manual" });
     const location = response.headers.get("location") || response.headers.get("Location");
     if (location && response.status >= 300 && response.status < 400) {

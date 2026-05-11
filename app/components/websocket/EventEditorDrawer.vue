@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type { ScriptLanguage } from '~/types/script-contract';
+import { normalizeScriptLanguage } from '~/utils/script-contract';
+import { buildWebsocketEventSavePayload } from '~/utils/websocket-events';
+
 const props = defineProps<{
   modelValue: boolean;
   event: any;
@@ -8,11 +12,11 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
-  'save': [];
+  save: [];
 }>();
 
 const notify = useNotify();
-const tableName = "websocket_event_definition";
+const tableName = 'websocket_event_definition';
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getIdFieldName, getId } = useDatabase();
 
@@ -22,62 +26,10 @@ const hasFormChanges = ref(false);
 const showDiscardModal = ref(false);
 const initialSnapshot = ref<string | null>(null);
 const formEditorRef = ref();
-const fieldMap = {
-  sourceCode: {
-    testRun: false,
-  },
-  handlerScript: {
-    testRun: false,
-  },
-};
-
-const testPayloadJson = ref('');
-const testing = ref(false);
-const testResult = ref<any>(null);
-const testPayloadPlaceholder = '{\n  "text": "hello"\n}';
-const showTestPanel = ref(false);
-
-const rawTestEventName =
-  computed(() =>
-    form.value?.eventName ??
-    (form.value as any)?.event_name ??
-    form.value?.name ??
-    props.event?.eventName ??
-    props.event?.name ??
-    Object.entries(form.value || {}).find(([k]) => k.toLowerCase() === 'eventname')?.[1] ??
-    '');
-const testEventName = computed(() => String(rawTestEventName.value || '').trim());
-const rawTestScript = computed(() => {
-  const direct =
-    form.value?.sourceCode ??
-    form.value?.handlerScript ??
-    (form.value as any)?.handler_script ??
-    (form.value as any)?.script ??
-    (form.value as any)?.logic ??
-    (form.value as any)?.code ??
-    props.event?.sourceCode ??
-    props.event?.handlerScript ??
-    props.event?.script ??
-    props.event?.logic ??
-    '';
-  if (direct) return direct;
-  const byKey = Object.entries(form.value || {}).find(([k, v]) => typeof v === 'string' && k.toLowerCase().includes('script'))?.[1];
-  return byKey ?? '';
-});
-const testScript = computed(() => String(rawTestScript.value || '').trim());
-const canRunTest = computed(() => !!testEventName.value && !!testScript.value);
-
-const {
-  execute: runTest,
-  pending: testPending,
-  error: testError,
-  data: testData,
-} = useApi(() => `/admin/test/run`, {
-  method: 'post',
-  errorContext: 'Test WebSocket Event',
-  immediate: false,
-  lazy: true,
-});
+const scriptLanguageOptions = [
+  { label: 'javascript', value: 'javascript' },
+  { label: 'typescript', value: 'typescript' },
+];
 
 defineExpose({
   hasFormChanges,
@@ -111,7 +63,7 @@ const {
       fields: getIncludeFields(),
     };
   }),
-  errorContext: "Fetch Event",
+  errorContext: 'Fetch Event',
   immediate: false,
   lazy: true,
 });
@@ -121,8 +73,8 @@ const {
   pending: updateLoading,
   error: updateError,
 } = useApi(() => `/${tableName}`, {
-  method: "patch",
-  errorContext: "Update Event",
+  method: 'patch',
+  errorContext: 'Update Event',
 });
 
 const {
@@ -130,36 +82,40 @@ const {
   pending: createLoading,
   error: createError,
 } = useApi(() => `/${tableName}`, {
-  method: "post",
-  errorContext: "Create Event",
+  method: 'post',
+  errorContext: 'Create Event',
 });
 
-watch(() => isOpen.value, async (open) => {
-  if (open) {
-    if (props.event && getId(props.event)) {
-      await initializeForm();
-      await nextTick();
-      if (formEditorRef.value?.confirmChanges) {
-        formEditorRef.value.confirmChanges();
+watch(
+  () => isOpen.value,
+  async (open) => {
+    if (open) {
+      if (props.event && getId(props.event)) {
+        await initializeForm();
+        await nextTick();
+        formEditorRef.value?.confirmChanges?.();
+      } else {
+        form.value = generateEmptyForm();
+        form.value.gateway = props.gatewayId;
+        form.value.scriptLanguage = 'typescript';
+        form.value.sourceCode = createDefaultEventSourceCode();
+        form.value.compiledCode = null;
+        errors.value = {};
       }
-      initialSnapshot.value = stableStringify(form.value);
-      hasFormChanges.value = false;
-    } else {
-      form.value = generateEmptyForm();
-      form.value.gateway = props.gatewayId;
-      errors.value = {};
+      normalizeEventScriptFields();
       await nextTick();
-      initialSnapshot.value = stableStringify(form.value);
+      initialSnapshot.value = createSnapshot();
       hasFormChanges.value = false;
+      return;
     }
-  } else {
+
     form.value = {};
     errors.value = {};
     initialSnapshot.value = null;
     showDiscardModal.value = false;
     hasFormChanges.value = false;
-  }
-});
+  },
+);
 
 async function initializeForm() {
   if (!props.event) return;
@@ -178,38 +134,45 @@ async function initializeForm() {
 }
 
 async function handleSave() {
+  if (!String(form.value.sourceCode || '').trim()) {
+    errors.value.sourceCode = 'sourceCode is required.';
+    notify.error('Validation Error', 'Please provide an event handler script.');
+    return;
+  }
+  form.value.scriptLanguage = normalizeScriptLanguage(form.value.scriptLanguage);
+
   const { isValid, errors: validationErrors } = validate(form.value);
 
   if (!isValid) {
     errors.value = validationErrors;
-    notify.error("Validation Error", "Please fill in all required fields.");
+    notify.error('Validation Error', 'Please fill in all required fields.');
     return;
   }
 
   const uniqueOk = await formEditorRef.value?.validateAllUniqueFields?.();
   if (uniqueOk === false) {
-    notify.error("Duplicate value", "Please verify all unique fields before saving.");
+    notify.error('Duplicate value', 'Please verify all unique fields before saving.');
     return;
   }
+
+  const payload = buildWebsocketEventSavePayload(form.value, props.gatewayId);
 
   if (props.event && getId(props.event)) {
     await updateEvent({
       id: getId(props.event),
-      body: form.value,
+      body: payload,
     });
 
     if (updateError.value) {
       return;
     }
   } else {
-    await createEvent({ body: form.value });
+    await createEvent({ body: payload });
 
     if (createError.value) {
       return;
     }
   }
-
-notify.success("Success")
 
   hasFormChanges.value = false;
   emit('save');
@@ -217,8 +180,11 @@ notify.success("Success")
 }
 
 function handleCancel() {
-  const hasUnsavedChanges = hasFormChanges.value
-    || (props.modelValue && initialSnapshot.value !== null && stableStringify(form.value) !== initialSnapshot.value);
+  const hasUnsavedChanges =
+    hasFormChanges.value ||
+    (props.modelValue &&
+      initialSnapshot.value !== null &&
+      createSnapshot() !== initialSnapshot.value);
 
   if (hasUnsavedChanges) {
     showDiscardModal.value = true;
@@ -234,68 +200,43 @@ function confirmDiscard() {
   emit('update:modelValue', false);
 }
 
-async function copyTestValue(value: any) {
-  const text = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
-  await navigator.clipboard.writeText(text);
-  notify.success("Copied");
+function updateSourceCode(value: string) {
+  form.value.sourceCode = value === '' ? null : value;
+  form.value.compiledCode = null;
+  hasFormChanges.value = createSnapshot() !== initialSnapshot.value;
 }
 
-async function handleTest() {
-  showTestPanel.value = true;
-  if (!canRunTest.value) return;
+function updateScriptLanguage(value: unknown) {
+  form.value.scriptLanguage = normalizeScriptLanguage(value);
+  form.value.compiledCode = null;
+  hasFormChanges.value = createSnapshot() !== initialSnapshot.value;
+}
 
-  let payload: any = {};
-  if (testPayloadJson.value?.trim()) {
-    try {
-      payload = JSON.parse(testPayloadJson.value);
-    } catch {
-      notify.error("Invalid JSON", "Test payload JSON is invalid.");
-      return;
-    }
-  }
+function normalizeEventScriptFields() {
+  form.value.scriptLanguage = normalizeScriptLanguage(form.value.scriptLanguage);
+  form.value.sourceCode =
+    form.value.sourceCode === undefined ? null : form.value.sourceCode;
+  form.value.compiledCode = form.value.compiledCode ?? null;
+}
 
-  const eventName = testEventName.value;
-  const script = testScript.value;
-  const timeoutMs = Number(form.value?.timeout || 5000);
+function createSnapshot() {
+  return stableStringify({
+    form: form.value,
+  });
+}
 
-  testing.value = true;
-  testResult.value = null;
-  try {
-    await runTest({
-      body: {
-        kind: 'websocket_event',
-        id: props.event ? getId(props.event) : undefined,
-        eventId: props.event ? getId(props.event) : undefined,
-        gatewayId: props.gatewayId,
-        ...(props.gatewayPath ? { gatewayPath: props.gatewayPath } : {}),
-        eventName,
-        timeoutMs,
-        payload,
-        script,
-        scriptLanguage: form.value?.scriptLanguage || 'typescript',
-      },
-    });
+function createDefaultEventSourceCode() {
+  return `const data = $ctx.$data || {};
 
-    if (testError.value) {
-      testResult.value = { success: false, error: testError.value.message };
-      return;
-    }
-    testResult.value = testData.value;
-  } finally {
-    testing.value = false;
-  }
+$ctx.$socket.reply('event:received', data);`;
 }
 </script>
 
 <template>
-  <CommonDrawer
-    v-model="isOpen"
-    direction="right"
-    full-width
-  >
+  <CommonDrawer v-model="isOpen" direction="right" full-width>
     <template #header>
       <div class="flex items-center gap-2">
-        <UIcon name="lucide:zap" class="w-5 h-5" />
+        <UIcon name="lucide:zap" class="h-5 w-5" />
         <span>{{ event && getId(event) ? `Edit Event: ${event.eventName || ''}` : 'Create Event' }}</span>
       </div>
     </template>
@@ -306,129 +247,75 @@ async function handleTest() {
           ref="formEditorRef"
           v-model="form"
           v-model:errors="errors"
-          @has-changed="(hasChanged) => hasFormChanges = hasChanged"
           :table-name="tableName"
-          :excluded="['createdAt', 'updatedAt', 'isSystem', 'gateway']"
-          :field-map="fieldMap"
+          :excluded="[
+            'createdAt',
+            'updatedAt',
+            'isSystem',
+            'gateway',
+            'sourceCode',
+            'compiledCode',
+            'handlerScript',
+            'scriptLanguage',
+          ]"
           :loading="loading"
+          @has-changed="(hasChanged) => (hasFormChanges = hasChanged || createSnapshot() !== initialSnapshot)"
         />
+
+        <div class="surface-card rounded-xl p-4 space-y-4">
+          <div>
+            <h3 class="text-base font-semibold text-[var(--text-primary)]">Event Handler Script</h3>
+            <p class="text-sm text-[var(--text-secondary)]">
+              Runs inline on the socket gateway. Use <span class="font-mono">@SOCKET</span>, <span class="font-mono">@DATA</span>, <span class="font-mono">@USER</span>, <span class="font-mono">@TRIGGER</span>, and <span class="font-mono">#table_name</span>.
+            </p>
+          </div>
+
+          <UFormField label="sourceCode" :error="errors.sourceCode" class="w-full">
+            <FormCodeEditorLazy
+              :model-value="String(form.sourceCode || '')"
+              :language="normalizeScriptLanguage(form.scriptLanguage)"
+              :enfyra-autocomplete="true"
+              :test-run="false"
+              height="420px"
+              class="w-full"
+              @update:model-value="updateSourceCode"
+            />
+            <template #hint>
+              <span>Return is optional. Emit replies or broadcasts explicitly in code.</span>
+            </template>
+          </UFormField>
+
+          <UFormField label="scriptLanguage" required class="w-full">
+            <FormEnumPicker
+              :model-value="normalizeScriptLanguage(form.scriptLanguage)"
+              :options="scriptLanguageOptions"
+              required
+              size="sm"
+              layout="inline"
+              @update:model-value="updateScriptLanguage"
+            />
+            <template #hint>
+              <span>Language used by sourceCode before server compilation.</span>
+            </template>
+          </UFormField>
+        </div>
       </div>
     </template>
 
     <template #footer>
-      <div class="w-full space-y-4">
-        <div class="flex items-center justify-between gap-2">
-          <UButton
-            variant="soft"
-            color="secondary"
-            @click="showTestPanel = !showTestPanel"
-          >
-            {{ showTestPanel ? 'Hide test' : 'Test' }}
-          </UButton>
-
-          <div class="flex items-center justify-end gap-2">
-          <UButton
-            variant="outline"
-            color="error"
-            @click="handleCancel"
-          >
-            Cancel
-          </UButton>
-          <UButton
-            variant="solid"
-            color="primary"
-            :loading="updateLoading || createLoading"
-            :disabled="!hasFormChanges || updateLoading || createLoading"
-            @click="handleSave"
-          >
-            {{ event && getId(event) ? 'Update' : 'Create' }}
-          </UButton>
-          </div>
-        </div>
-
-        <div v-if="showTestPanel" class="pt-3 border-t border-[var(--border-default)]">
-          <div class="surface-card rounded-xl p-4 space-y-3">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <UIcon name="lucide:flask-conical" class="w-4 h-4 text-primary" />
-                <div class="text-sm font-semibold text-[var(--text-primary)]">Test event handler</div>
-              </div>
-              <UButton
-                size="sm"
-                color="primary"
-                variant="solid"
-                :loading="testing || testPending"
-                :disabled="!canRunTest"
-                @click="handleTest"
-              >
-                Test
-              </UButton>
-            </div>
-
-            <div class="text-xs text-[var(--text-tertiary)]">
-              Runs the current <span class="font-mono">sourceCode</span> via <span class="font-mono">/admin/test/run</span> and returns result, logs, and emitted events.
-            </div>
-
-            <div v-if="!canRunTest" class="text-xs text-amber-700 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 p-2">
-              <span v-if="!testEventName">Please fill <span class="font-mono">eventName</span> above to enable testing.</span>
-              <span v-else>Please fill <span class="font-mono">sourceCode</span> above to enable testing.</span>
-            </div>
-
-            <div>
-              <div class="text-xs font-medium text-[var(--text-tertiary)] mb-1">Payload (JSON)</div>
-              <FormCodeEditorLazy
-                v-model="testPayloadJson"
-                language="json"
-                height="180px"
-                class="text-xs"
-              />
-              <div v-if="!testPayloadJson?.trim()" class="mt-1 text-[11px] text-[var(--text-tertiary)] font-mono">
-                {{ testPayloadPlaceholder }}
-              </div>
-            </div>
-
-            <div v-if="testResult" class="space-y-2">
-              <div class="flex items-center gap-2">
-                <UIcon
-                  :name="testResult.success ? 'lucide:check-circle' : 'lucide:x-circle'"
-                  class="w-4 h-4"
-                  :class="testResult.success ? 'text-emerald-600' : 'text-rose-600'"
-                />
-                <div class="text-xs font-medium" :class="testResult.success ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'">
-                  {{ testResult.success ? 'Test passed' : 'Test failed' }}
-                </div>
-              </div>
-
-              <div v-if="testResult.error" class="text-xs text-rose-700 dark:text-rose-300 rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 p-2">
-                {{ testResult.error?.message || testResult.error }}
-              </div>
-
-              <div v-if="testResult.logs?.length" class="space-y-1">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Logs</div>
-                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.logs)">Copy</UButton>
-                </div>
-                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[160px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.logs, null, 2) }}</pre>
-              </div>
-
-              <div v-if="testResult.emitted?.length" class="space-y-1">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Emitted</div>
-                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.emitted)">Copy</UButton>
-                </div>
-                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.emitted, null, 2) }}</pre>
-              </div>
-
-              <div v-if="testResult.result !== undefined" class="space-y-1">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Result</div>
-                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.result)">Copy</UButton>
-                </div>
-                <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="flex w-full items-center justify-end gap-2">
+        <UButton variant="outline" color="error" @click="handleCancel">
+          Cancel
+        </UButton>
+        <UButton
+          variant="solid"
+          color="primary"
+          :loading="updateLoading || createLoading"
+          :disabled="!hasFormChanges || updateLoading || createLoading"
+          @click="handleSave"
+        >
+          {{ event && getId(event) ? 'Update' : 'Create' }}
+        </UButton>
       </div>
     </template>
   </CommonDrawer>
@@ -441,8 +328,10 @@ async function handleTest() {
       </div>
     </template>
     <template #footer>
-      <div class="flex justify-end gap-2 w-full">
-        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
+      <div class="flex w-full justify-end gap-2">
+        <UButton variant="ghost" color="error" @click="showDiscardModal = false">
+          Cancel
+        </UButton>
         <UButton @click="confirmDiscard">Discard Changes</UButton>
       </div>
     </template>

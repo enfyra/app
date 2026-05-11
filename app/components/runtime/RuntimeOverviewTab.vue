@@ -29,36 +29,36 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
 
 <template>
   <div class="grid gap-4">
-    <section v-if="runtime.clusterStats?.enabled" class="surface-card rounded-lg p-4">
+    <section v-if="runtime.appClusterStats.enabled" class="surface-card rounded-lg p-4">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-default)] pb-3">
         <div>
-          <div class="font-medium text-[var(--text-primary)]">Cluster Instances</div>
+          <div class="font-medium text-[var(--text-primary)]">App Instances</div>
           <div class="mt-1 text-xs text-[var(--text-tertiary)]">
-            SQL pool coordination heartbeat · stale after {{ fmtSec(runtime.clusterStats.staleAfterMs) }}
+            Runtime monitor samples · stale after {{ fmtSec(runtime.appClusterStats.staleAfterMs) }}
           </div>
         </div>
         <RuntimeStatusBadge
           :severity="runtime.clusterSeverity()"
-          :messages="runtime.clusterSeverity() === 'warning' ? ['One or more cluster heartbeats are near the stale threshold.'] : []"
-          ok-label="Coordinated"
+          :messages="runtime.clusterSeverity() === 'warning' ? ['One or more runtime monitor samples are near the stale threshold.'] : []"
+          ok-label="Live"
           warning-label="Check samples"
         />
       </div>
 
       <div class="mt-4 grid gap-3 sm:grid-cols-2">
         <div class="rounded-lg border border-[var(--border-default)] p-3">
-          <div class="text-xs font-medium text-[var(--text-tertiary)]">Coordination</div>
+          <div class="text-xs font-medium text-[var(--text-tertiary)]">Runtime Samples</div>
           <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
             <div>Active instances</div>
-            <div class="text-right font-medium">{{ runtime.clusterStats.activeCount }}</div>
-            <div>Heartbeat every</div>
-            <div class="text-right font-medium">{{ fmtSec(runtime.clusterStats.heartbeatIntervalMs) }}</div>
-            <div>Reconcile every</div>
-            <div class="text-right font-medium">{{ fmtSec(runtime.clusterStats.reconcileIntervalMs) }}</div>
+            <div class="text-right font-medium">{{ runtime.appClusterStats.activeCount }}</div>
+            <div>Sample every</div>
+            <div class="text-right font-medium">{{ fmtSec(runtime.appClusterStats.sampleIntervalMs) }}</div>
+            <div>Stale after</div>
+            <div class="text-right font-medium">{{ fmtSec(runtime.appClusterStats.staleAfterMs) }}</div>
           </div>
         </div>
 
-        <div class="rounded-lg border border-[var(--border-default)] p-3">
+        <div v-if="runtime.clusterStats?.enabled" class="rounded-lg border border-[var(--border-default)] p-3">
           <div class="text-xs font-medium text-[var(--text-tertiary)]">SQL Pool Budget</div>
           <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
             <div>DB max connections</div>
@@ -75,11 +75,11 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
 
       <div class="mt-4 rounded-lg border border-[var(--border-default)]">
         <div class="border-b border-[var(--border-default)] px-3 py-2 text-xs font-medium text-[var(--text-tertiary)]">
-          Heartbeats
+          Runtime samples
         </div>
         <div class="divide-y divide-[var(--border-default)]">
           <div
-            v-for="item in runtime.clusterStats.instances"
+            v-for="item in runtime.appClusterStats.instances"
             :key="item.id"
             class="grid gap-2 px-3 py-2 text-xs sm:grid-cols-[1fr_170px_100px]"
           >
@@ -87,7 +87,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
             <div class="text-[var(--text-tertiary)]">{{ fmtDateTime(item.lastSeenAt) }}</div>
             <div
               class="font-medium"
-              :class="metricTextClass(item.ageMs > runtime.clusterStats.staleAfterMs * 0.75 ? 'warning' : 'ok')"
+              :class="metricTextClass(item.ageMs > runtime.appClusterStats.staleAfterMs * 0.75 ? 'warning' : 'ok')"
             >
               {{ fmtSec(item.ageMs) }} ago
             </div>

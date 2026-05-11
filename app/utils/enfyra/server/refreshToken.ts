@@ -8,6 +8,19 @@ interface TokenValidationResult {
   needsRefresh: boolean;
 }
 
+interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+  expTime: number;
+}
+
+const REFRESH_REUSE_WINDOW_MS = 2000;
+const refreshRequests = new Map<string, Promise<RefreshTokenResponse>>();
+const refreshResults = new Map<
+  string,
+  { expiresAt: number; response: RefreshTokenResponse }
+>();
+
 export function decodeJWT(token: string): any {
   try {
     const parts = token.split(".");
@@ -53,29 +66,52 @@ export async function refreshAccessToken(
   apiUrl: string
 ): Promise<string> {
   try {
-    const response = await $fetch(normalizeUrl(apiUrl, "/auth/refresh-token"), {
-      method: "POST",
-      body: { refreshToken },
-    });
+    const cached = refreshResults.get(refreshToken);
+    if (cached && cached.expiresAt > Date.now()) {
+      setRefreshedAuthCookies(event, cached.response);
+      return cached.response.accessToken;
+    }
 
-    const {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-      expTime: newExpTime,
-    } = response;
+    if (cached) {
+      refreshResults.delete(refreshToken);
+    }
 
-    const cookieOptions = {
-      httpOnly: true,
-      secure: !import.meta.dev,
-      sameSite: "lax" as const,
-      path: "/",
-    };
+    let refreshRequest = refreshRequests.get(refreshToken);
+    if (!refreshRequest) {
+      refreshRequest = $fetch<RefreshTokenResponse>(
+        normalizeUrl(apiUrl, "/auth/refresh-token"),
+        {
+          method: "POST",
+          body: { refreshToken },
+        }
+      );
+      refreshRequests.set(refreshToken, refreshRequest);
+      refreshRequest
+        .then((response) => {
+          refreshResults.set(refreshToken, {
+            expiresAt: Date.now() + REFRESH_REUSE_WINDOW_MS,
+            response,
+          });
+          setTimeout(() => {
+            const cached = refreshResults.get(refreshToken);
+            if (cached && cached.response === response) {
+              refreshResults.delete(refreshToken);
+            }
+          }, REFRESH_REUSE_WINDOW_MS);
+        })
+        .catch(() => {
+          refreshResults.delete(refreshToken);
+        })
+        .finally(() => {
+          refreshRequests.delete(refreshToken);
+        });
+    }
 
-    setCookie(event, ACCESS_TOKEN_KEY, newAccessToken, cookieOptions);
-    setCookie(event, REFRESH_TOKEN_KEY, newRefreshToken, cookieOptions);
-    setCookie(event, EXP_TIME_KEY, String(newExpTime), cookieOptions);
+    const response = await refreshRequest;
 
-    return newAccessToken;
+    setRefreshedAuthCookies(event, response);
+
+    return response.accessToken;
   } catch (error) {
     console.warn("Token refresh failed:", error);
     const deleteOptions = { path: "/" };
@@ -84,4 +120,20 @@ export async function refreshAccessToken(
     deleteCookie(event, EXP_TIME_KEY, deleteOptions);
     throw error;
   }
+}
+
+function setRefreshedAuthCookies(
+  event: H3Event,
+  response: RefreshTokenResponse
+) {
+  const cookieOptions = {
+    httpOnly: true,
+    secure: !import.meta.dev,
+    sameSite: "lax" as const,
+    path: "/",
+  };
+
+  setCookie(event, ACCESS_TOKEN_KEY, response.accessToken, cookieOptions);
+  setCookie(event, REFRESH_TOKEN_KEY, response.refreshToken, cookieOptions);
+  setCookie(event, EXP_TIME_KEY, String(response.expTime), cookieOptions);
 }

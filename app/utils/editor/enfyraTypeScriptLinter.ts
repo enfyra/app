@@ -45,16 +45,112 @@ const macroReplacements = new Map([
 ]);
 
 const libSource = `
-interface Array<T> { length: number; [n: number]: T; }
+interface Array<T> {
+  length: number;
+  [n: number]: T;
+  filter<S extends T>(predicate: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S[];
+  filter(predicate: (value: T, index: number, array: T[]) => any, thisArg?: any): T[];
+  [Symbol.iterator](): IterableIterator<T>;
+}
+interface ArrayConstructor {
+  isArray(arg: any): arg is any[];
+}
+declare const Array: ArrayConstructor;
 interface Boolean {}
+interface BooleanConstructor {
+  (value?: any): boolean;
+  new (value?: any): Boolean;
+}
+declare const Boolean: BooleanConstructor;
+interface Date {
+  toISOString(): string;
+  toLocaleString(...args: any[]): string;
+  toLocaleDateString(...args: any[]): string;
+  toLocaleTimeString(...args: any[]): string;
+  getTime(): number;
+}
+interface DateConstructor {
+  new (): Date;
+  new (value: any): Date;
+  (value?: any): string;
+  now(): number;
+  parse(value: string): number;
+}
+declare const Date: DateConstructor;
 interface CallableFunction {}
 interface Function {}
 interface IArguments {}
 interface NewableFunction {}
-interface Number {}
-interface Object {}
+interface Math {
+  readonly E: number;
+  readonly LN10: number;
+  readonly LN2: number;
+  readonly LOG10E: number;
+  readonly LOG2E: number;
+  readonly PI: number;
+  readonly SQRT1_2: number;
+  readonly SQRT2: number;
+  abs(x: number): number;
+  ceil(x: number): number;
+  floor(x: number): number;
+  max(...values: number[]): number;
+  min(...values: number[]): number;
+  pow(x: number, y: number): number;
+  random(): number;
+  round(x: number): number;
+  sign(x: number): number;
+  trunc(x: number): number;
+}
+declare const Math: Math;
+interface Number {
+  toString(radix?: number): string;
+  valueOf(): number;
+}
+interface NumberConstructor {
+  (value?: any): number;
+  new (value?: any): Number;
+  isFinite(number: unknown): boolean;
+  isInteger(number: unknown): boolean;
+  isNaN(number: unknown): boolean;
+  parseFloat(string: string): number;
+  parseInt(string: string, radix?: number): number;
+}
+declare const Number: NumberConstructor;
+interface Object {
+  hasOwnProperty(v: PropertyKey): boolean;
+  toString(): string;
+  valueOf(): Object;
+}
+interface ObjectConstructor {
+  (value?: any): any;
+  new (value?: any): Object;
+  assign<T extends object, U>(target: T, source: U): T & U;
+  create(o: object | null): any;
+  entries<T = any>(o: any): [string, T][];
+  getOwnPropertyDescriptor(o: any, p: PropertyKey): any;
+  getOwnPropertyDescriptors<T>(o: T): any;
+  hasOwn(o: object, v: PropertyKey): boolean;
+  keys(o: any): string[];
+  values<T = any>(o: any): T[];
+}
+declare const Object: ObjectConstructor;
 interface RegExp {}
-interface String {}
+interface String {
+  split(separator?: string | RegExp, limit?: number): string[];
+  trim(): string;
+  toLowerCase(): string;
+  toUpperCase(): string;
+  includes(searchString: string, position?: number): boolean;
+  startsWith(searchString: string, position?: number): boolean;
+  endsWith(searchString: string, endPosition?: number): boolean;
+  slice(start?: number, end?: number): string;
+  substring(start: number, end?: number): string;
+}
+interface StringConstructor {
+  (value?: any): string;
+  new (value?: any): String;
+}
+declare const String: StringConstructor;
 interface PromiseLike<T> {
   then<TResult1 = T, TResult2 = never>(
     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
@@ -67,6 +163,22 @@ interface PromiseConstructor {
   resolve<T>(value: T | Promise<T>): Promise<T>;
 }
 declare const Promise: PromiseConstructor;
+interface IteratorYieldResult<TYield> { done?: false; value: TYield; }
+interface IteratorReturnResult<TReturn> { done: true; value: TReturn; }
+type IteratorResult<T, TReturn = any> = IteratorYieldResult<T> | IteratorReturnResult<TReturn>;
+interface Iterator<T, TReturn = any, TNext = undefined> {
+  next(...args: [] | [TNext]): IteratorResult<T, TReturn>;
+}
+interface Iterable<T> {
+  [Symbol.iterator](): Iterator<T>;
+}
+interface IterableIterator<T> extends Iterator<T> {
+  [Symbol.iterator](): IterableIterator<T>;
+}
+interface SymbolConstructor {
+  readonly iterator: symbol;
+}
+declare const Symbol: SymbolConstructor;
 type PropertyKey = string | number | symbol;
 type Record<K extends PropertyKey, T> = { [P in K]: T };
 type Partial<T> = { [P in keyof T]?: T[P] };

@@ -19,10 +19,10 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
     <div class="surface-card rounded-lg p-4">
       <div class="text-xs font-medium text-[var(--text-tertiary)]">Instances</div>
       <div class="mt-2 text-2xl font-semibold" :class="metricTextClass(runtime.clusterSeverity())">
-        {{ runtime.clusterStats?.enabled ? runtime.clusterStats.activeCount : runtime.instances.length }}
+        {{ runtime.appClusterStats.activeCount }}
       </div>
-      <div v-if="runtime.clusterStats?.enabled" class="mt-1 text-xs text-[var(--text-tertiary)]">
-        cluster active
+      <div class="mt-1 text-xs text-[var(--text-tertiary)]">
+        app active
       </div>
     </div>
 

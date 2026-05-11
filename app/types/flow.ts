@@ -9,6 +9,9 @@ export interface FlowStep {
   stepOrder: number;
   type: StepType | string;
   config?: Record<string, any>;
+  sourceCode?: string | null;
+  scriptLanguage?: 'javascript' | 'typescript' | string | null;
+  compiledCode?: string | null;
   timeout?: number;
   onError?: StepErrorHandling;
   retryAttempts?: number;
@@ -35,6 +38,7 @@ export interface StepNodeData {
   label: string;
   stepType: StepNodeType;
   config?: Record<string, any>;
+  sourceCode?: string | null;
   timeout?: number;
   onError?: StepErrorHandling;
   retryAttempts?: number;
