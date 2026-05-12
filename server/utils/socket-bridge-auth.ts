@@ -1,14 +1,10 @@
 import type { IncomingMessage } from 'node:http';
-import { $fetch } from 'ofetch';
 import { Encoder, PacketType } from 'socket.io-parser';
-import { useRuntimeConfig } from 'nitropack/runtime/internal/config';
 
 import {
   ACCESS_TOKEN_KEY,
   ENFYRA_SOCKET_AUTH_ERROR,
-  REFRESH_TOKEN_KEY,
 } from '~/constants/enfyra';
-import { normalizeUrl } from '~/utils/api/url';
 import { isAccessTokenExpired } from '~/utils/enfyra/server/refreshToken';
 
 import { addWsNs } from './ws-namespace';
@@ -42,23 +38,6 @@ function buildUpstreamHeaders(
   return upstreamHeaders;
 }
 
-async function fetchAccessTokenWithRefresh(
-  refreshToken: string,
-  apiUrl: string,
-): Promise<string | null> {
-  try {
-    const response = await $fetch<{
-      accessToken?: string;
-    }>(normalizeUrl(apiUrl, '/auth/refresh-token'), {
-      method: 'POST',
-      body: { refreshToken },
-    });
-    return response.accessToken ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export async function resolveSocketBridgeAuth(
   req: IncomingMessage,
 ): Promise<
@@ -74,25 +53,9 @@ export async function resolveSocketBridgeAuth(
 
   const cookies = parseCookieHeader(req.headers?.cookie);
   const accessToken = cookies[ACCESS_TOKEN_KEY];
-  const refreshToken = cookies[REFRESH_TOKEN_KEY];
 
   if (accessToken && !isAccessTokenExpired(accessToken)) {
     return { ok: true, upstreamHeaders: buildUpstreamHeaders(req, {}) };
-  }
-
-  if (refreshToken && (!accessToken || isAccessTokenExpired(accessToken))) {
-    const apiUrl = useRuntimeConfig().public?.apiUrl;
-    if (typeof apiUrl === 'string' && apiUrl.length > 0) {
-      const newAccess = await fetchAccessTokenWithRefresh(refreshToken, apiUrl);
-      if (newAccess) {
-        return {
-          ok: true,
-          upstreamHeaders: buildUpstreamHeaders(req, {
-            authorization: `Bearer ${newAccess}`,
-          }),
-        };
-      }
-    }
   }
 
   return { ok: false };
