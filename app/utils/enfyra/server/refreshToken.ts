@@ -1,6 +1,6 @@
-import { getCookie, deleteCookie, type H3Event } from "h3";
+import { getCookie, type H3Event } from "h3";
 import { $fetch } from "ofetch";
-import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, EXP_TIME_KEY } from "~/constants/enfyra";
+import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "~/constants/enfyra";
 import { normalizeUrl } from "~/utils/api/url";
 import { setAuthCookies } from "~/utils/enfyra/server/authCookies";
 
@@ -115,10 +115,6 @@ export async function refreshAccessToken(
     return response.accessToken;
   } catch (error) {
     console.warn("Token refresh failed:", error);
-    const deleteOptions = { path: "/" };
-    deleteCookie(event, ACCESS_TOKEN_KEY, deleteOptions);
-    deleteCookie(event, REFRESH_TOKEN_KEY, deleteOptions);
-    deleteCookie(event, EXP_TIME_KEY, deleteOptions);
     throw error;
   }
 }
