@@ -1,7 +1,8 @@
-import { setCookie, getCookie, deleteCookie, type H3Event } from "h3";
+import { getCookie, deleteCookie, type H3Event } from "h3";
 import { $fetch } from "ofetch";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, EXP_TIME_KEY } from "~/constants/enfyra";
 import { normalizeUrl } from "~/utils/api/url";
+import { setAuthCookies } from "~/utils/enfyra/server/authCookies";
 
 interface TokenValidationResult {
   accessToken: string | null;
@@ -126,14 +127,5 @@ function setRefreshedAuthCookies(
   event: H3Event,
   response: RefreshTokenResponse
 ) {
-  const cookieOptions = {
-    httpOnly: true,
-    secure: !import.meta.dev,
-    sameSite: "lax" as const,
-    path: "/",
-  };
-
-  setCookie(event, ACCESS_TOKEN_KEY, response.accessToken, cookieOptions);
-  setCookie(event, REFRESH_TOKEN_KEY, response.refreshToken, cookieOptions);
-  setCookie(event, EXP_TIME_KEY, String(response.expTime), cookieOptions);
+  setAuthCookies(event, response);
 }
