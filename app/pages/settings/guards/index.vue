@@ -270,8 +270,8 @@ async function createGuardFromTemplate() {
   }
 
   showCreateGuardDrawer.value = false;
-  notify.success('Success', 'Guard created successfully');
-  await fetchGuards();
+  await nextTick();
+  await navigateTo(`/settings/guards/${createdGuardId}`);
 }
 
 const positionColorMap: Record<string, string> = {

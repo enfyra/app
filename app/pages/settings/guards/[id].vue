@@ -253,11 +253,18 @@ const formChanges = useFormChanges();
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
-const fieldMap = {
+const isGlobalGuardForm = computed(() => form.value?.isGlobal === true);
+
+const fieldMap = computed(() => ({
   position: { component: resolveComponent('GuardPositionPicker') },
   combinator: { component: resolveComponent('GuardCombinatorPicker') },
-  methods: { type: 'methods-selector', componentProps: { excludeGqlMethods: true } },
-};
+  route: { excluded: isGlobalGuardForm.value },
+  methods: {
+    type: 'methods-selector',
+    excluded: isGlobalGuardForm.value,
+    componentProps: { excludeGqlMethods: true },
+  },
+}));
 
 registerPageHeader({
   title: 'Guard Details',
@@ -341,6 +348,17 @@ const {
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
+watch(
+  () => form.value?.isGlobal,
+  (isGlobal) => {
+    if (!isGlobal) return;
+    form.value.route = null;
+    form.value.methods = [];
+    delete errors.value.route;
+    delete errors.value.methods;
+  },
+);
+
 const rootGuard = computed(() => guardData.value?.data?.[0] || null);
 const rootPosition = computed(() => rootGuard.value?.position || null);
 
@@ -351,7 +369,7 @@ const {
 } = useApi(() => '/guard_definition', {
   query: computed(() => ({
     fields: getIncludeFields(),
-    filter: { parent: { _nnull: true } },
+    filter: { parent: { _is_null: false } },
     sort: ['priority'],
     limit: -1,
   })),
@@ -537,6 +555,11 @@ async function updateGuard() {
   if (!form.value) return;
 
   const body = { ...form.value };
+  if (body.isGlobal === true) {
+    body.route = null;
+    body.methods = [];
+  }
+
   if (!(await validateForm(body, errors))) return;
 
   await executeUpdateGuard({ id: route.params.id as string, body });

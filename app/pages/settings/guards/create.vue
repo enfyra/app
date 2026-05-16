@@ -29,11 +29,18 @@ const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
 
-const fieldMap = {
+const isGlobalGuardForm = computed(() => createForm.value?.isGlobal === true);
+
+const fieldMap = computed(() => ({
   position: { component: resolveComponent('GuardPositionPicker') },
   combinator: { component: resolveComponent('GuardCombinatorPicker') },
-  methods: { type: 'methods-selector', componentProps: { excludeGqlMethods: true } },
-};
+  route: { excluded: isGlobalGuardForm.value },
+  methods: {
+    type: 'methods-selector',
+    excluded: isGlobalGuardForm.value,
+    componentProps: { excludeGqlMethods: true },
+  },
+}));
 
 registerPageHeader({
   title: 'Create New Guard',
@@ -76,8 +83,23 @@ onMounted(() => {
   createForm.value = generateEmptyForm();
 });
 
+watch(
+  () => createForm.value?.isGlobal,
+  (isGlobal) => {
+    if (!isGlobal) return;
+    createForm.value.route = null;
+    createForm.value.methods = [];
+    delete createErrors.value.route;
+    delete createErrors.value.methods;
+  },
+);
+
 async function handleCreate() {
   const body = { ...createForm.value };
+  if (body.isGlobal === true) {
+    body.route = null;
+    body.methods = [];
+  }
 
   if (!(await validateForm(body, createErrors))) return;
 
