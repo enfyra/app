@@ -134,10 +134,6 @@ export function useAdminSocket() {
       return true;
     };
 
-    socket.on('connect', () => {
-      console.log('Connected to admin socket');
-    });
-
     socket.on('connect_error', (err: Error) => {
       if (err?.message === ENFYRA_SOCKET_AUTH_ERROR) return;
       if (!shouldToastConnection()) return;

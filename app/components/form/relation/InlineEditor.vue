@@ -79,12 +79,10 @@ function shortenId(id: string | number): string {
 
 async function navigateToDetail(item: any) {
   const tableName = props.relationMeta?.targetTableName;
-  console.log('[InlineEditor] navigateToDetail', { tableName, item, keys: Object.keys(item || {}) });
 
   if (!tableName) return;
 
   const url = resolveRelationDetailPath(tableName, item);
-  console.log('[InlineEditor] resolved url:', url);
 
   if (url) {
     await navigateTo(url);
@@ -92,7 +90,6 @@ async function navigateToDetail(item: any) {
   }
 
   const itemId = getId(item);
-  console.log('[InlineEditor] fallback, itemId:', itemId);
   if (!itemId) return;
   await navigateTo(`/data/${tableName}/${itemId}`);
 }

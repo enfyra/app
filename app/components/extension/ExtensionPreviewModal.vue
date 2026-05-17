@@ -193,7 +193,7 @@ async function compileAndPreview() {
           console.warn('Invalid Vue component:', component);
         }
         previewComponent.value = markRaw(component);
-        if (perf.enabled) {
+        if (perf.enabled && import.meta.dev) {
           console.log(
             `[Extension Perf] Preview total: ${(performance.now() - totalStart).toFixed(1)}ms`
           );
@@ -218,4 +218,3 @@ async function compileAndPreview() {
   isolation: isolate;
 }
 </style>
-

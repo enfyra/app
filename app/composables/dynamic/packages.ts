@@ -281,7 +281,7 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
     await loadSinglePackage(pkgName, packagesObject, loadedExternals);
   }
 
-  if (PERF_ENABLED) {
+  if (PERF_ENABLED && import.meta.dev) {
     console.log(
       `[Extension Perf] getPackages: load ${packagesToLoad.length} pkgs: ${(performance.now() - loadStart).toFixed(1)}ms`
     );

@@ -31,9 +31,6 @@ export function useNotify() {
         settled = true
         observer.disconnect()
         clearTimeout(timeout)
-        const vaulOverlay = !!document.querySelector('[data-vaul-overlay]')
-        const bodyOverflow = document.body.style.overflow
-        console.log(`[useNotify] waitForCleanBody resolved via ${reason}`, { vaulOverlay, bodyOverflow })
         resolve()
       }
 
