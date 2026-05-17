@@ -185,7 +185,7 @@ async function handleFileUpload(files: File | File[]) {
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
-  title: "Files Manager",
+  title: "File Manager",
   description: "Organize your files and documents efficiently",
   gradient: "cyan",
 });

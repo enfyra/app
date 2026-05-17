@@ -23,8 +23,6 @@ const emit = defineEmits<{
   "refresh-folders": [];
 }>();
 
-const { isMounted } = useMounted();
-
 function handleFolderClick(folder: any) {
   emit("folder-click", folder);
 }
@@ -38,7 +36,7 @@ function toggleItemSelection(folderId: string) {
   <div>
     <Transition name="loading-fade" mode="out-in">
       <div
-        v-if="(loading && folders.length === 0) || !isMounted"
+        v-if="loading && folders.length === 0"
         class="col-span-full"
       >
         <CommonLoadingState type="folder" />

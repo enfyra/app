@@ -139,7 +139,6 @@ const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
 
-const { isMounted } = useMounted();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -167,7 +166,7 @@ const {
 
 const storageConfigs = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const showInitialLoading = computed(() => loading.value && !apiData.value);
 
 
 const { execute: updateConfig, error: updateError } = useApi(

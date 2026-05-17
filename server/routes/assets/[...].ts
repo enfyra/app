@@ -1,11 +1,7 @@
 import {
-  createError,
   defineEventHandler,
-  getQuery,
-  sendRedirect,
   setResponseHeaders,
 } from "h3";
-import { ENFYRA_API_PREFIX } from "~/constants/enfyra";
 import { proxyToAPI } from "~/utils/enfyra/server/proxy";
 
 const CORS_HEADERS = {

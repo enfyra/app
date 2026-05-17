@@ -56,7 +56,7 @@ const props = withDefaults(defineProps<Props>(), {
   selectedItems: () => [],
 });
 
-const { getFileUrl } = useFileUrl();
+const { getFileUrl, getThumbnailUrl } = useFileUrl();
 const { getId } = useDatabase();
 
 const transformedFiles = computed(() => {
@@ -71,6 +71,8 @@ const transformedFiles = computed(() => {
       size: formatFileSize(parseInt(file.filesize || "0")),
       modifiedAt: formatDate(file.updatedAt || file.createdAt || ""),
       assetUrl: getFileUrl(getId(file)),
+      thumbnailUrl: getThumbnailUrl(getId(file)),
+      isImage: file.mimetype?.startsWith("image/") || file.type === "image",
     };
   });
 });

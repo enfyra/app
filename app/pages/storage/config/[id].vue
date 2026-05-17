@@ -101,10 +101,6 @@ async function handleReset() {
     hasFormChanges.value = false;
 
     notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
@@ -234,10 +230,6 @@ async function updateConfig() {
 
   await fetchGlobalStorageConfigs();
 
-  notify.success("Success", "Storage configuration updated!");
-  notify.success("Success", "Storage configuration updated!");
-  notify.success("Success", "Storage configuration updated!");
-  notify.success("Success", "Storage configuration updated!");
   notify.success("Success", "Storage configuration updated!");
   errors.value = {};
 }

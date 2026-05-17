@@ -1,13 +1,11 @@
 <template>
-  <div
-    class="group relative"
-  >
+  <div class="group relative">
     <UContextMenu
       :items="moveState.moveMode ? [] : getContextMenuItems()"
       :disabled="moveState.moveMode"
     >
       <div
-        class="relative rounded-xl surface-card transition-all duration-200 overflow-hidden cursor-pointer hover:shadow-panel-md"
+        class="relative overflow-hidden rounded-xl surface-card transition-all duration-200 cursor-pointer hover:shadow-panel-md"
         :class="{
           'border-brand-500 shadow-panel-md': selectedItems.includes(file.id),
           'hover:border-[var(--border-strong)]': !selectedItems.includes(file.id),
@@ -15,72 +13,93 @@
         :style="{
           borderWidth: selectedItems.includes(file.id) ? '2px' : '1px',
           opacity: moveState.moveMode ? '0.6' : '1',
-          cursor: moveState.moveMode ? 'not-allowed' : 'pointer'
+          cursor: moveState.moveMode ? 'not-allowed' : 'pointer',
         }"
         @click="handleFileClick"
       >
-        <div class="p-5 flex items-start gap-4 h-full">
-          <div class="flex-shrink-0">
-            <div class="w-12 h-12 rounded-lg flex items-center justify-center" :class="getFileIconBgClass()">
-              <UIcon
-                :name="file.icon"
-                :class="getFileIconColor()"
-                size="24"
-            />
-          </div>
-          </div>
-
-          <div class="flex-1 flex flex-col justify-between min-w-0">
-            <div class="mb-3">
-          <EditableName
-            :file="file"
-            :editing-file-id="editingFileId"
-            v-model:editing-name="editingName"
-            :editing-loading="editingLoading"
-            :original-name="originalName"
-            :is-selection-mode="isSelectionMode"
-            @start-rename="startRename"
-            @save-edit="saveEdit"
-            @cancel-edit="cancelEdit"
+        <div class="relative aspect-[4/3] overflow-hidden bg-[var(--surface-muted)]">
+          <CommonLazyImage
+            v-if="file.isImage"
+            :src="file.thumbnailUrl"
+            :alt="file.displayName"
+            class="h-full w-full"
+            container-class="h-full w-full"
+            object-fit="cover"
+            :show-error-text="false"
           />
-            </div>
 
-            <div class="flex items-center justify-between text-sm text-[var(--text-tertiary)] mb-3">
-            <span>{{ file.size }}</span>
-            <span>{{ file.modifiedAt }}</span>
-              </div>
-
-            <div v-if="!moveState.moveMode" class="flex items-center justify-between" @click.stop>
-              <UBadge
-                :color="getStorageColor(file)"
-                variant="soft"
-                size="sm"
-              >
-                <UIcon :name="getStorageIcon(file)" class="w-3 h-3 mr-1" />
-                {{ getStorageName(file) }}
-              </UBadge>
-              <UDropdownMenu :items="getDropdownMenuItems()">
-                <UButton
-                  variant="soft"
-                  size="sm"
-                  class="h-8 w-8 p-0"
-                  @click.stop
-                >
-                  <UIcon name="lucide:more-vertical" class="w-4 h-4 text-[var(--text-tertiary)]" />
-                </UButton>
-              </UDropdownMenu>
+          <div v-else class="flex h-full items-center justify-center">
+            <div
+              class="flex h-20 w-20 items-center justify-center rounded-2xl"
+              :class="file.iconBackground"
+            >
+              <UIcon :name="file.icon" :class="file.iconColor" size="36" />
             </div>
           </div>
 
           <div
             v-if="isSelectionMode"
-            class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-[var(--surface-default)] shadow-theme-xs"
+            class="absolute right-3 top-3 z-20 rounded-md bg-[var(--surface-default)]/95 p-1.5 shadow-theme-xs backdrop-blur"
             @click.stop="handleCheckboxClick"
           >
             <UCheckbox
               :model-value="selectedItems.includes(file.id)"
               @update:model-value="handleCheckboxClick"
             />
+          </div>
+
+          <div
+            class="absolute left-3 top-3 rounded-full bg-[var(--surface-default)]/90 px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)] shadow-theme-xs backdrop-blur"
+          >
+            {{ fileTypeLabel }}
+          </div>
+        </div>
+
+        <div class="space-y-4 p-4">
+          <div class="min-w-0">
+            <FileGridEditableName
+              :file="file"
+              :editing-file-id="editingFileId"
+              v-model:editing-name="editingName"
+              :editing-loading="editingLoading"
+              :original-name="originalName"
+              :is-selection-mode="isSelectionMode"
+              @start-rename="startRename"
+              @save-edit="saveEdit"
+              @cancel-edit="cancelEdit"
+            />
+          </div>
+
+          <div class="flex items-center justify-between gap-3 text-xs text-[var(--text-tertiary)]">
+            <span class="truncate">{{ file.size }}</span>
+            <span class="truncate">{{ file.modifiedAt || "No date" }}</span>
+          </div>
+
+          <div
+            v-if="!moveState.moveMode"
+            class="flex items-center justify-between gap-3"
+            @click.stop
+          >
+            <UBadge
+              :color="getStorageColor(file)"
+              variant="subtle"
+              size="sm"
+              class="min-w-0"
+            >
+              <UIcon :name="getStorageIcon(file)" class="mr-1 h-3 w-3" />
+              <span class="truncate">{{ getStorageName(file) }}</span>
+            </UBadge>
+
+            <UDropdownMenu :items="getDropdownMenuItems()">
+              <UButton
+                icon="lucide:more-horizontal"
+                variant="ghost"
+                color="neutral"
+                size="sm"
+                square
+                @click.stop
+              />
+            </UDropdownMenu>
           </div>
         </div>
       </div>
@@ -98,6 +117,9 @@ interface Props {
     size: string;
     modifiedAt: string;
     assetUrl: string;
+    thumbnailUrl: string;
+    isImage?: boolean;
+    type?: string;
     storageConfig?: {
       type?: string;
       name?: string;
@@ -139,13 +161,23 @@ const editingName = ref("");
 const originalName = ref("");
 const editingLoading = ref(false);
 
+const fileTypeLabel = computed(() => {
+  const mimetype = props.file.mimetype || props.file.type || "";
+  if (mimetype.startsWith("image/") || props.file.isImage) return "Image";
+  if (mimetype.startsWith("video/")) return "Video";
+  if (mimetype.startsWith("audio/")) return "Audio";
+  if (mimetype.includes("pdf")) return "PDF";
+  if (mimetype.includes("zip") || mimetype.includes("archive")) return "Archive";
+  if (mimetype.startsWith("text/")) return "Text";
+  return "File";
+});
+
 function handleFileClick() {
   if (props.isSelectionMode) {
     emit("toggle-selection", props.file.id);
   } else if (moveState.value.moveMode) {
     const notify = useNotify();
     notify.info("Cannot open file", "Cancel move mode to access files.");
-    return;
   } else {
     emit("file-click", props.file);
   }
@@ -163,12 +195,10 @@ function startRename() {
 
   nextTick(() => {
     const input = document.querySelector(
-      `input[data-editing-id="${props.file.id}"]`
+      `input[data-editing-id="${props.file.id}"]`,
     ) as HTMLInputElement;
-    if (input) {
-      input.focus();
-      input.select();
-    }
+    input?.focus();
+    input?.select();
   });
 }
 
@@ -182,7 +212,8 @@ function cancelEdit() {
 
 async function saveEdit() {
   if (!editingName.value.trim()) {
-    console.error("File name cannot be empty");
+    const notify = useNotify();
+    notify.warning("Invalid name", "File name cannot be empty.");
     return;
   }
 
@@ -194,7 +225,7 @@ async function saveEdit() {
       {
         method: "patch",
         errorContext: "Update File",
-      }
+      },
     );
 
     await updateFile({
@@ -204,21 +235,17 @@ async function saveEdit() {
       },
     });
 
-    if (error.value) {
-      editingLoading.value = false;
-      return;
-    }
+    if (error.value) return;
 
     editingFileId.value = null;
     editingName.value = "";
     originalName.value = "";
-    editingLoading.value = false;
 
     const notify = useNotify();
     notify.success("Success", "File renamed successfully!");
 
     emit("refresh-files");
-  } catch (error) {
+  } finally {
     editingLoading.value = false;
   }
 }
@@ -229,37 +256,27 @@ function getContextMenuItems() {
       {
         label: "View",
         icon: "lucide:eye",
-        onSelect: () => {
-          emit("view-file", props.file);
-        },
+        onSelect: () => emit("view-file", props.file),
       },
       {
         label: "Rename",
         icon: "lucide:edit-3",
-        onSelect: () => {
-          startRename();
-        },
+        onSelect: startRename,
       },
       {
         label: "Download",
         icon: "lucide:download",
-        onSelect: () => {
-          emit("download-file", props.file);
-        },
+        onSelect: () => emit("download-file", props.file),
       },
       {
         label: "Copy URL",
         icon: "lucide:copy",
-        onSelect: () => {
-          emit("copy-file-url", props.file);
-        },
+        onSelect: () => emit("copy-file-url", props.file),
       },
       {
         label: "Details",
         icon: "lucide:info",
-        onSelect: () => {
-          emit("view-file-details", props.file);
-        },
+        onSelect: () => emit("view-file-details", props.file),
       },
     ],
   ];
@@ -270,9 +287,7 @@ function getContextMenuItems() {
         label: "Delete",
         icon: "lucide:trash-2",
         color: "error" as const,
-        onSelect: () => {
-          emit("delete-file", props.file);
-        },
+        onSelect: () => emit("delete-file", props.file),
       },
     ]);
   }
@@ -285,37 +300,27 @@ function getDropdownMenuItems() {
     {
       label: "View",
       icon: "lucide:eye",
-      onSelect: () => {
-        emit("view-file", props.file);
-      },
+      onSelect: () => emit("view-file", props.file),
     },
     {
       label: "Rename",
       icon: "lucide:edit-3",
-      onSelect: () => {
-        startRename();
-      },
+      onSelect: startRename,
     },
     {
       label: "Download",
       icon: "lucide:download",
-      onSelect: () => {
-        emit("download-file", props.file);
-      },
+      onSelect: () => emit("download-file", props.file),
     },
     {
       label: "Copy URL",
       icon: "lucide:copy",
-      onSelect: () => {
-        emit("copy-file-url", props.file);
-      },
+      onSelect: () => emit("copy-file-url", props.file),
     },
     {
       label: "Details",
       icon: "lucide:info",
-      onSelect: () => {
-        emit("view-file-details", props.file);
-      },
+      onSelect: () => emit("view-file-details", props.file),
     },
   ];
 
@@ -324,9 +329,7 @@ function getDropdownMenuItems() {
       label: "Delete",
       icon: "lucide:trash-2",
       color: "error" as const,
-      onSelect: () => {
-        emit("delete-file", props.file);
-      },
+      onSelect: () => emit("delete-file", props.file),
     });
   }
 
@@ -350,7 +353,10 @@ function getStorageName(file: any) {
 
 function getStorageColor(file: any) {
   const storageType = file.storageConfig?.type || "Local Storage";
-  const colorMap: Record<string, "primary" | "secondary" | "info" | "success" | "warning" | "error" | "neutral"> = {
+  const colorMap: Record<
+    string,
+    "primary" | "secondary" | "info" | "success" | "warning" | "error" | "neutral"
+  > = {
     "Amazon S3": "primary",
     "Google Cloud Storage": "info",
     "Cloudflare R2": "warning",
@@ -358,22 +364,4 @@ function getStorageColor(file: any) {
   };
   return colorMap[storageType] || "neutral";
 }
-
-const getFileIconBgClass = () => {
-  const mimetype = props.file.mimetype || '';
-  if (mimetype.startsWith('image/')) {
-    return 'bg-success-50 dark:bg-success-500/20';
-  }
-  if (mimetype.startsWith('video/')) {
-    return 'bg-purple-50 dark:bg-purple-500/20';
-  }
-  if (mimetype.startsWith('audio/')) {
-    return 'bg-primary-50 dark:bg-primary-500/20';
-  }
-  return 'bg-[var(--surface-muted)]';
-};
-
-const getFileIconColor = () => {
-  return getFileColor(props.file.mimetype || '');
-};
 </script>

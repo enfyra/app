@@ -46,7 +46,6 @@ const {
   clearFileManagerState,
 } = useFileManagerMove();
 const { deleteSelectedFolders, deleteSelectedFiles } = useFileManager();
-const { confirm } = useConfirm();
 const { getId } = useDatabase();
 
 function handleFolderClick(folder: any) {
@@ -140,7 +139,9 @@ async function handleBulkDelete() {
     props.files.find((file) => getId(file) === id)
   );
 
-  const folderList = folderIds.map((id) => props.folders.find((f) => getId(f) === id)).filter(Boolean);
+  const folderList = folderIds
+    .map((id) => props.folders.find((f) => getId(f) === id))
+    .filter(Boolean);
 
   if (folderIds.length > 0) {
     await deleteSelectedFolders(folderList, () => emit("refreshItems"));
@@ -150,8 +151,8 @@ async function handleBulkDelete() {
     await deleteSelectedFiles(fileIds, () => emit("refreshItems"));
   }
 
-    selectedItems.value = [];
-    isSelectionMode.value = false;
+  selectedItems.value = [];
+  isSelectionMode.value = false;
 }
 
 const { isMobile, isTablet } = useScreen();
@@ -288,56 +289,102 @@ useSubHeaderActionRegistry([
 </script>
 
 <template>
-  <div class="space-y-6">
-    
-    <div class="min-h-[400px] space-y-8">
-      <div class="space-y-8">
-        
-        <div class="surface-card rounded-xl overflow-hidden">
-          <div class="px-5 py-4 border-b border-[var(--border-default)]">
-            <h2 class="text-lg font-semibold text-[var(--text-primary)]">
+  <div class="surface-card overflow-hidden rounded-xl">
+    <div
+      class="flex flex-col gap-4 border-b border-[var(--border-default)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
+    >
+      <div class="min-w-0">
+        <p class="text-sm font-medium text-[var(--text-tertiary)]">
+          Library
+        </p>
+        <h2 class="text-xl font-semibold text-[var(--text-primary)]">
+          {{ props.folders.length + props.files.length }} items
+        </h2>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <UBadge variant="subtle" color="primary" size="lg">
+          <UIcon name="lucide:folder" class="mr-1 h-4 w-4" />
+          {{ props.folders.length }} folders
+        </UBadge>
+        <UBadge variant="subtle" color="info" size="lg">
+          <UIcon name="lucide:file" class="mr-1 h-4 w-4" />
+          {{ props.files.length }} files
+        </UBadge>
+      </div>
+    </div>
+
+    <div class="space-y-8 p-5">
+      <section v-if="props.foldersLoading || props.folders.length > 0">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <UIcon name="lucide:folder" class="h-5 w-5 text-primary" />
+            <h3 class="text-base font-semibold text-[var(--text-primary)]">
               Folders
-            </h2>
+            </h3>
           </div>
-
-          <div class="p-5">
-          <FolderView
-            :folders="props.folders"
-            :view-mode="viewMode"
-            :loading="props.foldersLoading && props.folders.length === 0"
-            empty-title="No folders"
-            empty-description="No folders in this location"
-            :is-selection-mode="isSelectionMode"
-            :selected-items="selectedItems"
-            @folder-click="handleFolderClick"
-            @toggle-selection="handleToggleItemSelection"
-            @refresh-folders="() => emit('refreshFolders')"
-          />
-          </div>
+          <span class="text-sm text-[var(--text-tertiary)]">
+            {{ props.folders.length }}
+          </span>
         </div>
 
-        <div class="surface-card rounded-xl overflow-hidden">
-          <div class="px-5 py-4 border-b border-[var(--border-default)]">
-            <h2 class="text-lg font-semibold text-[var(--text-primary)]">
+        <FolderView
+          :folders="props.folders"
+          :view-mode="viewMode"
+          :loading="props.foldersLoading && props.folders.length === 0"
+          empty-title="No folders"
+          empty-description="No folders in this location"
+          :is-selection-mode="isSelectionMode"
+          :selected-items="selectedItems"
+          @folder-click="handleFolderClick"
+          @toggle-selection="handleToggleItemSelection"
+          @refresh-folders="() => emit('refreshFolders')"
+        />
+      </section>
+
+      <section v-if="props.filesLoading || props.files.length > 0">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <UIcon name="lucide:file" class="h-5 w-5 text-info" />
+            <h3 class="text-base font-semibold text-[var(--text-primary)]">
               Files
-            </h2>
+            </h3>
           </div>
-
-          <div class="p-5">
-          <FileView
-            :files="props.files"
-            :view-mode="viewMode"
-            :loading="props.filesLoading && props.files.length === 0"
-            empty-title="No files"
-            empty-description="No files in this location"
-            :is-selection-mode="isSelectionMode"
-            :selected-items="selectedItems"
-            @file-click="handleFileClick"
-            @toggle-selection="handleToggleItemSelection"
-            @refresh-files="() => emit('refreshFiles')"
-          />
-          </div>
+          <span class="text-sm text-[var(--text-tertiary)]">
+            {{ props.files.length }}
+          </span>
         </div>
+
+        <FileView
+          :files="props.files"
+          :view-mode="viewMode"
+          :loading="props.filesLoading && props.files.length === 0"
+          empty-title="No files"
+          empty-description="No files in this location"
+          :is-selection-mode="isSelectionMode"
+          :selected-items="selectedItems"
+          @file-click="handleFileClick"
+          @toggle-selection="handleToggleItemSelection"
+          @refresh-files="() => emit('refreshFiles')"
+        />
+      </section>
+
+      <div
+        v-if="
+          !props.foldersLoading &&
+          !props.filesLoading &&
+          props.folders.length === 0 &&
+          props.files.length === 0
+        "
+        class="py-8"
+      >
+        <CommonEmptyState
+          :title="emptyTitle"
+          :description="emptyDescription"
+          icon="lucide:folder-open"
+          variant="naked"
+          size="lg"
+        />
       </div>
     </div>
   </div>
