@@ -141,8 +141,17 @@ interface ObjectConstructor {
   values<T = any>(o: any): T[];
 }
 declare const Object: ObjectConstructor;
-interface RegExp {}
+interface RegExp {
+  test(string: string): boolean;
+  exec(string: string): RegExpExecArray | null;
+}
+interface RegExpExecArray extends Array<string> {
+  index: number;
+  input: string;
+}
 interface String {
+  length: number;
+  [Symbol.iterator](): IterableIterator<string>;
   replace(searchValue: string | RegExp, replaceValue: string): string;
   replace(searchValue: string | RegExp, replacer: (...args: any[]) => string): string;
   split(separator?: string | RegExp, limit?: number): string[];
@@ -592,7 +601,7 @@ export async function lintEnfyraScript(
   };
 
   const program = ts.createProgram([fileName], compilerOptions, host);
-  const diagnostics = ts.getPreEmitDiagnostics(program, program.getSourceFile(fileName));
+  const diagnostics = program.getSyntacticDiagnostics(program.getSourceFile(fileName));
 
   return diagnostics
     .map((diagnostic): Diagnostic | null => {
