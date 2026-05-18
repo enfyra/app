@@ -50,6 +50,13 @@ interface Array<T> {
   [n: number]: T;
   filter<S extends T>(predicate: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S[];
   filter(predicate: (value: T, index: number, array: T[]) => any, thisArg?: any): T[];
+  includes(searchElement: T, fromIndex?: number): boolean;
+  indexOf(searchElement: T, fromIndex?: number): number;
+  map<U>(callbackfn: (value: T, index: number, array: T[]) => U, thisArg?: any): U[];
+  reduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T): T;
+  reduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue: T): T;
+  reduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue: U): U;
+  slice(start?: number, end?: number): T[];
   [Symbol.iterator](): IterableIterator<T>;
 }
 interface ArrayConstructor {
@@ -136,6 +143,8 @@ interface ObjectConstructor {
 declare const Object: ObjectConstructor;
 interface RegExp {}
 interface String {
+  replace(searchValue: string | RegExp, replaceValue: string): string;
+  replace(searchValue: string | RegExp, replacer: (...args: any[]) => string): string;
   split(separator?: string | RegExp, limit?: number): string[];
   trim(): string;
   toLowerCase(): string;
@@ -161,8 +170,43 @@ interface Promise<T> extends PromiseLike<T> {}
 interface PromiseConstructor {
   new <T>(executor: (resolve: (value: T | Promise<T>) => void, reject: (reason?: any) => void) => void): Promise<T>;
   resolve<T>(value: T | Promise<T>): Promise<T>;
+  all<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]> }>;
+  all<T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>;
 }
 declare const Promise: PromiseConstructor;
+interface Set<T> {
+  readonly size: number;
+  add(value: T): this;
+  clear(): void;
+  delete(value: T): boolean;
+  has(value: T): boolean;
+  forEach(callbackfn: (value: T, value2: T, set: Set<T>) => void, thisArg?: any): void;
+  [Symbol.iterator](): IterableIterator<T>;
+}
+interface SetConstructor {
+  new <T = any>(values?: readonly T[] | Iterable<T> | null): Set<T>;
+}
+declare const Set: SetConstructor;
+declare namespace Intl {
+  type DateTimeFormatOptions = Record<string, any>;
+  type NumberFormatOptions = Record<string, any>;
+  interface DateTimeFormat {
+    format(date?: Date | number): string;
+  }
+  interface DateTimeFormatConstructor {
+    new (locales?: string | string[], options?: DateTimeFormatOptions): DateTimeFormat;
+    (locales?: string | string[], options?: DateTimeFormatOptions): DateTimeFormat;
+  }
+  interface NumberFormat {
+    format(value: number): string;
+  }
+  interface NumberFormatConstructor {
+    new (locales?: string | string[], options?: NumberFormatOptions): NumberFormat;
+    (locales?: string | string[], options?: NumberFormatOptions): NumberFormat;
+  }
+  const DateTimeFormat: DateTimeFormatConstructor;
+  const NumberFormat: NumberFormatConstructor;
+}
 interface IteratorYieldResult<TYield> { done?: false; value: TYield; }
 interface IteratorReturnResult<TReturn> { done: true; value: TReturn; }
 type IteratorResult<T, TReturn = any> = IteratorYieldResult<T> | IteratorReturnResult<TReturn>;

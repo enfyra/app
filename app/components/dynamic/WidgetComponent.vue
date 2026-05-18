@@ -62,38 +62,21 @@ const {
   loadDynamicComponent,
   getCachedComponent,
   getCachedExtensionMeta,
-  setCachedExtensionMeta,
   extensionCacheInvalidation,
   isExtensionInvalidationMatch,
 } = useDynamicComponent();
-const { getIdFieldName } = useDatabase();
+const {
+  getWidgetMetaCacheKey,
+  loadWidgetExtension,
+} = useDynamicWidgetLoader();
 
 const error = ref<string | null>(null);
 const widgetComponent = ref<any>(null);
 const currentExtensionMeta = ref<any>(null);
 const loading = ref(false);
 
-const {
-  data: extensionResponse,
-  error: extensionError,
-  execute: executeFetchExtension,
-} = useApi(() => "/extension_definition", {
-  query: computed(() => ({
-    fields: "*",
-    filter: {
-      _and: [
-        { [getIdFieldName()]: { _eq: props.id } },
-        { isEnabled: { _eq: true } },
-        { type: { _eq: "widget" } },
-      ],
-    },
-  })),
-  errorContext: "Fetch Widget Extension",
-  immediate: false,
-});
-
 const tryLoadFromCache = (): boolean => {
-  const widgetPath = `widget:${props.id}`;
+  const widgetPath = getWidgetMetaCacheKey(props.id);
   const cachedMeta = getCachedExtensionMeta(widgetPath);
   if (!cachedMeta) return false;
 
@@ -121,19 +104,12 @@ const loadMatchingWidget = async () => {
 
 const fetchAndLoadWidget = async () => {
   try {
-    await executeFetchExtension();
-
-    if (extensionError.value) {
-      error.value = `API Error: ${extensionError.value}`;
-      return;
-    }
-
-    if (!extensionResponse.value?.data || extensionResponse.value.data.length === 0) {
+    const extension = await loadWidgetExtension(props.id);
+    if (!extension) {
       error.value = `No widget found with ID: ${props.id}`;
       return;
     }
 
-    const extension = extensionResponse.value.data[0];
     currentExtensionMeta.value = extension;
 
     if (!extension.isEnabled) {
@@ -141,8 +117,10 @@ const fetchAndLoadWidget = async () => {
       return;
     }
 
-    const widgetPath = `widget:${props.id}`;
-    setCachedExtensionMeta(widgetPath, extension);
+    if (!extension.extensionId) {
+      error.value = `Widget "${extension.name}" is missing a runtime extension ID.`;
+      return;
+    }
 
     const cachedComponent = getCachedComponent(extension.extensionId, extension.updatedAt);
     if (cachedComponent) {
@@ -164,8 +142,8 @@ const fetchAndLoadWidget = async () => {
 };
 
 watch(extensionCacheInvalidation, async (invalidation) => {
-  const widgetPath = `widget:${props.id}`;
-  const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(widgetPath) || extensionResponse.value?.data?.[0];
+  const widgetPath = getWidgetMetaCacheKey(props.id);
+  const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(widgetPath);
   const matchesByRecordId = invalidation?.id != null && String(invalidation.id) === String(props.id);
   if (!matchesByRecordId && !isExtensionInvalidationMatch(currentExtension, invalidation)) return;
 

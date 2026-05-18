@@ -154,6 +154,24 @@ console.log(data, execute, me, pageHeader, loaded, packages)
 
     expect(diagnostics).toEqual([])
   })
+
+  it('accepts modern JavaScript built-ins in Vue extension scripts', async () => {
+    const source = `<script setup lang="ts">
+const statuses = ['active', 'ready']
+const isActive = statuses.includes('active')
+const termSlugs = new Set(['cloud-terms', 'privacy-policy'])
+const rows = [1, 2, 3].map((value) => value * 2).filter((value) => value > 2)
+const total = rows.reduce((sum, value) => sum + value, 0)
+const label = String('pending_payment').replace(/_/g, ' ')
+const loaded = await Promise.all([Promise.resolve(1), Promise.resolve(2)])
+const formattedDate = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date())
+const formattedMoney = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(19)
+console.log(isActive, termSlugs.has('cloud-terms'), total, label, loaded, formattedDate, formattedMoney)
+</script>`
+    const diagnostics = await lintVueSfcScripts(source)
+
+    expect(diagnostics).toEqual([])
+  })
 })
 
 describe('validateEnfyraRequiredReturnScript', () => {

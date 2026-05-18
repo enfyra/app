@@ -29,6 +29,12 @@ import {
 } from "./runtime";
 import type { PreviewState } from "./types";
 
+const componentLoadPromises = new Map<string, Promise<any>>();
+
+function buildComponentLoadKey(extensionName: string, updatedAt?: string | Date): string {
+  return `${extensionName}:${updatedAt ? new Date(updatedAt).getTime() : "latest"}`;
+}
+
 function wrapWithCssLifecycle(
   component: any,
   extensionName: string,
@@ -83,44 +89,61 @@ export const useDynamicComponent = () => {
         return getCachedComponent(extensionName, updatedAt);
       }
 
+      const loadKey = buildComponentLoadKey(extensionName, updatedAt);
+      const pendingLoad = componentLoadPromises.get(loadKey);
+      if (pendingLoad && !forceReload) {
+        incrementCacheHits();
+        return pendingLoad;
+      }
+
       incrementCacheMisses();
 
-      await Promise.all([setupVueGlobals(), getVueRuntime()]);
+      const loadPromise = (async () => {
+        await Promise.all([setupVueGlobals(), getVueRuntime()]);
 
-      const g = globalThis as any;
-      const composables = getComposablesObject();
-      exposeComposables(g, composables);
-      exposeVueGlobals(g);
+        const g = globalThis as any;
+        const composables = getComposablesObject();
+        exposeComposables(g, composables);
+        exposeVueGlobals(g);
 
-      setupPackagesGlobal(g);
+        setupPackagesGlobal(g);
 
-      const requiredPackages = perf.timeSync("loadDynamic: detectPackages", () =>
-        detectPackages(originalCode || compiledCode)
-      );
-      if (requiredPackages.length > 0) {
-        await perf.time("loadDynamic: getPackages", () =>
-          getPackages(requiredPackages)
+        const requiredPackages = perf.timeSync("loadDynamic: detectPackages", () =>
+          detectPackages(originalCode || compiledCode)
         );
+        if (requiredPackages.length > 0) {
+          await perf.time("loadDynamic: getPackages", () =>
+            getPackages(requiredPackages)
+          );
+        }
+
+        const component = await perf.time("loadDynamic: executeScript", () =>
+          executeScriptInWindow(compiledCode, extensionName)
+        );
+        findComponentInWindow(extensionName);
+
+        if (!component || typeof component !== "object") {
+          throw new Error(`Invalid component: ${component}`);
+        }
+
+        const wrappedComponent = markRaw({
+          ...component,
+          components: availableComponents,
+        });
+
+        const finalComponent = wrapWithCssLifecycle(wrappedComponent, extensionName);
+        setCachedComponent(extensionName, finalComponent, updatedAt);
+
+        return finalComponent;
+      })();
+
+      componentLoadPromises.set(loadKey, loadPromise);
+
+      try {
+        return await loadPromise;
+      } finally {
+        componentLoadPromises.delete(loadKey);
       }
-
-      const component = await perf.time("loadDynamic: executeScript", () =>
-        executeScriptInWindow(compiledCode, extensionName)
-      );
-      findComponentInWindow(extensionName);
-
-      if (!component || typeof component !== "object") {
-        throw new Error(`Invalid component: ${component}`);
-      }
-
-      const wrappedComponent = markRaw({
-        ...component,
-        components: availableComponents,
-      });
-
-      const finalComponent = wrapWithCssLifecycle(wrappedComponent, extensionName);
-      setCachedComponent(extensionName, finalComponent, updatedAt);
-
-      return finalComponent;
     } catch (error: any) {
       throw new Error(`Failed to load component: ${error?.message || error}`);
     }
