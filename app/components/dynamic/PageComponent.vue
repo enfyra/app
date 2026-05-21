@@ -90,6 +90,7 @@ const error = ref<string | null>(null);
 const extensionComponent = ref<any>(null);
 const currentExtensionMeta = ref<any>(null);
 const isLoading = ref(true);
+const loadRunId = ref(0);
 
 const {
   data: menuResponse,
@@ -123,7 +124,10 @@ const tryLoadFromCache = (): boolean => {
   return false;
 };
 
+const isCurrentLoad = (runId: number) => loadRunId.value === runId;
+
 const loadMatchingExtension = async () => {
+  const runId = ++loadRunId.value;
   error.value = null;
 
   if (!matchedMenu.value) {
@@ -137,19 +141,25 @@ const loadMatchingExtension = async () => {
   }
 
   if (tryLoadFromCache()) {
-    isLoading.value = false;
+    if (isCurrentLoad(runId)) {
+      setRouteLoading(false);
+      isLoading.value = false;
+    }
     return;
   }
 
   setRouteLoading(true);
-  await fetchAndLoadExtension();
-  setRouteLoading(false);
-  isLoading.value = false;
+  await fetchAndLoadExtension(runId);
+  if (isCurrentLoad(runId)) {
+    setRouteLoading(false);
+    isLoading.value = false;
+  }
 };
 
-const fetchAndLoadExtension = async () => {
+const fetchAndLoadExtension = async (runId: number) => {
   try {
     await perf.time("Route: fetchMenu", () => executeFetchMenu());
+    if (!isCurrentLoad(runId)) return;
 
     if (menuError.value) {
       error.value = `API Error: ${menuError.value}`;
@@ -180,6 +190,7 @@ const fetchAndLoadExtension = async () => {
 
     const cachedComponent = getCachedComponent(extension.extensionId, extension.updatedAt);
     if (cachedComponent) {
+      if (!isCurrentLoad(runId)) return;
       extensionComponent.value = cachedComponent;
       return;
     }
@@ -193,14 +204,17 @@ const fetchAndLoadExtension = async () => {
         extension.code
       )
     );
+    if (!isCurrentLoad(runId)) return;
     extensionComponent.value = component;
 
   } catch (err: any) {
+    if (!isCurrentLoad(runId)) return;
     error.value = `Failed to load extension: ${err?.message || err}`;
   }
 };
 
 watch(extensionCacheInvalidation, async (invalidation) => {
+  const runId = ++loadRunId.value;
   const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(extensionMetaCacheKey.value) || menuResponse.value?.data?.[0]?.extension;
   const invalidationPath = invalidation?.path;
   const matchesPath = invalidationPath != null && (
@@ -215,9 +229,11 @@ watch(extensionCacheInvalidation, async (invalidation) => {
   error.value = null;
   extensionComponent.value = null;
   setRouteLoading(true);
-  await fetchAndLoadExtension();
-  setRouteLoading(false);
-  isLoading.value = false;
+  await fetchAndLoadExtension(runId);
+  if (isCurrentLoad(runId)) {
+    setRouteLoading(false);
+    isLoading.value = false;
+  }
 });
 
 const retry = () => {
