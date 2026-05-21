@@ -1,4 +1,5 @@
 import { resolveComponent, markRaw } from "vue";
+import { findBestMenuRouteMatch, isDynamicMenuPath } from "~/utils/menu-route-patterns";
 
 function normalizePath(path?: string): string {
   if (!path) return "";
@@ -19,6 +20,7 @@ export function useMenuRegistry() {
 
   const menuGroups = computed(() => {
     const topLevelItems = menuItems.value.filter(item => {
+      if (isDynamicMenuPath(item.route || item.path)) return false;
       if (!item.parent) {
         if (item.type === 'Dropdown Menu') return true;
         if (item.type === 'Menu') return true;
@@ -27,17 +29,19 @@ export function useMenuRegistry() {
     });
 
     function buildMenuTree(item: any): any {
-      const children = menuItems.value.filter(child => {
+      const directChildren = menuItems.value.filter(child => {
         if (!child.parent) return false;
         return String(child.parent) === String(item.id);
       });
+      const childSource = directChildren.length > 0 ? directChildren : (item.children || []);
+      const children = childSource.filter((child: any) => !isDynamicMenuPath(child.route || child.path));
 
       return {
         ...item,
         icon: item.icon || 'lucide:circle',
         route: normalizePath(item.route || item.path),
         position: (item as any).position || 'top' as const,
-        items: children.length > 0 ? children.map(buildMenuTree) : (item.children || []).map(buildMenuTree),
+        items: children.map(buildMenuTree),
         order: item.order || 0,
       };
     }
@@ -302,6 +306,9 @@ export function useMenuRegistry() {
   };
 
   const findMenuIconForPath = (fullPath: string): string | undefined => {
+    const match = findBestMenuMatch(fullPath);
+    if (match?.item.icon) return match.item.icon;
+
     const normalized = normalizePathForMatch(fullPath.split("?")[0]);
     let bestLen = -1;
     let bestIcon: string | undefined;
@@ -316,6 +323,14 @@ export function useMenuRegistry() {
       }
     }
     return bestIcon;
+  };
+
+  const findBestMenuMatch = (fullPath: string) => {
+    return findBestMenuRouteMatch(
+      menuItems.value,
+      fullPath,
+      (item) => item.route || item.path
+    );
   };
 
   return {
@@ -334,6 +349,7 @@ export function useMenuRegistry() {
     registerDataMenuItemsFromRoutes,
     reregisterExtensionMenus,
 
+    findBestMenuMatch,
     findMenuIconForPath,
   };
 }

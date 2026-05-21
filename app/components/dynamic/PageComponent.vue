@@ -58,6 +58,8 @@
 </template>
 
 <script setup lang="ts">
+import { matchMenuRoutePath, normalizeMenuRoutePath } from "~/utils/menu-route-patterns";
+
 interface Props {
   path: string;
 }
@@ -73,23 +75,16 @@ const {
   isExtensionInvalidationMatch,
 } = useDynamicComponent();
 const { setRouteLoading } = useGlobalState();
-const { menuItems } = useMenuRegistry();
+const { findBestMenuMatch } = useMenuRegistry();
 const perf = useExtensionPerf();
 
 const normalizedPath = computed(() => {
-  const p = props.path || "";
-  return p.startsWith("/") ? p : `/${p}`;
+  return normalizeMenuRoutePath(props.path);
 });
 
-const isPathRegisteredInMenu = () => {
-  const target = normalizedPath.value;
-  return menuItems.value.some((item) => {
-    const route = item.route || item.path;
-    if (!route) return false;
-    const normalized = route.startsWith("/") ? route : `/${route}`;
-    return normalized === target;
-  });
-};
+const matchedMenu = computed(() => findBestMenuMatch(normalizedPath.value)?.item ?? null);
+const matchedMenuPath = computed(() => matchedMenu.value ? normalizeMenuRoutePath(matchedMenu.value.route || matchedMenu.value.path) : "");
+const extensionMetaCacheKey = computed(() => matchedMenu.value ? `menu:${matchedMenu.value.id}` : normalizedPath.value);
 
 const error = ref<string | null>(null);
 const extensionComponent = ref<any>(null);
@@ -105,12 +100,7 @@ const {
     fields: "*,extension.*",
     filter: {
       _and: [
-        {
-          _or: [
-            { path: { _eq: props.path } },
-            { path: { _eq: `/${props.path}` } },
-          ],
-        },
+        { id: { _eq: matchedMenu.value?.id } },
         { isEnabled: { _eq: true } },
       ],
     },
@@ -120,7 +110,7 @@ const {
 });
 
 const tryLoadFromCache = (): boolean => {
-  const cachedMeta = getCachedExtensionMeta(props.path);
+  const cachedMeta = getCachedExtensionMeta(extensionMetaCacheKey.value);
   if (!cachedMeta) return false;
 
   const cachedComponent = getCachedComponent(cachedMeta.extensionId, cachedMeta.updatedAt);
@@ -136,7 +126,7 @@ const tryLoadFromCache = (): boolean => {
 const loadMatchingExtension = async () => {
   error.value = null;
 
-  if (!isPathRegisteredInMenu()) {
+  if (!matchedMenu.value) {
     showError({
       statusCode: 404,
       statusMessage: "Page Not Found",
@@ -186,7 +176,7 @@ const fetchAndLoadExtension = async () => {
       return;
     }
 
-    setCachedExtensionMeta(props.path, extension);
+    setCachedExtensionMeta(extensionMetaCacheKey.value, extension);
 
     const cachedComponent = getCachedComponent(extension.extensionId, extension.updatedAt);
     if (cachedComponent) {
@@ -211,11 +201,13 @@ const fetchAndLoadExtension = async () => {
 };
 
 watch(extensionCacheInvalidation, async (invalidation) => {
-  const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(props.path) || menuResponse.value?.data?.[0]?.extension;
+  const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(extensionMetaCacheKey.value) || menuResponse.value?.data?.[0]?.extension;
   const invalidationPath = invalidation?.path;
   const matchesPath = invalidationPath != null && (
     String(invalidationPath) === props.path
     || String(invalidationPath) === normalizedPath.value
+    || matchMenuRoutePath(String(invalidationPath), normalizedPath.value) != null
+    || matchMenuRoutePath(matchedMenuPath.value, String(invalidationPath)) != null
   );
   if (!matchesPath && !isExtensionInvalidationMatch(currentExtension, invalidation)) return;
 
