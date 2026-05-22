@@ -291,6 +291,29 @@ function getColumnLabel(columnId: string) {
   }
   return columnId.charAt(0).toUpperCase() + columnId.slice(1).replace(/([A-Z])/g, ' $1')
 }
+
+function isIdentifierColumn(columnId: string | undefined) {
+  const id = String(columnId || '').toLowerCase()
+  return id === 'id' || id === '_id'
+}
+
+function getColumnStyle(column: any) {
+  const size = Number(column?.getSize?.() || column?.columnDef?.size || 0)
+  const minSize = Number(column?.columnDef?.minSize || 0)
+  const maxSize = Number(column?.columnDef?.maxSize || 0)
+  const style: Record<string, string> = {}
+  if (size > 0) style.width = `${size}px`
+  if (minSize > 0) style.minWidth = `${minSize}px`
+  if (maxSize > 0) style.maxWidth = `${maxSize}px`
+  return style
+}
+
+function getCellTextClass(columnId: string | undefined) {
+  return [
+    'text-[var(--table-cell-color)] text-theme-sm block min-w-0 truncate',
+    isIdentifierColumn(columnId) ? 'font-mono max-w-32' : 'w-full',
+  ]
+}
 </script>
 
 <template>
@@ -433,19 +456,27 @@ function getColumnLabel(columnId: string) {
       :class="isRefreshing ? 'after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-primary after:animate-pulse' : ''"
     >
       <div class="max-w-full overflow-x-auto overflow-y-auto custom-scrollbar">
-        <table class="min-w-full divide-y divide-[var(--table-header-border)]" aria-label="Data table">
+        <table class="min-w-full table-fixed divide-y divide-[var(--table-header-border)]" aria-label="Data table">
+          <colgroup>
+            <col
+              v-for="header in table?.getFlatHeaders() || []"
+              :key="`col-${header.id}`"
+              :style="getColumnStyle(header.column)"
+            />
+          </colgroup>
           <thead class="bg-[var(--table-header-bg)]">
             <tr>
               <th
                 v-for="header in table?.getFlatHeaders() || []"
                 :key="header.id"
+                :style="getColumnStyle(header.column)"
                 :class="[
                   'px-5 py-3 text-left sm:px-6',
                   header.id === '__actions' ? 'text-center' : 'text-left',
                   header.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                   header.id === '__actions' ? 'w-12 min-w-12 max-w-12' : '',
-                  header.id?.toLowerCase() === 'id' ? 'w-20 min-w-20 max-w-20' : '',
-                  header.id !== 'select' && header.id !== '__actions' && header.id?.toLowerCase() !== 'id'
+                  isIdentifierColumn(header.id) ? 'min-w-32 max-w-44' : '',
+                  header.id !== 'select' && header.id !== '__actions' && !isIdentifierColumn(header.id)
                     ? 'overflow-hidden'
                     : '',
                   header.column.getCanSort() &&
@@ -509,10 +540,11 @@ function getColumnLabel(columnId: string) {
                     header.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                     header.id === '__actions'
                       ? 'w-12 min-w-12 max-w-12'
-                      : header.id?.toLowerCase() === 'id'
-                      ? 'w-20 min-w-20 max-w-20'
+                      : isIdentifierColumn(header.id)
+                      ? 'min-w-32 max-w-44'
                       : '',
                   ]"
+                  :style="getColumnStyle(header.column)"
                 >
                   <div class="h-4 skeleton-base rounded" :style="{ width: (headerIndex as number) % 3 === 0 ? '80%' : (headerIndex as number) % 3 === 1 ? '60%' : '90%' }"></div>
                 </td>
@@ -538,21 +570,22 @@ function getColumnLabel(columnId: string) {
                     v-for="cell in row.getVisibleCells()"
                     :key="cell.id"
                     @click="cell.column.id === 'select' && $event.stopPropagation()"
+                    :style="getColumnStyle(cell.column)"
                 :class="[
                   'px-5 py-4 sm:px-6 align-middle',
                       cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                       cell.column.id === '__actions'
                         ? 'w-12 min-w-12 max-w-12'
-                        : cell.column.id?.toLowerCase() === 'id'
-                        ? 'w-20 min-w-20 max-w-20'
+                        : isIdentifierColumn(cell.column.id)
+                        ? 'min-w-32 max-w-44 overflow-hidden whitespace-nowrap text-ellipsis'
                         : cell.column.id !== 'select' && cell.column.id !== '__actions'
                     ? 'overflow-hidden whitespace-nowrap text-ellipsis'
                         : '',
                     ]"
                   >
                     <p
-                  v-if="typeof cell.column.columnDef.cell !== 'function'"
-                  class="text-[var(--table-cell-color)] text-theme-sm w-full truncate"
+                      v-if="isIdentifierColumn(cell.column.id) || typeof cell.column.columnDef.cell !== 'function'"
+                  :class="getCellTextClass(cell.column.id)"
                       :title="String(cell.getValue())"
                     >
                       {{ cell.getValue() }}
@@ -580,21 +613,22 @@ function getColumnLabel(columnId: string) {
                   v-for="cell in row.getVisibleCells()"
                   :key="cell.id"
                   @click="cell.column.id === 'select' && $event.stopPropagation()"
+                  :style="getColumnStyle(cell.column)"
                   :class="[
                     'px-5 py-4 sm:px-6 align-middle',
                     cell.column.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                     cell.column.id === '__actions'
                       ? 'w-12 min-w-12 max-w-12'
-                      : cell.column.id?.toLowerCase() === 'id'
-                      ? 'w-20 min-w-20 max-w-20'
+                      : isIdentifierColumn(cell.column.id)
+                      ? 'min-w-32 max-w-44 overflow-hidden whitespace-nowrap text-ellipsis'
                       : cell.column.id !== 'select' && cell.column.id !== '__actions'
                       ? 'overflow-hidden whitespace-nowrap text-ellipsis'
                       : '',
                   ]"
                 >
                   <p
-                    v-if="typeof cell.column.columnDef.cell !== 'function'"
-                    class="text-[var(--table-cell-color)] text-theme-sm w-full truncate"
+                    v-if="isIdentifierColumn(cell.column.id) || typeof cell.column.columnDef.cell !== 'function'"
+                    :class="getCellTextClass(cell.column.id)"
                     :title="String(cell.getValue())"
                   >
                     {{ cell.getValue() }}

@@ -1,13 +1,9 @@
 <template>
-  <div v-bind="$attrs" :style="!hasPermission ? { display: 'contents' } : undefined" class="h-full w-full">
-    <slot v-if="hasPermission" />
-  </div>
+  <slot v-if="hasPermission" />
 </template>
 
 <script setup lang="ts">
 import type { PermissionGateProps } from "~/types";
-
-defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<PermissionGateProps>(), {
   mode: "any",

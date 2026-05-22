@@ -228,6 +228,13 @@ const columns = computed(() => {
         id: field.name!,
         header: field.label || field.name || "",
       };
+      const fieldName = field.name?.toLowerCase() || "";
+
+      if (fieldName === "id" || fieldName === "_id") {
+        config.width = 150;
+        config.minWidth = 132;
+        config.maxWidth = 180;
+      }
 
       if (field.type === "timestamp") {
         config.format = "datetime";
