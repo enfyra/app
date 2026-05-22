@@ -84,15 +84,18 @@ import {
   CommonEmptyState,
   CommonSettingsCard,
   CommonLazyImage,
+  CommonModal,
   PermissionGate,
   FormEditor,
   CommonUploadModal,
   DynamicWidgetComponent,
   FilterDrawer,
   DataTable,
+  NuxtLink,
 } from "#components";
 
 export const availableComponents = {
+  NuxtLink: markRaw(NuxtLink),
   UIcon: markRaw(UIcon),
   Icon: markRaw(UIcon),
   UButton: markRaw(UButton),
@@ -181,6 +184,7 @@ export const availableComponents = {
   EmptyState: markRaw(CommonEmptyState),
   SettingsCard: markRaw(CommonSettingsCard),
   Image: markRaw(CommonLazyImage),
+  CommonModal: markRaw(CommonModal),
   UploadModal: markRaw(CommonUploadModal),
   Widget: markRaw(DynamicWidgetComponent),
 };

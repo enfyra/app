@@ -23,6 +23,7 @@ import {
   exposeVueGlobals,
   getComposablesObject,
   exposeComposables,
+  exposeExtensionGlobalsToVueApp,
   setupPackagesGlobal,
   executeScriptInWindow,
   findComponentInWindow
@@ -105,6 +106,7 @@ export const useDynamicComponent = () => {
         const composables = getComposablesObject();
         exposeComposables(g, composables);
         exposeVueGlobals(g);
+        exposeExtensionGlobalsToVueApp(useNuxtApp().vueApp, composables);
 
         setupPackagesGlobal(g);
 
@@ -190,6 +192,7 @@ export const useDynamicComponent = () => {
 
       const composables = getComposablesForPreview(previewState);
       exposeComposables(g, composables);
+      exposeExtensionGlobalsToVueApp(useNuxtApp().vueApp, composables);
 
       options?.onLoadingPhase?.("executing");
       const component = await perf.time("preview: executeScript", () =>

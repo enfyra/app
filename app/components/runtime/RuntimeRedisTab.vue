@@ -698,11 +698,11 @@ function openCreateKey() {
     </section>
 
     <CommonModal
-      v-model="keyEditorDialogOpen"
+      v-model:open="keyEditorDialogOpen"
       class="max-w-[760px]"
       :ui="{ body: 'pt-4 max-h-[min(72vh,680px)] overflow-y-auto' }"
     >
-      <template #title>
+      <template #header>
         <div class="flex min-w-0 items-center gap-2">
           <UIcon :name="keyEditorMode === 'create' ? 'lucide:plus' : 'lucide:pencil'" class="h-5 w-5 text-primary-500" />
           <h3 class="truncate text-lg font-semibold">{{ keyEditorTitle }}</h3>

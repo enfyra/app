@@ -330,8 +330,8 @@ onMounted(() => {
     </template>
   </div>
 
-  <CommonModal v-model="passwordModalOpen">
-    <template #title>Change Password</template>
+  <CommonModal v-model:open="passwordModalOpen">
+    <template #header>Change Password</template>
     <template #body>
       <UForm id="password-form" :state="passwordForm" @submit="handleChangePassword" class="space-y-5">
         <UFormField

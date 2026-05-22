@@ -435,8 +435,8 @@ onMounted(() => {
 
 <template>
   <div class="relative">
-    <CommonModal v-model="schemaConfirmModalOpen" :handle="false">
-      <template #title>
+    <CommonModal v-model:open="schemaConfirmModalOpen" :handle="false">
+      <template #header>
         <div class="flex items-start gap-3">
           <div
             class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border"

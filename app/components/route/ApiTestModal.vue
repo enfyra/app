@@ -1,6 +1,6 @@
 <template>
-  <CommonModal v-model="isOpen" class="max-w-[700px]">
-    <template #title>
+  <CommonModal v-model:open="isOpen" class="max-w-[700px]">
+    <template #header>
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-flask-conical" class="w-5 h-5 text-primary-500" />
         <h3 class="text-lg font-semibold">Test API</h3>

@@ -113,6 +113,30 @@ export function exposeComposables(g: any, composables: Record<string, any>): voi
   });
 }
 
+export function exposeExtensionGlobalsToVueApp(
+  vueApp: any,
+  composables: Record<string, any>,
+): void {
+  const globalProperties = vueApp?.config?.globalProperties;
+  if (!globalProperties) return;
+
+  const g = globalThis as any;
+  const vue = g.Vue || (typeof window !== "undefined" ? (window as any).Vue : null);
+
+  EXTENSION_VUE_FUNCTIONS.forEach((fnName) => {
+    const value = vue?.[fnName];
+    if (typeof value === "function") {
+      globalProperties[fnName] = value;
+    }
+  });
+
+  Object.entries(composables).forEach(([key, composable]) => {
+    if (typeof composable === "function") {
+      globalProperties[key] = composable;
+    }
+  });
+}
+
 export function setupPackagesGlobal(g: any): void {
   if (!g.packages) {
     g.packages = {};

@@ -149,7 +149,7 @@ async function save() {
     apply: `const pageHeader = usePageHeaderRegistry()
 
 onMounted(() => {
-  pageHeader.setPageHeader({
+  pageHeader.registerPageHeader({
     title: "Page Title",
     description: "Page description",
   })

@@ -145,7 +145,10 @@ watch(
   >
     
     <div class="relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', isMinimal ? ((isMobile || isTablet) ? 'py-3' : 'py-4') : ((isMobile || isTablet) ? 'py-4' : 'py-5')]">
-      <div class="flex flex-col gap-4" :class="(isMobile || isTablet) ? '' : 'flex-row items-center justify-between'">
+      <div
+        class="flex gap-4"
+        :class="(isMobile || isTablet) ? 'flex-col' : 'flex-row items-center justify-between'"
+      >
         
         <div class="flex min-w-0 flex-1 items-start gap-4">
           <div

@@ -31,14 +31,14 @@ onUnmounted(() => {
 
 <template>
   <CommonModal
-    v-model="isVisible"
+    v-model:open="isVisible"
     :handle="false"
     :ui="{
       overlay: 'z-[150]',
       content: 'surface-card z-[150]',
     }"
   >
-      <template #title>
+      <template #header>
         <div class="flex items-center justify-between w-full">
           <div class="text-lg font-semibold">{{ options.title }}</div>
         </div>

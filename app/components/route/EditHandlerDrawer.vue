@@ -47,8 +47,8 @@
     </template>
   </CommonDrawer>
 
-  <CommonModal v-model="showDiscardModal">
-    <template #title>Discard Changes</template>
+  <CommonModal v-model:open="showDiscardModal">
+    <template #header>Discard Changes</template>
     <template #body>
       <div class="text-sm text-[var(--text-secondary)]">
         You have unsaved changes. Are you sure you want to close? All changes will be lost.

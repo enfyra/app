@@ -11,8 +11,8 @@
       :disabled="disabled"
     />
 
-    <CommonModal v-model="showModal">
-      <template #title>
+    <CommonModal v-model:open="showModal">
+      <template #header>
         Select Date
       </template>
 

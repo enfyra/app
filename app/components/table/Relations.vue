@@ -556,10 +556,10 @@ async function removeRelation(index: number) {
     </CommonDrawer>
 
     <CommonModal
-      v-model="showInverseModal"
+      v-model:open="showInverseModal"
       :handle="false"
     >
-      <template #title>
+      <template #header>
         <div class="text-lg font-semibold">Create Inverse Relation</div>
       </template>
       <template #body>

@@ -48,7 +48,11 @@ const items = computed(() => [
 </script>
 
 <template>
-    <UDropdownMenu :items="items" :content="{ align: 'end' }">
+    <UDropdownMenu
+      :items="items"
+      :content="{ align: 'start', side: 'top', sideOffset: 8 }"
+      :ui="{ content: collapsed ? 'w-56' : 'w-[var(--reka-dropdown-menu-trigger-width)] min-w-64' }"
+    >
       <template #theme-trailing="{ item }">
         <USwitch
           class="ms-4"

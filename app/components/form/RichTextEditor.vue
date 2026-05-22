@@ -1112,8 +1112,8 @@ onUnmounted(() => {
     </Teleport>
 
 
-    <CommonModal v-model="linkModalOpen">
-      <template #title>Add Link</template>
+    <CommonModal v-model:open="linkModalOpen">
+      <template #header>Add Link</template>
       <template #body>
         <div class="space-y-4">
           <label class="block text-sm font-medium text-[var(--text-secondary)]">URL</label>
@@ -1147,8 +1147,8 @@ onUnmounted(() => {
       </template>
     </CommonModal>
 
-    <CommonModal v-model="imageModalOpen">
-      <template #title>Add Image</template>
+    <CommonModal v-model:open="imageModalOpen">
+      <template #header>Add Image</template>
       <template #body>
         <div class="space-y-4">
           <label class="block text-sm font-medium text-[var(--text-secondary)]">Image URL</label>
@@ -1182,8 +1182,8 @@ onUnmounted(() => {
       </template>
     </CommonModal>
 
-    <CommonModal v-model="tableModifyModalOpen">
-      <template #title>Table Settings</template>
+    <CommonModal v-model:open="tableModifyModalOpen">
+      <template #header>Table Settings</template>
       <template #body>
         <div class="grid grid-cols-3 gap-2">
           <button

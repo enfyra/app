@@ -31,9 +31,9 @@ const folderIconColor = computed(() => {
 
 <template>
   <CommonModal
-    v-model="showDetailModal"
+    v-model:open="showDetailModal"
   >
-    <template #title>
+    <template #header>
       Folder Details
     </template>
       <template #body>
