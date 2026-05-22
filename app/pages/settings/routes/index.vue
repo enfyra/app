@@ -169,7 +169,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/route_definition",
-          actions: ["read"],
+          methods: ["GET"],
         },
       ],
     },
@@ -186,7 +186,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/route_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -437,7 +437,7 @@ async function deleteRoute(routeItem: any) {
                   ...getPublishedMethodsStat(routeItem)
                 }
               ]"
-              :actions="getRouteFooterActions(routeItem)"
+              :methods="getRouteFooterActions(routeItem)"
               :header-actions="getRouteHeaderActions(routeItem)"
             </CommonSettingsCard>
           </CommonAnimatedGrid>

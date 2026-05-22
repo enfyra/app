@@ -109,7 +109,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/file_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -129,7 +129,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/file_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },
@@ -149,7 +149,7 @@ useSubHeaderActionRegistry([
       and: [
         {
           route: "/file_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

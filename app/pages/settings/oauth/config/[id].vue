@@ -124,7 +124,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/oauth_config_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -144,7 +144,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/oauth_config_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

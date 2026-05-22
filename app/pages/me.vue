@@ -86,7 +86,7 @@ const fieldMap = computed(() => ({
   role: {
     permission: {
       and: [
-        { route: '/user_definition', actions: ['update'] }
+        { route: '/user_definition', methods: ['PATCH'] }
       ]
     }
   }

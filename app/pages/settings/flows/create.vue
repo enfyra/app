@@ -62,7 +62,7 @@ useHeaderActionRegistry([
     submit: handleCreate,
     loading: computed(() => createLoading.value),
     permission: {
-      and: [{ route: "/flow_definition", actions: ["create"] }],
+      and: [{ route: "/flow_definition", methods: ["POST"] }],
     },
   },
 ]);

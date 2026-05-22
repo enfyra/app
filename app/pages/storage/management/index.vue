@@ -204,7 +204,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/file_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -222,7 +222,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/folder_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

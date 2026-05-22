@@ -81,7 +81,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/extension_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -110,7 +110,7 @@ useHeaderActionRegistry([
     and: [
       {
         route: "/extension_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },

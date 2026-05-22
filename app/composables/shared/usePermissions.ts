@@ -63,25 +63,20 @@ export function usePermissions() {
     return false;
   };
 
-  const actionToMethod = (action: string): string | null => {
-    switch (action) {
-      case "read":   return "GET";
-      case "create": return "POST";
-      case "update": return "PATCH";
-      case "delete": return "DELETE";
-      default:       return null;
-    }
-  };
+  const normalizeMethod = (method: string): string => method.toUpperCase();
 
   const checkPermissionRule = (rule: PermissionRule): boolean => {
     if (rule.allowAll === true) {
       return true;
     }
 
-    return rule.actions.every((action) => {
-      const method = actionToMethod(action);
-      return method ? hasPermission(rule.route, method) : false;
-    });
+    if (!Array.isArray(rule.methods) || rule.methods.length === 0) {
+      return false;
+    }
+
+    return rule.methods.every((method) =>
+      hasPermission(rule.route, normalizeMethod(method))
+    );
   };
 
   const checkPermissionCondition = (
@@ -118,21 +113,15 @@ export function usePermissions() {
     return false;
   };
 
-  const hasAnyPermission = (routes: string[], actions: string[]): boolean => {
+  const hasAnyPermission = (routes: string[], methods: string[]): boolean => {
     return routes.some((routePath) =>
-      actions.some((action) => {
-        const method = actionToMethod(action);
-        return method ? hasPermission(routePath, method) : false;
-      })
+      methods.some((method) => hasPermission(routePath, normalizeMethod(method)))
     );
   };
 
-  const hasAllPermissions = (routes: string[], actions: string[]): boolean => {
+  const hasAllPermissions = (routes: string[], methods: string[]): boolean => {
     return routes.every((routePath) =>
-      actions.every((action) => {
-        const method = actionToMethod(action);
-        return method ? hasPermission(routePath, method) : false;
-      })
+      methods.every((method) => hasPermission(routePath, normalizeMethod(method)))
     );
   };
 

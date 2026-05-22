@@ -49,7 +49,7 @@
           ]"
           @click="navigateToDetail(extension)"
           :header-actions="getHeaderActions(extension)"
-          :actions="getFooterActions(extension)"
+          :methods="getFooterActions(extension)"
         </CommonSettingsCard>
       </CommonAnimatedGrid>
 
@@ -141,7 +141,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/extension_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -177,7 +177,7 @@ function navigateToDetail(extension: ExtensionDefinition) {
 function getHeaderActions(extension: ExtensionDefinition) {
   const actions = [];
 
-  if (checkPermissionCondition({ or: [{ route: '/extension_definition', actions: ['update'] }] })) {
+  if (checkPermissionCondition({ or: [{ route: '/extension_definition', methods: ['PATCH'] }] })) {
     actions.push({
       component: 'USwitch',
       props: {
@@ -193,7 +193,7 @@ function getHeaderActions(extension: ExtensionDefinition) {
 }
 
 function getFooterActions(extension: ExtensionDefinition) {
-  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/extension_definition', actions: ['delete'] }] });
+  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/extension_definition', methods: ['DELETE'] }] });
 
   return [
     {

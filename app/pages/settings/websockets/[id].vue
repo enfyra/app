@@ -112,7 +112,7 @@
               onUpdate: () => toggleEventStatus(event),
             }
           ]"
-          :actions="[
+          :methods="[
             {
               label: 'Delete',
               props: {
@@ -264,7 +264,7 @@ const {
 const { checkPermissionCondition } = usePermissions();
 const canUpdateGateway = computed(() =>
   checkPermissionCondition({
-    and: [{ route: "/websocket_definition", actions: ["update"] }],
+    and: [{ route: "/websocket_definition", methods: ["PATCH"] }],
   })
 );
 
@@ -284,7 +284,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/websocket_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },

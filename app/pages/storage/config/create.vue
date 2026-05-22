@@ -92,7 +92,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/storage_config_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },

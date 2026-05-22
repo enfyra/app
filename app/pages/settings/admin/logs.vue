@@ -10,7 +10,7 @@ const router = useRouter();
 const hasPermission = computed(() => {
   if (me.value?.isRootAdmin) return true;
   return checkPermissionCondition({
-    or: [{ route: "/logs", actions: ["read"] }],
+    or: [{ route: "/logs", methods: ["GET"] }],
   });
 });
 
@@ -380,7 +380,7 @@ useHeaderActionRegistry([
     color: "primary",
     loading: computed(() => isInitialLoading.value),
     onClick: loadLogs,
-    permission: { and: [{ route: "/logs", actions: ["read"] }] },
+    permission: { and: [{ route: "/logs", methods: ["GET"] }] },
   },
 ]);
 

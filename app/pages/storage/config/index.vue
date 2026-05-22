@@ -83,7 +83,7 @@
               <div class="flex items-center gap-2">
                 <span class="text-xs text-[var(--text-quaternary)]">Status:</span>
                 <USwitch
-	                  v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['update'] }] })"
+	                  v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', methods: ['PATCH'] }] })"
 	                  :model-value="config.isEnabled"
 	                  :disabled="isConfigLoading(config)"
 	                  @update:model-value="toggleConfigStatus(config)"
@@ -91,7 +91,7 @@
                 />
               </div>
               <UButton
-                v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['delete'] }] })"
+                v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', methods: ['DELETE'] }] })"
                 icon="i-lucide-trash-2"
                 variant="outline"
                 color="error"
@@ -190,7 +190,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/storage_config_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

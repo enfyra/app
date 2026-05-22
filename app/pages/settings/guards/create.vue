@@ -62,7 +62,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: '/guard_definition',
-          actions: ['create'],
+          methods: ['POST'],
         },
       ],
     },

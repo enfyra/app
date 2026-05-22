@@ -190,7 +190,7 @@ useHeaderActionRegistry([
     disabled: computed(() => routeLoading.value || !routeId.value || !hasFormChanges.value),
     onClick: updateRoute,
     permission: {
-      and: [{ route: '/route_definition', actions: ['update'] }],
+      and: [{ route: '/route_definition', methods: ['PATCH'] }],
     },
   },
 ])

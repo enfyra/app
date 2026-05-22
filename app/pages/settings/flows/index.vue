@@ -46,7 +46,7 @@
           ]"
           @click="navigateToDetail(flow)"
           :header-actions="getHeaderActions(flow)"
-          :actions="getFooterActions(flow)"
+          :methods="getFooterActions(flow)"
         />
       </CommonAnimatedGrid>
 
@@ -127,7 +127,7 @@ useHeaderActionRegistry([
     size: "md",
     to: "/settings/flows/create",
     permission: {
-      and: [{ route: "/flow_definition", actions: ["create"] }],
+      and: [{ route: "/flow_definition", methods: ["POST"] }],
     },
   },
 ]);
@@ -139,7 +139,7 @@ function navigateToDetail(flow: any) {
 
 function getHeaderActions(flow: any) {
   const actions = [];
-  if (checkPermissionCondition({ or: [{ route: '/flow_definition', actions: ['update'] }] })) {
+  if (checkPermissionCondition({ or: [{ route: '/flow_definition', methods: ['PATCH'] }] })) {
     actions.push({
       component: 'USwitch',
       props: {
@@ -154,7 +154,7 @@ function getHeaderActions(flow: any) {
 }
 
 function getFooterActions(flow: any) {
-  const hasDelete = checkPermissionCondition({ or: [{ route: '/flow_definition', actions: ['delete'] }] });
+  const hasDelete = checkPermissionCondition({ or: [{ route: '/flow_definition', methods: ['DELETE'] }] });
   return [
     {
       label: 'Delete',

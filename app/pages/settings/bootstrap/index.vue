@@ -60,7 +60,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/bootstrap_script_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },
@@ -135,7 +135,7 @@ watch(
               value: new Date(script.createdAt).toLocaleDateString(),
             },
           ]"
-          :actions="[
+          :methods="[
             {
               label: 'Delete',
               props: {

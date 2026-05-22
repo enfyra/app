@@ -224,7 +224,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/menu_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

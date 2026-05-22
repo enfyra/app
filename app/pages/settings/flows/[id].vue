@@ -489,7 +489,7 @@ const { execute: updateFlowApi, error: updateError, pending: saveFlowPending } =
 const { checkPermissionCondition } = usePermissions();
 const canUpdateFlow = computed(() =>
   checkPermissionCondition({
-    and: [{ route: "/flow_definition", actions: ["update"] }],
+    and: [{ route: "/flow_definition", methods: ["PATCH"] }],
   })
 );
 const { execute: createStepApi, error: createStepError } = useApi(() => `/flow_step_definition`, { method: "post", errorContext: "Create Step" });
@@ -506,7 +506,7 @@ useSubHeaderActionRegistry([
     color: "success",
     size: "md",
     onClick: triggerFlow,
-    permission: { and: [{ route: "/flow_execution_definition", actions: ["create"] }] },
+    permission: { and: [{ route: "/flow_execution_definition", methods: ["POST"] }] },
   },
 ]);
 

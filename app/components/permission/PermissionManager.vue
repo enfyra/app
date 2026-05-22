@@ -11,7 +11,7 @@
       <PermissionGate
         class="!w-auto !h-auto shrink-0"
         :condition="{
-          or: [{ route: `/${permissionTableName}`, actions: ['create'] }],
+          or: [{ route: `/${permissionTableName}`, methods: ['POST'] }],
         }"
       >
         <UButton
@@ -46,7 +46,7 @@
         >
           <PermissionGate
             :condition="{
-              or: [{ route: `/${permissionTableName}`, actions: ['update'] }],
+              or: [{ route: `/${permissionTableName}`, methods: ['PATCH'] }],
             }"
           >
             <div
@@ -101,7 +101,7 @@
                   </span>
                   <PermissionGate
                     :condition="{
-                      or: [{ route: `/${permissionTableName}`, actions: ['delete'] }],
+                      or: [{ route: `/${permissionTableName}`, methods: ['DELETE'] }],
                     }"
                   >
                     <UButton
@@ -121,7 +121,7 @@
           </PermissionGate>
 
           <div
-            v-if="!checkPermissionCondition({ or: [{ route: `/${permissionTableName}`, actions: ['update'] }] })"
+            v-if="!checkPermissionCondition({ or: [{ route: `/${permissionTableName}`, methods: ['PATCH'] }] })"
             class="surface-card rounded-lg p-3 opacity-60"
           >
             <div class="flex items-center justify-between gap-3">
@@ -160,7 +160,7 @@
                   </span>
                 </template>
                 <PermissionGate
-                  :condition="{ or: [{ route: `/${permissionTableName}`, actions: ['delete'] }] }"
+                  :condition="{ or: [{ route: `/${permissionTableName}`, methods: ['DELETE'] }] }"
                 >
                   <UButton
                     icon="lucide:trash"

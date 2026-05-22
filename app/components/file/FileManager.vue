@@ -192,11 +192,11 @@ useSubHeaderActionRegistry([
       and: [
         {
           route: "/folder_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
         {
           route: "/file_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },

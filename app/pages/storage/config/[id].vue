@@ -130,7 +130,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/storage_config_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -150,7 +150,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/storage_config_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

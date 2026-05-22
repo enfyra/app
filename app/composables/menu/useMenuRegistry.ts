@@ -228,7 +228,7 @@ export function useMenuRegistry() {
         type: "Menu",
         permission: {
           or: [
-            { route: route.path, actions: ["read"] }
+            { route: route.path, methods: ["GET"] }
           ]
         }
       });
@@ -287,7 +287,7 @@ export function useMenuRegistry() {
           type: "Menu",
           permission: {
             or: [
-              { route: dynamicRoute, actions: ["read"] }
+              { route: dynamicRoute, methods: ["GET"] }
             ]
           }
         });

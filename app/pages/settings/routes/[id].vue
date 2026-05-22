@@ -58,7 +58,7 @@ watch(() => routeData.value?.data?.[0]?.path, (path) => {
 const { checkPermissionCondition } = usePermissions()
 const canUpdateRoute = computed(() =>
   checkPermissionCondition({
-    and: [{ route: '/route_definition', actions: ['update'] }],
+    and: [{ route: '/route_definition', methods: ['PATCH'] }],
   })
 )
 
@@ -106,7 +106,7 @@ useHeaderActionRegistry([
     loading: computed(() => deleteLoading.value),
     disabled: computed(() => routeData.value?.data?.[0]?.isSystem ?? false),
     permission: {
-      and: [{ route: '/route_definition', actions: ['delete'] }],
+      and: [{ route: '/route_definition', methods: ['DELETE'] }],
     },
   },
 ])

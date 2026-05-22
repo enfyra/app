@@ -13,7 +13,7 @@ registerPageHeader({
 const adminTools = computed(() => {
   const isRootAdmin = !!me.value?.isRootAdmin;
   const canReadLogs = isRootAdmin || checkPermissionCondition({
-    or: [{ route: '/logs', actions: ['read'] }],
+    or: [{ route: '/logs', methods: ['GET'] }],
   });
 
   return [

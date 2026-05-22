@@ -276,7 +276,7 @@ const guardId = computed(() => route.params.id as string);
 const { checkPermissionCondition } = usePermissions();
 const canUpdateGuard = computed(() =>
   checkPermissionCondition({
-    and: [{ route: '/guard_definition', actions: ['update'] }],
+    and: [{ route: '/guard_definition', methods: ['PATCH'] }],
   })
 );
 
@@ -295,7 +295,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: '/guard_definition',
-          actions: ['delete'],
+          methods: ['DELETE'],
         },
       ],
     },

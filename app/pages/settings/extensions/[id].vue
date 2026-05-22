@@ -132,7 +132,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/extension_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },
@@ -152,7 +152,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/extension_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -172,7 +172,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/extension_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

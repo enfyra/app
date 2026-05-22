@@ -18,8 +18,8 @@ const hasReloadPermission = computed(() => {
   if (me.value?.isRootAdmin) return true;
   return checkPermissionCondition({
     or: [
-      { route: '/route_definition', actions: ['update'] },
-      { route: '/admin/reload', actions: ['create'] },
+      { route: '/route_definition', methods: ['PATCH'] },
+      { route: '/admin/reload', methods: ['POST'] },
     ],
   });
 });

@@ -46,7 +46,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

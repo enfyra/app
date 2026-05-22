@@ -81,7 +81,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/oauth_config_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

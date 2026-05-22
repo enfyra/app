@@ -26,11 +26,11 @@ const hasPermission = computed(() => {
     return checkPermissionCondition(props.condition);
   }
 
-  if (props.routes && props.actions) {
+  if (props.routes && props.methods) {
     if (props.mode === "all") {
-      return hasAllPermissions(props.routes, props.actions);
+      return hasAllPermissions(props.routes, props.methods);
     } else {
-      return hasAnyPermission(props.routes, props.actions);
+      return hasAnyPermission(props.routes, props.methods);
     }
   }
 

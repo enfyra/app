@@ -98,7 +98,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/bootstrap_script_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -118,7 +118,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/bootstrap_script_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

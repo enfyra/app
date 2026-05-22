@@ -85,7 +85,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/role_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -104,7 +104,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/role_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

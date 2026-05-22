@@ -48,7 +48,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/bootstrap_script_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

@@ -54,7 +54,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/role_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },
@@ -136,7 +136,7 @@ watch(
               value: '-'
             }
           ]"
-          :actions="[
+          :methods="[
             {
               label: 'Delete',
               props: {

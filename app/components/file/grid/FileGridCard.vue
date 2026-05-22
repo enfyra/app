@@ -151,7 +151,7 @@ const canDeleteFile = checkPermissionCondition({
   and: [
     {
       route: "/file_definition",
-      actions: ["delete"],
+      methods: ["DELETE"],
     },
   ],
 });

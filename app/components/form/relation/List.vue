@@ -6,8 +6,8 @@ const props = defineProps<{
   disabled?: boolean;
 
   deletePermission?: {
-    and?: { route: string; actions: string[] }[];
-    or?: { route: string; actions: string[] }[];
+    and?: { route: string; methods: string[] }[];
+    or?: { route: string; methods: string[] }[];
   };
 }>();
 
@@ -376,4 +376,3 @@ const { isMobile, isTablet } = useScreen();
     </div>
   </div>
 </template>
-

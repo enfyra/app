@@ -46,7 +46,7 @@
               value: new Date(user.createdAt).toLocaleDateString(),
             },
           ]"
-          :actions="[
+          :methods="[
             {
               label: 'Delete',
               props: {
@@ -181,7 +181,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: `/${tableName}`,
-          actions: ["read"],
+          methods: ["GET"],
         },
       ],
     },
@@ -198,7 +198,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: `/${tableName}`,
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

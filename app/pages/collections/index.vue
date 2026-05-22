@@ -153,7 +153,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/table_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },

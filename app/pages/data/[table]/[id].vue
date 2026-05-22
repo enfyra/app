@@ -171,7 +171,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -191,7 +191,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

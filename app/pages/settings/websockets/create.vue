@@ -80,7 +80,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/websocket_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

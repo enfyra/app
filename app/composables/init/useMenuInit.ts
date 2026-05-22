@@ -31,7 +31,7 @@ export async function useMenuInit() {
       position: "top" as any,
       permission: {
         and: [
-          { route: `/table_definition`, actions: ["read"] }
+          { route: `/table_definition`, methods: ["GET"] }
         ]
       }
     } as any);

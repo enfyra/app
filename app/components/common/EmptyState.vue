@@ -32,7 +32,7 @@ const mappedActions = computed(() => {
     :icon="props.icon || 'lucide:database'"
     :title="props.title || 'No data available'"
     :description="props.description"
-    :actions="mappedActions"
+    :methods="mappedActions"
     :size="props.size || 'md'"
     :variant="props.variant || 'outline'"
   />

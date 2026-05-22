@@ -210,7 +210,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/package_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -230,7 +230,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/package_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

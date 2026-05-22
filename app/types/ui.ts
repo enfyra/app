@@ -62,7 +62,7 @@ export interface RouteLoadingProps {
 }
 
 export interface PermissionGateProps {
-  actions?: string[];
+  methods?: string[];
   routes?: string[];
   mode?: "any" | "all";
   condition?: PermissionCondition;

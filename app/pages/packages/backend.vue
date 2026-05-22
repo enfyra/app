@@ -81,7 +81,7 @@
                 ]
               : []),
           ]"
-          :actions="[]"
+          :methods="[]"
           :header-actions="[]"
         />
       </CommonAnimatedGrid>
@@ -149,7 +149,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/package_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },

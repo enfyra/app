@@ -57,7 +57,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/route_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

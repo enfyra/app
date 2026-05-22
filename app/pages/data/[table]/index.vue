@@ -144,7 +144,7 @@ useSubHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -164,7 +164,7 @@ useSubHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -187,7 +187,7 @@ useSubHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["read"],
+          methods: ["GET"],
         },
       ],
     },
@@ -266,7 +266,7 @@ const columns = computed(() => {
             and: [
               {
                 route: getRouteForTableName(tableName),
-                actions: ["delete"],
+                methods: ["DELETE"],
               },
             ],
           });
@@ -357,7 +357,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["read"],
+          methods: ["GET"],
         },
       ],
     },
@@ -374,7 +374,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

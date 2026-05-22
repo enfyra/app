@@ -112,7 +112,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: '/guard_definition',
-          actions: ['read'],
+          methods: ['GET'],
         },
       ],
     },
@@ -129,7 +129,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: '/guard_definition',
-          actions: ['create'],
+          methods: ['POST'],
         },
       ],
     },
@@ -514,7 +514,7 @@ async function deleteGuard(guard: any) {
                   value: (guard.combinator || 'and').toUpperCase(),
                 },
               ]"
-              :actions="getGuardFooterActions(guard)"
+              :methods="getGuardFooterActions(guard)"
               :header-actions="getGuardHeaderActions(guard)"
             />
           </CommonAnimatedGrid>

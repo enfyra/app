@@ -115,7 +115,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/user_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -135,7 +135,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/user_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

@@ -139,7 +139,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/table_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -166,7 +166,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/table_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

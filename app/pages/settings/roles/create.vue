@@ -51,7 +51,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/role_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },
