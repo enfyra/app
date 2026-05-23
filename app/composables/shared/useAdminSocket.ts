@@ -115,6 +115,8 @@ export function useAdminSocket() {
   const schema = useSchema();
   const routes = useRoutes();
   const menuRegistry = useMenuRegistry();
+  const menuApi = useMenuApi();
+  const dynamicComponent = useDynamicComponent();
 
   if (!socket) {
     ensureStaleReloadPruner();
@@ -181,14 +183,20 @@ export function useAdminSocket() {
 
         const needsSchema = steps.includes('metadata') || steps.includes('graphql');
         const needsRoutes = steps.includes('metadata') || steps.includes('route');
-        const needsMenus = steps.includes('metadata');
+        const needsMenus = steps.includes('metadata') || steps.includes('menu');
+        const needsExtensions = steps.includes('extension') || steps.includes('menu');
 
         if (needsSchema) await schema.forceRefreshSchema();
         if (needsRoutes) await routes.loadRoutes();
         if (needsMenus) {
+          await menuApi.fetchMenuDefinitions();
+          await useMenuInit({ reset: true });
           await menuRegistry.registerDataMenuItems(
             Object.values(schema.schemas.value),
           );
+        }
+        if (needsExtensions) {
+          dynamicComponent.invalidateExtensionCache({ reason: 'updated' });
         }
 
         activeReloads.value = activeReloads.value.filter((r) => r.key !== key);

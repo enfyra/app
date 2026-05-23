@@ -138,26 +138,45 @@ export function isExtensionInvalidationMatch(
   invalidation: ExtensionCacheInvalidation | null
 ): boolean {
   if (!extensionData || !invalidation) return false;
+  if (
+    invalidation.id == null &&
+    invalidation.extensionId == null &&
+    invalidation.path == null
+  ) {
+    return true;
+  }
   return matchesExtensionInvalidation(extensionData, invalidation);
 }
 
 export function invalidateExtensionCache(
   invalidation: Omit<ExtensionCacheInvalidation, "token">
 ): void {
+  const isGlobalInvalidation =
+    invalidation.id == null &&
+    invalidation.extensionId == null &&
+    invalidation.path == null;
+
+  if (isGlobalInvalidation) {
+    extensionCache.clear();
+    extensionMetaCache.value.clear();
+  }
+
   if (invalidation.extensionId != null) {
     clearOldVersions(String(invalidation.extensionId));
   }
 
-  const pathVariants = getPathVariants(invalidation.path);
-  for (const [path, extensionData] of extensionMetaCache.value) {
-    const matchesPath = pathVariants.has(String(path));
-    if (!matchesPath && !matchesExtensionInvalidation(extensionData, invalidation)) continue;
+  if (!isGlobalInvalidation) {
+    const pathVariants = getPathVariants(invalidation.path);
+    for (const [path, extensionData] of extensionMetaCache.value) {
+      const matchesPath = pathVariants.has(String(path));
+      if (!matchesPath && !matchesExtensionInvalidation(extensionData, invalidation)) continue;
 
-    const runtimeId = getExtensionRuntimeId(extensionData);
-    if (runtimeId) {
-      clearOldVersions(runtimeId);
+      const runtimeId = getExtensionRuntimeId(extensionData);
+      if (runtimeId) {
+        clearOldVersions(runtimeId);
+      }
+      extensionMetaCache.value.delete(path);
     }
-    extensionMetaCache.value.delete(path);
   }
 
   extensionCacheInvalidation.value = {
