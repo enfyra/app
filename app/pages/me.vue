@@ -105,6 +105,7 @@ const apiTokenForm = ref({
   customDate: "",
 });
 const apiTokenCustomCalendarDate = shallowRef<any>(null);
+const apiTokenCustomCalendarOpen = ref(false);
 const apiTokenErrors = ref<Record<string, string>>({});
 const newlyCreatedToken = ref("");
 const apiTokenCopied = ref(false);
@@ -357,6 +358,7 @@ function openApiTokenModal() {
     customDate: "",
   };
   apiTokenCustomCalendarDate.value = null;
+  apiTokenCustomCalendarOpen.value = false;
 }
 
 function resolveApiTokenExpiresAt() {
@@ -704,32 +706,48 @@ onMounted(() => {
           </UFormField>
 
           <UFormField label="Expiration" :error="apiTokenErrors.expiresAt" required>
-            <div class="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <div class="flex flex-wrap gap-2">
               <UButton
                 v-for="preset in apiTokenExpiryPresets"
                 :key="preset.value"
                 type="button"
                 :color="apiTokenForm.expiryPreset === preset.value ? 'primary' : 'neutral'"
                 :variant="apiTokenForm.expiryPreset === preset.value ? 'solid' : 'soft'"
-                class="justify-center"
+                class="min-w-[120px] justify-center"
                 @click="apiTokenForm.expiryPreset = preset.value"
               >
                 {{ preset.label }}
               </UButton>
             </div>
-            <UInput
+            <UPopover
               v-if="apiTokenForm.expiryPreset === 'custom'"
-              :model-value="apiTokenForm.customDate ? formatTokenDate(`${apiTokenForm.customDate}T00:00:00.000`) : 'Select a date'"
-              readonly
-              icon="lucide:calendar"
-              class="w-full mt-3"
-            />
-            <div
-              v-if="apiTokenForm.expiryPreset === 'custom'"
-              class="mt-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-3"
+              v-model:open="apiTokenCustomCalendarOpen"
             >
-              <UCalendar v-model="apiTokenCustomCalendarDate" class="w-fit" />
-            </div>
+              <UButton
+                type="button"
+                color="neutral"
+                variant="outline"
+                icon="lucide:calendar"
+                class="mt-3 w-full justify-start"
+              >
+                {{ apiTokenForm.customDate ? formatTokenDate(`${apiTokenForm.customDate}T00:00:00.000`) : "Select a date" }}
+              </UButton>
+              <template #content="{ close }">
+                <div class="space-y-3 p-3">
+                  <UCalendar v-model="apiTokenCustomCalendarDate" class="w-fit" />
+                  <div class="flex justify-end">
+                    <UButton
+                      size="sm"
+                      color="primary"
+                      variant="solid"
+                      @click="() => { close(); apiTokenCustomCalendarOpen = false; }"
+                    >
+                      Done
+                    </UButton>
+                  </div>
+                </div>
+              </template>
+            </UPopover>
           </UFormField>
         </UForm>
       </div>
