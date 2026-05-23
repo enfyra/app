@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { CalendarDate } from "@internationalized/date";
+
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { validateForm } = useFormValidation("user_definition");
@@ -102,6 +104,7 @@ const apiTokenForm = ref({
   expiryPreset: "90d",
   customDate: "",
 });
+const apiTokenCustomCalendarDate = shallowRef<any>(null);
 const apiTokenErrors = ref<Record<string, string>>({});
 const newlyCreatedToken = ref("");
 const apiTokenCopied = ref(false);
@@ -113,6 +116,30 @@ const apiTokenExpiryPresets = [
   { label: "No expiration", value: "never", days: null },
   { label: "Custom", value: "custom", days: null },
 ];
+
+function todayCalendarDate() {
+  const date = new Date();
+  return new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+}
+
+function calendarDateToDateString(value: CalendarDate | { year: number; month: number; day: number } | null) {
+  if (!value) return "";
+  return [
+    value.year,
+    String(value.month).padStart(2, "0"),
+    String(value.day).padStart(2, "0"),
+  ].join("-");
+}
+
+watch(apiTokenCustomCalendarDate, (value) => {
+  apiTokenForm.value.customDate = calendarDateToDateString(value);
+});
+
+watch(() => apiTokenForm.value.expiryPreset, (value) => {
+  if (value === "custom" && !apiTokenCustomCalendarDate.value) {
+    apiTokenCustomCalendarDate.value = todayCalendarDate();
+  }
+});
 
 function getProviderIcon(provider: string) {
   switch (provider) {
@@ -329,6 +356,7 @@ function openApiTokenModal() {
     expiryPreset: "90d",
     customDate: "",
   };
+  apiTokenCustomCalendarDate.value = null;
 }
 
 function resolveApiTokenExpiresAt() {
@@ -691,10 +719,17 @@ onMounted(() => {
             </div>
             <UInput
               v-if="apiTokenForm.expiryPreset === 'custom'"
-              v-model="apiTokenForm.customDate"
-              type="date"
+              :model-value="apiTokenForm.customDate ? formatTokenDate(`${apiTokenForm.customDate}T00:00:00.000`) : 'Select a date'"
+              readonly
+              icon="lucide:calendar"
               class="w-full mt-3"
             />
+            <div
+              v-if="apiTokenForm.expiryPreset === 'custom'"
+              class="mt-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-3"
+            >
+              <UCalendar v-model="apiTokenCustomCalendarDate" class="w-fit" />
+            </div>
           </UFormField>
         </UForm>
       </div>
