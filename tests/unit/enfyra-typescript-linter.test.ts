@@ -100,27 +100,26 @@ return await @REPOS.user_definition.find({ where: { email: { _eq: @BODY.email } 
     expect(source.slice(typeDiagnostic!.from, typeDiagnostic!.to)).toBe('value')
   })
 
-  it('checks Vue script tags as strict JavaScript by default', async () => {
+  it('does not TypeScript-check Vue script setup without lang ts', async () => {
     const source = `<template><div /></template>
-<script>
+<script setup>
 a = b
 </script>`
     const diagnostics = await lintVueSfcScripts(source)
 
-    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Cannot find name 'a'"))).toBe(true)
-    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Cannot find name 'b'"))).toBe(true)
+    expect(diagnostics).toEqual([])
   })
 
-  it('rejects TypeScript syntax in Vue script tags without lang ts', async () => {
-    const source = `<script>
+  it('does not TypeScript-check Vue script setup type annotations without lang ts', async () => {
+    const source = `<script setup>
 const value: string = "ok"
 </script>`
     const diagnostics = await lintVueSfcScripts(source)
 
-    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Type annotations can only be used in TypeScript files"))).toBe(true)
+    expect(diagnostics).toEqual([])
   })
 
-  it('checks Vue script lang ts as TypeScript', async () => {
+  it('checks Vue script setup lang ts as TypeScript', async () => {
     const source = `<script setup lang="ts">
 const value: string = 1
 </script>`

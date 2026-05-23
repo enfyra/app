@@ -941,7 +941,9 @@ async function lintVueScriptBlock(block: VueScriptBlock, index: number): Promise
 }
 
 export async function lintVueSfcScripts(source: string): Promise<Diagnostic[]> {
-  const blocks = extractVueScriptBlocks(source);
+  const blocks = extractVueScriptBlocks(source).filter(
+    (block) => block.setup && block.language === 'typescript',
+  );
   if (blocks.length === 0) return [];
   const results = await Promise.all(blocks.map((block, index) => lintVueScriptBlock(block, index)));
   return results.flat();

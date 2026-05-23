@@ -85,6 +85,7 @@ import {
   CommonSettingsCard,
   CommonLazyImage,
   CommonModal,
+  CommonDrawer,
   PermissionGate,
   FormEditor,
   CommonUploadModal,
@@ -185,6 +186,7 @@ export const availableComponents = {
   SettingsCard: markRaw(CommonSettingsCard),
   Image: markRaw(CommonLazyImage),
   CommonModal: markRaw(CommonModal),
+  CommonDrawer: markRaw(CommonDrawer),
   UploadModal: markRaw(CommonUploadModal),
   Widget: markRaw(DynamicWidgetComponent),
 };
