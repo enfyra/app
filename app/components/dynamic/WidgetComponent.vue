@@ -141,7 +141,7 @@ const fetchAndLoadWidget = async () => {
   }
 };
 
-watch(extensionCacheInvalidation, async (invalidation) => {
+watch(() => extensionCacheInvalidation.value, async (invalidation) => {
   const widgetPath = getWidgetMetaCacheKey(props.id);
   const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(widgetPath);
   const matchesByRecordId = invalidation?.id != null && String(invalidation.id) === String(props.id);

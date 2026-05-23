@@ -213,7 +213,7 @@ const fetchAndLoadExtension = async (runId: number) => {
   }
 };
 
-watch(extensionCacheInvalidation, async (invalidation) => {
+watch(() => extensionCacheInvalidation.value, async (invalidation) => {
   const runId = ++loadRunId.value;
   const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(extensionMetaCacheKey.value) || menuResponse.value?.data?.[0]?.extension;
   const invalidationPath = invalidation?.path;
