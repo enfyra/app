@@ -1,4 +1,5 @@
 import type { MenuApiItem } from '~/types';
+import { compareMenuOrder } from '~/utils/menu-order';
 
 export const useMenuApi = () => {
   const sharedMenuDefinitions = useState<{ data: MenuApiItem[] } | null>("menu-definitions", () => null);
@@ -12,6 +13,7 @@ export const useMenuApi = () => {
     query: computed(() => ({
       limit: 0,
       fields: "*,parent.*,children.*,sidebar.*,extension.*",
+      sort: "order,label,path,id",
     })),
     errorContext: "Fetch Menu Definitions",
   });
@@ -41,14 +43,14 @@ export const useMenuApi = () => {
     const dropdownMenus = finalMenuDefinitions.value?.data || [];
     return dropdownMenus
       .filter((menu: MenuApiItem) => menu.type === "Dropdown Menu" && menu.isEnabled)
-      .sort((a: MenuApiItem, b: MenuApiItem) => a.order - b.order);
+      .sort(compareMenuOrder);
   });
 
   const getMenus = computed<MenuApiItem[]>(() => {
     const menus = finalMenuDefinitions.value?.data || [];
     return menus
       .filter((menu: MenuApiItem) => menu.type === "Menu" && menu.isEnabled)
-      .sort((a: MenuApiItem, b: MenuApiItem) => a.order - b.order);
+      .sort(compareMenuOrder);
   });
 
   const getMenuItemsBySidebar = computed(() => {
@@ -62,7 +64,7 @@ export const useMenuApi = () => {
             item.isEnabled &&
             String(getId(item.sidebar)) === sidebarId
         )
-        .sort((a: MenuApiItem, b: MenuApiItem) => a.order - b.order);
+        .sort(compareMenuOrder);
       return sidebarMenus;
     };
   });

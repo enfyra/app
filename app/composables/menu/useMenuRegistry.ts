@@ -1,4 +1,5 @@
 import { resolveComponent, markRaw } from "vue";
+import { compareMenuOrder } from "~/utils/menu-order";
 import { findBestMenuRouteMatch, isDynamicMenuPath } from "~/utils/menu-route-patterns";
 
 function normalizePath(path?: string): string {
@@ -52,7 +53,7 @@ export function useMenuRegistry() {
         if (a.position !== b.position) {
           return a.position === 'top' ? -1 : 1;
         }
-        return (a.order || 0) - (b.order || 0);
+        return compareMenuOrder(a, b);
       });
 
     return groups;
@@ -107,8 +108,10 @@ export function useMenuRegistry() {
       const typeOrder: Record<string, number> = { 'Dropdown Menu': 0, 'Menu': 1 };
       const aTypeOrder = a.type ? (typeOrder[a.type] ?? 2) : 2;
       const bTypeOrder = b.type ? (typeOrder[b.type] ?? 2) : 2;
+      const typeDiff = aTypeOrder - bTypeOrder;
+      if (typeDiff !== 0) return typeDiff;
       
-      return aTypeOrder - bTypeOrder;
+      return compareMenuOrder(a, b);
     });
   };
 
@@ -121,7 +124,7 @@ export function useMenuRegistry() {
 
     const allMenus = menuDefinitions
       .filter((item) => item.isEnabled)
-      .sort((a, b) => a.order - b.order);
+      .sort(compareMenuOrder);
 
     function buildChildren(parentId: string | number): any[] {
       return allMenus
