@@ -89,6 +89,21 @@ export default defineAppConfig({
           class: "bg-[var(--surface-default)] text-brand-600 dark:text-primary ring-1 ring-inset ring-brand-400/40 dark:ring-primary/30 hover:bg-brand-50 dark:hover:bg-primary/10"
         },
         {
+          color: "neutral",
+          variant: "soft",
+          class: "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-800/70 dark:text-slate-100 dark:ring-slate-700/70 dark:hover:bg-slate-700/80"
+        },
+        {
+          color: "neutral",
+          variant: "ghost",
+          class: "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/70 dark:hover:text-white"
+        },
+        {
+          color: "neutral",
+          variant: "outline",
+          class: "bg-[var(--surface-default)] text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-100 dark:ring-slate-700 dark:hover:bg-slate-800"
+        },
+        {
           color: "error",
           variant: "solid",
           class: "bg-error-500 text-white shadow-theme-xs hover:bg-error-600 disabled:bg-error-300 disabled:hover:bg-error-300 dark:bg-error-500 dark:hover:bg-error-600 dark:disabled:hover:bg-error-300",
