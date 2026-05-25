@@ -82,21 +82,21 @@
                   </UBadge>
                 </div>
                 <div class="flex items-center gap-1 shrink-0">
-                  <template v-for="m in permission.methods" :key="m.method">
+                  <template v-for="m in getPermissionMethods(permission)" :key="m">
                     <span
                       class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold"
                       :class="[
-                        m.method === 'GET' ? 'bg-success-500/15 text-success-600 dark:text-success-400' :
-                        m.method === 'POST' ? 'bg-info-500/15 text-info-600 dark:text-info-400' :
-                        m.method === 'PUT' || m.method === 'PATCH' ? 'bg-warning-500/15 text-warning-600 dark:text-warning-400' :
-                        m.method === 'DELETE' ? 'bg-error-500/15 text-error-600 dark:text-error-400' :
+                        m === 'GET' ? 'bg-success-500/15 text-success-600 dark:text-success-400' :
+                        m === 'POST' ? 'bg-info-500/15 text-info-600 dark:text-info-400' :
+                        m === 'PUT' || m === 'PATCH' ? 'bg-warning-500/15 text-warning-600 dark:text-warning-400' :
+                        m === 'DELETE' ? 'bg-error-500/15 text-error-600 dark:text-error-400' :
                         'bg-[var(--surface-muted)] text-[var(--text-tertiary)]'
                       ]"
                     >
-                      {{ m.method }}
+                      {{ m }}
                     </span>
                   </template>
-                  <span v-if="!permission.methods?.length" class="text-[10px] text-[var(--text-quaternary)]">
+                  <span v-if="!getPermissionMethods(permission).length" class="text-[10px] text-[var(--text-quaternary)]">
                     No methods
                   </span>
                   <PermissionGate
@@ -145,20 +145,23 @@
                 </UBadge>
               </div>
               <div class="flex items-center gap-1 shrink-0">
-                <template v-for="m in permission.methods" :key="m.method">
+                <template v-for="m in getPermissionMethods(permission)" :key="m">
                   <span
                     class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold"
                     :class="[
-                      m.method === 'GET' ? 'bg-success-500/15 text-success-600 dark:text-success-400' :
-                      m.method === 'POST' ? 'bg-info-500/15 text-info-600 dark:text-info-400' :
-                      m.method === 'PUT' || m.method === 'PATCH' ? 'bg-warning-500/15 text-warning-600 dark:text-warning-400' :
-                      m.method === 'DELETE' ? 'bg-error-500/15 text-error-600 dark:text-error-400' :
+                      m === 'GET' ? 'bg-success-500/15 text-success-600 dark:text-success-400' :
+                      m === 'POST' ? 'bg-info-500/15 text-info-600 dark:text-info-400' :
+                      m === 'PUT' || m === 'PATCH' ? 'bg-warning-500/15 text-warning-600 dark:text-warning-400' :
+                      m === 'DELETE' ? 'bg-error-500/15 text-error-600 dark:text-error-400' :
                       'bg-[var(--surface-muted)] text-[var(--text-tertiary)]'
                     ]"
                   >
-                    {{ m.method }}
+                    {{ m }}
                   </span>
                 </template>
+                <span v-if="!getPermissionMethods(permission).length" class="text-[10px] text-[var(--text-quaternary)]">
+                  No methods
+                </span>
                 <PermissionGate
                   :condition="{ or: [{ route: `/${permissionTableName}`, methods: ['DELETE'] }] }"
                 >
@@ -201,7 +204,7 @@
             <FormEditorLazy
               v-model="permissionForm"
               v-model:errors="permissionErrors"
-              @has-changed="(v: boolean) => hasFormChanges = v"
+              @has-changed="handleHasChanged"
               :table-name="permissionTableName"
               :excluded="[props.currentFieldId?.field as string]"
               :field-map="fieldMap"
@@ -388,6 +391,19 @@ function editPermission(permission: Permission) {
   showDrawer.value = true;
 }
 
+function getPermissionMethods(permission: Permission): string[] {
+  if (!Array.isArray(permission.methods)) return [];
+
+  return permission.methods
+    .map((item: any) => typeof item === "string" ? item : item?.method)
+    .filter((method: any): method is string => typeof method === "string" && method.trim().length > 0);
+}
+
+function handleHasChanged(value: boolean) {
+  if (!showDrawer.value) return;
+  hasFormChanges.value = value;
+}
+
 async function handleReset() {
   const ok = await confirm({
     title: 'Reset Changes',
@@ -398,6 +414,7 @@ async function handleReset() {
   if (isEditing.value && currentPermission.value) {
     permissionForm.value = formChanges.discardChanges(permissionForm.value);
   }
+  formChanges.update(permissionForm.value);
   hasFormChanges.value = false;
 }
 
@@ -452,13 +469,16 @@ async function savePermission() {
     if (createError.value) return;
   }
 
+  formChanges.update(permissionForm.value);
+  hasFormChanges.value = false;
+  permissionErrors.value = {};
+  showDiscardModal.value = false;
   showDrawer.value = false;
 
   await fetchPermissions();
 
   currentPermission.value = null;
   permissionForm.value = {};
-  permissionErrors.value = {};
 }
 
 async function deletePermission(permission: Permission) {
