@@ -275,7 +275,7 @@ export const VUE_COMPONENT_COMPLETIONS = [
   { label: 'UCheckbox', type: 'class', detail: 'Nuxt UI: checkbox' },
   { label: 'UCheckboxGroup', type: 'class', detail: 'Nuxt UI: checkbox group' },
   { label: 'URadioGroup', type: 'class', detail: 'Nuxt UI: radio group' },
-  { label: 'UModal', type: 'class', detail: 'Nuxt UI: modal' },
+  { label: 'UModal', type: 'class', detail: 'Extension alias: CommonModal' },
   { label: 'UDrawer', type: 'class', detail: 'Nuxt UI: drawer' },
   { label: 'UDropdownMenu', type: 'class', detail: 'Nuxt UI: dropdown menu' },
   { label: 'UTooltip', type: 'class', detail: 'Nuxt UI: tooltip' },
