@@ -63,28 +63,33 @@ function close() {
     }"
   >
     <template #header>
-      <div v-if="hasHeader" class="flex items-center justify-between w-full ">
+      <div v-if="hasHeader" class="flex items-center justify-between w-full" @click.stop>
         <div class="flex-1 min-w-0">
           <slot name="header" />
         </div>
         <UButton
           v-if="props.showClose"
+          type="button"
           icon="lucide:x"
           color="error"
           variant="soft"
           :size="(isMobile || isTablet) ? 'lg' : 'xl'"
           :class="(isMobile || isTablet) ? 'rounded-full !aspect-square flex-shrink-0' : 'flex-shrink-0'"
-          @click="close"
+          @click.stop.prevent="close"
         />
       </div>
     </template>
 
     <template #body>
-      <slot name="body" />
+      <div @click.stop>
+        <slot name="body" />
+      </div>
     </template>
 
     <template #footer>
-      <slot v-if="hasFooter" name="footer" />
+      <div v-if="hasFooter" @click.stop>
+        <slot name="footer" />
+      </div>
     </template>
   </UDrawer>
 </template>

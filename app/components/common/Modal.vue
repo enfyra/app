@@ -59,7 +59,7 @@ const mergedUi = computed(() => ({
       }"
     >
       <template #title>
-        <div v-if="hasTitle" class="flex items-center justify-between w-full">
+        <div v-if="hasTitle" class="flex items-center justify-between w-full" @click.stop>
           <div class="flex-1 min-w-0">
             <slot name="header" />
           </div>
@@ -71,12 +71,16 @@ const mergedUi = computed(() => ({
       </template>
 
       <template #body>
-        <slot v-if="$slots.body" name="body" />
-        <slot v-else />
+        <div @click.stop>
+          <slot v-if="$slots.body" name="body" />
+          <slot v-else />
+        </div>
       </template>
 
       <template #footer>
-        <slot v-if="hasFooter" name="footer" />
+        <div v-if="hasFooter" @click.stop>
+          <slot name="footer" />
+        </div>
       </template>
     </UModal>
 </template>
