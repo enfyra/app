@@ -59,6 +59,24 @@ let staleReloadInterval: ReturnType<typeof setInterval> | null = null;
 
 const RELOAD_STALE_MS = 45_000;
 
+export function stopAdminSocketReconnectOnAuthError(
+  currentSocket: Socket | null,
+  err: Error,
+) {
+  if (err?.message !== ENFYRA_SOCKET_AUTH_ERROR || !currentSocket) {
+    return false;
+  }
+
+  const manager = currentSocket.io as any;
+  if (typeof manager?.reconnection === 'function') {
+    manager.reconnection(false);
+  } else if (manager?.opts) {
+    manager.opts.reconnection = false;
+  }
+  currentSocket.disconnect();
+  return true;
+}
+
 function clearReloadTimers() {
   if (reloadDoneTimer) {
     clearTimeout(reloadDoneTimer);
@@ -137,7 +155,10 @@ export function useAdminSocket() {
     };
 
     socket.on('connect_error', (err: Error) => {
-      if (err?.message === ENFYRA_SOCKET_AUTH_ERROR) return;
+      if (stopAdminSocketReconnectOnAuthError(socket, err)) {
+        socket = null;
+        return;
+      }
       if (!shouldToastConnection()) return;
       console.error('Connection error:', err);
     });
