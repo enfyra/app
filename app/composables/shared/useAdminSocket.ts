@@ -254,17 +254,6 @@ export function useAdminSocket() {
       notify.error('Redis read failed', data?.message || 'Redis admin socket request failed');
     });
 
-    socket.on('$system:package:installed', (data: any) => {
-      notify.success('Package ready', `${data.name}@${data.version} installed successfully`);
-    });
-
-    socket.on('$system:package:uninstalled', (data: any) => {
-      notify.success('Package removed', `${data.name} has been uninstalled`);
-    });
-
-    socket.on('$system:package:failed', (data: any) => {
-      notify.error('Package operation failed', data.error || `Failed to ${data.operation} ${data.name}`);
-    });
   }
 
   function redisRequest<T>(event: string, payload: Record<string, any> = {}) {

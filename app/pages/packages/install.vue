@@ -170,7 +170,6 @@
 </template>
 
 <script setup lang="ts">
-const notify = useNotify();
 const { me } = useAuth();
 const { fetchAppPackages } = useGlobalState();
 
@@ -284,7 +283,6 @@ async function handleCreate() {
 
   if (packageType.value === 'App') {
     await fetchAppPackages();
-    notify.success("Package installed", `${form.value.name} has been installed`);
   }
 
   await navigateTo(`/packages/${packageId}`, {

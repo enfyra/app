@@ -88,6 +88,8 @@ import {
 
 await useInitialData();
 await useMenuInit();
+const { markInitialReady } = useInitialLoading();
+markInitialReady();
 useAppSettings();
 useRouterErrorHandler();
 useMobileMenuAction();
