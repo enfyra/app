@@ -64,11 +64,14 @@ async function handleLogout() {
       class="overflow-hidden rounded-md border border-[var(--border-default)] bg-[var(--surface-default)] shadow-xs transition-all duration-200 hover:shadow-md hover:border-[var(--border-strong)]"
       :class="isOpen ? 'rounded-lg' : ''"
     >
-      <button
-        type="button"
-        class="flex items-center gap-2 w-full p-1.5 text-left cursor-pointer"
+      <div
+        role="button"
+        tabindex="0"
+        class="flex cursor-pointer items-center gap-2 w-full p-1.5 text-left"
         :aria-expanded="isOpen"
         @click="togglePanel"
+        @keydown.enter.prevent="togglePanel"
+        @keydown.space.prevent="togglePanel"
       >
         <UAvatar :text="userInitial" size="xs" />
         <div class="flex-1 min-w-0">
@@ -76,7 +79,7 @@ async function handleLogout() {
           <p class="text-xs truncate text-[var(--text-tertiary)] leading-tight">Account</p>
         </div>
         <UIcon name="lucide:chevrons-up-down" class="w-4 h-4 text-[var(--text-tertiary)] shrink-0" />
-      </button>
+      </div>
 
       <div
         class="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
@@ -85,33 +88,42 @@ async function handleLogout() {
         <div class="min-h-0 overflow-hidden">
           <div class="border-t border-[var(--border-default)]">
           <div class="p-1.5 space-y-1">
-            <button
-              type="button"
-              class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]"
+            <div
+              role="button"
+              tabindex="0"
+              class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]"
               @click="router.push('/me')"
+              @keydown.enter.prevent="router.push('/me')"
+              @keydown.space.prevent="router.push('/me')"
             >
               <UIcon name="lucide:user" class="h-5 w-5 shrink-0 text-[var(--text-tertiary)]" />
               <span class="truncate">Profile</span>
-            </button>
+            </div>
 
-            <button
-              type="button"
-              class="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]"
+            <div
+              role="button"
+              tabindex="0"
+              class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]"
               @click="toggleTheme"
+              @keydown.enter.prevent="toggleTheme"
+              @keydown.space.prevent="toggleTheme"
             >
               <UIcon :name="themeIcon" class="h-5 w-5 shrink-0 text-[var(--text-tertiary)]" />
               <span class="min-w-0 flex-1 truncate">{{ themeLabel }}</span>
               <USwitch size="sm" :model-value="isDark" @update:model-value="toggleTheme" @click.stop />
-            </button>
+            </div>
 
-            <button
-              type="button"
-              class="flex w-full items-center gap-2 rounded-md bg-red-50 px-2.5 py-2 text-left text-sm font-medium text-red-500 transition-colors hover:bg-red-100 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50"
+            <div
+              role="button"
+              tabindex="0"
+              class="flex w-full cursor-pointer items-center gap-2 rounded-md bg-red-50 px-2.5 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15 dark:hover:text-red-200"
               @click="handleLogout"
+              @keydown.enter.prevent="handleLogout"
+              @keydown.space.prevent="handleLogout"
             >
               <UIcon name="lucide:log-out" class="h-5 w-5 shrink-0" />
               <span class="truncate">Logout</span>
-            </button>
+            </div>
           </div>
           </div>
         </div>
