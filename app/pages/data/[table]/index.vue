@@ -224,16 +224,21 @@ const columns = computed(() => {
       return aSortKey - bSortKey;
     })
     .map((field) => {
+      const fieldNameRaw = field.name!;
       let config: DataTableColumnConfig = {
-        id: field.name!,
-        header: field.label || field.name || "",
+        id: fieldNameRaw,
+        header: field.label || fieldNameRaw,
       };
-      const fieldName = field.name?.toLowerCase() || "";
+      const fieldName = fieldNameRaw.toLowerCase();
 
       if (fieldName === "id" || fieldName === "_id") {
-        config.width = 150;
-        config.minWidth = 132;
-        config.maxWidth = 180;
+        const maxIdLength = Math.max(
+          fieldNameRaw.length,
+          ...data.value.map((record) => String(record?.[fieldNameRaw] ?? "").length)
+        );
+        config.width = Math.min(Math.max(maxIdLength * 9 + 72, 84), 220);
+        config.minWidth = 84;
+        config.maxWidth = 220;
       }
 
       if (field.type === "timestamp") {

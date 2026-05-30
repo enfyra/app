@@ -298,7 +298,7 @@ function isIdentifierColumn(columnId: string | undefined) {
 }
 
 function getColumnStyle(column: any) {
-  const size = Number(column?.getSize?.() || column?.columnDef?.size || 0)
+  const size = Number(column?.columnDef?.size || 0)
   const minSize = Number(column?.columnDef?.minSize || 0)
   const maxSize = Number(column?.columnDef?.maxSize || 0)
   const style: Record<string, string> = {}
@@ -311,7 +311,7 @@ function getColumnStyle(column: any) {
 function getCellTextClass(columnId: string | undefined) {
   return [
     'text-[var(--table-cell-color)] text-theme-sm block min-w-0 truncate',
-    isIdentifierColumn(columnId) ? 'font-mono max-w-32' : 'w-full',
+    isIdentifierColumn(columnId) ? 'font-mono w-full' : 'w-full',
   ]
 }
 </script>
@@ -456,7 +456,7 @@ function getCellTextClass(columnId: string | undefined) {
       :class="isRefreshing ? 'after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-primary after:animate-pulse' : ''"
     >
       <div class="max-w-full overflow-x-auto overflow-y-auto custom-scrollbar">
-        <table class="min-w-full table-fixed divide-y divide-[var(--table-header-border)]" aria-label="Data table">
+        <table class="w-max table-fixed divide-y divide-[var(--table-header-border)]" aria-label="Data table">
           <colgroup>
             <col
               v-for="header in table?.getFlatHeaders() || []"
@@ -475,7 +475,7 @@ function getCellTextClass(columnId: string | undefined) {
                   header.id === '__actions' ? 'text-center' : 'text-left',
                   header.id === 'select' ? 'w-12 min-w-12 max-w-12' : '',
                   header.id === '__actions' ? 'w-12 min-w-12 max-w-12' : '',
-                  isIdentifierColumn(header.id) ? 'min-w-32 max-w-44' : '',
+                  isIdentifierColumn(header.id) ? 'overflow-hidden' : '',
                   header.id !== 'select' && header.id !== '__actions' && !isIdentifierColumn(header.id)
                     ? 'overflow-hidden'
                     : '',
@@ -541,7 +541,7 @@ function getCellTextClass(columnId: string | undefined) {
                     header.id === '__actions'
                       ? 'w-12 min-w-12 max-w-12'
                       : isIdentifierColumn(header.id)
-                      ? 'min-w-32 max-w-44'
+                      ? 'overflow-hidden whitespace-nowrap text-ellipsis'
                       : '',
                   ]"
                   :style="getColumnStyle(header.column)"
@@ -577,7 +577,7 @@ function getCellTextClass(columnId: string | undefined) {
                       cell.column.id === '__actions'
                         ? 'w-12 min-w-12 max-w-12'
                         : isIdentifierColumn(cell.column.id)
-                        ? 'min-w-32 max-w-44 overflow-hidden whitespace-nowrap text-ellipsis'
+                        ? 'overflow-hidden whitespace-nowrap text-ellipsis'
                         : cell.column.id !== 'select' && cell.column.id !== '__actions'
                     ? 'overflow-hidden whitespace-nowrap text-ellipsis'
                         : '',
@@ -620,7 +620,7 @@ function getCellTextClass(columnId: string | undefined) {
                     cell.column.id === '__actions'
                       ? 'w-12 min-w-12 max-w-12'
                       : isIdentifierColumn(cell.column.id)
-                      ? 'min-w-32 max-w-44 overflow-hidden whitespace-nowrap text-ellipsis'
+                      ? 'overflow-hidden whitespace-nowrap text-ellipsis'
                       : cell.column.id !== 'select' && cell.column.id !== '__actions'
                       ? 'overflow-hidden whitespace-nowrap text-ellipsis'
                       : '',
