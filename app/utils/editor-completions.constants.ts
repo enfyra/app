@@ -1,5 +1,6 @@
 export const ENFYRA_COMPLETIONS = [
   { label: '@BODY', type: 'variable', detail: 'Request body ($ctx.$body)' },
+  { label: '@ENV', type: 'variable', detail: 'Sanitized environment variables ($ctx.$env)' },
   { label: '@QUERY', type: 'variable', detail: 'Query params ($ctx.$query)' },
   { label: '@PARAMS', type: 'variable', detail: 'Route params ($ctx.$params)' },
   { label: '@USER', type: 'variable', detail: 'Current user ($ctx.$user)' },

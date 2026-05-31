@@ -14,6 +14,7 @@ const macroReplacements = new Map([
   ['@FETCH', '$ctx.$helpers.$fetch'],
   ['@LOGS', '$ctx.$logs'],
   ['@BODY', '$ctx.$body'],
+  ['@ENV', '$ctx.$env'],
   ['@DATA', '$ctx.$data'],
   ['@PARAMS', '$ctx.$params'],
   ['@QUERY', '$ctx.$query'],
@@ -305,6 +306,7 @@ type EnfyraThrow = {
 };
 type EnfyraContext = {
   $body: any;
+  $env: Record<string, string | undefined>;
   $data: any;
   $params: Record<string, any>;
   $query: Record<string, any>;

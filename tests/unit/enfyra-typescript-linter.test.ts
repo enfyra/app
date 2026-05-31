@@ -46,6 +46,15 @@ await @TRIGGER('flow_name', { item })
     expect(diagnostics).toEqual([])
   })
 
+  it('accepts the @ENV macro as sanitized environment context', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const nodeName = @ENV.NODE_NAME
+return { nodeName }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
   it('accepts DynamicRepository exists with a direct filter', async () => {
     const diagnostics = await lintEnfyraTypeScript(`
 const used = await @REPOS.user_definition.exists({ email: { _eq: @BODY.email } })
