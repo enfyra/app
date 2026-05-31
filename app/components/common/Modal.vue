@@ -78,7 +78,7 @@ const mergedUi = computed(() => ({
       </template>
 
       <template #footer>
-        <div v-if="hasFooter" @click.stop>
+        <div v-if="hasFooter" class="w-full" @click.stop>
           <slot name="footer" />
         </div>
       </template>
