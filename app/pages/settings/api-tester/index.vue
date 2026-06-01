@@ -25,7 +25,7 @@
                 <UBadge v-if="!r.isEnabled" color="warning" variant="soft" size="xs">Off</UBadge>
               </div>
               <div class="flex gap-1">
-                <MethodBadge v-for="m in getRouteMethods(r)" :key="m.method" :method="m" />
+                <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
               </div>
             </div>
           </div>
@@ -53,7 +53,7 @@
                 <p class="text-xs font-semibold font-mono text-[var(--text-primary)] truncate flex-1">{{ r.path }}</p>
               </div>
               <div class="flex gap-1">
-                <MethodBadge v-for="m in getRouteMethods(r)" :key="m.method" :method="m" />
+                <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
               </div>
             </div>
           </div>
@@ -86,7 +86,7 @@ const search = ref('');
 const selectedRoute = ref<any>(null);
 const showTestModal = ref(false);
 
-const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.method,availableMethods.buttonColor,availableMethods.textColor,publishedMethods.method,publishedMethods.buttonColor,publishedMethods.textColor,handlers.method';
+const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.name,availableMethods.buttonColor,availableMethods.textColor,publishedMethods.name,publishedMethods.buttonColor,publishedMethods.textColor,handlers.method.name';
 
 const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi(
   '/route_definition',
@@ -153,7 +153,7 @@ const filteredSystemRoutes = computed(() => {
 function getRouteMethods(route: any): any[] {
   const methods = route.availableMethods;
   if (!Array.isArray(methods)) return [];
-  return methods.filter((m: any) => m?.method);
+  return methods.filter((m: any) => m?.name);
 }
 
 function openTest(route: any) {
@@ -164,7 +164,7 @@ function openTest(route: any) {
 const selectedRoutePublishedMethods = computed(() => {
   const methods = selectedRoute.value?.publishedMethods;
   if (!Array.isArray(methods)) return [];
-  return methods.map((m: any) => m.method).filter(Boolean);
+  return methods.map((m: any) => m.name).filter(Boolean);
 });
 
 const selectedRouteColumns = computed(() => {

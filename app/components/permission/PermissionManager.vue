@@ -395,7 +395,7 @@ function getPermissionMethods(permission: Permission): string[] {
   if (!Array.isArray(permission.methods)) return [];
 
   return permission.methods
-    .map((item: any) => typeof item === "string" ? item : item?.method)
+    .map((item: any) => typeof item === "string" ? item : item?.name)
     .filter((method: any): method is string => typeof method === "string" && method.trim().length > 0);
 }
 

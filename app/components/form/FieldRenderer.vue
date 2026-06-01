@@ -127,7 +127,7 @@ function getCodeTestRunConfig(key: string) {
     payload: {
       recordId: props.formData?.id ?? props.formData?._id,
       routeId: props.formData?.route?.id ?? props.formData?.route?._id,
-      method: props.formData?.method?.method ?? props.formData?.method,
+      method: props.formData?.method?.name ?? props.formData?.method,
     },
   };
   if (config.testRun && typeof config.testRun === "object") {
@@ -230,8 +230,8 @@ function getComponentConfigByKey(key: string) {
   if (finalType === "methods-selector") {
     const allowedMethods = config.allowedMethodsKey
       ? (props.formData[config.allowedMethodsKey] || [])
-          .filter((m: any) => m?.method)
-          .map((m: any) => m.method)
+          .filter((m: any) => m?.name)
+          .map((m: any) => m.name)
       : undefined;
     return {
       component: resolveComponent("FormMethodSelector"),

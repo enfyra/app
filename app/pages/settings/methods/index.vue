@@ -38,7 +38,7 @@ const customMethod = ref(false);
 const closingDrawer = ref(false);
 const initialForm = ref({
   id: null as string | number | null,
-  method: '',
+  name: '',
   buttonColor: '',
   textColor: '',
   isSystem: false,
@@ -46,7 +46,7 @@ const initialForm = ref({
 });
 const form = reactive({
   id: null as string | number | null,
-  method: '',
+  name: '',
   buttonColor: '',
   textColor: '',
   isSystem: false,
@@ -59,7 +59,7 @@ const {
 } = useApi<{ data: MethodRecord[] }>('/method_definition', {
   query: {
     fields: '*',
-    sort: 'method',
+    sort: 'name',
     limit: 0,
   },
   errorContext: 'Fetch Methods',
@@ -79,7 +79,7 @@ const { execute: updateMethod } = useApi('/method_definition', {
 
 const methods = computed(() => methodsData.value?.data || []);
 const methodNames = computed(() => new Set(methods.value.map((method) => getMethodLabel(method))));
-const currentMethodLabel = computed(() => normalizeMethodName(form.method));
+const currentMethodLabel = computed(() => normalizeMethodName(form.name));
 const canEditMethodName = computed(() => mode.value === 'create' || !form.isSystem);
 
 const formError = computed(() => {
@@ -88,7 +88,7 @@ const formError = computed(() => {
   if (!CUSTOM_METHOD_RE.test(method)) {
     return 'Use uppercase letters, numbers, or underscore. The first character must be a letter.';
   }
-  const duplicate = methodNames.value.has(method) && (mode.value === 'create' || method !== form.method);
+  const duplicate = methodNames.value.has(method) && (mode.value === 'create' || method !== form.name);
   if (duplicate) return `${method} already exists.`;
   if (!isHexColor(form.buttonColor) || !isHexColor(form.textColor)) {
     return 'Button and text colors must be full hex values.';
@@ -99,7 +99,7 @@ const formError = computed(() => {
 const canSave = computed(() => !saving.value && !formError.value);
 const hasUnsavedChanges = computed(() => (
   form.id !== initialForm.value.id ||
-  form.method !== initialForm.value.method ||
+  form.name !== initialForm.value.name ||
   form.buttonColor !== initialForm.value.buttonColor ||
   form.textColor !== initialForm.value.textColor ||
   form.isSystem !== initialForm.value.isSystem ||
@@ -120,7 +120,7 @@ watch(methodsData, (data) => {
 
 function resetForm() {
   form.id = null;
-  form.method = '';
+  form.name = '';
   form.buttonColor = '';
   form.textColor = '';
   form.isSystem = false;
@@ -130,7 +130,7 @@ function resetForm() {
 function snapshotForm() {
   initialForm.value = {
     id: form.id,
-    method: form.method,
+    name: form.name,
     buttonColor: form.buttonColor,
     textColor: form.textColor,
     isSystem: form.isSystem,
@@ -146,7 +146,7 @@ function applySuggestedColors(method: string) {
 
 function selectMethod(method: string) {
   if (!canEditMethodName.value) return;
-  form.method = method;
+  form.name = method;
   customMethod.value = false;
   applySuggestedColors(method);
 }
@@ -162,11 +162,11 @@ function openEdit(method: MethodRecord) {
   const colors = getMethodColors(method);
   mode.value = 'edit';
   form.id = getId(method);
-  form.method = getMethodLabel(method);
+  form.name = getMethodLabel(method);
   form.buttonColor = colors.buttonColor;
   form.textColor = colors.textColor;
   form.isSystem = Boolean(method.isSystem);
-  customMethod.value = !METHOD_OPTIONS.includes(form.method);
+  customMethod.value = !METHOD_OPTIONS.includes(form.name);
   snapshotForm();
   drawerOpen.value = true;
 }
@@ -214,7 +214,7 @@ async function saveMethod() {
     };
 
     if (canEditMethodName.value) {
-      body.method = currentMethodLabel.value;
+      body.name = currentMethodLabel.value;
     }
     if (mode.value === 'create') {
       body.isSystem = false;
@@ -239,7 +239,7 @@ function isMethodSelected(method: string) {
 }
 
 function normalizeCustomMethodInput(value: string) {
-  form.method = normalizeMethodName(value);
+  form.name = normalizeMethodName(value);
 }
 
 useHeaderActionRegistry([
@@ -378,7 +378,7 @@ watch(
               </div>
               <MethodBadge
                 v-if="currentMethodLabel"
-                :method="{ method: currentMethodLabel, buttonColor: form.buttonColor, textColor: form.textColor }"
+                :method="{ name: currentMethodLabel, buttonColor: form.buttonColor, textColor: form.textColor }"
               />
             </div>
 
@@ -413,7 +413,7 @@ watch(
 
             <UInput
               v-if="customMethod"
-              v-model="form.method"
+              v-model="form.name"
               :disabled="!canEditMethodName"
               class="mt-3"
               size="lg"

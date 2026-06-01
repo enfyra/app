@@ -12,13 +12,13 @@
           <div class="flex gap-1.5">
             <button
               v-for="m in httpMethods"
-              :key="m.method"
+              :key="m.name"
               type="button"
               class="inline-flex min-h-7 items-center rounded-md border px-2 py-1 font-mono text-xs font-semibold uppercase transition hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
-              :disabled="!isMethodAvailable(m.method)"
+              :disabled="!isMethodAvailable(m.name)"
               :style="getMethodButtonStyle(m)"
-              @click="method = m.method"
-            >{{ m.method }}</button>
+              @click="method = m.name"
+            >{{ m.name }}</button>
             <div class="flex items-center gap-1.5 ml-auto">
               <UBadge v-if="isPublished" color="success" variant="soft" size="xs">Public</UBadge>
               <UBadge v-else color="warning" variant="soft" size="xs">Auth Required</UBadge>
@@ -137,7 +137,7 @@ const isOpen = computed({
   set: (v) => emit('update:modelValue', v),
 });
 
-const httpMethods = computed(() => props.availableMethods.filter((m: any) => m?.method));
+const httpMethods = computed(() => props.availableMethods.filter((m: any) => m?.name));
 const method = ref<string>('GET');
 const filterObject = ref<any>(null);
 const selectedFields = ref<string[]>([]);
@@ -166,13 +166,13 @@ watch(() => props.modelValue, (open) => {
       { key: 'limit', value: '10', enabled: hasTable },
       { key: 'sort', value: '-createdAt', enabled: false },
     ];
-    const available = httpMethods.value.filter((m: any) => isMethodAvailable(m.method));
-    method.value = available[0]?.method || 'GET';
+    const available = httpMethods.value.filter((m: any) => isMethodAvailable(m.name));
+    method.value = available[0]?.name || 'GET';
   }
 });
 
 function isMethodAvailable(m: string): boolean {
-  return props.availableMethods.some((am: any) => am?.method === m || am === m || am?.method === 'REST' || am === 'REST');
+  return props.availableMethods.some((am: any) => am?.name === m || am === m || am?.name === 'REST' || am === 'REST');
 }
 
 const isPublished = computed(() =>
@@ -180,7 +180,7 @@ const isPublished = computed(() =>
 );
 
 const hasCustomHandler = computed(() =>
-  props.handlers?.some((h: any) => h.method?.method === method.value || h.method === method.value) ?? false
+  props.handlers?.some((h: any) => h.method?.name === method.value || h.method === method.value) ?? false
 );
 
 const methodWarning = computed(() => {
@@ -198,7 +198,7 @@ const canSend = computed(() => {
 
 function getMethodButtonStyle(methodRecord: any) {
   const colors = getMethodColors(methodRecord);
-  const active = method.value === methodRecord.method;
+  const active = method.value === methodRecord.name;
   return {
     backgroundColor: active ? colors.buttonColor : 'transparent',
     color: active ? colors.textColor : 'var(--text-secondary)',

@@ -33,7 +33,7 @@ onMounted(async () => {
   }
 });
 
-watch(() => newRecord.value?.method, () => {
+watch(() => newRecord.value?.name, () => {
   if (tableName !== 'method_definition') return;
   applyMethodColorSuggestion(newRecord.value);
 });

@@ -26,7 +26,7 @@ const emit = defineEmits<{
 const showCustom = ref(false);
 
 const previewMethod = computed<MethodColorRecord>(() => ({
-  method: props.method || 'METHOD',
+  name: props.method || 'METHOD',
   buttonColor: props.buttonColor,
   textColor: props.textColor,
 }));
@@ -97,7 +97,7 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
         <div class="flex min-w-0 items-center gap-2">
           <MethodBadge
             :method="{
-              method: method || 'METHOD',
+              name: method || 'METHOD',
               buttonColor: preset.buttonColor,
               textColor: preset.textColor,
             }"

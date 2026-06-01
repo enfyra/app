@@ -108,7 +108,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   editHandler: [handler: any];
   editHook: [hook: any];
-  createHandler: [methodObject?: { method: string; id?: string }];
+  createHandler: [methodObject?: { name: string; id?: string }];
   createHook: [type: 'pre' | 'post', method?: string, priority?: number];
   deleteHandler: [handler: any];
   deleteHook: [hook: any];
@@ -277,8 +277,8 @@ const methodLookup = computed(() => {
   props.sortedPreHooks.forEach((hook) => {
     if (hook.methods && Array.isArray(hook.methods)) {
       hook.methods.forEach((method: any) => {
-        if (method.method && props.getId(method)) {
-          lookup[method.method] = method;
+        if (method.name && props.getId(method)) {
+          lookup[method.name] = method;
         }
       });
     }
@@ -287,8 +287,8 @@ const methodLookup = computed(() => {
   props.sortedAfterHooks.forEach((hook) => {
     if (hook.methods && Array.isArray(hook.methods)) {
       hook.methods.forEach((method: any) => {
-        if (method.method && props.getId(method)) {
-          lookup[method.method] = method;
+        if (method.name && props.getId(method)) {
+          lookup[method.name] = method;
         }
       });
     }
@@ -325,7 +325,7 @@ const methodGroups = computed(() => {
     const hasMethods = hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0;
     const targetMethods = (isGlobal || !hasMethods)
       ? [...allowedMethods]
-      : hook.methods.map((m: any) => m?.method).filter(Boolean).filter((m: string) => allowedMethods.has(m));
+      : hook.methods.map((m: any) => m?.name).filter(Boolean).filter((m: string) => allowedMethods.has(m));
 
     targetMethods.forEach((methodKey: string) => {
       if (groups[methodKey] && !groups[methodKey]!.preHooks.find((h: any) => props.getId(h) === hookId)) {
@@ -335,12 +335,12 @@ const methodGroups = computed(() => {
   });
 
   props.handlers.forEach((handler) => {
-    if (handler.method?.method && allowedMethods.has(handler.method.method) && groups[handler.method.method]) {
-      groups[handler.method.method]!.handler = handler;
+    if (handler.method?.name && allowedMethods.has(handler.method.name) && groups[handler.method.name]) {
+      groups[handler.method.name]!.handler = handler;
     } else if (handler._isDefault) {
       availableMethodsList.forEach((methodKey) => {
         if (groups[methodKey] && !groups[methodKey]!.handler) {
-          groups[methodKey]!.handler = { ...handler, _methodObject: handler._methodObject || { method: methodKey } };
+          groups[methodKey]!.handler = { ...handler, _methodObject: handler._methodObject || { name: methodKey } };
         }
       });
     }
@@ -350,7 +350,7 @@ const methodGroups = computed(() => {
     availableMethodsList.forEach((methodKey) => {
       const group = groups[methodKey];
       if (group && !group.handler) {
-        group.handler = { ...props.defaultHandler, _methodObject: { method: methodKey } };
+        group.handler = { ...props.defaultHandler, _methodObject: { name: methodKey } };
       }
     });
   }
@@ -361,7 +361,7 @@ const methodGroups = computed(() => {
     const hasMethods = hook.methods && Array.isArray(hook.methods) && hook.methods.length > 0;
     const targetMethods = (isGlobal || !hasMethods)
       ? [...allowedMethods]
-      : hook.methods.map((m: any) => m?.method).filter(Boolean).filter((m: string) => allowedMethods.has(m));
+      : hook.methods.map((m: any) => m?.name).filter(Boolean).filter((m: string) => allowedMethods.has(m));
 
     targetMethods.forEach((methodKey: string) => {
       if (groups[methodKey] && !groups[methodKey]!.postHooks.find((h: any) => props.getId(h) === hookId)) {
@@ -506,7 +506,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
     if (group.handler) {
       const handlerId = `handler-${group.method}-${group.handler._isDefault ? 'default' : props.getId(group.handler)}`;
       const methodObject = group.handler._isDefault
-        ? (methodLookup.value[group.method] || { method: group.method })
+        ? (methodLookup.value[group.method] || { name: group.method })
         : group.handler.method;
       pushFlowNode(handlerId, 'handler', {
         ...group.handler,
@@ -523,7 +523,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
         '#10b981',
         'Handler',
         `Add handler for ${group.method}`,
-        () => emit('createHandler', methodLookup.value[group.method] || { method: group.method }),
+        () => emit('createHandler', methodLookup.value[group.method] || { name: group.method }),
       );
     }
 

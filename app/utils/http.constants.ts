@@ -3,7 +3,7 @@ export const HTTP_METHODS = ['GET', 'POST', 'PATCH', 'DELETE'] as const;
 export type HttpMethod = (typeof HTTP_METHODS)[number];
 
 export type MethodColorRecord = {
-  method?: string | null;
+  name?: string | null;
   buttonColor?: string | null;
   textColor?: string | null;
 };
@@ -58,8 +58,8 @@ export function getSuggestedMethodColors(method: unknown) {
 
 export function getMethodColors(method: MethodColorRecord | string | null | undefined) {
   const record =
-    typeof method === 'string' ? { method } : method || {};
-  const suggested = getSuggestedMethodColors(record.method);
+    typeof method === 'string' ? { name: method } : method || {};
+  const suggested = getSuggestedMethodColors(record.name);
   return {
     buttonColor: normalizeHexColor(record.buttonColor, suggested.buttonColor),
     textColor: normalizeHexColor(record.textColor, suggested.textColor),
@@ -67,5 +67,5 @@ export function getMethodColors(method: MethodColorRecord | string | null | unde
 }
 
 export function getMethodLabel(method: MethodColorRecord | string | null | undefined) {
-  return normalizeMethodName(typeof method === 'string' ? method : method?.method);
+  return normalizeMethodName(typeof method === 'string' ? method : method?.name);
 }

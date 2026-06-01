@@ -80,11 +80,11 @@ onMounted(() => {
 
 function filterDependentMethods(body: Record<string, any>) {
   const available = body.availableMethods || [];
-  const availableSet = new Set(available.filter((m: any) => m?.method).map((m: any) => m.method));
+  const availableSet = new Set(available.filter((m: any) => m?.name).map((m: any) => m.name));
   for (const key of ['publishedMethods', 'skipRoleGuardMethods'] as const) {
     if (Array.isArray(body[key])) {
       body[key] = availableSet.size > 0
-        ? body[key].filter((m: any) => m?.method && availableSet.has(m.method))
+        ? body[key].filter((m: any) => m?.name && availableSet.has(m.name))
         : [];
     }
   }
@@ -93,7 +93,7 @@ function filterDependentMethods(body: Record<string, any>) {
       body[key] = body[key]
         .map((m: any) => {
           const id = getId(m);
-          return id != null ? { id, method: m.method } : null;
+          return id != null ? { id, name: m.name } : null;
         })
         .filter(Boolean);
     }

@@ -59,10 +59,10 @@ const availableMethods = computed(() => {
   const allowed = props.allowedMethods;
   if (Array.isArray(allowed)) {
     const allowedSet = new Set(allowed);
-    list = list.filter((m: any) => m?.method && allowedSet.has(m.method));
+    list = list.filter((m: any) => m?.name && allowedSet.has(m.name));
   }
   if (props.excludeGqlMethods) {
-    list = list.filter((m: any) => m?.method && !GQL_METHODS.includes(m.method));
+    list = list.filter((m: any) => m?.name && !GQL_METHODS.includes(m.name));
   }
   return list;
 });
@@ -86,14 +86,14 @@ function selectMethod(methodObj: any) {
       newArray.splice(existingIndex, 1);
       emit('update:modelValue', newArray);
     } else {
-      const newMethod = targetId ? methodObj : { method: methodObj.method };
+      const newMethod = targetId ? methodObj : { name: methodObj.name };
       emit('update:modelValue', [...currentArray, newMethod]);
     }
   } else {
     if (targetIdentity && selectedIdentities.value.has(targetIdentity)) {
       emit('update:modelValue', null);
     } else {
-      const newMethod = targetId ? methodObj : { method: methodObj.method };
+      const newMethod = targetId ? methodObj : { name: methodObj.name };
       emit('update:modelValue', newMethod);
     }
   }
@@ -144,7 +144,7 @@ onMounted(async () => {
   <div v-else class="flex flex-wrap gap-2">
     <button
       v-for="m in availableMethods"
-      :key="getId(m) || m.method"
+      :key="getId(m) || m.name"
       :disabled="disabled"
       :aria-pressed="isSelected(m)"
       type="button"
@@ -152,7 +152,7 @@ onMounted(async () => {
       :style="getMethodButtonStyle(m)"
       @click="selectMethod(m)"
     >
-      {{ m.method }}
+      {{ m.name }}
       <UIcon
         :name="isSelected(m) ? 'lucide:check' : 'lucide:circle'"
         class="size-3.5 shrink-0"

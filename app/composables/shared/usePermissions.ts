@@ -27,7 +27,7 @@ export function usePermissions() {
       if (directPermissions.length > 0) {
         const hasDirectMethodPermission = directPermissions.some((permission: any) => {
           if (permission.methods && permission.methods.length > 0) {
-            return permission.methods.some((methodObj: any) => methodObj.method === method);
+            return permission.methods.some((methodObj: any) => methodObj.name === method);
           }
           return false;
         });
@@ -46,7 +46,7 @@ export function usePermissions() {
     if (!routePermissions.length) return false;
 
     const hasMethodPermission = routePermissions.some((permission: any) =>
-      permission.methods?.some((methodObj: any) => methodObj.method === method)
+      permission.methods?.some((methodObj: any) => methodObj.name === method)
     );
 
     if (hasMethodPermission) {

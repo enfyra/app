@@ -171,7 +171,7 @@ const {
   execute: fetchRoutes,
 } = useApi(() => '/route_definition', {
   query: {
-    fields: '*,availableMethods.method',
+    fields: '*,availableMethods.name',
     sort: 'path',
     limit: 500,
   },

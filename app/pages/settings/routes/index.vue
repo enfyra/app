@@ -243,15 +243,15 @@ const { execute: deleteRouteApi, error: deleteError } = useApi(
 function getPublishedMethodsStat(routeItem: any) {
   const availableSet = new Set(
     (routeItem.availableMethods || [])
-      .filter((m: any) => m?.method)
-      .map((m: any) => m.method)
+      .filter((m: any) => m?.name)
+      .map((m: any) => m.name)
   );
   const filtered = (routeItem.publishedMethods || [])
-    .filter((m: any) => m?.method && availableSet.has(m.method));
+    .filter((m: any) => m?.name && availableSet.has(m.name));
   return {
     component: filtered.length ? 'UBadge' : undefined,
     values: filtered.length ? filtered.map((m: any) => ({
-      value: m.method.toUpperCase(),
+      value: m.name.toUpperCase(),
       props: { method: m }
     })) : undefined,
     ...(filtered.length ? { component: 'MethodBadge' } : {}),

@@ -96,7 +96,7 @@ export function buildGuardBodyFromTemplate(
   }
 
   if (options.methods?.length) {
-    body.methods = options.methods.map((method) => ({ method }));
+    body.methods = options.methods.map((method) => ({ name: method }));
   }
 
   return body;

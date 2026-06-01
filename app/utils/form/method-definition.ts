@@ -2,7 +2,7 @@ import { getSuggestedMethodColors, normalizeMethodName } from '~/utils/http.cons
 
 export function buildMethodDefinitionFieldMap() {
   return {
-    method: {
+    name: {
       componentProps: {
         class: 'font-mono uppercase',
       },
@@ -23,15 +23,15 @@ export function buildMethodDefinitionFieldMap() {
 }
 
 export function normalizeMethodDefinitionRecord(record: Record<string, any>) {
-  const method = normalizeMethodName(record.method);
+  const method = normalizeMethodName(record.name);
   const suggested = getSuggestedMethodColors(method);
-  record.method = method;
+  record.name = method;
   record.buttonColor = record.buttonColor || suggested.buttonColor;
   record.textColor = record.textColor || suggested.textColor;
 }
 
 export function applyMethodColorSuggestion(record: Record<string, any>) {
-  const method = normalizeMethodName(record.method);
+  const method = normalizeMethodName(record.name);
   const suggested = getSuggestedMethodColors(method);
   if (!record.buttonColor) record.buttonColor = suggested.buttonColor;
   if (!record.textColor) record.textColor = suggested.textColor;

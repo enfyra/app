@@ -43,7 +43,7 @@
                 item.route || "No route"
               }}</span>
               <UBadge
-                v-for="method in item.methods"
+                v-for="method in item.names"
                 :key="method"
                 size="sm"
                 variant="soft"
@@ -170,7 +170,7 @@ function isPermission(item: any): boolean {
 function editPermission(index: number, item: any) {
   editingPermission.value = {
     ...item,
-    methods: [...(item.methods || [])],
+    methods: [...(item.names || [])],
     allowAll: item.allowAll || false,
   };
   editingIndex.value = index;

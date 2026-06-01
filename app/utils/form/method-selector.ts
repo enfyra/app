@@ -4,7 +4,7 @@ type GetMethodId = (method: MethodRecord) => string | number | null | undefined;
 
 export function getMethodIdentity(method: MethodRecord | null | undefined, getId: GetMethodId): string | null {
   if (!method) return null;
-  if (method.method != null) return String(method.method);
+  if (method.name != null) return String(method.name);
 
   const id = getId(method);
   return id != null ? `id:${String(id)}` : null;
@@ -32,9 +32,9 @@ export function filterMethodsByAllowedMethodNames(modelValue: any, allowedMethod
   const allowedSet = new Set(allowedMethods);
 
   if (Array.isArray(modelValue)) {
-    return modelValue.filter((method: MethodRecord) => method?.method != null && allowedSet.has(String(method.method)));
+    return modelValue.filter((method: MethodRecord) => method?.name != null && allowedSet.has(String(method.name)));
   }
 
   if (!modelValue) return modelValue;
-  return modelValue.method != null && allowedSet.has(String(modelValue.method)) ? modelValue : null;
+  return modelValue.name != null && allowedSet.has(String(modelValue.name)) ? modelValue : null;
 }
