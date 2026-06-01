@@ -676,6 +676,13 @@ onMounted(() => {
     <template #header>{{ newlyCreatedToken ? "API Token" : "Create API Token" }}</template>
     <template #body>
       <div v-if="newlyCreatedToken" class="space-y-3">
+        <UAlert
+          icon="lucide:alert-triangle"
+          color="warning"
+          variant="soft"
+          title="Save this token now"
+          description="This API token is shown only once. Copy and store it securely before closing this dialog; it cannot be viewed again."
+        />
         <UFormField label="API token">
           <div class="flex gap-2">
             <UInput
