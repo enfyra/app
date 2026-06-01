@@ -10,15 +10,15 @@
       <div class="space-y-5">
         <div class="space-y-2">
           <div class="flex gap-1.5">
-            <UButton
+            <button
               v-for="m in httpMethods"
-              :key="m"
-              :color="method === m ? methodColor(m) : 'neutral'"
-              :variant="method === m ? 'solid' : 'outline'"
-              size="xs"
-              :disabled="!isMethodAvailable(m)"
-              @click="method = m"
-            >{{ m }}</UButton>
+              :key="m.method"
+              type="button"
+              class="inline-flex min-h-7 items-center rounded-md border px-2 py-1 font-mono text-xs font-semibold uppercase transition hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+              :disabled="!isMethodAvailable(m.method)"
+              :style="getMethodButtonStyle(m)"
+              @click="method = m.method"
+            >{{ m.method }}</button>
             <div class="flex items-center gap-1.5 ml-auto">
               <UBadge v-if="isPublished" color="success" variant="soft" size="xs">Public</UBadge>
               <UBadge v-else color="warning" variant="soft" size="xs">Auth Required</UBadge>
@@ -113,12 +113,12 @@
 </template>
 
 <script setup lang="ts">
-import { HTTP_METHODS, getHttpMethodColor } from '~/utils/http.constants';
+import { getMethodColors } from '~/utils/http.constants';
 
 const props = defineProps<{
   modelValue: boolean;
   routePath: string;
-  availableMethods: string[];
+  availableMethods: any[];
   publishedMethods?: string[];
   handlers?: any[];
   mainTableName?: string;
@@ -137,7 +137,7 @@ const isOpen = computed({
   set: (v) => emit('update:modelValue', v),
 });
 
-const httpMethods = HTTP_METHODS;
+const httpMethods = computed(() => props.availableMethods.filter((m: any) => m?.method));
 const method = ref<string>('GET');
 const filterObject = ref<any>(null);
 const selectedFields = ref<string[]>([]);
@@ -166,13 +166,13 @@ watch(() => props.modelValue, (open) => {
       { key: 'limit', value: '10', enabled: hasTable },
       { key: 'sort', value: '-createdAt', enabled: false },
     ];
-    const available = httpMethods.filter(m => isMethodAvailable(m));
-    method.value = available[0] || 'GET';
+    const available = httpMethods.value.filter((m: any) => isMethodAvailable(m.method));
+    method.value = available[0]?.method || 'GET';
   }
 });
 
 function isMethodAvailable(m: string): boolean {
-  return props.availableMethods.some(am => am === m || am === 'REST');
+  return props.availableMethods.some((am: any) => am?.method === m || am === m || am?.method === 'REST' || am === 'REST');
 }
 
 const isPublished = computed(() =>
@@ -196,8 +196,14 @@ const canSend = computed(() => {
   return true;
 });
 
-function methodColor(m: string): any {
-  return getHttpMethodColor(m);
+function getMethodButtonStyle(methodRecord: any) {
+  const colors = getMethodColors(methodRecord);
+  const active = method.value === methodRecord.method;
+  return {
+    backgroundColor: active ? colors.buttonColor : 'transparent',
+    color: active ? colors.textColor : 'var(--text-secondary)',
+    borderColor: active ? `${colors.textColor}55` : 'var(--border-strong)',
+  };
 }
 
 function addQueryParam() {

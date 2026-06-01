@@ -240,13 +240,6 @@ const { execute: deleteRouteApi, error: deleteError } = useApi(
 );
 
 
-const methodColorMap: Record<string, string> = {
-  GET: 'info',
-  POST: 'success',
-  PATCH: 'warning',
-  DELETE: 'error',
-};
-
 function getPublishedMethodsStat(routeItem: any) {
   const availableSet = new Set(
     (routeItem.availableMethods || [])
@@ -259,8 +252,9 @@ function getPublishedMethodsStat(routeItem: any) {
     component: filtered.length ? 'UBadge' : undefined,
     values: filtered.length ? filtered.map((m: any) => ({
       value: m.method.toUpperCase(),
-      props: { color: methodColorMap[m.method] }
+      props: { method: m }
     })) : undefined,
+    ...(filtered.length ? { component: 'MethodBadge' } : {}),
     value: filtered.length ? undefined : '-',
   };
 }

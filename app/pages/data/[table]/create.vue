@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import {
+  applyMethodColorSuggestion,
+  buildMethodDefinitionFieldMap,
+  normalizeMethodDefinitionRecord,
+} from '~/utils/form/method-definition';
+
 const route = useRoute();
 const notify = useNotify();
 const newRecord = ref<Record<string, any>>({});
@@ -7,6 +13,9 @@ const { generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const createErrors = ref<Record<string, string>>({});
 const { getId } = useDatabase();
+const fieldMap = computed(() =>
+  tableName === 'method_definition' ? buildMethodDefinitionFieldMap() : {},
+);
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -19,6 +28,14 @@ registerPageHeader({
 onMounted(async () => {
   await ensureRoutesLoaded();
   newRecord.value = generateEmptyForm();
+  if (tableName === 'method_definition') {
+    applyMethodColorSuggestion(newRecord.value);
+  }
+});
+
+watch(() => newRecord.value?.method, () => {
+  if (tableName !== 'method_definition') return;
+  applyMethodColorSuggestion(newRecord.value);
 });
 
 const {
@@ -54,6 +71,9 @@ useHeaderActionRegistry([
 ]);
 
 async function handleCreate() {
+  if (tableName === 'method_definition') {
+    normalizeMethodDefinitionRecord(newRecord.value);
+  }
   if (!await validateForm(newRecord.value, createErrors)) return;
 
   const response = await createRecord({ body: newRecord.value });
@@ -89,6 +109,7 @@ async function handleCreate() {
             mode="create"
             v-model="newRecord"
             v-model:errors="createErrors"
+            :field-map="fieldMap"
           />
         </UForm>
       </CommonFormCard>

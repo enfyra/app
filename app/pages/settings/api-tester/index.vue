@@ -25,7 +25,7 @@
                 <UBadge v-if="!r.isEnabled" color="warning" variant="soft" size="xs">Off</UBadge>
               </div>
               <div class="flex gap-1">
-                <UBadge v-for="m in getRouteMethods(r)" :key="m" :color="methodColor(m)" variant="soft" size="xs">{{ m }}</UBadge>
+                <MethodBadge v-for="m in getRouteMethods(r)" :key="m.method" :method="m" />
               </div>
             </div>
           </div>
@@ -53,7 +53,7 @@
                 <p class="text-xs font-semibold font-mono text-[var(--text-primary)] truncate flex-1">{{ r.path }}</p>
               </div>
               <div class="flex gap-1">
-                <UBadge v-for="m in getRouteMethods(r)" :key="m" :color="methodColor(m)" variant="soft" size="xs">{{ m }}</UBadge>
+                <MethodBadge v-for="m in getRouteMethods(r)" :key="m.method" :method="m" />
               </div>
             </div>
           </div>
@@ -75,8 +75,6 @@
 </template>
 
 <script setup lang="ts">
-import { HTTP_METHODS, getHttpMethodColor, type HttpMethod } from '~/utils/http.constants';
-
 definePageMeta({ layout: "default", title: "API Tester" });
 
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -88,7 +86,7 @@ const search = ref('');
 const selectedRoute = ref<any>(null);
 const showTestModal = ref(false);
 
-const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.method,publishedMethods.method,handlers.method';
+const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.method,availableMethods.buttonColor,availableMethods.textColor,publishedMethods.method,publishedMethods.buttonColor,publishedMethods.textColor,handlers.method';
 
 const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi(
   '/route_definition',
@@ -152,16 +150,10 @@ const filteredSystemRoutes = computed(() => {
   return systemRoutes.value.filter((r: any) => r.path?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q));
 });
 
-function getRouteMethods(route: any): string[] {
+function getRouteMethods(route: any): any[] {
   const methods = route.availableMethods;
   if (!Array.isArray(methods)) return [];
-  const mapped = methods.map((m: any) => m?.method).filter(Boolean);
-  if (mapped.includes('REST')) return ['GET', 'POST', 'PATCH', 'DELETE'];
-  return mapped.filter((m: string): m is HttpMethod => HTTP_METHODS.includes(m as HttpMethod));
-}
-
-function methodColor(m: string): any {
-  return getHttpMethodColor(m);
+  return methods.filter((m: any) => m?.method);
 }
 
 function openTest(route: any) {

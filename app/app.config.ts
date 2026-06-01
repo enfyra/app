@@ -60,7 +60,7 @@ export default defineAppConfig({
           "text-sm font-medium",
           "transition-all duration-300",
           "outline-none",
-          "disabled:cursor-not-allowed disabled:opacity-50",
+          "disabled:cursor-not-allowed disabled:opacity-55",
           "focus-visible:ring-[3px] focus-visible:ring-brand-500/10",
           "[&_svg]:pointer-events-none",
           "[&_svg:not([class*='size-'])]:size-4",
@@ -71,7 +71,7 @@ export default defineAppConfig({
         {
           color: "primary",
           variant: "solid",
-          class: "bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300",
+          class: "bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 active:bg-brand-700 disabled:bg-brand-500 disabled:text-white",
         },
         {
           color: "primary",
@@ -86,12 +86,12 @@ export default defineAppConfig({
         {
           color: "primary",
           variant: "outline",
-          class: "bg-[var(--surface-default)] text-brand-600 dark:text-primary ring-1 ring-inset ring-brand-400/40 dark:ring-primary/30 hover:bg-brand-50 dark:hover:bg-primary/10"
+          class: "bg-[var(--surface-default)] text-brand-600 ring-1 ring-inset ring-brand-400/50 hover:bg-brand-50 hover:text-brand-700 active:bg-brand-100 disabled:bg-[var(--surface-default)] disabled:text-brand-600 dark:text-brand-300 dark:ring-brand-400/35 dark:hover:bg-brand-500/10 dark:hover:text-brand-200 dark:active:bg-brand-500/15"
         },
         {
           color: "neutral",
           variant: "soft",
-          class: "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-800/70 dark:text-slate-100 dark:ring-slate-700/70 dark:hover:bg-slate-700/80"
+          class: "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-200 hover:text-slate-900 active:bg-slate-300 disabled:bg-slate-100 disabled:text-slate-700 dark:bg-slate-800/70 dark:text-slate-100 dark:ring-slate-700/70 dark:hover:bg-slate-700/80 dark:hover:text-white dark:active:bg-slate-700"
         },
         {
           color: "neutral",
@@ -101,7 +101,7 @@ export default defineAppConfig({
         {
           color: "neutral",
           variant: "outline",
-          class: "bg-[var(--surface-default)] text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-100 dark:ring-slate-700 dark:hover:bg-slate-800"
+          class: "bg-[var(--surface-default)] text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200 disabled:bg-[var(--surface-default)] disabled:text-slate-700 dark:text-slate-100 dark:ring-slate-600 dark:hover:bg-slate-800 dark:hover:text-white dark:active:bg-slate-700"
         },
         {
           color: "error",

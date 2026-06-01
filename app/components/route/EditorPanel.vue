@@ -60,10 +60,14 @@ const {
   errorContext: 'Fetch Route',
 })
 
-const availableMethodStrings = computed(() => {
+const availableMethodRecords = computed(() => {
   const methods = routeData.value?.data?.[0]?.availableMethods
   if (!Array.isArray(methods)) return []
-  return methods.filter((m: any) => m?.method).map((m: any) => m.method)
+  return methods.filter((m: any) => m?.method)
+})
+
+const availableMethodStrings = computed(() => {
+  return availableMethodRecords.value.map((m: any) => m.method)
 })
 
 const publishedMethodStrings = computed(() => {
@@ -1203,7 +1207,7 @@ watch(showEditHookDrawer, (isOpen) => {
     <RouteApiTestModal
       v-model="showApiTestModal"
       :route-path="routePath"
-      :available-methods="availableMethodStrings"
+      :available-methods="availableMethodRecords"
       :published-methods="publishedMethodStrings"
       :handlers="displayHandlers"
       :main-table-name="mainTableName"

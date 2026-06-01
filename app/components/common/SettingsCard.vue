@@ -168,7 +168,7 @@
 </template>
 
 <script setup lang="ts">
-import { UAvatar, UBadge, UButton, USwitch, UChip, UIcon, UKbd, UTooltip } from "#components";
+import { UAvatar, UBadge, UButton, USwitch, UChip, UIcon, UKbd, UTooltip, MethodBadge } from "#components";
 
 interface Stat {
   label: string;
@@ -224,6 +224,7 @@ const componentMap = {
   UIcon,
   UKbd,
   UTooltip,
+  MethodBadge,
 };
 
 const getComponent = (componentName?: string) => {
@@ -247,6 +248,7 @@ const getDefaultProps = (componentName?: string, context: 'header' | 'stats' = '
       UButton: { size: 'xs', variant: 'ghost' },
       UIcon: { size: '4' },
       UKbd: { size: 'xs' },
+      MethodBadge: { size: 'xs' },
     }
   };
 
