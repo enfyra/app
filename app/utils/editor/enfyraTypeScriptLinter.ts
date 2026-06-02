@@ -11,6 +11,7 @@ const macroReplacements = new Map([
   ['@CACHE', '$ctx.$cache'],
   ['@REPOS', '$ctx.$repos'],
   ['@HELPERS', '$ctx.$helpers'],
+  ['@STORAGE', '$ctx.$storage'],
   ['@FETCH', '$ctx.$helpers.$fetch'],
   ['@LOGS', '$ctx.$logs'],
   ['@BODY', '$ctx.$body'],
@@ -291,6 +292,12 @@ type EnfyraRepos = {
   main: EnfyraRepository;
   secure: Record<string, EnfyraRepository>;
 } & Record<string, EnfyraRepository>;
+type EnfyraStorage = {
+  $upload(options: Record<string, any>): Promise<any>;
+  $update(fileId: string | number, options: Record<string, any>): Promise<any>;
+  $delete(fileId: string | number): Promise<any>;
+  $registerFile(options: Record<string, any>): Promise<any>;
+};
 type EnfyraThrow = {
   (statusCode: number, message?: string): never;
   400(message: string): never;
@@ -320,6 +327,7 @@ type EnfyraContext = {
   $cache: Record<string, any>;
   $repos: EnfyraRepos;
   $helpers: Record<string, any> & { $fetch: (...args: any[]) => Promise<any> };
+  $storage: EnfyraStorage;
   $logs: (...args: any[]) => any;
   $socket: Record<string, any>;
   $trigger: (...args: any[]) => Promise<any>;
