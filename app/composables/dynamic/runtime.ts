@@ -89,6 +89,7 @@ export function getComposablesObject(): Record<string, any> {
     usePermissions,
     useFilterQuery,
     useDataTableColumns,
+    useAdminSocket,
     useHeaderActionRegistry,
     useSubHeaderActionRegistry,
     usePageHeaderRegistry,

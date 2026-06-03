@@ -365,6 +365,7 @@ declare function useGlobalState(...args: any[]): any;
 declare function usePermissions(...args: any[]): any;
 declare function useFilterQuery(...args: any[]): any;
 declare function useDataTableColumns(...args: any[]): any;
+declare function useAdminSocket(...args: any[]): any;
 declare function useHeaderActionRegistry(...args: any[]): any;
 declare function useSubHeaderActionRegistry(...args: any[]): any;
 declare function usePageHeaderRegistry(...args: any[]): any;

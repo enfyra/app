@@ -141,6 +141,7 @@ async function save() {
   { label: 'useGlobalState', type: 'function', detail: 'Enfyra: { settings, storageConfigs, sidebarVisible }' },
   { label: 'useScreen', type: 'function', detail: 'Enfyra: { isMobile, isTablet, isDesktop, width, height }' },
   { label: 'useConfirm', type: 'function', detail: 'Enfyra: { confirm({ title, content }) }' },
+  { label: 'useAdminSocket', type: 'function', detail: 'Enfyra: shared admin Socket.IO client' },
   { label: 'useHeaderActionRegistry', type: 'function', detail: 'Enfyra: register header actions' },
   { label: 'useSubHeaderActionRegistry', type: 'function', detail: 'Enfyra: register sub-header actions' },
   { label: 'usePageHeaderRegistry', type: 'function', detail: 'Enfyra: register extension page header' },
