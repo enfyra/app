@@ -22,7 +22,7 @@
     />
 
     <div
-      v-else-if="type === 'date'"
+      v-else-if="['date', 'datetime', 'timestamp'].includes(type)"
       class="h-8 animate-pulse rounded skeleton-base"
     />
 

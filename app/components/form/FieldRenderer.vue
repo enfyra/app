@@ -6,6 +6,7 @@ import {
   UTextarea,
   USwitch,
   FormDateField,
+  FormDateTimeField,
   USelect,
   UFormField,
 } from "#components";
@@ -669,6 +670,23 @@ function getComponentConfigByKey(key: string) {
       };
     }
 
+    case "datetime":
+    case "timestamp": {
+      return {
+        component: FormDateTimeField,
+        componentProps: {
+          ...componentPropsBase,
+          disabled: disabled,
+          modelValue: props.formData[key],
+          "onUpdate:modelValue": (val: string | null) => {
+            updateFormData(key, val);
+          },
+          ...(hasError && { error: props.errors[key] }),
+        },
+        fieldProps,
+      };
+    }
+
     case "int":
       if (column?.isPrimary && column?.isGenerated) {
         return {
@@ -736,6 +754,8 @@ const isCustomComponent = computed(() => {
     'uuid',
     'permission',
     'date',
+    'datetime',
+    'timestamp',
     'array-tags',
   ];
   
