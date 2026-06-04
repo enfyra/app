@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const showCreateModal = ref(false);
 const showUploadModal = ref(false);
 const selectedStorage = ref<{ label: string; value: string; icon: string }>();
@@ -190,7 +191,7 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "upload-files",
     label: "Upload Files",

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { DataTableColumnSelector as ColumnSelector } from "#components";
 
 const route = useRoute();
@@ -120,7 +122,7 @@ const selectedRowIds = computed(() =>
 
 const { isMobile, isTablet } = useScreen();
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "toggle-selection",
     label: computed(() =>
@@ -343,7 +345,7 @@ watch(
   { immediate: true }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "filter-data-entries",
     get label() {

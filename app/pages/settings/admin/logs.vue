@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { checkPermissionCondition } = usePermissions();
@@ -371,7 +372,7 @@ function closeLogViewer() {
   router.push({ query: {} });
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "refresh-logs",
     label: "Refresh",

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   applyMethodColorSuggestion,
   buildMethodDefinitionFieldMap,
@@ -48,7 +49,7 @@ const {
   errorContext: "Create Record",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "save-data-entry",
     label: "Save",

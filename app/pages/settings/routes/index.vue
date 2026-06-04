@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const page = ref(1);
 const pageLimit = 9;
@@ -103,7 +105,7 @@ const total = computed(() => {
   return meta?.filterCount ?? 0
 });
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "toggle-system-routes",
     icon: "lucide:shield",
@@ -148,7 +150,7 @@ useSubHeaderActionRegistry([
   },
 ]);
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "filter-routes",
     icon: "lucide:filter",

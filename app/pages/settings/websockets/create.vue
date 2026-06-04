@@ -41,6 +41,8 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
   title: "Create WebSocket Gateway",
@@ -66,7 +68,7 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "save-websocket",
     label: "Save",
@@ -87,7 +89,7 @@ useHeaderActionRegistry([
   },
 ]);
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: 'test-ws-connection',
     label: 'Test',

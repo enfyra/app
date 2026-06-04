@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { defineComponent, h } from "vue";
 
 const page = ref(1);
@@ -81,7 +83,7 @@ const SearchInput = defineComponent({
   },
 });
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "toggle-system-collections",
     icon: "lucide:shield",
@@ -141,7 +143,7 @@ const collections = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.filterCount ?? 0);
 const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "create-collection",
   label: "Create Collection",
   icon: "lucide:plus",

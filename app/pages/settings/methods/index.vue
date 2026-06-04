@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   getMethodColors,
   getMethodLabel,
@@ -242,7 +243,7 @@ function normalizeCustomMethodInput(value: string) {
   form.name = normalizeMethodName(value);
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: 'create-method',
     label: 'New Method',

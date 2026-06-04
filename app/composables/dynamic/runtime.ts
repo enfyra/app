@@ -92,6 +92,7 @@ export function getComposablesObject(): Record<string, any> {
     useAdminSocket,
     useHeaderActionRegistry,
     useSubHeaderActionRegistry,
+    useAccountPanelRegistry,
     usePageHeaderRegistry,
     useConfirm,
     useAuth,

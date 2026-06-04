@@ -237,6 +237,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import draggable from 'vuedraggable';
 
 const route = useRoute();
@@ -280,7 +281,7 @@ const canUpdateGuard = computed(() =>
   })
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: 'delete-guard',
     label: 'Delete',

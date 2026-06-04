@@ -159,6 +159,8 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
   title: "WebSocket Gateway Detail",
@@ -268,7 +270,7 @@ const canUpdateGateway = computed(() =>
   })
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "delete-websocket",
     label: "Delete",
@@ -291,7 +293,7 @@ useHeaderActionRegistry([
   },
 ]);
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: 'test-ws-connection',
     label: 'Test',

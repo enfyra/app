@@ -112,6 +112,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
 const limit = 9;
 const { confirm } = useConfirm();
@@ -137,7 +138,7 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "create-server-package",
   label: "Install Package",
   icon: "lucide:server",

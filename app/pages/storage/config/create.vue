@@ -20,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
   title: "Create Storage Configuration",
@@ -79,7 +80,7 @@ registerPageHeader({
   gradient: "blue",
 });
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "save-storage-config",
   label: "Save",
   icon: "lucide:save",

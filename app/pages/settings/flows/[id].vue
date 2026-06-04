@@ -295,6 +295,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 import type { StepType, StepErrorHandling } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS, getExecutionStatusColor, getExecutionStatusDotClass, getStepTimelineIcon, getStepTimelineIconColor, getStepTimelineClass } from '~/utils/flow.constants';
 import {
@@ -497,7 +498,7 @@ const { execute: updateStepApi, error: updateStepError } = useApi(() => `/flow_s
 const { execute: deleteStepApi, error: deleteStepError } = useApi(() => `/flow_step_definition`, { method: "delete", errorContext: "Delete Step" });
 
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "trigger-flow",
     label: "Run Now",

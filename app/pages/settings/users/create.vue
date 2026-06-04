@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 
 const tableName = "user_definition";
@@ -43,7 +44,7 @@ const {
   errorContext: "Create User",
 });
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "save-user",
   label: "Save",
   icon: "lucide:save",

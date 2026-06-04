@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import type { MenuDefinition } from '~/types';
 
 const notify = useNotify();
@@ -197,7 +198,7 @@ function syncDrawersFromQuery() {
   selectedMenuForExtension.value = null;
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-menu",
     label: "Create Menu",

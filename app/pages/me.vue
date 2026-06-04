@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { CalendarDate } from "@internationalized/date";
 
 const notify = useNotify();
@@ -235,7 +237,7 @@ async function handleReset() {
   }
 }
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "change-password",
     label: "Change Password",
@@ -256,7 +258,7 @@ useSubHeaderActionRegistry([
   },
 ]);
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-profile",
     label: "Reset",

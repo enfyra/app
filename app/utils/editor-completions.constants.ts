@@ -163,10 +163,10 @@ onMounted(() => {
     label: 'header-action',
     type: 'snippet',
     detail: 'Register page header action',
-    apply: `const headerActions = useHeaderActionRegistry()
+    apply: `const { register: registerHeaderActions } = useHeaderActionRegistry()
 
 onMounted(() => {
-  headerActions.registerAction({
+  registerHeaderActions({
     id: "primary-action",
     label: "Action",
     icon: "lucide:plus",

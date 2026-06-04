@@ -127,6 +127,25 @@ export interface HeaderAction {
   order?: number;
 }
 
+export interface AccountPanelItem {
+  id: string;
+  order?: number;
+  label?: string | ComputedRef<string>;
+  icon?: string | ComputedRef<string>;
+  component?: string | any;
+  props?: Record<string, any>;
+  permission?: PermissionCondition;
+  disabled?:
+    | boolean
+    | Ref<boolean>
+    | Readonly<Ref<boolean>>
+    | ComputedRef<boolean>;
+  show?: boolean | Ref<boolean> | Readonly<Ref<boolean>> | ComputedRef<boolean>;
+  class?: string;
+  iconClass?: string;
+  onClick?: () => void;
+}
+
 export type UniqueCheckStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'incomplete';
 
 export interface SettingsCardStat {

@@ -73,6 +73,7 @@
 
   <CommonGlobalConfirm />
   <CommonGlobalNotify />
+  <DynamicGlobalExtensionsHost />
   <FolderDetailModal />
   <CommonRouteLoading :show="routeLoading" message="Navigating..." />
 </template>
@@ -87,7 +88,10 @@ import {
 } from '~/composables/shared/useAdminSocket';
 
 await useInitialData();
-await useMenuInit();
+await Promise.all([
+  useMenuInit(),
+  useGlobalExtensionsInit(),
+]);
 const { markInitialReady } = useInitialLoading();
 markInitialReady();
 useAppSettings();

@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 
 const tableName = "bootstrap_script_definition";
@@ -33,7 +34,7 @@ registerPageHeader({
   gradient: "purple",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "save-bootstrap",
     label: "Save",

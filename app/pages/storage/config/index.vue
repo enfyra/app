@@ -128,6 +128,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const page = ref(1);
 const limit = 9;
@@ -177,7 +178,7 @@ const { execute: updateConfig, error: updateError } = useApi(
   }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-storage-config",
     label: "Create Storage",

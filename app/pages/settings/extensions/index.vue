@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const page = ref(1);
 const limit = 9;
@@ -86,6 +87,7 @@ const { getLoader: getExtensionLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 const { invalidateExtensionCache } = useDynamicComponent();
+const { loadGlobalExtensions } = useGlobalExtensions();
 
 const { isMounted } = useMounted();
 const { isTablet } = useScreen();
@@ -128,7 +130,7 @@ const { execute: updateExtension, error: updateError } = useApi(
   }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-extension",
     label: "Create Extension",
@@ -154,6 +156,8 @@ function getExtensionIcon(extension: ExtensionDefinition) {
       return "i-lucide-file-text";
     case "widget":
       return "i-lucide-layout-dashboard";
+    case "global":
+      return "i-lucide-orbit";
     default:
       return "i-lucide-puzzle";
   }
@@ -165,6 +169,8 @@ function getExtensionTypeLabel(type: string) {
       return "Page";
     case "widget":
       return "Widget";
+    case "global":
+      return "Global";
     default:
       return "Unknown";
   }
@@ -256,6 +262,7 @@ const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
     extensionId: extension.extensionId,
     path: extension.menu?.path ?? null,
   });
+  await loadGlobalExtensions({ forceReload: true });
 };
 
 const { execute: deleteExtensionApi, error: deleteError } = useApi(
@@ -289,6 +296,7 @@ const deleteExtension = async (extension: ExtensionDefinition) => {
       extensionId: extension.extensionId,
       path: extension.menu?.path ?? null,
     });
+    await loadGlobalExtensions({ forceReload: true });
 
     notify.success("Success", `Extension "${extension.id}" has been deleted successfully!`);
   }

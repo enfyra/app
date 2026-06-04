@@ -15,6 +15,8 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute()
 const notify = useNotify()
 const { confirm } = useConfirm()
@@ -93,7 +95,7 @@ async function deleteRoute() {
   await navigateTo('/settings/routes')
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: 'delete-route',
     label: 'Delete',
@@ -111,7 +113,7 @@ useHeaderActionRegistry([
   },
 ])
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: 'test-api',
     label: 'Test API',

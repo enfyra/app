@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   applyMethodColorSuggestion,
   buildMethodDefinitionFieldMap,
@@ -159,7 +160,7 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-data-entry",
     label: "Reset",

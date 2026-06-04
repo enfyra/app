@@ -170,6 +170,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { me } = useAuth();
 const { fetchAppPackages } = useGlobalState();
 
@@ -194,7 +195,7 @@ const {
   errorContext: "Install Package",
 });
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "save-package",
   label: "Install",
   icon: "lucide:download",

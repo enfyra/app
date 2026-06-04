@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 interface OAuthConfigDefinition {
   id?: string;
   _id?: string;
@@ -111,7 +112,7 @@ const { execute: updateConfig, error: updateError } = useApi(
   }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-oauth-config",
     label: "Add Provider",

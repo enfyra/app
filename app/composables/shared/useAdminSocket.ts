@@ -132,9 +132,10 @@ export function useAdminSocket() {
   const notify = useNotify();
   const schema = useSchema();
   const routes = useRoutes();
-  const menuRegistry = useMenuRegistry();
+  const { registerDataMenuItems } = useMenuRegistry();
   const menuApi = useMenuApi();
   const dynamicComponent = useDynamicComponent();
+  const { loadGlobalExtensions } = useGlobalExtensions();
 
   if (!socket) {
     ensureStaleReloadPruner();
@@ -212,12 +213,13 @@ export function useAdminSocket() {
         if (needsMenus) {
           await menuApi.fetchMenuDefinitions();
           await useMenuInit({ reset: true });
-          await menuRegistry.registerDataMenuItems(
+          await registerDataMenuItems(
             Object.values(schema.schemas.value),
           );
         }
         if (needsExtensions) {
           dynamicComponent.invalidateExtensionCache({ reason: 'updated' });
+          await loadGlobalExtensions({ forceReload: true });
         }
 
         activeReloads.value = activeReloads.value.filter((r) => r.key !== key);

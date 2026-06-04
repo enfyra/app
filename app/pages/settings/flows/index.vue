@@ -73,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { getTriggerColor } from '~/utils/flow.constants';
 
 const page = ref(1);
@@ -117,7 +118,7 @@ const { execute: updateFlow, error: updateError } = useApi(
   { method: "patch", errorContext: "Update Flow" }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-flow",
     label: "Create Flow",

@@ -79,6 +79,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import type { SettingsCardAction, SettingsCardHeaderAction } from '~/types/ui';
 
 const page = ref(1);
@@ -131,7 +132,7 @@ const { execute: updateGateway, error: updateError } = useApi(
   }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-websocket",
     label: "Create Gateway",

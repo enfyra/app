@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
@@ -100,7 +102,7 @@ const {
   errorContext: "Delete Table",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-table",
     label: "Reset",
@@ -187,7 +189,7 @@ watch(activeTab, (tab) => {
   navigateTo({ query }, { replace: true })
 })
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "view-schema",
     label: "View Schema",

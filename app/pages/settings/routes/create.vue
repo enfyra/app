@@ -18,6 +18,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const { loadRoutes } = useRoutes();
 
@@ -42,7 +43,7 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "save-route",
     label: "Save",

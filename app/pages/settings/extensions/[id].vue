@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
   title: "Extension Detail",
@@ -73,6 +74,7 @@ const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 const { fetchMenuDefinitions } = useMenuApi();
 const { invalidateExtensionCache } = useDynamicComponent();
+const { loadGlobalExtensions } = useGlobalExtensions();
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -96,7 +98,7 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-extension",
     label: "Reset",
@@ -262,6 +264,7 @@ async function updateExtension() {
       path: freshData.menu?.path ?? null,
       updatedAt: freshData.updatedAt,
     });
+    await loadGlobalExtensions({ forceReload: true });
   }
 
   formEditorRef.value?.confirmChanges();
@@ -287,6 +290,7 @@ async function deleteExtension() {
     extensionId: form.value?.extensionId,
     path: form.value?.menu?.path ?? null,
   });
+  await loadGlobalExtensions({ forceReload: true });
   await fetchMenuDefinitions();
   await navigateTo("/settings/extensions");
 }

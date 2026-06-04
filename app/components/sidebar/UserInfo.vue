@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { defineComponent, h, resolveComponent } from "vue";
+
+import type { AccountPanelItem } from "~/types/ui";
+
 const props = defineProps<{
   collapsed?: boolean;
 }>();
@@ -21,6 +25,114 @@ const isDark = computed(() => colorMode.value === 'dark');
 const themeLabel = computed(() => (isDark.value ? 'Dark' : 'Light'));
 const themeIcon = computed(() => (isDark.value ? 'lucide:moon' : 'lucide:sun'));
 const panelGridClass = computed(() => (isOpen.value ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'));
+const { accountPanelItems, register } = useAccountPanelRegistry();
+
+const accountPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]";
+const logoutPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-md bg-red-50 px-2.5 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15 dark:hover:text-red-200";
+
+const ProfileAccountPanelItem = defineComponent({
+  name: "ProfileAccountPanelItem",
+  setup() {
+    const UIcon = resolveComponent("UIcon");
+    const activate = () => router.push("/me");
+    const onKeydown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      activate();
+    };
+
+    return () => h(
+      "div",
+      {
+        role: "button",
+        tabindex: 0,
+        class: accountPanelButtonClass,
+        onClick: activate,
+        onKeydown,
+      },
+      [
+        h(UIcon, { name: "lucide:user", class: "h-5 w-5 shrink-0 text-[var(--text-tertiary)]" }),
+        h("span", { class: "truncate" }, "Profile"),
+      ],
+    );
+  },
+});
+
+const ThemeAccountPanelItem = defineComponent({
+  name: "ThemeAccountPanelItem",
+  setup() {
+    const UIcon = resolveComponent("UIcon");
+    const USwitch = resolveComponent("USwitch");
+    const onKeydown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      toggleTheme();
+    };
+
+    return () => h(
+      "div",
+      {
+        role: "button",
+        tabindex: 0,
+        class: accountPanelButtonClass,
+        onClick: toggleTheme,
+        onKeydown,
+      },
+      [
+        h(UIcon, { name: themeIcon.value, class: "h-5 w-5 shrink-0 text-[var(--text-tertiary)]" }),
+        h("span", { class: "min-w-0 flex-1 truncate" }, themeLabel.value),
+        h(USwitch, {
+          size: "sm",
+          modelValue: isDark.value,
+          "onUpdate:modelValue": toggleTheme,
+          onClick: (event: MouseEvent) => event.stopPropagation(),
+        }),
+      ],
+    );
+  },
+});
+
+const LogoutAccountPanelItem = defineComponent({
+  name: "LogoutAccountPanelItem",
+  setup() {
+    const UIcon = resolveComponent("UIcon");
+    const onKeydown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      handleLogout();
+    };
+
+    return () => h(
+      "div",
+      {
+        role: "button",
+        tabindex: 0,
+        class: logoutPanelButtonClass,
+        onClick: handleLogout,
+        onKeydown,
+      },
+      [
+        h(UIcon, { name: "lucide:log-out", class: "h-5 w-5 shrink-0" }),
+        h("span", { class: "truncate" }, "Logout"),
+      ],
+    );
+  },
+});
+
+register([
+  { id: "profile", order: 10, component: ProfileAccountPanelItem },
+  { id: "theme", order: 20, component: ThemeAccountPanelItem },
+  { id: "logout", order: 100, component: LogoutAccountPanelItem },
+]);
+
+const visibleAccountPanelItems = computed(() => accountPanelItems.value.filter((item) => {
+  const showValue = item.show === undefined
+    ? true
+    : isRef(item.show)
+      ? unref(item.show)
+      : item.show;
+  return Boolean(showValue);
+}));
 
 watch(
   () => props.collapsed,
@@ -31,6 +143,17 @@ watch(
 
 function toggleTheme() {
   colorMode.preference = isDark.value ? 'light' : 'dark';
+}
+
+function handleAccountPanelItemClick(item: AccountPanelItem) {
+  if (item.disabled && unref(item.disabled)) return;
+  item.onClick?.();
+}
+
+function handleAccountPanelItemKeydown(event: KeyboardEvent, item: AccountPanelItem) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  handleAccountPanelItemClick(item);
 }
 
 function togglePanel() {
@@ -88,42 +211,34 @@ async function handleLogout() {
         <div class="min-h-0 overflow-hidden">
           <div class="border-t border-[var(--border-default)]">
           <div class="p-1.5 space-y-1">
-            <div
-              role="button"
-              tabindex="0"
-              class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]"
-              @click="router.push('/me')"
-              @keydown.enter.prevent="router.push('/me')"
-              @keydown.space.prevent="router.push('/me')"
-            >
-              <UIcon name="lucide:user" class="h-5 w-5 shrink-0 text-[var(--text-tertiary)]" />
-              <span class="truncate">Profile</span>
-            </div>
-
-            <div
-              role="button"
-              tabindex="0"
-              class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]"
-              @click="toggleTheme"
-              @keydown.enter.prevent="toggleTheme"
-              @keydown.space.prevent="toggleTheme"
-            >
-              <UIcon :name="themeIcon" class="h-5 w-5 shrink-0 text-[var(--text-tertiary)]" />
-              <span class="min-w-0 flex-1 truncate">{{ themeLabel }}</span>
-              <USwitch size="sm" :model-value="isDark" @update:model-value="toggleTheme" @click.stop />
-            </div>
-
-            <div
-              role="button"
-              tabindex="0"
-              class="flex w-full cursor-pointer items-center gap-2 rounded-md bg-red-50 px-2.5 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15 dark:hover:text-red-200"
-              @click="handleLogout"
-              @keydown.enter.prevent="handleLogout"
-              @keydown.space.prevent="handleLogout"
-            >
-              <UIcon name="lucide:log-out" class="h-5 w-5 shrink-0" />
-              <span class="truncate">Logout</span>
-            </div>
+            <template v-for="item in visibleAccountPanelItems" :key="item.id">
+              <PermissionGate :condition="item.permission">
+                <component
+                  v-if="item.component"
+                  :is="item.component"
+                  v-bind="item.props"
+                />
+                <div
+                  v-else
+                  role="button"
+                  tabindex="0"
+                  :class="[
+                    accountPanelButtonClass,
+                    item.class,
+                    item.disabled && unref(item.disabled) ? 'cursor-not-allowed opacity-50' : '',
+                  ]"
+                  @click="handleAccountPanelItemClick(item)"
+                  @keydown="handleAccountPanelItemKeydown($event, item)"
+                >
+                  <UIcon
+                    v-if="item.icon"
+                    :name="isRef(item.icon) ? unref(item.icon) : item.icon"
+                    :class="item.iconClass || 'h-5 w-5 shrink-0 text-[var(--text-tertiary)]'"
+                  />
+                  <span class="truncate">{{ isRef(item.label) ? unref(item.label) : item.label }}</span>
+                </div>
+              </PermissionGate>
+            </template>
           </div>
           </div>
         </div>

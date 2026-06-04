@@ -11,7 +11,7 @@ export function useHeaderActionRegistry(
     return [...actionsRaw.value].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   });
 
-  const register = (action: HeaderAction, ownerUid?: number) => {
+  const registerOne = (action: HeaderAction, ownerUid?: number) => {
     const processed = processHeaderAction(action);
     const existingIndex = actionsRaw.value.findIndex(a => a.id === action.id);
     if (existingIndex > -1) {
@@ -21,6 +21,23 @@ export function useHeaderActionRegistry(
     }
     if (ownerUid !== undefined) {
       actionOwners.set(action.id, ownerUid);
+    }
+  };
+
+  const register = (actions: HeaderAction | HeaderAction[]) => {
+    const arr = Array.isArray(actions) ? actions : [actions];
+    const instance = getCurrentInstance();
+    const uid = instance?.uid;
+    arr.forEach(action => registerOne(action, uid));
+
+    if (instance) {
+      onUnmounted(() => {
+        arr.forEach(action => {
+          if (actionOwners.get(action.id) === uid) {
+            unregister(action.id);
+          }
+        });
+      });
     }
   };
 
@@ -39,7 +56,7 @@ export function useHeaderActionRegistry(
     const arr = Array.isArray(actions) ? actions : [actions];
     const instance = getCurrentInstance();
     const uid = instance?.uid;
-    arr.forEach(a => register(a, uid));
+    arr.forEach(a => registerOne(a, uid));
     if (instance) {
       onUnmounted(() => {
         arr.forEach(a => {

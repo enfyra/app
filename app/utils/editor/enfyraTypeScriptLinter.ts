@@ -368,6 +368,7 @@ declare function useDataTableColumns(...args: any[]): any;
 declare function useAdminSocket(...args: any[]): any;
 declare function useHeaderActionRegistry(...args: any[]): any;
 declare function useSubHeaderActionRegistry(...args: any[]): any;
+declare function useAccountPanelRegistry(...args: any[]): any;
 declare function usePageHeaderRegistry(...args: any[]): any;
 declare function useConfirm(...args: any[]): any;
 declare function useAuth(...args: any[]): any;

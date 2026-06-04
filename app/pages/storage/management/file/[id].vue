@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const route = useRoute();
 const router = useRouter();
@@ -83,7 +85,7 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-file",
     label: "Reset",
@@ -136,7 +138,7 @@ useHeaderActionRegistry([
   },
 ]);
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "replace-file",
     label: "Replace File",

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildGuardBodyFromTemplate,
   buildGuardRuleBodyFromTemplate,
@@ -91,7 +92,7 @@ const total = computed(() => {
   return apiData.value?.meta?.totalCount || 0;
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: 'filter-guards',
     icon: 'lucide:filter',

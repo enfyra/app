@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 interface Props {
   parentId?: string;
   folders?: any[];
@@ -157,7 +158,7 @@ async function handleBulkDelete() {
 
 const { isMobile, isTablet } = useScreen();
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "page-view-mode",
     icon: computed(() =>
