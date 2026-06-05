@@ -10,18 +10,22 @@ function processAccountPanelItem(item: AccountPanelItem): AccountPanelItem {
     Object.defineProperty(processed, key, descriptor);
   }
 
-  if (processed.component) {
-    if (typeof processed.component === "string") {
+  const componentKeys: Array<"component" | "contentComponent"> = ["component", "contentComponent"];
+
+  for (const key of componentKeys) {
+    if (!processed[key]) continue;
+
+    if (typeof processed[key] === "string") {
       try {
-        const resolved = resolveComponent(processed.component as any);
+        const resolved = resolveComponent(processed[key] as any);
         if (resolved && typeof resolved !== "string") {
-          processed.component = markRaw(resolved);
+          processed[key] = markRaw(resolved);
         }
       } catch (error) {
-        console.warn(`Failed to resolve account panel component: ${processed.component}`, error);
+        console.warn(`Failed to resolve account panel component: ${processed[key]}`, error);
       }
     } else {
-      processed.component = markRaw(processed.component);
+      processed[key] = markRaw(processed[key]);
     }
   }
 

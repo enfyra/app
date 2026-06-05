@@ -1,5 +1,5 @@
 <template>
-  <div class="hidden" aria-hidden="true">
+  <div class="contents">
     <component
       v-for="extension in globalExtensions"
       :key="extension.key"

@@ -11,7 +11,7 @@
       :disabled="disabled"
     />
 
-    <CommonDrawer v-model="showDrawer" nested direction="right">
+    <CommonDrawer v-model="showDrawer" direction="right">
       <template #header>
         <div>
           <h3 class="text-base font-semibold text-zinc-950 dark:text-white">

@@ -47,9 +47,9 @@ function close() {
 <template>
   <UDrawer
     v-if="hasContent"
-    :handle="false"
-    handle-only
     v-model:open="isOpen"
+    :handle="props.handle"
+    :handle-only="props.handleOnly"
     :direction="props.direction"
     :inset="true"
     :nested="props.nested"

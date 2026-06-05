@@ -456,7 +456,7 @@ function getCellTextClass(columnId: string | undefined) {
       :class="isRefreshing ? 'after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-primary after:animate-pulse' : ''"
     >
       <div class="max-w-full overflow-x-auto overflow-y-auto custom-scrollbar">
-        <table class="w-max table-fixed divide-y divide-[var(--table-header-border)]" aria-label="Data table">
+        <table class="w-full min-w-max table-fixed divide-y divide-[var(--table-header-border)]" aria-label="Data table">
           <colgroup>
             <col
               v-for="header in table?.getFlatHeaders() || []"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { defineComponent, h, resolveComponent } from "vue";
+import type { ComputedRef, Ref } from "vue";
 
 import type { AccountPanelItem } from "~/types/ui";
 
@@ -147,13 +148,39 @@ function toggleTheme() {
 
 function handleAccountPanelItemClick(item: AccountPanelItem) {
   if (item.disabled && unref(item.disabled)) return;
-  item.onClick?.();
+  if (item.onClick) {
+    item.onClick();
+    return;
+  }
+  if (item.onToggle) {
+    item.onToggle();
+    return;
+  }
+}
+
+function resolveAccountPanelValue<T>(value: T | Ref<T> | Readonly<Ref<T>> | ComputedRef<T> | undefined): T | undefined {
+  return isRef(value) ? unref(value) : value;
 }
 
 function handleAccountPanelItemKeydown(event: KeyboardEvent, item: AccountPanelItem) {
   if (event.key !== "Enter" && event.key !== " ") return;
   event.preventDefault();
   handleAccountPanelItemClick(item);
+}
+
+function accountPanelBadgeClass(item: AccountPanelItem) {
+  const color = resolveAccountPanelValue(item.badgeColor) || "neutral";
+  const base = "ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold";
+  if (color === "error") return `${base} bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300`;
+  if (color === "warning") return `${base} bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300`;
+  if (color === "success") return `${base} bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300`;
+  if (color === "primary") return `${base} bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-300`;
+  return `${base} bg-[var(--surface-muted)] text-[var(--text-tertiary)]`;
+}
+
+function hasAccountPanelBadge(item: AccountPanelItem) {
+  const badge = resolveAccountPanelValue(item.badge);
+  return badge !== undefined && badge !== null && badge !== "";
 }
 
 function togglePanel() {
@@ -232,11 +259,38 @@ async function handleLogout() {
                 >
                   <UIcon
                     v-if="item.icon"
-                    :name="isRef(item.icon) ? unref(item.icon) : item.icon"
+                    :name="resolveAccountPanelValue(item.icon)"
                     :class="item.iconClass || 'h-5 w-5 shrink-0 text-[var(--text-tertiary)]'"
                   />
-                  <span class="truncate">{{ isRef(item.label) ? unref(item.label) : item.label }}</span>
+                  <span class="min-w-0 flex-1">
+                    <span :class="item.labelClass || 'block truncate'">
+                      {{ resolveAccountPanelValue(item.label) }}
+                    </span>
+                    <span
+                      v-if="resolveAccountPanelValue(item.description)"
+                      class="mt-0.5 block truncate text-xs font-normal text-[var(--text-tertiary)]"
+                    >
+                      {{ resolveAccountPanelValue(item.description) }}
+                    </span>
+                  </span>
+                  <span
+                    v-if="hasAccountPanelBadge(item)"
+                    :class="accountPanelBadgeClass(item)"
+                  >
+                    {{ resolveAccountPanelValue(item.badge) }}
+                  </span>
+                  <UIcon
+                    v-if="item.trailingIcon || item.contentComponent || item.onToggle"
+                    :name="item.trailingIcon ? resolveAccountPanelValue(item.trailingIcon) : resolveAccountPanelValue(item.expanded) ? 'lucide:chevron-up' : 'lucide:chevron-right'"
+                    class="h-4 w-4 shrink-0 text-[var(--text-tertiary)]"
+                  />
                 </div>
+                <component
+                  v-if="!item.component && item.contentComponent && resolveAccountPanelValue(item.expanded)"
+                  :is="item.contentComponent"
+                  v-bind="item.contentProps"
+                  :class="item.contentClass || 'mx-1 mb-1 overflow-hidden rounded-md border border-[var(--border-default)] bg-[var(--surface-default)]'"
+                />
               </PermissionGate>
             </template>
           </div>
