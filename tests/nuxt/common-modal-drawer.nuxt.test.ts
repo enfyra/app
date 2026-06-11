@@ -59,7 +59,7 @@ describe('CommonModal', () => {
     const wrapper = await mountSuspended(CommonModal, {
       route: '/login',
       slots: {
-        title: () => 'Title',
+        header: () => 'Title',
         body: () => 'Body',
       },
       global: {
@@ -76,11 +76,11 @@ describe('CommonModal', () => {
     const wrapper = await mountSuspended(CommonModal, {
       route: '/login',
       props: {
-        modelValue: true,
+        open: true,
         preventClose: true,
       },
       slots: {
-        title: () => 'Title',
+        header: () => 'Title',
         body: () => 'Body',
       },
       global: {
@@ -92,17 +92,17 @@ describe('CommonModal', () => {
 
     await wrapper.get('[data-testid="modal-close"]').trigger('click')
 
-    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    expect(wrapper.emitted('update:open')).toBeUndefined()
   })
 
   it('emits close when preventClose is false', async () => {
     const wrapper = await mountSuspended(CommonModal, {
       route: '/login',
       props: {
-        modelValue: true,
+        open: true,
       },
       slots: {
-        title: () => 'Title',
+        header: () => 'Title',
         body: () => 'Body',
       },
       global: {
@@ -114,7 +114,7 @@ describe('CommonModal', () => {
 
     await wrapper.get('[data-testid="modal-close"]').trigger('click')
 
-    expect(wrapper.emitted('update:modelValue')).toEqual([[false]])
+    expect(wrapper.emitted('update:open')).toEqual([[false]])
   })
 })
 

@@ -19,13 +19,13 @@ describe('SidebarUserInfo', () => {
     })
 
     expect(wrapper.findComponent({ name: 'UDropdownMenu' }).exists()).toBe(false)
-    expect(wrapper.get('button[aria-expanded="false"]')).toBeTruthy()
+    expect(wrapper.get('[role="button"][aria-expanded="false"]')).toBeTruthy()
     expect(wrapper.html()).toContain('grid-rows-[0fr]')
 
-    await wrapper.get('button[aria-expanded="false"]').trigger('click')
+    await wrapper.get('[role="button"][aria-expanded="false"]').trigger('click')
 
-    expect(wrapper.get('button[aria-expanded="true"]')).toBeTruthy()
-    expect(wrapper.findAll('button[aria-expanded]').length).toBe(1)
+    expect(wrapper.get('[role="button"][aria-expanded="true"]')).toBeTruthy()
+    expect(wrapper.findAll('[role="button"][aria-expanded]').length).toBe(1)
     expect(wrapper.html()).toContain('grid-rows-[1fr]')
     expect(wrapper.text()).toContain('dothinh115@gmail.com')
     expect(wrapper.text().match(/dothinh115@gmail\.com/g)?.length).toBe(1)

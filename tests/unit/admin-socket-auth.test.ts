@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { stopAdminSocketReconnectOnAuthError } from "../../app/composables/shared/useAdminSocket";
+import { ENFYRA_SOCKET_AUTH_ERROR } from "../../app/constants/enfyra";
+
 const disconnectMock = vi.fn();
 const reconnectionMock = vi.fn();
 
@@ -9,12 +12,6 @@ describe("useAdminSocket auth failures", () => {
   });
 
   it("stops reconnecting when the bridge reports missing auth", async () => {
-    const { stopAdminSocketReconnectOnAuthError } = await import(
-      "../../app/composables/shared/useAdminSocket"
-    );
-    const { ENFYRA_SOCKET_AUTH_ERROR } = await import(
-      "../../app/constants/enfyra"
-    );
     const socket = {
       disconnect: disconnectMock,
       io: {
@@ -37,9 +34,6 @@ describe("useAdminSocket auth failures", () => {
   });
 
   it("leaves normal transient errors reconnectable", async () => {
-    const { stopAdminSocketReconnectOnAuthError } = await import(
-      "../../app/composables/shared/useAdminSocket"
-    );
     const socket = {
       disconnect: disconnectMock,
       io: {

@@ -613,7 +613,7 @@ export async function lintEnfyraScript(
   };
 
   const program = ts.createProgram([fileName], compilerOptions, host);
-  const diagnostics = program.getSyntacticDiagnostics(program.getSourceFile(fileName));
+  const diagnostics = ts.getPreEmitDiagnostics(program, program.getSourceFile(fileName));
 
   return diagnostics
     .map((diagnostic): Diagnostic | null => {

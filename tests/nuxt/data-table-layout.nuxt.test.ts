@@ -35,8 +35,8 @@ describe('DataTable layout', () => {
 
     const table = wrapper.get('table')
     expect(table.classes()).toContain('table-fixed')
-    expect(table.classes()).toContain('w-max')
-    expect(table.classes()).not.toContain('w-full')
+    expect(table.classes()).toContain('w-full')
+    expect(table.classes()).toContain('min-w-max')
     expect(table.classes()).not.toContain('min-w-full')
 
     const idCol = wrapper.get('colgroup col:first-child')
