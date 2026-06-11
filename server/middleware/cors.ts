@@ -67,18 +67,13 @@ export async function initCorsCache(): Promise<void> {
   const now = Date.now();
   const origins = await fetchAllowedOrigins();
   cachedCorsData = { origins, timestamp: now };
-  console.log('[CORS] Cache initialized:', origins);
 }
 
 export async function clearCorsCache(newOrigins?: string[]) {
-  const oldOrigins = [...cachedCorsData.origins];
-  
   if (newOrigins !== undefined && newOrigins !== null) {
     cachedCorsData = { origins: newOrigins, timestamp: Date.now() };
-    console.log('[CORS] Cache updated, was:', oldOrigins, 'now:', newOrigins);
   } else {
     cachedCorsData = { origins: [], timestamp: 0 };
-    console.log('[CORS] Cache cleared, was:', oldOrigins);
   }
 }
 
@@ -103,7 +98,6 @@ export default defineEventHandler(async (event) => {
   const allowedOrigins = await getValidatedOrigins();
   
   if (allowedOrigins.length === 0) {
-    console.log('[CORS] No origins configured, allowing:', origin);
     setHeader(event, 'Access-Control-Allow-Origin', origin);
     setHeader(event, 'Access-Control-Allow-Credentials', 'true');
     setHeader(event, 'Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');

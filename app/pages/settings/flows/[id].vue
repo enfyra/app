@@ -133,16 +133,19 @@
             <USelect v-model="stepForm.type" :items="stepTypeOptions" value-key="value" class="w-full" />
           </UFormField>
 
-          <div class="p-3 rounded-lg border" :class="stepErrors.config ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-800' : 'bg-[var(--surface-muted)] border-[var(--border-default)]'">
+          <div class="p-3 rounded-lg border" :class="hasStepConfigErrors ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-800' : 'bg-[var(--surface-muted)] border-[var(--border-default)]'">
             <p v-if="stepErrors.config" class="text-xs text-red-500 mb-2">{{ stepErrors.config }}</p>
+            <p v-else-if="stepErrors.sourceCode" class="text-xs text-red-500 mb-2">{{ stepErrors.sourceCode }}</p>
             <FlowStepConfigEditor
               :type="stepForm.type"
               :config-json="stepForm.configJson"
               :source-code="stepForm.sourceCode"
               :script-language="stepForm.scriptLanguage"
+              :errors="stepErrors"
               @update:config-json="stepForm.configJson = $event; stepErrors.config = ''"
               @update:source-code="stepForm.sourceCode = $event; stepForm.compiledCode = null; stepErrors.config = ''"
               @update:script-language="stepForm.scriptLanguage = $event; stepForm.compiledCode = null"
+              @update:errors="stepErrors = $event"
             />
           </div>
 
@@ -212,7 +215,7 @@
             <UButton v-else color="error" variant="soft" icon="i-lucide-x" @click="cancelTest">Cancel</UButton>
             <div class="flex-1" />
             <UButton variant="ghost" color="error" @click="closeStepDrawer">Cancel</UButton>
-            <UButton color="primary" @click="saveStep" :loading="savingStep">
+            <UButton color="primary" @click="saveStep" :loading="savingStep" :disabled="hasStepErrors">
               {{ editingStepId ? 'Update' : 'Create' }}
             </UButton>
           </div>
@@ -292,6 +295,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 import type { StepType, StepErrorHandling } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS, getExecutionStatusColor, getExecutionStatusDotClass, getStepTimelineIcon, getStepTimelineIconColor, getStepTimelineClass } from '~/utils/flow.constants';
 import {
@@ -370,6 +374,13 @@ const stepForm = ref({
   parentId: null as any,
   branch: undefined as string | undefined,
 });
+
+const hasStepErrors = computed(() =>
+  Object.values(stepErrors.value).some((message) => Boolean(message)),
+);
+const hasStepConfigErrors = computed(() =>
+  Boolean(stepErrors.value.config || stepErrors.value.sourceCode || stepErrors.value.scriptLanguage),
+);
 
 function cleanStepConfig(config: any): Record<string, any> {
   return stripLegacyScriptFields(config);
@@ -479,7 +490,7 @@ const { execute: updateFlowApi, error: updateError, pending: saveFlowPending } =
 const { checkPermissionCondition } = usePermissions();
 const canUpdateFlow = computed(() =>
   checkPermissionCondition({
-    and: [{ route: "/flow_definition", actions: ["update"] }],
+    and: [{ route: "/flow_definition", methods: ["PATCH"] }],
   })
 );
 const { execute: createStepApi, error: createStepError } = useApi(() => `/flow_step_definition`, { method: "post", errorContext: "Create Step" });
@@ -487,7 +498,7 @@ const { execute: updateStepApi, error: updateStepError } = useApi(() => `/flow_s
 const { execute: deleteStepApi, error: deleteStepError } = useApi(() => `/flow_step_definition`, { method: "delete", errorContext: "Delete Step" });
 
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "trigger-flow",
     label: "Run Now",
@@ -496,7 +507,7 @@ useSubHeaderActionRegistry([
     color: "success",
     size: "md",
     onClick: triggerFlow,
-    permission: { and: [{ route: "/flow_execution_definition", actions: ["create"] }] },
+    permission: { and: [{ route: "/flow_execution_definition", methods: ["POST"] }] },
   },
 ]);
 
@@ -777,7 +788,11 @@ async function testCurrentStep() {
 }
 
 async function saveStep() {
-  stepErrors.value = {};
+  const currentCodeErrors = {
+    ...(stepErrors.value.sourceCode ? { sourceCode: stepErrors.value.sourceCode } : {}),
+    ...(stepErrors.value.scriptLanguage ? { scriptLanguage: stepErrors.value.scriptLanguage } : {}),
+  };
+  stepErrors.value = currentCodeErrors;
   let hasError = false;
 
   const key = stepForm.value.key?.trim();
@@ -805,7 +820,11 @@ async function saveStep() {
     config = {};
   }
 
+  if (hasStepErrors.value) {
+    return;
+  }
   if (hasError) return;
+
   savingStep.value = true;
   try {
     const body: any = {

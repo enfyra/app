@@ -52,7 +52,7 @@
           ]"
           @click="navigateToDetail(gateway)"
           :header-actions="getHeaderActions(gateway)"
-          :actions="getFooterActions(gateway)"
+          :methods="getFooterActions(gateway)"
         />
       </CommonAnimatedGrid>
 
@@ -79,6 +79,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import type { SettingsCardAction, SettingsCardHeaderAction } from '~/types/ui';
 
 const page = ref(1);
@@ -131,7 +132,7 @@ const { execute: updateGateway, error: updateError } = useApi(
   }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-websocket",
     label: "Create Gateway",
@@ -144,7 +145,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/websocket_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -178,7 +179,7 @@ function getHeaderActions(gateway: any) {
   }
   const idKey = String(id);
 
-  if (checkPermissionCondition({ or: [{ route: '/websocket_definition', actions: ['update'] }] })) {
+  if (checkPermissionCondition({ or: [{ route: '/websocket_definition', methods: ['PATCH'] }] })) {
     actions.push({
       component: 'USwitch',
       props: {
@@ -195,7 +196,7 @@ function getHeaderActions(gateway: any) {
 
 function getFooterActions(gateway: any) {
   const actions: SettingsCardAction[] = [];
-  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/websocket_definition', actions: ['delete'] }] });
+  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/websocket_definition', methods: ['DELETE'] }] });
 
   actions.push({
     label: 'Delete',

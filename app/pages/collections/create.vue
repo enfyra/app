@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
@@ -153,7 +154,7 @@ const {
   errorContext: "Create Table",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-table",
     label: "Create New Table",
@@ -168,7 +169,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/table_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

@@ -62,7 +62,7 @@ export interface RouteLoadingProps {
 }
 
 export interface PermissionGateProps {
-  actions?: string[];
+  methods?: string[];
   routes?: string[];
   mode?: "any" | "all";
   condition?: PermissionCondition;
@@ -125,6 +125,45 @@ export interface HeaderAction {
   global?: boolean;
   show?: boolean | Ref<boolean> | Readonly<Ref<boolean>> | ComputedRef<boolean>;
   order?: number;
+}
+
+export interface AccountPanelItem {
+  id: string;
+  order?: number;
+  label?: string | ComputedRef<string>;
+  description?: string | ComputedRef<string>;
+  icon?: string | ComputedRef<string>;
+  badge?: string | number | ComputedRef<string | number | null | undefined>;
+  badgeColor?:
+    | "primary"
+    | "neutral"
+    | "error"
+    | "warning"
+    | "success"
+    | ComputedRef<"primary" | "neutral" | "error" | "warning" | "success">;
+  trailingIcon?: string | ComputedRef<string>;
+  component?: string | any;
+  contentComponent?: string | any;
+  contentProps?: Record<string, any>;
+  contentClass?: string;
+  props?: Record<string, any>;
+  permission?: PermissionCondition;
+  disabled?:
+    | boolean
+    | Ref<boolean>
+    | Readonly<Ref<boolean>>
+    | ComputedRef<boolean>;
+  expanded?:
+    | boolean
+    | Ref<boolean>
+    | Readonly<Ref<boolean>>
+    | ComputedRef<boolean>;
+  show?: boolean | Ref<boolean> | Readonly<Ref<boolean>> | ComputedRef<boolean>;
+  class?: string;
+  iconClass?: string;
+  labelClass?: string;
+  onClick?: () => void;
+  onToggle?: () => void;
 }
 
 export type UniqueCheckStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'incomplete';

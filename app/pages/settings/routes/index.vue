@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const page = ref(1);
 const pageLimit = 9;
@@ -103,7 +105,7 @@ const total = computed(() => {
   return meta?.filterCount ?? 0
 });
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "toggle-system-routes",
     icon: "lucide:shield",
@@ -148,7 +150,7 @@ useSubHeaderActionRegistry([
   },
 ]);
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "filter-routes",
     icon: "lucide:filter",
@@ -169,7 +171,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/route_definition",
-          actions: ["read"],
+          methods: ["GET"],
         },
       ],
     },
@@ -186,7 +188,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/route_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -240,27 +242,21 @@ const { execute: deleteRouteApi, error: deleteError } = useApi(
 );
 
 
-const methodColorMap: Record<string, string> = {
-  GET: 'info',
-  POST: 'success',
-  PATCH: 'warning',
-  DELETE: 'error',
-};
-
 function getPublishedMethodsStat(routeItem: any) {
   const availableSet = new Set(
     (routeItem.availableMethods || [])
-      .filter((m: any) => m?.method)
-      .map((m: any) => m.method)
+      .filter((m: any) => m?.name)
+      .map((m: any) => m.name)
   );
   const filtered = (routeItem.publishedMethods || [])
-    .filter((m: any) => m?.method && availableSet.has(m.method));
+    .filter((m: any) => m?.name && availableSet.has(m.name));
   return {
     component: filtered.length ? 'UBadge' : undefined,
     values: filtered.length ? filtered.map((m: any) => ({
-      value: m.method.toUpperCase(),
-      props: { color: methodColorMap[m.method] }
+      value: m.name.toUpperCase(),
+      props: { method: m }
     })) : undefined,
+    ...(filtered.length ? { component: 'MethodBadge' } : {}),
     value: filtered.length ? undefined : '-',
   };
 }
@@ -437,7 +433,7 @@ async function deleteRoute(routeItem: any) {
                   ...getPublishedMethodsStat(routeItem)
                 }
               ]"
-              :actions="getRouteFooterActions(routeItem)"
+              :methods="getRouteFooterActions(routeItem)"
               :header-actions="getRouteHeaderActions(routeItem)"
             </CommonSettingsCard>
           </CommonAnimatedGrid>

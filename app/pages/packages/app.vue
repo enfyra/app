@@ -47,7 +47,7 @@
                 ]
               : []),
           ]"
-          :actions="[]"
+          :methods="[]"
           :header-actions="[]"
         />
       </CommonAnimatedGrid>
@@ -78,6 +78,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
 const limit = 9;
 const { confirm } = useConfirm();
@@ -96,7 +97,7 @@ registerPageHeader({
   gradient: "blue",
 });
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "create-package",
   label: "Install Package",
   icon: "lucide:package-plus",
@@ -108,7 +109,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/package_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },

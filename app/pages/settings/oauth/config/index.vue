@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 interface OAuthConfigDefinition {
   id?: string;
   _id?: string;
@@ -111,7 +112,7 @@ const { execute: updateConfig, error: updateError } = useApi(
   }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-oauth-config",
     label: "Add Provider",
@@ -124,7 +125,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/oauth_config_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -169,7 +170,7 @@ function navigateToDetail(config: OAuthConfigDefinition) {
 function getHeaderActions(config: OAuthConfigDefinition) {
   const actions = [];
 
-  if (checkPermissionCondition({ or: [{ route: '/oauth_config_definition', actions: ['update'] }] })) {
+  if (checkPermissionCondition({ or: [{ route: '/oauth_config_definition', methods: ['PATCH'] }] })) {
     actions.push({
       component: 'USwitch',
       props: {

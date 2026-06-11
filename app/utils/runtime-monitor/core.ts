@@ -46,23 +46,6 @@ export function badgeColor(severity: RuntimeSeverity) {
   return 'success';
 }
 
-export function methodColor(method: string) {
-  switch (method.toUpperCase()) {
-    case 'GET':
-      return 'info';
-    case 'POST':
-      return 'success';
-    case 'PATCH':
-      return 'warning';
-    case 'PUT':
-      return 'primary';
-    case 'DELETE':
-      return 'error';
-    default:
-      return 'neutral';
-  }
-}
-
 export function shortText(value: unknown, head = 18, tail = 6) {
   const text = String(value ?? '');
   if (text.length <= head + tail + 1) return text;

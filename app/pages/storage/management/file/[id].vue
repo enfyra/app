@@ -1,10 +1,11 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const route = useRoute();
 const router = useRouter();
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { isMounted } = useMounted();
 const { updateFileTimestamp } = useGlobalState();
 const { getPreviewUrl } = useFileUrl();
 const fileId = route.params.id as string;
@@ -84,7 +85,7 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-file",
     label: "Reset",
@@ -110,7 +111,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/file_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -130,14 +131,14 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/file_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },
   },
 ]);
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "replace-file",
     label: "Replace File",
@@ -150,7 +151,7 @@ useSubHeaderActionRegistry([
       and: [
         {
           route: "/file_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },
@@ -242,6 +243,16 @@ const pageTitle = computed(() => {
   return file.value?.data?.[0]?.filename || "File Details";
 });
 
+const currentFile = computed(() => file.value?.data?.[0] || form.value || {});
+const isImageFile = computed(() => form.value?.mimetype?.startsWith("image/"));
+const fileIcon = computed(() => getFileIconAndColor(form.value?.mimetype || ""));
+const storageName = computed(
+  () => currentFile.value?.storageConfig?.name || "Local"
+);
+const storageType = computed(
+  () => currentFile.value?.storageConfig?.type || "Local Storage"
+);
+
 function getFileIconAndColor(mimetype: string): {
   icon: string;
   color: string;
@@ -299,51 +310,87 @@ function getFileIconAndColor(mimetype: string): {
 </script>
 
 <template>
-  <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
-    
-    <div class="space-y-6">
-      
-      <div
-        class="surface-card rounded-xl shadow-xl overflow-hidden"
-        v-if="!pending || !isMounted"
-      >
-        <div class="flex justify-center p-4">
+  <div class="grid max-w-[1400px] gap-6 xl:grid-cols-[minmax(360px,520px)_1fr]">
+    <aside class="space-y-4 xl:sticky xl:top-6 xl:self-start">
+      <div class="surface-card overflow-hidden rounded-xl">
+        <div class="border-b border-[var(--border-default)] px-5 py-4">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-[var(--text-tertiary)]">
+                Preview
+              </p>
+              <h2 class="truncate text-lg font-semibold text-[var(--text-primary)]">
+                {{ pageTitle }}
+              </h2>
+            </div>
+            <UBadge variant="subtle" color="neutral" size="sm">
+              {{ storageName }}
+            </UBadge>
+          </div>
+        </div>
+
+        <div class="bg-[var(--surface-muted)] p-4">
           <div
-            v-if="form.mimetype?.startsWith('image/')"
-            class="max-w-full max-h-132 w-full"
+            v-if="isImageFile"
+            class="flex min-h-[360px] items-center justify-center overflow-hidden rounded-lg bg-[var(--surface-default)]"
           >
             <CommonLazyImage
               :src="getPreviewUrl(fileId)"
               :alt="form.filename"
-              class="object-contain h-full w-full max-w-132 max-h-132 mx-auto rounded-lg"
+              class="h-full max-h-[520px] w-full"
+              container-class="h-full w-full"
+              object-fit="contain"
               loading-area="custom"
               custom-loading-size="300px"
             />
           </div>
 
-          <div v-else class="text-center">
+          <div
+            v-else
+            class="flex min-h-[360px] items-center justify-center rounded-lg bg-[var(--surface-default)]"
+          >
             <div
               :class="[
-                getFileIconAndColor(form.mimetype).background,
-                'w-100 h-100 rounded-2xl flex items-center justify-center mx-auto',
+                fileIcon.background,
+                'flex h-36 w-36 items-center justify-center rounded-3xl',
               ]"
             >
-              <UIcon
-                :name="getFileIconAndColor(form.mimetype).icon"
-                :class="getFileIconAndColor(form.mimetype).color"
-                size="192"
-              />
+              <UIcon :name="fileIcon.icon" :class="fileIcon.color" size="72" />
             </div>
           </div>
         </div>
-      </div>
 
-      <div
-        class="space-y-4 surface-card rounded-xl p-6"
-      >
-        <div class="flex items-center gap-3">
-          <UIcon name="lucide:edit-3" class="w-5 h-5" />
-          <h3 class="text-lg font-semibold">Edit File Information</h3>
+        <div class="grid grid-cols-2 gap-3 border-t border-[var(--border-default)] p-4 text-sm">
+          <div class="rounded-lg bg-[var(--surface-muted)] p-3">
+            <p class="text-xs text-[var(--text-quaternary)]">Type</p>
+            <p class="truncate font-medium text-[var(--text-primary)]">
+              {{ form.mimetype || "Unknown" }}
+            </p>
+          </div>
+          <div class="rounded-lg bg-[var(--surface-muted)] p-3">
+            <p class="text-xs text-[var(--text-quaternary)]">Storage</p>
+            <p class="truncate font-medium text-[var(--text-primary)]">
+              {{ storageType }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <div class="space-y-6">
+      <div class="surface-card rounded-xl p-6">
+        <div class="mb-5 flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <UIcon name="lucide:edit-3" class="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-[var(--text-primary)]">
+              File information
+            </h3>
+            <p class="text-sm text-[var(--text-tertiary)]">
+              Metadata, publishing state, and display fields.
+            </p>
+          </div>
         </div>
 
         <UForm :state="form" @submit="saveFile">

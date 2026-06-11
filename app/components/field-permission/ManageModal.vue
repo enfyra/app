@@ -252,8 +252,8 @@ watch(open, (isOpen) => {
 </script>
 
 <template>
-  <CommonModal v-model="open" :handle="false">
-    <template #title>
+  <CommonModal v-model:open="open" :handle="false">
+    <template #header>
       <div class="flex items-center gap-2">
         <UButton
           v-if="viewMode === 'form'"

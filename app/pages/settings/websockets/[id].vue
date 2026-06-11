@@ -112,7 +112,7 @@
               onUpdate: () => toggleEventStatus(event),
             }
           ]"
-          :actions="[
+          :methods="[
             {
               label: 'Delete',
               props: {
@@ -159,6 +159,8 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
   title: "WebSocket Gateway Detail",
@@ -264,11 +266,11 @@ const {
 const { checkPermissionCondition } = usePermissions();
 const canUpdateGateway = computed(() =>
   checkPermissionCondition({
-    and: [{ route: "/websocket_definition", actions: ["update"] }],
+    and: [{ route: "/websocket_definition", methods: ["PATCH"] }],
   })
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "delete-websocket",
     label: "Delete",
@@ -284,14 +286,14 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/websocket_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
   },
 ]);
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: 'test-ws-connection',
     label: 'Test',

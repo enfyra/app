@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
@@ -100,7 +102,7 @@ const {
   errorContext: "Delete Table",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-table",
     label: "Reset",
@@ -139,7 +141,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/table_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -166,7 +168,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/table_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },
@@ -187,7 +189,7 @@ watch(activeTab, (tab) => {
   navigateTo({ query }, { replace: true })
 })
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "view-schema",
     label: "View Schema",
@@ -435,8 +437,8 @@ onMounted(() => {
 
 <template>
   <div class="relative">
-    <CommonModal v-model="schemaConfirmModalOpen" :handle="false">
-      <template #title>
+    <CommonModal v-model:open="schemaConfirmModalOpen" :handle="false">
+      <template #header>
         <div class="flex items-start gap-3">
           <div
             class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border"

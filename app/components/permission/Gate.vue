@@ -1,21 +1,30 @@
 <template>
-  <div v-bind="$attrs" :style="!hasPermission ? { display: 'contents' } : undefined" class="h-full w-full">
-    <slot v-if="hasPermission" />
+  <div
+    v-if="hasPermission && hasAttrs"
+    v-bind="attrs"
+  >
+    <slot />
   </div>
+  <slot v-else-if="hasPermission" />
 </template>
 
 <script setup lang="ts">
 import type { PermissionGateProps } from "~/types";
 
-defineOptions({ inheritAttrs: false });
+defineOptions({
+  inheritAttrs: false,
+});
 
 const props = withDefaults(defineProps<PermissionGateProps>(), {
   mode: "any",
 });
 
+const attrs = useAttrs();
 const { hasAnyPermission, hasAllPermissions, checkPermissionCondition } =
   usePermissions();
 const { me } = useAuth();
+
+const hasAttrs = computed(() => Object.keys(attrs).length > 0);
 
 const hasPermission = computed(() => {
   if (me.value?.isRootAdmin) {
@@ -26,11 +35,11 @@ const hasPermission = computed(() => {
     return checkPermissionCondition(props.condition);
   }
 
-  if (props.routes && props.actions) {
+  if (props.routes && props.methods) {
     if (props.mode === "all") {
-      return hasAllPermissions(props.routes, props.actions);
+      return hasAllPermissions(props.routes, props.methods);
     } else {
-      return hasAnyPermission(props.routes, props.actions);
+      return hasAnyPermission(props.routes, props.methods);
     }
   }
 

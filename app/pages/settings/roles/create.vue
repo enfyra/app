@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 
 const tableName = "role_definition";
@@ -38,7 +39,7 @@ const {
   errorContext: "Create Role",
 });
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "save-role",
   label: "Save",
   icon: "lucide:save",
@@ -51,7 +52,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/role_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },

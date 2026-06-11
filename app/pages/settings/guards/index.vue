@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildGuardBodyFromTemplate,
   buildGuardRuleBodyFromTemplate,
@@ -91,7 +92,7 @@ const total = computed(() => {
   return apiData.value?.meta?.totalCount || 0;
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: 'filter-guards',
     icon: 'lucide:filter',
@@ -112,7 +113,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: '/guard_definition',
-          actions: ['read'],
+          methods: ['GET'],
         },
       ],
     },
@@ -129,7 +130,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: '/guard_definition',
-          actions: ['create'],
+          methods: ['POST'],
         },
       ],
     },
@@ -171,7 +172,7 @@ const {
   execute: fetchRoutes,
 } = useApi(() => '/route_definition', {
   query: {
-    fields: '*,availableMethods.method',
+    fields: '*,availableMethods.name',
     sort: 'path',
     limit: 500,
   },
@@ -514,7 +515,7 @@ async function deleteGuard(guard: any) {
                   value: (guard.combinator || 'and').toUpperCase(),
                 },
               ]"
-              :actions="getGuardFooterActions(guard)"
+              :methods="getGuardFooterActions(guard)"
               :header-actions="getGuardHeaderActions(guard)"
             />
           </CommonAnimatedGrid>

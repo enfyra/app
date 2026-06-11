@@ -83,7 +83,7 @@
               <div class="flex items-center gap-2">
                 <span class="text-xs text-[var(--text-quaternary)]">Status:</span>
                 <USwitch
-	                  v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['update'] }] })"
+	                  v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', methods: ['PATCH'] }] })"
 	                  :model-value="config.isEnabled"
 	                  :disabled="isConfigLoading(config)"
 	                  @update:model-value="toggleConfigStatus(config)"
@@ -91,7 +91,7 @@
                 />
               </div>
               <UButton
-                v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', actions: ['delete'] }] })"
+                v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', methods: ['DELETE'] }] })"
                 icon="i-lucide-trash-2"
                 variant="outline"
                 color="error"
@@ -128,6 +128,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const page = ref(1);
 const limit = 9;
@@ -139,7 +140,6 @@ const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
 
-const { isMounted } = useMounted();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -167,7 +167,7 @@ const {
 
 const storageConfigs = computed(() => apiData.value?.data || []);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const showInitialLoading = computed(() => loading.value && !apiData.value);
 
 
 const { execute: updateConfig, error: updateError } = useApi(
@@ -178,7 +178,7 @@ const { execute: updateConfig, error: updateError } = useApi(
   }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "create-storage-config",
     label: "Create Storage",
@@ -191,7 +191,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/storage_config_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

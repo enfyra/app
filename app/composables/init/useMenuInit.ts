@@ -1,7 +1,8 @@
 import { SidebarUserInfo } from "#components";
 
-export async function useMenuInit() {
+export async function useMenuInit(options: { reset?: boolean } = {}) {
   const {
+    clearAllMenus,
     registerAllMenusFromApi,
     registerDataMenuItemsFromRoutes,
     registerMenuItem,
@@ -12,6 +13,10 @@ export async function useMenuInit() {
   const menuData = (menuDefinitions.value && "data" in menuDefinitions.value && Array.isArray(menuDefinitions.value.data))
     ? menuDefinitions.value.data
     : [];
+
+  if (options.reset) {
+    clearAllMenus();
+  }
 
   if (menuData.length > 0) {
     await registerAllMenusFromApi(menuData);
@@ -31,7 +36,7 @@ export async function useMenuInit() {
       position: "top" as any,
       permission: {
         and: [
-          { route: `/table_definition`, actions: ["read"] }
+          { route: `/table_definition`, methods: ["GET"] }
         ]
       }
     } as any);

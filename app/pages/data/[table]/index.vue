@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { DataTableColumnSelector as ColumnSelector } from "#components";
 
 const route = useRoute();
@@ -120,7 +122,7 @@ const selectedRowIds = computed(() =>
 
 const { isMobile, isTablet } = useScreen();
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "toggle-selection",
     label: computed(() =>
@@ -144,7 +146,7 @@ useSubHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -164,7 +166,7 @@ useSubHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -187,7 +189,7 @@ useSubHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["read"],
+          methods: ["GET"],
         },
       ],
     },
@@ -224,10 +226,22 @@ const columns = computed(() => {
       return aSortKey - bSortKey;
     })
     .map((field) => {
+      const fieldNameRaw = field.name!;
       let config: DataTableColumnConfig = {
-        id: field.name!,
-        header: field.label || field.name || "",
+        id: fieldNameRaw,
+        header: field.label || fieldNameRaw,
       };
+      const fieldName = fieldNameRaw.toLowerCase();
+
+      if (fieldName === "id" || fieldName === "_id") {
+        const maxIdLength = Math.max(
+          fieldNameRaw.length,
+          ...data.value.map((record) => String(record?.[fieldNameRaw] ?? "").length)
+        );
+        config.width = Math.min(Math.max(maxIdLength * 9 + 72, 84), 220);
+        config.minWidth = 84;
+        config.maxWidth = 220;
+      }
 
       if (field.type === "timestamp") {
         config.format = "datetime";
@@ -266,7 +280,7 @@ const columns = computed(() => {
             and: [
               {
                 route: getRouteForTableName(tableName),
-                actions: ["delete"],
+                methods: ["DELETE"],
               },
             ],
           });
@@ -331,7 +345,7 @@ watch(
   { immediate: true }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "filter-data-entries",
     get label() {
@@ -357,7 +371,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["read"],
+          methods: ["GET"],
         },
       ],
     },
@@ -374,7 +388,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

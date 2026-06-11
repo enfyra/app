@@ -40,7 +40,7 @@ async function handleReset() {
 
 const canUpdateSetting = computed(() =>
   checkPermissionCondition({
-    and: [{ route: "/setting", actions: ["update"] }],
+    and: [{ route: "/setting", methods: ["PATCH"] }],
   })
 );
 

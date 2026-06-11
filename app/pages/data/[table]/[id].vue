@@ -1,4 +1,11 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
+import {
+  applyMethodColorSuggestion,
+  buildMethodDefinitionFieldMap,
+  normalizeMethodDefinitionRecord,
+} from '~/utils/form/method-definition';
+
 const route = useRoute();
 
 const notify = useNotify();
@@ -21,6 +28,9 @@ const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const currentRecord = ref<Record<string, any>>({});
+const fieldMap = computed(() =>
+  tableName === 'method_definition' ? buildMethodDefinitionFieldMap() : {},
+);
 
 const currentRecordRouteId = computed(() => {
   const p = route.params.id;
@@ -63,11 +73,17 @@ async function initializeForm() {
   const data = apiData.value?.data?.[0];
   if (data) {
     currentRecord.value = { ...data };
+    if (tableName === 'method_definition') {
+      applyMethodColorSuggestion(currentRecord.value);
+    }
     formChanges.update(data);
   }
 }
 
 async function handleUpdate() {
+  if (tableName === 'method_definition') {
+    normalizeMethodDefinitionRecord(currentRecord.value);
+  }
   if (!await validateForm(currentRecord.value, updateErrors)) return;
 
   await updateRecord({
@@ -144,7 +160,7 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-data-entry",
     label: "Reset",
@@ -171,7 +187,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -191,7 +207,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: getRouteForTableName(tableName),
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },
@@ -209,6 +225,7 @@ useHeaderActionRegistry([
           mode="update"
           v-model="currentRecord"
           v-model:errors="updateErrors"
+          :field-map="fieldMap"
           @has-changed="(hasChanged) => hasFormChanges = hasChanged"
           :loading="loading"
           :current-record-id="currentRecordRouteId"

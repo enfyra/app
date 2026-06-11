@@ -25,8 +25,6 @@ const emit = defineEmits<{
   "refresh-files": [];
 }>();
 
-const { isMounted } = useMounted();
-
 const { moveState } = useFileManagerMove();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
@@ -35,7 +33,7 @@ const canDeleteFile = checkPermissionCondition({
   and: [
     {
       route: "/file_definition",
-      actions: ["delete"],
+      methods: ["DELETE"],
     },
   ],
 });
@@ -287,7 +285,7 @@ function getContextMenuItems(file: any) {
   <div>
     <Transition name="loading-fade" mode="out-in">
       <div
-        v-if="(loading && files.length === 0) || !isMounted"
+        v-if="loading && files.length === 0"
         class="col-span-full"
       >
         <CommonLoadingState type="file-card" />
@@ -328,7 +326,7 @@ function getContextMenuItems(file: any) {
       </div>
 
       <div
-        v-else-if="!loading && transformedFiles.length === 0 && isMounted"
+        v-else-if="!loading && transformedFiles.length === 0"
         key="empty"
         class="text-center py-12"
       >

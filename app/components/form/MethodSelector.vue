@@ -4,6 +4,7 @@ import {
   getMethodIdentity,
   getSelectedMethodIdentities,
 } from '~/utils/form/method-selector';
+import { getMethodColors } from '~/utils/http.constants';
 
 const GQL_METHODS = ['GQL_QUERY', 'GQL_MUTATION'];
 
@@ -26,16 +27,6 @@ const emit = defineEmits<{
 }>();
 
 const { getId } = useDatabase();
-
-const methodColorMap: Record<string, 'success' | 'info' | 'warning' | 'error' | 'neutral'> = {
-  GET: 'success',
-  POST: 'info',
-  PUT: 'warning',
-  PATCH: 'warning',
-  DELETE: 'error',
-  HEAD: 'neutral',
-  OPTIONS: 'neutral',
-};
 
 const methodsCache = useState<any[]>('methods-cache', () => []);
 const methodsLoaded = useState<boolean>('methods-loaded', () => false);
@@ -68,10 +59,10 @@ const availableMethods = computed(() => {
   const allowed = props.allowedMethods;
   if (Array.isArray(allowed)) {
     const allowedSet = new Set(allowed);
-    list = list.filter((m: any) => m?.method && allowedSet.has(m.method));
+    list = list.filter((m: any) => m?.name && allowedSet.has(m.name));
   }
   if (props.excludeGqlMethods) {
-    list = list.filter((m: any) => m?.method && !GQL_METHODS.includes(m.method));
+    list = list.filter((m: any) => m?.name && !GQL_METHODS.includes(m.name));
   }
   return list;
 });
@@ -95,14 +86,14 @@ function selectMethod(methodObj: any) {
       newArray.splice(existingIndex, 1);
       emit('update:modelValue', newArray);
     } else {
-      const newMethod = targetId ? methodObj : { method: methodObj.method };
+      const newMethod = targetId ? methodObj : { name: methodObj.name };
       emit('update:modelValue', [...currentArray, newMethod]);
     }
   } else {
     if (targetIdentity && selectedIdentities.value.has(targetIdentity)) {
       emit('update:modelValue', null);
     } else {
-      const newMethod = targetId ? methodObj : { method: methodObj.method };
+      const newMethod = targetId ? methodObj : { name: methodObj.name };
       emit('update:modelValue', newMethod);
     }
   }
@@ -113,8 +104,13 @@ function isSelected(methodObj: any): boolean {
   return identity ? selectedIdentities.value.has(identity) : false;
 }
 
-function getMethodColor(method: string): 'success' | 'info' | 'warning' | 'error' | 'neutral' {
-  return methodColorMap[method] || 'neutral';
+function getMethodButtonStyle(methodObj: any) {
+  const colors = getMethodColors(methodObj);
+  return {
+    backgroundColor: isSelected(methodObj) ? colors.buttonColor : 'transparent',
+    color: isSelected(methodObj) ? colors.textColor : 'var(--text-secondary)',
+    borderColor: isSelected(methodObj) ? `${colors.textColor}55` : 'var(--border-strong)',
+  };
 }
 
 watch([() => props.modelValue, () => props.allowedMethods], () => {
@@ -146,19 +142,33 @@ onMounted(async () => {
     Please select Available Methods first.
   </div>
   <div v-else class="flex flex-wrap gap-2">
-    <UButton
+    <button
       v-for="m in availableMethods"
-      :key="getId(m) || m.method"
-      :color="isSelected(m) ? getMethodColor(m.method) : 'neutral'"
-      :variant="isSelected(m) ? 'solid' : 'outline'"
-      size="xs"
+      :key="getId(m) || m.name"
       :disabled="disabled"
       :aria-pressed="isSelected(m)"
-      class="font-mono text-xs font-semibold"
+      type="button"
+      class="inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-xs font-semibold uppercase transition hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+      :style="getMethodButtonStyle(m)"
       @click="selectMethod(m)"
     >
-      {{ m.method }}
-      <UIcon v-if="isSelected(m)" name="lucide:check" class="size-3.5 shrink-0 ml-1" />
-    </UButton>
+      {{ m.name }}
+      <UIcon
+        :name="isSelected(m) ? 'lucide:check' : 'lucide:circle'"
+        class="size-3.5 shrink-0"
+        :class="isSelected(m) ? '' : 'opacity-45'"
+      />
+    </button>
+    <UButton
+      v-if="!disabled"
+      to="/settings/methods?create=true"
+      type="button"
+      icon="lucide:plus"
+      variant="outline"
+      color="neutral"
+      size="xs"
+      title="Create method"
+      @click.stop
+    />
   </div>
 </template>

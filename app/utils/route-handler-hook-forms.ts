@@ -32,14 +32,14 @@ export function getRouteHandlerSourceCodeFieldConfig(options: {
     testRun: {
       configure: true,
       nested: true,
-      method: options.method?.method ?? options.method,
+      method: options.method?.name ?? options.method,
       methods: options.availableMethods,
       routePath: options.routePath,
       tableName: 'route_handler_definition',
       payload: {
         routeId: options.routeId,
         handlerId: options.handlerId,
-        method: options.method?.method ?? options.method,
+        method: options.method?.name ?? options.method,
       },
     },
   };
@@ -60,7 +60,7 @@ export function getRouteHookSourceCodeFieldConfig(options: {
     testRun: {
       configure: true,
       nested: true,
-      method: options.method?.method ?? options.method,
+      method: options.method?.name ?? options.method,
       methods: options.availableMethods,
       routePath: options.routePath,
       tableName: options.hookType === 'pre' ? 'pre_hook_definition' : 'post_hook_definition',

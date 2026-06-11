@@ -1,4 +1,6 @@
 import { resolveComponent, markRaw } from "vue";
+import { compareMenuOrder } from "~/utils/menu-order";
+import { findBestMenuRouteMatch, isDynamicMenuPath } from "~/utils/menu-route-patterns";
 
 function normalizePath(path?: string): string {
   if (!path) return "";
@@ -19,6 +21,7 @@ export function useMenuRegistry() {
 
   const menuGroups = computed(() => {
     const topLevelItems = menuItems.value.filter(item => {
+      if (isDynamicMenuPath(item.route || item.path)) return false;
       if (!item.parent) {
         if (item.type === 'Dropdown Menu') return true;
         if (item.type === 'Menu') return true;
@@ -27,17 +30,19 @@ export function useMenuRegistry() {
     });
 
     function buildMenuTree(item: any): any {
-      const children = menuItems.value.filter(child => {
+      const directChildren = menuItems.value.filter(child => {
         if (!child.parent) return false;
         return String(child.parent) === String(item.id);
       });
+      const childSource = directChildren.length > 0 ? directChildren : (item.children || []);
+      const children = childSource.filter((child: any) => !isDynamicMenuPath(child.route || child.path));
 
       return {
         ...item,
         icon: item.icon || 'lucide:circle',
         route: normalizePath(item.route || item.path),
         position: (item as any).position || 'top' as const,
-        items: children.length > 0 ? children.map(buildMenuTree) : (item.children || []).map(buildMenuTree),
+        items: children.map(buildMenuTree),
         order: item.order || 0,
       };
     }
@@ -48,7 +53,7 @@ export function useMenuRegistry() {
         if (a.position !== b.position) {
           return a.position === 'top' ? -1 : 1;
         }
-        return (a.order || 0) - (b.order || 0);
+        return compareMenuOrder(a, b);
       });
 
     return groups;
@@ -103,8 +108,10 @@ export function useMenuRegistry() {
       const typeOrder: Record<string, number> = { 'Dropdown Menu': 0, 'Menu': 1 };
       const aTypeOrder = a.type ? (typeOrder[a.type] ?? 2) : 2;
       const bTypeOrder = b.type ? (typeOrder[b.type] ?? 2) : 2;
+      const typeDiff = aTypeOrder - bTypeOrder;
+      if (typeDiff !== 0) return typeDiff;
       
-      return aTypeOrder - bTypeOrder;
+      return compareMenuOrder(a, b);
     });
   };
 
@@ -117,7 +124,7 @@ export function useMenuRegistry() {
 
     const allMenus = menuDefinitions
       .filter((item) => item.isEnabled)
-      .sort((a, b) => a.order - b.order);
+      .sort(compareMenuOrder);
 
     function buildChildren(parentId: string | number): any[] {
       return allMenus
@@ -224,7 +231,7 @@ export function useMenuRegistry() {
         type: "Menu",
         permission: {
           or: [
-            { route: route.path, actions: ["read"] }
+            { route: route.path, methods: ["GET"] }
           ]
         }
       });
@@ -283,7 +290,7 @@ export function useMenuRegistry() {
           type: "Menu",
           permission: {
             or: [
-              { route: dynamicRoute, actions: ["read"] }
+              { route: dynamicRoute, methods: ["GET"] }
             ]
           }
         });
@@ -302,6 +309,9 @@ export function useMenuRegistry() {
   };
 
   const findMenuIconForPath = (fullPath: string): string | undefined => {
+    const match = findBestMenuMatch(fullPath);
+    if (match?.item.icon) return match.item.icon;
+
     const normalized = normalizePathForMatch(fullPath.split("?")[0]);
     let bestLen = -1;
     let bestIcon: string | undefined;
@@ -316,6 +326,14 @@ export function useMenuRegistry() {
       }
     }
     return bestIcon;
+  };
+
+  const findBestMenuMatch = (fullPath: string) => {
+    return findBestMenuRouteMatch(
+      menuItems.value,
+      fullPath,
+      (item) => item.route || item.path
+    );
   };
 
   return {
@@ -334,6 +352,7 @@ export function useMenuRegistry() {
     registerDataMenuItemsFromRoutes,
     reregisterExtensionMenus,
 
+    findBestMenuMatch,
     findMenuIconForPath,
   };
 }

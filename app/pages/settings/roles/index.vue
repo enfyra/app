@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const page = ref(1);
 const pageLimit = 10;
@@ -42,7 +43,7 @@ const total = computed(() => {
   return apiData.value?.meta?.totalCount || 0;
 });
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "create-role",
   label: "Create Role",
   icon: "lucide:plus",
@@ -54,7 +55,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/role_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },
@@ -136,7 +137,7 @@ watch(
               value: '-'
             }
           ]"
-          :actions="[
+          :methods="[
             {
               label: 'Delete',
               props: {

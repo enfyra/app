@@ -75,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
 const { confirm } = useConfirm();
@@ -183,7 +184,7 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-package",
     label: "Reset",
@@ -210,7 +211,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/package_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -230,7 +231,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/package_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-const notify = useNotify();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { me } = useAuth();
 const { fetchAppPackages } = useGlobalState();
 
@@ -195,7 +195,7 @@ const {
   errorContext: "Install Package",
 });
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "save-package",
   label: "Install",
   icon: "lucide:download",
@@ -208,7 +208,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/package_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },
@@ -284,7 +284,6 @@ async function handleCreate() {
 
   if (packageType.value === 'App') {
     await fetchAppPackages();
-    notify.success("Package installed", `${form.value.name} has been installed`);
   }
 
   await navigateTo(`/packages/${packageId}`, {

@@ -10,7 +10,6 @@ import {
   USelect,
   UCheckbox,
   USwitch,
-  UModal,
   UPopover,
   UTooltip,
   UAlert,
@@ -84,15 +83,19 @@ import {
   CommonEmptyState,
   CommonSettingsCard,
   CommonLazyImage,
+  CommonModal,
+  CommonDrawer,
   PermissionGate,
   FormEditor,
   CommonUploadModal,
   DynamicWidgetComponent,
   FilterDrawer,
   DataTable,
+  NuxtLink,
 } from "#components";
 
 export const availableComponents = {
+  NuxtLink: markRaw(NuxtLink),
   UIcon: markRaw(UIcon),
   Icon: markRaw(UIcon),
   UButton: markRaw(UButton),
@@ -103,7 +106,7 @@ export const availableComponents = {
   USelect: markRaw(USelect),
   UCheckbox: markRaw(UCheckbox),
   USwitch: markRaw(USwitch),
-  UModal: markRaw(UModal),
+  UModal: markRaw(CommonModal),
   UPopover: markRaw(UPopover),
   UTooltip: markRaw(UTooltip),
   UAlert: markRaw(UAlert),
@@ -181,6 +184,8 @@ export const availableComponents = {
   EmptyState: markRaw(CommonEmptyState),
   SettingsCard: markRaw(CommonSettingsCard),
   Image: markRaw(CommonLazyImage),
+  CommonModal: markRaw(CommonModal),
+  CommonDrawer: markRaw(CommonDrawer),
   UploadModal: markRaw(CommonUploadModal),
   Widget: markRaw(DynamicWidgetComponent),
 };
@@ -199,6 +204,7 @@ export const availableComposables = {
   useDataTableColumns,
   useHeaderActionRegistry,
   useSubHeaderActionRegistry,
+  useAccountPanelRegistry,
   usePageHeaderRegistry,
   useConfirm,
   useAuth,
@@ -219,6 +225,7 @@ export function getComposablesForPreview(previewState?: PreviewState) {
 
   const headerActionsRef = previewState.headerActions || ref<any[]>([]);
   const subHeaderActionsRef = previewState.subHeaderActions || ref<any[]>([]);
+  const accountPanelItemsRef = ref<any[]>([]);
   const pageHeaderRef = previewState.pageHeader || ref<any>(null);
 
   const mockUseHeaderActionRegistry = (actions?: any) => {
@@ -230,8 +237,11 @@ export function getComposablesForPreview(previewState?: PreviewState) {
     }
     return {
       headerActions: headerActionsRef,
-      register: (action: any) => {
-        headerActionsRef.value.push(action);
+      register: (actionsToRegister: any) => {
+        const actionsArray = Array.isArray(actionsToRegister) ? actionsToRegister : [actionsToRegister];
+        actionsArray.forEach((action: any) => {
+          headerActionsRef.value.push(action);
+        });
       },
     };
   };
@@ -245,8 +255,29 @@ export function getComposablesForPreview(previewState?: PreviewState) {
     }
     return {
       subHeaderActions: subHeaderActionsRef,
-      register: (action: any) => {
-        subHeaderActionsRef.value.push(action);
+      register: (actionsToRegister: any) => {
+        const actionsArray = Array.isArray(actionsToRegister) ? actionsToRegister : [actionsToRegister];
+        actionsArray.forEach((action: any) => {
+          subHeaderActionsRef.value.push(action);
+        });
+      },
+    };
+  };
+
+  const mockUseAccountPanelRegistry = (items?: any) => {
+    if (items) {
+      const itemsArray = Array.isArray(items) ? items : [items];
+      itemsArray.forEach((item: any) => {
+        accountPanelItemsRef.value.push(item);
+      });
+    }
+    return {
+      accountPanelItems: accountPanelItemsRef,
+      register: (itemsToRegister: any) => {
+        const itemsArray = Array.isArray(itemsToRegister) ? itemsToRegister : [itemsToRegister];
+        itemsArray.forEach((item: any) => {
+          accountPanelItemsRef.value.push(item);
+        });
       },
     };
   };
@@ -264,6 +295,7 @@ export function getComposablesForPreview(previewState?: PreviewState) {
     ...availableComposables,
     useHeaderActionRegistry: mockUseHeaderActionRegistry,
     useSubHeaderActionRegistry: mockUseSubHeaderActionRegistry,
+    useAccountPanelRegistry: mockUseAccountPanelRegistry,
     usePageHeaderRegistry: mockUsePageHeaderRegistry,
   };
 }

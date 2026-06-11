@@ -1,9 +1,11 @@
 export const ENFYRA_COMPLETIONS = [
   { label: '@BODY', type: 'variable', detail: 'Request body ($ctx.$body)' },
+  { label: '@ENV', type: 'variable', detail: 'Sanitized environment variables ($ctx.$env)' },
   { label: '@QUERY', type: 'variable', detail: 'Query params ($ctx.$query)' },
   { label: '@PARAMS', type: 'variable', detail: 'Route params ($ctx.$params)' },
   { label: '@USER', type: 'variable', detail: 'Current user ($ctx.$user)' },
   { label: '@HELPERS', type: 'variable', detail: 'Helpers: $jwt, $bcrypt, autoSlug' },
+  { label: '@STORAGE', type: 'variable', detail: 'Storage helpers: upload, update, delete, registerFile' },
   { label: '@SOCKET', type: 'variable', detail: 'WebSocket helper ($ctx.$socket)' },
   { label: '@FETCH', type: 'function', detail: 'Safe fetch helper ($ctx.$helpers.$fetch)' },
   { label: '@DATA', type: 'variable', detail: 'Response data (post-hooks)' },
@@ -139,6 +141,7 @@ async function save() {
   { label: 'useGlobalState', type: 'function', detail: 'Enfyra: { settings, storageConfigs, sidebarVisible }' },
   { label: 'useScreen', type: 'function', detail: 'Enfyra: { isMobile, isTablet, isDesktop, width, height }' },
   { label: 'useConfirm', type: 'function', detail: 'Enfyra: { confirm({ title, content }) }' },
+  { label: 'useAdminSocket', type: 'function', detail: 'Enfyra: shared admin Socket.IO client' },
   { label: 'useHeaderActionRegistry', type: 'function', detail: 'Enfyra: register header actions' },
   { label: 'useSubHeaderActionRegistry', type: 'function', detail: 'Enfyra: register sub-header actions' },
   { label: 'usePageHeaderRegistry', type: 'function', detail: 'Enfyra: register extension page header' },
@@ -149,7 +152,7 @@ async function save() {
     apply: `const pageHeader = usePageHeaderRegistry()
 
 onMounted(() => {
-  pageHeader.setPageHeader({
+  pageHeader.registerPageHeader({
     title: "Page Title",
     description: "Page description",
   })
@@ -160,10 +163,10 @@ onMounted(() => {
     label: 'header-action',
     type: 'snippet',
     detail: 'Register page header action',
-    apply: `const headerActions = useHeaderActionRegistry()
+    apply: `const { register: registerHeaderActions } = useHeaderActionRegistry()
 
 onMounted(() => {
-  headerActions.registerAction({
+  registerHeaderActions({
     id: "primary-action",
     label: "Action",
     icon: "lucide:plus",
@@ -275,7 +278,7 @@ export const VUE_COMPONENT_COMPLETIONS = [
   { label: 'UCheckbox', type: 'class', detail: 'Nuxt UI: checkbox' },
   { label: 'UCheckboxGroup', type: 'class', detail: 'Nuxt UI: checkbox group' },
   { label: 'URadioGroup', type: 'class', detail: 'Nuxt UI: radio group' },
-  { label: 'UModal', type: 'class', detail: 'Nuxt UI: modal' },
+  { label: 'UModal', type: 'class', detail: 'Extension alias: CommonModal' },
   { label: 'UDrawer', type: 'class', detail: 'Nuxt UI: drawer' },
   { label: 'UDropdownMenu', type: 'class', detail: 'Nuxt UI: dropdown menu' },
   { label: 'UTooltip', type: 'class', detail: 'Nuxt UI: tooltip' },

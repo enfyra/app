@@ -9,7 +9,7 @@
         icon-color="primary"
         :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
         @click="navigateTo('/packages/app')"
-        :actions="[
+        :methods="[
           {
             label: 'Manage',
             props: { variant: 'solid', color: 'primary', size: 'md' },
@@ -26,7 +26,7 @@
         icon-color="success"
         :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-success/20 transition-all'"
         @click="navigateTo('/packages/backend')"
-        :actions="[
+        :methods="[
           {
             label: 'Manage',
             props: { variant: 'solid', color: 'success', size: 'md' },

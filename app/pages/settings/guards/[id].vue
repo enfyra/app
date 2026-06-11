@@ -237,6 +237,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import draggable from 'vuedraggable';
 
 const route = useRoute();
@@ -276,11 +277,11 @@ const guardId = computed(() => route.params.id as string);
 const { checkPermissionCondition } = usePermissions();
 const canUpdateGuard = computed(() =>
   checkPermissionCondition({
-    and: [{ route: '/guard_definition', actions: ['update'] }],
+    and: [{ route: '/guard_definition', methods: ['PATCH'] }],
   })
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: 'delete-guard',
     label: 'Delete',
@@ -295,7 +296,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: '/guard_definition',
-          actions: ['delete'],
+          methods: ['DELETE'],
         },
       ],
     },

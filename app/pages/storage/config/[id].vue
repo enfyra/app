@@ -29,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
   title: "Storage Configuration Detail",
@@ -101,14 +102,10 @@ async function handleReset() {
     hasFormChanges.value = false;
 
     notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-config",
     label: "Reset",
@@ -134,7 +131,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/storage_config_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -154,7 +151,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/storage_config_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },
@@ -234,10 +231,6 @@ async function updateConfig() {
 
   await fetchGlobalStorageConfigs();
 
-  notify.success("Success", "Storage configuration updated!");
-  notify.success("Success", "Storage configuration updated!");
-  notify.success("Success", "Storage configuration updated!");
-  notify.success("Success", "Storage configuration updated!");
   notify.success("Success", "Storage configuration updated!");
   errors.value = {};
 }

@@ -2,34 +2,30 @@
   <div class="space-y-3 w-full">
     <!-- Script -->
     <template v-if="type === 'script'">
-      <UFormField label="sourceCode" class="w-full">
-        <FormCodeEditorLazy :model-value="sourceCode" @update:model-value="updateSourceCode" :language="scriptLanguage" :enfyra-autocomplete="true" :test-run="false" height="300px" class="w-full" />
-        <template #hint>
-          <span>Must return a value. Use @FLOW_PAYLOAD, @FLOW_LAST, @FLOW.step_key, #table_name, @HELPERS.</span>
-        </template>
-      </UFormField>
-      <UFormField label="scriptLanguage" required class="w-full">
-        <FormEnumPicker :model-value="scriptLanguage" :options="scriptLanguageOptions" required size="sm" layout="inline" @update:model-value="updateScriptLanguage" />
-        <template #hint>
-          <span>Language used by sourceCode before server compilation</span>
-        </template>
-      </UFormField>
+      <FormEditorLazy
+        :model-value="scriptForm"
+        table-name="flow_step_definition"
+        :errors="errors"
+        :includes="['sourceCode', 'scriptLanguage']"
+        :field-map="scriptFieldMap"
+        mode="update"
+        @update:model-value="updateScriptForm"
+        @update:errors="emit('update:errors', $event)"
+      />
     </template>
 
     <!-- Condition -->
     <template v-else-if="type === 'condition'">
-      <UFormField label="sourceCode" class="w-full">
-        <FormCodeEditorLazy :model-value="sourceCode" @update:model-value="updateSourceCode" :language="scriptLanguage" :enfyra-autocomplete="true" :test-run="false" height="220px" class="w-full" />
-        <template #hint>
-          <span>Must return a truthy or falsy value. Use @FLOW_PAYLOAD, @FLOW_LAST, @FLOW.step_key, #table_name, @HELPERS.</span>
-        </template>
-      </UFormField>
-      <UFormField label="scriptLanguage" required class="w-full">
-        <FormEnumPicker :model-value="scriptLanguage" :options="scriptLanguageOptions" required size="sm" layout="inline" @update:model-value="updateScriptLanguage" />
-        <template #hint>
-          <span>Language used by sourceCode before server compilation</span>
-        </template>
-      </UFormField>
+      <FormEditorLazy
+        :model-value="scriptForm"
+        table-name="flow_step_definition"
+        :errors="errors"
+        :includes="['sourceCode', 'scriptLanguage']"
+        :field-map="conditionFieldMap"
+        mode="update"
+        @update:model-value="updateScriptForm"
+        @update:errors="emit('update:errors', $event)"
+      />
     </template>
 
     <!-- Query -->
@@ -151,13 +147,17 @@ interface Props {
   configJson: string;
   sourceCode?: string | null;
   scriptLanguage?: ScriptLanguage | string | null;
+  errors?: Record<string, string>;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  errors: () => ({}),
+});
 const emit = defineEmits<{
   'update:configJson': [value: string];
   'update:sourceCode': [value: string | null];
   'update:scriptLanguage': [value: ScriptLanguage];
+  'update:errors': [value: Record<string, string>];
 }>();
 
 const fields = computed(() => {
@@ -168,21 +168,42 @@ const fields = computed(() => {
   }
 });
 
-const scriptLanguageOptions = [
-  { label: 'javascript', value: 'javascript' },
-  { label: 'typescript', value: 'typescript' },
-] satisfies { label: string; value: ScriptLanguage }[];
-
 const scriptLanguage = computed<ScriptLanguage>(() => normalizeScriptLanguage(props.scriptLanguage));
 
 const sourceCode = computed(() => props.sourceCode ?? fields.value.sourceCode ?? fields.value.code ?? '');
 
-function updateScriptLanguage(value: unknown) {
-  emit('update:scriptLanguage', normalizeScriptLanguage(value));
-}
+const scriptForm = computed(() => ({
+  sourceCode: sourceCode.value,
+  scriptLanguage: scriptLanguage.value,
+}));
 
-function updateSourceCode(value: string) {
-  emit('update:sourceCode', value === '' ? null : value);
+const scriptFieldMap = {
+  sourceCode: {
+    type: 'code',
+    height: '300px',
+    testRun: false,
+    hint: 'Must return a value. Use @FLOW_PAYLOAD, @FLOW_LAST, @FLOW.step_key, #table_name, @HELPERS.',
+  },
+  scriptLanguage: {
+    hint: 'Language used by sourceCode before server compilation',
+  },
+};
+
+const conditionFieldMap = {
+  sourceCode: {
+    type: 'code',
+    height: '220px',
+    testRun: false,
+    hint: 'Must return a truthy or falsy value. Use @FLOW_PAYLOAD, @FLOW_LAST, @FLOW.step_key, #table_name, @HELPERS.',
+  },
+  scriptLanguage: {
+    hint: 'Language used by sourceCode before server compilation',
+  },
+};
+
+function updateScriptForm(value: Record<string, any>) {
+  emit('update:sourceCode', value.sourceCode === '' ? null : value.sourceCode ?? null);
+  emit('update:scriptLanguage', normalizeScriptLanguage(value.scriptLanguage));
 }
 
 function update(field: string, value: any) {

@@ -29,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const route = useRoute();
 const notify = useNotify();
@@ -71,7 +72,7 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-bootstrap",
     label: "Reset",
@@ -98,7 +99,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/bootstrap_script_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -118,7 +119,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/bootstrap_script_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

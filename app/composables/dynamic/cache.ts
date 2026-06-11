@@ -1,3 +1,5 @@
+import type { Ref } from "vue";
+
 const extensionCache = new Map<string, any>();
 const maxCacheSize = 50;
 const cacheHits = ref(0);
@@ -14,15 +16,29 @@ export interface ExtensionCacheInvalidation {
   updatedAt?: string | Date | null;
 }
 
-export const extensionMetaCache = useState<Map<string, any>>(
-  "extension-meta-cache",
-  () => new Map()
-);
+export const extensionMetaCache = {
+  get value() {
+    return useState<Map<string, any>>("extension-meta-cache", () => new Map()).value;
+  },
+  set value(value: Map<string, any>) {
+    useState<Map<string, any>>("extension-meta-cache", () => new Map()).value = value;
+  },
+} as Ref<Map<string, any>>;
 
-export const extensionCacheInvalidation = useState<ExtensionCacheInvalidation | null>(
-  "extension-cache-invalidation",
-  () => null
-);
+export const extensionCacheInvalidation = {
+  get value() {
+    return useState<ExtensionCacheInvalidation | null>(
+      "extension-cache-invalidation",
+      () => null
+    ).value;
+  },
+  set value(value: ExtensionCacheInvalidation | null) {
+    useState<ExtensionCacheInvalidation | null>(
+      "extension-cache-invalidation",
+      () => null
+    ).value = value;
+  },
+} as Ref<ExtensionCacheInvalidation | null>;
 
 function buildCacheKey(extensionName: string, updatedAt?: string | Date): string {
   return `${extensionName}:${updatedAt ? new Date(updatedAt).getTime() : Date.now()}`;
@@ -122,26 +138,45 @@ export function isExtensionInvalidationMatch(
   invalidation: ExtensionCacheInvalidation | null
 ): boolean {
   if (!extensionData || !invalidation) return false;
+  if (
+    invalidation.id == null &&
+    invalidation.extensionId == null &&
+    invalidation.path == null
+  ) {
+    return true;
+  }
   return matchesExtensionInvalidation(extensionData, invalidation);
 }
 
 export function invalidateExtensionCache(
   invalidation: Omit<ExtensionCacheInvalidation, "token">
 ): void {
+  const isGlobalInvalidation =
+    invalidation.id == null &&
+    invalidation.extensionId == null &&
+    invalidation.path == null;
+
+  if (isGlobalInvalidation) {
+    extensionCache.clear();
+    extensionMetaCache.value.clear();
+  }
+
   if (invalidation.extensionId != null) {
     clearOldVersions(String(invalidation.extensionId));
   }
 
-  const pathVariants = getPathVariants(invalidation.path);
-  for (const [path, extensionData] of extensionMetaCache.value) {
-    const matchesPath = pathVariants.has(String(path));
-    if (!matchesPath && !matchesExtensionInvalidation(extensionData, invalidation)) continue;
+  if (!isGlobalInvalidation) {
+    const pathVariants = getPathVariants(invalidation.path);
+    for (const [path, extensionData] of extensionMetaCache.value) {
+      const matchesPath = pathVariants.has(String(path));
+      if (!matchesPath && !matchesExtensionInvalidation(extensionData, invalidation)) continue;
 
-    const runtimeId = getExtensionRuntimeId(extensionData);
-    if (runtimeId) {
-      clearOldVersions(runtimeId);
+      const runtimeId = getExtensionRuntimeId(extensionData);
+      if (runtimeId) {
+        clearOldVersions(runtimeId);
+      }
+      extensionMetaCache.value.delete(path);
     }
-    extensionMetaCache.value.delete(path);
   }
 
   extensionCacheInvalidation.value = {

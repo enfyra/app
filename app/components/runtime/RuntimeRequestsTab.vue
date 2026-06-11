@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { fmtMs, fmtNumber } from '~/utils/runtime-monitor/format';
 import {
-  methodColor,
   metricTextClass,
 } from '~/utils/runtime-monitor/core';
 
@@ -29,9 +28,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
         <tbody class="divide-y divide-[var(--border-default)]">
           <tr v-for="row in runtime.requestRows" :key="`${row.method}:${row.route}`">
             <td class="px-3 py-2">
-              <UBadge :color="methodColor(row.method)" variant="soft" size="xs">
-                {{ row.method }}
-              </UBadge>
+              <MethodBadge :method="row.method" />
               <span class="ml-2 text-[var(--text-tertiary)]">{{ row.route }}</span>
             </td>
             <td class="px-3 py-2 text-right font-medium">{{ fmtNumber(row.rps, 2) }}</td>

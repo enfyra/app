@@ -28,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildOAuthRedirectUri,
   validateOAuthConfigForm,
@@ -97,7 +98,7 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-oauth-config",
     label: "Reset",
@@ -124,7 +125,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/oauth_config_definition",
-          actions: ["delete"],
+          methods: ["DELETE"],
         },
       ],
     },
@@ -144,7 +145,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/oauth_config_definition",
-          actions: ["update"],
+          methods: ["PATCH"],
         },
       ],
     },

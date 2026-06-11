@@ -56,7 +56,7 @@
       ref="imageRef"
       :src="imageSrc"
       :alt="alt"
-      :class="['object-cover', imageClass]"
+      :class="[objectFitClass, imageClass]"
       :style="{
         opacity: isLoading ? 0 : 1,
         transition: 'opacity 0.3s ease-out',
@@ -84,6 +84,8 @@ interface Props {
   showErrorText?: boolean;
   errorText?: string;
   customLoadingSize?: string;
+  objectFit?: "cover" | "contain";
+  autoFormat?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -97,6 +99,8 @@ const props = withDefaults(defineProps<Props>(), {
   showErrorText: false,
   errorText: "Failed to load image",
   customLoadingSize: "",
+  objectFit: "cover",
+  autoFormat: true,
 });
 
 const containerRef = ref<HTMLDivElement>();
@@ -112,7 +116,7 @@ const retryTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 const imageSrc = computed(() => {
   let src = props.src;
 
-  if (src.includes("/assets/")) {
+  if (props.autoFormat && src.includes("/assets/")) {
     
     if (!src.startsWith("/assets/")) {
       src = src.replace(/^\/?(assets\/)/, "/assets/");
@@ -151,6 +155,9 @@ const aspectRatioStyle = computed(() => {
 });
 
 const imageClass = computed(() => props.class);
+const objectFitClass = computed(() =>
+  props.objectFit === "contain" ? "object-contain" : "object-cover"
+);
 
 const loadingStyle = computed(() => {
   if (props.customLoadingSize) {

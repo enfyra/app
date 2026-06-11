@@ -22,6 +22,7 @@ const EXTENSION_VUE_FUNCTIONS = [
   'onRenderTriggered',
   'onServerPrefetch',
   'nextTick',
+  'resolveComponent',
   'h',
   'defineComponent',
   'defineProps',
@@ -46,6 +47,9 @@ const EXTENSION_VUE_FUNCTIONS = [
   'readonly',
   'provide',
   'inject',
+  'effectScope',
+  'getCurrentScope',
+  'onScopeDispose',
   'useSlots',
   'useAttrs',
 ];
@@ -89,11 +93,16 @@ export function getComposablesObject(): Record<string, any> {
     usePermissions,
     useFilterQuery,
     useDataTableColumns,
+    useAdminSocket,
     useHeaderActionRegistry,
     useSubHeaderActionRegistry,
+    useAccountPanelRegistry,
     usePageHeaderRegistry,
+    useMenuRegistry,
+    useMenuApi,
     useConfirm,
     useAuth,
+    useMounted,
     navigateTo,
     useFetch,
     useAsyncData,
@@ -109,6 +118,30 @@ export function exposeComposables(g: any, composables: Record<string, any>): voi
   Object.entries(composables).forEach(([key, composable]) => {
     if (typeof composable === "function") {
       g[key] = composable;
+    }
+  });
+}
+
+export function exposeExtensionGlobalsToVueApp(
+  vueApp: any,
+  composables: Record<string, any>,
+): void {
+  const globalProperties = vueApp?.config?.globalProperties;
+  if (!globalProperties) return;
+
+  const g = globalThis as any;
+  const vue = g.Vue || (typeof window !== "undefined" ? (window as any).Vue : null);
+
+  EXTENSION_VUE_FUNCTIONS.forEach((fnName) => {
+    const value = vue?.[fnName];
+    if (typeof value === "function") {
+      globalProperties[fnName] = value;
+    }
+  });
+
+  Object.entries(composables).forEach(([key, composable]) => {
+    if (typeof composable === "function") {
+      globalProperties[key] = composable;
     }
   });
 }

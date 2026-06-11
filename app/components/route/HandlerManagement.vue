@@ -75,7 +75,7 @@
                   variant="soft"
                   color="success"
                 >
-                  {{ handler.method.method }}
+                  {{ handler.method.name }}
                 </UBadge>
                 <UBadge
                   v-if="handler.isSystem"

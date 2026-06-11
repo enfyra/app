@@ -4,6 +4,7 @@ export const TABLE_DETAIL_PATH_MAP: Record<string, string> = {
   // Settings
   user_definition: "/settings/users",
   role_definition: "/settings/roles",
+  method_definition: "/settings/methods",
   route_definition: "/settings/routes",
   extension_definition: "/settings/extensions",
   websocket_definition: "/settings/websockets",

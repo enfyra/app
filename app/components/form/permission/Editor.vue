@@ -52,38 +52,38 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-3">Actions</label>
+            <label class="block text-sm font-medium mb-3">Methods</label>
             <div class="flex flex-wrap gap-2">
               <UButton
-                v-for="action in ['create', 'read', 'update', 'delete']"
-                :key="action"
+                v-for="method in ['GET', 'POST', 'PATCH', 'DELETE']"
+                :key="method"
                 :color="
-                  localPermission?.actions?.includes(action)
+                  localPermission?.methods?.includes(method)
                     ? 'primary'
                     : 'neutral'
                 "
                 :variant="
-                  localPermission?.actions?.includes(action)
+                  localPermission?.methods?.includes(method)
                     ? 'solid'
                     : 'outline'
                 "
                 size="xs"
                 :disabled="disabled"
-                :aria-pressed="localPermission?.actions?.includes(action)"
-                @click="toggleAction(action)"
+                :aria-pressed="localPermission?.methods?.includes(method)"
+                @click="toggleMethod(method)"
               >
-                <UIcon :name="getActionIcon(action)" class="w-4 h-4 mr-1.5" />
-                {{ action.charAt(0).toUpperCase() + action.slice(1) }}
+                <UIcon :name="getMethodIcon(method)" class="w-4 h-4 mr-1.5" />
+                {{ method }}
               </UButton>
             </div>
             <p class="text-xs text-muted-foreground mt-2">
-              Click to toggle permissions
+              Click to toggle allowed HTTP methods.
             </p>
             <p
-              v-if="!localPermission.actions?.length"
+              v-if="!localPermission.methods?.length"
               class="text-xs text-error mt-1"
             >
-              At least one action is required
+              At least one method is required
             </p>
           </div>
 
@@ -105,8 +105,8 @@
       @select="onRouteSelect"
     />
 
-    <CommonModal v-model="showDiscardModal">
-      <template #title>Discard Changes</template>
+    <CommonModal v-model:open="showDiscardModal">
+      <template #header>Discard Changes</template>
       <template #body>
         <div class="text-sm text-[var(--text-secondary)]">
           You have unsaved changes. Are you sure you want to close? All changes will be lost.
@@ -149,7 +149,7 @@ const isOpen = computed({
 
 const localPermission = ref<any>({
   route: "",
-  actions: [],
+  methods: [],
 });
 
 const showRoutePicker = ref(false);
@@ -159,7 +159,7 @@ const initialSnapshot = ref("");
 
 const isValid = computed(() => {
   return !!(
-    localPermission.value.route && localPermission.value.actions?.length > 0
+    localPermission.value.route && localPermission.value.methods?.length > 0
   );
 });
 
@@ -169,12 +169,12 @@ watch(
     if (newPermission) {
       localPermission.value = {
         ...newPermission,
-        actions: [...(newPermission.actions || [])],
+        methods: [...(newPermission.methods || [])],
       };
     } else {
       localPermission.value = {
         route: "",
-        actions: [],
+        methods: [],
       };
     }
   },
@@ -206,27 +206,27 @@ watch(
   { deep: true }
 );
 
-function toggleAction(action: string) {
-  if (!localPermission.value.actions) {
-    localPermission.value.actions = [];
+function toggleMethod(method: string) {
+  if (!localPermission.value.methods) {
+    localPermission.value.methods = [];
   }
 
-  const index = localPermission.value.actions.indexOf(action);
+  const index = localPermission.value.methods.indexOf(method);
   if (index > -1) {
-    localPermission.value.actions.splice(index, 1);
+    localPermission.value.methods.splice(index, 1);
   } else {
-    localPermission.value.actions.push(action);
+    localPermission.value.methods.push(method);
   }
 }
 
-function getActionIcon(action: string): string {
+function getMethodIcon(method: string): string {
   const icons: Record<string, string> = {
-    create: "lucide:plus-circle",
-    read: "lucide:eye",
-    update: "lucide:edit",
-    delete: "lucide:trash-2",
+    GET: "lucide:eye",
+    POST: "lucide:plus-circle",
+    PATCH: "lucide:edit",
+    DELETE: "lucide:trash-2",
   };
-  return icons[action] || "lucide:shield";
+  return icons[method] || "lucide:shield";
 }
 
 function close() {

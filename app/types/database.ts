@@ -8,6 +8,8 @@ export const columnTypes = [
   { label: "Varchar", value: "varchar", icon: "mdi:format-text" },
   { label: "Boolean", value: "boolean", icon: "mdi:toggle-switch" },
   { label: "Date", value: "date", icon: "mdi:calendar" },
+  { label: "Date Time", value: "datetime", icon: "mdi:calendar-clock" },
+  { label: "Timestamp", value: "timestamp", icon: "mdi:clock-time-four-outline" },
   { label: "Text", value: "text", icon: "mdi:file-document-outline" },
   { label: "Rich Text", value: "richtext", icon: "mdi:format-text" },
   { label: "Code", value: "code", icon: "mdi:code-braces-box" },
@@ -28,6 +30,8 @@ export const mongoColumnTypes = [
   { label: "Long", value: "bigint", icon: "tabler:123" },
   { label: "Boolean", value: "boolean", icon: "mdi:toggle-switch" },
   { label: "Date", value: "date", icon: "mdi:calendar" },
+  { label: "Date Time", value: "datetime", icon: "mdi:calendar-clock" },
+  { label: "Timestamp", value: "timestamp", icon: "mdi:clock-time-four-outline" },
   { label: "Rich Text", value: "richtext", icon: "mdi:format-text" },
   { label: "Code", value: "code", icon: "mdi:code-braces-box" },
   { label: "Object", value: "simple-json", icon: "mdi:code-json" },
@@ -55,6 +59,7 @@ export type ColumnType =
   | 'bigint'
   | 'boolean'
   | 'date'
+  | 'datetime'
   | 'enum'
   | 'array'
   | 'array-select'

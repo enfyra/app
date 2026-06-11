@@ -1,3 +1,5 @@
+export type ExtensionType = "page" | "widget" | "global";
+
 export interface ExtensionDefinition {
   id?: number;
   _id?: string;
@@ -7,7 +9,7 @@ export interface ExtensionDefinition {
   isEnabled: boolean;
   isSystem: boolean;
   name: string;
-  type: string;
+  type: ExtensionType | string;
   version: string;
   menu?: {
     id?: number;

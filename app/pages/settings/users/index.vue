@@ -46,7 +46,7 @@
               value: new Date(user.createdAt).toLocaleDateString(),
             },
           ]"
-          :actions="[
+          :methods="[
             {
               label: 'Delete',
               props: {
@@ -95,6 +95,7 @@
   </div>
 </template>
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
 const limit = 9;
 const tableName = "user_definition";
@@ -160,7 +161,7 @@ const filterColor = computed(() => {
   return hasActiveFilters(currentFilter.value) ? "secondary" : "neutral";
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "filter-users",
     get label() {
@@ -181,7 +182,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: `/${tableName}`,
-          actions: ["read"],
+          methods: ["GET"],
         },
       ],
     },
@@ -198,7 +199,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: `/${tableName}`,
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

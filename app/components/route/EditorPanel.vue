@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildGuardBodyFromTemplate,
   buildGuardRuleBodyFromTemplate,
@@ -60,16 +61,20 @@ const {
   errorContext: 'Fetch Route',
 })
 
-const availableMethodStrings = computed(() => {
+const availableMethodRecords = computed(() => {
   const methods = routeData.value?.data?.[0]?.availableMethods
   if (!Array.isArray(methods)) return []
-  return methods.filter((m: any) => m?.method).map((m: any) => m.method)
+  return methods.filter((m: any) => m?.name)
+})
+
+const availableMethodStrings = computed(() => {
+  return availableMethodRecords.value.map((m: any) => m.name)
 })
 
 const publishedMethodStrings = computed(() => {
   const methods = routeData.value?.data?.[0]?.publishedMethods
   if (!Array.isArray(methods)) return []
-  return methods.filter((m: any) => m?.method).map((m: any) => m.method)
+  return methods.filter((m: any) => m?.name).map((m: any) => m.name)
 })
 
 const { validateForm } = useFormValidation('route_definition')
@@ -93,11 +98,11 @@ const {
 
 function filterPublishedToAvailable(body: Record<string, any>) {
   const available = body.availableMethods || []
-  const availableSet = new Set(available.filter((m: any) => m?.method).map((m: any) => m.method))
+  const availableSet = new Set(available.filter((m: any) => m?.name).map((m: any) => m.name))
   for (const key of ['publishedMethods', 'skipRoleGuardMethods'] as const) {
     if (Array.isArray(body[key])) {
       body[key] = availableSet.size > 0
-        ? body[key].filter((m: any) => m?.method && availableSet.has(m.method))
+        ? body[key].filter((m: any) => m?.name && availableSet.has(m.name))
         : []
     }
   }
@@ -106,7 +111,7 @@ function filterPublishedToAvailable(body: Record<string, any>) {
       body[key] = body[key]
         .map((m: any) => {
           const id = getId(m)
-          return id != null ? { id, method: m.method } : null
+          return id != null ? { id, name: m.name } : null
         })
         .filter(Boolean)
     }
@@ -166,7 +171,7 @@ async function handleReset() {
   }
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: 'reset-route',
     label: 'Reset',
@@ -190,7 +195,7 @@ useHeaderActionRegistry([
     disabled: computed(() => routeLoading.value || !routeId.value || !hasFormChanges.value),
     onClick: updateRoute,
     permission: {
-      and: [{ route: '/route_definition', actions: ['update'] }],
+      and: [{ route: '/route_definition', methods: ['PATCH'] }],
     },
   },
 ])
@@ -268,7 +273,7 @@ const handlers = computed(() => handlersData.value?.data || [])
 const handlerOccupiedMethods = computed(() => {
   const set = new Set<string>()
   for (const h of handlers.value as any[]) {
-    const m = h?.method?.method
+    const m = h?.method?.name
     if (m) set.add(m)
   }
   return set
@@ -386,13 +391,13 @@ onMounted(async () => {
 
 const methodsCache = useState<any[]>('methods-cache', () => [])
 
-function resolveMethodObject(methodStr: string): { method: string; id?: string } {
-  const cached = methodsCache.value.find((m: any) => m?.method === methodStr)
+function resolveMethodObject(methodStr: string): { name: string; id?: string } {
+  const cached = methodsCache.value.find((m: any) => m?.name === methodStr)
   if (cached) {
     const id = getId(cached)
-    return id != null ? { id, method: methodStr } : { method: methodStr }
+    return id != null ? { id, name: methodStr } : { name: methodStr }
   }
-  return { method: methodStr }
+  return { name: methodStr }
 }
 
 const handlerLockedMethod = ref(false)
@@ -412,10 +417,10 @@ const {
   errorContext: 'Create Handler',
 })
 
-function createHandler(methodObject?: { method: string; id?: string }) {
+function createHandler(methodObject?: { name: string; id?: string }) {
   if (methodObject) {
-    if (handlerOccupiedMethods.value.has(methodObject.method)) {
-      notify.warning('Handler exists', `This route already has a handler for ${methodObject.method}.`)
+    if (handlerOccupiedMethods.value.has(methodObject.name)) {
+      notify.warning('Handler exists', `This route already has a handler for ${methodObject.name}.`)
       return
     }
   } else if (!canCreateHandler.value) {
@@ -428,7 +433,7 @@ function createHandler(methodObject?: { method: string; id?: string }) {
   if (methodObject) {
     const resolved = methodObject.id != null
       ? methodObject
-      : resolveMethodObject(methodObject.method)
+      : resolveMethodObject(methodObject.name)
     handlerForm.value.method = resolved
     handlerLockedMethod.value = true
   } else {
@@ -805,7 +810,7 @@ const {
   execute: fetchRouteGuards,
 } = useApi(() => '/guard_definition', {
   query: computed(() => ({
-    fields: '*,route.id,route.path,methods.method,parent',
+    fields: '*,route.id,route.path,methods.name,parent',
     filter: routeId.value
       ? { _and: [{ route: { [getIdFieldName()]: { _eq: routeId.value } } }, { parent: { _is_null: true } }] }
       : undefined,
@@ -821,7 +826,7 @@ const {
   execute: fetchGlobalGuards,
 } = useApi(() => '/guard_definition', {
   query: computed(() => ({
-    fields: '*,route.id,route.path,methods.method,parent',
+    fields: '*,route.id,route.path,methods.name,parent',
     filter: { _and: [{ isGlobal: { _eq: true } }, { parent: { _is_null: true } }] },
     sort: ['priority'],
   })),
@@ -1203,7 +1208,7 @@ watch(showEditHookDrawer, (isOpen) => {
     <RouteApiTestModal
       v-model="showApiTestModal"
       :route-path="routePath"
-      :available-methods="availableMethodStrings"
+      :available-methods="availableMethodRecords"
       :published-methods="publishedMethodStrings"
       :handlers="displayHandlers"
       :main-table-name="mainTableName"

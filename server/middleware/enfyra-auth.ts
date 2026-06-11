@@ -7,15 +7,17 @@ import { REFRESH_TOKEN_KEY } from "~/constants/enfyra";
 
 export default defineEventHandler(async (event) => {
   const url = event.node.req.url || "";
+  const path = url.split("?")[0] || "";
 
   const loginPath = "/api/login";
   const logoutPath = "/api/logout";
-  const authPrefix = "/api/auth/";
+  const oauthBridgePattern = /^\/api\/auth\/(?:google|facebook|github)(?:\/callback)?$/;
 
   if (
-    url === loginPath ||
-    url === logoutPath ||
-    url.startsWith(authPrefix)
+    path === loginPath ||
+    path === logoutPath ||
+    path === "/api/auth/set-cookies" ||
+    oauthBridgePattern.test(path)
   ) {
     return;
   }

@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildOAuthRedirectUri,
   validateOAuthConfigForm,
@@ -67,7 +68,7 @@ registerPageHeader({
   gradient: "blue",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "save-oauth-config",
     label: "Save",
@@ -81,7 +82,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/oauth_config_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

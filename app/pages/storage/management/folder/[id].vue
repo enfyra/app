@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const router = useRouter();
 const showCreateModal = ref(false);
@@ -206,7 +207,7 @@ watch(
   { immediate: true }
 );
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "upload-files",
     label: "Upload Files",
@@ -220,7 +221,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/file_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -238,7 +239,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/folder_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

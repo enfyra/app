@@ -46,6 +46,15 @@ await @TRIGGER('flow_name', { item })
     expect(diagnostics).toEqual([])
   })
 
+  it('accepts the @ENV macro as sanitized environment context', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const nodeName = @ENV.NODE_NAME
+return { nodeName }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
   it('accepts DynamicRepository exists with a direct filter', async () => {
     const diagnostics = await lintEnfyraTypeScript(`
 const used = await @REPOS.user_definition.exists({ email: { _eq: @BODY.email } })
@@ -100,27 +109,26 @@ return await @REPOS.user_definition.find({ where: { email: { _eq: @BODY.email } 
     expect(source.slice(typeDiagnostic!.from, typeDiagnostic!.to)).toBe('value')
   })
 
-  it('checks Vue script tags as strict JavaScript by default', async () => {
+  it('does not TypeScript-check Vue script setup without lang ts', async () => {
     const source = `<template><div /></template>
-<script>
+<script setup>
 a = b
 </script>`
     const diagnostics = await lintVueSfcScripts(source)
 
-    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Cannot find name 'a'"))).toBe(true)
-    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Cannot find name 'b'"))).toBe(true)
+    expect(diagnostics).toEqual([])
   })
 
-  it('rejects TypeScript syntax in Vue script tags without lang ts', async () => {
-    const source = `<script>
+  it('does not TypeScript-check Vue script setup type annotations without lang ts', async () => {
+    const source = `<script setup>
 const value: string = "ok"
 </script>`
     const diagnostics = await lintVueSfcScripts(source)
 
-    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Type annotations can only be used in TypeScript files"))).toBe(true)
+    expect(diagnostics).toEqual([])
   })
 
-  it('checks Vue script lang ts as TypeScript', async () => {
+  it('checks Vue script setup lang ts as TypeScript', async () => {
     const source = `<script setup lang="ts">
 const value: string = 1
 </script>`
@@ -149,6 +157,24 @@ const pageHeader = usePageHeaderRegistry()
 const loaded = await getPackages(["lodash"])
 await navigateTo("/settings")
 console.log(data, execute, me, pageHeader, loaded, packages)
+</script>`
+    const diagnostics = await lintVueSfcScripts(source)
+
+    expect(diagnostics).toEqual([])
+  })
+
+  it('accepts modern JavaScript built-ins in Vue extension scripts', async () => {
+    const source = `<script setup lang="ts">
+const statuses = ['active', 'ready']
+const isActive = statuses.includes('active')
+const termSlugs = new Set(['cloud-terms', 'privacy-policy'])
+const rows = [1, 2, 3].map((value) => value * 2).filter((value) => value > 2)
+const total = rows.reduce((sum, value) => sum + value, 0)
+const label = String('pending_payment').replace(/_/g, ' ')
+const loaded = await Promise.all([Promise.resolve(1), Promise.resolve(2)])
+const formattedDate = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date())
+const formattedMoney = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(19)
+console.log(isActive, termSlugs.has('cloud-terms'), total, label, loaded, formattedDate, formattedMoney)
 </script>`
     const diagnostics = await lintVueSfcScripts(source)
 

@@ -1,6 +1,9 @@
 export default defineNuxtPlugin(() => {
   const colorMode = useColorMode();
   const isDark = computed(() => colorMode.value === 'dark');
+  const { initialReady } = useInitialLoading();
+  const mounted = ref(false);
+  let hidden = false;
   
   const getLoadingColors = () => {
     return {
@@ -37,16 +40,35 @@ export default defineNuxtPlugin(() => {
 
   document.body.insertAdjacentHTML("beforeend", loadingHtml);
 
+  function hideLoading() {
+    if (hidden) return;
+    hidden = true;
+
+    const loading = document.getElementById("app-loading");
+    if (!loading) return;
+
+    loading.style.opacity = "0";
+    setTimeout(() => {
+      loading.remove();
+    }, 500);
+  }
+
+  async function hideWhenReady() {
+    if (!mounted.value || !initialReady.value) return;
+
+    await nextTick();
+    requestAnimationFrame(() => {
+      setTimeout(hideLoading, 150);
+    });
+  }
+
   const nuxtApp = useNuxtApp();
   nuxtApp.hook("app:mounted", () => {
-    const loading = document.getElementById("app-loading");
-    if (loading) {
-      setTimeout(() => {
-        loading.style.opacity = "0";
-        setTimeout(() => {
-          loading.remove();
-        }, 500);
-      }, 800);
-    }
+    mounted.value = true;
+    void hideWhenReady();
   });
+
+  watch(initialReady, () => {
+    void hideWhenReady();
+  }, { immediate: true });
 });

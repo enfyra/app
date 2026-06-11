@@ -1,6 +1,6 @@
 export type PermissionRule = {
   route: string;
-  actions: string[];
+  methods: string[];
   allowAll?: boolean;
 };
 

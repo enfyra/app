@@ -120,7 +120,7 @@ const canDeleteFolder = checkPermissionCondition({
   and: [
     {
       route: "/folder_definition",
-      actions: ["delete"],
+      methods: ["DELETE"],
     },
   ],
 });

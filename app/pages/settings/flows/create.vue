@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
   title: "Create Flow",
@@ -51,7 +52,7 @@ registerPageHeader({
   gradient: "purple",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "save-flow",
     label: "Save",
@@ -62,7 +63,7 @@ useHeaderActionRegistry([
     submit: handleCreate,
     loading: computed(() => createLoading.value),
     permission: {
-      and: [{ route: "/flow_definition", actions: ["create"] }],
+      and: [{ route: "/flow_definition", methods: ["POST"] }],
     },
   },
 ]);

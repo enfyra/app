@@ -106,7 +106,7 @@ const canShowTestRun = computed(() => {
   if (!config) return false;
   if (props.language !== "javascript" && props.language !== "typescript") return false;
   const permission = config.permission ?? {
-    and: [{ route: "/admin/test/run", actions: ["create"] }],
+    and: [{ route: "/admin/test/run", methods: ["POST"] }],
   };
   return checkPermissionCondition(permission);
 });

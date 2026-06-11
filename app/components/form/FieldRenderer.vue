@@ -6,6 +6,7 @@ import {
   UTextarea,
   USwitch,
   FormDateField,
+  FormDateTimeField,
   USelect,
   UFormField,
 } from "#components";
@@ -127,7 +128,7 @@ function getCodeTestRunConfig(key: string) {
     payload: {
       recordId: props.formData?.id ?? props.formData?._id,
       routeId: props.formData?.route?.id ?? props.formData?.route?._id,
-      method: props.formData?.method?.method ?? props.formData?.method,
+      method: props.formData?.method?.name ?? props.formData?.method,
     },
   };
   if (config.testRun && typeof config.testRun === "object") {
@@ -230,8 +231,8 @@ function getComponentConfigByKey(key: string) {
   if (finalType === "methods-selector") {
     const allowedMethods = config.allowedMethodsKey
       ? (props.formData[config.allowedMethodsKey] || [])
-          .filter((m: any) => m?.method)
-          .map((m: any) => m.method)
+          .filter((m: any) => m?.name)
+          .map((m: any) => m.name)
       : undefined;
     return {
       component: resolveComponent("FormMethodSelector"),
@@ -669,6 +670,23 @@ function getComponentConfigByKey(key: string) {
       };
     }
 
+    case "datetime":
+    case "timestamp": {
+      return {
+        component: FormDateTimeField,
+        componentProps: {
+          ...componentPropsBase,
+          disabled: disabled,
+          modelValue: props.formData[key],
+          "onUpdate:modelValue": (val: string | null) => {
+            updateFormData(key, val);
+          },
+          ...(hasError && { error: props.errors[key] }),
+        },
+        fieldProps,
+      };
+    }
+
     case "int":
       if (column?.isPrimary && column?.isGenerated) {
         return {
@@ -736,6 +754,8 @@ const isCustomComponent = computed(() => {
     'uuid',
     'permission',
     'date',
+    'datetime',
+    'timestamp',
     'array-tags',
   ];
   

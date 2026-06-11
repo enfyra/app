@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
   title: "Create Extension",
@@ -63,13 +64,14 @@ const showPreviewModal = ref(false);
 const { generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
+const { loadGlobalExtensions } = useGlobalExtensions();
 
 registerPageHeader({
   title: "Create New Extension",
   gradient: "purple",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "upload-extension",
     label: "Upload",
@@ -81,7 +83,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/extension_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -110,7 +112,7 @@ useHeaderActionRegistry([
     and: [
       {
         route: "/extension_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },
@@ -150,6 +152,7 @@ async function handleCreate() {
   }
 
   notify.success("Extension created successfully");
+  await loadGlobalExtensions({ forceReload: true });
 
   const { getId } = useDatabase();
   await navigateTo(`/settings/extensions/${getId(createData.value.data[0])}`, {

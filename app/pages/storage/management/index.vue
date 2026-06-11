@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const showCreateModal = ref(false);
 const showUploadModal = ref(false);
 const selectedStorage = ref<{ label: string; value: string; icon: string }>();
@@ -185,12 +186,12 @@ async function handleFileUpload(files: File | File[]) {
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
-  title: "Files Manager",
+  title: "File Manager",
   description: "Organize your files and documents efficiently",
   gradient: "cyan",
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "upload-files",
     label: "Upload Files",
@@ -204,7 +205,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/file_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },
@@ -222,7 +223,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: "/folder_definition",
-          actions: ["create"],
+          methods: ["POST"],
         },
       ],
     },

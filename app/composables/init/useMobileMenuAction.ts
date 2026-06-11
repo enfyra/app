@@ -1,7 +1,8 @@
 export function useMobileMenuAction() {
+  const { register: registerHeaderActions } = useHeaderActionRegistry();
   const { toggleSidebar } = useGlobalState();
 
-  useHeaderActionRegistry([
+  registerHeaderActions([
     {
       id: "sidebar-toggle",
       icon: "lucide:panel-left",

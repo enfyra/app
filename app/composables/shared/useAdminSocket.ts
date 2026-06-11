@@ -59,6 +59,24 @@ let staleReloadInterval: ReturnType<typeof setInterval> | null = null;
 
 const RELOAD_STALE_MS = 45_000;
 
+export function stopAdminSocketReconnectOnAuthError(
+  currentSocket: Socket | null,
+  err: Error,
+) {
+  if (err?.message !== ENFYRA_SOCKET_AUTH_ERROR || !currentSocket) {
+    return false;
+  }
+
+  const manager = currentSocket.io as any;
+  if (typeof manager?.reconnection === 'function') {
+    manager.reconnection(false);
+  } else if (manager?.opts) {
+    manager.opts.reconnection = false;
+  }
+  currentSocket.disconnect();
+  return true;
+}
+
 function clearReloadTimers() {
   if (reloadDoneTimer) {
     clearTimeout(reloadDoneTimer);
@@ -114,7 +132,10 @@ export function useAdminSocket() {
   const notify = useNotify();
   const schema = useSchema();
   const routes = useRoutes();
-  const menuRegistry = useMenuRegistry();
+  const { registerDataMenuItems } = useMenuRegistry();
+  const menuApi = useMenuApi();
+  const dynamicComponent = useDynamicComponent();
+  const { loadGlobalExtensions } = useGlobalExtensions();
 
   if (!socket) {
     ensureStaleReloadPruner();
@@ -134,12 +155,11 @@ export function useAdminSocket() {
       return true;
     };
 
-    socket.on('connect', () => {
-      console.log('Connected to admin socket');
-    });
-
     socket.on('connect_error', (err: Error) => {
-      if (err?.message === ENFYRA_SOCKET_AUTH_ERROR) return;
+      if (stopAdminSocketReconnectOnAuthError(socket, err)) {
+        socket = null;
+        return;
+      }
       if (!shouldToastConnection()) return;
       console.error('Connection error:', err);
     });
@@ -185,14 +205,21 @@ export function useAdminSocket() {
 
         const needsSchema = steps.includes('metadata') || steps.includes('graphql');
         const needsRoutes = steps.includes('metadata') || steps.includes('route');
-        const needsMenus = steps.includes('metadata');
+        const needsMenus = steps.includes('metadata') || steps.includes('menu');
+        const needsExtensions = steps.includes('extension') || steps.includes('menu');
 
         if (needsSchema) await schema.forceRefreshSchema();
         if (needsRoutes) await routes.loadRoutes();
         if (needsMenus) {
-          await menuRegistry.registerDataMenuItems(
+          await menuApi.fetchMenuDefinitions();
+          await useMenuInit({ reset: true });
+          await registerDataMenuItems(
             Object.values(schema.schemas.value),
           );
+        }
+        if (needsExtensions) {
+          dynamicComponent.invalidateExtensionCache({ reason: 'updated' });
+          await loadGlobalExtensions({ forceReload: true });
         }
 
         activeReloads.value = activeReloads.value.filter((r) => r.key !== key);
@@ -229,17 +256,6 @@ export function useAdminSocket() {
       notify.error('Redis read failed', data?.message || 'Redis admin socket request failed');
     });
 
-    socket.on('$system:package:installed', (data: any) => {
-      notify.success('Package ready', `${data.name}@${data.version} installed successfully`);
-    });
-
-    socket.on('$system:package:uninstalled', (data: any) => {
-      notify.success('Package removed', `${data.name} has been uninstalled`);
-    });
-
-    socket.on('$system:package:failed', (data: any) => {
-      notify.error('Package operation failed', data.error || `Failed to ${data.operation} ${data.name}`);
-    });
   }
 
   function redisRequest<T>(event: string, payload: Record<string, any> = {}) {

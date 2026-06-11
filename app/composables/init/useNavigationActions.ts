@@ -1,6 +1,7 @@
 import { CommonBreadcrumbs } from "#components";
 
 export function useNavigationActions() {
+  const { register: registerHeaderActions } = useHeaderActionRegistry();
   const route = useRoute();
   const router = useRouter();
   const { isMobile, isTablet } = useScreen();
@@ -21,7 +22,7 @@ export function useNavigationActions() {
     router.back();
   };
 
-  useHeaderActionRegistry([
+  registerHeaderActions([
     {
       id: "navigation-back-button",
       icon: "lucide:arrow-left",

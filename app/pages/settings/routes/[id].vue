@@ -15,6 +15,8 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute()
 const notify = useNotify()
 const { confirm } = useConfirm()
@@ -58,7 +60,7 @@ watch(() => routeData.value?.data?.[0]?.path, (path) => {
 const { checkPermissionCondition } = usePermissions()
 const canUpdateRoute = computed(() =>
   checkPermissionCondition({
-    and: [{ route: '/route_definition', actions: ['update'] }],
+    and: [{ route: '/route_definition', methods: ['PATCH'] }],
   })
 )
 
@@ -93,7 +95,7 @@ async function deleteRoute() {
   await navigateTo('/settings/routes')
 }
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: 'delete-route',
     label: 'Delete',
@@ -106,12 +108,12 @@ useHeaderActionRegistry([
     loading: computed(() => deleteLoading.value),
     disabled: computed(() => routeData.value?.data?.[0]?.isSystem ?? false),
     permission: {
-      and: [{ route: '/route_definition', actions: ['delete'] }],
+      and: [{ route: '/route_definition', methods: ['DELETE'] }],
     },
   },
 ])
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: 'test-api',
     label: 'Test API',

@@ -291,6 +291,10 @@ function getDefaultValueType(columnType: string) {
     case "date":
       return "date";
 
+    case "datetime":
+    case "timestamp":
+      return columnType;
+
     case "text":
     case "richtext":
     case "varchar":

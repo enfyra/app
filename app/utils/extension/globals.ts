@@ -63,6 +63,7 @@ export const ENFYRA_GLOBALS = {
 
   useSchema: true,
   useFilterQuery: true,
+  useAdminSocket: true,
 
   useHeaderActionRegistry: true,
   useScreen: true,
@@ -102,6 +103,7 @@ export const EXTENSION_COMPOSABLES = {
   useConfirm: 'useConfirm',
   useAuth: 'useAuth',
   usePermissions: 'usePermissions',
+  useAdminSocket: 'useAdminSocket',
 
   useToast: 'useToast',
   useState: 'useState',

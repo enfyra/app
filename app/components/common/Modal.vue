@@ -1,35 +1,36 @@
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{
-    modelValue?: boolean;
+    open?: boolean;
     class?: string;
     handle?: boolean;
     preventClose?: boolean;
     ui?: Record<string, string>;
   }>(),
   {
-    modelValue: false,
+    open: false,
     handle: false,
     preventClose: false,
   }
 );
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean];
+  'update:open': [value: boolean];
 }>();
 
 const slots = useSlots();
-const hasTitle = computed(() => !!slots.title);
+const hasTitle = computed(() => !!slots.header);
 const hasFooter = computed(() => !!slots.footer);
-const hasContent = computed(() => hasTitle.value || !!slots.body || hasFooter.value);
+const hasBody = computed(() => !!slots.body || !!slots.default);
+const hasContent = computed(() => hasTitle.value || hasBody.value || hasFooter.value);
 
 const isOpen = computed({
-  get: () => props.modelValue,
+  get: () => props.open,
   set: (value) => {
     if (!value && props.preventClose) {
       return;
     }
-    emit('update:modelValue', value);
+    emit('update:open', value);
   },
 });
 
@@ -58,9 +59,9 @@ const mergedUi = computed(() => ({
       }"
     >
       <template #title>
-        <div v-if="hasTitle" class="flex items-center justify-between w-full">
+        <div v-if="hasTitle" class="flex items-center justify-between w-full" @click.stop>
           <div class="flex-1 min-w-0">
-            <slot name="title" />
+            <slot name="header" />
           </div>
         </div>
       </template>
@@ -70,11 +71,16 @@ const mergedUi = computed(() => ({
       </template>
 
       <template #body>
-        <slot name="body" />
+        <div @click.stop>
+          <slot v-if="$slots.body" name="body" />
+          <slot v-else />
+        </div>
       </template>
 
       <template #footer>
-        <slot v-if="hasFooter" name="footer" />
+        <div v-if="hasFooter" class="w-full" @click.stop>
+          <slot name="footer" />
+        </div>
       </template>
     </UModal>
 </template>

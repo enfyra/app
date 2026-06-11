@@ -18,6 +18,7 @@
 </template>
 
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const tableName = 'guard_definition';
 
@@ -47,7 +48,7 @@ registerPageHeader({
   gradient: 'purple',
 });
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: 'save-guard',
     label: 'Save',
@@ -62,7 +63,7 @@ useHeaderActionRegistry([
       and: [
         {
           route: '/guard_definition',
-          actions: ['create'],
+          methods: ['POST'],
         },
       ],
     },

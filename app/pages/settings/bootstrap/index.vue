@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const page = ref(1);
 const pageLimit = 9;
@@ -48,7 +49,7 @@ const total = computed(() => {
   return apiData.value?.meta?.totalCount || 0;
 });
 
-useHeaderActionRegistry({
+registerHeaderActions({
   id: "create-bootstrap",
   label: "Create Bootstrap",
   icon: "lucide:plus",
@@ -60,7 +61,7 @@ useHeaderActionRegistry({
     and: [
       {
         route: "/bootstrap_script_definition",
-        actions: ["create"],
+        methods: ["POST"],
       },
     ],
   },
@@ -135,7 +136,7 @@ watch(
               value: new Date(script.createdAt).toLocaleDateString(),
             },
           ]"
-          :actions="[
+          :methods="[
             {
               label: 'Delete',
               props: {

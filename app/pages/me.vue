@@ -1,4 +1,8 @@
 <script setup lang="ts">
+const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
+import { CalendarDate } from "@internationalized/date";
+
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { validateForm } = useFormValidation("user_definition");
@@ -52,6 +56,94 @@ const {
 
 const oauthAccounts = computed(() => oauthData.value?.data || []);
 
+type ApiTokenRecord = {
+  id: string;
+  name: string;
+  prefix: string;
+  last4: string;
+  expiresAt: string;
+  lastUsedAt: string | null;
+  createdAt: string | null;
+};
+
+const {
+  data: apiTokenData,
+  pending: apiTokensLoading,
+  execute: fetchApiTokens,
+} = useApi<{ data: ApiTokenRecord[] }>(() => "/auth/api-tokens", {
+  errorContext: "Fetch API Tokens",
+  disableErrorPage: true,
+  onError: () => true,
+});
+
+const {
+  data: createdApiTokenData,
+  pending: createApiTokenLoading,
+  error: createApiTokenError,
+  execute: createApiToken,
+} = useApi<ApiTokenRecord & { token: string }>(() => "/auth/api-tokens", {
+  method: "post",
+  errorContext: "Create API Token",
+  disableErrorPage: true,
+  onError: () => true,
+});
+
+const {
+  pending: revokeApiTokenLoading,
+  error: revokeApiTokenError,
+  execute: revokeApiToken,
+} = useApi(() => "/auth/api-tokens", {
+  method: "delete",
+  errorContext: "Revoke API Token",
+  disableErrorPage: true,
+  onError: () => true,
+});
+
+const apiTokens = computed(() => apiTokenData.value?.data || []);
+const apiTokenModalOpen = ref(false);
+const apiTokenForm = ref({
+  name: "MCP token",
+  expiryPreset: "90d",
+  customDate: "",
+});
+const apiTokenCustomCalendarDate = shallowRef<any>(null);
+const apiTokenCustomCalendarOpen = ref(false);
+const apiTokenErrors = ref<Record<string, string>>({});
+const newlyCreatedToken = ref("");
+const apiTokenCopied = ref(false);
+
+const apiTokenExpiryPresets = [
+  { label: "30 days", value: "30d", days: 30 },
+  { label: "90 days", value: "90d", days: 90 },
+  { label: "1 year", value: "365d", days: 365 },
+  { label: "No expiration", value: "never", days: null },
+  { label: "Custom", value: "custom", days: null },
+];
+
+function todayCalendarDate() {
+  const date = new Date();
+  return new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+}
+
+function calendarDateToDateString(value: CalendarDate | { year: number; month: number; day: number } | null) {
+  if (!value) return "";
+  return [
+    value.year,
+    String(value.month).padStart(2, "0"),
+    String(value.day).padStart(2, "0"),
+  ].join("-");
+}
+
+watch(apiTokenCustomCalendarDate, (value) => {
+  apiTokenForm.value.customDate = calendarDateToDateString(value);
+});
+
+watch(() => apiTokenForm.value.expiryPreset, (value) => {
+  if (value === "custom" && !apiTokenCustomCalendarDate.value) {
+    apiTokenCustomCalendarDate.value = todayCalendarDate();
+  }
+});
+
 function getProviderIcon(provider: string) {
   switch (provider) {
     case "google": return "logos:google-icon";
@@ -86,7 +178,7 @@ const fieldMap = computed(() => ({
   role: {
     permission: {
       and: [
-        { route: '/user_definition', actions: ['update'] }
+        { route: '/user_definition', methods: ['PATCH'] }
       ]
     }
   }
@@ -98,7 +190,7 @@ async function initializeForm() {
   if (data) {
     form.value = { ...data };
     formChanges.update(data);
-    await fetchOauthAccounts();
+    await Promise.all([fetchOauthAccounts(), fetchApiTokens()]);
   }
 }
 
@@ -145,7 +237,7 @@ async function handleReset() {
   }
 }
 
-useSubHeaderActionRegistry([
+registerSubHeaderActions([
   {
     id: "change-password",
     label: "Change Password",
@@ -155,9 +247,18 @@ useSubHeaderActionRegistry([
     side: "right",
     onClick: () => { passwordModalOpen.value = true; },
   },
+  {
+    id: "create-api-token",
+    label: "Create API token",
+    icon: "lucide:key",
+    variant: "outline",
+    color: "neutral",
+    side: "right",
+    onClick: () => { openApiTokenModal(); },
+  },
 ]);
 
-useHeaderActionRegistry([
+registerHeaderActions([
   {
     id: "reset-profile",
     label: "Reset",
@@ -248,6 +349,116 @@ async function handleChangePassword() {
   passwordModalOpen.value = false;
 }
 
+function openApiTokenModal() {
+  apiTokenModalOpen.value = true;
+  newlyCreatedToken.value = "";
+  apiTokenCopied.value = false;
+  apiTokenErrors.value = {};
+  apiTokenForm.value = {
+    name: "MCP token",
+    expiryPreset: "90d",
+    customDate: "",
+  };
+  apiTokenCustomCalendarDate.value = null;
+  apiTokenCustomCalendarOpen.value = false;
+}
+
+function resolveApiTokenExpiresAt() {
+  const preset = apiTokenExpiryPresets.find(
+    (item) => item.value === apiTokenForm.value.expiryPreset,
+  );
+  if (!preset) return null;
+  if (preset.value === "never") return "never";
+  if (preset.value === "custom") {
+    if (!apiTokenForm.value.customDate) return null;
+    const date = new Date(`${apiTokenForm.value.customDate}T23:59:59.999`);
+    return date.toISOString();
+  }
+  const date = new Date();
+  date.setDate(date.getDate() + (preset.days || 0));
+  return date.toISOString();
+}
+
+function validateApiTokenForm() {
+  const errs: Record<string, string> = {};
+  if (!apiTokenForm.value.name.trim()) {
+    errs.name = "Token name is required";
+  }
+  const expiresAt = resolveApiTokenExpiresAt();
+  if (!expiresAt) {
+    errs.expiresAt = "Expiration is required";
+  } else if (expiresAt !== "never" && new Date(expiresAt).getTime() <= Date.now()) {
+    errs.expiresAt = "Expiration must be in the future";
+  }
+  apiTokenErrors.value = errs;
+  return Object.keys(errs).length === 0;
+}
+
+async function handleCreateApiToken() {
+  if (!validateApiTokenForm()) {
+    notify.error("Validation Error", "Please check the API token fields.");
+    return;
+  }
+
+  await createApiToken({
+    body: {
+      name: apiTokenForm.value.name.trim(),
+      expiresAt: resolveApiTokenExpiresAt(),
+    },
+  });
+
+  if (createApiTokenError.value || !createdApiTokenData.value?.token) {
+    notify.error(
+      "Create API token failed",
+      createApiTokenError.value?.message || "Unable to create API token.",
+    );
+    return;
+  }
+
+  newlyCreatedToken.value = createdApiTokenData.value.token;
+  apiTokenCopied.value = false;
+  await fetchApiTokens();
+}
+
+async function handleCopyApiToken(token: string) {
+  await navigator.clipboard.writeText(token);
+  apiTokenCopied.value = true;
+}
+
+async function handleRevokeApiToken(token: ApiTokenRecord) {
+  const ok = await confirm({
+    title: "Revoke API token",
+    content: `Revoke ${token.name}? This deletes the token immediately.`,
+  });
+  if (!ok) return;
+
+  await revokeApiToken({ id: token.id });
+  if (revokeApiTokenError.value) {
+    notify.error(
+      "Revoke API token failed",
+      revokeApiTokenError.value.message || "Unable to revoke API token.",
+    );
+    return;
+  }
+
+  notify.success("API token revoked", "The token can no longer be used.");
+  await fetchApiTokens();
+}
+
+function formatTokenDate(value: string | null) {
+  if (!value) return "Never used";
+  if (value === "never") return "No expiration";
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
+function tokenPreview(token: ApiTokenRecord) {
+  return `${token.prefix}...${token.last4}`;
+}
+
 onMounted(() => {
   initializeForm();
 });
@@ -327,11 +538,69 @@ onMounted(() => {
         />
       </div>
 
+      <div class="surface-card rounded-xl p-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
+          <div>
+            <h3 class="text-base font-semibold text-[var(--text-primary)]">API Tokens</h3>
+            <p class="text-sm text-[var(--text-tertiary)] mt-0.5">Create long-lived tokens for MCP servers and external API clients</p>
+          </div>
+          <UButton
+            color="primary"
+            variant="solid"
+            icon="lucide:plus"
+            @click="openApiTokenModal"
+          >
+            Create token
+          </UButton>
+        </div>
+
+        <CommonLoadingState
+          v-if="apiTokensLoading"
+          title="Loading..."
+          description="Fetching API tokens"
+          size="sm"
+          type="card"
+        />
+        <div v-else-if="apiTokens.length > 0" class="divide-y divide-[var(--border-subtle)]">
+          <div
+            v-for="token in apiTokens"
+            :key="token.id"
+            class="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div class="min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="text-sm font-semibold text-[var(--text-primary)]">{{ token.name }}</p>
+                <UBadge color="neutral" variant="soft">{{ tokenPreview(token) }}</UBadge>
+              </div>
+              <p class="text-xs text-[var(--text-tertiary)] mt-1">
+                Expires {{ formatTokenDate(token.expiresAt) }} · Last used {{ formatTokenDate(token.lastUsedAt) }}
+              </p>
+            </div>
+            <UButton
+              color="error"
+              variant="ghost"
+              icon="lucide:trash-2"
+              :loading="revokeApiTokenLoading"
+              @click="handleRevokeApiToken(token)"
+            >
+              Revoke
+            </UButton>
+          </div>
+        </div>
+        <CommonEmptyState
+          v-else
+          title="No API tokens"
+          description="Create a token to connect MCP servers or custom API clients"
+          icon="lucide:key"
+          size="sm"
+        />
+      </div>
+
     </template>
   </div>
 
-  <CommonModal v-model="passwordModalOpen">
-    <template #title>Change Password</template>
+  <CommonModal v-model:open="passwordModalOpen">
+    <template #header>Change Password</template>
     <template #body>
       <UForm id="password-form" :state="passwordForm" @submit="handleChangePassword" class="space-y-5">
         <UFormField
@@ -400,6 +669,118 @@ onMounted(() => {
           :disabled="passwordLoading"
         >
           Update password
+        </UButton>
+      </div>
+    </template>
+  </CommonModal>
+
+  <CommonModal v-model:open="apiTokenModalOpen">
+    <template #header>{{ newlyCreatedToken ? "API Token" : "Create API Token" }}</template>
+    <template #body>
+      <div v-if="newlyCreatedToken" class="space-y-3">
+        <UAlert
+          icon="lucide:alert-triangle"
+          color="warning"
+          variant="soft"
+          title="Save this token now"
+          description="This API token is shown only once. Copy and store it securely before closing this dialog; it cannot be viewed again."
+        />
+        <UFormField label="API token">
+          <div class="flex gap-2">
+            <UInput
+              :model-value="newlyCreatedToken"
+              readonly
+              class="flex-1 font-mono"
+            />
+            <UButton
+              type="button"
+              color="primary"
+              variant="solid"
+              :icon="apiTokenCopied ? 'lucide:check' : 'lucide:copy'"
+              @click="handleCopyApiToken(newlyCreatedToken)"
+            >
+              {{ apiTokenCopied ? "Copied" : "Copy" }}
+            </UButton>
+          </div>
+        </UFormField>
+      </div>
+      <div v-else class="space-y-5">
+        <UForm :state="apiTokenForm" class="space-y-5" @submit="handleCreateApiToken">
+          <UFormField label="Token name" :error="apiTokenErrors.name" required>
+            <UInput
+              v-model="apiTokenForm.name"
+              placeholder="MCP token"
+              class="w-full"
+            />
+          </UFormField>
+
+          <UFormField label="Expiration" :error="apiTokenErrors.expiresAt" required>
+            <div class="flex flex-wrap gap-2">
+              <UButton
+                v-for="preset in apiTokenExpiryPresets"
+                :key="preset.value"
+                type="button"
+                :color="apiTokenForm.expiryPreset === preset.value ? 'primary' : 'neutral'"
+                :variant="apiTokenForm.expiryPreset === preset.value ? 'solid' : 'soft'"
+                class="min-w-[120px] justify-center"
+                @click="apiTokenForm.expiryPreset = preset.value"
+              >
+                {{ preset.label }}
+              </UButton>
+            </div>
+            <UPopover
+              v-if="apiTokenForm.expiryPreset === 'custom'"
+              v-model:open="apiTokenCustomCalendarOpen"
+            >
+              <UButton
+                type="button"
+                color="neutral"
+                variant="outline"
+                icon="lucide:calendar"
+                class="mt-3 w-full justify-start"
+              >
+                {{ apiTokenForm.customDate ? formatTokenDate(`${apiTokenForm.customDate}T00:00:00.000`) : "Select a date" }}
+              </UButton>
+              <template #content="{ close }">
+                <div class="space-y-3 p-3">
+                  <UCalendar v-model="apiTokenCustomCalendarDate" class="w-fit" />
+                  <div class="flex justify-end">
+                    <UButton
+                      size="sm"
+                      color="primary"
+                      variant="solid"
+                      @click="() => { close(); apiTokenCustomCalendarOpen = false; }"
+                    >
+                      Done
+                    </UButton>
+                  </div>
+                </div>
+              </template>
+            </UPopover>
+          </UFormField>
+        </UForm>
+      </div>
+    </template>
+    <template #footer>
+      <div v-if="!newlyCreatedToken" class="flex justify-end gap-2 w-full">
+        <UButton
+          variant="outline"
+          color="neutral"
+          size="md"
+          @click="apiTokenModalOpen = false"
+        >
+          Close
+        </UButton>
+        <UButton
+          color="primary"
+          variant="solid"
+          size="md"
+          icon="lucide:key"
+          :loading="createApiTokenLoading"
+          :disabled="createApiTokenLoading"
+          @click="handleCreateApiToken"
+        >
+          Create token
         </UButton>
       </div>
     </template>

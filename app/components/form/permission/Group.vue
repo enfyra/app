@@ -43,13 +43,13 @@
                 item.route || "No route"
               }}</span>
               <UBadge
-                v-for="action in item.actions"
-                :key="action"
+                v-for="method in item.names"
+                :key="method"
                 size="sm"
                 variant="soft"
                 color="secondary"
               >
-                {{ action }}
+                {{ method }}
               </UBadge>
             </template>
           </div>
@@ -137,7 +137,7 @@ function addPermission() {
   const newPermission = {
     id: Math.random().toString(36).substring(2, 9),
     route: "",
-    actions: [],
+    methods: [],
   };
   props.group.conditions.push(newPermission);
   updateGroup();
@@ -170,7 +170,7 @@ function isPermission(item: any): boolean {
 function editPermission(index: number, item: any) {
   editingPermission.value = {
     ...item,
-    actions: [...(item.actions || [])],
+    methods: [...(item.names || [])],
     allowAll: item.allowAll || false,
   };
   editingIndex.value = index;
