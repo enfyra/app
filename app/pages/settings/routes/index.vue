@@ -242,13 +242,13 @@ const { execute: deleteRouteApi, error: deleteError } = useApi(
 );
 
 
-function getPublishedMethodsStat(routeItem: any) {
+function getPublicMethodsStat(routeItem: any) {
   const availableSet = new Set(
     (routeItem.availableMethods || [])
       .filter((m: any) => m?.name)
       .map((m: any) => m.name)
   );
-  const filtered = (routeItem.publishedMethods || [])
+  const filtered = (routeItem.publicMethods || [])
     .filter((m: any) => m?.name && availableSet.has(m.name));
   return {
     component: filtered.length ? 'UBadge' : undefined,
@@ -429,8 +429,8 @@ async function deleteRoute(routeItem: any) {
                   value: routeItem.isEnabled ? 'Enabled' : 'Disabled'
                 },
                 {
-                  label: 'Published Methods',
-                  ...getPublishedMethodsStat(routeItem)
+                  label: 'Public Methods',
+                  ...getPublicMethodsStat(routeItem)
                 }
               ]"
               :methods="getRouteFooterActions(routeItem)"

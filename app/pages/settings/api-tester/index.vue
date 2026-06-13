@@ -65,7 +65,7 @@
       v-model="showTestModal"
       :route-path="selectedRoute?.path || ''"
       :available-methods="selectedRoute ? getRouteMethods(selectedRoute) : []"
-      :published-methods="selectedRoutePublishedMethods"
+      :public-methods="selectedRoutePublicMethods"
       :handlers="selectedRoute?.handlers"
       :main-table-name="selectedRoute?.mainTable?.name"
       :schemas="schemas"
@@ -86,7 +86,7 @@ const search = ref('');
 const selectedRoute = ref<any>(null);
 const showTestModal = ref(false);
 
-const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.name,availableMethods.buttonColor,availableMethods.textColor,publishedMethods.name,publishedMethods.buttonColor,publishedMethods.textColor,handlers.method.name';
+const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.name,availableMethods.buttonColor,availableMethods.textColor,publicMethods.name,publicMethods.buttonColor,publicMethods.textColor,handlers.method.name';
 
 const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi(
   '/route_definition',
@@ -161,8 +161,8 @@ function openTest(route: any) {
   showTestModal.value = true;
 }
 
-const selectedRoutePublishedMethods = computed(() => {
-  const methods = selectedRoute.value?.publishedMethods;
+const selectedRoutePublicMethods = computed(() => {
+  const methods = selectedRoute.value?.publicMethods;
   if (!Array.isArray(methods)) return [];
   return methods.map((m: any) => m.name).filter(Boolean);
 });

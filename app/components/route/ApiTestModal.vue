@@ -20,7 +20,7 @@
               @click="method = m.name"
             >{{ m.name }}</button>
             <div class="flex items-center gap-1.5 ml-auto">
-              <UBadge v-if="isPublished" color="success" variant="soft" size="xs">Public</UBadge>
+              <UBadge v-if="isPublic" color="success" variant="soft" size="xs">Public</UBadge>
               <UBadge v-else color="warning" variant="soft" size="xs">Auth Required</UBadge>
               <UBadge v-if="hasCustomHandler" color="info" variant="soft" size="xs">Custom</UBadge>
               <UBadge v-else-if="mainTableName" color="neutral" variant="soft" size="xs">CRUD</UBadge>
@@ -119,7 +119,7 @@ const props = defineProps<{
   modelValue: boolean;
   routePath: string;
   availableMethods: any[];
-  publishedMethods?: string[];
+  publicMethods?: string[];
   handlers?: any[];
   mainTableName?: string;
   schemas?: Record<string, any>;
@@ -175,8 +175,8 @@ function isMethodAvailable(m: string): boolean {
   return props.availableMethods.some((am: any) => am?.name === m || am === m || am?.name === 'REST' || am === 'REST');
 }
 
-const isPublished = computed(() =>
-  props.publishedMethods?.some(pm => pm === method.value || pm === 'REST') ?? false
+const isPublic = computed(() =>
+  props.publicMethods?.some(pm => pm === method.value || pm === 'REST') ?? false
 );
 
 const hasCustomHandler = computed(() =>

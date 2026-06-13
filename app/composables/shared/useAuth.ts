@@ -70,7 +70,7 @@ export function useAuth() {
     }
   };
 
-  const fetchUser = async (options?: { fields?: string[] }) => {
+  const fetchUser = async (options?: { fields?: string[]; silent?: boolean }) => {
     isLoading.value = true;
 
     try {
@@ -88,7 +88,7 @@ export function useAuth() {
 
       me.value = (response as any)?.data?.[0] || null;
     } catch (error) {
-      console.error("[Auth] Fetch user error:", error);
+      if (!options?.silent) console.error("[Auth] Fetch user error:", error);
       me.value = null;
     } finally {
       isLoading.value = false;
