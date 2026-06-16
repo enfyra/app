@@ -212,7 +212,7 @@ const showDemoLogin = computed(() => {
   return v === true || v === "true" || v === "1";
 });
 
-const { login, oauthLogin } = useAuth();
+const { login, oauthLogin, fetchUser } = useAuth();
 const route = useRoute();
 const notify = useNotify();
 const demoLoading = ref(false);
@@ -240,10 +240,12 @@ const oauthProviders = computed(
   () => oauthProviderData.value?.data ?? []
 );
 
-function redirectAfterLogin() {
+async function completeLogin() {
+  await fetchUser({ fields: DEFAULT_ME_FIELDS });
+
   const redirect = route.query.redirect as string | undefined;
   if (redirect) window.location.href = redirect;
-  else window.location.reload();
+  else await navigateTo("/");
 }
 
 function getOAuthProviderIcon(provider: OAuthProvider) {
@@ -272,7 +274,7 @@ async function handleLogin() {
   loginError.value = null;
   const res = await login(form);
   if (res.ok) {
-    redirectAfterLogin();
+    await completeLogin();
     return;
   }
   loginError.value = res.message;
@@ -289,7 +291,7 @@ async function handleDemoLogin() {
       remember: true,
     });
     if (res.ok) {
-      redirectAfterLogin();
+      await completeLogin();
       return;
     }
     const hint = "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.";

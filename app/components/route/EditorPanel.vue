@@ -71,8 +71,8 @@ const availableMethodStrings = computed(() => {
   return availableMethodRecords.value.map((m: any) => m.name)
 })
 
-const publishedMethodStrings = computed(() => {
-  const methods = routeData.value?.data?.[0]?.publishedMethods
+const publicMethodStrings = computed(() => {
+  const methods = routeData.value?.data?.[0]?.publicMethods
   if (!Array.isArray(methods)) return []
   return methods.filter((m: any) => m?.name).map((m: any) => m.name)
 })
@@ -96,17 +96,17 @@ const {
   errorContext: 'Update Route',
 })
 
-function filterPublishedToAvailable(body: Record<string, any>) {
+function filterPublicToAvailable(body: Record<string, any>) {
   const available = body.availableMethods || []
   const availableSet = new Set(available.filter((m: any) => m?.name).map((m: any) => m.name))
-  for (const key of ['publishedMethods', 'skipRoleGuardMethods'] as const) {
+  for (const key of ['publicMethods', 'skipRoleGuardMethods'] as const) {
     if (Array.isArray(body[key])) {
       body[key] = availableSet.size > 0
         ? body[key].filter((m: any) => m?.name && availableSet.has(m.name))
         : []
     }
   }
-  for (const key of ['availableMethods', 'publishedMethods', 'skipRoleGuardMethods'] as const) {
+  for (const key of ['availableMethods', 'publicMethods', 'skipRoleGuardMethods'] as const) {
     if (Array.isArray(body[key])) {
       body[key] = body[key]
         .map((m: any) => {
@@ -131,7 +131,7 @@ async function updateRoute() {
   if (!form.value || !routeId.value) return
 
   const body = { ...form.value }
-  filterPublishedToAvailable(body)
+  filterPublicToAvailable(body)
 
   if (!await validateForm(body, errors)) return
 
@@ -361,7 +361,7 @@ watch(() => routeData.value?.data?.[0], async (newRoute) => {
       isEnabled: {
         disabled: !!mainTableInfo.value,
       },
-      publishedMethods: {
+      publicMethods: {
         type: 'methods-selector',
         allowedMethodsKey: 'availableMethods'
       },
@@ -1209,7 +1209,7 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model="showApiTestModal"
       :route-path="routePath"
       :available-methods="availableMethodRecords"
-      :published-methods="publishedMethodStrings"
+      :public-methods="publicMethodStrings"
       :handlers="displayHandlers"
       :main-table-name="mainTableName"
       :schemas="schemas"

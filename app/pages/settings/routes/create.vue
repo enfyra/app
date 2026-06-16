@@ -33,7 +33,7 @@ const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
 
 const fieldMap = {
-  publishedMethods: { type: 'methods-selector', allowedMethodsKey: 'availableMethods' },
+  publicMethods: { type: 'methods-selector', allowedMethodsKey: 'availableMethods' },
   skipRoleGuardMethods: { type: 'methods-selector', allowedMethodsKey: 'availableMethods' },
   availableMethods: { type: 'methods-selector' },
 };
@@ -82,14 +82,14 @@ onMounted(() => {
 function filterDependentMethods(body: Record<string, any>) {
   const available = body.availableMethods || [];
   const availableSet = new Set(available.filter((m: any) => m?.name).map((m: any) => m.name));
-  for (const key of ['publishedMethods', 'skipRoleGuardMethods'] as const) {
+  for (const key of ['publicMethods', 'skipRoleGuardMethods'] as const) {
     if (Array.isArray(body[key])) {
       body[key] = availableSet.size > 0
         ? body[key].filter((m: any) => m?.name && availableSet.has(m.name))
         : [];
     }
   }
-  for (const key of ['availableMethods', 'publishedMethods', 'skipRoleGuardMethods'] as const) {
+  for (const key of ['availableMethods', 'publicMethods', 'skipRoleGuardMethods'] as const) {
     if (Array.isArray(body[key])) {
       body[key] = body[key]
         .map((m: any) => {
