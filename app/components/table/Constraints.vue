@@ -82,17 +82,18 @@ function hasEmptyField(group: string[]): boolean {
   return group.some((f: string) => !f || f === '');
 }
 
-function hasDuplicateGroup(list: string[][], groupIndex: number | string): boolean {
+function hasDuplicateGroup(list: string[][], groupIndex: number | string, orderMatters = false): boolean {
   const idx = Number(groupIndex);
   if (!list) return false;
   const currentGroup = list[idx];
   if (!currentGroup || currentGroup.some((f: string) => !f)) return false;
 
-  const sortedCurrent = [...currentGroup].sort().join(',');
+  const normalize = (group: string[]) => (orderMatters ? group : [...group].sort()).join(',');
+  const normalizedCurrent = normalize(currentGroup);
   return list.some((g: string[], i: number) => {
     if (i === idx) return false;
     if (g.some((f: string) => !f)) return false;
-    return [...g].sort().join(',') === sortedCurrent;
+    return normalize(g) === normalizedCurrent;
   });
 }
 
@@ -102,17 +103,17 @@ function isIndexAlreadyUnique(groupIndex: number | string): boolean {
   const indexGroup = table.value.indexes[idx];
   if (!indexGroup || indexGroup.some((f: string) => !f)) return false;
 
-  const sortedIndex = [...indexGroup].sort().join(',');
+  const normalizedIndex = indexGroup.join(',');
 
   if (!table.value.uniques) return false;
   return table.value.uniques.some((uniqueGroup: string[]) => {
     if (uniqueGroup.some((f: string) => !f)) return false;
-    return [...uniqueGroup].sort().join(',') === sortedIndex;
+    return uniqueGroup.join(',') === normalizedIndex;
   });
 }
 
 function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redundant' | null {
-  if (hasDuplicateGroup(table.value.indexes, groupIndex)) return 'duplicate';
+  if (hasDuplicateGroup(table.value.indexes, groupIndex, true)) return 'duplicate';
   if (isIndexAlreadyUnique(groupIndex)) return 'redundant';
   return null;
 }
