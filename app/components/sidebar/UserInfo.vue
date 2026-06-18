@@ -2,6 +2,7 @@
 import { defineComponent, h, resolveComponent } from "vue";
 import type { ComputedRef, Ref } from "vue";
 
+import ThemeAccountPanelItem from "~/components/sidebar/ThemeAccountPanelItem.vue";
 import type { AccountPanelItem } from "~/types/ui";
 
 const props = defineProps<{
@@ -10,7 +11,6 @@ const props = defineProps<{
 
 const { me, logout } = useAuth();
 const { confirm } = useConfirm();
-const colorMode = useColorMode();
 const router = useRouter();
 
 const isOpen = ref(false);
@@ -22,9 +22,6 @@ const userInitial = computed(() => {
   return email.charAt(0).toUpperCase();
 });
 
-const isDark = computed(() => colorMode.value === 'dark');
-const themeLabel = computed(() => (isDark.value ? 'Dark' : 'Light'));
-const themeIcon = computed(() => (isDark.value ? 'lucide:moon' : 'lucide:sun'));
 const panelGridClass = computed(() => (isOpen.value ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'));
 const { accountPanelItems, register } = useAccountPanelRegistry();
 
@@ -54,40 +51,6 @@ const ProfileAccountPanelItem = defineComponent({
       [
         h(UIcon, { name: "lucide:user", class: "h-5 w-5 shrink-0 text-[var(--text-tertiary)]" }),
         h("span", { class: "truncate" }, "Profile"),
-      ],
-    );
-  },
-});
-
-const ThemeAccountPanelItem = defineComponent({
-  name: "ThemeAccountPanelItem",
-  setup() {
-    const UIcon = resolveComponent("UIcon");
-    const USwitch = resolveComponent("USwitch");
-    const onKeydown = (event: KeyboardEvent) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      toggleTheme();
-    };
-
-    return () => h(
-      "div",
-      {
-        role: "button",
-        tabindex: 0,
-        class: accountPanelButtonClass,
-        onClick: toggleTheme,
-        onKeydown,
-      },
-      [
-        h(UIcon, { name: themeIcon.value, class: "h-5 w-5 shrink-0 text-[var(--text-tertiary)]" }),
-        h("span", { class: "min-w-0 flex-1 truncate" }, themeLabel.value),
-        h(USwitch, {
-          size: "sm",
-          modelValue: isDark.value,
-          "onUpdate:modelValue": toggleTheme,
-          onClick: (event: MouseEvent) => event.stopPropagation(),
-        }),
       ],
     );
   },
@@ -141,10 +104,6 @@ watch(
     if (collapsed) isOpen.value = false;
   },
 );
-
-function toggleTheme() {
-  colorMode.preference = isDark.value ? 'light' : 'dark';
-}
 
 function handleAccountPanelItemClick(item: AccountPanelItem) {
   if (item.disabled && unref(item.disabled)) return;

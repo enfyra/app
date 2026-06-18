@@ -52,7 +52,7 @@ export function useDynamicWidgetLoader() {
     if (ids.length === 0) return;
 
     try {
-      const response = await $fetch<{ data?: ExtensionDefinition[] }>("/api/extension_definition", {
+      const response = await $fetch<{ data?: ExtensionDefinition[] }>("/api/enfyra_extension", {
         query: {
           fields: "*",
           filter: {

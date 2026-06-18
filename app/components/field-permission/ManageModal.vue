@@ -20,7 +20,7 @@ const permissions = defineModel<Permission[]>("permissions", { required: true })
 const notify = useNotify()
 const { confirm } = useConfirm()
 const { isMobile, isTablet } = useScreen()
-const { generateEmptyForm: generateFieldPermEmptyForm } = useSchema("field_permission_definition")
+const { generateEmptyForm: generateFieldPermEmptyForm } = useSchema("enfyra_field_permission")
 
 type ViewMode = "list" | "form"
 const viewMode = ref<ViewMode>("list")
@@ -367,7 +367,7 @@ watch(open, (isOpen) => {
         <FormEditorLazy
           v-model="fieldPermForm"
           v-model:errors="fieldPermErrors"
-          table-name="field_permission_definition"
+          table-name="enfyra_field_permission"
           :field-map="fieldMap"
           :excluded="excludedFields"
           :mode="fieldPermMode"

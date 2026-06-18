@@ -17,7 +17,7 @@ const {
   pending,
   error,
   execute,
-} = useApi(`/file_definition`, {
+} = useApi(`/enfyra_file`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
@@ -52,7 +52,7 @@ const {
   error: updateError,
   execute: executeUpdateFile,
   pending: updateLoading,
-} = useApi(`/file_definition`, {
+} = useApi(`/enfyra_file`, {
   method: "patch",
   errorContext: "Update File",
 });
@@ -61,7 +61,7 @@ const {
   error: deleteError,
   execute: executeDeleteFile,
   pending: deleteLoading,
-} = useApi(`/file_definition`, {
+} = useApi(`/enfyra_file`, {
   method: "delete",
   errorContext: "Delete File",
 });
@@ -110,7 +110,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/file_definition",
+          route: "/enfyra_file",
           methods: ["DELETE"],
         },
       ],
@@ -130,7 +130,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/file_definition",
+          route: "/enfyra_file",
           methods: ["PATCH"],
         },
       ],
@@ -150,7 +150,7 @@ registerSubHeaderActions([
     permission: {
       and: [
         {
-          route: "/file_definition",
+          route: "/enfyra_file",
           methods: ["PATCH"],
         },
       ],
@@ -399,7 +399,7 @@ function getFileIconAndColor(mimetype: string): {
             v-model="form"
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            table-name="file_definition"
+            table-name="enfyra_file"
             :excluded="[
               'createdAt',
               'updatedAt',
@@ -414,7 +414,7 @@ function getFileIconAndColor(mimetype: string): {
 
       <div class="surface-card rounded-xl p-6">
         <PermissionManager
-          table-name="file_permission_definition"
+          table-name="enfyra_file_permission"
           :current-field-id="{ field: 'file', value: fileId }"
           icon="lucide:shield"
           title="File Permissions"

@@ -6,7 +6,7 @@ const notify = useNotify();
 const { confirm } = useConfirm();
 const route = useRoute();
 const router = useRouter();
-const tableName = "menu_definition";
+const tableName = "enfyra_menu";
 const { generateEmptyForm } = useSchema(tableName);
 const { schemas } = useSchema();
 const { getId } = useDatabase();
@@ -14,7 +14,7 @@ const { invalidateExtensionCache } = useDynamicComponent();
 
 const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
 
-const { execute: updateMenuApi } = useApi(() => '/menu_definition', {
+const { execute: updateMenuApi } = useApi(() => '/enfyra_menu', {
   method: 'patch',
   errorContext: 'Update Menu Order',
 });
@@ -224,7 +224,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/menu_definition",
+          route: "/enfyra_menu",
           methods: ["POST"],
         },
       ],
@@ -333,7 +333,7 @@ async function toggleEnabled(payload: { menu: MenuDefinition; enabled: boolean }
   }
 
   const { execute: updateSpecificMenu, error: updateError } = useApi(
-    () => `/menu_definition/${menuId}`,
+    () => `/enfyra_menu/${menuId}`,
     {
       method: "patch",
       errorContext: "Toggle Menu",
@@ -373,7 +373,7 @@ async function deleteMenu(menuItem: MenuDefinition) {
 
   if (isConfirmed) {
     const { execute: deleteMenuApi, error: deleteError } = useApi(
-      () => `/menu_definition/${getId(menuItem)}`,
+      () => `/enfyra_menu/${getId(menuItem)}`,
       {
         method: "delete",
         errorContext: "Delete Menu",
@@ -419,7 +419,7 @@ async function handleDeleteExtension(menu: MenuDefinition) {
   if (!isConfirmed) return;
 
   const { execute: deleteExtensionApi, error: deleteError } = useApi(
-    () => `/extension_definition/${extensionId}`,
+    () => `/enfyra_extension/${extensionId}`,
     {
       method: "delete",
       errorContext: "Delete Extension",

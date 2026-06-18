@@ -35,13 +35,13 @@ const currentPageRoute = useRoute()
 const router = useRouter()
 const { loadRoutes } = useRoutes()
 const { schemas } = useSchema()
-const { getIncludeFields: getRouteIncludeFields } = useSchema('route_definition')
-const { getIncludeFields: getPreHookIncludeFields } = useSchema('pre_hook_definition')
-const { getIncludeFields: getPostHookIncludeFields } = useSchema('post_hook_definition')
-const { getIncludeFields: getHandlerIncludeFields } = useSchema('route_handler_definition')
-const { generateEmptyForm: generateHandlerEmptyForm, validate: validateHandler } = useSchema('route_handler_definition')
-const { generateEmptyForm: generatePreHookEmptyForm, validate: validatePreHook } = useSchema('pre_hook_definition')
-const { generateEmptyForm: generatePostHookEmptyForm, validate: validatePostHook } = useSchema('post_hook_definition')
+const { getIncludeFields: getRouteIncludeFields } = useSchema('enfyra_route')
+const { getIncludeFields: getPreHookIncludeFields } = useSchema('enfyra_pre_hook')
+const { getIncludeFields: getPostHookIncludeFields } = useSchema('enfyra_post_hook')
+const { getIncludeFields: getHandlerIncludeFields } = useSchema('enfyra_route_handler')
+const { generateEmptyForm: generateHandlerEmptyForm, validate: validateHandler } = useSchema('enfyra_route_handler')
+const { generateEmptyForm: generatePreHookEmptyForm, validate: validatePreHook } = useSchema('enfyra_pre_hook')
+const { generateEmptyForm: generatePostHookEmptyForm, validate: validatePostHook } = useSchema('enfyra_post_hook')
 
 const routeId = ref<string | undefined>(props.routeId)
 
@@ -49,7 +49,7 @@ const {
   data: routeData,
   pending: routeLoading,
   execute: fetchRoute,
-} = useApi(() => '/route_definition', {
+} = useApi(() => '/enfyra_route', {
   query: computed(() => ({
     fields: getRouteIncludeFields(),
     filter: props.routeId
@@ -77,7 +77,7 @@ const publicMethodStrings = computed(() => {
   return methods.filter((m: any) => m?.name).map((m: any) => m.name)
 })
 
-const { validateForm } = useFormValidation('route_definition')
+const { validateForm } = useFormValidation('enfyra_route')
 const formEditorRef = ref()
 const form = ref<Record<string, any>>({})
 const errors = ref<Record<string, string>>({})
@@ -91,7 +91,7 @@ const {
   error: updateRouteError,
   execute: executeUpdateRoute,
   pending: updateLoading,
-} = useApi(() => '/route_definition', {
+} = useApi(() => '/enfyra_route', {
   method: 'patch',
   errorContext: 'Update Route',
 })
@@ -195,7 +195,7 @@ registerHeaderActions([
     disabled: computed(() => routeLoading.value || !routeId.value || !hasFormChanges.value),
     onClick: updateRoute,
     permission: {
-      and: [{ route: '/route_definition', methods: ['PATCH'] }],
+      and: [{ route: '/enfyra_route', methods: ['PATCH'] }],
     },
   },
 ])
@@ -204,7 +204,7 @@ const {
   data: handlersData,
   pending: handlersLoading,
   execute: fetchHandlers,
-} = useApi(() => '/route_handler_definition', {
+} = useApi(() => '/enfyra_route_handler', {
   query: computed(() => ({
     fields: getHandlerIncludeFields(),
     filter: routeId.value ? { route: { [getIdFieldName()]: { _eq: routeId.value } } } : undefined,
@@ -217,7 +217,7 @@ const {
   data: preHooksData,
   pending: preHooksLoading,
   execute: fetchPreHooks,
-} = useApi(() => '/pre_hook_definition', {
+} = useApi(() => '/enfyra_pre_hook', {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
     filter: routeId.value ? { route: { [getIdFieldName()]: { _eq: routeId.value } } } : undefined,
@@ -231,7 +231,7 @@ const {
   data: postHooksData,
   pending: postHooksLoading,
   execute: fetchPostHooks,
-} = useApi(() => '/post_hook_definition', {
+} = useApi(() => '/enfyra_post_hook', {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
     filter: routeId.value ? { route: { [getIdFieldName()]: { _eq: routeId.value } } } : undefined,
@@ -245,7 +245,7 @@ const {
   data: globalPreHooksData,
   pending: globalPreHooksLoading,
   execute: fetchGlobalPreHooks,
-} = useApi(() => '/pre_hook_definition', {
+} = useApi(() => '/enfyra_pre_hook', {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
     filter: { isGlobal: { _eq: true } },
@@ -259,7 +259,7 @@ const {
   data: globalPostHooksData,
   pending: globalPostHooksLoading,
   execute: fetchGlobalPostHooks,
-} = useApi(() => '/post_hook_definition', {
+} = useApi(() => '/enfyra_post_hook', {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
     filter: { isGlobal: { _eq: true } },
@@ -412,7 +412,7 @@ const {
   error: createHandlerError,
   execute: executeCreateHandler,
   pending: createHandlerLoading,
-} = useApi(() => '/route_handler_definition', {
+} = useApi(() => '/enfyra_route_handler', {
   method: 'post',
   errorContext: 'Create Handler',
 })
@@ -473,7 +473,7 @@ const {
   error: updateHandlerError,
   execute: executeUpdateHandler,
   pending: updateHandlerLoading,
-} = useApi(() => '/route_handler_definition', {
+} = useApi(() => '/enfyra_route_handler', {
   method: 'patch',
   errorContext: 'Update Handler',
 })
@@ -481,7 +481,7 @@ const {
 const {
   data: editHandlerData,
   execute: fetchEditHandler,
-} = useApi(() => '/route_handler_definition', {
+} = useApi(() => '/enfyra_route_handler', {
   query: computed(() => ({
     fields: getHandlerIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: editingHandlerId.value } },
@@ -529,7 +529,7 @@ async function updateHandler() {
   await fetchHandlers()
 }
 
-const { execute: deleteHandlerApi, error: deleteHandlerError } = useApi(() => '/route_handler_definition', {
+const { execute: deleteHandlerApi, error: deleteHandlerError } = useApi(() => '/enfyra_route_handler', {
   method: 'delete',
   errorContext: 'Delete Handler',
 })
@@ -561,13 +561,13 @@ const {
   error: createPreHookError,
   execute: executeCreatePreHook,
   pending: createPreHookLoading,
-} = useApi(() => '/pre_hook_definition', { method: 'post', errorContext: 'Create Pre-Hook' })
+} = useApi(() => '/enfyra_pre_hook', { method: 'post', errorContext: 'Create Pre-Hook' })
 
 const {
   error: createPostHookError,
   execute: executeCreatePostHook,
   pending: createPostHookLoading,
-} = useApi(() => '/post_hook_definition', { method: 'post', errorContext: 'Create Post-Hook' })
+} = useApi(() => '/enfyra_post_hook', { method: 'post', errorContext: 'Create Post-Hook' })
 
 const createHookLoading = computed(() => createPreHookLoading.value || createPostHookLoading.value)
 
@@ -651,20 +651,20 @@ const {
   error: updatePreHookError,
   execute: executeUpdatePreHook,
   pending: updatePreHookLoading,
-} = useApi(() => '/pre_hook_definition', { method: 'patch', errorContext: 'Update Pre-Hook' })
+} = useApi(() => '/enfyra_pre_hook', { method: 'patch', errorContext: 'Update Pre-Hook' })
 
 const {
   error: updatePostHookError,
   execute: executeUpdatePostHook,
   pending: updatePostHookLoading,
-} = useApi(() => '/post_hook_definition', { method: 'patch', errorContext: 'Update Post-Hook' })
+} = useApi(() => '/enfyra_post_hook', { method: 'patch', errorContext: 'Update Post-Hook' })
 
 const updateHookLoading = computed(() => updatePreHookLoading.value || updatePostHookLoading.value)
 
 const {
   data: editPreHookData,
   execute: fetchEditPreHook,
-} = useApi(() => '/pre_hook_definition', {
+} = useApi(() => '/enfyra_pre_hook', {
   query: computed(() => ({
     fields: getPreHookIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: editingHookId.value } },
@@ -676,7 +676,7 @@ const {
 const {
   data: editPostHookData,
   execute: fetchEditPostHook,
-} = useApi(() => '/post_hook_definition', {
+} = useApi(() => '/enfyra_post_hook', {
   query: computed(() => ({
     fields: getPostHookIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: editingHookId.value } },
@@ -745,12 +745,12 @@ async function updateHook() {
   await refreshAll()
 }
 
-const { execute: togglePreHookApi, error: togglePreHookError } = useApi(() => '/pre_hook_definition', {
+const { execute: togglePreHookApi, error: togglePreHookError } = useApi(() => '/enfyra_pre_hook', {
   method: 'patch',
   errorContext: 'Toggle Pre-Hook',
 })
 
-const { execute: togglePostHookApi, error: togglePostHookError } = useApi(() => '/post_hook_definition', {
+const { execute: togglePostHookApi, error: togglePostHookError } = useApi(() => '/enfyra_post_hook', {
   method: 'patch',
   errorContext: 'Toggle Post-Hook',
 })
@@ -772,12 +772,12 @@ async function toggleHook(hook: any, enabled: boolean) {
   await refreshAll()
 }
 
-const { execute: deletePreHookApi, error: deletePreHookError } = useApi(() => '/pre_hook_definition', {
+const { execute: deletePreHookApi, error: deletePreHookError } = useApi(() => '/enfyra_pre_hook', {
   method: 'delete',
   errorContext: 'Delete Pre-Hook',
 })
 
-const { execute: deletePostHookApi, error: deletePostHookError } = useApi(() => '/post_hook_definition', {
+const { execute: deletePostHookApi, error: deletePostHookError } = useApi(() => '/enfyra_post_hook', {
   method: 'delete',
   errorContext: 'Delete Post-Hook',
 })
@@ -808,7 +808,7 @@ const {
   data: routeGuardsData,
   pending: routeGuardsLoading,
   execute: fetchRouteGuards,
-} = useApi(() => '/guard_definition', {
+} = useApi(() => '/enfyra_guard', {
   query: computed(() => ({
     fields: '*,route.id,route.path,methods.name,parent',
     filter: routeId.value
@@ -824,7 +824,7 @@ const {
   data: globalGuardsData,
   pending: globalGuardsLoading,
   execute: fetchGlobalGuards,
-} = useApi(() => '/guard_definition', {
+} = useApi(() => '/enfyra_guard', {
   query: computed(() => ({
     fields: '*,route.id,route.path,methods.name,parent',
     filter: { _and: [{ isGlobal: { _eq: true } }, { parent: { _is_null: true } }] },
@@ -849,12 +849,12 @@ const {
   error: createGuardError,
   execute: executeCreateGuard,
   pending: createGuardLoading,
-} = useApi(() => '/guard_definition', { method: 'post', errorContext: 'Create Guard' })
+} = useApi(() => '/enfyra_guard', { method: 'post', errorContext: 'Create Guard' })
 
 const {
   error: createGuardRuleError,
   execute: executeCreateGuardRule,
-} = useApi(() => '/guard_rule_definition', { method: 'post', errorContext: 'Create Guard Rule' })
+} = useApi(() => '/enfyra_guard_rule', { method: 'post', errorContext: 'Create Guard Rule' })
 
 function openCreateGuardDrawer() {
   selectedGuardTemplate.value = routeGuardTemplates[0]?.key || null
@@ -1062,7 +1062,7 @@ watch(showEditHookDrawer, (isOpen) => {
           v-model="form"
           v-model:errors="errors"
           @has-changed="(hasChanged: boolean) => hasFormChanges = hasChanged"
-          table-name="route_definition"
+          table-name="enfyra_route"
           :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards']"
           :field-map="typeMap"
           :loading="routeLoading"
@@ -1124,7 +1124,7 @@ watch(showEditHookDrawer, (isOpen) => {
 
     <CommonFormCard v-if="routeId">
       <PermissionManager
-        table-name="route_permission_definition"
+        table-name="enfyra_route_permission"
         :current-field-id="{ field: 'route', value: routeId }"
         icon="lucide:shield"
         title="Route Permissions"

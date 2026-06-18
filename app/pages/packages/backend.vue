@@ -149,7 +149,7 @@ registerHeaderActions({
   permission: {
     and: [
       {
-        route: "/package_definition",
+        route: "/enfyra_package",
         methods: ["POST"],
       },
     ],
@@ -160,7 +160,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadPackages,
-} = useApi("/package_definition", {
+} = useApi("/enfyra_package", {
   query: computed(() => ({
     page: page.value,
     limit,
@@ -176,7 +176,7 @@ const showInitialLoading = computed(() => !isMounted.value || (loading.value && 
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 const { execute: removePackage, error: removePackageError } = useApi(
-  "/package_definition",
+  "/enfyra_package",
   {
     method: "delete",
     errorContext: "Uninstall Package",

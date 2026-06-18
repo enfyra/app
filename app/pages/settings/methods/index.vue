@@ -57,7 +57,7 @@ const {
   data: methodsData,
   pending: loading,
   execute: fetchMethods,
-} = useApi<{ data: MethodRecord[] }>('/method_definition', {
+} = useApi<{ data: MethodRecord[] }>('/enfyra_method', {
   query: {
     fields: '*',
     sort: 'name',
@@ -66,13 +66,13 @@ const {
   errorContext: 'Fetch Methods',
 });
 
-const { execute: createMethod } = useApi('/method_definition', {
+const { execute: createMethod } = useApi('/enfyra_method', {
   method: 'post',
   errorContext: 'Create Method',
   disableErrorPage: true,
 });
 
-const { execute: updateMethod } = useApi('/method_definition', {
+const { execute: updateMethod } = useApi('/enfyra_method', {
   method: 'patch',
   errorContext: 'Update Method',
   disableErrorPage: true,
@@ -255,7 +255,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: '/method_definition',
+          route: '/enfyra_method',
           methods: ['POST'],
         },
       ],

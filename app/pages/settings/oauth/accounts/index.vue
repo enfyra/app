@@ -62,7 +62,7 @@
 const page = ref(1);
 const pageLimit = 12;
 const route = useRoute();
-const tableName = "oauth_account_definition";
+const tableName = "enfyra_oauth_account";
 
 const { getId } = useDatabase();
 const { isMounted } = useMounted();

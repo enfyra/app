@@ -52,7 +52,7 @@ definePageMeta({
 
 const notify = useNotify();
 
-const tableName = "extension_definition";
+const tableName = "enfyra_extension";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -82,7 +82,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/extension_definition",
+          route: "/enfyra_extension",
           methods: ["POST"],
         },
       ],
@@ -111,7 +111,7 @@ registerHeaderActions([
   permission: {
     and: [
       {
-        route: "/extension_definition",
+        route: "/enfyra_extension",
         methods: ["POST"],
       },
     ],

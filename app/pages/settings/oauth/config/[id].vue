@@ -44,7 +44,7 @@ const route = useRoute();
 const notify = useNotify();
 const { confirm } = useConfirm();
 
-const tableName = "oauth_config_definition";
+const tableName = "enfyra_oauth_config";
 
 const { getIncludeFields } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -124,7 +124,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/oauth_config_definition",
+          route: "/enfyra_oauth_config",
           methods: ["DELETE"],
         },
       ],
@@ -144,7 +144,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/oauth_config_definition",
+          route: "/enfyra_oauth_config",
           methods: ["PATCH"],
         },
       ],

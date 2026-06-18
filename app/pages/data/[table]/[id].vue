@@ -29,7 +29,7 @@ const { registerPageHeader } = usePageHeaderRegistry();
 
 const currentRecord = ref<Record<string, any>>({});
 const fieldMap = computed(() =>
-  tableName === 'method_definition' ? buildMethodDefinitionFieldMap() : {},
+  tableName === 'enfyra_method' ? buildMethodDefinitionFieldMap() : {},
 );
 
 const currentRecordRouteId = computed(() => {
@@ -73,7 +73,7 @@ async function initializeForm() {
   const data = apiData.value?.data?.[0];
   if (data) {
     currentRecord.value = { ...data };
-    if (tableName === 'method_definition') {
+    if (tableName === 'enfyra_method') {
       applyMethodColorSuggestion(currentRecord.value);
     }
     formChanges.update(data);
@@ -81,7 +81,7 @@ async function initializeForm() {
 }
 
 async function handleUpdate() {
-  if (tableName === 'method_definition') {
+  if (tableName === 'enfyra_method') {
     normalizeMethodDefinitionRecord(currentRecord.value);
   }
   if (!await validateForm(currentRecord.value, updateErrors)) return;

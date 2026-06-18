@@ -10,7 +10,7 @@
             <FormEditorLazy
               v-model="form"
               v-model:errors="localErrors"
-              :table-name="'guard_definition'"
+              :table-name="'enfyra_guard'"
               :excluded="['createdAt', 'updatedAt', 'children', 'rules', 'parent', 'route', 'isGlobal', 'isSystem', 'position', 'methods']"
               :field-map="fieldMap"
               @has-changed="(v) => (hasChanged = v)"

@@ -144,7 +144,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 30% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+  background: radial-gradient(ellipse at 30% 20%, color-mix(in srgb, var(--brand-500) 6%, transparent) 0%, transparent 50%),
               radial-gradient(ellipse at 70% 80%, rgba(34, 211, 238, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
@@ -191,7 +191,7 @@
 }
 
 .card-float {
-  box-shadow: var(--shadow-lg), 0 0 30px rgba(139, 92, 246, 0.06);
+  box-shadow: var(--shadow-lg), 0 0 30px color-mix(in srgb, var(--brand-500) 6%, transparent);
   transition: box-shadow 0.3s var(--ease-smooth);
 }
 
@@ -200,7 +200,7 @@
 }
 
 .card-float:hover {
-  box-shadow: var(--shadow-xl), 0 0 50px rgba(139, 92, 246, 0.15);
+  box-shadow: var(--shadow-xl), 0 0 50px color-mix(in srgb, var(--brand-500) 15%, transparent);
 }
 
 .dark .card-float:hover {
@@ -213,7 +213,7 @@
 }
 
 .card-float-primary:hover {
-  box-shadow: var(--shadow-primary-lg), 0 0 30px rgba(139, 92, 246, 0.2);
+  box-shadow: var(--shadow-primary-lg), 0 0 30px color-mix(in srgb, var(--brand-500) 20%, transparent);
 }
 
 .card-static {
@@ -317,10 +317,10 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--brand-500) 30%, transparent);
   }
   50% {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.5), 0 0 60px rgba(34, 211, 238, 0.3);
+    box-shadow: 0 0 40px color-mix(in srgb, var(--brand-500) 50%, transparent), 0 0 60px rgba(34, 211, 238, 0.3);
   }
 }
 
@@ -369,9 +369,9 @@
 .animate-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(139, 92, 246, 0) 0%,
-    rgba(139, 92, 246, 0.08) 50%,
-    rgba(139, 92, 246, 0) 100%
+    color-mix(in srgb, var(--brand-500) 0%, transparent) 0%,
+    color-mix(in srgb, var(--brand-500) 8%, transparent) 50%,
+    color-mix(in srgb, var(--brand-500) 0%, transparent) 100%
   );
   background-size: 1000px 100%;
   animation: shimmer 3s infinite;
@@ -380,9 +380,9 @@
 .dark .animate-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(139, 92, 246, 0) 0%,
-    rgba(139, 92, 246, 0.1) 50%,
-    rgba(139, 92, 246, 0) 100%
+    color-mix(in srgb, var(--brand-500) 0%, transparent) 0%,
+    color-mix(in srgb, var(--brand-500) 10%, transparent) 50%,
+    color-mix(in srgb, var(--brand-500) 0%, transparent) 100%
   );
   background-size: 1000px 100%;
 }
@@ -399,8 +399,8 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(139, 92, 246, 0.15),
-    rgba(99, 102, 241, 0.1),
+    color-mix(in srgb, var(--brand-500) 15%, transparent),
+    color-mix(in srgb, var(--brand-600) 10%, transparent),
     transparent
   );
   animation: shimmer 2s infinite;
@@ -411,7 +411,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(139, 92, 246, 0.3),
+    color-mix(in srgb, var(--brand-500) 30%, transparent),
     transparent
   );
 }
@@ -451,13 +451,13 @@
 }
 
 .menu-item-active {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, color-mix(in srgb, var(--brand-600) 10%, transparent) 100%);
   color: var(--brand-violet-deep);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.08);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--brand-500) 8%, transparent);
 }
 
 .dark .menu-item-active {
-  background: rgba(139, 92, 246, 0.15);
+  background: color-mix(in srgb, var(--brand-500) 15%, transparent);
   color: var(--brand-violet-bright);
 }
 
@@ -466,12 +466,12 @@
 }
 
 .menu-item-inactive:hover {
-  background: rgba(139, 92, 246, 0.08);
+  background: color-mix(in srgb, var(--brand-500) 8%, transparent);
   color: var(--brand-violet-deep);
 }
 
 .dark .menu-item-inactive:hover {
-  background: rgba(139, 92, 246, 0.1);
+  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
   color: var(--brand-violet-bright);
 }
 
@@ -514,13 +514,13 @@
 }
 
 .menu-dropdown-item-active {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, color-mix(in srgb, var(--brand-600) 10%, transparent) 100%);
   color: var(--brand-violet-deep);
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.08);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--brand-500) 8%, transparent);
 }
 
 .dark .menu-dropdown-item-active {
-  background: rgba(139, 92, 246, 0.15);
+  background: color-mix(in srgb, var(--brand-500) 15%, transparent);
   color: var(--brand-violet-bright);
 }
 
@@ -529,12 +529,12 @@
 }
 
 .menu-dropdown-item-inactive:hover {
-  background: rgba(139, 92, 246, 0.08);
+  background: color-mix(in srgb, var(--brand-500) 8%, transparent);
   color: var(--brand-violet-deep);
 }
 
 .dark .menu-dropdown-item-inactive:hover {
-  background: rgba(139, 92, 246, 0.1);
+  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
   color: var(--brand-violet-bright);
 }
 
@@ -562,25 +562,25 @@
 }
 
 .skeleton-base {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(99, 102, 241, 0.12) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 8%, transparent) 0%, color-mix(in srgb, var(--brand-600) 12%, transparent) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 .dark .skeleton-base {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(99, 102, 241, 0.15) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 10%, transparent) 0%, color-mix(in srgb, var(--brand-600) 15%, transparent) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
 .skeleton-gradient {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(34, 211, 238, 0.08) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 10%, transparent) 0%, rgba(34, 211, 238, 0.08) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 .dark .skeleton-gradient {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(34, 211, 238, 0.2) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, rgba(34, 211, 238, 0.2) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -591,11 +591,11 @@
 }
 
 .skeleton-preview-bg {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(34, 211, 238, 0.08) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 8%, transparent) 0%, rgba(34, 211, 238, 0.08) 100%);
 }
 
 .dark .skeleton-preview-bg {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(34, 211, 238, 0.1) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, rgba(34, 211, 238, 0.1) 100%);
 }
 
 .skeleton-icon {
@@ -603,7 +603,7 @@
 }
 
 .dark .skeleton-icon {
-  background: rgba(139, 92, 246, 0.2);
+  background: color-mix(in srgb, var(--brand-500) 20%, transparent);
 }
 
 .skeleton-badge {
@@ -611,17 +611,17 @@
 }
 
 .dark .skeleton-badge {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(232, 121, 249, 0.2) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, rgba(232, 121, 249, 0.2) 100%);
 }
 
 .skeleton-primary {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(99, 102, 241, 0.25) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 20%, transparent) 0%, color-mix(in srgb, var(--brand-600) 25%, transparent) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 .dark .skeleton-primary {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(139, 92, 246, 0.3) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 25%, transparent) 0%, color-mix(in srgb, var(--brand-500) 30%, transparent) 100%);
 }
 
 .skeleton-inline {
@@ -629,7 +629,7 @@
 }
 
 .dark .skeleton-inline {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(34, 211, 238, 0.2) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, rgba(34, 211, 238, 0.2) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }

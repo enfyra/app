@@ -268,7 +268,7 @@ const normalizedIcon = computed(() => props.icon.replace(/\s+/g, ''));
 
 const iconBgClass = computed(() => {
   const colorMap = {
-    primary: "bg-gradient-to-br from-violet-500 to-indigo-600",
+    primary: "bg-gradient-to-br from-brand-500 to-brand-600",
     success: "bg-gradient-to-br from-emerald-500 to-teal-500",
     warning: "bg-gradient-to-br from-amber-500 to-orange-500",
     error: "bg-gradient-to-br from-rose-500 to-pink-500",

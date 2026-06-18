@@ -185,7 +185,7 @@ const schemaStructure = computed(() => {
 
     if (fieldName === 'isSystem') return;
 
-    if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
+    if (fieldName === 'isRootAdmin' && props.tableName === 'enfyra_user') return;
 
     const targetTableName = getTargetTableName(field, allSchemas.value);
 
@@ -224,7 +224,7 @@ const examplePayload = computed(() => {
 
     if (fieldName === 'isSystem') return;
 
-    if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
+    if (fieldName === 'isRootAdmin' && props.tableName === 'enfyra_user') return;
 
     if (field.fieldType === "relation") {
 
@@ -299,7 +299,7 @@ const examplePatchPayload = computed(() => {
     if (field.isGenerated) return;
     if (["createdAt", "updatedAt", "id"].includes(fieldName)) return;
     if (fieldName === 'isSystem') return;
-    if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
+    if (fieldName === 'isRootAdmin' && props.tableName === 'enfyra_user') return;
 
     if (field.fieldType === "relation") {
       const targetTableName = getTargetTableName(field, allSchemas.value) || "unknown";
@@ -354,7 +354,7 @@ const validationRules = computed(() => {
 
     if (fieldName === 'isSystem') return;
 
-    if (fieldName === 'isRootAdmin' && props.tableName === 'user_definition') return;
+    if (fieldName === 'isRootAdmin' && props.tableName === 'enfyra_user') return;
 
     const fieldRules: string[] = [];
 

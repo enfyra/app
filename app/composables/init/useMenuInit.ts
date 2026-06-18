@@ -36,7 +36,7 @@ export async function useMenuInit(options: { reset?: boolean } = {}) {
       position: "top" as any,
       permission: {
         and: [
-          { route: `/table_definition`, methods: ["GET"] }
+          { route: `/enfyra_table`, methods: ["GET"] }
         ]
       }
     } as any);

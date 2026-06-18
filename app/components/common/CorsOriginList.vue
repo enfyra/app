@@ -101,7 +101,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchOrigins,
-} = useApi(() => "/cors_origin_definition", {
+} = useApi(() => "/enfyra_cors_origin", {
   query: {
     fields: "id,value,isEnabled",
     sort: "value",
@@ -120,17 +120,17 @@ const origins = computed<CorsOrigin[]>(() => {
 });
 
 const { execute: createApi, error: createError } = useApi(
-  () => "/cors_origin_definition",
+  () => "/enfyra_cors_origin",
   { method: "post", errorContext: "Add CORS Origin" }
 );
 
 const { execute: updateApi, error: updateError } = useApi(
-  () => "/cors_origin_definition",
+  () => "/enfyra_cors_origin",
   { method: "patch", errorContext: "Update CORS Origin" }
 );
 
 const { execute: deleteApi, error: deleteError } = useApi(
-  () => "/cors_origin_definition",
+  () => "/enfyra_cors_origin",
   { method: "delete", errorContext: "Delete CORS Origin" }
 );
 

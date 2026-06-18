@@ -27,7 +27,7 @@ export function useGlobalExtensions() {
     globalExtensionsError.value = null;
 
     try {
-      const response = await $fetch<{ data?: ExtensionDefinition[] }>("/api/extension_definition", {
+      const response = await $fetch<{ data?: ExtensionDefinition[] }>("/api/enfyra_extension", {
         query: {
           fields: "*",
           limit: 0,

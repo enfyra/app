@@ -88,7 +88,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchConfigs,
-} = useApi(() => "/oauth_config_definition", {
+} = useApi(() => "/enfyra_oauth_config", {
   query: computed(() => ({
     fields: ["*"].join(","),
     limit,
@@ -105,7 +105,7 @@ const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 
 const { execute: updateConfig, error: updateError } = useApi(
-  () => `/oauth_config_definition`,
+  () => `/enfyra_oauth_config`,
   {
     method: "patch",
     errorContext: "Update OAuth Config",
@@ -124,7 +124,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/oauth_config_definition",
+          route: "/enfyra_oauth_config",
           methods: ["POST"],
         },
       ],
@@ -170,7 +170,7 @@ function navigateToDetail(config: OAuthConfigDefinition) {
 function getHeaderActions(config: OAuthConfigDefinition) {
   const actions = [];
 
-  if (checkPermissionCondition({ or: [{ route: '/oauth_config_definition', methods: ['PATCH'] }] })) {
+  if (checkPermissionCondition({ or: [{ route: '/enfyra_oauth_config', methods: ['PATCH'] }] })) {
     actions.push({
       component: 'USwitch',
       props: {

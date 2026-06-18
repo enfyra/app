@@ -66,7 +66,7 @@ async function fetchDefaultList() {
 }
 
 const { data: rolesData, execute: searchRoles, pending: rolesLoading } = useApi(
-  () => "/role_definition",
+  () => "/enfyra_role",
   {
     immediate: false,
     watch: false,
@@ -81,7 +81,7 @@ const { data: rolesData, execute: searchRoles, pending: rolesLoading } = useApi(
 );
 
 const { data: usersData, execute: searchUsers, pending: usersLoading } = useApi(
-  () => "/user_definition",
+  () => "/enfyra_user",
   {
     immediate: false,
     watch: false,

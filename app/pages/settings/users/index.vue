@@ -98,7 +98,7 @@
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
 const limit = 9;
-const tableName = "user_definition";
+const tableName = "enfyra_user";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();

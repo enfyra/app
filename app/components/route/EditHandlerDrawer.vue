@@ -15,7 +15,7 @@
             <FormEditorLazy
               v-model="localForm"
               v-model:errors="localErrors"
-              :table-name="'route_handler_definition'"
+              :table-name="'enfyra_route_handler'"
               :excluded="excludedFields"
               :field-map="fieldMap"
               mode="update"

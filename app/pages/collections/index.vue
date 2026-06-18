@@ -116,7 +116,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchCollections,
-} = useApi(() => "/table_definition", {
+} = useApi(() => "/enfyra_table", {
   query: computed(() => {
     const conditions: any[] = [];
     if (!showSystem.value) {
@@ -154,7 +154,7 @@ registerHeaderActions({
   permission: {
     and: [
       {
-        route: "/table_definition",
+        route: "/enfyra_table",
         methods: ["POST"],
       },
     ],

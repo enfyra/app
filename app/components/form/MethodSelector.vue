@@ -34,7 +34,7 @@ const methodsLoaded = useState<boolean>('methods-loaded', () => false);
 const {
   data: methodsData,
   execute: fetchMethods,
-} = useApi('/method_definition', {
+} = useApi('/enfyra_method', {
   query: {
     fields: '*',
     limit: 0,

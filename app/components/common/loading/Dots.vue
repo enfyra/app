@@ -5,7 +5,7 @@ const props = withDefaults(defineProps<{
   type?: 'bounce' | 'pulse' | 'wave';
 }>(), {
   size: 'md',
-  color: 'purple-500',
+  color: 'var(--brand-500)',
   type: 'bounce'
 });
 
@@ -29,16 +29,16 @@ const animation = computed(() => {
 <template>
   <div class="flex items-center gap-2">
     <div
-      :class="[dotSize, `bg-${color}`, 'rounded-full', animation]"
-      :style="{ animationDelay: '0ms' }"
+      :class="[dotSize, 'rounded-full', animation]"
+      :style="{ animationDelay: '0ms', backgroundColor: color }"
     ></div>
     <div
-      :class="[dotSize, `bg-${color}`, 'rounded-full', animation]"
-      :style="{ animationDelay: '150ms' }"
+      :class="[dotSize, 'rounded-full', animation]"
+      :style="{ animationDelay: '150ms', backgroundColor: color }"
     ></div>
     <div
-      :class="[dotSize, `bg-${color}`, 'rounded-full', animation]"
-      :style="{ animationDelay: '300ms' }"
+      :class="[dotSize, 'rounded-full', animation]"
+      :style="{ animationDelay: '300ms', backgroundColor: color }"
     ></div>
   </div>
 </template>

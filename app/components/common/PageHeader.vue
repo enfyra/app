@@ -42,7 +42,7 @@ const leadingIconShellClass = computed(() => {
     : "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl";
   const g = props.gradient;
   if (g === "purple") {
-    return `${base} bg-gradient-to-br from-violet-500/25 to-fuchsia-500/20 text-violet-600 dark:from-violet-400/20 dark:to-fuchsia-500/15 dark:text-violet-300`;
+    return `${base} bg-gradient-to-br from-brand-500/25 to-brand-300/20 text-brand-600 dark:from-brand-400/20 dark:to-brand-500/15 dark:text-brand-300`;
   }
   if (g === "blue") {
     return `${base} bg-gradient-to-br from-indigo-500/25 to-cyan-500/15 text-indigo-600 dark:from-indigo-400/20 dark:to-cyan-400/15 dark:text-indigo-300`;
@@ -89,7 +89,7 @@ const headerStripClass = computed(() => {
     return "bg-gradient-to-r from-cyan-500/[0.07] via-[var(--surface-muted)]/80 to-transparent dark:from-cyan-400/[0.09] dark:via-[var(--surface-muted)]/50 dark:to-transparent";
   }
   if (g === "purple") {
-    return "bg-gradient-to-r from-violet-500/[0.08] via-[var(--surface-muted)]/78 to-transparent dark:from-violet-400/[0.09] dark:via-[var(--surface-muted)]/48 dark:to-transparent";
+    return "bg-gradient-to-r from-brand-500/[0.08] via-[var(--surface-muted)]/78 to-transparent dark:from-brand-400/[0.09] dark:via-[var(--surface-muted)]/48 dark:to-transparent";
   }
   if (g === "blue") {
     return "bg-gradient-to-r from-indigo-500/[0.08] via-[var(--surface-muted)]/78 to-transparent dark:from-indigo-400/[0.09] dark:via-[var(--surface-muted)]/48 dark:to-transparent";

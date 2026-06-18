@@ -6,7 +6,7 @@ export const getId = (item: any): string | null => {
 };
 
 export const isSystemTableModifiable = (tableName: string): boolean => {
-  const modifiableSystemTables = ["user_definition"];
+  const modifiableSystemTables = ["enfyra_user"];
   return modifiableSystemTables.includes(tableName);
 };
 

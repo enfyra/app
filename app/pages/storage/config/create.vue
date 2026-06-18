@@ -31,7 +31,7 @@ const { me } = useAuth();
 const { getIdFieldName } = useDatabase();
 const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
 
-const tableName = "storage_config_definition";
+const tableName = "enfyra_storage_config";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -92,7 +92,7 @@ registerHeaderActions({
   permission: {
     and: [
       {
-        route: "/storage_config_definition",
+        route: "/enfyra_storage_config",
         methods: ["POST"],
       },
     ],

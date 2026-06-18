@@ -336,8 +336,8 @@ function handleCancelMove() {
       :class="[
         'menu-item-dropdown-header flex items-center flex-wrap !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
         (level || 0) > 0 ? 'pl-3 md:pl-6' : 'pl-3',
-        isMoving ? 'ring-2 ring-violet-500 bg-violet-500/10 dark:bg-violet-500/20' : '',
-        isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-violet-500/5 dark:hover:bg-violet-500/10'
+        isMoving ? 'ring-2 ring-brand-500 bg-brand-500/10 dark:bg-brand-500/20' : '',
+        isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-brand-500/5 dark:hover:bg-brand-500/10'
       ]"
       @click="handleItemClick(item)"
     >
@@ -346,7 +346,7 @@ function handleCancelMove() {
           class="hidden md:block w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
           @click.stop
         />
-        <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 shrink-0 text-violet-500 dark:text-violet-400" />
+        <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 shrink-0 text-brand-500 dark:text-brand-400" />
         <span class="text-sm font-medium text-[var(--text-secondary)] truncate">{{ item.label }}</span>
         <UIcon
           v-if="isSystemMenu"
@@ -510,8 +510,8 @@ function handleCancelMove() {
       v-else
       :class="[
         'menu-item flex items-center flex-wrap !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
-        isMoving ? 'ring-2 ring-violet-500 bg-violet-500/10 dark:bg-violet-500/20' : '',
-        isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-violet-500/5 dark:hover:bg-violet-500/10'
+        isMoving ? 'ring-2 ring-brand-500 bg-brand-500/10 dark:bg-brand-500/20' : '',
+        isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-brand-500/5 dark:hover:bg-brand-500/10'
       ]"
       :style="{
         paddingLeft: `${12 + (level || 0) * 12}px`
@@ -523,7 +523,7 @@ function handleCancelMove() {
         class="hidden md:block w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
         @click.stop
       />
-      <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 shrink-0 text-violet-500 dark:text-violet-400" />
+      <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 shrink-0 text-brand-500 dark:text-brand-400" />
       <span class="text-sm text-[var(--text-secondary)] truncate">{{ item.label }}</span>
       <UIcon
         v-if="isSystemMenu"
@@ -654,20 +654,20 @@ function handleCancelMove() {
 }
 
 .drop-zone:has(.sortable-ghost) {
-  background-color: rgba(139, 92, 246, 0.05);
-  border-color: rgb(139, 92, 246);
-  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.35);
+  background-color: color-mix(in srgb, var(--brand-500) 5%, transparent);
+  border-color: var(--brand-500);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 35%, transparent);
 }
 
 .drop-zone:has(.sortable-ghost)::before,
 .drop-zone:has(.ghost-item)::before {
-  background: rgba(139, 92, 246, 0.85);
+  background: color-mix(in srgb, var(--brand-500) 85%, transparent);
 }
 
 .menu-visual-editor-item :deep(.sortable-ghost) {
   opacity: 0.5;
-  background: rgba(139, 92, 246, 0.1);
-  border: 2px dashed rgb(139, 92, 246);
+  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
+  border: 2px dashed var(--brand-500);
 }
 
 .menu-visual-editor-item :deep(.sortable-chosen) {
@@ -678,4 +678,3 @@ function handleCancelMove() {
   opacity: 0.5;
 }
 </style>
-

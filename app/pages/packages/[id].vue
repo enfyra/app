@@ -55,7 +55,7 @@
         <UForm :state="form" @submit="handleUpdate">
           <FormEditorLazy
             ref="formEditorRef"
-            table-name="package_definition"
+            table-name="enfyra_package"
             mode="update"
             v-model="form"
             v-model:errors="errors"
@@ -83,7 +83,7 @@ const { getIdFieldName } = useDatabase();
 const { fetchAppPackages } = useGlobalState();
 const { adminSocket: $adminSocket } = useAdminSocket();
 const packageId = route.params.id as string;
-const tableName = "package_definition";
+const tableName = "enfyra_package";
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -98,7 +98,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadPackage,
-} = useApi("/package_definition", {
+} = useApi("/enfyra_package", {
   query: {
     fields: "*",
     filter: {
@@ -148,7 +148,7 @@ const {
   execute: updatePackage,
   pending: updating,
   error: updateError,
-} = useApi("/package_definition", {
+} = useApi("/enfyra_package", {
   method: "patch",
   errorContext: "Update Package",
 });
@@ -157,7 +157,7 @@ const {
   execute: removePackage,
   pending: deleting,
   error: deleteError,
-} = useApi("/package_definition", {
+} = useApi("/enfyra_package", {
   method: "delete",
   errorContext: "Uninstall Package",
 });
@@ -210,7 +210,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/package_definition",
+          route: "/enfyra_package",
           methods: ["DELETE"],
         },
       ],
@@ -230,7 +230,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/package_definition",
+          route: "/enfyra_package",
           methods: ["PATCH"],
         },
       ],

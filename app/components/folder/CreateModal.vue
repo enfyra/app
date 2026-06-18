@@ -11,7 +11,7 @@ const emit = defineEmits<{
 
 const notify = useNotify();
 const newFolder = ref<Record<string, any>>({});
-const { generateEmptyForm, validate } = useSchema("folder_definition");
+const { generateEmptyForm, validate } = useSchema("enfyra_folder");
 const createErrors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
 const showDiscardModal = ref(false);
@@ -20,7 +20,7 @@ const {
   pending: createLoading,
   execute: createFolder,
   error: createError,
-} = useApi(() => "/folder_definition", {
+} = useApi(() => "/enfyra_folder", {
   method: "post",
   errorContext: "Create Folder",
 });
@@ -108,7 +108,7 @@ function confirmDiscard() {
             @has-changed="(changed) => (hasFormChanges = changed)"
             :errors="createErrors"
             @update:errors="(errors) => (createErrors = errors)"
-            table-name="folder_definition"
+            table-name="enfyra_folder"
             :excluded="['children', 'files']"
           />
         </UForm>

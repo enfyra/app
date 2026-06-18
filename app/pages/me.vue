@@ -5,7 +5,7 @@ import { CalendarDate } from "@internationalized/date";
 
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { validateForm } = useFormValidation("user_definition");
+const { validateForm } = useFormValidation("enfyra_user");
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -45,7 +45,7 @@ const {
   data: oauthData,
   pending: oauthLoading,
   execute: fetchOauthAccounts,
-} = useApi(() => "/oauth_account_definition", {
+} = useApi(() => "/enfyra_oauth_account", {
   query: computed(() => ({
     fields: "*,user.id,user._id,user.email",
     filter: userId.value ? { user: { _eq: userId.value } } : undefined,
@@ -178,7 +178,7 @@ const fieldMap = computed(() => ({
   role: {
     permission: {
       and: [
-        { route: '/user_definition', methods: ['PATCH'] }
+        { route: '/enfyra_user', methods: ['PATCH'] }
       ]
     }
   }
@@ -486,7 +486,7 @@ onMounted(() => {
             v-model="form"
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            table-name="user_definition"
+            table-name="enfyra_user"
             :excluded="['isRootAdmin', 'isSystem', 'allowedRoutePermissions', 'createdAt', 'updatedAt', 'password']"
             :field-map="fieldMap"
             :loading="loading"

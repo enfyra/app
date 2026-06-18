@@ -105,7 +105,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchExtensions,
-} = useApi(() => "/extension_definition", {
+} = useApi(() => "/enfyra_extension", {
   query: computed(() => ({
     fields: ["*", "menu.*"].join(","),
     limit,
@@ -123,7 +123,7 @@ const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 
 const { execute: updateExtension, error: updateError } = useApi(
-  () => `/extension_definition`,
+  () => `/enfyra_extension`,
   {
     method: "patch",
     errorContext: "Update Extension",
@@ -142,7 +142,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/extension_definition",
+          route: "/enfyra_extension",
           methods: ["POST"],
         },
       ],
@@ -183,7 +183,7 @@ function navigateToDetail(extension: ExtensionDefinition) {
 function getHeaderActions(extension: ExtensionDefinition) {
   const actions = [];
 
-  if (checkPermissionCondition({ or: [{ route: '/extension_definition', methods: ['PATCH'] }] })) {
+  if (checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['PATCH'] }] })) {
     actions.push({
       component: 'USwitch',
       props: {
@@ -199,7 +199,7 @@ function getHeaderActions(extension: ExtensionDefinition) {
 }
 
 function getFooterActions(extension: ExtensionDefinition) {
-  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/extension_definition', methods: ['DELETE'] }] });
+  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['DELETE'] }] });
 
   return [
     {
@@ -266,7 +266,7 @@ const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
 };
 
 const { execute: deleteExtensionApi, error: deleteError } = useApi(
-  () => `/extension_definition`,
+  () => `/enfyra_extension`,
   {
     method: "delete",
     errorContext: "Delete Extension",

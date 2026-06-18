@@ -16,7 +16,7 @@ const emit = defineEmits<{
 }>();
 
 const notify = useNotify();
-const tableName = 'websocket_event_definition';
+const tableName = 'enfyra_websocket_event';
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getIdFieldName, getId } = useDatabase();
 

@@ -13,7 +13,7 @@ const emit = defineEmits<{
 }>();
 
 const notify = useNotify();
-const tableName = "menu_definition";
+const tableName = "enfyra_menu";
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getIdFieldName, getId } = useDatabase();
 

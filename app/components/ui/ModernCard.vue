@@ -24,7 +24,7 @@
 
     <div
       v-if="accentBorder"
-      class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/60 to-transparent"
+      class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/60 to-transparent"
     />
 
 

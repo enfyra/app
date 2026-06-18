@@ -104,7 +104,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  tableName: "field_permission_definition",
+  tableName: "enfyra_field_permission",
   title: "Field Permission",
   subtitle: "Create or update field-level rules",
   mode: "create",
@@ -122,7 +122,7 @@ const emit = defineEmits<{
 const { schema, definition } = useSchema(toRef(props, "tableName"));
 
 const fieldPermissionFormPositions = computed(() => {
-  if (props.tableName !== "field_permission_definition") return undefined;
+  if (props.tableName !== "enfyra_field_permission") return undefined;
   if (props.mode === "update") {
     return { action: 1, effect: 2, config: 3 };
   }
@@ -130,7 +130,7 @@ const fieldPermissionFormPositions = computed(() => {
 });
 
 const fieldPermissionVirtualFields = computed<FormEditorVirtualField[]>(() =>
-  props.tableName === "field_permission_definition"
+  props.tableName === "enfyra_field_permission"
     ? [{ name: "config", fieldType: "relation", label: "Config" }]
     : [],
 );
@@ -150,7 +150,7 @@ const localErrors = computed({
 
 const excluded = computed(() => {
   const base = ["allowedUsers", "table"];
-  if (props.tableName === "field_permission_definition") {
+  if (props.tableName === "enfyra_field_permission") {
     base.push("role");
   }
   const extra = Array.isArray(props.excluded) ? props.excluded : [];

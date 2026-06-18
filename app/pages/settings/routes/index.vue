@@ -6,7 +6,7 @@ const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
 const router = useRouter();
-const tableName = "route_definition";
+const tableName = "enfyra_route";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
@@ -67,7 +67,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRoutes,
-} = useApi(() => "/route_definition", {
+} = useApi(() => "/enfyra_route", {
   query: computed(() => {
     const conditions: any[] = [];
     if (!showSystem.value) {
@@ -170,7 +170,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/route_definition",
+          route: "/enfyra_route",
           methods: ["GET"],
         },
       ],
@@ -187,7 +187,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/route_definition",
+          route: "/enfyra_route",
           methods: ["POST"],
         },
       ],
@@ -226,7 +226,7 @@ watch(
 );
 
 const { execute: updateRouteApi, error: updateError } = useApi(
-  () => `/route_definition`,
+  () => `/enfyra_route`,
   {
     method: "patch",
     errorContext: "Toggle Route",
@@ -234,7 +234,7 @@ const { execute: updateRouteApi, error: updateError } = useApi(
 );
 
 const { execute: deleteRouteApi, error: deleteError } = useApi(
-  () => `/route_definition`,
+  () => `/enfyra_route`,
   {
     method: "delete",
     errorContext: "Delete Route",

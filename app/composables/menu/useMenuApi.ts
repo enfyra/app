@@ -9,7 +9,7 @@ export const useMenuApi = () => {
     data: menuDefinitions,
     pending: menuDefinitionsPending,
     execute: fetchMenuDefinitions,
-  } = useApi<{ data: MenuApiItem[] }>(() => "/menu_definition", {
+  } = useApi<{ data: MenuApiItem[] }>(() => "/enfyra_menu", {
     query: computed(() => ({
       limit: 0,
       fields: "*,parent.*,children.*,sidebar.*,extension.*",

@@ -42,7 +42,7 @@ const { me } = useAuth();
 const { getIdFieldName } = useDatabase();
 const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
 
-const tableName = "storage_config_definition";
+const tableName = "enfyra_storage_config";
 
 const { getIncludeFields } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -130,7 +130,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/storage_config_definition",
+          route: "/enfyra_storage_config",
           methods: ["DELETE"],
         },
       ],
@@ -150,7 +150,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/storage_config_definition",
+          route: "/enfyra_storage_config",
           methods: ["PATCH"],
         },
       ],

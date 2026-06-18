@@ -16,7 +16,7 @@ export function useFileManagerMove() {
     execute: patchFiles,
     error: patchFilesError,
     pending: patchFilesPending,
-  } = useApi(() => "/file_definition", {
+  } = useApi(() => "/enfyra_file", {
     method: "patch",
     errorContext: "Move Files",
   });
@@ -25,7 +25,7 @@ export function useFileManagerMove() {
     execute: patchFolders,
     error: patchFoldersError,
     pending: patchFoldersPending,
-  } = useApi(() => "/folder_definition", {
+  } = useApi(() => "/enfyra_folder", {
     method: "patch",
     errorContext: "Move Folders",
   });

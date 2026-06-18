@@ -451,8 +451,8 @@ const { isMobile, isTablet } = useScreen();
   right: 10px;
   height: 10px;
   border-radius: 9999px;
-  background: linear-gradient(90deg, rgba(139, 92, 246, 0) 0%, rgba(139, 92, 246, 0.98) 18%, rgba(139, 92, 246, 0.98) 82%, rgba(139, 92, 246, 0) 100%);
-  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.4), 0 14px 28px rgba(139, 92, 246, 0.24);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--brand-500) 0%, transparent) 0%, color-mix(in srgb, var(--brand-500) 98%, transparent) 18%, color-mix(in srgb, var(--brand-500) 98%, transparent) 82%, color-mix(in srgb, var(--brand-500) 0%, transparent) 100%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-400) 40%, transparent), 0 14px 28px color-mix(in srgb, var(--brand-500) 24%, transparent);
   pointer-events: none;
 }
 
@@ -462,8 +462,8 @@ const { isMobile, isTablet } = useScreen();
   width: 10px;
   height: 10px;
   border-radius: 9999px;
-  background: rgba(139, 92, 246, 0.95);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7), 0 10px 22px rgba(139, 92, 246, 0.22);
+  background: color-mix(in srgb, var(--brand-500) 95%, transparent);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7), 0 10px 22px color-mix(in srgb, var(--brand-500) 22%, transparent);
   pointer-events: none;
 }
 

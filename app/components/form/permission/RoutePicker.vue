@@ -153,7 +153,7 @@
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
-      table-name="route_definition"
+      table-name="enfyra_route"
       :current-filter="currentFilter"
       @apply="handleFilterApply"
     />
@@ -179,7 +179,7 @@ const isOpen = computed({
 const page = ref(1);
 const limit = 7;
 
-const { getIncludeFields } = useSchema("route_definition");
+const { getIncludeFields } = useSchema("enfyra_route");
 
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
@@ -190,7 +190,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRoutes,
-} = useApi(() => "/route_definition", {
+} = useApi(() => "/enfyra_route", {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)

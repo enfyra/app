@@ -1,7 +1,7 @@
 
 export function useFileManager(parentFilter?: any) {
   const apiCall = parentFilter
-    ? useApi(() => "folder_definition", {
+    ? useApi(() => "enfyra_folder", {
         query: computed(() => ({
           limit: 100,
           fields: "*",
@@ -18,7 +18,7 @@ export function useFileManager(parentFilter?: any) {
   const { getId } = useDatabase();
 
   const { execute: deleteFolderApi, error: deleteFolderError } = useApi(
-    () => "/folder_definition",
+    () => "/enfyra_folder",
     {
       method: "delete",
       errorContext: "Delete Folder",
@@ -26,7 +26,7 @@ export function useFileManager(parentFilter?: any) {
   );
 
   const { execute: deleteFileApi, error: deleteFileError } = useApi(
-    () => "/file_definition",
+    () => "/enfyra_file",
     {
       method: "delete",
       errorContext: "Delete File",

@@ -28,7 +28,7 @@ definePageMeta({
 const notify = useNotify();
 const router = useRouter();
 
-const tableName = "flow_definition";
+const tableName = "enfyra_flow";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -63,7 +63,7 @@ registerHeaderActions([
     submit: handleCreate,
     loading: computed(() => createLoading.value),
     permission: {
-      and: [{ route: "/flow_definition", methods: ["POST"] }],
+      and: [{ route: "/enfyra_flow", methods: ["POST"] }],
     },
   },
 ]);
@@ -73,7 +73,7 @@ const {
   error: createError,
   execute: executeCreateFlow,
   pending: createLoading,
-} = useApi(() => `/flow_definition`, {
+} = useApi(() => `/enfyra_flow`, {
   method: "post",
   errorContext: "Create Flow",
 });

@@ -5,7 +5,7 @@ const props = withDefaults(defineProps<{
   count?: number;
 }>(), {
   size: 'md',
-  color: 'purple-500',
+  color: 'var(--brand-500)',
   count: 5
 });
 
@@ -39,8 +39,8 @@ const bars = computed(() => {
     <div 
       v-for="(bar, index) in bars"
       :key="index"
-      :class="[barWidth, bar.height, `bg-${color}`, 'animate-pulse']"
-      :style="`animation-delay: ${bar.delay}ms; animation-duration: 1s;`"
+      :class="[barWidth, bar.height, 'animate-pulse']"
+      :style="{ animationDelay: `${bar.delay}ms`, animationDuration: '1s', backgroundColor: color }"
     ></div>
   </div>
 </template>

@@ -13,7 +13,7 @@ const page = ref(1);
 const pageLimit = 12;
 const route = useRoute();
 const router = useRouter();
-const tableName = 'guard_definition';
+const tableName = 'enfyra_guard';
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
@@ -50,7 +50,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchGuards,
-} = useApi(() => '/guard_definition', {
+} = useApi(() => '/enfyra_guard', {
   query: computed(() => {
     const conditions: any[] = [
       { parent: { _is_null: true } },
@@ -112,7 +112,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: '/guard_definition',
+          route: '/enfyra_guard',
           methods: ['GET'],
         },
       ],
@@ -129,7 +129,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: '/guard_definition',
+          route: '/enfyra_guard',
           methods: ['POST'],
         },
       ],
@@ -170,7 +170,7 @@ watch(activeScope, async () => {
 const {
   data: routesData,
   execute: fetchRoutes,
-} = useApi(() => '/route_definition', {
+} = useApi(() => '/enfyra_route', {
   query: {
     fields: '*,availableMethods.name',
     sort: 'path',
@@ -188,7 +188,7 @@ const routeOptions = computed(() =>
 );
 
 const { execute: updateGuardApi, error: updateError } = useApi(
-  () => '/guard_definition',
+  () => '/enfyra_guard',
   {
     method: 'patch',
     errorContext: 'Toggle Guard',
@@ -196,7 +196,7 @@ const { execute: updateGuardApi, error: updateError } = useApi(
 );
 
 const { execute: deleteGuardApi, error: deleteError } = useApi(
-  () => '/guard_definition',
+  () => '/enfyra_guard',
   {
     method: 'delete',
     errorContext: 'Delete Guard',
@@ -208,7 +208,7 @@ const {
   error: createGuardError,
   execute: createGuardApi,
   pending: createGuardLoading,
-} = useApi(() => '/guard_definition', {
+} = useApi(() => '/enfyra_guard', {
   method: 'post',
   errorContext: 'Create Guard',
 });
@@ -216,7 +216,7 @@ const {
 const {
   error: createRuleError,
   execute: createRuleApi,
-} = useApi(() => '/guard_rule_definition', {
+} = useApi(() => '/enfyra_guard_rule', {
   method: 'post',
   errorContext: 'Create Guard Rule',
 });

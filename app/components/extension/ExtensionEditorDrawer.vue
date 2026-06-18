@@ -12,7 +12,7 @@ const emit = defineEmits<{
 }>();
 
 const notify = useNotify();
-const tableName = "extension_definition";
+const tableName = "enfyra_extension";
 const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getId, getIdFieldName } = useDatabase();
 const { me } = useAuth();

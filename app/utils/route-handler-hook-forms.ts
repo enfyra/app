@@ -35,7 +35,7 @@ export function getRouteHandlerSourceCodeFieldConfig(options: {
       method: options.method?.name ?? options.method,
       methods: options.availableMethods,
       routePath: options.routePath,
-      tableName: 'route_handler_definition',
+      tableName: 'enfyra_route_handler',
       payload: {
         routeId: options.routeId,
         handlerId: options.handlerId,
@@ -63,7 +63,7 @@ export function getRouteHookSourceCodeFieldConfig(options: {
       method: options.method?.name ?? options.method,
       methods: options.availableMethods,
       routePath: options.routePath,
-      tableName: options.hookType === 'pre' ? 'pre_hook_definition' : 'post_hook_definition',
+      tableName: options.hookType === 'pre' ? 'enfyra_pre_hook' : 'enfyra_post_hook',
       payload: {
         routeId: options.routeId,
         hookId: options.hookId,
