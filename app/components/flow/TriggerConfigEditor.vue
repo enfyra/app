@@ -84,7 +84,7 @@
 
     <div v-else-if="triggerType === 'event'" class="rounded-lg border p-4 space-y-4" :style="{ borderColor: 'var(--border-subtle)', backgroundColor: 'var(--bg-subtle)' }">
       <UFormField label="Table" class="w-full">
-        <UInput :model-value="parsed.table" @update:model-value="updateField('table', $event)" placeholder="order_definition" class="w-full" />
+        <UInput :model-value="parsed.table" @update:model-value="updateField('table', $event)" placeholder="order" class="w-full" />
       </UFormField>
       <div class="border-t" :style="{ borderColor: 'var(--border-subtle)' }" />
       <UFormField label="Action" class="w-full">

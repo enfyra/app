@@ -361,7 +361,7 @@ watch(
               {{ mode === 'create' ? 'Create method' : 'Edit method' }}
             </h2>
             <p class="text-sm text-[var(--text-secondary)]">
-              {{ mode === 'create' ? 'Pick a method and assign its badge colors.' : 'Adjust the method colors used across eApp.' }}
+              {{ mode === 'create' ? 'Pick a method and assign its badge colors.' : 'Adjust the method colors used across the Enfyra admin app.' }}
             </p>
           </div>
         </div>
