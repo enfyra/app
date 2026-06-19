@@ -6,7 +6,7 @@ export function useRoutes() {
   const {
     data: routesData,
     execute: executeRoutes
-  } = useApi(() => '/route_definition', {
+  } = useApi(() => '/enfyra_route', {
     query: {
       fields: ['id', 'path', 'isEnabled', 'updatedAt', 'mainTable.id', 'mainTable.name', 'mainTable.isSystem', 'mainTable.alias', 'mainTable.icon'].join(','),
       limit: 0,

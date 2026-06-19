@@ -246,7 +246,7 @@ const { confirm } = useConfirm();
 const { getId, getIdFieldName } = useDatabase();
 const { isMobile, isTablet } = useScreen();
 
-const tableName = 'guard_definition';
+const tableName = 'enfyra_guard';
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges, getIncludeFields } = useSchema(tableName);
@@ -277,7 +277,7 @@ const guardId = computed(() => route.params.id as string);
 const { checkPermissionCondition } = usePermissions();
 const canUpdateGuard = computed(() =>
   checkPermissionCondition({
-    and: [{ route: '/guard_definition', methods: ['PATCH'] }],
+    and: [{ route: '/enfyra_guard', methods: ['PATCH'] }],
   })
 );
 
@@ -295,7 +295,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: '/guard_definition',
+          route: '/enfyra_guard',
           methods: ['DELETE'],
         },
       ],
@@ -367,7 +367,7 @@ const {
   data: descendantsData,
   pending: descendantsLoading,
   execute: fetchDescendants,
-} = useApi(() => '/guard_definition', {
+} = useApi(() => '/enfyra_guard', {
   query: computed(() => ({
     fields: getIncludeFields(),
     filter: { parent: { _is_null: false } },
@@ -381,7 +381,7 @@ const {
   data: rulesData,
   pending: rulesLoading,
   execute: fetchRules,
-} = useApi(() => '/guard_rule_definition', {
+} = useApi(() => '/enfyra_guard_rule', {
   query: computed(() => ({
     fields: '*,guard,users.id',
     sort: ['priority'],
@@ -453,12 +453,12 @@ const isReordering = ref(false);
 watch(rootRules, (v) => { localRootRules.value = [...v]; }, { immediate: true, deep: true });
 watch(rootChildren, (v) => { localRootChildren.value = [...v]; }, { immediate: true, deep: true });
 
-const { execute: reorderRuleApi } = useApi(() => '/guard_rule_definition', {
+const { execute: reorderRuleApi } = useApi(() => '/enfyra_guard_rule', {
   method: 'patch',
   errorContext: 'Reorder Rule',
 });
 
-const { execute: reorderGuardApi } = useApi(() => '/guard_definition', {
+const { execute: reorderGuardApi } = useApi(() => '/enfyra_guard', {
   method: 'patch',
   errorContext: 'Reorder Guard',
 });
@@ -618,7 +618,7 @@ const {
   error: createRuleError,
   execute: executeCreateRule,
   pending: createRuleLoading,
-} = useApi(() => '/guard_rule_definition', {
+} = useApi(() => '/enfyra_guard_rule', {
   method: 'post',
   errorContext: 'Create Rule',
 });
@@ -686,7 +686,7 @@ const {
   error: updateRuleError,
   execute: executeUpdateRule,
   pending: updateRuleLoading,
-} = useApi(() => '/guard_rule_definition', {
+} = useApi(() => '/enfyra_guard_rule', {
   method: 'patch',
   errorContext: 'Update Rule',
 });
@@ -719,7 +719,7 @@ async function saveEditRule() {
 }
 
 const { execute: deleteRuleApi, error: deleteRuleError } = useApi(
-  () => '/guard_rule_definition',
+  () => '/enfyra_guard_rule',
   { method: 'delete', errorContext: 'Delete Rule' },
 );
 
@@ -748,7 +748,7 @@ const {
   error: createChildError,
   execute: executeCreateChild,
   pending: createChildLoading,
-} = useApi(() => '/guard_definition', {
+} = useApi(() => '/enfyra_guard', {
   method: 'post',
   errorContext: 'Create Sub-guard',
 });
@@ -789,7 +789,7 @@ const {
   error: updateChildError,
   execute: executeUpdateChild,
   pending: updateChildLoading,
-} = useApi(() => '/guard_definition', {
+} = useApi(() => '/enfyra_guard', {
   method: 'patch',
   errorContext: 'Update Guard',
 });
@@ -840,7 +840,7 @@ async function handleDeleteGuard(guard: any) {
 }
 
 const { execute: toggleGuardApi, error: toggleGuardError } = useApi(
-  () => '/guard_definition',
+  () => '/enfyra_guard',
   { method: 'patch', errorContext: 'Toggle Guard' },
 );
 

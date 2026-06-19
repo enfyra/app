@@ -18,7 +18,7 @@ const columns = useModel(props, "modelValue");
 const isNew = ref(false);
 const errors = ref<Record<string, string>>({});
 
-const { generateEmptyForm, validate } = useSchema("column_definition");
+const { generateEmptyForm, validate } = useSchema("enfyra_column");
 const { deleteIds, getIdFieldName, isMongoDB } = useDatabase();
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -616,7 +616,7 @@ watch(
             <FormEditorLazy
               ref="formEditorRef"
               v-model="currentColumn"
-              tableName="column_definition"
+              tableName="enfyra_column"
               v-model:errors="errors"
               @has-changed="(hasChanged) => hasFormChanges = hasChanged"
               unique-check-mode="local"

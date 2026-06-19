@@ -36,7 +36,7 @@ const notify = useNotify();
 const { confirm } = useConfirm();
 
 const id = route.params.id as string;
-const tableName = "bootstrap_script_definition";
+const tableName = "enfyra_bootstrap_script";
 const { getIdFieldName } = useDatabase();
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -98,7 +98,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/bootstrap_script_definition",
+          route: "/enfyra_bootstrap_script",
           methods: ["DELETE"],
         },
       ],
@@ -118,7 +118,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/bootstrap_script_definition",
+          route: "/enfyra_bootstrap_script",
           methods: ["PATCH"],
         },
       ],

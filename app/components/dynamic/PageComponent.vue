@@ -96,7 +96,7 @@ const {
   data: menuResponse,
   error: menuError,
   execute: executeFetchMenu,
-} = useApi(() => "/menu_definition", {
+} = useApi(() => "/enfyra_menu", {
   query: computed(() => ({
     fields: "*,extension.*",
     filter: {

@@ -32,7 +32,7 @@ const { getId } = useDatabase();
 const canDeleteFile = checkPermissionCondition({
   and: [
     {
-      route: "/file_definition",
+      route: "/enfyra_file",
       methods: ["DELETE"],
     },
   ],

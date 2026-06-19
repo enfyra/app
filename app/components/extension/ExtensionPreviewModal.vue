@@ -125,7 +125,7 @@ const { execute: executePreviewApi } = useApi<{
   success: boolean;
   compiledCode: string;
   extensionId?: string;
-}>('/extension_definition/preview', {
+}>('/enfyra_extension/preview', {
   method: 'post',
   errorContext: 'Extension Preview',
 });

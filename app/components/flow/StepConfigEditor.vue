@@ -4,7 +4,7 @@
     <template v-if="type === 'script'">
       <FormEditorLazy
         :model-value="scriptForm"
-        table-name="flow_step_definition"
+        table-name="enfyra_flow_step"
         :errors="errors"
         :includes="['sourceCode', 'scriptLanguage']"
         :field-map="scriptFieldMap"
@@ -18,7 +18,7 @@
     <template v-else-if="type === 'condition'">
       <FormEditorLazy
         :model-value="scriptForm"
-        table-name="flow_step_definition"
+        table-name="enfyra_flow_step"
         :errors="errors"
         :includes="['sourceCode', 'scriptLanguage']"
         :field-map="conditionFieldMap"

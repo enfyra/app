@@ -20,7 +20,7 @@
           <UForm :state="editForm" @submit="saveFlowSettings">
             <FormEditorLazy
               v-model="editForm"
-              :table-name="'flow_definition'"
+              :table-name="'enfyra_flow'"
               :errors="flowErrors"
               :excluded="['steps', 'isSystem']"
               :field-map="flowFieldMap"
@@ -400,7 +400,7 @@ watch(() => stepForm.value.type, () => {
 registerPageHeader({ title: "Flow Editor", gradient: "purple" });
 
 const { data: flowData, pending: loading, execute: fetchFlow } = useApi(
-  () => `/flow_definition?filter={"${getIdFieldName()}":{"_eq":"${flowId}"}}&fields=*,steps.*,steps.parent.id&limit=1`,
+  () => `/enfyra_flow?filter={"${getIdFieldName()}":{"_eq":"${flowId}"}}&fields=*,steps.*,steps.parent.id&limit=1`,
   { errorContext: "Fetch Flow" }
 );
 
@@ -420,7 +420,7 @@ const { data: execData, execute: fetchExecApi } = useApi(
   () => {
     const filter: any = { flow: { _eq: flowId } };
     if (execCursor.value) filter.id = { _lt: execCursor.value };
-    return `/flow_execution_definition?filter=${JSON.stringify(filter)}&sort=-id&limit=${EXEC_LIMIT}&fields=${EXEC_FIELDS}`;
+    return `/enfyra_flow_execution?filter=${JSON.stringify(filter)}&sort=-id&limit=${EXEC_LIMIT}&fields=${EXEC_FIELDS}`;
   },
   { errorContext: "Fetch Executions" }
 );
@@ -453,8 +453,8 @@ const latestExecDetail = ref<any>(null);
 const { data: latestExecData, execute: fetchLatestExecDetail } = useApi(
   () => {
     const latest = allExecutions.value[0];
-    if (!latest) return '/flow_execution_definition?limit=0';
-    return `/flow_execution_definition?filter={"${getIdFieldName()}":{"_eq":"${getId(latest)}"}}&fields=id,status,completedSteps,currentStep,error&limit=1`;
+    if (!latest) return '/enfyra_flow_execution?limit=0';
+    return `/enfyra_flow_execution?filter={"${getIdFieldName()}":{"_eq":"${getId(latest)}"}}&fields=id,status,completedSteps,currentStep,error&limit=1`;
   },
   { errorContext: "Fetch Latest Exec Detail" }
 );
@@ -485,17 +485,17 @@ async function refreshExecOverlay() {
   }
 }
 
-const { execute: updateFlowApi, error: updateError, pending: saveFlowPending } = useApi(() => `/flow_definition`, { method: "patch", errorContext: "Update Flow" });
+const { execute: updateFlowApi, error: updateError, pending: saveFlowPending } = useApi(() => `/enfyra_flow`, { method: "patch", errorContext: "Update Flow" });
 
 const { checkPermissionCondition } = usePermissions();
 const canUpdateFlow = computed(() =>
   checkPermissionCondition({
-    and: [{ route: "/flow_definition", methods: ["PATCH"] }],
+    and: [{ route: "/enfyra_flow", methods: ["PATCH"] }],
   })
 );
-const { execute: createStepApi, error: createStepError } = useApi(() => `/flow_step_definition`, { method: "post", errorContext: "Create Step" });
-const { execute: updateStepApi, error: updateStepError } = useApi(() => `/flow_step_definition`, { method: "patch", errorContext: "Update Step" });
-const { execute: deleteStepApi, error: deleteStepError } = useApi(() => `/flow_step_definition`, { method: "delete", errorContext: "Delete Step" });
+const { execute: createStepApi, error: createStepError } = useApi(() => `/enfyra_flow_step`, { method: "post", errorContext: "Create Step" });
+const { execute: updateStepApi, error: updateStepError } = useApi(() => `/enfyra_flow_step`, { method: "patch", errorContext: "Update Step" });
+const { execute: deleteStepApi, error: deleteStepError } = useApi(() => `/enfyra_flow_step`, { method: "delete", errorContext: "Delete Step" });
 
 
 registerSubHeaderActions([
@@ -507,7 +507,7 @@ registerSubHeaderActions([
     color: "success",
     size: "md",
     onClick: triggerFlow,
-    permission: { and: [{ route: "/flow_execution_definition", methods: ["POST"] }] },
+    permission: { and: [{ route: "/enfyra_flow_execution", methods: ["POST"] }] },
   },
 ]);
 
@@ -932,7 +932,7 @@ async function refreshExecutions() {
 }
 
 const { execute: fetchExecDetail, data: execDetailData } = useApi(
-  () => `/flow_execution_definition?filter={"${getIdFieldName()}":{"_eq":"${getId(selectedExec.value)}"}}&fields=id,status,startedAt,completedAt,duration,currentStep,completedSteps,error,context&limit=1`,
+  () => `/enfyra_flow_execution?filter={"${getIdFieldName()}":{"_eq":"${getId(selectedExec.value)}"}}&fields=id,status,startedAt,completedAt,duration,currentStep,completedSteps,error,context&limit=1`,
   { errorContext: "Fetch Execution Detail" }
 );
 

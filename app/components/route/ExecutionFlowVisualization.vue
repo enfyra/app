@@ -470,7 +470,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
     let prePriorityIdx = 0;
     pushActionNode(
       `add-prehook-${group.method}-start`,
-      '#8b5cf6',
+      'var(--brand-500)',
       'Pre-Hook',
       group.preHooks.length > 0
         ? `Insert pre-hook at start`
@@ -494,7 +494,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
         const priority = prePriorityIdx;
         pushActionNode(
           `add-prehook-${group.method}-after-${props.getId(hook)}`,
-          '#8b5cf6',
+          'var(--brand-500)',
           'Pre-Hook',
           `Add pre-hook after "${hook.name || 'hook'}"`,
           () => emit('createHook', 'pre', group.method, priority),

@@ -5,7 +5,7 @@ const { checkPermissionCondition } = usePermissions();
 const { getIdFieldName } = useDatabase();
 const errors = ref<Record<string, string>>({});
 
-const { validateForm } = useFormValidation("setting_definition");
+const { validateForm } = useFormValidation("enfyra_setting");
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -48,7 +48,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadSetting,
-} = useApi(() => `/setting_definition`, {
+} = useApi(() => `/enfyra_setting`, {
   query: {
     fields: "*",
     limit: 1,
@@ -108,7 +108,7 @@ const {
   execute: saveSetting,
   pending: saveLoading,
   error: saveError,
-} = useApi(() => `/setting_definition/${getId(setting.value)}`, {
+} = useApi(() => `/enfyra_setting/${getId(setting.value)}`, {
   method: "patch",
   errorContext: "Save Settings",
 });
@@ -159,7 +159,7 @@ onMounted(() => {
         <UForm v-else @submit="handleSaveSetting" :state="setting">
           <FormEditorLazy
             ref="formEditorRef"
-            table-name="setting_definition"
+            table-name="enfyra_setting"
             mode="update"
             layout="grid"
             v-model="setting"

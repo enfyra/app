@@ -107,7 +107,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchGateways,
-} = useApi(() => "/websocket_definition", {
+} = useApi(() => "/enfyra_websocket", {
   query: computed(() => ({
     fields: ["*", "events.*"].join(","),
     limit,
@@ -125,7 +125,7 @@ const total = computed(() => apiData.value?.meta?.totalCount || 0);
 const connectionCounts = ref<Record<string, number>>({});
 
 const { execute: updateGateway, error: updateError } = useApi(
-  () => `/websocket_definition`,
+  () => `/enfyra_websocket`,
   {
     method: "patch",
     errorContext: "Update WebSocket Gateway",
@@ -144,7 +144,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/websocket_definition",
+          route: "/enfyra_websocket",
           methods: ["POST"],
         },
       ],
@@ -179,7 +179,7 @@ function getHeaderActions(gateway: any) {
   }
   const idKey = String(id);
 
-  if (checkPermissionCondition({ or: [{ route: '/websocket_definition', methods: ['PATCH'] }] })) {
+  if (checkPermissionCondition({ or: [{ route: '/enfyra_websocket', methods: ['PATCH'] }] })) {
     actions.push({
       component: 'USwitch',
       props: {
@@ -196,7 +196,7 @@ function getHeaderActions(gateway: any) {
 
 function getFooterActions(gateway: any) {
   const actions: SettingsCardAction[] = [];
-  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/websocket_definition', methods: ['DELETE'] }] });
+  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/enfyra_websocket', methods: ['DELETE'] }] });
 
   actions.push({
     label: 'Delete',
@@ -258,7 +258,7 @@ const toggleGatewayStatus = async (gateway: any) => {
 };
 
 const { execute: deleteGatewayApi, error: deleteError } = useApi(
-  () => `/websocket_definition`,
+  () => `/enfyra_websocket`,
   {
     method: "delete",
     errorContext: "Delete WebSocket Gateway",

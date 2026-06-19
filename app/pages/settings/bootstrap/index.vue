@@ -4,7 +4,7 @@ const notify = useNotify();
 const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
-const tableName = "bootstrap_script_definition";
+const tableName = "enfyra_bootstrap_script";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { getId } = useDatabase();
@@ -24,7 +24,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchBootstrapScripts,
-} = useApi(() => "/bootstrap_script_definition", {
+} = useApi(() => "/enfyra_bootstrap_script", {
   query: computed(() => ({
     fields: getIncludeFields(),
     sort: "-createdAt",
@@ -36,7 +36,7 @@ const {
 });
 
 const { execute: removeScript, error: removeScriptError } = useApi(
-  () => `/bootstrap_script_definition`,
+  () => `/enfyra_bootstrap_script`,
   {
     method: "delete",
     errorContext: "Delete Script",
@@ -60,7 +60,7 @@ registerHeaderActions({
   permission: {
     and: [
       {
-        route: "/bootstrap_script_definition",
+        route: "/enfyra_bootstrap_script",
         methods: ["POST"],
       },
     ],

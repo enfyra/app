@@ -4,7 +4,7 @@ const notify = useNotify();
 const page = ref(1);
 const pageLimit = 10;
 const route = useRoute();
-const tableName = "role_definition";
+const tableName = "enfyra_role";
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { getId } = useDatabase();
@@ -26,7 +26,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRoles,
-} = useApi(() => "/role_definition", {
+} = useApi(() => "/enfyra_role", {
   query: computed(() => ({
     fields: getIncludeFields(),
     sort: "-createdAt",
@@ -54,7 +54,7 @@ registerHeaderActions({
   permission: {
     and: [
       {
-        route: "/role_definition",
+        route: "/enfyra_role",
         methods: ["POST"],
       },
     ],
@@ -62,7 +62,7 @@ registerHeaderActions({
 });
 
 const { execute: deleteRoleApi, error: deleteError } = useApi(
-  () => `/role_definition`,
+  () => `/enfyra_role`,
   {
     method: "delete",
     errorContext: "Delete Role",

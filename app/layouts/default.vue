@@ -3,7 +3,7 @@
 
     <a
       href="#main-content"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-violet-500 focus:text-white focus:px-4 focus:py-2 focus:rounded-xl"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-brand-500 focus:text-white focus:px-4 focus:py-2 focus:rounded-xl"
     >
       Skip to main content
     </a>

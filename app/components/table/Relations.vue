@@ -18,7 +18,7 @@ const editingIndex = ref<number | null>(null);
 const currentRelation = ref<any>(null);
 const relationErrors = ref<Record<number, Record<string, string>>>({});
 
-const { schemas, forceRefreshSchema, generateEmptyForm, validate } = useSchema("relation_definition");
+const { schemas, forceRefreshSchema, generateEmptyForm, validate } = useSchema("enfyra_relation");
 const { isMobile, isTablet } = useScreen();
 
 watch(() => props.tableId, async (id) => {
@@ -481,7 +481,7 @@ async function removeRelation(index: number) {
               ref="formEditorRef"
               v-model="currentRelation"
               v-model:errors="currentRelationErrors"
-              tableName="relation_definition"
+              tableName="enfyra_relation"
               @has-changed="(hasChanged) => hasFormChanges = hasChanged"
               unique-check-mode="local"
               :unique-local-records="localRelationsWithKeys"

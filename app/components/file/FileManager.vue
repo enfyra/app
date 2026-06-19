@@ -192,11 +192,11 @@ registerSubHeaderActions([
     permission: {
       and: [
         {
-          route: "/folder_definition",
+          route: "/enfyra_folder",
           methods: ["DELETE"],
         },
         {
-          route: "/file_definition",
+          route: "/enfyra_file",
           methods: ["DELETE"],
         },
       ],

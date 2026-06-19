@@ -1,10 +1,10 @@
 <template>
   <div class="min-h-screen flex">
-    <div class="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 overflow-hidden">
+    <div class="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 overflow-hidden">
       <div class="absolute inset-0">
         <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-300/10 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
-        <div class="absolute top-1/2 left-1/2 w-[500px] h-[500px] bg-indigo-300/10 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-300/10 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+        <div class="absolute top-1/2 left-1/2 w-[500px] h-[500px] bg-brand-200/10 rounded-full blur-3xl animate-pulse"></div>
       </div>
       
       <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
@@ -22,9 +22,9 @@
         <div class="space-y-6">
           <h2 class="text-5xl font-bold text-white leading-tight">
             Welcome to<br />
-            <span class="text-purple-200">the Future</span>
+            <span class="text-brand-100">the Future</span>
           </h2>
-          <p class="text-lg text-indigo-100 max-w-md">
+          <p class="text-lg text-brand-100/90 max-w-md">
             Experience the next generation of application management. Secure, powerful, and beautifully simple.
           </p>
           
@@ -50,20 +50,20 @@
       </div>
     </div>
 
-    <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-slate-200 via-gray-100 to-indigo-200 dark:from-gray-700 dark:via-gray-800 dark:to-indigo-950">
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-[var(--surface-muted)] via-[var(--surface-default)] to-brand-100 dark:from-[var(--surface-chrome)] dark:via-[var(--surface-default)] dark:to-brand-950">
       <div class="w-full max-w-md">
         <div class="lg:hidden flex items-center gap-3 mb-8">
-          <div class="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl">
+          <div class="p-3 bg-gradient-to-br from-brand-600 to-brand-500 rounded-2xl">
             <UIcon name="lucide:shield-check" class="text-3xl text-white" />
           </div>
-          <span class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Enfyra App</span>
+          <span class="text-2xl font-bold bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">Enfyra App</span>
         </div>
 
         <div class="mb-10">
-          <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 class="text-3xl font-bold text-[var(--text-primary)] mb-2">
             Sign in to your account
           </h1>
-          <p class="text-gray-600 dark:text-gray-400">
+          <p class="text-[var(--text-tertiary)]">
             Welcome back! Please enter your details.
           </p>
         </div>
@@ -92,7 +92,7 @@
             </div>
 
             <div>
-              <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label for="email" class="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                 Email
               </label>
               <UInput
@@ -112,7 +112,7 @@
             </div>
 
             <div>
-              <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label for="password" class="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                 Password
               </label>
               <UInput
@@ -132,7 +132,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <USwitch v-model="form.remember" size="sm" />
-                <label for="remember" class="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+                <label for="remember" class="text-sm text-[var(--text-tertiary)] cursor-pointer select-none">
                   Remember me
                 </label>
               </div>
@@ -141,7 +141,7 @@
             <UButton
               type="submit"
               size="lg"
-              class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 dark:from-indigo-500 dark:to-purple-500 dark:hover:from-indigo-600 dark:hover:to-purple-600 text-white font-semibold shadow-lg"
+              class="w-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 dark:from-brand-500 dark:to-brand-400 dark:hover:from-brand-600 dark:hover:to-brand-500 text-white font-semibold shadow-lg"
               loading-auto
             >
               Sign in
@@ -149,11 +149,11 @@
 
             <div v-if="oauthProviders.length > 0" class="space-y-3">
               <div class="flex items-center gap-3">
-                <div class="h-px flex-1 bg-gray-300 dark:bg-gray-700" />
-                <span class="text-xs font-medium uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
+                <div class="h-px flex-1 bg-[var(--border-default)]" />
+                <span class="text-xs font-medium uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
                   Or continue with
                 </span>
-                <div class="h-px flex-1 bg-gray-300 dark:bg-gray-700" />
+                <div class="h-px flex-1 bg-[var(--border-default)]" />
               </div>
 
               <div class="grid gap-3">

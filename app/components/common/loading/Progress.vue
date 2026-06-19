@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<{
   value: 0,
   size: 'md',
   type: 'linear',
-  color: 'purple-500',
+  color: 'var(--brand-500)',
   indeterminate: false
 });
 
@@ -48,13 +48,13 @@ const strokeDashoffset = computed(() =>
   <div v-if="type === 'linear'" :class="['w-full bg-[var(--surface-muted)] rounded-full overflow-hidden', progressHeight]">
     <div 
       v-if="indeterminate"
-      :class="[progressHeight, `bg-${color}`, 'rounded-full animate-pulse w-1/3']"
-      style="animation: progress-indeterminate 2s infinite linear;"
+      :class="[progressHeight, 'rounded-full animate-pulse w-1/3']"
+      :style="{ animation: 'progress-indeterminate 2s infinite linear', backgroundColor: color }"
     ></div>
     <div 
       v-else
-      :class="[progressHeight, `bg-${color}`, 'rounded-full transition-all duration-300']"
-      :style="`width: ${value}%`"
+      :class="[progressHeight, 'rounded-full transition-all duration-300']"
+      :style="{ width: `${value}%`, backgroundColor: color }"
     ></div>
   </div>
 
@@ -75,7 +75,7 @@ const strokeDashoffset = computed(() =>
         cx="50%"
         cy="50%"
         :r="radius"
-        :stroke="color === 'purple-500' ? 'var(--brand-violet-electric)' : color"
+        :stroke="color"
         stroke-width="2"
         fill="none"
         :stroke-dasharray="circumference"

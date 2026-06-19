@@ -20,7 +20,7 @@
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 
-const tableName = "role_definition";
+const tableName = "enfyra_role";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -51,7 +51,7 @@ registerHeaderActions({
   permission: {
     and: [
       {
-        route: "/role_definition",
+        route: "/enfyra_role",
         methods: ["POST"],
       },
     ],

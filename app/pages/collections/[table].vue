@@ -6,7 +6,7 @@ const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const notify = useNotify();
 const { getId } = useDatabase();
-const tableName = "table_definition";
+const tableName = "enfyra_table";
 const { getIncludeFields } = useSchema(tableName);
 const { isMobile, isTablet } = useScreen();
 const { isMounted } = useMounted();
@@ -55,7 +55,7 @@ const {
   data: tableData,
   pending: loading,
   execute: fetchTableData,
-} = useApi(() => "/table_definition", {
+} = useApi(() => "/enfyra_table", {
   query: computed(() => ({
     fields: [
       getIncludeFields(),
@@ -88,7 +88,7 @@ const {
   pending: saving,
   execute: executePatchTable,
   error: updateError,
-} = useApi(() => `/table_definition`, {
+} = useApi(() => `/enfyra_table`, {
   method: "patch",
   errorContext: "Update Table",
 });
@@ -97,7 +97,7 @@ const {
   pending: deleting,
   execute: executeDeleteTable,
   error: deleteError,
-} = useApi(() => `/table_definition`, {
+} = useApi(() => `/enfyra_table`, {
   method: "delete",
   errorContext: "Delete Table",
 });
@@ -140,7 +140,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/table_definition",
+          route: "/enfyra_table",
           methods: ["DELETE"],
         },
       ],
@@ -167,7 +167,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/table_definition",
+          route: "/enfyra_table",
           methods: ["PATCH"],
         },
       ],
@@ -509,7 +509,7 @@ onMounted(() => {
                   <div class="font-medium">Inverse relations will be removed</div>
                   <p class="mt-1 text-amber-800/90 dark:text-amber-100/90">
                     These relations are the owning side. Deleting them also deletes the inverse
-                    <code class="rounded bg-amber-100/80 px-1 py-0.5 font-mono text-xs dark:bg-amber-950/50">relation_definition</code>
+                    <code class="rounded bg-amber-100/80 px-1 py-0.5 font-mono text-xs dark:bg-amber-950/50">enfyra_relation</code>
                     rows on the other tables listed below.
                   </p>
                   <div class="mt-3 space-y-3">

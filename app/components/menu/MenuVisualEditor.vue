@@ -142,7 +142,7 @@ function handleRootReorder(event: DragEvent) {
       <div class="menu-preview rounded-2xl p-4 surface-card">
         <div
           v-if="canMoveToRoot"
-          class="mb-2 p-2 border-2 border-dashed border-violet-400 dark:border-violet-500 rounded-xl bg-violet-500/10 dark:bg-violet-500/20"
+          class="mb-2 p-2 border-2 border-dashed border-brand-400 dark:border-brand-500 rounded-xl bg-brand-500/10 dark:bg-brand-500/20"
         >
           <UButton
             size="sm"
@@ -194,8 +194,8 @@ function handleRootReorder(event: DragEvent) {
 <style scoped>
 .ghost-item {
   opacity: 0.5;
-  background: rgba(139, 92, 246, 0.1);
-  border: 2px dashed rgb(139, 92, 246);
+  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
+  border: 2px dashed var(--brand-500);
 }
 
 .chosen-item {
@@ -208,8 +208,8 @@ function handleRootReorder(event: DragEvent) {
 
 .menu-visual-editor :deep(.sortable-ghost) {
   opacity: 0.5;
-  background: rgba(139, 92, 246, 0.1);
-  border: 2px dashed rgb(139, 92, 246);
+  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
+  border: 2px dashed var(--brand-500);
 }
 
 .menu-visual-editor :deep(.sortable-chosen) {

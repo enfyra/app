@@ -174,7 +174,7 @@ const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { me } = useAuth();
 const { fetchAppPackages } = useGlobalState();
 
-const tableName = "package_definition";
+const tableName = "enfyra_package";
 const route = useRoute();
 const packageType = ref<"App" | "Server">("Server");
 const selectedNpmPackage = ref<any>(null);
@@ -207,7 +207,7 @@ registerHeaderActions({
   permission: {
     and: [
       {
-        route: "/package_definition",
+        route: "/enfyra_package",
         methods: ["POST"],
       },
     ],

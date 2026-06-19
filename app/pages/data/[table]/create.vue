@@ -15,7 +15,7 @@ const { validateForm } = useFormValidation(tableName);
 const createErrors = ref<Record<string, string>>({});
 const { getId } = useDatabase();
 const fieldMap = computed(() =>
-  tableName === 'method_definition' ? buildMethodDefinitionFieldMap() : {},
+  tableName === 'enfyra_method' ? buildMethodDefinitionFieldMap() : {},
 );
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
@@ -29,13 +29,13 @@ registerPageHeader({
 onMounted(async () => {
   await ensureRoutesLoaded();
   newRecord.value = generateEmptyForm();
-  if (tableName === 'method_definition') {
+  if (tableName === 'enfyra_method') {
     applyMethodColorSuggestion(newRecord.value);
   }
 });
 
 watch(() => newRecord.value?.name, () => {
-  if (tableName !== 'method_definition') return;
+  if (tableName !== 'enfyra_method') return;
   applyMethodColorSuggestion(newRecord.value);
 });
 
@@ -72,7 +72,7 @@ registerHeaderActions([
 ]);
 
 async function handleCreate() {
-  if (tableName === 'method_definition') {
+  if (tableName === 'enfyra_method') {
     normalizeMethodDefinitionRecord(newRecord.value);
   }
   if (!await validateForm(newRecord.value, createErrors)) return;

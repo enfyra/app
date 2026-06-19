@@ -24,7 +24,7 @@ async function fetchAllowedOrigins(): Promise<string[]> {
       return [];
     }
 
-    const response = await fetch(`${apiUrl.replace(/\/+$/, '')}/cors_origin_definition?fields=value,isEnabled&limit=0`, {
+    const response = await fetch(`${apiUrl.replace(/\/+$/, '')}/enfyra_cors_origin?fields=value,isEnabled&limit=0`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -83,7 +83,7 @@
               <div class="flex items-center gap-2">
                 <span class="text-xs text-[var(--text-quaternary)]">Status:</span>
                 <USwitch
-	                  v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', methods: ['PATCH'] }] })"
+	                  v-if="checkPermissionCondition({ or: [{ route: '/enfyra_storage_config', methods: ['PATCH'] }] })"
 	                  :model-value="config.isEnabled"
 	                  :disabled="isConfigLoading(config)"
 	                  @update:model-value="toggleConfigStatus(config)"
@@ -91,7 +91,7 @@
                 />
               </div>
               <UButton
-                v-if="checkPermissionCondition({ or: [{ route: '/storage_config_definition', methods: ['DELETE'] }] })"
+                v-if="checkPermissionCondition({ or: [{ route: '/enfyra_storage_config', methods: ['DELETE'] }] })"
                 icon="i-lucide-trash-2"
                 variant="outline"
                 color="error"
@@ -154,7 +154,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchStorageConfigs,
-} = useApi(() => "/storage_config_definition", {
+} = useApi(() => "/enfyra_storage_config", {
   query: computed(() => ({
     fields: ["*"].join(","),
     limit,
@@ -171,7 +171,7 @@ const showInitialLoading = computed(() => loading.value && !apiData.value);
 
 
 const { execute: updateConfig, error: updateError } = useApi(
-  () => `/storage_config_definition`,
+  () => `/enfyra_storage_config`,
   {
     method: "patch",
     errorContext: "Update Storage Configuration",
@@ -190,7 +190,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/storage_config_definition",
+          route: "/enfyra_storage_config",
           methods: ["POST"],
         },
       ],
@@ -271,7 +271,7 @@ const toggleConfigStatus = async (config: any) => {
 };
 
 const { execute: deleteConfigApi, error: deleteError } = useApi(
-  () => `/storage_config_definition`,
+  () => `/enfyra_storage_config`,
   {
     method: "delete",
     errorContext: "Delete Storage Configuration",

@@ -149,7 +149,7 @@ const {
   pending: createLoading,
   execute: createTable,
   error: createError,
-} = useApi("/table_definition", {
+} = useApi("/enfyra_table", {
   method: "post",
   errorContext: "Create Table",
 });
@@ -168,7 +168,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/table_definition",
+          route: "/enfyra_table",
           methods: ["POST"],
         },
       ],

@@ -56,7 +56,7 @@ const { data: tablesData, execute: fetchTables } = useApi(
     if (searchTerm.value) {
       params.set('filter', JSON.stringify({ name: { _contains: searchTerm.value } }));
     }
-    return `/table_definition?${params.toString()}`;
+    return `/enfyra_table?${params.toString()}`;
   },
   { errorContext: 'Fetch Tables' }
 );

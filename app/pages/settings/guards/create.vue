@@ -20,7 +20,7 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
-const tableName = 'guard_definition';
+const tableName = 'enfyra_guard';
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -62,7 +62,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: '/guard_definition',
+          route: '/enfyra_guard',
           methods: ['POST'],
         },
       ],

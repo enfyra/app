@@ -150,7 +150,7 @@ const { checkPermissionCondition } = usePermissions();
 const canDeleteFile = checkPermissionCondition({
   and: [
     {
-      route: "/file_definition",
+      route: "/enfyra_file",
       methods: ["DELETE"],
     },
   ],
@@ -221,7 +221,7 @@ async function saveEdit() {
 
   try {
     const { execute: updateFile, error } = useApi(
-      () => `file_definition/${props.file.id}`,
+      () => `enfyra_file/${props.file.id}`,
       {
         method: "patch",
         errorContext: "Update File",

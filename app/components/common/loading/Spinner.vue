@@ -5,7 +5,7 @@ const props = withDefaults(defineProps<{
   type?: 'ring' | 'crescent' | 'dashed';
 }>(), {
   size: 'md',
-  color: 'var(--brand-violet-electric)',
+  color: 'var(--brand-500)',
   type: 'crescent'
 });
 

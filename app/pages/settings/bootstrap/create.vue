@@ -20,7 +20,7 @@
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 
-const tableName = "bootstrap_script_definition";
+const tableName = "enfyra_bootstrap_script";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -48,7 +48,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/bootstrap_script_definition",
+          route: "/enfyra_bootstrap_script",
           methods: ["POST"],
         },
       ],

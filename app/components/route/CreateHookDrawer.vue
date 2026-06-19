@@ -15,7 +15,7 @@
             <FormEditorLazy
               v-model="localForm"
               v-model:errors="localErrors"
-              :table-name="hookType === 'pre' ? 'pre_hook_definition' : 'post_hook_definition'"
+              :table-name="hookType === 'pre' ? 'enfyra_pre_hook' : 'enfyra_post_hook'"
               :excluded="excludedFields"
               :field-map="fieldMap"
               mode="create"

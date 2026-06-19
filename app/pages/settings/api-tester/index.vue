@@ -89,7 +89,7 @@ const showTestModal = ref(false);
 const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.name,availableMethods.buttonColor,availableMethods.textColor,publicMethods.name,publicMethods.buttonColor,publicMethods.textColor,handlers.method.name';
 
 const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi(
-  '/route_definition',
+  '/enfyra_route',
   {
     query: {
       fields: routeFields,
@@ -106,7 +106,7 @@ const systemLoading = ref(false);
 const systemExpanded = ref(false);
 
 const { data: systemData, execute: fetchSystemRoutes } = useApi(
-  '/route_definition',
+  '/enfyra_route',
   {
     query: {
       fields: routeFields,

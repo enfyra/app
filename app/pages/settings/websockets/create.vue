@@ -53,7 +53,7 @@ const router = useRouter();
 const { createLoader } = useLoader();
 const { confirm } = useConfirm();
 
-const tableName = "websocket_definition";
+const tableName = "enfyra_websocket";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -81,7 +81,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/websocket_definition",
+          route: "/enfyra_websocket",
           methods: ["POST"],
         },
       ],
@@ -109,7 +109,7 @@ const {
   error: createError,
   execute: executeCreateGateway,
   pending: createLoading,
-} = useApi(() => `/websocket_definition`, {
+} = useApi(() => `/enfyra_websocket`, {
   method: "post",
   errorContext: "Create WebSocket Gateway",
 });

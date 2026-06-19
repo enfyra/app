@@ -33,7 +33,7 @@ definePageMeta({
 
 const notify = useNotify();
 
-const tableName = "oauth_config_definition";
+const tableName = "enfyra_oauth_config";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -81,7 +81,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/oauth_config_definition",
+          route: "/enfyra_oauth_config",
           methods: ["POST"],
         },
       ],

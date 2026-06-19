@@ -171,7 +171,7 @@ const notify = useNotify();
 const { confirm } = useConfirm();
 const { getId, getIdFieldName } = useDatabase();
 
-const tableName = "websocket_definition";
+const tableName = "enfyra_websocket";
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -205,7 +205,7 @@ const {
   data: gatewayData,
   pending: loading,
   execute: fetchGateway,
-} = useApi(() => `/websocket_definition`, {
+} = useApi(() => `/enfyra_websocket`, {
   query: computed(() => ({
     fields: ["*"].join(","),
     filter:
@@ -217,7 +217,7 @@ const {
 
 const gatewayId = computed(() => pageId.value || getId(gatewayData.value?.data?.[0]));
 
-const { data: eventsData, execute: fetchEvents } = useApi(() => "/websocket_event_definition", {
+const { data: eventsData, execute: fetchEvents } = useApi(() => "/enfyra_websocket_event", {
   query: computed(() => ({
     fields: ["*"].join(","),
     limit: -1,
@@ -233,7 +233,7 @@ const {
   error: updateError,
   execute: executeUpdate,
   pending: updateLoading,
-} = useApi(() => `/websocket_definition`, {
+} = useApi(() => `/enfyra_websocket`, {
   method: "patch",
   errorContext: "Update WebSocket Gateway",
 });
@@ -242,7 +242,7 @@ const {
   error: deleteError,
   execute: executeDelete,
   pending: deleteLoading,
-} = useApi(() => `/websocket_definition`, {
+} = useApi(() => `/enfyra_websocket`, {
   method: "delete",
   errorContext: "Delete WebSocket Gateway",
 });
@@ -250,7 +250,7 @@ const {
 const {
   error: toggleEventError,
   execute: executeToggleEvent,
-} = useApi(() => `/websocket_event_definition`, {
+} = useApi(() => `/enfyra_websocket_event`, {
   method: "patch",
   errorContext: "Toggle Event Status",
 });
@@ -258,7 +258,7 @@ const {
 const {
   error: deleteEventError,
   execute: executeDeleteEvent,
-} = useApi(() => `/websocket_event_definition`, {
+} = useApi(() => `/enfyra_websocket_event`, {
   method: "delete",
   errorContext: "Delete Event",
 });
@@ -266,7 +266,7 @@ const {
 const { checkPermissionCondition } = usePermissions();
 const canUpdateGateway = computed(() =>
   checkPermissionCondition({
-    and: [{ route: "/websocket_definition", methods: ["PATCH"] }],
+    and: [{ route: "/enfyra_websocket", methods: ["PATCH"] }],
   })
 );
 
@@ -285,7 +285,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/websocket_definition",
+          route: "/enfyra_websocket",
           methods: ["DELETE"],
         },
       ],

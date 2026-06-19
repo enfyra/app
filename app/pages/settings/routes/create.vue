@@ -22,7 +22,7 @@ const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const { loadRoutes } = useRoutes();
 
-const tableName = "route_definition";
+const tableName = "enfyra_route";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
@@ -57,7 +57,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/route_definition",
+          route: "/enfyra_route",
           methods: ["POST"],
         },
       ],

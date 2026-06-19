@@ -98,7 +98,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchFlows,
-} = useApi(() => "/flow_definition", {
+} = useApi(() => "/enfyra_flow", {
   query: computed(() => ({
     fields: ["*", "steps.*"].join(","),
     limit,
@@ -114,7 +114,7 @@ const showInitialLoading = computed(() => !isMounted.value || (loading.value && 
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 const { execute: updateFlow, error: updateError } = useApi(
-  () => `/flow_definition`,
+  () => `/enfyra_flow`,
   { method: "patch", errorContext: "Update Flow" }
 );
 
@@ -128,7 +128,7 @@ registerHeaderActions([
     size: "md",
     to: "/settings/flows/create",
     permission: {
-      and: [{ route: "/flow_definition", methods: ["POST"] }],
+      and: [{ route: "/enfyra_flow", methods: ["POST"] }],
     },
   },
 ]);
@@ -140,7 +140,7 @@ function navigateToDetail(flow: any) {
 
 function getHeaderActions(flow: any) {
   const actions = [];
-  if (checkPermissionCondition({ or: [{ route: '/flow_definition', methods: ['PATCH'] }] })) {
+  if (checkPermissionCondition({ or: [{ route: '/enfyra_flow', methods: ['PATCH'] }] })) {
     actions.push({
       component: 'USwitch',
       props: {
@@ -155,7 +155,7 @@ function getHeaderActions(flow: any) {
 }
 
 function getFooterActions(flow: any) {
-  const hasDelete = checkPermissionCondition({ or: [{ route: '/flow_definition', methods: ['DELETE'] }] });
+  const hasDelete = checkPermissionCondition({ or: [{ route: '/enfyra_flow', methods: ['DELETE'] }] });
   return [
     {
       label: 'Delete',
@@ -189,7 +189,7 @@ const toggleFlowStatus = async (flow: any) => {
 };
 
 const { execute: deleteFlowApi, error: deleteError } = useApi(
-  () => `/flow_definition`,
+  () => `/enfyra_flow`,
   { method: "delete", errorContext: "Delete Flow" }
 );
 

@@ -3,7 +3,7 @@ const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
 const { confirm } = useConfirm();
-const { validateForm } = useFormValidation("user_definition");
+const { validateForm } = useFormValidation("enfyra_user");
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -15,7 +15,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchUser,
-} = useApi(() => "/user_definition", {
+} = useApi(() => "/enfyra_user", {
   query: computed(() => ({
     fields: "*",
     filter: {
@@ -53,7 +53,7 @@ const {
   execute: updateUser,
   pending: updateLoading,
   error: updateError,
-} = useApi(() => `/user_definition/${route.params.id}`, {
+} = useApi(() => `/enfyra_user/${route.params.id}`, {
   method: "patch",
   errorContext: "Update User",
 });
@@ -62,7 +62,7 @@ const {
   execute: removeUser,
   pending: deleteLoading,
   error: deleteError,
-} = useApi(() => `/user_definition/${route.params.id}`, {
+} = useApi(() => `/enfyra_user/${route.params.id}`, {
   method: "delete",
   errorContext: "Delete User",
 });
@@ -115,7 +115,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/user_definition",
+          route: "/enfyra_user",
           methods: ["DELETE"],
         },
       ],
@@ -135,7 +135,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/user_definition",
+          route: "/enfyra_user",
           methods: ["PATCH"],
         },
       ],
@@ -199,7 +199,7 @@ onMounted(() => {
             v-model="form"
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            table-name="user_definition"
+            table-name="enfyra_user"
             :excluded="['isRootAdmin', 'isSystem', 'allowedRoutePermissions']"
             :loading="loading"
           />

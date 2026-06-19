@@ -119,7 +119,7 @@ const { checkPermissionCondition } = usePermissions();
 const canDeleteFolder = checkPermissionCondition({
   and: [
     {
-      route: "/folder_definition",
+      route: "/enfyra_folder",
       methods: ["DELETE"],
     },
   ],
@@ -170,7 +170,7 @@ async function saveEdit() {
 
   try {
     const { execute: updateFolder, error } = useApi(
-      () => `folder_definition/${props.folder.id}`,
+      () => `enfyra_folder/${props.folder.id}`,
       {
         method: "patch",
         errorContext: "Update Folder",

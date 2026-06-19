@@ -10,7 +10,7 @@
             <FormEditorLazy
               v-model="form"
               v-model:errors="localErrors"
-              :table-name="'guard_rule_definition'"
+              :table-name="'enfyra_guard_rule'"
               :excluded="excludedFields"
               :field-map="fieldMap"
               mode="create"

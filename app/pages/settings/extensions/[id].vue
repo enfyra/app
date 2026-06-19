@@ -63,7 +63,7 @@ const route = useRoute();
 const notify = useNotify();
 const { confirm } = useConfirm();
 
-const tableName = "extension_definition";
+const tableName = "enfyra_extension";
 
 const showUploadModal = ref(false);
 const uploadLoading = ref(false);
@@ -133,7 +133,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/extension_definition",
+          route: "/enfyra_extension",
           methods: ["PATCH"],
         },
       ],
@@ -153,7 +153,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/extension_definition",
+          route: "/enfyra_extension",
           methods: ["DELETE"],
         },
       ],
@@ -173,7 +173,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/extension_definition",
+          route: "/enfyra_extension",
           methods: ["PATCH"],
         },
       ],

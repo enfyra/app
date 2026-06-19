@@ -42,7 +42,7 @@ export default defineAppConfig({
       }
     },
     colors: {
-      primary: "purple",
+      primary: "violet",
       secondary: "cyan",
       neutral: "slate",
       success: "success",
@@ -315,7 +315,7 @@ export default defineAppConfig({
           "transition-all duration-300",
           "border-2 border-[var(--border-strong)]",
           "data-[state=checked]:bg-primary data-[state=checked]:border-primary",
-          "focus-visible:ring-[3px] focus-visible:ring-purple-500/20",
+          "focus-visible:ring-[3px] focus-visible:ring-brand-500/20",
         ].join(" "),
         icon: "text-white",
       },

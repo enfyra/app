@@ -45,14 +45,14 @@ const showTitle = computed(() =>
       v-if="loadingType === 'dots'"
       type="bounce"
       :size="size"
-      color="purple-500"
+      color="var(--brand-500)"
     />
 
     <CommonLoadingSpinner
       v-else-if="loadingType === 'spinner'"
       type="crescent"
       :size="size"
-      color="var(--brand-violet-electric)"
+      color="var(--brand-500)"
     />
     
     <CommonLoadingSkeleton 
@@ -117,4 +117,3 @@ const showTitle = computed(() =>
     </div>
   </div>
 </template>
-

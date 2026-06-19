@@ -57,8 +57,8 @@ return { nodeName }
 
   it('accepts DynamicRepository exists with a direct filter', async () => {
     const diagnostics = await lintEnfyraTypeScript(`
-const used = await @REPOS.user_definition.exists({ email: { _eq: @BODY.email } })
-if (used) @THROW409('user_definition', 'email', @BODY.email)
+const used = await @REPOS.enfyra_user.exists({ email: { _eq: @BODY.email } })
+if (used) @THROW409('enfyra_user', 'email', @BODY.email)
 return { used }
 `)
 
@@ -93,7 +93,7 @@ return { messageId, bounded }
 
   it('rejects stale DynamicRepository where option', async () => {
     const diagnostics = await lintEnfyraTypeScript(`
-return await @REPOS.user_definition.find({ where: { email: { _eq: @BODY.email } } })
+return await @REPOS.enfyra_user.find({ where: { email: { _eq: @BODY.email } } })
 `)
 
     expect(diagnostics.some((diagnostic) => diagnostic.message.includes("'where'"))).toBe(true)

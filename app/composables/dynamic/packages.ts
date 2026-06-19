@@ -78,7 +78,7 @@ async function fetchVersionMap(): Promise<Map<string, string>> {
   if (versionCache) return versionCache;
   try {
     const filter = JSON.stringify({ type: { _eq: "App" }, isEnabled: { _eq: true } });
-    const res = await fetch(`/api/package_definition?filter=${encodeURIComponent(filter)}&fields=name,version`);
+    const res = await fetch(`/api/enfyra_package?filter=${encodeURIComponent(filter)}&fields=name,version`);
     if (!res.ok) return new Map();
     const data = await res.json();
     versionCache = new Map((data.data || []).map((p: any) => [p.name, p.version]));

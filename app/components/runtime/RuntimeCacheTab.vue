@@ -18,7 +18,7 @@ const hasReloadPermission = computed(() => {
   if (me.value?.isRootAdmin) return true;
   return checkPermissionCondition({
     or: [
-      { route: '/route_definition', methods: ['PATCH'] },
+      { route: '/enfyra_route', methods: ['PATCH'] },
       { route: '/admin/reload', methods: ['POST'] },
     ],
   });

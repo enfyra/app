@@ -35,7 +35,7 @@ const notify = useNotify();
 const { confirm } = useConfirm();
 
 const id = route.params.id as string;
-const tableName = "role_definition";
+const tableName = "enfyra_role";
 const { getIncludeFields } = useSchema(tableName);
 
 const hasFormChanges = ref(false);
@@ -85,7 +85,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/role_definition",
+          route: "/enfyra_role",
           methods: ["DELETE"],
         },
       ],
@@ -104,7 +104,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/role_definition",
+          route: "/enfyra_role",
           methods: ["PATCH"],
         },
       ],

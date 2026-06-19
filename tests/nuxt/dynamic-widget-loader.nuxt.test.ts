@@ -54,7 +54,7 @@ describe('dynamic widget loader', () => {
     expect(second?.extensionId).toBe('widget-two')
     expect(duplicate?.extensionId).toBe('widget-one')
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(fetchMock).toHaveBeenCalledWith('/api/extension_definition', {
+    expect(fetchMock).toHaveBeenCalledWith('/api/enfyra_extension', {
       query: {
         fields: '*',
         filter: {

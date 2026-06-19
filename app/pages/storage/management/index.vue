@@ -12,7 +12,7 @@ const folderPage = ref(Number(route.query.folderPage) || 1);
 const filePage = ref(Number(route.query.filePage) || 1);
 const limit = 20;
 
-const { getIncludeFields: getFileFields } = useSchema("file_definition");
+const { getIncludeFields: getFileFields } = useSchema("enfyra_file");
 
 const idField = computed(() => getIdFieldName());
 
@@ -20,7 +20,7 @@ const {
   data: rootFolders,
   pending: rootPending,
   execute: fetchRootFolders,
-} = useApi(() => `folder_definition`, {
+} = useApi(() => `enfyra_folder`, {
   query: computed(() => {
     return {
       limit,
@@ -43,7 +43,7 @@ const {
   data: rootFiles,
   pending: filesPending,
   execute: fetchRootFiles,
-} = useApi(() => `file_definition`, {
+} = useApi(() => `enfyra_file`, {
   query: computed(() => {
     return {
       fields: getFileFields(),
@@ -67,7 +67,7 @@ const {
   execute: uploadFilesApi,
   error: uploadError,
   pending: uploadPending,
-} = useApi(() => `file_definition`, {
+} = useApi(() => `enfyra_file`, {
   method: "post",
   errorContext: "Upload Files",
 });
@@ -204,7 +204,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/file_definition",
+          route: "/enfyra_file",
           methods: ["POST"],
         },
       ],
@@ -222,7 +222,7 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: "/folder_definition",
+          route: "/enfyra_folder",
           methods: ["POST"],
         },
       ],

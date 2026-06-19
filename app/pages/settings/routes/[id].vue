@@ -23,7 +23,7 @@ const { confirm } = useConfirm()
 const { routes, loadRoutes } = useRoutes()
 const { retryUntilFresh } = useServerSync()
 const { getId, getIdFieldName } = useDatabase()
-const { getIncludeFields, schemas } = useSchema('route_definition')
+const { getIncludeFields, schemas } = useSchema('enfyra_route')
 const { registerPageHeader } = usePageHeaderRegistry()
 
 const routeId = computed(() => String(route.params.id))
@@ -38,7 +38,7 @@ const {
   data: routeData,
   pending: loading,
   execute: fetchRoute,
-} = useApi('/route_definition', {
+} = useApi('/enfyra_route', {
   query: computed(() => ({
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: routeId.value } },
@@ -60,7 +60,7 @@ watch(() => routeData.value?.data?.[0]?.path, (path) => {
 const { checkPermissionCondition } = usePermissions()
 const canUpdateRoute = computed(() =>
   checkPermissionCondition({
-    and: [{ route: '/route_definition', methods: ['PATCH'] }],
+    and: [{ route: '/enfyra_route', methods: ['PATCH'] }],
   })
 )
 
@@ -68,7 +68,7 @@ const {
   error: deleteError,
   execute: executeDeleteRoute,
   pending: deleteLoading,
-} = useApi('/route_definition', {
+} = useApi('/enfyra_route', {
   method: 'delete',
   errorContext: 'Delete Route',
 })
@@ -108,7 +108,7 @@ registerHeaderActions([
     loading: computed(() => deleteLoading.value),
     disabled: computed(() => routeData.value?.data?.[0]?.isSystem ?? false),
     permission: {
-      and: [{ route: '/route_definition', methods: ['DELETE'] }],
+      and: [{ route: '/enfyra_route', methods: ['DELETE'] }],
     },
   },
 ])

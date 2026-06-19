@@ -25,7 +25,7 @@ export const useGlobalState = () => {
     data: settingsData,
     pending: settingsPending,
     execute: executeFetchSettings,
-  } = useApi(() => "/setting_definition", {
+  } = useApi(() => "/enfyra_setting", {
     query: {
       fields: ["*", "methods.*"].join(","),
       limit: 0,
@@ -36,7 +36,7 @@ export const useGlobalState = () => {
   const {
     data: storageConfigsData,
     execute: executeFetchStorageConfigs,
-  } = useApi(() => "/storage_config_definition", {
+  } = useApi(() => "/enfyra_storage_config", {
     query: {
       fields: "*",
       limit: -1,
@@ -53,7 +53,7 @@ export const useGlobalState = () => {
   const {
     data: appPackagesData,
     execute: executeFetchAppPackages,
-  } = useApi(() => "/package_definition", {
+  } = useApi(() => "/enfyra_package", {
     query: {
       fields: "*",
       limit: -1,

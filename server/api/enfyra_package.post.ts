@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
       ? { ...body, status: "installed" }
       : body;
 
-    return await $fetch(`${apiUrl}/package_definition`, {
+    return await $fetch(`${apiUrl}/enfyra_package`, {
       method: "POST",
       headers: { ...headers, "Content-Type": "application/json" },
       body: finalBody,

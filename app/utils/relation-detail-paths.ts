@@ -2,29 +2,29 @@ import { getId } from '~/utils/common/helpers';
 
 export const TABLE_DETAIL_PATH_MAP: Record<string, string> = {
   // Settings
-  user_definition: "/settings/users",
-  role_definition: "/settings/roles",
-  method_definition: "/settings/methods",
-  route_definition: "/settings/routes",
-  extension_definition: "/settings/extensions",
-  websocket_definition: "/settings/websockets",
-  bootstrap_script_definition: "/settings/bootstrap",
-  oauth_config_definition: "/settings/oauth/config",
-  oauth_account_definition: "/settings/oauth/accounts",
+  enfyra_user: "/settings/users",
+  enfyra_role: "/settings/roles",
+  enfyra_method: "/settings/methods",
+  enfyra_route: "/settings/routes",
+  enfyra_extension: "/settings/extensions",
+  enfyra_websocket: "/settings/websockets",
+  enfyra_bootstrap_script: "/settings/bootstrap",
+  enfyra_oauth_config: "/settings/oauth/config",
+  enfyra_oauth_account: "/settings/oauth/accounts",
 
   // Storage
-  storage_config_definition: "/storage/config",
-  file_definition: "/storage/management/file",
-  folder_definition: "/storage/management/folder",
+  enfyra_storage_config: "/storage/config",
+  enfyra_file: "/storage/management/file",
+  enfyra_folder: "/storage/management/folder",
 
   // Packages
-  package_definition: "/packages",
+  enfyra_package: "/packages",
 };
 
 type DetailPathResolver = (item: any) => string | null;
 
 const CUSTOM_PATH_RESOLVERS: Record<string, DetailPathResolver> = {
-  table_definition: (item) => {
+  enfyra_table: (item) => {
     const name = item?.name;
     return name ? `/collections/${name}` : null;
   },
