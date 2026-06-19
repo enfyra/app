@@ -1,3 +1,4 @@
+import { parse } from 'acorn';
 import type { Diagnostic } from '@codemirror/lint';
 
 type TypeScriptModule = typeof import('typescript');
@@ -113,6 +114,7 @@ interface Math {
 declare const Math: Math;
 interface Number {
   toString(radix?: number): string;
+  toFixed(fractionDigits?: number): string;
   valueOf(): number;
 }
 interface NumberConstructor {
@@ -171,6 +173,10 @@ interface StringConstructor {
   new (value?: any): String;
 }
 declare const String: StringConstructor;
+declare function encodeURI(uri: string): string;
+declare function encodeURIComponent(uriComponent: string | number | boolean): string;
+declare function decodeURI(encodedURI: string): string;
+declare function decodeURIComponent(encodedURIComponent: string): string;
 interface PromiseLike<T> {
   then<TResult1 = T, TResult2 = never>(
     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
@@ -563,14 +569,77 @@ export function transformEnfyraCode(source: string): TransformedCode {
   return { code: output.join(''), sourceMap };
 }
 
+function mapTypeScriptDiagnostic(
+  ts: TypeScriptModule,
+  diagnostic: import('typescript').Diagnostic,
+  sourceMap: number[],
+): Diagnostic | null {
+  if (diagnostic.start === undefined || diagnostic.length === undefined) return null;
+  const sourceStart = sourceMap[diagnostic.start];
+  if (sourceStart === undefined || sourceStart < 0) return null;
+  const virtualEnd = Math.max(diagnostic.start + diagnostic.length - 1, diagnostic.start);
+  const sourceEnd = sourceMap[Math.min(virtualEnd, sourceMap.length - 1)];
+  const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+  return {
+    from: sourceStart,
+    to: sourceEnd !== undefined && sourceEnd >= sourceStart ? sourceEnd + 1 : sourceStart + 1,
+    severity: diagnostic.category === ts.DiagnosticCategory.Warning ? 'warning' : 'error',
+    message,
+  };
+}
+
+async function lintEnfyraJavaScriptSyntax(source: string): Promise<Diagnostic[]> {
+  const transformed = transformEnfyraCode(source);
+  try {
+    parse(transformed.code, {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      allowReturnOutsideFunction: true,
+      allowAwaitOutsideFunction: true,
+    });
+    return [];
+  } catch (error: any) {
+    const position = typeof error?.pos === 'number' ? error.pos : 0;
+    const sourceStart = transformed.sourceMap[Math.min(position, transformed.sourceMap.length - 1)] ?? 0;
+    return [{
+      from: sourceStart,
+      to: sourceStart + 1,
+      severity: 'error',
+      message: error?.message || 'Syntax error',
+    }];
+  }
+}
+
+async function getEnfyraJavaScriptSyntaxError(
+  source: string,
+  prefix = '',
+  suffix = '',
+): Promise<string | null> {
+  const transformed = transformEnfyraCode(source);
+  try {
+    parse(`${prefix}${transformed.code}${suffix}`, {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      allowReturnOutsideFunction: true,
+      allowAwaitOutsideFunction: true,
+    });
+    return null;
+  } catch (error: any) {
+    return error?.message || 'Syntax error';
+  }
+}
+
 export async function lintEnfyraScript(
   source: string,
   language: 'javascript' | 'typescript' = 'typescript',
 ): Promise<Diagnostic[]> {
+  if (language === 'javascript') {
+    return lintEnfyraJavaScriptSyntax(source);
+  }
+
   const ts = await loadTypeScript();
   const transformed = transformEnfyraCode(source);
-  const fileName =
-    language === 'typescript' ? 'enfyra-script.ts' : 'enfyra-script.js';
+  const fileName = 'enfyra-script.ts';
   const libName = 'enfyra-lib.d.ts';
   const prefix = `${libSource}\nasync function __enfyra_runtime__() {\n`;
   const suffix = '\n}\n';
@@ -582,8 +651,6 @@ export async function lintEnfyraScript(
   ];
 
   const compilerOptions: import('typescript').CompilerOptions = {
-    allowJs: language === 'javascript',
-    checkJs: language === 'javascript',
     noEmit: true,
     noLib: true,
     noImplicitAny: false,
@@ -616,20 +683,7 @@ export async function lintEnfyraScript(
   const diagnostics = ts.getPreEmitDiagnostics(program, program.getSourceFile(fileName));
 
   return diagnostics
-    .map((diagnostic): Diagnostic | null => {
-      if (diagnostic.start === undefined || diagnostic.length === undefined) return null;
-      const sourceStart = virtualMap[diagnostic.start];
-      if (sourceStart === undefined || sourceStart < 0) return null;
-      const virtualEnd = Math.max(diagnostic.start + diagnostic.length - 1, diagnostic.start);
-      const sourceEnd = virtualMap[Math.min(virtualEnd, virtualMap.length - 1)];
-      const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
-      return {
-        from: sourceStart,
-        to: sourceEnd !== undefined && sourceEnd >= sourceStart ? sourceEnd + 1 : sourceStart + 1,
-        severity: diagnostic.category === ts.DiagnosticCategory.Warning ? 'warning' : 'error',
-        message,
-      };
-    })
+    .map((diagnostic) => mapTypeScriptDiagnostic(ts, diagnostic, virtualMap))
     .filter((diagnostic): diagnostic is Diagnostic => Boolean(diagnostic));
 }
 
@@ -640,10 +694,18 @@ export async function validateEnfyraObjectReturnScript(
   const trimmed = source.trim();
   if (!trimmed) return { ok: true };
 
+  if (language === 'javascript') {
+    const message = await getEnfyraJavaScriptSyntaxError(
+      source,
+      'async function __enfyra_runtime__() {\n',
+      '\n}\n',
+    );
+    return message ? { ok: false, message } : { ok: true };
+  }
+
   const ts = await loadTypeScript();
   const transformed = transformEnfyraCode(source);
-  const fileName =
-    language === 'typescript' ? 'enfyra-object-script.ts' : 'enfyra-object-script.js';
+  const fileName = 'enfyra-object-script.ts';
   const libName = 'enfyra-lib.d.ts';
   const prefix = `${libSource}
 type __EnfyraPlainObject = { [key: string]: any } & { length?: never };
@@ -655,8 +717,6 @@ async function __enfyra_runtime__(): Promise<__EnfyraPlainObject> {
   const virtualSource = `${prefix}${transformed.code}${suffix}`;
 
   const compilerOptions: import('typescript').CompilerOptions = {
-    allowJs: language === 'javascript',
-    checkJs: language === 'javascript',
     noEmit: true,
     noLib: true,
     noImplicitAny: false,
@@ -739,8 +799,17 @@ export async function validateEnfyraRequiredReturnScript(
     return { ok: false, message: 'Script must return a value.' };
   }
 
+  if (language === 'javascript') {
+    const message = await getEnfyraJavaScriptSyntaxError(
+      source,
+      'async function __enfyra_runtime__() {\n',
+      '\n}\n',
+    );
+    return message ? { ok: false, message } : { ok: true };
+  }
+
   const fileName =
-    language === 'typescript' ? 'enfyra-return-script.ts' : 'enfyra-return-script.js';
+    'enfyra-return-script.ts';
   const libName = 'enfyra-lib.d.ts';
   const prefix = `${libSource}
 type __EnfyraReturnValue = {} | null;
@@ -752,8 +821,6 @@ async function __enfyra_runtime__(): Promise<__EnfyraReturnValue> {
   const virtualSource = `${prefix}${transformed.code}${suffix}`;
 
   const compilerOptions: import('typescript').CompilerOptions = {
-    allowJs: language === 'javascript',
-    checkJs: language === 'javascript',
     noEmit: true,
     noLib: true,
     noImplicitAny: false,
