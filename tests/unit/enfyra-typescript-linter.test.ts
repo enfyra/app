@@ -23,17 +23,28 @@ return {
     expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Cannot find name 'b'"))).toBe(true)
   })
 
-  it('reports unresolved identifiers in strict JavaScript mode', async () => {
+  it('does not TypeScript-check JavaScript mode', async () => {
     const diagnostics = await lintEnfyraScript('a = b', 'javascript')
 
-    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Cannot find name 'a'"))).toBe(true)
-    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Cannot find name 'b'"))).toBe(true)
+    expect(diagnostics).toEqual([])
+  })
+
+  it('does not report TypeScript semantic errors in JavaScript mode', async () => {
+    const diagnostics = await lintEnfyraScript(`
+const payload = {}
+const value = payload.message
+const rounded = Number(payload.amount).toFixed(2)
+const encoded = encodeURIComponent(payload.url || '')
+return { value, rounded, encoded }
+`, 'javascript')
+
+    expect(diagnostics).toEqual([])
   })
 
   it('rejects TypeScript syntax in JavaScript mode', async () => {
     const diagnostics = await lintEnfyraScript('const value: string = "ok"', 'javascript')
 
-    expect(diagnostics.some((diagnostic) => diagnostic.message.includes("Type annotations can only be used in TypeScript files"))).toBe(true)
+    expect(diagnostics.length).toBeGreaterThan(0)
   })
 
   it('accepts Enfyra macros before TypeScript checking', async () => {
@@ -86,6 +97,18 @@ const createdAt = new Date().toISOString()
 const messageId = String(@BODY.messageId || ('rt_' + createdAt + '_' + String(@USER.id) + '_' + Math.random().toString(36).slice(2)))
 const bounded = Math.min(100, Math.max(0, Math.floor(@BODY.score || 0)))
 return { messageId, bounded }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
+  it('accepts standard URI globals and number formatting in admin scripts', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const projectId = String(@BODY.projectId || '')
+const path = projectId ? '/projects/' + encodeURIComponent(projectId) : '/projects'
+const downloadUrl = decodeURIComponent(String(@BODY.downloadUrl || ''))
+const amount = Number(@BODY.amount || 0).toFixed(2)
+return { path, downloadUrl, amount }
 `)
 
     expect(diagnostics).toEqual([])
