@@ -111,6 +111,7 @@ const apiTokenCustomCalendarOpen = ref(false);
 const apiTokenErrors = ref<Record<string, string>>({});
 const newlyCreatedToken = ref("");
 const apiTokenCopied = ref(false);
+let apiTokenCopiedTimer: ReturnType<typeof setTimeout> | null = null;
 
 const apiTokenExpiryPresets = [
   { label: "30 days", value: "30d", days: 30 },
@@ -136,6 +137,14 @@ function calendarDateToDateString(value: CalendarDate | { year: number; month: n
 
 watch(apiTokenCustomCalendarDate, (value) => {
   apiTokenForm.value.customDate = calendarDateToDateString(value);
+});
+
+watch(apiTokenModalOpen, (open) => {
+  if (!open) resetApiTokenCopiedState();
+});
+
+onBeforeUnmount(() => {
+  clearApiTokenCopiedTimer();
 });
 
 watch(() => apiTokenForm.value.expiryPreset, (value) => {
@@ -352,7 +361,7 @@ async function handleChangePassword() {
 function openApiTokenModal() {
   apiTokenModalOpen.value = true;
   newlyCreatedToken.value = "";
-  apiTokenCopied.value = false;
+  resetApiTokenCopiedState();
   apiTokenErrors.value = {};
   apiTokenForm.value = {
     name: "MCP token",
@@ -361,6 +370,17 @@ function openApiTokenModal() {
   };
   apiTokenCustomCalendarDate.value = null;
   apiTokenCustomCalendarOpen.value = false;
+}
+
+function clearApiTokenCopiedTimer() {
+  if (!apiTokenCopiedTimer) return;
+  clearTimeout(apiTokenCopiedTimer);
+  apiTokenCopiedTimer = null;
+}
+
+function resetApiTokenCopiedState() {
+  clearApiTokenCopiedTimer();
+  apiTokenCopied.value = false;
 }
 
 function resolveApiTokenExpiresAt() {
@@ -416,13 +436,18 @@ async function handleCreateApiToken() {
   }
 
   newlyCreatedToken.value = createdApiTokenData.value.token;
-  apiTokenCopied.value = false;
+  resetApiTokenCopiedState();
   await fetchApiTokens();
 }
 
 async function handleCopyApiToken(token: string) {
   await navigator.clipboard.writeText(token);
+  clearApiTokenCopiedTimer();
   apiTokenCopied.value = true;
+  apiTokenCopiedTimer = setTimeout(() => {
+    apiTokenCopied.value = false;
+    apiTokenCopiedTimer = null;
+  }, 1500);
 }
 
 async function handleRevokeApiToken(token: ApiTokenRecord) {
