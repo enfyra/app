@@ -71,6 +71,388 @@
 
 }
 
+@layer utilities {
+  .bg-default {
+    background-color: var(--surface-default);
+  }
+
+  .bg-muted {
+    background-color: var(--surface-muted);
+  }
+
+  .text-muted {
+    color: var(--text-tertiary);
+  }
+
+  .border-default {
+    border-color: var(--border-default);
+  }
+
+  .divide-default > :not(:last-child) {
+    border-color: var(--border-default);
+  }
+
+  .ring-default {
+    --tw-ring-color: var(--border-default);
+  }
+
+  .text-primary {
+    color: var(--ui-primary);
+  }
+
+  .text-success {
+    color: var(--ui-success);
+  }
+
+  .text-warning {
+    color: var(--ui-warning);
+  }
+
+  .text-info {
+    color: var(--ui-info);
+  }
+
+  .border-primary {
+    border-color: var(--ui-primary);
+  }
+
+  .border-success {
+    border-color: var(--ui-success);
+  }
+
+  .border-warning {
+    border-color: var(--ui-warning);
+  }
+
+  .border-error {
+    border-color: var(--ui-error);
+  }
+
+  .border-info {
+    border-color: var(--ui-info);
+  }
+
+  .bg-primary {
+    background-color: var(--ui-primary);
+  }
+
+  .bg-success {
+    background-color: var(--ui-success);
+  }
+
+  .bg-warning {
+    background-color: var(--ui-warning);
+  }
+
+  .bg-error {
+    background-color: var(--ui-error);
+  }
+
+  .bg-info {
+    background-color: var(--ui-info);
+  }
+
+  .ring-primary {
+    --tw-ring-color: var(--ui-primary);
+  }
+
+  .ring-success {
+    --tw-ring-color: var(--ui-success);
+  }
+
+  .ring-warning {
+    --tw-ring-color: var(--ui-warning);
+  }
+
+  .ring-error {
+    --tw-ring-color: var(--ui-error);
+  }
+
+  .ring-info {
+    --tw-ring-color: var(--ui-info);
+  }
+
+  .divide-primary > :not(:last-child) {
+    border-color: var(--ui-primary);
+  }
+
+  .divide-success > :not(:last-child) {
+    border-color: var(--ui-success);
+  }
+
+  .divide-warning > :not(:last-child) {
+    border-color: var(--ui-warning);
+  }
+
+  .divide-error > :not(:last-child) {
+    border-color: var(--ui-error);
+  }
+
+  .divide-info > :not(:last-child) {
+    border-color: var(--ui-info);
+  }
+
+  .border-primary\/20 {
+    border-color: color-mix(in srgb, var(--ui-primary) 20%, transparent);
+  }
+
+  .border-primary\/30 {
+    border-color: color-mix(in srgb, var(--ui-primary) 30%, transparent);
+  }
+
+  .border-primary\/50 {
+    border-color: color-mix(in srgb, var(--ui-primary) 50%, transparent);
+  }
+
+  .border-primary\/60 {
+    border-color: color-mix(in srgb, var(--ui-primary) 60%, transparent);
+  }
+
+  .border-success\/20 {
+    border-color: color-mix(in srgb, var(--ui-success) 20%, transparent);
+  }
+
+  .border-success\/30 {
+    border-color: color-mix(in srgb, var(--ui-success) 30%, transparent);
+  }
+
+  .border-success\/50 {
+    border-color: color-mix(in srgb, var(--ui-success) 50%, transparent);
+  }
+
+  .border-success\/60 {
+    border-color: color-mix(in srgb, var(--ui-success) 60%, transparent);
+  }
+
+  .border-warning\/20 {
+    border-color: color-mix(in srgb, var(--ui-warning) 20%, transparent);
+  }
+
+  .border-warning\/30 {
+    border-color: color-mix(in srgb, var(--ui-warning) 30%, transparent);
+  }
+
+  .border-warning\/50 {
+    border-color: color-mix(in srgb, var(--ui-warning) 50%, transparent);
+  }
+
+  .border-warning\/60 {
+    border-color: color-mix(in srgb, var(--ui-warning) 60%, transparent);
+  }
+
+  .border-error\/20 {
+    border-color: color-mix(in srgb, var(--ui-error) 20%, transparent);
+  }
+
+  .border-error\/30 {
+    border-color: color-mix(in srgb, var(--ui-error) 30%, transparent);
+  }
+
+  .border-error\/50 {
+    border-color: color-mix(in srgb, var(--ui-error) 50%, transparent);
+  }
+
+  .border-error\/60 {
+    border-color: color-mix(in srgb, var(--ui-error) 60%, transparent);
+  }
+
+  .border-info\/20 {
+    border-color: color-mix(in srgb, var(--ui-info) 20%, transparent);
+  }
+
+  .border-info\/30 {
+    border-color: color-mix(in srgb, var(--ui-info) 30%, transparent);
+  }
+
+  .border-info\/50 {
+    border-color: color-mix(in srgb, var(--ui-info) 50%, transparent);
+  }
+
+  .border-info\/60 {
+    border-color: color-mix(in srgb, var(--ui-info) 60%, transparent);
+  }
+
+  .bg-primary\/5 {
+    background-color: color-mix(in srgb, var(--ui-primary) 5%, transparent);
+  }
+
+  .bg-primary\/10 {
+    background-color: color-mix(in srgb, var(--ui-primary) 10%, transparent);
+  }
+
+  .bg-primary\/15 {
+    background-color: color-mix(in srgb, var(--ui-primary) 15%, transparent);
+  }
+
+  .bg-primary\/20 {
+    background-color: color-mix(in srgb, var(--ui-primary) 20%, transparent);
+  }
+
+  .bg-success\/5 {
+    background-color: color-mix(in srgb, var(--ui-success) 5%, transparent);
+  }
+
+  .bg-success\/10 {
+    background-color: color-mix(in srgb, var(--ui-success) 10%, transparent);
+  }
+
+  .bg-success\/15 {
+    background-color: color-mix(in srgb, var(--ui-success) 15%, transparent);
+  }
+
+  .bg-success\/20 {
+    background-color: color-mix(in srgb, var(--ui-success) 20%, transparent);
+  }
+
+  .bg-warning\/5 {
+    background-color: color-mix(in srgb, var(--ui-warning) 5%, transparent);
+  }
+
+  .bg-warning\/10 {
+    background-color: color-mix(in srgb, var(--ui-warning) 10%, transparent);
+  }
+
+  .bg-warning\/15 {
+    background-color: color-mix(in srgb, var(--ui-warning) 15%, transparent);
+  }
+
+  .bg-warning\/20 {
+    background-color: color-mix(in srgb, var(--ui-warning) 20%, transparent);
+  }
+
+  .bg-error\/5 {
+    background-color: color-mix(in srgb, var(--ui-error) 5%, transparent);
+  }
+
+  .bg-error\/10 {
+    background-color: color-mix(in srgb, var(--ui-error) 10%, transparent);
+  }
+
+  .bg-error\/15 {
+    background-color: color-mix(in srgb, var(--ui-error) 15%, transparent);
+  }
+
+  .bg-error\/20 {
+    background-color: color-mix(in srgb, var(--ui-error) 20%, transparent);
+  }
+
+  .bg-info\/5 {
+    background-color: color-mix(in srgb, var(--ui-info) 5%, transparent);
+  }
+
+  .bg-info\/10 {
+    background-color: color-mix(in srgb, var(--ui-info) 10%, transparent);
+  }
+
+  .bg-info\/15 {
+    background-color: color-mix(in srgb, var(--ui-info) 15%, transparent);
+  }
+
+  .bg-info\/20 {
+    background-color: color-mix(in srgb, var(--ui-info) 20%, transparent);
+  }
+
+  .ring-primary\/20 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-primary) 20%, transparent);
+  }
+
+  .ring-primary\/30 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-primary) 30%, transparent);
+  }
+
+  .ring-success\/20 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-success) 20%, transparent);
+  }
+
+  .ring-success\/30 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-success) 30%, transparent);
+  }
+
+  .ring-warning\/20 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-warning) 20%, transparent);
+  }
+
+  .ring-warning\/30 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-warning) 30%, transparent);
+  }
+
+  .ring-error\/20 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-error) 20%, transparent);
+  }
+
+  .ring-error\/30 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-error) 30%, transparent);
+  }
+
+  .ring-info\/20 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-info) 20%, transparent);
+  }
+
+  .ring-info\/30 {
+    --tw-ring-color: color-mix(in srgb, var(--ui-info) 30%, transparent);
+  }
+
+  .divide-primary\/20 > :not(:last-child) {
+    border-color: color-mix(in srgb, var(--ui-primary) 20%, transparent);
+  }
+
+  .divide-success\/20 > :not(:last-child) {
+    border-color: color-mix(in srgb, var(--ui-success) 20%, transparent);
+  }
+
+  .divide-warning\/20 > :not(:last-child) {
+    border-color: color-mix(in srgb, var(--ui-warning) 20%, transparent);
+  }
+
+  .divide-error\/20 > :not(:last-child) {
+    border-color: color-mix(in srgb, var(--ui-error) 20%, transparent);
+  }
+
+  .divide-info\/20 > :not(:last-child) {
+    border-color: color-mix(in srgb, var(--ui-info) 20%, transparent);
+  }
+
+  .hover\:border-primary\/60:hover {
+    border-color: color-mix(in srgb, var(--ui-primary) 60%, transparent);
+  }
+
+  .hover\:border-success\/60:hover {
+    border-color: color-mix(in srgb, var(--ui-success) 60%, transparent);
+  }
+
+  .hover\:border-warning\/60:hover {
+    border-color: color-mix(in srgb, var(--ui-warning) 60%, transparent);
+  }
+
+  .hover\:border-error\/60:hover {
+    border-color: color-mix(in srgb, var(--ui-error) 60%, transparent);
+  }
+
+  .hover\:border-info\/60:hover {
+    border-color: color-mix(in srgb, var(--ui-info) 60%, transparent);
+  }
+
+  .hover\:bg-primary\/5:hover {
+    background-color: color-mix(in srgb, var(--ui-primary) 5%, transparent);
+  }
+
+  .hover\:bg-success\/5:hover {
+    background-color: color-mix(in srgb, var(--ui-success) 5%, transparent);
+  }
+
+  .hover\:bg-warning\/5:hover {
+    background-color: color-mix(in srgb, var(--ui-warning) 5%, transparent);
+  }
+
+  .hover\:bg-error\/5:hover {
+    background-color: color-mix(in srgb, var(--ui-error) 5%, transparent);
+  }
+
+  .hover\:bg-info\/5:hover {
+    background-color: color-mix(in srgb, var(--ui-info) 5%, transparent);
+  }
+}
+
 .filter-date-picker-popover table {
   table-layout: auto;
   border-collapse: collapse;

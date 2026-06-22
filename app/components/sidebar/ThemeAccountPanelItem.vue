@@ -47,7 +47,7 @@ function handleKeydown(event: KeyboardEvent) {
           :key="color.value"
           type="button"
           class="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-default)] transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-          :class="$primaryColor.current.value === color.value ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-[var(--surface-default)]' : ''"
+          :class="$primaryColor.current.value === color.value ? 'border-brand-500 ring-2 ring-brand-500/35' : ''"
           :aria-label="`Use ${color.label} accent`"
           :title="color.label"
           @click="$primaryColor.set(color.value)"
