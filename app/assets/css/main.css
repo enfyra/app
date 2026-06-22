@@ -37,6 +37,14 @@
     @apply bg-[var(--bg-app)] text-[var(--text-primary)] antialiased;
   }
 
+  *,
+  ::before,
+  ::after,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--border-default);
+  }
+
   button {
     @apply cursor-pointer;
   }
