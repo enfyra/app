@@ -923,6 +923,7 @@
   --eapp-button-text: var(--action-primary-text);
   --eapp-button-disabled-bg: var(--action-primary-disabled-bg);
   --eapp-button-disabled-text: var(--action-primary-disabled-text);
+  --eapp-button-disabled-ring: var(--action-primary-disabled-ring);
 }
 
 .eapp-button-success-solid {

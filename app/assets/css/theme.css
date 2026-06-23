@@ -110,6 +110,7 @@
     --action-primary-text: #ffffff;
     --action-primary-disabled-bg: color-mix(in srgb, var(--brand-500) 42%, var(--surface-muted));
     --action-primary-disabled-text: color-mix(in srgb, var(--brand-950) 72%, var(--text-secondary));
+    --action-primary-disabled-ring: color-mix(in srgb, var(--brand-500) 24%, var(--border-default));
 
     --action-neutral-bg: rgba(255, 255, 255, 0.82);
     --action-neutral-bg-hover: color-mix(in srgb, var(--brand-500) 7%, #ffffff);
@@ -347,12 +348,13 @@
     --control-disabled-border: rgba(148, 163, 184, 0.1);
     --control-disabled-text: var(--text-disabled);
 
-    --action-primary-bg: var(--brand-200);
-    --action-primary-bg-hover: var(--brand-100);
-    --action-primary-bg-active: var(--brand-300);
+    --action-primary-bg: var(--brand-500);
+    --action-primary-bg-hover: var(--brand-400);
+    --action-primary-bg-active: var(--brand-600);
     --action-primary-text: var(--brand-950);
-    --action-primary-disabled-bg: color-mix(in srgb, var(--brand-300) 22%, var(--surface-muted));
-    --action-primary-disabled-text: color-mix(in srgb, var(--brand-100) 66%, var(--text-tertiary));
+    --action-primary-disabled-bg: color-mix(in srgb, var(--brand-500) 28%, var(--surface-muted));
+    --action-primary-disabled-text: color-mix(in srgb, var(--brand-100) 78%, var(--text-tertiary));
+    --action-primary-disabled-ring: color-mix(in srgb, var(--brand-400) 28%, var(--border-default));
 
     --action-neutral-bg: rgba(15, 23, 42, 0.72);
     --action-neutral-bg-hover: rgba(51, 65, 85, 0.96);
