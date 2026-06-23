@@ -362,8 +362,8 @@ export default defineAppConfig({
           class: {
             root: "!border-[var(--state-primary-outline-border)] !bg-[var(--state-primary-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-primary-outline-border)]",
             icon: "text-[var(--state-primary-soft-text)]",
-            title: "text-[var(--state-primary-title-text)]",
-            description: "text-[var(--state-primary-description-text)]",
+            title: "text-[var(--text-primary)]",
+            description: "text-[var(--text-secondary)]",
           }
         },
         {
@@ -372,8 +372,8 @@ export default defineAppConfig({
           class: {
             root: "!border-[var(--state-primary-outline-border)] !bg-[var(--state-primary-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-primary-outline-border)]",
             icon: "text-[var(--state-primary-soft-text)]",
-            title: "text-[var(--state-primary-title-text)]",
-            description: "text-[var(--state-primary-description-text)]",
+            title: "text-[var(--text-primary)]",
+            description: "text-[var(--text-secondary)]",
           }
         },
         {

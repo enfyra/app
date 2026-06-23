@@ -29,12 +29,6 @@
           color="primary"
           variant="soft"
           class="mb-6"
-          :ui="{
-            root: '!border-[var(--border-accent)] !bg-[var(--surface-default)] !ring-1 !ring-inset !ring-[var(--border-accent)]',
-            icon: 'text-[var(--state-primary-soft-text)]',
-            title: 'text-[var(--text-primary)]',
-            description: 'text-[var(--text-primary)]',
-          }"
         >
           <template #description>
             <div class="space-y-4 text-[var(--text-primary)]">

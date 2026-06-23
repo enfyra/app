@@ -638,31 +638,53 @@
   box-shadow: none !important;
 }
 
-.eapp-accent-soft {
+.eapp-accent-soft,
+.eapp-identity-soft {
   border-color: var(--badge-primary-soft-border);
   background: var(--badge-primary-soft-bg);
   color: var(--badge-primary-soft-text);
   box-shadow: inset 0 0 0 1px var(--badge-primary-soft-border);
 }
 
-.eapp-accent-soft-hover {
+.eapp-accent-soft-hover,
+.eapp-identity-soft-hover {
   transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.eapp-accent-soft-hover:hover {
+.eapp-accent-soft-hover:hover,
+.eapp-identity-soft-hover:hover {
   border-color: var(--border-accent);
   background: var(--state-primary-soft-bg-hover);
   color: var(--badge-primary-soft-text);
 }
 
-.eapp-accent-solid {
+.eapp-accent-solid,
+.eapp-identity-solid {
   border-color: var(--action-primary-bg);
   background: var(--action-primary-bg);
   color: var(--action-primary-text);
 }
 
-.eapp-accent-text {
+.eapp-accent-text,
+.eapp-identity-text {
   color: var(--badge-primary-soft-text);
+}
+
+.eapp-identity-surface {
+  border-color: var(--border-accent);
+  background: color-mix(in srgb, var(--brand-500) 7%, var(--card-bg));
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 14%, transparent);
+}
+
+.eapp-identity-surface-hover {
+  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.eapp-identity-surface-hover:hover {
+  border-color: color-mix(in srgb, var(--brand-500) 34%, transparent);
+  background: color-mix(in srgb, var(--brand-500) 11%, var(--card-bg));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 20%, transparent), var(--shadow-xs);
 }
 
 .eapp-button-primary-solid,

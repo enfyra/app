@@ -166,11 +166,11 @@
     --state-info-title-text: #155e75;
     --state-info-description-text: #0e7490;
 
-    --state-primary-soft-bg: color-mix(in srgb, var(--brand-500) 7%, transparent);
-    --state-primary-soft-bg-hover: color-mix(in srgb, var(--brand-500) 11%, transparent);
+    --state-primary-soft-bg: color-mix(in srgb, var(--brand-500) 14%, var(--card-bg));
+    --state-primary-soft-bg-hover: color-mix(in srgb, var(--brand-500) 18%, var(--card-bg));
     --state-primary-soft-text: color-mix(in srgb, var(--brand-700) 74%, #334155);
-    --state-primary-outline-border: color-mix(in srgb, var(--brand-500) 22%, transparent);
-    --state-primary-outline-bg-hover: color-mix(in srgb, var(--brand-500) 8%, transparent);
+    --state-primary-outline-border: color-mix(in srgb, var(--brand-500) 24%, transparent);
+    --state-primary-outline-bg-hover: color-mix(in srgb, var(--brand-500) 12%, var(--card-bg));
     --state-primary-title-text: color-mix(in srgb, var(--brand-800) 78%, #0f172a);
     --state-primary-description-text: color-mix(in srgb, var(--brand-700) 70%, #334155);
     --badge-primary-soft-bg: color-mix(in srgb, var(--brand-500) 12%, #ffffff);
@@ -409,11 +409,11 @@
     --state-info-title-text: #bae6fd;
     --state-info-description-text: #67e8f9;
 
-    --state-primary-soft-bg: color-mix(in srgb, var(--brand-500) 9%, transparent);
-    --state-primary-soft-bg-hover: color-mix(in srgb, var(--brand-500) 13%, transparent);
+    --state-primary-soft-bg: color-mix(in srgb, var(--brand-500) 18%, transparent);
+    --state-primary-soft-bg-hover: color-mix(in srgb, var(--brand-500) 24%, transparent);
     --state-primary-soft-text: color-mix(in srgb, var(--brand-200) 58%, #e2e8f0);
-    --state-primary-outline-border: color-mix(in srgb, var(--brand-400) 20%, transparent);
-    --state-primary-outline-bg-hover: color-mix(in srgb, var(--brand-500) 7%, transparent);
+    --state-primary-outline-border: color-mix(in srgb, var(--brand-400) 22%, transparent);
+    --state-primary-outline-bg-hover: color-mix(in srgb, var(--brand-500) 18%, transparent);
     --state-primary-title-text: color-mix(in srgb, var(--brand-100) 82%, #f8fafc);
     --state-primary-description-text: color-mix(in srgb, var(--brand-200) 70%, #e2e8f0);
     --badge-primary-soft-bg: color-mix(in srgb, var(--brand-400) 17%, rgba(15, 23, 42, 0.92));
