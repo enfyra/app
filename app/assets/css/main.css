@@ -855,10 +855,28 @@
 }
 
 .eapp-identity-surface {
-  border-color: var(--border-accent);
-  background: color-mix(in srgb, var(--brand-500) 7%, var(--card-bg));
+  border-color: color-mix(in srgb, var(--brand-500) 10%, var(--card-border));
+  background:
+    linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--brand-500) 3%, transparent),
+      color-mix(in srgb, var(--brand-500) 3%, transparent)
+    ),
+    var(--card-bg);
   color: var(--text-primary);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 14%, transparent);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.dark .eapp-identity-surface {
+  border-color: color-mix(in srgb, var(--brand-400) 12%, var(--card-border));
+  background:
+    linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--brand-400) 5%, transparent),
+      color-mix(in srgb, var(--brand-400) 5%, transparent)
+    ),
+    var(--card-bg);
 }
 
 .eapp-identity-surface-hover {
@@ -866,9 +884,26 @@
 }
 
 .eapp-identity-surface-hover:hover {
-  border-color: color-mix(in srgb, var(--brand-500) 34%, transparent);
-  background: color-mix(in srgb, var(--brand-500) 11%, var(--card-bg));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 20%, transparent), var(--shadow-xs);
+  border-color: color-mix(in srgb, var(--brand-500) 16%, var(--card-border-hover));
+  background:
+    linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--brand-500) 5%, transparent),
+      color-mix(in srgb, var(--brand-500) 5%, transparent)
+    ),
+    var(--card-bg);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.dark .eapp-identity-surface-hover:hover {
+  border-color: color-mix(in srgb, var(--brand-400) 18%, var(--card-border-hover));
+  background:
+    linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--brand-400) 8%, transparent),
+      color-mix(in srgb, var(--brand-400) 8%, transparent)
+    ),
+    var(--card-bg);
 }
 
 .eapp-button-primary-solid,
