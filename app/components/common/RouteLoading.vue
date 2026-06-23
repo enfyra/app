@@ -10,15 +10,24 @@
     >
       <div
         v-if="show"
-        class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-40"
+        class="fixed inset-0 z-40 flex items-center justify-center bg-[color-mix(in_srgb,var(--bg-app)_82%,transparent)] backdrop-blur-sm"
       >
         <div class="flex flex-col items-center gap-3">
-          
-          <div
-            class="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin"
-          ></div>
+          <svg class="h-8 w-8 animate-spin drop-shadow-[0_0_18px_color-mix(in_srgb,var(--brand-500)_22%,transparent)]" viewBox="0 0 24 24" aria-hidden="true">
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="var(--brand-500)"
+              stroke-width="2"
+              fill="none"
+              stroke-dasharray="60"
+              stroke-dashoffset="40"
+              stroke-linecap="round"
+            />
+          </svg>
 
-          <p v-if="message" class="text-sm text-muted-foreground">
+          <p v-if="message" class="text-sm font-medium text-[var(--text-secondary)]">
             {{ message }}
           </p>
         </div>
