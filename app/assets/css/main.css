@@ -928,6 +928,81 @@
   box-shadow: 0 0 0 1px var(--badge-primary-soft-border);
 }
 
+.eapp-status-success-soft {
+  border-color: var(--badge-success-soft-border);
+  background: var(--badge-success-soft-bg);
+  color: var(--badge-success-soft-text);
+  box-shadow: inset 0 0 0 1px var(--badge-success-soft-border);
+}
+
+.eapp-status-success-text {
+  color: var(--badge-success-soft-text);
+}
+
+.eapp-status-success-border {
+  border-color: var(--badge-success-soft-border);
+}
+
+.eapp-status-warning-soft {
+  border-color: var(--badge-warning-soft-border);
+  background: var(--badge-warning-soft-bg);
+  color: var(--badge-warning-soft-text);
+  box-shadow: inset 0 0 0 1px var(--badge-warning-soft-border);
+}
+
+.eapp-status-warning-text {
+  color: var(--badge-warning-soft-text);
+}
+
+.eapp-status-warning-border {
+  border-color: var(--badge-warning-soft-border);
+}
+
+.eapp-status-danger-soft {
+  border-color: var(--badge-danger-soft-border);
+  background: var(--badge-danger-soft-bg);
+  color: var(--badge-danger-soft-text);
+  box-shadow: inset 0 0 0 1px var(--badge-danger-soft-border);
+}
+
+.eapp-status-danger-text {
+  color: var(--badge-danger-soft-text);
+}
+
+.eapp-status-danger-border {
+  border-color: var(--badge-danger-soft-border);
+}
+
+.eapp-status-info-soft {
+  border-color: var(--badge-info-soft-border);
+  background: var(--badge-info-soft-bg);
+  color: var(--badge-info-soft-text);
+  box-shadow: inset 0 0 0 1px var(--badge-info-soft-border);
+}
+
+.eapp-status-info-text {
+  color: var(--badge-info-soft-text);
+}
+
+.eapp-status-info-border {
+  border-color: var(--badge-info-soft-border);
+}
+
+.eapp-status-neutral-soft {
+  border-color: var(--badge-neutral-soft-border);
+  background: var(--badge-neutral-soft-bg);
+  color: var(--badge-neutral-soft-text);
+  box-shadow: inset 0 0 0 1px var(--badge-neutral-soft-border);
+}
+
+.eapp-status-neutral-text {
+  color: var(--badge-neutral-soft-text);
+}
+
+.eapp-status-neutral-border {
+  border-color: var(--badge-neutral-soft-border);
+}
+
 .eapp-identity-surface,
 .eapp-primary-surface {
   border-color: color-mix(in srgb, var(--brand-500) 10%, var(--card-border));
