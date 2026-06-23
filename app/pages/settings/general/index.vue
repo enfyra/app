@@ -61,7 +61,7 @@ const setting = ref<Record<string, any>>({});
 const generalFormSections = [
   {
     id: "project",
-    class: "border-b border-[var(--border-subtle)] pb-8",
+    class: "border-b border-[var(--border-subtle)] pb-6",
     fields: ["projectName", "projectFavicon", "projectDescription",  "isInit"],
 
   },
@@ -144,9 +144,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-[1000px] space-y-6 pb-10 lg:px-0">
-    <div class="surface-card overflow-hidden rounded-2xl">
-      <div class="relative px-6 py-8 sm:px-8">
+  <div class="general-settings-page eapp-page-constrained">
+    <div class="general-settings-card surface-card">
+      <div class="general-settings-card-inner">
         <CommonLoadingState
           v-if="loading"
           title="Loading settings…"
@@ -171,9 +171,7 @@ onMounted(() => {
             :field-map="fieldMap"
           />
 
-          <div
-            class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
-          >
+          <div class="general-settings-actions">
             <UButton
               v-if="hasFormChanges"
               label="Reset"
@@ -198,13 +196,13 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="surface-card overflow-hidden rounded-2xl">
-      <div class="relative px-6 py-8 sm:px-8">
-        <div class="mb-6">
-          <h3 class="mb-1 text-lg font-semibold text-[var(--text-primary)]">
+    <div class="general-settings-card surface-card">
+      <div class="general-settings-card-inner">
+        <div class="general-settings-card-header">
+          <h3>
             CORS Allowed Origins
           </h3>
-          <p class="text-sm text-[var(--text-tertiary)]">
+          <p>
             Manage the list of origins allowed to call the API. Changes take
             effect immediately.
           </p>
@@ -214,3 +212,57 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.general-settings-page {
+  display: grid;
+  gap: 18px;
+}
+
+.general-settings-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(18px);
+}
+
+.general-settings-card-inner {
+  position: relative;
+  padding: 22px;
+}
+
+.general-settings-card-header {
+  margin-bottom: 18px;
+}
+
+.general-settings-card-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.general-settings-card-header p {
+  margin: 4px 0 0;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.general-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 18px;
+}
+
+@media (max-width: 640px) {
+  .general-settings-card-inner {
+    padding: 16px;
+  }
+}
+</style>

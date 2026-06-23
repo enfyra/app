@@ -1,88 +1,190 @@
 <script setup lang="ts">
-const { current, dismiss } = useNotify()
+const { current, dismiss } = useNotify();
 
 const typeConfig = {
-  success: { icon: 'lucide:check-circle', color: 'success' as const, ring: 'ring-green-200 dark:ring-green-800/40', bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400' },
-  error: { icon: 'lucide:x-circle', color: 'error' as const, ring: 'ring-red-200 dark:ring-red-800/40', bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400' },
-  warning: { icon: 'lucide:alert-triangle', color: 'warning' as const, ring: 'ring-amber-200 dark:ring-amber-800/40', bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-600 dark:text-amber-400' },
-  info: { icon: 'lucide:info', color: 'info' as const, ring: 'ring-blue-200 dark:ring-blue-800/40', bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' },
-}
+  success: {
+    icon: 'lucide:check-circle',
+    tone: 'success',
+    iconClass: 'text-[var(--badge-success-soft-text)]',
+    tileClass: 'bg-[var(--badge-success-soft-bg)] ring-[var(--badge-success-soft-border)]',
+  },
+  error: {
+    icon: 'lucide:x-circle',
+    tone: 'error',
+    iconClass: 'text-[var(--badge-danger-soft-text)]',
+    tileClass: 'bg-[var(--badge-danger-soft-bg)] ring-[var(--badge-danger-soft-border)]',
+  },
+  warning: {
+    icon: 'lucide:alert-triangle',
+    tone: 'warning',
+    iconClass: 'text-[var(--badge-warning-soft-text)]',
+    tileClass: 'bg-[var(--badge-warning-soft-bg)] ring-[var(--badge-warning-soft-border)]',
+  },
+  info: {
+    icon: 'lucide:info',
+    tone: 'info',
+    iconClass: 'text-[var(--badge-info-soft-text)]',
+    tileClass: 'bg-[var(--badge-info-soft-bg)] ring-[var(--badge-info-soft-border)]',
+  },
+} as const;
 
 const cfg = computed(() => {
-  const type = current.value?.type ?? 'info'
-  return typeConfig[type as keyof typeof typeConfig] ?? typeConfig.info
-})
+  const type = current.value?.type ?? 'info';
+  return typeConfig[type as keyof typeof typeConfig] ?? typeConfig.info;
+});
 
-const open = ref(false)
+const open = ref(false);
+const isPaused = ref(false);
+let dismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+const toastDuration = computed(() => {
+  const type = current.value?.type ?? 'info';
+  return type === 'error' || type === 'warning' ? 6000 : 3600;
+});
+
+function clearDismissTimer() {
+  if (!dismissTimer) return;
+  clearTimeout(dismissTimer);
+  dismissTimer = null;
+}
+
+function startDismissTimer() {
+  clearDismissTimer();
+  isPaused.value = false;
+  dismissTimer = setTimeout(() => handleClose(), toastDuration.value);
+}
+
+function pauseDismissTimer() {
+  isPaused.value = true;
+  clearDismissTimer();
+}
 
 watch(current, async (v) => {
+  clearDismissTimer();
   if (v) {
-    await nextTick()
-    open.value = true
+    await nextTick();
+    open.value = true;
+    startDismissTimer();
   } else {
-    open.value = false
+    open.value = false;
   }
-})
+});
 
 function handleClose() {
-  if (!open.value) return
-  open.value = false
-  setTimeout(() => dismiss(), 250)
+  if (!open.value) return;
+  clearDismissTimer();
+  open.value = false;
+  setTimeout(() => dismiss(), 160);
 }
 
 function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter' && open.value) {
-    e.preventDefault()
-    handleClose()
+  if (e.key === 'Escape' && open.value) {
+    e.preventDefault();
+    handleClose();
   }
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown)
-})
+  window.addEventListener('keydown', handleKeydown);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
-})
+  clearDismissTimer();
+  window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <template>
-  <UModal
-    v-if="current"
-    v-model:open="open"
-    :close="false"
-    :overlay="true"
-    :ui="{
-      overlay: 'bg-black/20 backdrop-blur-[2px] z-[200]',
-      content: ['surface-card w-full max-w-sm rounded-2xl shadow-xl ring-1 overflow-hidden z-[200]', cfg.ring],
-    }"
-    @update:open="(v) => { if (!v) handleClose() }"
-  >
-    <template #body>
-      <div class="space-y-4">
-        <div class="flex items-center gap-3">
-          <div
-            class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-            :class="cfg.bg"
-          >
-            <UIcon :name="cfg.icon" :class="cfg.text" class="w-5 h-5" />
-          </div>
-          <span class="text-lg font-semibold text-[var(--text-primary)]">{{ current?.title }}</span>
-        </div>
-
-        <p
-          v-if="current?.description"
-          class="text-sm text-[var(--text-secondary)] break-words pl-[52px]"
+  <Teleport to="body">
+    <Transition name="notify-toast">
+      <div
+        v-if="current && open"
+        class="fixed bottom-4 left-4 z-[220] w-[min(420px,calc(100vw-2rem))]"
+        role="status"
+        aria-live="polite"
+        @mouseenter="pauseDismissTimer"
+        @mouseleave="startDismissTimer"
+      >
+        <div
+          class="surface-card relative flex items-start gap-3 overflow-hidden p-3 shadow-[var(--shadow-md)] ring-1 ring-[var(--card-border)]"
+          :style="{ '--notify-duration': `${toastDuration}ms` }"
         >
-          {{ current.description }}
-        </p>
+          <div
+            :class="[
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)] ring-1 ring-inset',
+              cfg.tileClass
+            ]"
+          >
+            <UIcon :name="cfg.icon" :class="['h-5 w-5', cfg.iconClass]" />
+          </div>
 
-        <div class="flex justify-end pt-1">
-          <UButton :color="cfg.color" @click="handleClose">
-            Got it
-          </UButton>
+          <div class="min-w-0 flex-1 py-0.5">
+            <p class="truncate text-sm font-bold text-[var(--text-primary)]">
+              {{ current.title }}
+            </p>
+            <p
+              v-if="current.description"
+              class="mt-1 text-sm leading-5 text-[var(--text-tertiary)]"
+            >
+              {{ current.description }}
+            </p>
+          </div>
+
+          <UButton
+            icon="lucide:x"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            aria-label="Dismiss notification"
+            class="-mr-1 -mt-1 shrink-0"
+            @click="handleClose"
+          />
+
+          <div class="absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-[var(--surface-muted)]">
+            <div
+              :key="current.id"
+              :class="[
+                'notify-progress h-full origin-left',
+                isPaused ? 'is-paused' : '',
+                cfg.tone === 'success' ? 'bg-[var(--badge-success-soft-text)]' : '',
+                cfg.tone === 'error' ? 'bg-[var(--badge-danger-soft-text)]' : '',
+                cfg.tone === 'warning' ? 'bg-[var(--badge-warning-soft-text)]' : '',
+                cfg.tone === 'info' ? 'bg-[var(--badge-info-soft-text)]' : ''
+              ]"
+            />
+          </div>
         </div>
       </div>
-    </template>
-  </UModal>
+    </Transition>
+  </Teleport>
 </template>
+
+<style scoped>
+.notify-toast-enter-active,
+.notify-toast-leave-active {
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.notify-toast-enter-from,
+.notify-toast-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.notify-progress {
+  animation: notify-progress var(--notify-duration) linear forwards;
+}
+
+.notify-progress.is-paused {
+  animation-play-state: paused;
+}
+
+@keyframes notify-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+</style>

@@ -1,7 +1,7 @@
 <template>
-  <div class="flex items-center justify-between w-full">
+  <div class="flex min-w-0 items-center justify-between w-full">
     
-    <div class="flex items-center gap-1.5 md:gap-3 min-w-0 flex-1">
+    <div class="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
       <template v-for="action in leftActions" :key="action.key || action.id">
         
         <component

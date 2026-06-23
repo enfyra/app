@@ -38,23 +38,23 @@ const resolvedLeadingIcon = computed(() => {
 const leadingIconShellClass = computed(() => {
   const isMin = props.variant === "minimal";
   const base = isMin
-    ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-    : "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl";
+    ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)]"
+    : "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)]";
   const g = props.gradient;
   if (g === "purple") {
-    return `${base} bg-gradient-to-br from-brand-500/25 to-brand-300/20 text-brand-600 dark:from-brand-400/20 dark:to-brand-500/15 dark:text-brand-300`;
+    return `${base} accent-tile accent-tile-primary`;
   }
   if (g === "blue") {
-    return `${base} bg-gradient-to-br from-indigo-500/25 to-cyan-500/15 text-indigo-600 dark:from-indigo-400/20 dark:to-cyan-400/15 dark:text-indigo-300`;
+    return `${base} accent-tile accent-tile-info`;
   }
   if (g === "cyan") {
-    return `${base} bg-gradient-to-br from-cyan-500/25 to-primary/20 text-cyan-600 dark:from-cyan-400/20 dark:to-primary/25 dark:text-cyan-300`;
+    return `${base} accent-tile accent-tile-secondary`;
   }
-  return `${base} bg-[var(--surface-muted)] text-[var(--text-secondary)] ring-1 ring-[var(--border-subtle)]`;
+  return `${base} accent-tile accent-tile-primary`;
 });
 
 const leadingIconGlyphClass = computed(() =>
-  props.variant === "minimal" ? "h-5 w-5" : "h-6 w-6",
+  props.variant === "minimal" ? "h-5 w-5" : "h-5 w-5",
 );
 
 const { subHeaderActions } = useSubHeaderActionRegistry();
@@ -81,20 +81,7 @@ const hasActions = computed(() => {
 });
 
 const headerStripClass = computed(() => {
-  const g = props.gradient;
-  if (g === "none") {
-    return "";
-  }
-  if (g === "cyan") {
-    return "bg-gradient-to-r from-cyan-500/[0.07] via-[var(--surface-muted)]/80 to-transparent dark:from-cyan-400/[0.09] dark:via-[var(--surface-muted)]/50 dark:to-transparent";
-  }
-  if (g === "purple") {
-    return "bg-gradient-to-r from-brand-500/[0.08] via-[var(--surface-muted)]/78 to-transparent dark:from-brand-400/[0.09] dark:via-[var(--surface-muted)]/48 dark:to-transparent";
-  }
-  if (g === "blue") {
-    return "bg-gradient-to-r from-indigo-500/[0.08] via-[var(--surface-muted)]/78 to-transparent dark:from-indigo-400/[0.09] dark:via-[var(--surface-muted)]/48 dark:to-transparent";
-  }
-  return "";
+  return props.gradient === "none" ? "" : "page-header-accent";
 });
 
 const isMinimal = computed(() => props.variant === "minimal");
@@ -134,23 +121,15 @@ watch(
 </script>
 
 <template>
-  <div
-    class="relative overflow-hidden"
-    :class="headerStripClass"
-    :style="{
-      borderBottomColor: 'var(--border-default)',
-      borderBottomWidth: '1px',
-      borderBottomStyle: 'solid'
-    }"
-  >
+  <div class="page-header-shell relative overflow-hidden" :class="headerStripClass">
     
-    <div class="relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', isMinimal ? ((isMobile || isTablet) ? 'py-3' : 'py-4') : ((isMobile || isTablet) ? 'py-4' : 'py-5')]">
+    <div class="page-header-inner relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-5', isMinimal ? 'py-3' : 'py-4']">
       <div
         class="flex gap-4"
         :class="(isMobile || isTablet) ? 'flex-col' : 'flex-row items-center justify-between'"
       >
         
-        <div class="flex min-w-0 flex-1 items-start gap-4">
+        <div class="flex min-w-0 flex-1 items-center gap-3">
           <div
             v-if="resolvedLeadingIcon"
             :class="leadingIconShellClass"
@@ -163,16 +142,16 @@ watch(
           </div>
           <div
             :class="(isMobile || isTablet) ? 'space-y-0.5' : 'space-y-1'"
-            class="min-w-0 flex-1 transition-all duration-400"
+            class="min-w-0 flex-1 transition-all duration-150"
             :style="{
               opacity: isVisible ? 1 : 0,
-              transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-              transitionDelay: '100ms',
+              transform: isVisible ? 'translateY(0)' : 'translateY(6px)',
+              transitionDelay: '40ms',
             }"
           >
             <h1
-              class="font-semibold tracking-tight text-[var(--text-primary)]"
-              :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-xl') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-4xl' : 'text-3xl')"
+              class="font-bold tracking-normal text-[var(--text-primary)]"
+              :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-[22px]') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-3xl' : 'text-[26px]')"
             >
               {{ title }}
             </h1>
@@ -276,7 +255,7 @@ watch(
           :key="index"
           :class="[
             'surface-card relative overflow-hidden group transition-all duration-300',
-            (isMobile || isTablet) ? 'rounded-lg' : 'rounded-xl',
+            'rounded-[var(--radius-card)]',
             isStatsFocus ? ((isMobile || isTablet) ? 'p-3' : 'p-6') : ((isMobile || isTablet) ? 'p-2.5' : 'p-4')
           ]"
           :style="{
@@ -287,7 +266,7 @@ watch(
         >
           
           <div
-            class="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-brand-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            class="absolute inset-0 bg-[var(--state-primary-soft-bg)] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           />
 
           <div class="relative">
@@ -306,3 +285,29 @@ watch(
     </div>
   </div>
 </template>
+
+<style scoped>
+.page-header-shell {
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-card);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--brand-500) 5%, transparent), transparent 62%),
+    var(--card-bg);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.page-header-shell::before {
+  display: none;
+}
+
+.page-header-inner {
+  min-height: 82px;
+}
+
+@media (max-width: 1023px) {
+  .page-header-inner {
+    min-height: auto;
+  }
+}
+</style>

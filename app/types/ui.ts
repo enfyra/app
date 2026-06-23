@@ -202,4 +202,7 @@ export interface SettingsCardProps {
   actions?: SettingsCardAction[];
   headerActions?: SettingsCardHeaderAction[];
   cardClass?: string;
+  contentLoading?: boolean;
 }
+
+export type SystemVisibilityMode = "custom" | "system" | "all";

@@ -14,7 +14,7 @@ const { invalidateExtensionCache } = useDynamicComponent();
 
 const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
 
-const { execute: updateMenuApi } = useApi(() => '/enfyra_menu', {
+const { execute: updateMenuApi, error: updateMenuError } = useApi(() => '/enfyra_menu', {
   method: 'patch',
   errorContext: 'Update Menu Order',
 });
@@ -505,12 +505,12 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
     }
   }
 
-  const { error: updateError } = await updateMenuApi({
+  await updateMenuApi({
     id: menuId,
     body
   });
 
-  if (updateError.value) {
+  if (updateMenuError.value) {
     if (menuIndex !== -1 && menuDefinitions.value?.data) {
       const menu = menuDefinitions.value.data[menuIndex]!;
       menu.parent = originalParentValue;
@@ -539,26 +539,40 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
 
   const originalMenuDefinitions = menuDefinitions.value?.data ? JSON.parse(JSON.stringify(menuDefinitions.value.data)) : [];
   const originalMenuItems = JSON.parse(JSON.stringify(menuItems.value));
+  const invalidSystemParentMove = updatedMenus.find((menu) => {
+    if (!menu.isSystem) return false;
+    const originalMenu = menus.value.find((m) => String(getId(m)) === String(getId(menu)));
+    const originalParentId = getId(originalMenu?.parent);
+    const nextParentId = getId((menu as any).parent);
+    return String(originalParentId || null) !== String(nextParentId || null);
+  });
+
+  if (invalidSystemParentMove) {
+    await refreshMenus();
+    notify.warning("Cannot move system menu", "System menu parent references are locked.");
+    return;
+  }
 
   if (isDndUpdating.value) return;
   isDndUpdating.value = true;
 
-  const updatePromises = updatedMenus.map(async (menu) => {
-    const menuId = getId(menu);
-    if (!menuId) return;
-
-    const body: { order: number; parent?: number | string | null } = { order: menu.order };
-    const parentId = getId((menu as any).parent);
-    body.parent = parentId ? parentId : null;
-
-    await updateMenuApi({
-      id: menuId,
-      body
-    });
-  });
-
   try {
-    await Promise.all(updatePromises);
+    for (const menu of updatedMenus) {
+      const menuId = getId(menu);
+      if (!menuId) continue;
+
+      const body: { order: number; parent?: number | string | null } = { order: menu.order };
+      const parentId = getId((menu as any).parent);
+      body.parent = parentId ? parentId : null;
+
+      const response = await updateMenuApi({
+        id: menuId,
+        body
+      });
+      if (!response || updateMenuError.value) {
+        throw updateMenuError.value || new Error("Menu order update failed");
+      }
+    }
     await refreshMenus();
 
     notify.success("Success", "Menu order updated successfully!");
@@ -568,7 +582,9 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
     }
     menuItems.value = originalMenuItems;
     await refreshMenus();
-    notify.error("Error", "Failed to update menu order. Please try again.");
+    if (!updateMenuError.value) {
+      notify.error("Error", "Failed to update menu order. Please try again.");
+    }
   } finally {
     isDndUpdating.value = false;
   }
@@ -599,7 +615,7 @@ watch(showExtensionDrawer, async (isOpen, wasOpen) => {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="eapp-page-constrained space-y-6">
     <MenuVisualEditor
       :menus="menus"
       :loading="false"

@@ -9,7 +9,6 @@ const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { getId } = useDatabase();
 
-const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -43,8 +42,11 @@ const { execute: removeScript, error: removeScriptError } = useApi(
   }
 );
 
-const bootstrapScripts = computed(() => apiData.value?.data || []);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const {
+  items: bootstrapScripts,
+  showInitialLoading,
+  isRefreshing: bootstrapScriptsRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => {
   return apiData.value?.meta?.totalCount || 0;
 });
@@ -94,19 +96,23 @@ watch(
 </script>
 
 <template>
-  <div class="space-y-6">
-    <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
-        v-if="showInitialLoading"
-        title="Loading bootstrap scripts..."
-        description="Fetching bootstrap scripts"
-        size="sm"
-        type="card"
-        context="page"
-      />
-
+  <CommonCardListFrame
+    v-model:page="page"
+    :loading="showInitialLoading"
+    :has-items="bootstrapScripts.length > 0"
+    loading-title="Loading bootstrap scripts..."
+    loading-description="Fetching bootstrap scripts"
+    empty-title="No bootstrap scripts found"
+    empty-description="No bootstrap scripts have been created yet"
+    empty-icon="lucide:rocket"
+    :total="total"
+    :items-per-page="pageLimit"
+    :pagination-loading="loading"
+    :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
+  >
       <CommonAnimatedGrid
-        v-else-if="bootstrapScripts.length"
+        :animate="false"
         :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
       >
         <CommonSettingsCard
@@ -117,6 +123,7 @@ watch(
           icon="lucide:rocket"
           :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
+          :content-loading="bootstrapScriptsRefreshing"
           @click="navigateTo(`/settings/bootstrap/${getId(script)}`)"
           :stats="[
             {
@@ -154,25 +161,5 @@ watch(
           ]"
         />
       </CommonAnimatedGrid>
-
-      <CommonEmptyState
-        v-else
-        title="No bootstrap scripts found"
-        description="No bootstrap scripts have been created yet"
-        icon="lucide:rocket"
-        size="sm"
-      />
-    </Transition>
-
-    <CommonPaginationBar
-      v-if="bootstrapScripts.length > 0 && total > pageLimit"
-      v-model:page="page"
-      class="mt-6"
-      :items-per-page="pageLimit"
-      :total="total"
-      :loading="loading"
-      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-      :ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
-    />
-  </div>
+  </CommonCardListFrame>
 </template>

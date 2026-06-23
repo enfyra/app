@@ -6,16 +6,19 @@ const { checkPermissionCondition } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
+const suppressSidebarPersist = ref(false);
+const hoverOpenedSidebar = ref(false);
 
 if (import.meta.client) {
   const saved = localStorage.getItem('sidebar-open');
-  if (saved !== null && width.value > 1024) {
+  if (saved !== null && width.value >= 1024) {
     sidebarVisible.value = saved === 'true';
   }
 }
 
 watch(sidebarVisible, (val) => {
-  if (import.meta.client && width.value > 1024) {
+  if (suppressSidebarPersist.value) return;
+  if (import.meta.client && width.value >= 1024) {
     localStorage.setItem('sidebar-open', String(val));
   }
 });
@@ -29,13 +32,20 @@ const faviconUrl = computed(() => {
   return getFileUrl(favicon);
 });
 
+function filterPermittedItems(items: any[] = []): any[] {
+  return items
+    .filter((item: any) => !item.permission || checkPermissionCondition(item.permission))
+    .map((item: any) => ({
+      ...item,
+      items: filterPermittedItems(item.items || []),
+    }));
+}
+
 const visibleGroups = computed(() => {
   return menuGroups.value
     .filter(group => !group.permission || checkPermissionCondition(group.permission))
     .map(group => {
-      const permittedItems = group.items?.filter((item: any) =>
-        !item.permission || checkPermissionCondition(item.permission)
-      ) || [];
+      const permittedItems = filterPermittedItems(group.items || []);
       return { ...group, items: permittedItems };
     });
 });
@@ -47,23 +57,25 @@ function isRouteActive(itemRoute?: string): boolean {
     (currentPath.startsWith(itemRoute) && (currentPath[itemRoute.length] === '/' || currentPath[itemRoute.length] === undefined));
 }
 
+function isRouteExactActive(itemRoute?: string): boolean {
+  if (!itemRoute) return false;
+  return route.path === itemRoute;
+}
+
 function convertItem(item: any): any {
   const itemRoute = item.route || item.path || undefined;
   const result: any = {
+    id: item.id,
     label: item.label,
     icon: item.icon || 'lucide:circle',
+    count: item.count || item.badge,
   };
 
-  if (item.type === 'Dropdown Menu' && item.items?.length) {
-    result.children = item.items.map((child: any) => {
-      const childRoute = child.route || child.path || undefined;
-      return {
-        label: child.label,
-        icon: child.icon || 'lucide:circle',
-        to: childRoute,
-        active: isRouteActive(childRoute),
-      };
-    });
+  if (item.items?.length) {
+    const parentActive = isRouteExactActive(itemRoute);
+    result.children = item.items.map(convertItem);
+    result.active = parentActive;
+    result.branchActive = result.children.some((child: any) => child.active || child.branchActive);
     result.defaultOpen = true;
   } else {
     result.to = itemRoute;
@@ -79,32 +91,38 @@ const navigationItems = computed(() => {
   const groups: any[][] = [];
 
   for (const group of topGroups) {
-    if (group.type === 'Menu') {
+    if (!group.items || group.items.length === 0) {
       const groupRoute = group.route || group.path || undefined;
+      if (!groupRoute) continue;
       groups.push([{
         label: group.label,
         icon: group.icon,
         to: groupRoute,
         active: isRouteActive(groupRoute),
+        count: group.count || group.badge,
+        collapsible: group.type === 'Dropdown Menu',
+        children: [],
       }]);
       continue;
     }
 
-    if (!group.items || group.items.length === 0) continue;
-
-    const items: any[] = [
-      { label: group.label, type: 'label' as const },
-    ];
-
-    for (const item of group.items) {
-      items.push(convertItem(item));
-    }
-
-    groups.push(items);
+    groups.push([convertItem(group)]);
   }
 
   return groups;
 });
+
+function collectRailItems(items: any[]): any[] {
+  return items.flatMap((item) => {
+    const children = item.children?.length ? collectRailItems(item.children) : [];
+    if (item.to && !item.collapsible) {
+      return [{ ...item, children: undefined, collapsible: false }, ...children];
+    }
+    return children;
+  });
+}
+
+const collapsedRailItems = computed(() => collectRailItems(navigationItems.value.flat()));
 
 const componentGroups = computed(() => {
   return visibleGroups.value.filter(g => g.position !== 'bottom' && g.component);
@@ -114,106 +132,97 @@ const bottomGroups = computed(() => {
   return visibleGroups.value.filter(g => g.position === 'bottom');
 });
 
-const isMobile = computed(() => width.value <= 1024);
+const isMobile = computed(() => width.value < 1024);
 const isDesktopCollapsed = computed(() => !isMobile.value && !sidebarVisible.value);
 
-const navMenuUi = computed(() => ({
-  list: 'isolate min-w-0 space-y-1',
-  link: [
-    'py-2 px-2.5 overflow-hidden gap-2.5 after:w-[2px] group-data-[state=collapsed]/sidebar:after:hidden group-data-[state=collapsed]/sidebar:py-1 group-data-[state=collapsed]/sidebar:px-1.5',
-    isMobile.value ? 'max-lg:before:bg-[var(--surface-muted)]' : '',
-  ],
-  linkLeadingIcon: 'size-5 shrink-0 text-[var(--text-quaternary)]',
-  separator: 'my-3 border-b border-[var(--border-default)] group-data-[state=collapsed]/sidebar:my-1',
-  childList: 'ms-[13px] border-s-2 border-primary/30 space-y-0.5 group-data-[state=collapsed]/sidebar:border-transparent group-data-[state=collapsed]/sidebar:ms-0',
-  childItem: 'ps-1.5 -ms-px',
-  childLink: 'py-1.5 px-2.5',
-}));
-
-const scrollAnchor = ref<HTMLElement | null>(null);
-const canScrollDown = ref(false);
-let scrollEl: Element | null = null;
-
-function checkScroll() {
-  if (!scrollEl) return;
-  canScrollDown.value = scrollEl.scrollTop + scrollEl.clientHeight < scrollEl.scrollHeight - 8;
+function setSidebarVisibleTransient(value: boolean) {
+  suppressSidebarPersist.value = true;
+  sidebarVisible.value = value;
+  nextTick(() => {
+    suppressSidebarPersist.value = false;
+  });
 }
 
-onMounted(() => {
-  nextTick(() => {
-    scrollEl = scrollAnchor.value?.closest('[data-slot="body"]') || null;
-    if (scrollEl) {
-      scrollEl.addEventListener('scroll', checkScroll, { passive: true });
-      checkScroll();
-    }
-  });
+function showSidebarPeek() {
+  if (isDesktopCollapsed.value) {
+    hoverOpenedSidebar.value = true;
+    setSidebarVisibleTransient(true);
+  }
+}
+
+function hideSidebarPeek() {
+  if (!hoverOpenedSidebar.value) return;
+  hoverOpenedSidebar.value = false;
+  setSidebarVisibleTransient(false);
+}
+
+const renderExpandedSidebarContent = computed(() => {
+  if (!sidebarVisible.value) return false;
+  return true;
 });
 
-onUnmounted(() => {
-  if (scrollEl) scrollEl.removeEventListener('scroll', checkScroll);
+const showExpandedSidebarLabels = computed(() => {
+  return sidebarVisible.value;
 });
-
-watch(navigationItems, () => nextTick(checkScroll), { deep: true });
 
 router.afterEach(() => {
-  if (width.value <= 1024) {
+  if (width.value < 1024) {
     setSidebarVisible(false);
   }
+  hideSidebarPeek();
 });
 </script>
 
 <template>
   <USidebar
     v-model:open="sidebarVisible"
-    variant="inset"
+    variant="sidebar"
     collapsible="icon"
-    :style="{ '--sidebar-width': '290px' }"
+    class="eapp-sidebar"
+    :style="{ '--sidebar-width': '280px' }"
     :ui="{
-      container: 'h-full !z-[99999] md:pb-4 md:pl-2 group-data-[state=collapsed]/sidebar:md:pl-0',
-      inner: 'dark:!bg-[var(--surface-chrome)]',
-      body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto border-0',
-      footer: 'flex flex-col gap-1.5 overflow-hidden w-full p-0 px-2 max-lg:pb-2',
+      gap: '!duration-[120ms]',
+      container: 'h-full !z-[99999] !duration-[140ms]',
+      inner: '!bg-[var(--shell-sidebar-bg)] !border-r !border-[var(--shell-sidebar-border)] !divide-transparent backdrop-blur-xl shadow-none',
+      header: 'px-[18px] pb-3 pt-6 group-data-[state=collapsed]/sidebar:px-2',
+      body: 'flex min-h-0 flex-1 flex-col gap-5 !overflow-y-auto border-0 px-[18px] group-data-[state=collapsed]/sidebar:px-3',
+      footer: 'flex flex-col gap-1.5 overflow-hidden w-full p-0 px-[18px] pb-7 max-lg:pb-4 group-data-[state=collapsed]/sidebar:px-3',
     }"
+    @mouseenter="showSidebarPeek"
+    @mouseleave="hideSidebarPeek"
+    @focusin="showSidebarPeek"
   >
     <template #title="{ state }">
-      <div class="flex items-center gap-3 overflow-hidden">
-        <div class="relative w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+      <div
+        class="flex min-w-0 items-center overflow-hidden"
+        :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
+      >
+        <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)] ring-1 ring-[var(--nav-item-active-ring)]">
           <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
-          <UIcon v-else name="lucide:database" class="w-5 h-5 text-primary" />
+          <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
         </div>
-        <template v-if="state === 'expanded'">
-          <span class="font-semibold text-sm truncate">{{ settings?.projectName || 'Enfyra' }}</span>
-        </template>
+        <div v-if="renderExpandedSidebarContent" class="min-w-0 flex-1 transition-opacity duration-100" :class="{ 'opacity-0': !showExpandedSidebarLabels }">
+          <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
+          <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
+        </div>
       </div>
     </template>
-    <template #description="{ state }">
-      <p v-if="state === 'expanded'" class="text-xs text-[var(--text-quaternary)] truncate ps-11">{{ settings?.projectDescription || 'CMS' }}</p>
-    </template>
+    <template #description />
 
     <template #default="{ state }">
       <div v-for="group in componentGroups" :key="group.id" class="mb-3">
-        <component v-if="state === 'expanded'" :is="group.component" v-bind="group.componentProps || {}" />
+        <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
       </div>
 
-      <UNavigationMenu
-        :items="navigationItems"
-        orientation="vertical"
-        :collapsed="state === 'collapsed'"
-        :tooltip="state === 'collapsed'"
-        highlight
-        highlight-color="primary"
-        color="primary"
-        :ui="navMenuUi"
-      />
-
-      <div ref="scrollAnchor" />
-
-      <div
-        v-if="canScrollDown && state === 'expanded'"
-        class="sticky bottom-0 w-full flex items-center justify-center pointer-events-none py-0.5"
-      >
-        <UIcon name="lucide:chevrons-down" class="w-3.5 h-3.5 text-[var(--text-quaternary)] animate-bounce" />
-      </div>
+      <nav class="app-sidebar-nav" aria-label="Main navigation">
+        <SidebarMenuTree
+          v-for="(group, groupIndex) in (!renderExpandedSidebarContent ? [collapsedRailItems] : navigationItems)"
+          :key="groupIndex"
+          :items="group"
+          :collapsed="!renderExpandedSidebarContent"
+          :labels-visible="showExpandedSidebarLabels"
+        />
+      </nav>
     </template>
 
     <template #footer>
@@ -222,10 +231,22 @@ router.afterEach(() => {
           <component
             v-if="group.component"
             :is="group.component"
-            v-bind="{ ...(group.componentProps || {}), collapsed: isDesktopCollapsed }"
+            v-bind="{ ...(group.componentProps || {}), collapsed: !renderExpandedSidebarContent }"
           />
         </PermissionGate>
       </template>
     </template>
   </USidebar>
 </template>
+
+<style scoped>
+.app-sidebar-nav {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.eapp-sidebar:deep([data-slot="container"]) {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+</style>

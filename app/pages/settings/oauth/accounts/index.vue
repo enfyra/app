@@ -1,17 +1,24 @@
 <template>
-  <div class="oauth-accounts-page">
-    <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
-        v-if="showInitialLoading"
-        title="Loading OAuth accounts..."
-        description="Fetching linked OAuth accounts"
-        size="md"
-        type="card"
-        context="page"
-      />
-
+  <CommonCardListFrame
+    v-model:page="page"
+    root-class="oauth-accounts-page"
+    :loading="showInitialLoading"
+    :has-items="accounts.length > 0"
+    loading-title="Loading OAuth accounts..."
+    loading-description="Fetching linked OAuth accounts"
+    loading-size="md"
+    empty-title="No OAuth accounts found"
+    empty-description="OAuth accounts will appear when users link their social login"
+    empty-icon="lucide:link"
+    empty-size="lg"
+    :total="total"
+    :items-per-page="pageLimit"
+    :pagination-loading="loading"
+    :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
+  >
       <CommonAnimatedGrid
-        v-else-if="accounts.length > 0"
+        :animate="false"
         :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
       >
         <CommonSettingsCard
@@ -22,6 +29,7 @@
           :icon="getProviderIcon(account.provider)"
           :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
+          :content-loading="accountsRefreshing"
           @click="navigateToDetail(account)"
           :stats="[
             {
@@ -35,27 +43,7 @@
           ]"
         />
       </CommonAnimatedGrid>
-
-      <CommonEmptyState
-        v-else
-        title="No OAuth accounts found"
-        description="OAuth accounts will appear when users link their social login"
-        icon="lucide:link"
-        size="lg"
-      />
-    </Transition>
-
-    <CommonPaginationBar
-      v-if="accounts.length > 0 && total > pageLimit"
-      v-model:page="page"
-      class="mt-6"
-      :items-per-page="pageLimit"
-      :total="total"
-      :loading="loading"
-      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-      :ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
-    />
-  </div>
+  </CommonCardListFrame>
 </template>
 
 <script setup lang="ts">
@@ -65,7 +53,6 @@ const route = useRoute();
 const tableName = "enfyra_oauth_account";
 
 const { getId } = useDatabase();
-const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -91,8 +78,11 @@ const {
   errorContext: "Fetch OAuth Accounts",
 });
 
-const accounts = computed(() => apiData.value?.data || []);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const {
+  items: accounts,
+  showInitialLoading,
+  isRefreshing: accountsRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 function getProviderIcon(provider: string) {

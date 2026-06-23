@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1200px] lg:max-w-[1200px] md:w-full space-y-6">
+    <div class="eapp-page-constrained-wide space-y-6">
       <CommonFormCard>
         <UForm :state="form" @submit="updateGuard">
           <FormEditorLazy

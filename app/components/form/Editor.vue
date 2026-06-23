@@ -171,8 +171,8 @@ const defaultSectionHeadingClass =
 
 const layoutClass = computed(() =>
   props.layout === 'grid'
-    ? 'grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6'
-    : 'space-y-6',
+    ? 'grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5'
+    : 'space-y-5',
 );
 
 function fieldRowClass(field: { fieldType?: string }) {

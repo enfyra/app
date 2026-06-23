@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
-      <div v-if="!isMounted || loading" class="w-full max-w-[1000px] space-y-6">
+      <div v-if="!isMounted || loading" class="eapp-page-constrained space-y-6">
         <CommonFormCard>
           <CommonLoadingState type="form" />
         </CommonFormCard>
@@ -15,7 +15,7 @@
         </CommonFormCard>
       </div>
 
-      <div v-else-if="flow" class="w-full max-w-[1000px] space-y-6">
+      <div v-else-if="flow" class="eapp-page-constrained space-y-6">
         <CommonFormCard>
           <UForm :state="editForm" @submit="saveFlowSettings">
             <FormEditorLazy

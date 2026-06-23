@@ -476,7 +476,7 @@ onMounted(async () => {
           />
 
           <CommonAnimatedGrid
-            :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'"
+            :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'"
           >
             <CommonSettingsCard
               v-for="file in filteredFiles"

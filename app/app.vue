@@ -15,9 +15,8 @@ useHead({
 
 <template>
   <UApp :toaster="toaster">
-    <NuxtLoadingIndicator color="var(--ui-primary)" />
     <NuxtLayout>
-      <NuxtPage />
+      <NuxtPage :page-key="(route) => route.path" />
     </NuxtLayout>
   </UApp>
 </template>

@@ -1,8 +1,21 @@
 <template>
-  <div class="storage-config-page">
-    <Transition name="loading-fade" mode="out-in">
+  <CommonCardListFrame
+    v-model:page="page"
+    root-class="storage-config-page"
+    :loading="showInitialLoading"
+    :has-items="storageConfigs.length > 0"
+    empty-title="No storage configurations found"
+    empty-description="No storage configurations have been created yet"
+    empty-icon="lucide:hard-drive"
+    empty-size="lg"
+    :total="total"
+    :items-per-page="limit"
+    :pagination-loading="loading"
+    :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
+  >
+    <template #loading>
       <div
-        v-if="showInitialLoading"
         class="space-y-3"
       >
         <div
@@ -49,9 +62,10 @@
           </div>
         </div>
       </div>
+    </template>
 
       <CommonAnimatedGrid
-        v-else-if="storageConfigs.length > 0"
+        :animate="false"
         grid-class="space-y-3"
       >
         <CommonListItem
@@ -61,6 +75,7 @@
           :description="config.description || 'No description provided'"
           :icon="getStorageIcon(config)"
           icon-class="text-primary"
+          :content-loading="storageConfigsRefreshing"
           @click="navigateToDetail(config)"
         >
           <template #title>
@@ -104,27 +119,7 @@
           </template>
         </CommonListItem>
       </CommonAnimatedGrid>
-
-      <CommonEmptyState
-        v-else
-        title="No storage configurations found"
-        description="No storage configurations have been created yet"
-        icon="lucide:hard-drive"
-        size="lg"
-      />
-    </Transition>
-
-    <CommonPaginationBar
-      v-if="storageConfigs.length > 0 && total > limit"
-      v-model:page="page"
-      class="mt-6"
-      :items-per-page="limit"
-      :total="total"
-      :loading="loading"
-      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-      :ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
-    />
-  </div>
+  </CommonCardListFrame>
 </template>
 
 <script setup lang="ts">
@@ -165,9 +160,12 @@ const {
   errorContext: "Fetch Storage Configurations",
 });
 
-const storageConfigs = computed(() => apiData.value?.data || []);
+const {
+  items: storageConfigs,
+  showInitialLoading,
+  isRefreshing: storageConfigsRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
-const showInitialLoading = computed(() => loading.value && !apiData.value);
 
 
 const { execute: updateConfig, error: updateError } = useApi(

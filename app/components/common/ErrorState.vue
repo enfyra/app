@@ -45,15 +45,15 @@ const textSize = computed(() => {
   >
     <UIcon
       :name="props.icon || defaultIcon"
-      :class="`${iconSize} text-red-400 dark:text-red-500`"
+      :class="`${iconSize} text-[var(--state-danger-soft-text)]`"
     />
     <div class="text-center">
-      <p :class="`${textSize} font-medium text-gray-800 dark:text-white/90`">
+      <p :class="`${textSize} font-medium text-[var(--text-primary)]`">
         {{ props.title || defaultTitle }}
       </p>
       <p
         v-if="props.description || defaultDescription"
-        :class="`${textSize} text-sm text-gray-500 dark:text-gray-400 mt-1`"
+        :class="`${textSize} text-sm text-[var(--text-tertiary)] mt-1`"
       >
         {{ props.description || defaultDescription }}
       </p>

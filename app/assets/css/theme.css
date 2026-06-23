@@ -47,12 +47,13 @@
        surface-muted = subtle bg within surfaces (stats, code blocks)
        surface-overlay = overlay/backdrop
     */
-    --bg-app: #e5e7eb;
-    --surface-chrome: #e5e7eb;
+    --bg-app: #f8fafc;
+    --surface-chrome: #eef6ff;
     --surface-default: #ffffff;
     --surface-muted: #f1f5f9;
+    --surface-nested: #ffffff;
     --surface-overlay: rgba(0, 0, 0, 0.4);
-    --surface-header: #f5f3ff;
+    --surface-header: #f8fafc;
 
     /* legacy aliases (used by existing code - point to new tokens) */
     --bg-surface: var(--surface-default);
@@ -62,7 +63,7 @@
     --bg-input: var(--surface-default);
 
     /* ── Text Colors ── */
-    --text-primary: #0f172a;
+    --text-primary: #102033;
     --text-secondary: #334155;
     --text-tertiary: #64748b;
     --text-quaternary: #94a3b8;
@@ -72,23 +73,168 @@
        Neutral slate borders (NOT violet-tinted - cleaner for light theme).
        Use --border-accent for brand-colored borders only.
     */
-    --border-subtle: #e2e8f0;
-    --border-default: #cbd5e1;
-    --border-strong: #94a3b8;
-    --border-accent: color-mix(in srgb, var(--brand-500) 35%, transparent);
-    --border-input: #94a3b8;
-    --border-neutral: #cbd5e1;
+    --border-subtle: rgba(15, 23, 42, 0.07);
+    --border-default: rgba(15, 23, 42, 0.1);
+    --border-strong: rgba(15, 23, 42, 0.16);
+    --border-accent: color-mix(in srgb, var(--brand-500) 38%, transparent);
+    --border-input: rgba(15, 23, 42, 0.14);
+    --border-neutral: rgba(15, 23, 42, 0.1);
 
     --surface-panel-ring: color-mix(in srgb, var(--border-default) 60%, transparent);
 
+    /* ── Theme Contract: interaction/component tokens ── */
+    --theme-focus-ring: color-mix(in srgb, var(--brand-500) 16%, transparent);
+    --theme-focus-ring-strong: color-mix(in srgb, var(--brand-500) 28%, transparent);
+    --radius-card: 18px;
+    --radius-panel: 14px;
+    --radius-control: 12px;
+    --radius-subcontrol: 8px;
+    --radius-pill: 9999px;
+
+    --control-bg: var(--surface-default);
+    --control-border: var(--border-input);
+    --control-border-focus: var(--brand-400);
+    --control-text: var(--text-primary);
+    --control-placeholder: var(--text-quaternary);
+    --control-disabled-bg: var(--surface-muted);
+    --control-disabled-border: var(--border-subtle);
+    --control-disabled-text: var(--text-disabled);
+
+    --action-primary-bg: var(--brand-600);
+    --action-primary-bg-hover: color-mix(in srgb, #020617 16%, var(--brand-600));
+    --action-primary-bg-active: color-mix(in srgb, #020617 28%, var(--brand-700));
+    --action-primary-text: #ffffff;
+    --action-primary-disabled-bg: color-mix(in srgb, var(--brand-500) 55%, var(--surface-muted));
+    --action-primary-disabled-text: rgba(255, 255, 255, 0.78);
+
+    --action-neutral-bg: rgba(255, 255, 255, 0.82);
+    --action-neutral-bg-hover: color-mix(in srgb, var(--brand-500) 7%, #ffffff);
+    --action-neutral-bg-active: color-mix(in srgb, var(--brand-500) 12%, #ffffff);
+    --action-neutral-border: color-mix(in srgb, var(--brand-500) 14%, rgba(15, 23, 42, 0.1));
+    --action-neutral-outline-bg: rgba(255, 255, 255, 0.9);
+    --action-neutral-outline-bg-hover: #ffffff;
+    --action-neutral-outline-bg-active: color-mix(in srgb, var(--brand-500) 8%, #ffffff);
+    --action-neutral-outline-border: rgba(15, 23, 42, 0.2);
+    --action-neutral-text: #334155;
+    --action-neutral-text-hover: #102033;
+    --action-neutral-disabled-bg: #f1f5f9;
+    --action-neutral-disabled-text: #94a3b8;
+
+    --action-danger-bg: var(--ui-error);
+    --action-danger-bg-hover: #dc2626;
+    --action-danger-bg-active: #b91c1c;
+    --action-danger-text: #ffffff;
+    --action-success-bg: var(--ui-success);
+    --action-success-bg-hover: #059669;
+    --action-success-bg-active: #047857;
+    --action-success-text: #ffffff;
+    --action-warning-bg: var(--ui-warning);
+    --action-warning-bg-hover: #d97706;
+    --action-warning-bg-active: #b45309;
+    --action-warning-text: #ffffff;
+    --action-info-bg: var(--ui-info);
+    --action-info-bg-hover: #0891b2;
+    --action-info-bg-active: #0e7490;
+    --action-info-text: #ffffff;
+
+    --state-danger-soft-bg: #fef2f2;
+    --state-danger-soft-bg-hover: #fee2e2;
+    --state-danger-soft-text: #dc2626;
+    --state-danger-outline-border: #fca5a5;
+    --state-success-soft-bg: #ecfdf5;
+    --state-success-soft-bg-hover: #d1fae5;
+    --state-success-soft-text: #059669;
+    --state-success-outline-border: #86efac;
+    --state-warning-soft-bg: #fffbeb;
+    --state-warning-soft-bg-hover: #fef3c7;
+    --state-warning-soft-text: #d97706;
+    --state-warning-outline-border: #fcd34d;
+    --state-info-soft-bg: #ecfeff;
+    --state-info-soft-bg-hover: #cffafe;
+    --state-info-soft-text: #0e7490;
+    --state-info-outline-border: #67e8f9;
+    --state-info-title-text: #155e75;
+    --state-info-description-text: #0e7490;
+
+    --state-primary-soft-bg: color-mix(in srgb, var(--brand-500) 7%, transparent);
+    --state-primary-soft-bg-hover: color-mix(in srgb, var(--brand-500) 11%, transparent);
+    --state-primary-soft-text: color-mix(in srgb, var(--brand-700) 74%, #334155);
+    --state-primary-outline-border: color-mix(in srgb, var(--brand-500) 22%, transparent);
+    --state-primary-outline-bg-hover: color-mix(in srgb, var(--brand-500) 8%, transparent);
+    --badge-primary-soft-bg: color-mix(in srgb, var(--brand-500) 12%, #ffffff);
+    --badge-primary-soft-text: color-mix(in srgb, var(--brand-800) 82%, #1f2937);
+    --badge-primary-soft-border: color-mix(in srgb, var(--brand-500) 20%, transparent);
+    --badge-neutral-soft-bg: color-mix(in srgb, #64748b 9%, #ffffff);
+    --badge-neutral-soft-text: #334155;
+    --badge-neutral-soft-border: rgba(15, 23, 42, 0.1);
+    --badge-success-soft-bg: color-mix(in srgb, var(--ui-success) 12%, #ffffff);
+    --badge-success-soft-text: #047857;
+    --badge-success-soft-border: color-mix(in srgb, var(--ui-success) 22%, transparent);
+    --badge-danger-soft-bg: color-mix(in srgb, var(--ui-error) 11%, #ffffff);
+    --badge-danger-soft-text: #b42318;
+    --badge-danger-soft-border: color-mix(in srgb, var(--ui-error) 22%, transparent);
+    --badge-warning-soft-bg: color-mix(in srgb, var(--ui-warning) 13%, #ffffff);
+    --badge-warning-soft-text: #a15c07;
+    --badge-warning-soft-border: color-mix(in srgb, var(--ui-warning) 24%, transparent);
+    --badge-info-soft-bg: color-mix(in srgb, var(--ui-info) 11%, #ffffff);
+    --badge-info-soft-text: #0e7490;
+    --badge-info-soft-border: color-mix(in srgb, var(--ui-info) 22%, transparent);
+    --badge-secondary-soft-bg: var(--badge-info-soft-bg);
+    --badge-secondary-soft-text: var(--badge-info-soft-text);
+    --badge-secondary-soft-border: var(--badge-info-soft-border);
+
+    --control-invalid-border: var(--state-danger-outline-border);
+    --control-invalid-ring: color-mix(in srgb, var(--ui-error) 10%, transparent);
+    --form-error-text: var(--state-danger-soft-text);
+
+    --card-bg: rgba(255, 255, 255, 0.88);
+    --card-accent: color-mix(in srgb, var(--brand-500) 16%, transparent);
+    --card-accent-soft: color-mix(in srgb, var(--brand-500) 4%, transparent);
+    --card-border: color-mix(in srgb, var(--brand-500) 3%, rgba(15, 23, 42, 0.12));
+    --card-border-hover: color-mix(in srgb, var(--brand-500) 7%, rgba(15, 23, 42, 0.18));
+    --card-shadow: 0 16px 42px rgba(15, 23, 42, 0.07), 0 0 0 1px rgba(15, 23, 42, 0.03);
+    --card-shadow-hover: 0 18px 48px rgba(15, 23, 42, 0.09), 0 0 0 1px color-mix(in srgb, var(--brand-500) 5%, rgba(15, 23, 42, 0.08));
+    --pagination-bg: rgba(255, 255, 255, 0.78);
+    --pagination-bg-hover: color-mix(in srgb, var(--brand-500) 6%, #ffffff);
+    --pagination-border: rgba(15, 23, 42, 0.12);
+    --pagination-border-hover: color-mix(in srgb, var(--brand-500) 24%, rgba(15, 23, 42, 0.18));
+    --pagination-text: #475569;
+    --pagination-text-hover: #102033;
+    --pagination-active-bg: color-mix(in srgb, var(--brand-500) 18%, #ffffff);
+    --pagination-active-border: color-mix(in srgb, var(--brand-500) 44%, rgba(15, 23, 42, 0.16));
+    --pagination-active-text: color-mix(in srgb, var(--brand-800) 74%, #102033);
+    --pagination-active-shadow: 0 8px 20px color-mix(in srgb, var(--brand-500) 10%, transparent);
+    --pagination-disabled-bg: rgba(226, 232, 240, 0.68);
+    --pagination-disabled-border: rgba(148, 163, 184, 0.22);
+    --pagination-disabled-text: #94a3b8;
+
+    --shell-sidebar-bg: rgba(255, 255, 255, 0.72);
+    --shell-sidebar-border: rgba(15, 23, 42, 0.08);
+    --shell-main-bg: rgba(255, 255, 255, 0.82);
+    --shell-main-border: rgba(15, 23, 42, 0.08);
+    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--brand-500) 18%, transparent), transparent 32rem), linear-gradient(135deg, #f8fafc 0%, #eef6ff 38%, #f7faf9 100%);
+    --nav-item-text: #475569;
+    --nav-item-hover-bg: color-mix(in srgb, var(--brand-500) 5%, rgba(15, 23, 42, 0.04));
+    --nav-item-hover-text: color-mix(in srgb, var(--brand-700) 24%, #102033);
+    --nav-item-active-bg: #172033;
+    --nav-item-active-bg-hover: color-mix(in srgb, var(--brand-600) 10%, #111827);
+    --nav-item-active-text: #ffffff;
+    --nav-item-active-ring: color-mix(in srgb, var(--brand-400) 24%, transparent);
+    --nav-item-active-rail: color-mix(in srgb, var(--brand-400) 82%, #ffffff);
+    --nav-item-active-shadow: 0 10px 22px rgba(15, 23, 42, 0.1), inset 0 0 0 1px color-mix(in srgb, var(--brand-300) 10%, transparent);
+    --nav-child-border: color-mix(in srgb, var(--brand-500) 10%, rgba(100, 116, 139, 0.2));
+    --nav-count-bg: color-mix(in srgb, var(--brand-500) 8%, rgba(148, 163, 184, 0.18));
+    --nav-count-active-bg: color-mix(in srgb, var(--brand-300) 24%, rgba(255, 255, 255, 0.14));
+    --nav-count-active-text: var(--brand-100);
+
     /* ── Shadows ── */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
-    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.06);
-    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.14);
-    --shadow-inset-card: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-sm: 0 8px 18px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 14px 30px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.05);
+    --shadow-lg: 0 22px 60px rgba(15, 23, 42, 0.1), 0 6px 18px rgba(15, 23, 42, 0.06);
+    --shadow-xl: 0 30px 80px rgba(15, 23, 42, 0.14), 0 10px 24px rgba(15, 23, 42, 0.07);
+    --shadow-2xl: 0 38px 100px rgba(15, 23, 42, 0.18);
+    --shadow-inset-card: 0 18px 50px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(15, 23, 42, 0.04);
 
     --shadow-primary: 0 4px 20px color-mix(in srgb, var(--brand-500) 18%, transparent), 0 2px 8px color-mix(in srgb, var(--brand-600) 12%, transparent);
     --shadow-primary-lg: 0 8px 32px color-mix(in srgb, var(--brand-500) 24%, transparent), 0 4px 16px color-mix(in srgb, var(--brand-600) 16%, transparent);
@@ -117,17 +263,17 @@
     --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
     /* ── Content: Tables, Prose, Editor ── */
-    --table-header-bg: #f1f5f9;
+    --table-header-bg: #f8fafc;
     --table-header-color: var(--text-primary);
-    --table-header-border: #94a3b8;
-    --table-header-hover-bg: #e2e8f0;
-    --table-cell-border: #cbd5e1;
+    --table-header-border: rgba(15, 23, 42, 0.08);
+    --table-header-hover-bg: #eef2f7;
+    --table-cell-border: rgba(15, 23, 42, 0.07);
     --table-cell-color: var(--text-secondary);
     --caret-color: #1f2937;
     --prose-placeholder: #94a3b8;
-    --prose-blockquote-border: #cbd5e1;
+    --prose-blockquote-border: rgba(15, 23, 42, 0.12);
     --prose-blockquote-color: #64748b;
-    --prose-hr-border: #cbd5e1;
+    --prose-hr-border: rgba(15, 23, 42, 0.1);
     --prose-code-bg: #f1f5f9;
     --prose-inline-code-color: #059669;
     --prose-pre-bg: #1e293b;
@@ -143,17 +289,18 @@
 
     /* ── Misc ── */
     --flow-node-bg: #ffffff;
-    --flow-node-border: #cbd5e1;
-    --scrollbar-thumb: #94a3b8;
+    --flow-node-border: rgba(15, 23, 42, 0.1);
+    --scrollbar-thumb: rgba(100, 116, 139, 0.48);
   }
 
   .dark {
-    --bg-app: color-mix(in srgb, #09090b 95%, rgb(255 255 255) 5%);
-    --surface-chrome: color-mix(in srgb, #09090b 95%, rgb(255 255 255) 5%);
-    --surface-default: #1e1e22;
-    --surface-muted: #2a2a2e;
+    --bg-app: #080d14;
+    --surface-chrome: #0d1724;
+    --surface-default: #0f172a;
+    --surface-muted: #1e293b;
+    --surface-nested: rgba(8, 13, 20, 0.54);
     --surface-overlay: rgba(0, 0, 0, 0.6);
-    --surface-header: #1a1a2e;
+    --surface-header: #101a29;
 
     --bg-surface: var(--surface-default);
     --bg-elevated: var(--surface-default);
@@ -161,28 +308,167 @@
     --bg-overlay: var(--surface-overlay);
     --bg-input: var(--surface-muted);
 
-    --text-primary: #fafafa;
-    --text-secondary: #d4d4d8;
-    --text-tertiary: #a1a1aa;
-    --text-quaternary: #71717a;
-    --text-disabled: #52525b;
+    --text-primary: #f8fafc;
+    --text-secondary: #d8e4f2;
+    --text-tertiary: #94a3b8;
+    --text-quaternary: #64748b;
+    --text-disabled: #475569;
 
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-default: rgba(255, 255, 255, 0.12);
-    --border-strong: rgba(255, 255, 255, 0.2);
+    --border-subtle: rgba(148, 163, 184, 0.1);
+    --border-default: rgba(148, 163, 184, 0.14);
+    --border-strong: rgba(203, 213, 225, 0.22);
     --border-accent: color-mix(in srgb, var(--brand-500) 40%, transparent);
-    --border-input: rgba(255, 255, 255, 0.1);
-    --border-neutral: rgba(255, 255, 255, 0.08);
+    --border-input: rgba(148, 163, 184, 0.14);
+    --border-neutral: rgba(148, 163, 184, 0.12);
 
     --surface-panel-ring: color-mix(in srgb, var(--border-default) 50%, transparent);
 
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.6);
-    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.8), 0 8px 20px rgba(0, 0, 0, 0.7);
-    --shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.9), 0 12px 28px rgba(0, 0, 0, 0.8);
-    --shadow-inset-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+    --theme-focus-ring: color-mix(in srgb, var(--brand-500) 16%, transparent);
+    --theme-focus-ring-strong: color-mix(in srgb, var(--brand-500) 28%, transparent);
+
+    --control-bg: rgba(8, 13, 20, 0.78);
+    --control-border: rgba(148, 163, 184, 0.14);
+    --control-border-focus: var(--brand-300);
+    --control-text: var(--text-primary);
+    --control-placeholder: var(--text-quaternary);
+    --control-disabled-bg: rgba(15, 23, 42, 0.52);
+    --control-disabled-border: rgba(148, 163, 184, 0.1);
+    --control-disabled-text: var(--text-disabled);
+
+    --action-primary-bg: var(--brand-200);
+    --action-primary-bg-hover: var(--brand-100);
+    --action-primary-bg-active: var(--brand-300);
+    --action-primary-text: var(--brand-950);
+    --action-primary-disabled-bg: rgba(51, 65, 85, 0.48);
+    --action-primary-disabled-text: #64748b;
+
+    --action-neutral-bg: rgba(15, 23, 42, 0.72);
+    --action-neutral-bg-hover: rgba(51, 65, 85, 0.96);
+    --action-neutral-bg-active: rgba(71, 85, 105, 0.92);
+    --action-neutral-border: rgba(148, 163, 184, 0.14);
+    --action-neutral-outline-bg: rgba(20, 29, 46, 0.9);
+    --action-neutral-outline-bg-hover: rgba(34, 48, 72, 0.98);
+    --action-neutral-outline-bg-active: rgba(45, 60, 86, 0.98);
+    --action-neutral-outline-border: rgba(203, 213, 225, 0.24);
+    --action-neutral-text: #dbeafe;
+    --action-neutral-text-hover: #ffffff;
+    --action-neutral-disabled-bg: rgba(51, 65, 85, 0.38);
+    --action-neutral-disabled-text: #64748b;
+
+    --action-danger-bg: var(--ui-error);
+    --action-danger-bg-hover: #dc2626;
+    --action-danger-bg-active: #b91c1c;
+    --action-danger-text: #ffffff;
+    --action-success-bg: var(--ui-success);
+    --action-success-bg-hover: #059669;
+    --action-success-bg-active: #047857;
+    --action-success-text: #ffffff;
+    --action-warning-bg: var(--ui-warning);
+    --action-warning-bg-hover: #d97706;
+    --action-warning-bg-active: #b45309;
+    --action-warning-text: #ffffff;
+    --action-info-bg: var(--ui-info);
+    --action-info-bg-hover: #0891b2;
+    --action-info-bg-active: #0e7490;
+    --action-info-text: #ffffff;
+
+    --state-danger-soft-bg: color-mix(in srgb, var(--ui-error) 15%, transparent);
+    --state-danger-soft-bg-hover: color-mix(in srgb, var(--ui-error) 20%, transparent);
+    --state-danger-soft-text: #f87171;
+    --state-danger-outline-border: color-mix(in srgb, var(--ui-error) 40%, transparent);
+    --state-success-soft-bg: color-mix(in srgb, var(--ui-success) 15%, transparent);
+    --state-success-soft-bg-hover: color-mix(in srgb, var(--ui-success) 20%, transparent);
+    --state-success-soft-text: #22c55e;
+    --state-success-outline-border: color-mix(in srgb, var(--ui-success) 40%, transparent);
+    --state-warning-soft-bg: color-mix(in srgb, var(--ui-warning) 16%, transparent);
+    --state-warning-soft-bg-hover: color-mix(in srgb, var(--ui-warning) 22%, transparent);
+    --state-warning-soft-text: #fbbf24;
+    --state-warning-outline-border: color-mix(in srgb, var(--ui-warning) 42%, transparent);
+    --state-info-soft-bg: color-mix(in srgb, var(--ui-info) 15%, transparent);
+    --state-info-soft-bg-hover: color-mix(in srgb, var(--ui-info) 20%, transparent);
+    --state-info-soft-text: #22d3ee;
+    --state-info-outline-border: color-mix(in srgb, var(--ui-info) 42%, transparent);
+    --state-info-title-text: #bae6fd;
+    --state-info-description-text: #67e8f9;
+
+    --state-primary-soft-bg: color-mix(in srgb, var(--brand-500) 9%, transparent);
+    --state-primary-soft-bg-hover: color-mix(in srgb, var(--brand-500) 13%, transparent);
+    --state-primary-soft-text: color-mix(in srgb, var(--brand-200) 58%, #e2e8f0);
+    --state-primary-outline-border: color-mix(in srgb, var(--brand-400) 20%, transparent);
+    --state-primary-outline-bg-hover: color-mix(in srgb, var(--brand-500) 7%, transparent);
+    --badge-primary-soft-bg: color-mix(in srgb, var(--brand-400) 17%, rgba(15, 23, 42, 0.92));
+    --badge-primary-soft-text: color-mix(in srgb, var(--brand-100) 82%, #f8fafc);
+    --badge-primary-soft-border: color-mix(in srgb, var(--brand-300) 20%, transparent);
+    --badge-neutral-soft-bg: rgba(30, 41, 59, 0.84);
+    --badge-neutral-soft-text: #cbd5e1;
+    --badge-neutral-soft-border: rgba(148, 163, 184, 0.2);
+    --badge-success-soft-bg: color-mix(in srgb, var(--ui-success) 16%, rgba(15, 23, 42, 0.92));
+    --badge-success-soft-text: #86efac;
+    --badge-success-soft-border: color-mix(in srgb, var(--ui-success) 24%, transparent);
+    --badge-danger-soft-bg: color-mix(in srgb, var(--ui-error) 16%, rgba(15, 23, 42, 0.92));
+    --badge-danger-soft-text: #fca5a5;
+    --badge-danger-soft-border: color-mix(in srgb, var(--ui-error) 24%, transparent);
+    --badge-warning-soft-bg: color-mix(in srgb, var(--ui-warning) 17%, rgba(15, 23, 42, 0.92));
+    --badge-warning-soft-text: #fde68a;
+    --badge-warning-soft-border: color-mix(in srgb, var(--ui-warning) 26%, transparent);
+    --badge-info-soft-bg: color-mix(in srgb, var(--ui-info) 16%, rgba(15, 23, 42, 0.92));
+    --badge-info-soft-text: #a5f3fc;
+    --badge-info-soft-border: color-mix(in srgb, var(--ui-info) 24%, transparent);
+    --badge-secondary-soft-bg: var(--badge-info-soft-bg);
+    --badge-secondary-soft-text: var(--badge-info-soft-text);
+    --badge-secondary-soft-border: var(--badge-info-soft-border);
+
+    --control-invalid-border: var(--state-danger-outline-border);
+    --control-invalid-ring: color-mix(in srgb, var(--ui-error) 14%, transparent);
+    --form-error-text: var(--state-danger-soft-text);
+
+    --card-bg: linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(10, 16, 25, 0.86));
+    --card-accent: color-mix(in srgb, var(--brand-400) 14%, transparent);
+    --card-accent-soft: color-mix(in srgb, var(--brand-500) 4%, transparent);
+    --card-border: color-mix(in srgb, var(--brand-400) 3%, rgba(148, 163, 184, 0.16));
+    --card-border-hover: color-mix(in srgb, var(--brand-400) 7%, rgba(203, 213, 225, 0.22));
+    --card-shadow: 0 20px 54px rgba(0, 0, 0, 0.26), 0 0 0 1px rgba(148, 163, 184, 0.04);
+    --card-shadow-hover: 0 22px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px color-mix(in srgb, var(--brand-400) 5%, rgba(148, 163, 184, 0.1));
+    --pagination-bg: rgba(15, 23, 42, 0.72);
+    --pagination-bg-hover: color-mix(in srgb, var(--brand-400) 8%, rgba(15, 23, 42, 0.82));
+    --pagination-border: rgba(148, 163, 184, 0.18);
+    --pagination-border-hover: color-mix(in srgb, var(--brand-400) 24%, rgba(203, 213, 225, 0.2));
+    --pagination-text: #a7b4c8;
+    --pagination-text-hover: #e5e7eb;
+    --pagination-active-bg: color-mix(in srgb, var(--brand-400) 24%, rgba(15, 23, 42, 0.86));
+    --pagination-active-border: color-mix(in srgb, var(--brand-400) 38%, rgba(203, 213, 225, 0.2));
+    --pagination-active-text: color-mix(in srgb, var(--brand-100) 76%, #f8fafc);
+    --pagination-active-shadow: 0 10px 24px color-mix(in srgb, var(--brand-500) 10%, transparent);
+    --pagination-disabled-bg: rgba(15, 23, 42, 0.42);
+    --pagination-disabled-border: rgba(148, 163, 184, 0.12);
+    --pagination-disabled-text: #64748b;
+
+    --shell-sidebar-bg: rgba(8, 13, 20, 0.74);
+    --shell-sidebar-border: rgba(148, 163, 184, 0.12);
+    --shell-main-bg: rgba(15, 23, 42, 0.72);
+    --shell-main-border: rgba(148, 163, 184, 0.14);
+    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--brand-500) 10%, transparent), transparent 32rem), linear-gradient(135deg, #080d14 0%, #0d1724 48%, #081118 100%);
+    --nav-item-text: #a7b5c7;
+    --nav-item-hover-bg: color-mix(in srgb, var(--brand-500) 6%, rgba(148, 163, 184, 0.06));
+    --nav-item-hover-text: #f8fafc;
+    --nav-item-active-bg: #e5edf5;
+    --nav-item-active-bg-hover: color-mix(in srgb, var(--brand-400) 5%, #dbe5ee);
+    --nav-item-active-text: #0f172a;
+    --nav-item-active-ring: color-mix(in srgb, var(--brand-400) 20%, transparent);
+    --nav-item-active-rail: color-mix(in srgb, var(--brand-400) 70%, #cbd5e1);
+    --nav-item-active-shadow: 0 12px 24px rgba(0, 0, 0, 0.2), inset 0 0 0 1px color-mix(in srgb, var(--brand-400) 8%, transparent);
+    --nav-child-border: color-mix(in srgb, var(--brand-400) 9%, rgba(148, 163, 184, 0.16));
+    --nav-count-bg: color-mix(in srgb, var(--brand-500) 8%, rgba(15, 23, 42, 0.12));
+    --nav-count-active-bg: color-mix(in srgb, var(--brand-500) 8%, rgba(15, 23, 42, 0.08));
+    --nav-count-active-text: #334155;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.34);
+    --shadow-sm: 0 12px 28px rgba(0, 0, 0, 0.24), 0 1px 3px rgba(0, 0, 0, 0.28);
+    --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.28);
+    --shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.38), 0 6px 18px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 34px 90px rgba(0, 0, 0, 0.48), 0 10px 24px rgba(0, 0, 0, 0.34);
+    --shadow-2xl: 0 44px 120px rgba(0, 0, 0, 0.58);
+    --shadow-inset-card: 0 22px 60px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.3);
 
     --shadow-primary: 0 8px 32px color-mix(in srgb, var(--brand-500) 18%, transparent), 0 4px 16px color-mix(in srgb, var(--brand-600) 12%, transparent);
     --shadow-primary-lg: 0 16px 48px color-mix(in srgb, var(--brand-500) 24%, transparent), 0 8px 24px color-mix(in srgb, var(--brand-600) 16%, transparent);
@@ -191,18 +477,18 @@
     --glow-primary: 0 0 40px color-mix(in srgb, var(--brand-500) 24%, transparent), 0 0 80px color-mix(in srgb, var(--brand-600) 14%, transparent), 0 0 120px rgba(34, 211, 238, 0.06);
     --glow-subtle: 0 0 60px color-mix(in srgb, var(--brand-500) 12%, transparent), 0 0 120px rgba(34, 211, 238, 0.04);
 
-    --table-header-bg: #27272a;
+    --table-header-bg: rgba(15, 23, 42, 0.82);
     --table-header-color: var(--text-primary);
-    --table-header-border: #3f3f46;
-    --table-header-hover-bg: #3f3f46;
-    --table-cell-border: #27272a;
+    --table-header-border: rgba(148, 163, 184, 0.12);
+    --table-header-hover-bg: rgba(51, 65, 85, 0.42);
+    --table-cell-border: rgba(148, 163, 184, 0.1);
     --table-cell-color: var(--text-secondary);
     --caret-color: #e5e7eb;
     --prose-placeholder: #6b7280;
-    --prose-blockquote-border: #3f3f46;
+    --prose-blockquote-border: rgba(148, 163, 184, 0.18);
     --prose-blockquote-color: #a1a1aa;
-    --prose-hr-border: #3f3f46;
-    --prose-code-bg: #27272a;
+    --prose-hr-border: rgba(148, 163, 184, 0.14);
+    --prose-code-bg: rgba(15, 23, 42, 0.82);
     --prose-inline-code-color: #34d399;
     --prose-pre-bg: #09090b;
     --prose-pre-color: #e5e7eb;
@@ -214,8 +500,8 @@
     --prose-heading-color: #f3f4f6;
     --prose-list-color: #e5e7eb;
     --column-resize-handle: var(--brand-400);
-    --flow-node-bg: #18181b;
-    --flow-node-border: #3f3f46;
-    --scrollbar-thumb: #3f3f46;
+    --flow-node-bg: #0f172a;
+    --flow-node-border: rgba(148, 163, 184, 0.14);
+    --scrollbar-thumb: rgba(148, 163, 184, 0.48);
   }
 }

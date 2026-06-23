@@ -44,7 +44,7 @@ registerPageHeader({
 </script>
 
 <template>
-  <div v-if="hasPermission" class="w-full min-w-0 max-w-[1000px] space-y-6 overflow-hidden pb-10">
+  <div v-if="hasPermission" class="w-full min-w-0 eapp-page-constrained space-y-6 overflow-hidden pb-10">
     <RuntimeSummaryCards :runtime="runtime" />
 
     <CommonEmptyState

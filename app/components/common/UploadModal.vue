@@ -22,7 +22,7 @@
           <slot name="header-content" />
           <div
             ref="dropZone"
-            class="border-2 border-dashed border-[var(--border-strong)] rounded-xl p-10 text-center transition-all duration-200 lg:hover:border-primary-400"
+            class="border-2 border-dashed border-[var(--border-strong)] rounded-[var(--radius-card)] p-10 text-center transition-all duration-200 lg:hover:border-primary-400"
             :class="{
               'border-primary-500 bg-primary-50 dark:bg-primary-950 scale-105':
                 isDragOver && !isLoading,
@@ -74,12 +74,12 @@
             <div
               v-for="(file, index) in selectedFiles"
               :key="index"
-              class="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-2"
+              class="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-[var(--radius-panel)] p-2"
             >
               <div class="flex items-center justify-between min-w-0">
                 <div class="flex items-center space-x-4 min-w-0 flex-1">
                   <div
-                    class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center flex-shrink-0"
+                    class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-[var(--radius-control)] flex items-center justify-center flex-shrink-0"
                   >
                     <UIcon
                       name="i-heroicons-document-check"
@@ -114,7 +114,7 @@
 
           <div
             v-if="hasError"
-            class="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl p-4"
+            class="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-[var(--radius-panel)] p-4"
           >
             <div class="flex items-center space-x-3">
               <UIcon

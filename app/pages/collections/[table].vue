@@ -770,7 +770,7 @@ onMounted(() => {
     </UModal>
 
     <Transition name="loading-fade" mode="out-in">
-      <div v-if="!isMounted || loading" class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+      <div v-if="!isMounted || loading" class="eapp-page-constrained">
         <CommonFormCard>
           <CommonLoadingState
             type="form"
@@ -780,7 +780,7 @@ onMounted(() => {
         </CommonFormCard>
       </div>
 
-      <div v-else-if="table" class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+      <div v-else-if="table" class="eapp-page-constrained">
           <UTabs v-model="activeTab" :items="tabItems" :content="false" variant="link" color="neutral" class="mb-4" />
 
           <UForm @submit.prevent="save" :state="table">

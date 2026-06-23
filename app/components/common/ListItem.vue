@@ -1,10 +1,12 @@
 <template>
   <div
     :class="[
-      'group surface-card-hover rounded-lg transition-all duration-300',
-      clickable ? 'cursor-pointer' : '',
+      'group surface-card-hover transition-all duration-300',
+      clickable && !contentLoading ? 'cursor-pointer' : '',
+      contentLoading ? 'pointer-events-none cursor-wait' : '',
       (isMobile || isTablet) ? 'p-3' : 'p-4'
     ]"
+    :aria-busy="contentLoading"
     @click="handleClick"
   >
     <div class="flex items-start gap-2 md:gap-4">
@@ -18,8 +20,16 @@
             avatarClass
           ]"
         >
-          <UIcon :name="avatar" :class="(isMobile || isTablet) ? 'w-5 h-5' : 'w-6 h-6 text-white'" />
+          <div v-if="contentLoading" class="h-1/2 w-1/2 rounded-[var(--radius-subcontrol)] skeleton-gradient skeleton-pulse-slow" />
+          <UIcon v-else :name="avatar" :class="(isMobile || isTablet) ? 'w-5 h-5' : 'w-6 h-6 text-white'" />
         </div>
+        <div
+          v-else-if="icon && contentLoading"
+          :class="[
+            'flex-shrink-0 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow',
+            (isMobile || isTablet) ? 'w-6 h-6' : 'w-5 h-5',
+          ]"
+        />
         <UIcon
           v-else-if="icon"
           :name="icon"
@@ -32,8 +42,12 @@
       </div>
 
       <div class="flex-1 min-w-0">
-        <slot name="content">
-          <div v-if="title || $slots.title" class="flex items-center gap-2 mb-1.5 md:mb-2">
+        <div v-if="contentLoading" class="space-y-2">
+          <div class="h-5 w-1/3 rounded skeleton-gradient skeleton-pulse-slow" />
+          <div class="h-4 w-2/3 rounded skeleton-inline skeleton-pulse-slow" />
+        </div>
+        <slot v-else name="content">
+          <div v-if="!contentLoading && (title || $slots.title)" class="flex items-center gap-2 mb-1.5 md:mb-2">
             <slot name="title">
               <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-[var(--text-primary)] truncate' : 'text-base font-semibold text-[var(--text-primary)]'">
                 {{ title }}
@@ -41,21 +55,21 @@
             </slot>
             <slot name="badges" />
           </div>
-          <slot name="description">
+          <slot v-if="!contentLoading" name="description">
             <p v-if="description" :class="(isMobile || isTablet) ? 'text-xs text-[var(--text-tertiary)]' : 'text-sm text-[var(--text-tertiary)]'">
               {{ description }}
             </p>
           </slot>
-          <slot name="metadata" />
+          <slot v-if="!contentLoading" name="metadata" />
         </slot>
       </div>
 
-      <div v-if="$slots.actions" class="flex items-center gap-2 flex-shrink-0">
+      <div v-if="$slots.actions && !contentLoading" class="flex items-center gap-2 flex-shrink-0">
         <slot name="actions" />
       </div>
     </div>
 
-    <div v-if="$slots.footer" class="flex items-center justify-between gap-2 pt-2 mt-2 border-t border-[var(--border-default)]">
+    <div v-if="$slots.footer && !contentLoading" class="flex items-center justify-between gap-2 pt-2 mt-2 border-t border-[var(--border-default)]">
       <slot name="footer" />
     </div>
   </div>
@@ -70,6 +84,7 @@ interface Props {
   avatarClass?: string;
   iconClass?: string;
   clickable?: boolean;
+  contentLoading?: boolean;
   onClick?: () => void;
 }
 
@@ -81,6 +96,7 @@ const props = withDefaults(defineProps<Props>(), {
   avatarClass: '',
   iconClass: '',
   clickable: true,
+  contentLoading: false,
   onClick: undefined,
 });
 
@@ -100,4 +116,3 @@ const handleClick = (event: MouseEvent) => {
   emit('click', event);
 };
 </script>
-

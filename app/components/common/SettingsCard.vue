@@ -2,13 +2,15 @@
   <div
     :class="[
       'relative group overflow-hidden cursor-pointer h-full flex flex-col surface-card-hover',
-      (isMobile || isTablet) ? 'rounded-xl p-2' : 'rounded-2xl p-4',
+      (isMobile || isTablet) ? 'p-2' : 'p-4',
       topBadge ? 'pt-6' : '',
+      contentLoading ? 'pointer-events-none cursor-wait' : '',
       cardClass,
     ]"
+    :aria-busy="contentLoading"
   >
     <div
-      v-if="topBadge"
+      v-if="topBadge && !contentLoading"
       class="absolute top-2 right-2 z-10"
     >
       <UBadge
@@ -25,25 +27,30 @@
 
       <div
         :class="[
-          (isMobile || isTablet) ? 'w-8 h-8 rounded-lg' : 'w-10 h-10 rounded-xl',
+          (isMobile || isTablet) ? 'w-8 h-8 rounded-[var(--radius-control)]' : 'w-10 h-10 rounded-[var(--radius-control)]',
           'flex items-center justify-center flex-shrink-0 self-start',
           iconBgClass
         ]"
       >
-        <UIcon :name="normalizedIcon" :class="(isMobile || isTablet) ? 'w-4 h-4 text-white' : 'w-5 h-5 text-white'" />
+        <div v-if="contentLoading" class="h-1/2 w-1/2 rounded-[var(--radius-subcontrol)] skeleton-gradient skeleton-pulse-slow" />
+        <UIcon v-else :name="normalizedIcon" :class="(isMobile || isTablet) ? 'w-4 h-4 text-current' : 'w-5 h-5 text-current'" />
       </div>
 
       <div class="flex-1 min-w-0 self-start">
-        <h3 :class="(isMobile || isTablet) ? 'text-xs mb-0 font-semibold text-[var(--text-primary)]' : 'text-sm mb-0.5 font-semibold text-[var(--text-primary)]'">
+        <div v-if="contentLoading" class="space-y-2 pt-0.5">
+          <div class="h-4 w-3/4 rounded skeleton-gradient skeleton-pulse-slow" />
+          <div v-if="description && !isMobile && !isTablet" class="h-3 w-1/2 rounded skeleton-inline skeleton-pulse-slow" />
+        </div>
+        <h3 v-else :class="(isMobile || isTablet) ? 'text-xs mb-0 font-semibold text-[var(--text-primary)]' : 'text-sm mb-0.5 font-semibold text-[var(--text-primary)]'">
           {{ title }}
         </h3>
-        <p v-if="description && !isMobile && !isTablet" class="text-xs text-[var(--text-tertiary)]">
+        <p v-if="!contentLoading && description && !isMobile && !isTablet" class="text-xs text-[var(--text-tertiary)]">
           {{ description }}
         </p>
       </div>
 
       <div
-        v-if="headerActions && headerActions.length > 0"
+        v-if="headerActions && headerActions.length > 0 && !contentLoading"
         :class="(isMobile || isTablet) ? 'flex items-center gap-1 flex-shrink-0' : 'flex items-center gap-2 flex-shrink-0'"
       >
         <component
@@ -61,11 +68,12 @@
           <template v-if="action.label && !isMobile && !isTablet">{{ action.label }}</template>
         </component>
       </div>
+      <div v-else-if="contentLoading && headerActions && headerActions.length > 0" class="h-7 w-10 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow" />
     </div>
 
     <div class="flex-1">
 
-      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 rounded-xl mb-1.5' : 'relative p-2.5 rounded-xl mb-3', 'surface-muted']">
+      <div v-if="stats && stats.length && statsLayout === 'list'" :class="[(isMobile || isTablet) ? 'relative p-1.5 mb-1.5' : 'relative p-2.5 mb-3', 'surface-muted']">
         <div
           v-for="(stat, index) in stats"
           :key="stat.label"
@@ -76,7 +84,8 @@
             {{ stat.label }}
           </span>
           <div :class="(isMobile || isTablet) ? 'text-2xs font-medium text-[var(--text-primary)]' : 'text-xs font-medium text-[var(--text-primary)]'">
-            <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-end">
+            <div v-if="contentLoading" class="h-3 w-16 rounded skeleton-gradient skeleton-pulse-slow" />
+            <div v-else-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-end">
               <component
                 v-for="(item, idx) in stat.values"
                 :key="idx"
@@ -102,10 +111,11 @@
         <div
           v-for="stat in stats"
           :key="stat.label"
-          :class="[(isMobile || isTablet) ? 'text-center p-1.5 rounded-xl' : 'text-center p-2.5 rounded-xl', 'surface-muted']"
+          :class="[(isMobile || isTablet) ? 'text-center p-1.5' : 'text-center p-2.5', 'surface-muted']"
         >
           <div :class="(isMobile || isTablet) ? 'text-sm font-medium text-[var(--text-primary)] mb-0' : 'text-base font-medium text-[var(--text-primary)] mb-0.5'">
-            <div v-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-center">
+            <div v-if="contentLoading" class="mx-auto h-4 w-12 rounded skeleton-gradient skeleton-pulse-slow" />
+            <div v-else-if="stat.values && stat.values.length > 0" class="flex gap-1 flex-wrap justify-center">
               <component
                 v-for="(item, idx) in stat.values"
                 :key="idx"
@@ -130,7 +140,7 @@
         </div>
       </div>
 
-      <div v-if="$slots.default" :class="(isMobile || isTablet) ? 'relative mb-1.5' : 'relative mb-3'">
+      <div v-if="$slots.default && !contentLoading" :class="(isMobile || isTablet) ? 'relative mb-1.5' : 'relative mb-3'">
         <slot />
       </div>
     </div>
@@ -143,7 +153,14 @@
 
       <slot name="footer" />
 
-      <div v-if="actions && actions.length" :class="(isMobile || isTablet) ? 'flex justify-end gap-1.5' : 'flex justify-end gap-2'">
+      <div v-if="contentLoading && actions && actions.length" :class="(isMobile || isTablet) ? 'flex justify-end gap-1.5' : 'flex justify-end gap-2'">
+        <div
+          v-for="action in actions"
+          :key="action.label"
+          class="h-8 w-20 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow"
+        />
+      </div>
+      <div v-else-if="actions && actions.length" :class="(isMobile || isTablet) ? 'flex justify-end gap-1.5' : 'flex justify-end gap-2'">
         <UButton
           v-for="action in actions"
           :key="action.label"
@@ -207,12 +224,14 @@ interface Props {
   headerActions?: HeaderAction[];
   cardClass?: string;
   topBadge?: { label: string; color?: "error" | "info" | "success" | "primary" | "secondary" | "warning" | "neutral" };
+  contentLoading?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   iconColor: "primary",
   statsLayout: "list",
   cardClass: "",
+  contentLoading: false,
 });
 
 const componentMap = {
@@ -268,11 +287,11 @@ const normalizedIcon = computed(() => props.icon.replace(/\s+/g, ''));
 
 const iconBgClass = computed(() => {
   const colorMap = {
-    primary: "bg-gradient-to-br from-brand-500 to-brand-600",
-    success: "bg-gradient-to-br from-emerald-500 to-teal-500",
-    warning: "bg-gradient-to-br from-amber-500 to-orange-500",
-    error: "bg-gradient-to-br from-rose-500 to-pink-500",
-    neutral: "bg-gradient-to-br from-gray-500 to-slate-600",
+    primary: "accent-tile accent-tile-primary",
+    success: "accent-tile accent-tile-success",
+    warning: "accent-tile accent-tile-warning",
+    error: "accent-tile accent-tile-error",
+    neutral: "accent-tile accent-tile-neutral",
   };
   return colorMap[props.iconColor];
 });

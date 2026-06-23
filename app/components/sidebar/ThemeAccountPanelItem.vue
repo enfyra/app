@@ -18,11 +18,11 @@ function handleKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="space-y-1 rounded-md">
+  <div class="space-y-1 rounded-[var(--radius-subcontrol)]">
     <div
       role="button"
       tabindex="0"
-      class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]"
+      class="flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]"
       @click="toggleTheme"
       @keydown="handleKeydown"
     >
@@ -46,8 +46,8 @@ function handleKeydown(event: KeyboardEvent) {
           v-for="color in $primaryColor.colors"
           :key="color.value"
           type="button"
-          class="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-default)] transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-          :class="$primaryColor.current.value === color.value ? 'border-brand-500 ring-2 ring-brand-500/35' : ''"
+          class="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-default)] transition-colors hover:border-[var(--border-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-focus-ring-strong)]"
+          :class="$primaryColor.current.value === color.value ? 'border-[var(--border-accent)] ring-2 ring-[var(--theme-focus-ring-strong)]' : ''"
           :aria-label="`Use ${color.label} accent`"
           :title="color.label"
           @click="$primaryColor.set(color.value)"

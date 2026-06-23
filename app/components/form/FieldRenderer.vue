@@ -808,13 +808,13 @@ function getComponentType(): string {
 <style>
 .field-input {
   opacity: 0;
-  animation: fadeIn 0.5s ease forwards;
+  animation: fadeIn 0.24s ease forwards;
 }
 
 @keyframes fadeIn {
   0% {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(2px);
   }
   100% {
     opacity: 1;

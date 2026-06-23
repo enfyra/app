@@ -1,19 +1,26 @@
 <template>
-  <div class="extension-manager-page">
-    <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
-        v-if="showInitialLoading"
-        title="Loading extensions..."
-        description="Fetching extension registry"
-        size="md"
-        type="card"
-        context="page"
-      />
-
-      <CommonAnimatedGrid
-        v-else-if="extensions.length > 0"
-        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-      >
+  <CommonCardListFrame
+    v-model:page="page"
+    root-class="extension-manager-page"
+    :loading="showInitialLoading"
+    :has-items="extensions.length > 0"
+    loading-title="Loading extensions..."
+    loading-description="Fetching extension registry"
+    loading-size="md"
+    empty-title="No extensions found"
+    empty-description="No extensions have been created yet"
+    empty-icon="lucide:puzzle"
+    empty-size="lg"
+    :total="total"
+    :items-per-page="limit"
+    :pagination-loading="loading"
+    :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
+  >
+    <CommonAnimatedGrid
+      :animate="false"
+      :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
+    >
         <CommonSettingsCard
           v-for="extension in extensions"
           :key="extension.id"
@@ -22,6 +29,7 @@
           :icon="getExtensionIcon(extension)"
           :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
+          :content-loading="extensionsRefreshing"
           :stats="[
             {
               label: 'Type',
@@ -52,27 +60,7 @@
           :methods="getFooterActions(extension)"
         </CommonSettingsCard>
       </CommonAnimatedGrid>
-
-      <CommonEmptyState
-        v-else
-        title="No extensions found"
-        description="No extensions have been created yet"
-        icon="lucide:puzzle"
-        size="lg"
-      />
-    </Transition>
-
-    <CommonPaginationBar
-      v-if="extensions.length > 0 && total > limit"
-      v-model:page="page"
-      class="mt-6"
-      :items-per-page="limit"
-      :total="total"
-      :loading="loading"
-      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-      :ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
-    />
-  </div>
+  </CommonCardListFrame>
 </template>
 
 <script setup lang="ts">
@@ -89,7 +77,6 @@ const { getId } = useDatabase();
 const { invalidateExtensionCache } = useDynamicComponent();
 const { loadGlobalExtensions } = useGlobalExtensions();
 
-const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -117,8 +104,11 @@ const {
 });
 const { fetchMenuDefinitions } = useMenuApi();
 
-const extensions = computed(() => apiData.value?.data || []);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const {
+  items: extensions,
+  showInitialLoading,
+  isRefreshing: extensionsRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 

@@ -21,8 +21,13 @@ const emit = defineEmits<{
 }>();
 
 const { getId } = useDatabase();
-const { isMobile, isTablet } = useScreen();
+const { isMobile } = useScreen();
 const isDndUpdating = useState('menu-dnd-updating', () => false);
+const itemLevel = computed(() => props.level || 0);
+
+const originalMenu = computed(() => {
+  return props.allMenus?.find(m => String(getId(m)) === String(props.item.id));
+});
 
 const childrenStyle = computed(() => {
   const lvl = (props.level || 0) + 1;
@@ -40,6 +45,11 @@ const childrenStyle = computed(() => {
 
 const childrenItems = ref<MenuTreeItem[]>(props.item.children || []);
 const isExpanded = ref(true);
+const hasChildren = computed(() => childrenItems.value.length > 0 || (props.item.children?.length ?? 0) > 0);
+const canEditMenu = computed(() => !isSystemMenu.value);
+const rowStyle = computed(() => ({
+  '--menu-depth': String(itemLevel.value)
+}));
 
 watch(() => props.item.children, (newChildren) => {
   childrenItems.value = newChildren || [];
@@ -98,6 +108,16 @@ function handleChildrenReorder(event: DragEvent) {
   });
 
   if (updatedMenus.length > 0) emit('reorder-menus', updatedMenus);
+}
+
+function canDropIntoChildren(event: any) {
+  const dragged = event?.draggedContext?.element;
+  if (!dragged?.isSystem) return true;
+
+  const draggedMenu = props.allMenus?.find((menu) => String(getId(menu)) === String(getId(dragged)));
+  const originalParentId = getId(draggedMenu?.parent) || null;
+  const targetParentId = getId(props.item) || null;
+  return String(originalParentId || null) === String(targetParentId || null);
 }
 
 const menuItems = computed(() => {
@@ -269,10 +289,22 @@ const isMoving = computed(() => {
 });
 
 const isSystemMenu = computed(() => {
-  const originalMenu = props.allMenus?.find(m => String(getId(m)) === String(props.item.id));
-  return originalMenu?.isSystem === true;
+  return originalMenu.value?.isSystem === true;
 });
 
+const typeBadgeColor = computed(() => props.item.isDropdown ? 'info' : 'neutral');
+const ownershipBadgeColor = computed(() => props.item.isSystem ? 'warning' : 'neutral');
+const iconToneClass = computed(() => props.item.isDropdown ? 'accent-tile-primary' : 'accent-tile-neutral');
+
+function getExtensionId() {
+  const extension = props.item.extension as any;
+  return getId(extension) || extension?.extensionId;
+}
+
+const extensionLabel = computed(() => {
+  const extension = props.item.extension as any;
+  return extension?.name || extension?.description || 'Extension';
+});
 
 const canMoveHere = computed(() => {
   if (!movingMenuId.value) return false;
@@ -327,165 +359,148 @@ function handleCancelMove() {
 </script>
 
 <template>
-  <div>
-    <div
-      v-if="item.isDropdown"
-      class="menu-group-wrapper"
-    >
+  <div class="menu-editor-node">
     <div
       :class="[
-        'menu-item-dropdown-header flex items-center flex-wrap !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
-        (level || 0) > 0 ? 'pl-3 md:pl-6' : 'pl-3',
-        isMoving ? 'ring-2 ring-brand-500 bg-brand-500/10 dark:bg-brand-500/20' : '',
-        isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-brand-500/5 dark:hover:bg-brand-500/10'
+        'menu-editor-row group',
+        canEditMenu ? 'is-editable cursor-pointer' : 'cursor-default',
+        isMoving ? 'is-moving' : '',
+        !item.isEnabled ? 'is-disabled' : ''
       ]"
+      :style="rowStyle"
       @click="handleItemClick(item)"
     >
+      <button
+        type="button"
+        class="menu-row-drag drag-handle"
+        aria-label="Drag menu item"
+        @click.stop
+      >
+        <UIcon name="lucide:grip-vertical" class="h-4 w-4" />
+      </button>
+
+      <button
+        v-if="item.isDropdown"
+        type="button"
+        class="menu-row-chevron"
+        :class="isExpanded ? 'is-open' : ''"
+        :disabled="!hasChildren"
+        aria-label="Toggle children"
+        @click.stop="isExpanded = !isExpanded"
+      >
         <UIcon
-          name="lucide:grip-vertical"
-          class="hidden md:block w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
-          @click.stop
+          name="lucide:chevron-right"
+          :class="[
+            'h-4 w-4 transition-transform duration-150 ease-out',
+            isExpanded ? 'rotate-90' : ''
+          ]"
         />
-        <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 shrink-0 text-brand-500 dark:text-brand-400" />
-        <span class="text-sm font-medium text-[var(--text-secondary)] truncate">{{ item.label }}</span>
-        <UIcon
-          v-if="isSystemMenu"
-          name="lucide:lock"
-          class="w-3.5 h-3.5 shrink-0 text-[var(--text-quaternary)]"
-          title="System menu - cannot be edited"
-        />
-        <UDropdownMenu
-          v-if="menuItems.length > 0"
-          :items="[menuItems]"
-          :modal="false"
-          :content="{
-            side: 'bottom',
-          }"
-        >
-          <UButton
-            size="xs"
-            color="neutral"
-            variant="soft"
-            icon="lucide:more-vertical"
-            @click.stop
+      </button>
+      <span v-else class="menu-row-chevron-placeholder" />
+
+      <span :class="['menu-row-icon accent-tile', iconToneClass]">
+        <UIcon :name="item.icon || 'lucide:circle'" class="h-4 w-4 text-current" />
+      </span>
+
+      <div class="menu-row-main">
+        <div class="menu-row-title-line">
+          <span class="menu-row-title">{{ item.label }}</span>
+          <UIcon
+            v-if="isSystemMenu"
+            name="lucide:lock"
+            class="h-3.5 w-3.5 text-[var(--text-quaternary)]"
+            title="System menu - cannot be edited"
           />
-        </UDropdownMenu>
-        <UButton
-          v-if="canMoveHere && item.isDropdown"
-          size="xs"
-          color="primary"
-          variant="soft"
-          class="ml-2"
-          @click.stop="handleMoveHere"
-        >
-          <UIcon name="lucide:move" class="w-3 h-3 mr-1" />
-          Move here
-        </UButton>
-        <div v-if="isMoving" class="flex items-center gap-2 mr-2">
+        </div>
+
+        <div class="menu-row-meta">
+          <UBadge variant="soft" :color="typeBadgeColor" size="xs">
+            {{ item.isDropdown ? 'Dropdown' : 'Menu' }}
+          </UBadge>
+          <UBadge variant="soft" :color="ownershipBadgeColor" size="xs">
+            {{ item.isSystem ? 'System' : 'Custom' }}
+          </UBadge>
+          <UBadge v-if="!item.isEnabled" variant="soft" color="error" size="xs">
+            Disabled
+          </UBadge>
           <UBadge
+            v-if="item.type === 'Menu' && item.extension"
             variant="soft"
             color="primary"
             size="xs"
+            class="cursor-pointer"
+            :title="`Extension: ${extensionLabel}`"
+            @click.stop="navigateTo(`/settings/extensions/${getExtensionId()}`)"
           >
-            <UIcon name="lucide:move" class="w-3 h-3 mr-1" />
+            <UIcon name="lucide:puzzle" class="mr-1 h-3 w-3" />
+            {{ extensionLabel }}
+          </UBadge>
+        </div>
+      </div>
+
+      <div class="menu-row-actions">
+        <UButton
+          v-if="canMoveHere"
+          size="xs"
+          color="primary"
+          variant="soft"
+          icon="lucide:move"
+          label="Move here"
+          @click.stop="handleMoveHere"
+        />
+
+        <template v-if="isMoving">
+          <UBadge variant="soft" color="primary" size="xs">
+            <UIcon name="lucide:move" class="mr-1 h-3 w-3" />
             Moving
           </UBadge>
           <UButton
             size="xs"
             color="error"
             variant="soft"
+            icon="lucide:x"
+            aria-label="Cancel move"
             @click.stop="handleCancelMove"
-          >
-            <UIcon name="lucide:x" class="w-3 h-3" />
-          </UButton>
-        </div>
-        <div class="flex items-center gap-1 ml-auto">
-          <button
-            v-if="item.isDropdown && (childrenItems.length > 0 || item.children?.length > 0)"
-            @click.stop="isExpanded = !isExpanded"
-            class="w-5 h-5 flex items-center justify-center transition-colors duration-150 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
-          >
-            <UIcon
-              name="lucide:chevron-right"
-              :class="[
-                'w-4 h-4 transition-transform duration-300 ease-out',
-                isExpanded ? 'rotate-90' : ''
-              ]"
-            />
-          </button>
-          <UBadge
-            variant="soft"
-            color="secondary"
-            size="xs"
-          >
-            Dropdown
-          </UBadge>
-          <UBadge
-            v-if="!item.isEnabled"
-            variant="soft"
-            color="error"
-            size="xs"
-          >
-            Disabled
-          </UBadge>
-          <UBadge
-            v-if="item.isSystem"
-            variant="soft"
-            color="warning"
-            size="xs"
-            class="hidden md:inline-flex"
-          >
-            System
-          </UBadge>
-          <UBadge
-            v-if="!item.isSystem"
-            variant="soft"
-            color="neutral"
-            size="xs"
-            class="hidden md:inline-flex"
-          >
-            Custom
-          </UBadge>
-          <UBadge
-            v-if="item.extension"
-            variant="soft"
-            color="primary"
-            size="xs"
-            class="hidden md:inline-flex cursor-pointer"
-            :title="`Extension: ${item.extension.name || item.extension.description || getId(item.extension) || item.extension.extensionId}`"
-            @click.stop="navigateTo(`/settings/extensions/${getId(item.extension) || item.extension.extensionId}`)"
-          >
-            <UIcon name="lucide:puzzle" class="w-3 h-3 mr-1" />
-            {{ item.extension.name || item.extension.description || 'Extension' }}
-          </UBadge>
-        </div>
-      </div>
-    
-    <div 
-      v-if="item.isDropdown" 
-      :class="[
-        'grid transition-all duration-300 ease-out',
-        isExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-      ]"
-    >
-      <div class="overflow-hidden">
-        <draggable
-          v-model="childrenItems"
-          :animation="200"
-          :disabled="isDndUpdating"
-          handle=".drag-handle"
-          ghost-class="ghost-item"
-          chosen-class="chosen-item"
-          drag-class="dragging-item"
-          :group="{ name: 'menu-items', pull: true, put: true }"
-          @change="handleChildrenReorder"
-          item-key="id"
-          :class="[
-            'menu-children drop-zone space-y-1 mt-1 pr-2 py-2 rounded-xl',
-            'bg-transparent'
-          ]"
-          :style="childrenStyle"
+          />
+        </template>
+
+        <UDropdownMenu
+          v-if="menuItems.length > 0"
+          :items="[menuItems]"
+          :modal="false"
+          :content="{ side: 'bottom', align: 'end' }"
         >
+          <UButton
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            icon="lucide:more-vertical"
+            aria-label="Menu actions"
+            @click.stop
+          />
+        </UDropdownMenu>
+      </div>
+    </div>
+
+    <div
+      v-if="item.isDropdown && isExpanded"
+      class="menu-editor-children-wrap"
+    >
+      <draggable
+        v-model="childrenItems"
+        :animation="140"
+        :disabled="isDndUpdating"
+        handle=".drag-handle"
+        ghost-class="ghost-item"
+        chosen-class="chosen-item"
+        drag-class="dragging-item"
+        :group="{ name: 'menu-items', pull: true, put: true }"
+        :move="canDropIntoChildren"
+        @change="handleChildrenReorder"
+        item-key="id"
+        class="menu-editor-children drop-zone"
+        :style="childrenStyle"
+      >
         <template #item="{ element: child }">
           <MenuVisualEditorItem
             :item="child"
@@ -503,138 +518,162 @@ function handleCancelMove() {
           />
         </template>
       </draggable>
-      </div>
-    </div>
-    </div>
-    <div
-      v-else
-      :class="[
-        'menu-item flex items-center flex-wrap !gap-2 px-3 py-2 rounded-xl transition-colors group relative',
-        isMoving ? 'ring-2 ring-brand-500 bg-brand-500/10 dark:bg-brand-500/20' : '',
-        isSystemMenu ? 'cursor-default' : 'cursor-pointer hover:bg-brand-500/5 dark:hover:bg-brand-500/10'
-      ]"
-      :style="{
-        paddingLeft: `${12 + (level || 0) * 12}px`
-      }"
-      @click="handleItemClick(item)"
-    >
-      <UIcon
-        name="lucide:grip-vertical"
-        class="hidden md:block w-4 h-4 text-[var(--text-quaternary)] drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity"
-        @click.stop
-      />
-      <UIcon :name="item.icon || 'lucide:circle'" class="w-4 h-4 shrink-0 text-brand-500 dark:text-brand-400" />
-      <span class="text-sm text-[var(--text-secondary)] truncate">{{ item.label }}</span>
-      <UIcon
-        v-if="isSystemMenu"
-        name="lucide:lock"
-        class="w-3.5 h-3.5 shrink-0 text-[var(--text-quaternary)]"
-        title="System menu - cannot be edited"
-      />
-      <UDropdownMenu
-        v-if="menuItems.length > 0"
-        :items="[menuItems]"
-        :modal="false"
-        :popper="{ placement: 'bottom-end' }"
-        :content="{
-
-        }"
-      >
-        <UButton
-          size="xs"
-          color="neutral"
-          variant="soft"
-          icon="lucide:more-vertical"
-          @click.stop
-        />
-      </UDropdownMenu>
-      <UButton
-        v-if="canMoveHere"
-        size="xs"
-        color="primary"
-        variant="soft"
-        class="ml-2"
-        @click.stop="handleMoveHere"
-      >
-        <UIcon name="lucide:move" class="w-3 h-3 mr-1" />
-        Move here
-      </UButton>
-      <div v-if="isMoving" class="flex items-center gap-2 mr-2">
-        <UBadge
-          variant="soft"
-          color="primary"
-          size="xs"
-        >
-          <UIcon name="lucide:move" class="w-3 h-3 mr-1" />
-          Moving
-        </UBadge>
-        <UButton
-          size="xs"
-          color="error"
-          variant="soft"
-          @click.stop="handleCancelMove"
-        >
-          <UIcon name="lucide:x" class="w-3 h-3" />
-        </UButton>
-      </div>
-      <div class="flex items-center gap-1 ml-auto">
-        <UBadge
-          v-if="!item.isEnabled"
-          variant="soft"
-          color="error"
-          size="xs"
-        >
-          Disabled
-        </UBadge>
-        <UBadge
-          v-if="item.isSystem"
-          variant="soft"
-          color="warning"
-          size="xs"
-          class="hidden md:inline-flex"
-        >
-          System
-        </UBadge>
-        <UBadge
-          v-if="!item.isSystem"
-          variant="soft"
-          color="neutral"
-          size="xs"
-          class="hidden md:inline-flex"
-        >
-          Custom
-        </UBadge>
-        <UBadge
-          v-if="item.type === 'Menu' && item.extension"
-          variant="soft"
-          color="primary"
-          size="xs"
-          class="hidden md:inline-flex cursor-pointer"
-          :title="`Extension: ${item.extension.name || item.extension.description || getId(item.extension) || item.extension.extensionId}`"
-          @click.stop="navigateTo(`/settings/extensions/${getId(item.extension) || item.extension.extensionId}`)"
-        >
-          <UIcon name="lucide:puzzle" class="w-3 h-3 mr-1" />
-          {{ item.extension.name || item.extension.description || 'Extension' }}
-        </UBadge>
-        <UBadge
-          v-if="item.type === 'Menu' && !item.isSystem && !item.extension"
-          variant="soft"
-          color="neutral"
-          size="xs"
-          class="hidden md:inline-flex"
-          title="No extension - Right click to create"
-        >
-          <UIcon name="lucide:puzzle" class="w-3 h-3 mr-1" />
-          No Extension
-        </UBadge>
-      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.menu-group-wrapper {
+.menu-editor-node {
   position: relative;
+}
+
+.menu-editor-row {
+  display: grid;
+  grid-template-columns: 18px 24px 40px minmax(220px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 12px 10px calc(12px + (var(--menu-depth, 0) * 14px));
+  border: 1px solid transparent;
+  border-radius: var(--radius-panel);
+  background: transparent;
+  transition: background-color 110ms ease, border-color 110ms ease, box-shadow 110ms ease;
+}
+
+.menu-editor-row.is-editable:hover {
+  border-color: var(--card-border-hover);
+  background: var(--state-primary-soft-bg);
+}
+
+.menu-editor-row.is-moving {
+  border-color: var(--badge-primary-soft-border);
+  background: var(--badge-primary-soft-bg);
+  box-shadow: inset 0 0 0 1px var(--badge-primary-soft-border);
+}
+
+.menu-editor-row.is-disabled {
+  opacity: 0.68;
+}
+
+.menu-row-drag,
+.menu-row-chevron {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-subcontrol);
+  color: var(--text-quaternary);
+  transition: background-color 110ms ease, color 110ms ease;
+}
+
+.menu-row-drag {
+  width: 18px;
+  cursor: move;
+  opacity: 0;
+}
+
+.menu-row-drag-placeholder {
+  width: 18px;
+  height: 24px;
+}
+
+.menu-editor-row:hover .menu-row-drag {
+  opacity: 1;
+}
+
+.menu-row-chevron:not(:disabled) {
+  cursor: pointer;
+}
+
+.menu-row-chevron:not(:disabled):hover,
+.menu-row-drag:hover {
+  background: var(--state-neutral-soft-bg);
+  color: var(--text-secondary);
+}
+
+.menu-row-chevron:disabled {
+  opacity: 0.28;
+}
+
+.menu-row-chevron-placeholder {
+  width: 24px;
+  height: 24px;
+}
+
+.menu-row-icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+}
+
+.menu-row-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.menu-row-title-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+
+.menu-row-title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-row-meta {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.menu-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.menu-editor-children {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-panel);
+  padding-top: 6px;
+  padding-bottom: 8px;
+  transition: background-color 110ms ease, border-color 110ms ease, box-shadow 110ms ease;
+}
+
+.menu-editor-children-wrap {
+  animation: menu-children-enter 120ms ease-out;
+}
+
+@keyframes menu-children-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .drop-zone {
@@ -645,18 +684,18 @@ function handleCancelMove() {
   content: '';
   position: absolute;
   left: var(--dnd-bar-left, 10px);
-  top: 8px;
-  bottom: 8px;
-  width: 2px;
+  top: 6px;
+  bottom: 10px;
+  width: 1px;
   border-radius: 2px;
-  background: rgba(148, 163, 184, 0.55);
+  background: color-mix(in srgb, var(--brand-400) 26%, var(--border-default));
   pointer-events: none;
 }
 
 .drop-zone:has(.sortable-ghost) {
-  background-color: color-mix(in srgb, var(--brand-500) 5%, transparent);
-  border-color: var(--brand-500);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 35%, transparent);
+  border-color: var(--badge-primary-soft-border);
+  background-color: color-mix(in srgb, var(--brand-500) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 24%, transparent);
 }
 
 .drop-zone:has(.sortable-ghost)::before,
@@ -664,17 +703,38 @@ function handleCancelMove() {
   background: color-mix(in srgb, var(--brand-500) 85%, transparent);
 }
 
-.menu-visual-editor-item :deep(.sortable-ghost) {
-  opacity: 0.5;
-  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  border: 2px dashed var(--brand-500);
+.menu-editor-node :deep(.sortable-ghost) {
+  min-height: 64px;
+  opacity: 1;
+  border-radius: var(--radius-panel);
+  outline: 2px dashed var(--badge-primary-soft-border);
+  outline-offset: -2px;
+  background: var(--badge-primary-soft-bg);
 }
 
-.menu-visual-editor-item :deep(.sortable-chosen) {
-  opacity: 0.8;
+.menu-editor-node :deep(.sortable-chosen) {
+  opacity: 1;
 }
 
-.menu-visual-editor-item :deep(.sortable-drag) {
-  opacity: 0.5;
+.menu-editor-node :deep(.sortable-drag) {
+  opacity: 0.94;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 640px) {
+  .menu-editor-row {
+    grid-template-columns: 18px 22px 36px minmax(0, 1fr);
+  }
+
+  .menu-row-main {
+    display: grid;
+    gap: 5px;
+  }
+
+  .menu-row-actions {
+    grid-column: 4;
+    justify-content: flex-start;
+  }
 }
 </style>
