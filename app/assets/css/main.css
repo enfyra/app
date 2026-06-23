@@ -692,6 +692,60 @@
   border-color: var(--card-border);
 }
 
+.eapp-surface-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(18px);
+}
+
+.eapp-surface-muted {
+  background: var(--surface-nested);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-panel);
+}
+
+.eapp-surface-flat {
+  background: var(--surface-default);
+  border: 1px solid var(--border-default);
+}
+
+.eapp-surface-hover {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.eapp-surface-hover:hover {
+  border-color: var(--card-border-hover);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.eapp-divider {
+  border-color: var(--border-default);
+}
+
+.eapp-divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-top: 1px solid var(--border-default);
+}
+
+.eapp-text-primary {
+  color: var(--text-primary);
+}
+
+.eapp-text-secondary {
+  color: var(--text-secondary);
+}
+
+.eapp-text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.eapp-text-quaternary {
+  color: var(--text-quaternary);
+}
+
 .eapp-modal-surface {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -823,7 +877,8 @@
 }
 
 .eapp-accent-soft,
-.eapp-identity-soft {
+.eapp-identity-soft,
+.eapp-primary-soft {
   border-color: var(--badge-primary-soft-border);
   background: var(--badge-primary-soft-bg);
   color: var(--badge-primary-soft-text);
@@ -831,30 +886,50 @@
 }
 
 .eapp-accent-soft-hover,
-.eapp-identity-soft-hover {
+.eapp-identity-soft-hover,
+.eapp-primary-soft-hover {
   transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .eapp-accent-soft-hover:hover,
-.eapp-identity-soft-hover:hover {
+.eapp-identity-soft-hover:hover,
+.eapp-primary-soft-hover:hover {
   border-color: var(--border-accent);
   background: var(--state-primary-soft-bg-hover);
   color: var(--badge-primary-soft-text);
 }
 
 .eapp-accent-solid,
-.eapp-identity-solid {
+.eapp-identity-solid,
+.eapp-primary-solid {
   border-color: var(--action-primary-bg);
   background: var(--action-primary-bg);
   color: var(--action-primary-text);
 }
 
 .eapp-accent-text,
-.eapp-identity-text {
+.eapp-identity-text,
+.eapp-primary-text {
   color: var(--badge-primary-soft-text);
 }
 
-.eapp-identity-surface {
+.eapp-primary-subtle {
+  border-color: var(--border-accent);
+  background: var(--state-primary-soft-bg);
+  color: var(--badge-primary-soft-text);
+  box-shadow: inset 0 0 0 1px var(--badge-primary-soft-border);
+}
+
+.eapp-primary-border {
+  border-color: var(--border-accent);
+}
+
+.eapp-primary-ring {
+  box-shadow: 0 0 0 1px var(--badge-primary-soft-border);
+}
+
+.eapp-identity-surface,
+.eapp-primary-surface {
   border-color: color-mix(in srgb, var(--brand-500) 10%, var(--card-border));
   background:
     linear-gradient(
@@ -868,7 +943,8 @@
   backdrop-filter: blur(18px);
 }
 
-.dark .eapp-identity-surface {
+.dark .eapp-identity-surface,
+.dark .eapp-primary-surface {
   border-color: color-mix(in srgb, var(--brand-400) 12%, var(--card-border));
   background:
     linear-gradient(
@@ -879,11 +955,13 @@
     var(--card-bg);
 }
 
-.eapp-identity-surface-hover {
+.eapp-identity-surface-hover,
+.eapp-primary-surface-hover {
   transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.eapp-identity-surface-hover:hover {
+.eapp-identity-surface-hover:hover,
+.eapp-primary-surface-hover:hover {
   border-color: color-mix(in srgb, var(--brand-500) 16%, var(--card-border-hover));
   background:
     linear-gradient(
@@ -895,7 +973,8 @@
   box-shadow: var(--card-shadow-hover);
 }
 
-.dark .eapp-identity-surface-hover:hover {
+.dark .eapp-identity-surface-hover:hover,
+.dark .eapp-primary-surface-hover:hover {
   border-color: color-mix(in srgb, var(--brand-400) 18%, var(--card-border-hover));
   background:
     linear-gradient(
