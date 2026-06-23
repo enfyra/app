@@ -39,8 +39,8 @@
           :title="pkg.name"
           :description="pkg.description || 'No description'"
           icon="lucide:server"
-          icon-color="success"
-          :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-success/20 transition-all'"
+          icon-color="primary"
+          :card-class="'cursor-pointer transition-all lg:hover:ring-2 lg:hover:ring-[var(--border-accent)]'"
           :content-loading="packagesRefreshing"
           @click="navigateTo(`/packages/${getId(pkg)}`)"
           :stats="[
@@ -49,7 +49,7 @@
               component: 'UBadge',
               props: {
                 variant: 'soft',
-                color: 'success',
+                color: 'primary',
               },
               value: pkg.version,
             },
@@ -83,10 +83,12 @@
                   {
                     label: 'Usage',
                     value: `$ctx.$pkgs.${pkg.name.replace(/[@\/\-]/g, '')}`,
-                    component: 'code',
+                    component: 'UBadge',
                     props: {
+                      variant: 'solid',
+                      color: 'primary',
                       class:
-                        'text-xs font-mono text-green-600 bg-green-50 px-2 py-1 rounded hover:text-white',
+                        'font-mono',
                     },
                   },
                 ]
@@ -123,7 +125,7 @@ const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
   title: "Server Packages",
-  gradient: "cyan",
+  gradient: "none",
 });
 
 registerHeaderActions({

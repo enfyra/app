@@ -109,15 +109,15 @@
   }
 
   .text-success {
-    color: var(--ui-success);
+    color: var(--status-success-base);
   }
 
   .text-warning {
-    color: var(--ui-warning);
+    color: var(--status-warning-base);
   }
 
   .text-info {
-    color: var(--ui-info);
+    color: var(--status-info-base);
   }
 
   .border-primary {
@@ -125,19 +125,19 @@
   }
 
   .border-success {
-    border-color: var(--ui-success);
+    border-color: var(--status-success-base);
   }
 
   .border-warning {
-    border-color: var(--ui-warning);
+    border-color: var(--status-warning-base);
   }
 
   .border-error {
-    border-color: var(--ui-error);
+    border-color: var(--status-danger-base);
   }
 
   .border-info {
-    border-color: var(--ui-info);
+    border-color: var(--status-info-base);
   }
 
   .bg-primary {
@@ -145,19 +145,19 @@
   }
 
   .bg-success {
-    background-color: var(--ui-success);
+    background-color: var(--status-success-base);
   }
 
   .bg-warning {
-    background-color: var(--ui-warning);
+    background-color: var(--status-warning-base);
   }
 
   .bg-error {
-    background-color: var(--ui-error);
+    background-color: var(--status-danger-base);
   }
 
   .bg-info {
-    background-color: var(--ui-info);
+    background-color: var(--status-info-base);
   }
 
   .ring-primary {
@@ -165,19 +165,19 @@
   }
 
   .ring-success {
-    --tw-ring-color: var(--ui-success);
+    --tw-ring-color: var(--status-success-base);
   }
 
   .ring-warning {
-    --tw-ring-color: var(--ui-warning);
+    --tw-ring-color: var(--status-warning-base);
   }
 
   .ring-error {
-    --tw-ring-color: var(--ui-error);
+    --tw-ring-color: var(--status-danger-base);
   }
 
   .ring-info {
-    --tw-ring-color: var(--ui-info);
+    --tw-ring-color: var(--status-info-base);
   }
 
   .divide-primary > :not(:last-child) {
@@ -185,19 +185,19 @@
   }
 
   .divide-success > :not(:last-child) {
-    border-color: var(--ui-success);
+    border-color: var(--status-success-base);
   }
 
   .divide-warning > :not(:last-child) {
-    border-color: var(--ui-warning);
+    border-color: var(--status-warning-base);
   }
 
   .divide-error > :not(:last-child) {
-    border-color: var(--ui-error);
+    border-color: var(--status-danger-base);
   }
 
   .divide-info > :not(:last-child) {
-    border-color: var(--ui-info);
+    border-color: var(--status-info-base);
   }
 
   .border-primary\/20 {
@@ -217,67 +217,67 @@
   }
 
   .border-success\/20 {
-    border-color: color-mix(in srgb, var(--ui-success) 20%, transparent);
+    border-color: color-mix(in srgb, var(--status-success-base) 20%, transparent);
   }
 
   .border-success\/30 {
-    border-color: color-mix(in srgb, var(--ui-success) 30%, transparent);
+    border-color: color-mix(in srgb, var(--status-success-base) 30%, transparent);
   }
 
   .border-success\/50 {
-    border-color: color-mix(in srgb, var(--ui-success) 50%, transparent);
+    border-color: color-mix(in srgb, var(--status-success-base) 50%, transparent);
   }
 
   .border-success\/60 {
-    border-color: color-mix(in srgb, var(--ui-success) 60%, transparent);
+    border-color: color-mix(in srgb, var(--status-success-base) 60%, transparent);
   }
 
   .border-warning\/20 {
-    border-color: color-mix(in srgb, var(--ui-warning) 20%, transparent);
+    border-color: color-mix(in srgb, var(--status-warning-base) 20%, transparent);
   }
 
   .border-warning\/30 {
-    border-color: color-mix(in srgb, var(--ui-warning) 30%, transparent);
+    border-color: color-mix(in srgb, var(--status-warning-base) 30%, transparent);
   }
 
   .border-warning\/50 {
-    border-color: color-mix(in srgb, var(--ui-warning) 50%, transparent);
+    border-color: color-mix(in srgb, var(--status-warning-base) 50%, transparent);
   }
 
   .border-warning\/60 {
-    border-color: color-mix(in srgb, var(--ui-warning) 60%, transparent);
+    border-color: color-mix(in srgb, var(--status-warning-base) 60%, transparent);
   }
 
   .border-error\/20 {
-    border-color: color-mix(in srgb, var(--ui-error) 20%, transparent);
+    border-color: color-mix(in srgb, var(--status-danger-base) 20%, transparent);
   }
 
   .border-error\/30 {
-    border-color: color-mix(in srgb, var(--ui-error) 30%, transparent);
+    border-color: color-mix(in srgb, var(--status-danger-base) 30%, transparent);
   }
 
   .border-error\/50 {
-    border-color: color-mix(in srgb, var(--ui-error) 50%, transparent);
+    border-color: color-mix(in srgb, var(--status-danger-base) 50%, transparent);
   }
 
   .border-error\/60 {
-    border-color: color-mix(in srgb, var(--ui-error) 60%, transparent);
+    border-color: color-mix(in srgb, var(--status-danger-base) 60%, transparent);
   }
 
   .border-info\/20 {
-    border-color: color-mix(in srgb, var(--ui-info) 20%, transparent);
+    border-color: color-mix(in srgb, var(--status-info-base) 20%, transparent);
   }
 
   .border-info\/30 {
-    border-color: color-mix(in srgb, var(--ui-info) 30%, transparent);
+    border-color: color-mix(in srgb, var(--status-info-base) 30%, transparent);
   }
 
   .border-info\/50 {
-    border-color: color-mix(in srgb, var(--ui-info) 50%, transparent);
+    border-color: color-mix(in srgb, var(--status-info-base) 50%, transparent);
   }
 
   .border-info\/60 {
-    border-color: color-mix(in srgb, var(--ui-info) 60%, transparent);
+    border-color: color-mix(in srgb, var(--status-info-base) 60%, transparent);
   }
 
   .bg-primary\/5 {
@@ -297,67 +297,67 @@
   }
 
   .bg-success\/5 {
-    background-color: color-mix(in srgb, var(--ui-success) 5%, transparent);
+    background-color: color-mix(in srgb, var(--status-success-base) 5%, transparent);
   }
 
   .bg-success\/10 {
-    background-color: color-mix(in srgb, var(--ui-success) 10%, transparent);
+    background-color: color-mix(in srgb, var(--status-success-base) 10%, transparent);
   }
 
   .bg-success\/15 {
-    background-color: color-mix(in srgb, var(--ui-success) 15%, transparent);
+    background-color: color-mix(in srgb, var(--status-success-base) 15%, transparent);
   }
 
   .bg-success\/20 {
-    background-color: color-mix(in srgb, var(--ui-success) 20%, transparent);
+    background-color: color-mix(in srgb, var(--status-success-base) 20%, transparent);
   }
 
   .bg-warning\/5 {
-    background-color: color-mix(in srgb, var(--ui-warning) 5%, transparent);
+    background-color: color-mix(in srgb, var(--status-warning-base) 5%, transparent);
   }
 
   .bg-warning\/10 {
-    background-color: color-mix(in srgb, var(--ui-warning) 10%, transparent);
+    background-color: color-mix(in srgb, var(--status-warning-base) 10%, transparent);
   }
 
   .bg-warning\/15 {
-    background-color: color-mix(in srgb, var(--ui-warning) 15%, transparent);
+    background-color: color-mix(in srgb, var(--status-warning-base) 15%, transparent);
   }
 
   .bg-warning\/20 {
-    background-color: color-mix(in srgb, var(--ui-warning) 20%, transparent);
+    background-color: color-mix(in srgb, var(--status-warning-base) 20%, transparent);
   }
 
   .bg-error\/5 {
-    background-color: color-mix(in srgb, var(--ui-error) 5%, transparent);
+    background-color: color-mix(in srgb, var(--status-danger-base) 5%, transparent);
   }
 
   .bg-error\/10 {
-    background-color: color-mix(in srgb, var(--ui-error) 10%, transparent);
+    background-color: color-mix(in srgb, var(--status-danger-base) 10%, transparent);
   }
 
   .bg-error\/15 {
-    background-color: color-mix(in srgb, var(--ui-error) 15%, transparent);
+    background-color: color-mix(in srgb, var(--status-danger-base) 15%, transparent);
   }
 
   .bg-error\/20 {
-    background-color: color-mix(in srgb, var(--ui-error) 20%, transparent);
+    background-color: color-mix(in srgb, var(--status-danger-base) 20%, transparent);
   }
 
   .bg-info\/5 {
-    background-color: color-mix(in srgb, var(--ui-info) 5%, transparent);
+    background-color: color-mix(in srgb, var(--status-info-base) 5%, transparent);
   }
 
   .bg-info\/10 {
-    background-color: color-mix(in srgb, var(--ui-info) 10%, transparent);
+    background-color: color-mix(in srgb, var(--status-info-base) 10%, transparent);
   }
 
   .bg-info\/15 {
-    background-color: color-mix(in srgb, var(--ui-info) 15%, transparent);
+    background-color: color-mix(in srgb, var(--status-info-base) 15%, transparent);
   }
 
   .bg-info\/20 {
-    background-color: color-mix(in srgb, var(--ui-info) 20%, transparent);
+    background-color: color-mix(in srgb, var(--status-info-base) 20%, transparent);
   }
 
   .ring-primary\/20 {
@@ -369,35 +369,35 @@
   }
 
   .ring-success\/20 {
-    --tw-ring-color: color-mix(in srgb, var(--ui-success) 20%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--status-success-base) 20%, transparent);
   }
 
   .ring-success\/30 {
-    --tw-ring-color: color-mix(in srgb, var(--ui-success) 30%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--status-success-base) 30%, transparent);
   }
 
   .ring-warning\/20 {
-    --tw-ring-color: color-mix(in srgb, var(--ui-warning) 20%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--status-warning-base) 20%, transparent);
   }
 
   .ring-warning\/30 {
-    --tw-ring-color: color-mix(in srgb, var(--ui-warning) 30%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--status-warning-base) 30%, transparent);
   }
 
   .ring-error\/20 {
-    --tw-ring-color: color-mix(in srgb, var(--ui-error) 20%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--status-danger-base) 20%, transparent);
   }
 
   .ring-error\/30 {
-    --tw-ring-color: color-mix(in srgb, var(--ui-error) 30%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--status-danger-base) 30%, transparent);
   }
 
   .ring-info\/20 {
-    --tw-ring-color: color-mix(in srgb, var(--ui-info) 20%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--status-info-base) 20%, transparent);
   }
 
   .ring-info\/30 {
-    --tw-ring-color: color-mix(in srgb, var(--ui-info) 30%, transparent);
+    --tw-ring-color: color-mix(in srgb, var(--status-info-base) 30%, transparent);
   }
 
   .divide-primary\/20 > :not(:last-child) {
@@ -405,19 +405,19 @@
   }
 
   .divide-success\/20 > :not(:last-child) {
-    border-color: color-mix(in srgb, var(--ui-success) 20%, transparent);
+    border-color: color-mix(in srgb, var(--status-success-base) 20%, transparent);
   }
 
   .divide-warning\/20 > :not(:last-child) {
-    border-color: color-mix(in srgb, var(--ui-warning) 20%, transparent);
+    border-color: color-mix(in srgb, var(--status-warning-base) 20%, transparent);
   }
 
   .divide-error\/20 > :not(:last-child) {
-    border-color: color-mix(in srgb, var(--ui-error) 20%, transparent);
+    border-color: color-mix(in srgb, var(--status-danger-base) 20%, transparent);
   }
 
   .divide-info\/20 > :not(:last-child) {
-    border-color: color-mix(in srgb, var(--ui-info) 20%, transparent);
+    border-color: color-mix(in srgb, var(--status-info-base) 20%, transparent);
   }
 
   .hover\:border-primary\/60:hover {
@@ -425,19 +425,19 @@
   }
 
   .hover\:border-success\/60:hover {
-    border-color: color-mix(in srgb, var(--ui-success) 60%, transparent);
+    border-color: color-mix(in srgb, var(--status-success-base) 60%, transparent);
   }
 
   .hover\:border-warning\/60:hover {
-    border-color: color-mix(in srgb, var(--ui-warning) 60%, transparent);
+    border-color: color-mix(in srgb, var(--status-warning-base) 60%, transparent);
   }
 
   .hover\:border-error\/60:hover {
-    border-color: color-mix(in srgb, var(--ui-error) 60%, transparent);
+    border-color: color-mix(in srgb, var(--status-danger-base) 60%, transparent);
   }
 
   .hover\:border-info\/60:hover {
-    border-color: color-mix(in srgb, var(--ui-info) 60%, transparent);
+    border-color: color-mix(in srgb, var(--status-info-base) 60%, transparent);
   }
 
   .hover\:bg-primary\/5:hover {
@@ -445,19 +445,19 @@
   }
 
   .hover\:bg-success\/5:hover {
-    background-color: color-mix(in srgb, var(--ui-success) 5%, transparent);
+    background-color: color-mix(in srgb, var(--status-success-base) 5%, transparent);
   }
 
   .hover\:bg-warning\/5:hover {
-    background-color: color-mix(in srgb, var(--ui-warning) 5%, transparent);
+    background-color: color-mix(in srgb, var(--status-warning-base) 5%, transparent);
   }
 
   .hover\:bg-error\/5:hover {
-    background-color: color-mix(in srgb, var(--ui-error) 5%, transparent);
+    background-color: color-mix(in srgb, var(--status-danger-base) 5%, transparent);
   }
 
   .hover\:bg-info\/5:hover {
-    background-color: color-mix(in srgb, var(--ui-info) 5%, transparent);
+    background-color: color-mix(in srgb, var(--status-info-base) 5%, transparent);
   }
 }
 
@@ -636,6 +636,300 @@
   background: var(--pagination-disabled-bg) !important;
   color: var(--pagination-disabled-text) !important;
   box-shadow: none !important;
+}
+
+.eapp-accent-soft {
+  border-color: var(--badge-primary-soft-border);
+  background: var(--badge-primary-soft-bg);
+  color: var(--badge-primary-soft-text);
+  box-shadow: inset 0 0 0 1px var(--badge-primary-soft-border);
+}
+
+.eapp-accent-soft-hover {
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.eapp-accent-soft-hover:hover {
+  border-color: var(--border-accent);
+  background: var(--state-primary-soft-bg-hover);
+  color: var(--badge-primary-soft-text);
+}
+
+.eapp-accent-solid {
+  border-color: var(--action-primary-bg);
+  background: var(--action-primary-bg);
+  color: var(--action-primary-text);
+}
+
+.eapp-accent-text {
+  color: var(--badge-primary-soft-text);
+}
+
+.eapp-button-primary-solid,
+.eapp-button-success-solid,
+.eapp-button-warning-solid,
+.eapp-button-info-solid,
+.eapp-button-danger-solid {
+  background: var(--eapp-button-bg) !important;
+  color: var(--eapp-button-text) !important;
+  box-shadow: var(--shadow-xs) !important;
+}
+
+.eapp-button-primary-solid {
+  --eapp-button-bg: var(--action-primary-bg);
+  --eapp-button-bg-hover: var(--action-primary-bg-hover);
+  --eapp-button-bg-active: var(--action-primary-bg-active);
+  --eapp-button-text: var(--action-primary-text);
+  --eapp-button-disabled-bg: var(--action-primary-disabled-bg);
+  --eapp-button-disabled-text: var(--action-primary-disabled-text);
+}
+
+.eapp-button-success-solid {
+  --eapp-button-bg: var(--action-success-bg);
+  --eapp-button-bg-hover: var(--action-success-bg-hover);
+  --eapp-button-bg-active: var(--action-success-bg-active);
+  --eapp-button-text: var(--action-success-text);
+}
+
+.eapp-button-warning-solid {
+  --eapp-button-bg: var(--action-warning-bg);
+  --eapp-button-bg-hover: var(--action-warning-bg-hover);
+  --eapp-button-bg-active: var(--action-warning-bg-active);
+  --eapp-button-text: var(--action-warning-text);
+}
+
+.eapp-button-info-solid {
+  --eapp-button-bg: var(--action-info-bg);
+  --eapp-button-bg-hover: var(--action-info-bg-hover);
+  --eapp-button-bg-active: var(--action-info-bg-active);
+  --eapp-button-text: var(--action-info-text);
+}
+
+.eapp-button-danger-solid {
+  --eapp-button-bg: var(--action-danger-bg);
+  --eapp-button-bg-hover: var(--action-danger-bg-hover);
+  --eapp-button-bg-active: var(--action-danger-bg-active);
+  --eapp-button-text: var(--action-danger-text);
+  --eapp-button-disabled-bg: var(--state-danger-soft-bg);
+  --eapp-button-disabled-text: var(--state-danger-soft-text);
+  --eapp-button-disabled-ring: var(--state-danger-outline-border);
+}
+
+.eapp-button-primary-solid:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-success-solid:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-warning-solid:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-info-solid:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-danger-solid:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--eapp-button-bg-hover) !important;
+}
+
+.eapp-button-primary-solid:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-success-solid:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-warning-solid:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-info-solid:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-danger-solid:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--eapp-button-bg-active) !important;
+}
+
+.eapp-button-primary-solid:disabled,
+.eapp-button-primary-solid[aria-disabled="true"],
+.eapp-button-success-solid:disabled,
+.eapp-button-success-solid[aria-disabled="true"],
+.eapp-button-warning-solid:disabled,
+.eapp-button-warning-solid[aria-disabled="true"],
+.eapp-button-info-solid:disabled,
+.eapp-button-info-solid[aria-disabled="true"],
+.eapp-button-danger-solid:disabled,
+.eapp-button-danger-solid[aria-disabled="true"] {
+  background: var(--eapp-button-disabled-bg, var(--action-neutral-disabled-bg)) !important;
+  color: var(--eapp-button-disabled-text, var(--action-neutral-disabled-text)) !important;
+  box-shadow: inset 0 0 0 1px var(--eapp-button-disabled-ring, var(--action-neutral-border)) !important;
+}
+
+.eapp-button-primary-soft,
+.eapp-button-success-soft,
+.eapp-button-warning-soft,
+.eapp-button-info-soft,
+.eapp-button-danger-soft {
+  background: var(--eapp-button-soft-bg) !important;
+  color: var(--eapp-button-soft-text) !important;
+  box-shadow: inset 0 0 0 1px var(--eapp-button-soft-ring) !important;
+}
+
+.eapp-button-primary-soft,
+.eapp-button-primary-outline,
+.eapp-button-primary-ghost {
+  --eapp-button-soft-bg: var(--state-primary-soft-bg);
+  --eapp-button-soft-bg-hover: var(--state-primary-soft-bg-hover);
+  --eapp-button-soft-text: var(--state-primary-soft-text);
+  --eapp-button-soft-ring: var(--state-primary-outline-border);
+}
+
+.eapp-button-success-soft,
+.eapp-button-success-ghost {
+  --eapp-button-soft-bg: var(--state-success-soft-bg);
+  --eapp-button-soft-bg-hover: var(--state-success-soft-bg-hover);
+  --eapp-button-soft-text: var(--state-success-soft-text);
+  --eapp-button-soft-ring: var(--state-success-outline-border);
+}
+
+.eapp-button-warning-soft,
+.eapp-button-warning-ghost {
+  --eapp-button-soft-bg: var(--state-warning-soft-bg);
+  --eapp-button-soft-bg-hover: var(--state-warning-soft-bg-hover);
+  --eapp-button-soft-text: var(--state-warning-soft-text);
+  --eapp-button-soft-ring: var(--state-warning-outline-border);
+}
+
+.eapp-button-info-soft,
+.eapp-button-info-ghost {
+  --eapp-button-soft-bg: var(--state-info-soft-bg);
+  --eapp-button-soft-bg-hover: var(--state-info-soft-bg-hover);
+  --eapp-button-soft-text: var(--state-info-soft-text);
+  --eapp-button-soft-ring: var(--state-info-outline-border);
+}
+
+.eapp-button-danger-soft,
+.eapp-button-danger-ghost {
+  --eapp-button-soft-bg: var(--state-danger-soft-bg);
+  --eapp-button-soft-bg-hover: var(--state-danger-soft-bg-hover);
+  --eapp-button-soft-text: var(--state-danger-soft-text);
+  --eapp-button-soft-ring: var(--state-danger-outline-border);
+}
+
+.eapp-button-primary-soft:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-success-soft:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-warning-soft:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-info-soft:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-danger-soft:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--eapp-button-soft-bg-hover) !important;
+}
+
+.eapp-button-primary-soft:disabled,
+.eapp-button-primary-soft[aria-disabled="true"],
+.eapp-button-success-soft:disabled,
+.eapp-button-success-soft[aria-disabled="true"],
+.eapp-button-warning-soft:disabled,
+.eapp-button-warning-soft[aria-disabled="true"],
+.eapp-button-info-soft:disabled,
+.eapp-button-info-soft[aria-disabled="true"],
+.eapp-button-danger-soft:disabled,
+.eapp-button-danger-soft[aria-disabled="true"] {
+  background: var(--eapp-button-soft-bg) !important;
+  color: var(--control-disabled-text) !important;
+}
+
+.eapp-button-primary-outline,
+.eapp-button-neutral-outline {
+  background: var(--eapp-button-outline-bg) !important;
+  color: var(--eapp-button-outline-text) !important;
+  box-shadow: inset 0 0 0 1px var(--eapp-button-outline-ring), var(--shadow-xs) !important;
+}
+
+.eapp-button-primary-outline {
+  --eapp-button-outline-bg: var(--surface-default);
+  --eapp-button-outline-bg-hover: var(--state-primary-outline-bg-hover);
+  --eapp-button-outline-text: var(--state-primary-soft-text);
+  --eapp-button-outline-ring: var(--state-primary-outline-border);
+}
+
+.eapp-button-neutral-outline {
+  --eapp-button-outline-bg: var(--action-neutral-outline-bg);
+  --eapp-button-outline-bg-hover: var(--action-neutral-outline-bg-hover);
+  --eapp-button-outline-bg-active: var(--action-neutral-outline-bg-active);
+  --eapp-button-outline-text: var(--action-neutral-text);
+  --eapp-button-outline-ring: var(--action-neutral-outline-border);
+}
+
+.eapp-button-primary-outline:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-neutral-outline:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--eapp-button-outline-bg-hover) !important;
+  color: var(--eapp-button-outline-text-hover, var(--eapp-button-outline-text)) !important;
+}
+
+.eapp-button-neutral-outline:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--eapp-button-outline-bg-active) !important;
+}
+
+.eapp-button-primary-outline:disabled,
+.eapp-button-primary-outline[aria-disabled="true"],
+.eapp-button-neutral-outline:disabled,
+.eapp-button-neutral-outline[aria-disabled="true"] {
+  background: var(--action-neutral-disabled-bg) !important;
+  color: var(--action-neutral-disabled-text) !important;
+  box-shadow: inset 0 0 0 1px var(--action-neutral-border) !important;
+}
+
+.eapp-button-neutral-soft {
+  background: var(--action-neutral-bg) !important;
+  color: var(--action-neutral-text) !important;
+  box-shadow: inset 0 0 0 1px var(--action-neutral-border) !important;
+}
+
+.eapp-button-neutral-soft:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--action-neutral-bg-hover) !important;
+  color: var(--action-neutral-text-hover) !important;
+}
+
+.eapp-button-neutral-soft:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--action-neutral-bg-active) !important;
+}
+
+.eapp-button-neutral-soft:disabled,
+.eapp-button-neutral-soft[aria-disabled="true"] {
+  background: var(--action-neutral-disabled-bg) !important;
+  color: var(--action-neutral-disabled-text) !important;
+}
+
+.eapp-button-primary-ghost,
+.eapp-button-success-ghost,
+.eapp-button-warning-ghost,
+.eapp-button-info-ghost,
+.eapp-button-danger-ghost,
+.eapp-button-neutral-ghost {
+  background: transparent !important;
+  color: var(--eapp-button-ghost-text) !important;
+}
+
+.eapp-button-primary-ghost,
+.eapp-button-success-ghost,
+.eapp-button-warning-ghost,
+.eapp-button-info-ghost,
+.eapp-button-danger-ghost {
+  --eapp-button-ghost-bg-hover: var(--eapp-button-soft-bg);
+  --eapp-button-ghost-text: var(--eapp-button-soft-text);
+}
+
+.eapp-button-neutral-ghost {
+  --eapp-button-ghost-bg-hover: var(--action-neutral-bg);
+  --eapp-button-ghost-text: var(--action-neutral-text);
+  --eapp-button-ghost-text-hover: var(--action-neutral-text-hover);
+}
+
+.eapp-button-primary-ghost:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-success-ghost:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-warning-ghost:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-info-ghost:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-danger-ghost:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-neutral-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--eapp-button-ghost-bg-hover) !important;
+  color: var(--eapp-button-ghost-text-hover, var(--eapp-button-ghost-text)) !important;
+}
+
+.eapp-button-primary-ghost:disabled,
+.eapp-button-primary-ghost[aria-disabled="true"],
+.eapp-button-success-ghost:disabled,
+.eapp-button-success-ghost[aria-disabled="true"],
+.eapp-button-warning-ghost:disabled,
+.eapp-button-warning-ghost[aria-disabled="true"],
+.eapp-button-info-ghost:disabled,
+.eapp-button-info-ghost[aria-disabled="true"],
+.eapp-button-danger-ghost:disabled,
+.eapp-button-danger-ghost[aria-disabled="true"],
+.eapp-button-neutral-ghost:disabled,
+.eapp-button-neutral-ghost[aria-disabled="true"] {
+  background: transparent !important;
+  color: var(--action-neutral-disabled-text) !important;
 }
 
 .accent-tile {

@@ -67,12 +67,12 @@
 
     <div
       v-if="validationRules.length > 0"
-      class="bg-gradient-to-r from-secondary-500/10 to-secondary-400/5 rounded-xl border border-secondary-300/50 dark:border-secondary-800/30 p-4"
+      class="eapp-accent-soft rounded-xl p-4"
     >
       <div class="flex items-center gap-2 mb-4">
         <UIcon
           name="lucide:shield-check"
-          class="text-secondary-500"
+          class="eapp-accent-text"
           size="18"
         />
         <h3 class="text-lg font-semibold text-[var(--text-primary)]">Validation Rules</h3>

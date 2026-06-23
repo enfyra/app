@@ -39,7 +39,17 @@ export default defineAppConfig({
       slots: {
         item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75',
 
-      }
+      },
+      compoundVariants: [
+        {
+          color: "error",
+          active: false,
+          class: {
+            item: "!text-[var(--state-danger-soft-text)] before:bg-[var(--state-danger-soft-bg)] data-highlighted:!text-[var(--state-danger-soft-text)] data-highlighted:before:!bg-[var(--state-danger-soft-bg-hover)] data-[state=open]:!text-[var(--state-danger-soft-text)] data-[state=open]:before:!bg-[var(--state-danger-soft-bg-hover)]",
+            itemLeadingIcon: "!text-[var(--state-danger-soft-text)] group-data-highlighted:!text-[var(--state-danger-soft-text)] group-data-[state=open]:!text-[var(--state-danger-soft-text)]",
+          },
+        },
+      ],
     },
     colors: {
       primary: "violet",
@@ -60,7 +70,7 @@ export default defineAppConfig({
           "text-sm font-medium",
           "transition-all duration-300",
           "outline-none",
-          "disabled:cursor-not-allowed disabled:opacity-100",
+          "disabled:cursor-not-allowed disabled:!opacity-100 aria-disabled:cursor-not-allowed aria-disabled:!opacity-100",
           "focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",
           "[&_svg]:pointer-events-none",
           "[&_svg:not([class*='size-'])]:size-4",
@@ -71,102 +81,102 @@ export default defineAppConfig({
         {
           color: "primary",
           variant: "solid",
-          class: "bg-[var(--action-primary-bg)] text-[var(--action-primary-text)] shadow-theme-xs hover:bg-[var(--action-primary-bg-hover)] active:bg-[var(--action-primary-bg-active)] disabled:bg-[var(--action-primary-disabled-bg)] disabled:text-[var(--action-primary-disabled-text)]",
+          class: "eapp-button-primary-solid",
         },
         {
           color: "primary",
           variant: "soft",
-          class: "bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)] hover:bg-[var(--state-primary-soft-bg-hover)] disabled:bg-[var(--state-primary-soft-bg)] disabled:text-[var(--control-disabled-text)]"
+          class: "eapp-button-primary-soft"
         },
         {
           color: "primary",
           variant: "ghost",
-          class: "text-[var(--state-primary-soft-text)] hover:bg-[var(--state-primary-soft-bg)] disabled:bg-transparent disabled:text-[var(--control-disabled-text)]"
+          class: "eapp-button-primary-ghost"
         },
         {
           color: "primary",
           variant: "outline",
-          class: "bg-[var(--surface-default)] text-[var(--state-primary-soft-text)] ring-1 ring-inset ring-[var(--state-primary-outline-border)] hover:bg-[var(--state-primary-outline-bg-hover)] active:bg-[var(--state-primary-soft-bg-hover)] disabled:bg-[var(--surface-default)] disabled:text-[var(--control-disabled-text)]"
+          class: "eapp-button-primary-outline"
         },
         {
           color: "neutral",
           variant: "soft",
-          class: "bg-[var(--action-neutral-bg)] text-[var(--action-neutral-text)] ring-1 ring-inset ring-[var(--action-neutral-border)] hover:bg-[var(--action-neutral-bg-hover)] hover:text-[var(--action-neutral-text-hover)] active:bg-[var(--action-neutral-bg-active)] disabled:bg-[var(--action-neutral-disabled-bg)] disabled:text-[var(--action-neutral-disabled-text)]"
+          class: "eapp-button-neutral-soft"
         },
         {
           color: "neutral",
           variant: "ghost",
-          class: "text-[var(--action-neutral-text)] hover:bg-[var(--action-neutral-bg)] hover:text-[var(--action-neutral-text-hover)] disabled:bg-transparent disabled:text-[var(--action-neutral-disabled-text)]"
+          class: "eapp-button-neutral-ghost"
         },
         {
           color: "neutral",
           variant: "outline",
-          class: "bg-[var(--action-neutral-outline-bg)] text-[var(--action-neutral-text)] ring-1 ring-inset ring-[var(--action-neutral-outline-border)] shadow-theme-xs hover:bg-[var(--action-neutral-outline-bg-hover)] hover:text-[var(--action-neutral-text-hover)] active:bg-[var(--action-neutral-outline-bg-active)] disabled:bg-[var(--action-neutral-disabled-bg)] disabled:text-[var(--action-neutral-disabled-text)]"
+          class: "eapp-button-neutral-outline"
         },
         {
           color: "error",
           variant: "solid",
-          class: "!bg-[var(--action-danger-bg)] !text-[var(--action-danger-text)] shadow-theme-xs hover:!bg-[var(--action-danger-bg-hover)] active:!bg-[var(--action-danger-bg-active)] disabled:!bg-[var(--action-neutral-disabled-bg)] disabled:!text-[var(--action-neutral-disabled-text)]",
+          class: "eapp-button-danger-solid",
         },
         {
           color: "error",
           variant: "soft",
-          class: "!bg-[var(--state-danger-soft-bg)] !text-[var(--state-danger-soft-text)] ring-1 ring-inset ring-[var(--state-danger-outline-border)] hover:!bg-[var(--state-danger-soft-bg-hover)] disabled:!bg-[var(--action-neutral-disabled-bg)] disabled:!text-[var(--action-neutral-disabled-text)]"
+          class: "eapp-button-danger-soft"
         },
         {
           color: "error",
           variant: "ghost",
-          class: "!text-[var(--state-danger-soft-text)] hover:!bg-[var(--state-danger-soft-bg)] disabled:!bg-transparent disabled:!text-[var(--control-disabled-text)]"
+          class: "eapp-button-danger-ghost"
         },
         {
           color: "error",
           variant: "outline",
-          class: "!bg-[var(--state-danger-soft-bg)] !text-[var(--state-danger-soft-text)] ring-1 ring-inset ring-[var(--state-danger-outline-border)] hover:!bg-[var(--state-danger-soft-bg-hover)] active:!bg-[var(--state-danger-soft-bg-hover)] disabled:!bg-[var(--action-neutral-disabled-bg)] disabled:!text-[var(--action-neutral-disabled-text)]"
+          class: "eapp-button-danger-soft"
         },
         {
           color: "success",
           variant: "solid",
-          class: "bg-[var(--action-success-bg)] text-[var(--action-success-text)] shadow-theme-xs hover:bg-[var(--action-success-bg-hover)] active:bg-[var(--action-success-bg-active)] disabled:bg-[var(--action-neutral-disabled-bg)] disabled:text-[var(--action-neutral-disabled-text)]",
+          class: "eapp-button-success-solid",
         },
         {
           color: "success",
           variant: "soft",
-          class: "bg-[var(--state-success-soft-bg)] text-[var(--state-success-soft-text)] hover:bg-[var(--state-success-soft-bg-hover)] disabled:bg-[var(--state-success-soft-bg)] disabled:text-[var(--control-disabled-text)]"
+          class: "eapp-button-success-soft"
         },
         {
           color: "success",
           variant: "ghost",
-          class: "text-[var(--state-success-soft-text)] hover:bg-[var(--state-success-soft-bg)] disabled:bg-transparent disabled:text-[var(--control-disabled-text)]"
+          class: "eapp-button-success-ghost"
         },
         {
           color: "warning",
           variant: "solid",
-          class: "bg-[var(--action-warning-bg)] text-[var(--action-warning-text)] shadow-theme-xs hover:bg-[var(--action-warning-bg-hover)] active:bg-[var(--action-warning-bg-active)] disabled:bg-[var(--action-neutral-disabled-bg)] disabled:text-[var(--action-neutral-disabled-text)]",
+          class: "eapp-button-warning-solid",
         },
         {
           color: "warning",
           variant: "soft",
-          class: "bg-[var(--state-warning-soft-bg)] text-[var(--state-warning-soft-text)] hover:bg-[var(--state-warning-soft-bg-hover)] disabled:bg-[var(--state-warning-soft-bg)] disabled:text-[var(--control-disabled-text)]"
+          class: "eapp-button-warning-soft"
         },
         {
           color: "warning",
           variant: "ghost",
-          class: "text-[var(--state-warning-soft-text)] hover:bg-[var(--state-warning-soft-bg)] disabled:bg-transparent disabled:text-[var(--control-disabled-text)]"
+          class: "eapp-button-warning-ghost"
         },
         {
           color: "info",
           variant: "solid",
-          class: "bg-[var(--action-info-bg)] text-[var(--action-info-text)] shadow-theme-xs hover:bg-[var(--action-info-bg-hover)] active:bg-[var(--action-info-bg-active)] disabled:bg-[var(--action-neutral-disabled-bg)] disabled:text-[var(--action-neutral-disabled-text)]",
+          class: "eapp-button-info-solid",
         },
         {
           color: "info",
           variant: "soft",
-          class: "bg-[var(--state-info-soft-bg)] text-[var(--state-info-soft-text)] hover:bg-[var(--state-info-soft-bg-hover)] disabled:bg-[var(--state-info-soft-bg)] disabled:text-[var(--control-disabled-text)]"
+          class: "eapp-button-info-soft"
         },
         {
           color: "info",
           variant: "ghost",
-          class: "text-[var(--state-info-soft-text)] hover:bg-[var(--state-info-soft-bg)] disabled:bg-transparent disabled:text-[var(--control-disabled-text)]"
+          class: "eapp-button-info-ghost"
         }
       ],
     },
@@ -326,23 +336,111 @@ export default defineAppConfig({
     checkbox: {
       slots: {
         base: [
-          "rounded",
-          "transition-all duration-300",
-          "border-2 border-[var(--control-border)]",
-          "data-[state=checked]:bg-[var(--action-primary-bg)] data-[state=checked]:border-[var(--action-primary-bg)]",
+          "rounded-[var(--radius-subcontrol)]",
+          "transition-all duration-200",
+          "border border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs",
+          "data-[state=checked]:border-[var(--action-primary-bg)] data-[state=checked]:bg-[var(--action-primary-bg)]",
+          "data-[state=unchecked]:hover:border-[var(--control-border-focus)] data-[state=unchecked]:hover:bg-[var(--surface-muted)]",
           "focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring-strong)]",
         ].join(" "),
-        icon: "text-white",
+        indicator: "text-[var(--action-primary-text)]",
+        icon: "text-[var(--action-primary-text)]",
+        label: "text-[var(--text-secondary)]",
       },
     },
 
     alert: {
+      slots: {
+        root: "rounded-[var(--radius-panel)] border p-4",
+        title: "font-semibold",
+        description: "opacity-100",
+      },
       compoundVariants: [
+        {
+          color: "primary",
+          variant: "soft",
+          class: {
+            root: "!border-[var(--state-primary-outline-border)] !bg-[var(--state-primary-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-primary-outline-border)]",
+            icon: "text-[var(--state-primary-soft-text)]",
+            title: "text-[var(--state-primary-title-text)]",
+            description: "text-[var(--state-primary-description-text)]",
+          }
+        },
+        {
+          color: "primary",
+          variant: "outline",
+          class: {
+            root: "!border-[var(--state-primary-outline-border)] !bg-[var(--state-primary-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-primary-outline-border)]",
+            icon: "text-[var(--state-primary-soft-text)]",
+            title: "text-[var(--state-primary-title-text)]",
+            description: "text-[var(--state-primary-description-text)]",
+          }
+        },
+        {
+          color: "success",
+          variant: "soft",
+          class: {
+            root: "!border-[var(--state-success-outline-border)] !bg-[var(--state-success-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-success-outline-border)]",
+            icon: "text-[var(--state-success-soft-text)]",
+            title: "text-[var(--state-success-title-text)]",
+            description: "text-[var(--state-success-description-text)]",
+          }
+        },
+        {
+          color: "success",
+          variant: "outline",
+          class: {
+            root: "!border-[var(--state-success-outline-border)] !bg-[var(--state-success-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-success-outline-border)]",
+            icon: "text-[var(--state-success-soft-text)]",
+            title: "text-[var(--state-success-title-text)]",
+            description: "text-[var(--state-success-description-text)]",
+          }
+        },
+        {
+          color: "warning",
+          variant: "soft",
+          class: {
+            root: "!border-[var(--state-warning-outline-border)] !bg-[var(--state-warning-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-warning-outline-border)]",
+            icon: "text-[var(--state-warning-soft-text)]",
+            title: "text-[var(--state-warning-title-text)]",
+            description: "text-[var(--state-warning-description-text)]",
+          }
+        },
+        {
+          color: "warning",
+          variant: "outline",
+          class: {
+            root: "!border-[var(--state-warning-outline-border)] !bg-[var(--state-warning-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-warning-outline-border)]",
+            icon: "text-[var(--state-warning-soft-text)]",
+            title: "text-[var(--state-warning-title-text)]",
+            description: "text-[var(--state-warning-description-text)]",
+          }
+        },
+        {
+          color: "error",
+          variant: "soft",
+          class: {
+            root: "!border-[var(--state-danger-outline-border)] !bg-[var(--state-danger-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-danger-outline-border)]",
+            icon: "text-[var(--state-danger-soft-text)]",
+            title: "text-[var(--state-danger-title-text)]",
+            description: "text-[var(--state-danger-description-text)]",
+          }
+        },
+        {
+          color: "error",
+          variant: "outline",
+          class: {
+            root: "!border-[var(--state-danger-outline-border)] !bg-[var(--state-danger-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-danger-outline-border)]",
+            icon: "text-[var(--state-danger-soft-text)]",
+            title: "text-[var(--state-danger-title-text)]",
+            description: "text-[var(--state-danger-description-text)]",
+          }
+        },
         {
           color: "info",
           variant: "soft",
           class: {
-            root: "bg-[var(--state-info-soft-bg)]",
+            root: "!border-[var(--state-info-outline-border)] !bg-[var(--state-info-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-info-outline-border)]",
             icon: "text-[var(--state-info-soft-text)]",
             title: "text-[var(--state-info-title-text)]",
             description: "text-[var(--state-info-description-text)]",
@@ -352,7 +450,7 @@ export default defineAppConfig({
           color: "info",
           variant: "outline",
           class: {
-            root: "ring-[var(--state-info-outline-border)]",
+            root: "!border-[var(--state-info-outline-border)] !bg-[var(--state-info-soft-bg)] !ring-1 !ring-inset !ring-[var(--state-info-outline-border)]",
             icon: "text-[var(--state-info-soft-text)]",
             title: "text-[var(--state-info-title-text)]",
             description: "text-[var(--state-info-description-text)]",

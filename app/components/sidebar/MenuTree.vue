@@ -284,6 +284,16 @@ watch(
   color: var(--nav-item-text);
 }
 
+.app-sidebar-link.disabled,
+.app-sidebar-link:disabled,
+.app-sidebar-link[aria-disabled="true"] {
+  background: transparent;
+  color: var(--nav-item-text);
+  cursor: not-allowed;
+  opacity: 0.42;
+  box-shadow: none;
+}
+
 .app-sidebar-link.active {
   background: var(--state-primary-soft-bg);
   color: var(--state-primary-soft-text);

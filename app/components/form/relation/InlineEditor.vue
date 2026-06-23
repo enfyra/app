@@ -100,10 +100,10 @@ async function navigateToDetail(item: any) {
     <div
       v-for="item in selectedIds"
       :key="getId(item)"
-      class="inline-flex items-stretch rounded-md overflow-hidden bg-secondary-500/10 border border-secondary-500/30"
+      class="eapp-accent-soft inline-flex items-stretch overflow-hidden rounded-md"
       :title="getId(item) ? String(getId(item)) : 'Invalid ID'"
     >
-      <span class="px-2 py-0.5 text-xs font-mono bg-secondary-500/20">
+      <span class="bg-[var(--state-primary-soft-bg-hover)] px-2 py-0.5 font-mono text-xs">
         {{ getId(item) ? shortenId(getId(item)) : "Invalid ID" }}
       </span>
 
@@ -131,7 +131,7 @@ async function navigateToDetail(item: any) {
       icon="lucide:square-pen"
       size="md"
       variant="outline"
-      color="secondary"
+      color="primary"
       @click="showModal = true"
       class="rounded-full"
     />

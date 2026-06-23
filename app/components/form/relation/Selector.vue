@@ -227,9 +227,9 @@ const { isMobile, isTablet } = useScreen();
             <div :class="(isMobile || isTablet) ? 'flex items-center justify-between mb-3' : 'flex items-center justify-between mb-4'">
               <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
                 <div
-                  :class="(isMobile || isTablet) ? 'w-6 h-6 rounded-lg bg-gradient-to-br from-info to-success flex items-center justify-center shadow-md flex-shrink-0' : 'w-8 h-8 rounded-lg bg-gradient-to-br from-info to-success flex items-center justify-center shadow-md'"
+                  :class="(isMobile || isTablet) ? 'accent-tile accent-tile-primary flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg shadow-theme-xs' : 'accent-tile accent-tile-primary flex h-8 w-8 items-center justify-center rounded-lg shadow-theme-xs'"
                 >
-                  <UIcon name="lucide:git-fork" :class="(isMobile || isTablet) ? 'text-xs text-white' : 'text-xs text-white'" />
+                  <UIcon name="lucide:git-fork" class="text-xs text-current" />
                 </div>
                 <div class="min-w-0 flex-1">
                   <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-foreground truncate' : 'text-lg font-semibold text-foreground'">

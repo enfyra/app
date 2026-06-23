@@ -100,9 +100,9 @@ function confirmDiscard() {
     <template #header>
       <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
         <div
-          :class="(isMobile || isTablet) ? 'w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg flex-shrink-0' : 'w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg'"
+          :class="(isMobile || isTablet) ? 'accent-tile accent-tile-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg shadow-theme-xs' : 'accent-tile accent-tile-primary flex h-10 w-10 items-center justify-center rounded-xl shadow-theme-xs'"
         >
-          <UIcon name="lucide:plus" :class="(isMobile || isTablet) ? 'text-xs text-white' : 'text-sm text-white'" />
+          <UIcon name="lucide:plus" :class="(isMobile || isTablet) ? 'text-xs text-current' : 'text-sm text-current'" />
         </div>
         <div class="min-w-0 flex-1">
           <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold text-foreground truncate' : 'text-xl font-semibold text-foreground'">

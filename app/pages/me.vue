@@ -252,18 +252,9 @@ registerSubHeaderActions([
     label: "Change Password",
     icon: "lucide:key-round",
     variant: "outline",
-    color: "neutral",
+    color: "primary",
     side: "right",
     onClick: () => { passwordModalOpen.value = true; },
-  },
-  {
-    id: "create-api-token",
-    label: "Create API token",
-    icon: "lucide:key",
-    variant: "outline",
-    color: "neutral",
-    side: "right",
-    onClick: () => { openApiTokenModal(); },
   },
 ]);
 

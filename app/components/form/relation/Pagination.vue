@@ -43,7 +43,7 @@ const { isMobile, isTablet } = useScreen();
         :disabled="page <= 1 || totalPages <= 1 || loading"
         :title="`Go to page ${page - 1}`"
         :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-        color="secondary"
+        color="primary"
       />
       <span v-if="isMobile || isTablet" class="text-xs font-medium">{{ page }}/{{ totalPages }}</span>
       <UButton
@@ -53,7 +53,7 @@ const { isMobile, isTablet } = useScreen();
         :disabled="page >= totalPages || totalPages <= 1 || loading"
         :title="`Go to page ${page + 1}`"
         :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-        color="secondary"
+        color="primary"
       />
       
     </div>

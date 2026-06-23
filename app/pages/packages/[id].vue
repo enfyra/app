@@ -26,24 +26,30 @@
           v-if="packageData?.type === 'Server' && packageData?.status === 'installed'"
           icon="lucide:code-2"
           title="Usage in Handlers & Hooks"
-          color="info"
+          color="primary"
           variant="soft"
           class="mb-6"
+          :ui="{
+            root: '!border-[var(--border-accent)] !bg-[var(--surface-default)] !ring-1 !ring-inset !ring-[var(--border-accent)]',
+            icon: 'text-[var(--state-primary-soft-text)]',
+            title: 'text-[var(--text-primary)]',
+            description: 'text-[var(--text-primary)]',
+          }"
         >
           <template #description>
-            <div class="space-y-4">
+            <div class="space-y-4 text-[var(--text-primary)]">
               <div class="space-y-2">
-                <p class="font-medium">In JavaScript/TypeScript code:</p>
+                <p class="font-semibold text-[var(--text-primary)]">In JavaScript/TypeScript code:</p>
                 <code
-                  class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
+                  class="block rounded-[var(--radius-control)] border border-[var(--border-default)] bg-[var(--prose-code-bg)] p-3 font-mono text-sm font-semibold text-[var(--prose-inline-code-color)]"
                 >
                   $ctx.$pkgs{{ packageData?.name && /[@\/\-]/.test(packageData.name) ? `['${packageData.name}']` : `.${packageData?.name.replace(/[@\/\-]/g, "")}` }}
                 </code>
               </div>
               <div class="space-y-2">
-                <p class="font-medium">In template syntax:</p>
+                <p class="font-semibold text-[var(--text-primary)]">In template syntax:</p>
                 <code
-                  class="block bg-gray-800 text-green-400 p-3 rounded-lg font-mono text-sm"
+                  class="block rounded-[var(--radius-control)] border border-[var(--border-default)] bg-[var(--prose-code-bg)] p-3 font-mono text-sm font-semibold text-[var(--prose-inline-code-color)]"
                 >
                   @PKGS{{ packageData?.name && /[@\/\-]/.test(packageData.name) ? `['${packageData.name}']` : `.${packageData?.name.replace(/[@\/\-]/g, "")}` }}
                 </code>

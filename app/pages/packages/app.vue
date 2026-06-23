@@ -29,7 +29,7 @@
           :description="pkg.description || 'No description'"
           icon="lucide:package-2"
           icon-color="primary"
-          :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
+          :card-class="'cursor-pointer transition-all lg:hover:ring-2 lg:hover:ring-[var(--border-accent)]'"
           :content-loading="packagesRefreshing"
           @click="navigateTo(`/packages/${getId(pkg)}`)"
           :stats="[
@@ -78,7 +78,7 @@ const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
   title: "App Packages",
-  gradient: "blue",
+  gradient: "none",
 });
 
 registerHeaderActions({

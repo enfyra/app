@@ -26,7 +26,7 @@ const panelGridClass = computed(() => (isOpen.value ? 'grid-rows-[1fr] opacity-1
 const { accountPanelItems, register } = useAccountPanelRegistry();
 
 const accountPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-bold text-[var(--text-secondary)] transition-colors hover:bg-[var(--nav-item-hover-bg)] hover:text-[var(--nav-item-hover-text)]";
-const logoutPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] bg-[var(--state-danger-soft-bg)] px-2.5 py-2 text-left text-sm font-bold text-[var(--state-danger-soft-text)] transition-colors hover:bg-[var(--state-danger-soft-bg-hover)]";
+const logoutPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-2.5 py-2 text-left text-sm font-bold text-[var(--state-danger-soft-text)] transition-all hover:bg-[var(--state-danger-soft-bg-hover)] hover:shadow-theme-xs focus:outline-none focus:ring-2 focus:ring-[var(--state-danger-outline-border)]";
 
 const ProfileAccountPanelItem = defineComponent({
   name: "ProfileAccountPanelItem",
