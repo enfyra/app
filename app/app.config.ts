@@ -290,6 +290,58 @@ export default defineAppConfig({
           'cursor-pointer hover:bg-[var(--state-primary-soft-bg)]'
         ],
       },
+      compoundVariants: [
+        {
+          color: "primary",
+          variant: ["outline", "subtle"],
+          class: "focus:ring-2 focus:ring-inset focus:ring-[var(--theme-focus-ring-strong)]",
+        },
+        {
+          color: "primary",
+          highlight: true,
+          class: "ring ring-inset ring-[var(--state-primary-outline-border)]",
+        },
+      ],
+    },
+    selectMenu: {
+      slots: {
+        item: [
+          "data-highlighted:not-data-disabled:!text-[var(--text-primary)]",
+          "data-highlighted:not-data-disabled:before:!bg-[var(--state-primary-soft-bg)]",
+        ].join(" "),
+      },
+      compoundVariants: [
+        {
+          color: "primary",
+          variant: ["outline", "subtle"],
+          class: "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--theme-focus-ring-strong)]",
+        },
+        {
+          color: "primary",
+          highlight: true,
+          class: "ring ring-inset ring-[var(--state-primary-outline-border)]",
+        },
+      ],
+    },
+    inputMenu: {
+      slots: {
+        item: [
+          "data-highlighted:not-data-disabled:!text-[var(--text-primary)]",
+          "data-highlighted:not-data-disabled:before:!bg-[var(--state-primary-soft-bg)]",
+        ].join(" "),
+      },
+      compoundVariants: [
+        {
+          color: "primary",
+          variant: ["outline", "subtle"],
+          class: "focus:ring-2 focus:ring-inset focus:ring-[var(--theme-focus-ring-strong)]",
+        },
+        {
+          color: "primary",
+          highlight: true,
+          class: "ring ring-inset ring-[var(--state-primary-outline-border)]",
+        },
+      ],
     },
     formField: {
       slots: {
@@ -457,6 +509,67 @@ export default defineAppConfig({
           }
         },
       ]
+    },
+    progress: {
+      slots: {
+        base: "bg-[var(--surface-muted)]",
+      },
+      compoundVariants: [
+        {
+          color: "primary",
+          class: {
+            indicator: "bg-[var(--action-primary-bg)]",
+            steps: "text-[var(--state-primary-soft-text)]",
+          },
+        },
+      ],
+    },
+    radioGroup: {
+      slots: {
+        legend: "text-[var(--text-secondary)]",
+        label: "text-[var(--text-primary)]",
+        description: "text-[var(--text-tertiary)]",
+        base: "ring-[var(--control-border)] focus-visible:outline-[var(--theme-focus-ring-strong)]",
+      },
+      compoundVariants: [
+        {
+          color: "primary",
+          class: {
+            base: "focus-visible:outline-[var(--theme-focus-ring-strong)]",
+            indicator: "bg-[var(--action-primary-bg)]",
+          },
+        },
+        {
+          color: "primary",
+          variant: ["card", "table"],
+          class: {
+            item: "has-data-[state=checked]:border-[var(--state-primary-outline-border)] has-data-[state=checked]:bg-[var(--state-primary-soft-bg)]",
+          },
+        },
+      ],
+    },
+    tabs: {
+      slots: {
+        list: "bg-[var(--surface-muted)]",
+      },
+      compoundVariants: [
+        {
+          color: "primary",
+          variant: "pill",
+          class: {
+            indicator: "bg-[var(--action-primary-bg)]",
+            trigger: "data-[state=active]:text-[var(--action-primary-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--theme-focus-ring-strong)]",
+          },
+        },
+        {
+          color: "primary",
+          variant: "link",
+          class: {
+            indicator: "bg-[var(--action-primary-bg)]",
+            trigger: "data-[state=active]:text-[var(--state-primary-soft-text)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--theme-focus-ring-strong)]",
+          },
+        },
+      ],
     },
     notification: {
       slots: {
