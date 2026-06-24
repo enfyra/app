@@ -126,38 +126,38 @@
     --action-neutral-disabled-bg: #f1f5f9;
     --action-neutral-disabled-text: #94a3b8;
 
-    --action-danger-bg: var(--status-danger-base);
-    --action-danger-bg-hover: #dc2626;
-    --action-danger-bg-active: #b91c1c;
+    --action-danger-bg: #dc2626;
+    --action-danger-bg-hover: #b91c1c;
+    --action-danger-bg-active: #991b1b;
     --action-danger-text: #ffffff;
-    --action-success-bg: var(--status-success-base);
-    --action-success-bg-hover: #059669;
-    --action-success-bg-active: #047857;
+    --action-success-bg: #047857;
+    --action-success-bg-hover: #065f46;
+    --action-success-bg-active: #064e3b;
     --action-success-text: #ffffff;
-    --action-warning-bg: var(--status-warning-base);
-    --action-warning-bg-hover: #d97706;
-    --action-warning-bg-active: #b45309;
+    --action-warning-bg: #b45309;
+    --action-warning-bg-hover: #92400e;
+    --action-warning-bg-active: #78350f;
     --action-warning-text: #ffffff;
-    --action-info-bg: var(--status-info-base);
-    --action-info-bg-hover: #0891b2;
-    --action-info-bg-active: #0e7490;
+    --action-info-bg: #0e7490;
+    --action-info-bg-hover: #155e75;
+    --action-info-bg-active: #164e63;
     --action-info-text: #ffffff;
 
     --state-danger-soft-bg: #fef2f2;
     --state-danger-soft-bg-hover: #fee2e2;
-    --state-danger-soft-text: #dc2626;
+    --state-danger-soft-text: #b42318;
     --state-danger-outline-border: #fca5a5;
     --state-danger-title-text: #991b1b;
     --state-danger-description-text: #b91c1c;
     --state-success-soft-bg: #ecfdf5;
     --state-success-soft-bg-hover: #d1fae5;
-    --state-success-soft-text: #059669;
+    --state-success-soft-text: #065f46;
     --state-success-outline-border: #86efac;
     --state-success-title-text: #065f46;
     --state-success-description-text: #047857;
     --state-warning-soft-bg: #fffbeb;
     --state-warning-soft-bg-hover: #fef3c7;
-    --state-warning-soft-text: #d97706;
+    --state-warning-soft-text: #92400e;
     --state-warning-outline-border: #fcd34d;
     --state-warning-title-text: #92400e;
     --state-warning-description-text: #a15c07;
@@ -277,7 +277,7 @@
     --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
     /* ── Content: Tables, Prose, Editor ── */
-    --table-header-bg: #f8fafc;
+    --table-header-bg: color-mix(in srgb, var(--brand-500) 4%, #f8fafc);
     --table-header-color: var(--text-primary);
     --table-header-border: rgba(15, 23, 42, 0.08);
     --table-header-hover-bg: #eef2f7;
@@ -302,7 +302,7 @@
     --column-resize-handle: var(--brand-600);
 
     /* ── Misc ── */
-    --flow-node-bg: #ffffff;
+    --flow-node-bg: color-mix(in srgb, var(--brand-500) 3%, #ffffff);
     --flow-node-border: rgba(15, 23, 42, 0.1);
     --scrollbar-thumb: rgba(100, 116, 139, 0.48);
   }
@@ -370,21 +370,21 @@
     --action-neutral-disabled-bg: rgba(51, 65, 85, 0.38);
     --action-neutral-disabled-text: #64748b;
 
-    --action-danger-bg: var(--status-danger-base);
-    --action-danger-bg-hover: #dc2626;
-    --action-danger-bg-active: #b91c1c;
+    --action-danger-bg: #dc2626;
+    --action-danger-bg-hover: #b91c1c;
+    --action-danger-bg-active: #991b1b;
     --action-danger-text: #ffffff;
-    --action-success-bg: var(--status-success-base);
-    --action-success-bg-hover: #059669;
-    --action-success-bg-active: #047857;
+    --action-success-bg: #047857;
+    --action-success-bg-hover: #065f46;
+    --action-success-bg-active: #064e3b;
     --action-success-text: #ffffff;
-    --action-warning-bg: var(--status-warning-base);
-    --action-warning-bg-hover: #d97706;
-    --action-warning-bg-active: #b45309;
+    --action-warning-bg: #b45309;
+    --action-warning-bg-hover: #92400e;
+    --action-warning-bg-active: #78350f;
     --action-warning-text: #ffffff;
-    --action-info-bg: var(--status-info-base);
-    --action-info-bg-hover: #0891b2;
-    --action-info-bg-active: #0e7490;
+    --action-info-bg: #0e7490;
+    --action-info-bg-hover: #155e75;
+    --action-info-bg-active: #164e63;
     --action-info-text: #ffffff;
 
     --state-danger-soft-bg: color-mix(in srgb, var(--status-danger-base) 15%, transparent);
@@ -500,7 +500,7 @@
     --glow-primary: 0 0 40px color-mix(in srgb, var(--brand-500) 24%, transparent), 0 0 80px color-mix(in srgb, var(--brand-600) 14%, transparent), 0 0 120px rgba(34, 211, 238, 0.06);
     --glow-subtle: 0 0 60px color-mix(in srgb, var(--brand-500) 12%, transparent), 0 0 120px rgba(34, 211, 238, 0.04);
 
-    --table-header-bg: rgba(15, 23, 42, 0.82);
+    --table-header-bg: color-mix(in srgb, var(--brand-500) 5%, rgba(15, 23, 42, 0.82));
     --table-header-color: var(--text-primary);
     --table-header-border: rgba(148, 163, 184, 0.12);
     --table-header-hover-bg: rgba(51, 65, 85, 0.42);
@@ -523,7 +523,7 @@
     --prose-heading-color: #f3f4f6;
     --prose-list-color: #e5e7eb;
     --column-resize-handle: var(--brand-400);
-    --flow-node-bg: #0f172a;
+    --flow-node-bg: color-mix(in srgb, var(--brand-500) 4%, #0f172a);
     --flow-node-border: rgba(148, 163, 184, 0.14);
     --scrollbar-thumb: rgba(148, 163, 184, 0.48);
   }
