@@ -53,11 +53,11 @@
     */
     --bg-app: #f8fafc;
     --surface-chrome: color-mix(in srgb, var(--brand-500) 6%, #f8fafc);
-    --surface-default: #ffffff;
-    --surface-muted: #f1f5f9;
-    --surface-nested: #ffffff;
+    --surface-default: color-mix(in srgb, var(--brand-500) 6%, #ffffff);
+    --surface-muted: color-mix(in srgb, var(--brand-500) 9%, #f1f5f9);
+    --surface-nested: color-mix(in srgb, var(--brand-500) 4%, #ffffff);
     --surface-overlay: rgba(0, 0, 0, 0.4);
-    --surface-header: #f8fafc;
+    --surface-header: color-mix(in srgb, var(--brand-500) 6%, #f8fafc);
 
     /* legacy aliases (used by existing code - point to new tokens) */
     --bg-surface: var(--surface-default);
@@ -105,9 +105,9 @@
     --control-disabled-border: var(--border-subtle);
     --control-disabled-text: var(--text-disabled);
 
-    --action-primary-bg: var(--brand-600);
-    --action-primary-bg-hover: color-mix(in srgb, #020617 16%, var(--brand-600));
-    --action-primary-bg-active: color-mix(in srgb, #020617 28%, var(--brand-700));
+    --action-primary-bg: var(--brand-700);
+    --action-primary-bg-hover: color-mix(in srgb, #020617 16%, var(--brand-700));
+    --action-primary-bg-active: color-mix(in srgb, #020617 28%, var(--brand-800));
     --action-primary-text: #ffffff;
     --action-primary-disabled-bg: color-mix(in srgb, var(--brand-500) 42%, var(--surface-muted));
     --action-primary-disabled-text: color-mix(in srgb, var(--brand-950) 72%, var(--text-secondary));
@@ -201,7 +201,7 @@
     --control-invalid-ring: color-mix(in srgb, var(--status-danger-base) 10%, transparent);
     --form-error-text: var(--state-danger-soft-text);
 
-    --card-bg: rgba(255, 255, 255, 0.88);
+    --card-bg: color-mix(in srgb, var(--brand-500) 3%, rgba(255, 255, 255, 0.92));
     --card-accent: color-mix(in srgb, var(--brand-500) 16%, transparent);
     --card-accent-soft: color-mix(in srgb, var(--brand-500) 4%, transparent);
     --card-border: color-mix(in srgb, var(--brand-500) 3%, rgba(15, 23, 42, 0.12));
@@ -310,11 +310,11 @@
   .dark {
     --bg-app: #080d14;
     --surface-chrome: color-mix(in srgb, var(--brand-500) 9%, #0d1724);
-    --surface-default: #0f172a;
-    --surface-muted: #1e293b;
-    --surface-nested: rgba(8, 13, 20, 0.54);
+    --surface-default: color-mix(in srgb, var(--brand-500) 5%, #0f172a);
+    --surface-muted: color-mix(in srgb, var(--brand-500) 7%, #1e293b);
+    --surface-nested: color-mix(in srgb, var(--brand-500) 4%, rgba(8, 13, 20, 0.54));
     --surface-overlay: rgba(0, 0, 0, 0.6);
-    --surface-header: #101a29;
+    --surface-header: color-mix(in srgb, var(--brand-500) 5%, #101a29);
 
     --bg-surface: var(--surface-default);
     --bg-elevated: var(--surface-default);
@@ -349,10 +349,10 @@
     --control-disabled-border: rgba(148, 163, 184, 0.1);
     --control-disabled-text: var(--text-disabled);
 
-    --action-primary-bg: var(--brand-500);
-    --action-primary-bg-hover: var(--brand-400);
-    --action-primary-bg-active: var(--brand-600);
-    --action-primary-text: var(--brand-950);
+    --action-primary-bg: var(--brand-700);
+    --action-primary-bg-hover: var(--brand-600);
+    --action-primary-bg-active: var(--brand-800);
+    --action-primary-text: #ffffff;
     --action-primary-disabled-bg: color-mix(in srgb, var(--brand-500) 28%, var(--surface-muted));
     --action-primary-disabled-text: color-mix(in srgb, var(--brand-100) 78%, var(--text-tertiary));
     --action-primary-disabled-ring: color-mix(in srgb, var(--brand-400) 28%, var(--border-default));
@@ -445,7 +445,7 @@
     --control-invalid-ring: color-mix(in srgb, var(--status-danger-base) 14%, transparent);
     --form-error-text: var(--state-danger-soft-text);
 
-    --card-bg: linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(10, 16, 25, 0.86));
+    --card-bg: linear-gradient(180deg, color-mix(in srgb, var(--brand-500) 4%, rgba(17, 24, 39, 0.92)), color-mix(in srgb, var(--brand-500) 3%, rgba(10, 16, 25, 0.86)));
     --card-accent: color-mix(in srgb, var(--brand-400) 14%, transparent);
     --card-accent-soft: color-mix(in srgb, var(--brand-500) 4%, transparent);
     --card-border: color-mix(in srgb, var(--brand-400) 3%, rgba(148, 163, 184, 0.16));

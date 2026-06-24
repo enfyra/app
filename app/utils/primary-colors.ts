@@ -152,8 +152,40 @@ export function isPrimaryColor(value: string | null | undefined): value is Prima
   return Boolean(value && value in primaryColorFallbacks);
 }
 
+function channelLuminance(value: number): number {
+  const s = value / 255;
+  return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+}
+
+function relativeLuminance(hex: string): number {
+  const h = hex.replace("#", "");
+  return (
+    0.2126 * channelLuminance(parseInt(h.slice(0, 2), 16)) +
+    0.7152 * channelLuminance(parseInt(h.slice(2, 4), 16)) +
+    0.0722 * channelLuminance(parseInt(h.slice(4, 6), 16))
+  );
+}
+
+function contrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+function useWhiteOnPrimary(bgHex: string, darkTextHex: string): boolean {
+  return contrastRatio("#ffffff", bgHex) >= contrastRatio(darkTextHex, bgHex);
+}
+
+const primaryOnText = Object.fromEntries(
+  (Object.keys(primaryColorFallbacks) as PrimaryColorValue[]).map((color) => {
+    const f = primaryColorFallbacks[color];
+    return [color, { light: useWhiteOnPrimary(f[700], f[950]), dark: useWhiteOnPrimary(f[700], f[950]) }];
+  }),
+) as Record<PrimaryColorValue, { light: boolean; dark: boolean }>;
+
 export function getPrimaryColorStyle(primary: PrimaryColorValue) {
   const fallbacks = primaryColorFallbacks[primary];
+  const onText = primaryOnText[primary];
   const uiVariables = primaryColorShades.map((shade) => `--ui-color-primary-${shade}:var(--color-${primary}-${shade},${fallbacks[shade]})`);
   const brandVariables = brandColorShades.map((shade) => `--brand-${shade}:var(--color-${primary}-${shade},${fallbacks[shade]})`);
   const aliases = [
@@ -179,7 +211,13 @@ export function getPrimaryColorStyle(primary: PrimaryColorValue) {
     "--column-resize-handle:var(--brand-600)",
   ];
 
-  return `:root{${[...uiVariables, ...brandVariables, ...aliases].map((declaration) => `${declaration}!important`).join(";")}}`;
+  const rootDeclarations = [
+    ...uiVariables,
+    ...brandVariables,
+    ...aliases,
+    `--action-primary-text:${onText.light ? "#ffffff" : "var(--brand-950)"}`,
+  ];
+  return `:root{${rootDeclarations.map((declaration) => `${declaration}!important`).join(";")}}.dark{--action-primary-text:${onText.dark ? "#ffffff" : "var(--brand-950)"}!important}`;
 }
 
 export function getPrimaryColorMeta(primary: PrimaryColorValue) {
@@ -191,6 +229,7 @@ export function getPrimaryColorPreflightScript() {
   const fallbacks = JSON.stringify(primaryColorFallbacks);
   const uiShades = JSON.stringify(primaryColorShades);
   const brandShades = JSON.stringify(brandColorShades);
+  const onText = JSON.stringify(primaryOnText);
 
-  return `try{var c=localStorage.getItem('${PRIMARY_COLOR_STORAGE_KEY}');var p=${fallbacks};var u=${uiShades};var b=${brandShades};if(!${colors}.includes(c)){c='${DEFAULT_PRIMARY_COLOR}'}document.querySelectorAll('style#${PRIMARY_COLOR_STYLE_ID}').forEach(function(n){n.remove()});var e=document.createElement('style');e.id='${PRIMARY_COLOR_STYLE_ID}';e.textContent=':root{'+u.map(function(x){return '--ui-color-primary-'+x+':var(--color-'+c+'-'+x+','+p[c][x]+')!important'}).concat(b.map(function(x){return '--brand-'+x+':var(--color-'+c+'-'+x+','+p[c][x]+')!important'})).concat(['--ui-primary:var(--ui-color-primary-500)!important','--brand-violet-deep:var(--brand-700)!important','--brand-violet-electric:var(--brand-500)!important','--brand-violet-bright:var(--brand-400)!important','--brand-indigo-deep:var(--brand-800)!important','--brand-indigo-electric:var(--brand-600)!important','--brand-indigo-bright:var(--brand-400)!important','--border-accent:color-mix(in srgb,var(--brand-500) 35%,transparent)!important','--gradient-primary:linear-gradient(135deg,var(--brand-500) 0%,var(--brand-600) 50%,var(--brand-400) 100%)!important','--gradient-primary-reverse:linear-gradient(135deg,var(--brand-400) 0%,var(--brand-600) 50%,var(--brand-500) 100%)!important','--gradient-violet-cyan:linear-gradient(135deg,var(--brand-500) 0%,var(--brand-400) 100%)!important','--shadow-primary:0 4px 20px color-mix(in srgb,var(--brand-500) 18%,transparent),0 2px 8px color-mix(in srgb,var(--brand-600) 12%,transparent)!important','--shadow-primary-lg:0 8px 32px color-mix(in srgb,var(--brand-500) 24%,transparent),0 4px 16px color-mix(in srgb,var(--brand-600) 16%,transparent)!important','--glow-primary:0 0 40px color-mix(in srgb,var(--brand-500) 24%,transparent),0 0 80px color-mix(in srgb,var(--brand-600) 14%,transparent)!important','--glow-violet:0 0 30px color-mix(in srgb,var(--brand-500) 28%,transparent)!important','--prose-link:var(--brand-600)!important','--prose-link-hover:var(--brand-700)!important','--selection-bg:color-mix(in srgb,var(--brand-500) 22%,transparent)!important','--prose-selection-bg:color-mix(in srgb,var(--brand-500) 22%,transparent)!important','--column-resize-handle:var(--brand-600)!important']).join(';')+'}';document.head.appendChild(e)}catch(e){}`;
+  return `try{var c=localStorage.getItem('${PRIMARY_COLOR_STORAGE_KEY}');var p=${fallbacks};var u=${uiShades};var b=${brandShades};var o=${onText};if(!${colors}.includes(c)){c='${DEFAULT_PRIMARY_COLOR}'}document.querySelectorAll('style#${PRIMARY_COLOR_STYLE_ID}').forEach(function(n){n.remove()});var e=document.createElement('style');e.id='${PRIMARY_COLOR_STYLE_ID}';e.textContent=':root{'+u.map(function(x){return '--ui-color-primary-'+x+':var(--color-'+c+'-'+x+','+p[c][x]+')!important'}).concat(b.map(function(x){return '--brand-'+x+':var(--color-'+c+'-'+x+','+p[c][x]+')!important'})).concat(['--ui-primary:var(--ui-color-primary-500)!important','--brand-violet-deep:var(--brand-700)!important','--brand-violet-electric:var(--brand-500)!important','--brand-violet-bright:var(--brand-400)!important','--brand-indigo-deep:var(--brand-800)!important','--brand-indigo-electric:var(--brand-600)!important','--brand-indigo-bright:var(--brand-400)!important','--border-accent:color-mix(in srgb,var(--brand-500) 35%,transparent)!important','--gradient-primary:linear-gradient(135deg,var(--brand-500) 0%,var(--brand-600) 50%,var(--brand-400) 100%)!important','--gradient-primary-reverse:linear-gradient(135deg,var(--brand-400) 0%,var(--brand-600) 50%,var(--brand-500) 100%)!important','--gradient-violet-cyan:linear-gradient(135deg,var(--brand-500) 0%,var(--brand-400) 100%)!important','--shadow-primary:0 4px 20px color-mix(in srgb,var(--brand-500) 18%,transparent),0 2px 8px color-mix(in srgb,var(--brand-600) 12%,transparent)!important','--shadow-primary-lg:0 8px 32px color-mix(in srgb,var(--brand-500) 24%,transparent),0 4px 16px color-mix(in srgb,var(--brand-600) 16%,transparent)!important','--glow-primary:0 0 40px color-mix(in srgb,var(--brand-500) 24%,transparent),0 0 80px color-mix(in srgb,var(--brand-600) 14%,transparent)!important','--glow-violet:0 0 30px color-mix(in srgb,var(--brand-500) 28%,transparent)!important','--prose-link:var(--brand-600)!important','--prose-link-hover:var(--brand-700)!important','--selection-bg:color-mix(in srgb,var(--brand-500) 22%,transparent)!important','--prose-selection-bg:color-mix(in srgb,var(--brand-500) 22%,transparent)!important','--column-resize-handle:var(--brand-600)!important','--action-primary-text:'+(o[c].light?'#ffffff':'var(--brand-950)')+'!important']).join(';')+'}'+'.dark{--action-primary-text:'+(o[c].dark?'#ffffff':'var(--brand-950)')+'!important}';document.head.appendChild(e)}catch(e){}`;
 }

@@ -38,6 +38,29 @@ const canDeleteFile = checkPermissionCondition({
   ],
 });
 
+const debouncedLoading = ref(false);
+let loadingTimer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  () => props.loading,
+  (value) => {
+    if (loadingTimer) {
+      clearTimeout(loadingTimer);
+      loadingTimer = undefined;
+    }
+    if (value) {
+      loadingTimer = setTimeout(() => {
+        debouncedLoading.value = true;
+      }, 180);
+    } else {
+      debouncedLoading.value = false;
+    }
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => {
+  if (loadingTimer) clearTimeout(loadingTimer);
+});
+
 const { getFileUrl } = useFileUrl();
 
 const transformedFiles = computed(() => {
@@ -285,10 +308,10 @@ function getContextMenuItems(file: any) {
   <div>
     <Transition name="loading-fade" mode="out-in">
       <div
-        v-if="loading && files.length === 0"
+        v-if="debouncedLoading && files.length === 0"
         class="col-span-full"
       >
-        <CommonLoadingState type="file-card" />
+        <CommonLoadingState type="card" />
       </div>
 
       <div v-else-if="transformedFiles.length > 0" key="content">

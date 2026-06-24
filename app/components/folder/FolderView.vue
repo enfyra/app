@@ -30,19 +30,42 @@ function handleFolderClick(folder: any) {
 function toggleItemSelection(folderId: string) {
   emit("toggle-selection", folderId);
 }
+
+const debouncedLoading = ref(false);
+let loadingTimer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  () => props.loading,
+  (value) => {
+    if (loadingTimer) {
+      clearTimeout(loadingTimer);
+      loadingTimer = undefined;
+    }
+    if (value) {
+      loadingTimer = setTimeout(() => {
+        debouncedLoading.value = true;
+      }, 180);
+    } else {
+      debouncedLoading.value = false;
+    }
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => {
+  if (loadingTimer) clearTimeout(loadingTimer);
+});
 </script>
 
 <template>
   <div>
     <Transition name="loading-fade" mode="out-in">
       <div
-        v-if="loading && folders.length === 0"
+        v-if="debouncedLoading && folders.length === 0"
         class="col-span-full"
       >
-        <CommonLoadingState type="folder" />
+        <CommonLoadingState type="card" />
       </div>
 
-      <div v-else-if="!loading && folders.length > 0" key="content">
+      <div v-else-if="folders.length > 0" key="content">
         <FolderGrid
           :folders="folders"
           :empty-title="emptyTitle"
