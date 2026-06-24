@@ -35,23 +35,9 @@ const resolvedLeadingIcon = computed(() => {
   return findMenuIconForPath(route.path);
 });
 
-const leadingIconShellClass = computed(() => {
-  const isMin = props.variant === "minimal";
-  const base = isMin
-    ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)]"
-    : "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)]";
-  const g = props.gradient;
-  if (g === "purple") {
-    return `${base} accent-tile accent-tile-primary`;
-  }
-  if (g === "blue") {
-    return `${base} accent-tile accent-tile-info`;
-  }
-  if (g === "cyan") {
-    return `${base} accent-tile accent-tile-secondary`;
-  }
-  return `${base} accent-tile accent-tile-primary`;
-});
+const leadingIconShellClass = computed(() =>
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)] accent-tile accent-tile-primary",
+);
 
 const leadingIconGlyphClass = computed(() =>
   props.variant === "minimal" ? "h-5 w-5" : "h-5 w-5",

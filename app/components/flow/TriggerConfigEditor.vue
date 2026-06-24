@@ -35,7 +35,7 @@
             <UBadge v-if="preset.recommended" size="xs" color="primary" variant="soft">Ops</UBadge>
           </div>
           <p class="mt-1 text-xs" style="color: var(--text-tertiary)">{{ preset.description }}</p>
-          <code class="mt-3 block rounded-md px-2 py-1 text-xs" :style="{ backgroundColor: 'var(--bg-muted)', color: 'var(--text-secondary)' }">{{ preset.cron }}</code>
+          <code class="mt-3 block rounded-md px-2 py-1 text-xs" :style="{ backgroundColor: 'var(--surface-muted)', color: 'var(--text-secondary)' }">{{ preset.cron }}</code>
         </button>
       </div>
 

@@ -7,7 +7,7 @@ registerPageHeader({
   title: 'Admin',
   description: 'Operational tools for logs and runtime health',
   variant: 'default',
-  gradient: 'blue',
+  gradient: 'purple',
 });
 
 const adminTools = computed(() => {

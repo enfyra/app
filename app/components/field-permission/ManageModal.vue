@@ -267,7 +267,7 @@ watch(open, (isOpen) => {
         <UIcon
           v-else
           name="lucide:shield"
-          class="w-5 h-5 text-purple-600 dark:text-purple-400"
+          class="w-5 h-5 eapp-primary-text"
         />
         <span class="text-lg font-semibold">
           {{ viewMode === "form" ? (fieldPermMode === "update" ? "Edit Permission" : "Create Permission") : "Field Permissions" }}

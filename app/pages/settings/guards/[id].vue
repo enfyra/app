@@ -511,7 +511,7 @@ function getChildChildren(child: any) {
 const ruleTypeMap: Record<string, { label: string; icon: string; iconColor: string }> = {
   rate_limit_by_ip: { label: 'Rate Limit (by IP)', icon: 'lucide:gauge', iconColor: 'text-amber-500' },
   rate_limit_by_user: { label: 'Rate Limit (by User)', icon: 'lucide:user-check', iconColor: 'text-blue-500' },
-  rate_limit_by_route: { label: 'Rate Limit (by Route)', icon: 'lucide:route', iconColor: 'text-purple-500' },
+  rate_limit_by_route: { label: 'Rate Limit (by Route)', icon: 'lucide:route', iconColor: 'eapp-primary-text' },
   ip_whitelist: { label: 'IP Whitelist', icon: 'lucide:shield-check', iconColor: 'text-emerald-500' },
   ip_blacklist: { label: 'IP Blacklist', icon: 'lucide:shield-x', iconColor: 'text-red-500' },
 };

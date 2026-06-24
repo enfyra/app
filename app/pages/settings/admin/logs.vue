@@ -429,7 +429,7 @@ onMounted(async () => {
         <div v-if="stats && !selectedFile" class="grid gap-4 grid-cols-1 md:grid-cols-3">
           <div class="rounded-xl p-4 surface-card">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-lg eapp-primary-solid flex items-center justify-center">
                 <UIcon name="lucide:files" class="w-5 h-5 text-white" />
               </div>
               <div>
@@ -442,7 +442,7 @@ onMounted(async () => {
           </div>
           <div class="rounded-xl p-4 surface-card">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-lg eapp-primary-solid flex items-center justify-center">
                 <UIcon name="lucide:hard-drive" class="w-5 h-5 text-white" />
               </div>
               <div>

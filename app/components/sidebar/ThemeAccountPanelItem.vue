@@ -46,9 +46,10 @@ function handleKeydown(event: KeyboardEvent) {
           v-for="color in $primaryColor.colors"
           :key="color.value"
           type="button"
-          class="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-default)] transition-colors hover:border-[var(--border-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-focus-ring-strong)]"
-          :class="$primaryColor.current.value === color.value ? 'border-[var(--border-accent)] ring-2 ring-[var(--theme-focus-ring-strong)]' : ''"
+          class="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-default)] transition-colors hover:border-[var(--border-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-500)]"
+          :class="$primaryColor.current.value === color.value ? 'border-2 border-[var(--brand-500)]' : ''"
           :aria-label="`Use ${color.label} accent`"
+          :aria-pressed="$primaryColor.current.value === color.value"
           :title="color.label"
           @click="$primaryColor.set(color.value)"
         >

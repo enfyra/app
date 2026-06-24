@@ -52,7 +52,7 @@
        surface-overlay = overlay/backdrop
     */
     --bg-app: #f8fafc;
-    --surface-chrome: #eef6ff;
+    --surface-chrome: color-mix(in srgb, var(--brand-500) 6%, #f8fafc);
     --surface-default: #ffffff;
     --surface-muted: #f1f5f9;
     --surface-nested: #ffffff;
@@ -72,6 +72,7 @@
     --text-tertiary: #64748b;
     --text-quaternary: #94a3b8;
     --text-disabled: #cbd5e1;
+    --text-muted: var(--text-tertiary);
 
     /* ── Border Colors ──
        Neutral slate borders (NOT violet-tinted - cleaner for light theme).
@@ -225,7 +226,7 @@
     --shell-sidebar-border: rgba(15, 23, 42, 0.08);
     --shell-main-bg: rgba(255, 255, 255, 0.82);
     --shell-main-border: rgba(15, 23, 42, 0.08);
-    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--brand-500) 18%, transparent), transparent 32rem), linear-gradient(135deg, #f8fafc 0%, #eef6ff 38%, #f7faf9 100%);
+    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--brand-500) 22%, transparent), transparent 36rem), linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 5%, #f8fafc) 0%, color-mix(in srgb, var(--brand-500) 8%, #f8fafc) 38%, color-mix(in srgb, var(--brand-500) 4%, #f8fafc) 100%);
     --nav-item-text: #475569;
     --nav-item-hover-bg: color-mix(in srgb, var(--brand-500) 5%, rgba(15, 23, 42, 0.04));
     --nav-item-hover-text: color-mix(in srgb, var(--brand-700) 24%, #102033);
@@ -254,9 +255,9 @@
     --shadow-glow: 0 0 40px color-mix(in srgb, var(--brand-500) 18%, transparent), 0 4px 20px rgba(34, 211, 238, 0.1);
 
     /* ── Gradients (brand decorative only) ── */
-    --gradient-primary: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 50%, #22D3EE 100%);
-    --gradient-primary-reverse: linear-gradient(135deg, #22D3EE 0%, var(--brand-600) 50%, var(--brand-500) 100%);
-    --gradient-violet-cyan: linear-gradient(135deg, var(--brand-500) 0%, #22D3EE 100%);
+    --gradient-primary: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 50%, var(--brand-400) 100%);
+    --gradient-primary-reverse: linear-gradient(135deg, var(--brand-400) 0%, var(--brand-600) 50%, var(--brand-500) 100%);
+    --gradient-violet-cyan: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-400) 100%);
     --gradient-fuchsia-rose: linear-gradient(135deg, #E879F9 0%, #FB7185 100%);
     --gradient-emerald-cyan: linear-gradient(135deg, #34D399 0%, #22D3EE 100%);
     --gradient-amber-rose: linear-gradient(135deg, #FBBF24 0%, #FB7185 100%);
@@ -308,7 +309,7 @@
 
   .dark {
     --bg-app: #080d14;
-    --surface-chrome: #0d1724;
+    --surface-chrome: color-mix(in srgb, var(--brand-500) 9%, #0d1724);
     --surface-default: #0f172a;
     --surface-muted: #1e293b;
     --surface-nested: rgba(8, 13, 20, 0.54);
@@ -469,7 +470,7 @@
     --shell-sidebar-border: rgba(148, 163, 184, 0.12);
     --shell-main-bg: rgba(15, 23, 42, 0.72);
     --shell-main-border: rgba(148, 163, 184, 0.14);
-    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--brand-500) 10%, transparent), transparent 32rem), linear-gradient(135deg, #080d14 0%, #0d1724 48%, #081118 100%);
+    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--brand-500) 12%, transparent), transparent 36rem), linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 7%, #080d14) 0%, color-mix(in srgb, var(--brand-500) 9%, #0d1724) 48%, color-mix(in srgb, var(--brand-500) 5%, #081118) 100%);
     --nav-item-text: #a7b5c7;
     --nav-item-hover-bg: color-mix(in srgb, var(--brand-500) 6%, rgba(148, 163, 184, 0.06));
     --nav-item-hover-text: #f8fafc;

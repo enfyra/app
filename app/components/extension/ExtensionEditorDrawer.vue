@@ -260,7 +260,7 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
     <template #body>
       <div class="space-y-4">
         <div v-if="isLoading" class="flex items-center justify-center py-8">
-          <div class="text-gray-400">Loading extension data...</div>
+          <div class="eapp-text-quaternary">Loading extension data...</div>
         </div>
         
         <div v-else>

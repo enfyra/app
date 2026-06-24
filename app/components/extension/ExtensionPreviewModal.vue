@@ -33,7 +33,7 @@
       </div>
 
       <div v-else-if="previewComponent && isValidComponent" class="extension-preview-container space-y-4">
-        <div v-if="previewPageHeader" class="rounded-xl bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 p-6 shadow-lg">
+        <div v-if="previewPageHeader" class="rounded-xl p-6 shadow-lg" :style="{ background: 'var(--gradient-primary)' }">
           <h2 class="text-2xl font-bold text-white mb-2">{{ previewPageHeader.title }}</h2>
           <p v-if="previewPageHeader.description" class="text-white/90 text-sm leading-relaxed">
             {{ previewPageHeader.description }}

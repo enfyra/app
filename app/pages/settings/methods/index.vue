@@ -27,7 +27,7 @@ const { getId } = useDatabase();
 registerPageHeader({
   title: 'Method Manager',
   description: 'Manage route methods and their badge colors.',
-  gradient: 'cyan',
+  gradient: 'purple',
 });
 
 const methodsCache = useState<any[]>('methods-cache', () => []);
@@ -314,7 +314,7 @@ watch(
 
           <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                 Button
               </dt>
               <dd class="mt-1 font-mono text-[var(--text-primary)]">
@@ -322,7 +322,7 @@ watch(
               </dd>
             </div>
             <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+              <dt class="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
                 Text
               </dt>
               <dd class="mt-1 font-mono text-[var(--text-primary)]">

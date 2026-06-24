@@ -92,18 +92,18 @@ const folderIconColor = computed(() => {
             <div class="flex items-start gap-3">
               <UIcon
                 name="lucide:file-text"
-                class="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-500"
+                class="w-4 h-4 mt-0.5 flex-shrink-0 eapp-text-tertiary"
               />
               <div class="flex-1 min-w-0">
                 <div
-                  class="text-xs mb-1.5 text-gray-500 uppercase"
+                  class="text-xs mb-1.5 eapp-text-tertiary uppercase"
                   style="letter-spacing: 0.05em; font-weight: 500"
                 >
                   Description
                 </div>
                 <p
                   class="text-sm leading-relaxed"
-                  :class="selectedFolder.description ? 'text-gray-300' : 'text-gray-500 italic'"
+                  :class="selectedFolder.description ? 'eapp-text-secondary' : 'eapp-text-tertiary italic'"
                 >
                   {{ selectedFolder.description || "No description provided" }}
                 </p>
@@ -118,16 +118,16 @@ const folderIconColor = computed(() => {
                 <UIcon
                   name="lucide:calendar"
                   class="w-4 h-4 mt-0.5 flex-shrink-0"
-                  style="color: #06B6D4"
+                  style="color: var(--accent-cyan)"
                 />
                 <div class="flex-1 min-w-0">
                   <div
-                    class="text-xs mb-1.5 text-gray-500 uppercase"
+                    class="text-xs mb-1.5 eapp-text-tertiary uppercase"
                     style="letter-spacing: 0.05em; font-weight: 500"
                   >
                     Created
                   </div>
-                  <p class="text-sm text-gray-300">
+                  <p class="text-sm eapp-text-secondary">
                     {{ formatDate(selectedFolder.createdAt) }}
                   </p>
                 </div>
@@ -139,16 +139,16 @@ const folderIconColor = computed(() => {
                 <UIcon
                   name="lucide:clock"
                   class="w-4 h-4 mt-0.5 flex-shrink-0"
-                  style="color: #D946EF"
+                  style="color: var(--accent-fuchsia)"
                 />
                 <div class="flex-1 min-w-0">
                   <div
-                    class="text-xs mb-1.5 text-gray-500 uppercase"
+                    class="text-xs mb-1.5 eapp-text-tertiary uppercase"
                     style="letter-spacing: 0.05em; font-weight: 500"
                   >
                     Modified
                   </div>
-                  <p class="text-sm text-gray-300">
+                  <p class="text-sm eapp-text-secondary">
                     {{ formatDate(selectedFolder.updatedAt) }}
                   </p>
                 </div>
@@ -158,7 +158,7 @@ const folderIconColor = computed(() => {
 
           <div class="p-5 rounded-xl bg-[var(--surface-muted)] space-y-4">
             <div
-              class="text-xs text-gray-500 uppercase mb-4"
+              class="text-xs eapp-text-tertiary uppercase mb-4"
               style="letter-spacing: 0.05em; font-weight: 500"
             >
               Properties
@@ -167,10 +167,10 @@ const folderIconColor = computed(() => {
             <div class="flex items-start gap-3 py-2">
               <UIcon
                 name="lucide:hash"
-                class="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-500"
+                class="w-4 h-4 mt-0.5 flex-shrink-0 eapp-text-tertiary"
               />
               <div class="flex-1 min-w-0">
-                <div class="text-xs mb-1 text-gray-500">ID</div>
+                <div class="text-xs mb-1 eapp-text-tertiary">ID</div>
                 <code class="text-xs px-2 py-1 rounded font-mono text-[var(--text-quaternary)] bg-[var(--surface-muted)]">
                   {{ selectedFolder.id }}
                 </code>
@@ -180,13 +180,13 @@ const folderIconColor = computed(() => {
             <div class="flex items-start gap-3 py-2">
               <UIcon
                 name="lucide:folder-tree"
-                class="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-500"
+                class="w-4 h-4 mt-0.5 flex-shrink-0 eapp-text-tertiary"
               />
               <div class="flex-1 min-w-0">
-                <div class="text-xs mb-1 text-gray-500">Parent Folder</div>
-                <div class="text-sm text-gray-300 flex items-center gap-2">
+                <div class="text-xs mb-1 eapp-text-tertiary">Parent Folder</div>
+                <div class="text-sm eapp-text-secondary flex items-center gap-2">
                   <span v-if="selectedFolder.parent?.name">{{ selectedFolder.parent.name }}</span>
-                  <span v-else class="text-gray-500 italic">Root</span>
+                  <span v-else class="eapp-text-tertiary italic">Root</span>
                 </div>
               </div>
             </div>
@@ -194,11 +194,11 @@ const folderIconColor = computed(() => {
             <div class="flex items-start gap-3 py-2">
               <UIcon
                 name="lucide:list-ordered"
-                class="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-500"
+                class="w-4 h-4 mt-0.5 flex-shrink-0 eapp-text-tertiary"
               />
               <div class="flex-1 min-w-0">
-                <div class="text-xs mb-1 text-gray-500">Order</div>
-                <div class="text-sm text-gray-300">
+                <div class="text-xs mb-1 eapp-text-tertiary">Order</div>
+                <div class="text-sm eapp-text-secondary">
                   {{ selectedFolder.order ?? 0 }}
                 </div>
               </div>

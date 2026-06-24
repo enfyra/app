@@ -39,7 +39,7 @@ registerPageHeader({
   title: 'Runtime Monitor',
   description: 'Live server runtime metrics',
   variant: 'default',
-  gradient: 'blue',
+  gradient: 'purple',
 });
 </script>
 

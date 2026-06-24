@@ -444,7 +444,7 @@ onMounted(() => {
             class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border"
             :class="isSchemaConfirmDestructive
               ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200'
-              : 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-200'"
+              : 'eapp-primary-soft eapp-primary-text'"
           >
             <Icon :name="isSchemaConfirmDestructive ? 'lucide:triangle-alert' : 'lucide:diff'" class="h-5 w-5" />
           </div>
@@ -476,7 +476,7 @@ onMounted(() => {
                 class="shrink-0 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium"
                 :class="isSchemaConfirmDestructive
                   ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200'
-                  : 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-200'"
+                  : 'eapp-primary-soft eapp-primary-text'"
               >
                 {{ schemaConfirmBadgeText }}
               </div>
@@ -842,7 +842,7 @@ onMounted(() => {
                 <h2 class="text-xl font-semibold text-foreground">
                   {{ table?.name }} Schema
                 </h2>
-                <p class="text-sm text-muted-foreground">
+                <p class="text-sm eapp-text-tertiary">
                   API Documentation & Structure
                 </p>
               </div>

@@ -401,7 +401,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
     'Post-Hook': 96,
   };
 
-  const edgeStyle = { stroke: '#94a3b8', strokeWidth: 2, strokeDasharray: '5,5' };
+  const edgeStyle = { stroke: 'var(--border-default)', strokeWidth: 2, strokeDasharray: '5,5' };
 
 
   methodList.forEach((group, groupIndex) => {
@@ -520,7 +520,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
     if (!hasRealHandler) {
       pushActionNode(
         `add-handler-${group.method}`,
-        '#10b981',
+        'var(--status-success-base)',
         'Handler',
         `Add handler for ${group.method}`,
         () => emit('createHandler', methodLookup.value[group.method] || { name: group.method }),
@@ -532,7 +532,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
     let postPriorityIdx = 0;
     pushActionNode(
       `add-posthook-${group.method}-start`,
-      '#06b6d4',
+      'var(--status-info-base)',
       'Post-Hook',
       group.postHooks.length > 0
         ? `Insert post-hook at start`
@@ -556,7 +556,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
         const priority = postPriorityIdx;
         pushActionNode(
           `add-posthook-${group.method}-after-${props.getId(hook)}`,
-          '#06b6d4',
+          'var(--status-info-base)',
           'Post-Hook',
           `Add post-hook after "${hook.name || 'hook'}"`,
           () => emit('createHook', 'post', group.method, priority),

@@ -90,7 +90,7 @@ onUnmounted(() => {
                   color="neutral"
                   @click="handleClose"
                 />
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-lg eapp-primary-solid flex items-center justify-center">
                   <UIcon name="lucide:file-text" class="w-4 h-4 text-white" />
                 </div>
                 <div class="min-w-0">

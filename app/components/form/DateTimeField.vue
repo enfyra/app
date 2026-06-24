@@ -14,10 +14,10 @@
     <CommonDrawer v-model="showDrawer" direction="right">
       <template #header>
         <div>
-          <h3 class="text-base font-semibold text-zinc-950 dark:text-white">
+          <h3 class="text-base font-semibold eapp-text-primary">
             Select date and time
           </h3>
-          <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p class="mt-1 text-sm eapp-text-tertiary">
             Choose a date, then adjust the exact time.
           </p>
         </div>
@@ -25,16 +25,16 @@
 
       <template #body>
         <div class="space-y-5">
-          <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-            <p class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          <div class="eapp-surface-muted rounded-lg border border-[var(--border-default)] px-4 py-3">
+            <p class="text-xs font-medium uppercase tracking-wide eapp-text-tertiary">
               Selected
             </p>
             <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-              <p class="text-base font-semibold text-zinc-950 dark:text-white">
+              <p class="text-base font-semibold eapp-text-primary">
                 {{ draftDateLabel }}
               </p>
-              <span class="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-              <p class="font-mono text-base font-semibold tabular-nums text-zinc-700 dark:text-zinc-200">
+              <span class="h-1 w-1 rounded-full bg-[var(--border-strong)]" />
+              <p class="font-mono text-base font-semibold tabular-nums eapp-text-primary">
                 {{ draftTimeLabel }}
               </p>
             </div>
@@ -44,11 +44,11 @@
             <UCalendar v-model="tempValue" />
           </div>
 
-          <div class="space-y-4 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+          <div class="space-y-4 rounded-lg border border-[var(--border-default)] p-4">
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-2">
-                <UIcon name="lucide:clock-3" class="size-4 text-zinc-500 dark:text-zinc-400" />
-                <p class="text-sm font-semibold text-zinc-900 dark:text-white">
+                <UIcon name="lucide:clock-3" class="size-4 eapp-text-tertiary" />
+                <p class="text-sm font-semibold eapp-text-primary">
                   Time
                 </p>
               </div>
@@ -58,7 +58,7 @@
             </div>
 
             <div class="space-y-2">
-              <p class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              <p class="text-xs font-medium uppercase tracking-wide eapp-text-tertiary">
                 Hour
               </p>
               <div class="grid grid-cols-6 gap-1.5">
@@ -76,17 +76,17 @@
 
             <div class="space-y-2">
               <div class="flex items-center justify-between gap-3">
-                <p class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                <p class="text-xs font-medium uppercase tracking-wide eapp-text-tertiary">
                   Minute
                 </p>
                 <div class="flex items-center gap-1.5">
-                  <span class="text-xs text-zinc-500 dark:text-zinc-400">Exact</span>
+                  <span class="text-xs eapp-text-tertiary">Exact</span>
                   <input
                     v-model="tempMinute"
                     inputmode="numeric"
                     maxlength="2"
                     aria-label="Exact minute"
-                    class="h-7 w-10 rounded-md border border-zinc-300 bg-white text-center font-mono text-sm tabular-nums text-zinc-950 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-white"
+                    class="h-7 w-10 rounded-md border border-[var(--border-default)] eapp-surface-flat text-center font-mono text-sm tabular-nums eapp-text-primary outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                     @input="normalizeMinuteTyping"
                     @blur="normalizeMinuteInput"
                   >
@@ -260,7 +260,7 @@ function timeOptionClass(selected: boolean): string {
     "h-9 rounded-md border text-sm font-medium tabular-nums transition-colors",
     selected
       ? "border-primary-500 bg-primary-500 text-white shadow-sm"
-      : "border-zinc-200 bg-white text-zinc-700 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-primary-700 dark:hover:bg-primary-950/30 dark:hover:text-primary-200",
+      : "eapp-surface-flat eapp-text-primary border-[var(--border-default)] hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:border-primary-700 dark:hover:bg-primary-950/30 dark:hover:text-primary-200",
   ].join(" ");
 }
 

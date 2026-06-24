@@ -92,6 +92,14 @@
     color: var(--text-tertiary);
   }
 
+  .text-muted-foreground {
+    color: var(--text-tertiary);
+  }
+
+  .text-muted-foreground\/50 {
+    color: color-mix(in srgb, var(--text-tertiary) 50%, transparent);
+  }
+
   .border-default {
     border-color: var(--border-default);
   }

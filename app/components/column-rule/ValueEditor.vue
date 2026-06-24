@@ -154,7 +154,7 @@ watch(
           class="w-full font-mono"
           @update:model-value="setPattern"
         />
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <p class="mt-1 text-xs eapp-text-tertiary">
           Write the pattern directly, or wrap it as <code>/pattern/flags</code> to include
           flags (<code>i</code> case-insensitive, <code>m</code> multiline,
           <code>s</code> dotAll, <code>u</code> unicode). Example: <code>/^[a-z]+$/i</code>.
@@ -185,7 +185,7 @@ watch(
       </div>
 
       <div
-        class="rounded-md border border-gray-200 dark:border-gray-800 p-3 space-y-2"
+        class="rounded-md border border-[var(--border-default)] p-3 space-y-2"
       >
         <div class="text-sm font-medium">Quick test</div>
 

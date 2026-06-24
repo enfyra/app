@@ -24,12 +24,12 @@
       <div v-else class="col-span-full text-center py-12">
         <UIcon
           name="lucide:file"
-          class="w-16 h-16 text-muted-foreground mx-auto mb-4"
+          class="w-16 h-16 eapp-text-quaternary mx-auto mb-4"
         />
-        <p class="text-lg font-medium text-muted-foreground">
+        <p class="text-lg font-medium eapp-text-tertiary">
           {{ emptyTitle }}
         </p>
-        <p class="text-sm text-muted-foreground mt-1">
+        <p class="text-sm eapp-text-quaternary mt-1">
           {{ emptyDescription }}
         </p>
       </div>

@@ -253,7 +253,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
             <div
               class="w-12 h-12 rounded-[var(--radius-control)]"
                 :style="{
-                background: ['#3B82F6', '#7C3AED', '#F59E0B', '#14B8A6'][i % 4],
+                background: ['var(--brand-500)', 'var(--brand-600)', 'var(--accent-amber)', 'var(--accent-emerald)'][i % 4],
                 }"
               />
         </div>

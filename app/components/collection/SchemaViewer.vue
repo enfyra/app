@@ -91,10 +91,10 @@
 
     <div
       v-if="relations.length > 0"
-      class="bg-gradient-to-r from-purple-500/10 to-purple-400/5 rounded-xl border border-purple-300/50 dark:border-purple-800/30 p-4"
+      class="eapp-primary-soft rounded-xl p-4"
     >
       <div class="flex items-center gap-2 mb-4">
-        <UIcon name="lucide:git-branch" class="text-purple-500" size="18" />
+        <UIcon name="lucide:git-branch" class="eapp-primary-text" size="18" />
         <h3 class="text-lg font-semibold text-[var(--text-primary)]">Relations</h3>
       </div>
       <ClientOnly>
@@ -114,12 +114,12 @@
         <UIcon
           v-if="schemaLoading"
           name="lucide:loader-2"
-          class="w-12 h-12 text-muted-foreground mx-auto mb-2 animate-spin"
+          class="w-12 h-12 eapp-text-quaternary mx-auto mb-2 animate-spin"
         />
         <UIcon
           v-else
           name="lucide:database-zap"
-          class="w-12 h-12 text-muted-foreground mx-auto mb-2"
+          class="w-12 h-12 eapp-text-quaternary mx-auto mb-2"
         />
         <p class="text-[var(--text-tertiary)]">
           {{ schemaLoading ? 'Loading schema...' : 'No schema data available' }}

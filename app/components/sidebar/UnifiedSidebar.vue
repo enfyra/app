@@ -169,7 +169,6 @@ router.afterEach(() => {
   if (width.value < 1024) {
     setSidebarVisible(false);
   }
-  hideSidebarPeek();
 });
 </script>
 

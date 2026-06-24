@@ -62,12 +62,12 @@ function toggleItemSelection(folderId: string) {
       >
         <UIcon
           :name="getDefaultFolderIcon()"
-          class="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4"
+          class="w-16 h-16 eapp-text-quaternary mx-auto mb-4"
         />
-        <p class="text-lg font-medium text-gray-500 dark:text-gray-400">
+        <p class="text-lg font-medium eapp-text-tertiary">
           {{ emptyTitle }}
         </p>
-        <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">{{ emptyDescription }}</p>
+        <p class="text-sm eapp-text-quaternary mt-1">{{ emptyDescription }}</p>
       </div>
     </Transition>
   </div>

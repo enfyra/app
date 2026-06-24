@@ -31,7 +31,7 @@ const showApiTestModal = ref(false)
 
 registerPageHeader({
   title: 'Route Details',
-  gradient: 'cyan',
+  gradient: 'purple',
 })
 
 const {
@@ -52,7 +52,7 @@ watch(() => routeData.value?.data?.[0]?.path, (path) => {
   if (path) {
     registerPageHeader({
       title: `Route: ${path}`,
-      gradient: 'cyan',
+      gradient: 'purple',
     })
   }
 }, { immediate: true })
