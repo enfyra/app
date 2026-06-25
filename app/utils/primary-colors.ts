@@ -62,9 +62,12 @@ function kebab(role: string): string {
   return "--md-" + role.replace(/([A-Z])/g, (m) => "-" + m.toLowerCase());
 }
 
-function roleToCssVar(role: string, scheme: DynamicScheme): string {
-  const dc = (dynamicColors as unknown as Record<string, () => { getArgb: (s: DynamicScheme) => number }>)[role].call(dynamicColors);
-  return `${kebab(role)}:${hexFromArgb(dc.getArgb(scheme))}`;
+type ArgbGetter = { getArgb: (scheme: DynamicScheme) => number };
+
+function materialGetter(role: string): ArgbGetter {
+  const fn = (dynamicColors as unknown as Record<string, () => ArgbGetter>)[role];
+  if (!fn) throw new Error(`Unknown Material role: ${role}`);
+  return fn.call(dynamicColors);
 }
 
 type StatusQuartet = { color: string; onColor: string; container: string; onContainer: string };
@@ -74,8 +77,7 @@ type SeedTheme = { light: ModeTheme; dark: ModeTheme };
 function extractRoles(scheme: DynamicScheme): Record<string, string> {
   const roles: Record<string, string> = {};
   for (const role of ROLES) {
-    const dc = (dynamicColors as unknown as Record<string, () => { getArgb: (s: DynamicScheme) => number }>)[role].call(dynamicColors);
-    roles[role] = hexFromArgb(dc.getArgb(scheme));
+    roles[role] = hexFromArgb(materialGetter(role).getArgb(scheme));
   }
   return roles;
 }
@@ -94,7 +96,7 @@ function buildSeedTheme(seedHex: string): SeedTheme {
   const source = argbFromHex(seedHex);
   const lightStatuses = extractStatuses(source, false);
   const darkStatuses = extractStatuses(source, true);
-  darkStatuses.error = { ...lightStatuses.error };
+  darkStatuses.error = { ...lightStatuses.error! };
   return {
     light: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), false, 0)), statuses: lightStatuses },
     dark: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), true, 0)), statuses: darkStatuses },
@@ -127,7 +129,7 @@ export function getPrimaryColorStyle(primary: PrimaryColorValue) {
 }
 
 export function getPrimaryColorMeta(primary: PrimaryColorValue) {
-  return seedThemes[primary].light.roles.primary;
+  return seedThemes[primary].light.roles.primary!;
 }
 
 export function getPrimaryColorPreflightScript() {

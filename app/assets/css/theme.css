@@ -31,18 +31,6 @@
     --brand-indigo-electric: var(--brand-600);
     --brand-indigo-bright: var(--brand-400);
 
-    --ui-color-primary-50: var(--brand-50);
-    --ui-color-primary-100: var(--brand-100);
-    --ui-color-primary-200: var(--brand-200);
-    --ui-color-primary-300: var(--brand-300);
-    --ui-color-primary-400: var(--brand-400);
-    --ui-color-primary-500: var(--brand-500);
-    --ui-color-primary-600: var(--brand-600);
-    --ui-color-primary-700: var(--brand-700);
-    --ui-color-primary-800: var(--brand-800);
-    --ui-color-primary-900: var(--brand-900);
-    --ui-color-primary-950: var(--brand-950);
-
     --accent-cyan: #22D3EE;
     --accent-cyan-bright: #67E8F9;
     --accent-fuchsia: #E879F9;
