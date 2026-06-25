@@ -30,16 +30,12 @@ const originalMenu = computed(() => {
 });
 
 const childrenStyle = computed(() => {
-  const lvl = (props.level || 0) + 1;
-  if (isMobile.value) {
-    return {
-      paddingLeft: `${16 + lvl * 8}px`,
-      '--dnd-bar-left': `${24 + lvl * 8}px`
-    };
-  }
+  const parentLevel = props.level || 0;
+  const base = 12 + parentLevel * 14;
+  const guideLeft = isMobile.value ? base + 62 : base + 66;
   return {
-    paddingLeft: `${24 + lvl * 12}px`,
-    '--dnd-bar-left': `${52 + lvl * 24}px`
+    paddingLeft: '10px',
+    '--menu-children-guide-left': `${guideLeft}px`,
   };
 });
 
@@ -499,6 +495,7 @@ function handleCancelMove() {
         @change="handleChildrenReorder"
         item-key="id"
         class="menu-editor-children drop-zone"
+        :class="{ 'is-empty': !hasChildren }"
         :style="childrenStyle"
       >
         <template #item="{ element: child }">
@@ -654,11 +651,24 @@ function handleCancelMove() {
   display: grid;
   gap: 6px;
   margin-top: 6px;
-  margin-left: 20px;
-  border-left: 1px solid var(--border-subtle);
   padding-top: 6px;
   padding-bottom: 8px;
   transition: background-color 110ms ease, border-color 110ms ease, box-shadow 110ms ease;
+}
+
+.menu-editor-children::before {
+  content: "";
+  position: absolute;
+  left: var(--menu-children-guide-left, 12px);
+  top: 2px;
+  bottom: 10px;
+  width: 1px;
+  background: var(--border-subtle);
+  pointer-events: none;
+}
+
+.menu-editor-children.is-empty::before {
+  display: none;
 }
 
 .menu-editor-children-wrap {
