@@ -36,7 +36,7 @@ const resolvedLeadingIcon = computed(() => {
 });
 
 const leadingIconShellClass = computed(() =>
-  "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)] accent-tile accent-tile-primary",
+  "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]",
 );
 
 const leadingIconGlyphClass = computed(() =>
@@ -107,7 +107,7 @@ watch(
 </script>
 
 <template>
-  <div class="page-header-shell relative overflow-hidden" :class="headerStripClass">
+  <div class="page-header-shell relative" :class="headerStripClass">
     
     <div class="page-header-inner relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-5', isMinimal ? 'py-3' : 'py-4']">
       <div

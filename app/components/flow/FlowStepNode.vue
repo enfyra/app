@@ -8,13 +8,13 @@
     <Handle type="target" :position="Position.Top" :style="{ opacity: 0 }" />
     <Handle type="source" :position="Position.Bottom" :style="{ opacity: 0 }" />
 
-    <span v-if="data.execStatus === 'completed'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10">
+    <span v-if="data.execStatus === 'completed'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--st-success)] flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10">
       <UIcon name="i-lucide-check" class="w-2.5 h-2.5 text-white" />
     </span>
-    <span v-else-if="data.execStatus === 'failed'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10" :title="data.execError || 'Step failed'">
+    <span v-else-if="data.execStatus === 'failed'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--md-error)] flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10" :title="data.execError || 'Step failed'">
       <UIcon name="i-lucide-x" class="w-2.5 h-2.5 text-white" />
     </span>
-    <span v-else-if="data.execStatus === 'running'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-blue-500 flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10">
+    <span v-else-if="data.execStatus === 'running'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--st-info)] flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10">
       <UIcon name="i-lucide-loader" class="w-2.5 h-2.5 text-white animate-spin" />
     </span>
     <span v-else-if="data.execStatus === 'skipped'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--text-quaternary)] flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10">

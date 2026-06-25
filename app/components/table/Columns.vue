@@ -458,7 +458,7 @@ watch(
     <div
       v-for="(column, index) in displayColumns"
       :key="column.id ?? index"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-muted lg:hover:bg-muted/50 transition cursor-pointer"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
       @click="editColumn(column, index)"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
@@ -489,7 +489,7 @@ watch(
             :color="column.isPublished ? 'success' : 'neutral'"
             variant="ghost"
             size="xs"
-            class="lg:hover:cursor-pointer"
+            class="cursor-pointer"
             @click.stop="column.isPublished = !column.isPublished"
           />
         </UTooltip>
@@ -510,7 +510,7 @@ watch(
               color="secondary"
               variant="ghost"
               size="xs"
-              class="lg:hover:cursor-pointer"
+              class="cursor-pointer"
               @click.stop="handleShieldClick(column, index)"
             />
           </UChip>
@@ -532,7 +532,7 @@ watch(
               color="info"
               variant="ghost"
               size="xs"
-              class="lg:hover:cursor-pointer"
+              class="cursor-pointer"
               @click.stop="handleRuleClick(column, index)"
             />
           </UChip>
@@ -543,7 +543,7 @@ watch(
           variant="ghost"
           size="xs"
           :disabled="column.isSystem || column.isPrimary"
-          class="lg:hover:cursor-pointer"
+          class="cursor-not-allowed enabled:cursor-pointer"
           @click.stop="removeColumn(index)"
         />
       </div>

@@ -455,7 +455,7 @@ onMounted(async () => {
           </div>
           <div class="rounded-xl p-4 surface-card">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--st-warning)] to-[var(--md-primary)] flex items-center justify-center">
                 <UIcon name="lucide:clock" class="w-5 h-5 text-white" />
               </div>
               <div>

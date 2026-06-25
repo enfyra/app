@@ -24,10 +24,16 @@ const showDiscardModal = ref(false);
 const initialSnapshot = ref<string | null>(null);
 const baseParentPath = ref<string>('');
 const formEditorRef = ref();
+const editorSettling = ref(false);
 
 defineExpose({
   hasFormChanges,
 });
+
+function onEditorChanged(hasChanged: boolean) {
+  if (editorSettling.value) return;
+  hasFormChanges.value = hasChanged;
+}
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -122,14 +128,10 @@ const typeMap = {
 
 watch(() => isOpen.value, async (open) => {
   if (open) {
+    editorSettling.value = true;
+    hasFormChanges.value = false;
     if (props.menu) {
       await initializeForm();
-      await nextTick();
-      if (formEditorRef.value?.confirmChanges) {
-        formEditorRef.value.confirmChanges();
-      }
-      initialSnapshot.value = stableStringify(form.value);
-      hasFormChanges.value = false;
     } else {
       form.value = generateEmptyForm();
       const menuWithParent = props.menu as MenuDefinition | null;
@@ -137,16 +139,23 @@ watch(() => isOpen.value, async (open) => {
         form.value.parent = menuWithParent.parent;
       }
       errors.value = {};
-      await nextTick();
-      initialSnapshot.value = stableStringify(form.value);
-      hasFormChanges.value = false;
     }
+    await nextTick();
+    await new Promise((r) => setTimeout(r, 60));
+    formEditorRef.value?.confirmChanges?.();
+    await nextTick();
+    initialSnapshot.value = stableStringify(form.value);
+    hasFormChanges.value = false;
+    editorSettling.value = false;
   } else {
+    editorSettling.value = true;
     form.value = {};
     errors.value = {};
     initialSnapshot.value = null;
     showDiscardModal.value = false;
     hasFormChanges.value = false;
+    await nextTick();
+    editorSettling.value = false;
   }
 });
 
@@ -333,10 +342,7 @@ notify.success("Success")
 }
 
 function handleCancel() {
-  const hasUnsavedChanges = hasFormChanges.value
-    || (props.modelValue && initialSnapshot.value !== null && stableStringify(form.value) !== initialSnapshot.value);
-
-  if (hasUnsavedChanges) {
+  if (hasFormChanges.value) {
     showDiscardModal.value = true;
     return;
   }
@@ -372,7 +378,7 @@ function confirmDiscard() {
               ref="formEditorRef"
               v-model="form"
               v-model:errors="errors"
-              @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+              @has-changed="onEditorChanged"
               :table-name="tableName"
               :excluded="excludedFields"
               :field-map="typeMap"

@@ -607,7 +607,7 @@ function handleCancelMove() {
   height: 40px;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-control);
+  border-radius: 9999px;
 }
 
 .menu-row-main {
@@ -680,27 +680,10 @@ function handleCancelMove() {
   position: relative;
 }
 
-.drop-zone::before {
-  content: '';
-  position: absolute;
-  left: var(--dnd-bar-left, 10px);
-  top: 6px;
-  bottom: 10px;
-  width: 1px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--brand-400) 26%, var(--border-default));
-  pointer-events: none;
-}
-
 .drop-zone:has(.sortable-ghost) {
   border-color: var(--badge-primary-soft-border);
   background-color: color-mix(in srgb, var(--brand-500) 7%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 24%, transparent);
-}
-
-.drop-zone:has(.sortable-ghost)::before,
-.drop-zone:has(.ghost-item)::before {
-  background: color-mix(in srgb, var(--brand-500) 85%, transparent);
 }
 
 .menu-editor-node :deep(.sortable-ghost) {

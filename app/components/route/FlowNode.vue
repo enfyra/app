@@ -17,9 +17,9 @@
           <div :class="iconClass">
             <UIcon :name="iconName" class="w-3.5 h-3.5" />
           </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-0.5 flex-wrap mb-0.5">
-              <h5 class="text-[8px] font-semibold text-[var(--text-primary)] truncate leading-tight max-w-[100px]">
+          <div class="flex-1 min-w-0 overflow-hidden">
+            <div class="flex items-center gap-1 overflow-hidden mb-0.5">
+              <h5 class="text-[9px] font-semibold text-[var(--text-primary)] truncate min-w-0 leading-tight">
                 {{ data.isDefault ? 'Built-in logic' : (data.label || 'Unnamed') }}
               </h5>
               <UBadge
@@ -27,7 +27,7 @@
                 size="xs"
                 variant="soft"
                 color="primary"
-                class="text-[7px] px-0.5 py-0 leading-none"
+                class="!text-[9px] !px-1.5 !py-0.5 font-semibold leading-none shrink-0"
               >
                 Built-in
               </UBadge>
@@ -36,7 +36,7 @@
                 size="xs"
                 variant="soft"
                 color="warning"
-                class="text-[7px] px-0.5 py-0 leading-none"
+                class="!text-[9px] !px-1.5 !py-0.5 font-semibold leading-none shrink-0"
               >
                 Global
               </UBadge>
@@ -45,7 +45,7 @@
                 size="xs"
                 variant="soft"
                 color="neutral"
-                class="text-[7px] px-0.5 py-0 leading-none"
+                class="!text-[9px] !px-1.5 !py-0.5 font-semibold leading-none shrink-0"
               >
                 Disabled
               </UBadge>
@@ -54,7 +54,7 @@
                 size="xs"
                 variant="soft"
                 color="success"
-                class="text-[7px] px-0.5 py-0 leading-none"
+                class="!text-[9px] !px-1.5 !py-0.5 font-semibold leading-none shrink-0"
               >
                 Enabled
               </UBadge>

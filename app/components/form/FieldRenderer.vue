@@ -796,7 +796,7 @@ function getComponentType(): string {
         </div>
         <p
           v-if="getComponentType() === 'simple-json' && hasError && errorMessage"
-          class="mt-1 text-xs text-red-500"
+          class="mt-1 text-xs text-[var(--md-error)]"
         >
           {{ errorMessage }}
         </p>

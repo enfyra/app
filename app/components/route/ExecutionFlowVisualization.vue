@@ -43,11 +43,11 @@
 
     <div
       v-if="!hasAvailableMethods"
-      class="text-center py-12 px-4 rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10"
+      class="text-center py-12 px-4 rounded-lg border border-[var(--state-warning-outline-border)] bg-[var(--state-warning-soft-bg)]"
     >
-      <UIcon name="lucide:list-filter" class="w-12 h-12 mx-auto mb-3 text-amber-500 dark:text-amber-400" />
-      <p class="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">No Available Methods</p>
-      <p class="text-xs text-amber-700 dark:text-amber-300/90">Please add Available Methods in the form above to display the execution flow for each HTTP method.</p>
+      <UIcon name="lucide:list-filter" class="w-12 h-12 mx-auto mb-3 text-[var(--st-warning)]" />
+      <p class="text-sm font-medium text-[var(--state-warning-soft-text)] mb-1">No Available Methods</p>
+      <p class="text-xs text-[var(--state-warning-soft-text)]">Please add Available Methods in the form above to display the execution flow for each HTTP method.</p>
     </div>
 
     <div v-else-if="allNodes.length > 0" class="h-[500px] border border-[var(--border-default)] rounded-lg overflow-hidden bg-[var(--surface-muted)]">
@@ -117,6 +117,31 @@ const emit = defineEmits<{
 
 const vueFlowRef = ref<any>(null);
 const hasFitted = ref(false);
+
+const textWidthCache: Record<string, number> = {};
+let measureCtx: CanvasRenderingContext2D | null = null;
+function measureText(text: string, font: string): number {
+  const key = `${font}|${text}`;
+  const cached = textWidthCache[key];
+  if (cached !== undefined) return cached;
+  if (!measureCtx) {
+    const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+    measureCtx = canvas ? canvas.getContext('2d') : null;
+  }
+  if (!measureCtx) return text.length * 7;
+  measureCtx.font = font;
+  const w = Math.ceil(measureCtx.measureText(text).width);
+  textWidthCache[key] = w;
+  return w;
+}
+
+function actionButtonWidth(label: string): number {
+  return measureText(label, '600 11px Outfit, system-ui, sans-serif') + 14 + 4 + 24 + 8;
+}
+
+function methodLabelWidth(method: string): number {
+  return measureText(String(method).toUpperCase(), '700 10px Outfit, system-ui, sans-serif') + 20 + 2 + 10;
+}
 
 function handleNodeDelete(nodeData: any, nodeType: string) {
   if (nodeType === 'handler') {
@@ -194,7 +219,7 @@ const nodeTypes = markRaw({
     props: ['data', 'id'],
     setup(props: any) {
       return () => h('div', {
-        class: 'px-1.5 py-0.5 rounded bg-[var(--surface-muted)] border border-[var(--border-default)] relative',
+        class: 'px-2.5 py-1 rounded-md bg-[var(--state-primary-soft-bg)] border border-[var(--state-primary-outline-border)] relative',
         style: { height: '40px', display: 'flex', alignItems: 'center' },
       }, [
         h(Handle, {
@@ -203,7 +228,7 @@ const nodeTypes = markRaw({
           style: { top: '50%', transform: 'translateY(-50%)', opacity: 0 },
         }),
         h('span', {
-          class: 'text-[7px] font-semibold text-[var(--text-primary)] uppercase tracking-wide',
+          class: 'text-[10px] font-bold text-[var(--state-primary-soft-text)] uppercase tracking-wide',
         }, props.data.label),
       ]);
     },
@@ -236,14 +261,14 @@ const nodeTypes = markRaw({
             justifyContent: 'center',
             gap: '4px',
             cursor: 'pointer',
-            color: '#fff',
+            color: props.data.text,
             fontSize: '11px',
             fontWeight: '600',
             lineHeight: '1',
             letterSpacing: '0.02em',
             whiteSpace: 'nowrap',
             border: 'none',
-            background: props.data.color,
+            background: props.data.bg,
             boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
             transition: 'transform 120ms ease',
           },
@@ -392,17 +417,11 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
   const rowHeight = 80;
   const startX = 20;
   const startY = 40;
-  const nodeSpacing = 24;
+  const nodeSpacing = 32;
   const actionBtnHeight = 28;
-  const actionBtnSpacing = 16;
-  const actionBtnWidths: Record<string, number> = {
-    'Pre-Hook': 92,
-    'Handler': 88,
-    'Post-Hook': 96,
-  };
+  const actionBtnSpacing = 24;
 
   const edgeStyle = { stroke: 'var(--border-default)', strokeWidth: 2, strokeDasharray: '5,5' };
-
 
   methodList.forEach((group, groupIndex) => {
     const groupY = startY + (groupIndex * rowHeight);
@@ -424,18 +443,19 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
       lastNodeId = nextId;
     };
 
-    const pushActionNode = (id: string, color: string, label: string, tooltip: string, onClick: () => void) => {
+    const pushActionNode = (id: string, bg: string, text: string, label: string, tooltip: string, onClick: () => void) => {
+      const width = actionButtonWidth(label);
       nodes.push({
         id,
         type: 'addAction',
         position: { x: currentX, y: actionBtnY },
-        data: { color, label, tooltip, onClick },
+        data: { bg, text, label, tooltip, onClick },
         draggable: false,
         selectable: false,
         connectable: false,
       });
       connectFrom(id);
-      currentX += (actionBtnWidths[label] || 90) + actionBtnSpacing;
+      currentX += width + actionBtnSpacing;
     };
 
     const pushFlowNode = (id: string, type: string, data: any) => {
@@ -461,7 +481,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
       selectable: false,
     });
     lastNodeId = methodLabelId;
-    currentX += 60;
+    currentX += methodLabelWidth(group.method) + actionBtnSpacing;
 
     const hasRealHandler = !!(group.handler && !group.handler._isDefault && !group.handler.isDefault);
 
@@ -470,7 +490,8 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
     let prePriorityIdx = 0;
     pushActionNode(
       `add-prehook-${group.method}-start`,
-      'var(--brand-500)',
+      'var(--action-primary-bg)',
+      'var(--action-primary-text)',
       'Pre-Hook',
       group.preHooks.length > 0
         ? `Insert pre-hook at start`
@@ -494,7 +515,8 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
         const priority = prePriorityIdx;
         pushActionNode(
           `add-prehook-${group.method}-after-${props.getId(hook)}`,
-          'var(--brand-500)',
+          'var(--action-primary-bg)',
+          'var(--action-primary-text)',
           'Pre-Hook',
           `Add pre-hook after "${hook.name || 'hook'}"`,
           () => emit('createHook', 'pre', group.method, priority),
@@ -520,7 +542,8 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
     if (!hasRealHandler) {
       pushActionNode(
         `add-handler-${group.method}`,
-        'var(--status-success-base)',
+        'var(--action-success-bg)',
+        'var(--action-success-text)',
         'Handler',
         `Add handler for ${group.method}`,
         () => emit('createHandler', methodLookup.value[group.method] || { name: group.method }),
@@ -532,7 +555,8 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
     let postPriorityIdx = 0;
     pushActionNode(
       `add-posthook-${group.method}-start`,
-      'var(--status-info-base)',
+      'var(--action-info-bg)',
+      'var(--action-info-text)',
       'Post-Hook',
       group.postHooks.length > 0
         ? `Insert post-hook at start`
@@ -556,7 +580,8 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
         const priority = postPriorityIdx;
         pushActionNode(
           `add-posthook-${group.method}-after-${props.getId(hook)}`,
-          'var(--status-info-base)',
+          'var(--action-info-bg)',
+          'var(--action-info-text)',
           'Post-Hook',
           `Add post-hook after "${hook.name || 'hook'}"`,
           () => emit('createHook', 'post', group.method, priority),

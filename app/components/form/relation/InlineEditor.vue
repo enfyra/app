@@ -119,7 +119,7 @@ async function navigateToDetail(item: any) {
       <button
         v-if="!props.disabled"
         type="button"
-        class="px-1.5 flex items-center justify-center text-[10px] text-[var(--text-secondary)] hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+        class="px-1.5 flex items-center justify-center text-[10px] text-[var(--text-secondary)] hover:bg-[var(--state-danger-soft-bg-hover)] hover:text-[var(--md-error)] transition-colors"
         title="Remove relation"
         @click.stop="removeId(getId(item))"
       >

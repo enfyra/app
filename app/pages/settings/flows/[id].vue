@@ -133,9 +133,9 @@
             <USelect v-model="stepForm.type" :items="stepTypeOptions" value-key="value" class="w-full" />
           </UFormField>
 
-          <div class="p-3 rounded-lg border" :class="hasStepConfigErrors ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-800' : 'bg-[var(--surface-muted)] border-[var(--border-default)]'">
-            <p v-if="stepErrors.config" class="text-xs text-red-500 mb-2">{{ stepErrors.config }}</p>
-            <p v-else-if="stepErrors.sourceCode" class="text-xs text-red-500 mb-2">{{ stepErrors.sourceCode }}</p>
+          <div class="p-3 rounded-lg border" :class="hasStepConfigErrors ? 'bg-[var(--state-danger-soft-bg)] border-[var(--state-danger-outline-border)]' : 'bg-[var(--surface-muted)] border-[var(--border-default)]'">
+            <p v-if="stepErrors.config" class="text-xs text-[var(--md-error)] mb-2">{{ stepErrors.config }}</p>
+            <p v-else-if="stepErrors.sourceCode" class="text-xs text-[var(--md-error)] mb-2">{{ stepErrors.sourceCode }}</p>
             <FlowStepConfigEditor
               :type="stepForm.type"
               :config-json="stepForm.configJson"
@@ -178,12 +178,12 @@
           </div>
           <div v-if="testResult" class="px-4 py-3 border-t border-[var(--border-default)]">
             <div class="flex items-center gap-2 mb-2">
-              <UIcon :name="testResult.success ? 'i-lucide-check-circle' : 'i-lucide-x-circle'" :class="testResult.success ? 'text-green-500' : 'text-red-500'" class="w-4 h-4" />
-              <span class="text-xs font-medium" :class="testResult.success ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+              <UIcon :name="testResult.success ? 'i-lucide-check-circle' : 'i-lucide-x-circle'" :class="testResult.success ? 'text-[var(--st-success)]' : 'text-[var(--md-error)]'" class="w-4 h-4" />
+              <span class="text-xs font-medium" :class="testResult.success ? 'text-[var(--st-success)]' : 'text-[var(--md-error)]'">
                 {{ testResult.success ? 'Test passed' : 'Test failed' }} ({{ testResult.duration }}ms)
               </span>
             </div>
-            <div v-if="testResult.error" class="p-2 rounded bg-red-50 dark:bg-red-900/20 text-xs text-red-600 dark:text-red-400 break-words">{{ testResult.error }}</div>
+            <div v-if="testResult.error" class="p-2 rounded bg-[var(--state-danger-soft-bg)] text-xs text-[var(--md-error)] break-words">{{ testResult.error }}</div>
             <div v-else class="space-y-2">
               <div v-if="testResult.result !== undefined" class="space-y-1">
                 <div class="flex items-center justify-between gap-2">
@@ -251,21 +251,21 @@
             </div>
           </div>
 
-          <div v-if="selectedExec.status === 'failed' && selectedExec.currentStep" class="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 space-y-2">
+          <div v-if="selectedExec.status === 'failed' && selectedExec.currentStep" class="p-3 rounded-lg bg-[var(--state-danger-soft-bg)] border border-[var(--state-danger-outline-border)] space-y-2">
             <div class="flex items-center gap-2">
-              <UIcon name="i-lucide-alert-circle" class="w-4 h-4 text-red-500 flex-shrink-0" />
-              <p class="text-sm font-semibold text-red-700 dark:text-red-300">
+              <UIcon name="i-lucide-alert-circle" class="w-4 h-4 text-[var(--md-error)] flex-shrink-0" />
+              <p class="text-sm font-semibold text-[var(--state-danger-soft-text)]">
                 Failed at step: <span class="font-bold">{{ selectedExec.currentStep }}</span>
               </p>
             </div>
-            <p v-if="parsedError.message" class="text-sm text-red-600 dark:text-red-400 break-words pl-6">{{ parsedError.message }}</p>
-            <pre v-if="parsedError.stack" class="text-[10px] text-red-500/80 dark:text-red-400/60 overflow-x-auto max-h-[120px] whitespace-pre-wrap pl-6">{{ parsedError.stack }}</pre>
+            <p v-if="parsedError.message" class="text-sm text-[var(--md-error)] break-words pl-6">{{ parsedError.message }}</p>
+            <pre v-if="parsedError.stack" class="text-[10px] text-[var(--md-error)]/80 overflow-x-auto max-h-[120px] whitespace-pre-wrap pl-6">{{ parsedError.stack }}</pre>
           </div>
 
-          <div v-else-if="selectedExec.currentStep && selectedExec.status === 'running'" class="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+          <div v-else-if="selectedExec.currentStep && selectedExec.status === 'running'" class="p-3 rounded-lg bg-[var(--state-info-soft-bg)] border border-[var(--state-info-outline-border)]">
             <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-              <p class="text-sm text-blue-700 dark:text-blue-300">Running step: <span class="font-semibold">{{ selectedExec.currentStep }}</span></p>
+              <span class="w-2 h-2 rounded-full bg-[var(--st-info)] animate-pulse" />
+              <p class="text-sm text-[var(--state-info-soft-text)]">Running step: <span class="font-semibold">{{ selectedExec.currentStep }}</span></p>
             </div>
           </div>
 

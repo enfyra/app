@@ -1103,7 +1103,7 @@ onUnmounted(() => {
         <div class="border-t border-[var(--border-default)] my-1"></div>
         <button
           @click="deleteTable"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2"
+          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--state-danger-soft-bg-hover)] text-[var(--state-danger-soft-text)] flex items-center gap-2"
         >
           <Icon name="lucide:trash" class="w-4 h-4" />
           Delete Table
@@ -1138,7 +1138,7 @@ onUnmounted(() => {
           </button>
           <button
             type="button"
-            class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+            class="px-4 py-2 bg-[var(--md-primary)] text-white rounded-md hover:bg-primary-700 transition-colors"
             @click="confirmLink"
           >
             Add Link
@@ -1173,7 +1173,7 @@ onUnmounted(() => {
           </button>
           <button
             type="button"
-            class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+            class="px-4 py-2 bg-[var(--md-primary)] text-white rounded-md hover:bg-primary-700 transition-colors"
             @click="confirmImage"
           >
             Add Image
@@ -1202,10 +1202,10 @@ onUnmounted(() => {
           </button>
           <button
             @click="deleteRow"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--state-danger-soft-bg-hover)] transition-colors"
           >
-            <Icon name="lucide:trash-2" class="w-5 h-5 text-red-500 dark:text-red-400" />
-            <span class="text-xs text-red-600 dark:text-red-400">Delete Row</span>
+            <Icon name="lucide:trash-2" class="w-5 h-5 text-[var(--md-error)]" />
+            <span class="text-xs text-[var(--state-danger-soft-text)]">Delete Row</span>
           </button>
           <button
             @click="addColumnBefore"
@@ -1223,10 +1223,10 @@ onUnmounted(() => {
           </button>
           <button
             @click="deleteColumn"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--state-danger-soft-bg-hover)] transition-colors"
           >
-            <Icon name="lucide:trash-2" class="w-5 h-5 text-red-500 dark:text-red-400" />
-            <span class="text-xs text-red-600 dark:text-red-400">Delete Col</span>
+            <Icon name="lucide:trash-2" class="w-5 h-5 text-[var(--md-error)]" />
+            <span class="text-xs text-[var(--state-danger-soft-text)]">Delete Col</span>
           </button>
           <button
             @click="toggleHeaderRow"
@@ -1253,7 +1253,7 @@ onUnmounted(() => {
         <div class="mt-4 pt-4 border-t border-[var(--border-default)]">
           <button
             @click="deleteTable"
-            class="w-full flex items-center justify-center gap-2 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            class="w-full flex items-center justify-center gap-2 p-3 rounded-lg text-[var(--state-danger-soft-text)] hover:bg-[var(--state-danger-soft-bg-hover)] transition-colors"
           >
             <Icon name="lucide:trash" class="w-5 h-5" />
             <span class="font-medium">Delete Table</span>

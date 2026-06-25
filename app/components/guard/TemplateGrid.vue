@@ -5,9 +5,9 @@
       :key="template.key"
       type="button"
       :class="[
-        'group h-full text-left rounded-lg border p-4 transition-all',
+        'group h-full text-left rounded-lg border-2 p-4 transition-colors',
         modelValue === template.key
-          ? 'border-brand-400 bg-brand-50 text-brand-950 shadow-panel-sm ring-2 ring-brand-500/15 dark:bg-brand-500/10 dark:text-brand-50'
+          ? 'border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)] shadow-panel-sm'
           : 'surface-card border-transparent hover:border-[var(--border-default)] hover:bg-[var(--surface-muted)]',
       ]"
       @click="emit('update:modelValue', template.key)"
@@ -17,8 +17,8 @@
           :class="[
             'flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors',
             modelValue === template.key
-              ? 'bg-brand-500 text-white'
-              : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)] group-hover:text-brand-500',
+              ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-text)]'
+              : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)] group-hover:text-[var(--state-primary-soft-text)]',
           ]"
         >
           <UIcon :name="template.icon" class="size-5" />
@@ -28,7 +28,7 @@
             <h3
               :class="[
                 'truncate text-sm font-semibold',
-                modelValue === template.key ? 'text-brand-950 dark:text-brand-50' : 'text-[var(--text-primary)]',
+                modelValue === template.key ? 'text-[var(--state-primary-soft-text)]' : 'text-[var(--text-primary)]',
               ]"
             >
               {{ template.title }}
@@ -37,7 +37,7 @@
               :class="[
                 'inline-flex h-6 min-w-20 items-center justify-center rounded-md px-2 text-[11px] font-medium',
                 modelValue === template.key
-                  ? 'bg-white/70 text-brand-700 dark:bg-white/10 dark:text-brand-100'
+                  ? 'bg-[var(--state-primary-outline-border)] text-[var(--state-primary-soft-text)]'
                   : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)]',
               ]"
             >
@@ -47,7 +47,7 @@
           <p
             :class="[
               'mt-1 line-clamp-2 min-h-8 text-xs leading-4',
-              modelValue === template.key ? 'text-brand-800 dark:text-brand-100/80' : 'text-[var(--text-tertiary)]',
+              modelValue === template.key ? 'text-[var(--state-primary-description-text)]' : 'text-[var(--text-tertiary)]',
             ]"
           >
             {{ template.description }}
@@ -56,7 +56,7 @@
             <span
               :class="[
                 'truncate text-xs font-medium',
-                modelValue === template.key ? 'text-brand-700 dark:text-brand-100' : 'text-[var(--text-secondary)]',
+                modelValue === template.key ? 'text-[var(--state-primary-soft-text)]' : 'text-[var(--text-secondary)]',
               ]"
             >
               {{ formatRuleType(template.ruleType) }}
@@ -65,7 +65,7 @@
               :class="[
                 'flex size-5 items-center justify-center rounded-full border transition-colors',
                 modelValue === template.key
-                  ? 'border-brand-500 bg-brand-500 text-white'
+                  ? 'border-[var(--action-primary-bg)] bg-[var(--action-primary-bg)] text-[var(--action-primary-text)]'
                   : 'border-[var(--border-default)] text-transparent',
               ]"
             >

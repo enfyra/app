@@ -259,7 +259,7 @@ function timeOptionClass(selected: boolean): string {
   return [
     "h-9 rounded-md border text-sm font-medium tabular-nums transition-colors",
     selected
-      ? "border-primary-500 bg-primary-500 text-white shadow-sm"
+      ? "border-[var(--md-primary)] bg-[var(--md-primary)] text-white shadow-sm"
       : "eapp-surface-flat eapp-text-primary border-[var(--border-default)] hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:border-primary-700 dark:hover:bg-primary-950/30 dark:hover:text-primary-200",
   ].join(" ");
 }

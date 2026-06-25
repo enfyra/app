@@ -26,7 +26,7 @@
             :class="{
               'border-primary-500 bg-primary-50 dark:bg-primary-950 scale-105':
                 isDragOver && !isLoading,
-              'border-red-500 bg-red-50 dark:bg-red-950': hasError,
+              'border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)]': hasError,
               'opacity-50 pointer-events-none': isLoading,
             }"
             @dragenter.prevent="handleDragEnter"
@@ -74,16 +74,16 @@
             <div
               v-for="(file, index) in selectedFiles"
               :key="index"
-              class="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-[var(--radius-panel)] p-2"
+              class="bg-[var(--state-success-soft-bg)] border border-[var(--state-success-outline-border)] rounded-[var(--radius-panel)] p-2"
             >
               <div class="flex items-center justify-between min-w-0">
                 <div class="flex items-center space-x-4 min-w-0 flex-1">
                   <div
-                    class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-[var(--radius-control)] flex items-center justify-center flex-shrink-0"
+                    class="w-10 h-10 bg-[var(--state-success-soft-bg)] rounded-[var(--radius-control)] flex items-center justify-center flex-shrink-0"
                   >
                     <UIcon
                       name="i-heroicons-document-check"
-                      class="w-5 h-5 text-green-600 dark:text-green-400"
+                      class="w-5 h-5 text-[var(--st-success)]"
                     />
                   </div>
                   <div class="min-w-0 flex-1">
@@ -114,14 +114,14 @@
 
           <div
             v-if="hasError"
-            class="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-[var(--radius-panel)] p-4"
+            class="bg-[var(--state-danger-soft-bg)] border border-[var(--state-danger-outline-border)] rounded-[var(--radius-panel)] p-4"
           >
             <div class="flex items-center space-x-3">
               <UIcon
                 name="i-heroicons-exclamation-triangle"
-                class="w-5 h-5 text-red-500"
+                class="w-5 h-5 text-[var(--md-error)]"
               />
-              <p class="text-sm font-medium text-red-800 dark:text-red-200">
+              <p class="text-sm font-medium text-[var(--state-danger-soft-text)]">
                 {{ errorMessage }}
               </p>
             </div>

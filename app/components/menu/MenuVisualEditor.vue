@@ -142,7 +142,7 @@ function canDropIntoParent(event: any, targetParentId: string | number | null) {
 
 <template>
   <div
-    class="menu-visual-editor overflow-hidden"
+    class="menu-visual-editor"
     :class="isDndUpdating ? 'pointer-events-none opacity-60 select-none' : ''"
   >
     <div v-if="menuTree.length === 0" class="flex flex-col items-center justify-center py-12 text-center">

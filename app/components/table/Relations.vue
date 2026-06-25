@@ -313,7 +313,7 @@ async function removeRelation(index: number) {
     <div
       v-for="(rel, index) in relations"
       :key="rel.id ?? index"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-muted lg:hover:bg-muted/50 transition cursor-pointer"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
       @click="editRelation(rel, index)"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
@@ -345,7 +345,7 @@ async function removeRelation(index: number) {
             :color="rel.isPublished ? 'success' : 'neutral'"
             variant="ghost"
             size="xs"
-            class="lg:hover:cursor-pointer"
+            class="cursor-pointer"
             @click.stop="rel.isPublished = !rel.isPublished"
           />
         </UTooltip>
@@ -365,7 +365,7 @@ async function removeRelation(index: number) {
               color="secondary"
               variant="ghost"
               size="xs"
-              class="lg:hover:cursor-pointer"
+              class="cursor-pointer"
               @click.stop="handleShieldClick(rel, index)"
             />
           </UChip>
@@ -376,7 +376,7 @@ async function removeRelation(index: number) {
           variant="ghost"
           size="xs"
           :disabled="rel.isSystem"
-          class="lg:hover:cursor-pointer"
+          class="cursor-not-allowed enabled:cursor-pointer"
           @click.stop="removeRelation(index)"
         />
       </div>
@@ -385,7 +385,7 @@ async function removeRelation(index: number) {
     <div
       v-for="incoming in incomingRelations"
       :key="'incoming-' + incoming.id"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-dashed border-muted opacity-60 hover:opacity-100 transition"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-dashed border-[var(--border-default)] opacity-60 hover:opacity-100 transition"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
         <UIcon name="lucide:arrow-down-left" class="w-4 h-4 text-muted-foreground shrink-0" />

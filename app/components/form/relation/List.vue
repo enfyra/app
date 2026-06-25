@@ -363,8 +363,8 @@ const { isMobile, isTablet } = useScreen();
             <div
               class="font-mono text-foreground overflow-hidden text-ellipsis whitespace-nowrap"
               :class="{
-                'text-green-500': field.type === 'boolean' && field.value,
-                'text-red-500': field.type === 'boolean' && !field.value,
+                'text-[var(--st-success)]': field.type === 'boolean' && field.value,
+                'text-[var(--md-error)]': field.type === 'boolean' && !field.value,
               }"
               :title="String(field.value)"
             >

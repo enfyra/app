@@ -282,13 +282,13 @@ watch(open, (isOpen) => {
         </div>
 
         <div
-          class="flex gap-3 rounded-lg border border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/40 p-3"
+          class="flex gap-3 rounded-lg border border-[var(--state-warning-outline-border)] bg-[var(--state-warning-soft-bg)] p-3"
         >
           <UIcon
             name="lucide:alert-triangle"
-            class="w-5 h-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5"
+            class="w-5 h-5 flex-shrink-0 text-[var(--st-warning)] mt-0.5"
           />
-          <div class="text-sm text-amber-900 dark:text-amber-200">
+          <div class="text-sm text-[var(--state-warning-soft-text)]">
             <div class="font-semibold mb-1">Changes are staged</div>
             <div class="text-xs">
               Add / edit / delete / toggle here only updates the local form.

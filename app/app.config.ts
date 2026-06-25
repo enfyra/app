@@ -64,13 +64,14 @@ export default defineAppConfig({
       slots: {
         base: [
           "inline-flex items-center justify-center gap-2",
+          "cursor-pointer",
           "whitespace-nowrap",
           "shrink-0",
           "rounded-[var(--radius-control)]",
           "text-sm font-medium",
           "transition-all duration-300",
           "outline-none",
-          "disabled:cursor-not-allowed disabled:!opacity-100 aria-disabled:cursor-not-allowed aria-disabled:!opacity-100",
+          "disabled:cursor-not-allowed disabled:!opacity-55 aria-disabled:cursor-not-allowed aria-disabled:!opacity-55",
           "focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",
           "[&_svg]:pointer-events-none",
           "[&_svg:not([class*='size-'])]:size-4",
@@ -97,6 +98,21 @@ export default defineAppConfig({
           color: "primary",
           variant: "outline",
           class: "eapp-button-primary-outline"
+        },
+        {
+          color: "secondary",
+          variant: "solid",
+          class: "eapp-button-secondary-solid",
+        },
+        {
+          color: "secondary",
+          variant: "soft",
+          class: "eapp-button-secondary-soft",
+        },
+        {
+          color: "secondary",
+          variant: "outline",
+          class: "eapp-button-secondary-outline",
         },
         {
           color: "neutral",
@@ -372,14 +388,15 @@ export default defineAppConfig({
     switch: {
       slots: {
         base: [
-          "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out",
+          "group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)] focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "data-[state=checked]:bg-[var(--action-primary-bg)]",
-          "data-[state=unchecked]:bg-[var(--control-border)]",
+          "data-[state=unchecked]:bg-[var(--md-surface-container-high)]",
         ].join(" "),
         thumb: [
-          "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+          "pointer-events-none block h-5 w-5 rounded-full shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+          "bg-[var(--md-outline)] group-data-[state=checked]:bg-[var(--md-on-primary)]",
           "data-[state=checked]:translate-x-5",
           "data-[state=unchecked]:translate-x-0",
         ].join(" "),

@@ -14,7 +14,7 @@
 
     <div
       v-else-if="error"
-      class="flex items-center gap-2 text-sm text-red-500"
+      class="flex items-center gap-2 text-sm text-[var(--md-error)]"
     >
       <UIcon
         :name="error.includes('disabled') ? 'i-heroicons-lock-closed' : 'i-heroicons-exclamation-triangle'"

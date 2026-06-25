@@ -268,8 +268,8 @@ function getFileIconAndColor(mimetype: string): {
   if (mimetype.startsWith("image/"))
     return {
       icon: "lucide:image",
-      color: "text-blue-600 dark:text-blue-300",
-      background: "bg-blue-100 dark:bg-blue-500/20",
+      color: "text-[var(--st-info)]",
+      background: "bg-[var(--state-info-soft-bg)]",
     };
   if (mimetype.startsWith("video/"))
     return {
@@ -280,20 +280,20 @@ function getFileIconAndColor(mimetype: string): {
   if (mimetype.startsWith("audio/"))
     return {
       icon: "lucide:music",
-      color: "text-green-600 dark:text-green-300",
-      background: "bg-green-100 dark:bg-green-500/20",
+      color: "text-[var(--st-success)]",
+      background: "bg-[var(--state-success-soft-bg)]",
     };
   if (mimetype.includes("pdf"))
     return {
       icon: "lucide:file-text",
-      color: "text-red-600 dark:text-red-300",
-      background: "bg-red-100 dark:bg-red-900/30",
+      color: "text-[var(--md-error)]",
+      background: "bg-[var(--state-danger-soft-bg)]",
     };
   if (mimetype.includes("zip") || mimetype.includes("archive"))
     return {
       icon: "lucide:archive",
-      color: "text-yellow-600 dark:text-yellow-300",
-      background: "bg-yellow-100 dark:bg-yellow-900/30",
+      color: "text-[var(--st-warning)]",
+      background: "bg-[var(--state-warning-soft-bg)]",
     };
   if (mimetype.startsWith("text/"))
     return {

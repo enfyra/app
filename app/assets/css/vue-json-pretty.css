@@ -1,47 +1,39 @@
 .vjs-tree {
-  font-size: 14px !important;
-}
-
-.vjs-tree .vjs-value__string {
-  color: #98d982 !important;
-}
-
-.vjs-tree .vjs-value__number {
-  color: #fc9403 !important;
-}
-
-.vjs-tree .vjs-value__boolean {
-  color: #ff8c94 !important;
+  font-size: 13px !important;
+  color: var(--text-primary) !important;
 }
 
 .vjs-tree .vjs-key {
-  color: #66c2cd !important;
+  color: var(--st-info) !important;
 }
 
-.vjs-tree .vjs-tree__brackets {
-  color: #a8a8a2 !important;
+.vjs-tree .vjs-value__string {
+  color: var(--st-success) !important;
 }
 
-.vjs-tree[data-theme="light"] .vjs-value__string {
-  color: #0969da !important;
+.vjs-tree .vjs-value__number {
+  color: var(--st-warning) !important;
 }
 
-.vjs-tree[data-theme="light"] .vjs-value__number {
-  color: #953800 !important;
+.vjs-tree .vjs-value__boolean {
+  color: var(--st-error) !important;
 }
 
-.vjs-tree[data-theme="light"] .vjs-value__boolean {
-  color: #cf222e !important;
+.vjs-tree .vjs-value__null {
+  color: var(--text-tertiary) !important;
 }
 
-.vjs-tree[data-theme="light"] .vjs-key {
-  color: #8250df !important;
+.vjs-tree .vjs-comment {
+  color: var(--text-tertiary) !important;
 }
 
-.vjs-tree[data-theme="light"] .vjs-tree__brackets {
-  color: #6e7681 !important;
+.vjs-tree .vjs-tree__brackets,
+.vjs-tree .vjs-tree__indent,
+.vjs-tree .vjs-tree__node {
+  color: var(--text-tertiary) !important;
 }
 
-.vjs-tree[data-theme="light"] {
-  color: #1e1e1e !important;
+.vjs-tree .vjs-line:hover {
+  background: var(--state-primary-soft-bg) !important;
+  border-radius: var(--radius-subcontrol);
 }

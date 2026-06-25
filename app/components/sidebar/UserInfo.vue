@@ -165,7 +165,7 @@ async function handleLogout() {
       aria-label="Open profile"
       @click="togglePanel"
     >
-      <UAvatar :text="userInitial" size="xs" />
+      <UAvatar :text="userInitial" size="xs" class="!bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] ring-1 ring-inset ring-[var(--state-primary-outline-border)]" />
     </button>
 
     <div
@@ -181,7 +181,7 @@ async function handleLogout() {
         @keydown.enter.prevent="togglePanel"
         @keydown.space.prevent="togglePanel"
       >
-        <UAvatar :text="userInitial" size="xs" />
+        <UAvatar :text="userInitial" size="xs" class="!bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] ring-1 ring-inset ring-[var(--state-primary-outline-border)]" />
         <div class="flex-1 min-w-0">
           <p class="text-sm font-bold truncate text-[var(--text-secondary)] leading-tight">{{ userEmail || 'No user' }}</p>
           <p class="text-xs truncate font-semibold text-[var(--text-tertiary)] leading-tight">Account</p>

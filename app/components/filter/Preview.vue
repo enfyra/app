@@ -94,11 +94,11 @@ const { isMobile, isTablet } = useScreen();
         class="relative"
       >
         <div
-          class="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 overflow-x-auto"
+          class="bg-[var(--surface-muted)] rounded-lg p-4 overflow-x-auto"
         >
           <pre
             v-if="formattedQuery"
-            class="text-xs text-green-400 font-mono whitespace-pre-wrap break-all"
+            class="text-xs text-[var(--st-success)] font-mono whitespace-pre-wrap break-all"
           >{{ formattedQuery }}</pre>
           <div v-else class="text-xs text-[var(--text-tertiary)]">
             No filter query generated

@@ -104,8 +104,8 @@ const pageStats = computed(() => {
     },
     {
       icon: "lucide:file",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      iconBg: "bg-blue-100 dark:bg-blue-900/30",
+      iconColor: "text-[var(--st-info)]",
+      iconBg: "bg-[var(--state-info-soft-bg)]",
       value: totalFiles,
       label: "Root Files",
     },
