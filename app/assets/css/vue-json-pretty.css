@@ -3,6 +3,13 @@
   color: var(--text-primary) !important;
 }
 
+.vjs-tree .vjs-tree-node:hover,
+.vjs-tree .vjs-tree-node.is-highlight,
+.vjs-tree .vjs-tree-node.dark:hover,
+.vjs-tree .vjs-tree-node.dark.is-highlight {
+  background: transparent !important;
+}
+
 .vjs-tree .vjs-key {
   color: var(--st-info) !important;
 }
@@ -19,6 +26,10 @@
   color: var(--st-error) !important;
 }
 
+.dark .vjs-tree .vjs-value__boolean {
+  color: #c084fc !important;
+}
+
 .vjs-tree .vjs-value__null {
   color: var(--text-tertiary) !important;
 }
@@ -31,9 +42,4 @@
 .vjs-tree .vjs-tree__indent,
 .vjs-tree .vjs-tree__node {
   color: var(--text-tertiary) !important;
-}
-
-.vjs-tree .vjs-line:hover {
-  background: var(--state-primary-soft-bg) !important;
-  border-radius: var(--radius-subcontrol);
 }

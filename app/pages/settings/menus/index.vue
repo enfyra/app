@@ -364,9 +364,11 @@ async function deleteMenu(menuItem: MenuDefinition) {
     return;
   }
 
+  const menuName = menuItem.label || menuItem.description || menuItem.path || "this menu";
+
   const isConfirmed = await confirm({
     title: "Delete Menu",
-    content: `Are you sure you want to delete menu "${menuItem.label}"? This action cannot be undone.`,
+    content: `Are you sure you want to delete menu "${menuName}"? This action cannot be undone.`,
     confirmText: "Delete",
     cancelText: "Cancel",
   });
@@ -388,7 +390,7 @@ async function deleteMenu(menuItem: MenuDefinition) {
 
     await refreshMenus();
 
-    notify.success("Success", `Menu "${menuItem.label}" has been deleted successfully!`);
+    notify.success("Success", `Menu "${menuName}" has been deleted successfully!`);
   }
 }
 
@@ -411,7 +413,7 @@ async function handleDeleteExtension(menu: MenuDefinition) {
 
   const isConfirmed = await confirm({
     title: "Delete Extension",
-    content: `Are you sure you want to delete the extension "${menu.extension.name || menu.extension.description || extensionId}"? This will permanently delete the extension and unlink it from menu "${menu.label}".`,
+    content: `Are you sure you want to delete the extension "${menu.extension.name || menu.extension.description || extensionId}"? This will permanently delete the extension and unlink it from menu "${menu.label || menu.description || menu.path || "this menu"}".`,
     confirmText: "Delete",
     cancelText: "Cancel",
   });

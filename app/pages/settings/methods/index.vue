@@ -239,6 +239,14 @@ function isMethodSelected(method: string) {
   return currentMethodLabel.value === method;
 }
 
+function methodSwatches(method: MethodRecord) {
+  const colors = getMethodColors(method);
+  return [
+    { key: 'button', label: 'Button', value: colors.buttonColor },
+    { key: 'text', label: 'Text', value: colors.textColor },
+  ];
+}
+
 function normalizeCustomMethodInput(value: string) {
   form.name = normalizeMethodName(value);
 }
@@ -300,49 +308,52 @@ watch(
       </div>
 
       <div v-else class="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
-        <article
+        <button
           v-for="method in methods"
           :key="getId(method) || getMethodLabel(method)"
-          class="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-subtle)] p-4 transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]"
+          type="button"
+          class="surface-card-hover group relative flex flex-col gap-4 rounded-xl p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring)]"
+          @click="openEdit(method)"
         >
-          <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center justify-between gap-2">
             <MethodBadge :method="method" size="sm" />
-            <UBadge :color="method.isSystem ? 'neutral' : 'primary'" variant="soft">
+            <UBadge
+              :color="method.isSystem ? 'neutral' : 'primary'"
+              variant="soft"
+              size="sm"
+            >
               {{ method.isSystem ? 'System' : 'Custom' }}
             </UBadge>
           </div>
 
-          <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
-                Button
-              </dt>
-              <dd class="mt-1 font-mono text-[var(--text-primary)]">
-                {{ getMethodColors(method).buttonColor }}
-              </dd>
+          <div class="grid grid-cols-2 gap-3">
+            <div
+              v-for="sw in methodSwatches(method)"
+              :key="sw.key"
+              class="flex min-w-0 items-center gap-2.5"
+            >
+              <span
+                class="size-8 shrink-0 rounded-lg ring-1 ring-inset ring-[var(--border-default)]"
+                :style="{ backgroundColor: sw.value }"
+              />
+              <div class="min-w-0">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                  {{ sw.label }}
+                </p>
+                <p class="truncate font-mono text-xs text-[var(--text-primary)]">
+                  {{ sw.value }}
+                </p>
+              </div>
             </div>
-            <div>
-              <dt class="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
-                Text
-              </dt>
-              <dd class="mt-1 font-mono text-[var(--text-primary)]">
-                {{ getMethodColors(method).textColor }}
-              </dd>
-            </div>
-          </dl>
+          </div>
 
-          <UButton
-            type="button"
-            class="mt-4"
-            icon="lucide:paintbrush"
-            variant="outline"
-            color="neutral"
-            block
-            @click="openEdit(method)"
+          <div
+            class="mt-auto flex items-center gap-1 text-[var(--text-tertiary)] opacity-0 transition group-hover:opacity-100"
           >
-            Edit
-          </UButton>
-        </article>
+            <UIcon name="lucide:pencil" class="size-3.5" />
+            <span class="text-xs font-medium">Edit</span>
+          </div>
+        </button>
       </div>
     </div>
 

@@ -22,7 +22,7 @@
       <CollectionSchemaViewerSection
         title="Schema Structure"
         icon="lucide:layers"
-        tile="primary"
+        tile="info"
       >
         <VueJsonPretty :data="schemaStructure" :show-length="true" :show-line="false" :deep="4" />
       </CollectionSchemaViewerSection>
@@ -48,7 +48,7 @@
         v-if="validationRules.length > 0"
         title="Validation Rules"
         icon="lucide:shield-check"
-        tile="info"
+        tile="primary"
       >
         <VueJsonPretty :data="validationRules" :show-length="true" :show-line="false" :deep="3" />
       </CollectionSchemaViewerSection>

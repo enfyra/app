@@ -607,7 +607,7 @@ function handleCancelMove() {
   height: 40px;
   align-items: center;
   justify-content: center;
-  border-radius: 9999px;
+  border-radius: var(--radius-control);
 }
 
 .menu-row-main {
@@ -654,8 +654,8 @@ function handleCancelMove() {
   display: grid;
   gap: 6px;
   margin-top: 6px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-panel);
+  margin-left: 20px;
+  border-left: 1px solid var(--border-subtle);
   padding-top: 6px;
   padding-bottom: 8px;
   transition: background-color 110ms ease, border-color 110ms ease, box-shadow 110ms ease;
@@ -681,18 +681,18 @@ function handleCancelMove() {
 }
 
 .drop-zone:has(.sortable-ghost) {
-  border-color: var(--badge-primary-soft-border);
-  background-color: color-mix(in srgb, var(--brand-500) 7%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 24%, transparent);
+  border-color: var(--md-primary);
+  background-color: color-mix(in srgb, var(--md-primary) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 30%, transparent);
 }
 
 .menu-editor-node :deep(.sortable-ghost) {
   min-height: 64px;
   opacity: 1;
   border-radius: var(--radius-panel);
-  outline: 2px dashed var(--badge-primary-soft-border);
+  outline: 2px dashed var(--md-primary);
   outline-offset: -2px;
-  background: var(--badge-primary-soft-bg);
+  background: color-mix(in srgb, var(--md-primary) 14%, var(--md-surface));
 }
 
 .menu-editor-node :deep(.sortable-chosen) {
