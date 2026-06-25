@@ -10,7 +10,7 @@ import {
 
 export const PRIMARY_COLOR_STORAGE_KEY = "enfyra-app-primary-color";
 export const PRIMARY_COLOR_STYLE_ID = "enfyra-app-primary-color-preflight";
-export const DEFAULT_PRIMARY_COLOR = "violet";
+export const DEFAULT_PRIMARY_COLOR = "green";
 
 const primaryColorSeeds = {
   red: "#ef4444",
@@ -92,9 +92,12 @@ function extractStatuses(source: number, isDark: boolean): Record<string, Status
 
 function buildSeedTheme(seedHex: string): SeedTheme {
   const source = argbFromHex(seedHex);
+  const lightStatuses = extractStatuses(source, false);
+  const darkStatuses = extractStatuses(source, true);
+  darkStatuses.error = { ...lightStatuses.error };
   return {
-    light: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), false, 0)), statuses: extractStatuses(source, false) },
-    dark: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), true, 0)), statuses: extractStatuses(source, true) },
+    light: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), false, 0)), statuses: lightStatuses },
+    dark: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), true, 0)), statuses: darkStatuses },
   };
 }
 

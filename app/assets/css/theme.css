@@ -147,7 +147,7 @@
     --action-info-text: var(--st-on-info);
 
     --state-danger-soft-bg: var(--st-error-container);
-    --state-danger-soft-bg-hover: color-mix(in srgb, var(--st-error) 18%, var(--md-surface));
+    --state-danger-soft-bg-hover: color-mix(in srgb, var(--st-error) 18%, var(--st-error-container));
     --state-danger-soft-text: var(--st-on-error-container);
     --state-danger-outline-border: color-mix(in srgb, var(--st-error) 40%, transparent);
     --state-danger-title-text: var(--st-on-error-container);

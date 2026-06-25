@@ -1172,6 +1172,7 @@
   --eapp-button-soft-bg-hover: var(--state-primary-soft-bg-hover);
   --eapp-button-soft-text: var(--state-primary-soft-text);
   --eapp-button-soft-ring: var(--state-primary-outline-border);
+  --eapp-button-ghost-text: var(--md-primary);
 }
 
 .eapp-button-success-soft,
@@ -1180,6 +1181,7 @@
   --eapp-button-soft-bg-hover: var(--state-success-soft-bg-hover);
   --eapp-button-soft-text: var(--state-success-soft-text);
   --eapp-button-soft-ring: var(--state-success-outline-border);
+  --eapp-button-ghost-text: var(--st-success);
 }
 
 .eapp-button-warning-soft,
@@ -1188,6 +1190,7 @@
   --eapp-button-soft-bg-hover: var(--state-warning-soft-bg-hover);
   --eapp-button-soft-text: var(--state-warning-soft-text);
   --eapp-button-soft-ring: var(--state-warning-outline-border);
+  --eapp-button-ghost-text: var(--st-warning);
 }
 
 .eapp-button-info-soft,
@@ -1196,6 +1199,7 @@
   --eapp-button-soft-bg-hover: var(--state-info-soft-bg-hover);
   --eapp-button-soft-text: var(--state-info-soft-text);
   --eapp-button-soft-ring: var(--state-info-outline-border);
+  --eapp-button-ghost-text: var(--st-info);
 }
 
 .eapp-button-danger-soft,
@@ -1204,6 +1208,7 @@
   --eapp-button-soft-bg-hover: var(--state-danger-soft-bg-hover);
   --eapp-button-soft-text: var(--state-danger-soft-text);
   --eapp-button-soft-ring: var(--state-danger-outline-border);
+  --eapp-button-ghost-text: var(--st-error);
 }
 
 .eapp-button-primary-soft:hover:not(:disabled):not([aria-disabled="true"]),
@@ -1309,7 +1314,6 @@
 .eapp-button-info-ghost,
 .eapp-button-danger-ghost {
   --eapp-button-ghost-bg-hover: var(--eapp-button-soft-bg);
-  --eapp-button-ghost-text: var(--eapp-button-soft-text);
 }
 
 .eapp-button-neutral-ghost {
