@@ -104,7 +104,15 @@ function buildSeedTheme(seedHex: string): SeedTheme {
   const source = argbFromHex(seedHex);
   const lightStatuses = extractStatuses(source, false);
   const darkStatuses = extractStatuses(source, true);
-  darkStatuses.error = { ...lightStatuses.error! };
+  // Dark error is PINK and consistent across icon, solid button and container
+  // (matching how the light error reads), not a deep red. Single source for
+  // every dark error token; modeDeclarations + preflight both read it.
+  darkStatuses.error = {
+    color: "#ffb4ab",
+    onColor: "#690005",
+    container: "#ffdad6",
+    onContainer: "#410002",
+  };
   return {
     light: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), false, 0)), statuses: lightStatuses },
     dark: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), true, 0)), statuses: darkStatuses },

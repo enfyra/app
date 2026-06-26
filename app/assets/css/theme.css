@@ -198,9 +198,9 @@
     --badge-secondary-soft-text: var(--md-on-tertiary-container);
     --badge-secondary-soft-border: color-mix(in srgb, var(--md-tertiary) 24%, transparent);
 
-    --control-invalid-border: color-mix(in srgb, #ef4444 50%, transparent);
-    --control-invalid-ring: color-mix(in srgb, #ef4444 25%, transparent);
-    --form-error-text: #dc2626;
+    --control-invalid-border: color-mix(in srgb, var(--st-error) 55%, transparent);
+    --control-invalid-ring: color-mix(in srgb, var(--st-error) 18%, transparent);
+    --form-error-text: var(--st-on-error-container);
 
     --card-bg: var(--block-base);
     --card-accent: color-mix(in srgb, var(--md-primary) 10%, transparent);
@@ -409,10 +409,7 @@
   --shell-main-bg: #131316;
   --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 4%, transparent), transparent 28rem), #131316;
 
-  /* Narrow dark invalid-input fix only: M3 dark error is a bright PINK, so the
-     default error border/ring mix the pink and are nearly invisible. Use a
-     clear red — calmer than light so dark stays soft while still readable. */
-  --control-invalid-border: color-mix(in srgb, #ef4444 32%, transparent);
-  --control-invalid-ring: color-mix(in srgb, #ef4444 12%, transparent);
-  --form-error-text: #fca5a5;
+  /* Dark invalid-input + error chrome derive from --st-error (calmed at the
+     source in primary-colors.ts), so no per-token dark overrides are needed
+     here. Tuning dark error happens only in buildSeedTheme. */
 }

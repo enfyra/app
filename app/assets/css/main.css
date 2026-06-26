@@ -677,6 +677,10 @@
   --eapp-button-soft-text: var(--state-danger-soft-text);
   --eapp-button-soft-ring: var(--state-danger-outline-border);
   --eapp-button-ghost-text: var(--st-error);
+  /* On hover a danger ghost reads like the solid delete button: filled pink
+     with dark on-error text, instead of pale-pink bg + pink icon that blends. */
+  --eapp-button-ghost-bg-hover: var(--action-danger-bg);
+  --eapp-button-ghost-text-hover: var(--st-on-error);
 }
 
 .eapp-button-primary-soft:hover:not(:disabled):not([aria-disabled="true"]),
@@ -779,8 +783,7 @@
 .eapp-button-primary-ghost,
 .eapp-button-success-ghost,
 .eapp-button-warning-ghost,
-.eapp-button-info-ghost,
-.eapp-button-danger-ghost {
+.eapp-button-info-ghost {
   --eapp-button-ghost-bg-hover: var(--eapp-button-soft-bg);
 }
 
