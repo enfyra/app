@@ -144,8 +144,8 @@ export function getPrimaryColorStyle(primary: PrimaryColorValue) {
   return `:root{${root}}.dark{${dark}}`;
 }
 
-export function getPrimaryColorMeta(primary: PrimaryColorValue) {
-  return seedThemes[primary].light.roles.primary!;
+export function getPrimaryColorMeta(primary: PrimaryColorValue, mode: "light" | "dark" = "light") {
+  return seedThemes[primary][mode].roles.primary!;
 }
 
 export function getPrimaryColorPreflightScript() {

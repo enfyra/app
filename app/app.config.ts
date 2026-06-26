@@ -52,7 +52,7 @@ export default defineAppConfig({
       ],
     },
     colors: {
-      primary: "violet",
+      primary: "green",
       secondary: "cyan",
       neutral: "slate",
       success: "success",
@@ -291,7 +291,7 @@ export default defineAppConfig({
       slots: {
         base: [
           "h-11 w-full rounded-[var(--radius-control)] border border-[var(--control-border)]",
-          "bg-[var(--control-bg)]",
+          "!bg-[var(--control-bg)]",
           "px-4 py-2.5 pr-11 text-sm",
           "text-[var(--control-text)]",
           "shadow-theme-xs",
@@ -299,8 +299,10 @@ export default defineAppConfig({
           "focus:border-[var(--control-border-focus)]",
           "focus:outline-none focus:ring-3 focus:ring-[var(--theme-focus-ring)]",
           "transition-all duration-300",
+          "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
+          "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
           "disabled:cursor-not-allowed disabled:opacity-100",
-          "disabled:border-[var(--control-disabled-border)] disabled:bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
+          "disabled:border-[var(--control-disabled-border)] disabled:!bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
         ],
         item: [
           'cursor-pointer hover:bg-[var(--state-primary-soft-bg)]'
@@ -321,6 +323,20 @@ export default defineAppConfig({
     },
     selectMenu: {
       slots: {
+        base: [
+          "h-11 w-full rounded-[var(--radius-control)] border border-[var(--control-border)]",
+          "!bg-[var(--control-bg)]",
+          "px-4 py-2.5 text-sm",
+          "text-[var(--control-text)]",
+          "shadow-theme-xs",
+          "focus:border-[var(--control-border-focus)]",
+          "focus:outline-none focus:ring-3 focus:ring-[var(--theme-focus-ring)]",
+          "transition-all duration-300",
+          "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
+          "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
+          "disabled:cursor-not-allowed disabled:opacity-100",
+          "disabled:border-[var(--control-disabled-border)] disabled:!bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
+        ].join(" "),
         item: [
           "data-highlighted:not-data-disabled:!text-[var(--text-primary)]",
           "data-highlighted:not-data-disabled:before:!bg-[var(--state-primary-soft-bg)]",
@@ -341,6 +357,20 @@ export default defineAppConfig({
     },
     inputMenu: {
       slots: {
+        base: [
+          "min-h-11 w-full rounded-[var(--radius-control)] border border-[var(--control-border)]",
+          "!bg-[var(--control-bg)]",
+          "px-4 py-2.5 text-sm",
+          "text-[var(--control-text)]",
+          "shadow-theme-xs",
+          "focus-within:border-[var(--control-border-focus)]",
+          "focus-within:outline-none focus-within:ring-3 focus-within:ring-[var(--theme-focus-ring)]",
+          "transition-all duration-300",
+          "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
+          "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
+          "disabled:cursor-not-allowed disabled:opacity-100",
+          "disabled:border-[var(--control-disabled-border)] disabled:!bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
+        ].join(" "),
         item: [
           "data-highlighted:not-data-disabled:!text-[var(--text-primary)]",
           "data-highlighted:not-data-disabled:before:!bg-[var(--state-primary-soft-bg)]",

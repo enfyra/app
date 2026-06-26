@@ -44,7 +44,7 @@ export default defineNuxtConfig({
             "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
         },
         { name: "theme-color", content: "#3b82f6" },
-        { name: "color-scheme", content: "light" },
+        { name: "color-scheme", content: "light dark" },
       ],
       link: [
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
