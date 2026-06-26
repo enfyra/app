@@ -40,7 +40,7 @@
     --danger-border: color-mix(in srgb, var(--danger-color) 40%, transparent);
     --danger-border-soft: color-mix(in srgb, var(--danger-color) 24%, transparent);
     --danger-ring: color-mix(in srgb, var(--danger-color) 18%, transparent);
-    --danger-ghost-text: var(--danger-surface);
+    --danger-ghost-text: var(--danger-on-surface);
 
     --ui-error: var(--danger-color);
     --status-success-base: var(--st-success);
