@@ -12,6 +12,9 @@ export const PRIMARY_COLOR_STORAGE_KEY = "enfyra-app-primary-color";
 export const PRIMARY_COLOR_STYLE_ID = "enfyra-app-primary-color-preflight";
 export const DEFAULT_PRIMARY_COLOR = "green";
 
+// Each accent is defined by a single seed hex. SchemeTonalSpot derives the full
+// M3 role palette (including a perceptually-balanced --md-primary) from it, so
+// the seeds are kept as raw hues and shown verbatim in the picker swatch.
 const primaryColorSeeds = {
   red: "#ef4444",
   orange: "#f97316",
@@ -21,16 +24,17 @@ const primaryColorSeeds = {
   pink: "#ec4899",
 } as const;
 
-export const primaryColors = [
-  { label: "Red", value: "red", class: "bg-red-500" },
-  { label: "Orange", value: "orange", class: "bg-orange-500" },
-  { label: "Green", value: "green", class: "bg-green-500" },
-  { label: "Blue", value: "blue", class: "bg-blue-500" },
-  { label: "Violet", value: "violet", class: "bg-violet-500" },
-  { label: "Pink", value: "pink", class: "bg-pink-500" },
-] as const;
-
 export type PrimaryColorValue = keyof typeof primaryColorSeeds;
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+export const primaryColors = (
+  (Object.keys(primaryColorSeeds) as PrimaryColorValue[]).map((value) => {
+    return { label: capitalize(value), value, swatch: primaryColorSeeds[value] } as const;
+  })
+) as readonly { readonly label: string; readonly value: PrimaryColorValue; readonly swatch: string }[];
 
 export function isPrimaryColor(value: string | null | undefined): value is PrimaryColorValue {
   return Boolean(value && value in primaryColorSeeds);
@@ -82,10 +86,14 @@ function extractRoles(scheme: DynamicScheme): Record<string, string> {
   return roles;
 }
 
+// Semantic status colors (success/warning/info/error) must stay fixed: they
+// carry meaning independent of the brand accent. blend:false keeps them from
+// drifting toward the primary hue (e.g. red accent no longer turns info blue
+// into violet, or success green into olive).
 function extractStatuses(source: number, isDark: boolean): Record<string, StatusQuartet> {
   const out: Record<string, StatusQuartet> = {};
   for (const [name, hex] of Object.entries(STATUS_SEEDS)) {
-    const group = customColor(source, { value: argbFromHex(hex), name, blend: true });
+    const group = customColor(source, { value: argbFromHex(hex), name, blend: false });
     const g = isDark ? group.dark : group.light;
     out[name] = { color: hexFromArgb(g.color), onColor: hexFromArgb(g.onColor), container: hexFromArgb(g.colorContainer), onContainer: hexFromArgb(g.onColorContainer) };
   }

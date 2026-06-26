@@ -24,31 +24,31 @@
     --brand-800: color-mix(in srgb, var(--md-primary) 58%, var(--md-on-primary-container));
     --brand-900: var(--md-on-primary-container);
     --brand-950: color-mix(in srgb, var(--md-on-primary-container) 80%, var(--md-primary));
-    --brand-violet-deep: var(--brand-700);
-    --brand-violet-electric: var(--brand-500);
-    --brand-violet-bright: var(--brand-400);
-    --brand-indigo-deep: var(--brand-800);
-    --brand-indigo-electric: var(--brand-600);
-    --brand-indigo-bright: var(--brand-400);
 
     --accent-cyan: #22D3EE;
-    --accent-cyan-bright: #67E8F9;
     --accent-fuchsia: #E879F9;
     --accent-fuchsia-bright: #F0ABFC;
     --accent-rose: #FB7185;
     --accent-rose-bright: #FDA4AF;
     --accent-emerald: #34D399;
-    --accent-emerald-bright: #6EE7B7;
     --accent-amber: #FBBF24;
-    --accent-amber-bright: #FCD34D;
+
+    /* Neutral block ramp. Material You "lite": the canvas + borders carry a faint
+       theme tint, but cards/panels/inputs stay crisp and neutral (clean white in
+       light, deep neutral in dark) so blocks read clearly lighter/darker than
+       the tinted background instead of being more saturated than it. */
+    --block-base: #ffffff;
+    --block-low: #fafafb;
+    --block-muted: #f4f4f5;
+    --block-high: #ececee;
 
     --bg-app: var(--md-background);
-    --surface-chrome: color-mix(in srgb, var(--md-surface-container-low) 88%, transparent);
-    --surface-default: color-mix(in srgb, var(--md-surface) 90%, transparent);
-    --surface-muted: color-mix(in srgb, var(--md-surface-container) 90%, transparent);
-    --surface-nested: color-mix(in srgb, var(--md-surface-container-low) 92%, transparent);
+    --surface-chrome: var(--md-surface-container-low);
+    --surface-default: var(--block-base);
+    --surface-muted: var(--block-muted);
+    --surface-nested: var(--block-low);
     --surface-overlay: color-mix(in srgb, var(--md-scrim) 45%, transparent);
-    --surface-header: color-mix(in srgb, var(--md-surface-container) 90%, transparent);
+    --surface-header: var(--block-muted);
 
     --bg-surface: var(--surface-default);
     --bg-elevated: var(--surface-default);
@@ -80,12 +80,12 @@
     --radius-subcontrol: 8px;
     --radius-pill: 9999px;
 
-    --control-bg: var(--md-surface-container);
+    --control-bg: color-mix(in srgb, var(--md-primary) 5%, var(--block-base));
     --control-border: var(--md-outline);
     --control-border-focus: var(--md-primary);
     --control-text: var(--md-on-surface);
     --control-placeholder: var(--text-tertiary);
-    --control-disabled-bg: color-mix(in srgb, var(--md-on-surface) 8%, var(--md-surface));
+    --control-disabled-bg: color-mix(in srgb, var(--md-on-surface) 6%, var(--block-base));
     --control-disabled-border: var(--md-outline-variant);
     --control-disabled-text: var(--text-disabled);
 
@@ -198,11 +198,11 @@
     --badge-secondary-soft-text: var(--md-on-tertiary-container);
     --badge-secondary-soft-border: color-mix(in srgb, var(--md-tertiary) 24%, transparent);
 
-    --control-invalid-border: var(--state-danger-outline-border);
-    --control-invalid-ring: color-mix(in srgb, var(--st-error) 12%, transparent);
-    --form-error-text: var(--state-danger-soft-text);
+    --control-invalid-border: color-mix(in srgb, #ef4444 50%, transparent);
+    --control-invalid-ring: color-mix(in srgb, #ef4444 25%, transparent);
+    --form-error-text: #dc2626;
 
-    --card-bg: color-mix(in srgb, var(--md-surface-container-low) 90%, transparent);
+    --card-bg: var(--block-base);
     --card-accent: color-mix(in srgb, var(--md-primary) 10%, transparent);
     --card-accent-soft: color-mix(in srgb, var(--md-primary) 4%, transparent);
     --card-border: var(--md-outline-variant);
@@ -223,11 +223,11 @@
     --pagination-disabled-border: var(--md-outline-variant);
     --pagination-disabled-text: var(--text-disabled);
 
-    --shell-sidebar-bg: var(--md-surface-container-low);
+    --shell-sidebar-bg: var(--md-surface);
     --shell-sidebar-border: var(--md-outline-variant);
     --shell-main-bg: var(--md-surface);
     --shell-main-border: var(--md-outline-variant);
-    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 10%, transparent), transparent 36rem), var(--md-background);
+    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 5%, transparent), transparent 28rem), var(--md-background);
     --nav-item-text: var(--md-on-surface-variant);
     --nav-item-hover-bg: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface));
     --nav-item-hover-text: var(--md-on-surface);
@@ -250,30 +250,28 @@
     --shadow-2xl: 0 32px 80px color-mix(in srgb, var(--md-shadow) 17%, transparent);
     --shadow-inset-card: 0 14px 36px color-mix(in srgb, var(--md-shadow) 8%, transparent), 0 2px 8px color-mix(in srgb, var(--md-shadow) 5%, transparent);
 
-    --shadow-primary: 0 4px 20px color-mix(in srgb, var(--md-primary) 22%, transparent), 0 2px 8px color-mix(in srgb, var(--md-primary) 14%, transparent);
-    --shadow-primary-lg: 0 8px 32px color-mix(in srgb, var(--md-primary) 28%, transparent), 0 4px 16px color-mix(in srgb, var(--md-primary) 16%, transparent);
-    --shadow-glow: 0 0 40px color-mix(in srgb, var(--md-primary) 20%, transparent);
+    --shadow-primary: 0 4px 20px color-mix(in srgb, var(--md-primary) 12%, transparent), 0 2px 8px color-mix(in srgb, var(--md-primary) 8%, transparent);
+    --shadow-primary-lg: 0 8px 32px color-mix(in srgb, var(--md-primary) 16%, transparent), 0 4px 16px color-mix(in srgb, var(--md-primary) 10%, transparent);
+    --shadow-glow: 0 0 40px color-mix(in srgb, var(--md-primary) 10%, transparent);
 
     --gradient-primary: linear-gradient(135deg, var(--md-primary) 0%, var(--md-tertiary) 100%);
     --gradient-primary-reverse: linear-gradient(135deg, var(--md-tertiary) 0%, var(--md-primary) 100%);
     --gradient-violet-cyan: linear-gradient(135deg, var(--md-primary) 0%, var(--md-tertiary) 100%);
     --gradient-fuchsia-rose: linear-gradient(135deg, #E879F9 0%, #FB7185 100%);
-    --gradient-emerald-cyan: linear-gradient(135deg, #34D399 0%, #22D3EE 100%);
-    --gradient-amber-rose: linear-gradient(135deg, #FBBF24 0%, #FB7185 100%);
     --gradient-rainbow: linear-gradient(135deg, #8B5CF6 0%, #6366F1 25%, #22D3EE 50%, #34D399 75%, #FBBF24 100%);
 
-    --glow-primary: 0 0 40px color-mix(in srgb, var(--md-primary) 26%, transparent), 0 0 80px color-mix(in srgb, var(--md-primary) 16%, transparent);
-    --glow-violet: 0 0 30px color-mix(in srgb, var(--md-primary) 30%, transparent);
+    --glow-primary: 0 0 40px color-mix(in srgb, var(--md-primary) 14%, transparent), 0 0 80px color-mix(in srgb, var(--md-primary) 8%, transparent);
+    --glow-violet: 0 0 30px color-mix(in srgb, var(--md-primary) 14%, transparent);
     --glow-cyan: 0 0 30px rgba(34, 211, 238, 0.25);
     --glow-fuchsia: 0 0 30px rgba(232, 121, 249, 0.25);
     --glow-rose: 0 0 30px rgba(251, 113, 133, 0.25);
-    --glow-subtle: 0 0 50px color-mix(in srgb, var(--md-primary) 16%, transparent);
+    --glow-subtle: 0 0 50px color-mix(in srgb, var(--md-primary) 8%, transparent);
 
     --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-    --table-header-bg: var(--md-surface-container);
+    --table-header-bg: var(--block-muted);
     --table-header-color: var(--md-on-surface);
     --table-header-border: var(--md-outline-variant);
     --table-header-hover-bg: var(--md-surface-container-high);
@@ -394,4 +392,27 @@
   --ui-border-accented: var(--state-primary-outline-border) !important;
   --ui-border-inverted: var(--md-primary) !important;
   --ui-ring: var(--md-primary) !important;
+}
+
+.dark {
+  --block-base: #1c1c20;
+  --block-low: #222227;
+  --block-muted: #28282e;
+  --block-high: #303037;
+
+  /* Dark theme is a harmonious neutral-dark canvas so neutral blocks, tinted
+     borders and the accent never clash in temperature. Only borders, the accent
+     and a faint corner radial carry the theme hue; surfaces stay neutral. */
+  --bg-app: #131316;
+  --surface-chrome: #16161a;
+  --shell-sidebar-bg: #131316;
+  --shell-main-bg: #131316;
+  --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 4%, transparent), transparent 28rem), #131316;
+
+  /* Narrow dark invalid-input fix only: M3 dark error is a bright PINK, so the
+     default error border/ring mix the pink and are nearly invisible. Use a
+     clear red — calmer than light so dark stays soft while still readable. */
+  --control-invalid-border: color-mix(in srgb, #ef4444 32%, transparent);
+  --control-invalid-ring: color-mix(in srgb, #ef4444 12%, transparent);
+  --form-error-text: #fca5a5;
 }

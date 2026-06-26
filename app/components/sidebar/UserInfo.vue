@@ -161,7 +161,7 @@ async function handleLogout() {
     <button
       v-if="collapsed"
       type="button"
-      class="flex items-center justify-center w-full rounded-[var(--radius-control)] border border-[var(--shell-main-border)] bg-[var(--shell-main-bg)] p-2 shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--card-border-hover)] cursor-pointer"
+      class="flex items-center justify-center w-full rounded-[var(--radius-control)] border border-[var(--card-border)] bg-[var(--block-base)] p-2 shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--card-border-hover)] cursor-pointer"
       aria-label="Open profile"
       @click="togglePanel"
     >
@@ -170,7 +170,7 @@ async function handleLogout() {
 
     <div
       v-else
-      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--shell-main-border)] bg-[var(--shell-main-bg)] shadow-[var(--shadow-sm)] backdrop-blur-xl transition-colors duration-200 hover:border-[var(--card-border-hover)]"
+      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--block-base)] shadow-[var(--shadow-sm)] backdrop-blur-xl transition-colors duration-200 hover:border-[var(--card-border-hover)]"
     >
       <div
         role="button"
@@ -194,7 +194,7 @@ async function handleLogout() {
         :class="panelGridClass"
       >
         <div class="min-h-0 overflow-hidden">
-          <div class="border-t border-[var(--shell-main-border)]">
+          <div class="border-t border-[var(--card-border)]">
           <div class="p-2 space-y-1">
             <template v-for="item in visibleAccountPanelItems" :key="item.id">
               <PermissionGate :condition="item.permission">

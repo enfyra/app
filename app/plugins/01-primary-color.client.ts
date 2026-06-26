@@ -12,7 +12,7 @@ import {
 interface PrimaryColorOption {
   label: string;
   value: PrimaryColorValue;
-  class: string;
+  swatch: string;
 }
 
 interface PrimaryColorService {

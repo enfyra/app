@@ -972,7 +972,7 @@
 }
 
 .dark .card-float {
-  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  box-shadow: var(--shadow-lg);
 }
 
 .card-float:hover {
@@ -980,7 +980,7 @@
 }
 
 .dark .card-float:hover {
-  box-shadow: var(--shadow-xl), var(--shadow-glow);
+  box-shadow: var(--shadow-xl);
 }
 
 .card-float-primary {
@@ -1228,13 +1228,13 @@
 
 .menu-item-active {
   background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, color-mix(in srgb, var(--brand-600) 10%, transparent) 100%);
-  color: var(--brand-violet-deep);
+  color: var(--brand-700);
   box-shadow: 0 0 20px color-mix(in srgb, var(--brand-500) 8%, transparent);
 }
 
 .dark .menu-item-active {
   background: color-mix(in srgb, var(--brand-500) 15%, transparent);
-  color: var(--brand-violet-bright);
+  color: var(--brand-400);
 }
 
 .menu-item-inactive {
@@ -1243,12 +1243,12 @@
 
 .menu-item-inactive:hover {
   background: color-mix(in srgb, var(--brand-500) 8%, transparent);
-  color: var(--brand-violet-deep);
+  color: var(--brand-700);
 }
 
 .dark .menu-item-inactive:hover {
   background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  color: var(--brand-violet-bright);
+  color: var(--brand-400);
 }
 
 .menu-item-icon {
@@ -1256,13 +1256,13 @@
 }
 
 .menu-item-icon-active {
-  color: var(--brand-violet-electric);
+  color: var(--brand-500);
   display: flex;
   align-items: center;
 }
 
 .dark .menu-item-icon-active {
-  color: var(--brand-violet-bright);
+  color: var(--brand-400);
 }
 
 .menu-item-icon-inactive {
@@ -1291,13 +1291,13 @@
 
 .menu-dropdown-item-active {
   background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, color-mix(in srgb, var(--brand-600) 10%, transparent) 100%);
-  color: var(--brand-violet-deep);
+  color: var(--brand-700);
   box-shadow: 0 0 20px color-mix(in srgb, var(--brand-500) 8%, transparent);
 }
 
 .dark .menu-dropdown-item-active {
   background: color-mix(in srgb, var(--brand-500) 15%, transparent);
-  color: var(--brand-violet-bright);
+  color: var(--brand-400);
 }
 
 .menu-dropdown-item-inactive {
@@ -1306,12 +1306,12 @@
 
 .menu-dropdown-item-inactive:hover {
   background: color-mix(in srgb, var(--brand-500) 8%, transparent);
-  color: var(--brand-violet-deep);
+  color: var(--brand-700);
 }
 
 .dark .menu-dropdown-item-inactive:hover {
   background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  color: var(--brand-violet-bright);
+  color: var(--brand-400);
 }
 
 .no-scrollbar {

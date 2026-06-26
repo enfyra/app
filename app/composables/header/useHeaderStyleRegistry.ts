@@ -39,7 +39,7 @@ const defaultHeaderStyle: HeaderStyleConfig = {
 
   accentLine: {
     enabled: true,
-    gradient: "linear-gradient(90deg, transparent 0%, rgba(124, 58, 237, 0.4) 50%, transparent 100%)",
+    gradient: "linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--md-primary) 40%, transparent) 50%, transparent 100%)",
     height: "1px",
     position: "top",
   },

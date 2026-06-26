@@ -22,7 +22,7 @@ function handleKeydown(event: KeyboardEvent) {
     <div
       role="button"
       tabindex="0"
-      class="flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]"
+      class="flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--nav-item-hover-bg)] hover:text-[var(--nav-item-hover-text)]"
       @click="toggleTheme"
       @keydown="handleKeydown"
     >
@@ -31,6 +31,7 @@ function handleKeydown(event: KeyboardEvent) {
       <USwitch
         size="sm"
         :model-value="isDark"
+        :ui="{ base: 'ring-1 ring-inset ring-[var(--border-default)]' }"
         @update:model-value="toggleTheme"
         @click.stop
       />
@@ -53,7 +54,7 @@ function handleKeydown(event: KeyboardEvent) {
           :title="color.label"
           @click="$primaryColor.set(color.value)"
         >
-          <span class="h-5 w-5 rounded-full" :class="color.class" />
+          <span class="h-5 w-5 rounded-full" :style="{ backgroundColor: color.swatch }" />
         </button>
       </div>
     </div>

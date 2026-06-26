@@ -20,12 +20,12 @@ const folderIconName = computed(() => {
 });
 
 const folderIconColor = computed(() => {
-  if (!selectedFolder.value) return "var(--brand-violet-deep)";
+  if (!selectedFolder.value) return "var(--brand-700)";
   const colorClass = getFolderIconColor(selectedFolder.value);
 
   if (colorClass.includes("blue")) return "#3B82F6";
   if (colorClass.includes("amber")) return "#F59E0B";
-  return "var(--brand-violet-deep)";
+  return "var(--brand-700)";
 });
 </script>
 
@@ -70,9 +70,9 @@ const folderIconColor = computed(() => {
                   variant="outline"
                   class="flex items-center gap-1.5 px-2.5 py-1"
                   style="
-                    background: rgba(124, 58, 237, 0.1);
-                    border-color: rgba(124, 58, 237, 0.3);
-                    color: var(--brand-violet-deep);
+                    background: color-mix(in srgb, var(--md-primary) 10%, transparent);
+                    border-color: color-mix(in srgb, var(--md-primary) 30%, transparent);
+                    color: var(--brand-700);
                   "
                 >
                   <UIcon name="lucide:shield" class="w-3.5 h-3.5" />

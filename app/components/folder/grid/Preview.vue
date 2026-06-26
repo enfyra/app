@@ -4,14 +4,14 @@
     <div
       class="absolute inset-0 opacity-20"
       style="
-        background-image: radial-gradient(circle, rgba(124, 58, 237, 0.3) 1px, transparent 1px);
+        background-image: radial-gradient(circle, color-mix(in srgb, var(--md-primary) 30%, transparent) 1px, transparent 1px);
         background-size: 16px 16px;
       "
     />
 
     <div
       class="absolute inset-0 opacity-30"
-      style="background: radial-gradient(circle at center, var(--brand-violet-deep-20, color-mix(in srgb, var(--md-primary) 12%, transparent)) 0%, transparent 70%)"
+      style="background: radial-gradient(circle at center, color-mix(in srgb, var(--md-primary) 12%, transparent) 0%, transparent 70%)"
     />
 
     <div
@@ -20,7 +20,7 @@
       <UIcon
         :name="folder.icon"
         :size="96"
-        style="color: var(--brand-violet-deep); filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--md-primary) 30%, transparent))"
+        style="color: var(--brand-700); filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--md-primary) 30%, transparent))"
       />
     </div>
   </div>

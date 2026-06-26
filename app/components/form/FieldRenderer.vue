@@ -483,7 +483,6 @@ function getComponentConfigByKey(key: string) {
         componentProps: {
           ...componentPropsBase,
           rows: 4,
-          variant: "subtle",
           autoresize: true,
           class: `${componentPropsBase.class} font-mono text-xs`.trim(),
           modelValue: ensureString(props.formData[key]),

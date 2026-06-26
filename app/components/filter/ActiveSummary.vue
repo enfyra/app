@@ -116,7 +116,7 @@ const rootClasses = computed(() => [
 }
 
 :global(.dark) .active-filter-summary__icon {
-  color: var(--brand-violet-bright);
+  color: var(--brand-400);
   background: color-mix(in srgb, var(--ui-primary) 20%, var(--surface-default));
 }
 </style>

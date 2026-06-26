@@ -32,8 +32,8 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
     if (isDark.value) {
       return m.EditorView.baseTheme({
         "&": {
-          backgroundColor: "#09090b",
-          color: "#e4e4e7",
+          backgroundColor: "var(--block-base)",
+          color: "var(--text-primary)",
           fontSize: "14px",
           fontFamily: "'Fira Code', monospace",
           borderRadius: "8px",
@@ -48,7 +48,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
         },
 
         ".cm-content ::selection": {
-          backgroundColor: "#264F78 !important",
+          backgroundColor: "color-mix(in srgb, var(--md-primary) 28%, transparent) !important",
           color: "inherit !important",
         },
 
@@ -57,35 +57,35 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
         },
 
         ".cm-gutters": {
-          backgroundColor: "#0c0c0e",
-          color: "#858585",
+          backgroundColor: "var(--block-low)",
+          color: "var(--text-tertiary)",
           borderRight: "1px solid var(--border-neutral)",
         },
 
         ".cm-activeLine": {
-          backgroundColor: "#2a2d2e",
+          backgroundColor: "var(--block-muted)",
         },
 
         ".cm-selectionBackground": {
-          backgroundColor: "#264F78 !important",
+          backgroundColor: "color-mix(in srgb, var(--md-primary) 28%, transparent) !important",
         },
 
         "&.cm-focused .cm-selectionBackground": {
-          backgroundColor: "#264F78 !important",
+          backgroundColor: "color-mix(in srgb, var(--md-primary) 28%, transparent) !important",
         },
 
         ".cm-selectionMatch": {
-          backgroundColor: "#515c6a80",
+          backgroundColor: "color-mix(in srgb, var(--md-primary) 18%, transparent)",
         },
 
         ".cm-cursor": {
-          borderLeft: "2px solid white",
+          borderLeft: "2px solid var(--text-primary)",
         },
 
         ".cm-tooltip": {
-          backgroundColor: "#252526",
-          color: "#d4d4d4",
-          border: "1px solid #454545",
+          backgroundColor: "var(--block-high)",
+          color: "var(--text-secondary)",
+          border: "1px solid var(--border-default)",
           borderRadius: "4px",
           padding: "0",
         },
@@ -103,8 +103,8 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
             minHeight: "24px",
           },
           "& > ul > li[aria-selected]": {
-            backgroundColor: "#094771",
-            color: "#ffffff",
+            backgroundColor: "var(--state-primary-soft-bg)",
+            color: "var(--state-primary-soft-text)",
           },
           "& .cm-completionIcon": {
             width: "16px",
@@ -116,21 +116,21 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
           },
           "& .cm-completionDetail": {
             marginLeft: "8px",
-            color: "#858585",
+            color: "var(--text-tertiary)",
             fontStyle: "italic",
           },
         },
 
         ".cm-tooltip-hover": {
-          backgroundColor: "#1e1e1e",
-          border: "1px solid #454545",
+          backgroundColor: "var(--block-high)",
+          border: "1px solid var(--border-default)",
           padding: "8px",
           maxWidth: "500px",
         },
 
         ".cm-diagnostic": {
-          backgroundColor: "#252526",
-          border: "1px solid #454545",
+          backgroundColor: "var(--block-high)",
+          border: "1px solid var(--border-default)",
           padding: "4px 8px",
           borderRadius: "4px",
         },
@@ -198,8 +198,8 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
     } else {
       return m.EditorView.baseTheme({
         "&": {
-          backgroundColor: "#ffffff",
-          color: "#1e1e1e",
+          backgroundColor: "var(--block-base)",
+          color: "var(--text-primary)",
           fontSize: "14px",
           fontFamily: "'Fira Code', monospace",
           borderRadius: "8px",
@@ -214,7 +214,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
         },
 
         ".cm-content ::selection": {
-          backgroundColor: "#add6ff !important",
+          backgroundColor: "color-mix(in srgb, var(--md-primary) 24%, transparent) !important",
           color: "inherit !important",
         },
 
@@ -223,34 +223,34 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
         },
 
         ".cm-gutters": {
-          backgroundColor: "#f8f9fa",
-          color: "#6e7681",
+          backgroundColor: "var(--block-low)",
+          color: "var(--text-tertiary)",
           borderRight: "1px solid var(--border-neutral)",
         },
 
         ".cm-activeLine": {
-          backgroundColor: "#f6f8fa",
+          backgroundColor: "var(--block-muted)",
         },
 
         ".cm-selectionBackground": {
-          backgroundColor: "#add6ff !important",
+          backgroundColor: "color-mix(in srgb, var(--md-primary) 24%, transparent) !important",
         },
 
         "&.cm-focused .cm-selectionBackground": {
-          backgroundColor: "#add6ff !important",
+          backgroundColor: "color-mix(in srgb, var(--md-primary) 24%, transparent) !important",
         },
 
         ".cm-selectionMatch": {
-          backgroundColor: "#c8e1ff80",
+          backgroundColor: "color-mix(in srgb, var(--md-primary) 16%, transparent)",
         },
 
         ".cm-cursor": {
-          borderLeft: "2px solid #1e1e1e",
+          borderLeft: "2px solid var(--text-primary)",
         },
 
         ".cm-tooltip": {
-          backgroundColor: "#ffffff",
-          color: "#1e1e1e",
+          backgroundColor: "var(--block-high)",
+          color: "var(--text-primary)",
           border: "1px solid var(--border-neutral)",
           borderRadius: "4px",
           padding: "0",
@@ -270,8 +270,8 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
             minHeight: "24px",
           },
           "& > ul > li[aria-selected]": {
-            backgroundColor: "#0969da",
-            color: "#ffffff",
+            backgroundColor: "var(--state-primary-soft-bg)",
+            color: "var(--state-primary-soft-text)",
           },
           "& .cm-completionIcon": {
             width: "16px",
@@ -283,13 +283,13 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
           },
           "& .cm-completionDetail": {
             marginLeft: "8px",
-            color: "#6e7681",
+            color: "var(--text-tertiary)",
             fontStyle: "italic",
           },
         },
 
         ".cm-tooltip-hover": {
-          backgroundColor: "#ffffff",
+          backgroundColor: "var(--block-high)",
           border: "1px solid var(--border-neutral)",
           padding: "8px",
           maxWidth: "500px",
@@ -297,7 +297,7 @@ export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModu
         },
 
         ".cm-diagnostic": {
-          backgroundColor: "#ffffff",
+          backgroundColor: "var(--block-high)",
           border: "1px solid var(--border-neutral)",
           padding: "4px 8px",
           borderRadius: "4px",
