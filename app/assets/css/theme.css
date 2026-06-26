@@ -6,11 +6,47 @@
     --ui-success: var(--st-success);
     --ui-info: var(--st-info);
     --ui-warning: var(--st-warning);
-    --ui-error: var(--st-error);
+    --status-theme-tint: 10%;
+    --success-color: var(--st-success);
+    --success-on-color: var(--st-on-success);
+    --success-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--st-success-container));
+    --success-surface-hover: color-mix(in srgb, var(--success-color) 18%, var(--success-surface));
+    --success-on-surface: var(--st-on-success-container);
+    --success-border: color-mix(in srgb, var(--success-color) 40%, transparent);
+    --success-border-soft: color-mix(in srgb, var(--success-color) 24%, transparent);
+
+    --warning-color: var(--st-warning);
+    --warning-on-color: var(--st-on-warning);
+    --warning-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--st-warning-container));
+    --warning-surface-hover: color-mix(in srgb, var(--warning-color) 20%, var(--warning-surface));
+    --warning-on-surface: var(--st-on-warning-container);
+    --warning-border: color-mix(in srgb, var(--warning-color) 42%, transparent);
+    --warning-border-soft: color-mix(in srgb, var(--warning-color) 26%, transparent);
+
+    --info-color: var(--st-info);
+    --info-on-color: var(--st-on-info);
+    --info-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--st-info-container));
+    --info-surface-hover: color-mix(in srgb, var(--info-color) 18%, var(--info-surface));
+    --info-on-surface: var(--st-on-info-container);
+    --info-border: color-mix(in srgb, var(--info-color) 42%, transparent);
+    --info-border-soft: color-mix(in srgb, var(--info-color) 24%, transparent);
+
+    --danger-color: var(--st-error);
+    --danger-on-color: var(--st-on-error);
+    --danger-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--st-error-container));
+    --danger-surface-hover: color-mix(in srgb, var(--danger-color) 18%, var(--danger-surface));
+    --danger-surface-active: color-mix(in srgb, var(--danger-color) 28%, var(--danger-surface));
+    --danger-on-surface: var(--st-on-error-container);
+    --danger-border: color-mix(in srgb, var(--danger-color) 40%, transparent);
+    --danger-border-soft: color-mix(in srgb, var(--danger-color) 24%, transparent);
+    --danger-ring: color-mix(in srgb, var(--danger-color) 18%, transparent);
+    --danger-ghost-text: var(--danger-surface);
+
+    --ui-error: var(--danger-color);
     --status-success-base: var(--st-success);
     --status-info-base: var(--st-info);
     --status-warning-base: var(--st-warning);
-    --status-danger-base: var(--st-error);
+    --status-danger-base: var(--danger-color);
 
     --brand-25: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface));
     --brand-50: color-mix(in srgb, var(--md-primary) 8%, var(--md-surface));
@@ -117,48 +153,47 @@
     --action-neutral-disabled-bg: color-mix(in srgb, var(--md-on-surface) 8%, var(--md-surface));
     --action-neutral-disabled-text: var(--text-disabled);
 
-    --state-danger-emphasis-text: color-mix(in srgb, var(--st-error) 34%, var(--st-on-error-container));
-    --action-danger-bg: var(--st-error);
-    --action-danger-bg-hover: color-mix(in srgb, var(--st-error) 82%, var(--st-on-error-container));
-    --action-danger-bg-active: color-mix(in srgb, var(--st-error) 70%, var(--st-on-error-container));
-    --action-danger-text: var(--state-danger-emphasis-text);
-    --action-success-bg: var(--st-success);
-    --action-success-bg-hover: color-mix(in srgb, var(--st-success) 82%, var(--st-on-success-container));
-    --action-success-bg-active: color-mix(in srgb, var(--st-success) 70%, var(--st-on-success-container));
-    --action-success-text: var(--st-on-success);
-    --action-warning-bg: var(--st-warning);
-    --action-warning-bg-hover: color-mix(in srgb, var(--st-warning) 82%, var(--st-on-warning-container));
-    --action-warning-bg-active: color-mix(in srgb, var(--st-warning) 70%, var(--st-on-warning-container));
-    --action-warning-text: var(--st-on-warning);
-    --action-info-bg: var(--st-info);
-    --action-info-bg-hover: color-mix(in srgb, var(--st-info) 82%, var(--st-on-info-container));
-    --action-info-bg-active: color-mix(in srgb, var(--st-info) 70%, var(--st-on-info-container));
-    --action-info-text: var(--st-on-info);
+    --action-danger-bg: var(--danger-surface);
+    --action-danger-bg-hover: var(--danger-surface-hover);
+    --action-danger-bg-active: var(--danger-surface-active);
+    --action-danger-text: var(--danger-on-surface);
+    --action-success-bg: var(--success-color);
+    --action-success-bg-hover: color-mix(in srgb, var(--success-color) 82%, var(--success-on-surface));
+    --action-success-bg-active: color-mix(in srgb, var(--success-color) 70%, var(--success-on-surface));
+    --action-success-text: var(--success-on-color);
+    --action-warning-bg: var(--warning-color);
+    --action-warning-bg-hover: color-mix(in srgb, var(--warning-color) 82%, var(--warning-on-surface));
+    --action-warning-bg-active: color-mix(in srgb, var(--warning-color) 70%, var(--warning-on-surface));
+    --action-warning-text: var(--warning-on-color);
+    --action-info-bg: var(--info-color);
+    --action-info-bg-hover: color-mix(in srgb, var(--info-color) 82%, var(--info-on-surface));
+    --action-info-bg-active: color-mix(in srgb, var(--info-color) 70%, var(--info-on-surface));
+    --action-info-text: var(--info-on-color);
 
-    --state-danger-soft-bg: var(--st-error-container);
-    --state-danger-soft-bg-hover: color-mix(in srgb, var(--st-error) 18%, var(--st-error-container));
-    --state-danger-soft-text: var(--state-danger-emphasis-text);
-    --state-danger-outline-border: color-mix(in srgb, var(--st-error) 40%, transparent);
-    --state-danger-title-text: var(--state-danger-emphasis-text);
-    --state-danger-description-text: var(--state-danger-emphasis-text);
-    --state-success-soft-bg: var(--st-success-container);
-    --state-success-soft-bg-hover: color-mix(in srgb, var(--st-success) 18%, var(--md-surface));
-    --state-success-soft-text: var(--st-on-success-container);
-    --state-success-outline-border: color-mix(in srgb, var(--st-success) 40%, transparent);
-    --state-success-title-text: var(--st-on-success-container);
-    --state-success-description-text: var(--st-on-success-container);
-    --state-warning-soft-bg: var(--st-warning-container);
-    --state-warning-soft-bg-hover: color-mix(in srgb, var(--st-warning) 20%, var(--md-surface));
-    --state-warning-soft-text: var(--st-on-warning-container);
-    --state-warning-outline-border: color-mix(in srgb, var(--st-warning) 42%, transparent);
-    --state-warning-title-text: var(--st-on-warning-container);
-    --state-warning-description-text: var(--st-on-warning-container);
-    --state-info-soft-bg: var(--st-info-container);
-    --state-info-soft-bg-hover: color-mix(in srgb, var(--st-info) 18%, var(--md-surface));
-    --state-info-soft-text: var(--st-on-info-container);
-    --state-info-outline-border: color-mix(in srgb, var(--st-info) 42%, transparent);
-    --state-info-title-text: var(--st-on-info-container);
-    --state-info-description-text: var(--st-on-info-container);
+    --state-danger-soft-bg: var(--danger-surface);
+    --state-danger-soft-bg-hover: var(--danger-surface-hover);
+    --state-danger-soft-text: var(--danger-on-surface);
+    --state-danger-outline-border: var(--danger-border);
+    --state-danger-title-text: var(--danger-on-surface);
+    --state-danger-description-text: var(--danger-on-surface);
+    --state-success-soft-bg: var(--success-surface);
+    --state-success-soft-bg-hover: var(--success-surface-hover);
+    --state-success-soft-text: var(--success-on-surface);
+    --state-success-outline-border: var(--success-border);
+    --state-success-title-text: var(--success-on-surface);
+    --state-success-description-text: var(--success-on-surface);
+    --state-warning-soft-bg: var(--warning-surface);
+    --state-warning-soft-bg-hover: var(--warning-surface-hover);
+    --state-warning-soft-text: var(--warning-on-surface);
+    --state-warning-outline-border: var(--warning-border);
+    --state-warning-title-text: var(--warning-on-surface);
+    --state-warning-description-text: var(--warning-on-surface);
+    --state-info-soft-bg: var(--info-surface);
+    --state-info-soft-bg-hover: var(--info-surface-hover);
+    --state-info-soft-text: var(--info-on-surface);
+    --state-info-outline-border: var(--info-border);
+    --state-info-title-text: var(--info-on-surface);
+    --state-info-description-text: var(--info-on-surface);
 
     --state-neutral-soft-bg: var(--surface-muted);
     --state-neutral-soft-bg-hover: color-mix(in srgb, var(--md-on-surface) 12%, var(--md-surface));
@@ -183,25 +218,25 @@
     --badge-neutral-soft-bg: color-mix(in srgb, var(--md-on-surface) 8%, var(--md-surface));
     --badge-neutral-soft-text: var(--md-on-surface-variant);
     --badge-neutral-soft-border: var(--md-outline-variant);
-    --badge-success-soft-bg: var(--st-success-container);
-    --badge-success-soft-text: var(--st-on-success-container);
-    --badge-success-soft-border: color-mix(in srgb, var(--st-success) 24%, transparent);
-    --badge-danger-soft-bg: var(--st-error-container);
-    --badge-danger-soft-text: var(--state-danger-emphasis-text);
-    --badge-danger-soft-border: color-mix(in srgb, var(--st-error) 24%, transparent);
-    --badge-warning-soft-bg: var(--st-warning-container);
-    --badge-warning-soft-text: var(--st-on-warning-container);
-    --badge-warning-soft-border: color-mix(in srgb, var(--st-warning) 26%, transparent);
-    --badge-info-soft-bg: var(--st-info-container);
-    --badge-info-soft-text: var(--st-on-info-container);
-    --badge-info-soft-border: color-mix(in srgb, var(--st-info) 24%, transparent);
+    --badge-success-soft-bg: var(--success-surface);
+    --badge-success-soft-text: var(--success-on-surface);
+    --badge-success-soft-border: var(--success-border-soft);
+    --badge-danger-soft-bg: var(--danger-surface);
+    --badge-danger-soft-text: var(--danger-on-surface);
+    --badge-danger-soft-border: var(--danger-border-soft);
+    --badge-warning-soft-bg: var(--warning-surface);
+    --badge-warning-soft-text: var(--warning-on-surface);
+    --badge-warning-soft-border: var(--warning-border-soft);
+    --badge-info-soft-bg: var(--info-surface);
+    --badge-info-soft-text: var(--info-on-surface);
+    --badge-info-soft-border: var(--info-border-soft);
     --badge-secondary-soft-bg: var(--md-tertiary-container);
     --badge-secondary-soft-text: var(--md-on-tertiary-container);
     --badge-secondary-soft-border: color-mix(in srgb, var(--md-tertiary) 24%, transparent);
 
-    --control-invalid-border: color-mix(in srgb, var(--st-error) 55%, transparent);
-    --control-invalid-ring: color-mix(in srgb, var(--st-error) 18%, transparent);
-    --form-error-text: var(--state-danger-emphasis-text);
+    --control-invalid-border: color-mix(in srgb, var(--danger-color) 55%, transparent);
+    --control-invalid-ring: var(--danger-ring);
+    --form-error-text: var(--danger-color);
 
     --card-bg: var(--block-base);
     --card-accent: color-mix(in srgb, var(--md-primary) 10%, transparent);
@@ -327,53 +362,53 @@
   --ui-color-secondary-900: var(--md-on-tertiary-container) !important;
   --ui-color-secondary-950: color-mix(in srgb, var(--md-on-tertiary-container) 82%, var(--md-tertiary)) !important;
 
-  --ui-color-error-50: color-mix(in srgb, var(--st-error) 6%, var(--md-surface)) !important;
-  --ui-color-error-100: var(--st-error-container) !important;
-  --ui-color-error-200: color-mix(in srgb, var(--st-error) 16%, var(--md-surface)) !important;
-  --ui-color-error-300: color-mix(in srgb, var(--st-error) 32%, var(--md-surface)) !important;
-  --ui-color-error-400: color-mix(in srgb, var(--st-error) 60%, var(--md-surface)) !important;
-  --ui-color-error-500: var(--st-error) !important;
-  --ui-color-error-600: var(--st-error) !important;
-  --ui-color-error-700: color-mix(in srgb, var(--st-error) 80%, var(--st-on-error-container)) !important;
-  --ui-color-error-800: color-mix(in srgb, var(--st-error) 62%, var(--st-on-error-container)) !important;
-  --ui-color-error-900: var(--st-on-error-container) !important;
-  --ui-color-error-950: color-mix(in srgb, var(--st-on-error-container) 82%, var(--st-error)) !important;
+  --ui-color-error-50: color-mix(in srgb, var(--danger-color) 6%, var(--md-surface)) !important;
+  --ui-color-error-100: var(--danger-surface) !important;
+  --ui-color-error-200: color-mix(in srgb, var(--danger-color) 16%, var(--md-surface)) !important;
+  --ui-color-error-300: color-mix(in srgb, var(--danger-color) 32%, var(--md-surface)) !important;
+  --ui-color-error-400: color-mix(in srgb, var(--danger-color) 60%, var(--md-surface)) !important;
+  --ui-color-error-500: var(--danger-color) !important;
+  --ui-color-error-600: var(--danger-color) !important;
+  --ui-color-error-700: color-mix(in srgb, var(--danger-color) 80%, var(--danger-on-surface)) !important;
+  --ui-color-error-800: color-mix(in srgb, var(--danger-color) 62%, var(--danger-on-surface)) !important;
+  --ui-color-error-900: var(--danger-on-surface) !important;
+  --ui-color-error-950: color-mix(in srgb, var(--danger-on-surface) 82%, var(--danger-color)) !important;
 
   --ui-color-success-50: color-mix(in srgb, var(--st-success) 6%, var(--md-surface)) !important;
-  --ui-color-success-100: var(--st-success-container) !important;
+  --ui-color-success-100: var(--success-surface) !important;
   --ui-color-success-200: color-mix(in srgb, var(--st-success) 16%, var(--md-surface)) !important;
   --ui-color-success-300: color-mix(in srgb, var(--st-success) 32%, var(--md-surface)) !important;
   --ui-color-success-400: color-mix(in srgb, var(--st-success) 60%, var(--md-surface)) !important;
   --ui-color-success-500: var(--st-success) !important;
   --ui-color-success-600: var(--st-success) !important;
-  --ui-color-success-700: color-mix(in srgb, var(--st-success) 80%, var(--st-on-success-container)) !important;
-  --ui-color-success-800: color-mix(in srgb, var(--st-success) 62%, var(--st-on-success-container)) !important;
-  --ui-color-success-900: var(--st-on-success-container) !important;
-  --ui-color-success-950: color-mix(in srgb, var(--st-on-success-container) 82%, var(--st-success)) !important;
+  --ui-color-success-700: color-mix(in srgb, var(--success-color) 80%, var(--success-on-surface)) !important;
+  --ui-color-success-800: color-mix(in srgb, var(--success-color) 62%, var(--success-on-surface)) !important;
+  --ui-color-success-900: var(--success-on-surface) !important;
+  --ui-color-success-950: color-mix(in srgb, var(--success-on-surface) 82%, var(--success-color)) !important;
 
   --ui-color-warning-50: color-mix(in srgb, var(--st-warning) 6%, var(--md-surface)) !important;
-  --ui-color-warning-100: var(--st-warning-container) !important;
+  --ui-color-warning-100: var(--warning-surface) !important;
   --ui-color-warning-200: color-mix(in srgb, var(--st-warning) 16%, var(--md-surface)) !important;
   --ui-color-warning-300: color-mix(in srgb, var(--st-warning) 32%, var(--md-surface)) !important;
   --ui-color-warning-400: color-mix(in srgb, var(--st-warning) 60%, var(--md-surface)) !important;
   --ui-color-warning-500: var(--st-warning) !important;
   --ui-color-warning-600: var(--st-warning) !important;
-  --ui-color-warning-700: color-mix(in srgb, var(--st-warning) 80%, var(--st-on-warning-container)) !important;
-  --ui-color-warning-800: color-mix(in srgb, var(--st-warning) 62%, var(--st-on-warning-container)) !important;
-  --ui-color-warning-900: var(--st-on-warning-container) !important;
-  --ui-color-warning-950: color-mix(in srgb, var(--st-on-warning-container) 82%, var(--st-warning)) !important;
+  --ui-color-warning-700: color-mix(in srgb, var(--warning-color) 80%, var(--warning-on-surface)) !important;
+  --ui-color-warning-800: color-mix(in srgb, var(--warning-color) 62%, var(--warning-on-surface)) !important;
+  --ui-color-warning-900: var(--warning-on-surface) !important;
+  --ui-color-warning-950: color-mix(in srgb, var(--warning-on-surface) 82%, var(--warning-color)) !important;
 
   --ui-color-info-50: color-mix(in srgb, var(--st-info) 6%, var(--md-surface)) !important;
-  --ui-color-info-100: var(--st-info-container) !important;
+  --ui-color-info-100: var(--info-surface) !important;
   --ui-color-info-200: color-mix(in srgb, var(--st-info) 16%, var(--md-surface)) !important;
   --ui-color-info-300: color-mix(in srgb, var(--st-info) 32%, var(--md-surface)) !important;
   --ui-color-info-400: color-mix(in srgb, var(--st-info) 60%, var(--md-surface)) !important;
   --ui-color-info-500: var(--st-info) !important;
   --ui-color-info-600: var(--st-info) !important;
-  --ui-color-info-700: color-mix(in srgb, var(--st-info) 80%, var(--st-on-info-container)) !important;
-  --ui-color-info-800: color-mix(in srgb, var(--st-info) 62%, var(--st-on-info-container)) !important;
-  --ui-color-info-900: var(--st-on-info-container) !important;
-  --ui-color-info-950: color-mix(in srgb, var(--st-on-info-container) 82%, var(--st-info)) !important;
+  --ui-color-info-700: color-mix(in srgb, var(--info-color) 80%, var(--info-on-surface)) !important;
+  --ui-color-info-800: color-mix(in srgb, var(--info-color) 62%, var(--info-on-surface)) !important;
+  --ui-color-info-900: var(--info-on-surface) !important;
+  --ui-color-info-950: color-mix(in srgb, var(--info-on-surface) 82%, var(--info-color)) !important;
 }
 
 :root {
@@ -410,7 +445,5 @@
   --shell-main-bg: #131316;
   --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 4%, transparent), transparent 28rem), #131316;
 
-  /* Dark invalid-input + error chrome derive from --st-error (calmed at the
-     source in primary-colors.ts), so no per-token dark overrides are needed
-     here. Tuning dark error happens only in buildSeedTheme. */
+  /* Dark invalid-input + error chrome derive directly from Material error roles. */
 }

@@ -22,7 +22,7 @@ function handleKeydown(event: KeyboardEvent) {
     <div
       role="button"
       tabindex="0"
-      class="flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--nav-item-hover-bg)] hover:text-[var(--nav-item-hover-text)]"
+      class="group/theme-toggle flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--nav-item-hover-bg)] hover:text-[var(--nav-item-hover-text)]"
       @click="toggleTheme"
       @keydown="handleKeydown"
     >
@@ -31,7 +31,7 @@ function handleKeydown(event: KeyboardEvent) {
       <USwitch
         size="sm"
         :model-value="isDark"
-        :ui="{ base: 'ring-1 ring-inset ring-[var(--border-default)]' }"
+        :ui="{ base: 'group-hover/theme-toggle:data-[state=unchecked]:!bg-[color-mix(in_srgb,var(--md-outline)_34%,var(--control-bg))]' }"
         @update:model-value="toggleTheme"
         @click.stop
       />
@@ -42,19 +42,19 @@ function handleKeydown(event: KeyboardEvent) {
         <UIcon name="lucide:palette" class="h-3.5 w-3.5" />
         <span>Accent</span>
       </div>
-      <div class="grid grid-cols-6 gap-2">
+      <div class="flex flex-nowrap items-center gap-1.5">
         <button
           v-for="color in $primaryColor.colors"
           :key="color.value"
           type="button"
-          class="flex h-7 w-7 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-default)]"
+          class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-default)]"
           :class="$primaryColor.current.value === color.value ? 'ring-2 ring-inset ring-[var(--md-primary)]' : 'ring-1 ring-inset ring-[var(--border-default)]'"
           :aria-label="`Use ${color.label} accent`"
           :aria-pressed="$primaryColor.current.value === color.value"
           :title="color.label"
           @click="$primaryColor.set(color.value)"
         >
-          <span class="h-5 w-5 rounded-full" :style="{ backgroundColor: color.swatch }" />
+          <span class="h-[18px] w-[18px] rounded-full" :style="{ backgroundColor: color.swatch }" />
         </button>
       </div>
     </div>

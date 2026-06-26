@@ -17,14 +17,21 @@ export const DEFAULT_PRIMARY_COLOR = "green";
 // the seeds are kept as raw hues and shown verbatim in the picker swatch.
 const primaryColorSeeds = {
   red: "#ef4444",
-  orange: "#f97316",
+  amber: "#f59e0b",
   green: "#22c55e",
-  blue: "#3b82f6",
-  violet: "#8b5cf6",
+  teal: "#0d9488",
+  sky: "#0ea5e9",
+  violet: "#7c3aed",
   pink: "#ec4899",
 } as const;
 
 export type PrimaryColorValue = keyof typeof primaryColorSeeds;
+
+const legacyPrimaryColorAliases: Partial<Record<string, PrimaryColorValue>> = {
+  coral: "red",
+  orange: "amber",
+  blue: "sky",
+};
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -40,11 +47,16 @@ export function isPrimaryColor(value: string | null | undefined): value is Prima
   return Boolean(value && value in primaryColorSeeds);
 }
 
+export function normalizePrimaryColor(value: string | null | undefined): PrimaryColorValue {
+  if (isPrimaryColor(value)) return value;
+  if (value && legacyPrimaryColorAliases[value]) return legacyPrimaryColorAliases[value];
+  return DEFAULT_PRIMARY_COLOR;
+}
+
 const STATUS_SEEDS = {
   success: "#16a34a",
   warning: "#d97706",
   info: "#2563eb",
-  error: "#dc2626",
 } as const;
 
 const ROLES = [
@@ -78,13 +90,6 @@ type StatusQuartet = { color: string; onColor: string; container: string; onCont
 type ModeTheme = { roles: Record<string, string>; statuses: Record<string, StatusQuartet> };
 type SeedTheme = { light: ModeTheme; dark: ModeTheme };
 
-const ERROR_STATUS: StatusQuartet = {
-  color: "#ffb4ab",
-  onColor: "#690005",
-  container: "#ffdad6",
-  onContainer: "#410002",
-};
-
 function extractRoles(scheme: DynamicScheme): Record<string, string> {
   const roles: Record<string, string> = {};
   for (const role of ROLES) {
@@ -93,10 +98,19 @@ function extractRoles(scheme: DynamicScheme): Record<string, string> {
   return roles;
 }
 
-// Semantic status colors (success/warning/info/error) must stay fixed: they
-// carry meaning independent of the brand accent. blend:false keeps them from
-// drifting toward the primary hue (e.g. red accent no longer turns info blue
-// into violet, or success green into olive).
+function statusFromRoles(roles: Record<string, string>): StatusQuartet {
+  return {
+    color: roles.error!,
+    onColor: roles.onError!,
+    container: roles.errorContainer!,
+    onContainer: roles.onErrorContainer!,
+  };
+}
+
+// Non-error semantic status colors carry meaning independent of the brand
+// accent. blend:false keeps them from drifting toward the primary hue (e.g.
+// warm accents no longer pull info toward purple, or success green into olive).
+// Error follows Material's dedicated error role from the generated scheme.
 function extractStatuses(source: number, isDark: boolean): Record<string, StatusQuartet> {
   const out: Record<string, StatusQuartet> = {};
   for (const [name, hex] of Object.entries(STATUS_SEEDS)) {
@@ -109,13 +123,15 @@ function extractStatuses(source: number, isDark: boolean): Record<string, Status
 
 function buildSeedTheme(seedHex: string): SeedTheme {
   const source = argbFromHex(seedHex);
+  const lightRoles = extractRoles(new SchemeTonalSpot(Hct.fromInt(source), false, 0));
+  const darkRoles = extractRoles(new SchemeTonalSpot(Hct.fromInt(source), true, 0));
   const lightStatuses = extractStatuses(source, false);
   const darkStatuses = extractStatuses(source, true);
-  lightStatuses.error = ERROR_STATUS;
-  darkStatuses.error = ERROR_STATUS;
+  lightStatuses.error = statusFromRoles(lightRoles);
+  darkStatuses.error = statusFromRoles(darkRoles);
   return {
-    light: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), false, 0)), statuses: lightStatuses },
-    dark: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), true, 0)), statuses: darkStatuses },
+    light: { roles: lightRoles, statuses: lightStatuses },
+    dark: { roles: darkRoles, statuses: darkStatuses },
   };
 }
 
@@ -150,7 +166,8 @@ export function getPrimaryColorMeta(primary: PrimaryColorValue, mode: "light" | 
 
 export function getPrimaryColorPreflightScript() {
   const validColors = JSON.stringify(primaryColors.map((c) => c.value));
+  const aliases = JSON.stringify(legacyPrimaryColorAliases);
   const themes = JSON.stringify(seedThemes);
 
-  return `try{var c=localStorage.getItem('${PRIMARY_COLOR_STORAGE_KEY}');var T=${themes};var V=${validColors};if(!V.includes(c)){c='${DEFAULT_PRIMARY_COLOR}'}document.querySelectorAll('style#${PRIMARY_COLOR_STYLE_ID}').forEach(function(n){n.remove()});function K(r){return '--md-'+r.replace(/([A-Z])/g,function(m){return '-'+m.toLowerCase()})}function B(m){var t=T[c][m];var a=[];for(var r in t.roles){a.push(K(r)+':'+t.roles[r])}var er=t.statuses.error;a.push('--md-error:'+er.color,'--md-on-error:'+er.onColor,'--md-error-container:'+er.container,'--md-on-error-container:'+er.onContainer);for(var s in t.statuses){var q=t.statuses[s];a.push('--st-'+s+':'+q.color,'--st-on-'+s+':'+q.onColor,'--st-'+s+'-container:'+q.container,'--st-on-'+s+'-container:'+q.onContainer)}return a.map(function(d){return d+'!important'}).join(';')}var e=document.createElement('style');e.id='${PRIMARY_COLOR_STYLE_ID}';e.textContent=':root{'+B('light')+'}.dark{'+B('dark')+'}';document.head.appendChild(e)}catch(e){}`;
+  return `try{var c=localStorage.getItem('${PRIMARY_COLOR_STORAGE_KEY}');var T=${themes};var V=${validColors};var A=${aliases};if(!V.includes(c)){c=A[c]||'${DEFAULT_PRIMARY_COLOR}'}document.querySelectorAll('style#${PRIMARY_COLOR_STYLE_ID}').forEach(function(n){n.remove()});function K(r){return '--md-'+r.replace(/([A-Z])/g,function(m){return '-'+m.toLowerCase()})}function B(m){var t=T[c][m];var a=[];for(var r in t.roles){a.push(K(r)+':'+t.roles[r])}var er=t.statuses.error;a.push('--md-error:'+er.color,'--md-on-error:'+er.onColor,'--md-error-container:'+er.container,'--md-on-error-container:'+er.onContainer);for(var s in t.statuses){var q=t.statuses[s];a.push('--st-'+s+':'+q.color,'--st-on-'+s+':'+q.onColor,'--st-'+s+'-container:'+q.container,'--st-on-'+s+'-container:'+q.onContainer)}return a.map(function(d){return d+'!important'}).join(';')}var e=document.createElement('style');e.id='${PRIMARY_COLOR_STYLE_ID}';e.textContent=':root{'+B('light')+'}.dark{'+B('dark')+'}';document.head.appendChild(e)}catch(e){}`;
 }

@@ -676,13 +676,9 @@
   --eapp-button-soft-bg-hover: var(--state-danger-soft-bg-hover);
   --eapp-button-soft-text: var(--state-danger-soft-text);
   --eapp-button-soft-ring: var(--state-danger-outline-border);
-  --eapp-button-ghost-text: var(--state-danger-emphasis-text);
+  --eapp-button-ghost-text: var(--danger-ghost-text);
   --eapp-button-ghost-bg-hover: var(--action-danger-bg);
   --eapp-button-ghost-text-hover: var(--action-danger-text);
-}
-
-.dark .eapp-button-danger-ghost {
-  --eapp-button-ghost-text: color-mix(in srgb, var(--st-error) 44%, var(--st-on-error-container));
 }
 
 .eapp-button-primary-soft:hover:not(:disabled):not([aria-disabled="true"]),
