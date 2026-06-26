@@ -117,10 +117,11 @@
     --action-neutral-disabled-bg: color-mix(in srgb, var(--md-on-surface) 8%, var(--md-surface));
     --action-neutral-disabled-text: var(--text-disabled);
 
+    --state-danger-emphasis-text: color-mix(in srgb, var(--st-error) 34%, var(--st-on-error-container));
     --action-danger-bg: var(--st-error);
     --action-danger-bg-hover: color-mix(in srgb, var(--st-error) 82%, var(--st-on-error-container));
     --action-danger-bg-active: color-mix(in srgb, var(--st-error) 70%, var(--st-on-error-container));
-    --action-danger-text: var(--st-on-error);
+    --action-danger-text: var(--state-danger-emphasis-text);
     --action-success-bg: var(--st-success);
     --action-success-bg-hover: color-mix(in srgb, var(--st-success) 82%, var(--st-on-success-container));
     --action-success-bg-active: color-mix(in srgb, var(--st-success) 70%, var(--st-on-success-container));
@@ -136,10 +137,10 @@
 
     --state-danger-soft-bg: var(--st-error-container);
     --state-danger-soft-bg-hover: color-mix(in srgb, var(--st-error) 18%, var(--st-error-container));
-    --state-danger-soft-text: var(--st-on-error-container);
+    --state-danger-soft-text: var(--state-danger-emphasis-text);
     --state-danger-outline-border: color-mix(in srgb, var(--st-error) 40%, transparent);
-    --state-danger-title-text: var(--st-on-error-container);
-    --state-danger-description-text: var(--st-on-error-container);
+    --state-danger-title-text: var(--state-danger-emphasis-text);
+    --state-danger-description-text: var(--state-danger-emphasis-text);
     --state-success-soft-bg: var(--st-success-container);
     --state-success-soft-bg-hover: color-mix(in srgb, var(--st-success) 18%, var(--md-surface));
     --state-success-soft-text: var(--st-on-success-container);
@@ -186,7 +187,7 @@
     --badge-success-soft-text: var(--st-on-success-container);
     --badge-success-soft-border: color-mix(in srgb, var(--st-success) 24%, transparent);
     --badge-danger-soft-bg: var(--st-error-container);
-    --badge-danger-soft-text: var(--st-on-error-container);
+    --badge-danger-soft-text: var(--state-danger-emphasis-text);
     --badge-danger-soft-border: color-mix(in srgb, var(--st-error) 24%, transparent);
     --badge-warning-soft-bg: var(--st-warning-container);
     --badge-warning-soft-text: var(--st-on-warning-container);
@@ -200,7 +201,7 @@
 
     --control-invalid-border: color-mix(in srgb, var(--st-error) 55%, transparent);
     --control-invalid-ring: color-mix(in srgb, var(--st-error) 18%, transparent);
-    --form-error-text: var(--st-on-error-container);
+    --form-error-text: var(--state-danger-emphasis-text);
 
     --card-bg: var(--block-base);
     --card-accent: color-mix(in srgb, var(--md-primary) 10%, transparent);

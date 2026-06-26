@@ -78,6 +78,13 @@ type StatusQuartet = { color: string; onColor: string; container: string; onCont
 type ModeTheme = { roles: Record<string, string>; statuses: Record<string, StatusQuartet> };
 type SeedTheme = { light: ModeTheme; dark: ModeTheme };
 
+const ERROR_STATUS: StatusQuartet = {
+  color: "#ffb4ab",
+  onColor: "#690005",
+  container: "#ffdad6",
+  onContainer: "#410002",
+};
+
 function extractRoles(scheme: DynamicScheme): Record<string, string> {
   const roles: Record<string, string> = {};
   for (const role of ROLES) {
@@ -104,15 +111,8 @@ function buildSeedTheme(seedHex: string): SeedTheme {
   const source = argbFromHex(seedHex);
   const lightStatuses = extractStatuses(source, false);
   const darkStatuses = extractStatuses(source, true);
-  // Dark error is PINK and consistent across icon, solid button and container
-  // (matching how the light error reads), not a deep red. Single source for
-  // every dark error token; modeDeclarations + preflight both read it.
-  darkStatuses.error = {
-    color: "#ffb4ab",
-    onColor: "#690005",
-    container: "#ffdad6",
-    onContainer: "#410002",
-  };
+  lightStatuses.error = ERROR_STATUS;
+  darkStatuses.error = ERROR_STATUS;
   return {
     light: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), false, 0)), statuses: lightStatuses },
     dark: { roles: extractRoles(new SchemeTonalSpot(Hct.fromInt(source), true, 0)), statuses: darkStatuses },
