@@ -17,7 +17,7 @@
 
     <ul
       v-else-if="origins.length > 0"
-      class="divide-y divide-[var(--border-default)] overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--surface-default)]"
+      class="divide-y divide-[var(--border-default)] overflow-hidden rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-default)]"
     >
       <li
         v-for="origin in origins"
@@ -52,7 +52,7 @@
 
     <div
       v-else
-      class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--surface-muted)]/40 px-4 py-5 text-center text-sm text-[var(--text-tertiary)]"
+      class="rounded-[var(--radius-panel)] border border-dashed border-[var(--border-default)] bg-[var(--surface-muted)]/40 px-4 py-5 text-center text-sm text-[var(--text-tertiary)]"
     >
       No origins in the list. Any origin will be allowed until you add entries.
     </div>
@@ -71,7 +71,7 @@
             color="primary"
             variant="solid"
             size="md"
-            class="rounded-md"
+            class="rounded-[var(--radius-subcontrol)]"
             :loading="creating"
             :disabled="!newOrigin.trim() || creating"
             @click="addOrigin"

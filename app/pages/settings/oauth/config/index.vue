@@ -1,17 +1,18 @@
 <template>
-  <div class="oauth-config-page">
-    <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
-        v-if="showInitialLoading"
-        title="Loading OAuth configurations..."
-        description="Fetching OAuth provider settings"
-        size="md"
-        type="card"
-        context="page"
-      />
-
+  <CommonCardListFrame
+    root-class="oauth-config-page"
+    :loading="showInitialLoading"
+    :has-items="configs.length > 0"
+    loading-title="Loading OAuth configurations..."
+    loading-description="Fetching OAuth provider settings"
+    loading-size="md"
+    empty-title="No OAuth configurations found"
+    empty-description="Configure OAuth providers to enable social login"
+    empty-icon="lucide:key"
+    empty-size="lg"
+  >
       <CommonAnimatedGrid
-        v-else-if="configs.length > 0"
+        :animate="false"
         :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
       >
         <CommonSettingsCard
@@ -22,6 +23,7 @@
           :icon="getProviderIcon(config.provider)"
           :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
+          :content-loading="configsRefreshing"
           :stats="[
             {
               label: 'Status',
@@ -41,16 +43,7 @@
           :header-actions="getHeaderActions(config)"
         />
       </CommonAnimatedGrid>
-
-      <CommonEmptyState
-        v-else
-        title="No OAuth configurations found"
-        description="Configure OAuth providers to enable social login"
-        icon="lucide:key"
-        size="lg"
-      />
-    </Transition>
-  </div>
+  </CommonCardListFrame>
 </template>
 
 <script setup lang="ts">
@@ -72,7 +65,6 @@ const { getLoader: getConfigLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
-const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -99,8 +91,11 @@ const {
   errorContext: "Fetch OAuth Configs",
 });
 
-const configs = computed(() => apiData.value?.data || []);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const {
+  items: configs,
+  showInitialLoading,
+  isRefreshing: configsRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 

@@ -18,12 +18,12 @@
       >
         <div
           v-if="isFolderDisabled"
-          class="absolute inset-0 z-10 bg-black/20 flex items-center justify-center"
+          class="absolute inset-0 z-10 bg-[var(--surface-overlay)] flex items-center justify-center"
           aria-disabled="true"
           title="Selected folder cannot be destination"
         >
           <span
-            class="inline-flex items-center gap-2 text-xs font-medium text-white/95 bg-amber-600/80 px-2.5 py-1 rounded-md"
+            class="inline-flex items-center gap-2 text-xs font-medium text-white/95 bg-[var(--st-warning)] px-2.5 py-1 rounded-md"
           >
             <UIcon name="lucide:lock" class="w-3.5 h-3.5" />
             Selected - cannot move here

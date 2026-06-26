@@ -483,7 +483,6 @@ function getComponentConfigByKey(key: string) {
         componentProps: {
           ...componentPropsBase,
           rows: 4,
-          variant: "subtle",
           autoresize: true,
           class: `${componentPropsBase.class} font-mono text-xs`.trim(),
           modelValue: ensureString(props.formData[key]),
@@ -796,7 +795,7 @@ function getComponentType(): string {
         </div>
         <p
           v-if="getComponentType() === 'simple-json' && hasError && errorMessage"
-          class="mt-1 text-xs text-red-500"
+          class="mt-1 text-xs text-[var(--md-error)]"
         >
           {{ errorMessage }}
         </p>
@@ -808,13 +807,13 @@ function getComponentType(): string {
 <style>
 .field-input {
   opacity: 0;
-  animation: fadeIn 0.5s ease forwards;
+  animation: fadeIn 0.24s ease forwards;
 }
 
 @keyframes fadeIn {
   0% {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(2px);
   }
   100% {
     opacity: 1;

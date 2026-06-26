@@ -169,8 +169,10 @@ async function saveUser() {
 }
 
 async function deleteUser() {
+  const user = apiData.value?.data?.[0];
+  const userIdentifier = user?.name || user?.username || user?.email || "this user";
   const ok = await confirm({
-    content: `Are you sure you want to delete user "${apiData.value?.data?.[0]?.name}"?`,
+    content: `Are you sure you want to delete user "${userIdentifier}"?`,
   });
   if (!ok) return;
 
@@ -191,7 +193,7 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+    <div class="eapp-page-constrained">
       <CommonFormCard>
         <UForm :state="form" @submit="saveUser">
           <FormEditorLazy

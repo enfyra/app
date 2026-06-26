@@ -3,19 +3,19 @@
     
     <div class="relative group">
       <div
-        class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg"
+        class="w-10 h-10 rounded-[var(--radius-control)] [background-image:var(--gradient-primary)] flex items-center justify-center shadow-lg"
       >
         <span class="text-white font-bold text-lg">E</span>
       </div>
-      
+
       <div
-        class="absolute inset-0 w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary opacity-50 blur-md -z-10"
+        class="absolute inset-0 w-10 h-10 rounded-[var(--radius-control)] [background-image:var(--gradient-primary)] opacity-50 blur-md -z-10"
       ></div>
     </div>
 
     <div class="flex flex-col">
       <h1
-        class="font-bold text-xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+        class="font-bold text-xl [background-image:var(--gradient-primary)] bg-clip-text text-transparent"
       >
         Enfyra
       </h1>

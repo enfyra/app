@@ -1,6 +1,9 @@
 <script setup lang="ts">
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
+import CommonSystemVisibilityControl from "~/components/common/SystemVisibilityControl.vue";
+import type { SystemVisibilityMode } from "~/types/ui";
+
 const notify = useNotify();
 const page = ref(1);
 const pageLimit = 9;
@@ -12,7 +15,6 @@ const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { getLoader: getRouteLoader } = useKeyedLoaders();
 const { isTablet } = useScreen();
-const { isMounted } = useMounted();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const pageIconColor = 'primary';
@@ -27,17 +29,25 @@ const { getId } = useDatabase();
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
-const showSystem = ref(route.query.system === 'true');
+const visibilityScope = ref<SystemVisibilityMode>(getVisibilityScope(route.query.scope, route.query.system));
 const showCollectionRoutes = ref(route.query.collectionRoutes === 'true');
 
-watch(() => route.query.system, (v) => { showSystem.value = v === 'true' })
+function getVisibilityScope(scope: unknown, system: unknown): SystemVisibilityMode {
+  if (scope === "custom" || scope === "system" || scope === "all") return scope;
+  return system === "true" ? "all" : "custom";
+}
+
+watch(() => [route.query.scope, route.query.system], ([scope, system]) => {
+  visibilityScope.value = getVisibilityScope(scope, system);
+})
 watch(() => route.query.collectionRoutes, (v) => { showCollectionRoutes.value = v === 'true' })
 
-watch(showSystem, (v) => {
-  if ((route.query.system === 'true') !== v) {
+watch(visibilityScope, (v) => {
+  if (getVisibilityScope(route.query.scope, route.query.system) !== v) {
     const query = { ...route.query }
-    if (v) query.system = 'true'
-    else delete query.system
+    delete query.system
+    if (v === "custom") delete query.scope
+    else query.scope = v
     router.replace({ query })
   }
 })
@@ -70,8 +80,10 @@ const {
 } = useApi(() => "/enfyra_route", {
   query: computed(() => {
     const conditions: any[] = [];
-    if (!showSystem.value) {
+    if (visibilityScope.value === "custom") {
       conditions.push({ isSystem: { _eq: false } });
+    } else if (visibilityScope.value === "system") {
+      conditions.push({ isSystem: { _eq: true } });
     }
     if (!showCollectionRoutes.value) {
       conditions.push({ mainTable: { _is_null: true } });
@@ -95,11 +107,14 @@ const {
   errorContext: "Fetch Routes",
 });
 
-const routesData = computed(() => apiData.value?.data || []);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const {
+  items: routesData,
+  showInitialLoading,
+  isRefreshing: routesRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => {
   const meta = apiData.value?.meta
-  if (showSystem.value && showCollectionRoutes.value && !hasActiveFilters(currentFilter.value)) {
+  if (visibilityScope.value === "all" && showCollectionRoutes.value && !hasActiveFilters(currentFilter.value)) {
     return meta?.totalCount ?? 0
   }
   return meta?.filterCount ?? 0
@@ -108,24 +123,20 @@ const total = computed(() => {
 registerSubHeaderActions([
   {
     id: "toggle-system-routes",
-    icon: "lucide:shield",
-    get label() {
-      return showSystem.value ? "Hide System" : "Show System";
+    component: CommonSystemVisibilityControl,
+    get props() {
+      return {
+        modelValue: visibilityScope.value,
+        label: "Routes",
+        "onUpdate:modelValue": (value: SystemVisibilityMode) => {
+          visibilityScope.value = value;
+          page.value = 1;
+          fetchRoutes();
+        },
+      };
     },
-    get variant() {
-      return showSystem.value ? "solid" as const : "outline" as const;
-    },
-    get color() {
-      return showSystem.value ? "warning" as const : "neutral" as const;
-    },
-    size: "md",
     side: "right",
     order: 0,
-    onClick: () => {
-      showSystem.value = !showSystem.value;
-      page.value = 1;
-      fetchRoutes();
-    },
   },
   {
     id: "toggle-collection-routes",
@@ -217,9 +228,10 @@ async function clearFilters() {
 }
 
 watch(
-  () => route.query.page,
+  () => [route.query.page, route.query.scope, route.query.system, route.query.collectionRoutes],
   async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
+    const newPage = Array.isArray(newVal) ? newVal[0] : newVal;
+    page.value = newPage ? Number(newPage) : 1;
     await fetchRoutes();
   },
   { immediate: true }
@@ -383,7 +395,7 @@ async function deleteRoute(routeItem: any) {
 <template>
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
-      <div v-if="showInitialLoading">
+      <div v-if="showInitialLoading" key="loading">
         <CommonLoadingState
           title="Loading routes..."
           description="Fetching routing configuration"
@@ -393,7 +405,7 @@ async function deleteRoute(routeItem: any) {
         />
       </div>
 
-      <div v-else class="space-y-6">
+      <div v-else key="content" class="space-y-6">
         <FilterActiveSummary
           v-if="hasActiveFilters(currentFilter)"
           :count="activeFilterCount"
@@ -402,6 +414,7 @@ async function deleteRoute(routeItem: any) {
 
         <div v-if="routesData.length" class="space-y-6">
           <CommonAnimatedGrid
+            :animate="false"
             :grid-class="
               isTablet
                 ? 'grid gap-4 grid-cols-2'
@@ -416,6 +429,7 @@ async function deleteRoute(routeItem: any) {
               :icon="routeItem.icon || 'lucide:circle'"
               :icon-color="pageIconColor"
               :card-class="'cursor-pointer transition-all'"
+              :content-loading="routesRefreshing"
               @click="navigateTo(`/settings/routes/${getId(routeItem)}`)"
               :top-badge="routeItem.isSystem ? { label: 'System', color: 'info' } : undefined"
               :stats="[

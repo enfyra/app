@@ -272,7 +272,7 @@ const nonBooleanOuterClass = computed(() => {
               keyName !== 'createdAt' &&
               keyName !== 'updatedAt'
             "
-            class="text-red-500"
+            class="text-[var(--md-error)]"
             >*</span
           >
         </label>
@@ -282,12 +282,12 @@ const nonBooleanOuterClass = computed(() => {
             <UIcon
               v-if="copyStatus === 'success'"
               name="i-lucide-check"
-              class="w-3.5 h-3.5 text-green-600"
+              class="w-3.5 h-3.5 text-[var(--st-success)]"
             />
             <UIcon
               v-else-if="copyStatus === 'error'"
               name="i-lucide-x"
-              class="w-3.5 h-3.5 text-red-600"
+              class="w-3.5 h-3.5 text-[var(--md-error)]"
             />
           </Transition>
           <UDropdownMenu :items="dropdownItems">
@@ -306,7 +306,7 @@ const nonBooleanOuterClass = computed(() => {
         <UIcon
           v-if="uniqueCheckStatus === 'checking'"
           name="i-lucide-loader-2"
-          class="w-3.5 h-3.5 animate-spin text-blue-500"
+          class="w-3.5 h-3.5 animate-spin text-[var(--st-info)]"
         />
         <UTooltip v-else-if="uniqueCheckStatus === 'valid'" text="Value is unique">
           <UBadge color="success" variant="subtle" size="xs">
@@ -355,7 +355,7 @@ const nonBooleanOuterClass = computed(() => {
 
     <p
       v-if="uniqueCheckStatus === 'incomplete' && uniqueCheckMessage"
-      class="text-xs text-amber-500"
+      class="text-xs text-[var(--st-warning)]"
     >
       {{ uniqueCheckMessage }}
     </p>

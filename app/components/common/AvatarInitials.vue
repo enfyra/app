@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-full aspect-square bg-gray-700 text-white flex items-center justify-center font-bold text-lg"
+    class="w-full aspect-square bg-[var(--action-neutral-bg-active)] text-[var(--action-neutral-text-hover)] flex items-center justify-center font-bold text-lg"
   >
     {{ props.name }}
   </div>

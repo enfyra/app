@@ -102,7 +102,7 @@ async function handleCreate() {
 <template>
   <div class="space-y-6">
     
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+    <div class="eapp-page-constrained">
       <CommonFormCard>
         <UForm :state="newRecord" @submit="handleCreate">
           <FormEditorLazy

@@ -124,12 +124,25 @@ function handleRootReorder(event: DragEvent) {
   if (updatedMenus.length > 0) emit('reorder-menus', updatedMenus);
 }
 
+function getMenuParentId(menu: MenuDefinition | MenuTreeItem | undefined | null) {
+  return getId((menu as any)?.parent) || null;
+}
+
+function canDropIntoParent(event: any, targetParentId: string | number | null) {
+  const dragged = event?.draggedContext?.element;
+  if (!dragged?.isSystem) return true;
+
+  const originalMenu = props.menus.find((menu) => String(getId(menu)) === String(getId(dragged)));
+  const originalParentId = getMenuParentId(originalMenu);
+  return String(originalParentId || null) === String(targetParentId || null);
+}
+
 
 </script>
 
 <template>
   <div
-    class="menu-visual-editor overflow-hidden"
+    class="menu-visual-editor"
     :class="isDndUpdating ? 'pointer-events-none opacity-60 select-none' : ''"
   >
     <div v-if="menuTree.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
@@ -137,12 +150,21 @@ function handleRootReorder(event: DragEvent) {
       <p class="text-sm text-[var(--text-tertiary)] mb-4">No menu items available</p>
     </div>
     
-    <div v-else class="space-y-4">
-      <div class="menu-preview-container">
-      <div class="menu-preview rounded-2xl p-4 surface-card">
+    <div v-else class="menu-preview-stage">
+      <div class="menu-preview surface-card">
+        <div class="menu-preview-header">
+          <div>
+            <p class="menu-preview-kicker">Navigation preview</p>
+            <h3 class="menu-preview-title">Menu structure</h3>
+          </div>
+          <UBadge variant="soft" color="neutral" size="sm">
+            {{ menuTreeItems.length }} root
+          </UBadge>
+        </div>
+
         <div
           v-if="canMoveToRoot"
-          class="mb-2 p-2 border-2 border-dashed border-brand-400 dark:border-brand-500 rounded-xl bg-brand-500/10 dark:bg-brand-500/20"
+          class="mb-3 rounded-[var(--radius-panel)] border border-dashed border-[var(--badge-primary-soft-border)] bg-[var(--badge-primary-soft-bg)] p-2"
         >
           <UButton
             size="sm"
@@ -164,9 +186,10 @@ function handleRootReorder(event: DragEvent) {
           chosen-class="chosen-item"
           drag-class="dragging-item"
           :group="{ name: 'menu-items', pull: true, put: true }"
+          :move="(event: any) => canDropIntoParent(event, null)"
           @change="handleRootReorder"
           item-key="id"
-          class="space-y-2 drop-zone"
+          class="menu-root-drop-zone"
         >
           <template #item="{ element: item }">
             <MenuVisualEditorItem
@@ -186,12 +209,54 @@ function handleRootReorder(event: DragEvent) {
           </template>
         </draggable>
       </div>
-      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.menu-visual-editor {
+  width: 100%;
+}
+
+.menu-preview-stage {
+  width: 100%;
+}
+
+.menu-preview {
+  border-radius: var(--radius-card);
+  padding: 16px 18px 18px;
+}
+
+.menu-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 4px 4px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.menu-preview-kicker {
+  color: var(--text-quaternary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.menu-preview-title {
+  margin-top: 2px;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.menu-root-drop-zone {
+  display: grid;
+  gap: 8px;
+}
+
 .ghost-item {
   opacity: 0.5;
   background: color-mix(in srgb, var(--brand-500) 10%, transparent);

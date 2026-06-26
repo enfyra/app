@@ -2,7 +2,7 @@
   <div>
     <div
       v-if="loading"
-      class="flex items-center gap-2 text-sm text-gray-400"
+      class="flex items-center gap-2 text-sm eapp-text-quaternary"
     >
       <UIcon
         name="i-heroicons-arrow-path-20-solid"
@@ -14,7 +14,7 @@
 
     <div
       v-else-if="error"
-      class="flex items-center gap-2 text-sm text-red-500"
+      class="flex items-center gap-2 text-sm text-[var(--md-error)]"
     >
       <UIcon
         :name="error.includes('disabled') ? 'i-heroicons-lock-closed' : 'i-heroicons-exclamation-triangle'"
@@ -40,7 +40,7 @@
 
     <div
       v-else
-      class="text-sm text-gray-400"
+      class="text-sm eapp-text-quaternary"
     >
       Widget #{{ props.id }} not found
     </div>

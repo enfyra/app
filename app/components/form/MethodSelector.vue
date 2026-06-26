@@ -138,7 +138,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="showAvailableMethodsHint" class="text-sm text-amber-600 dark:text-amber-400">
+  <div v-if="showAvailableMethodsHint" class="text-sm text-[var(--st-warning)]">
     Please select Available Methods first.
   </div>
   <div v-else class="flex flex-wrap gap-2">
@@ -148,7 +148,7 @@ onMounted(async () => {
       :disabled="disabled"
       :aria-pressed="isSelected(m)"
       type="button"
-      class="inline-flex min-h-7 items-center gap-1.5 rounded-md border px-2 py-1 font-mono text-xs font-semibold uppercase transition hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+      class="inline-flex h-7 items-center gap-1.5 rounded-md border px-2 font-mono text-xs font-semibold uppercase transition hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
       :style="getMethodButtonStyle(m)"
       @click="selectMethod(m)"
     >
@@ -167,6 +167,7 @@ onMounted(async () => {
       variant="outline"
       color="neutral"
       size="xs"
+      class="!size-7 shrink-0 !p-0"
       title="Create method"
       @click.stop
     />

@@ -22,7 +22,7 @@
       <div class="absolute inset-0 flex items-center justify-center">
         <UIcon
           name="lucide:image"
-          class="text-gray-300 dark:text-gray-600 opacity-50"
+          class="text-[var(--text-quaternary)] opacity-50"
           size="24"
         />
       </div>
@@ -137,7 +137,7 @@ const imageSrc = computed(() => {
 const shapeClasses = computed(() => {
   const shapes = {
     square: "",
-    rounded: "rounded-lg",
+    rounded: "rounded-[var(--radius-control)]",
     circle: "rounded-full",
     none: "",
   };

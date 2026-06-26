@@ -2,7 +2,7 @@ import {
   DEFAULT_PRIMARY_COLOR,
   getPrimaryColorMeta,
   getPrimaryColorStyle,
-  isPrimaryColor,
+  normalizePrimaryColor,
   primaryColors,
   PRIMARY_COLOR_STORAGE_KEY,
   PRIMARY_COLOR_STYLE_ID,
@@ -12,7 +12,7 @@ import {
 interface PrimaryColorOption {
   label: string;
   value: PrimaryColorValue;
-  class: string;
+  swatch: string;
 }
 
 interface PrimaryColorService {
@@ -22,9 +22,11 @@ interface PrimaryColorService {
 }
 
 export default defineNuxtPlugin(() => {
+  const colorMode = useColorMode();
+
   function initialPrimaryColor() {
     const storedColor = localStorage.getItem(PRIMARY_COLOR_STORAGE_KEY);
-    return isPrimaryColor(storedColor) ? storedColor : DEFAULT_PRIMARY_COLOR;
+    return normalizePrimaryColor(storedColor);
   }
 
   const current = useState<PrimaryColorValue>("primary-color", initialPrimaryColor);
@@ -44,7 +46,7 @@ export default defineNuxtPlugin(() => {
   }
 
   function syncThemeColorMeta(primary: PrimaryColorValue) {
-    const color = getPrimaryColorMeta(primary);
+    const color = getPrimaryColorMeta(primary, colorMode.value === "dark" ? "dark" : "light");
     let element = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
 
     if (!element) {
@@ -57,7 +59,7 @@ export default defineNuxtPlugin(() => {
   }
 
   function setPrimaryColor(value: string | null) {
-    const primary = isPrimaryColor(value) ? value : DEFAULT_PRIMARY_COLOR;
+    const primary = normalizePrimaryColor(value);
 
     current.value = primary;
     updateAppConfig({
@@ -74,6 +76,7 @@ export default defineNuxtPlugin(() => {
   }
 
   setPrimaryColor(initialPrimaryColor());
+  watch(() => colorMode.value, () => syncThemeColorMeta(current.value));
 
   return {
     provide: {

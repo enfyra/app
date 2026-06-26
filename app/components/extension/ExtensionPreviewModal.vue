@@ -22,18 +22,18 @@
 
       <div v-else-if="previewError" class="flex items-center justify-center h-[70vh]">
         <div class="text-center max-w-md">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
-            <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-red-500 dark:text-red-400" />
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--state-danger-soft-bg)] flex items-center justify-center">
+            <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-[var(--md-error)]" />
           </div>
           <h4 class="text-lg font-semibold mb-3 text-[var(--text-primary)]">Compilation Error</h4>
-          <div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p class="text-sm text-red-700 dark:text-red-300 whitespace-pre-wrap text-left">{{ previewError }}</p>
+          <div class="bg-[var(--state-danger-soft-bg)] border border-[var(--state-danger-outline-border)] rounded-lg p-4">
+            <p class="text-sm text-[var(--state-danger-soft-text)] whitespace-pre-wrap text-left">{{ previewError }}</p>
           </div>
         </div>
       </div>
 
       <div v-else-if="previewComponent && isValidComponent" class="extension-preview-container space-y-4">
-        <div v-if="previewPageHeader" class="rounded-xl bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 p-6 shadow-lg">
+        <div v-if="previewPageHeader" class="rounded-xl p-6 shadow-lg" :style="{ background: 'var(--gradient-primary)' }">
           <h2 class="text-2xl font-bold text-white mb-2">{{ previewPageHeader.title }}</h2>
           <p v-if="previewPageHeader.description" class="text-white/90 text-sm leading-relaxed">
             {{ previewPageHeader.description }}
@@ -62,8 +62,8 @@
       
       <div v-else-if="previewComponent && !isValidComponent" class="flex items-center justify-center h-[70vh]">
         <div class="text-center max-w-md">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center">
-            <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-yellow-500 dark:text-yellow-400" />
+          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--state-warning-soft-bg)] flex items-center justify-center">
+            <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-[var(--st-warning)]" />
           </div>
           <h4 class="text-lg font-semibold mb-3 text-[var(--text-primary)]">Component Render Error</h4>
           <p class="text-sm text-[var(--text-tertiary)]">

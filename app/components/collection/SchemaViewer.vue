@@ -1,131 +1,67 @@
 <template>
-  <div class="space-y-6">
-    
-    <div
-      class="bg-gradient-to-r from-gray-100/80 to-gray-200/40 dark:from-gray-900/50 dark:to-gray-800/10 rounded-xl border border-gray-300/50 dark:border-gray-700/30 p-4"
-    >
-      <div class="flex items-center gap-2 mb-4">
-        <UIcon name="lucide:layers" class="text-info" size="18" />
-        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Schema Structure</h3>
-      </div>
-      <ClientOnly>
-        <VueJsonPretty
-          :data="schemaStructure"
-          :show-length="true"
-          :show-line="false"
-          :deep="4"
-          :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          class="surface-card rounded-lg p-4"
-        />
-      </ClientOnly>
-    </div>
-
-    <div
-      class="bg-gradient-to-r from-green-500/10 to-green-400/5 rounded-xl border border-green-300/50 dark:border-green-800/30 p-4"
-    >
-      <div class="flex items-center gap-2 mb-4">
-        <UIcon name="lucide:code" class="text-green-500" size="18" />
-        <h3 class="text-lg font-semibold text-[var(--text-primary)]">
-          Example POST Request
-        </h3>
-      </div>
-      <ClientOnly>
-        <VueJsonPretty
-          :data="examplePayload"
-          :show-length="true"
-          :show-line="false"
-          :deep="3"
-          :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          class="surface-card rounded-lg p-4"
-        />
-      </ClientOnly>
-    </div>
-
-    <div
-      class="bg-gradient-to-r from-yellow-500/10 to-yellow-400/5 rounded-xl border border-yellow-300/50 dark:border-yellow-800/30 p-4"
-    >
-      <div class="flex items-center gap-2 mb-4">
-        <UIcon name="lucide:edit" class="text-yellow-500" size="18" />
-        <h3 class="text-lg font-semibold text-[var(--text-primary)]">
-          Example PATCH Request
-        </h3>
-        <span class="text-xs text-[var(--text-tertiary)] ml-auto">
-          Only send fields you want to update
-        </span>
-      </div>
-      <ClientOnly>
-        <VueJsonPretty
-          :data="examplePatchPayload"
-          :show-length="true"
-          :show-line="false"
-          :deep="3"
-          :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          class="surface-card rounded-lg p-4"
-        />
-      </ClientOnly>
-    </div>
-
-    <div
-      v-if="validationRules.length > 0"
-      class="bg-gradient-to-r from-secondary-500/10 to-secondary-400/5 rounded-xl border border-secondary-300/50 dark:border-secondary-800/30 p-4"
-    >
-      <div class="flex items-center gap-2 mb-4">
-        <UIcon
-          name="lucide:shield-check"
-          class="text-secondary-500"
-          size="18"
-        />
-        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Validation Rules</h3>
-      </div>
-      <ClientOnly>
-        <VueJsonPretty
-          :data="validationRules"
-          :show-length="true"
-          :show-line="false"
-          :deep="3"
-          :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          class="surface-card rounded-lg p-4"
-        />
-      </ClientOnly>
-    </div>
-
-    <div
-      v-if="relations.length > 0"
-      class="bg-gradient-to-r from-purple-500/10 to-purple-400/5 rounded-xl border border-purple-300/50 dark:border-purple-800/30 p-4"
-    >
-      <div class="flex items-center gap-2 mb-4">
-        <UIcon name="lucide:git-branch" class="text-purple-500" size="18" />
-        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Relations</h3>
-      </div>
-      <ClientOnly>
-        <VueJsonPretty
-          :data="relations"
-          :show-length="true"
-          :show-line="false"
-          :deep="2"
-          :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
-          class="surface-card rounded-lg p-4"
-        />
-      </ClientOnly>
-    </div>
-
+  <div class="space-y-4">
     <div v-if="schemaLoading || !schemaData" class="flex items-center justify-center h-64">
       <div class="text-center">
         <UIcon
           v-if="schemaLoading"
           name="lucide:loader-2"
-          class="w-12 h-12 text-muted-foreground mx-auto mb-2 animate-spin"
+          class="w-12 h-12 eapp-text-quaternary mx-auto mb-2 animate-spin"
         />
         <UIcon
           v-else
           name="lucide:database-zap"
-          class="w-12 h-12 text-muted-foreground mx-auto mb-2"
+          class="w-12 h-12 eapp-text-quaternary mx-auto mb-2"
         />
         <p class="text-[var(--text-tertiary)]">
           {{ schemaLoading ? 'Loading schema...' : 'No schema data available' }}
         </p>
       </div>
     </div>
+
+    <template v-else>
+      <CollectionSchemaViewerSection
+        title="Schema Structure"
+        icon="lucide:layers"
+        tile="info"
+      >
+        <VueJsonPretty :data="schemaStructure" :show-length="true" :show-line="false" :deep="4" />
+      </CollectionSchemaViewerSection>
+
+      <CollectionSchemaViewerSection
+        title="Example POST Request"
+        icon="lucide:code"
+        tile="success"
+      >
+        <VueJsonPretty :data="examplePayload" :show-length="true" :show-line="false" :deep="3" />
+      </CollectionSchemaViewerSection>
+
+      <CollectionSchemaViewerSection
+        title="Example PATCH Request"
+        icon="lucide:pencil"
+        tile="warning"
+        hint="Only send fields you want to update"
+      >
+        <VueJsonPretty :data="examplePatchPayload" :show-length="true" :show-line="false" :deep="3" />
+      </CollectionSchemaViewerSection>
+
+      <CollectionSchemaViewerSection
+        v-if="validationRules.length > 0"
+        title="Validation Rules"
+        icon="lucide:shield-check"
+        tile="primary"
+      >
+        <VueJsonPretty :data="validationRules" :show-length="true" :show-line="false" :deep="3" />
+      </CollectionSchemaViewerSection>
+
+      <CollectionSchemaViewerSection
+        v-if="relations.length > 0"
+        title="Relations"
+        icon="lucide:git-branch"
+        tile="primary"
+      >
+        <VueJsonPretty :data="relations" :show-length="true" :show-line="false" :deep="2" />
+      </CollectionSchemaViewerSection>
+    </template>
   </div>
 </template>
 
@@ -139,7 +75,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const colorMode = useColorMode();
 
 const { schemas: allSchemas, fetchSchema, schemaLoading } = useSchema();
 const { definition, schema } = useSchema(toRef(props, 'tableName'));

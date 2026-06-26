@@ -154,7 +154,7 @@ watch(
           class="w-full font-mono"
           @update:model-value="setPattern"
         />
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <p class="mt-1 text-xs eapp-text-tertiary">
           Write the pattern directly, or wrap it as <code>/pattern/flags</code> to include
           flags (<code>i</code> case-insensitive, <code>m</code> multiline,
           <code>s</code> dotAll, <code>u</code> unicode). Example: <code>/^[a-z]+$/i</code>.
@@ -166,8 +166,8 @@ watch(
         class="rounded-md border px-3 py-2 text-xs"
         :class="
           compileResult.ok
-            ? 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200'
-            : 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200'
+            ? 'border-[var(--state-info-outline-border)] bg-[var(--state-info-soft-bg)] text-[var(--state-info-soft-text)]'
+            : 'border-[var(--state-warning-outline-border)] bg-[var(--state-warning-soft-bg)] text-[var(--state-warning-soft-text)]'
         "
       >
         <div class="flex items-start gap-2">
@@ -185,7 +185,7 @@ watch(
       </div>
 
       <div
-        class="rounded-md border border-gray-200 dark:border-gray-800 p-3 space-y-2"
+        class="rounded-md border border-[var(--border-default)] p-3 space-y-2"
       >
         <div class="text-sm font-medium">Quick test</div>
 
@@ -202,7 +202,7 @@ watch(
           <span
             v-if="validateResult.checked"
             class="text-xs"
-            :class="validateResult.ok ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+            :class="validateResult.ok ? 'text-[var(--st-success)]' : 'text-[var(--md-error)]'"
           >
             <UIcon
               :name="validateResult.ok ? 'lucide:check' : 'lucide:x'"
@@ -236,19 +236,19 @@ watch(
           >
             <span
               v-if="testResult.error"
-              class="text-red-600 dark:text-red-400"
+              class="text-[var(--md-error)]"
             >
               <UIcon name="lucide:x" class="inline size-3.5 align-text-bottom" />
               {{ testResult.error }}
             </span>
             <span
               v-else-if="testResult.matched"
-              class="text-green-600 dark:text-green-400"
+              class="text-[var(--st-success)]"
             >
               <UIcon name="lucide:check" class="inline size-3.5 align-text-bottom" />
               Match. This value will PASS validation.
             </span>
-            <span v-else class="text-red-600 dark:text-red-400">
+            <span v-else class="text-[var(--md-error)]">
               <UIcon name="lucide:x" class="inline size-3.5 align-text-bottom" />
               No match. This value will FAIL validation.
             </span>

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex gap-2">
+  <div class="flex flex-wrap items-center justify-end gap-2">
     
     <template
       v-for="action in visibleComponentActions"

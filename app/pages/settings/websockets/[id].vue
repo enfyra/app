@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+    <div class="eapp-page-constrained">
       <CommonFormCard>
         <UForm :state="form" @submit="updateGateway">
           <FormEditorLazy
@@ -64,7 +64,7 @@
       :timeout-ms="Number(form?.connectionHandlerTimeout || 5000)"
     />
 
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+    <div class="eapp-page-constrained">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-[var(--text-primary)]">Event Handlers</h3>
         <UButton

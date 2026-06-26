@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="w-full max-w-[1000px]">
+    <div class="eapp-page-constrained">
       <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
           <FormEditorLazy

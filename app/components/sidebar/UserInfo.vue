@@ -25,8 +25,8 @@ const userInitial = computed(() => {
 const panelGridClass = computed(() => (isOpen.value ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'));
 const { accountPanelItems, register } = useAccountPanelRegistry();
 
-const accountPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-muted)]";
-const logoutPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-md bg-red-50 px-2.5 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-100 hover:text-red-700 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/15 dark:hover:text-red-200";
+const accountPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-bold text-[var(--text-secondary)] transition-colors hover:bg-[var(--nav-item-hover-bg)] hover:text-[var(--nav-item-hover-text)]";
+const logoutPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-2.5 py-2 text-left text-sm font-bold text-[var(--state-danger-soft-text)] transition-all hover:bg-[var(--state-danger-soft-bg-hover)] hover:shadow-theme-xs focus:outline-none focus:ring-2 focus:ring-[var(--state-danger-outline-border)]";
 
 const ProfileAccountPanelItem = defineComponent({
   name: "ProfileAccountPanelItem",
@@ -130,10 +130,10 @@ function handleAccountPanelItemKeydown(event: KeyboardEvent, item: AccountPanelI
 function accountPanelBadgeClass(item: AccountPanelItem) {
   const color = resolveAccountPanelValue(item.badgeColor) || "neutral";
   const base = "ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold";
-  if (color === "error") return `${base} bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300`;
-  if (color === "warning") return `${base} bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300`;
-  if (color === "success") return `${base} bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300`;
-  if (color === "primary") return `${base} bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-300`;
+  if (color === "error") return `${base} bg-[var(--state-danger-soft-bg)] text-[var(--state-danger-soft-text)]`;
+  if (color === "warning") return `${base} bg-[var(--state-warning-soft-bg)] text-[var(--state-warning-soft-text)]`;
+  if (color === "success") return `${base} bg-[var(--state-success-soft-bg)] text-[var(--state-success-soft-text)]`;
+  if (color === "primary") return `${base} bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]`;
   return `${base} bg-[var(--surface-muted)] text-[var(--text-tertiary)]`;
 }
 
@@ -161,31 +161,30 @@ async function handleLogout() {
     <button
       v-if="collapsed"
       type="button"
-      class="flex items-center justify-center w-full rounded-md p-1.5 border border-[var(--border-default)] bg-[var(--surface-default)] shadow-xs transition-all hover:shadow-md hover:border-[var(--border-strong)] cursor-pointer"
+      class="flex items-center justify-center w-full rounded-[var(--radius-control)] border border-[var(--card-border)] bg-[var(--block-base)] p-2 shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--card-border-hover)] cursor-pointer"
       aria-label="Open profile"
       @click="togglePanel"
     >
-      <UAvatar :text="userInitial" size="xs" />
+      <UAvatar :text="userInitial" size="xs" class="!bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] ring-1 ring-inset ring-[var(--state-primary-outline-border)]" />
     </button>
 
     <div
       v-else
-      class="overflow-hidden rounded-md border border-[var(--border-default)] bg-[var(--surface-default)] shadow-xs transition-all duration-200 hover:shadow-md hover:border-[var(--border-strong)]"
-      :class="isOpen ? 'rounded-lg' : ''"
+      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--block-base)] shadow-[var(--shadow-sm)] backdrop-blur-xl transition-colors duration-200 hover:border-[var(--card-border-hover)]"
     >
       <div
         role="button"
         tabindex="0"
-        class="flex cursor-pointer items-center gap-2 w-full p-1.5 text-left"
+        class="flex cursor-pointer items-center gap-3 w-full p-2.5 text-left"
         :aria-expanded="isOpen"
         @click="togglePanel"
         @keydown.enter.prevent="togglePanel"
         @keydown.space.prevent="togglePanel"
       >
-        <UAvatar :text="userInitial" size="xs" />
+        <UAvatar :text="userInitial" size="xs" class="!bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] ring-1 ring-inset ring-[var(--state-primary-outline-border)]" />
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium truncate text-[var(--text-secondary)] leading-tight">{{ userEmail || 'No user' }}</p>
-          <p class="text-xs truncate text-[var(--text-tertiary)] leading-tight">Account</p>
+          <p class="text-sm font-bold truncate text-[var(--text-secondary)] leading-tight">{{ userEmail || 'No user' }}</p>
+          <p class="text-xs truncate font-semibold text-[var(--text-tertiary)] leading-tight">Account</p>
         </div>
         <UIcon name="lucide:chevrons-up-down" class="w-4 h-4 text-[var(--text-tertiary)] shrink-0" />
       </div>
@@ -195,8 +194,8 @@ async function handleLogout() {
         :class="panelGridClass"
       >
         <div class="min-h-0 overflow-hidden">
-          <div class="border-t border-[var(--border-default)]">
-          <div class="p-1.5 space-y-1">
+          <div class="border-t border-[var(--card-border)]">
+          <div class="p-2 space-y-1">
             <template v-for="item in visibleAccountPanelItems" :key="item.id">
               <PermissionGate :condition="item.permission">
                 <component
@@ -248,7 +247,7 @@ async function handleLogout() {
                   v-if="!item.component && item.contentComponent && resolveAccountPanelValue(item.expanded)"
                   :is="item.contentComponent"
                   v-bind="item.contentProps"
-                  :class="item.contentClass || 'mx-1 mb-1 overflow-hidden rounded-md border border-[var(--border-default)] bg-[var(--surface-default)]'"
+                  :class="item.contentClass || 'mx-1 mb-1 overflow-hidden rounded-[var(--radius-subcontrol)] border border-[var(--border-default)] bg-[var(--surface-default)]'"
                 />
               </PermissionGate>
             </template>

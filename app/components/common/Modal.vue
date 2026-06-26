@@ -37,10 +37,10 @@ const isOpen = computed({
 const { isMobile, isTablet } = useScreen();
 
 const mergedUi = computed(() => ({
-  content: 'surface-card',
-  header: 'pb-0',
-  body: 'pt-4',
   ...props.ui,
+  content: ['eapp-modal-surface', props.ui?.content].filter(Boolean).join(' '),
+  header: ['pb-0', props.ui?.header].filter(Boolean).join(' '),
+  body: ['pt-4', props.ui?.body].filter(Boolean).join(' '),
 }));
 
 </script>

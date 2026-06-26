@@ -95,15 +95,15 @@ export function getStepTimelineIcon(s: { status: string; type: string }): string
 export function getStepTimelineIconColor(s: { status: string }): string {
   if (s.status === 'completed') return 'text-green-500';
   if (s.status === 'failed') return 'text-red-500';
-  if (s.status === 'skipped') return 'text-gray-400';
-  return 'text-gray-300';
+  if (s.status === 'skipped') return 'eapp-text-quaternary';
+  return 'eapp-text-tertiary';
 }
 
 export function getStepTimelineClass(s: { status: string }): string {
-  if (s.status === 'completed') return 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700';
+  if (s.status === 'completed') return 'eapp-surface-muted border-[var(--border-default)]';
   if (s.status === 'failed') return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
-  if (s.status === 'skipped') return 'bg-gray-50/50 dark:bg-gray-800/30 border-gray-100 dark:border-gray-700 opacity-60';
-  return 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700';
+  if (s.status === 'skipped') return 'eapp-surface-muted border-[var(--border-default)] opacity-60';
+  return 'eapp-surface-muted border-[var(--border-default)]';
 }
 
 export const NODE_WIDTH = 220;

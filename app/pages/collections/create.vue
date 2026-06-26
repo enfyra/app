@@ -202,7 +202,7 @@ async function save() {
 
 <template>
   <div class="relative">
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+    <div class="eapp-page-constrained">
       <CommonFormCard>
         <TableForm v-model="table" :new="true">
           <template #tableName>

@@ -66,7 +66,7 @@ const strokeDashoffset = computed(() =>
         cy="50%"
         :r="radius"
         stroke="currentColor"
-        class="text-gray-200 dark:text-gray-700"
+        class="text-[var(--border-subtle)]"
         stroke-width="2"
         fill="none"
       />

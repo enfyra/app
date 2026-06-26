@@ -1,6 +1,6 @@
 {
   "name": "enfyra-app",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Dynamic admin interface for Enfyra backend - auto-generates management UI from database schemas",
   "license": "MIT",
   "author": "dothinh115 <dothinh115@gmail.com>",
@@ -50,6 +50,7 @@
     "@floating-ui/dom": "1.7.4",
     "@iconify-json/lucide": "^1.2.49",
     "@lezer/highlight": "^1.2.3",
+    "@material/material-color-utilities": "^0.4.0",
     "@nuxt/icon": "^2.2.1",
     "@nuxt/ui": "^4.7.0",
     "@nuxtjs/color-mode": "^4.0.0",
@@ -103,6 +104,7 @@
     "@vue/language-core": "^3.2.7",
     "@vue/test-utils": "2.4.6",
     "happy-dom": "^20.9.0",
+    "playwright": "^1.61.1",
     "tailwindcss": "^4.1.10",
     "typescript": "^5.8.3",
     "vitest": "4.1.0",

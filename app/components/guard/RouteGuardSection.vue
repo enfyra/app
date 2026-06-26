@@ -5,7 +5,7 @@
         <div class="flex items-center gap-2">
           <UIcon
             name="lucide:shield"
-            class="w-5 h-5 text-amber-600 dark:text-amber-400"
+            class="w-5 h-5 text-[var(--st-warning)]"
           />
           <h3 class="text-lg font-semibold text-[var(--text-primary)]">
             Guards
@@ -48,7 +48,7 @@
           >
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div
-                class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-amber-500 to-orange-500"
+                class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[var(--st-warning)] to-[var(--md-primary)]"
               >
                 <UIcon name="lucide:shield" class="w-4 h-4 text-white" />
               </div>
@@ -97,7 +97,7 @@
             >
               <div class="flex items-center gap-3 min-w-0 flex-1">
                 <div
-                  class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-slate-500 to-gray-600"
+                  class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[var(--md-primary)] to-[var(--md-tertiary)]"
                 >
                   <UIcon name="lucide:globe" class="w-4 h-4 text-white" />
                 </div>
@@ -152,7 +152,7 @@
           >
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div
-                class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-slate-500 to-gray-600"
+                class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[var(--md-primary)] to-[var(--md-tertiary)]"
               >
                 <UIcon name="lucide:globe" class="w-4 h-4 text-white" />
               </div>

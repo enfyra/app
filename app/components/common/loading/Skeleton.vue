@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<{
   shimmer: false
 });
 
-const animationClass = computed(() => props.animated ? 'animate-pulse' : '');
+const animationClass = computed(() => props.animated ? 'skeleton-pulse-slow' : '');
 const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
 </script>
 
@@ -46,7 +46,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     <div
       v-for="i in 8"
       :key="i"
-      class="rounded-xl border p-4 space-y-4 skeleton-card"
+      class="rounded-[var(--radius-card)] border p-4 space-y-4 skeleton-card"
       :class="[animationClass, shimmerClass]"
       :style="{
         backgroundColor: 'var(--bg-elevated)',
@@ -78,10 +78,10 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
 
       <div class="flex gap-2 justify-end">
         <div
-          class="h-8 w-20 rounded-lg skeleton-gradient"
+          class="h-8 w-20 rounded-[var(--radius-control)] skeleton-gradient"
         ></div>
         <div
-          class="h-8 w-16 rounded-lg skeleton-gradient"
+          class="h-8 w-16 rounded-[var(--radius-control)] skeleton-gradient"
         ></div>
       </div>
     </div>
@@ -94,7 +94,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
       class="group relative"
     >
       <div
-        class="relative rounded-xl border transition-all duration-200 overflow-hidden"
+        class="relative rounded-[var(--radius-card)] border transition-all duration-200 overflow-hidden"
         :class="[animationClass, shimmerClass]"
         :style="{
           backgroundColor: 'var(--bg-elevated)',
@@ -103,7 +103,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
           boxShadow: 'var(--shadow-xs)',
         }"
       >
-        <div class="h-28 relative overflow-hidden rounded-t-xl">
+        <div class="h-28 relative overflow-hidden rounded-t-[var(--radius-card)]">
           <div
             class="w-full h-full skeleton-preview-bg"
           >
@@ -140,7 +140,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
 
   <div
     v-else-if="type === 'table'"
-    class="w-full space-y-0 overflow-hidden rounded-xl border"
+    class="w-full space-y-0 overflow-hidden rounded-[var(--radius-card)] border"
     :style="{
       borderColor: 'var(--border-default)',
     }"
@@ -215,18 +215,18 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
       ></div>
       
       <div
-        class="h-10 w-full rounded-lg skeleton-inline"
+        class="h-10 w-full rounded-[var(--radius-control)] skeleton-inline"
         :class="[animationClass, shimmerClass]"
       ></div>
     </div>
 
     <div class="flex gap-3 pt-6">
       <div
-        class="h-10 w-24 rounded-lg skeleton-primary"
+        class="h-10 w-24 rounded-[var(--radius-control)] skeleton-primary"
         :class="[animationClass, shimmerClass]"
       ></div>
       <div
-        class="h-10 w-20 rounded-lg skeleton-gradient"
+        class="h-10 w-20 rounded-[var(--radius-control)] skeleton-gradient"
         :class="[animationClass, shimmerClass]"
       ></div>
     </div>
@@ -239,7 +239,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
       class="group relative"
     >
       <div
-        class="relative rounded-xl border transition-all duration-200 overflow-hidden"
+        class="relative rounded-[var(--radius-card)] border transition-all duration-200 overflow-hidden"
         :class="[animationClass, shimmerClass]"
         :style="{
           backgroundColor: 'var(--bg-elevated)',
@@ -251,9 +251,9 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
         <div class="p-4 flex items-start gap-4">
           <div class="flex-shrink-0">
             <div
-              class="w-12 h-12 rounded-lg"
+              class="w-12 h-12 rounded-[var(--radius-control)]"
                 :style="{
-                background: ['#3B82F6', '#7C3AED', '#F59E0B', '#14B8A6'][i % 4],
+                background: ['var(--brand-500)', 'var(--brand-600)', 'var(--accent-amber)', 'var(--accent-emerald)'][i % 4],
                 }"
               />
         </div>
@@ -278,10 +278,10 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
   </div>
 
   <div v-else-if="type === 'menu'" class="w-full space-y-4 p-4">
-    <div class="menu-preview surface-card rounded-lg p-4">
+    <div class="menu-preview surface-card p-4">
       <div class="space-y-2">
         <div v-for="i in 4" :key="i" class="space-y-2">
-          <div class="menu-item flex items-center gap-2 px-3 py-2 rounded-lg">
+          <div class="menu-item flex items-center gap-2 px-3 py-2 rounded-[var(--radius-control)]">
             <div class="w-4 h-4 bg-[var(--surface-muted)] rounded skeleton-gradient" :class="[animationClass, shimmerClass]"></div>
             <div class="h-4 bg-[var(--surface-muted)] rounded skeleton-gradient" :class="[animationClass, shimmerClass]" :style="{ width: `${120 + (i % 3) * 40}px` }"></div>
             <div class="flex items-center gap-1 ml-auto">
@@ -291,7 +291,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
             </div>
           </div>
           <div v-if="i <= 2" class="pl-4 md:pl-6 space-y-1">
-            <div class="menu-item-child flex items-center gap-2 px-3 py-1.5 rounded-lg">
+            <div class="menu-item-child flex items-center gap-2 px-3 py-1.5 rounded-[var(--radius-control)]">
               <div class="w-3.5 h-3.5 bg-[var(--surface-muted)] rounded skeleton-gradient" :class="[animationClass, shimmerClass]"></div>
               <div class="h-3 bg-[var(--surface-muted)] rounded skeleton-gradient" :class="[animationClass, shimmerClass]" :style="{ width: `${80 + (i % 2) * 30}px` }"></div>
               <div class="flex items-center gap-1 ml-auto">

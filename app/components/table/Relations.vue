@@ -313,7 +313,7 @@ async function removeRelation(index: number) {
     <div
       v-for="(rel, index) in relations"
       :key="rel.id ?? index"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-muted lg:hover:bg-muted/50 transition cursor-pointer"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
       @click="editRelation(rel, index)"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
@@ -345,7 +345,7 @@ async function removeRelation(index: number) {
             :color="rel.isPublished ? 'success' : 'neutral'"
             variant="ghost"
             size="xs"
-            class="lg:hover:cursor-pointer"
+            class="cursor-pointer"
             @click.stop="rel.isPublished = !rel.isPublished"
           />
         </UTooltip>
@@ -365,7 +365,7 @@ async function removeRelation(index: number) {
               color="secondary"
               variant="ghost"
               size="xs"
-              class="lg:hover:cursor-pointer"
+              class="cursor-pointer"
               @click.stop="handleShieldClick(rel, index)"
             />
           </UChip>
@@ -376,7 +376,7 @@ async function removeRelation(index: number) {
           variant="ghost"
           size="xs"
           :disabled="rel.isSystem"
-          class="lg:hover:cursor-pointer"
+          class="cursor-not-allowed enabled:cursor-pointer"
           @click.stop="removeRelation(index)"
         />
       </div>
@@ -385,7 +385,7 @@ async function removeRelation(index: number) {
     <div
       v-for="incoming in incomingRelations"
       :key="'incoming-' + incoming.id"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-dashed border-muted opacity-60 hover:opacity-100 transition"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-dashed border-[var(--border-default)] opacity-60 hover:opacity-100 transition"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
         <UIcon name="lucide:arrow-down-left" class="w-4 h-4 text-muted-foreground shrink-0" />
@@ -443,9 +443,9 @@ async function removeRelation(index: number) {
       <div class="flex items-start justify-between gap-3 w-full">
         <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3 min-w-0 flex-1'">
         <div
-          :class="(isMobile || isTablet) ? 'w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg flex-shrink-0' : 'w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg'"
+          :class="(isMobile || isTablet) ? 'accent-tile accent-tile-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg shadow-theme-xs' : 'accent-tile accent-tile-primary flex h-10 w-10 items-center justify-center rounded-xl shadow-theme-xs'"
         >
-          <UIcon name="lucide:git-branch" :class="(isMobile || isTablet) ? 'text-xs text-white' : 'text-sm text-white'" />
+          <UIcon name="lucide:git-branch" :class="(isMobile || isTablet) ? 'text-xs text-current' : 'text-sm text-current'" />
         </div>
         <div class="min-w-0 flex-1">
           <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold text-foreground truncate' : 'text-xl font-semibold text-foreground'">

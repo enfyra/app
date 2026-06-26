@@ -443,8 +443,8 @@ onMounted(() => {
           <div
             class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-lg border"
             :class="isSchemaConfirmDestructive
-              ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200'
-              : 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-200'"
+              ? 'border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] text-[var(--md-error)]'
+              : 'eapp-primary-soft eapp-primary-text'"
           >
             <Icon :name="isSchemaConfirmDestructive ? 'lucide:triangle-alert' : 'lucide:diff'" class="h-5 w-5" />
           </div>
@@ -475,8 +475,8 @@ onMounted(() => {
               <div
                 class="shrink-0 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium"
                 :class="isSchemaConfirmDestructive
-                  ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200'
-                  : 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/30 dark:text-indigo-200'"
+                  ? 'border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] text-[var(--md-error)]'
+                  : 'eapp-primary-soft eapp-primary-text'"
               >
                 {{ schemaConfirmBadgeText }}
               </div>
@@ -489,46 +489,46 @@ onMounted(() => {
               <div class="text-xs text-[var(--text-tertiary)]">Review before confirming</div>
             </div>
 
-            <div v-if="schemaConfirmDetails?.warning" class="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 px-4 py-3">
+            <div v-if="schemaConfirmDetails?.warning" class="rounded-xl border border-[var(--state-warning-outline-border)] bg-[var(--state-warning-soft-bg)] px-4 py-3">
               <div class="flex items-start gap-3">
-                <Icon name="lucide:triangle-alert" class="mt-0.5 h-4 w-4 text-amber-600 dark:text-amber-300" />
-                <div class="text-sm text-amber-900 dark:text-amber-100">
+                <Icon name="lucide:triangle-alert" class="mt-0.5 h-4 w-4 text-[var(--st-warning)]" />
+                <div class="text-sm text-[var(--state-warning-title-text)]">
                   <div class="font-medium">Warning</div>
-                  <div class="mt-0.5 text-amber-800/90 dark:text-amber-100/90">{{ schemaConfirmDetails.warning }}</div>
+                  <div class="mt-0.5 text-[var(--state-warning-soft-text)]">{{ schemaConfirmDetails.warning }}</div>
                 </div>
               </div>
             </div>
 
             <div
               v-if="modalOwningSideInverseWarnings.length"
-              class="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 px-4 py-3"
+              class="rounded-xl border border-[var(--state-warning-outline-border)] bg-[var(--state-warning-soft-bg)] px-4 py-3"
             >
               <div class="flex items-start gap-3">
-                <Icon name="lucide:link-2-off" class="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-300" />
-                <div class="min-w-0 text-sm text-amber-900 dark:text-amber-100">
+                <Icon name="lucide:link-2-off" class="mt-0.5 h-4 w-4 shrink-0 text-[var(--st-warning)]" />
+                <div class="min-w-0 text-sm text-[var(--state-warning-title-text)]">
                   <div class="font-medium">Inverse relations will be removed</div>
-                  <p class="mt-1 text-amber-800/90 dark:text-amber-100/90">
+                  <p class="mt-1 text-[var(--state-warning-soft-text)]">
                     These relations are the owning side. Deleting them also deletes the inverse
-                    <code class="rounded bg-amber-100/80 px-1 py-0.5 font-mono text-xs dark:bg-amber-950/50">enfyra_relation</code>
+                    <code class="rounded bg-[var(--state-warning-soft-bg)] px-1 py-0.5 font-mono text-xs">enfyra_relation</code>
                     rows on the other tables listed below.
                   </p>
                   <div class="mt-3 space-y-3">
                     <div
                       v-for="(w, wIdx) in modalOwningSideInverseWarnings"
                       :key="w.owningRelationId + '-' + wIdx"
-                      class="rounded-lg border border-amber-200/80 bg-white/60 dark:border-amber-900/50 dark:bg-amber-950/20 px-3 py-2"
+                      class="rounded-lg border border-[var(--state-warning-outline-border)] bg-[var(--surface-default)] px-3 py-2"
                     >
-                      <div class="font-mono text-xs font-semibold text-amber-950 dark:text-amber-50">
+                      <div class="font-mono text-xs font-semibold text-[var(--state-warning-title-text)]">
                         {{ w.owningSourceTableName }}.{{ w.owningPropertyName }}
-                        <span class="font-normal text-amber-700/80 dark:text-amber-200/80">(owning)</span>
+                        <span class="font-normal text-[var(--state-warning-soft-text)]">(owning)</span>
                       </div>
-                      <ul class="mt-2 list-inside list-disc space-y-1 text-xs text-amber-900/95 dark:text-amber-100/95">
+                      <ul class="mt-2 list-inside list-disc space-y-1 text-xs text-[var(--state-warning-soft-text)]">
                         <li
                           v-for="inv in w.cascadeDeletesInverseRelations"
                           :key="inv.relationId"
                         >
                           <span class="font-mono">{{ inv.inverseSourceTableName }}.{{ inv.propertyName }}</span>
-                          <span class="text-amber-700/80 dark:text-amber-300/80"> — inverse will be deleted</span>
+                          <span class="text-[var(--state-warning-soft-text)]"> — inverse will be deleted</span>
                         </li>
                       </ul>
                     </div>
@@ -552,25 +552,25 @@ onMounted(() => {
                 </ul>
               </div>
 
-              <div v-if="modalAddedColumns.length" class="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3">
+              <div v-if="modalAddedColumns.length" class="rounded-xl border border-[var(--state-success-outline-border)] bg-[var(--state-success-soft-bg)] px-4 py-3">
                 <div class="flex items-center justify-between">
-                  <div class="text-sm font-medium text-emerald-900 dark:text-emerald-100">Added columns</div>
-                  <div class="text-xs text-emerald-700/80 dark:text-emerald-200/80">{{ modalAddedColumns.length }}</div>
+                  <div class="text-sm font-medium text-[var(--state-success-title-text)]">Added columns</div>
+                  <div class="text-xs text-[var(--state-success-soft-text)]">{{ modalAddedColumns.length }}</div>
                 </div>
                 <div class="mt-2 flex flex-wrap gap-2">
-                  <span v-for="c in modalAddedColumns" :key="c" class="inline-flex items-center rounded-full border border-emerald-200 dark:border-emerald-900 bg-white/70 dark:bg-black/20 px-2.5 py-1 text-xs font-mono text-emerald-900 dark:text-emerald-100">
+                  <span v-for="c in modalAddedColumns" :key="c" class="inline-flex items-center rounded-full border border-[var(--state-success-outline-border)] bg-[var(--surface-default)] px-2.5 py-1 text-xs font-mono text-[var(--state-success-title-text)]">
                     {{ c }}
                   </span>
                 </div>
               </div>
 
-              <div v-if="modalRemovedColumns.length" class="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 px-4 py-3">
+              <div v-if="modalRemovedColumns.length" class="rounded-xl border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-4 py-3">
                 <div class="flex items-center justify-between">
-                  <div class="text-sm font-medium text-rose-900 dark:text-rose-100">Removed columns</div>
-                  <div class="text-xs text-rose-700/80 dark:text-rose-200/80">{{ modalRemovedColumns.length }}</div>
+                  <div class="text-sm font-medium text-[var(--state-danger-title-text)]">Removed columns</div>
+                  <div class="text-xs text-[var(--state-danger-soft-text)]">{{ modalRemovedColumns.length }}</div>
                 </div>
                 <div class="mt-2 flex flex-wrap gap-2">
-                  <span v-for="c in modalRemovedColumns" :key="c" class="inline-flex items-center rounded-full border border-rose-200 dark:border-rose-900 bg-white/70 dark:bg-black/20 px-2.5 py-1 text-xs font-mono text-rose-900 dark:text-rose-100">
+                  <span v-for="c in modalRemovedColumns" :key="c" class="inline-flex items-center rounded-full border border-[var(--state-danger-outline-border)] bg-[var(--surface-default)] px-2.5 py-1 text-xs font-mono text-[var(--state-danger-title-text)]">
                     {{ c }}
                   </span>
                 </div>
@@ -598,17 +598,17 @@ onMounted(() => {
                   </div>
                 </div>
                 <div v-if="modalAddedUniques.length" class="mt-2">
-                  <div class="text-xs font-medium text-emerald-900/80 dark:text-emerald-200/80 mb-1">Added</div>
+                  <div class="text-xs font-medium text-[var(--state-success-soft-text)] mb-1">Added</div>
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="u in modalAddedUniques" :key="'u+' + u" class="inline-flex items-center rounded-full border border-emerald-200 dark:border-emerald-900 bg-emerald-50/70 dark:bg-emerald-950/20 px-2.5 py-1 text-xs font-mono text-emerald-900 dark:text-emerald-100">
+                    <span v-for="u in modalAddedUniques" :key="'u+' + u" class="inline-flex items-center rounded-full border border-[var(--state-success-outline-border)] bg-[var(--state-success-soft-bg)] px-2.5 py-1 text-xs font-mono text-[var(--state-success-title-text)]">
                       {{ u }}
                     </span>
                   </div>
                 </div>
                 <div v-if="modalRemovedUniques.length" class="mt-3">
-                  <div class="text-xs font-medium text-rose-900/80 dark:text-rose-200/80 mb-1">Removed</div>
+                  <div class="text-xs font-medium text-[var(--state-danger-soft-text)] mb-1">Removed</div>
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="u in modalRemovedUniques" :key="'u-' + u" class="inline-flex items-center rounded-full border border-rose-200 dark:border-rose-900 bg-rose-50/70 dark:bg-rose-950/20 px-2.5 py-1 text-xs font-mono text-rose-900 dark:text-rose-100">
+                    <span v-for="u in modalRemovedUniques" :key="'u-' + u" class="inline-flex items-center rounded-full border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-2.5 py-1 text-xs font-mono text-[var(--state-danger-title-text)]">
                       {{ u }}
                     </span>
                   </div>
@@ -625,34 +625,34 @@ onMounted(() => {
                   </div>
                 </div>
                 <div v-if="modalAddedIndexes.length" class="mt-2">
-                  <div class="text-xs font-medium text-emerald-900/80 dark:text-emerald-200/80 mb-1">Added</div>
+                  <div class="text-xs font-medium text-[var(--state-success-soft-text)] mb-1">Added</div>
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="i in modalAddedIndexes" :key="'i+' + i" class="inline-flex items-center rounded-full border border-emerald-200 dark:border-emerald-900 bg-emerald-50/70 dark:bg-emerald-950/20 px-2.5 py-1 text-xs font-mono text-emerald-900 dark:text-emerald-100">
+                    <span v-for="i in modalAddedIndexes" :key="'i+' + i" class="inline-flex items-center rounded-full border border-[var(--state-success-outline-border)] bg-[var(--state-success-soft-bg)] px-2.5 py-1 text-xs font-mono text-[var(--state-success-title-text)]">
                       {{ i }}
                     </span>
                   </div>
                 </div>
                 <div v-if="modalRemovedIndexes.length" class="mt-3">
-                  <div class="text-xs font-medium text-rose-900/80 dark:text-rose-200/80 mb-1">Removed</div>
+                  <div class="text-xs font-medium text-[var(--state-danger-soft-text)] mb-1">Removed</div>
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="i in modalRemovedIndexes" :key="'i-' + i" class="inline-flex items-center rounded-full border border-rose-200 dark:border-rose-900 bg-rose-50/70 dark:bg-rose-950/20 px-2.5 py-1 text-xs font-mono text-rose-900 dark:text-rose-100">
+                    <span v-for="i in modalRemovedIndexes" :key="'i-' + i" class="inline-flex items-center rounded-full border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-2.5 py-1 text-xs font-mono text-[var(--state-danger-title-text)]">
                       {{ i }}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div v-if="modalAddedRelationsCount" class="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3">
+              <div v-if="modalAddedRelationsCount" class="rounded-xl border border-[var(--state-success-outline-border)] bg-[var(--state-success-soft-bg)] px-4 py-3">
                 <div class="flex items-center justify-between">
-                  <div class="text-sm font-medium text-emerald-900 dark:text-emerald-100">Added relations</div>
-                  <div class="text-xs text-emerald-700/80 dark:text-emerald-200/80">{{ modalAddedRelationsCount }}</div>
+                  <div class="text-sm font-medium text-[var(--state-success-title-text)]">Added relations</div>
+                  <div class="text-xs text-[var(--state-success-soft-text)]">{{ modalAddedRelationsCount }}</div>
                 </div>
               </div>
 
-              <div v-if="modalRemovedRelationsCount" class="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 px-4 py-3">
+              <div v-if="modalRemovedRelationsCount" class="rounded-xl border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-4 py-3">
                 <div class="flex items-center justify-between">
-                  <div class="text-sm font-medium text-rose-900 dark:text-rose-100">Removed relations</div>
-                  <div class="text-xs text-rose-700/80 dark:text-rose-200/80">{{ modalRemovedRelationsCount }}</div>
+                  <div class="text-sm font-medium text-[var(--state-danger-title-text)]">Removed relations</div>
+                  <div class="text-xs text-[var(--state-danger-soft-text)]">{{ modalRemovedRelationsCount }}</div>
                 </div>
               </div>
             </div>
@@ -699,9 +699,9 @@ onMounted(() => {
       <template #header>
         <div class="flex items-center gap-3">
           <div
-            class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950/40 flex items-center justify-center"
+            class="w-10 h-10 rounded-xl bg-[var(--state-danger-soft-bg)] flex items-center justify-center"
           >
-            <UIcon name="lucide:trash-2" class="text-rose-600 dark:text-rose-400" />
+            <UIcon name="lucide:trash-2" class="text-[var(--md-error)]" />
           </div>
           <div>
             <h2 class="text-lg font-semibold text-[var(--text-primary)]">
@@ -715,12 +715,12 @@ onMounted(() => {
       </template>
       <template #body>
         <div class="space-y-4">
-          <div class="rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 px-4 py-3">
+          <div class="rounded-xl border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-4 py-3">
             <div class="flex items-start gap-3">
-              <UIcon name="lucide:alert-triangle" class="mt-0.5 w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
-              <div class="text-sm text-rose-900 dark:text-rose-100">
+              <UIcon name="lucide:alert-triangle" class="mt-0.5 w-5 h-5 text-[var(--md-error)] shrink-0" />
+              <div class="text-sm text-[var(--state-danger-title-text)]">
                 <p class="font-medium">Warning: Destructive Action</p>
-                <p class="mt-1 text-rose-800/90 dark:text-rose-100/90">
+                <p class="mt-1 text-[var(--state-danger-soft-text)]">
                   All data in this collection will be permanently deleted. This includes all records, columns, and relations.
                 </p>
               </div>
@@ -742,7 +742,7 @@ onMounted(() => {
               class="w-full"
               @update:model-value="deleteConfirmError = false"
             />
-            <p v-if="deleteConfirmError" class="text-xs text-rose-600 dark:text-rose-400">
+            <p v-if="deleteConfirmError" class="text-xs text-[var(--md-error)]">
               Collection name does not match. Please type exactly: {{ table?.name }}
             </p>
           </div>
@@ -770,7 +770,7 @@ onMounted(() => {
     </UModal>
 
     <Transition name="loading-fade" mode="out-in">
-      <div v-if="!isMounted || loading" class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+      <div v-if="!isMounted || loading" class="eapp-page-constrained">
         <CommonFormCard>
           <CommonLoadingState
             type="form"
@@ -780,8 +780,28 @@ onMounted(() => {
         </CommonFormCard>
       </div>
 
-      <div v-else-if="table" class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
-          <UTabs v-model="activeTab" :items="tabItems" :content="false" variant="link" color="neutral" class="mb-4" />
+      <div v-else-if="table" class="eapp-page-constrained">
+          <div class="relative -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
+            <div class="overflow-x-auto overflow-y-hidden">
+              <div class="flex min-w-max border-b border-[var(--border-default)]">
+                <button
+                  v-for="item in tabItems"
+                  :key="item.value"
+                  type="button"
+                  class="relative flex h-12 items-center gap-2 px-4 text-sm font-medium text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)]"
+                  :class="activeTab === item.value ? 'text-[var(--text-primary)]' : ''"
+                  @click="activeTab = item.value"
+                >
+                  <UIcon :name="item.icon" class="h-5 w-5 shrink-0" />
+                  <span>{{ item.label }}</span>
+                  <span
+                    v-if="activeTab === item.value"
+                    class="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[var(--text-primary)]"
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
 
           <UForm @submit.prevent="save" :state="table">
             <div v-show="activeTab === 'schema'">
@@ -842,7 +862,7 @@ onMounted(() => {
                 <h2 class="text-xl font-semibold text-foreground">
                   {{ table?.name }} Schema
                 </h2>
-                <p class="text-sm text-muted-foreground">
+                <p class="text-sm eapp-text-tertiary">
                   API Documentation & Structure
                 </p>
               </div>

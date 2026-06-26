@@ -12,7 +12,7 @@
           Runs <span class="font-mono">sourceCode</span> via <span class="font-mono">/admin/test/run</span> (<span class="font-mono">kind: "websocket_connection"</span>).
         </div>
 
-        <div v-if="!canRun" class="text-xs text-amber-700 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 p-2">
+        <div v-if="!canRun" class="text-xs text-[var(--state-warning-soft-text)] rounded-lg border border-[var(--state-warning-outline-border)] bg-[var(--state-warning-soft-bg)] p-2">
           Please fill <span class="font-mono">sourceCode</span> to enable testing.
         </div>
 
@@ -29,14 +29,14 @@
             <UIcon
               :name="result.success ? 'lucide:check-circle' : 'lucide:x-circle'"
               class="w-4 h-4"
-              :class="result.success ? 'text-emerald-600' : 'text-rose-600'"
+              :class="result.success ? 'text-[var(--st-success)]' : 'text-[var(--md-error)]'"
             />
-            <div class="text-xs font-medium" :class="result.success ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'">
+            <div class="text-xs font-medium" :class="result.success ? 'text-[var(--st-success)]' : 'text-[var(--md-error)]'">
               {{ result.success ? 'Test passed' : 'Test failed' }}
             </div>
           </div>
 
-          <div v-if="result.error" class="text-xs text-rose-700 dark:text-rose-300 rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/20 p-2">
+          <div v-if="result.error" class="text-xs text-[var(--state-danger-soft-text)] rounded-lg border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] p-2">
             {{ result.error?.message || result.error }}
           </div>
 

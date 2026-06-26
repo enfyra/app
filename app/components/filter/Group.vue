@@ -354,7 +354,7 @@ const { isMobile, isTablet } = useScreen();
 
                 <div
                   v-if="item.relationContext"
-                  class="mb-3 p-2 bg-blue-50 dark:bg-blue-950 rounded text-sm text-blue-700 dark:text-blue-300"
+                  class="mb-3 p-2 bg-[var(--state-info-soft-bg)] rounded text-sm text-[var(--state-info-soft-text)]"
                 >
                   <span class="font-medium">Filtering in relation:</span>
                   {{ item.relationContext }}

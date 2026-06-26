@@ -13,6 +13,7 @@ const props = withDefaults(defineProps<{
   align?: 'between' | 'center';
   color?: PaginationColor;
   activeColor?: PaginationColor;
+  activeVariant?: 'solid' | 'outline' | 'soft' | 'subtle' | 'ghost' | 'link';
   to?: (page: number) => any;
   ui?: Record<string, string>;
 }>(), {
@@ -23,6 +24,7 @@ const props = withDefaults(defineProps<{
   align: 'between',
   color: 'primary',
   activeColor: 'primary',
+  activeVariant: 'soft',
 });
 
 const pageStart = computed(() => {
@@ -40,7 +42,7 @@ const rootClass = computed(() =>
 </script>
 
 <template>
-  <div v-if="hasPagination" :class="rootClass">
+  <div v-if="hasPagination" :class="['eapp-pagination', rootClass]">
     <div class="flex min-w-0 items-center gap-2">
       <UPagination
         v-model:page="page"
@@ -52,6 +54,7 @@ const rootClass = computed(() =>
         :disabled="loading"
         :color="color"
         :active-color="activeColor"
+        :active-variant="activeVariant"
         :ui="ui"
       />
       <div

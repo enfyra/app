@@ -101,17 +101,30 @@ const cancelChanges = () => {
         </template>
 
         <template #body>
-          <div class="space-y-3">
+          <div class="space-y-2">
             <div
               v-for="item in props.items"
               :key="item.label"
-              class="flex items-center gap-3"
+              role="button"
+              tabindex="0"
+              :class="[
+                'flex w-full cursor-pointer items-center gap-3 rounded-[var(--radius-panel)] border px-3 py-2.5 text-left transition-colors',
+                localCheckedState[item.label]
+                  ? 'eapp-accent-soft'
+                  : 'border-[var(--border-default)] bg-[var(--surface-muted)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-default)]',
+              ]"
+              @click="handleCheckboxChange(item.label, !localCheckedState[item.label])"
+              @keydown.enter.prevent="handleCheckboxChange(item.label, !localCheckedState[item.label])"
+              @keydown.space.prevent="handleCheckboxChange(item.label, !localCheckedState[item.label])"
             >
               <UCheckbox
                 :model-value="localCheckedState[item.label]"
+                color="primary"
+                size="lg"
+                :ui="{ root: 'pointer-events-none', label: 'sr-only' }"
                 @update:model-value="(checked: boolean | string) => handleCheckboxChange(item.label, Boolean(checked))"
               />
-              <span>{{ item.label }}</span>
+              <span class="min-w-0 truncate text-sm font-medium">{{ item.label }}</span>
             </div>
           </div>
         </template>

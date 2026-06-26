@@ -6,18 +6,24 @@
       @clear="clearFilters"
     />
 
-    <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
-        v-if="showInitialLoading"
-        title="Loading users..."
-        description="Fetching user accounts"
-        size="sm"
-        type="card"
-        context="page"
-      />
-
+    <CommonCardListFrame
+      v-model:page="page"
+      root-class=""
+      :loading="showInitialLoading"
+      :has-items="users.length > 0"
+      loading-title="Loading users..."
+      loading-description="Fetching user accounts"
+      empty-title="No users found"
+      empty-description="No user accounts have been created yet"
+      empty-icon="lucide:users"
+      :total="total"
+      :items-per-page="limit"
+      :pagination-loading="loading"
+      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
+    >
       <CommonAnimatedGrid
-        v-else-if="users.length > 0"
+        :animate="false"
         :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
       >
         <CommonSettingsCard
@@ -28,6 +34,7 @@
           icon="lucide:user"
           :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
+          :content-loading="usersRefreshing"
           @click="navigateTo(`/settings/users/${getId(user)}`)"
           :stats="[
             {
@@ -65,26 +72,7 @@
           :header-actions="getHeaderActions(user)"
         />
       </CommonAnimatedGrid>
-
-      <CommonEmptyState
-        v-else
-        title="No users found"
-        description="No user accounts have been created yet"
-        icon="lucide:users"
-        size="sm"
-      />
-      
-    </Transition>
-    <CommonPaginationBar
-      v-if="users.length > 0 && total > limit"
-      v-model:page="page"
-      class="mt-6"
-      :items-per-page="limit"
-      :total="total"
-      :loading="loading"
-      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-      :ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
-    />
+    </CommonCardListFrame>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
@@ -144,8 +132,11 @@ const {
   errorContext: "Fetch Users",
 });
 
-const users = computed(() => apiData.value?.data || []);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const {
+  items: users,
+  showInitialLoading,
+  isRefreshing: usersRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 const filterLabel = computed(() => {

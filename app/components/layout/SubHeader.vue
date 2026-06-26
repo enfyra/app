@@ -1,11 +1,11 @@
 <template>
   <div
-    class="h-12 flex items-center shrink-0 relative overflow-hidden border-b border-[var(--border-default)]"
+    class="h-12 flex items-center shrink-0 relative overflow-hidden border-b border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-muted)_70%,transparent)] backdrop-blur-xl"
     :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
   >
 
     <div
-      class="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-500/30 to-transparent"
+      class="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--border-accent)] to-transparent"
       :class="props.accentPosition === 'top' ? 'top-0' : 'bottom-0'"
     ></div>
     <div class="flex items-center gap-1.5 md:gap-3">
@@ -43,7 +43,7 @@
               action.class,
               (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
               (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                ? '!bg-[var(--surface-default)] !border !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
+                ? '!bg-[var(--action-neutral-outline-bg)] !border !border-[var(--action-neutral-outline-border)] !text-[var(--action-neutral-text)] hover:!bg-[var(--action-neutral-outline-bg-hover)] hover:!text-[var(--action-neutral-text-hover)]'
                 : ''
             ]"
           />
@@ -86,7 +86,7 @@
               action.class,
               (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
               (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                ? '!bg-[var(--surface-default)] !border !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
+                ? '!bg-[var(--action-neutral-outline-bg)] !border !border-[var(--action-neutral-outline-border)] !text-[var(--action-neutral-text)] hover:!bg-[var(--action-neutral-outline-bg-hover)] hover:!text-[var(--action-neutral-text-hover)]'
                 : ''
             ]"
           />

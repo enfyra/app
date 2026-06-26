@@ -30,19 +30,42 @@ function handleFolderClick(folder: any) {
 function toggleItemSelection(folderId: string) {
   emit("toggle-selection", folderId);
 }
+
+const debouncedLoading = ref(false);
+let loadingTimer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  () => props.loading,
+  (value) => {
+    if (loadingTimer) {
+      clearTimeout(loadingTimer);
+      loadingTimer = undefined;
+    }
+    if (value) {
+      loadingTimer = setTimeout(() => {
+        debouncedLoading.value = true;
+      }, 180);
+    } else {
+      debouncedLoading.value = false;
+    }
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => {
+  if (loadingTimer) clearTimeout(loadingTimer);
+});
 </script>
 
 <template>
   <div>
     <Transition name="loading-fade" mode="out-in">
       <div
-        v-if="loading && folders.length === 0"
+        v-if="debouncedLoading && folders.length === 0"
         class="col-span-full"
       >
-        <CommonLoadingState type="folder" />
+        <CommonLoadingState type="card" />
       </div>
 
-      <div v-else-if="!loading && folders.length > 0" key="content">
+      <div v-else-if="folders.length > 0" key="content">
         <FolderGrid
           :folders="folders"
           :empty-title="emptyTitle"
@@ -62,12 +85,12 @@ function toggleItemSelection(folderId: string) {
       >
         <UIcon
           :name="getDefaultFolderIcon()"
-          class="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4"
+          class="w-16 h-16 eapp-text-quaternary mx-auto mb-4"
         />
-        <p class="text-lg font-medium text-gray-500 dark:text-gray-400">
+        <p class="text-lg font-medium eapp-text-tertiary">
           {{ emptyTitle }}
         </p>
-        <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">{{ emptyDescription }}</p>
+        <p class="text-sm eapp-text-quaternary mt-1">{{ emptyDescription }}</p>
       </div>
     </Transition>
   </div>

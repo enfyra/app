@@ -18,7 +18,6 @@ const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { isTablet } = useScreen();
-const { isMounted } = useMounted();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { getId, getIdFieldName } = useDatabase();
 const idField = getIdFieldName();
@@ -80,8 +79,11 @@ const {
   errorContext: 'Fetch Guards',
 });
 
-const guardsData = computed(() => apiData.value?.data || []);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const {
+  items: guardsData,
+  showInitialLoading,
+  isRefreshing: guardsRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const globalGuardCount = computed(() => guardsData.value.filter((guard: any) => guard.isGlobal).length);
 const routeGuardCount = computed(() => guardsData.value.filter((guard: any) => !guard.isGlobal).length);
 const enabledGuardCount = computed(() => guardsData.value.filter((guard: any) => guard.isEnabled).length);
@@ -169,6 +171,7 @@ watch(activeScope, async () => {
 
 const {
   data: routesData,
+  pending: routesLoading,
   execute: fetchRoutes,
 } = useApi(() => '/enfyra_route', {
   query: {
@@ -226,14 +229,28 @@ const createScope = ref<GuardScope>('global');
 const selectedTemplate = ref<string | null>(null);
 const selectedRouteId = ref<string | null>(null);
 const createTemplates = computed(() => getGuardTemplatesForScope(createScope.value));
+const hasLoadedRoutes = computed(() => Boolean(routesData.value?.data?.length));
+
+async function ensureRoutesLoaded() {
+  if (hasLoadedRoutes.value || routesLoading.value) return;
+  await fetchRoutes();
+}
 
 async function openCreateGuardDrawer(scope: GuardScope) {
   createScope.value = scope;
   selectedTemplate.value = createTemplates.value[0]?.key || null;
   selectedRouteId.value = null;
-  if (!routesData.value?.data?.length) await fetchRoutes();
   showCreateGuardDrawer.value = true;
+  if (scope === 'route') {
+    void ensureRoutesLoaded();
+  }
 }
+
+watch(createScope, (scope) => {
+  if (showCreateGuardDrawer.value && scope === 'route') {
+    void ensureRoutesLoaded();
+  }
+});
 
 async function createGuardFromTemplate() {
   const template = getGuardTemplate(selectedTemplate.value);
@@ -368,7 +385,7 @@ async function deleteGuard(guard: any) {
 <template>
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
-      <div v-if="showInitialLoading">
+      <div v-if="showInitialLoading" key="loading">
         <CommonLoadingState
           title="Loading guards..."
           description="Fetching guard configuration"
@@ -378,7 +395,7 @@ async function deleteGuard(guard: any) {
         />
       </div>
 
-      <div v-else class="space-y-6">
+      <div v-else key="content" class="space-y-6">
         <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div class="surface-card rounded-lg p-4">
             <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-quaternary)]">
@@ -462,6 +479,7 @@ async function deleteGuard(guard: any) {
 
         <div v-if="guardsData.length" class="space-y-6">
           <CommonAnimatedGrid
+            :animate="false"
             :grid-class="
               isTablet
                 ? 'grid gap-4 grid-cols-2'
@@ -476,6 +494,7 @@ async function deleteGuard(guard: any) {
               icon="lucide:shield"
               icon-color="warning"
               :card-class="'cursor-pointer transition-all'"
+              :content-loading="guardsRefreshing"
               @click="navigateTo(`/settings/guards/${getId(guard)}`)"
               :stats="[
                 {
@@ -594,7 +613,9 @@ async function deleteGuard(guard: any) {
               :items="routeOptions"
               value-key="value"
               class="w-full"
-              placeholder="Select route"
+              :loading="routesLoading"
+              :disabled="routesLoading && routeOptions.length === 0"
+              :placeholder="routesLoading ? 'Loading routes...' : 'Select route'"
             />
           </UFormField>
         </section>

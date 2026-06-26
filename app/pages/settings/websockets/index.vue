@@ -1,19 +1,26 @@
 <template>
-  <div class="websocket-manager-page">
-    <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
-        v-if="showInitialLoading"
-        title="Loading WebSocket gateways..."
-        description="Fetching WebSocket configurations"
-        size="md"
-        type="card"
-        context="page"
-      />
-
-      <CommonAnimatedGrid
-        v-else-if="gateways.length > 0"
-        :grid-class="isTablet ? 'grid gap-4 grid-cols-1' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-      >
+  <CommonCardListFrame
+    v-model:page="page"
+    root-class="websocket-manager-page"
+    :loading="showInitialLoading"
+    :has-items="gateways.length > 0"
+    loading-title="Loading WebSocket gateways..."
+    loading-description="Fetching WebSocket configurations"
+    loading-size="md"
+    empty-title="No WebSocket gateways found"
+    empty-description="No WebSocket gateways have been created yet"
+    empty-icon="lucide:radio-tower"
+    empty-size="lg"
+    :total="total"
+    :items-per-page="limit"
+    :pagination-loading="loading"
+    :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
+  >
+    <CommonAnimatedGrid
+      :animate="false"
+      :grid-class="isTablet ? 'grid gap-4 grid-cols-1' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
+    >
         <CommonSettingsCard
           v-for="gateway in gateways"
           :key="String(getId(gateway) ?? gateway.path)"
@@ -22,6 +29,7 @@
           :icon="getGatewayIcon(gateway)"
           :icon-color="pageIconColor"
           :card-class="'cursor-pointer transition-all'"
+          :content-loading="gatewaysRefreshing"
           :stats="[
             {
               label: 'Status',
@@ -55,27 +63,7 @@
           :methods="getFooterActions(gateway)"
         />
       </CommonAnimatedGrid>
-
-      <CommonEmptyState
-        v-else
-        title="No WebSocket gateways found"
-        description="No WebSocket gateways have been created yet"
-        icon="lucide:radio-tower"
-        size="lg"
-      />
-    </Transition>
-
-    <CommonPaginationBar
-      v-if="gateways.length > 0 && total > limit"
-      v-model:page="page"
-      class="mt-6"
-      :items-per-page="limit"
-      :total="total"
-      :loading="loading"
-      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-      :ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
-    />
-  </div>
+  </CommonCardListFrame>
 </template>
 
 <script setup lang="ts">
@@ -91,7 +79,6 @@ const { getLoader: getGatewayLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
-const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -118,8 +105,11 @@ const {
   errorContext: "Fetch WebSocket Gateways",
 });
 
-const gateways = computed(() => apiData.value?.data || []);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const {
+  items: gateways,
+  showInitialLoading,
+  isRefreshing: gatewaysRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 const connectionCounts = ref<Record<string, number>>({});

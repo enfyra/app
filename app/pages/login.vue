@@ -1,10 +1,13 @@
 <template>
   <div class="min-h-screen flex">
-    <div class="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 overflow-hidden">
+    <div
+      class="hidden lg:flex lg:w-1/2 relative overflow-hidden"
+      style="background: var(--gradient-primary);"
+    >
       <div class="absolute inset-0">
         <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-brand-300/10 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
-        <div class="absolute top-1/2 left-1/2 w-[500px] h-[500px] bg-brand-200/10 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+        <div class="absolute top-1/2 left-1/2 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl animate-pulse"></div>
       </div>
       
       <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
@@ -22,9 +25,9 @@
         <div class="space-y-6">
           <h2 class="text-5xl font-bold text-white leading-tight">
             Welcome to<br />
-            <span class="text-brand-100">the Future</span>
+            <span class="text-white/90">the Future</span>
           </h2>
-          <p class="text-lg text-brand-100/90 max-w-md">
+          <p class="text-lg text-white/85 max-w-md">
             Experience the next generation of application management. Secure, powerful, and beautifully simple.
           </p>
           
@@ -50,13 +53,16 @@
       </div>
     </div>
 
-    <div class="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-[var(--surface-muted)] via-[var(--surface-default)] to-brand-100 dark:from-[var(--surface-chrome)] dark:via-[var(--surface-default)] dark:to-brand-950">
+    <div
+      class="w-full lg:w-1/2 flex items-center justify-center p-8"
+      style="background: linear-gradient(135deg, var(--surface-muted), var(--surface-default), var(--state-primary-soft-bg));"
+    >
       <div class="w-full max-w-md">
         <div class="lg:hidden flex items-center gap-3 mb-8">
-          <div class="p-3 bg-gradient-to-br from-brand-600 to-brand-500 rounded-2xl">
-            <UIcon name="lucide:shield-check" class="text-3xl text-white" />
+          <div class="p-3 rounded-2xl bg-[var(--action-primary-bg)]">
+            <UIcon name="lucide:shield-check" class="text-3xl text-[var(--action-primary-text)]" />
           </div>
-          <span class="text-2xl font-bold bg-gradient-to-r from-brand-600 to-brand-500 bg-clip-text text-transparent">Enfyra App</span>
+          <span class="text-2xl font-bold text-[var(--text-primary)]">Enfyra App</span>
         </div>
 
         <div class="mb-10">
@@ -74,7 +80,7 @@
               v-if="loginError"
               role="alert"
               aria-live="assertive"
-              class="flex items-start gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-200"
+              class="flex items-start gap-3 rounded-lg border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-4 py-3 text-sm text-[var(--state-danger-soft-text)]"
             >
               <UIcon name="lucide:alert-triangle" class="mt-0.5 size-4 shrink-0" />
               <div class="min-w-0 flex-1 break-words">
@@ -83,7 +89,7 @@
               </div>
               <button
                 type="button"
-                class="shrink-0 text-red-500/70 hover:text-red-700 dark:text-red-300/70 dark:hover:text-red-100"
+                class="shrink-0 text-[var(--state-danger-soft-text)] opacity-70 hover:opacity-100"
                 aria-label="Dismiss error"
                 @click="loginError = null"
               >
@@ -108,7 +114,7 @@
                 autocomplete="email"
                 :aria-describedby="error.email ? 'email-error' : undefined"
               />
-              <p v-if="error.email" id="email-error" role="alert" class="text-sm text-red-500 mt-1.5">{{ error.email }}</p>
+              <p v-if="error.email" id="email-error" role="alert" class="text-sm text-[var(--form-error-text)] mt-1.5">{{ error.email }}</p>
             </div>
 
             <div>
@@ -126,7 +132,7 @@
                 autocomplete="current-password"
                 :aria-describedby="error.password ? 'password-error' : undefined"
               />
-              <p v-if="error.password" id="password-error" role="alert" class="text-sm text-red-500 mt-1.5">{{ error.password }}</p>
+              <p v-if="error.password" id="password-error" role="alert" class="text-sm text-[var(--form-error-text)] mt-1.5">{{ error.password }}</p>
             </div>
 
             <div class="flex items-center justify-between">
@@ -141,7 +147,9 @@
             <UButton
               type="submit"
               size="lg"
-              class="w-full bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 dark:from-brand-500 dark:to-brand-400 dark:hover:from-brand-600 dark:hover:to-brand-500 text-white font-semibold shadow-lg"
+              color="primary"
+              variant="solid"
+              class="w-full font-semibold shadow-lg"
               loading-auto
             >
               Sign in

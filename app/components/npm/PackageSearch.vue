@@ -94,7 +94,7 @@
     <Transition name="fade-slide">
       <div
         v-if="selectedPackage"
-        class="relative overflow-hidden rounded-xl border border-green-500/20 bg-gradient-to-r from-green-500/5 via-emerald-500/5 to-green-500/5 p-4 backdrop-blur-sm shadow-sm"
+        class="eapp-accent-soft relative overflow-hidden rounded-xl p-4 backdrop-blur-sm"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1 space-y-2">
@@ -103,13 +103,13 @@
               <div class="flex items-center gap-2">
                 <UIcon
                   name="lucide:package-check"
-                  class="w-4 h-4 text-green-500 flex-shrink-0"
+                  class="w-4 h-4 flex-shrink-0 eapp-accent-text"
                 />
-                <span class="font-medium text-green-400 text-sm">
+                <span class="eapp-accent-text text-sm font-medium">
                   {{ selectedPackage.name }}
                 </span>
               </div>
-              <UBadge color="success" variant="soft" size="xs">
+              <UBadge color="primary" variant="soft" size="xs">
                 v{{ selectedPackage.version }}
               </UBadge>
             </div>

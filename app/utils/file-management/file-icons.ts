@@ -8,8 +8,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (!mimetype) {
     return {
       icon: "lucide:file",
-      color: "text-gray-600 dark:text-gray-300",
-      background: "bg-gray-100 dark:bg-gray-800",
+      color: "text-[var(--text-tertiary)]",
+      background: "bg-[var(--surface-muted)]",
     };
   }
 
@@ -80,8 +80,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
   if (mimetype.includes("text/")) {
     return {
       icon: "lucide:file-text",
-      color: "text-gray-600 dark:text-gray-300",
-      background: "bg-gray-100 dark:bg-gray-800",
+      color: "text-[var(--text-tertiary)]",
+      background: "bg-[var(--surface-muted)]",
     };
   }
 
@@ -95,8 +95,8 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
 
   return {
     icon: "lucide:file",
-    color: "text-gray-600 dark:text-gray-300",
-    background: "bg-gray-100 dark:bg-gray-800",
+    color: "text-[var(--text-tertiary)]",
+    background: "bg-[var(--surface-muted)]",
   };
 }
 
@@ -116,5 +116,5 @@ export function getFileColor(mimetype: string): string {
   if (mimetype?.includes("zip") || mimetype?.includes("archive")) {
     return "text-yellow-500 dark:text-yellow-400";
   }
-  return "text-gray-500 dark:text-gray-400";
+  return "text-[var(--text-quaternary)]";
 }

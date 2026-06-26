@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full space-y-6">
+    <div class="eapp-page-constrained space-y-6">
       <RouteEditorPanel
         :route-id="routeId"
         :external-api-test="showApiTestModal"
@@ -31,7 +31,7 @@ const showApiTestModal = ref(false)
 
 registerPageHeader({
   title: 'Route Details',
-  gradient: 'cyan',
+  gradient: 'purple',
 })
 
 const {
@@ -52,7 +52,7 @@ watch(() => routeData.value?.data?.[0]?.path, (path) => {
   if (path) {
     registerPageHeader({
       title: `Route: ${path}`,
-      gradient: 'cyan',
+      gradient: 'purple',
     })
   }
 }, { immediate: true })

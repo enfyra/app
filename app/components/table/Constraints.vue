@@ -138,10 +138,10 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
         v-for="(group, gIndex) in table.uniques"
         :key="gIndex"
         class="flex flex-wrap gap-2 items-center"
-        :class="hasDuplicateGroup(table.uniques, gIndex) ? 'p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' : ''"
+        :class="hasDuplicateGroup(table.uniques, gIndex) ? 'p-2 rounded-lg bg-[var(--state-danger-soft-bg)] border border-[var(--state-danger-outline-border)]' : ''"
       >
         <UTooltip v-if="hasDuplicateGroup(table.uniques, gIndex)" text="This combination already exists in another constraint">
-          <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 text-red-500" />
+          <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 text-[var(--md-error)]" />
         </UTooltip>
 
         <div
@@ -149,11 +149,11 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           :key="fIndex"
           class="flex items-center gap-1"
         >
-          <USelectMenu
+          <USelect
             :items="getAvailableFields(group, field)"
             v-model="table.uniques[gIndex][fIndex]"
             size="sm"
-            class="min-w-[180px] min-h-[28px]"
+            class="min-w-[180px]"
           />
           <UButton
             v-if="group.length > 1"
@@ -200,13 +200,13 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
         :key="gIndex"
         class="flex flex-wrap gap-2 items-center"
         :class="getIndexWarningType(gIndex) ? 'p-2 rounded-lg border' : ''"
-        :style="getIndexWarningType(gIndex) === 'duplicate' ? 'background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);' : getIndexWarningType(gIndex) === 'redundant' ? 'background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3);' : ''"
+        :style="getIndexWarningType(gIndex) === 'duplicate' ? 'background: color-mix(in srgb, var(--md-error) 10%, transparent); border-color: color-mix(in srgb, var(--md-error) 30%, transparent);' : getIndexWarningType(gIndex) === 'redundant' ? 'background: color-mix(in srgb, var(--st-warning) 10%, transparent); border-color: color-mix(in srgb, var(--st-warning) 30%, transparent);' : ''"
       >
         <UTooltip v-if="getIndexWarningType(gIndex) === 'duplicate'" text="This combination already exists in another index">
-          <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 text-red-500" />
+          <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 text-[var(--md-error)]" />
         </UTooltip>
         <UTooltip v-else-if="getIndexWarningType(gIndex) === 'redundant'" text="This combination is already a Unique constraint - index is created automatically">
-          <UIcon name="i-lucide-info" class="w-4 h-4 text-amber-500" />
+          <UIcon name="i-lucide-info" class="w-4 h-4 text-[var(--st-warning)]" />
         </UTooltip>
 
         <div
@@ -214,11 +214,11 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           :key="fIndex"
           class="flex items-center gap-1"
         >
-          <USelectMenu
+          <USelect
             :items="getAvailableFields(group, field)"
             v-model="table.indexes[gIndex][fIndex]"
             size="sm"
-            class="min-w-[180px] min-h-[28px]"
+            class="min-w-[180px]"
           />
           <UButton
             v-if="group.length > 1"

@@ -89,7 +89,7 @@ function hasAnySelected(relName: string): boolean {
     <div v-for="rel in relations" :key="rel.name" class="rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] overflow-hidden">
       <button
         type="button"
-        class="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs bg-neutral-200 dark:bg-neutral-900"
+        class="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs bg-[var(--surface-muted)]"
         :class="[
           rel.canExpand ? '' : 'cursor-default'
         ]"

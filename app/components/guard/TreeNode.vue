@@ -19,8 +19,8 @@
             :class="[
               'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
               depth === 0
-                ? 'bg-gradient-to-br from-amber-500 to-orange-500'
-                : 'bg-gradient-to-br from-slate-500 to-gray-600',
+                ? 'bg-gradient-to-br from-[var(--st-warning)] to-[var(--md-primary)]'
+                : 'bg-gradient-to-br from-[var(--md-primary)] to-[var(--md-tertiary)]',
             ]"
           >
             <UIcon
@@ -144,7 +144,7 @@
                 </UBadge>
                 <UIcon
                   :name="rule.isEnabled ? 'lucide:circle-check' : 'lucide:circle-x'"
-                  :class="['w-5 h-5 md:hidden', rule.isEnabled ? 'text-green-500' : 'text-amber-500']"
+                  :class="['w-5 h-5 md:hidden', rule.isEnabled ? 'text-[var(--st-success)]' : 'text-[var(--st-warning)]']"
                 />
                 <UButton
                   v-if="!readonly"
@@ -322,11 +322,11 @@ function getMenuItems() {
 }
 
 const ruleTypeMap: Record<string, { label: string; icon: string; iconColor: string }> = {
-  rate_limit_by_ip: { label: 'Rate Limit (by IP)', icon: 'lucide:gauge', iconColor: 'text-amber-500' },
-  rate_limit_by_user: { label: 'Rate Limit (by User)', icon: 'lucide:user-check', iconColor: 'text-blue-500' },
-  rate_limit_by_route: { label: 'Rate Limit (by Route)', icon: 'lucide:route', iconColor: 'text-purple-500' },
-  ip_whitelist: { label: 'IP Whitelist', icon: 'lucide:shield-check', iconColor: 'text-emerald-500' },
-  ip_blacklist: { label: 'IP Blacklist', icon: 'lucide:shield-x', iconColor: 'text-red-500' },
+  rate_limit_by_ip: { label: 'Rate Limit (by IP)', icon: 'lucide:gauge', iconColor: 'text-[var(--st-warning)]' },
+  rate_limit_by_user: { label: 'Rate Limit (by User)', icon: 'lucide:user-check', iconColor: 'text-[var(--st-info)]' },
+  rate_limit_by_route: { label: 'Rate Limit (by Route)', icon: 'lucide:route', iconColor: 'eapp-primary-text' },
+  ip_whitelist: { label: 'IP Whitelist', icon: 'lucide:shield-check', iconColor: 'text-[var(--st-success)]' },
+  ip_blacklist: { label: 'IP Blacklist', icon: 'lucide:shield-x', iconColor: 'text-[var(--md-error)]' },
 };
 
 function getRuleIcon(type: string): string {
@@ -364,7 +364,7 @@ function getRuleDescription(rule: any): string {
 <style scoped>
 .guard-ghost {
   opacity: 0.4;
-  border: 2px dashed rgb(139, 92, 246) !important;
+  border: 2px dashed var(--md-primary) !important;
   border-radius: 0.75rem;
 }
 </style>

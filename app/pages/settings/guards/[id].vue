@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1200px] lg:max-w-[1200px] md:w-full space-y-6">
+    <div class="eapp-page-constrained-wide space-y-6">
       <CommonFormCard>
         <UForm :state="form" @submit="updateGuard">
           <FormEditorLazy
@@ -50,7 +50,7 @@
             <div class="flex items-center gap-2 min-w-0">
               <UIcon
                 name="lucide:git-branch"
-                class="w-5 h-5 flex-shrink-0 text-amber-600 dark:text-amber-400"
+                class="w-5 h-5 flex-shrink-0 text-[var(--st-warning)]"
               />
               <h3
                 :class="(isMobile || isTablet)
@@ -127,7 +127,7 @@
                         <UBadge :color="rule.isEnabled ? 'success' : 'warning'" variant="subtle" size="sm" class="hidden md:inline-flex">
                           {{ rule.isEnabled ? 'Enabled' : 'Disabled' }}
                         </UBadge>
-                        <UIcon :name="rule.isEnabled ? 'lucide:circle-check' : 'lucide:circle-x'" :class="['w-5 h-5 md:hidden', rule.isEnabled ? 'text-green-500' : 'text-amber-500']" />
+                        <UIcon :name="rule.isEnabled ? 'lucide:circle-check' : 'lucide:circle-x'" :class="['w-5 h-5 md:hidden', rule.isEnabled ? 'text-[var(--st-success)]' : 'text-[var(--st-warning)]']" />
                         <UButton icon="lucide:trash-2" color="error" variant="ghost" size="xs" @click.stop="handleDeleteRule(rule)" />
                       </div>
                     </div>
@@ -509,11 +509,11 @@ function getChildChildren(child: any) {
 }
 
 const ruleTypeMap: Record<string, { label: string; icon: string; iconColor: string }> = {
-  rate_limit_by_ip: { label: 'Rate Limit (by IP)', icon: 'lucide:gauge', iconColor: 'text-amber-500' },
-  rate_limit_by_user: { label: 'Rate Limit (by User)', icon: 'lucide:user-check', iconColor: 'text-blue-500' },
-  rate_limit_by_route: { label: 'Rate Limit (by Route)', icon: 'lucide:route', iconColor: 'text-purple-500' },
-  ip_whitelist: { label: 'IP Whitelist', icon: 'lucide:shield-check', iconColor: 'text-emerald-500' },
-  ip_blacklist: { label: 'IP Blacklist', icon: 'lucide:shield-x', iconColor: 'text-red-500' },
+  rate_limit_by_ip: { label: 'Rate Limit (by IP)', icon: 'lucide:gauge', iconColor: 'text-[var(--st-warning)]' },
+  rate_limit_by_user: { label: 'Rate Limit (by User)', icon: 'lucide:user-check', iconColor: 'text-[var(--st-info)]' },
+  rate_limit_by_route: { label: 'Rate Limit (by Route)', icon: 'lucide:route', iconColor: 'eapp-primary-text' },
+  ip_whitelist: { label: 'IP Whitelist', icon: 'lucide:shield-check', iconColor: 'text-[var(--st-success)]' },
+  ip_blacklist: { label: 'IP Blacklist', icon: 'lucide:shield-x', iconColor: 'text-[var(--md-error)]' },
 };
 
 function getRuleIcon(type: string): string {
@@ -873,7 +873,7 @@ onMounted(async () => {
 <style scoped>
 .guard-ghost {
   opacity: 0.4;
-  border: 2px dashed rgb(139, 92, 246) !important;
+  border: 2px dashed var(--md-primary) !important;
   border-radius: 0.75rem;
 }
 </style>

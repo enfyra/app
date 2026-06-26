@@ -35,7 +35,7 @@ const { isMobile, isTablet } = useScreen();
   <div class="flex justify-between items-center">
     <div :class="(isMobile || isTablet) ? 'text-xs text-muted-foreground flex gap-1.5 items-center' : 'text-xs text-muted-foreground flex gap-2 items-center'">
       <span v-if="!isMobile && !isTablet">Page {{ page }} / {{ totalPages }}</span>
-      <span v-if="!isValidPage && !isMobile && !isTablet" class="text-red-500">(Invalid page)</span>
+      <span v-if="!isValidPage && !isMobile && !isTablet" class="text-[var(--md-error)]">(Invalid page)</span>
       <UButton
         icon="i-lucide-chevron-left"
         :size="(isMobile || isTablet) ? 'sm' : 'xs'"
@@ -43,7 +43,7 @@ const { isMobile, isTablet } = useScreen();
         :disabled="page <= 1 || totalPages <= 1 || loading"
         :title="`Go to page ${page - 1}`"
         :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-        color="secondary"
+        color="primary"
       />
       <span v-if="isMobile || isTablet" class="text-xs font-medium">{{ page }}/{{ totalPages }}</span>
       <UButton
@@ -53,7 +53,7 @@ const { isMobile, isTablet } = useScreen();
         :disabled="page >= totalPages || totalPages <= 1 || loading"
         :title="`Go to page ${page + 1}`"
         :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-        color="secondary"
+        color="primary"
       />
       
     </div>

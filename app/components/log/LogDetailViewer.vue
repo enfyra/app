@@ -90,7 +90,7 @@ onUnmounted(() => {
                   color="neutral"
                   @click="handleClose"
                 />
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-lg eapp-primary-solid flex items-center justify-center">
                   <UIcon name="lucide:file-text" class="w-4 h-4 text-white" />
                 </div>
                 <div class="min-w-0">
@@ -200,8 +200,8 @@ onUnmounted(() => {
 
             <div v-else-if="error" class="flex items-center justify-center h-full">
               <div class="text-center space-y-3">
-                <UIcon name="lucide:alert-triangle" class="w-12 h-12 text-rose-400 mx-auto" />
-                <p class="text-rose-400 font-medium text-lg">{{ error }}</p>
+                <UIcon name="lucide:alert-triangle" class="w-12 h-12 text-[var(--md-error)] mx-auto" />
+                <p class="text-[var(--md-error)] font-medium text-lg">{{ error }}</p>
                 <p class="text-[var(--text-tertiary)]">Check permissions or try again</p>
                 <UButton size="sm" variant="soft" color="neutral" @click="handleClose">
                   Go back

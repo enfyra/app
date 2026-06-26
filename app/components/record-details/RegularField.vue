@@ -14,7 +14,7 @@
     >
       <UIcon
         :name="value ? 'lucide:check' : 'lucide:x'"
-        :class="value ? 'text-green-500' : 'text-red-500'"
+        :class="value ? 'text-[var(--st-success)]' : 'text-[var(--md-error)]'"
         size="14"
       />
       <span>{{ value ? "True" : "False" }}</span>

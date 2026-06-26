@@ -1,19 +1,26 @@
 <template>
-  <div class="flow-manager-page">
-    <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
-        v-if="showInitialLoading"
-        title="Loading flows..."
-        description="Fetching flow configurations"
-        size="md"
-        type="card"
-        context="page"
-      />
-
-      <CommonAnimatedGrid
-        v-else-if="flows.length > 0"
-        :grid-class="isTablet ? 'grid gap-4 grid-cols-1' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-      >
+  <CommonCardListFrame
+    v-model:page="page"
+    root-class="flow-manager-page"
+    :loading="showInitialLoading"
+    :has-items="flows.length > 0"
+    loading-title="Loading flows..."
+    loading-description="Fetching flow configurations"
+    loading-size="md"
+    empty-title="No flows found"
+    empty-description="No flows have been created yet"
+    empty-icon="lucide:workflow"
+    empty-size="lg"
+    :total="total"
+    :items-per-page="limit"
+    :pagination-loading="loading"
+    :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
+  >
+    <CommonAnimatedGrid
+      :animate="false"
+      :grid-class="isTablet ? 'grid gap-4 grid-cols-1' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
+    >
         <CommonSettingsCard
           v-for="flow in flows"
           :key="flow.id"
@@ -22,6 +29,7 @@
           :icon="flow.icon || 'i-lucide-workflow'"
           icon-color="primary"
           card-class="cursor-pointer transition-all"
+          :content-loading="flowsRefreshing"
           :stats="[
             {
               label: 'Trigger',
@@ -49,27 +57,7 @@
           :methods="getFooterActions(flow)"
         />
       </CommonAnimatedGrid>
-
-      <CommonEmptyState
-        v-else
-        title="No flows found"
-        description="No flows have been created yet"
-        icon="lucide:workflow"
-        size="lg"
-      />
-    </Transition>
-
-    <CommonPaginationBar
-      v-if="flows.length > 0 && total > limit"
-      v-model:page="page"
-      class="mt-6"
-      :items-per-page="limit"
-      :total="total"
-      :loading="loading"
-      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-      :ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
-    />
-  </div>
+  </CommonCardListFrame>
 </template>
 
 <script setup lang="ts">
@@ -84,7 +72,6 @@ const { confirm } = useConfirm();
 const { getLoader: getFlowLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
-const { isMounted } = useMounted();
 const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -109,8 +96,11 @@ const {
   errorContext: "Fetch Flows",
 });
 
-const flows = computed(() => apiData.value?.data || []);
-const showInitialLoading = computed(() => !isMounted.value || (loading.value && !apiData.value));
+const {
+  items: flows,
+  showInitialLoading,
+  isRefreshing: flowsRefreshing,
+} = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
 const { execute: updateFlow, error: updateError } = useApi(

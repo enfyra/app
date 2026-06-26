@@ -458,7 +458,7 @@ watch(
     <div
       v-for="(column, index) in displayColumns"
       :key="column.id ?? index"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-muted lg:hover:bg-muted/50 transition cursor-pointer"
+      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
       @click="editColumn(column, index)"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
@@ -489,7 +489,7 @@ watch(
             :color="column.isPublished ? 'success' : 'neutral'"
             variant="ghost"
             size="xs"
-            class="lg:hover:cursor-pointer"
+            class="cursor-pointer"
             @click.stop="column.isPublished = !column.isPublished"
           />
         </UTooltip>
@@ -510,7 +510,7 @@ watch(
               color="secondary"
               variant="ghost"
               size="xs"
-              class="lg:hover:cursor-pointer"
+              class="cursor-pointer"
               @click.stop="handleShieldClick(column, index)"
             />
           </UChip>
@@ -532,7 +532,7 @@ watch(
               color="info"
               variant="ghost"
               size="xs"
-              class="lg:hover:cursor-pointer"
+              class="cursor-pointer"
               @click.stop="handleRuleClick(column, index)"
             />
           </UChip>
@@ -543,7 +543,7 @@ watch(
           variant="ghost"
           size="xs"
           :disabled="column.isSystem || column.isPrimary"
-          class="lg:hover:cursor-pointer"
+          class="cursor-not-allowed enabled:cursor-pointer"
           @click.stop="removeColumn(index)"
         />
       </div>
@@ -585,9 +585,9 @@ watch(
       <div class="flex items-start justify-between gap-3 w-full">
         <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3 min-w-0 flex-1'">
         <div
-          :class="(isMobile || isTablet) ? 'w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg flex-shrink-0' : 'w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg'"
+          :class="(isMobile || isTablet) ? 'accent-tile accent-tile-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg shadow-theme-xs' : 'accent-tile accent-tile-primary flex h-10 w-10 items-center justify-center rounded-xl shadow-theme-xs'"
         >
-          <UIcon name="lucide:columns" :class="(isMobile || isTablet) ? 'text-xs text-white' : 'text-sm text-white'" />
+          <UIcon name="lucide:columns" :class="(isMobile || isTablet) ? 'text-xs text-current' : 'text-sm text-current'" />
         </div>
         <div class="min-w-0 flex-1">
           <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold text-foreground truncate' : 'text-xl font-semibold text-foreground'">

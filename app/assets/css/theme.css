@@ -1,221 +1,449 @@
 @layer base {
   :root {
-    /* ── UI State Colors ── */
-    --ui-primary: var(--ui-color-primary-500, #8b5cf6);
-    --ui-secondary: #06b6d4;
-    --ui-success: #12b76a;
-    --ui-info: #06b6d4;
-    --ui-warning: #f79009;
-    --ui-error: #f04438;
+    --ui-primary: var(--md-primary);
+    --ui-secondary: var(--md-secondary);
+    --ui-tertiary: var(--md-tertiary);
+    --ui-success: var(--st-success);
+    --ui-info: var(--st-info);
+    --ui-warning: var(--st-warning);
+    --status-theme-tint: 10%;
+    --success-color: var(--st-success);
+    --success-on-color: var(--st-on-success);
+    --success-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--st-success-container));
+    --success-surface-hover: color-mix(in srgb, var(--success-color) 18%, var(--success-surface));
+    --success-on-surface: var(--st-on-success-container);
+    --success-border: color-mix(in srgb, var(--success-color) 40%, transparent);
+    --success-border-soft: color-mix(in srgb, var(--success-color) 24%, transparent);
 
-    /* ── Brand Palette ── */
-    --brand-25: #faf5ff;
-    --brand-50: #f5f3ff;
-    --brand-100: #ede9fe;
-    --brand-200: #ddd6fe;
-    --brand-300: #c4b5fd;
-    --brand-400: #a78bfa;
-    --brand-500: #8b5cf6;
-    --brand-600: #7c3aed;
-    --brand-700: #6d28d9;
-    --brand-800: #5b21b6;
-    --brand-900: #4c1d95;
-    --brand-950: #2e1065;
-    --brand-violet-deep: var(--brand-700);
-    --brand-violet-electric: var(--brand-500);
-    --brand-violet-bright: var(--brand-400);
-    --brand-indigo-deep: var(--brand-800);
-    --brand-indigo-electric: var(--brand-600);
-    --brand-indigo-bright: var(--brand-400);
+    --warning-color: var(--st-warning);
+    --warning-on-color: var(--st-on-warning);
+    --warning-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--st-warning-container));
+    --warning-surface-hover: color-mix(in srgb, var(--warning-color) 20%, var(--warning-surface));
+    --warning-on-surface: var(--st-on-warning-container);
+    --warning-border: color-mix(in srgb, var(--warning-color) 42%, transparent);
+    --warning-border-soft: color-mix(in srgb, var(--warning-color) 26%, transparent);
 
-    /* ── Accent Palette ── */
+    --info-color: var(--st-info);
+    --info-on-color: var(--st-on-info);
+    --info-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--st-info-container));
+    --info-surface-hover: color-mix(in srgb, var(--info-color) 18%, var(--info-surface));
+    --info-on-surface: var(--st-on-info-container);
+    --info-border: color-mix(in srgb, var(--info-color) 42%, transparent);
+    --info-border-soft: color-mix(in srgb, var(--info-color) 24%, transparent);
+
+    --danger-color: var(--st-error);
+    --danger-on-color: var(--st-on-error);
+    --danger-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--st-error-container));
+    --danger-surface-hover: color-mix(in srgb, var(--danger-color) 18%, var(--danger-surface));
+    --danger-surface-active: color-mix(in srgb, var(--danger-color) 28%, var(--danger-surface));
+    --danger-on-surface: var(--st-on-error-container);
+    --danger-border: color-mix(in srgb, var(--danger-color) 40%, transparent);
+    --danger-border-soft: color-mix(in srgb, var(--danger-color) 24%, transparent);
+    --danger-ring: color-mix(in srgb, var(--danger-color) 18%, transparent);
+    --danger-ghost-text: var(--danger-surface);
+
+    --ui-error: var(--danger-color);
+    --status-success-base: var(--st-success);
+    --status-info-base: var(--st-info);
+    --status-warning-base: var(--st-warning);
+    --status-danger-base: var(--danger-color);
+
+    --brand-25: color-mix(in srgb, var(--md-primary) 4%, var(--md-surface));
+    --brand-50: color-mix(in srgb, var(--md-primary) 8%, var(--md-surface));
+    --brand-100: color-mix(in srgb, var(--md-primary) 16%, var(--md-surface));
+    --brand-200: color-mix(in srgb, var(--md-primary) 28%, var(--md-surface));
+    --brand-300: color-mix(in srgb, var(--md-primary) 45%, var(--md-surface));
+    --brand-400: color-mix(in srgb, var(--md-primary) 72%, var(--md-surface));
+    --brand-500: var(--md-primary);
+    --brand-600: color-mix(in srgb, var(--md-primary) 85%, var(--md-on-primary-container));
+    --brand-700: color-mix(in srgb, var(--md-primary) 72%, var(--md-on-primary-container));
+    --brand-800: color-mix(in srgb, var(--md-primary) 58%, var(--md-on-primary-container));
+    --brand-900: var(--md-on-primary-container);
+    --brand-950: color-mix(in srgb, var(--md-on-primary-container) 80%, var(--md-primary));
+
     --accent-cyan: #22D3EE;
-    --accent-cyan-bright: #67E8F9;
     --accent-fuchsia: #E879F9;
     --accent-fuchsia-bright: #F0ABFC;
     --accent-rose: #FB7185;
     --accent-rose-bright: #FDA4AF;
     --accent-emerald: #34D399;
-    --accent-emerald-bright: #6EE7B7;
     --accent-amber: #FBBF24;
-    --accent-amber-bright: #FCD34D;
 
-    /* ── Surface Backgrounds ──
-       Use these for ALL background colors in components.
-       surface-chrome = outer app shell (behind inset card)
-       surface-default = cards, modals, drawers, main content
-       surface-muted = subtle bg within surfaces (stats, code blocks)
-       surface-overlay = overlay/backdrop
-    */
-    --bg-app: #e5e7eb;
-    --surface-chrome: #e5e7eb;
-    --surface-default: #ffffff;
-    --surface-muted: #f1f5f9;
-    --surface-overlay: rgba(0, 0, 0, 0.4);
-    --surface-header: #f5f3ff;
+    /* Neutral block ramp. Material You "lite": the canvas + borders carry a faint
+       theme tint, but cards/panels/inputs stay crisp and neutral (clean white in
+       light, deep neutral in dark) so blocks read clearly lighter/darker than
+       the tinted background instead of being more saturated than it. */
+    --block-base: #ffffff;
+    --block-low: #fafafb;
+    --block-muted: #f4f4f5;
+    --block-high: #ececee;
 
-    /* legacy aliases (used by existing code - point to new tokens) */
-    --bg-surface: var(--surface-default);
-    --bg-elevated: var(--surface-default);
-    --bg-elevated-high: var(--surface-default);
-    --bg-overlay: var(--surface-overlay);
-    --bg-input: var(--surface-default);
-
-    /* ── Text Colors ── */
-    --text-primary: #0f172a;
-    --text-secondary: #334155;
-    --text-tertiary: #64748b;
-    --text-quaternary: #94a3b8;
-    --text-disabled: #cbd5e1;
-
-    /* ── Border Colors ──
-       Neutral slate borders (NOT violet-tinted - cleaner for light theme).
-       Use --border-accent for brand-colored borders only.
-    */
-    --border-subtle: #e2e8f0;
-    --border-default: #cbd5e1;
-    --border-strong: #94a3b8;
-    --border-accent: color-mix(in srgb, var(--brand-500) 35%, transparent);
-    --border-input: #94a3b8;
-    --border-neutral: #cbd5e1;
-
-    --surface-panel-ring: color-mix(in srgb, var(--border-default) 60%, transparent);
-
-    /* ── Shadows ── */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
-    --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
-    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.06);
-    --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.14);
-    --shadow-inset-card: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-
-    --shadow-primary: 0 4px 20px color-mix(in srgb, var(--brand-500) 18%, transparent), 0 2px 8px color-mix(in srgb, var(--brand-600) 12%, transparent);
-    --shadow-primary-lg: 0 8px 32px color-mix(in srgb, var(--brand-500) 24%, transparent), 0 4px 16px color-mix(in srgb, var(--brand-600) 16%, transparent);
-    --shadow-glow: 0 0 40px color-mix(in srgb, var(--brand-500) 18%, transparent), 0 4px 20px rgba(34, 211, 238, 0.1);
-
-    /* ── Gradients (brand decorative only) ── */
-    --gradient-primary: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 50%, #22D3EE 100%);
-    --gradient-primary-reverse: linear-gradient(135deg, #22D3EE 0%, var(--brand-600) 50%, var(--brand-500) 100%);
-    --gradient-violet-cyan: linear-gradient(135deg, var(--brand-500) 0%, #22D3EE 100%);
-    --gradient-fuchsia-rose: linear-gradient(135deg, #E879F9 0%, #FB7185 100%);
-    --gradient-emerald-cyan: linear-gradient(135deg, #34D399 0%, #22D3EE 100%);
-    --gradient-amber-rose: linear-gradient(135deg, #FBBF24 0%, #FB7185 100%);
-    --gradient-rainbow: linear-gradient(135deg, #8B5CF6 0%, #6366F1 25%, #22D3EE 50%, #34D399 75%, #FBBF24 100%);
-
-    /* ── Glow (brand decorative only) ── */
-    --glow-primary: 0 0 40px color-mix(in srgb, var(--brand-500) 24%, transparent), 0 0 80px color-mix(in srgb, var(--brand-600) 14%, transparent);
-    --glow-violet: 0 0 30px color-mix(in srgb, var(--brand-500) 28%, transparent);
-    --glow-cyan: 0 0 30px rgba(34, 211, 238, 0.25);
-    --glow-fuchsia: 0 0 30px rgba(232, 121, 249, 0.25);
-    --glow-rose: 0 0 30px rgba(251, 113, 133, 0.25);
-    --glow-subtle: 0 0 50px color-mix(in srgb, var(--brand-500) 15%, transparent), 0 0 100px rgba(34, 211, 238, 0.08);
-
-    /* ── Easing ── */
-    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-    /* ── Content: Tables, Prose, Editor ── */
-    --table-header-bg: #f1f5f9;
-    --table-header-color: var(--text-primary);
-    --table-header-border: #94a3b8;
-    --table-header-hover-bg: #e2e8f0;
-    --table-cell-border: #cbd5e1;
-    --table-cell-color: var(--text-secondary);
-    --caret-color: #1f2937;
-    --prose-placeholder: #94a3b8;
-    --prose-blockquote-border: #cbd5e1;
-    --prose-blockquote-color: #64748b;
-    --prose-hr-border: #cbd5e1;
-    --prose-code-bg: #f1f5f9;
-    --prose-inline-code-color: #059669;
-    --prose-pre-bg: #1e293b;
-    --prose-pre-color: #e2e8f0;
-    --prose-link: var(--brand-600);
-    --prose-link-hover: var(--brand-700);
-    --prose-selection-bg: color-mix(in srgb, var(--brand-500) 22%, transparent);
-    --selection-bg: color-mix(in srgb, var(--brand-500) 22%, transparent);
-    --selection-text: inherit;
-    --prose-heading-color: inherit;
-    --prose-list-color: inherit;
-    --column-resize-handle: var(--brand-600);
-
-    /* ── Misc ── */
-    --flow-node-bg: #ffffff;
-    --flow-node-border: #cbd5e1;
-    --scrollbar-thumb: #94a3b8;
-  }
-
-  .dark {
-    --bg-app: color-mix(in srgb, #09090b 95%, rgb(255 255 255) 5%);
-    --surface-chrome: color-mix(in srgb, #09090b 95%, rgb(255 255 255) 5%);
-    --surface-default: #1e1e22;
-    --surface-muted: #2a2a2e;
-    --surface-overlay: rgba(0, 0, 0, 0.6);
-    --surface-header: #1a1a2e;
+    --bg-app: var(--md-background);
+    --surface-chrome: var(--md-surface-container-low);
+    --surface-default: var(--block-base);
+    --surface-muted: var(--block-muted);
+    --surface-nested: var(--block-low);
+    --surface-overlay: color-mix(in srgb, var(--md-scrim) 45%, transparent);
+    --surface-header: var(--block-muted);
 
     --bg-surface: var(--surface-default);
     --bg-elevated: var(--surface-default);
     --bg-elevated-high: var(--surface-muted);
     --bg-overlay: var(--surface-overlay);
-    --bg-input: var(--surface-muted);
+    --bg-input: var(--surface-default);
 
-    --text-primary: #fafafa;
-    --text-secondary: #d4d4d8;
-    --text-tertiary: #a1a1aa;
-    --text-quaternary: #71717a;
-    --text-disabled: #52525b;
+    --text-primary: var(--md-on-surface);
+    --text-secondary: var(--md-on-surface-variant);
+    --text-tertiary: color-mix(in srgb, var(--md-on-surface-variant) 70%, var(--md-surface));
+    --text-quaternary: color-mix(in srgb, var(--md-on-surface) 45%, var(--md-surface));
+    --text-disabled: color-mix(in srgb, var(--md-on-surface) 30%, var(--md-surface));
+    --text-muted: var(--text-tertiary);
 
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-default: rgba(255, 255, 255, 0.12);
-    --border-strong: rgba(255, 255, 255, 0.2);
-    --border-accent: color-mix(in srgb, var(--brand-500) 40%, transparent);
-    --border-input: rgba(255, 255, 255, 0.1);
-    --border-neutral: rgba(255, 255, 255, 0.08);
+    --border-subtle: color-mix(in srgb, var(--md-outline-variant) 55%, transparent);
+    --border-default: var(--md-outline-variant);
+    --border-strong: var(--md-outline);
+    --border-accent: color-mix(in srgb, var(--md-primary) 32%, transparent);
+    --border-input: var(--md-outline);
+    --border-neutral: var(--md-outline-variant);
 
-    --surface-panel-ring: color-mix(in srgb, var(--border-default) 50%, transparent);
+    --surface-panel-ring: color-mix(in srgb, var(--md-outline) 50%, transparent);
 
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.6);
-    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.8), 0 8px 20px rgba(0, 0, 0, 0.7);
-    --shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.9), 0 12px 28px rgba(0, 0, 0, 0.8);
-    --shadow-inset-card: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+    --theme-focus-ring: color-mix(in srgb, var(--md-primary) 34%, transparent);
+    --theme-focus-ring-strong: color-mix(in srgb, var(--md-primary) 47%, transparent);
+    --radius-card: 18px;
+    --radius-panel: 14px;
+    --radius-control: 12px;
+    --radius-subcontrol: 8px;
+    --radius-pill: 9999px;
 
-    --shadow-primary: 0 8px 32px color-mix(in srgb, var(--brand-500) 18%, transparent), 0 4px 16px color-mix(in srgb, var(--brand-600) 12%, transparent);
-    --shadow-primary-lg: 0 16px 48px color-mix(in srgb, var(--brand-500) 24%, transparent), 0 8px 24px color-mix(in srgb, var(--brand-600) 16%, transparent);
-    --shadow-glow: 0 0 60px color-mix(in srgb, var(--brand-500) 16%, transparent), 0 0 120px rgba(34, 211, 238, 0.06);
+    --control-bg: color-mix(in srgb, var(--md-primary) 5%, var(--block-base));
+    --control-border: var(--md-outline);
+    --control-border-focus: var(--md-primary);
+    --control-text: var(--md-on-surface);
+    --control-placeholder: var(--text-tertiary);
+    --control-disabled-bg: color-mix(in srgb, var(--md-on-surface) 6%, var(--block-base));
+    --control-disabled-border: var(--md-outline-variant);
+    --control-disabled-text: var(--text-disabled);
 
-    --glow-primary: 0 0 40px color-mix(in srgb, var(--brand-500) 24%, transparent), 0 0 80px color-mix(in srgb, var(--brand-600) 14%, transparent), 0 0 120px rgba(34, 211, 238, 0.06);
-    --glow-subtle: 0 0 60px color-mix(in srgb, var(--brand-500) 12%, transparent), 0 0 120px rgba(34, 211, 238, 0.04);
+    --action-primary-bg: var(--md-primary);
+    --action-primary-bg-hover: color-mix(in srgb, var(--md-primary) 82%, var(--md-on-primary-container));
+    --action-primary-bg-active: color-mix(in srgb, var(--md-primary) 70%, var(--md-on-primary-container));
+    --action-primary-text: var(--md-on-primary);
+    --action-primary-disabled-bg: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface));
+    --action-primary-disabled-text: color-mix(in srgb, var(--md-on-primary) 30%, var(--md-on-surface));
+    --action-primary-disabled-ring: color-mix(in srgb, var(--md-primary) 20%, var(--md-outline));
 
-    --table-header-bg: #27272a;
-    --table-header-color: var(--text-primary);
-    --table-header-border: #3f3f46;
-    --table-header-hover-bg: #3f3f46;
-    --table-cell-border: #27272a;
-    --table-cell-color: var(--text-secondary);
-    --caret-color: #e5e7eb;
-    --prose-placeholder: #6b7280;
-    --prose-blockquote-border: #3f3f46;
-    --prose-blockquote-color: #a1a1aa;
-    --prose-hr-border: #3f3f46;
-    --prose-code-bg: #27272a;
-    --prose-inline-code-color: #34d399;
-    --prose-pre-bg: #09090b;
-    --prose-pre-color: #e5e7eb;
-    --prose-link: var(--brand-400);
-    --prose-link-hover: var(--brand-300);
-    --prose-selection-bg: color-mix(in srgb, var(--brand-500) 30%, transparent);
-    --selection-bg: color-mix(in srgb, var(--brand-500) 30%, transparent);
+    --action-secondary-bg: var(--md-tertiary);
+    --action-secondary-bg-hover: color-mix(in srgb, var(--md-tertiary) 82%, var(--md-on-tertiary-container));
+    --action-secondary-bg-active: color-mix(in srgb, var(--md-tertiary) 70%, var(--md-on-tertiary-container));
+    --action-secondary-text: var(--md-on-tertiary);
+    --action-secondary-disabled-bg: color-mix(in srgb, var(--md-tertiary) 12%, var(--md-surface));
+    --action-secondary-disabled-text: color-mix(in srgb, var(--md-on-tertiary) 30%, var(--md-on-surface));
+
+    --action-neutral-bg: var(--md-surface-container);
+    --action-neutral-bg-hover: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface-container));
+    --action-neutral-bg-active: color-mix(in srgb, var(--md-primary) 17%, var(--md-surface-container));
+    --action-neutral-border: var(--md-outline);
+    --action-neutral-outline-bg: var(--md-surface);
+    --action-neutral-outline-bg-hover: var(--md-surface-container-low);
+    --action-neutral-outline-bg-active: color-mix(in srgb, var(--md-primary) 7%, var(--md-surface));
+    --action-neutral-outline-border: var(--md-outline);
+    --action-neutral-text: var(--md-on-surface-variant);
+    --action-neutral-text-hover: var(--md-on-surface);
+    --action-neutral-disabled-bg: color-mix(in srgb, var(--md-on-surface) 8%, var(--md-surface));
+    --action-neutral-disabled-text: var(--text-disabled);
+
+    --action-danger-bg: var(--danger-surface);
+    --action-danger-bg-hover: var(--danger-surface-hover);
+    --action-danger-bg-active: var(--danger-surface-active);
+    --action-danger-text: var(--danger-on-surface);
+    --action-success-bg: var(--success-color);
+    --action-success-bg-hover: color-mix(in srgb, var(--success-color) 82%, var(--success-on-surface));
+    --action-success-bg-active: color-mix(in srgb, var(--success-color) 70%, var(--success-on-surface));
+    --action-success-text: var(--success-on-color);
+    --action-warning-bg: var(--warning-color);
+    --action-warning-bg-hover: color-mix(in srgb, var(--warning-color) 82%, var(--warning-on-surface));
+    --action-warning-bg-active: color-mix(in srgb, var(--warning-color) 70%, var(--warning-on-surface));
+    --action-warning-text: var(--warning-on-color);
+    --action-info-bg: var(--info-color);
+    --action-info-bg-hover: color-mix(in srgb, var(--info-color) 82%, var(--info-on-surface));
+    --action-info-bg-active: color-mix(in srgb, var(--info-color) 70%, var(--info-on-surface));
+    --action-info-text: var(--info-on-color);
+
+    --state-danger-soft-bg: var(--danger-surface);
+    --state-danger-soft-bg-hover: var(--danger-surface-hover);
+    --state-danger-soft-text: var(--danger-on-surface);
+    --state-danger-outline-border: var(--danger-border);
+    --state-danger-title-text: var(--danger-on-surface);
+    --state-danger-description-text: var(--danger-on-surface);
+    --state-success-soft-bg: var(--success-surface);
+    --state-success-soft-bg-hover: var(--success-surface-hover);
+    --state-success-soft-text: var(--success-on-surface);
+    --state-success-outline-border: var(--success-border);
+    --state-success-title-text: var(--success-on-surface);
+    --state-success-description-text: var(--success-on-surface);
+    --state-warning-soft-bg: var(--warning-surface);
+    --state-warning-soft-bg-hover: var(--warning-surface-hover);
+    --state-warning-soft-text: var(--warning-on-surface);
+    --state-warning-outline-border: var(--warning-border);
+    --state-warning-title-text: var(--warning-on-surface);
+    --state-warning-description-text: var(--warning-on-surface);
+    --state-info-soft-bg: var(--info-surface);
+    --state-info-soft-bg-hover: var(--info-surface-hover);
+    --state-info-soft-text: var(--info-on-surface);
+    --state-info-outline-border: var(--info-border);
+    --state-info-title-text: var(--info-on-surface);
+    --state-info-description-text: var(--info-on-surface);
+
+    --state-neutral-soft-bg: var(--surface-muted);
+    --state-neutral-soft-bg-hover: color-mix(in srgb, var(--md-on-surface) 12%, var(--md-surface));
+    --state-neutral-soft-text: var(--text-secondary);
+    --state-neutral-outline-border: var(--border-default);
+
+    --state-primary-soft-bg: color-mix(in srgb, var(--md-primary) 14%, var(--md-surface));
+    --state-primary-soft-bg-hover: color-mix(in srgb, var(--md-primary) 19%, var(--md-surface));
+    --state-primary-soft-text: var(--md-on-primary-container);
+    --state-primary-outline-border: color-mix(in srgb, var(--md-primary) 30%, transparent);
+    --state-primary-outline-bg-hover: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface));
+    --state-primary-title-text: var(--md-on-primary-container);
+    --state-primary-description-text: var(--md-on-primary-container);
+
+    --state-secondary-soft-bg: var(--md-tertiary-container);
+    --state-secondary-soft-bg-hover: color-mix(in srgb, var(--md-tertiary) 16%, var(--md-surface));
+    --state-secondary-soft-text: var(--md-on-tertiary-container);
+    --state-secondary-outline-border: color-mix(in srgb, var(--md-tertiary) 35%, transparent);
+    --badge-primary-soft-bg: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface));
+    --badge-primary-soft-text: var(--md-on-primary-container);
+    --badge-primary-soft-border: color-mix(in srgb, var(--md-primary) 19%, transparent);
+    --badge-neutral-soft-bg: color-mix(in srgb, var(--md-on-surface) 8%, var(--md-surface));
+    --badge-neutral-soft-text: var(--md-on-surface-variant);
+    --badge-neutral-soft-border: var(--md-outline-variant);
+    --badge-success-soft-bg: var(--success-surface);
+    --badge-success-soft-text: var(--success-on-surface);
+    --badge-success-soft-border: var(--success-border-soft);
+    --badge-danger-soft-bg: var(--danger-surface);
+    --badge-danger-soft-text: var(--danger-on-surface);
+    --badge-danger-soft-border: var(--danger-border-soft);
+    --badge-warning-soft-bg: var(--warning-surface);
+    --badge-warning-soft-text: var(--warning-on-surface);
+    --badge-warning-soft-border: var(--warning-border-soft);
+    --badge-info-soft-bg: var(--info-surface);
+    --badge-info-soft-text: var(--info-on-surface);
+    --badge-info-soft-border: var(--info-border-soft);
+    --badge-secondary-soft-bg: var(--md-tertiary-container);
+    --badge-secondary-soft-text: var(--md-on-tertiary-container);
+    --badge-secondary-soft-border: color-mix(in srgb, var(--md-tertiary) 24%, transparent);
+
+    --control-invalid-border: color-mix(in srgb, var(--danger-color) 55%, transparent);
+    --control-invalid-ring: var(--danger-ring);
+    --form-error-text: var(--danger-color);
+
+    --card-bg: var(--block-base);
+    --card-accent: color-mix(in srgb, var(--md-primary) 10%, transparent);
+    --card-accent-soft: color-mix(in srgb, var(--md-primary) 4%, transparent);
+    --card-border: var(--md-outline-variant);
+    --card-border-hover: var(--md-outline);
+    --card-shadow: 0 12px 32px color-mix(in srgb, var(--md-shadow) 8%, transparent);
+    --card-shadow-hover: 0 16px 40px color-mix(in srgb, var(--md-shadow) 11%, transparent);
+    --pagination-bg: var(--md-surface-container);
+    --pagination-bg-hover: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface-container));
+    --pagination-border: var(--md-outline-variant);
+    --pagination-border-hover: color-mix(in srgb, var(--md-primary) 30%, var(--md-outline));
+    --pagination-text: var(--md-on-surface-variant);
+    --pagination-text-hover: var(--md-on-surface);
+    --pagination-active-bg: color-mix(in srgb, var(--md-primary) 16%, var(--md-surface));
+    --pagination-active-border: color-mix(in srgb, var(--md-primary) 45%, var(--md-outline));
+    --pagination-active-text: var(--md-on-primary-container);
+    --pagination-active-shadow: 0 8px 20px color-mix(in srgb, var(--md-primary) 20%, transparent);
+    --pagination-disabled-bg: color-mix(in srgb, var(--md-on-surface) 6%, var(--md-surface));
+    --pagination-disabled-border: var(--md-outline-variant);
+    --pagination-disabled-text: var(--text-disabled);
+
+    --shell-sidebar-bg: var(--md-surface);
+    --shell-sidebar-border: var(--md-outline-variant);
+    --shell-main-bg: var(--md-surface);
+    --shell-main-border: var(--md-outline-variant);
+    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 5%, transparent), transparent 28rem), var(--md-background);
+    --nav-item-text: var(--md-on-surface-variant);
+    --nav-item-hover-bg: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface));
+    --nav-item-hover-text: var(--md-on-surface);
+    --nav-item-active-bg: var(--md-primary-container);
+    --nav-item-active-bg-hover: color-mix(in srgb, var(--md-primary) 15%, var(--md-surface));
+    --nav-item-active-text: var(--md-on-primary-container);
+    --nav-item-active-ring: color-mix(in srgb, var(--md-primary) 26%, transparent);
+    --nav-item-active-rail: var(--md-primary);
+    --nav-item-active-shadow: 0 10px 22px color-mix(in srgb, var(--md-shadow) 50%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 20%, transparent);
+    --nav-child-border: var(--md-outline-variant);
+    --nav-count-bg: color-mix(in srgb, var(--md-primary) 8%, var(--md-surface-container));
+    --nav-count-active-bg: var(--md-primary-container);
+    --nav-count-active-text: var(--md-on-primary-container);
+
+    --shadow-xs: 0 1px 2px color-mix(in srgb, var(--md-shadow) 6%, transparent);
+    --shadow-sm: 0 6px 14px color-mix(in srgb, var(--md-shadow) 6%, transparent), 0 1px 2px color-mix(in srgb, var(--md-shadow) 5%, transparent);
+    --shadow-md: 0 10px 24px color-mix(in srgb, var(--md-shadow) 8%, transparent), 0 2px 6px color-mix(in srgb, var(--md-shadow) 6%, transparent);
+    --shadow-lg: 0 16px 40px color-mix(in srgb, var(--md-shadow) 10%, transparent), 0 4px 12px color-mix(in srgb, var(--md-shadow) 7%, transparent);
+    --shadow-xl: 0 24px 56px color-mix(in srgb, var(--md-shadow) 13%, transparent), 0 8px 20px color-mix(in srgb, var(--md-shadow) 8%, transparent);
+    --shadow-2xl: 0 32px 80px color-mix(in srgb, var(--md-shadow) 17%, transparent);
+    --shadow-inset-card: 0 14px 36px color-mix(in srgb, var(--md-shadow) 8%, transparent), 0 2px 8px color-mix(in srgb, var(--md-shadow) 5%, transparent);
+
+    --shadow-primary: 0 4px 20px color-mix(in srgb, var(--md-primary) 12%, transparent), 0 2px 8px color-mix(in srgb, var(--md-primary) 8%, transparent);
+    --shadow-primary-lg: 0 8px 32px color-mix(in srgb, var(--md-primary) 16%, transparent), 0 4px 16px color-mix(in srgb, var(--md-primary) 10%, transparent);
+    --shadow-glow: 0 0 40px color-mix(in srgb, var(--md-primary) 10%, transparent);
+
+    --gradient-primary: linear-gradient(135deg, var(--md-primary) 0%, var(--md-tertiary) 100%);
+    --gradient-primary-reverse: linear-gradient(135deg, var(--md-tertiary) 0%, var(--md-primary) 100%);
+    --gradient-violet-cyan: linear-gradient(135deg, var(--md-primary) 0%, var(--md-tertiary) 100%);
+    --gradient-fuchsia-rose: linear-gradient(135deg, #E879F9 0%, #FB7185 100%);
+    --gradient-rainbow: linear-gradient(135deg, #8B5CF6 0%, #6366F1 25%, #22D3EE 50%, #34D399 75%, #FBBF24 100%);
+
+    --glow-primary: 0 0 40px color-mix(in srgb, var(--md-primary) 14%, transparent), 0 0 80px color-mix(in srgb, var(--md-primary) 8%, transparent);
+    --glow-violet: 0 0 30px color-mix(in srgb, var(--md-primary) 14%, transparent);
+    --glow-cyan: 0 0 30px rgba(34, 211, 238, 0.25);
+    --glow-fuchsia: 0 0 30px rgba(232, 121, 249, 0.25);
+    --glow-rose: 0 0 30px rgba(251, 113, 133, 0.25);
+    --glow-subtle: 0 0 50px color-mix(in srgb, var(--md-primary) 8%, transparent);
+
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    --table-header-bg: var(--block-muted);
+    --table-header-color: var(--md-on-surface);
+    --table-header-border: var(--md-outline-variant);
+    --table-header-hover-bg: var(--md-surface-container-high);
+    --table-cell-border: var(--md-outline-variant);
+    --table-cell-color: var(--md-on-surface-variant);
+    --caret-color: var(--md-on-surface);
+    --prose-placeholder: var(--text-tertiary);
+    --prose-blockquote-border: var(--md-outline);
+    --prose-blockquote-color: var(--md-on-surface-variant);
+    --prose-hr-border: var(--md-outline-variant);
+    --prose-code-bg: var(--md-surface-container);
+    --prose-inline-code-color: var(--st-success);
+    --prose-pre-bg: var(--md-surface-container-lowest);
+    --prose-pre-color: var(--md-on-surface);
+    --prose-link: var(--md-primary);
+    --prose-link-hover: color-mix(in srgb, var(--md-primary) 80%, var(--md-on-primary-container));
+    --prose-selection-bg: color-mix(in srgb, var(--md-primary) 19%, transparent);
+    --selection-bg: color-mix(in srgb, var(--md-primary) 19%, transparent);
     --selection-text: inherit;
-    --prose-heading-color: #f3f4f6;
-    --prose-list-color: #e5e7eb;
-    --column-resize-handle: var(--brand-400);
-    --flow-node-bg: #18181b;
-    --flow-node-border: #3f3f46;
-    --scrollbar-thumb: #3f3f46;
+    --prose-heading-color: var(--md-on-surface);
+    --prose-list-color: var(--md-on-surface);
+    --column-resize-handle: var(--md-primary);
+
+    --flow-node-bg: var(--md-surface-container-low);
+    --flow-node-border: var(--md-outline-variant);
+    --scrollbar-thumb: color-mix(in srgb, var(--md-on-surface) 40%, transparent);
   }
+}
+
+:root {
+  --ui-color-primary-50: color-mix(in srgb, var(--md-primary) 6%, var(--md-surface)) !important;
+  --ui-color-primary-100: var(--md-primary-container) !important;
+  --ui-color-primary-200: color-mix(in srgb, var(--md-primary) 16%, var(--md-surface)) !important;
+  --ui-color-primary-300: color-mix(in srgb, var(--md-primary) 32%, var(--md-surface)) !important;
+  --ui-color-primary-400: color-mix(in srgb, var(--md-primary) 60%, var(--md-surface)) !important;
+  --ui-color-primary-500: var(--md-primary) !important;
+  --ui-color-primary-600: var(--md-primary) !important;
+  --ui-color-primary-700: color-mix(in srgb, var(--md-primary) 80%, var(--md-on-primary-container)) !important;
+  --ui-color-primary-800: color-mix(in srgb, var(--md-primary) 62%, var(--md-on-primary-container)) !important;
+  --ui-color-primary-900: var(--md-on-primary-container) !important;
+  --ui-color-primary-950: color-mix(in srgb, var(--md-on-primary-container) 82%, var(--md-primary)) !important;
+
+  --ui-color-secondary-50: color-mix(in srgb, var(--md-tertiary) 6%, var(--md-surface)) !important;
+  --ui-color-secondary-100: var(--md-tertiary-container) !important;
+  --ui-color-secondary-200: color-mix(in srgb, var(--md-tertiary) 16%, var(--md-surface)) !important;
+  --ui-color-secondary-300: color-mix(in srgb, var(--md-tertiary) 32%, var(--md-surface)) !important;
+  --ui-color-secondary-400: color-mix(in srgb, var(--md-tertiary) 60%, var(--md-surface)) !important;
+  --ui-color-secondary-500: var(--md-tertiary) !important;
+  --ui-color-secondary-600: var(--md-tertiary) !important;
+  --ui-color-secondary-700: color-mix(in srgb, var(--md-tertiary) 80%, var(--md-on-tertiary-container)) !important;
+  --ui-color-secondary-800: color-mix(in srgb, var(--md-tertiary) 62%, var(--md-on-tertiary-container)) !important;
+  --ui-color-secondary-900: var(--md-on-tertiary-container) !important;
+  --ui-color-secondary-950: color-mix(in srgb, var(--md-on-tertiary-container) 82%, var(--md-tertiary)) !important;
+
+  --ui-color-error-50: color-mix(in srgb, var(--danger-color) 6%, var(--md-surface)) !important;
+  --ui-color-error-100: var(--danger-surface) !important;
+  --ui-color-error-200: color-mix(in srgb, var(--danger-color) 16%, var(--md-surface)) !important;
+  --ui-color-error-300: color-mix(in srgb, var(--danger-color) 32%, var(--md-surface)) !important;
+  --ui-color-error-400: color-mix(in srgb, var(--danger-color) 60%, var(--md-surface)) !important;
+  --ui-color-error-500: var(--danger-color) !important;
+  --ui-color-error-600: var(--danger-color) !important;
+  --ui-color-error-700: color-mix(in srgb, var(--danger-color) 80%, var(--danger-on-surface)) !important;
+  --ui-color-error-800: color-mix(in srgb, var(--danger-color) 62%, var(--danger-on-surface)) !important;
+  --ui-color-error-900: var(--danger-on-surface) !important;
+  --ui-color-error-950: color-mix(in srgb, var(--danger-on-surface) 82%, var(--danger-color)) !important;
+
+  --ui-color-success-50: color-mix(in srgb, var(--st-success) 6%, var(--md-surface)) !important;
+  --ui-color-success-100: var(--success-surface) !important;
+  --ui-color-success-200: color-mix(in srgb, var(--st-success) 16%, var(--md-surface)) !important;
+  --ui-color-success-300: color-mix(in srgb, var(--st-success) 32%, var(--md-surface)) !important;
+  --ui-color-success-400: color-mix(in srgb, var(--st-success) 60%, var(--md-surface)) !important;
+  --ui-color-success-500: var(--st-success) !important;
+  --ui-color-success-600: var(--st-success) !important;
+  --ui-color-success-700: color-mix(in srgb, var(--success-color) 80%, var(--success-on-surface)) !important;
+  --ui-color-success-800: color-mix(in srgb, var(--success-color) 62%, var(--success-on-surface)) !important;
+  --ui-color-success-900: var(--success-on-surface) !important;
+  --ui-color-success-950: color-mix(in srgb, var(--success-on-surface) 82%, var(--success-color)) !important;
+
+  --ui-color-warning-50: color-mix(in srgb, var(--st-warning) 6%, var(--md-surface)) !important;
+  --ui-color-warning-100: var(--warning-surface) !important;
+  --ui-color-warning-200: color-mix(in srgb, var(--st-warning) 16%, var(--md-surface)) !important;
+  --ui-color-warning-300: color-mix(in srgb, var(--st-warning) 32%, var(--md-surface)) !important;
+  --ui-color-warning-400: color-mix(in srgb, var(--st-warning) 60%, var(--md-surface)) !important;
+  --ui-color-warning-500: var(--st-warning) !important;
+  --ui-color-warning-600: var(--st-warning) !important;
+  --ui-color-warning-700: color-mix(in srgb, var(--warning-color) 80%, var(--warning-on-surface)) !important;
+  --ui-color-warning-800: color-mix(in srgb, var(--warning-color) 62%, var(--warning-on-surface)) !important;
+  --ui-color-warning-900: var(--warning-on-surface) !important;
+  --ui-color-warning-950: color-mix(in srgb, var(--warning-on-surface) 82%, var(--warning-color)) !important;
+
+  --ui-color-info-50: color-mix(in srgb, var(--st-info) 6%, var(--md-surface)) !important;
+  --ui-color-info-100: var(--info-surface) !important;
+  --ui-color-info-200: color-mix(in srgb, var(--st-info) 16%, var(--md-surface)) !important;
+  --ui-color-info-300: color-mix(in srgb, var(--st-info) 32%, var(--md-surface)) !important;
+  --ui-color-info-400: color-mix(in srgb, var(--st-info) 60%, var(--md-surface)) !important;
+  --ui-color-info-500: var(--st-info) !important;
+  --ui-color-info-600: var(--st-info) !important;
+  --ui-color-info-700: color-mix(in srgb, var(--info-color) 80%, var(--info-on-surface)) !important;
+  --ui-color-info-800: color-mix(in srgb, var(--info-color) 62%, var(--info-on-surface)) !important;
+  --ui-color-info-900: var(--info-on-surface) !important;
+  --ui-color-info-950: color-mix(in srgb, var(--info-on-surface) 82%, var(--info-color)) !important;
+}
+
+:root {
+  --ui-bg: var(--surface-default) !important;
+  --ui-bg-muted: var(--surface-muted) !important;
+  --ui-bg-elevated: var(--md-surface-container) !important;
+  --ui-bg-accented: var(--state-primary-soft-bg) !important;
+  --ui-bg-inverted: var(--md-primary) !important;
+  --ui-text: var(--text-secondary) !important;
+  --ui-text-highlighted: var(--text-primary) !important;
+  --ui-text-muted: var(--text-secondary) !important;
+  --ui-text-toned: var(--text-tertiary) !important;
+  --ui-text-dimmed: var(--text-quaternary) !important;
+  --ui-text-inverted: var(--md-on-primary) !important;
+  --ui-border: var(--border-default) !important;
+  --ui-border-muted: var(--border-subtle) !important;
+  --ui-border-accented: var(--state-primary-outline-border) !important;
+  --ui-border-inverted: var(--md-primary) !important;
+  --ui-ring: var(--md-primary) !important;
+}
+
+.dark {
+  --block-base: #1c1c20;
+  --block-low: #222227;
+  --block-muted: #28282e;
+  --block-high: #303037;
+
+  /* Dark theme is a harmonious neutral-dark canvas so neutral blocks, tinted
+     borders and the accent never clash in temperature. Only borders, the accent
+     and a faint corner radial carry the theme hue; surfaces stay neutral. */
+  --bg-app: #131316;
+  --surface-chrome: #16161a;
+  --shell-sidebar-bg: #131316;
+  --shell-main-bg: #131316;
+  --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 4%, transparent), transparent 28rem), #131316;
+
+  /* Dark invalid-input + error chrome derive directly from Material error roles. */
 }

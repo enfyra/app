@@ -628,7 +628,7 @@ function handleMouseUp(e?: MouseEvent) {
       attrs.class,
       !isResizing ? 'transition-[height] duration-300 ease-out' : '',
       props.error
-        ? 'border border-red-500 ring-2 ring-red-500/20'
+        ? 'border border-[var(--state-danger-outline-border)] ring-2 ring-[var(--md-error)]/20'
         : 'border border-[var(--border-strong)]'
     ]"
     :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
@@ -736,7 +736,7 @@ function handleMouseUp(e?: MouseEvent) {
             </div>
           </div>
 
-          <div v-if="testSetupError" class="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300">
+          <div v-if="testSetupError" class="rounded-md border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] p-3 text-xs text-[var(--state-danger-soft-text)]">
             {{ testSetupError }}
           </div>
         </template>
@@ -752,10 +752,10 @@ function handleMouseUp(e?: MouseEvent) {
             </UBadge>
           </div>
 
-          <div v-if="testRunError?.message" class="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300">
+          <div v-if="testRunError?.message" class="rounded-md border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] p-3 text-xs text-[var(--state-danger-soft-text)]">
             {{ testRunError.message }}
           </div>
-          <div v-else-if="testErrorText" class="rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/20 dark:text-red-300">
+          <div v-else-if="testErrorText" class="rounded-md border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] p-3 text-xs text-[var(--state-danger-soft-text)]">
             {{ testErrorText }}
           </div>
 

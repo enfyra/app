@@ -33,7 +33,7 @@
           <pre v-if="showFullUrl" class="text-[10px] font-mono text-[var(--text-tertiary)] break-all whitespace-pre-wrap px-1">{{ fullUrl }}</pre>
         </div>
 
-        <div v-if="methodWarning" class="flex items-center gap-2 p-2.5 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-xs text-yellow-700 dark:text-yellow-300">
+        <div v-if="methodWarning" class="flex items-center gap-2 p-2.5 rounded-lg bg-[var(--state-warning-soft-bg)] border border-[var(--state-warning-outline-border)] text-xs text-[var(--state-warning-soft-text)]">
           <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 flex-shrink-0" />
           {{ methodWarning }}
         </div>
@@ -95,10 +95,10 @@
             <div class="flex-1" />
             <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyResponse">Copy</UButton>
           </div>
-          <pre class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono overflow-auto max-h-[300px] whitespace-pre-wrap" :class="response.status >= 400 ? 'text-red-600 dark:text-red-400' : 'text-[var(--text-secondary)]'">{{ response.body }}</pre>
+          <pre class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono overflow-auto max-h-[300px] whitespace-pre-wrap" :class="response.status >= 400 ? 'text-[var(--md-error)]' : 'text-[var(--text-secondary)]'">{{ response.body }}</pre>
         </div>
 
-        <div v-if="responseError" class="p-2.5 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-xs text-red-600 dark:text-red-400">
+        <div v-if="responseError" class="p-2.5 rounded-lg bg-[var(--state-danger-soft-bg)] border border-[var(--state-danger-outline-border)] text-xs text-[var(--state-danger-soft-text)]">
           {{ responseError }}
         </div>
       </div>

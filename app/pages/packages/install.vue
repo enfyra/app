@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="max-w-[1000px] lg:max-w-[1000px] md:w-full">
+    <div class="eapp-page-constrained">
       <CommonFormCard>
         <div class="mb-8">
           <div class="flex items-center justify-between mb-4">
@@ -17,7 +17,7 @@
               :class="[
                 'relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-200',
                 packageType === 'Server'
-                  ? 'border-cyan-600 dark:border-cyan-500 bg-cyan-50 dark:bg-cyan-950/60 shadow-lg shadow-cyan-200/50 dark:shadow-cyan-500/10'
+                  ? 'eapp-accent-soft shadow-theme-md'
                   : 'border-[var(--border-strong)] bg-[var(--surface-default)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]',
               ]"
             >
@@ -26,7 +26,7 @@
                   :class="[
                     'flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200',
                     packageType === 'Server'
-                      ? 'bg-cyan-200/80 dark:bg-cyan-500/25 text-cyan-700 dark:text-cyan-200'
+                      ? 'eapp-accent-solid'
                       : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)] group-hover:bg-[var(--surface-muted)] group-hover:text-[var(--text-secondary)]',
                   ]"
                 >
@@ -45,7 +45,7 @@
                     </span>
                     <div
                       v-if="packageType === 'Server'"
-                      class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-600 dark:bg-cyan-500/30 text-white dark:text-cyan-100 text-xs font-medium"
+                      class="eapp-accent-solid flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
                     >
                       <UIcon name="lucide:check" class="w-3 h-3" />
                       <span>Selected</span>
@@ -53,7 +53,7 @@
                   </div>
                   <p class="text-sm text-[var(--text-secondary)]">
                     Use in handlers & hooks via
-                    <code class="px-1.5 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/40 text-cyan-800 dark:text-cyan-200 text-xs font-mono">$ctx.$pkgs</code>
+                    <code class="eapp-accent-soft rounded px-1.5 py-0.5 text-xs font-mono">$ctx.$pkgs</code>
                   </p>
                 </div>
               </div>
@@ -64,7 +64,7 @@
               :class="[
                 'relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-200',
                 packageType === 'App'
-                  ? 'border-cyan-600 dark:border-cyan-500 bg-cyan-50 dark:bg-cyan-950/60 shadow-lg shadow-cyan-200/50 dark:shadow-cyan-500/10'
+                  ? 'eapp-accent-soft shadow-theme-md'
                   : 'border-[var(--border-strong)] bg-[var(--surface-default)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]',
               ]"
             >
@@ -73,7 +73,7 @@
                   :class="[
                     'flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200',
                     packageType === 'App'
-                      ? 'bg-cyan-200/80 dark:bg-cyan-500/25 text-cyan-700 dark:text-cyan-200'
+                      ? 'eapp-accent-solid'
                       : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)] group-hover:bg-[var(--surface-muted)] group-hover:text-[var(--text-secondary)]',
                   ]"
                 >
@@ -92,7 +92,7 @@
                     </span>
                     <div
                       v-if="packageType === 'App'"
-                      class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-600 dark:bg-cyan-500/30 text-white dark:text-cyan-100 text-xs font-medium"
+                      class="eapp-accent-solid flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
                     >
                       <UIcon name="lucide:check" class="w-3 h-3" />
                       <span>Selected</span>
@@ -117,8 +117,6 @@
           class="mb-6"
           :ui="{
             icon: 'text-[35px]',
-            title: 'text-violet-800 dark:text-violet-200',
-            description: 'text-violet-700 dark:text-violet-200/90',
           }"
           variant="soft"
         />
@@ -132,8 +130,6 @@
           class="mb-6"
           :ui="{
             icon: 'text-[35px]',
-            title: 'text-violet-800 dark:text-violet-200',
-            description: 'text-violet-700 dark:text-violet-200/90',
           }"
           variant="soft"
         />
