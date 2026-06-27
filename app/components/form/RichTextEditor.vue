@@ -1,104 +1,9 @@
 <script setup lang="ts">
 import { useEditor, EditorContent } from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
-import Placeholder from '@tiptap/extension-placeholder'
-import Underline from '@tiptap/extension-underline'
-import TextAlign from '@tiptap/extension-text-align'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
-import { Table } from '@tiptap/extension-table'
-import { TableRow } from '@tiptap/extension-table-row'
-import { TableCell } from '@tiptap/extension-table-cell'
-import { TableHeader } from '@tiptap/extension-table-header'
-
-const CustomTableCell = TableCell.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      colspan: {
-        default: 1,
-        parseHTML: (element) => element.getAttribute('colspan') || 1,
-        renderHTML: (attributes) => {
-          if (attributes.colspan === 1) return {}
-          return { colspan: attributes.colspan }
-        },
-      },
-      rowspan: {
-        default: 1,
-        parseHTML: (element) => element.getAttribute('rowspan') || 1,
-        renderHTML: (attributes) => {
-          if (attributes.rowspan === 1) return {}
-          return { rowspan: attributes.rowspan }
-        },
-      },
-      colwidth: {
-        default: null,
-        parseHTML: (element) => {
-          const style = element.getAttribute('style') || ''
-          const match = style.match(/width:\s*(\d+(?:\.\d+)?)/i)
-          if (match && match[1]) {
-            return [parseInt(match[1])]
-          }
-          const colwidth = element.getAttribute('colwidth')
-          return colwidth ? [parseInt(colwidth)] : null
-        },
-        renderHTML: (attributes) => {
-          if (!attributes.colwidth || attributes.colwidth.length === 0) return {}
-          const width = attributes.colwidth[0]
-          return { style: `width: ${width}px` }
-        },
-      },
-    }
-  },
-})
-
-const CustomTableHeader = TableHeader.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      colspan: {
-        default: 1,
-        parseHTML: (element) => element.getAttribute('colspan') || 1,
-        renderHTML: (attributes) => {
-          if (attributes.colspan === 1) return {}
-          return { colspan: attributes.colspan }
-        },
-      },
-      rowspan: {
-        default: 1,
-        parseHTML: (element) => element.getAttribute('rowspan') || 1,
-        renderHTML: (attributes) => {
-          if (attributes.rowspan === 1) return {}
-          return { rowspan: attributes.rowspan }
-        },
-      },
-      colwidth: {
-        default: null,
-        parseHTML: (element) => {
-          const style = element.getAttribute('style') || ''
-          const match = style.match(/width:\s*(\d+(?:\.\d+)?)/i)
-          if (match && match[1]) {
-            return [parseInt(match[1])]
-          }
-          const colwidth = element.getAttribute('colwidth')
-          return colwidth ? [parseInt(colwidth)] : null
-        },
-        renderHTML: (attributes) => {
-          if (!attributes.colwidth || attributes.colwidth.length === 0) return {}
-          const width = attributes.colwidth[0]
-          return { style: `width: ${width}px` }
-        },
-      },
-    }
-  },
-})
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { createLowlight } from 'lowlight'
 import { ensureString } from "../../utils/components/form";
-import type { AnyExtension } from '@tiptap/core'
-import { Extension } from '@tiptap/core'
-import { Mark } from '@tiptap/core'
-import { Node } from '@tiptap/core'
+import { buildRichTextExtensions } from "../../utils/form/rich-text-extensions";
+import { injectRichTextCustomStyles } from "../../utils/form/rich-text-styles";
 import type { RichTextEditorConfig } from "../../../enfyra.config.types";
 import { enfyraConfig } from "../../../enfyra.config";
 
@@ -140,17 +45,12 @@ const minHeight = computed(() => initialHeight);
 const isMounted = ref(false);
 
 const lowlight = createLowlight();
-
-function camelToKebab(str: string): string {
-  return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-}
+const colorMode = useColorMode();
 
 const linkModalOpen = ref(false);
 const imageModalOpen = ref(false);
 const tableMenuOpen = ref(false);
-const tableMenuRef = ref<HTMLDivElement>();
 const tableMenuStyle = ref<{ top: string; left: string } | null>(null);
-const tableModifyModalOpen = ref(false);
 const linkUrl = ref('');
 const imageUrl = ref('');
 const canUndo = ref(false);
@@ -192,243 +92,11 @@ const toolbarButtons = computed<ButtonGroup[]>(() => {
   return result;
 });
 
-function resolveCssStyles(formatCss: any): { light?: Record<string, string>; dark?: Record<string, string>; shared?: Record<string, string> } {
-  if (!formatCss) return {};
-  if (typeof formatCss === 'function') {
-    const lightStyles = formatCss('light');
-    const darkStyles = formatCss('dark');
-    if (JSON.stringify(lightStyles) === JSON.stringify(darkStyles)) return { shared: lightStyles };
-    return { light: lightStyles, dark: darkStyles };
-  }
-  if (formatCss.dark !== undefined || formatCss.light !== undefined) {
-    const light = (formatCss.light && typeof formatCss.light === 'object') ? formatCss.light : {};
-    const dark = (formatCss.dark && typeof formatCss.dark === 'object') ? formatCss.dark : {};
-    return { light: Object.keys(light).length ? light : undefined, dark: Object.keys(dark).length ? dark : undefined };
-  }
-  return { shared: formatCss };
-}
-
-const METADATA_SCOPE = '.rich-text-editor .ProseMirror';
-
-const injectCustomStyles = () => {
-  const formats = effectiveConfig.value.formats;
-  if (!formats) return;
-
-  const styleId = 'custom-rich-text-formats';
-  let styleEl = document.getElementById(styleId);
-
-  if (!styleEl) {
-    styleEl = document.createElement('style');
-    styleEl.id = styleId;
-    document.head.appendChild(styleEl);
-  }
-
-  const cssRules: string[] = [];
-
-  const toRule = (selector: string, stylesObj: Record<string, string>) => {
-    const styles = Object.entries(stylesObj).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
-    if (styles) cssRules.push(`${selector} { ${styles} }`);
-  };
-
-  Object.keys(formats).forEach((key) => {
-    const format = formats![key];
-    if (!format) return;
-
-    const resolved = resolveCssStyles(format.css);
-
-    const toSelector = (tag: string, isSpan: boolean) =>
-      isSpan ? `${METADATA_SCOPE} .${key}` : `${METADATA_SCOPE} ${tag}`;
-
-    if (format.inline) {
-      const tag = format.tag || 'span';
-      const sel = toSelector(tag, tag === 'span');
-      if (resolved.shared) toRule(sel, resolved.shared);
-      if (resolved.light) toRule(`html:not(.dark) ${sel}`, resolved.light);
-      if (resolved.dark) toRule(`html.dark ${sel}`, resolved.dark);
-    } else {
-      const tag = format.tag || key;
-      const sel = `${METADATA_SCOPE} ${tag}`;
-      if (resolved.shared) toRule(sel, resolved.shared);
-      if (resolved.light) toRule(`html:not(.dark) ${sel}`, resolved.light);
-      if (resolved.dark) toRule(`html.dark ${sel}`, resolved.dark);
-    }
-  });
-
-  styleEl.textContent = cssRules.join('\n');
-};
-
-const createCustomFormatsExtension = (): Extension => {
-  const formats = effectiveConfig.value.formats;
-
-  const extensions: any[] = [];
-  const marks: any[] = [];
-  const nodes: any[] = [];
-
-  const colorMode = useColorMode();
-
-  Object.keys(formats || {}).forEach((key) => {
-    const format = formats![key];
-    if (!format) return;
-
-    const theme = colorMode.value as 'light' | 'dark';
-
-    let classes: string[] = [];
-    if (format.classes) {
-      if (typeof format.classes === 'function') {
-        const cls = format.classes(theme);
-        classes = Array.isArray(cls) ? cls : [cls];
-      } else {
-        classes = Array.isArray(format.classes) ? format.classes : [format.classes];
-      }
-    }
-
-    if (format.inline) {
-      const tag = format.tag || 'span';
-      const shouldAddKeyClass = tag === 'span';
-      const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
-      marks.push(Mark.create({
-        name: key,
-        addAttributes() {
-          const attrs: any = { ...format.attributes };
-          if (allClasses) attrs.class = { default: allClasses };
-          return attrs;
-        },
-        parseHTML() {
-          return [
-            {
-              tag,
-              getAttrs: (node: any) => {
-                if (tag !== 'span' || (node.classList && node.classList.contains(key))) {
-                  return {};
-                }
-                return false;
-              },
-            },
-          ];
-        },
-        renderHTML({ HTMLAttributes }) {
-          const attrs: any = {};
-          if (allClasses) attrs.class = allClasses;
-          return [tag, { ...attrs, ...HTMLAttributes }, 0];
-        },
-      }));
-    } else if (format.wrapper) {
-      const tag = format.tag || key;
-      const shouldAddKeyClass = !format.tag;
-      const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
-      nodes.push(Node.create({
-        name: key,
-        addAttributes() {
-          const attrs: any = { ...format.attributes };
-          if (allClasses) attrs.class = { default: allClasses };
-          return attrs;
-        },
-        content: 'block*',
-        group: 'block',
-        parseHTML() {
-          return [
-            {
-              tag,
-            },
-          ];
-        },
-        renderHTML({ HTMLAttributes }) {
-          return [tag, HTMLAttributes, 0];
-        },
-      }));
-    } else {
-      const tag = format.tag || key;
-      const shouldAddKeyClass = !format.tag;
-      const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
-      nodes.push(Node.create({
-        name: key,
-        addAttributes() {
-          const attrs: any = { ...format.attributes };
-          if (allClasses) attrs.class = { default: allClasses };
-          return attrs;
-        },
-        content: 'inline*',
-        group: 'block',
-        parseHTML() {
-          return [
-            {
-              tag,
-            },
-          ];
-        },
-        renderHTML({ HTMLAttributes }) {
-          return [tag, HTMLAttributes, 0];
-        },
-      }));
-    }
-  });
-
-  return Extension.create({
-    name: 'customFormats',
-    addExtensions() {
-      return [...extensions, ...marks, ...nodes];
-    },
-  });
-};
-
 let lastEmittedHtml = ensureString(props.modelValue);
 
 const editor = useEditor({
   content: lastEmittedHtml,
-  extensions: [
-    StarterKit.configure({
-      codeBlock: false,
-      code: false,
-      underline: false,
-      link: false,
-      heading: {
-        levels: [1, 2, 3, 4, 5, 6],
-      },
-      bulletList: {
-        keepMarks: true,
-        keepAttributes: false,
-      },
-      orderedList: {
-        keepMarks: true,
-        keepAttributes: false,
-      },
-    }) as AnyExtension,
-    Placeholder.configure({
-      placeholder: 'Type something...',
-    }) as AnyExtension,
-    Underline,
-    TextAlign.configure({
-      types: ['heading', 'paragraph'],
-      alignments: ['left', 'center', 'right', 'justify'],
-      defaultAlignment: 'left',
-    }) as AnyExtension,
-    Link.configure({
-      openOnClick: false,
-    }) as AnyExtension,
-    Image.extend({
-      addAttributes() {
-        return {
-          ...this.parent?.(),
-          width: { default: null },
-          height: { default: null },
-        };
-      },
-    }) as AnyExtension,
-    Table.configure({
-      resizable: true,
-      handleWidth: 5,
-      cellMinWidth: 50,
-      lastColumnResizable: true,
-    }) as AnyExtension,
-    TableRow as AnyExtension,
-    CustomTableHeader as AnyExtension,
-    CustomTableCell as AnyExtension,
-    CodeBlockLowlight.configure({
-      lowlight,
-      defaultLanguage: 'auto',
-    }) as AnyExtension,
-    createCustomFormatsExtension(),
-  ],
+  extensions: buildRichTextExtensions(effectiveConfig.value, lowlight, colorMode.value as 'light' | 'dark'),
   editable: !props.disabled,
   onBlur: ({ editor }) => {
     try {
@@ -490,7 +158,7 @@ watch(
   effectiveConfig,
   () => {
     nextTick(() => {
-      injectCustomStyles();
+      injectRichTextCustomStyles(effectiveConfig.value);
     });
   },
   { immediate: true, deep: true }
@@ -688,63 +356,53 @@ const insertTable = () => {
   }
 };
 
+const closeTableMenu = () => {
+  tableMenuOpen.value = false;
+  tableMenuStyle.value = null;
+};
+
 const addRowBefore = () => {
   editor.value?.chain().focus().addRowBefore().run();
-  tableModifyModalOpen.value = false;
 };
 
 const addRowAfter = () => {
   editor.value?.chain().focus().addRowAfter().run();
-  tableModifyModalOpen.value = false;
 };
 
 const deleteRow = () => {
   editor.value?.chain().focus().deleteRow().run();
-  tableModifyModalOpen.value = false;
 };
 
 const addColumnBefore = () => {
   editor.value?.chain().focus().addColumnBefore().run();
-  tableModifyModalOpen.value = false;
 };
 
 const addColumnAfter = () => {
   editor.value?.chain().focus().addColumnAfter().run();
-  tableModifyModalOpen.value = false;
 };
 
 const deleteColumn = () => {
   editor.value?.chain().focus().deleteColumn().run();
-  tableModifyModalOpen.value = false;
 };
 
 const deleteTable = () => {
   editor.value?.chain().focus().deleteTable().run();
-  tableModifyModalOpen.value = false;
 };
 
 const toggleHeaderColumn = () => {
   editor.value?.chain().focus().toggleHeaderColumn().run();
-  tableModifyModalOpen.value = false;
 };
 
 const toggleHeaderRow = () => {
   editor.value?.chain().focus().toggleHeaderRow().run();
-  tableModifyModalOpen.value = false;
 };
 
 const mergeCells = () => {
   editor.value?.chain().focus().mergeCells().run();
-  tableModifyModalOpen.value = false;
 };
 
 const splitCell = () => {
   editor.value?.chain().focus().splitCell().run();
-  tableModifyModalOpen.value = false;
-};
-
-const applyTableSize = () => {
-  tableModifyModalOpen.value = false;
 };
 
 const toggleCodeBlock = () => {
@@ -889,27 +547,8 @@ onBeforeUnmount(() => {
   }
 });
 
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target;
-  if (tableMenuRef.value && target instanceof window.Node && !tableMenuRef.value.contains(target)) {
-    tableMenuOpen.value = false;
-    tableMenuStyle.value = null;
-  }
-};
-
-watch(tableMenuOpen, (isOpen) => {
-  if (isOpen) {
-    nextTick(() => {
-      document.addEventListener('click', handleClickOutside);
-    });
-  } else {
-    document.removeEventListener('click', handleClickOutside);
-  }
-});
-
 onUnmounted(() => {
   isMounted.value = false;
-  document.removeEventListener('click', handleClickOutside);
 });
 
 
@@ -1017,260 +656,41 @@ onUnmounted(() => {
     </div>
     </div>
 
-    <Teleport to="body">
-      <div
-        v-if="tableMenuOpen && tableMenuStyle"
-        ref="tableMenuRef"
-        class="fixed z-50 bg-[var(--surface-default)] border border-[var(--border-strong)] rounded-md shadow-lg py-1 min-w-[180px]"
-        :style="{ top: tableMenuStyle.top, left: tableMenuStyle.left, maxHeight: '300px', overflowY: 'auto' }"
-        @click.stop
-      >
-        <div class="px-3 py-1 text-xs font-medium text-[var(--text-tertiary)] border-b border-[var(--border-default)]">
-          Table Options
-        </div>
-        <button
-          @click="addRowBefore"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:arrow-up" class="w-4 h-4" />
-          Add Row Before
-        </button>
-        <button
-          @click="addRowAfter"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:arrow-down" class="w-4 h-4" />
-          Add Row After
-        </button>
-        <button
-          @click="deleteRow"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:trash-2" class="w-4 h-4" />
-          Delete Row
-        </button>
-        <div class="border-t border-[var(--border-default)] my-1"></div>
-        <button
-          @click="addColumnBefore"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:arrow-left" class="w-4 h-4" />
-          Add Column Before
-        </button>
-        <button
-          @click="addColumnAfter"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:arrow-right" class="w-4 h-4" />
-          Add Column After
-        </button>
-        <button
-          @click="deleteColumn"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:trash-2" class="w-4 h-4" />
-          Delete Column
-        </button>
-        <div class="border-t border-[var(--border-default)] my-1"></div>
-        <button
-          @click="toggleHeaderRow"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:panel-top" class="w-4 h-4" />
-          Toggle Header Row
-        </button>
-        <button
-          @click="toggleHeaderColumn"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:columns" class="w-4 h-4" />
-          Toggle Header Column
-        </button>
-        <button
-          @click="mergeCells"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:combine" class="w-4 h-4" />
-          Merge Cells
-        </button>
-        <button
-          @click="splitCell"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:square" class="w-4 h-4" />
-          Split Cell
-        </button>
-        <div class="border-t border-[var(--border-default)] my-1"></div>
-        <button
-          @click="deleteTable"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--state-danger-soft-bg-hover)] text-[var(--state-danger-soft-text)] flex items-center gap-2"
-        >
-          <Icon name="lucide:trash" class="w-4 h-4" />
-          Delete Table
-        </button>
-      </div>
-    </Teleport>
+    <FormRichTextTableMenu
+      v-if="tableMenuOpen"
+      :style="tableMenuStyle"
+      @close="closeTableMenu"
+      @add-row-before="addRowBefore"
+      @add-row-after="addRowAfter"
+      @delete-row="deleteRow"
+      @add-column-before="addColumnBefore"
+      @add-column-after="addColumnAfter"
+      @delete-column="deleteColumn"
+      @toggle-header-row="toggleHeaderRow"
+      @toggle-header-column="toggleHeaderColumn"
+      @merge-cells="mergeCells"
+      @split-cell="splitCell"
+      @delete-table="deleteTable"
+    />
 
+    <FormRichTextPromptModal
+      v-model:open="linkModalOpen"
+      v-model="linkUrl"
+      title="Add Link"
+      label="URL"
+      placeholder="https://example.com"
+      confirm-label="Add Link"
+      @confirm="confirmLink"
+    />
 
-    <CommonModal v-model:open="linkModalOpen">
-      <template #header>Add Link</template>
-      <template #body>
-        <div class="space-y-4">
-          <label class="block text-sm font-medium text-[var(--text-secondary)]">URL</label>
-          <input
-            v-model="linkUrl"
-            type="text"
-            placeholder="https://example.com"
-            autofocus
-            class="w-full px-3 py-2 border border-[var(--border-strong)] rounded-md bg-[var(--surface-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary-500"
-            @keydown.enter="confirmLink"
-          />
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <button
-            type="button"
-            class="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] rounded-md transition-colors"
-            @click="linkModalOpen = false"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="px-4 py-2 bg-[var(--md-primary)] text-white rounded-md hover:bg-primary-700 transition-colors"
-            @click="confirmLink"
-          >
-            Add Link
-          </button>
-        </div>
-      </template>
-    </CommonModal>
-
-    <CommonModal v-model:open="imageModalOpen">
-      <template #header>Add Image</template>
-      <template #body>
-        <div class="space-y-4">
-          <label class="block text-sm font-medium text-[var(--text-secondary)]">Image URL</label>
-          <input
-            v-model="imageUrl"
-            type="text"
-            placeholder="https://example.com/image.jpg"
-            autofocus
-            class="w-full px-3 py-2 border border-[var(--border-strong)] rounded-md bg-[var(--surface-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary-500"
-            @keydown.enter="confirmImage"
-          />
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <button
-            type="button"
-            class="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] rounded-md transition-colors"
-            @click="imageModalOpen = false"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="px-4 py-2 bg-[var(--md-primary)] text-white rounded-md hover:bg-primary-700 transition-colors"
-            @click="confirmImage"
-          >
-            Add Image
-          </button>
-        </div>
-      </template>
-    </CommonModal>
-
-    <CommonModal v-model:open="tableModifyModalOpen">
-      <template #header>Table Settings</template>
-      <template #body>
-        <div class="grid grid-cols-3 gap-2">
-          <button
-            @click="addRowBefore"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:arrow-up" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Row Above</span>
-          </button>
-          <button
-            @click="addRowAfter"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:arrow-down" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Row Below</span>
-          </button>
-          <button
-            @click="deleteRow"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--state-danger-soft-bg-hover)] transition-colors"
-          >
-            <Icon name="lucide:trash-2" class="w-5 h-5 text-[var(--md-error)]" />
-            <span class="text-xs text-[var(--state-danger-soft-text)]">Delete Row</span>
-          </button>
-          <button
-            @click="addColumnBefore"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:arrow-left" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Col Left</span>
-          </button>
-          <button
-            @click="addColumnAfter"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:arrow-right" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Col Right</span>
-          </button>
-          <button
-            @click="deleteColumn"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--state-danger-soft-bg-hover)] transition-colors"
-          >
-            <Icon name="lucide:trash-2" class="w-5 h-5 text-[var(--md-error)]" />
-            <span class="text-xs text-[var(--state-danger-soft-text)]">Delete Col</span>
-          </button>
-          <button
-            @click="toggleHeaderRow"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:panel-top" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Header Row</span>
-          </button>
-          <button
-            @click="mergeCells"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:merge" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Merge</span>
-          </button>
-          <button
-            @click="splitCell"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:split" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Split</span>
-          </button>
-        </div>
-        <div class="mt-4 pt-4 border-t border-[var(--border-default)]">
-          <button
-            @click="deleteTable"
-            class="w-full flex items-center justify-center gap-2 p-3 rounded-lg text-[var(--state-danger-soft-text)] hover:bg-[var(--state-danger-soft-bg-hover)] transition-colors"
-          >
-            <Icon name="lucide:trash" class="w-5 h-5" />
-            <span class="font-medium">Delete Table</span>
-          </button>
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end">
-          <UButton
-            variant="ghost"
-            color="neutral"
-            @click="tableModifyModalOpen = false"
-          >
-            Close
-          </UButton>
-        </div>
-      </template>
-    </CommonModal>
+    <FormRichTextPromptModal
+      v-model:open="imageModalOpen"
+      v-model="imageUrl"
+      title="Add Image"
+      label="Image URL"
+      placeholder="https://example.com/image.jpg"
+      confirm-label="Add Image"
+      @confirm="confirmImage"
+    />
   </div>
 </template>

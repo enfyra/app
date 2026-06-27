@@ -19,7 +19,12 @@
           </div>
           <div class="flex-1 min-w-0 overflow-hidden">
             <div class="flex items-center gap-1 overflow-hidden mb-0.5">
-              <h5 class="text-[9px] font-semibold text-[var(--text-primary)] truncate min-w-0 leading-tight">
+              <h5
+                :class="[
+                  'text-[9px] font-semibold truncate min-w-0 leading-tight',
+                  isPrimaryTone ? 'flow-node-primary-title' : 'text-[var(--text-primary)]',
+                ]"
+              >
                 {{ data.isDefault ? 'Built-in logic' : (data.label || 'Unnamed') }}
               </h5>
               <UBadge
@@ -35,8 +40,8 @@
                 v-if="!data.route && !data.isDefault"
                 size="xs"
                 variant="soft"
-                color="warning"
-                class="!text-[9px] !px-1.5 !py-0.5 font-semibold leading-none shrink-0"
+                color="neutral"
+                :class="globalBadgeClass"
               >
                 Global
               </UBadge>
@@ -100,6 +105,13 @@ const canDelete = computed(() => {
   return true;
 });
 
+const isPrimaryTone = computed(() => props.data.isDefault || props.type === 'prehook');
+
+const globalBadgeClass = computed(() => [
+  '!text-[9px] !px-1.5 !py-0.5 font-semibold leading-none shrink-0',
+  isPrimaryTone.value ? 'flow-node-global-badge' : '',
+]);
+
 const contextMenuItems = computed(() => {
   if (!canDelete.value) {
     return [];
@@ -125,12 +137,12 @@ const nodeClass = computed(() => {
     : '';
   
   if (props.data.isDefault) {
-    return `${baseClass} border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20`;
+    return `${baseClass} flow-node-primary`;
   }
 
   switch (props.type) {
     case 'prehook':
-      return `${baseClass} border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20 hover:border-primary-300 dark:hover:border-primary-700`;
+      return `${baseClass} flow-node-primary`;
     case 'handler':
       return `${baseClass} border-success-200 dark:border-success-800 bg-success-50 dark:bg-success-900/20 hover:border-success-300 dark:hover:border-success-700`;
     case 'posthook':
@@ -142,12 +154,12 @@ const nodeClass = computed(() => {
 
 const iconClass = computed(() => {
   if (props.data.isDefault) {
-    return 'w-6 h-6 rounded bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 text-primary-600 dark:text-primary-400';
+    return 'flow-node-primary-icon w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
   }
   
   switch (props.type) {
     case 'prehook':
-      return 'w-6 h-6 rounded bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 text-primary-600 dark:text-primary-400';
+      return 'flow-node-primary-icon w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
     case 'handler':
       return 'w-6 h-6 rounded bg-success-100 dark:bg-success-900/40 flex items-center justify-center flex-shrink-0 text-success-600 dark:text-success-400';
     case 'posthook':
@@ -175,4 +187,30 @@ const iconName = computed(() => {
 
 </script>
 
+<style scoped>
+.flow-node-primary {
+  border-color: color-mix(in srgb, var(--md-primary) 46%, transparent);
+  background: color-mix(in srgb, var(--md-primary) 24%, var(--surface-default));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 18%, transparent);
+}
 
+.flow-node-primary:hover {
+  border-color: var(--md-primary);
+}
+
+.flow-node-primary-title {
+  color: color-mix(in srgb, var(--md-primary) 38%, var(--text-primary));
+}
+
+.flow-node-primary-icon {
+  color: var(--md-primary);
+  background: color-mix(in srgb, var(--md-primary) 30%, var(--surface-default));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 34%, transparent);
+}
+
+.flow-node-global-badge {
+  color: color-mix(in srgb, var(--md-primary) 36%, var(--text-primary)) !important;
+  background: color-mix(in srgb, var(--md-primary) 18%, var(--surface-default)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 34%, transparent);
+}
+</style>

@@ -25,9 +25,9 @@
           v-for="preset in schedulePresets"
           :key="preset.key"
           type="button"
-          class="rounded-lg border p-3 text-left transition"
-          :class="selectedPresetKey === preset.key ? 'ring-2 ring-primary-500/60' : 'hover:border-primary-400/70'"
-          :style="{ borderColor: selectedPresetKey === preset.key ? 'var(--color-primary-500)' : 'var(--border-subtle)', backgroundColor: selectedPresetKey === preset.key ? 'var(--bg-primary)' : 'transparent' }"
+          class="rounded-lg border p-3 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)]"
+          :class="selectedPresetKey === preset.key ? 'ring-2 ring-[var(--theme-focus-ring-strong)]' : 'hover:border-[var(--md-primary)]'"
+          :style="{ borderColor: selectedPresetKey === preset.key ? 'var(--md-primary)' : 'var(--border-subtle)', backgroundColor: selectedPresetKey === preset.key ? 'var(--bg-primary)' : 'transparent' }"
           @click="applyPreset(preset.cron)"
         >
           <div class="flex items-center justify-between gap-2">

@@ -3,6 +3,37 @@ export const useCodeMirrorLazy = () => {
   const loading = ref(false)
   const initialized = ref(false)
 
+  const wait = (ms: number) => new Promise(resolve => window.setTimeout(resolve, ms))
+
+  const loadModules = () => Promise.all([
+    import('@codemirror/view'),
+    import('@codemirror/state'),
+    import('@codemirror/commands'),
+    import('@codemirror/autocomplete'),
+    import('@codemirror/language'),
+    import('@lezer/highlight'),
+    import('@codemirror/lint'),
+    import('@codemirror/search'),
+    import('@codemirror/lang-javascript'),
+    import('@codemirror/lang-vue'),
+    import('@codemirror/lang-html'),
+    import('@uiw/codemirror-theme-vscode'),
+  ])
+
+  const loadModulesWithRetry = async () => {
+    try {
+      return await loadModules()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      const isViteOptimizeRace = message.includes('Failed to fetch dynamically imported module')
+      if (!import.meta.dev || !isViteOptimizeRace) {
+        throw error
+      }
+      await wait(250)
+      return await loadModules()
+    }
+  }
+
   const initCodeMirror = async () => {
     if (codeMirrorModules.value || initialized.value) {
       return codeMirrorModules.value
@@ -25,20 +56,7 @@ export const useCodeMirrorLazy = () => {
         langVueModule,
         langHtmlModule,
         themeModule,
-      ] = await Promise.all([
-        import('@codemirror/view'),
-        import('@codemirror/state'),
-        import('@codemirror/commands'),
-        import('@codemirror/autocomplete'),
-        import('@codemirror/language'),
-        import('@lezer/highlight'),
-        import('@codemirror/lint'),
-        import('@codemirror/search'),
-        import('@codemirror/lang-javascript'),
-        import('@codemirror/lang-vue'),
-        import('@codemirror/lang-html'),
-        import('@uiw/codemirror-theme-vscode'),
-      ])
+      ] = await loadModulesWithRetry()
 
       codeMirrorModules.value = {
         EditorView: viewModule.EditorView,

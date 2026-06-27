@@ -147,8 +147,6 @@
         </div>
       </template>
 
-      <template #footer>
-      </template>
     </CommonDrawer>
 
     <FilterDrawerLazy

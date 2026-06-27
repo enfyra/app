@@ -30,6 +30,12 @@
       v-model="showModal"
       direction="right"
       :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-3xl'"
+      :primary-action="{
+        label: 'Apply',
+        icon: 'lucide:check',
+        disabled: props.disabled,
+        onClick: applyFormPermissionGroups,
+      }"
     >
       <template #header>
         <h2 class="text-lg font-semibold">Permission Configuration</h2>
@@ -43,21 +49,6 @@
           />
         </template>
 
-        <template #footer>
-          <div
-            class="flex justify-end gap-3 rounded-xl border border-muted/30 p-4 bg-[var(--surface-muted)]"
-          >
-            <UButton
-              icon="lucide:check"
-              variant="solid"
-              color="primary"
-              @click="applyFormPermissionGroups"
-              :disabled="props.disabled"
-            >
-              Apply
-            </UButton>
-          </div>
-      </template>
     </CommonDrawer>
   </div>
 </template>

@@ -21,6 +21,21 @@ export interface FlowStep {
   branch?: BranchType;
 }
 
+export interface FlowStepEditorForm {
+  key: string;
+  stepOrder: number;
+  type: StepType;
+  configJson: string;
+  sourceCode: string | null;
+  scriptLanguage: 'javascript' | 'typescript';
+  compiledCode: string | null;
+  timeout: number;
+  onError: StepErrorHandling;
+  retryAttempts: number;
+  parentId: any;
+  branch?: string;
+}
+
 export interface FlowDefinition {
   id: string | number;
   name: string;

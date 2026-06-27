@@ -5,6 +5,13 @@
     direction="right"
     :show-close="false"
     :nested="nested"
+    :cancel-action="{ label: 'Cancel', onClick: handleCancel }"
+    :primary-action="{
+      label: 'Save',
+      loading,
+      disabled: loading || !isConditionValid,
+      onClick: handleSaveClick,
+    }"
   >
     <template #header>
       <div class="flex items-start justify-between gap-3 w-full">
@@ -52,35 +59,17 @@
       </div>
     </template>
 
-    <template #footer>
-      <div class="flex justify-end gap-3">
-        <UButton variant="outline" color="error" @click="handleCancel">
-          Cancel
-        </UButton>
-        <UButton
-          variant="solid"
-          color="primary"
-          :loading="loading"
-          :disabled="loading || !isConditionValid"
-          @click="handleSaveClick"
-        >
-          Save
-        </UButton>
-      </div>
-    </template>
   </CommonDrawer>
 
-  <CommonModal v-model:open="showDiscardModal">
+  <CommonModal
+    v-model:open="showDiscardModal"
+    :cancel-action="{ label: 'Keep editing', tone: 'primary', onClick: () => (showDiscardModal = false) }"
+    :danger-action="{ label: 'Discard Changes', onClick: confirmDiscard }"
+  >
     <template #header>Discard Changes</template>
     <template #body>
       <div class="text-sm text-[var(--text-secondary)]">
         You have unsaved changes. Are you sure you want to close? All changes will be lost.
-      </div>
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-2 w-full">
-        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
-        <UButton @click="confirmDiscard">Discard Changes</UButton>
       </div>
     </template>
   </CommonModal>

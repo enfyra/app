@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flow-step-node relative cursor-pointer transition-all border-2 rounded-lg shadow-sm hover:shadow-md"
+    class="flow-step-node relative transition-all border-2 rounded-lg shadow-sm hover:shadow-md"
     :class="nodeClass"
     @click="handleClick"
     :style="{ width: '220px' }"
@@ -86,7 +86,6 @@ function handleClick() {
 }
 
 const showReorder = computed(() => !['trigger', 'add'].includes(props.data.stepType));
-
 const typeColor = computed((): BadgeColor => {
   return STEP_TYPE_COLOR_MAP[props.data.stepType] || 'neutral';
 });
@@ -96,20 +95,20 @@ const iconName = computed(() => {
 });
 
 const nodeClass = computed(() => {
-  if (props.data.stepType === 'trigger') return 'border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/20 hover:shadow-md hover:border-primary-400 transition-all';
-  if (props.data.stepType === 'add') return 'border-dashed border-[var(--border-strong)] bg-[var(--surface-default)] hover:border-primary-400 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:shadow-md transition-all';
+  if (props.data.stepType === 'trigger') return 'flow-step-node-trigger cursor-default';
+  if (props.data.stepType === 'add') return 'flow-step-node-add border-dashed cursor-pointer';
   if (props.data.enabled === false) return 'border-[var(--border-default)] bg-[var(--surface-muted)] opacity-60';
-  return 'border-[var(--border-default)] bg-[var(--surface-default)] hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md active:shadow-inner transition-all';
+  return 'flow-step-node-default cursor-pointer';
 });
 
 const iconWrapperClass = computed(() => {
   if (props.data.stepType === 'trigger') {
-    return 'w-6 h-6 rounded bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 text-primary-600 dark:text-primary-400';
+    return 'flow-step-node-icon flow-step-node-icon-primary w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
   }
   if (props.data.stepType === 'add') {
-    return 'w-6 h-6 rounded bg-[var(--surface-muted)] flex items-center justify-center flex-shrink-0 text-[var(--text-tertiary)]';
+    return 'flow-step-node-icon flow-step-node-icon-muted w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
   }
-  return 'w-6 h-6 rounded bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 text-primary-600 dark:text-primary-400';
+  return 'flow-step-node-icon flow-step-node-icon-primary w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
 });
 
 const description = computed(() => {
@@ -138,3 +137,54 @@ const badges = computed(() => {
   return b;
 });
 </script>
+
+<style scoped>
+.flow-step-node-trigger {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--md-primary) 58%, var(--border-default));
+  background: color-mix(in srgb, var(--md-primary) 22%, var(--surface-default));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 18%, transparent), var(--shadow-panel-sm);
+}
+
+.flow-step-node-trigger:hover {
+  border-color: var(--md-primary);
+  background: color-mix(in srgb, var(--md-primary) 26%, var(--surface-default));
+}
+
+.flow-step-node-default {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--md-primary) 24%, var(--border-default));
+  background: color-mix(in srgb, var(--md-primary) 5%, var(--surface-default));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 5%, transparent);
+}
+
+.flow-step-node-default:hover {
+  border-color: color-mix(in srgb, var(--md-primary) 48%, var(--border-default));
+  background: color-mix(in srgb, var(--md-primary) 9%, var(--surface-default));
+}
+
+.flow-step-node-add {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--text-secondary) 62%, transparent);
+  background: color-mix(in srgb, var(--text-primary) 3%, var(--surface-default));
+}
+
+.flow-step-node-add:hover {
+  border-color: color-mix(in srgb, var(--md-primary) 62%, transparent);
+  background: color-mix(in srgb, var(--md-primary) 8%, var(--surface-default));
+}
+
+.flow-step-node-icon {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 24%, transparent);
+}
+
+.flow-step-node-icon-primary {
+  color: color-mix(in srgb, var(--md-primary) 76%, var(--text-primary));
+  background: color-mix(in srgb, var(--md-primary) 22%, var(--surface-default));
+}
+
+.flow-step-node-icon-muted {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-primary) 6%, var(--surface-default));
+}
+</style>

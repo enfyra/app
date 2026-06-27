@@ -362,6 +362,13 @@ function confirmDiscard() {
   <CommonDrawer 
     v-model="isOpen"
     direction="right"
+    :cancel-action="{ label: 'Cancel', onClick: handleCancel }"
+    :primary-action="{
+      label: menu ? 'Update' : 'Create',
+      loading: updateLoading || createLoading,
+      disabled: !hasFormChanges || updateLoading || createLoading,
+      onClick: handleSave,
+    }"
   >
     <template #header>
       <div class="flex items-center gap-2">
@@ -391,39 +398,17 @@ function confirmDiscard() {
       </div>
     </template>
 
-    <template #footer>
-      <div class="flex items-center justify-end gap-2 w-full">
-        <UButton
-          variant="outline"
-          color="neutral"
-          @click="handleCancel"
-        >
-          Cancel
-        </UButton>
-        <UButton
-          variant="solid"
-          color="primary"
-          :loading="updateLoading || createLoading"
-          :disabled="!hasFormChanges || updateLoading || createLoading"
-          @click="handleSave"
-        >
-          {{ menu ? 'Update' : 'Create' }}
-        </UButton>
-      </div>
-    </template>
   </CommonDrawer>
 
-  <CommonModal v-model:open="showDiscardModal">
+  <CommonModal
+    v-model:open="showDiscardModal"
+    :cancel-action="{ label: 'Keep editing', tone: 'primary', onClick: () => (showDiscardModal = false) }"
+    :danger-action="{ label: 'Discard Changes', onClick: confirmDiscard }"
+  >
     <template #header>Discard Changes</template>
     <template #body>
       <div class="text-sm text-[var(--text-secondary)]">
         You have unsaved changes. Are you sure you want to close? All changes will be lost.
-      </div>
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-2 w-full">
-        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
-        <UButton @click="confirmDiscard">Discard Changes</UButton>
       </div>
     </template>
   </CommonModal>

@@ -437,7 +437,12 @@ onMounted(() => {
 
 <template>
   <div class="relative">
-    <CommonModal v-model:open="schemaConfirmModalOpen" :handle="false">
+    <CommonModal
+      v-model:open="schemaConfirmModalOpen"
+      :handle="false"
+      :cancel-action="{ label: 'Cancel', onClick: () => (schemaConfirmModalOpen = false) }"
+      :primary-action="{ label: 'Confirm', icon: isSchemaConfirmDestructive ? 'lucide:triangle-alert' : 'lucide:check', tone: isSchemaConfirmDestructive ? 'warning' : 'primary', loading: schemaConfirmLoading, onClick: onSchemaConfirmSubmit }"
+    >
       <template #header>
         <div class="flex items-start gap-3">
           <div
@@ -672,29 +677,13 @@ onMounted(() => {
 
         </div>
       </template>
-      <template #footer>
-        <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 w-full">
-          <UButton variant="ghost" class="justify-center" @click="schemaConfirmModalOpen = false">
-            Cancel
-          </UButton>
-          <UButton
-            :color="isSchemaConfirmDestructive ? 'warning' : 'primary'"
-            :loading="schemaConfirmLoading"
-            class="justify-center"
-            @click="onSchemaConfirmSubmit"
-          >
-            <span class="inline-flex items-center gap-2">
-              <Icon :name="isSchemaConfirmDestructive ? 'lucide:triangle-alert' : 'lucide:check'" class="h-4 w-4" />
-              Confirm
-            </span>
-          </UButton>
-        </div>
-      </template>
     </CommonModal>
 
-    <UModal
+    <CommonModal
       v-model:open="deleteModalOpen"
       :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'w-full max-w-md'"
+      :cancel-action="{ label: 'Cancel', onClick: () => (deleteModalOpen = false) }"
+      :danger-action="{ label: 'Delete Collection', icon: 'lucide:trash-2', tone: 'danger', loading: deleting, disabled: deleteConfirmText !== table?.name, onClick: executeDelete }"
     >
       <template #header>
         <div class="flex items-center gap-3">
@@ -748,26 +737,7 @@ onMounted(() => {
           </div>
         </div>
       </template>
-      <template #footer>
-        <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 w-full">
-          <UButton variant="ghost" class="justify-center" @click="deleteModalOpen = false">
-            Cancel
-          </UButton>
-          <UButton
-            color="error"
-            :loading="deleting"
-            :disabled="deleteConfirmText !== table?.name"
-            class="justify-center"
-            @click="executeDelete"
-          >
-            <span class="inline-flex items-center gap-2">
-              <UIcon name="lucide:trash-2" class="w-4 h-4" />
-              Delete Collection
-            </span>
-          </UButton>
-        </div>
-      </template>
-    </UModal>
+    </CommonModal>
 
     <Transition name="loading-fade" mode="out-in">
       <div v-if="!isMounted || loading" class="eapp-page-constrained">
@@ -783,23 +753,12 @@ onMounted(() => {
       <div v-else-if="table" class="eapp-page-constrained">
           <div class="relative -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
             <div class="overflow-x-auto overflow-y-hidden">
-              <div class="flex min-w-max border-b border-[var(--border-default)]">
-                <button
-                  v-for="item in tabItems"
-                  :key="item.value"
-                  type="button"
-                  class="relative flex h-12 items-center gap-2 px-4 text-sm font-medium text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)]"
-                  :class="activeTab === item.value ? 'text-[var(--text-primary)]' : ''"
-                  @click="activeTab = item.value"
-                >
-                  <UIcon :name="item.icon" class="h-5 w-5 shrink-0" />
-                  <span>{{ item.label }}</span>
-                  <span
-                    v-if="activeTab === item.value"
-                    class="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[var(--text-primary)]"
-                  />
-                </button>
-              </div>
+              <UTabs
+                v-model="activeTab"
+                :items="tabItems"
+                :content="false"
+                variant="link"
+              />
             </div>
           </div>
 

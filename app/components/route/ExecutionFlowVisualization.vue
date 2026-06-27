@@ -252,6 +252,7 @@ const nodeTypes = markRaw({
         h('button', {
           type: 'button',
           title: props.data.tooltip,
+          class: 'outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-default)]',
           style: {
             height: '28px',
             padding: '0 12px',

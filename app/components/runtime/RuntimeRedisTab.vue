@@ -701,6 +701,9 @@ function openCreateKey() {
       v-model:open="keyEditorDialogOpen"
       class="max-w-[760px]"
       :ui="{ body: 'pt-4 max-h-[min(72vh,680px)] overflow-y-auto' }"
+      :danger-action="selected ? { label: 'Delete', icon: 'lucide:trash-2', tone: 'danger', variant: 'soft', disabled: !canModifySelected || runtime.redisWritePending, onClick: deleteKey } : false"
+      :cancel-action="{ label: 'Cancel', variant: 'outline', disabled: runtime.redisWritePending, onClick: requestCloseKeyEditor }"
+      :primary-action="{ label: keyEditorMode === 'create' ? 'Create' : 'Save', icon: 'lucide:save', type: 'submit', form: 'redis-key-editor-form', loading: runtime.redisWritePending, disabled: selectedLocked || !formKey.trim() }"
     >
       <template #header>
         <div class="flex min-w-0 items-center gap-2">
@@ -764,21 +767,6 @@ function openCreateKey() {
         </div>
       </template>
 
-      <template #footer>
-        <div class="flex w-full flex-wrap items-center gap-2">
-          <UButton v-if="selected" type="button" color="error" variant="soft" icon="lucide:trash-2" :disabled="!canModifySelected || runtime.redisWritePending" @click="deleteKey">
-            Delete
-          </UButton>
-          <div class="ml-auto flex flex-wrap justify-end gap-2">
-            <UButton type="button" color="neutral" variant="outline" :disabled="runtime.redisWritePending" @click="requestCloseKeyEditor">
-              Cancel
-            </UButton>
-            <UButton type="submit" form="redis-key-editor-form" icon="lucide:save" :loading="runtime.redisWritePending" :disabled="selectedLocked || !formKey.trim()">
-              {{ keyEditorMode === 'create' ? 'Create' : 'Save' }}
-            </UButton>
-          </div>
-        </div>
-      </template>
     </CommonModal>
   </div>
 </template>

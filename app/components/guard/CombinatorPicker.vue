@@ -38,10 +38,16 @@
           />
         </div>
         <div class="flex-1 min-w-0">
-          <h4 class="text-sm font-semibold text-[var(--text-primary)] mb-0.5">
+          <h4
+            class="text-sm font-semibold mb-0.5"
+            :class="modelValue === option.value ? 'text-current' : 'text-[var(--text-primary)]'"
+          >
             {{ option.label }}
           </h4>
-          <p class="text-xs text-[var(--text-tertiary)] leading-relaxed">
+          <p
+            class="text-xs leading-relaxed"
+            :class="modelValue === option.value ? 'text-current opacity-90' : 'text-[var(--text-tertiary)]'"
+          >
             {{ option.description }}
           </p>
         </div>

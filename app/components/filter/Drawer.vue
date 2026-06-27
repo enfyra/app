@@ -87,6 +87,21 @@ const { isMobile, isTablet } = useScreen();
     direction="right"
     :nested="props.nested === true"
     :class="(isMobile || isTablet) ? 'w-full max-w-full' : 'min-w-2xl max-w-2xl'"
+    :footer-hint="hasActiveConditions ? 'Ready to apply filters' : 'Add conditions above to filter results'"
+    :leading-actions="[{
+      label: 'Clear All',
+      icon: 'i-lucide-x',
+      tone: 'neutral',
+      variant: 'soft',
+      disabled: !hasActiveConditions,
+      onClick: handleClear,
+    }]"
+    :primary-action="{
+      label: 'Apply Filters',
+      icon: 'i-lucide-check',
+      disabled: !hasActiveConditions,
+      onClick: handleApply,
+    }"
   >
     <template #header>
       <div class="flex items-start justify-between gap-2">
@@ -135,41 +150,5 @@ const { isMobile, isTablet } = useScreen();
         </div>
       </template>
 
-      <template #footer>
-        <div class="flex items-center justify-between">
-          <div class="hidden md:block text-sm text-[var(--text-tertiary)]">
-            {{
-              hasActiveConditions
-                ? "Ready to apply filters"
-                : "Add conditions above to filter results"
-            }}
-          </div>
-
-          <div class="flex items-center gap-1.5 md:gap-3" :class="(isMobile || isTablet) ? 'w-full justify-end' : ''">
-            <UButton
-              variant="soft"
-              @click="handleClear"
-              :disabled="!hasActiveConditions"
-              icon="i-lucide-x"
-              color="neutral"
-              :size="(isMobile || isTablet) ? 'sm' : 'md'"
-              :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-            >
-              <span v-if="!isMobile && !isTablet">Clear All</span>
-            </UButton>
-
-            <UButton
-              @click="handleApply"
-              :disabled="!hasActiveConditions"
-              :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : 'min-w-[100px]'"
-              icon="i-lucide-check"
-              color="primary"
-              :size="(isMobile || isTablet) ? 'sm' : 'md'"
-            >
-              <span v-if="!isMobile && !isTablet">Apply Filters</span>
-            </UButton>
-          </div>
-        </div>
-      </template>
     </CommonDrawer>
 </template>

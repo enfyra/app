@@ -271,20 +271,13 @@ watch(
       </div>
     </div>
 
-    <UModal v-model:open="showRenameDialog">
+    <CommonModal
+      v-model:open="showRenameDialog"
+      :cancel-action="{ label: 'Cancel', onClick: () => (showRenameDialog = false) }"
+      :primary-action="{ label: 'Rename', disabled: !newFilterName.trim(), onClick: saveRename }"
+    >
       <template #header>
-        <div class="flex items-center justify-between w-full">
-          <span class="text-base font-semibold">Rename Filter</span>
-          <UButton
-            @click="showRenameDialog = false"
-            icon="lucide:x"
-            size="md"
-            variant="soft"
-            color="error"
-          >
-            Close
-          </UButton>
-        </div>
+        <span class="text-base font-semibold">Rename Filter</span>
       </template>
 
       <template #body>
@@ -303,20 +296,6 @@ watch(
         </div>
       </template>
 
-      <template #footer>
-        <div class="w-full">
-          <UButton
-            @click="saveRename"
-            variant="solid"
-            color="primary"
-            size="lg"
-            class="w-full text-center justify-center"
-            :disabled="!newFilterName.trim()"
-          >
-            Rename
-          </UButton>
-        </div>
-      </template>
-    </UModal>
+    </CommonModal>
   </div>
 </template>

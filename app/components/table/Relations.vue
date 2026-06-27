@@ -437,6 +437,12 @@ async function removeRelation(index: number) {
     handle-only
     v-model="isEditing"
     direction="right"
+    :footer-hint="isNew ? 'Ready to create new relation?' : 'Ready to update relation?'"
+    :primary-action="{
+      label: isNew ? 'Create Relation' : 'Update Relation',
+      icon: 'lucide:check',
+      onClick: saveRelation,
+    }"
     @update:model-value="(open) => { if (!open) handleDrawerClose() }"
   >
     <template #header>
@@ -518,46 +524,17 @@ async function removeRelation(index: number) {
         </div>
       </template>
 
-      <template #footer>
-
-        <div
-          :class="(isMobile || isTablet) ? 'surface-card rounded-lg p-3 w-full' : 'surface-card rounded-xl p-4 w-full'"
-        >
-          <div class="flex items-center justify-between w-full">
-            <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
-              <UIcon
-                name="lucide:info"
-                class="text-muted-foreground"
-                size="16"
-              />
-              <span class="text-sm text-muted-foreground">
-                {{
-                  isNew
-                    ? "Ready to create new relation?"
-                    : "Ready to update relation?"
-                }}
-              </span>
-            </div>
-            <div :class="(isMobile || isTablet) ? 'flex gap-1.5 w-full justify-end' : 'flex gap-3'">
-              <UButton
-                icon="lucide:check"
-                @click="saveRelation()"
-                color="primary"
-                :loading="false"
-                :size="(isMobile || isTablet) ? 'sm' : 'md'"
-                :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-              >
-                <span v-if="!isMobile && !isTablet">{{ isNew ? "Create Relation" : "Update Relation" }}</span>
-              </UButton>
-            </div>
-          </div>
-        </div>
-      </template>
     </CommonDrawer>
 
     <CommonModal
       v-model:open="showInverseModal"
       :handle="false"
+      :cancel-action="{ label: 'Cancel', onClick: () => (showInverseModal = false) }"
+      :primary-action="{
+        label: 'Create',
+        disabled: !inversePropertyNameInput?.trim(),
+        onClick: confirmCreateInverse,
+      }"
     >
       <template #header>
         <div class="text-lg font-semibold">Create Inverse Relation</div>
@@ -581,20 +558,6 @@ async function removeRelation(index: number) {
               @keydown.enter="confirmCreateInverse"
             />
           </UFormField>
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2 w-full">
-          <UButton variant="ghost" @click="showInverseModal = false">
-            Cancel
-          </UButton>
-          <UButton
-            color="primary"
-            :disabled="!inversePropertyNameInput?.trim()"
-            @click="confirmCreateInverse"
-          >
-            Create
-          </UButton>
         </div>
       </template>
     </CommonModal>
