@@ -35,6 +35,9 @@ export default defineAppConfig({
         list: 'w-full flex-wrap'
       }
     },
+    skeleton: {
+      base: "skeleton-gradient skeleton-pulse-slow",
+    },
     dropdownMenu: {
       slots: {
         item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75',

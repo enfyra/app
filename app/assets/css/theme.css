@@ -153,10 +153,10 @@
     --action-neutral-disabled-bg: color-mix(in srgb, var(--md-on-surface) 8%, var(--md-surface));
     --action-neutral-disabled-text: var(--text-disabled);
 
-    --action-danger-bg: var(--danger-surface);
-    --action-danger-bg-hover: var(--danger-surface-hover);
-    --action-danger-bg-active: var(--danger-surface-active);
-    --action-danger-text: var(--danger-on-surface);
+    --action-danger-bg: var(--danger-color);
+    --action-danger-bg-hover: color-mix(in srgb, var(--danger-color) 82%, var(--danger-on-surface));
+    --action-danger-bg-active: color-mix(in srgb, var(--danger-color) 70%, var(--danger-on-surface));
+    --action-danger-text: var(--danger-on-color);
     --action-success-bg: var(--success-color);
     --action-success-bg-hover: color-mix(in srgb, var(--success-color) 82%, var(--success-on-surface));
     --action-success-bg-active: color-mix(in srgb, var(--success-color) 70%, var(--success-on-surface));
@@ -435,6 +435,11 @@
   --block-low: #222227;
   --block-muted: #28282e;
   --block-high: #303037;
+
+  --action-danger-bg: color-mix(in srgb, var(--danger-color) 48%, var(--block-base));
+  --action-danger-bg-hover: color-mix(in srgb, var(--danger-color) 58%, var(--block-base));
+  --action-danger-bg-active: color-mix(in srgb, var(--danger-color) 68%, var(--block-base));
+  --action-danger-text: var(--danger-on-surface);
 
   /* Dark theme is a harmonious neutral-dark canvas so neutral blocks, tinted
      borders and the accent never clash in temperature. Only borders, the accent

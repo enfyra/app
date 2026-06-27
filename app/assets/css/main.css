@@ -1401,13 +1401,13 @@ button:focus-visible,
 }
 
 .skeleton-gradient {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 10%, transparent) 0%, rgba(34, 211, 238, 0.08) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 10%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 6%, var(--surface-default)) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 .dark .skeleton-gradient {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, rgba(34, 211, 238, 0.2) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 18%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 10%, var(--surface-default)) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -1418,11 +1418,11 @@ button:focus-visible,
 }
 
 .skeleton-preview-bg {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 8%, transparent) 0%, rgba(34, 211, 238, 0.08) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 8%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 5%, var(--surface-default)) 100%);
 }
 
 .dark .skeleton-preview-bg {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, rgba(34, 211, 238, 0.1) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 15%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 8%, var(--surface-default)) 100%);
 }
 
 .skeleton-icon {
@@ -1438,7 +1438,7 @@ button:focus-visible,
 }
 
 .dark .skeleton-badge {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, rgba(232, 121, 249, 0.2) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 15%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 10%, var(--surface-default)) 100%);
 }
 
 .skeleton-primary {
@@ -1456,7 +1456,7 @@ button:focus-visible,
 }
 
 .dark .skeleton-inline {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 15%, transparent) 0%, rgba(34, 211, 238, 0.2) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 15%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 10%, var(--surface-default)) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
