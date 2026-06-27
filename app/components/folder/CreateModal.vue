@@ -120,7 +120,7 @@ function confirmDiscard() {
 
   <CommonModal
     v-model:open="showDiscardModal"
-    :cancel-action="{ label: 'Cancel', onClick: () => (showDiscardModal = false) }"
+    :cancel-action="{ label: 'Keep editing', tone: 'primary', onClick: () => (showDiscardModal = false) }"
     :danger-action="{ label: 'Discard Changes', tone: 'danger', onClick: confirmDiscard }"
   >
     <template #header>Discard Changes</template>

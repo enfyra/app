@@ -81,123 +81,29 @@
       <CommonEmptyState v-else title="Flow not found" icon="lucide:workflow" size="lg" />
     </Transition>
 
-    <CommonDrawer v-model="stepDrawerOpen" direction="right" full-width>
-      <template #header>
-        <div class="flex items-center gap-2 w-full min-w-0">
-          <h3 class="text-lg font-semibold flex-shrink-0">{{ editingStepId ? 'Edit Step' : 'New Step' }}</h3>
-          <template v-if="stepForm.parentId">
-            <span class="text-[var(--text-quaternary)]">·</span>
-            <UBadge color="secondary" variant="soft" size="md">{{ getConditionLabel(stepForm.parentId) }}</UBadge>
-            <UBadge :color="stepForm.branch === 'true' ? 'success' : 'error'" variant="soft" size="md">{{ stepForm.branch === 'true' ? 'True' : 'False' }}</UBadge>
-          </template>
-        </div>
-      </template>
-      <template #body>
-        <div class="p-4 space-y-4">
-          <UFormField label="Key" required class="w-full" :error="stepErrors.key">
-            <UInput v-model="stepForm.key" placeholder="e.g. check_user" class="w-full" />
-            <template #hint><span class="text-[10px]">Reference via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW.{{ stepForm.key || 'key' }}</code></span></template>
-          </UFormField>
-
-          <UFormField label="Timeout" class="w-full">
-            <UInput v-model.number="stepForm.timeout" type="number" class="w-full">
-              <template #trailing><span class="text-xs text-[var(--text-quaternary)]">ms</span></template>
-            </UInput>
-          </UFormField>
-
-          <UFormField label="Type" required class="w-full" :error="stepErrors.type">
-            <USelect v-model="stepForm.type" :items="stepTypeOptions" value-key="value" class="w-full" />
-          </UFormField>
-
-          <div class="p-3 rounded-lg border" :class="hasStepConfigErrors ? 'bg-[var(--state-danger-soft-bg)] border-[var(--state-danger-outline-border)]' : 'bg-[var(--surface-muted)] border-[var(--border-default)]'">
-            <p v-if="stepErrors.config" class="text-xs text-[var(--md-error)] mb-2">{{ stepErrors.config }}</p>
-            <p v-else-if="stepErrors.sourceCode" class="text-xs text-[var(--md-error)] mb-2">{{ stepErrors.sourceCode }}</p>
-            <FlowStepConfigEditor
-              :type="stepForm.type"
-              :config-json="stepForm.configJson"
-              :source-code="stepForm.sourceCode"
-              :script-language="stepForm.scriptLanguage"
-              :errors="stepErrors"
-              @update:config-json="stepForm.configJson = $event; stepErrors.config = ''"
-              @update:source-code="stepForm.sourceCode = $event; stepForm.compiledCode = null; stepErrors.config = ''"
-              @update:script-language="stepForm.scriptLanguage = $event; stepForm.compiledCode = null"
-              @update:errors="stepErrors = $event"
-            />
-          </div>
-
-          <div :class="stepForm.onError === 'retry' ? 'grid grid-cols-2 gap-3' : ''">
-            <UFormField label="On Error" class="w-full">
-              <USelect v-model="stepForm.onError" :items="errorOptions" value-key="value" class="w-full" />
-            </UFormField>
-            <UFormField v-if="stepForm.onError === 'retry'" label="Retries" class="w-full">
-              <UInput v-model.number="stepForm.retryAttempts" type="number" placeholder="3" class="w-full" />
-            </UFormField>
-          </div>
-
-          <div v-if="!stepForm.parentId && conditionStepOptions.length > 1" class="grid grid-cols-2 gap-3">
-            <UFormField label="Attach to Condition" class="w-full">
-              <USelect v-model="stepForm.parentId" :items="conditionStepOptions" value-key="value" class="w-full" placeholder="None (root level)" />
-            </UFormField>
-            <UFormField v-if="stepForm.parentId" label="Execute when" class="w-full">
-              <USelect v-model="stepForm.branch" :items="[{label: 'Condition is True', value: 'true'}, {label: 'Condition is False', value: 'false'}]" value-key="value" class="w-full" />
-            </UFormField>
-          </div>
-        </div>
-      </template>
-      <template #footer>
-        <div class="w-full">
-          <div class="px-4 py-3">
-            <UFormField label="Test Payload (optional)" class="w-full">
-              <UTextarea v-model="testPayloadJson" :rows="2" class="w-full font-mono text-xs" placeholder='{"orderId": 123, "email": "test@test.com"}' />
-              <template #hint><span class="text-[10px]">Accessible via <code class="bg-[var(--surface-muted)] px-1 rounded">@FLOW_PAYLOAD</code> in step code</span></template>
-            </UFormField>
-          </div>
-          <div v-if="testResult" class="px-4 py-3 border-t border-[var(--border-default)]">
-            <div class="flex items-center gap-2 mb-2">
-              <UIcon :name="testResult.success ? 'i-lucide-check-circle' : 'i-lucide-x-circle'" :class="testResult.success ? 'text-[var(--st-success)]' : 'text-[var(--md-error)]'" class="w-4 h-4" />
-              <span class="text-xs font-medium" :class="testResult.success ? 'text-[var(--st-success)]' : 'text-[var(--md-error)]'">
-                {{ testResult.success ? 'Test passed' : 'Test failed' }} ({{ testResult.duration }}ms)
-              </span>
-            </div>
-            <div v-if="testResult.error" class="p-2 rounded bg-[var(--state-danger-soft-bg)] text-xs text-[var(--md-error)] break-words">{{ testResult.error }}</div>
-            <div v-else class="space-y-2">
-              <div v-if="testResult.result !== undefined" class="space-y-1">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Result</div>
-                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.result)">Copy</UButton>
-                </div>
-                <pre class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono text-[var(--text-secondary)] overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.result, null, 2) }}</pre>
-              </div>
-              <div v-if="testResult.logs?.length" class="space-y-1">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Logs</div>
-                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.logs)">Copy</UButton>
-                </div>
-                <pre class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono text-[var(--text-secondary)] overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.logs, null, 2) }}</pre>
-              </div>
-              <div v-if="testResult.emitted?.length" class="space-y-1">
-                <div class="flex items-center justify-between gap-2">
-                  <div class="text-xs font-medium text-[var(--text-tertiary)]">Emitted</div>
-                  <UButton size="xs" variant="ghost" icon="i-lucide-copy" @click="copyTestValue(testResult.emitted)">Copy</UButton>
-                </div>
-                <pre class="p-3 rounded-lg bg-[var(--surface-muted)] border border-[var(--border-default)] text-xs font-mono text-[var(--text-secondary)] overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(testResult.emitted, null, 2) }}</pre>
-              </div>
-            </div>
-          </div>
-          <div class="flex gap-2 w-full p-4 border-t border-[var(--border-default)]">
-            <UButton v-if="editingStepId" color="error" variant="soft" @click="deleteCurrentStep">Delete</UButton>
-            <UButton v-if="editingStepId" variant="soft" icon="i-lucide-copy" @click="duplicateStep">Duplicate</UButton>
-            <UButton v-if="!testing" color="warning" variant="soft" icon="i-lucide-flask-conical" @click="testCurrentStep">Test</UButton>
-            <UButton v-else color="error" variant="soft" icon="i-lucide-x" @click="cancelTest">Cancel</UButton>
-            <div class="flex-1" />
-            <UButton variant="ghost" color="error" @click="closeStepDrawer">Cancel</UButton>
-            <UButton color="primary" @click="saveStep" :loading="savingStep" :disabled="hasStepErrors">
-              {{ editingStepId ? 'Update' : 'Create' }}
-            </UButton>
-          </div>
-        </div>
-      </template>
-    </CommonDrawer>
+    <FlowStepEditorDrawer
+      v-model="stepDrawerOpen"
+      v-model:form="stepForm"
+      v-model:errors="stepErrors"
+      v-model:test-payload-json="testPayloadJson"
+      :editing="Boolean(editingStepId)"
+      :saving="savingStep"
+      :testing="testing"
+      :has-errors="hasStepErrors"
+      :has-config-errors="hasStepConfigErrors"
+      :step-type-options="stepTypeOptions"
+      :error-options="errorOptions"
+      :condition-step-options="conditionStepOptions"
+      :condition-label="stepForm.parentId ? getConditionLabel(stepForm.parentId) : undefined"
+      :test-result="testResult"
+      @close="closeStepDrawer"
+      @save="saveStep"
+      @delete="deleteCurrentStep"
+      @duplicate="duplicateStep"
+      @test="testCurrentStep"
+      @cancel-test="cancelTest"
+      @copy-test-value="copyTestValue"
+    />
 
     <FlowExecutionDetailDrawer
       v-model="execDrawerOpen"
@@ -214,7 +120,7 @@
 
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import type { StepType, StepErrorHandling } from '~/types/flow';
+import type { FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS } from '~/utils/flow.constants';
 import {
   normalizeScriptContract,
@@ -278,7 +184,7 @@ function getConditionLabel(parentId: any): string {
 }
 
 
-const stepForm = ref({
+const stepForm = ref<FlowStepEditorForm>({
   key: '',
   stepOrder: 0,
   type: 'script' as StepType,

@@ -293,7 +293,7 @@ onBeforeUnmount(() => {
 
     <CommonModal
       v-model:open="apiTokenModalOpen"
-      :cancel-action="!newlyCreatedToken ? { label: 'Close', onClick: () => (apiTokenModalOpen = false) } : false"
+      :cancel-action="!newlyCreatedToken ? { label: 'Close', tone: 'neutral', onClick: () => (apiTokenModalOpen = false) } : false"
       :primary-action="!newlyCreatedToken
         ? {
           label: 'Create token',

@@ -13,6 +13,12 @@ const isDestructive = computed(() => {
   return text.includes('delete') || text.includes('remove') || text.includes('destroy');
 });
 
+const cancelAction = computed(() => ({
+  label: options.value.cancelText,
+  tone: options.value.cancelText?.toLowerCase() === 'keep editing' ? 'primary' as const : undefined,
+  onClick: onCancel,
+}));
+
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && isVisible.value) {
     e.preventDefault();
@@ -37,7 +43,7 @@ onUnmounted(() => {
       overlay: 'z-[150]',
       content: 'z-[150]',
     }"
-    :cancel-action="{ label: options.cancelText, onClick: onCancel }"
+    :cancel-action="cancelAction"
     :primary-action="!isDestructive ? { label: options.confirmText, onClick: onConfirm } : false"
     :danger-action="isDestructive ? { label: options.confirmText, tone: 'danger', onClick: onConfirm } : false"
   >

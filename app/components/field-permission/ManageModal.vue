@@ -255,7 +255,7 @@ watch(open, (isOpen) => {
   <CommonModal
     v-model:open="open"
     :handle="false"
-    :cancel-action="viewMode === 'list' ? { label: 'Done', onClick: () => (open = false) } : false"
+    :cancel-action="viewMode === 'list' ? { label: 'Done', tone: 'neutral', onClick: () => (open = false) } : false"
     :primary-action="viewMode === 'list'
       ? { label: 'Create rule', icon: 'lucide:plus', onClick: openCreateForm }
       : { label: fieldPermMode === 'update' ? 'Update' : 'Create', disabled: !isConditionValid, onClick: saveFieldPerm }"

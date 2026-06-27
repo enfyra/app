@@ -2,7 +2,7 @@
   <CommonModal
     v-model:open="isOpen"
     class="max-w-[760px]"
-    :cancel-action="{ label: 'Close', onClick: () => (isOpen = false) }"
+    :cancel-action="{ label: 'Close', tone: 'neutral', onClick: () => (isOpen = false) }"
     :primary-action="{
       label: 'Test',
       icon: 'i-lucide-play',

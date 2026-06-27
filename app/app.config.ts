@@ -597,7 +597,14 @@ export default defineAppConfig({
     },
     tabs: {
       slots: {
-        list: "bg-[var(--surface-muted)]",
+        root: "min-w-0",
+        list: "relative flex min-w-max gap-0 overflow-visible border-b border-[var(--border-default)] bg-transparent p-0",
+        indicator: "absolute !-bottom-px !h-0.5 !w-[calc(var(--reka-tabs-indicator-size)-1rem)] !translate-x-[calc(var(--reka-tabs-indicator-position)+0.5rem)] rounded-full bg-[var(--text-primary)]",
+        trigger: "relative flex h-12 cursor-pointer items-center gap-2 rounded-none px-4 text-sm font-medium text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)] data-[state=active]:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--theme-focus-ring-strong)]",
+        leadingIcon: "h-5 w-5 shrink-0",
+        label: "truncate",
+        trailingBadge: "ml-0 rounded-md bg-[var(--state-warning-soft-bg)] px-1.5 py-0.5 text-xs font-semibold text-[var(--state-warning-soft-text)] ring-1 ring-inset ring-[var(--state-warning-outline-border)]",
+        content: "mt-4",
       },
       compoundVariants: [
         {
@@ -612,8 +619,8 @@ export default defineAppConfig({
           color: "primary",
           variant: "link",
           class: {
-            indicator: "bg-[var(--action-primary-bg)]",
-            trigger: "data-[state=active]:text-[var(--state-primary-soft-text)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--theme-focus-ring-strong)]",
+            indicator: "bg-[var(--text-primary)]",
+            trigger: "data-[state=active]:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--theme-focus-ring-strong)]",
           },
         },
       ],

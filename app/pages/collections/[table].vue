@@ -753,23 +753,12 @@ onMounted(() => {
       <div v-else-if="table" class="eapp-page-constrained">
           <div class="relative -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
             <div class="overflow-x-auto overflow-y-hidden">
-              <div class="flex min-w-max border-b border-[var(--border-default)]">
-                <button
-                  v-for="item in tabItems"
-                  :key="item.value"
-                  type="button"
-                  class="relative flex h-12 items-center gap-2 px-4 text-sm font-medium text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)]"
-                  :class="activeTab === item.value ? 'text-[var(--text-primary)]' : ''"
-                  @click="activeTab = item.value"
-                >
-                  <UIcon :name="item.icon" class="h-5 w-5 shrink-0" />
-                  <span>{{ item.label }}</span>
-                  <span
-                    v-if="activeTab === item.value"
-                    class="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[var(--text-primary)]"
-                  />
-                </button>
-              </div>
+              <UTabs
+                v-model="activeTab"
+                :items="tabItems"
+                :content="false"
+                variant="link"
+              />
             </div>
           </div>
 

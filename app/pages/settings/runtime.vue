@@ -35,6 +35,17 @@ function tabIssueCount(label: string) {
   return match ? Number(match[1]) : 0;
 }
 
+const runtimeTabItems = computed(() =>
+  runtime.tabItems.map((item) => {
+    const count = tabIssueCount(item.label);
+    return {
+      ...item,
+      label: tabLabel(item.label),
+      badge: count > 0 ? String(count) : undefined,
+    };
+  }),
+);
+
 registerPageHeader({
   title: 'Runtime Monitor',
   description: 'Live server runtime metrics',
@@ -75,30 +86,12 @@ registerPageHeader({
           class="runtime-tab-scroll overflow-x-auto overflow-y-hidden"
           @scroll.passive="updateTabScrollState"
         >
-          <div class="flex min-w-max border-b border-[var(--border-default)]">
-            <button
-              v-for="item in runtime.tabItems"
-              :key="item.value"
-              type="button"
-              class="relative flex h-12 items-center gap-2 px-4 text-sm font-medium text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)]"
-              :class="runtime.activeTab === item.value ? 'text-[var(--text-primary)]' : ''"
-              :aria-label="tabLabel(item.label)"
-              @click="runtime.activeTab = item.value"
-            >
-              <UIcon :name="item.icon" class="h-5 w-5 shrink-0" />
-              <span class="hidden sm:inline">{{ tabLabel(item.label) }}</span>
-              <span
-                v-if="tabIssueCount(item.label) > 0"
-                class="rounded-md bg-warning-400/10 px-1.5 py-0.5 text-xs font-semibold text-warning-600 dark:text-warning-400"
-              >
-                {{ tabIssueCount(item.label) }}
-              </span>
-              <span
-                v-if="runtime.activeTab === item.value"
-                class="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[var(--text-primary)]"
-              />
-            </button>
-          </div>
+          <UTabs
+            v-model="runtime.activeTab"
+            :items="runtimeTabItems"
+            :content="false"
+            variant="link"
+          />
         </div>
       </div>
 
