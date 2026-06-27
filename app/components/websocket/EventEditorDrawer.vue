@@ -233,7 +233,18 @@ $ctx.$socket.reply('event:received', data);`;
 </script>
 
 <template>
-  <CommonDrawer v-model="isOpen" direction="right" full-width>
+  <CommonDrawer
+    v-model="isOpen"
+    direction="right"
+    full-width
+    :cancel-action="{ label: 'Cancel', onClick: handleCancel }"
+    :primary-action="{
+      label: event && getId(event) ? 'Update' : 'Create',
+      loading: updateLoading || createLoading,
+      disabled: !hasFormChanges || updateLoading || createLoading,
+      onClick: handleSave,
+    }"
+  >
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon name="lucide:zap" class="h-5 w-5" />
@@ -302,37 +313,17 @@ $ctx.$socket.reply('event:received', data);`;
       </div>
     </template>
 
-    <template #footer>
-      <div class="flex w-full items-center justify-end gap-2">
-        <UButton variant="outline" color="error" @click="handleCancel">
-          Cancel
-        </UButton>
-        <UButton
-          variant="solid"
-          color="primary"
-          :loading="updateLoading || createLoading"
-          :disabled="!hasFormChanges || updateLoading || createLoading"
-          @click="handleSave"
-        >
-          {{ event && getId(event) ? 'Update' : 'Create' }}
-        </UButton>
-      </div>
-    </template>
   </CommonDrawer>
 
-  <CommonModal v-model:open="showDiscardModal">
+  <CommonModal
+    v-model:open="showDiscardModal"
+    :cancel-action="{ label: 'Cancel', onClick: () => (showDiscardModal = false) }"
+    :danger-action="{ label: 'Discard Changes', onClick: confirmDiscard }"
+  >
     <template #header>Discard Changes</template>
     <template #body>
       <div class="text-sm text-[var(--text-secondary)]">
         You have unsaved changes. Are you sure you want to close? All changes will be lost.
-      </div>
-    </template>
-    <template #footer>
-      <div class="flex w-full justify-end gap-2">
-        <UButton variant="ghost" color="error" @click="showDiscardModal = false">
-          Cancel
-        </UButton>
-        <UButton @click="confirmDiscard">Discard Changes</UButton>
       </div>
     </template>
   </CommonModal>

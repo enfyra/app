@@ -22,7 +22,7 @@ function handleKeydown(event: KeyboardEvent) {
     <div
       role="button"
       tabindex="0"
-      class="group/theme-toggle flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--nav-item-hover-bg)] hover:text-[var(--nav-item-hover-text)]"
+      class="group/theme-toggle flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] outline-none transition-colors hover:bg-[var(--nav-item-hover-bg)] hover:text-[var(--nav-item-hover-text)] focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)]"
       @click="toggleTheme"
       @keydown="handleKeydown"
     >

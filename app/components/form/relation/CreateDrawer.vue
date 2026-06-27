@@ -96,6 +96,15 @@ function confirmDiscard() {
     handle-only
     v-model="show"
     direction="right"
+    footer-hint="Ready to create new record?"
+    :cancel-action="{ label: 'Cancel', onClick: handleClose }"
+    :primary-action="{
+      label: 'Create Record',
+      icon: 'lucide:plus',
+      loading: creating,
+      disabled: creating,
+      onClick: createNewRecord,
+    }"
   >
     <template #header>
       <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
@@ -129,56 +138,19 @@ function confirmDiscard() {
               :errors="createErrors"
             />
           </div>
-
-          <div :class="(isMobile || isTablet) ? 'bg-[var(--surface-muted)] rounded-lg border border-muted/30 p-3' : 'bg-[var(--surface-muted)] rounded-xl border border-muted/30 p-4'">
-            <div class="flex items-center justify-between">
-              <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
-                <UIcon
-                  name="lucide:info"
-                  class="text-muted-foreground"
-                  size="16"
-                />
-                <span class="text-sm text-muted-foreground"
-                  >Ready to create new record?</span
-                >
-              </div>
-              <div :class="(isMobile || isTablet) ? 'flex gap-1.5 w-full justify-end' : 'flex gap-3'">
-                <UButton
-                  variant="outline"
-                  color="error"
-                  @click="handleClose"
-                  :size="(isMobile || isTablet) ? 'sm' : 'md'"
-                >
-                  Cancel
-                </UButton>
-                <UButton
-                  icon="lucide:plus"
-                  @click="createNewRecord"
-                  :loading="creating"
-                  :disabled="creating"
-                  :size="(isMobile || isTablet) ? 'sm' : 'md'"
-                  :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-                >
-                  <span v-if="!isMobile && !isTablet">Create Record</span>
-                </UButton>
-              </div>
-            </div>
-          </div>
         </div>
       </template>
     </CommonDrawer>
 
-  <CommonModal v-model:open="showDiscardModal">
+  <CommonModal
+    v-model:open="showDiscardModal"
+    :cancel-action="{ label: 'Cancel', onClick: () => (showDiscardModal = false) }"
+    :danger-action="{ label: 'Discard Changes', onClick: confirmDiscard }"
+  >
     <template #header>Discard Changes</template>
     <template #body>
       <div class="text-sm text-[var(--text-secondary)]">
         You have unsaved changes. Are you sure you want to close? All changes will be lost.
-      </div>
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-2 w-full">
-        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
-        <UButton @click="confirmDiscard">Discard Changes</UButton>
       </div>
     </template>
   </CommonModal>

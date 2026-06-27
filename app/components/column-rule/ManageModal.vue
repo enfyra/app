@@ -241,7 +241,14 @@ watch(open, (isOpen) => {
 </script>
 
 <template>
-  <CommonModal v-model:open="open" :handle="false">
+  <CommonModal
+    v-model:open="open"
+    :handle="false"
+    :cancel-action="viewMode === 'list' ? { label: 'Done', onClick: () => (open = false) } : false"
+    :primary-action="viewMode === 'list'
+      ? { label: 'Add rule', icon: 'lucide:plus', onClick: openCreateForm }
+      : { label: mode === 'update' ? 'Update' : 'Create', onClick: saveRule }"
+  >
     <template #header>
       <div class="flex items-center gap-2">
         <UButton
@@ -394,18 +401,5 @@ watch(open, (isOpen) => {
       </div>
     </template>
 
-    <template #footer>
-      <div class="flex justify-end gap-2 w-full">
-        <template v-if="viewMode === 'list'">
-          <UButton variant="ghost" @click="open = false">Done</UButton>
-          <UButton icon="lucide:plus" @click="openCreateForm">Add rule</UButton>
-        </template>
-        <template v-else>
-          <UButton @click="saveRule">
-            {{ mode === "update" ? "Update" : "Create" }}
-          </UButton>
-        </template>
-      </div>
-    </template>
   </CommonModal>
 </template>

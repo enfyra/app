@@ -83,20 +83,14 @@ const cancelChanges = () => {
       Columns
     </UButton>
 
-      <UModal v-model:open="isOpen">
+      <CommonModal
+        v-model:open="isOpen"
+        :cancel-action="{ label: 'Cancel', onClick: cancelChanges }"
+        :primary-action="{ label: 'Apply', onClick: applyChanges }"
+      >
         <template #header>
-          <div class="flex justify-between items-center w-full">
-            <div class="text-base font-semibold">
-              Select Columns
-            </div>
-            <UButton
-              icon="lucide:x"
-              color="error"
-              variant="soft"
-              @click="cancelChanges"
-            >
-              Close
-            </UButton>
+          <div class="text-base font-semibold">
+            Select Columns
           </div>
         </template>
 
@@ -129,19 +123,6 @@ const cancelChanges = () => {
           </div>
         </template>
 
-        <template #footer>
-          <div class="w-full">
-            <UButton
-              @click="applyChanges"
-              variant="solid"
-              color="primary"
-              size="lg"
-              block
-            >
-              Apply
-            </UButton>
-          </div>
-        </template>
-      </UModal>
+      </CommonModal>
   </div>
 </template>

@@ -194,6 +194,22 @@
       <CommonDrawer
         v-model="drawerOpen"
         direction="right"
+        :leading-actions="[
+          {
+            label: 'Reset',
+            icon: 'lucide:rotate-ccw',
+            tone: 'neutral',
+            disabled: !hasFormChanges,
+            onClick: handleReset,
+          },
+        ]"
+        :cancel-action="{ label: 'Cancel', icon: 'lucide:x', onClick: handleDrawerClose }"
+        :primary-action="{
+          label: isEditing ? 'Update' : 'Create',
+          loading: saving,
+          disabled: !hasFormChanges || saving,
+          onClick: savePermission,
+        }"
       >
         <template #header>
           <h2 class="text-lg font-semibold">{{ isEditing ? "Edit Permission" : "Create Permission" }}</h2>
@@ -211,47 +227,17 @@
             />
           </div>
         </template>
-        <template #footer>
-          <div class="flex justify-end gap-3 border border-[var(--border-default)] rounded-lg p-4 surface-card">
-            <UButton
-              label="Cancel"
-              icon="lucide:x"
-              variant="outline"
-              color="error"
-              @click="handleDrawerClose"
-            />
-            <UButton
-              v-if="hasFormChanges"
-              label="Reset"
-              icon="lucide:rotate-ccw"
-              variant="outline"
-              color="warning"
-              :disabled="!hasFormChanges"
-              @click="handleReset"
-            />
-            <UButton
-              @click="savePermission"
-              :loading="saving"
-              :disabled="!hasFormChanges || saving"
-              color="primary"
-            >
-              {{ isEditing ? "Update" : "Create" }}
-            </UButton>
-          </div>
-        </template>
       </CommonDrawer>
 
-      <CommonModal v-model:open="showDiscardModal">
+      <CommonModal
+        v-model:open="showDiscardModal"
+        :cancel-action="{ label: 'Cancel', onClick: () => (showDiscardModal = false) }"
+        :danger-action="{ label: 'Discard Changes', onClick: confirmDiscard }"
+      >
         <template #header>Discard Changes</template>
         <template #body>
           <div class="text-sm text-[var(--text-secondary)]">
             You have unsaved changes. Are you sure you want to close? All changes will be lost.
-          </div>
-        </template>
-        <template #footer>
-          <div class="flex justify-end gap-2 w-full">
-            <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
-            <UButton @click="confirmDiscard">Discard Changes</UButton>
           </div>
         </template>
       </CommonModal>

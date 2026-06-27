@@ -70,7 +70,17 @@ watch(open, (value) => {
 </script>
 
 <template>
-  <CommonModal v-model:open="open">
+  <CommonModal
+    v-model:open="open"
+    :cancel-action="{ label: 'Cancel', onClick: () => (open = false) }"
+    :primary-action="{
+      label: 'Update password',
+      type: 'submit',
+      form: 'password-form',
+      loading: passwordLoading,
+      disabled: passwordLoading,
+    }"
+  >
     <template #header>Change Password</template>
     <template #body>
       <UForm id="password-form" :state="passwordForm" class="space-y-5" @submit="handleChangePassword">
@@ -119,29 +129,6 @@ watch(open, (value) => {
           </UInput>
         </UFormField>
       </UForm>
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-2 w-full">
-        <UButton
-          variant="outline"
-          color="neutral"
-          size="md"
-          @click="open = false"
-        >
-          Cancel
-        </UButton>
-        <UButton
-          type="submit"
-          form="password-form"
-          color="primary"
-          variant="solid"
-          size="md"
-          :loading="passwordLoading"
-          :disabled="passwordLoading"
-        >
-          Update password
-        </UButton>
-      </div>
     </template>
   </CommonModal>
 </template>

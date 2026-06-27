@@ -1,5 +1,16 @@
 <template>
-  <CommonModal v-model:open="isOpen" class="max-w-[700px]">
+  <CommonModal
+    v-model:open="isOpen"
+    class="max-w-[700px]"
+    :leading-actions="response ? [{ label: 'Clear', icon: 'i-lucide-x', tone: 'neutral', variant: 'ghost', onClick: () => { response = null; responseError = ''; } }] : []"
+    :primary-action="{
+      label: 'Send',
+      icon: 'i-lucide-play',
+      loading: pending,
+      disabled: !canSend,
+      onClick: sendRequest,
+    }"
+  >
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-flask-conical" class="w-5 h-5 text-primary-500" />
@@ -101,12 +112,6 @@
         <div v-if="responseError" class="p-2.5 rounded-lg bg-[var(--state-danger-soft-bg)] border border-[var(--state-danger-outline-border)] text-xs text-[var(--state-danger-soft-text)]">
           {{ responseError }}
         </div>
-      </div>
-    </template>
-    <template #footer>
-      <div class="flex gap-2 w-full justify-end">
-        <UButton v-if="response" variant="ghost" color="neutral" icon="i-lucide-x" @click="response = null; responseError = ''">Clear</UButton>
-        <UButton color="primary" icon="i-lucide-play" :loading="pending" :disabled="!canSend" @click="sendRequest">Send</UButton>
       </div>
     </template>
   </CommonModal>

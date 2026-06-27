@@ -249,6 +249,17 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
     v-model="isOpen"
     direction="right"
     :full-width="true"
+    :leading-actions="[
+      { label: 'Preview', icon: 'lucide:eye', tone: 'primary', disabled: !form?.code, onClick: () => (showPreviewModal = true) },
+      { label: 'Upload', icon: 'lucide:upload', tone: 'secondary', onClick: () => (showUploadModal = true) },
+    ]"
+    :cancel-action="{ label: 'Cancel', onClick: handleClose }"
+    :primary-action="{
+      label: menu?.extension ? 'Update' : 'Create',
+      loading: updateLoading || createLoading,
+      disabled: !hasFormChanges || updateLoading || createLoading,
+      onClick: handleSave,
+    }"
   >
     <template #header>
       <div class="flex items-center gap-2">
@@ -280,47 +291,6 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
       </div>
     </template>
 
-    <template #footer>
-      <div class="flex items-center justify-between w-full">
-        <div class="flex items-center gap-2">
-          <UButton
-            variant="outline"
-            color="primary"
-            icon="lucide:eye"
-            :disabled="!form?.code"
-            @click="showPreviewModal = true"
-          >
-            Preview
-          </UButton>
-          <UButton
-            variant="outline"
-            color="secondary"
-            icon="lucide:upload"
-            @click="showUploadModal = true"
-          >
-            Upload
-          </UButton>
-        </div>
-        <div class="flex items-center gap-2">
-          <UButton
-            variant="outline"
-            color="error"
-            @click="handleClose"
-          >
-            Cancel
-          </UButton>
-          <UButton
-            variant="solid"
-            color="primary"
-            :loading="updateLoading || createLoading"
-            :disabled="!hasFormChanges || updateLoading || createLoading"
-            @click="handleSave"
-          >
-            {{ menu?.extension ? 'Update' : 'Create' }}
-          </UButton>
-        </div>
-      </div>
-    </template>
   </CommonDrawer>
 
   <CommonUploadModalLazy
@@ -343,17 +313,15 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
     :code="form?.code || ''"
   />
 
-  <CommonModal v-model:open="showDiscardModal">
+  <CommonModal
+    v-model:open="showDiscardModal"
+    :cancel-action="{ label: 'Cancel', onClick: () => (showDiscardModal = false) }"
+    :danger-action="{ label: 'Discard Changes', onClick: confirmDiscard }"
+  >
     <template #header>Discard Changes</template>
     <template #body>
       <div class="text-sm text-[var(--text-secondary)]">
         You have unsaved changes. Are you sure you want to close? All changes will be lost.
-      </div>
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-2 w-full">
-        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
-        <UButton @click="confirmDiscard">Discard Changes</UButton>
       </div>
     </template>
   </CommonModal>

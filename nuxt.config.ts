@@ -81,13 +81,8 @@ export default defineNuxtConfig({
   },
   vite: {
     optimizeDeps: {
-      exclude: ['console-browserify'],
-      include: [
-        '@vue/devtools-core',
-        '@vue/devtools-kit',
-        'socket.io-client',
-        'json5',
-        '@internationalized/date',
+      exclude: [
+        'console-browserify',
         '@codemirror/commands',
         '@codemirror/autocomplete',
         '@codemirror/language',
@@ -100,6 +95,13 @@ export default defineNuxtConfig({
         '@uiw/codemirror-theme-vscode',
         '@codemirror/view',
         '@codemirror/state',
+      ],
+      include: [
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'socket.io-client',
+        'json5',
+        '@internationalized/date',
         'typescript',
         '@tanstack/vue-table',
         '@vue-flow/core',

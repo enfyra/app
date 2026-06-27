@@ -42,16 +42,25 @@
           />
         </div>
         <div class="flex-1 min-w-0">
-          <h4 class="text-sm font-semibold text-[var(--text-primary)] mb-0.5">
+          <h4
+            class="text-sm font-semibold mb-0.5"
+            :class="modelValue === option.value ? 'text-current' : 'text-[var(--text-primary)]'"
+          >
             {{ option.label }}
           </h4>
-          <p class="text-xs text-[var(--text-tertiary)] leading-relaxed">
+          <p
+            class="text-xs leading-relaxed"
+            :class="modelValue === option.value ? 'text-current opacity-90' : 'text-[var(--text-tertiary)]'"
+          >
             {{ option.description }}
           </p>
         </div>
       </div>
 
-      <div class="mt-3 pt-3" style="border-top: 1px solid var(--border-default)">
+      <div
+        class="mt-3 pt-3"
+        :style="{ borderTop: modelValue === option.value ? '1px solid color-mix(in srgb, currentColor 24%, transparent)' : '1px solid var(--border-default)' }"
+      >
         <div class="flex flex-wrap gap-1">
           <UBadge
             v-for="tag in option.tags"
@@ -85,9 +94,9 @@ const options = [
     value: 'pre_auth',
     label: 'Pre-Auth',
     icon: 'lucide:shield-alert',
-    activeClass: 'eapp-status-warning-soft',
-    checkColor: 'eapp-status-warning-text',
-    iconBg: 'bg-[var(--status-warning-base)]',
+    activeClass: 'eapp-primary-soft',
+    checkColor: 'eapp-primary-text',
+    iconBg: 'eapp-primary-solid',
     description: 'Runs before authentication. No user info available. Use for IP-based rules and global rate limiting.',
     tags: [
       { label: 'Before JWT', color: 'warning' as const },

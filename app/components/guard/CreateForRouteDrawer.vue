@@ -3,6 +3,13 @@
     v-model="localOpen"
     :handle="false"
     direction="right"
+    :cancel-action="{ label: 'Cancel', onClick: handleCancel }"
+    :primary-action="{
+      label: 'Create Guard',
+      loading,
+      disabled: loading || (!hasChanged && !selectedTemplate),
+      onClick: () => emit('save'),
+    }"
   >
     <template #header>
       <h2 class="text-xl font-semibold">Create Guard</h2>
@@ -40,35 +47,17 @@
         </CommonFormCard>
       </div>
     </template>
-    <template #footer>
-      <div class="flex justify-end gap-3">
-        <UButton variant="outline" color="error" @click="handleCancel">
-          Cancel
-        </UButton>
-        <UButton
-          variant="solid"
-          color="primary"
-          :loading="loading"
-          :disabled="loading || (!hasChanged && !selectedTemplate)"
-          @click="$emit('save')"
-        >
-          Create Guard
-        </UButton>
-      </div>
-    </template>
   </CommonDrawer>
 
-  <CommonModal v-model:open="showDiscardModal">
+  <CommonModal
+    v-model:open="showDiscardModal"
+    :cancel-action="{ label: 'Cancel', onClick: () => (showDiscardModal = false) }"
+    :danger-action="{ label: 'Discard Changes', onClick: confirmDiscard }"
+  >
     <template #header>Discard Changes</template>
     <template #body>
       <div class="text-sm text-[var(--text-secondary)]">
         You have unsaved changes. Are you sure you want to close? All changes will be lost.
-      </div>
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-2 w-full">
-        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
-        <UButton @click="confirmDiscard">Discard Changes</UButton>
       </div>
     </template>
   </CommonModal>

@@ -360,6 +360,14 @@ watch(
     <CommonDrawer
       :model-value="drawerOpen"
       direction="right"
+      :cancel-action="{ label: 'Cancel', onClick: closeDrawer }"
+      :primary-action="{
+        label: mode === 'create' ? 'Create method' : 'Save changes',
+        icon: 'lucide:save',
+        loading: saving,
+        disabled: !canSave,
+        onClick: saveMethod,
+      }"
       @update:model-value="handleDrawerOpenChange"
     >
       <template #header>
@@ -452,27 +460,6 @@ watch(
         </div>
       </template>
 
-      <template #footer>
-        <div class="flex justify-end gap-3">
-          <UButton
-            type="button"
-            variant="outline"
-            color="neutral"
-            @click="() => closeDrawer()"
-          >
-            Cancel
-          </UButton>
-          <UButton
-            type="button"
-            icon="lucide:save"
-            :loading="saving"
-            :disabled="!canSave"
-            @click="saveMethod"
-          >
-            {{ mode === 'create' ? 'Create method' : 'Save changes' }}
-          </UButton>
-        </div>
-      </template>
     </CommonDrawer>
   </div>
 </template>

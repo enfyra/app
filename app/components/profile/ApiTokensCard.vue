@@ -291,7 +291,19 @@ onBeforeUnmount(() => {
       size="sm"
     />
 
-    <CommonModal v-model:open="apiTokenModalOpen">
+    <CommonModal
+      v-model:open="apiTokenModalOpen"
+      :cancel-action="!newlyCreatedToken ? { label: 'Close', onClick: () => (apiTokenModalOpen = false) } : false"
+      :primary-action="!newlyCreatedToken
+        ? {
+          label: 'Create token',
+          icon: 'lucide:key',
+          loading: createApiTokenLoading,
+          disabled: createApiTokenLoading,
+          onClick: handleCreateApiToken,
+        }
+        : false"
+    >
       <template #header>{{ newlyCreatedToken ? "API Token" : "Create API Token" }}</template>
       <template #body>
         <div v-if="newlyCreatedToken" class="space-y-3">
@@ -376,29 +388,6 @@ onBeforeUnmount(() => {
               </UPopover>
             </UFormField>
           </UForm>
-        </div>
-      </template>
-      <template #footer>
-        <div v-if="!newlyCreatedToken" class="flex justify-end gap-2 w-full">
-          <UButton
-            variant="outline"
-            color="neutral"
-            size="md"
-            @click="apiTokenModalOpen = false"
-          >
-            Close
-          </UButton>
-          <UButton
-            color="primary"
-            variant="solid"
-            size="md"
-            icon="lucide:key"
-            :loading="createApiTokenLoading"
-            :disabled="createApiTokenLoading"
-            @click="handleCreateApiToken"
-          >
-            Create token
-          </UButton>
         </div>
       </template>
     </CommonModal>

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="inline-flex max-w-full">
     
     <UButton
       @click="openModal"
@@ -7,11 +7,14 @@
       :label="displayValue"
       icon="i-heroicons-calendar"
       size="sm"
-      :class="buttonClass"
+      :class="['!w-auto max-w-full justify-start', buttonClass]"
       :disabled="disabled"
     />
 
-    <CommonModal v-model:open="showModal">
+    <CommonModal
+      v-model:open="showModal"
+      :primary-action="{ label: 'Apply', onClick: applyValue }"
+    >
       <template #header>
         Select Date
       </template>
@@ -22,11 +25,6 @@
         </div>
       </template>
 
-      <template #footer>
-        <div class="flex justify-end w-full">
-          <UButton @click="applyValue" color="primary"> Apply </UButton>
-        </div>
-      </template>
     </CommonModal>
   </div>
 </template>

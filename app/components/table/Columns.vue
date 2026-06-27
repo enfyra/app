@@ -579,6 +579,12 @@ watch(
     handle-only
     v-model="isEditing"
     direction="right"
+    :footer-hint="editingIndex !== null ? 'Ready to update column?' : 'Ready to create new column?'"
+    :primary-action="{
+      label: editingIndex !== null ? 'Update Column' : 'Create Column',
+      icon: 'lucide:check',
+      onClick: saveColumn,
+    }"
     @update:model-value="(open) => { if (!open) handleDrawerClose() }"
   >
     <template #header>
@@ -642,39 +648,6 @@ watch(
         </div>
       </template>
 
-      <template #footer>
-
-        <div :class="(isMobile || isTablet) ? 'surface-card rounded-lg p-3' : 'surface-card rounded-xl p-4'">
-          <div class="flex items-center justify-between">
-            <div v-if="!isMobile && !isTablet" class="flex items-center gap-2">
-              <UIcon
-                name="lucide:info"
-                class="text-muted-foreground"
-                size="16"
-              />
-              <span class="text-sm text-muted-foreground">
-                {{
-                  editingIndex !== null
-                    ? "Ready to update column?"
-                    : "Ready to create new column?"
-                }}
-              </span>
-            </div>
-            <div :class="(isMobile || isTablet) ? 'flex gap-1.5 w-full justify-end' : 'flex gap-3'">
-              <UButton
-                icon="lucide:check"
-                @click="saveColumn()"
-                color="primary"
-                :loading="false"
-                :size="(isMobile || isTablet) ? 'sm' : 'md'"
-                :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
-              >
-                <span v-if="!isMobile && !isTablet">{{ editingIndex !== null ? "Update Column" : "Create Column" }}</span>
-              </UButton>
-            </div>
-          </div>
-        </div>
-      </template>
-    </CommonDrawer>
+  </CommonDrawer>
 
 </template>

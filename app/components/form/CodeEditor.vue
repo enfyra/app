@@ -678,7 +678,12 @@ function handleMouseUp(e?: MouseEvent) {
     </div>
   </div>
 
-  <CommonDrawer v-model="showTestSetup" :nested="testRunConfig?.nested === true">
+  <CommonDrawer
+    v-model="showTestSetup"
+    :nested="testRunConfig?.nested === true"
+    :cancel-action="isConfiguredTest ? { label: 'Cancel', onClick: () => (showTestSetup = false) } : false"
+    :primary-action="isConfiguredTest ? { label: 'Run', icon: 'i-lucide-play', loading: testRunning, onClick: runConfiguredCodeTest } : false"
+  >
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-flask-conical" class="w-5 h-5 text-primary-500" />
@@ -783,14 +788,6 @@ function handleMouseUp(e?: MouseEvent) {
             <pre class="max-h-[180px] overflow-auto rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] p-3 text-xs whitespace-pre-wrap select-text cursor-text">{{ testEmittedText }}</pre>
           </div>
         </div>
-      </div>
-    </template>
-    <template #footer>
-      <div v-if="isConfiguredTest" class="flex justify-end gap-2 w-full">
-        <UButton variant="ghost" color="neutral" @click="showTestSetup = false">Cancel</UButton>
-        <UButton color="primary" icon="i-lucide-play" :loading="testRunning" @click="runConfiguredCodeTest">
-          Run
-        </UButton>
       </div>
     </template>
   </CommonDrawer>

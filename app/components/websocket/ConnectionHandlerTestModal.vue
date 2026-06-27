@@ -1,5 +1,16 @@
 <template>
-  <CommonModal v-model:open="isOpen" class="max-w-[760px]">
+  <CommonModal
+    v-model:open="isOpen"
+    class="max-w-[760px]"
+    :cancel-action="{ label: 'Close', onClick: () => (isOpen = false) }"
+    :primary-action="{
+      label: 'Test',
+      icon: 'i-lucide-play',
+      loading: testing || pending,
+      disabled: !canRun,
+      onClick: run,
+    }"
+  >
     <template #header>
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-flask-conical" class="w-5 h-5 text-primary-500" />
@@ -64,20 +75,6 @@
             <pre class="text-[11px] font-mono rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-2 overflow-auto max-h-[200px] whitespace-pre-wrap select-text cursor-text">{{ JSON.stringify(result.result, null, 2) }}</pre>
           </div>
         </div>
-      </div>
-    </template>
-    <template #footer>
-      <div class="flex gap-2 w-full justify-end">
-        <UButton variant="outline" color="neutral" @click="isOpen = false">Close</UButton>
-        <UButton
-          color="primary"
-          icon="i-lucide-play"
-          :loading="testing || pending"
-          :disabled="!canRun"
-          @click="run"
-        >
-          Test
-        </UButton>
       </div>
     </template>
   </CommonModal>

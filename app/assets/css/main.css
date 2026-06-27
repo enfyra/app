@@ -10,6 +10,12 @@
 @import "./vue-flow.css";
 @import "./richtext-editor.css";
 @import "prosemirror-tables/style/tables.css";
+
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline-color: var(--theme-focus-ring-strong);
+}
+
 @layer base {
   html {
     font-family: 'Outfit', 'Manrope', system-ui, sans-serif;

@@ -127,6 +127,19 @@ export interface HeaderAction {
   order?: number;
 }
 
+export interface DialogFooterAction {
+  label: string;
+  icon?: string;
+  tone?: "neutral" | "primary" | "secondary" | "warning" | "danger";
+  variant?: "solid" | "outline" | "ghost" | "soft";
+  loading?: boolean | Ref<boolean> | Readonly<Ref<boolean>> | ComputedRef<boolean>;
+  disabled?: boolean | Ref<boolean> | Readonly<Ref<boolean>> | ComputedRef<boolean>;
+  type?: "button" | "submit";
+  form?: string;
+  closeOnClick?: boolean;
+  onClick?: () => void;
+}
+
 export interface AccountPanelItem {
   id: string;
   order?: number;

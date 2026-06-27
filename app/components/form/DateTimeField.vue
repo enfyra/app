@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="inline-flex max-w-full">
     <UButton
       type="button"
       @click="openModal"
@@ -7,11 +7,16 @@
       :label="displayValue"
       icon="i-heroicons-calendar-days"
       size="sm"
-      :class="buttonClass"
+      :class="['!w-auto max-w-full justify-start', buttonClass]"
       :disabled="disabled"
     />
 
-    <CommonDrawer v-model="showDrawer" direction="right">
+    <CommonDrawer
+      v-model="showDrawer"
+      direction="right"
+      :leading-actions="[{ label: 'Clear', tone: 'neutral', variant: 'ghost', onClick: clearValue }]"
+      :primary-action="{ label: 'Apply', onClick: applyValue }"
+    >
       <template #header>
         <div>
           <h3 class="text-base font-semibold eapp-text-primary">
@@ -108,16 +113,6 @@
         </div>
       </template>
 
-      <template #footer>
-        <div class="flex w-full justify-between gap-3">
-          <UButton type="button" color="neutral" variant="ghost" @click="clearValue">
-            Clear
-          </UButton>
-          <UButton type="button" color="primary" @click="applyValue">
-            Apply
-          </UButton>
-        </div>
-      </template>
     </CommonDrawer>
   </div>
 </template>

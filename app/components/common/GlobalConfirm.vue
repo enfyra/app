@@ -37,6 +37,9 @@ onUnmounted(() => {
       overlay: 'z-[150]',
       content: 'z-[150]',
     }"
+    :cancel-action="{ label: options.cancelText, onClick: onCancel }"
+    :primary-action="!isDestructive ? { label: options.confirmText, onClick: onConfirm } : false"
+    :danger-action="isDestructive ? { label: options.confirmText, tone: 'danger', onClick: onConfirm } : false"
   >
       <template #header>
         <div class="flex items-center justify-between w-full">
@@ -48,16 +51,6 @@ onUnmounted(() => {
           <p class="text-sm text-[var(--text-secondary)] text-center break-words min-w-0" :title="options.content">
             {{ options.content }}
           </p>
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2 w-full">
-          <UButton variant="ghost" @click="onCancel">
-            {{ options.cancelText }}
-          </UButton>
-          <UButton :color="isDestructive ? 'error' : 'primary'" @click="onConfirm">
-            {{ options.confirmText }}
-          </UButton>
         </div>
       </template>
     </CommonModal>

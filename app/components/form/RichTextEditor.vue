@@ -1,104 +1,9 @@
 <script setup lang="ts">
 import { useEditor, EditorContent } from '@tiptap/vue-3'
-import StarterKit from '@tiptap/starter-kit'
-import Placeholder from '@tiptap/extension-placeholder'
-import Underline from '@tiptap/extension-underline'
-import TextAlign from '@tiptap/extension-text-align'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
-import { Table } from '@tiptap/extension-table'
-import { TableRow } from '@tiptap/extension-table-row'
-import { TableCell } from '@tiptap/extension-table-cell'
-import { TableHeader } from '@tiptap/extension-table-header'
-
-const CustomTableCell = TableCell.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      colspan: {
-        default: 1,
-        parseHTML: (element) => element.getAttribute('colspan') || 1,
-        renderHTML: (attributes) => {
-          if (attributes.colspan === 1) return {}
-          return { colspan: attributes.colspan }
-        },
-      },
-      rowspan: {
-        default: 1,
-        parseHTML: (element) => element.getAttribute('rowspan') || 1,
-        renderHTML: (attributes) => {
-          if (attributes.rowspan === 1) return {}
-          return { rowspan: attributes.rowspan }
-        },
-      },
-      colwidth: {
-        default: null,
-        parseHTML: (element) => {
-          const style = element.getAttribute('style') || ''
-          const match = style.match(/width:\s*(\d+(?:\.\d+)?)/i)
-          if (match && match[1]) {
-            return [parseInt(match[1])]
-          }
-          const colwidth = element.getAttribute('colwidth')
-          return colwidth ? [parseInt(colwidth)] : null
-        },
-        renderHTML: (attributes) => {
-          if (!attributes.colwidth || attributes.colwidth.length === 0) return {}
-          const width = attributes.colwidth[0]
-          return { style: `width: ${width}px` }
-        },
-      },
-    }
-  },
-})
-
-const CustomTableHeader = TableHeader.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      colspan: {
-        default: 1,
-        parseHTML: (element) => element.getAttribute('colspan') || 1,
-        renderHTML: (attributes) => {
-          if (attributes.colspan === 1) return {}
-          return { colspan: attributes.colspan }
-        },
-      },
-      rowspan: {
-        default: 1,
-        parseHTML: (element) => element.getAttribute('rowspan') || 1,
-        renderHTML: (attributes) => {
-          if (attributes.rowspan === 1) return {}
-          return { rowspan: attributes.rowspan }
-        },
-      },
-      colwidth: {
-        default: null,
-        parseHTML: (element) => {
-          const style = element.getAttribute('style') || ''
-          const match = style.match(/width:\s*(\d+(?:\.\d+)?)/i)
-          if (match && match[1]) {
-            return [parseInt(match[1])]
-          }
-          const colwidth = element.getAttribute('colwidth')
-          return colwidth ? [parseInt(colwidth)] : null
-        },
-        renderHTML: (attributes) => {
-          if (!attributes.colwidth || attributes.colwidth.length === 0) return {}
-          const width = attributes.colwidth[0]
-          return { style: `width: ${width}px` }
-        },
-      },
-    }
-  },
-})
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { createLowlight } from 'lowlight'
 import { ensureString } from "../../utils/components/form";
-import type { AnyExtension } from '@tiptap/core'
-import { Extension } from '@tiptap/core'
-import { Mark } from '@tiptap/core'
-import { Node } from '@tiptap/core'
+import { buildRichTextExtensions } from "../../utils/form/rich-text-extensions";
+import { injectRichTextCustomStyles } from "../../utils/form/rich-text-styles";
 import type { RichTextEditorConfig } from "../../../enfyra.config.types";
 import { enfyraConfig } from "../../../enfyra.config";
 
@@ -140,10 +45,7 @@ const minHeight = computed(() => initialHeight);
 const isMounted = ref(false);
 
 const lowlight = createLowlight();
-
-function camelToKebab(str: string): string {
-  return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-}
+const colorMode = useColorMode();
 
 const linkModalOpen = ref(false);
 const imageModalOpen = ref(false);
@@ -190,243 +92,11 @@ const toolbarButtons = computed<ButtonGroup[]>(() => {
   return result;
 });
 
-function resolveCssStyles(formatCss: any): { light?: Record<string, string>; dark?: Record<string, string>; shared?: Record<string, string> } {
-  if (!formatCss) return {};
-  if (typeof formatCss === 'function') {
-    const lightStyles = formatCss('light');
-    const darkStyles = formatCss('dark');
-    if (JSON.stringify(lightStyles) === JSON.stringify(darkStyles)) return { shared: lightStyles };
-    return { light: lightStyles, dark: darkStyles };
-  }
-  if (formatCss.dark !== undefined || formatCss.light !== undefined) {
-    const light = (formatCss.light && typeof formatCss.light === 'object') ? formatCss.light : {};
-    const dark = (formatCss.dark && typeof formatCss.dark === 'object') ? formatCss.dark : {};
-    return { light: Object.keys(light).length ? light : undefined, dark: Object.keys(dark).length ? dark : undefined };
-  }
-  return { shared: formatCss };
-}
-
-const METADATA_SCOPE = '.rich-text-editor .ProseMirror';
-
-const injectCustomStyles = () => {
-  const formats = effectiveConfig.value.formats;
-  if (!formats) return;
-
-  const styleId = 'custom-rich-text-formats';
-  let styleEl = document.getElementById(styleId);
-
-  if (!styleEl) {
-    styleEl = document.createElement('style');
-    styleEl.id = styleId;
-    document.head.appendChild(styleEl);
-  }
-
-  const cssRules: string[] = [];
-
-  const toRule = (selector: string, stylesObj: Record<string, string>) => {
-    const styles = Object.entries(stylesObj).map(([k, v]) => `${camelToKebab(k)}: ${v}`).join('; ');
-    if (styles) cssRules.push(`${selector} { ${styles} }`);
-  };
-
-  Object.keys(formats).forEach((key) => {
-    const format = formats![key];
-    if (!format) return;
-
-    const resolved = resolveCssStyles(format.css);
-
-    const toSelector = (tag: string, isSpan: boolean) =>
-      isSpan ? `${METADATA_SCOPE} .${key}` : `${METADATA_SCOPE} ${tag}`;
-
-    if (format.inline) {
-      const tag = format.tag || 'span';
-      const sel = toSelector(tag, tag === 'span');
-      if (resolved.shared) toRule(sel, resolved.shared);
-      if (resolved.light) toRule(`html:not(.dark) ${sel}`, resolved.light);
-      if (resolved.dark) toRule(`html.dark ${sel}`, resolved.dark);
-    } else {
-      const tag = format.tag || key;
-      const sel = `${METADATA_SCOPE} ${tag}`;
-      if (resolved.shared) toRule(sel, resolved.shared);
-      if (resolved.light) toRule(`html:not(.dark) ${sel}`, resolved.light);
-      if (resolved.dark) toRule(`html.dark ${sel}`, resolved.dark);
-    }
-  });
-
-  styleEl.textContent = cssRules.join('\n');
-};
-
-const createCustomFormatsExtension = (): Extension => {
-  const formats = effectiveConfig.value.formats;
-
-  const extensions: any[] = [];
-  const marks: any[] = [];
-  const nodes: any[] = [];
-
-  const colorMode = useColorMode();
-
-  Object.keys(formats || {}).forEach((key) => {
-    const format = formats![key];
-    if (!format) return;
-
-    const theme = colorMode.value as 'light' | 'dark';
-
-    let classes: string[] = [];
-    if (format.classes) {
-      if (typeof format.classes === 'function') {
-        const cls = format.classes(theme);
-        classes = Array.isArray(cls) ? cls : [cls];
-      } else {
-        classes = Array.isArray(format.classes) ? format.classes : [format.classes];
-      }
-    }
-
-    if (format.inline) {
-      const tag = format.tag || 'span';
-      const shouldAddKeyClass = tag === 'span';
-      const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
-      marks.push(Mark.create({
-        name: key,
-        addAttributes() {
-          const attrs: any = { ...format.attributes };
-          if (allClasses) attrs.class = { default: allClasses };
-          return attrs;
-        },
-        parseHTML() {
-          return [
-            {
-              tag,
-              getAttrs: (node: any) => {
-                if (tag !== 'span' || (node.classList && node.classList.contains(key))) {
-                  return {};
-                }
-                return false;
-              },
-            },
-          ];
-        },
-        renderHTML({ HTMLAttributes }) {
-          const attrs: any = {};
-          if (allClasses) attrs.class = allClasses;
-          return [tag, { ...attrs, ...HTMLAttributes }, 0];
-        },
-      }));
-    } else if (format.wrapper) {
-      const tag = format.tag || key;
-      const shouldAddKeyClass = !format.tag;
-      const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
-      nodes.push(Node.create({
-        name: key,
-        addAttributes() {
-          const attrs: any = { ...format.attributes };
-          if (allClasses) attrs.class = { default: allClasses };
-          return attrs;
-        },
-        content: 'block*',
-        group: 'block',
-        parseHTML() {
-          return [
-            {
-              tag,
-            },
-          ];
-        },
-        renderHTML({ HTMLAttributes }) {
-          return [tag, HTMLAttributes, 0];
-        },
-      }));
-    } else {
-      const tag = format.tag || key;
-      const shouldAddKeyClass = !format.tag;
-      const allClasses = shouldAddKeyClass ? [...classes, key].join(' ') : classes.join(' ');
-      nodes.push(Node.create({
-        name: key,
-        addAttributes() {
-          const attrs: any = { ...format.attributes };
-          if (allClasses) attrs.class = { default: allClasses };
-          return attrs;
-        },
-        content: 'inline*',
-        group: 'block',
-        parseHTML() {
-          return [
-            {
-              tag,
-            },
-          ];
-        },
-        renderHTML({ HTMLAttributes }) {
-          return [tag, HTMLAttributes, 0];
-        },
-      }));
-    }
-  });
-
-  return Extension.create({
-    name: 'customFormats',
-    addExtensions() {
-      return [...extensions, ...marks, ...nodes];
-    },
-  });
-};
-
 let lastEmittedHtml = ensureString(props.modelValue);
 
 const editor = useEditor({
   content: lastEmittedHtml,
-  extensions: [
-    StarterKit.configure({
-      codeBlock: false,
-      code: false,
-      underline: false,
-      link: false,
-      heading: {
-        levels: [1, 2, 3, 4, 5, 6],
-      },
-      bulletList: {
-        keepMarks: true,
-        keepAttributes: false,
-      },
-      orderedList: {
-        keepMarks: true,
-        keepAttributes: false,
-      },
-    }) as AnyExtension,
-    Placeholder.configure({
-      placeholder: 'Type something...',
-    }) as AnyExtension,
-    Underline,
-    TextAlign.configure({
-      types: ['heading', 'paragraph'],
-      alignments: ['left', 'center', 'right', 'justify'],
-      defaultAlignment: 'left',
-    }) as AnyExtension,
-    Link.configure({
-      openOnClick: false,
-    }) as AnyExtension,
-    Image.extend({
-      addAttributes() {
-        return {
-          ...this.parent?.(),
-          width: { default: null },
-          height: { default: null },
-        };
-      },
-    }) as AnyExtension,
-    Table.configure({
-      resizable: true,
-      handleWidth: 5,
-      cellMinWidth: 50,
-      lastColumnResizable: true,
-    }) as AnyExtension,
-    TableRow as AnyExtension,
-    CustomTableHeader as AnyExtension,
-    CustomTableCell as AnyExtension,
-    CodeBlockLowlight.configure({
-      lowlight,
-      defaultLanguage: 'auto',
-    }) as AnyExtension,
-    createCustomFormatsExtension(),
-  ],
+  extensions: buildRichTextExtensions(effectiveConfig.value, lowlight, colorMode.value as 'light' | 'dark'),
   editable: !props.disabled,
   onBlur: ({ editor }) => {
     try {
@@ -488,7 +158,7 @@ watch(
   effectiveConfig,
   () => {
     nextTick(() => {
-      injectCustomStyles();
+      injectRichTextCustomStyles(effectiveConfig.value);
     });
   },
   { immediate: true, deep: true }

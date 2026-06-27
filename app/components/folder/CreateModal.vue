@@ -95,6 +95,8 @@ function confirmDiscard() {
 <template>
   <CommonModal
     v-model:open="isOpen"
+    :cancel-action="{ label: 'Cancel', onClick: handleClose }"
+    :primary-action="{ label: 'Create Folder', icon: 'lucide:save', loading: createLoading, disabled: createLoading, onClick: handleCreate }"
   >
     <template #header>
       Create New Folder
@@ -114,40 +116,17 @@ function confirmDiscard() {
         </UForm>
       </template>
 
-      <template #footer>
-        <div class="flex justify-end gap-2 w-full">
-          <UButton
-            variant="outline"
-            color="error"
-            @click="handleClose"
-          >
-            Cancel
-          </UButton>
-          <UButton
-            variant="solid"
-            color="primary"
-            @click="handleCreate"
-            :loading="createLoading"
-            :disabled="createLoading"
-            icon="lucide:save"
-          >
-            Create Folder
-          </UButton>
-        </div>
-      </template>
     </CommonModal>
 
-  <CommonModal v-model:open="showDiscardModal">
+  <CommonModal
+    v-model:open="showDiscardModal"
+    :cancel-action="{ label: 'Cancel', onClick: () => (showDiscardModal = false) }"
+    :danger-action="{ label: 'Discard Changes', tone: 'danger', onClick: confirmDiscard }"
+  >
     <template #header>Discard Changes</template>
     <template #body>
       <div class="text-sm text-[var(--text-secondary)]">
         You have unsaved changes. Are you sure you want to close? All changes will be lost.
-      </div>
-    </template>
-    <template #footer>
-      <div class="flex justify-end gap-2 w-full">
-        <UButton variant="ghost" color="error" @click="showDiscardModal = false">Cancel</UButton>
-        <UButton @click="confirmDiscard">Discard Changes</UButton>
       </div>
     </template>
   </CommonModal>

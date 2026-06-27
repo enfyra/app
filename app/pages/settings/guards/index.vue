@@ -572,6 +572,13 @@ async function deleteGuard(guard: any) {
     v-model="showCreateGuardDrawer"
     :handle="false"
     direction="right"
+    :cancel-action="{ label: 'Cancel', onClick: () => (showCreateGuardDrawer = false) }"
+    :primary-action="{
+      label: 'Create Guard',
+      loading: createGuardLoading,
+      disabled: createGuardLoading,
+      onClick: createGuardFromTemplate,
+    }"
   >
     <template #header>
       <h2 class="text-xl font-semibold">Create Guard</h2>
@@ -637,24 +644,5 @@ async function deleteGuard(guard: any) {
       </div>
     </template>
 
-    <template #footer>
-      <div class="flex justify-end gap-3">
-        <UButton
-          variant="outline"
-          color="neutral"
-          @click="showCreateGuardDrawer = false"
-        >
-          Cancel
-        </UButton>
-        <UButton
-          color="primary"
-          :loading="createGuardLoading"
-          :disabled="createGuardLoading"
-          @click="createGuardFromTemplate"
-        >
-          Create Guard
-        </UButton>
-      </div>
-    </template>
   </CommonDrawer>
 </template>
