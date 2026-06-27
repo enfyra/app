@@ -262,6 +262,49 @@ button:focus-visible,
   border-radius: var(--radius-pill);
 }
 
+.eapp-icon-tile {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  aspect-ratio: 1 / 1;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  line-height: 1;
+}
+
+.eapp-icon-tile-sm {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.eapp-icon-tile-lg {
+  width: 3.25rem;
+  height: 3.25rem;
+}
+
+.eapp-icon-tile > :where(svg, span) {
+  flex-shrink: 0;
+}
+
+.eapp-primary-soft.eapp-radius-control:has(> :where(.iconify, svg):only-child),
+.eapp-status-success-soft.eapp-radius-control:has(> :where(.iconify, svg):only-child),
+.eapp-status-warning-soft.eapp-radius-control:has(> :where(.iconify, svg):only-child),
+.eapp-status-danger-soft.eapp-radius-control:has(> :where(.iconify, svg):only-child),
+.eapp-status-info-soft.eapp-radius-control:has(> :where(.iconify, svg):only-child),
+.eapp-status-neutral-soft.eapp-radius-control:has(> :where(.iconify, svg):only-child) {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  aspect-ratio: 1 / 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
 .rounded {
   border-radius: var(--radius-subcontrol);
 }
