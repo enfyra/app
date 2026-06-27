@@ -161,7 +161,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
                 :type="props.cancelAction.type || 'button'"
                 :form="props.cancelAction.form"
                 :variant="actionVariant(props.cancelAction, 'outline')"
-                :color="actionColor(props.cancelAction, 'error')"
+                :color="actionColor(props.cancelAction, 'neutral')"
                 @click="runAction(props.cancelAction, true)"
               />
               <UButton
