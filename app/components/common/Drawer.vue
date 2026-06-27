@@ -125,7 +125,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
     <template #footer>
       <div v-if="hasFooter" @click.stop>
         <slot name="footer" />
-        <div v-if="!slots.footer && hasManagedFooter" class="flex w-full items-center justify-between gap-3 border-t border-[var(--border-default)] pt-4">
+        <div v-if="!slots.footer && hasManagedFooter" class="flex w-full items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <div v-if="props.footerHint" class="hidden text-sm text-[var(--text-tertiary)] md:block">
               {{ props.footerHint }}
