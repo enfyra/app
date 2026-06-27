@@ -148,9 +148,7 @@ function camelToKebab(str: string): string {
 const linkModalOpen = ref(false);
 const imageModalOpen = ref(false);
 const tableMenuOpen = ref(false);
-const tableMenuRef = ref<HTMLDivElement>();
 const tableMenuStyle = ref<{ top: string; left: string } | null>(null);
-const tableModifyModalOpen = ref(false);
 const linkUrl = ref('');
 const imageUrl = ref('');
 const canUndo = ref(false);
@@ -688,63 +686,53 @@ const insertTable = () => {
   }
 };
 
+const closeTableMenu = () => {
+  tableMenuOpen.value = false;
+  tableMenuStyle.value = null;
+};
+
 const addRowBefore = () => {
   editor.value?.chain().focus().addRowBefore().run();
-  tableModifyModalOpen.value = false;
 };
 
 const addRowAfter = () => {
   editor.value?.chain().focus().addRowAfter().run();
-  tableModifyModalOpen.value = false;
 };
 
 const deleteRow = () => {
   editor.value?.chain().focus().deleteRow().run();
-  tableModifyModalOpen.value = false;
 };
 
 const addColumnBefore = () => {
   editor.value?.chain().focus().addColumnBefore().run();
-  tableModifyModalOpen.value = false;
 };
 
 const addColumnAfter = () => {
   editor.value?.chain().focus().addColumnAfter().run();
-  tableModifyModalOpen.value = false;
 };
 
 const deleteColumn = () => {
   editor.value?.chain().focus().deleteColumn().run();
-  tableModifyModalOpen.value = false;
 };
 
 const deleteTable = () => {
   editor.value?.chain().focus().deleteTable().run();
-  tableModifyModalOpen.value = false;
 };
 
 const toggleHeaderColumn = () => {
   editor.value?.chain().focus().toggleHeaderColumn().run();
-  tableModifyModalOpen.value = false;
 };
 
 const toggleHeaderRow = () => {
   editor.value?.chain().focus().toggleHeaderRow().run();
-  tableModifyModalOpen.value = false;
 };
 
 const mergeCells = () => {
   editor.value?.chain().focus().mergeCells().run();
-  tableModifyModalOpen.value = false;
 };
 
 const splitCell = () => {
   editor.value?.chain().focus().splitCell().run();
-  tableModifyModalOpen.value = false;
-};
-
-const applyTableSize = () => {
-  tableModifyModalOpen.value = false;
 };
 
 const toggleCodeBlock = () => {
@@ -889,27 +877,8 @@ onBeforeUnmount(() => {
   }
 });
 
-const handleClickOutside = (event: MouseEvent) => {
-  const target = event.target;
-  if (tableMenuRef.value && target instanceof window.Node && !tableMenuRef.value.contains(target)) {
-    tableMenuOpen.value = false;
-    tableMenuStyle.value = null;
-  }
-};
-
-watch(tableMenuOpen, (isOpen) => {
-  if (isOpen) {
-    nextTick(() => {
-      document.addEventListener('click', handleClickOutside);
-    });
-  } else {
-    document.removeEventListener('click', handleClickOutside);
-  }
-});
-
 onUnmounted(() => {
   isMounted.value = false;
-  document.removeEventListener('click', handleClickOutside);
 });
 
 
@@ -1017,260 +986,41 @@ onUnmounted(() => {
     </div>
     </div>
 
-    <Teleport to="body">
-      <div
-        v-if="tableMenuOpen && tableMenuStyle"
-        ref="tableMenuRef"
-        class="fixed z-50 bg-[var(--surface-default)] border border-[var(--border-strong)] rounded-md shadow-lg py-1 min-w-[180px]"
-        :style="{ top: tableMenuStyle.top, left: tableMenuStyle.left, maxHeight: '300px', overflowY: 'auto' }"
-        @click.stop
-      >
-        <div class="px-3 py-1 text-xs font-medium text-[var(--text-tertiary)] border-b border-[var(--border-default)]">
-          Table Options
-        </div>
-        <button
-          @click="addRowBefore"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:arrow-up" class="w-4 h-4" />
-          Add Row Before
-        </button>
-        <button
-          @click="addRowAfter"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:arrow-down" class="w-4 h-4" />
-          Add Row After
-        </button>
-        <button
-          @click="deleteRow"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:trash-2" class="w-4 h-4" />
-          Delete Row
-        </button>
-        <div class="border-t border-[var(--border-default)] my-1"></div>
-        <button
-          @click="addColumnBefore"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:arrow-left" class="w-4 h-4" />
-          Add Column Before
-        </button>
-        <button
-          @click="addColumnAfter"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:arrow-right" class="w-4 h-4" />
-          Add Column After
-        </button>
-        <button
-          @click="deleteColumn"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:trash-2" class="w-4 h-4" />
-          Delete Column
-        </button>
-        <div class="border-t border-[var(--border-default)] my-1"></div>
-        <button
-          @click="toggleHeaderRow"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:panel-top" class="w-4 h-4" />
-          Toggle Header Row
-        </button>
-        <button
-          @click="toggleHeaderColumn"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:columns" class="w-4 h-4" />
-          Toggle Header Column
-        </button>
-        <button
-          @click="mergeCells"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:combine" class="w-4 h-4" />
-          Merge Cells
-        </button>
-        <button
-          @click="splitCell"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--surface-muted)] flex items-center gap-2"
-        >
-          <Icon name="lucide:square" class="w-4 h-4" />
-          Split Cell
-        </button>
-        <div class="border-t border-[var(--border-default)] my-1"></div>
-        <button
-          @click="deleteTable"
-          class="w-full px-3 py-2 text-left text-sm hover:bg-[var(--state-danger-soft-bg-hover)] text-[var(--state-danger-soft-text)] flex items-center gap-2"
-        >
-          <Icon name="lucide:trash" class="w-4 h-4" />
-          Delete Table
-        </button>
-      </div>
-    </Teleport>
+    <FormRichTextTableMenu
+      v-if="tableMenuOpen"
+      :style="tableMenuStyle"
+      @close="closeTableMenu"
+      @add-row-before="addRowBefore"
+      @add-row-after="addRowAfter"
+      @delete-row="deleteRow"
+      @add-column-before="addColumnBefore"
+      @add-column-after="addColumnAfter"
+      @delete-column="deleteColumn"
+      @toggle-header-row="toggleHeaderRow"
+      @toggle-header-column="toggleHeaderColumn"
+      @merge-cells="mergeCells"
+      @split-cell="splitCell"
+      @delete-table="deleteTable"
+    />
 
+    <FormRichTextPromptModal
+      v-model:open="linkModalOpen"
+      v-model="linkUrl"
+      title="Add Link"
+      label="URL"
+      placeholder="https://example.com"
+      confirm-label="Add Link"
+      @confirm="confirmLink"
+    />
 
-    <CommonModal v-model:open="linkModalOpen">
-      <template #header>Add Link</template>
-      <template #body>
-        <div class="space-y-4">
-          <label class="block text-sm font-medium text-[var(--text-secondary)]">URL</label>
-          <input
-            v-model="linkUrl"
-            type="text"
-            placeholder="https://example.com"
-            autofocus
-            class="w-full px-3 py-2 border border-[var(--border-strong)] rounded-md bg-[var(--surface-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary-500"
-            @keydown.enter="confirmLink"
-          />
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <button
-            type="button"
-            class="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] rounded-md transition-colors"
-            @click="linkModalOpen = false"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="px-4 py-2 bg-[var(--md-primary)] text-white rounded-md hover:bg-primary-700 transition-colors"
-            @click="confirmLink"
-          >
-            Add Link
-          </button>
-        </div>
-      </template>
-    </CommonModal>
-
-    <CommonModal v-model:open="imageModalOpen">
-      <template #header>Add Image</template>
-      <template #body>
-        <div class="space-y-4">
-          <label class="block text-sm font-medium text-[var(--text-secondary)]">Image URL</label>
-          <input
-            v-model="imageUrl"
-            type="text"
-            placeholder="https://example.com/image.jpg"
-            autofocus
-            class="w-full px-3 py-2 border border-[var(--border-strong)] rounded-md bg-[var(--surface-default)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary-500"
-            @keydown.enter="confirmImage"
-          />
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <button
-            type="button"
-            class="px-4 py-2 text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] rounded-md transition-colors"
-            @click="imageModalOpen = false"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="px-4 py-2 bg-[var(--md-primary)] text-white rounded-md hover:bg-primary-700 transition-colors"
-            @click="confirmImage"
-          >
-            Add Image
-          </button>
-        </div>
-      </template>
-    </CommonModal>
-
-    <CommonModal v-model:open="tableModifyModalOpen">
-      <template #header>Table Settings</template>
-      <template #body>
-        <div class="grid grid-cols-3 gap-2">
-          <button
-            @click="addRowBefore"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:arrow-up" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Row Above</span>
-          </button>
-          <button
-            @click="addRowAfter"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:arrow-down" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Row Below</span>
-          </button>
-          <button
-            @click="deleteRow"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--state-danger-soft-bg-hover)] transition-colors"
-          >
-            <Icon name="lucide:trash-2" class="w-5 h-5 text-[var(--md-error)]" />
-            <span class="text-xs text-[var(--state-danger-soft-text)]">Delete Row</span>
-          </button>
-          <button
-            @click="addColumnBefore"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:arrow-left" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Col Left</span>
-          </button>
-          <button
-            @click="addColumnAfter"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:arrow-right" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Col Right</span>
-          </button>
-          <button
-            @click="deleteColumn"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--state-danger-soft-bg-hover)] transition-colors"
-          >
-            <Icon name="lucide:trash-2" class="w-5 h-5 text-[var(--md-error)]" />
-            <span class="text-xs text-[var(--state-danger-soft-text)]">Delete Col</span>
-          </button>
-          <button
-            @click="toggleHeaderRow"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:panel-top" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Header Row</span>
-          </button>
-          <button
-            @click="mergeCells"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:merge" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Merge</span>
-          </button>
-          <button
-            @click="splitCell"
-            class="flex flex-col items-center gap-1.5 p-3 rounded-lg hover:bg-[var(--surface-muted)] transition-colors"
-          >
-            <Icon name="lucide:split" class="w-5 h-5 text-[var(--text-tertiary)]" />
-            <span class="text-xs text-[var(--text-secondary)]">Split</span>
-          </button>
-        </div>
-        <div class="mt-4 pt-4 border-t border-[var(--border-default)]">
-          <button
-            @click="deleteTable"
-            class="w-full flex items-center justify-center gap-2 p-3 rounded-lg text-[var(--state-danger-soft-text)] hover:bg-[var(--state-danger-soft-bg-hover)] transition-colors"
-          >
-            <Icon name="lucide:trash" class="w-5 h-5" />
-            <span class="font-medium">Delete Table</span>
-          </button>
-        </div>
-      </template>
-      <template #footer>
-        <div class="flex justify-end">
-          <UButton
-            variant="ghost"
-            color="neutral"
-            @click="tableModifyModalOpen = false"
-          >
-            Close
-          </UButton>
-        </div>
-      </template>
-    </CommonModal>
+    <FormRichTextPromptModal
+      v-model:open="imageModalOpen"
+      v-model="imageUrl"
+      title="Add Image"
+      label="Image URL"
+      placeholder="https://example.com/image.jpg"
+      confirm-label="Add Image"
+      @confirm="confirmImage"
+    />
   </div>
 </template>
