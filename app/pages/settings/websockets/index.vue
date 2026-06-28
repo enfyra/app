@@ -88,7 +88,7 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-const pageIconColor = 'success';
+const pageIconColor = 'primary';
 
 const {
   data: apiData,

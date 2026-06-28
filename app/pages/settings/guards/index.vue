@@ -492,7 +492,7 @@ async function deleteGuard(guard: any) {
               :title="guard.name"
               :description="guard.description || (guard.isGlobal ? 'Global guard' : guard.route?.path || 'No route assigned')"
               icon="lucide:shield"
-              icon-color="warning"
+              icon-color="primary"
               :card-class="'cursor-pointer transition-all'"
               :content-loading="guardsRefreshing"
               @click="navigateTo(`/settings/guards/${getId(guard)}`)"

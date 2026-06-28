@@ -19,7 +19,7 @@ registerPageHeader({
   gradient: "purple",
 });
 
-const pageIconColor = 'warning';
+const pageIconColor = 'primary';
 
 const {
   data: apiData,
