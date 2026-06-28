@@ -153,8 +153,8 @@
     --action-neutral-disabled-bg: color-mix(in srgb, var(--md-on-surface) 8%, var(--md-surface));
     --action-neutral-disabled-text: var(--text-disabled);
 
-    --action-danger-bg: var(--danger-color);
-    --action-danger-bg-hover: color-mix(in srgb, var(--danger-color) 82%, var(--danger-on-surface));
+    --action-danger-bg: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--danger-color));
+    --action-danger-bg-hover: color-mix(in srgb, var(--danger-color) 82%, var(--action-danger-bg));
     --action-danger-bg-active: color-mix(in srgb, var(--danger-color) 70%, var(--danger-on-surface));
     --action-danger-text: var(--danger-on-color);
     --action-success-bg: var(--success-color);
@@ -436,10 +436,18 @@
   --block-muted: #28282e;
   --block-high: #303037;
 
-  --action-danger-bg: color-mix(in srgb, var(--danger-color) 48%, var(--block-base));
-  --action-danger-bg-hover: color-mix(in srgb, var(--danger-color) 58%, var(--block-base));
-  --action-danger-bg-active: color-mix(in srgb, var(--danger-color) 68%, var(--block-base));
-  --action-danger-text: var(--danger-on-surface);
+  --danger-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--md-error-container));
+  --danger-surface-hover: color-mix(in srgb, var(--md-error) 16%, var(--md-error-container));
+  --danger-surface-active: color-mix(in srgb, var(--md-error) 24%, var(--md-error-container));
+  --danger-on-surface: var(--md-on-error-container);
+  --danger-border: color-mix(in srgb, var(--md-error) 46%, transparent);
+  --danger-border-soft: color-mix(in srgb, var(--md-error) 30%, transparent);
+  --danger-ring: color-mix(in srgb, var(--md-error) 24%, transparent);
+  --danger-ghost-text: var(--md-error);
+  --action-danger-bg: var(--danger-surface);
+  --action-danger-bg-hover: var(--danger-surface-hover);
+  --action-danger-bg-active: var(--danger-surface-active);
+  --action-danger-text: var(--md-on-error-container);
 
   /* Dark theme is a harmonious neutral-dark canvas so neutral blocks, tinted
      borders and the accent never clash in temperature. Only borders, the accent
