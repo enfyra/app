@@ -1,5 +1,5 @@
 import { resolveComponent, markRaw } from "vue";
-import { compareMenuOrder } from "~/utils/menu-order";
+import { compareMenuOrder, sortMenuItems } from "~/utils/menu-order";
 import { findBestMenuRouteMatch, isDynamicMenuPath } from "~/utils/menu-route-patterns";
 
 function normalizePath(path?: string): string {
@@ -42,7 +42,7 @@ export function useMenuRegistry() {
         icon: item.icon || 'lucide:circle',
         route: normalizePath(item.route || item.path),
         position: (item as any).position || 'top' as const,
-        items: children.map(buildMenuTree),
+        items: sortMenuItems(children.map(buildMenuTree)),
         order: item.order || 0,
       };
     }
