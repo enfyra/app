@@ -20,3 +20,7 @@ export function compareMenuOrder(a: OrderedMenuLike, b: OrderedMenuLike) {
 
   return String(a.id || '').localeCompare(String(b.id || ''));
 }
+
+export function sortMenuItems<T extends OrderedMenuLike>(items: T[]): T[] {
+  return [...items].sort(compareMenuOrder);
+}
