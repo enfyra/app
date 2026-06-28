@@ -17,7 +17,7 @@ registerPageHeader({
   gradient: "purple",
 });
 
-const pageIconColor = 'success';
+const pageIconColor = 'primary';
 
 const {
   data: apiData,

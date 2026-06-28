@@ -88,7 +88,7 @@
           :title="event.eventName"
           :description="event.description || 'No description'"
           icon="lucide:zap"
-          icon-color="warning"
+          icon-color="primary"
           :card-class="'cursor-pointer'"
           @click="handleEditEvent(event)"
           :stats="[

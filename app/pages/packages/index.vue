@@ -23,13 +23,13 @@
         title="Server Packages"
         description="Manage server packages"
         icon="lucide:server"
-        icon-color="success"
-        :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-success/20 transition-all'"
+        icon-color="primary"
+        :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
         @click="navigateTo('/packages/backend')"
         :methods="[
           {
             label: 'Manage',
-            props: { variant: 'solid', color: 'success', size: 'md' },
+            props: { variant: 'solid', color: 'primary', size: 'md' },
             to: '/packages/backend',
             block: true,
           },
@@ -52,7 +52,7 @@
           icon="lucide:plus"
           label="Install Server Package"
           variant="outline"
-          color="success"
+          color="primary"
           size="md"
           to="/packages/install?type=server"
         />

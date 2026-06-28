@@ -109,7 +109,7 @@ registerPageHeader({
   gradient: "blue",
 });
 
-const pageIconColor = 'warning';
+const pageIconColor = 'primary';
 
 const {
   data: apiData,

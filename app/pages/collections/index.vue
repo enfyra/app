@@ -186,25 +186,6 @@ function getFieldCount(collectionName: string): number {
   ).length;
 }
 
-const collectionAccents = [
-  "collection-accent-blue",
-  "collection-accent-purple",
-  "collection-accent-cyan",
-  "collection-accent-emerald",
-  "collection-accent-amber",
-  "collection-accent-rose",
-];
-
-function getAccentForCollection(id: any): string {
-  const idStr = String(id);
-  let hash = 0;
-  for (let i = 0; i < idStr.length; i++) {
-    hash = (hash << 5) - hash + idStr.charCodeAt(i);
-    hash = hash & hash;
-  }
-  const index = Math.abs(hash) % collectionAccents.length;
-  return collectionAccents[index] || collectionAccents[0] || "collection-accent-blue";
-}
 </script>
 
 <template>
@@ -243,7 +224,7 @@ function getAccentForCollection(id: any): string {
             'flex items-center justify-center w-12 h-12 rounded-xl mb-5',
             collection.isSystem
               ? 'accent-tile accent-tile-error'
-              : `accent-tile ${getAccentForCollection(getId(collection))}`
+              : 'accent-tile accent-tile-primary'
           ]"
         >
           <div v-if="collectionsRefreshing" class="h-1/2 w-1/2 rounded-[var(--radius-subcontrol)] skeleton-gradient skeleton-pulse-slow" />
