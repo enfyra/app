@@ -51,12 +51,13 @@ function wrapWithCssLifecycle(
       components: component.components,
       setup(_props, { attrs, slots }) {
         const styleId = `ext-style-${extensionName}`;
+        const scopeValue = `ext-${extensionName}`;
 
         onMounted(() => {
           if (!document.getElementById(styleId)) {
             const s = document.createElement("style");
             s.id = styleId;
-            s.textContent = extensionCss;
+            s.textContent = `@scope ([data-enfyra-extension-scope="${scopeValue}"]) {\n${extensionCss}\n}`;
             document.head.appendChild(s);
           }
         });
@@ -65,7 +66,14 @@ function wrapWithCssLifecycle(
           document.getElementById(styleId)?.remove();
         });
 
-        return () => h(component, attrs, slots);
+        return () => h(
+          "div",
+          {
+            "data-enfyra-extension-scope": scopeValue,
+            style: { display: "contents" },
+          },
+          [h(component, attrs, slots)],
+        );
       },
     })
   );
