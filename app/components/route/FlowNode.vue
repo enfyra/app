@@ -144,9 +144,9 @@ const nodeClass = computed(() => {
     case 'prehook':
       return `${baseClass} flow-node-primary`;
     case 'handler':
-      return `${baseClass} border-success-200 dark:border-success-800 bg-success-50 dark:bg-success-900/20 hover:border-success-300 dark:hover:border-success-700`;
+      return `${baseClass} flow-node-success`;
     case 'posthook':
-      return `${baseClass} border-secondary-200 dark:border-secondary-800 bg-secondary-50 dark:bg-secondary-900/20 hover:border-secondary-300 dark:hover:border-secondary-700`;
+      return `${baseClass} flow-node-info`;
     default:
       return `${baseClass} border-[var(--border-default)] bg-[var(--surface-muted)]`;
   }
@@ -161,9 +161,9 @@ const iconClass = computed(() => {
     case 'prehook':
       return 'flow-node-primary-icon w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
     case 'handler':
-      return 'w-6 h-6 rounded bg-success-100 dark:bg-success-900/40 flex items-center justify-center flex-shrink-0 text-success-600 dark:text-success-400';
+      return 'flow-node-success-icon w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
     case 'posthook':
-      return 'w-6 h-6 rounded bg-secondary-100 dark:bg-secondary-900/40 flex items-center justify-center flex-shrink-0 text-secondary-600 dark:text-secondary-400';
+      return 'flow-node-info-icon w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
     default:
       return 'w-6 h-6 rounded bg-[var(--surface-muted)] flex items-center justify-center flex-shrink-0 text-[var(--text-tertiary)]';
   }
@@ -189,8 +189,8 @@ const iconName = computed(() => {
 
 <style scoped>
 .flow-node-primary {
-  border-color: color-mix(in srgb, var(--md-primary) 46%, transparent);
-  background: color-mix(in srgb, var(--md-primary) 24%, var(--surface-default));
+  border-color: color-mix(in srgb, var(--md-primary) 58%, var(--flow-node-border));
+  background: color-mix(in srgb, var(--md-primary) 18%, var(--flow-node-bg));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 18%, transparent);
 }
 
@@ -199,18 +199,51 @@ const iconName = computed(() => {
 }
 
 .flow-node-primary-title {
-  color: color-mix(in srgb, var(--md-primary) 38%, var(--text-primary));
+  color: color-mix(in srgb, var(--md-primary) 54%, var(--text-primary));
 }
 
 .flow-node-primary-icon {
-  color: var(--md-primary);
-  background: color-mix(in srgb, var(--md-primary) 30%, var(--surface-default));
+  color: color-mix(in srgb, var(--md-primary) 72%, var(--text-primary));
+  background: color-mix(in srgb, var(--md-primary) 28%, var(--flow-node-bg));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 34%, transparent);
 }
 
 .flow-node-global-badge {
-  color: color-mix(in srgb, var(--md-primary) 36%, var(--text-primary)) !important;
-  background: color-mix(in srgb, var(--md-primary) 18%, var(--surface-default)) !important;
+  color: color-mix(in srgb, var(--md-primary) 54%, var(--text-primary)) !important;
+  background: color-mix(in srgb, var(--md-primary) 20%, var(--flow-node-bg)) !important;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 34%, transparent);
+}
+
+.flow-node-success {
+  border-color: color-mix(in srgb, var(--success-color) 50%, var(--flow-node-border));
+  background: color-mix(in srgb, var(--success-color) 13%, var(--flow-node-bg));
+}
+
+.flow-node-success:hover {
+  border-color: color-mix(in srgb, var(--success-color) 72%, var(--flow-node-border));
+}
+
+.flow-node-info {
+  border-color: color-mix(in srgb, var(--info-color) 50%, var(--flow-node-border));
+  background: color-mix(in srgb, var(--info-color) 13%, var(--flow-node-bg));
+}
+
+.flow-node-info:hover {
+  border-color: color-mix(in srgb, var(--info-color) 72%, var(--flow-node-border));
+}
+
+.flow-node-success-icon,
+.flow-node-info-icon {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 28%, transparent);
+}
+
+.flow-node-success-icon {
+  color: color-mix(in srgb, var(--success-color) 72%, var(--text-primary));
+  background: color-mix(in srgb, var(--success-color) 26%, var(--flow-node-bg));
+}
+
+.flow-node-info-icon {
+  color: color-mix(in srgb, var(--info-color) 72%, var(--text-primary));
+  background: color-mix(in srgb, var(--info-color) 26%, var(--flow-node-bg));
 }
 </style>

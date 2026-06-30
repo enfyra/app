@@ -331,8 +331,12 @@
     --prose-list-color: var(--md-on-surface);
     --column-resize-handle: var(--md-primary);
 
-    --flow-node-bg: var(--md-surface-container-low);
-    --flow-node-border: var(--md-outline-variant);
+    --flow-surface-bg: var(--block-muted);
+    --flow-surface-border: var(--border-default);
+    --flow-edge: color-mix(in srgb, var(--text-secondary) 42%, transparent);
+    --flow-node-bg: var(--block-base);
+    --flow-node-border: color-mix(in srgb, var(--md-outline) 55%, var(--block-base));
+    --flow-node-shadow: 0 1px 2px 0 color-mix(in srgb, var(--md-scrim) 12%, transparent);
     --scrollbar-thumb: color-mix(in srgb, var(--md-on-surface) 40%, transparent);
   }
 }
@@ -457,6 +461,12 @@
   --shell-sidebar-bg: #131316;
   --shell-main-bg: #131316;
   --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 4%, transparent), transparent 28rem), #131316;
+  --flow-surface-bg: #151518;
+  --flow-surface-border: color-mix(in srgb, var(--md-outline) 58%, transparent);
+  --flow-edge: color-mix(in srgb, var(--text-secondary) 58%, transparent);
+  --flow-node-bg: color-mix(in srgb, var(--text-primary) 5%, var(--block-low));
+  --flow-node-border: color-mix(in srgb, var(--md-outline) 72%, transparent);
+  --flow-node-shadow: 0 0 0 1px color-mix(in srgb, var(--md-outline) 18%, transparent), 0 8px 18px color-mix(in srgb, #000 28%, transparent);
 
   /* Dark invalid-input + error chrome derive directly from Material error roles. */
 }

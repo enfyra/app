@@ -50,7 +50,7 @@
       <p class="text-xs text-[var(--state-warning-soft-text)]">Please add Available Methods in the form above to display the execution flow for each HTTP method.</p>
     </div>
 
-    <div v-else-if="allNodes.length > 0" class="h-[500px] border border-[var(--border-default)] rounded-lg overflow-hidden bg-[var(--surface-muted)]">
+    <div v-else-if="allNodes.length > 0" class="h-[500px] rounded-lg border border-[var(--flow-surface-border)] bg-[var(--flow-surface-bg)] overflow-hidden">
       <VueFlow
         ref="vueFlowRef"
         :nodes="allNodes"
@@ -270,7 +270,7 @@ const nodeTypes = markRaw({
             whiteSpace: 'nowrap',
             border: 'none',
             background: props.data.bg,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+            boxShadow: 'inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent), var(--shadow-xs)',
             transition: 'transform 120ms ease',
           },
           onMouseenter: (e: any) => { e.currentTarget.style.transform = 'scale(1.05)'; },
@@ -422,7 +422,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
   const actionBtnHeight = 28;
   const actionBtnSpacing = 24;
 
-  const edgeStyle = { stroke: 'var(--border-default)', strokeWidth: 2, strokeDasharray: '5,5' };
+  const edgeStyle = { stroke: 'var(--flow-edge)', strokeWidth: 2.5, strokeDasharray: '5,5' };
 
   methodList.forEach((group, groupIndex) => {
     const groupY = startY + (groupIndex * rowHeight);

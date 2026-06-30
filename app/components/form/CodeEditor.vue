@@ -717,11 +717,22 @@ function handleMouseUp(e?: MouseEvent) {
               <UButton size="xs" variant="ghost" icon="i-lucide-plus" @click="addTestQueryParam">Add</UButton>
             </div>
             <div class="space-y-1.5">
-              <div v-for="(param, idx) in testQueryParams" :key="idx" class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
-                <USwitch v-model="param.enabled" size="xs" class="flex-shrink-0" />
-                <UInput v-model="param.key" placeholder="key" class="w-full sm:w-[150px] font-mono text-xs" :disabled="!param.enabled" />
-                <UInput v-model="param.value" placeholder="value" class="w-full sm:flex-1 font-mono text-xs min-w-0" :disabled="!param.enabled" />
-                <UButton size="xs" variant="ghost" color="error" icon="i-lucide-x" class="flex-shrink-0" @click="testQueryParams.splice(idx, 1)" />
+              <div
+                v-for="(param, idx) in testQueryParams"
+                :key="idx"
+                class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[auto_minmax(8rem,0.7fr)_minmax(10rem,1fr)_auto]"
+              >
+                <USwitch v-model="param.enabled" size="xs" class="row-span-2 shrink-0 sm:row-span-1" />
+                <UInput v-model="param.key" placeholder="key" class="w-full min-w-0 font-mono text-xs" :disabled="!param.enabled" />
+                <UInput v-model="param.value" placeholder="value" class="col-start-2 w-full min-w-0 font-mono text-xs sm:col-start-auto" :disabled="!param.enabled" />
+                <UButton
+                  size="xs"
+                  variant="ghost"
+                  color="error"
+                  icon="i-lucide-x"
+                  class="col-start-3 row-span-2 row-start-1 h-8 w-8 shrink-0 justify-center p-0 sm:col-start-auto sm:row-span-1 sm:row-start-auto"
+                  @click="testQueryParams.splice(idx, 1)"
+                />
               </div>
             </div>
           </div>
@@ -729,11 +740,11 @@ function handleMouseUp(e?: MouseEvent) {
           <div>
             <h4 class="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Route Params</h4>
             <div v-if="testRouteParams.length > 0" class="space-y-1.5">
-              <div v-for="param in testRouteParams" :key="param.key" class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
-                <div class="w-full sm:w-[180px] rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] px-3 py-2 text-xs font-mono text-[var(--text-secondary)]">
+              <div v-for="param in testRouteParams" :key="param.key" class="grid grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)]">
+                <div class="w-full rounded-md border border-[var(--border-default)] bg-[var(--surface-muted)] px-3 py-2 text-xs font-mono text-[var(--text-secondary)]">
                   @PARAMS.{{ param.key }}
                 </div>
-                <UInput v-model="param.value" :placeholder="param.key" class="w-full sm:flex-1 font-mono text-xs min-w-0" />
+                <UInput v-model="param.value" :placeholder="param.key" class="w-full min-w-0 font-mono text-xs" />
               </div>
             </div>
             <div v-else class="rounded-md border border-dashed border-[var(--border-default)] p-3 text-xs text-[var(--text-tertiary)]">

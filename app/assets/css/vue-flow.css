@@ -1,10 +1,12 @@
 .vue-flow-container {
   width: 100%;
   height: 100%;
+  background: var(--flow-surface-bg);
 }
 
 
 .vue-flow__edge-path {
+  stroke: var(--flow-edge);
   stroke-dasharray: 5, 5;
   animation: dash 1s linear infinite;
 }
@@ -31,7 +33,7 @@
   border: 1px solid var(--flow-node-border);
   border-radius: 5px;
   padding: 6px 8px;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: var(--flow-node-shadow);
   background: var(--flow-node-bg);
   display: flex;
   align-items: center;
@@ -40,12 +42,12 @@
 }
 
 .flow-node:hover:not(.disabled-state) {
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--flow-node-shadow), 0 0 0 1px color-mix(in srgb, var(--text-primary) 8%, transparent);
   transform: translateY(-1px);
 }
 
 .flow-node.disabled-state {
-  opacity: 0.5;
+  opacity: 0.78;
   border-style: dashed;
   filter: grayscale(0.3);
 }
@@ -93,4 +95,3 @@
     box-shadow: 0 0 0 4px rgba(110, 231, 183, 0.2);
   }
 }
-

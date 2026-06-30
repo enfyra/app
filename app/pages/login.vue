@@ -1,68 +1,119 @@
 <template>
-  <div class="min-h-screen flex">
+  <div class="login-page min-h-screen flex">
     <div
-      class="hidden lg:flex lg:w-1/2 relative overflow-hidden"
-      style="background: var(--gradient-primary);"
+      class="login-hero hidden lg:flex lg:w-1/2 relative overflow-hidden"
     >
-      <div class="absolute inset-0">
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
-        <div class="absolute top-1/2 left-1/2 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-      </div>
-      
-      <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
+      <div class="login-hero-grid absolute inset-0"></div>
       
       <div class="relative z-10 flex flex-col justify-between p-16 w-full">
         <div>
           <div class="flex items-center gap-3 mb-8">
-            <div class="p-3 bg-white/10 backdrop-blur-sm rounded-2xl aspect-square flex items-center justify-center">
-              <UIcon name="lucide:shield-check" class="text-4xl text-white" />
+            <div class="login-brand-mark p-3 rounded-2xl aspect-square flex items-center justify-center">
+              <UIcon name="lucide:shield-check" class="text-4xl" />
             </div>
-            <span class="text-2xl font-bold text-white">Enfyra</span>
+            <span class="text-2xl font-bold">Enfyra</span>
           </div>
         </div>
         
         <div class="space-y-6">
-          <h2 class="text-5xl font-bold text-white leading-tight">
+          <h2 class="text-5xl font-bold leading-tight">
             Welcome to<br />
-            <span class="text-white/90">the Future</span>
+            <span>the Future</span>
           </h2>
-          <p class="text-lg text-white/85 max-w-md">
+          <p class="login-hero-copy text-lg max-w-md">
             Experience the next generation of application management. Secure, powerful, and beautifully simple.
           </p>
           
           <div class="flex gap-4 pt-4">
-            <div class="flex items-center gap-2 text-white/80">
+            <div class="login-hero-chip flex items-center gap-2">
               <UIcon name="lucide:check-circle" class="text-xl" />
               <span>Secure</span>
             </div>
-            <div class="flex items-center gap-2 text-white/80">
+            <div class="login-hero-chip flex items-center gap-2">
               <UIcon name="lucide:zap" class="text-xl" />
               <span>Fast</span>
             </div>
-            <div class="flex items-center gap-2 text-white/80">
+            <div class="login-hero-chip flex items-center gap-2">
               <UIcon name="lucide:layers" class="text-xl" />
               <span>Powerful</span>
             </div>
           </div>
         </div>
         
-        <div class="text-sm text-white/60">
+        <div class="login-hero-copy text-sm">
           © 2026 Enfyra App. All rights reserved.
         </div>
       </div>
     </div>
 
     <div
-      class="w-full lg:w-1/2 flex items-center justify-center p-8"
-      style="background: linear-gradient(135deg, var(--surface-muted), var(--surface-default), var(--state-primary-soft-bg));"
+      class="login-form-panel relative w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8"
     >
-      <div class="w-full max-w-md">
-        <div class="lg:hidden flex items-center gap-3 mb-8">
-          <div class="p-3 rounded-2xl bg-[var(--action-primary-bg)]">
-            <UIcon name="lucide:shield-check" class="text-3xl text-[var(--action-primary-text)]" />
+      <div class="absolute right-5 top-5 z-20 flex items-center gap-2">
+        <UButton
+          type="button"
+          size="lg"
+          variant="outline"
+          color="neutral"
+          :icon="themeIcon"
+          :aria-label="`Switch to ${isDark ? 'light' : 'dark'} theme`"
+          :title="themeLabel"
+          @click="toggleTheme"
+        />
+        <UPopover :content="{ align: 'end', sideOffset: 8 }">
+          <UButton
+            type="button"
+            size="lg"
+            variant="outline"
+            color="neutral"
+            icon="lucide:palette"
+            aria-label="Choose accent color"
+            title="Accent"
+          />
+          <template #content="{ close }">
+            <div class="w-48 space-y-1 p-2">
+              <div class="flex items-center justify-between gap-2 px-1 pb-1">
+                <div class="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Accent</div>
+                <UButton
+                  type="button"
+                  size="xs"
+                  variant="ghost"
+                  color="neutral"
+                  icon="lucide:x"
+                  aria-label="Close accent chooser"
+                  @click="close()"
+                />
+              </div>
+              <button
+                v-for="color in $primaryColor.colors"
+                :key="color.value"
+                type="button"
+                class="flex w-full items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)]"
+                :class="$primaryColor.current.value === color.value ? 'bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]' : ''"
+                :aria-label="`Use ${color.label} accent`"
+                :aria-pressed="$primaryColor.current.value === color.value"
+                :title="color.label"
+                @click="$primaryColor.set(color.value)"
+              >
+                <span class="h-4 w-4 shrink-0 rounded-full ring-1 ring-inset ring-[var(--border-default)]" :style="{ backgroundColor: color.swatch }" />
+                <span class="min-w-0 flex-1 truncate">{{ color.label }}</span>
+                <UIcon
+                  v-if="$primaryColor.current.value === color.value"
+                  name="lucide:check"
+                  class="h-4 w-4 shrink-0"
+                />
+              </button>
+            </div>
+          </template>
+        </UPopover>
+      </div>
+
+      <div class="w-full max-w-md pt-16 lg:pt-0">
+        <div class="lg:hidden mb-10 flex items-center gap-3">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--action-primary-bg)]">
+            <UIcon name="lucide:shield-check" class="text-2xl text-[var(--action-primary-text)]" />
           </div>
-          <span class="text-2xl font-bold text-[var(--text-primary)]">Enfyra App</span>
+          <span class="text-xl font-bold text-[var(--text-primary)]">Enfyra App</span>
         </div>
 
         <div class="mb-10">
@@ -223,6 +274,8 @@ const showDemoLogin = computed(() => {
 const { login, oauthLogin, fetchUser } = useAuth();
 const route = useRoute();
 const notify = useNotify();
+const colorMode = useColorMode();
+const { $primaryColor } = useNuxtApp();
 const demoLoading = ref(false);
 const oauthLoadingProvider = ref<OAuthProvider | null>(null);
 const form = reactive({
@@ -247,6 +300,13 @@ const {
 const oauthProviders = computed(
   () => oauthProviderData.value?.data ?? []
 );
+const isDark = computed(() => colorMode.value === "dark");
+const themeLabel = computed(() => (isDark.value ? "Dark" : "Light"));
+const themeIcon = computed(() => (isDark.value ? "lucide:moon" : "lucide:sun"));
+
+function toggleTheme() {
+  colorMode.preference = isDark.value ? "light" : "dark";
+}
 
 async function completeLogin() {
   await fetchUser({ fields: DEFAULT_ME_FIELDS });
@@ -358,22 +418,68 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-@keyframes float {
-  0%, 100% {
-    transform: translate(0, 0);
-  }
-  25% {
-    transform: translate(10px, -10px);
-  }
-  50% {
-    transform: translate(-5px, 5px);
-  }
-  75% {
-    transform: translate(5px, 10px);
-  }
+.login-page {
+  background: var(--bg-app);
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.login-hero {
+  color: var(--md-on-primary-container);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 30%, var(--block-base)), color-mix(in srgb, var(--md-primary) 10%, var(--block-low)));
+}
+
+.login-hero-grid {
+  opacity: 0.55;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--md-on-primary-container) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--md-on-primary-container) 8%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.login-brand-mark {
+  color: var(--md-on-primary-container);
+  background: color-mix(in srgb, var(--md-primary) 18%, var(--surface-default));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 26%, transparent);
+}
+
+.login-hero-copy,
+.login-hero-chip {
+  color: color-mix(in srgb, var(--md-on-primary-container) 78%, transparent);
+}
+
+.login-form-panel {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--md-primary) 8%, transparent), transparent 26rem),
+    linear-gradient(135deg, var(--surface-nested), var(--surface-default));
+}
+
+.dark .login-hero {
+  color: var(--text-primary);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 14%, var(--block-low)), color-mix(in srgb, var(--md-primary) 5%, var(--bg-app)));
+}
+
+.dark .login-hero-grid {
+  opacity: 0.35;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--text-primary) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 5%, transparent) 1px, transparent 1px);
+}
+
+.dark .login-brand-mark {
+  color: color-mix(in srgb, var(--md-primary) 72%, var(--text-primary));
+  background: color-mix(in srgb, var(--md-primary) 18%, var(--block-low));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 32%, transparent);
+}
+
+.dark .login-hero-copy,
+.dark .login-hero-chip {
+  color: var(--text-secondary);
+}
+
+.dark .login-form-panel {
+  background:
+    radial-gradient(circle at bottom right, color-mix(in srgb, var(--md-primary) 7%, transparent), transparent 28rem),
+    linear-gradient(135deg, var(--bg-app), var(--block-low));
 }
 </style>
