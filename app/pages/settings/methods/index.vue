@@ -82,8 +82,7 @@ const methods = computed(() => methodsData.value?.data || []);
 const methodNames = computed(() => new Set(methods.value.map((method) => getMethodLabel(method))));
 const currentMethodLabel = computed(() => normalizeMethodName(form.name));
 const canEditMethodName = computed(() => mode.value === 'create' || !form.isSystem);
-
-const formError = computed(() => {
+const methodError = computed(() => {
   const method = currentMethodLabel.value;
   if (!method) return 'Select a method.';
   if (!CUSTOM_METHOD_RE.test(method)) {
@@ -91,10 +90,19 @@ const formError = computed(() => {
   }
   const duplicate = methodNames.value.has(method) && (mode.value === 'create' || method !== form.name);
   if (duplicate) return `${method} already exists.`;
+  return null;
+});
+const colorError = computed(() => {
   if (!isHexColor(form.buttonColor) || !isHexColor(form.textColor)) {
     return 'Button and text colors must be full hex values.';
   }
   return null;
+});
+const visibleMethodError = computed(() => customMethod.value ? methodError.value : null);
+const visibleColorError = computed(() => methodError.value ? null : colorError.value);
+
+const formError = computed(() => {
+  return methodError.value || colorError.value;
 });
 
 const canSave = computed(() => !saving.value && !formError.value);
@@ -150,6 +158,14 @@ function selectMethod(method: string) {
   form.name = method;
   customMethod.value = false;
   applySuggestedColors(method);
+}
+
+function selectCustomMethod() {
+  if (!canEditMethodName.value) return;
+  customMethod.value = true;
+  if (!isHexColor(form.buttonColor) || !isHexColor(form.textColor)) {
+    applySuggestedColors(form.name || 'CUSTOM');
+  }
 }
 
 function openCreate() {
@@ -372,7 +388,7 @@ watch(
     >
       <template #header>
         <div class="flex items-center gap-3">
-          <div class="flex size-12 items-center justify-center rounded-xl bg-primary-100 text-primary-600 dark:bg-primary-950/40 dark:text-primary-300">
+          <div class="flex size-12 items-center justify-center rounded-xl bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)] ring-1 ring-inset ring-[var(--state-primary-outline-border)]">
             <UIcon name="lucide:badge" class="size-6" />
           </div>
           <div>
@@ -409,7 +425,7 @@ watch(
                 type="button"
                 :disabled="!canEditMethodName"
                 class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 font-mono text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
-                :class="isMethodSelected(method) ? 'border-primary-400 bg-primary-50 text-primary-700 dark:bg-primary-950/30 dark:text-primary-200' : 'border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]'"
+                :class="isMethodSelected(method) ? 'border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]' : 'border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]'"
                 @click="selectMethod(method)"
               >
                 {{ method }}
@@ -423,8 +439,8 @@ watch(
                 type="button"
                 :disabled="!canEditMethodName"
                 class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
-                :class="customMethod ? 'border-primary-400 bg-primary-50 text-primary-700 dark:bg-primary-950/30 dark:text-primary-200' : 'border-dashed border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]'"
-                @click="customMethod = true"
+                :class="customMethod ? 'border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]' : 'border-dashed border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]'"
+                @click="selectCustomMethod"
               >
                 <UIcon name="lucide:plus" class="size-4" />
                 Custom
@@ -440,6 +456,13 @@ watch(
               placeholder="CUSTOM_METHOD"
               @update:model-value="normalizeCustomMethodInput"
             />
+            <p
+              v-if="visibleMethodError"
+              class="mt-2 flex items-center gap-1.5 text-sm font-medium text-[var(--form-error-text)]"
+            >
+              <UIcon name="lucide:circle-alert" class="size-4 shrink-0" />
+              {{ visibleMethodError }}
+            </p>
           </section>
 
           <section>
@@ -452,10 +475,10 @@ watch(
           </section>
 
           <div
-            v-if="formError"
-            class="rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-sm font-medium text-error-700 dark:border-error-900/60 dark:bg-error-950/30 dark:text-error-300"
+            v-if="visibleColorError"
+            class="rounded-lg border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-4 py-3 text-sm font-medium text-[var(--state-danger-soft-text)]"
           >
-            {{ formError }}
+            {{ visibleColorError }}
           </div>
         </div>
       </template>

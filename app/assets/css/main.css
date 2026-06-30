@@ -24,22 +24,6 @@ button:focus-visible,
   animation-duration: 0s !important;
 }
 
-.eapp-theme-color-changing body {
-  pointer-events: none;
-}
-
-.eapp-theme-color-changing body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  pointer-events: auto;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--md-primary) 8%, transparent), transparent 28rem),
-    color-mix(in srgb, var(--bg-app) 18%, transparent);
-  backdrop-filter: blur(1px);
-}
-
 @layer base {
   html {
     font-family: 'Outfit', 'Manrope', system-ui, sans-serif;

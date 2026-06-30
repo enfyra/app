@@ -106,7 +106,7 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
             <span class="block truncate text-sm font-medium text-[var(--text-primary)]">
               {{ preset.label }}
             </span>
-            <span class="block truncate text-xs text-[var(--text-muted)]">
+            <span class="block truncate text-xs text-[var(--text-tertiary)]">
               Background {{ preset.buttonColor }} · Text {{ preset.textColor }}
             </span>
           </span>
@@ -114,7 +114,7 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
         <UIcon
           :name="selectedPresetLabel === preset.label ? 'lucide:check' : 'lucide:circle'"
           class="size-4 shrink-0"
-          :class="selectedPresetLabel === preset.label ? '' : 'text-[var(--text-muted)]'"
+          :class="selectedPresetLabel === preset.label ? '' : 'text-[var(--text-tertiary)]'"
           :style="selectedPresetLabel === preset.label ? { color: preset.textColor } : undefined"
         />
       </button>
@@ -122,16 +122,33 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
 
     <button
       type="button"
-      class="inline-flex items-center gap-2 rounded-md px-2 py-1 text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+      :disabled="disabled"
+      class="flex w-full items-center justify-between gap-3 rounded-lg border px-3 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-50"
+      :class="showCustom ? 'border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]' : 'border-[var(--border-default)] bg-[var(--surface-default)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]'"
       @click="showCustom = !showCustom"
     >
-      <UIcon name="lucide:palette" class="size-4" />
-      {{ showCustom ? 'Hide custom colors' : 'Use custom hex colors' }}
+      <span class="flex min-w-0 items-center gap-3">
+        <span
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
+          :class="showCustom ? 'bg-[var(--surface-default)] text-[var(--state-primary-soft-text)]' : 'bg-[var(--surface-muted)] text-[var(--text-secondary)]'"
+        >
+          <UIcon name="lucide:palette" class="size-4" />
+        </span>
+        <span class="min-w-0">
+          <span class="block text-sm font-semibold">
+            {{ showCustom ? 'Hide custom colors' : 'Use custom hex colors' }}
+          </span>
+          <span class="block text-xs text-[var(--text-tertiary)]">
+            Enter exact background and text hex values.
+          </span>
+        </span>
+      </span>
+      <UIcon :name="showCustom ? 'lucide:chevron-up' : 'lucide:chevron-down'" class="size-4 shrink-0" />
     </button>
 
     <div
       v-if="showCustom"
-      class="space-y-4 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-subtle)] p-3"
+      class="space-y-4 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-nested)] p-3"
     >
       <div
         class="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] px-3 py-2"
@@ -153,7 +170,7 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
 
       <div class="grid gap-3 sm:grid-cols-2">
         <label class="space-y-2">
-          <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+          <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
             Background color
           </span>
           <div class="flex gap-2">
@@ -176,7 +193,7 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
         </label>
 
         <label class="space-y-2">
-          <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+          <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">
             Text color
           </span>
           <div class="flex gap-2">
@@ -201,7 +218,7 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
 
       <p
         v-if="!isHexColor(buttonColor) || !isHexColor(textColor)"
-        class="text-xs text-error-500"
+        class="text-xs font-medium text-[var(--form-error-text)]"
       >
         Colors must be full hex values such as #1d4ed8.
       </p>
