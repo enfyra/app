@@ -16,6 +16,30 @@ button:focus-visible,
   outline-color: var(--theme-focus-ring-strong);
 }
 
+.eapp-theme-color-changing *,
+.eapp-theme-color-changing *::before,
+.eapp-theme-color-changing *::after {
+  transition-property: none !important;
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+}
+
+.eapp-theme-color-changing body {
+  pointer-events: none;
+}
+
+.eapp-theme-color-changing body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: auto;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--md-primary) 8%, transparent), transparent 28rem),
+    color-mix(in srgb, var(--bg-app) 18%, transparent);
+  backdrop-filter: blur(1px);
+}
+
 @layer base {
   html {
     font-family: 'Outfit', 'Manrope', system-ui, sans-serif;
@@ -582,6 +606,9 @@ button:focus-visible,
   --eapp-button-bg-hover: var(--action-success-bg-hover);
   --eapp-button-bg-active: var(--action-success-bg-active);
   --eapp-button-text: var(--action-success-text);
+  --eapp-button-disabled-bg: var(--state-success-soft-bg);
+  --eapp-button-disabled-text: var(--state-success-soft-text);
+  --eapp-button-disabled-ring: var(--state-success-outline-border);
 }
 
 .eapp-button-warning-solid {

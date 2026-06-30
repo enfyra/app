@@ -23,6 +23,8 @@ interface PrimaryColorService {
 
 export default defineNuxtPlugin(() => {
   const colorMode = useColorMode();
+  let themeTransitionFrame: number | null = null;
+  let themeTransitionTimeout: number | null = null;
 
   function initialPrimaryColor() {
     const storedColor = localStorage.getItem(PRIMARY_COLOR_STORAGE_KEY);
@@ -31,18 +33,61 @@ export default defineNuxtPlugin(() => {
 
   const current = useState<PrimaryColorValue>("primary-color", initialPrimaryColor);
 
+  function withThemeTransitionSuppressed(apply: () => void) {
+    const root = document.documentElement;
+    root.classList.add("eapp-theme-color-changing");
+
+    apply();
+
+    if (themeTransitionFrame !== null) {
+      window.cancelAnimationFrame(themeTransitionFrame);
+      themeTransitionFrame = null;
+    }
+    if (themeTransitionTimeout !== null) {
+      window.clearTimeout(themeTransitionTimeout);
+      themeTransitionTimeout = null;
+    }
+
+    themeTransitionFrame = window.requestAnimationFrame(() => {
+      themeTransitionFrame = window.requestAnimationFrame(() => {
+        themeTransitionFrame = null;
+        themeTransitionTimeout = window.setTimeout(() => {
+          themeTransitionTimeout = null;
+          root.classList.remove("eapp-theme-color-changing");
+        }, 120);
+      });
+    });
+  }
+
   function syncPrimaryColorStyle(primary: PrimaryColorValue) {
-    const existingElements = Array.from(document.querySelectorAll<HTMLStyleElement>(`style#${PRIMARY_COLOR_STYLE_ID}`));
-    let element = existingElements[0];
+    const element = document.getElementById(PRIMARY_COLOR_STYLE_ID) as HTMLStyleElement | null;
+
+    if (!element) {
+      const element = document.createElement("style");
+      element.id = PRIMARY_COLOR_STYLE_ID;
+      element.textContent = getPrimaryColorStyle(primary);
+      document.head.appendChild(element);
+      return;
+    }
+
+    if (element.textContent !== getPrimaryColorStyle(primary)) {
+      element.textContent = getPrimaryColorStyle(primary);
+    }
+
+    document.querySelectorAll<HTMLStyleElement>(`style#${PRIMARY_COLOR_STYLE_ID}`).forEach((duplicate, index) => {
+      if (index > 0) duplicate.remove();
+    });
+  }
+
+  function ensurePrimaryColorStyle(primary: PrimaryColorValue) {
+    let element = document.getElementById(PRIMARY_COLOR_STYLE_ID) as HTMLStyleElement | null;
 
     if (!element) {
       element = document.createElement("style");
       element.id = PRIMARY_COLOR_STYLE_ID;
+      element.textContent = getPrimaryColorStyle(primary);
+      document.head.appendChild(element);
     }
-
-    existingElements.slice(1).forEach((duplicate) => duplicate.remove());
-    element.textContent = getPrimaryColorStyle(primary);
-    document.head.appendChild(element);
   }
 
   function syncThemeColorMeta(primary: PrimaryColorValue) {
@@ -60,22 +105,35 @@ export default defineNuxtPlugin(() => {
 
   function setPrimaryColor(value: string | null) {
     const primary = normalizePrimaryColor(value);
+    if (primary === current.value) return;
 
-    current.value = primary;
-    updateAppConfig({
-      ui: {
-        colors: {
-          primary,
+    withThemeTransitionSuppressed(() => {
+      current.value = primary;
+      updateAppConfig({
+        ui: {
+          colors: {
+            primary,
+          },
         },
-      },
-    });
+      });
 
-    localStorage.setItem(PRIMARY_COLOR_STORAGE_KEY, primary);
-    syncPrimaryColorStyle(primary);
-    syncThemeColorMeta(primary);
+      localStorage.setItem(PRIMARY_COLOR_STORAGE_KEY, primary);
+      syncPrimaryColorStyle(primary);
+      syncThemeColorMeta(primary);
+    });
   }
 
-  setPrimaryColor(initialPrimaryColor());
+  const initial = initialPrimaryColor();
+  current.value = initial;
+  updateAppConfig({
+    ui: {
+      colors: {
+        primary: initial,
+      },
+    },
+  });
+  ensurePrimaryColorStyle(initial);
+  syncThemeColorMeta(initial);
   watch(() => colorMode.value, () => syncThemeColorMeta(current.value));
 
   return {
