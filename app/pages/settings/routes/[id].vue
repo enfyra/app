@@ -86,7 +86,9 @@ async function deleteRoute() {
   notify.success('Success', 'Route deleted successfully')
 
   await retryUntilFresh(
-    () => loadRoutes(),
+    async () => {
+      await loadRoutes()
+    },
     () => routes.value.some((r: any) => String(getId(r)) === routeId.value),
   )
 

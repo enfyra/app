@@ -3,6 +3,7 @@ const route = useRoute();
 const router = useRouter();
 const { menuGroups } = useMenuRegistry();
 const { menuDefinitionsPending } = useMenuApi();
+const { routesLoading, routesFetched } = useRoutes();
 const { checkPermissionCondition } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
@@ -84,11 +85,13 @@ function isRouteExactActive(itemRoute?: string): boolean {
 
 function convertItem(item: any): any {
   const itemRoute = item.route || item.path || undefined;
+  const isDataItem = item.id === "data" || itemRoute === "/data" || item.label === "Data";
   const result: any = {
     id: item.id,
     label: item.label,
     icon: item.icon || 'lucide:circle',
     count: item.count || item.badge,
+    loading: isDataItem && routesLoading.value && !routesFetched.value,
   };
 
   if (item.items?.length) {
@@ -114,7 +117,9 @@ const navigationItems = computed(() => {
     if (!group.items || group.items.length === 0) {
       const groupRoute = group.route || group.path || undefined;
       if (!groupRoute) continue;
+      const isDataGroup = group.id === "data" || groupRoute === "/data" || group.label === "Data";
       groups.push([{
+        id: group.id,
         label: group.label,
         icon: group.icon,
         to: groupRoute,
@@ -122,6 +127,7 @@ const navigationItems = computed(() => {
         count: group.count || group.badge,
         collapsible: group.type === 'Dropdown Menu',
         children: [],
+        loading: isDataGroup && routesLoading.value && !routesFetched.value,
       }]);
       continue;
     }
@@ -304,7 +310,7 @@ onUnmounted(() => {
 
 .app-sidebar-menu-skeleton {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -314,6 +320,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 10px;
   min-height: 40px;
+  background: color-mix(in srgb, var(--nav-item-hover-bg) 34%, transparent);
   border-radius: var(--radius-control);
   padding: 0 10px;
 }
@@ -326,26 +333,16 @@ onUnmounted(() => {
 }
 
 .app-sidebar-menu-skeleton-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: var(--radius-subcontrol);
 }
 
 .app-sidebar-menu-skeleton-label {
-  height: 12px;
+  height: 11px;
   min-width: 48px;
   max-width: 148px;
   border-radius: var(--radius-pill);
-}
-
-.sidebar-menu-loading-enter-active,
-.sidebar-menu-loading-leave-active {
-  transition: opacity 120ms ease;
-}
-
-.sidebar-menu-loading-enter-from,
-.sidebar-menu-loading-leave-to {
-  opacity: 0;
 }
 
 .eapp-sidebar:deep([data-slot="container"]) {

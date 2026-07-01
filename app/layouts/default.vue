@@ -96,6 +96,12 @@ await Promise.all([
   useMenuInit(),
   useGlobalExtensionsInit({ throwOnError: true }),
 ]);
+const { loadRoutes } = useRoutes();
+void loadRoutes().then((loadedRoutes) => {
+  if (!loadedRoutes) return;
+  const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
+  registerDataMenuItemsFromRoutes(loadedRoutes);
+});
 const { markInitialReady } = useInitialLoading();
 markInitialReady();
 useAppSettings();

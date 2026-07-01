@@ -37,7 +37,25 @@ function toggleMenu(item: any) {
 }
 
 function shouldUseDots(item: any): boolean {
-  return props.useDots || item.id === "data" || item.to === "/data" || item.label === "Data";
+  return props.useDots || isDataMenuItem(item);
+}
+
+function isDataMenuItem(item: any): boolean {
+  return item.id === "data" || item.to === "/data" || item.label === "Data";
+}
+
+function skeletonWidths(item: any): string[] {
+  return isDataMenuItem(item)
+    ? ["74%", "58%", "66%"]
+    : ["68%", "52%"];
+}
+
+function isEmptyDataMenuItem(item: any): boolean {
+  return isDataMenuItem(item) && !item.children?.length && !item.loading;
+}
+
+function isDisabledParent(item: any): boolean {
+  return !item.children?.length && !item.loading;
 }
 
 function notificationFor(item: any) {
@@ -159,7 +177,7 @@ watch(
         />
       </NuxtLink>
 
-      <div v-else class="app-sidebar-collapse" :class="{ collapsed: props.collapsed, empty: !item.children?.length }">
+      <div v-else class="app-sidebar-collapse" :class="{ collapsed: props.collapsed, empty: !item.children?.length && !item.loading }">
         <button
           type="button"
           class="app-sidebar-link"
@@ -168,12 +186,13 @@ watch(
             collapsed: props.collapsed,
             'with-collapse': !props.collapsed,
             'with-count': hasNotification(item),
-            disabled: !item.children?.length
+            disabled: isDisabledParent(item),
+            'empty-data': isEmptyDataMenuItem(item)
           }"
           :title="props.collapsed ? item.label : undefined"
           :aria-expanded="isMenuOpen(item)"
-          :aria-disabled="!item.children?.length"
-          :disabled="!item.children?.length"
+          :aria-disabled="isDisabledParent(item)"
+          :disabled="isDisabledParent(item)"
           @click="toggleMenu(item)"
         >
           <UIcon
@@ -204,7 +223,7 @@ watch(
             :title="notificationTitle(item)"
           />
           <UIcon
-            v-if="!props.collapsed && item.children?.length"
+            v-if="!props.collapsed && (item.children?.length || item.loading)"
             name="lucide:chevron-down"
             class="app-sidebar-chevron"
             :class="{ open: isMenuOpen(item), hidden: !props.labelsVisible }"
@@ -221,16 +240,35 @@ watch(
           @after-leave="afterChildrenLeave"
         >
           <div
-            v-if="item.children?.length && !props.collapsed && isMenuOpen(item)"
+            v-if="(item.children?.length || item.loading) && !props.collapsed && isMenuOpen(item)"
             class="app-sidebar-children"
           >
             <SidebarMenuTree
+              v-if="item.children?.length"
               :items="item.children"
               :collapsed="props.collapsed"
               :labels-visible="props.labelsVisible"
               :level="props.level + 1"
               :use-dots="shouldUseDots(item)"
             />
+            <div
+              v-else-if="item.loading"
+              class="app-sidebar-child-skeleton"
+              :class="{ dots: shouldUseDots(item) }"
+              aria-label="Loading data menu"
+            >
+              <div
+                v-for="(width, index) in skeletonWidths(item)"
+                :key="`${menuKey(item)}-loading-${index}`"
+                class="app-sidebar-child-skeleton-row"
+              >
+                <span class="app-sidebar-child-skeleton-dot skeleton-gradient skeleton-pulse-slow" />
+                <span
+                  class="app-sidebar-child-skeleton-label skeleton-gradient skeleton-pulse-slow"
+                  :style="{ width }"
+                />
+              </div>
+            </div>
           </div>
         </Transition>
       </div>
@@ -254,6 +292,38 @@ watch(
 
 .app-sidebar-children {
   overflow: hidden;
+}
+
+.app-sidebar-child-skeleton {
+  display: grid;
+  gap: 1px;
+  margin: 1px 0 8px 12px;
+  padding-left: 12px;
+  border-left: 1px solid var(--nav-child-border);
+}
+
+.app-sidebar-child-skeleton-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 30px;
+  border-radius: var(--radius-subcontrol);
+  padding: 0 8px;
+}
+
+.app-sidebar-child-skeleton-dot {
+  width: 4px;
+  height: 4px;
+  justify-self: center;
+  border-radius: 999px;
+}
+
+.app-sidebar-child-skeleton-label {
+  height: 10px;
+  min-width: 48px;
+  max-width: 128px;
+  border-radius: var(--radius-pill);
 }
 
 .sidebar-children-enter-active,
@@ -352,6 +422,15 @@ watch(
   cursor: not-allowed;
   opacity: 0.42;
   box-shadow: none;
+}
+
+.app-sidebar-link.empty-data,
+.app-sidebar-link.empty-data:hover,
+.app-sidebar-link.empty-data:disabled,
+.app-sidebar-link.empty-data[aria-disabled="true"] {
+  background: transparent;
+  color: var(--text-tertiary);
+  opacity: 1;
 }
 
 .app-sidebar-link.active {

@@ -1,8 +1,11 @@
+let loadRoutesPromise: Promise<any[] | null> | null = null;
+
 export function useRoutes() {
   const routes = useState<any[]>('routes:all', () => [])
   const tableRoutesMap = useState<Record<string, string>>('routes:table:map', () => ({}))
+  const routesLoading = useState<boolean>('routes:loading', () => false)
+  const routesFetched = useState<boolean>('routes:fetched', () => false)
   const { getId } = useDatabase();
-
   const {
     data: routesData,
     execute: executeRoutes
@@ -17,22 +20,35 @@ export function useRoutes() {
   })
   
   async function loadRoutes() {
-    const response = await executeRoutes()
-    if (!response) return null
-    const allRoutes = routesData.value?.data || []
-    
-    const mapping: Record<string, string> = {}
-    for (const route of allRoutes) {
-      const tableId = getId(route.mainTable);
-      if (tableId) {
-        mapping[tableId] = route.path
+    if (loadRoutesPromise) return loadRoutesPromise
+
+    loadRoutesPromise = (async () => {
+      routesLoading.value = true
+      try {
+        const response = await executeRoutes()
+        if (!response) return null
+        const allRoutes = routesData.value?.data || []
+        
+        const mapping: Record<string, string> = {}
+        for (const route of allRoutes) {
+          const tableId = getId(route.mainTable);
+          if (tableId) {
+            mapping[tableId] = route.path
+          }
+        }
+        
+        routes.value = allRoutes
+        tableRoutesMap.value = mapping
+        routesFetched.value = true
+        
+        return allRoutes
+      } finally {
+        routesLoading.value = false
+        loadRoutesPromise = null
       }
-    }
-    
-    routes.value = allRoutes
-    tableRoutesMap.value = mapping
-    
-    return allRoutes
+    })()
+
+    return loadRoutesPromise
   }
   
   function getRouteForTableId(tableId: string | number, schemas?: any): string {
@@ -76,6 +92,8 @@ export function useRoutes() {
   
   return {
     routes: readonly(routes),
+    routesLoading: readonly(routesLoading),
+    routesFetched: readonly(routesFetched),
     loadRoutes,
     ensureRoutesLoaded,
     getRouteForTableId,
