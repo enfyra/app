@@ -2,7 +2,7 @@ import type { MenuApiItem } from '~/types';
 import { EXTENSION_MENU_METADATA_FIELDS, prefixFields } from '~/utils/extension-fields';
 import { compareMenuOrder } from '~/utils/menu-order';
 
-const MENU_DEFINITION_FIELDS = "*,parent.*,children.*,sidebar.*";
+const MENU_DEFINITION_FIELDS = "*,parent.*,sidebar.*";
 const MENU_DEFINITION_FIELDS_WITH_EXTENSIONS = `${MENU_DEFINITION_FIELDS},${prefixFields("extension", EXTENSION_MENU_METADATA_FIELDS)}`;
 
 type FetchMenuDefinitionsOptions = {
