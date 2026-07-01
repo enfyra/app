@@ -96,14 +96,20 @@ await Promise.all([
   useMenuInit(),
   useGlobalExtensionsInit({ throwOnError: true }),
 ]);
-const { loadRoutes } = useRoutes();
-void loadRoutes().then((loadedRoutes) => {
-  if (!loadedRoutes) return;
-  const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
-  registerDataMenuItemsFromRoutes(loadedRoutes);
-});
 const { markInitialReady } = useInitialLoading();
 markInitialReady();
+if (import.meta.client) {
+  void nextTick(() => {
+    requestAnimationFrame(() => {
+      const { loadRoutes } = useRoutes();
+      void loadRoutes().then((loadedRoutes) => {
+        if (!loadedRoutes) return;
+        const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
+        registerDataMenuItemsFromRoutes(loadedRoutes);
+      });
+    });
+  });
+}
 useAppSettings();
 useRouterErrorHandler();
 useMobileMenuAction();
