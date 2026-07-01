@@ -1,9 +1,21 @@
 import type { MenuApiItem } from '~/types';
+import { EXTENSION_MENU_METADATA_FIELDS, prefixFields } from '~/utils/extension-fields';
 import { compareMenuOrder } from '~/utils/menu-order';
 
+const MENU_DEFINITION_FIELDS = "*,parent.*,children.*,sidebar.*";
+const MENU_DEFINITION_FIELDS_WITH_EXTENSIONS = `${MENU_DEFINITION_FIELDS},${prefixFields("extension", EXTENSION_MENU_METADATA_FIELDS)}`;
+
+type FetchMenuDefinitionsOptions = {
+  includeExtensions?: boolean;
+  showSidebarSkeleton?: boolean;
+};
+
 export const useMenuApi = () => {
-  const sharedMenuDefinitions = useState<{ data: MenuApiItem[] } | null>("menu-definitions", () => null);
+  const sharedMenuDefinitionsBase = useState<{ data: MenuApiItem[] } | null>("menu-definitions", () => null);
+  const sharedMenuDefinitionsWithExtensions = useState<{ data: MenuApiItem[] } | null>("menu-definitions-with-extensions", () => null);
   const sharedMenuDefinitionsPending = useState<boolean>("menu-definitions-pending", () => false);
+  const sharedMenuDefinitionsSidebarPendingCount = useState<number>("menu-definitions-sidebar-pending-count", () => 0);
+  const menuDefinitionFields = useState<string>("menu-definitions-fields", () => MENU_DEFINITION_FIELDS);
 
   const {
     data: menuDefinitions,
@@ -12,32 +24,46 @@ export const useMenuApi = () => {
   } = useApi<{ data: MenuApiItem[] }>(() => "/enfyra_menu", {
     query: computed(() => ({
       limit: 0,
-      fields: "*,parent.*,children.*,sidebar.*,extension.*",
+      fields: menuDefinitionFields.value,
       sort: "order,label,path,id",
     })),
     errorContext: "Fetch Menu Definitions",
   });
 
-  watch(menuDefinitions, (newVal) => {
-    if (newVal) {
-      sharedMenuDefinitions.value = newVal;
-    }
-  }, { immediate: true, deep: true });
+  const wrappedFetchMenuDefinitions = async (options: FetchMenuDefinitionsOptions = {}) => {
+    const includeExtensions = options.includeExtensions === true;
+    const showSidebarSkeleton = options.showSidebarSkeleton !== false;
+    menuDefinitionFields.value = options.includeExtensions
+      ? MENU_DEFINITION_FIELDS_WITH_EXTENSIONS
+      : MENU_DEFINITION_FIELDS;
 
-  watch(menuDefinitionsPending, (newVal) => {
-    sharedMenuDefinitionsPending.value = newVal;
-  }, { immediate: true });
-
-  const wrappedFetchMenuDefinitions = async () => {
-    const result = await fetchMenuDefinitions();
-    if (result && menuDefinitions.value) {
-      sharedMenuDefinitions.value = menuDefinitions.value;
+    if (showSidebarSkeleton) {
+      sharedMenuDefinitionsSidebarPendingCount.value += 1;
+      sharedMenuDefinitionsPending.value = true;
     }
-    return result;
+
+    try {
+      const result = await fetchMenuDefinitions();
+      if (result && menuDefinitions.value) {
+        if (includeExtensions) {
+          sharedMenuDefinitionsWithExtensions.value = menuDefinitions.value;
+        } else {
+          sharedMenuDefinitionsBase.value = menuDefinitions.value;
+        }
+      }
+      return result;
+    } finally {
+      if (showSidebarSkeleton) {
+        sharedMenuDefinitionsSidebarPendingCount.value = Math.max(0, sharedMenuDefinitionsSidebarPendingCount.value - 1);
+        sharedMenuDefinitionsPending.value = sharedMenuDefinitionsSidebarPendingCount.value > 0;
+      }
+    }
   };
 
-  const finalMenuDefinitions = computed(() => sharedMenuDefinitions.value || menuDefinitions.value);
-  const finalPending = computed(() => sharedMenuDefinitionsPending.value || menuDefinitionsPending.value);
+  const finalMenuDefinitions = computed(() =>
+    sharedMenuDefinitionsWithExtensions.value || sharedMenuDefinitionsBase.value || menuDefinitions.value
+  );
+  const finalPending = computed(() => sharedMenuDefinitionsPending.value);
 
   const getDropdownMenus = computed<MenuApiItem[]>(() => {
     const dropdownMenus = finalMenuDefinitions.value?.data || [];

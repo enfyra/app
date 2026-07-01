@@ -42,7 +42,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     </div>
   </div>
 
-  <div v-else-if="type === 'card'" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  <div v-else-if="type === 'card'" class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
     <div
       v-for="i in 8"
       :key="i"

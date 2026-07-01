@@ -1,4 +1,5 @@
 import type { ExtensionDefinition } from "~/types/extensions";
+import { EXTENSION_RUNTIME_FIELDS } from "~/utils/extension-fields";
 
 type GlobalExtensionRuntime = {
   key: string;
@@ -12,6 +13,7 @@ type GlobalExtensionRuntime = {
 const globalExtensions = shallowRef<GlobalExtensionRuntime[]>([]);
 const globalExtensionsPending = ref(false);
 const globalExtensionsError = ref<string | null>(null);
+let loadRunId = 0;
 
 function getRecordId(extension: ExtensionDefinition): string | number | null {
   return extension.id ?? extension._id ?? null;
@@ -20,16 +22,17 @@ function getRecordId(extension: ExtensionDefinition): string | number | null {
 export function useGlobalExtensions() {
   const { loadDynamicComponent } = useDynamicComponent();
 
-  const loadGlobalExtensions = async (options: { forceReload?: boolean } = {}) => {
+  const loadGlobalExtensions = async (options: { forceReload?: boolean; throwOnError?: boolean } = {}) => {
     if (!import.meta.client) return;
 
+    const runId = ++loadRunId;
     globalExtensionsPending.value = true;
     globalExtensionsError.value = null;
 
     try {
       const response = await $fetch<{ data?: ExtensionDefinition[] }>("/api/enfyra_extension", {
         query: {
-          fields: "*",
+          fields: EXTENSION_RUNTIME_FIELDS,
           limit: 0,
           sort: "id",
           filter: {
@@ -43,14 +46,13 @@ export function useGlobalExtensions() {
 
       const loaded = await Promise.all(
         (response.data ?? [])
-          .filter((extension) => extension.extensionId && (extension.compiledCode || extension.code))
+          .filter((extension) => extension.extensionId)
           .map(async (extension) => {
             const component = await loadDynamicComponent(
-              extension.compiledCode || extension.code,
+              extension.compiledCode!,
               extension.extensionId!,
               extension.updatedAt,
               options.forceReload,
-              extension.code,
             );
             const id = getRecordId(extension);
             return {
@@ -64,12 +66,22 @@ export function useGlobalExtensions() {
           }),
       );
 
-      globalExtensions.value = loaded;
+      if (runId === loadRunId) {
+        globalExtensions.value = loaded;
+      }
     } catch (error: any) {
-      globalExtensionsError.value = error?.message || String(error);
+      const message = error?.message || String(error);
+      if (runId === loadRunId) {
+        globalExtensionsError.value = message;
+      }
       console.error("[Global extensions] Failed to load", error);
+      if (options.throwOnError) {
+        throw error;
+      }
     } finally {
-      globalExtensionsPending.value = false;
+      if (runId === loadRunId) {
+        globalExtensionsPending.value = false;
+      }
     }
   };
 

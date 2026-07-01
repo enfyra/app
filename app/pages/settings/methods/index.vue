@@ -30,8 +30,6 @@ registerPageHeader({
   gradient: 'purple',
 });
 
-const methodsCache = useState<any[]>('methods-cache', () => []);
-const methodsLoaded = useState<boolean>('methods-loaded', () => false);
 const drawerOpen = ref(false);
 const mode = ref<'create' | 'edit'>('create');
 const saving = ref(false);
@@ -78,7 +76,11 @@ const { execute: updateMethod } = useApi('/enfyra_method', {
   disableErrorPage: true,
 });
 
-const methods = computed(() => methodsData.value?.data || []);
+const {
+  items: methods,
+  showInitialLoading,
+  isRefreshing: methodsRefreshing,
+} = useStableListState(() => methodsData.value?.data, () => loading.value);
 const methodNames = computed(() => new Set(methods.value.map((method) => getMethodLabel(method))));
 const currentMethodLabel = computed(() => normalizeMethodName(form.name));
 const canEditMethodName = computed(() => mode.value === 'create' || !form.isSystem);
@@ -118,13 +120,6 @@ const hasUnsavedChanges = computed(() => (
 const visibleMethodOptions = computed(() => {
   if (mode.value === 'edit') return METHOD_OPTIONS;
   return METHOD_OPTIONS.filter((method) => !methodNames.value.has(method));
-});
-
-watch(methodsData, (data) => {
-  if (data?.data) {
-    methodsCache.value = data.data;
-    methodsLoaded.value = true;
-  }
 });
 
 function resetForm() {
@@ -307,7 +302,7 @@ watch(
 <template>
   <div class="space-y-6">
     <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-default)]">
-      <div v-if="loading && !methods.length" class="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-3">
+      <div v-if="showInitialLoading" class="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-3">
         <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-xl" />
       </div>
 
@@ -329,6 +324,7 @@ watch(
           :key="getId(method) || getMethodLabel(method)"
           type="button"
           class="surface-card-hover group relative flex flex-col gap-4 rounded-xl p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring)]"
+          :class="methodsRefreshing ? 'opacity-75' : ''"
           @click="openEdit(method)"
         >
           <div class="flex items-center justify-between gap-2">

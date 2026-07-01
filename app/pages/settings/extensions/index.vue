@@ -94,7 +94,7 @@ const {
   execute: fetchExtensions,
 } = useApi(() => "/enfyra_extension", {
   query: computed(() => ({
-    fields: ["*", "menu.*"].join(","),
+    fields: EXTENSION_LIST_FIELDS,
     limit,
     page: page.value,
     meta: "*",

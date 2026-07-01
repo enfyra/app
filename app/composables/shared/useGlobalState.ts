@@ -2,6 +2,7 @@
 export const useGlobalState = () => {
   const settings = useState<any>("global:settings", () => {});
   const storageConfigs = useState<any[]>("global:storage:configs", () => []);
+  const storageConfigsFetched = useState<boolean>("global:storage:configs:fetched", () => false);
   const appPackages = useState<any[]>("global:app:packages", () => []);
   const packageCacheState = useState<Map<string, any>>("global:app:packages:cache", () => new Map());
   const packageCacheTimestamp = useState<number>("global:app:packages:cache:timestamp", () => 0);
@@ -35,6 +36,8 @@ export const useGlobalState = () => {
 
   const {
     data: storageConfigsData,
+    pending: storageConfigsPending,
+    error: storageConfigsError,
     execute: executeFetchStorageConfigs,
   } = useApi(() => "/enfyra_storage_config", {
     query: {
@@ -67,13 +70,25 @@ export const useGlobalState = () => {
   });
 
   async function fetchSetting() {
-    await executeFetchSettings();
+    const response = await executeFetchSettings();
+    if (!response) return null;
     settings.value = settingsData.value?.data[0] || {};
+    return response;
   }
 
   async function fetchStorageConfigs() {
-    await executeFetchStorageConfigs();
+    const response = await executeFetchStorageConfigs();
+    if (!response) {
+      storageConfigsFetched.value = false;
+      return null;
+    }
     storageConfigs.value = storageConfigsData.value?.data || [];
+    storageConfigsFetched.value = true;
+    return response;
+  }
+
+  function invalidateStorageConfigs() {
+    storageConfigsFetched.value = false;
   }
 
   async function fetchAppPackages() {
@@ -127,7 +142,11 @@ export const useGlobalState = () => {
     settings,
     fetchSetting,
     storageConfigs,
+    storageConfigsFetched,
+    storageConfigsPending,
+    storageConfigsError,
     fetchStorageConfigs,
+    invalidateStorageConfigs,
     appPackages,
     fetchAppPackages,
     packageCacheState,

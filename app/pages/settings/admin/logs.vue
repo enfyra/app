@@ -476,6 +476,7 @@ onMounted(async () => {
           />
 
           <CommonAnimatedGrid
+            v-if="files.length > 0"
             :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'"
           >
             <CommonSettingsCard
@@ -501,7 +502,15 @@ onMounted(async () => {
           </CommonAnimatedGrid>
 
           <CommonEmptyState
-            v-if="filteredFiles.length === 0 && files.length > 0"
+            v-if="files.length === 0"
+            title="No log files found"
+            description="Server log files will appear here after the backend writes them."
+            icon="lucide:file-x"
+            size="sm"
+          />
+
+          <CommonEmptyState
+            v-else-if="filteredFiles.length === 0"
             title="No matching files"
             :description="`No files match '${fileSearchQuery}'`"
             icon="lucide:search-x"

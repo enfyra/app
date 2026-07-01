@@ -74,6 +74,7 @@ const error = ref<string | null>(null);
 const widgetComponent = ref<any>(null);
 const currentExtensionMeta = ref<any>(null);
 const loading = ref(false);
+const loadRunId = ref(0);
 
 const tryLoadFromCache = (): boolean => {
   const widgetPath = getWidgetMetaCacheKey(props.id);
@@ -90,7 +91,10 @@ const tryLoadFromCache = (): boolean => {
   return false;
 };
 
+const isCurrentLoad = (runId: number) => loadRunId.value === runId;
+
 const loadMatchingWidget = async () => {
+  const runId = ++loadRunId.value;
   error.value = null;
 
   if (tryLoadFromCache()) {
@@ -98,13 +102,17 @@ const loadMatchingWidget = async () => {
   }
 
   loading.value = true;
-  await fetchAndLoadWidget();
-  loading.value = false;
+  await fetchAndLoadWidget(runId);
+  if (isCurrentLoad(runId)) {
+    loading.value = false;
+  }
 };
 
-const fetchAndLoadWidget = async () => {
+const fetchAndLoadWidget = async (runId: number) => {
   try {
     const extension = await loadWidgetExtension(props.id);
+    if (!isCurrentLoad(runId)) return;
+
     if (!extension) {
       error.value = `No widget found with ID: ${props.id}`;
       return;
@@ -124,24 +132,28 @@ const fetchAndLoadWidget = async () => {
 
     const cachedComponent = getCachedComponent(extension.extensionId, extension.updatedAt);
     if (cachedComponent) {
+      if (!isCurrentLoad(runId)) return;
       widgetComponent.value = cachedComponent;
       return;
     }
 
     const component = await loadDynamicComponent(
-      extension.compiledCode || extension.code,
+      extension.compiledCode!,
       extension.extensionId,
       extension.updatedAt
     );
 
+    if (!isCurrentLoad(runId)) return;
     widgetComponent.value = component;
 
   } catch (err: any) {
+    if (!isCurrentLoad(runId)) return;
     error.value = `Failed to load widget: ${err?.message || err}`;
   }
 };
 
 watch(() => extensionCacheInvalidation.value, async (invalidation) => {
+  const runId = ++loadRunId.value;
   const widgetPath = getWidgetMetaCacheKey(props.id);
   const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(widgetPath);
   const matchesByRecordId = invalidation?.id != null && String(invalidation.id) === String(props.id);
@@ -150,8 +162,10 @@ watch(() => extensionCacheInvalidation.value, async (invalidation) => {
   loading.value = true;
   error.value = null;
   widgetComponent.value = null;
-  await fetchAndLoadWidget();
-  loading.value = false;
+  await fetchAndLoadWidget(runId);
+  if (isCurrentLoad(runId)) {
+    loading.value = false;
+  }
 });
 
 const retry = () => {

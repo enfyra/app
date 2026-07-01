@@ -1,6 +1,8 @@
-import { resolveComponent, markRaw } from "vue";
+import { getCurrentInstance, markRaw, onUnmounted, resolveComponent } from "vue";
 import { compareMenuOrder, sortMenuItems } from "~/utils/menu-order";
 import { findBestMenuRouteMatch, isDynamicMenuPath } from "~/utils/menu-route-patterns";
+
+const menuItemOwners = new Map<string, number>();
 
 function normalizePath(path?: string): string {
   if (!path) return "";
@@ -61,6 +63,7 @@ export function useMenuRegistry() {
 
   const registerMenuItem = (item: MenuItem) => {
     const processedItem: MenuItem = { ...item };
+    const ownerUid = getCurrentInstance()?.uid;
 
     if (processedItem.component) {
       if (typeof processedItem.component === "string") {
@@ -87,6 +90,14 @@ export function useMenuRegistry() {
     } else {
       menuItems.value.push(processedItem);
     }
+    if (ownerUid !== undefined) {
+      menuItemOwners.set(item.id, ownerUid);
+      onUnmounted(() => {
+        if (menuItemOwners.get(item.id) === ownerUid) {
+          unregisterMenuItem(item.id);
+        }
+      });
+    }
   };
 
   const unregisterMenuItem = (id: string) => {
@@ -94,6 +105,7 @@ export function useMenuRegistry() {
     if (index > -1) {
       menuItems.value.splice(index, 1);
     }
+    menuItemOwners.delete(id);
   };
 
   const getMenuItemsBySidebar = (sidebarId: number | string) => {
@@ -117,6 +129,7 @@ export function useMenuRegistry() {
 
   const clearAllMenus = () => {
     menuItems.value = [];
+    menuItemOwners.clear();
   };
 
   const registerAllMenusFromApi = async (menuDefinitions: MenuDefinition[]) => {

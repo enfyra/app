@@ -32,7 +32,7 @@
 
   <PermissionGate
     v-else-if="extensionComponent"
-    :condition="menuResponse?.data[0]?.permission ?? { allowAll: true }"
+    :condition="currentPermission"
     class="flex-1 flex flex-col"
   >
     <component
@@ -59,6 +59,7 @@
 
 <script setup lang="ts">
 import { matchMenuRoutePath, normalizeMenuRoutePath } from "~/utils/menu-route-patterns";
+import { EXTENSION_RUNTIME_FIELDS, prefixFields } from "~/utils/extension-fields";
 
 interface Props {
   path: string;
@@ -89,6 +90,7 @@ const extensionMetaCacheKey = computed(() => matchedMenu.value ? `menu:${matched
 const error = ref<string | null>(null);
 const extensionComponent = ref<any>(null);
 const currentExtensionMeta = ref<any>(null);
+const currentPermission = ref<any>(null);
 const isLoading = ref(true);
 const loadRunId = ref(0);
 
@@ -98,7 +100,10 @@ const {
   execute: executeFetchMenu,
 } = useApi(() => "/enfyra_menu", {
   query: computed(() => ({
-    fields: "*,extension.*",
+    fields: [
+      "*",
+      prefixFields("extension", EXTENSION_RUNTIME_FIELDS),
+    ].join(","),
     filter: {
       _and: [
         { id: { _eq: matchedMenu.value?.id } },
@@ -129,6 +134,7 @@ const isCurrentLoad = (runId: number) => loadRunId.value === runId;
 const loadMatchingExtension = async () => {
   const runId = ++loadRunId.value;
   error.value = null;
+  currentPermission.value = null;
 
   if (!matchedMenu.value) {
     showError({
@@ -137,14 +143,6 @@ const loadMatchingExtension = async () => {
       message: `No menu found for route: ${normalizedPath.value}`,
       fatal: true,
     });
-    return;
-  }
-
-  if (tryLoadFromCache()) {
-    if (isCurrentLoad(runId)) {
-      setRouteLoading(false);
-      isLoading.value = false;
-    }
     return;
   }
 
@@ -172,6 +170,7 @@ const fetchAndLoadExtension = async (runId: number) => {
     }
 
     const menuItem = menuResponse.value.data[0];
+    currentPermission.value = menuItem.permission ?? { allowAll: true };
 
     if (!menuItem.extension || menuItem.extension.length === 0) {
       error.value = `No extension found for route: /${props.path}`;
@@ -188,6 +187,10 @@ const fetchAndLoadExtension = async (runId: number) => {
 
     setCachedExtensionMeta(extensionMetaCacheKey.value, extension);
 
+    if (tryLoadFromCache()) {
+      return;
+    }
+
     const cachedComponent = getCachedComponent(extension.extensionId, extension.updatedAt);
     if (cachedComponent) {
       if (!isCurrentLoad(runId)) return;
@@ -197,11 +200,10 @@ const fetchAndLoadExtension = async (runId: number) => {
 
     const component = await perf.time("Route: loadDynamicComponent", () =>
       loadDynamicComponent(
-        extension.compiledCode || extension.code,
+        extension.compiledCode!,
         extension.extensionId,
         extension.updatedAt,
         false,
-        extension.code
       )
     );
     if (!isCurrentLoad(runId)) return;
@@ -227,6 +229,7 @@ watch(() => extensionCacheInvalidation.value, async (invalidation) => {
 
   isLoading.value = true;
   error.value = null;
+  currentPermission.value = null;
   extensionComponent.value = null;
   setRouteLoading(true);
   await fetchAndLoadExtension(runId);
@@ -247,6 +250,7 @@ watch(
     isLoading.value = true;
     extensionComponent.value = null;
     currentExtensionMeta.value = null;
+    currentPermission.value = null;
     loadMatchingExtension();
   },
   { immediate: true }

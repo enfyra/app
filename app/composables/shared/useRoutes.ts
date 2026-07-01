@@ -17,7 +17,8 @@ export function useRoutes() {
   })
   
   async function loadRoutes() {
-    await executeRoutes()
+    const response = await executeRoutes()
+    if (!response) return null
     const allRoutes = routesData.value?.data || []
     
     const mapping: Record<string, string> = {}

@@ -2,12 +2,15 @@
 const route = useRoute();
 const router = useRouter();
 const { menuGroups } = useMenuRegistry();
+const { menuDefinitionsPending } = useMenuApi();
 const { checkPermissionCondition } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
 const suppressSidebarPersist = ref(false);
 const hoverOpenedSidebar = ref(false);
+const showMenuSkeleton = ref(false);
+let menuSkeletonTimer: ReturnType<typeof setTimeout> | null = null;
 
 if (import.meta.client) {
   const saved = localStorage.getItem('sidebar-open');
@@ -21,6 +24,23 @@ watch(sidebarVisible, (val) => {
   if (import.meta.client && width.value >= 1024) {
     localStorage.setItem('sidebar-open', String(val));
   }
+});
+
+watch(menuDefinitionsPending, (pending) => {
+  if (menuSkeletonTimer) {
+    clearTimeout(menuSkeletonTimer);
+    menuSkeletonTimer = null;
+  }
+
+  if (pending) {
+    showMenuSkeleton.value = true;
+    return;
+  }
+
+  menuSkeletonTimer = setTimeout(() => {
+    showMenuSkeleton.value = false;
+    menuSkeletonTimer = null;
+  }, 180);
 });
 
 const faviconUrl = computed(() => {
@@ -170,6 +190,12 @@ router.afterEach(() => {
     setSidebarVisible(false);
   }
 });
+
+onUnmounted(() => {
+  if (menuSkeletonTimer) {
+    clearTimeout(menuSkeletonTimer);
+  }
+});
 </script>
 
 <template>
@@ -214,13 +240,38 @@ router.afterEach(() => {
       </div>
 
       <nav class="app-sidebar-nav" aria-label="Main navigation">
-        <SidebarMenuTree
-          v-for="(group, groupIndex) in (!renderExpandedSidebarContent ? [collapsedRailItems] : navigationItems)"
-          :key="groupIndex"
-          :items="group"
-          :collapsed="!renderExpandedSidebarContent"
-          :labels-visible="showExpandedSidebarLabels"
-        />
+        <Transition name="sidebar-menu-loading" mode="out-in">
+          <div
+            v-if="showMenuSkeleton"
+            key="menu-skeleton"
+            class="app-sidebar-menu-skeleton"
+            :class="{ collapsed: !renderExpandedSidebarContent }"
+            aria-label="Loading navigation"
+          >
+            <div
+              v-for="i in 7"
+              :key="i"
+              class="app-sidebar-menu-skeleton-row"
+            >
+              <div class="app-sidebar-menu-skeleton-icon skeleton-gradient skeleton-pulse-slow" />
+              <div
+                v-if="renderExpandedSidebarContent"
+                class="app-sidebar-menu-skeleton-label skeleton-gradient skeleton-pulse-slow"
+                :style="{ width: `${64 + (i % 4) * 12}%` }"
+              />
+            </div>
+          </div>
+
+          <div v-else key="menu-tree" class="app-sidebar-menu-tree">
+            <SidebarMenuTree
+              v-for="(group, groupIndex) in (!renderExpandedSidebarContent ? [collapsedRailItems] : navigationItems)"
+              :key="groupIndex"
+              :items="group"
+              :collapsed="!renderExpandedSidebarContent"
+              :labels-visible="showExpandedSidebarLabels"
+            />
+          </div>
+        </Transition>
       </nav>
     </template>
 
@@ -243,6 +294,58 @@ router.afterEach(() => {
   display: grid;
   gap: 8px;
   min-width: 0;
+}
+
+.app-sidebar-menu-tree {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.app-sidebar-menu-skeleton {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.app-sidebar-menu-skeleton-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  border-radius: var(--radius-control);
+  padding: 0 10px;
+}
+
+.app-sidebar-menu-skeleton.collapsed .app-sidebar-menu-skeleton-row {
+  grid-template-columns: 1fr;
+  place-items: center;
+  min-height: 42px;
+  padding: 0;
+}
+
+.app-sidebar-menu-skeleton-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-subcontrol);
+}
+
+.app-sidebar-menu-skeleton-label {
+  height: 12px;
+  min-width: 48px;
+  max-width: 148px;
+  border-radius: var(--radius-pill);
+}
+
+.sidebar-menu-loading-enter-active,
+.sidebar-menu-loading-leave-active {
+  transition: opacity 120ms ease;
+}
+
+.sidebar-menu-loading-enter-from,
+.sidebar-menu-loading-leave-to {
+  opacity: 0;
 }
 
 .eapp-sidebar:deep([data-slot="container"]) {

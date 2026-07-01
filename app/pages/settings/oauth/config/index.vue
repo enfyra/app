@@ -10,6 +10,12 @@
     empty-description="Configure OAuth providers to enable social login"
     empty-icon="lucide:key"
     empty-size="lg"
+    v-model:page="page"
+    :total="total"
+    :items-per-page="limit"
+    :pagination-loading="loading"
+    :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
       <CommonAnimatedGrid
         :animate="false"

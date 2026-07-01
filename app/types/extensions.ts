@@ -3,7 +3,7 @@ export type ExtensionType = "page" | "widget" | "global";
 export interface ExtensionDefinition {
   id?: number;
   _id?: string;
-  code: string;
+  code?: string;
   compiledCode?: string;
   description: string | null;
   isEnabled: boolean;

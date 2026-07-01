@@ -29,6 +29,17 @@ export default defineNuxtConfig({
     componentName: "ColorScheme",
     storage: "localStorage",
   },
+  fonts: {
+    providers: {
+      adobe: false,
+      bunny: false,
+      fontshare: false,
+      fontsource: false,
+      google: false,
+      googleicons: false,
+      npm: false,
+    },
+  },
   ssr: false,
   css: ["assets/css/main.css"],
   app: {

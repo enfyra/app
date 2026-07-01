@@ -94,7 +94,7 @@ import {
 await useInitialData();
 await Promise.all([
   useMenuInit(),
-  useGlobalExtensionsInit(),
+  useGlobalExtensionsInit({ throwOnError: true }),
 ]);
 const { markInitialReady } = useInitialLoading();
 markInitialReady();

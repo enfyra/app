@@ -16,6 +16,7 @@ export function useStableListState<T = any>(
   const initialDelayMs = options.initialDelayMs ?? 420;
   const refreshDelayMs = options.refreshDelayMs ?? 180;
   const initialStartedAt = Date.now();
+  let requestStarted = false;
   let refreshStartedAt = 0;
   let initialTimer: ReturnType<typeof setTimeout> | undefined;
   let refreshTimer: ReturnType<typeof setTimeout> | undefined;
@@ -61,9 +62,8 @@ export function useStableListState<T = any>(
   watch(
     () => [source(), loading()] as const,
     ([nextItems, isLoading]) => {
-      if (!Array.isArray(nextItems)) return;
-
       if (isLoading) {
+        requestStarted = true;
         if (refreshTimer) {
           clearTimeout(refreshTimer);
           refreshTimer = undefined;
@@ -71,6 +71,14 @@ export function useStableListState<T = any>(
         if (initialReady.value && items.value.length > 0 && !refreshing.value) {
           refreshing.value = true;
           refreshStartedAt = Date.now();
+        }
+        return;
+      }
+
+      if (!Array.isArray(nextItems)) {
+        if (requestStarted) {
+          refreshing.value = false;
+          resolveInitialLoading();
         }
         return;
       }

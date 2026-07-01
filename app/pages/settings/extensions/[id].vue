@@ -69,7 +69,6 @@ const showUploadModal = ref(false);
 const uploadLoading = ref(false);
 const showPreviewModal = ref(false);
 
-const { getIncludeFields } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 const { fetchMenuDefinitions } = useMenuApi();
@@ -189,7 +188,7 @@ const {
   execute: executeGetExtension,
 } = useApi(() => `/${tableName}`, {
   query: {
-    fields: getIncludeFields(),
+    fields: EXTENSION_EDITOR_FIELDS,
     filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: "Fetch Extension",
