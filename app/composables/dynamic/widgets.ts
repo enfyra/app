@@ -1,4 +1,5 @@
 import type { ExtensionDefinition } from "~/types/extensions";
+import { EXTENSION_RUNTIME_FIELDS } from "~/utils/extension-fields";
 
 type WidgetRequest = {
   id: string | number;
@@ -54,7 +55,7 @@ export function useDynamicWidgetLoader() {
     try {
       const response = await $fetch<{ data?: ExtensionDefinition[] }>("/api/enfyra_extension", {
         query: {
-          fields: "*",
+          fields: EXTENSION_RUNTIME_FIELDS,
           filter: {
             _and: [
               { [idField]: { _in: ids } },

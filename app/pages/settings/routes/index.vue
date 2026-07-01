@@ -46,6 +46,7 @@ watch(visibilityScope, (v) => {
   if (getVisibilityScope(route.query.scope, route.query.system) !== v) {
     const query = { ...route.query }
     delete query.system
+    delete query.page
     if (v === "custom") delete query.scope
     else query.scope = v
     router.replace({ query })
@@ -54,6 +55,7 @@ watch(visibilityScope, (v) => {
 watch(showCollectionRoutes, (v) => {
   if ((route.query.collectionRoutes === 'true') !== v) {
     const query = { ...route.query }
+    delete query.page
     if (v) query.collectionRoutes = 'true'
     else delete query.collectionRoutes
     router.replace({ query })
@@ -130,8 +132,6 @@ registerSubHeaderActions([
         label: "Routes",
         "onUpdate:modelValue": (value: SystemVisibilityMode) => {
           visibilityScope.value = value;
-          page.value = 1;
-          fetchRoutes();
         },
       };
     },
@@ -155,8 +155,6 @@ registerSubHeaderActions([
     order: 1,
     onClick: () => {
       showCollectionRoutes.value = !showCollectionRoutes.value;
-      page.value = 1;
-      fetchRoutes();
     },
   },
 ]);

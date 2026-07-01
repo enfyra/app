@@ -18,8 +18,14 @@ const { execute: updateMenuApi, error: updateMenuError } = useApi(() => '/enfyra
   method: 'patch',
   errorContext: 'Update Menu Order',
 });
+const { execute: reorderMenusApi, error: reorderMenusError } = useApi(() => '/admin/menu/reorder', {
+  method: 'post',
+  errorContext: 'Reorder Menus',
+});
 
 const isDndUpdating = useState('menu-dnd-updating', () => false);
+const pendingReorderMenus = ref<MenuDefinition[]>([]);
+let reorderMenusTimer: ReturnType<typeof setTimeout> | null = null;
 
 registerPageHeader({
   title: "Menu Manager",
@@ -30,9 +36,17 @@ registerPageHeader({
 
 onBeforeUnmount(() => {
   clearPageHeader();
+  if (reorderMenusTimer) {
+    clearTimeout(reorderMenusTimer);
+    reorderMenusTimer = null;
+  }
 });
 
 const { menuDefinitions, fetchMenuDefinitions } = useMenuApi();
+
+onMounted(() => {
+  void fetchMenuDefinitions({ includeExtensions: true, showSidebarSkeleton: false });
+});
 
 const menus = computed(() => {
   const rawMenus = menuDefinitions.value?.data || [];
@@ -235,8 +249,9 @@ registerHeaderActions([
 const { menuItems, reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
 
 async function refreshMenus() {
-  await fetchMenuDefinitions();
-  await reregisterAllMenus(fetchMenuDefinitions as any);
+  const fetchMenusWithExtensions = () => fetchMenuDefinitions({ includeExtensions: true, showSidebarSkeleton: false });
+  await fetchMenusWithExtensions();
+  await reregisterAllMenus(fetchMenusWithExtensions as any);
 
   const schemaValues = Object.values(schemas.value);
   if (schemaValues.length > 0) {
@@ -536,8 +551,36 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
   notify.success("Success", "Menu moved successfully!");
 }
 
-async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
-  if (!updatedMenus || updatedMenus.length === 0) return;
+function mergePendingReorderMenus(updatedMenus: MenuDefinition[]) {
+  const merged = new Map<string, MenuDefinition>();
+  for (const menu of pendingReorderMenus.value) {
+    const menuId = getId(menu);
+    if (menuId) merged.set(String(menuId), menu);
+  }
+  for (const menu of updatedMenus) {
+    const menuId = getId(menu);
+    if (menuId) merged.set(String(menuId), menu);
+  }
+  pendingReorderMenus.value = Array.from(merged.values());
+}
+
+function scheduleReorderFlush() {
+  if (reorderMenusTimer) clearTimeout(reorderMenusTimer);
+  reorderMenusTimer = setTimeout(() => {
+    reorderMenusTimer = null;
+    void flushReorderMenus();
+  }, 0);
+}
+
+async function flushReorderMenus() {
+  if (isDndUpdating.value) {
+    scheduleReorderFlush();
+    return;
+  }
+
+  const updatedMenus = pendingReorderMenus.value;
+  pendingReorderMenus.value = [];
+  if (!updatedMenus.length) return;
 
   const originalMenuDefinitions = menuDefinitions.value?.data ? JSON.parse(JSON.stringify(menuDefinitions.value.data)) : [];
   const originalMenuItems = JSON.parse(JSON.stringify(menuItems.value));
@@ -555,26 +598,29 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
     return;
   }
 
-  if (isDndUpdating.value) return;
   isDndUpdating.value = true;
 
   try {
-    for (const menu of updatedMenus) {
-      const menuId = getId(menu);
-      if (!menuId) continue;
+    const updates = updatedMenus
+      .map((menu) => {
+        const menuId = getId(menu);
+        if (!menuId) return null;
+        const parentId = getId((menu as any).parent);
+        return {
+          id: menuId,
+          order: menu.order,
+          parent: parentId ? parentId : null,
+        };
+      })
+      .filter(Boolean);
 
-      const body: { order: number; parent?: number | string | null } = { order: menu.order };
-      const parentId = getId((menu as any).parent);
-      body.parent = parentId ? parentId : null;
-
-      const response = await updateMenuApi({
-        id: menuId,
-        body
-      });
-      if (!response || updateMenuError.value) {
-        throw updateMenuError.value || new Error("Menu order update failed");
-      }
+    const response = await reorderMenusApi({
+      body: { updates },
+    });
+    if (!response || reorderMenusError.value) {
+      throw reorderMenusError.value || new Error("Menu order update failed");
     }
+
     await refreshMenus();
 
     notify.success("Success", "Menu order updated successfully!");
@@ -584,12 +630,21 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
     }
     menuItems.value = originalMenuItems;
     await refreshMenus();
-    if (!updateMenuError.value) {
+    if (!reorderMenusError.value) {
       notify.error("Error", "Failed to update menu order. Please try again.");
     }
   } finally {
     isDndUpdating.value = false;
+    if (pendingReorderMenus.value.length > 0) {
+      scheduleReorderFlush();
+    }
   }
+}
+
+async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
+  if (!updatedMenus || updatedMenus.length === 0) return;
+  mergePendingReorderMenus(updatedMenus);
+  scheduleReorderFlush();
 }
 
 watch(

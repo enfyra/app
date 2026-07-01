@@ -206,6 +206,7 @@ export const availableComposables = {
   useSubHeaderActionRegistry,
   useAccountPanelRegistry,
   usePageHeaderRegistry,
+  useMenuNotificationRegistry,
   useConfirm,
   useAuth,
   navigateTo,

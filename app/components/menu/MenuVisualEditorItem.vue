@@ -23,6 +23,7 @@ const emit = defineEmits<{
 const { getId } = useDatabase();
 const { isMobile } = useScreen();
 const isDndUpdating = useState('menu-dnd-updating', () => false);
+const isMenuDragActive = useState('menu-dnd-drag-active', () => false);
 const itemLevel = computed(() => props.level || 0);
 
 const originalMenu = computed(() => {
@@ -107,12 +108,21 @@ function handleChildrenReorder(event: DragEvent) {
 }
 
 function canDropIntoChildren(event: any) {
+  if (!canAcceptChildMenus.value) return false;
+
+  const targetParentId = getId(props.item) || null;
+  if (!targetParentId) return false;
+
   const dragged = event?.draggedContext?.element;
+  const draggedId = getId(dragged);
+  if (!draggedId) return false;
+  if (String(draggedId) === String(targetParentId)) return false;
+  if (props.allMenus && isDescendant(targetParentId, draggedId, props.allMenus)) return false;
+
   if (!dragged?.isSystem) return true;
 
   const draggedMenu = props.allMenus?.find((menu) => String(getId(menu)) === String(getId(dragged)));
   const originalParentId = getId(draggedMenu?.parent) || null;
-  const targetParentId = getId(props.item) || null;
   return String(originalParentId || null) === String(targetParentId || null);
 }
 
@@ -127,6 +137,8 @@ const menuItems = computed(() => {
   }
 
   if (originalMenu.isSystem && originalMenu.type === 'Dropdown Menu') {
+    if (!canAcceptChildMenus.value) return [];
+
     return [
       {
         label: 'Add Child Menu',
@@ -186,7 +198,7 @@ const menuItems = computed(() => {
     }
   );
 
-  if (originalMenu.type === 'Dropdown Menu') {
+  if (originalMenu.type === 'Dropdown Menu' && canAcceptChildMenus.value) {
     items.push({
       label: 'Add Child Menu',
       icon: 'lucide:plus-circle',
@@ -288,6 +300,12 @@ const isSystemMenu = computed(() => {
   return originalMenu.value?.isSystem === true;
 });
 
+const canAcceptChildMenus = computed(() => originalMenu.value?.path !== '/data');
+const childDragGroup = computed(() => ({
+  name: 'menu-items',
+  pull: true,
+  put: canAcceptChildMenus.value
+}));
 const typeBadgeColor = computed(() => props.item.isDropdown ? 'info' : 'neutral');
 const ownershipBadgeColor = computed(() => props.item.isSystem ? 'warning' : 'neutral');
 const iconToneClass = computed(() => props.item.isDropdown ? 'accent-tile-primary' : 'accent-tile-neutral');
@@ -306,6 +324,8 @@ const canMoveHere = computed(() => {
   if (!movingMenuId.value) return false;
   
   if (!props.item.isDropdown) return false;
+
+  if (!canAcceptChildMenus.value) return false;
   
   const menuId = getId(props.item);
   if (!menuId) return false;
@@ -329,6 +349,13 @@ const canMoveHere = computed(() => {
   return true;
 });
 
+const showChildDropHint = computed(() =>
+  isMenuDragActive.value &&
+  props.item.isDropdown &&
+  isExpanded.value &&
+  canAcceptChildMenus.value
+);
+
 function handleMoveHere() {
   if (!movingMenuId.value || !props.allMenus) return;
   
@@ -337,7 +364,7 @@ function handleMoveHere() {
   
   let newParent: MenuDefinition | null = null;
   
-  if (props.item.isDropdown) {
+  if (props.item.isDropdown && canAcceptChildMenus.value) {
     newParent = props.allMenus.find(m => String(getId(m)) === String(getId(props.item))) || null;
   }
   
@@ -351,6 +378,14 @@ function handleMoveHere() {
 
 function handleCancelMove() {
   movingMenuId.value = null;
+}
+
+function handleDragStart() {
+  isMenuDragActive.value = true;
+}
+
+function handleDragEnd() {
+  isMenuDragActive.value = false;
 }
 </script>
 
@@ -490,14 +525,32 @@ function handleCancelMove() {
         ghost-class="ghost-item"
         chosen-class="chosen-item"
         drag-class="dragging-item"
-        :group="{ name: 'menu-items', pull: true, put: true }"
+        :group="childDragGroup"
         :move="canDropIntoChildren"
+        @start="handleDragStart"
+        @end="handleDragEnd"
         @change="handleChildrenReorder"
         item-key="id"
         class="menu-editor-children drop-zone"
-        :class="{ 'is-empty': !hasChildren }"
+        :class="{ 'is-empty': !hasChildren, 'is-dragging-target': showChildDropHint }"
         :style="childrenStyle"
       >
+        <template #header>
+          <div
+            v-if="showChildDropHint && !hasChildren"
+            class="menu-child-drop-placeholder"
+          >
+            <UIcon name="lucide:corner-down-right" class="h-4 w-4" />
+            <span>Drop here to add as child</span>
+          </div>
+          <div
+            v-else-if="showChildDropHint"
+            class="menu-child-drop-inline-hint"
+          >
+            <UIcon name="lucide:corner-down-right" class="h-3.5 w-3.5" />
+            <span>Drop inside {{ item.label }}</span>
+          </div>
+        </template>
         <template #item="{ element: child }">
           <MenuVisualEditorItem
             :item="child"
@@ -653,6 +706,8 @@ function handleCancelMove() {
   margin-top: 6px;
   padding-top: 6px;
   padding-bottom: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-panel);
   transition: background-color 110ms ease, border-color 110ms ease, box-shadow 110ms ease;
 }
 
@@ -669,6 +724,40 @@ function handleCancelMove() {
 
 .menu-editor-children.is-empty::before {
   display: none;
+}
+
+.menu-editor-children.is-dragging-target {
+  border-color: color-mix(in srgb, var(--md-primary) 20%, transparent);
+  background: color-mix(in srgb, var(--md-primary) 3%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 38%, transparent);
+}
+
+.menu-editor-children.is-empty.is-dragging-target {
+  min-height: 48px;
+}
+
+.menu-child-drop-placeholder,
+.menu-child-drop-inline-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--state-primary-soft-text);
+  font-weight: 750;
+}
+
+.menu-child-drop-placeholder {
+  min-height: 38px;
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--md-primary) 6%, var(--md-surface));
+  padding: 0 12px;
+  font-size: 13px;
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 44%, transparent);
+}
+
+.menu-child-drop-inline-hint {
+  min-height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
 }
 
 .menu-editor-children-wrap {
@@ -700,9 +789,8 @@ function handleCancelMove() {
   min-height: 64px;
   opacity: 1;
   border-radius: var(--radius-panel);
-  outline: 2px dashed var(--md-primary);
-  outline-offset: -2px;
-  background: color-mix(in srgb, var(--md-primary) 14%, var(--md-surface));
+  background: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface));
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 44%, transparent);
 }
 
 .menu-editor-node :deep(.sortable-chosen) {

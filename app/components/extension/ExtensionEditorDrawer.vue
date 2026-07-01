@@ -13,7 +13,7 @@ const emit = defineEmits<{
 
 const notify = useNotify();
 const tableName = "enfyra_extension";
-const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
+const { validate, generateEmptyForm } = useSchema(tableName);
 const { getId, getIdFieldName } = useDatabase();
 const { me } = useAuth();
 const { invalidateExtensionCache } = useDynamicComponent();
@@ -51,13 +51,13 @@ const {
       const extensionId = getId(props.menu.extension);
       if (extensionId) {
         return {
-          fields: getIncludeFields(),
+          fields: EXTENSION_EDITOR_FIELDS,
           filter: { [getIdFieldName()]: { _eq: extensionId } },
         };
       }
     }
     return {
-      fields: getIncludeFields(),
+      fields: EXTENSION_EDITOR_FIELDS,
     };
   }),
   errorContext: "Fetch Extension",

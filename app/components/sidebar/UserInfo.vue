@@ -13,6 +13,8 @@ const { me, logout } = useAuth();
 const { confirm } = useConfirm();
 const router = useRouter();
 
+const ACCOUNT_PANEL_OPEN_STORAGE_KEY = "enfyra.account-panel.open";
+
 const isOpen = ref(false);
 const userEmail = computed(() => me.value?.email || '');
 
@@ -98,12 +100,50 @@ const visibleAccountPanelItems = computed(() => accountPanelItems.value.filter((
   return Boolean(showValue);
 }));
 
+const accountPanelTriggerBadge = computed(() => {
+  let numericTotal = 0;
+  let hasNumericBadge = false;
+  let fallbackBadge: string | number | null = null;
+
+  for (const item of visibleAccountPanelItems.value) {
+    const badge = getAccountPanelBadge(item);
+    if (badge === undefined || badge === null || badge === "") continue;
+
+    const numericBadge = typeof badge === "number"
+      ? badge
+      : typeof badge === "string" && badge.trim() !== "" && !Number.isNaN(Number(badge))
+        ? Number(badge)
+        : null;
+
+    if (numericBadge !== null) {
+      numericTotal += numericBadge;
+      hasNumericBadge = true;
+      continue;
+    }
+
+    fallbackBadge ??= badge;
+  }
+
+  if (hasNumericBadge) return numericTotal > 99 ? "99+" : numericTotal;
+  return fallbackBadge;
+});
+
+const hasAccountPanelTriggerBadge = computed(() => {
+  const badge = accountPanelTriggerBadge.value;
+  return badge !== undefined && badge !== null && badge !== "";
+});
+
 watch(
   () => props.collapsed,
   (collapsed) => {
     if (collapsed) isOpen.value = false;
   },
 );
+
+onMounted(() => {
+  if (props.collapsed) return;
+  isOpen.value = localStorage.getItem(ACCOUNT_PANEL_OPEN_STORAGE_KEY) === "true";
+});
 
 function handleAccountPanelItemClick(item: AccountPanelItem) {
   if (item.disabled && unref(item.disabled)) return;
@@ -133,13 +173,22 @@ function accountPanelBadgeClass(item: AccountPanelItem) {
   if (color === "error") return `${base} bg-[var(--state-danger-soft-bg)] text-[var(--state-danger-soft-text)]`;
   if (color === "warning") return `${base} bg-[var(--state-warning-soft-bg)] text-[var(--state-warning-soft-text)]`;
   if (color === "success") return `${base} bg-[var(--state-success-soft-bg)] text-[var(--state-success-soft-text)]`;
+  if (color === "info") return `${base} bg-[var(--state-info-soft-bg)] text-[var(--state-info-soft-text)]`;
   if (color === "primary") return `${base} bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]`;
   return `${base} bg-[var(--surface-muted)] text-[var(--text-tertiary)]`;
 }
 
+function getAccountPanelBadge(item: AccountPanelItem) {
+  return resolveAccountPanelValue(item.count) ?? resolveAccountPanelValue(item.badge);
+}
+
 function hasAccountPanelBadge(item: AccountPanelItem) {
-  const badge = resolveAccountPanelValue(item.badge);
+  const badge = getAccountPanelBadge(item);
   return badge !== undefined && badge !== null && badge !== "";
+}
+
+function accountPanelTriggerBadgeClass() {
+  return "absolute right-1 top-1 z-10 min-w-5 rounded-full bg-[var(--state-primary-soft-bg)] px-1.5 py-0.5 text-center text-[11px] font-bold leading-none text-[var(--state-primary-soft-text)] ring-2 ring-[var(--block-base)]";
 }
 
 function togglePanel() {
@@ -148,6 +197,7 @@ function togglePanel() {
     return;
   }
   isOpen.value = !isOpen.value;
+  localStorage.setItem(ACCOUNT_PANEL_OPEN_STORAGE_KEY, String(isOpen.value));
 }
 
 async function handleLogout() {
@@ -161,11 +211,17 @@ async function handleLogout() {
     <button
       v-if="collapsed"
       type="button"
-      class="flex items-center justify-center w-full rounded-[var(--radius-control)] border border-[var(--card-border)] bg-[var(--block-base)] p-2 shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--card-border-hover)] cursor-pointer"
+      class="relative flex items-center justify-center w-full rounded-[var(--radius-control)] border border-[var(--card-border)] bg-[var(--block-base)] p-2 shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--card-border-hover)] cursor-pointer"
       aria-label="Open profile"
       @click="togglePanel"
     >
       <UAvatar :text="userInitial" size="xs" class="!bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] ring-1 ring-inset ring-[var(--state-primary-outline-border)]" />
+      <span
+        v-if="hasAccountPanelTriggerBadge"
+        :class="accountPanelTriggerBadgeClass()"
+      >
+        {{ accountPanelTriggerBadge }}
+      </span>
     </button>
 
     <div
@@ -186,6 +242,12 @@ async function handleLogout() {
           <p class="text-sm font-bold truncate text-[var(--text-secondary)] leading-tight">{{ userEmail || 'No user' }}</p>
           <p class="text-xs truncate font-semibold text-[var(--text-tertiary)] leading-tight">Account</p>
         </div>
+        <span
+          v-if="!isOpen && hasAccountPanelTriggerBadge"
+          class="shrink-0 rounded-full bg-[var(--state-primary-soft-bg)] px-2 py-0.5 text-xs font-bold text-[var(--state-primary-soft-text)]"
+        >
+          {{ accountPanelTriggerBadge }}
+        </span>
         <UIcon name="lucide:chevrons-up-down" class="w-4 h-4 text-[var(--text-tertiary)] shrink-0" />
       </div>
 
@@ -235,7 +297,7 @@ async function handleLogout() {
                     v-if="hasAccountPanelBadge(item)"
                     :class="accountPanelBadgeClass(item)"
                   >
-                    {{ resolveAccountPanelValue(item.badge) }}
+                    {{ getAccountPanelBadge(item) }}
                   </span>
                   <UIcon
                     v-if="item.trailingIcon || item.contentComponent || item.onToggle"

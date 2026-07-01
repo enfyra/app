@@ -22,6 +22,7 @@ const emit = defineEmits<{
 
 const { getId } = useDatabase();
 const isDndUpdating = useState('menu-dnd-updating', () => false);
+const isMenuDragActive = useState('menu-dnd-drag-active', () => false);
 
 function buildChildren(parentId: string | number | null, allMenus: MenuDefinition[]): MenuTreeItem[] {
   if (!parentId) return [];
@@ -137,6 +138,14 @@ function canDropIntoParent(event: any, targetParentId: string | number | null) {
   return String(originalParentId || null) === String(targetParentId || null);
 }
 
+function handleDragStart() {
+  isMenuDragActive.value = true;
+}
+
+function handleDragEnd() {
+  isMenuDragActive.value = false;
+}
+
 
 </script>
 
@@ -164,7 +173,7 @@ function canDropIntoParent(event: any, targetParentId: string | number | null) {
 
         <div
           v-if="canMoveToRoot"
-          class="mb-3 rounded-[var(--radius-panel)] border border-dashed border-[var(--badge-primary-soft-border)] bg-[var(--badge-primary-soft-bg)] p-2"
+          class="mb-3 rounded-[var(--radius-panel)] border border-[var(--badge-primary-soft-border)] bg-[var(--badge-primary-soft-bg)] p-2 shadow-[inset_2px_0_0_var(--badge-primary-soft-border)]"
         >
           <UButton
             size="sm"
@@ -187,6 +196,8 @@ function canDropIntoParent(event: any, targetParentId: string | number | null) {
           drag-class="dragging-item"
           :group="{ name: 'menu-items', pull: true, put: true }"
           :move="(event: any) => canDropIntoParent(event, null)"
+          @start="handleDragStart"
+          @end="handleDragEnd"
           @change="handleRootReorder"
           item-key="id"
           class="menu-root-drop-zone"
@@ -260,7 +271,7 @@ function canDropIntoParent(event: any, targetParentId: string | number | null) {
 .ghost-item {
   opacity: 0.5;
   background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  border: 2px dashed var(--brand-500);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--brand-500) 44%, transparent);
 }
 
 .chosen-item {
@@ -274,7 +285,7 @@ function canDropIntoParent(event: any, targetParentId: string | number | null) {
 .menu-visual-editor :deep(.sortable-ghost) {
   opacity: 0.5;
   background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  border: 2px dashed var(--brand-500);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--brand-500) 44%, transparent);
 }
 
 .menu-visual-editor :deep(.sortable-chosen) {

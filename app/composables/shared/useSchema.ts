@@ -45,11 +45,13 @@ export function useSchema(tableName?: string | Ref<string>) {
 
     schemaLoading.value = true;
     try {
-      await executeMetadata();
+      const response = await executeMetadata();
       updateDatabaseContext(metadataData.value);
       processAndCacheSchemas(metadataData.value?.data || []);
+      return response;
     } catch (error) {
       console.error('[useSchema] Error fetching schema:', error);
+      throw error;
     } finally {
       schemaLoading.value = false;
     }
@@ -59,11 +61,13 @@ export function useSchema(tableName?: string | Ref<string>) {
     schemas.value = {};
     schemaLoading.value = true;
     try {
-      await executeMetadata();
+      const response = await executeMetadata();
       updateDatabaseContext(metadataData.value);
       processAndCacheSchemas(metadataData.value?.data || []);
+      return response;
     } catch (error) {
       console.error('[useSchema] Error refreshing schema:', error);
+      throw error;
     } finally {
       schemaLoading.value = false;
     }

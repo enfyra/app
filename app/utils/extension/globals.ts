@@ -66,6 +66,8 @@ export const ENFYRA_GLOBALS = {
   useAdminSocket: true,
 
   useHeaderActionRegistry: true,
+  useAccountPanelRegistry: true,
+  useMenuNotificationRegistry: true,
   useScreen: true,
   useGlobalState: true,
   useConfirm: true,
@@ -97,6 +99,8 @@ export const EXTENSION_COMPOSABLES = {
   useApi: 'useApi',
   useHeaderActionRegistry: 'useHeaderActionRegistry',
   useSubHeaderActionRegistry: 'useSubHeaderActionRegistry',
+  useAccountPanelRegistry: 'useAccountPanelRegistry',
+  useMenuNotificationRegistry: 'useMenuNotificationRegistry',
   useSchema: 'useSchema',
   useScreen: 'useScreen',
   useGlobalState: 'useGlobalState',

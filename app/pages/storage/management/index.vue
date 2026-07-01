@@ -5,7 +5,13 @@ const showUploadModal = ref(false);
 const selectedStorage = ref<{ label: string; value: string; icon: string }>();
 
 const route = useRoute();
-const { storageConfigs } = useGlobalState();
+const {
+  storageConfigs,
+  storageConfigsFetched,
+  storageConfigsPending,
+  storageConfigsError,
+  fetchStorageConfigs
+} = useGlobalState();
 const router = useRouter();
 const { getId, getIdFieldName } = useDatabase();
 const folderPage = ref(Number(route.query.folderPage) || 1);
@@ -88,6 +94,11 @@ const storageOptions = computed(() => {
       icon: isCloudStorage ? 'lucide:cloud' : 'lucide:hard-drive',
     };
   });
+});
+
+watch(showUploadModal, async (open) => {
+  if (!open || storageConfigsFetched.value) return;
+  await fetchStorageConfigs();
 });
 
 const pageStats = computed(() => {
@@ -302,7 +313,24 @@ registerHeaderActions([
             :items="storageOptions"
             placeholder="Select storage (optional)"
             size="lg"
+            :loading="storageConfigsPending"
+            :disabled="storageConfigsPending"
             class="w-full"
+          />
+          <UAlert
+            v-if="storageConfigsError"
+            color="error"
+            variant="soft"
+            icon="lucide:triangle-alert"
+            title="Storage locations could not be loaded"
+            :description="storageConfigsError.message"
+            :actions="[{
+              label: 'Retry',
+              color: 'error',
+              variant: 'soft',
+              onClick: () => fetchStorageConfigs()
+            }]"
+            class="mt-3"
           />
         </div>
       </template>

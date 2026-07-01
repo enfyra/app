@@ -207,9 +207,11 @@ export function useAdminSocket() {
         const needsRoutes = steps.includes('metadata') || steps.includes('route');
         const needsMenus = steps.includes('metadata') || steps.includes('menu');
         const needsExtensions = steps.includes('extension') || steps.includes('menu');
+        const needsStorageConfigs = steps.includes('storage') || steps.includes('storage_config') || steps.includes('enfyra_storage_config');
 
         if (needsSchema) await schema.forceRefreshSchema();
         if (needsRoutes) await routes.loadRoutes();
+        if (needsStorageConfigs) useGlobalState().invalidateStorageConfigs();
         if (needsMenus) {
           await menuApi.fetchMenuDefinitions();
           await useMenuInit({ reset: true });

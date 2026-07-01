@@ -16,10 +16,11 @@ export interface PageHeaderConfig {
 
 export const usePageHeaderRegistry = () => {
   const route = useRoute();
+  const ownerUid = getCurrentInstance()?.uid;
 
   const pageHeaderConfig = useState<PageHeaderConfig | null>("page-header", () => null);
 
-  const routeHeaders = useState<Map<string, PageHeaderConfig>>(
+  const routeHeaders = useState<Map<string, { config: PageHeaderConfig; ownerUid?: number }>>(
     "route-page-headers",
     () => new Map()
   );
@@ -27,9 +28,21 @@ export const usePageHeaderRegistry = () => {
   const registerPageHeader = (config: PageHeaderConfig) => {
     const currentRoute = route.path;
 
-    routeHeaders.value.set(currentRoute, config);
+    routeHeaders.value.set(currentRoute, { config, ownerUid });
 
     pageHeaderConfig.value = config;
+
+    if (ownerUid !== undefined) {
+      onUnmounted(() => {
+        const registered = routeHeaders.value.get(currentRoute);
+        if (registered?.ownerUid === ownerUid) {
+          routeHeaders.value.delete(currentRoute);
+          if (route.path === currentRoute) {
+            pageHeaderConfig.value = null;
+          }
+        }
+      });
+    }
   };
 
   const clearPageHeader = () => {
@@ -45,7 +58,7 @@ export const usePageHeaderRegistry = () => {
 
       const routeHeader = routeHeaders.value.get(newPath);
       if (routeHeader) {
-        pageHeaderConfig.value = routeHeader;
+        pageHeaderConfig.value = routeHeader.config;
       }
     },
     { immediate: true }

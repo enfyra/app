@@ -146,14 +146,16 @@ export interface AccountPanelItem {
   label?: string | ComputedRef<string>;
   description?: string | ComputedRef<string>;
   icon?: string | ComputedRef<string>;
+  count?: string | number | ComputedRef<string | number | null | undefined>;
   badge?: string | number | ComputedRef<string | number | null | undefined>;
   badgeColor?:
     | "primary"
     | "neutral"
+    | "info"
     | "error"
     | "warning"
     | "success"
-    | ComputedRef<"primary" | "neutral" | "error" | "warning" | "success">;
+    | ComputedRef<"primary" | "neutral" | "info" | "error" | "warning" | "success">;
   trailingIcon?: string | ComputedRef<string>;
   component?: string | any;
   contentComponent?: string | any;

@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<{
 
 const STORAGE_KEY = "sidebar-menu-open-keys";
 const openMenuKeys = useState<Record<string, boolean>>("sidebar-menu-open-keys", () => ({}));
+const { getMenuNotification } = useMenuNotificationRegistry();
 
 function menuKey(item: any): string {
   return item.to || item.label;
@@ -36,7 +37,46 @@ function toggleMenu(item: any) {
 }
 
 function shouldUseDots(item: any): boolean {
-  return props.useDots || item.id === "data" || item.to === "/data" || item.label === "Data";
+  return props.useDots || isDataMenuItem(item);
+}
+
+function isDataMenuItem(item: any): boolean {
+  return item.id === "data" || item.to === "/data" || item.label === "Data";
+}
+
+function skeletonWidths(item: any): string[] {
+  return isDataMenuItem(item)
+    ? ["74%", "58%", "66%"]
+    : ["68%", "52%"];
+}
+
+function isEmptyDataMenuItem(item: any): boolean {
+  return isDataMenuItem(item) && !item.children?.length && !item.loading;
+}
+
+function isDisabledParent(item: any): boolean {
+  return !item.children?.length && !item.loading;
+}
+
+function notificationFor(item: any) {
+  return getMenuNotification(item);
+}
+
+function notificationValue(item: any) {
+  const notification = notificationFor(item);
+  return item.count ?? notification?.value ?? null;
+}
+
+function hasNotification(item: any) {
+  return notificationValue(item) != null || Boolean(notificationFor(item));
+}
+
+function notificationColor(item: any) {
+  return notificationFor(item)?.color ?? "primary";
+}
+
+function notificationTitle(item: any) {
+  return notificationFor(item)?.title;
 }
 
 function beforeChildrenEnter(element: Element) {
@@ -105,7 +145,7 @@ watch(
         v-if="!item.collapsible && !item.children?.length"
         :to="item.to"
         class="app-sidebar-link"
-        :class="{ active: item.active, collapsed: props.collapsed, 'with-count': !!item.count }"
+        :class="{ active: item.active, collapsed: props.collapsed, 'with-count': hasNotification(item) }"
         :title="props.collapsed ? item.label : undefined"
       >
         <UIcon
@@ -115,10 +155,29 @@ watch(
         />
         <span v-else class="app-sidebar-dot" />
         <span v-if="!props.collapsed" class="app-sidebar-text" :class="{ hidden: !props.labelsVisible }">{{ item.label }}</span>
-        <span v-if="!props.collapsed && item.count" class="app-sidebar-count" :class="{ hidden: !props.labelsVisible }">{{ item.count }}</span>
+        <span
+          v-if="!props.collapsed && notificationValue(item) != null"
+          class="app-sidebar-count"
+          :class="{ hidden: !props.labelsVisible }"
+          :data-color="notificationColor(item)"
+          :title="notificationTitle(item)"
+        >{{ notificationValue(item) }}</span>
+        <span
+          v-else-if="!props.collapsed && hasNotification(item)"
+          class="app-sidebar-notification-dot"
+          :class="{ hidden: !props.labelsVisible }"
+          :data-color="notificationColor(item)"
+          :title="notificationTitle(item)"
+        />
+        <span
+          v-if="props.collapsed && hasNotification(item)"
+          class="app-sidebar-collapsed-notification"
+          :data-color="notificationColor(item)"
+          :title="notificationTitle(item)"
+        />
       </NuxtLink>
 
-      <div v-else class="app-sidebar-collapse" :class="{ collapsed: props.collapsed, empty: !item.children?.length }">
+      <div v-else class="app-sidebar-collapse" :class="{ collapsed: props.collapsed, empty: !item.children?.length && !item.loading }">
         <button
           type="button"
           class="app-sidebar-link"
@@ -126,13 +185,14 @@ watch(
             active: item.active,
             collapsed: props.collapsed,
             'with-collapse': !props.collapsed,
-            'with-count': !!item.count,
-            disabled: !item.children?.length
+            'with-count': hasNotification(item),
+            disabled: isDisabledParent(item),
+            'empty-data': isEmptyDataMenuItem(item)
           }"
           :title="props.collapsed ? item.label : undefined"
           :aria-expanded="isMenuOpen(item)"
-          :aria-disabled="!item.children?.length"
-          :disabled="!item.children?.length"
+          :aria-disabled="isDisabledParent(item)"
+          :disabled="isDisabledParent(item)"
           @click="toggleMenu(item)"
         >
           <UIcon
@@ -142,9 +202,28 @@ watch(
           />
           <span v-else class="app-sidebar-dot" />
           <span v-if="!props.collapsed" class="app-sidebar-text" :class="{ hidden: !props.labelsVisible }">{{ item.label }}</span>
-          <span v-if="!props.collapsed && item.count" class="app-sidebar-count" :class="{ hidden: !props.labelsVisible }">{{ item.count }}</span>
+          <span
+            v-if="!props.collapsed && notificationValue(item) != null"
+            class="app-sidebar-count"
+            :class="{ hidden: !props.labelsVisible }"
+            :data-color="notificationColor(item)"
+            :title="notificationTitle(item)"
+          >{{ notificationValue(item) }}</span>
+          <span
+            v-else-if="!props.collapsed && hasNotification(item)"
+            class="app-sidebar-notification-dot"
+            :class="{ hidden: !props.labelsVisible }"
+            :data-color="notificationColor(item)"
+            :title="notificationTitle(item)"
+          />
+          <span
+            v-if="props.collapsed && hasNotification(item)"
+            class="app-sidebar-collapsed-notification"
+            :data-color="notificationColor(item)"
+            :title="notificationTitle(item)"
+          />
           <UIcon
-            v-if="!props.collapsed && item.children?.length"
+            v-if="!props.collapsed && (item.children?.length || item.loading)"
             name="lucide:chevron-down"
             class="app-sidebar-chevron"
             :class="{ open: isMenuOpen(item), hidden: !props.labelsVisible }"
@@ -161,16 +240,35 @@ watch(
           @after-leave="afterChildrenLeave"
         >
           <div
-            v-if="item.children?.length && !props.collapsed && isMenuOpen(item)"
+            v-if="(item.children?.length || item.loading) && !props.collapsed && isMenuOpen(item)"
             class="app-sidebar-children"
           >
             <SidebarMenuTree
+              v-if="item.children?.length"
               :items="item.children"
               :collapsed="props.collapsed"
               :labels-visible="props.labelsVisible"
               :level="props.level + 1"
               :use-dots="shouldUseDots(item)"
             />
+            <div
+              v-else-if="item.loading"
+              class="app-sidebar-child-skeleton"
+              :class="{ dots: shouldUseDots(item) }"
+              aria-label="Loading data menu"
+            >
+              <div
+                v-for="(width, index) in skeletonWidths(item)"
+                :key="`${menuKey(item)}-loading-${index}`"
+                class="app-sidebar-child-skeleton-row"
+              >
+                <span class="app-sidebar-child-skeleton-dot skeleton-gradient skeleton-pulse-slow" />
+                <span
+                  class="app-sidebar-child-skeleton-label skeleton-gradient skeleton-pulse-slow"
+                  :style="{ width }"
+                />
+              </div>
+            </div>
           </div>
         </Transition>
       </div>
@@ -194,6 +292,38 @@ watch(
 
 .app-sidebar-children {
   overflow: hidden;
+}
+
+.app-sidebar-child-skeleton {
+  display: grid;
+  gap: 1px;
+  margin: 1px 0 8px 12px;
+  padding-left: 12px;
+  border-left: 1px solid var(--nav-child-border);
+}
+
+.app-sidebar-child-skeleton-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 30px;
+  border-radius: var(--radius-subcontrol);
+  padding: 0 8px;
+}
+
+.app-sidebar-child-skeleton-dot {
+  width: 4px;
+  height: 4px;
+  justify-self: center;
+  border-radius: 999px;
+}
+
+.app-sidebar-child-skeleton-label {
+  height: 10px;
+  min-width: 48px;
+  max-width: 128px;
+  border-radius: var(--radius-pill);
 }
 
 .sidebar-children-enter-active,
@@ -294,6 +424,15 @@ watch(
   box-shadow: none;
 }
 
+.app-sidebar-link.empty-data,
+.app-sidebar-link.empty-data:hover,
+.app-sidebar-link.empty-data:disabled,
+.app-sidebar-link.empty-data[aria-disabled="true"] {
+  background: transparent;
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
 .app-sidebar-link.active {
   background: var(--state-primary-soft-bg);
   color: var(--state-primary-soft-text);
@@ -326,6 +465,7 @@ watch(
 
 .app-sidebar-text.hidden,
 .app-sidebar-count.hidden,
+.app-sidebar-notification-dot.hidden,
 .app-sidebar-chevron.hidden {
   opacity: 0;
 }
@@ -357,9 +497,74 @@ watch(
   line-height: 1;
 }
 
+.app-sidebar-count[data-color="primary"],
+.app-sidebar-notification-dot[data-color="primary"],
+.app-sidebar-collapsed-notification[data-color="primary"] {
+  --menu-notification-bg: var(--badge-primary-soft-bg);
+  --menu-notification-text: var(--badge-primary-soft-text);
+}
+
+.app-sidebar-count[data-color="success"],
+.app-sidebar-notification-dot[data-color="success"],
+.app-sidebar-collapsed-notification[data-color="success"] {
+  --menu-notification-bg: var(--badge-success-soft-bg);
+  --menu-notification-text: var(--badge-success-soft-text);
+}
+
+.app-sidebar-count[data-color="warning"],
+.app-sidebar-notification-dot[data-color="warning"],
+.app-sidebar-collapsed-notification[data-color="warning"] {
+  --menu-notification-bg: var(--badge-warning-soft-bg);
+  --menu-notification-text: var(--badge-warning-soft-text);
+}
+
+.app-sidebar-count[data-color="error"],
+.app-sidebar-notification-dot[data-color="error"],
+.app-sidebar-collapsed-notification[data-color="error"] {
+  --menu-notification-bg: var(--badge-danger-soft-bg);
+  --menu-notification-text: var(--badge-danger-soft-text);
+}
+
+.app-sidebar-count[data-color="info"],
+.app-sidebar-notification-dot[data-color="info"],
+.app-sidebar-collapsed-notification[data-color="info"] {
+  --menu-notification-bg: var(--badge-info-soft-bg);
+  --menu-notification-text: var(--badge-info-soft-text);
+}
+
+.app-sidebar-count[data-color="neutral"],
+.app-sidebar-notification-dot[data-color="neutral"],
+.app-sidebar-collapsed-notification[data-color="neutral"] {
+  --menu-notification-bg: var(--badge-neutral-soft-bg);
+  --menu-notification-text: var(--badge-neutral-soft-text);
+}
+
+.app-sidebar-count[data-color] {
+  background: var(--menu-notification-bg, var(--nav-count-bg));
+  color: var(--menu-notification-text, currentColor);
+}
+
 .app-sidebar-link.active .app-sidebar-count {
   background: var(--state-primary-soft-bg-hover);
   color: var(--state-primary-soft-text);
+}
+
+.app-sidebar-notification-dot,
+.app-sidebar-collapsed-notification {
+  display: inline-flex;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--menu-notification-bg, var(--badge-primary-bg));
+  box-shadow: 0 0 0 2px var(--nav-item-bg, transparent);
+}
+
+.app-sidebar-collapsed-notification {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 .app-sidebar-dot {

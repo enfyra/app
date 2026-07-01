@@ -15,7 +15,7 @@ export interface MenuDefinition {
   type: "Dropdown Menu" | "Menu";
   parent: number | string | { id: number | string } | null;
   sidebar: { id?: number; _id?: string } | null;
-  children: MenuDefinition[];
+  children?: MenuDefinition[];
   menus: MenuDefinition[];
   extension?: ExtensionDefinition;
   createdAt?: string;
@@ -70,7 +70,7 @@ export interface MenuApiItem {
   type: "Dropdown Menu" | "Menu";
   parent: number | string | null;
   sidebar: { id?: number; _id?: string } | null;
-  children: MenuApiItem[];
+  children?: MenuApiItem[];
   menus: MenuApiItem[];
   extension?: ExtensionDefinition;
   createdAt?: string;

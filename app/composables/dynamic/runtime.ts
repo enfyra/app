@@ -99,6 +99,7 @@ export function getComposablesObject(): Record<string, any> {
     useAccountPanelRegistry,
     usePageHeaderRegistry,
     useMenuRegistry,
+    useMenuNotificationRegistry,
     useMenuApi,
     useConfirm,
     useAuth,
