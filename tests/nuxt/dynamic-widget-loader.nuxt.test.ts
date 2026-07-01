@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useDynamicWidgetLoader } from '~/composables/dynamic/widgets'
 import { useDynamicComponent } from '~/composables/dynamic/useDynamicComponent'
+import { EXTENSION_RUNTIME_FIELDS } from '~/utils/extension-fields'
 
 describe('dynamic widget loader', () => {
   beforeEach(() => {
@@ -18,7 +19,7 @@ describe('dynamic widget loader', () => {
           id: 1,
           extensionId: 'widget-one',
           updatedAt: '2026-05-19T00:00:00.000Z',
-          code: '',
+          compiledCode: 'window.widget-one = {}',
           description: null,
           isEnabled: true,
           isSystem: false,
@@ -31,7 +32,7 @@ describe('dynamic widget loader', () => {
           id: 2,
           extensionId: 'widget-two',
           updatedAt: '2026-05-19T00:00:00.000Z',
-          code: '',
+          compiledCode: 'window.widget-two = {}',
           description: null,
           isEnabled: true,
           isSystem: false,
@@ -56,7 +57,7 @@ describe('dynamic widget loader', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock).toHaveBeenCalledWith('/api/enfyra_extension', {
       query: {
-        fields: '*',
+        fields: EXTENSION_RUNTIME_FIELDS,
         filter: {
           _and: [
             { id: { _in: [1, 2] } },
@@ -76,7 +77,7 @@ describe('dynamic widget loader', () => {
           id: 3,
           extensionId: 'cached-widget',
           updatedAt: '2026-05-19T00:00:00.000Z',
-          code: '',
+          compiledCode: 'window.cached-widget = {}',
           description: null,
           isEnabled: true,
           isSystem: false,

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MenuDefinition } from '~/types';
+import { EXTENSION_MENU_METADATA_FIELDS, prefixFields } from '~/utils/extension-fields';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -57,13 +58,13 @@ const {
       const menuId = getId(props.menu);
       if (menuId) {
         return {
-          fields: `${getIncludeFields()},extension.*`,
+          fields: `${getIncludeFields()},${prefixFields("extension", EXTENSION_MENU_METADATA_FIELDS)}`,
           filter: { [getIdFieldName()]: { _eq: menuId } },
         };
       }
     }
     return {
-      fields: `${getIncludeFields()},extension.*`,
+      fields: `${getIncludeFields()},${prefixFields("extension", EXTENSION_MENU_METADATA_FIELDS)}`,
     };
   }),
   errorContext: "Fetch Menu",
