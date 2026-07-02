@@ -8,7 +8,6 @@ import type { SystemVisibilityMode } from "~/types/ui";
 const page = ref(1);
 const pageLimit = 9;
 const route = useRoute();
-const { getId } = useDatabase();
 
 const { registerPageHeader } = usePageHeaderRegistry();
 

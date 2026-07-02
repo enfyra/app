@@ -108,7 +108,7 @@ const emit = defineEmits<{
   cancel: [];
 }>();
 
-const { schema, definition } = useSchema(toRef(props, "tableName"));
+useSchema(toRef(props, "tableName"));
 
 const fieldPermissionFormPositions = computed(() => {
   if (props.tableName !== "enfyra_field_permission") return undefined;

@@ -99,12 +99,6 @@ function getFieldConfig(key: string) {
     : manualConfig || {};
 }
 
-function getFinalType(key: string): string {
-  const column = props.columnMap.get(key);
-  const config = getFieldConfig(key);
-  return config.type || column?.type || "text";
-}
-
 function getCodeLanguage(key: string): "javascript" | "typescript" | "vue" | "json" | "html" {
   const config = getFieldConfig(key);
   if (config.language) return config.language;
@@ -195,7 +189,6 @@ function getComponentConfigByKey(key: string) {
   const disabled = config.disabled ?? isSystemField;
   const hasError = !!props.errors?.[key];
   const isSimpleJsonField = finalType === "simple-json";
-  const isRichTextField = finalType === "richtext";
 
   const fieldProps = {
     ...config.fieldProps,
@@ -731,35 +724,6 @@ function getComponentConfigByKey(key: string) {
 const componentConfig = computed(() => getComponentConfigByKey(props.keyName));
 const errorMessage = computed(() => props.errors?.[props.keyName]);
 const hasError = computed(() => !!errorMessage.value);
-
-const isRelationColumn = computed(() => {
-  return props.columnMap.get(props.keyName)?.fieldType === "relation";
-});
-
-const isCustomComponent = computed(() => {
-  const column = props.columnMap.get(props.keyName);
-  const manualConfig = props.fieldMap?.[props.keyName];
-  const config =
-    typeof manualConfig === "string"
-      ? { type: manualConfig }
-      : manualConfig || {};
-  const finalType = config.type || column?.type;
-  const isRelation = column?.fieldType === "relation";
-  
-  const customTypes = [
-    'richtext',
-    'code',
-    'simple-json',
-    'uuid',
-    'permission',
-    'date',
-    'datetime',
-    'timestamp',
-    'array-tags',
-  ];
-  
-  return isRelation || (finalType && customTypes.includes(finalType));
-});
 
 function getComponentType(): string {
   const column = props.columnMap.get(props.keyName);

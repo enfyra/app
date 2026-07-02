@@ -101,28 +101,6 @@ watch(showUploadModal, async (open) => {
   await fetchStorageConfigs();
 });
 
-const pageStats = computed(() => {
-  const totalFolders = rootFolders.value?.meta?.filterCount || 0;
-  const totalFiles = rootFiles.value?.meta?.filterCount || 0;
-
-  return [
-    {
-      icon: "lucide:folder",
-      iconColor: "text-primary",
-      iconBg: "bg-primary/10",
-      value: totalFolders,
-      label: "Root Folders",
-    },
-    {
-      icon: "lucide:file",
-      iconColor: "text-[var(--st-info)]",
-      iconBg: "bg-[var(--state-info-soft-bg)]",
-      value: totalFiles,
-      label: "Root Files",
-    },
-  ];
-});
-
 watch(
   () => route.query.folderPage,
   async (newPage) => {

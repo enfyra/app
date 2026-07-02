@@ -1,4 +1,4 @@
-export default defineNuxtRouteMiddleware(async (to, from) => {
+export default defineNuxtRouteMiddleware(async (to) => {
   if (process.env.NODE_ENV === "test") return;
 
   const { me, fetchUser } = useAuth();

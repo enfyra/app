@@ -1,15 +1,10 @@
-export function useCodeMirrorTheme(height?: string | Ref<string>, codeMirrorModules?: Ref<any> | any, colorModeRef?: any) {
+export function useCodeMirrorTheme(_height?: string | Ref<string>, codeMirrorModules?: Ref<any> | any, colorModeRef?: any) {
   let colorMode: any;
   if (colorModeRef !== undefined && colorModeRef !== null) {
     colorMode = colorModeRef;
   } else {
     colorMode = useColorMode();
   }
-  const heightValue = computed(() => {
-    if (!height) return "400px";
-    return typeof height === "string" ? height : height.value;
-  });
-
   const isDark = computed(() => colorMode.value === 'dark');
 
   const modules = computed(() => {

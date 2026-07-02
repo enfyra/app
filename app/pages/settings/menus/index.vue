@@ -460,10 +460,6 @@ async function handleDeleteExtension(menu: MenuDefinition) {
   notify.success("Success", `Extension deleted successfully!`);
 }
 
-async function handleMoveMenu(menu: MenuDefinition) {
-  
-}
-
 async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: MenuDefinition | null }) {
   const { menu, newParent } = payload;
   const menuId = getId(menu);
@@ -684,7 +680,6 @@ watch(showExtensionDrawer, async (isOpen, wasOpen) => {
       @edit-extension="handleEditExtension"
       @delete-extension="handleDeleteExtension"
       @reorder-menus="handleReorderMenus"
-      @move-menu="handleMoveMenu"
       @move-menu-to="handleMoveMenuTo"
     />
 

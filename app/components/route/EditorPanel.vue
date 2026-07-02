@@ -87,8 +87,6 @@ const mainTableName = computed(() => mainTableInfo.value?.name || props.tableNam
 const {
   handlerAvailableMethods,
   canCreateHandler,
-  routePreHooks,
-  routePostHooks,
   sortedPreHooks,
   sortedAfterHooks,
   defaultHandler,
@@ -183,15 +181,6 @@ function filterPublicToAvailable(body: Record<string, any>) {
         })
         .filter(Boolean)
     }
-  }
-}
-
-async function initializeForm() {
-  const data = routeData.value?.data?.[0]
-  if (data) {
-    form.value = { ...data }
-    formChanges.update(data)
-    hasFormChanges.value = false
   }
 }
 

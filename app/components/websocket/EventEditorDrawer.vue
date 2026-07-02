@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { ScriptLanguage } from '~/types/script-contract';
 import { normalizeScriptLanguage } from '~/utils/script-contract';
 import { buildWebsocketEventSavePayload } from '~/utils/websocket-events';
 

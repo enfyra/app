@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MenuDefinition, MenuTreeItem, DragEvent } from '~/types';
+import type { MenuDefinition, MenuTreeItem } from '~/types';
 import draggable from 'vuedraggable';
 
 const props = defineProps<{
@@ -74,7 +74,7 @@ function isDescendant(menuId: string | number, potentialParentId: string | numbe
   return isDescendant(menuParentId, potentialParentId, allMenus);
 }
 
-function handleChildrenReorder(event: DragEvent) {
+function handleChildrenReorder() {
   if (!props.allMenus) return;
   
   const parentId = getId(props.item);

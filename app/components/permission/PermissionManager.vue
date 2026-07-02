@@ -324,7 +324,6 @@ const {
 const {
   error: deleteError,
   execute: deletePermissionApi,
-  pending: deletePending,
 } = useApi(() => `/${permissionTableName.value}`, {
   method: "delete",
   errorContext: "Delete Permission",

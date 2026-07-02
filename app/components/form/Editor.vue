@@ -373,9 +373,6 @@ const filteredFormFields = computed(() => {
 
 const visibleFields = computed(() => {
   const fields = filteredFormFields.value;
-  const fk = (f: { name?: string; propertyName?: string }) =>
-    f.name || f.propertyName || '';
-  const filteredKeys = fields.map(fk);
 
   if (props.loading) {
     return sortFieldsByOrder(fields);
@@ -391,8 +388,6 @@ const visibleFields = computed(() => {
   } else {
     ordered = sortFieldsByOrder(fields);
   }
-
-  const afterSortKeys = ordered.map(fk);
 
   if (props.fieldPositions && Object.keys(props.fieldPositions).length > 0) {
     ordered = applyFieldPositions(ordered, props.fieldPositions);

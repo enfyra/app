@@ -83,7 +83,6 @@ export function getCorsOrigins(): string[] {
 
 export default defineEventHandler(async (event) => {
   const url = event.node.req.url || '';
-  const method = event.node.req.method || 'GET';
   
   if (!url.includes('/api/')) {
     return;

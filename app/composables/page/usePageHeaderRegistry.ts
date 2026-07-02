@@ -53,7 +53,7 @@ export const usePageHeaderRegistry = () => {
 
   watch(
     () => route.path,
-    (newPath, oldPath) => {
+    (newPath) => {
       pageHeaderConfig.value = null;
 
       const routeHeader = routeHeaders.value.get(newPath);

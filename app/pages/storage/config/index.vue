@@ -143,8 +143,6 @@ registerPageHeader({
   gradient: "blue",
 });
 
-const pageIconColor = 'primary';
-
 const {
   data: apiData,
   pending: loading,

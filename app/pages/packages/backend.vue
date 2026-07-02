@@ -106,8 +106,6 @@
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
 const limit = 9;
-const { confirm } = useConfirm();
-const notify = useNotify();
 const route = useRoute();
 const { isTablet } = useScreen();
 const { getId } = useDatabase();
@@ -167,64 +165,6 @@ const {
   isRefreshing: packagesRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
-
-const { execute: removePackage, error: removePackageError } = useApi(
-  "/enfyra_package",
-  {
-    method: "delete",
-    errorContext: "Uninstall Package",
-  }
-);
-
-const deletingPackages = ref(new Set<string>());
-
-async function deletePackage(pkgId: any, pkgName: string) {
-  const isConfirmed = await confirm({
-    title: "Uninstall Package",
-    content: `Are you sure you want to uninstall "${pkgName}"? This action cannot be undone.`,
-    confirmText: "Uninstall",
-    cancelText: "Cancel",
-  });
-
-  if (!isConfirmed) return;
-
-  deletingPackages.value.add(pkgId);
-  pendingOps.value.set(pkgId, `Uninstalling ${pkgName}...`);
-
-  try {
-    await removePackage({ id: pkgId });
-
-    if (removePackageError.value) {
-      pendingOps.value.delete(pkgId);
-      return;
-    }
-
-    await loadPackages();
-  } finally {
-    deletingPackages.value.delete(pkgId);
-  }
-}
-
-function getHeaderActions(pkg: any) {
-  const pkgId = getId(pkg);
-
-  return [
-    {
-      component: "UButton",
-      props: {
-        icon: "i-heroicons-trash",
-        variant: "outline",
-        color: "error",
-        loading: deletingPackages.value.has(pkgId) || pkg.status === 'uninstalling',
-        disabled: pkg.status && pkg.status !== 'installed' && pkg.status !== 'failed',
-      },
-      onClick: (e?: Event) => {
-        e?.stopPropagation();
-        deletePackage(pkgId, pkg.name);
-      },
-    },
-  ];
-}
 
 watch(
   page,

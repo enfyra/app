@@ -229,19 +229,6 @@ function applyFormPermissionGroups() {
   showModal.value = false;
 }
 
-function closeModal() {
-  
-  showModal.value = false;
-}
-
-function cancelChanges() {
-  
-  localFormPermissionGroups.value = JSON.parse(
-    JSON.stringify(originalPermissionGroups.value)
-  );
-  showModal.value = false;
-}
-
 function getTotalPermissions(): number {
   return localFormPermissionGroups.value.reduce((total, group) => {
     const conditions = group.conditions || group.rules || [];

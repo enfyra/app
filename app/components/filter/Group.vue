@@ -258,10 +258,6 @@ function onEndZoneDragOver(event: DragEvent) {
   if (!isGroupEndZoneActive()) setEndZoneDropTarget(props.group);
 }
 
-function onEndZoneDragLeave(event: DragEvent) {
-  event.stopPropagation();
-}
-
 function onEndZoneDrop(event: DragEvent) {
   if (props.readonly) return;
 

@@ -24,7 +24,6 @@ export const useGlobalState = () => {
 
   const {
     data: settingsData,
-    pending: settingsPending,
     execute: executeFetchSettings,
   } = useApi(() => "/enfyra_setting", {
     query: {

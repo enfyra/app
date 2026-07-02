@@ -26,7 +26,7 @@ export function useNotify() {
 
     return new Promise((resolve) => {
       let settled = false
-      const finish = (reason: string) => {
+      const finish = () => {
         if (settled) return
         settled = true
         observer.disconnect()
@@ -35,7 +35,7 @@ export function useNotify() {
       }
 
       const observer = new MutationObserver(() => {
-        if (!hasOpenOverlay()) finish('observer')
+        if (!hasOpenOverlay()) finish()
       })
 
       observer.observe(document.body, {
@@ -45,7 +45,7 @@ export function useNotify() {
         subtree: true,
       })
 
-      const timeout = setTimeout(() => finish('timeout(500ms)'), 500)
+      const timeout = setTimeout(() => finish(), 500)
     })
   }
 

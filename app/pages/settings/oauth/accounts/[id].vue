@@ -35,7 +35,7 @@ const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const tableName = "enfyra_oauth_account";
-const { getId, getIdFieldName } = useDatabase();
+const { getIdFieldName } = useDatabase();
 
 const {
   data: apiData,

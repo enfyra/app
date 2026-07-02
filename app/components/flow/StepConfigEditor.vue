@@ -138,7 +138,7 @@
 
 <script setup lang="ts">
 import type { StepType } from '~/types/flow';
-import type { FilterGroup, FilterCondition } from '~/utils/common/filter/filter-types';
+import type { FilterGroup } from '~/utils/common/filter/filter-types';
 import type { ScriptLanguage } from '~/types/script-contract';
 import { normalizeScriptLanguage } from '~/utils/script-contract';
 

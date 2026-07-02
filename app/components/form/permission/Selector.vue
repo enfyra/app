@@ -46,7 +46,6 @@ const emit = defineEmits(["update"]);
 
 const currentGroups = ref<any[]>([]);
 const isAllowAll = ref(false);
-const groupsOperator = ref("and");
 
 onMounted(() => {
   

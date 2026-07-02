@@ -28,7 +28,6 @@ const rules = defineModel<Rule[]>("rules", { required: true })
 
 const notify = useNotify()
 const { confirm } = useConfirm()
-const { getId } = useDatabase()
 
 type ViewMode = "list" | "form"
 const viewMode = ref<ViewMode>("list")

@@ -8,10 +8,6 @@ const props = defineProps<{
 const { confirm } = useConfirm();
 const table = useModel(props, "modelValue");
 
-function addGroup(list: string[][]) {
-  list?.push([""]);
-}
-
 function addUniqueGroup() {
   if (!table.value.uniques) table.value.uniques = [];
   table.value.uniques.push([""]);
@@ -76,10 +72,6 @@ function canAddFieldToGroup(group: string[]): boolean {
   const availableCount = props.columnNames.filter((name: string) => !group.includes(name) || name === '').length;
   const hasEmptySlot = group.some((f: string) => !f || f === '');
   return availableCount > 0 && !hasEmptySlot;
-}
-
-function hasEmptyField(group: string[]): boolean {
-  return group.some((f: string) => !f || f === '');
 }
 
 function hasDuplicateGroup(list: string[][], groupIndex: number | string, orderMatters = false): boolean {

@@ -21,7 +21,6 @@
         <div class="space-y-3">
           <slot name="header-content" />
           <div
-            ref="dropZone"
             class="border-2 border-dashed border-[var(--border-strong)] rounded-[var(--radius-card)] p-10 text-center transition-all duration-200 lg:hover:border-primary-400"
             :class="{
               'border-primary-500 bg-primary-50 dark:bg-primary-950 scale-105':
@@ -171,7 +170,6 @@ const isOpen = computed({
 });
 
 const fileInput = ref<HTMLInputElement>();
-const dropZone = ref<HTMLElement>();
 const selectedFiles = ref<File[]>([]);
 const isDragOver = ref(false);
 const dragCounter = ref(0);

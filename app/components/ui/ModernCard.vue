@@ -1,7 +1,6 @@
 <template>
   <component
     :is="animated ? 'div' : 'div'"
-    ref="cardRef"
     :class="[
       'relative overflow-hidden',
       borderless ? 'rounded-none bg-transparent border-0 shadow-none p-0' : 'rounded-2xl surface-card',
@@ -61,7 +60,6 @@ const props = withDefaults(defineProps<Props>(), {
   animationDelay: "0ms",
 });
 
-const cardRef = ref<HTMLElement>();
 const isVisible = ref(false);
 
 const sizeClasses = {

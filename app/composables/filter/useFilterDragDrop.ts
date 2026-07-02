@@ -95,7 +95,7 @@ export function useFilterDragDrop() {
     return true;
   }
 
-  function executeDrop(targetGroup: FilterGroup): DropResult {
+  function executeDrop(_targetGroup: FilterGroup): DropResult {
     const defaultResult: DropResult = { success: false, sourceGroupId: null, targetGroupId: null };
 
     if (!dragState.value || !dropTarget.value) return defaultResult;

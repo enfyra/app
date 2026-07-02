@@ -223,7 +223,7 @@ onUnmounted(() => {
     @mouseleave="hideSidebarPeek"
     @focusin="showSidebarPeek"
   >
-    <template #title="{ state }">
+    <template #title>
       <div
         class="flex min-w-0 items-center overflow-hidden"
         :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
@@ -240,7 +240,7 @@ onUnmounted(() => {
     </template>
     <template #description />
 
-    <template #default="{ state }">
+    <template #default>
       <div v-for="group in componentGroups" :key="group.id" class="mb-3">
         <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
       </div>

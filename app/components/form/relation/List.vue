@@ -18,8 +18,6 @@ const emit = defineEmits<{
 
 const { getId } = useDatabase();
 const expandedItems = ref<Set<any>>(new Set());
-const itemRefs = ref<Record<string, HTMLElement>>({});
-const itemWidths = ref<Record<string, string>>({});
 
 function toggle(id: any) {
   if (props.disabled) return;
@@ -35,13 +33,6 @@ function isExpanded(id: any) {
 }
 
 function toggleExpand(id: any) {
-  
-  const el = itemRefs.value[id];
-  if (el && !expandedItems.value.has(id)) {
-    
-    itemWidths.value[id] = `${el.offsetWidth}px`;
-  }
-  
   if (expandedItems.value.has(id)) {
     expandedItems.value.delete(id);
   } else {
@@ -51,21 +42,9 @@ function toggleExpand(id: any) {
   expandedItems.value = new Set(expandedItems.value);
 }
 
-function setItemRef(id: any, el: any) {
-  if (el) {
-    itemRefs.value[id] = el;
-  }
-}
-
-function getItemWidth(id: any): string {
-  return itemWidths.value[id] || '100%';
-}
-
 function navigateToDetail(item: any) {
   emit("navigate-detail", item);
 }
-
-const { checkPermissionCondition } = usePermissions();
 
 function getDisplayLabel(
   item: Record<string, any>
@@ -294,7 +273,6 @@ const { isMobile, isTablet } = useScreen();
     >
       
       <div
-        :ref="(el) => setItemRef(getId(item), el)"
         class="flex items-center min-w-0"
       >
         
