@@ -19,7 +19,6 @@ export const useMenuApi = () => {
 
   const {
     data: menuDefinitions,
-    pending: menuDefinitionsPending,
     execute: fetchMenuDefinitions,
   } = useApi<{ data: MenuApiItem[] }>(() => "/enfyra_menu", {
     query: computed(() => ({

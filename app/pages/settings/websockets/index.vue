@@ -142,7 +142,7 @@ registerHeaderActions([
   },
 ]);
 
-function getGatewayIcon(gateway: any) {
+function getGatewayIcon(_gateway: any) {
   return "i-lucide-radio-tower";
 }
 

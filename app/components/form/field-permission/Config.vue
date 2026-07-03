@@ -124,9 +124,8 @@ const loading = computed(() => (mode.value === "role" ? rolesLoading.value : use
 
 watch(
   searchTerm,
-  debounce(async (q: string) => {
+  debounce(async () => {
     if (suppressSearch.value) return;
-    const s = q.trim();
     if (!menuOpen.value) return;
     menuOpen.value = false;
     await fetchDefaultList();
@@ -337,4 +336,3 @@ async function setMode(next: Mode) {
     </UInputMenu>
   </div>
 </template>
-

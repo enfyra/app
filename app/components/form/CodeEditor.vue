@@ -49,7 +49,6 @@ const minHeight = computed(() => {
 });
 const containerRef = ref<HTMLDivElement>();
 const resizeHandleRef = ref<HTMLDivElement>();
-const previewLayerRef = ref<HTMLDivElement>();
 const isResizing = ref(false);
 const startY = ref(0);
 const startHeight = ref(0);
@@ -659,7 +658,6 @@ function handleMouseUp(e?: MouseEvent) {
     <Teleport to="body">
       <div
         v-if="isResizing && previewStyle"
-        ref="previewLayerRef"
         class="fixed pointer-events-none z-50 border-2 border-dashed border-brand-500 dark:border-brand-400 bg-brand-500/5 rounded-md"
         :style="previewStyle"
       ></div>

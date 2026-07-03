@@ -666,7 +666,6 @@ async function saveStep() {
       parent: stepForm.value.parentId ? { id: stepForm.value.parentId } : null,
       branch: stepForm.value.parentId ? stepForm.value.branch : null,
     };
-    const isEdit = !!editingStepId.value;
     if (editingStepId.value) {
       await updateStepApi({ body, id: editingStepId.value });
       if (updateStepError.value) return;
@@ -860,11 +859,4 @@ const execStepTimeline = computed(() => {
   return timeline;
 });
 
-function formatJson(val: any): string {
-  if (!val) return '';
-  if (typeof val === 'string') {
-    try { return JSON.stringify(JSON.parse(val), null, 2); } catch { return val; }
-  }
-  return JSON.stringify(val, null, 2);
-}
 </script>

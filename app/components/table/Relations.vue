@@ -192,7 +192,7 @@ const tooltipsDisabled = computed(
   () => showPermModal.value || isEditing.value || showInverseModal.value,
 );
 
-function handleShieldClick(rel: any, index: number) {
+function handleShieldClick(_rel: any, index: number) {
   permModalIndex.value = index;
   showPermModal.value = true;
 }
@@ -207,10 +207,6 @@ async function handleDrawerClose() {
     cancelText: "Cancel",
   });
   if (ok) discardChanges();
-}
-
-function cancelDrawer() {
-  isEditing.value = false;
 }
 
 function discardChanges() {

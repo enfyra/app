@@ -18,8 +18,8 @@
               @click="openTest(r)"
             >
               <div class="flex items-center gap-2 mb-2">
-                <div class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-primary-100 dark:bg-primary-900/40">
-                  <UIcon :name="r.icon || 'lucide:code-2'" class="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
+                <div class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 eapp-primary-solid">
+                  <UIcon :name="r.icon || 'lucide:code-2'" class="w-3.5 h-3.5 text-[var(--action-primary-text)]" />
                 </div>
                 <p class="text-xs font-semibold font-mono text-[var(--text-primary)] truncate flex-1">{{ r.path }}</p>
                 <UBadge v-if="!r.isEnabled" color="warning" variant="soft" size="xs">Off</UBadge>

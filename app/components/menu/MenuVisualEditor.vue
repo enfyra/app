@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MenuDefinition, MenuTreeItem, DragEvent } from '~/types';
+import type { MenuDefinition, MenuTreeItem } from '~/types';
 import draggable from 'vuedraggable';
 
 const props = defineProps<{
@@ -98,7 +98,7 @@ function handleMoveToRoot() {
   movingMenuId.value = null;
 }
 
-function handleRootReorder(event: DragEvent) {
+function handleRootReorder() {
   const updatedMenus: MenuDefinition[] = [];
   
   menuTreeItems.value.forEach((item, index) => {

@@ -24,7 +24,6 @@ const { getIncludeFields: getFileFields } = useSchema("enfyra_file");
 
 const {
   data: folder,
-  pending: folderPending,
   execute: fetchFolder,
 } = useApi(() => `/enfyra_folder`, {
   query: computed(() => {

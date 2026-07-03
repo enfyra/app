@@ -1,5 +1,4 @@
 import {
-  DEFAULT_PRIMARY_COLOR,
   getPrimaryColorMeta,
   getPrimaryColorStyle,
   normalizePrimaryColor,

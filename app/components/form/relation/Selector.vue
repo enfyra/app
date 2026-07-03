@@ -151,12 +151,6 @@ function clearSearch() {
   page.value = 1;
 }
 
-async function clearFilter() {
-  currentFilter.value = createEmptyFilter();
-  page.value = 1;
-  await fetchDataWithValidation();
-}
-
 function clearAllFilters() {
   clearSearch();
   currentFilter.value = createEmptyFilter();

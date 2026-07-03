@@ -19,7 +19,6 @@ const permissions = defineModel<Permission[]>("permissions", { required: true })
 
 const notify = useNotify()
 const { confirm } = useConfirm()
-const { isMobile, isTablet } = useScreen()
 const { generateEmptyForm: generateFieldPermEmptyForm } = useSchema("enfyra_field_permission")
 
 type ViewMode = "list" | "form"

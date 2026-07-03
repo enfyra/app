@@ -229,7 +229,6 @@ const { data: eventsData, execute: fetchEvents } = useApi(() => "/enfyra_websock
 });
 
 const {
-  data: updateData,
   error: updateError,
   execute: executeUpdate,
   pending: updateLoading,

@@ -50,8 +50,6 @@ definePageMeta({
 
 const notify = useNotify();
 const router = useRouter();
-const { createLoader } = useLoader();
-const { confirm } = useConfirm();
 
 const tableName = "enfyra_websocket";
 

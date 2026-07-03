@@ -47,16 +47,11 @@ export function applyFieldPositions(
   positions: Record<string, number>,
 ): TableDefinitionField[] {
   const n = fields.length;
-  const fieldKeys = fields.map(fieldKey);
   if (n === 0) {
     return fields;
   }
 
   const positionKeys = Object.keys(positions);
-  const unmatched = positionKeys.filter(
-    (k) => !fields.some((f) => fieldKey(f) === k),
-  );
-
   const pinnedKeys = new Set(
     positionKeys.filter((k) => fields.some((f) => fieldKey(f) === k)),
   );

@@ -199,15 +199,12 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     
     let checkPos = pos - 1;
     let prevLineText = '';
-    let actualPrevLine = null;
-    
     while (checkPos > 0) {
       const lineAtPos = doc.lineAt(checkPos);
       const lineText = lineAtPos.text.trim();
       
       if (lineText !== '') {
         prevLineText = lineAtPos.text;
-        actualPrevLine = lineAtPos;
         break;
       }
       checkPos = lineAtPos.from - 1;
@@ -290,7 +287,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     });
   };
 
-  function enfyraCompletionSource(m: any) {
+  function enfyraCompletionSource() {
     return (context: any) => {
       const before = context.matchBefore(/[@#%][\w.]*/);
       if (!before) {
@@ -304,7 +301,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     };
   }
 
-  function vueCompletionSource(m: any) {
+  function vueCompletionSource() {
     return (context: any) => {
       const doc = context.state.doc.toString();
       const before = doc.slice(0, context.pos);
@@ -365,9 +362,9 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       m.closeBrackets(),
       m.autocompletion({
         override: enfyraAutocomplete === 'vue'
-          ? [vueCompletionSource(m)]
+          ? [vueCompletionSource()]
           : enfyraAutocomplete
-            ? [enfyraCompletionSource(m)]
+            ? [enfyraCompletionSource()]
             : undefined,
       }),
       m.highlightSelectionMatches(),

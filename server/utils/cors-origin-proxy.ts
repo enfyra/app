@@ -5,7 +5,6 @@ import {
   getRequestHeader,
   readBody,
   setResponseHeaders,
-  type H3Event,
 } from 'h3';
 import { clearCorsCache } from '../middleware/cors';
 

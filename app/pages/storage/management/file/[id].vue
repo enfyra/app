@@ -3,7 +3,6 @@ const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const route = useRoute();
-const router = useRouter();
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { updateFileTimestamp } = useGlobalState();
@@ -15,7 +14,6 @@ const { getIdFieldName } = useDatabase();
 const {
   data: file,
   pending,
-  error,
   execute,
 } = useApi(`/enfyra_file`, {
   query: computed(() => {

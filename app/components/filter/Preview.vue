@@ -50,8 +50,6 @@ function copyToClipboard() {
     navigator.clipboard.writeText(formattedQuery.value);
   }
 }
-
-const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>

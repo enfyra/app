@@ -121,8 +121,6 @@ const gridClass = computed(() => {
   };
   return colMap[cols] || 'grid-cols-3';
 });
-
-const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
