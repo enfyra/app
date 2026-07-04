@@ -173,6 +173,11 @@ export default defineAppConfig({
           class: "eapp-button-success-ghost"
         },
         {
+          color: "success",
+          variant: "outline",
+          class: "eapp-button-success-outline"
+        },
+        {
           color: "warning",
           variant: "solid",
           class: "eapp-button-warning-solid",
@@ -188,6 +193,11 @@ export default defineAppConfig({
           class: "eapp-button-warning-ghost"
         },
         {
+          color: "warning",
+          variant: "outline",
+          class: "eapp-button-warning-outline"
+        },
+        {
           color: "info",
           variant: "solid",
           class: "eapp-button-info-solid",
@@ -201,6 +211,11 @@ export default defineAppConfig({
           color: "info",
           variant: "ghost",
           class: "eapp-button-info-ghost"
+        },
+        {
+          color: "info",
+          variant: "outline",
+          class: "eapp-button-info-outline"
         }
       ],
     },

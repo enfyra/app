@@ -143,6 +143,10 @@
     --action-neutral-bg: var(--md-surface-container);
     --action-neutral-bg-hover: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface-container));
     --action-neutral-bg-active: color-mix(in srgb, var(--md-primary) 17%, var(--md-surface-container));
+    --action-neutral-solid-bg: var(--md-on-surface);
+    --action-neutral-solid-bg-hover: color-mix(in srgb, var(--md-on-surface) 88%, var(--md-surface));
+    --action-neutral-solid-bg-active: color-mix(in srgb, var(--md-on-surface) 78%, var(--md-surface));
+    --action-neutral-solid-text: var(--md-surface);
     --action-neutral-border: var(--md-outline);
     --action-neutral-outline-bg: var(--md-surface);
     --action-neutral-outline-bg-hover: var(--md-surface-container-low);

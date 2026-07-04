@@ -27,33 +27,25 @@ const userInitial = computed(() => {
 const panelGridClass = computed(() => (isOpen.value ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'));
 const { accountPanelItems, register } = useAccountPanelRegistry();
 
-const accountPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-bold text-[var(--text-secondary)] transition-colors hover:bg-[var(--nav-item-hover-bg)] hover:text-[var(--nav-item-hover-text)]";
-const logoutPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] bg-[var(--action-danger-bg)] px-2.5 py-2 text-left text-sm font-bold text-[var(--action-danger-text)] shadow-theme-xs transition-all hover:bg-[var(--action-danger-bg-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--danger-ring)]";
+const accountPanelButtonClass = "eapp-account-panel-row eapp-button-neutral-ghost flex w-full cursor-pointer items-center gap-2 px-2.5 py-2 text-left text-sm font-bold transition-colors";
 
 const ProfileAccountPanelItem = defineComponent({
   name: "ProfileAccountPanelItem",
   setup() {
-    const UIcon = resolveComponent("UIcon");
+    const UButton = resolveComponent("UButton");
     const activate = () => router.push("/me");
-    const onKeydown = (event: KeyboardEvent) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      activate();
-    };
 
     return () => h(
-      "div",
+      UButton,
       {
-        role: "button",
-        tabindex: 0,
-        class: accountPanelButtonClass,
+        block: true,
+        color: "neutral",
+        variant: "ghost",
+        icon: "lucide:user",
+        label: "Profile",
+        class: "eapp-account-panel-row justify-start font-bold",
         onClick: activate,
-        onKeydown,
       },
-      [
-        h(UIcon, { name: "lucide:user", class: "h-5 w-5 shrink-0 text-[var(--text-tertiary)]" }),
-        h("span", { class: "truncate" }, "Profile"),
-      ],
     );
   },
 });
@@ -61,26 +53,19 @@ const ProfileAccountPanelItem = defineComponent({
 const LogoutAccountPanelItem = defineComponent({
   name: "LogoutAccountPanelItem",
   setup() {
-    const UIcon = resolveComponent("UIcon");
-    const onKeydown = (event: KeyboardEvent) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      handleLogout();
-    };
+    const UButton = resolveComponent("UButton");
 
     return () => h(
-      "div",
+      UButton,
       {
-        role: "button",
-        tabindex: 0,
-        class: logoutPanelButtonClass,
+        block: true,
+        color: "error",
+        variant: "solid",
+        icon: "lucide:log-out",
+        label: "Logout",
+        class: "eapp-account-panel-row justify-start font-bold",
         onClick: handleLogout,
-        onKeydown,
       },
-      [
-        h(UIcon, { name: "lucide:log-out", class: "h-5 w-5 shrink-0" }),
-        h("span", { class: "truncate" }, "Logout"),
-      ],
     );
   },
 });
@@ -211,7 +196,7 @@ async function handleLogout() {
     <button
       v-if="collapsed"
       type="button"
-      class="relative flex items-center justify-center w-full rounded-[var(--radius-control)] border border-[var(--card-border)] bg-[var(--block-base)] p-2 shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--card-border-hover)] cursor-pointer"
+      class="eapp-account-panel-collapsed-trigger relative flex w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-[var(--card-border)] bg-[var(--block-base)] p-2 shadow-[var(--shadow-sm)] transition-colors"
       aria-label="Open profile"
       @click="togglePanel"
     >
@@ -226,12 +211,12 @@ async function handleLogout() {
 
     <div
       v-else
-      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--block-base)] shadow-[var(--shadow-sm)] backdrop-blur-xl transition-colors duration-200 hover:border-[var(--card-border-hover)]"
+      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--block-base)] shadow-[var(--shadow-sm)] backdrop-blur-xl"
     >
       <div
         role="button"
         tabindex="0"
-        class="flex cursor-pointer items-center gap-3 w-full p-2.5 text-left"
+        class="eapp-account-panel-row eapp-button-neutral-ghost m-2 mb-0 flex w-[calc(100%-1rem)] cursor-pointer items-center gap-3 p-2.5 text-left transition-colors"
         :aria-expanded="isOpen"
         @click="togglePanel"
         @keydown.enter.prevent="togglePanel"
