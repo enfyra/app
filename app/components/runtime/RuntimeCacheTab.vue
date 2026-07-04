@@ -100,7 +100,7 @@ async function handleReload(action: (typeof reloadActions)[number]) {
       <div class="mb-3 font-medium text-[var(--text-primary)]">Reload Cache</div>
       <div
         v-if="activeReloads.length"
-        class="mb-3 rounded-md border border-primary-500/20 bg-primary-500/10 px-3 py-2 text-sm text-primary-700 dark:text-primary-300"
+        class="eapp-primary-soft mb-3 rounded-md px-3 py-2 text-sm"
       >
         Reloading {{ activeReloads.map((item) => runtimeCacheFlowLabel(item.flow)).join(', ') }}
       </div>
@@ -113,7 +113,7 @@ async function handleReload(action: (typeof reloadActions)[number]) {
           <div
             :class="[
               'flex h-9 w-9 shrink-0 items-center justify-center rounded-md',
-              action.color === 'primary' ? 'bg-primary-500/20 text-primary-600 dark:text-primary-400' : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)]',
+              action.color === 'primary' ? 'eapp-primary-soft' : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)]',
             ]"
           >
             <UIcon :name="action.icon" class="h-5 w-5" />
@@ -174,7 +174,7 @@ async function handleReload(action: (typeof reloadActions)[number]) {
             </div>
           </div>
 
-          <div v-if="row.error" class="mt-2 text-xs text-error-600 dark:text-error-400">
+          <div v-if="row.error" class="eapp-status-danger-text mt-2 text-xs">
             {{ row.error }}
           </div>
         </div>

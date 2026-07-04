@@ -35,8 +35,8 @@ export function maxSeverity(...values: RuntimeSeverity[]): RuntimeSeverity {
 }
 
 export function metricTextClass(severity: RuntimeSeverity) {
-  if (severity === 'error') return 'text-error-600 dark:text-error-400';
-  if (severity === 'warning') return 'text-warning-600 dark:text-warning-400';
+  if (severity === 'error') return 'eapp-status-danger-text';
+  if (severity === 'warning') return 'eapp-status-warning-text';
   return 'text-[var(--text-primary)]';
 }
 

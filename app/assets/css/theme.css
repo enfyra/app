@@ -96,7 +96,7 @@
     --text-secondary: var(--md-on-surface-variant);
     --text-tertiary: color-mix(in srgb, var(--md-on-surface-variant) 70%, var(--md-surface));
     --text-quaternary: color-mix(in srgb, var(--md-on-surface) 45%, var(--md-surface));
-    --text-disabled: color-mix(in srgb, var(--md-on-surface) 30%, var(--md-surface));
+    --text-disabled: color-mix(in srgb, var(--md-on-surface) 48%, var(--md-surface));
     --text-muted: var(--text-tertiary);
 
     --border-subtle: color-mix(in srgb, var(--md-outline-variant) 55%, transparent);

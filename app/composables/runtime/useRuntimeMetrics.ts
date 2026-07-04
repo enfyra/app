@@ -7,6 +7,7 @@ import {
 } from '~/composables/shared/useAdminSocket';
 import type {
   RedisAdminKeyDetail,
+  RedisAdminKeyFilter,
   RedisAdminKeySummary,
   RedisAdminSetKeyInput,
   RuntimeAppMetricInstance,
@@ -251,6 +252,7 @@ export function useRuntimeMetrics() {
   const redisKeys = ref<RedisAdminKeySummary[]>([]);
   const redisKeysCursor = ref('0');
   const redisKeysPattern = ref('*');
+  const redisKeysFilter = ref<RedisAdminKeyFilter>('all');
   const redisKeysPending = ref(false);
   const redisDetailPending = ref(false);
   const redisWritePending = ref(false);
@@ -281,6 +283,7 @@ export function useRuntimeMetrics() {
         cursor: reset ? '0' : redisKeysCursor.value,
         pattern: redisKeysPattern.value || '*',
         count: 10,
+        filter: redisKeysFilter.value,
       });
       redisKeysCursor.value = result.cursor;
       if (reset) {
@@ -375,11 +378,17 @@ export function useRuntimeMetrics() {
     redisSelectedDetail.value = null;
   }
 
+  function setRedisKeysFilter(filter: RedisAdminKeyFilter, options: { resetPattern?: boolean } = {}) {
+    redisKeysFilter.value = filter;
+    redisKeysCursor.value = '0';
+    if (options.resetPattern !== false) redisKeysPattern.value = '*';
+    void scanRedisKeys({ reset: true });
+  }
+
   watch(activeTab, (tab) => {
-    if (tab === 'redis' && !redisAdminOverview.value) {
-      void refreshRedisOverview();
-      void scanRedisKeys({ reset: true });
-    }
+    if (tab !== 'redis') return;
+    if (!redisAdminOverview.value) void refreshRedisOverview();
+    if (redisKeys.value.length === 0) void scanRedisKeys({ reset: true });
   }, { immediate: true });
 
   watch(redisAdminKeyChange, (change) => {
@@ -524,6 +533,7 @@ export function useRuntimeMetrics() {
     redisKeys,
     redisKeysCursor,
     redisKeysPattern,
+    redisKeysFilter,
     redisKeysPending,
     redisDetailPending,
     redisWritePending,
@@ -537,6 +547,7 @@ export function useRuntimeMetrics() {
     deleteRedisKey,
     updateRedisKeyTtl,
     clearRedisSelection,
+    setRedisKeysFilter,
     activeGuide,
     updatedSeverity,
     clusterSeverity,

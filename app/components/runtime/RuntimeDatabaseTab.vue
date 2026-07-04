@@ -30,15 +30,15 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
 
         <div
           v-if="databaseWarnings(metrics).length > 0"
-          class="mt-3 rounded-lg border border-warning-400/20 bg-warning-400/5 p-3"
+          class="eapp-status-warning-soft mt-3 rounded-lg p-3"
         >
-          <div class="flex items-center gap-2 text-sm font-medium text-warning-600 dark:text-warning-400">
+          <div class="flex items-center gap-2 text-sm font-medium">
             <UIcon name="lucide:triangle-alert" class="h-4 w-4" />
             Database warnings
           </div>
           <ul class="mt-2 space-y-1 text-sm text-[var(--text-secondary)]">
             <li v-for="warning in databaseWarnings(metrics)" :key="warning" class="flex gap-2">
-              <span class="text-warning-600 dark:text-warning-400">•</span>
+              <span class="eapp-status-warning-text">•</span>
               <span>{{ warning }}</span>
             </li>
           </ul>

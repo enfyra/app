@@ -1,10 +1,23 @@
 <script setup lang="ts">
-import type { RedisAdminKeySummary, RedisAdminSystemKind, RedisAdminValueType } from '~/types/runtime-monitor';
+import type { RedisAdminKeyFilter, RedisAdminKeySummary, RedisAdminSystemKind, RedisAdminValueType } from '~/types/runtime-monitor';
 import { metricTextClass, shortText } from '~/utils/runtime-monitor/core';
 import { fmtBytes, fmtDateTime, fmtNumber, fmtSec } from '~/utils/runtime-monitor/format';
 
 type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
 type KeyEditorMode = 'create' | 'edit';
+type KeyGroup = {
+  name: string;
+  count: number;
+  memoryBytes?: number | null;
+  system?: boolean;
+  systemKind?: RedisAdminSystemKind;
+};
+type KeyFilterOption = {
+  label: string;
+  value: RedisAdminKeyFilter;
+  count?: number;
+  color: ReturnType<typeof groupColor>;
+};
 type KeyEditorState = {
   key: string;
   type: RedisAdminValueType;
@@ -63,6 +76,29 @@ const isKeyEditorDirty = computed(() => {
     || current.ttl !== initial.ttl;
 });
 const currentGroups = computed(() => overview.value?.groups ?? []);
+const visibleRedisKeys = computed(() =>
+  props.runtime.redisKeys.filter((key) => matchesKeyFilter(key, props.runtime.redisKeysFilter)),
+);
+const keyFilterOptions = computed<KeyFilterOption[]>(() => {
+  const options = new Map<RedisAdminKeyFilter, KeyFilterOption>();
+  options.set('all', {
+    label: 'All',
+    value: 'all',
+    count: overview.value?.keyCount ?? 0,
+    color: 'neutral',
+  });
+  for (const group of currentGroups.value) {
+    const value = groupFilterValue(group);
+    if (!value || options.has(value)) continue;
+    options.set(value, {
+      label: groupLabel(group) || group.name,
+      value,
+      count: group.count,
+      color: groupColor(group),
+    });
+  }
+  return [...options.values()];
+});
 const userCacheQuotaLabel = computed(() => {
   const quota = overview.value?.userCache;
   if (!quota || quota.limitBytes <= 0) return 'allocated memory not limited';
@@ -106,6 +142,8 @@ function systemKindLabel(kind?: RedisAdminSystemKind) {
       return 'runtime monitor';
     case 'sql_pool_coordination':
       return 'SQL pool';
+    case 'rate_limit':
+      return 'rate limit';
     case 'system_lock':
       return 'system lock';
     default:
@@ -127,11 +165,20 @@ function systemKindColor(kind?: RedisAdminSystemKind) {
       return 'neutral';
     case 'sql_pool_coordination':
       return 'warning';
+    case 'rate_limit':
+      return 'info';
     case 'system_lock':
       return 'error';
     default:
       return 'neutral';
   }
+}
+
+function groupFilterValue(group: KeyGroup): RedisAdminKeyFilter | null {
+  if (group.systemKind === 'rate_limit') return null;
+  if (group.systemKind === 'sql_pool_coordination') return null;
+  if (group.systemKind) return group.systemKind;
+  return group.system ? null : 'custom';
 }
 
 function groupLabel(group: { systemKind?: RedisAdminSystemKind; system?: boolean; name: string }) {
@@ -154,6 +201,8 @@ function groupDescription(group: { systemKind?: RedisAdminSystemKind; system?: b
       return 'Socket.IO adapter coordination';
     case 'runtime_monitor':
       return 'Runtime metrics and telemetry';
+    case 'rate_limit':
+      return 'Rate-limit counters and request windows';
     case 'system_lock':
       return 'Boot, provision, or recovery locks';
     default:
@@ -179,6 +228,37 @@ function keyActionLabel(row: RedisAdminKeySummary) {
 
 function keyActionIcon(row: RedisAdminKeySummary) {
   return row.modifiable === false ? 'lucide:eye' : 'lucide:pencil';
+}
+
+function inferSystemKindFromKey(key: string): RedisAdminSystemKind | undefined {
+  if (key.startsWith('coord:sql:pool:')) return 'sql_pool_coordination';
+  if (key.startsWith('rl:')) return 'rate_limit';
+  if (key.startsWith('runtime_cache:')) return 'runtime_cache';
+  if (key.startsWith('user_cache:') || key.startsWith('user_cache_meta:')) return 'user_cache';
+}
+
+function matchesKeyFilter(key: RedisAdminKeySummary, filter: RedisAdminKeyFilter) {
+  const systemKind = key.systemKind ?? inferSystemKindFromKey(key.key);
+  if (systemKind === 'rate_limit' && filter !== 'rate_limit') return false;
+  if (systemKind === 'sql_pool_coordination' && filter !== 'sql_pool_coordination') return false;
+  if (filter === 'all') return true;
+  if (filter === 'custom') return !key.isSystem && !systemKind;
+  return systemKind === filter;
+}
+
+function setKeyFilter(filter: RedisAdminKeyFilter) {
+  props.runtime.setRedisKeysFilter(filter);
+}
+
+function setGroupFilter(group: KeyGroup) {
+  const filter = groupFilterValue(group);
+  if (!filter) return;
+  setKeyFilter(filter);
+}
+
+function emptyKeysLabel() {
+  if (props.runtime.redisKeysPending) return 'Scanning keys...';
+  return 'No keys match this pattern/filter';
 }
 
 function parseJsonLike(value: string) {
@@ -412,11 +492,11 @@ function openCreateKey() {
         </div>
       </div>
 
-      <div v-if="runtime.redisError" class="mt-3 rounded-lg border border-warning-400/20 bg-warning-400/5 p-3 text-sm text-warning-700 dark:text-warning-300">
+      <div v-if="runtime.redisError" class="eapp-status-warning-soft mt-3 rounded-lg p-3 text-sm">
         {{ runtime.redisError }}
       </div>
 
-      <div v-if="redisWarnings.length > 0" class="mt-3 rounded-lg border border-warning-400/20 bg-warning-400/5 p-3 text-sm text-warning-700 dark:text-warning-300">
+      <div v-if="redisWarnings.length > 0" class="eapp-status-warning-soft mt-3 rounded-lg p-3 text-sm">
         <div class="flex items-center gap-2 font-medium">
           <UIcon name="lucide:triangle-alert" class="h-4 w-4" />
           Redis warnings
@@ -516,7 +596,15 @@ function openCreateKey() {
             </div>
           </div>
           <div class="mt-3 space-y-2 text-sm">
-            <div v-for="group in currentGroups" :key="group.name" class="grid grid-cols-[minmax(0,1fr)_56px_84px] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_64px_96px] sm:gap-3">
+            <button
+              v-for="group in currentGroups"
+              :key="group.name"
+              type="button"
+              class="grid w-full grid-cols-[minmax(0,1fr)_56px_84px] items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-[var(--surface-muted)] sm:grid-cols-[minmax(0,1fr)_64px_96px] sm:gap-3"
+              :class="groupFilterValue(group) === runtime.redisKeysFilter ? 'bg-[var(--state-primary-soft-bg)]' : ''"
+              :disabled="!groupFilterValue(group)"
+              @click="setGroupFilter(group)"
+            >
               <div class="min-w-0">
                 <UBadge :color="groupColor(group)" variant="soft" size="xs">
                   {{ groupLabel(group) }}
@@ -527,7 +615,7 @@ function openCreateKey() {
               </div>
               <div class="text-right text-[var(--text-tertiary)]">{{ fmtNumber(group.count) }}</div>
               <div class="text-right text-[var(--text-tertiary)]">{{ fmtBytes(group.memoryBytes) }}</div>
-            </div>
+            </button>
             <div v-if="currentGroups.length === 0" class="text-[var(--text-tertiary)]">No current namespace keys found</div>
           </div>
 
@@ -537,9 +625,12 @@ function openCreateKey() {
 
     <section class="surface-card min-w-0 rounded-lg p-4">
       <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div class="font-medium text-[var(--text-primary)]">Key Browser</div>
+        <div>
+          <div class="font-medium text-[var(--text-primary)]">Key Browser</div>
+          <div class="mt-1 text-xs text-[var(--text-tertiary)]">Redis SCAN MATCH glob</div>
+        </div>
         <div class="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] gap-2 sm:w-auto sm:grid-cols-[16rem_auto_auto]">
-          <UInput v-model="runtime.redisKeysPattern" icon="i-lucide-search" size="sm" class="min-w-0" placeholder="pattern, e.g. *" @keyup.enter="runtime.scanRedisKeys({ reset: true })" />
+          <UInput v-model="runtime.redisKeysPattern" icon="i-lucide-search" size="sm" class="min-w-0" placeholder="MATCH glob, e.g. * or *cache*" @keyup.enter="runtime.scanRedisKeys({ reset: true })" />
           <UButton size="sm" icon="lucide:scan-search" :loading="runtime.redisKeysPending" class="min-w-0" @click="runtime.scanRedisKeys({ reset: true })">
             Scan
           </UButton>
@@ -548,13 +639,27 @@ function openCreateKey() {
           </UButton>
         </div>
       </div>
+      <div v-if="keyFilterOptions.length > 0" class="mb-3 flex flex-wrap gap-2">
+        <UButton
+          v-for="filter in keyFilterOptions"
+          :key="filter.value"
+          size="xs"
+          :color="filter.color"
+          :icon="runtime.redisKeysFilter === filter.value ? 'lucide:check' : undefined"
+          :variant="runtime.redisKeysFilter === filter.value ? 'solid' : 'soft'"
+          @click="setKeyFilter(filter.value)"
+        >
+          {{ filter.label }}
+          <span v-if="filter.count != null" class="ml-1 text-[0.7rem] opacity-80">{{ fmtNumber(filter.count) }}</span>
+        </UButton>
+      </div>
 
       <div class="space-y-2 md:hidden">
         <div
-          v-for="row in runtime.redisKeys"
+          v-for="row in visibleRedisKeys"
           :key="row.key"
           class="w-full rounded-lg border border-[var(--border-default)] p-3 text-left hover:bg-[var(--surface-muted)]"
-          :class="runtime.redisSelectedKey === row.key ? 'bg-primary-500/5' : ''"
+          :class="runtime.redisSelectedKey === row.key ? 'bg-[var(--state-primary-soft-bg)]' : ''"
         >
           <div class="flex min-w-0 items-start justify-between gap-2">
             <div class="min-w-0">
@@ -583,7 +688,7 @@ function openCreateKey() {
               <button
                 type="button"
                 class="shrink-0 text-[var(--text-quaternary)] hover:text-[var(--text-primary)]"
-                :class="copiedKey === row.key ? 'text-success-500 hover:text-success-500' : ''"
+                :class="copiedKey === row.key ? 'eapp-status-success-text' : ''"
                 title="Copy key"
                 @click="copyKey(row.key)"
               >
@@ -607,8 +712,8 @@ function openCreateKey() {
           </div>
           <div v-if="row.reason" class="mt-2 truncate text-xs text-[var(--text-tertiary)]">{{ row.reason }}</div>
         </div>
-        <div v-if="runtime.redisKeys.length === 0" class="rounded-lg border border-[var(--border-default)] px-3 py-8 text-center text-sm text-[var(--text-tertiary)]">
-          No keys loaded
+        <div v-if="visibleRedisKeys.length === 0" class="rounded-lg border border-[var(--border-default)] px-3 py-8 text-center text-sm text-[var(--text-tertiary)]">
+          {{ emptyKeysLabel() }}
         </div>
       </div>
 
@@ -625,10 +730,10 @@ function openCreateKey() {
           </thead>
           <tbody class="divide-y divide-[var(--border-default)]">
             <tr
-              v-for="row in runtime.redisKeys"
+              v-for="row in visibleRedisKeys"
               :key="row.key"
               class="hover:bg-[var(--surface-muted)]"
-              :class="runtime.redisSelectedKey === row.key ? 'bg-primary-500/5' : ''"
+              :class="runtime.redisSelectedKey === row.key ? 'bg-[var(--state-primary-soft-bg)]' : ''"
             >
               <td class="max-w-[420px] px-3 py-2">
                 <div class="flex min-w-0 items-center gap-2">
@@ -638,7 +743,7 @@ function openCreateKey() {
                   <button
                     type="button"
                     class="shrink-0 text-[var(--text-quaternary)] hover:text-[var(--text-primary)]"
-                    :class="copiedKey === row.key ? 'text-success-500 hover:text-success-500' : ''"
+                    :class="copiedKey === row.key ? 'eapp-status-success-text' : ''"
                     title="Copy key"
                     @click="copyKey(row.key)"
                   >
@@ -673,9 +778,9 @@ function openCreateKey() {
                 </UButton>
               </td>
             </tr>
-            <tr v-if="runtime.redisKeys.length === 0">
+            <tr v-if="visibleRedisKeys.length === 0">
               <td colspan="5" class="px-3 py-8 text-center text-[var(--text-tertiary)]">
-                No keys loaded
+                {{ emptyKeysLabel() }}
               </td>
             </tr>
           </tbody>
@@ -692,7 +797,7 @@ function openCreateKey() {
           :loading="runtime.redisKeysPending"
           @click="runtime.scanRedisKeys({ reset: false })"
         >
-          Load More
+          Load next keys
         </UButton>
       </div>
     </section>
@@ -701,13 +806,13 @@ function openCreateKey() {
       v-model:open="keyEditorDialogOpen"
       class="max-w-[760px]"
       :ui="{ body: 'pt-4 max-h-[min(72vh,680px)] overflow-y-auto' }"
-      :danger-action="selected ? { label: 'Delete', icon: 'lucide:trash-2', tone: 'danger', variant: 'soft', disabled: !canModifySelected || runtime.redisWritePending, onClick: deleteKey } : false"
-      :cancel-action="{ label: 'Cancel', variant: 'outline', disabled: runtime.redisWritePending, onClick: requestCloseKeyEditor }"
-      :primary-action="{ label: keyEditorMode === 'create' ? 'Create' : 'Save', icon: 'lucide:save', type: 'submit', form: 'redis-key-editor-form', loading: runtime.redisWritePending, disabled: selectedLocked || !formKey.trim() }"
+      :danger-action="selected && canModifySelected ? { label: 'Delete', icon: 'lucide:trash-2', tone: 'danger', variant: 'soft', disabled: runtime.redisWritePending, onClick: deleteKey } : false"
+      :cancel-action="{ label: selectedLocked ? 'Close' : 'Cancel', variant: 'outline', disabled: runtime.redisWritePending, onClick: requestCloseKeyEditor }"
+      :primary-action="!selectedLocked ? { label: keyEditorMode === 'create' ? 'Create' : 'Save', icon: 'lucide:save', type: 'submit', form: 'redis-key-editor-form', loading: runtime.redisWritePending, disabled: !formKey.trim() } : false"
     >
       <template #header>
         <div class="flex min-w-0 items-center gap-2">
-          <UIcon :name="keyEditorMode === 'create' ? 'lucide:plus' : 'lucide:pencil'" class="h-5 w-5 text-primary-500" />
+          <UIcon :name="keyEditorMode === 'create' ? 'lucide:plus' : 'lucide:pencil'" class="eapp-primary-text h-5 w-5" />
           <h3 class="truncate text-lg font-semibold">{{ keyEditorTitle }}</h3>
           <UBadge v-if="selected" :color="ownerColor(selected)" variant="soft">
             {{ selectedLocked ? ownerLabel(selected) : 'editable' }}
@@ -716,7 +821,7 @@ function openCreateKey() {
       </template>
 
       <template #body>
-        <div v-if="selectedLocked" class="mb-3 rounded-lg border border-warning-400/20 bg-warning-400/5 p-3 text-sm text-warning-700 dark:text-warning-300">
+        <div v-if="selectedLocked" class="eapp-status-neutral-soft mb-3 rounded-lg p-3 text-sm">
           {{ selected?.reason || 'Read-only Redis key' }}
         </div>
 
@@ -753,7 +858,7 @@ function openCreateKey() {
           </div>
         </form>
 
-        <div v-if="selected" class="mt-4 border-t border-[var(--border-default)] pt-3">
+        <div v-if="selected && canModifySelected" class="mt-4 border-t border-[var(--border-default)] pt-3">
           <div class="mb-2 text-xs font-medium text-[var(--text-tertiary)]">TTL Control</div>
           <div class="flex gap-2">
             <UInput v-model="ttlInput" type="number" min="1" class="min-w-0 flex-1" :disabled="!canModifySelected || runtime.redisWritePending" placeholder="seconds" />
