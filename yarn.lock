@@ -4815,7 +4815,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tiptap/extension-link@npm:^3.15.3":
+"@tiptap/extension-link@npm:3.15.3, @tiptap/extension-link@npm:^3.15.3":
   version: 3.15.3
   resolution: "@tiptap/extension-link@npm:3.15.3"
   dependencies:
@@ -4952,6 +4952,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tiptap/extension-placeholder@npm:3.15.3":
+  version: 3.15.3
+  resolution: "@tiptap/extension-placeholder@npm:3.15.3"
+  peerDependencies:
+    "@tiptap/extensions": ^3.15.3
+  checksum: 10c0/2b9d203f7c8cbf288f62f9803aea9617f54bc7a06bc6f010102f1d468031a515cbe008cef1735653273a6d838b9566735e9167177211df79285395e2a112f603
+  languageName: node
+  linkType: hard
+
 "@tiptap/extension-placeholder@npm:^3.22.4":
   version: 3.22.4
   resolution: "@tiptap/extension-placeholder@npm:3.22.4"
@@ -5043,7 +5052,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tiptap/extension-underline@npm:^3.15.3":
+"@tiptap/extension-underline@npm:3.15.3, @tiptap/extension-underline@npm:^3.15.3":
   version: 3.15.3
   resolution: "@tiptap/extension-underline@npm:3.15.3"
   peerDependencies:
@@ -5061,7 +5070,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tiptap/extensions@npm:^3.15.3":
+"@tiptap/extensions@npm:3.15.3, @tiptap/extensions@npm:^3.15.3":
   version: 3.15.3
   resolution: "@tiptap/extensions@npm:3.15.3"
   peerDependencies:
@@ -7894,11 +7903,15 @@ __metadata:
     "@tiptap/extension-code-block": "npm:3.15.3"
     "@tiptap/extension-code-block-lowlight": "npm:3.15.3"
     "@tiptap/extension-image": "npm:3.15.3"
+    "@tiptap/extension-link": "npm:3.15.3"
+    "@tiptap/extension-placeholder": "npm:3.15.3"
     "@tiptap/extension-table": "npm:3.15.3"
     "@tiptap/extension-table-cell": "npm:3.15.3"
     "@tiptap/extension-table-header": "npm:3.15.3"
     "@tiptap/extension-table-row": "npm:3.15.3"
     "@tiptap/extension-text-align": "npm:3.15.3"
+    "@tiptap/extension-underline": "npm:3.15.3"
+    "@tiptap/extensions": "npm:3.15.3"
     "@tiptap/pm": "npm:3.15.3"
     "@tiptap/starter-kit": "npm:3.15.3"
     "@tiptap/vue-3": "npm:3.15.3"
