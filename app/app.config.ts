@@ -119,6 +119,11 @@ export default defineAppConfig({
         },
         {
           color: "neutral",
+          variant: "solid",
+          class: "eapp-button-neutral-solid"
+        },
+        {
+          color: "neutral",
           variant: "soft",
           class: "eapp-button-neutral-soft"
         },

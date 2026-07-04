@@ -566,6 +566,7 @@ button:focus-visible,
 }
 
 .eapp-button-primary-solid,
+.eapp-button-neutral-solid,
 .eapp-button-success-solid,
 .eapp-button-warning-solid,
 .eapp-button-info-solid,
@@ -575,14 +576,25 @@ button:focus-visible,
   box-shadow: var(--shadow-xs) !important;
 }
 
+.eapp-button-neutral-solid {
+  --eapp-button-bg: var(--action-neutral-bg);
+  --eapp-button-bg-hover: var(--action-neutral-bg-hover);
+  --eapp-button-bg-active: var(--action-neutral-bg-active);
+  --eapp-button-text: var(--action-neutral-text);
+  --eapp-button-disabled-bg: var(--action-neutral-disabled-bg);
+  --eapp-button-disabled-text: var(--action-neutral-disabled-text);
+  --eapp-button-disabled-ring: var(--action-neutral-border);
+  box-shadow: inset 0 0 0 1px var(--action-neutral-border), var(--shadow-xs) !important;
+}
+
 .eapp-button-primary-solid {
   --eapp-button-bg: var(--action-primary-bg);
   --eapp-button-bg-hover: var(--action-primary-bg-hover);
   --eapp-button-bg-active: var(--action-primary-bg-active);
   --eapp-button-text: var(--action-primary-text);
-  --eapp-button-disabled-bg: var(--action-primary-disabled-bg);
-  --eapp-button-disabled-text: var(--action-primary-disabled-text);
-  --eapp-button-disabled-ring: var(--action-primary-disabled-ring);
+  --eapp-button-disabled-bg: var(--action-neutral-disabled-bg);
+  --eapp-button-disabled-text: var(--action-neutral-disabled-text);
+  --eapp-button-disabled-ring: var(--action-neutral-border);
 }
 
 .eapp-button-success-solid {
@@ -590,9 +602,9 @@ button:focus-visible,
   --eapp-button-bg-hover: var(--action-success-bg-hover);
   --eapp-button-bg-active: var(--action-success-bg-active);
   --eapp-button-text: var(--action-success-text);
-  --eapp-button-disabled-bg: var(--state-success-soft-bg);
-  --eapp-button-disabled-text: var(--state-success-soft-text);
-  --eapp-button-disabled-ring: var(--state-success-outline-border);
+  --eapp-button-disabled-bg: var(--action-neutral-disabled-bg);
+  --eapp-button-disabled-text: var(--action-neutral-disabled-text);
+  --eapp-button-disabled-ring: var(--action-neutral-border);
 }
 
 .eapp-button-warning-solid {
@@ -620,6 +632,7 @@ button:focus-visible,
 }
 
 .eapp-button-primary-solid:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-neutral-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-success-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-warning-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-info-solid:hover:not(:disabled):not([aria-disabled="true"]),
@@ -629,6 +642,7 @@ button:focus-visible,
 }
 
 .eapp-button-primary-solid:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-neutral-solid:active:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-success-solid:active:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-warning-solid:active:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-info-solid:active:not(:disabled):not([aria-disabled="true"]),
@@ -638,6 +652,8 @@ button:focus-visible,
 
 .eapp-button-primary-solid:disabled,
 .eapp-button-primary-solid[aria-disabled="true"],
+.eapp-button-neutral-solid:disabled,
+.eapp-button-neutral-solid[aria-disabled="true"],
 .eapp-button-success-solid:disabled,
 .eapp-button-success-solid[aria-disabled="true"],
 .eapp-button-warning-solid:disabled,
@@ -645,7 +661,9 @@ button:focus-visible,
 .eapp-button-info-solid:disabled,
 .eapp-button-info-solid[aria-disabled="true"],
 .eapp-button-danger-solid:disabled,
-.eapp-button-danger-solid[aria-disabled="true"] {
+.eapp-button-danger-solid[aria-disabled="true"],
+.eapp-button-secondary-solid:disabled,
+.eapp-button-secondary-solid[aria-disabled="true"] {
   background: var(--eapp-button-disabled-bg, var(--action-neutral-disabled-bg)) !important;
   color: var(--eapp-button-disabled-text, var(--action-neutral-disabled-text)) !important;
   box-shadow: inset 0 0 0 1px var(--eapp-button-disabled-ring, var(--action-neutral-border)) !important;
@@ -665,8 +683,9 @@ button:focus-visible,
 }
 .eapp-button-secondary-solid:disabled,
 .eapp-button-secondary-solid[aria-disabled="true"] {
-  background: var(--action-secondary-disabled-bg) !important;
-  color: var(--action-secondary-disabled-text) !important;
+  background: var(--action-neutral-disabled-bg) !important;
+  color: var(--action-neutral-disabled-text) !important;
+  box-shadow: inset 0 0 0 1px var(--action-neutral-border) !important;
 }
 .eapp-button-secondary-soft,
 .eapp-button-secondary-outline,
@@ -861,9 +880,9 @@ button:focus-visible,
 }
 
 .eapp-button-neutral-ghost {
-  --eapp-button-ghost-bg-hover: var(--action-neutral-bg);
+  --eapp-button-ghost-bg-hover: var(--surface-muted);
   --eapp-button-ghost-text: var(--action-neutral-text);
-  --eapp-button-ghost-text-hover: var(--action-neutral-text-hover);
+  --eapp-button-ghost-text-hover: var(--text-primary);
 }
 
 .eapp-button-primary-ghost:hover:not(:disabled):not([aria-disabled="true"]),
@@ -874,6 +893,10 @@ button:focus-visible,
 .eapp-button-neutral-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
   background: var(--eapp-button-ghost-bg-hover) !important;
   color: var(--eapp-button-ghost-text-hover, var(--eapp-button-ghost-text)) !important;
+}
+
+.eapp-button-neutral-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
+  box-shadow: inset 0 0 0 1px var(--action-neutral-border) !important;
 }
 
 .eapp-button-primary-ghost:disabled,
