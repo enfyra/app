@@ -7,6 +7,7 @@ interface CorsCache {
 
 const CACHE_TTL = 5 * 60 * 1000;
 const ERROR_COOLDOWN = 30 * 1000;
+const DEFAULT_ALLOWED_HEADERS = 'Content-Type, Authorization, X-Requested-With, X-Correlation-ID, Paddle-Signature, Range';
 
 let cachedCorsData: CorsCache = {
   origins: [],
@@ -89,6 +90,8 @@ export default defineEventHandler(async (event) => {
   }
   
   const origin = getRequestHeader(event, 'origin');
+  const requestedHeaders = getRequestHeader(event, 'access-control-request-headers');
+  const allowedHeaders = requestedHeaders || DEFAULT_ALLOWED_HEADERS;
   
   if (!origin) {
     return;
@@ -100,7 +103,7 @@ export default defineEventHandler(async (event) => {
     setHeader(event, 'Access-Control-Allow-Origin', origin);
     setHeader(event, 'Access-Control-Allow-Credentials', 'true');
     setHeader(event, 'Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    setHeader(event, 'Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    setHeader(event, 'Access-Control-Allow-Headers', allowedHeaders);
     return;
   }
   
@@ -108,7 +111,7 @@ export default defineEventHandler(async (event) => {
     setHeader(event, 'Access-Control-Allow-Origin', origin);
     setHeader(event, 'Access-Control-Allow-Credentials', 'true');
     setHeader(event, 'Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    setHeader(event, 'Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    setHeader(event, 'Access-Control-Allow-Headers', allowedHeaders);
   } else {
     console.warn('[CORS] Not allowed:', origin, 'in', allowedOrigins);
   }
