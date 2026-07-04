@@ -119,6 +119,11 @@ export default defineAppConfig({
         },
         {
           color: "neutral",
+          variant: "solid",
+          class: "eapp-button-neutral-solid"
+        },
+        {
+          color: "neutral",
           variant: "soft",
           class: "eapp-button-neutral-soft"
         },
@@ -150,7 +155,7 @@ export default defineAppConfig({
         {
           color: "error",
           variant: "outline",
-          class: "eapp-button-danger-soft"
+          class: "eapp-button-danger-outline"
         },
         {
           color: "success",
@@ -168,6 +173,11 @@ export default defineAppConfig({
           class: "eapp-button-success-ghost"
         },
         {
+          color: "success",
+          variant: "outline",
+          class: "eapp-button-success-outline"
+        },
+        {
           color: "warning",
           variant: "solid",
           class: "eapp-button-warning-solid",
@@ -183,6 +193,11 @@ export default defineAppConfig({
           class: "eapp-button-warning-ghost"
         },
         {
+          color: "warning",
+          variant: "outline",
+          class: "eapp-button-warning-outline"
+        },
+        {
           color: "info",
           variant: "solid",
           class: "eapp-button-info-solid",
@@ -196,6 +211,11 @@ export default defineAppConfig({
           color: "info",
           variant: "ghost",
           class: "eapp-button-info-ghost"
+        },
+        {
+          color: "info",
+          variant: "outline",
+          class: "eapp-button-info-outline"
         }
       ],
     },

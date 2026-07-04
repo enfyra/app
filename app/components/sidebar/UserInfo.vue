@@ -12,6 +12,7 @@ const props = defineProps<{
 const { me, logout } = useAuth();
 const { confirm } = useConfirm();
 const router = useRouter();
+const { enfyraVersion } = useSchema();
 
 const ACCOUNT_PANEL_OPEN_STORAGE_KEY = "enfyra.account-panel.open";
 
@@ -23,37 +24,34 @@ const userInitial = computed(() => {
   if (!email) return '?';
   return email.charAt(0).toUpperCase();
 });
+const enfyraVersionLabel = computed(() => {
+  const version = enfyraVersion.value?.trim();
+  if (!version) return null;
+  return version.startsWith("v") ? version : `v${version}`;
+});
 
 const panelGridClass = computed(() => (isOpen.value ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'));
 const { accountPanelItems, register } = useAccountPanelRegistry();
 
-const accountPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-bold text-[var(--text-secondary)] transition-colors hover:bg-[var(--nav-item-hover-bg)] hover:text-[var(--nav-item-hover-text)]";
-const logoutPanelButtonClass = "flex w-full cursor-pointer items-center gap-2 rounded-[var(--radius-subcontrol)] bg-[var(--action-danger-bg)] px-2.5 py-2 text-left text-sm font-bold text-[var(--action-danger-text)] shadow-theme-xs transition-all hover:bg-[var(--action-danger-bg-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--danger-ring)]";
+const accountPanelButtonClass = "eapp-account-panel-row eapp-button-neutral-ghost flex w-full cursor-pointer items-center gap-2 px-2.5 py-2 text-left text-sm font-bold transition-colors";
 
 const ProfileAccountPanelItem = defineComponent({
   name: "ProfileAccountPanelItem",
   setup() {
-    const UIcon = resolveComponent("UIcon");
+    const UButton = resolveComponent("UButton");
     const activate = () => router.push("/me");
-    const onKeydown = (event: KeyboardEvent) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      activate();
-    };
 
     return () => h(
-      "div",
+      UButton,
       {
-        role: "button",
-        tabindex: 0,
-        class: accountPanelButtonClass,
+        block: true,
+        color: "neutral",
+        variant: "ghost",
+        icon: "lucide:user",
+        label: "Profile",
+        class: "eapp-account-panel-row justify-start font-bold",
         onClick: activate,
-        onKeydown,
       },
-      [
-        h(UIcon, { name: "lucide:user", class: "h-5 w-5 shrink-0 text-[var(--text-tertiary)]" }),
-        h("span", { class: "truncate" }, "Profile"),
-      ],
     );
   },
 });
@@ -61,26 +59,19 @@ const ProfileAccountPanelItem = defineComponent({
 const LogoutAccountPanelItem = defineComponent({
   name: "LogoutAccountPanelItem",
   setup() {
-    const UIcon = resolveComponent("UIcon");
-    const onKeydown = (event: KeyboardEvent) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      handleLogout();
-    };
+    const UButton = resolveComponent("UButton");
 
     return () => h(
-      "div",
+      UButton,
       {
-        role: "button",
-        tabindex: 0,
-        class: logoutPanelButtonClass,
+        block: true,
+        color: "error",
+        variant: "solid",
+        icon: "lucide:log-out",
+        label: "Logout",
+        class: "eapp-account-panel-row justify-start font-bold",
         onClick: handleLogout,
-        onKeydown,
       },
-      [
-        h(UIcon, { name: "lucide:log-out", class: "h-5 w-5 shrink-0" }),
-        h("span", { class: "truncate" }, "Logout"),
-      ],
     );
   },
 });
@@ -211,7 +202,7 @@ async function handleLogout() {
     <button
       v-if="collapsed"
       type="button"
-      class="relative flex items-center justify-center w-full rounded-[var(--radius-control)] border border-[var(--card-border)] bg-[var(--block-base)] p-2 shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--card-border-hover)] cursor-pointer"
+      class="eapp-account-panel-collapsed-trigger relative flex w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-[var(--card-border)] bg-[var(--block-base)] p-2 shadow-[var(--shadow-sm)] transition-colors"
       aria-label="Open profile"
       @click="togglePanel"
     >
@@ -226,12 +217,13 @@ async function handleLogout() {
 
     <div
       v-else
-      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--block-base)] shadow-[var(--shadow-sm)] backdrop-blur-xl transition-colors duration-200 hover:border-[var(--card-border-hover)]"
+      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--block-base)] shadow-[var(--shadow-sm)] backdrop-blur-xl"
     >
       <div
         role="button"
         tabindex="0"
-        class="flex cursor-pointer items-center gap-3 w-full p-2.5 text-left"
+        class="eapp-button-neutral-ghost flex w-full cursor-pointer items-center gap-3 p-3 text-left transition-colors"
+        :class="isOpen ? 'rounded-t-[var(--radius-card)] rounded-b-none' : 'rounded-[var(--radius-card)]'"
         :aria-expanded="isOpen"
         @click="togglePanel"
         @keydown.enter.prevent="togglePanel"
@@ -317,6 +309,17 @@ async function handleLogout() {
           </div>
         </div>
       </div>
+
+    </div>
+
+    <div
+      v-if="!collapsed && enfyraVersionLabel"
+      class="mt-3 flex items-center justify-center gap-1.5 px-1 text-[11px] font-medium leading-5 text-[var(--text-tertiary)]"
+    >
+      <span>Powered by Enfyra</span>
+      <span class="rounded-[var(--radius-subcontrol)] border border-[var(--border-default)] bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10px] font-bold leading-4 text-[var(--text-secondary)]">
+        {{ enfyraVersionLabel }}
+      </span>
     </div>
   </div>
 </template>

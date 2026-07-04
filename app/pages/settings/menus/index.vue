@@ -45,7 +45,7 @@ onBeforeUnmount(() => {
 const { menuDefinitions, fetchMenuDefinitions } = useMenuApi();
 
 onMounted(() => {
-  void fetchMenuDefinitions({ includeExtensions: true, showSidebarSkeleton: false });
+  void refreshMenus();
 });
 
 const menus = computed(() => {

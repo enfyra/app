@@ -566,6 +566,7 @@ button:focus-visible,
 }
 
 .eapp-button-primary-solid,
+.eapp-button-neutral-solid,
 .eapp-button-success-solid,
 .eapp-button-warning-solid,
 .eapp-button-info-solid,
@@ -575,14 +576,24 @@ button:focus-visible,
   box-shadow: var(--shadow-xs) !important;
 }
 
+.eapp-button-neutral-solid {
+  --eapp-button-bg: var(--action-neutral-solid-bg);
+  --eapp-button-bg-hover: var(--action-neutral-solid-bg-hover);
+  --eapp-button-bg-active: var(--action-neutral-solid-bg-active);
+  --eapp-button-text: var(--action-neutral-solid-text);
+  --eapp-button-disabled-bg: var(--action-neutral-disabled-bg);
+  --eapp-button-disabled-text: var(--action-neutral-disabled-text);
+  --eapp-button-disabled-ring: var(--action-neutral-border);
+}
+
 .eapp-button-primary-solid {
   --eapp-button-bg: var(--action-primary-bg);
   --eapp-button-bg-hover: var(--action-primary-bg-hover);
   --eapp-button-bg-active: var(--action-primary-bg-active);
   --eapp-button-text: var(--action-primary-text);
-  --eapp-button-disabled-bg: var(--action-primary-disabled-bg);
-  --eapp-button-disabled-text: var(--action-primary-disabled-text);
-  --eapp-button-disabled-ring: var(--action-primary-disabled-ring);
+  --eapp-button-disabled-bg: var(--action-neutral-disabled-bg);
+  --eapp-button-disabled-text: var(--action-neutral-disabled-text);
+  --eapp-button-disabled-ring: var(--action-neutral-border);
 }
 
 .eapp-button-success-solid {
@@ -590,9 +601,9 @@ button:focus-visible,
   --eapp-button-bg-hover: var(--action-success-bg-hover);
   --eapp-button-bg-active: var(--action-success-bg-active);
   --eapp-button-text: var(--action-success-text);
-  --eapp-button-disabled-bg: var(--state-success-soft-bg);
-  --eapp-button-disabled-text: var(--state-success-soft-text);
-  --eapp-button-disabled-ring: var(--state-success-outline-border);
+  --eapp-button-disabled-bg: var(--action-neutral-disabled-bg);
+  --eapp-button-disabled-text: var(--action-neutral-disabled-text);
+  --eapp-button-disabled-ring: var(--action-neutral-border);
 }
 
 .eapp-button-warning-solid {
@@ -614,12 +625,13 @@ button:focus-visible,
   --eapp-button-bg-hover: var(--action-danger-bg-hover);
   --eapp-button-bg-active: var(--action-danger-bg-active);
   --eapp-button-text: var(--action-danger-text);
-  --eapp-button-disabled-bg: var(--state-danger-soft-bg);
-  --eapp-button-disabled-text: var(--state-danger-soft-text);
-  --eapp-button-disabled-ring: var(--state-danger-outline-border);
+  --eapp-button-disabled-bg: var(--action-neutral-disabled-bg);
+  --eapp-button-disabled-text: var(--action-neutral-disabled-text);
+  --eapp-button-disabled-ring: var(--action-neutral-border);
 }
 
 .eapp-button-primary-solid:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-neutral-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-success-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-warning-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-info-solid:hover:not(:disabled):not([aria-disabled="true"]),
@@ -629,6 +641,7 @@ button:focus-visible,
 }
 
 .eapp-button-primary-solid:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-neutral-solid:active:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-success-solid:active:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-warning-solid:active:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-info-solid:active:not(:disabled):not([aria-disabled="true"]),
@@ -638,6 +651,8 @@ button:focus-visible,
 
 .eapp-button-primary-solid:disabled,
 .eapp-button-primary-solid[aria-disabled="true"],
+.eapp-button-neutral-solid:disabled,
+.eapp-button-neutral-solid[aria-disabled="true"],
 .eapp-button-success-solid:disabled,
 .eapp-button-success-solid[aria-disabled="true"],
 .eapp-button-warning-solid:disabled,
@@ -645,7 +660,9 @@ button:focus-visible,
 .eapp-button-info-solid:disabled,
 .eapp-button-info-solid[aria-disabled="true"],
 .eapp-button-danger-solid:disabled,
-.eapp-button-danger-solid[aria-disabled="true"] {
+.eapp-button-danger-solid[aria-disabled="true"],
+.eapp-button-secondary-solid:disabled,
+.eapp-button-secondary-solid[aria-disabled="true"] {
   background: var(--eapp-button-disabled-bg, var(--action-neutral-disabled-bg)) !important;
   color: var(--eapp-button-disabled-text, var(--action-neutral-disabled-text)) !important;
   box-shadow: inset 0 0 0 1px var(--eapp-button-disabled-ring, var(--action-neutral-border)) !important;
@@ -665,21 +682,16 @@ button:focus-visible,
 }
 .eapp-button-secondary-solid:disabled,
 .eapp-button-secondary-solid[aria-disabled="true"] {
-  background: var(--action-secondary-disabled-bg) !important;
-  color: var(--action-secondary-disabled-text) !important;
+  background: var(--action-neutral-disabled-bg) !important;
+  color: var(--action-neutral-disabled-text) !important;
+  box-shadow: inset 0 0 0 1px var(--action-neutral-border) !important;
 }
 .eapp-button-secondary-soft,
-.eapp-button-secondary-outline,
 .eapp-button-secondary-ghost {
   --eapp-button-soft-bg: var(--state-secondary-soft-bg);
   --eapp-button-soft-bg-hover: var(--state-secondary-soft-bg-hover);
   --eapp-button-soft-text: var(--state-secondary-soft-text);
   --eapp-button-soft-ring: var(--state-secondary-outline-border);
-}
-.eapp-button-secondary-outline {
-  background: var(--surface-default) !important;
-  color: var(--state-secondary-soft-text) !important;
-  box-shadow: inset 0 0 0 1px var(--state-secondary-outline-border), var(--shadow-xs) !important;
 }
 
 .eapp-button-primary-soft,
@@ -737,8 +749,6 @@ button:focus-visible,
   --eapp-button-soft-text: var(--state-danger-soft-text);
   --eapp-button-soft-ring: var(--state-danger-outline-border);
   --eapp-button-ghost-text: var(--danger-ghost-text);
-  --eapp-button-ghost-bg-hover: var(--action-danger-bg);
-  --eapp-button-ghost-text-hover: var(--action-danger-text);
 }
 
 .eapp-button-primary-soft:hover:not(:disabled):not([aria-disabled="true"]),
@@ -762,13 +772,18 @@ button:focus-visible,
 .eapp-button-info-soft[aria-disabled="true"],
 .eapp-button-danger-soft:disabled,
 .eapp-button-danger-soft[aria-disabled="true"] {
-  background: var(--eapp-button-soft-bg) !important;
+  background: var(--action-neutral-disabled-bg) !important;
   color: var(--control-disabled-text) !important;
-  box-shadow: inset 0 0 0 1px var(--eapp-button-soft-ring) !important;
+  box-shadow: inset 0 0 0 1px var(--action-neutral-border) !important;
 }
 
 .eapp-button-primary-outline,
-.eapp-button-neutral-outline {
+.eapp-button-secondary-outline,
+.eapp-button-neutral-outline,
+.eapp-button-success-outline,
+.eapp-button-warning-outline,
+.eapp-button-info-outline,
+.eapp-button-danger-outline {
   background: var(--eapp-button-outline-bg) !important;
   color: var(--eapp-button-outline-text) !important;
   box-shadow: inset 0 0 0 1px var(--eapp-button-outline-ring), var(--shadow-xs) !important;
@@ -776,51 +791,99 @@ button:focus-visible,
 
 .eapp-button-primary-outline {
   --eapp-button-outline-bg: var(--surface-default);
-  --eapp-button-outline-bg-hover: var(--state-primary-outline-bg-hover);
   --eapp-button-outline-text: var(--state-primary-soft-text);
   --eapp-button-outline-ring: var(--state-primary-outline-border);
 }
 
 .eapp-button-neutral-outline {
   --eapp-button-outline-bg: var(--action-neutral-outline-bg);
-  --eapp-button-outline-bg-hover: var(--action-neutral-outline-bg-hover);
-  --eapp-button-outline-bg-active: var(--action-neutral-outline-bg-active);
-  --eapp-button-outline-text: var(--action-neutral-text);
+  --eapp-button-outline-text: var(--text-primary);
   --eapp-button-outline-ring: var(--action-neutral-outline-border);
 }
 
-.eapp-button-primary-outline:hover:not(:disabled):not([aria-disabled="true"]),
-.eapp-button-neutral-outline:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--eapp-button-outline-bg-hover) !important;
-  color: var(--eapp-button-outline-text-hover, var(--eapp-button-outline-text)) !important;
+.eapp-button-secondary-outline {
+  --eapp-button-outline-bg: var(--surface-default);
+  --eapp-button-outline-text: var(--state-secondary-soft-text);
+  --eapp-button-outline-ring: var(--state-secondary-outline-border);
 }
 
-.eapp-button-neutral-outline:active:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--eapp-button-outline-bg-active) !important;
+.eapp-button-success-outline {
+  --eapp-button-outline-bg: var(--surface-default);
+  --eapp-button-outline-text: var(--state-success-soft-text);
+  --eapp-button-outline-ring: var(--state-success-outline-border);
+}
+
+.eapp-button-warning-outline {
+  --eapp-button-outline-bg: var(--surface-default);
+  --eapp-button-outline-text: var(--state-warning-soft-text);
+  --eapp-button-outline-ring: var(--state-warning-outline-border);
+}
+
+.eapp-button-info-outline {
+  --eapp-button-outline-bg: var(--surface-default);
+  --eapp-button-outline-text: var(--state-info-soft-text);
+  --eapp-button-outline-ring: var(--state-info-outline-border);
+}
+
+.eapp-button-danger-outline {
+  --eapp-button-outline-bg: var(--surface-default);
+  --eapp-button-outline-text: var(--state-danger-soft-text);
+  --eapp-button-outline-ring: var(--state-danger-outline-border);
+}
+
+.eapp-button-primary-outline:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-secondary-outline:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-neutral-outline:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-success-outline:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-warning-outline:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-info-outline:hover:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-danger-outline:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--eapp-button-outline-text) 8%, var(--eapp-button-outline-bg)) !important;
+  color: var(--eapp-button-outline-text) !important;
+}
+
+.eapp-button-primary-outline:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-secondary-outline:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-neutral-outline:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-success-outline:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-warning-outline:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-info-outline:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-danger-outline:active:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--eapp-button-outline-text) 12%, var(--eapp-button-outline-bg)) !important;
 }
 
 .eapp-button-primary-outline:disabled,
 .eapp-button-primary-outline[aria-disabled="true"],
+.eapp-button-secondary-outline:disabled,
+.eapp-button-secondary-outline[aria-disabled="true"],
 .eapp-button-neutral-outline:disabled,
-.eapp-button-neutral-outline[aria-disabled="true"] {
+.eapp-button-neutral-outline[aria-disabled="true"],
+.eapp-button-success-outline:disabled,
+.eapp-button-success-outline[aria-disabled="true"],
+.eapp-button-warning-outline:disabled,
+.eapp-button-warning-outline[aria-disabled="true"],
+.eapp-button-info-outline:disabled,
+.eapp-button-info-outline[aria-disabled="true"],
+.eapp-button-danger-outline:disabled,
+.eapp-button-danger-outline[aria-disabled="true"] {
   background: var(--action-neutral-disabled-bg) !important;
   color: var(--action-neutral-disabled-text) !important;
   box-shadow: inset 0 0 0 1px var(--action-neutral-border) !important;
 }
 
 .eapp-button-neutral-soft {
-  background: var(--action-neutral-bg) !important;
-  color: var(--action-neutral-text) !important;
-  box-shadow: inset 0 0 0 1px var(--action-neutral-border) !important;
+  background: var(--state-neutral-soft-bg) !important;
+  color: var(--state-neutral-soft-text) !important;
+  box-shadow: inset 0 0 0 1px var(--state-neutral-outline-border) !important;
 }
 
 .eapp-button-neutral-soft:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--action-neutral-bg-hover) !important;
-  color: var(--action-neutral-text-hover) !important;
+  background: var(--state-neutral-soft-bg-hover) !important;
+  color: var(--text-primary) !important;
 }
 
 .eapp-button-neutral-soft:active:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--action-neutral-bg-active) !important;
+  background: color-mix(in srgb, var(--md-on-surface) 16%, var(--md-surface)) !important;
 }
 
 .eapp-button-neutral-soft:disabled,
@@ -838,19 +901,11 @@ button:focus-visible,
 .eapp-button-neutral-ghost {
   background: transparent !important;
   color: var(--eapp-button-ghost-text) !important;
-}
-
-.eapp-button-primary-ghost,
-.eapp-button-success-ghost,
-.eapp-button-warning-ghost,
-.eapp-button-info-ghost {
-  --eapp-button-ghost-bg-hover: var(--eapp-button-soft-bg);
+  box-shadow: none !important;
 }
 
 .eapp-button-neutral-ghost {
-  --eapp-button-ghost-bg-hover: var(--action-neutral-bg);
   --eapp-button-ghost-text: var(--action-neutral-text);
-  --eapp-button-ghost-text-hover: var(--action-neutral-text-hover);
 }
 
 .eapp-button-primary-ghost:hover:not(:disabled):not([aria-disabled="true"]),
@@ -859,8 +914,18 @@ button:focus-visible,
 .eapp-button-info-ghost:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-danger-ghost:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-neutral-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--eapp-button-ghost-bg-hover) !important;
-  color: var(--eapp-button-ghost-text-hover, var(--eapp-button-ghost-text)) !important;
+  background: color-mix(in srgb, var(--eapp-button-ghost-text) 8%, transparent) !important;
+  color: var(--eapp-button-ghost-text) !important;
+}
+
+.eapp-button-primary-ghost:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-success-ghost:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-warning-ghost:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-info-ghost:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-danger-ghost:active:not(:disabled):not([aria-disabled="true"]),
+.eapp-button-neutral-ghost:active:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--eapp-button-ghost-text) 12%, transparent) !important;
+  color: var(--eapp-button-ghost-text) !important;
 }
 
 .eapp-button-primary-ghost:disabled,
@@ -877,6 +942,19 @@ button:focus-visible,
 .eapp-button-neutral-ghost[aria-disabled="true"] {
   background: transparent !important;
   color: var(--action-neutral-disabled-text) !important;
+}
+
+.eapp-account-panel-collapsed-trigger {
+  color: var(--action-neutral-text);
+}
+
+.eapp-account-panel-collapsed-trigger:hover {
+  border-color: var(--card-border-hover);
+  background: color-mix(in srgb, var(--action-neutral-text) 8%, var(--block-base));
+}
+
+.eapp-account-panel-row {
+  border-radius: var(--radius-subcontrol) !important;
 }
 
 .accent-tile {
