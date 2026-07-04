@@ -12,6 +12,7 @@ const props = defineProps<{
 const { me, logout } = useAuth();
 const { confirm } = useConfirm();
 const router = useRouter();
+const { enfyraVersion } = useSchema();
 
 const ACCOUNT_PANEL_OPEN_STORAGE_KEY = "enfyra.account-panel.open";
 
@@ -22,6 +23,11 @@ const userInitial = computed(() => {
   const email = userEmail.value;
   if (!email) return '?';
   return email.charAt(0).toUpperCase();
+});
+const enfyraVersionLabel = computed(() => {
+  const version = enfyraVersion.value?.trim();
+  if (!version) return null;
+  return version.startsWith("v") ? version : `v${version}`;
 });
 
 const panelGridClass = computed(() => (isOpen.value ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'));
@@ -216,7 +222,8 @@ async function handleLogout() {
       <div
         role="button"
         tabindex="0"
-        class="eapp-account-panel-row eapp-button-neutral-ghost m-2 mb-0 flex w-[calc(100%-1rem)] cursor-pointer items-center gap-3 p-2.5 text-left transition-colors"
+        class="eapp-button-neutral-ghost flex w-full cursor-pointer items-center gap-3 p-3 text-left transition-colors"
+        :class="isOpen ? 'rounded-t-[var(--radius-card)] rounded-b-none' : 'rounded-[var(--radius-card)]'"
         :aria-expanded="isOpen"
         @click="togglePanel"
         @keydown.enter.prevent="togglePanel"
@@ -302,6 +309,17 @@ async function handleLogout() {
           </div>
         </div>
       </div>
+
+    </div>
+
+    <div
+      v-if="!collapsed && enfyraVersionLabel"
+      class="mt-3 flex items-center justify-center gap-1.5 px-1 text-[11px] font-medium leading-5 text-[var(--text-tertiary)]"
+    >
+      <span>Powered by Enfyra</span>
+      <span class="rounded-[var(--radius-subcontrol)] border border-[var(--border-default)] bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10px] font-bold leading-4 text-[var(--text-secondary)]">
+        {{ enfyraVersionLabel }}
+      </span>
     </div>
   </div>
 </template>

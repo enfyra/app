@@ -24,6 +24,7 @@ type MetadataResponse = {
   data: any[];
   dbType?: MetadataDatabaseType;
   pkField?: 'id' | '_id';
+  enfyraVersion?: string | null;
 };
 
 export function useSchema(tableName?: string | Ref<string>) {
@@ -32,6 +33,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     dbType: null,
     pkField: null,
   }));
+  const enfyraVersion = useState<string | null>("enfyra:version", () => null);
   const schemaLoading = ref(false);
   const {
     execute: executeMetadata,
@@ -125,6 +127,7 @@ export function useSchema(tableName?: string | Ref<string>) {
       dbType: metadata?.dbType ?? null,
       pkField: metadata?.pkField ?? null,
     };
+    enfyraVersion.value = metadata?.enfyraVersion?.trim() || null;
   }
 
   function updateSchemas(tables: any[]) {
@@ -305,6 +308,7 @@ export function useSchema(tableName?: string | Ref<string>) {
   return {
     schemas: readonly(schemas),
     schema: tableSchema,
+    enfyraVersion: readonly(enfyraVersion),
     fetchSchema,
     forceRefreshSchema,
     schemaLoading,

@@ -12,6 +12,7 @@ describe('SidebarUserInfo', () => {
   it('expands account actions inline instead of rendering a dropdown menu', async () => {
     const { me } = useAuth()
     me.value = { id: 'user-1', email: 'dothinh115@gmail.com' } as any
+    useState<string | null>('enfyra:version', () => null).value = null
 
     const wrapper = await mountSuspended(SidebarUserInfo, {
       route: '/data/cloud_email_senders',
@@ -34,5 +35,19 @@ describe('SidebarUserInfo', () => {
     expect(wrapper.text()).toContain('Profile')
     expect(wrapper.text()).toMatch(/Light|Dark/)
     expect(wrapper.text()).toContain('Logout')
+  })
+
+  it('renders the Enfyra version from metadata below the account panel', async () => {
+    const { me } = useAuth()
+    me.value = { id: 'user-1', email: 'dothinh115@gmail.com' } as any
+    useState<string | null>('enfyra:version', () => null).value = '2.2.8-patch-1'
+
+    const wrapper = await mountSuspended(SidebarUserInfo, {
+      route: '/data/cloud_email_senders',
+      props: { collapsed: false },
+    })
+
+    expect(wrapper.text()).toContain('Powered by Enfyra')
+    expect(wrapper.text()).toContain('v2.2.8-patch-1')
   })
 })
