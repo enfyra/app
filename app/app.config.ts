@@ -150,7 +150,7 @@ export default defineAppConfig({
         {
           color: "error",
           variant: "outline",
-          class: "eapp-button-danger-soft"
+          class: "eapp-button-danger-outline"
         },
         {
           color: "success",
