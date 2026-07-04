@@ -74,7 +74,7 @@ export default defineAppConfig({
           "text-sm font-medium",
           "transition-all duration-300",
           "outline-none",
-          "disabled:cursor-not-allowed disabled:!opacity-55 aria-disabled:cursor-not-allowed aria-disabled:!opacity-55",
+          "disabled:cursor-not-allowed disabled:!opacity-100 aria-disabled:cursor-not-allowed aria-disabled:!opacity-100",
           "focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",
           "[&_svg]:pointer-events-none",
           "[&_svg:not([class*='size-'])]:size-4",

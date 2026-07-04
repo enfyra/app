@@ -37,7 +37,10 @@ export type RedisAdminSystemKind =
   | 'socket_io'
   | 'runtime_monitor'
   | 'sql_pool_coordination'
+  | 'rate_limit'
   | 'system_lock';
+
+export type RedisAdminKeyFilter = 'all' | 'custom' | RedisAdminSystemKind;
 
 export type RedisAdminNamespaceScope = 'current' | 'global';
 

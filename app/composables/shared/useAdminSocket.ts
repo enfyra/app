@@ -2,6 +2,7 @@ import { io, type Socket } from 'socket.io-client';
 
 import { ENFYRA_SOCKET_AUTH_ERROR } from '~/constants/enfyra';
 import type {
+  RedisAdminKeyFilter,
   RedisAdminKeyDetail,
   RedisAdminKeysResponse,
   RedisAdminOverview,
@@ -287,7 +288,7 @@ export function useAdminSocket() {
     return overview;
   }
 
-  function loadRedisKeys(payload: { cursor?: string; pattern?: string; count?: number }) {
+  function loadRedisKeys(payload: { cursor?: string; pattern?: string; count?: number; filter?: RedisAdminKeyFilter }) {
     return redisRequest<RedisAdminKeysResponse>('$system:redis:keys:list', payload);
   }
 

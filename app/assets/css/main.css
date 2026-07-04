@@ -764,6 +764,7 @@ button:focus-visible,
 .eapp-button-danger-soft[aria-disabled="true"] {
   background: var(--eapp-button-soft-bg) !important;
   color: var(--control-disabled-text) !important;
+  box-shadow: inset 0 0 0 1px var(--eapp-button-soft-ring) !important;
 }
 
 .eapp-button-primary-outline,
@@ -826,6 +827,7 @@ button:focus-visible,
 .eapp-button-neutral-soft[aria-disabled="true"] {
   background: var(--action-neutral-disabled-bg) !important;
   color: var(--action-neutral-disabled-text) !important;
+  box-shadow: inset 0 0 0 1px var(--action-neutral-border) !important;
 }
 
 .eapp-button-primary-ghost,
