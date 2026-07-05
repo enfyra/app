@@ -1,5 +1,5 @@
 <template>
-  <CommonCardListFrame
+  <CommonResourceListFrame
     v-model:page="page"
     :loading="showInitialLoading"
     :has-items="packages.length > 0"
@@ -18,18 +18,13 @@
     pagination-active-color="secondary"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
   >
-      <CommonAnimatedGrid
-        :animate="false"
-        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3'"
-      >
-        <CommonSettingsCard
+        <CommonResourceListItem
           v-for="pkg in packages"
           :key="getId(pkg)"
           :title="pkg.name"
           :description="pkg.description || 'No description'"
           icon="lucide:package-2"
           icon-color="primary"
-          :card-class="'cursor-pointer transition-all lg:hover:ring-2 lg:hover:ring-[var(--border-accent)]'"
           :content-loading="packagesRefreshing"
           @click="navigateTo(`/packages/${getId(pkg)}`)"
           :stats="[
@@ -55,11 +50,8 @@
                 ]
               : []),
           ]"
-          :methods="[]"
-          :header-actions="[]"
         />
-      </CommonAnimatedGrid>
-  </CommonCardListFrame>
+  </CommonResourceListFrame>
 </template>
 
 <script setup lang="ts">
@@ -67,7 +59,6 @@ const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
 const limit = 9;
 const route = useRoute();
-const { isTablet } = useScreen();
 const { getId } = useDatabase();
 const { fetchAppPackages } = useGlobalState();
 const { adminSocket: $adminSocket } = useAdminSocket();

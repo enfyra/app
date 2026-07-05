@@ -1,5 +1,5 @@
 <template>
-  <CommonCardListFrame
+  <CommonResourceListFrame
     v-model:page="page"
     root-class="oauth-accounts-page"
     :loading="showInitialLoading"
@@ -17,18 +17,13 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-      <CommonAnimatedGrid
-        :animate="false"
-        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-      >
-        <CommonSettingsCard
+        <CommonResourceListItem
           v-for="account in accounts"
           :key="getId(account)"
           :title="getProviderLabel(account.provider)"
           :description="getUserEmail(account)"
           :icon="getProviderIcon(account.provider)"
           :icon-color="pageIconColor"
-          :card-class="'cursor-pointer transition-all'"
           :content-loading="accountsRefreshing"
           @click="navigateToDetail(account)"
           :stats="[
@@ -42,8 +37,7 @@
             },
           ]"
         />
-      </CommonAnimatedGrid>
-  </CommonCardListFrame>
+  </CommonResourceListFrame>
 </template>
 
 <script setup lang="ts">
@@ -53,7 +47,6 @@ const route = useRoute();
 const tableName = "enfyra_oauth_account";
 
 const { getId } = useDatabase();
-const { isTablet } = useScreen();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

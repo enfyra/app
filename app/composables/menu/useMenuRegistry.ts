@@ -181,16 +181,14 @@ export function useMenuRegistry() {
       fixedMenuIds.includes(item.id)
     );
 
-    clearAllMenus();
-
     const menuResponse = await fetchMenuDefinitions();
     if (menuResponse?.data) {
+      clearAllMenus();
       await registerAllMenusFromApi(menuResponse.data);
+      fixedMenuItems.forEach(item => {
+        registerMenuItem(item);
+      });
     }
-
-    fixedMenuItems.forEach(item => {
-      registerMenuItem(item);
-    });
   };
 
   const findParentMenuIdByPath = (path: string): string | number | null => {

@@ -301,73 +301,67 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <div class="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-default)]">
-      <div v-if="showInitialLoading" class="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-3">
-        <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-xl" />
-      </div>
-
-      <div v-else-if="!methods.length" class="p-5">
-        <div class="rounded-lg border border-dashed border-[var(--border-strong)] p-6 text-center">
-          <p class="font-medium text-[var(--text-primary)]">No methods found</p>
-          <p class="mt-1 text-sm text-[var(--text-secondary)]">
-            Create the first method to make it selectable in route forms.
-          </p>
-          <UButton class="mt-4" icon="lucide:plus" @click="openCreate">
+    <CommonResourceListFrame
+      :loading="showInitialLoading"
+      :has-items="methods.length > 0"
+      loading-title="Loading methods..."
+      loading-description="Fetching route method definitions"
+      empty-title="No methods found"
+      empty-description="Create the first method to make it selectable in route forms."
+      empty-icon="lucide:badge"
+    >
+      <template #empty>
+        <CommonEmptyState
+          title="No methods found"
+          description="Create the first method to make it selectable in route forms."
+          icon="lucide:badge"
+          size="sm"
+        >
+          <UButton icon="lucide:plus" color="primary" variant="solid" @click="openCreate">
             New Method
           </UButton>
-        </div>
-      </div>
+        </CommonEmptyState>
+      </template>
 
-      <div v-else class="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
-        <button
+        <CommonResourceListItem
           v-for="method in methods"
           :key="getId(method) || getMethodLabel(method)"
-          type="button"
-          class="surface-card-hover group relative flex flex-col gap-4 rounded-xl p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring)]"
-          :class="methodsRefreshing ? 'opacity-75' : ''"
+          :title="getMethodLabel(method)"
+          :description="method.isSystem ? 'Built-in route method' : 'Custom route method'"
+          icon="lucide:badge"
+          :icon-color="method.isSystem ? 'neutral' : 'primary'"
+          :content-loading="methodsRefreshing"
+          :actions="[
+            {
+              label: 'Edit',
+              props: { icon: 'lucide:pencil', variant: 'ghost', color: 'neutral', size: 'xs' },
+              onClick: () => openEdit(method),
+            },
+          ]"
           @click="openEdit(method)"
         >
-          <div class="flex items-center justify-between gap-2">
-            <MethodBadge :method="method" size="sm" />
-            <UBadge
-              :color="method.isSystem ? 'neutral' : 'primary'"
-              variant="soft"
-              size="sm"
-            >
-              {{ method.isSystem ? 'System' : 'Custom' }}
-            </UBadge>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div
-              v-for="sw in methodSwatches(method)"
-              :key="sw.key"
-              class="flex min-w-0 items-center gap-2.5"
-            >
+          <template #metadata>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <MethodBadge :method="method" size="xs" />
+              <UBadge :color="method.isSystem ? 'neutral' : 'primary'" variant="soft" size="xs">
+                {{ method.isSystem ? 'System' : 'Custom' }}
+              </UBadge>
               <span
-                class="size-8 shrink-0 rounded-lg ring-1 ring-inset ring-[var(--border-default)]"
-                :style="{ backgroundColor: sw.value }"
-              />
-              <div class="min-w-0">
-                <p class="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                  {{ sw.label }}
-                </p>
-                <p class="truncate font-mono text-xs text-[var(--text-primary)]">
-                  {{ sw.value }}
-                </p>
-              </div>
+                v-for="sw in methodSwatches(method)"
+                :key="sw.key"
+                class="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--badge-neutral-soft-border)] bg-[var(--badge-neutral-soft-bg)] px-2 py-0.5"
+              >
+                <span
+                  class="size-3 rounded-full ring-1 ring-inset ring-[var(--border-default)]"
+                  :style="{ backgroundColor: sw.value }"
+                />
+                <span class="text-xs font-medium eapp-text-tertiary">{{ sw.label }}</span>
+                <span class="font-mono text-xs eapp-text-secondary">{{ sw.value }}</span>
+              </span>
             </div>
-          </div>
-
-          <div
-            class="mt-auto flex items-center gap-1 text-[var(--text-tertiary)] opacity-0 transition group-hover:opacity-100"
-          >
-            <UIcon name="lucide:pencil" class="size-3.5" />
-            <span class="text-xs font-medium">Edit</span>
-          </div>
-        </button>
-      </div>
-    </div>
+          </template>
+        </CommonResourceListItem>
+    </CommonResourceListFrame>
 
     <CommonDrawer
       :model-value="drawerOpen"

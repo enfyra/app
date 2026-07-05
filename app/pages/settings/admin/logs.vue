@@ -4,7 +4,6 @@ const notify = useNotify();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { checkPermissionCondition } = usePermissions();
 const { me } = useAuth();
-const { isTablet } = useScreen();
 const route = useRoute();
 const router = useRouter();
 
@@ -416,13 +415,12 @@ onMounted(async () => {
 <template>
   <div v-if="hasPermission" class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState
+      <CommonResourceListFrame
         v-if="isInitialLoading && !selectedFile"
-        title="Loading log files..."
-        description="Fetching server logs"
-        size="md"
-        type="card"
-        context="page"
+        :loading="true"
+        :has-items="false"
+        loading-title="Loading log files..."
+        loading-description="Fetching server logs"
       />
 
       <div v-else class="space-y-6">
@@ -475,18 +473,14 @@ onMounted(async () => {
             icon="lucide:search"
           />
 
-          <CommonAnimatedGrid
-            v-if="files.length > 0"
-            :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'"
-          >
-            <CommonSettingsCard
+          <div v-if="files.length > 0" class="eapp-resource-list">
+            <CommonResourceListItem
               v-for="file in filteredFiles"
               :key="file.filename || file.name"
               :title="file.filename || file.name"
               :description="file.modifiedAt || 'Unknown date'"
               :icon="getFileIcon(file)"
               :icon-color="getFileIconColor(file)"
-              card-class="cursor-pointer"
               :stats="[
                 { label: 'Size', value: formatFileSize(file.size) },
               ]"
@@ -499,7 +493,7 @@ onMounted(async () => {
               ]"
               @click="handleSelectFile(file)"
             />
-          </CommonAnimatedGrid>
+          </div>
 
           <CommonEmptyState
             v-if="files.length === 0"

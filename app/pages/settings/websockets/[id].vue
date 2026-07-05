@@ -78,18 +78,14 @@
         </UButton>
       </div>
 
-      <CommonAnimatedGrid
-        v-if="events.length > 0"
-        grid-class="grid gap-4 grid-cols-1 md:grid-cols-2"
-      >
-        <CommonSettingsCard
+      <div v-if="events.length > 0" class="eapp-resource-list">
+        <CommonResourceListItem
           v-for="event in events"
           :key="getId(event)"
           :title="event.eventName"
           :description="event.description || 'No description'"
           icon="lucide:zap"
           icon-color="primary"
-          :card-class="'cursor-pointer'"
           @click="handleEditEvent(event)"
           :stats="[
             {
@@ -128,7 +124,7 @@
             }
           ]"
         />
-      </CommonAnimatedGrid>
+      </div>
 
       <CommonEmptyState
         v-else

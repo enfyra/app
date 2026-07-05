@@ -3,40 +3,47 @@ const colorMode = useColorMode();
 const { $primaryColor } = useNuxtApp();
 
 const isDark = computed(() => colorMode.value === "dark");
-const themeLabel = computed(() => (isDark.value ? "Dark" : "Light"));
-const themeIcon = computed(() => (isDark.value ? "lucide:moon" : "lucide:sun"));
 
-function toggleTheme() {
-  colorMode.preference = isDark.value ? "light" : "dark";
-}
-
-function handleKeydown(event: KeyboardEvent) {
-  if (event.key !== "Enter" && event.key !== " ") return;
-  event.preventDefault();
-  toggleTheme();
+function setThemeMode(mode: "light" | "dark") {
+  colorMode.preference = mode;
 }
 </script>
 
 <template>
   <div class="space-y-1 rounded-[var(--radius-subcontrol)]">
-    <div
-      role="button"
-      tabindex="0"
-      class="eapp-account-panel-row eapp-button-neutral-ghost group/theme-toggle flex w-full cursor-pointer items-center gap-2 px-2.5 py-2 text-left text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)]"
-      @click="toggleTheme"
-      @keydown="handleKeydown"
-    >
-      <UIcon :name="themeIcon" class="h-5 w-5 shrink-0 text-[var(--text-tertiary)]" />
-      <span class="min-w-0 flex-1 truncate">{{ themeLabel }}</span>
-      <USwitch
-        size="sm"
-        :model-value="isDark"
-        @update:model-value="toggleTheme"
-        @click.stop
-      />
-    </div>
+    <div class="space-y-3 px-2.5 pb-2">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex min-w-0 items-center gap-2 text-sm font-semibold text-[var(--text-secondary)]">
+          <UIcon name="lucide:sun-moon" class="h-4 w-4 shrink-0 text-[var(--text-tertiary)]" />
+          <span class="truncate">Appearance</span>
+        </div>
+        <div class="flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] border border-[var(--border-default)] bg-[var(--surface-muted)] p-0.5">
+          <button
+            type="button"
+            class="inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)]"
+            :class="!isDark ? 'bg-[var(--surface-default)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] ring-1 ring-inset ring-[var(--border-default)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'"
+            :aria-pressed="!isDark"
+            aria-label="Use light mode"
+            title="Light mode"
+            @click="setThemeMode('light')"
+          >
+            <UIcon name="lucide:sun" class="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)]"
+            :class="isDark ? 'bg-[var(--surface-default)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] ring-1 ring-inset ring-[var(--border-default)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'"
+            :aria-pressed="isDark"
+            aria-label="Use dark mode"
+            title="Dark mode"
+            @click="setThemeMode('dark')"
+          >
+            <UIcon name="lucide:moon" class="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
 
-    <div class="px-2.5 pb-2">
+      <div>
       <div class="mb-2.5 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-[var(--text-tertiary)]">
         <UIcon name="lucide:palette" class="h-3.5 w-3.5" />
         <span>Accent</span>
@@ -55,6 +62,7 @@ function handleKeydown(event: KeyboardEvent) {
         >
           <span class="h-[18px] w-[18px] rounded-full" :style="{ backgroundColor: color.swatch }" />
         </button>
+      </div>
       </div>
     </div>
   </div>

@@ -154,7 +154,27 @@ function handleDragEnd() {
     class="menu-visual-editor"
     :class="isDndUpdating ? 'pointer-events-none opacity-60 select-none' : ''"
   >
-    <div v-if="menuTree.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+    <div v-if="props.loading" class="eapp-resource-list">
+      <div
+        v-for="row in 9"
+        :key="row"
+        class="eapp-resource-list-item pointer-events-none"
+      >
+        <span class="eapp-resource-list-leading skeleton-gradient skeleton-pulse-slow" />
+        <span class="min-w-0 flex-1 space-y-2">
+          <span class="block h-4 w-1/3 max-w-72 rounded skeleton-gradient skeleton-pulse-slow" />
+          <span class="block h-3 w-2/3 max-w-[34rem] rounded skeleton-inline skeleton-pulse-slow" />
+          <span class="flex gap-2">
+            <span class="block h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+            <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+            <span class="hidden h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
+          </span>
+        </span>
+        <span class="hidden h-8 w-20 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
+      </div>
+    </div>
+
+    <div v-else-if="menuTree.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
       <UIcon name="lucide:navigation" class="w-12 h-12 text-[var(--text-quaternary)] mb-3" />
       <p class="text-sm text-[var(--text-tertiary)] mb-4">No menu items available</p>
     </div>

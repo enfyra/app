@@ -1,5 +1,5 @@
 <template>
-  <CommonCardListFrame
+  <CommonResourceListFrame
     v-model:page="page"
     root-class="flow-manager-page"
     :loading="showInitialLoading"
@@ -17,18 +17,13 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-    <CommonAnimatedGrid
-      :animate="false"
-      :grid-class="isTablet ? 'grid gap-4 grid-cols-1' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-    >
-        <CommonSettingsCard
+        <CommonResourceListItem
           v-for="flow in flows"
           :key="flow.id"
           :title="flow.name"
           :description="flow.description || 'Flow'"
           :icon="flow.icon || 'i-lucide-workflow'"
           icon-color="primary"
-          card-class="cursor-pointer transition-all"
           :content-loading="flowsRefreshing"
           :stats="[
             {
@@ -56,8 +51,7 @@
           :header-actions="getHeaderActions(flow)"
           :methods="getFooterActions(flow)"
         />
-      </CommonAnimatedGrid>
-  </CommonCardListFrame>
+  </CommonResourceListFrame>
 </template>
 
 <script setup lang="ts">
@@ -72,7 +66,6 @@ const { confirm } = useConfirm();
 const { getLoader: getFlowLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
-const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 

@@ -17,7 +17,6 @@ const tableName = 'enfyra_guard';
 const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
-const { isTablet } = useScreen();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { getId, getIdFieldName } = useDatabase();
 const idField = getIdFieldName();
@@ -386,12 +385,11 @@ async function deleteGuard(guard: any) {
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
       <div v-if="showInitialLoading" key="loading">
-        <CommonLoadingState
-          title="Loading guards..."
-          description="Fetching guard configuration"
-          size="sm"
-          type="card"
-          context="page"
+        <CommonResourceListFrame
+          :loading="true"
+          :has-items="false"
+          loading-title="Loading guards..."
+          loading-description="Fetching guard configuration"
         />
       </div>
 
@@ -478,22 +476,14 @@ async function deleteGuard(guard: any) {
         />
 
         <div v-if="guardsData.length" class="space-y-6">
-          <CommonAnimatedGrid
-            :animate="false"
-            :grid-class="
-              isTablet
-                ? 'grid gap-4 grid-cols-2'
-                : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
-            "
-          >
-            <CommonSettingsCard
+          <div class="eapp-resource-list">
+            <CommonResourceListItem
               v-for="guard in guardsData"
               :key="getId(guard)"
               :title="guard.name"
               :description="guard.description || (guard.isGlobal ? 'Global guard' : guard.route?.path || 'No route assigned')"
               icon="lucide:shield"
               icon-color="primary"
-              :card-class="'cursor-pointer transition-all'"
               :content-loading="guardsRefreshing"
               @click="navigateTo(`/settings/guards/${getId(guard)}`)"
               :stats="[
@@ -537,7 +527,7 @@ async function deleteGuard(guard: any) {
               :methods="getGuardFooterActions(guard)"
               :header-actions="getGuardHeaderActions(guard)"
             />
-          </CommonAnimatedGrid>
+          </div>
         </div>
 
         <CommonEmptyState

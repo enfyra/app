@@ -1,5 +1,5 @@
 <template>
-  <CommonCardListFrame
+  <CommonResourceListFrame
     v-model:page="page"
     root-class="extension-manager-page"
     :loading="showInitialLoading"
@@ -17,18 +17,13 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-    <CommonAnimatedGrid
-      :animate="false"
-      :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-    >
-        <CommonSettingsCard
+        <CommonResourceListItem
           v-for="extension in extensions"
           :key="extension.id"
           :title="extension.name"
           :description="extension.description"
           :icon="getExtensionIcon(extension)"
           :icon-color="pageIconColor"
-          :card-class="'cursor-pointer transition-all'"
           :content-loading="extensionsRefreshing"
           :stats="[
             {
@@ -58,9 +53,8 @@
           @click="navigateToDetail(extension)"
           :header-actions="getHeaderActions(extension)"
           :methods="getFooterActions(extension)"
-        </CommonSettingsCard>
-      </CommonAnimatedGrid>
-  </CommonCardListFrame>
+        />
+  </CommonResourceListFrame>
 </template>
 
 <script setup lang="ts">
@@ -77,7 +71,6 @@ const { getId } = useDatabase();
 const { invalidateExtensionCache } = useDynamicComponent();
 const { loadGlobalExtensions } = useGlobalExtensions();
 
-const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 

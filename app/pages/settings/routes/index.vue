@@ -14,7 +14,6 @@ const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { getLoader: getRouteLoader } = useKeyedLoaders();
-const { isTablet } = useScreen();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const pageIconColor = 'primary';
@@ -394,12 +393,11 @@ async function deleteRoute(routeItem: any) {
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
       <div v-if="showInitialLoading" key="loading">
-        <CommonLoadingState
-          title="Loading routes..."
-          description="Fetching routing configuration"
-          size="sm"
-          type="card"
-          context="page"
+        <CommonResourceListFrame
+          :loading="true"
+          :has-items="false"
+          loading-title="Loading routes..."
+          loading-description="Fetching routing configuration"
         />
       </div>
 
@@ -411,22 +409,14 @@ async function deleteRoute(routeItem: any) {
         />
 
         <div v-if="routesData.length" class="space-y-6">
-          <CommonAnimatedGrid
-            :animate="false"
-            :grid-class="
-              isTablet
-                ? 'grid gap-4 grid-cols-2'
-                : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
-            "
-          >
-            <CommonSettingsCard
+          <div class="eapp-resource-list">
+            <CommonResourceListItem
               v-for="routeItem in routesData"
               :key="getId(routeItem)"
               :title="routeItem.path"
               :description="routeItem.mainTable?.name"
               :icon="routeItem.icon || 'lucide:circle'"
               :icon-color="pageIconColor"
-              :card-class="'cursor-pointer transition-all'"
               :content-loading="routesRefreshing"
               @click="navigateTo(`/settings/routes/${getId(routeItem)}`)"
               :top-badge="routeItem.isSystem ? { label: 'System', color: 'info' } : undefined"
@@ -447,8 +437,8 @@ async function deleteRoute(routeItem: any) {
               ]"
               :methods="getRouteFooterActions(routeItem)"
               :header-actions="getRouteHeaderActions(routeItem)"
-            </CommonSettingsCard>
-          </CommonAnimatedGrid>
+            />
+          </div>
         </div>
 
         <CommonEmptyState

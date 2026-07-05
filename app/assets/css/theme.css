@@ -463,7 +463,7 @@
   --surface-chrome: color-mix(in srgb, var(--md-primary) 1%, #1b1b20);
   --shell-sidebar-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
   --shell-main-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
-  --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 4%, transparent), transparent 28rem), color-mix(in srgb, var(--md-primary) 2%, #17171b);
+  --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 1.5%, transparent), transparent 28rem), color-mix(in srgb, var(--md-primary) 0.5%, #17171b);
   --flow-surface-bg: color-mix(in srgb, var(--md-primary) 1%, #19191d);
   --flow-surface-border: color-mix(in srgb, var(--md-outline) 58%, transparent);
   --flow-edge: color-mix(in srgb, var(--text-secondary) 58%, transparent);

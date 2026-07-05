@@ -1,5 +1,5 @@
 <template>
-  <CommonCardListFrame
+  <CommonResourceListFrame
     v-model:page="page"
     root-class="websocket-manager-page"
     :loading="showInitialLoading"
@@ -17,18 +17,13 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-    <CommonAnimatedGrid
-      :animate="false"
-      :grid-class="isTablet ? 'grid gap-4 grid-cols-1' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-    >
-        <CommonSettingsCard
+        <CommonResourceListItem
           v-for="gateway in gateways"
           :key="String(getId(gateway) ?? gateway.path)"
           :title="gateway.path"
           :description="gateway.description || 'WebSocket gateway'"
           :icon="getGatewayIcon(gateway)"
           :icon-color="pageIconColor"
-          :card-class="'cursor-pointer transition-all'"
           :content-loading="gatewaysRefreshing"
           :stats="[
             {
@@ -62,8 +57,7 @@
           :header-actions="getHeaderActions(gateway)"
           :methods="getFooterActions(gateway)"
         />
-      </CommonAnimatedGrid>
-  </CommonCardListFrame>
+  </CommonResourceListFrame>
 </template>
 
 <script setup lang="ts">
@@ -79,7 +73,6 @@ const { getLoader: getGatewayLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
-const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 
