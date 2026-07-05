@@ -42,7 +42,7 @@ const { isMobile, isTablet } = useScreen();
         @click="goToPage(page - 1)"
         :disabled="page <= 1 || totalPages <= 1 || loading"
         :title="`Go to page ${page - 1}`"
-        :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
+        :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
         color="primary"
       />
       <span v-if="isMobile || isTablet" class="text-xs font-medium">{{ page }}/{{ totalPages }}</span>
@@ -52,7 +52,7 @@ const { isMobile, isTablet } = useScreen();
         @click="goToPage(page + 1)"
         :disabled="page >= totalPages || totalPages <= 1 || loading"
         :title="`Go to page ${page + 1}`"
-        :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
+        :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
         color="primary"
       />
       
@@ -63,7 +63,7 @@ const { isMobile, isTablet } = useScreen();
       color="primary"
       :size="(isMobile || isTablet) ? 'sm' : 'sm'"
       :disabled="disabled"
-      :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
+      :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
     >
       <span v-if="!isMobile && !isTablet">Apply</span>
     </UButton>

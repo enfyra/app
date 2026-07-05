@@ -299,7 +299,7 @@ async function setMode(next: Mode) {
         variant="ghost"
         color="neutral"
         icon="lucide:x"
-        class="rounded-full !aspect-square"
+        class="!rounded-[var(--radius-subcontrol)] !aspect-square"
         @click="clearSelection"
       />
     </div>

@@ -15,19 +15,15 @@
             <div
               @click="packageType = 'Server'"
               :class="[
-                'relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-200',
-                packageType === 'Server'
-                  ? 'eapp-accent-soft shadow-theme-md'
-                  : 'border-[var(--border-strong)] bg-[var(--surface-default)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]',
+                'package-type-card group',
+                packageType === 'Server' ? 'package-type-card-active shadow-theme-md' : '',
               ]"
             >
               <div class="flex items-start gap-4">
                 <div
                   :class="[
-                    'flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200',
-                    packageType === 'Server'
-                      ? 'eapp-accent-solid'
-                      : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)] group-hover:bg-[var(--surface-muted)] group-hover:text-[var(--text-secondary)]',
+                    'package-type-icon',
+                    packageType === 'Server' ? 'package-type-icon-active' : '',
                   ]"
                 >
                   <UIcon name="lucide:server" class="w-6 h-6" />
@@ -51,9 +47,9 @@
                       <span>Selected</span>
                     </div>
                   </div>
-                  <p class="text-sm text-[var(--text-secondary)]">
+                  <p class="text-sm package-type-description">
                     Use in handlers & hooks via
-                    <code class="eapp-accent-soft rounded px-1.5 py-0.5 text-xs font-mono">$ctx.$pkgs</code>
+                    <code class="package-type-code rounded px-1.5 py-0.5 text-xs font-mono">$ctx.$pkgs</code>
                   </p>
                 </div>
               </div>
@@ -62,19 +58,15 @@
             <div
               @click="packageType = 'App'"
               :class="[
-                'relative group cursor-pointer rounded-xl border-2 p-5 transition-all duration-200',
-                packageType === 'App'
-                  ? 'eapp-accent-soft shadow-theme-md'
-                  : 'border-[var(--border-strong)] bg-[var(--surface-default)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]',
+                'package-type-card group',
+                packageType === 'App' ? 'package-type-card-active shadow-theme-md' : '',
               ]"
             >
               <div class="flex items-start gap-4">
                 <div
                   :class="[
-                    'flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200',
-                    packageType === 'App'
-                      ? 'eapp-accent-solid'
-                      : 'bg-[var(--surface-muted)] text-[var(--text-tertiary)] group-hover:bg-[var(--surface-muted)] group-hover:text-[var(--text-secondary)]',
+                    'package-type-icon',
+                    packageType === 'App' ? 'package-type-icon-active' : '',
                   ]"
                 >
                   <UIcon name="lucide:package-2" class="w-6 h-6" />
@@ -98,7 +90,7 @@
                       <span>Selected</span>
                     </div>
                   </div>
-                  <p class="text-sm text-[var(--text-secondary)]">
+                  <p class="text-sm package-type-description">
                     Use in extensions and components
                     <span class="text-[var(--text-tertiary)]">via import</span>
                   </p>
@@ -287,3 +279,71 @@ async function handleCreate() {
   });
 }
 </script>
+
+<style scoped>
+.package-type-card {
+  position: relative;
+  cursor: pointer;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  background: var(--card-bg);
+  padding: 1.25rem;
+  color: var(--text-primary);
+  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.package-type-card:hover {
+  border-color: var(--border-accent);
+  background: color-mix(in srgb, var(--state-primary-soft-bg) 28%, var(--card-bg));
+}
+
+.package-type-card-active {
+  border-color: var(--badge-primary-soft-border);
+  background: var(--badge-primary-soft-bg);
+  color: var(--badge-primary-soft-text);
+}
+
+.package-type-card-active:hover {
+  border-color: var(--border-accent);
+  background: var(--state-primary-soft-bg-hover);
+}
+
+.package-type-icon {
+  display: flex;
+  width: 3rem;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.package-type-card:hover .package-type-icon {
+  background: var(--state-primary-soft-bg);
+  color: var(--badge-primary-soft-text);
+  box-shadow: inset 0 0 0 1px var(--badge-primary-soft-border);
+}
+
+.package-type-icon-active,
+.package-type-card-active:hover .package-type-icon-active {
+  background: var(--action-primary-bg);
+  color: var(--action-primary-text);
+  box-shadow: none;
+}
+
+.package-type-description {
+  color: color-mix(in srgb, var(--text-secondary) 90%, var(--badge-primary-soft-text));
+}
+
+.package-type-card-active .package-type-description {
+  color: var(--badge-primary-soft-text);
+}
+
+.package-type-code {
+  border: 1px solid var(--badge-primary-soft-border);
+  background: color-mix(in srgb, var(--state-primary-soft-bg-hover) 74%, var(--surface-default));
+  color: var(--badge-primary-soft-text);
+}
+</style>

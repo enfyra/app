@@ -3,6 +3,12 @@ const { register: registerHeaderActions } = useHeaderActionRegistry();
 const showCreateModal = ref(false);
 const showUploadModal = ref(false);
 const selectedStorage = ref<{ label: string; value: string; icon: string }>();
+const {
+  uploadProgress,
+  uploadProgressHeaders,
+  beginUploadProgress,
+  resetUploadProgress,
+} = useFileUploadProgress();
 
 const route = useRoute();
 const {
@@ -97,6 +103,10 @@ const storageOptions = computed(() => {
 });
 
 watch(showUploadModal, async (open) => {
+  if (!open) {
+    resetUploadProgress();
+    return;
+  }
   if (!open || storageConfigsFetched.value) return;
   await fetchStorageConfigs();
 });
@@ -156,11 +166,23 @@ async function handleFileUpload(files: File | File[]) {
     return formData;
   });
 
-  await uploadFilesApi({
-    files: formDataArray,
-  });
+  for (const [index, formData] of formDataArray.entries()) {
+    beginUploadProgress({
+      basePercent: (index / formDataArray.length) * 100,
+      weightPercent: 100 / formDataArray.length,
+    });
+    await uploadFilesApi({
+      body: formData,
+      headers: uploadProgressHeaders.value,
+    });
+    if (uploadError.value) {
+      resetUploadProgress();
+      return;
+    }
+  }
 
   if (uploadError.value) {
+    resetUploadProgress();
     return;
   }
 
@@ -168,6 +190,7 @@ async function handleFileUpload(files: File | File[]) {
 
   showUploadModal.value = false;
   selectedStorage.value = undefined;
+  resetUploadProgress();
 
   useNotify().success("Success", `${fileArray.length} file(s) uploaded successfully`);
 }
@@ -279,6 +302,7 @@ registerHeaderActions([
       accept="*/*"
       :max-size="50 * 1024 * 1024"
       :loading="uploadPending"
+      :upload-progress="uploadProgress"
       @upload="handleFileUpload"
     >
       <template #header-content>

@@ -35,7 +35,8 @@
           :to="unref(action.to)"
           :replace="unref(action.replace)"
           :aria-label="action.label || action.id"
-          :class="action.class"
+          :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
+          :class="getHeaderActionButtonClass(action)"
           @click="handleActionClick(action)"
           class="cursor-pointer"
         />

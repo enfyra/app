@@ -298,9 +298,20 @@ type EnfyraRepos = {
   main: EnfyraRepository;
   secure: Record<string, EnfyraRepository>;
 } & Record<string, EnfyraRepository>;
+type EnfyraStorageProgress = {
+  phase: string;
+  loaded: number;
+  total: number;
+  percent: number;
+  fileName: string;
+  uploadId?: string;
+};
+type EnfyraStorageUploadOptions = Record<string, any> & {
+  onProgress?: (progress: EnfyraStorageProgress) => void | Promise<void>;
+};
 type EnfyraStorage = {
-  $upload(options: Record<string, any>): Promise<any>;
-  $update(fileId: string | number, options: Record<string, any>): Promise<any>;
+  $upload(options: EnfyraStorageUploadOptions): Promise<any>;
+  $update(fileId: string | number, options: EnfyraStorageUploadOptions): Promise<any>;
   $delete(fileId: string | number): Promise<any>;
   $registerFile(options: Record<string, any>): Promise<any>;
 };

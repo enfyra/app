@@ -44,8 +44,11 @@ onUnmounted(() => {
       content: 'z-[150]',
     }"
     :cancel-action="cancelAction"
-    :primary-action="!isDestructive ? { label: options.confirmText, onClick: onConfirm } : false"
-    :danger-action="isDestructive ? { label: options.confirmText, tone: 'danger', onClick: onConfirm } : false"
+    :primary-action="{
+      label: options.confirmText,
+      tone: isDestructive ? 'danger' : undefined,
+      onClick: onConfirm,
+    }"
   >
       <template #header>
         <div class="flex items-center justify-between w-full">

@@ -29,7 +29,7 @@ const { isMobile, isTablet } = useScreen();
       :color="hasActiveFilters ? 'primary' : 'neutral'"
       @click="openFilterDrawer"
       :size="(isMobile || isTablet) ? 'xs' : 'sm'"
-      :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
+      :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
     >
       <span v-if="!isMobile && !isTablet">{{ hasActiveFilters ? `Filtered (${filterCount})` : "Filter" }}</span>
     </UButton>
@@ -41,7 +41,7 @@ const { isMobile, isTablet } = useScreen();
       :size="(isMobile || isTablet) ? 'xs' : 'sm'"
       @click="openCreateDrawer"
       :disabled="disabled"
-      :class="(isMobile || isTablet) ? 'rounded-full !aspect-square' : ''"
+      :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
     >
       <span v-if="!isMobile && !isTablet">Add New</span>
     </UButton>

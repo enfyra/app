@@ -12,6 +12,7 @@ export interface UploadModalProps {
   uploadText?: string;
   uploadingText?: string;
   loading?: boolean;
+  uploadProgress?: number | null;
 }
 
 export interface UploadModalEmits {

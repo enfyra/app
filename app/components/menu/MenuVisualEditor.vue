@@ -154,23 +154,55 @@ function handleDragEnd() {
     class="menu-visual-editor"
     :class="isDndUpdating ? 'pointer-events-none opacity-60 select-none' : ''"
   >
-    <div v-if="props.loading" class="eapp-resource-list">
-      <div
-        v-for="row in 9"
-        :key="row"
-        class="eapp-resource-list-item pointer-events-none"
-      >
-        <span class="eapp-resource-list-leading skeleton-gradient skeleton-pulse-slow" />
-        <span class="min-w-0 flex-1 space-y-2">
-          <span class="block h-4 w-1/3 max-w-72 rounded skeleton-gradient skeleton-pulse-slow" />
-          <span class="block h-3 w-2/3 max-w-[34rem] rounded skeleton-inline skeleton-pulse-slow" />
-          <span class="flex gap-2">
-            <span class="block h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            <span class="hidden h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
-          </span>
-        </span>
-        <span class="hidden h-8 w-20 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
+    <div v-if="props.loading" class="menu-preview-stage" aria-busy="true" aria-label="Loading menu structure">
+      <div class="menu-preview surface-card">
+        <div class="menu-preview-header">
+          <div class="space-y-2">
+            <div class="h-3 w-28 rounded skeleton-inline skeleton-pulse-slow" />
+            <div class="h-5 w-36 rounded skeleton-gradient skeleton-pulse-slow" />
+          </div>
+          <div class="h-6 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+        </div>
+
+        <div class="menu-root-drop-zone">
+          <div
+            v-for="row in 4"
+            :key="row"
+            class="menu-visual-skeleton-item"
+          >
+            <div class="flex min-w-0 flex-1 items-center gap-3">
+              <span class="h-4 w-4 shrink-0 rounded skeleton-inline skeleton-pulse-slow" />
+              <span class="h-9 w-9 shrink-0 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
+              <span class="min-w-0 flex-1 space-y-2">
+                <span class="block h-4 rounded skeleton-gradient skeleton-pulse-slow" :class="row % 2 ? 'w-36' : 'w-48'" />
+                <span class="block h-3 w-56 max-w-full rounded skeleton-inline skeleton-pulse-slow" />
+              </span>
+            </div>
+            <div class="hidden items-center gap-2 md:flex">
+              <span class="h-6 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+              <span class="h-8 w-8 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
+            </div>
+
+            <div
+              v-if="row === 2"
+              class="menu-visual-skeleton-children"
+            >
+              <div
+                v-for="child in 2"
+                :key="child"
+                class="menu-visual-skeleton-child"
+              >
+                <span class="h-3.5 w-3.5 shrink-0 rounded skeleton-inline skeleton-pulse-slow" />
+                <span class="h-8 w-8 shrink-0 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
+                <span class="min-w-0 flex-1 space-y-2">
+                  <span class="block h-3.5 w-32 rounded skeleton-gradient skeleton-pulse-slow" />
+                  <span class="block h-3 w-40 max-w-full rounded skeleton-inline skeleton-pulse-slow" />
+                </span>
+                <span class="hidden h-7 w-7 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow md:block" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -286,6 +318,36 @@ function handleDragEnd() {
 .menu-root-drop-zone {
   display: grid;
   gap: 8px;
+}
+
+.menu-visual-skeleton-item {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-panel);
+  background: var(--surface-default);
+  padding: 10px;
+}
+
+.menu-visual-skeleton-item > :first-child {
+  display: flex;
+}
+
+.menu-visual-skeleton-children {
+  display: grid;
+  gap: 8px;
+  margin-left: 28px;
+  border-left: 1px solid var(--border-subtle);
+  padding-left: 12px;
+}
+
+.menu-visual-skeleton-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-control);
+  background: var(--surface-muted);
+  padding: 9px;
 }
 
 .ghost-item {

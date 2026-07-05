@@ -65,6 +65,18 @@ const {
 });
 
 const showReplaceModal = ref(false);
+const {
+  uploadProgress: replaceProgress,
+  uploadProgressHeaders,
+  beginUploadProgress,
+  resetUploadProgress,
+} = useFileUploadProgress();
+
+watch(showReplaceModal, (open) => {
+  if (!open) {
+    resetUploadProgress();
+  }
+});
 
 async function handleReset() {
   const ok = await confirm({
@@ -219,16 +231,20 @@ async function handleReplaceFileSuccess(files: File | File[]) {
   const formData = new FormData();
   formData.append("file", newFile);
 
+  beginUploadProgress();
   await executeUpdateFile({
     id: fileId,
     body: formData,
+    headers: uploadProgressHeaders.value,
   });
 
   if (updateError.value) {
+    resetUploadProgress();
     return;
   }
 
   showReplaceModal.value = false;
+  resetUploadProgress();
   await initializeForm();
 
   updateFileTimestamp(fileId);
@@ -425,6 +441,7 @@ function getFileIconAndColor(mimetype: string): {
       :title="`Replace ${form.filename || 'File'}`"
       :multiple="false"
       :loading="updateLoading"
+      :upload-progress="replaceProgress"
       @upload="handleReplaceFileSuccess"
     >
       <template #warning>

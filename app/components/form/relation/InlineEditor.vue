@@ -100,16 +100,16 @@ async function navigateToDetail(item: any) {
     <div
       v-for="item in selectedIds"
       :key="getId(item)"
-      class="eapp-accent-soft inline-flex items-stretch overflow-hidden rounded-md"
+      class="relation-inline-chip eapp-primary-soft inline-flex items-stretch overflow-hidden rounded-md"
       :title="getId(item) ? String(getId(item)) : 'Invalid ID'"
     >
-      <span class="bg-[var(--state-primary-soft-bg-hover)] px-2 py-0.5 font-mono text-xs">
+      <span class="relation-inline-chip-label px-2 py-0.5 font-mono text-xs">
         {{ getId(item) ? shortenId(getId(item)) : "Invalid ID" }}
       </span>
 
       <button
         type="button"
-        class="px-1.5 flex items-center justify-center text-[10px] text-[var(--text-secondary)] hover:bg-primary-500/20 hover:text-primary-600 dark:hover:text-primary-300 transition-colors"
+        class="relation-inline-chip-action relation-inline-chip-action-primary px-1.5 flex items-center justify-center text-[10px] transition-colors"
         :title="`Open detail for ${getId(item)}`"
         @click.stop="navigateToDetail(item)"
       >
@@ -119,7 +119,7 @@ async function navigateToDetail(item: any) {
       <button
         v-if="!props.disabled"
         type="button"
-        class="px-1.5 flex items-center justify-center text-[10px] text-[var(--text-secondary)] hover:bg-[var(--state-danger-soft-bg-hover)] hover:text-[var(--md-error)] transition-colors"
+        class="relation-inline-chip-action relation-inline-chip-action-danger px-1.5 flex items-center justify-center text-[10px] transition-colors"
         title="Remove relation"
         @click.stop="removeId(getId(item))"
       >
@@ -133,7 +133,7 @@ async function navigateToDetail(item: any) {
       variant="outline"
       color="primary"
       @click="showModal = true"
-      class="rounded-full"
+      class="!rounded-[var(--radius-subcontrol)]"
     />
   </div>
 
@@ -149,3 +149,30 @@ async function navigateToDetail(item: any) {
     :disabled="props.disabled"
   />
 </template>
+
+<style scoped>
+.relation-inline-chip {
+  border: 1px solid var(--badge-primary-soft-border);
+}
+
+.relation-inline-chip-label {
+  background: var(--state-primary-soft-bg-hover);
+  color: var(--badge-primary-soft-text);
+}
+
+.relation-inline-chip-action {
+  border-left: 1px solid color-mix(in srgb, var(--badge-primary-soft-border) 78%, transparent);
+  background: color-mix(in srgb, var(--surface-default) 42%, transparent);
+  color: var(--badge-primary-soft-text);
+}
+
+.relation-inline-chip-action-primary:hover {
+  background: color-mix(in srgb, var(--md-primary) 28%, var(--state-primary-soft-bg-hover));
+  color: var(--badge-primary-soft-text);
+}
+
+.relation-inline-chip-action-danger:hover {
+  background: var(--state-danger-soft-bg-hover);
+  color: var(--state-danger-soft-text);
+}
+</style>

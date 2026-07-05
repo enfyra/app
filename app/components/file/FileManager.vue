@@ -179,8 +179,8 @@ registerSubHeaderActions([
     icon: computed(() =>
       isSelectionMode.value ? "lucide:x" : "lucide:check-square"
     ),
-    variant: computed(() => (isSelectionMode.value ? "ghost" : "outline")),
-    color: computed(() => (isSelectionMode.value ? "secondary" : "primary")),
+    variant: computed(() => (isSelectionMode.value ? "soft" : "outline")),
+    color: computed(() => (isSelectionMode.value ? "primary" : "neutral")),
     onClick: () => {
       isSelectionMode.value = !isSelectionMode.value;
       if (!isSelectionMode.value) {
