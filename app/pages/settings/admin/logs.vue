@@ -421,7 +421,16 @@ onMounted(async () => {
         :has-items="false"
         loading-title="Loading log files..."
         loading-description="Fetching server logs"
-      />
+      >
+        <template #skeleton-row>
+          <CommonResourceListSkeletonRow
+            title-width="w-56"
+            description-width="w-32"
+            :chips="['w-20']"
+            trailing-width="w-10"
+          />
+        </template>
+      </CommonResourceListFrame>
 
       <div v-else class="space-y-6">
         <div v-if="stats && !selectedFile" class="grid gap-4 grid-cols-1 md:grid-cols-3">

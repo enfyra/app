@@ -11,7 +11,16 @@
         :has-items="false"
         loading-title="Loading routes..."
         loading-description="Fetching route definitions"
-      />
+      >
+        <template #skeleton-row>
+          <CommonResourceListSkeletonRow
+            title-width="w-56"
+            description-width="w-36"
+            :chips="['w-12', 'w-12', 'w-16']"
+            :show-trailing="false"
+          />
+        </template>
+      </CommonResourceListFrame>
 
       <div v-else class="space-y-4">
         <UTabs
@@ -34,6 +43,16 @@
               :top-badge="!r.isEnabled ? { label: 'Off', color: 'warning' } : undefined"
               @click="openTest(r)"
             >
+              <template #skeleton-content>
+                <span class="block h-4 w-56 rounded skeleton-gradient skeleton-pulse-slow" />
+                <span class="block h-3 w-36 rounded skeleton-inline skeleton-pulse-slow" />
+                <span class="flex flex-wrap gap-2">
+                  <span class="block h-5 w-12 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
+                  <span class="block h-5 w-12 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
+                  <span class="hidden h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
+                </span>
+              </template>
+
               <template #metadata>
                 <div class="mt-2 flex flex-wrap items-center gap-1.5">
                   <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
@@ -59,7 +78,16 @@
             :has-items="false"
             loading-title="Loading system routes..."
             loading-description="Fetching system route definitions"
-          />
+          >
+            <template #skeleton-row>
+              <CommonResourceListSkeletonRow
+                title-width="w-56"
+                description-width="w-44"
+                :chips="['w-12', 'w-12', 'w-16']"
+                :show-trailing="false"
+              />
+            </template>
+          </CommonResourceListFrame>
 
           <div v-else-if="filteredSystemRoutes.length > 0" class="eapp-resource-list">
             <CommonResourceListItem

@@ -18,22 +18,24 @@
       v-if="icon || avatar"
       :class="[
         'eapp-resource-list-leading',
-        avatar ? avatarClass : iconBgClass,
+        contentLoading ? 'skeleton-gradient skeleton-pulse-slow' : avatar ? avatarClass : iconBgClass,
       ]"
     >
-      <span v-if="contentLoading" class="h-1/2 w-1/2 rounded-[var(--radius-subcontrol)] skeleton-gradient skeleton-pulse-slow" />
+      <slot v-if="contentLoading" name="skeleton-leading" />
       <UIcon v-else :name="normalizedIcon" class="size-4" />
     </span>
 
     <span class="min-w-0 flex-1 text-left">
       <span v-if="contentLoading" class="block space-y-2">
-        <span class="block h-4 w-1/3 max-w-72 rounded skeleton-gradient skeleton-pulse-slow" />
-        <span class="block h-3 w-2/3 max-w-[34rem] rounded skeleton-inline skeleton-pulse-slow" />
-        <span class="flex gap-2">
-          <span class="block h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-          <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-          <span class="hidden h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
-        </span>
+        <slot name="skeleton-content">
+          <span class="block h-4 w-1/3 max-w-72 rounded skeleton-gradient skeleton-pulse-slow" />
+          <span class="block h-3 w-2/3 max-w-[34rem] rounded skeleton-inline skeleton-pulse-slow" />
+          <span class="flex gap-2">
+            <span class="block h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+            <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+            <span class="hidden h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
+          </span>
+        </slot>
       </span>
 
       <span v-else class="block min-w-0">
@@ -80,10 +82,12 @@
       </span>
     </span>
 
-    <span
+    <slot
       v-if="contentLoading && (headerActions?.length || normalizedActions.length)"
-      class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block"
-    />
+      name="skeleton-actions"
+    >
+      <span class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
+    </slot>
 
     <span
       v-else-if="headerActions?.length"

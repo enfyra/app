@@ -228,6 +228,20 @@ button:focus-visible,
   box-shadow: var(--card-shadow);
 }
 
+.eapp-resource-list-contained {
+  border: 1px solid color-mix(in srgb, var(--border-default) 78%, var(--surface-default));
+  border-radius: var(--radius-card);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.eapp-resource-list-plain {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .eapp-resource-list-item {
   position: relative;
   display: flex;
@@ -239,6 +253,10 @@ button:focus-visible,
   background: transparent;
   color: var(--text-primary);
   transition: background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.eapp-resource-list-plain .eapp-resource-list-item:first-child {
+  border-top: 1px solid color-mix(in srgb, var(--border-default) 70%, var(--surface-default));
 }
 
 .eapp-resource-list-item:last-child {
