@@ -457,15 +457,14 @@
   --action-danger-bg-active: var(--danger-surface-active);
   --action-danger-text: var(--md-on-error-container);
 
-  /* Dark theme is a harmonious neutral-dark canvas so neutral blocks, tinted
-     borders and the accent never clash in temperature. Only borders, the accent
-     and a faint corner radial carry the theme hue; surfaces stay neutral. */
-  --bg-app: #131316;
-  --surface-chrome: #16161a;
-  --shell-sidebar-bg: #131316;
-  --shell-main-bg: #131316;
-  --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 4%, transparent), transparent 28rem), #131316;
-  --flow-surface-bg: #151518;
+  /* Dark theme keeps neutral blocks crisp while the app canvas carries a quiet
+     primary tint, so the runtime accent is visible without turning surfaces black. */
+  --bg-app: color-mix(in srgb, var(--md-primary) 2%, #17171b);
+  --surface-chrome: color-mix(in srgb, var(--md-primary) 1%, #1b1b20);
+  --shell-sidebar-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
+  --shell-main-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
+  --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 4%, transparent), transparent 28rem), color-mix(in srgb, var(--md-primary) 2%, #17171b);
+  --flow-surface-bg: color-mix(in srgb, var(--md-primary) 1%, #19191d);
   --flow-surface-border: color-mix(in srgb, var(--md-outline) 58%, transparent);
   --flow-edge: color-mix(in srgb, var(--text-secondary) 58%, transparent);
   --flow-node-bg: color-mix(in srgb, var(--text-primary) 5%, var(--block-low));
