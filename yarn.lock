@@ -763,6 +763,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@codemirror/state@npm:^6.5.2":
+  version: 6.7.0
+  resolution: "@codemirror/state@npm:6.7.0"
+  dependencies:
+    "@marijn/find-cluster-break": "npm:^1.0.0"
+  checksum: 10c0/132ad67850daba80e11af820f2e44bb0696ed4ca68e7cfd6fa5092bd78280ba5cbb6f92e83eb6ac68d3a98ccd3e7e46f7081c35ac327b830c5567760796c3600
+  languageName: node
+  linkType: hard
+
 "@codemirror/text@npm:^0.19.0":
   version: 0.19.6
   resolution: "@codemirror/text@npm:0.19.6"
@@ -7886,6 +7895,7 @@ __metadata:
     "@codemirror/lint": "npm:^6.8.5"
     "@codemirror/matchbrackets": "npm:^0.19.4"
     "@codemirror/search": "npm:^6.5.11"
+    "@codemirror/state": "npm:^6.5.2"
     "@codemirror/view": "npm:^6.38.0"
     "@floating-ui/dom": "npm:1.7.4"
     "@iconify-json/lucide": "npm:^1.2.49"
