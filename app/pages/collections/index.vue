@@ -6,7 +6,7 @@ import CommonSystemVisibilityControl from "~/components/common/SystemVisibilityC
 import type { SystemVisibilityMode } from "~/types/ui";
 
 const page = ref(1);
-const pageLimit = 9;
+const pageLimit = 10;
 const route = useRoute();
 
 const { registerPageHeader } = usePageHeaderRegistry();

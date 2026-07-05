@@ -89,7 +89,7 @@ const { register: registerHeaderActions } = useHeaderActionRegistry();
 import type { SettingsCardAction, SettingsCardHeaderAction } from '~/types/ui';
 
 const page = ref(1);
-const limit = 9;
+const limit = 10;
 const WEBSOCKET_LIST_FIELDS = [
   "id",
   "path",

@@ -101,7 +101,7 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
-const limit = 9;
+const limit = 10;
 const tableName = "enfyra_user";
 const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
