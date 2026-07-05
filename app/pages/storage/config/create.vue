@@ -70,7 +70,7 @@ const excludedFields = computed(() => {
 const includedFields = computed(() => {
   const selectedType = createForm.value.type;
   if (!selectedType) {
-    return ['name', 'bucket', 'description', 'type'];
+    return ['name', 'bucket', 'description', 'type', 'isDefault'];
   }
   return [];
 });

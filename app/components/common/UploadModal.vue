@@ -107,15 +107,15 @@
                 </div>
               </div>
               <div
-                v-if="displayUploadProgress !== null"
+                v-if="fileDisplayProgresses[index] !== null"
                 class="upload-file-progress"
-                :aria-label="`Upload progress ${displayUploadProgress}%`"
+                :aria-label="`Upload progress ${fileDisplayProgresses[index]}%`"
               >
-                <span>{{ displayUploadProgress }}%</span>
+                <span>{{ fileDisplayProgresses[index] }}%</span>
                 <div class="upload-file-progress-track">
                   <div
                     class="upload-file-progress-bar"
-                    :style="{ width: `${displayUploadProgress}%` }"
+                    :style="{ width: `${fileDisplayProgresses[index]}%` }"
                   />
                 </div>
               </div>
@@ -165,6 +165,7 @@ const props = withDefaults(defineProps<UploadModalProps>(), {
   uploadingText: "Uploading...",
   loading: false,
   uploadProgress: null,
+  fileProgress: () => ({}),
 });
 
 const emit = defineEmits<UploadModalEmits>();
@@ -208,6 +209,26 @@ const displayUploadProgress = computed(() => {
   if (!isLoading.value) return null;
   return normalizedUploadProgress.value;
 });
+const getDerivedFileProgress = (index: number, total: number) => {
+  const progress = displayUploadProgress.value;
+  if (progress === null) return null;
+  if (total <= 1) return progress;
+
+  const segmentSize = 100 / total;
+  const segmentStart = index * segmentSize;
+  const segmentProgress = ((progress - segmentStart) / segmentSize) * 100;
+  return Math.min(100, Math.max(0, Math.round(segmentProgress)));
+};
+const fileDisplayProgresses = computed(() =>
+  selectedFiles.value.map((_, index) => {
+    if (!isLoading.value) return null;
+    const progress = props.fileProgress?.[index];
+    if (progress !== null && progress !== undefined && Number.isFinite(progress)) {
+      return Math.min(100, Math.max(0, Math.round(progress)));
+    }
+    return getDerivedFileProgress(index, selectedFiles.value.length);
+  }),
+);
 const primaryActionLabel = computed(() => {
   if (!isLoading.value) return uploadText.value;
   return displayUploadProgress.value === null

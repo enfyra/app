@@ -76,7 +76,6 @@
   <div id="others-overlay"></div>
 
   <CommonGlobalConfirm />
-  <CommonGlobalNotify />
   <DynamicGlobalExtensionsHost />
   <FolderDetailModal />
   <CommonRouteLoading :show="routeLoading" message="Navigating..." />

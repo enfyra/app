@@ -13,6 +13,7 @@ interface ExecuteOptions {
   body?: any;
   query?: any;
   headers?: Record<string, string>;
+  headersByIndex?: Record<number, Record<string, string>>;
   files?: FormData[];
   batchSize?: number;
   concurrent?: number;
@@ -284,7 +285,10 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
               lastAttemptedPath = finalPath;
               return uploadFormDataWithProgress<T>(finalPath, fileObj, {
                 method: method as string,
-                headers: finalHeaders,
+                headers: {
+                  ...finalHeaders,
+                  ...(executeOpts.headersByIndex?.[index] || {}),
+                },
                 query: finalQuery,
                 index,
                 count: executeOpts.files?.length || 0,
@@ -308,12 +312,15 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         }
 
         const responses = await Promise.all(
-          executeOpts.files.map(async (fileObj: FormData) => {
+          executeOpts.files.map(async (fileObj: FormData, index) => {
             lastAttemptedPath = finalPath;
             return $fetch(finalPath, {
               method: method as any,
               body: fileObj,
-              headers: finalHeaders,
+              headers: {
+                ...finalHeaders,
+                ...(executeOpts.headersByIndex?.[index] || {}),
+              },
               query: finalQuery,
             }) as Promise<T>;
           })

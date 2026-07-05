@@ -1,6 +1,5 @@
 export type FileUploadProgressPhase =
   | "receiving"
-  | "storing"
   | "completed"
   | "failed";
 
@@ -11,4 +10,6 @@ export interface FileUploadProgressEvent {
   total: number;
   percent: number;
   fileName?: string;
+  route?: string;
+  method?: string;
 }

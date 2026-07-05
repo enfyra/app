@@ -38,6 +38,55 @@ export default defineAppConfig({
     skeleton: {
       base: "skeleton-gradient skeleton-pulse-slow",
     },
+    toaster: {
+      slots: {
+        viewport: "fixed flex flex-col w-[calc(100%-2rem)] sm:w-[420px] z-[220] data-[expanded=true]:h-(--height) focus:outline-none",
+      },
+    },
+    toast: {
+      slots: {
+        root: "surface-card relative group overflow-hidden p-3 flex items-start gap-3 shadow-[var(--shadow-md)] ring-1 ring-[var(--card-border)] focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",
+        wrapper: "min-w-0 flex-1 py-0.5",
+        title: "truncate text-sm font-bold text-[var(--text-primary)]",
+        description: "mt-1 text-sm leading-5 text-[var(--text-tertiary)]",
+        icon: "mt-0.5 shrink-0 size-5",
+        actions: "flex gap-1.5 shrink-0",
+        progress: "absolute inset-x-0 bottom-0 h-1 overflow-hidden bg-[var(--surface-muted)]",
+        close: "-mr-1 -mt-1 shrink-0",
+      },
+      variants: {
+        color: {
+          primary: {
+            icon: "text-[var(--badge-primary-soft-text)]",
+            root: "focus-visible:ring-[var(--theme-focus-ring)]",
+          },
+          secondary: {
+            icon: "text-[var(--badge-secondary-soft-text)]",
+            root: "focus-visible:ring-[var(--theme-focus-ring)]",
+          },
+          success: {
+            icon: "text-[var(--badge-success-soft-text)]",
+            root: "focus-visible:ring-[var(--badge-success-soft-border)]",
+          },
+          info: {
+            icon: "text-[var(--badge-info-soft-text)]",
+            root: "focus-visible:ring-[var(--badge-info-soft-border)]",
+          },
+          warning: {
+            icon: "text-[var(--badge-warning-soft-text)]",
+            root: "focus-visible:ring-[var(--badge-warning-soft-border)]",
+          },
+          error: {
+            icon: "text-[var(--badge-danger-soft-text)]",
+            root: "focus-visible:ring-[var(--badge-danger-soft-border)]",
+          },
+          neutral: {
+            icon: "text-[var(--text-secondary)]",
+            root: "focus-visible:ring-[var(--theme-focus-ring)]",
+          },
+        },
+      },
+    },
     dropdownMenu: {
       slots: {
         item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75',

@@ -13,6 +13,7 @@
         :uploading-text="props.uploadingText"
         :loading="props.loading"
         :upload-progress="props.uploadProgress"
+        :file-progress="props.fileProgress"
         @update:model-value="(value) => emit('update:modelValue', value)"
         @upload="(files) => emit('upload', files)"
         @error="(message) => emit('error', message)"

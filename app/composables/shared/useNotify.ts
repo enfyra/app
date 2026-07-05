@@ -1,17 +1,30 @@
 type NotifyType = 'success' | 'error' | 'warning' | 'info'
 
-interface NotifyItem {
-  id: number
-  type: NotifyType
-  title: string
-  description?: string
-}
-
-let counter = 0
-const queue = ref<NotifyItem[]>([])
+const notifyConfig = {
+  success: {
+    icon: 'lucide:check-circle',
+    color: 'success',
+    duration: 3600,
+  },
+  error: {
+    icon: 'lucide:x-circle',
+    color: 'error',
+    duration: 6000,
+  },
+  warning: {
+    icon: 'lucide:alert-triangle',
+    color: 'warning',
+    duration: 6000,
+  },
+  info: {
+    icon: 'lucide:info',
+    color: 'info',
+    duration: 3600,
+  },
+} as const
 
 export function useNotify() {
-  const current = computed(() => queue.value[0] ?? null)
+  const toast = useToast()
 
   function hasOpenOverlay() {
     if (document.querySelector('[data-vaul-overlay]')) return true
@@ -52,7 +65,17 @@ export function useNotify() {
   async function show(type: NotifyType, title: string, description?: string) {
     await nextTick()
     await waitForCleanBody()
-    queue.value.push({ id: ++counter, type, title, description })
+    const config = notifyConfig[type]
+    toast.add({
+      title,
+      description,
+      icon: config.icon,
+      color: config.color,
+      duration: config.duration,
+      progress: {
+        color: config.color,
+      },
+    })
   }
 
   function success(title: string, description?: string) {
@@ -72,8 +95,18 @@ export function useNotify() {
   }
 
   function dismiss() {
-    queue.value.shift()
+    toast.toasts.value[0]?.id && toast.remove(toast.toasts.value[0].id)
   }
 
-  return { current, show, success, error, warning, info, dismiss }
+  return {
+    current: computed(() => toast.toasts.value[0] ?? null),
+    toasts: toast.toasts,
+    show,
+    success,
+    error,
+    warning,
+    info,
+    dismiss,
+    clear: toast.clear,
+  }
 }
