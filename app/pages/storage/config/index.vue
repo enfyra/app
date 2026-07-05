@@ -70,7 +70,7 @@
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const page = ref(1);
-const limit = 9;
+const limit = 10;
 
 const notify = useNotify();
 const { confirm } = useConfirm();

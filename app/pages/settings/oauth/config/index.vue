@@ -79,7 +79,7 @@ interface OAuthConfigDefinition {
 }
 
 const page = ref(1);
-const limit = 9;
+const limit = 10;
 
 const notify = useNotify();
 const { getLoader: getConfigLoader } = useKeyedLoaders();

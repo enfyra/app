@@ -117,7 +117,7 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
-const limit = 9;
+const limit = 10;
 const route = useRoute();
 const { getId } = useDatabase();
 const { adminSocket: $adminSocket } = useAdminSocket();

@@ -83,7 +83,7 @@ const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { getTriggerColor } from '~/utils/flow.constants';
 
 const page = ref(1);
-const limit = 9;
+const limit = 10;
 const FLOW_LIST_FIELDS = [
   "id",
   "name",

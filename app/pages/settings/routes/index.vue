@@ -6,7 +6,7 @@ import type { SystemVisibilityMode } from "~/types/ui";
 
 const notify = useNotify();
 const page = ref(1);
-const pageLimit = 9;
+const pageLimit = 10;
 const route = useRoute();
 const router = useRouter();
 const tableName = "enfyra_route";

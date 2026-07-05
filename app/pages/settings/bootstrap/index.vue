@@ -2,7 +2,7 @@
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const page = ref(1);
-const pageLimit = 9;
+const pageLimit = 10;
 const route = useRoute();
 const tableName = "enfyra_bootstrap_script";
 const { confirm } = useConfirm();
