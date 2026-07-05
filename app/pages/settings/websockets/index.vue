@@ -90,6 +90,15 @@ import type { SettingsCardAction, SettingsCardHeaderAction } from '~/types/ui';
 
 const page = ref(1);
 const limit = 9;
+const WEBSOCKET_LIST_FIELDS = [
+  "id",
+  "path",
+  "description",
+  "isEnabled",
+  "isSystem",
+  "requireAuth",
+  "events.id",
+].join(",");
 
 const notify = useNotify();
 const { confirm } = useConfirm();
@@ -113,7 +122,7 @@ const {
   execute: fetchGateways,
 } = useApi(() => "/enfyra_websocket", {
   query: computed(() => ({
-    fields: ["*", "events.*"].join(","),
+    fields: WEBSOCKET_LIST_FIELDS,
     limit,
     page: page.value,
     meta: "*",

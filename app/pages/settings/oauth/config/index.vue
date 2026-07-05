@@ -88,6 +88,13 @@ const { getId } = useDatabase();
 
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
+const OAUTH_CONFIG_LIST_FIELDS = [
+  "id",
+  "provider",
+  "description",
+  "clientId",
+  "isEnabled",
+].join(",");
 
 registerPageHeader({
   title: "OAuth Configuration",
@@ -102,7 +109,7 @@ const {
   execute: fetchConfigs,
 } = useApi(() => "/enfyra_oauth_config", {
   query: computed(() => ({
-    fields: ["*"].join(","),
+    fields: OAUTH_CONFIG_LIST_FIELDS,
     limit,
     page: page.value,
     meta: "*",

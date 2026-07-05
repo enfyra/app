@@ -62,7 +62,7 @@
             ...resolveProps(action.props),
             ...((isMobile || isTablet) && action.component === 'UButton' ? { size: 'xs', class: 'rounded-full !aspect-square' } : {})
           }"
-          @click="action.onClick"
+          @click="handleHeaderActionClick(action, $event)"
           @update:model-value="action.onUpdate"
         >
           <template v-if="action.label && !isMobile && !isTablet">{{ action.label }}</template>
@@ -171,7 +171,7 @@
           :to="action.to"
           :loading="action.loading"
           :disabled="action.disabled || action.loading"
-          @click="action.onClick"
+          @click="handleActionClick(action)"
           :class="[
             action.onClick || action.to ? 'cursor-pointer' : '',
             (isMobile || isTablet) ? '' : 'h-9 px-4 justify-center'
@@ -233,6 +233,14 @@ const props = withDefaults(defineProps<Props>(), {
   cardClass: "",
   contentLoading: false,
 });
+
+function handleHeaderActionClick(action: HeaderAction, event: Event) {
+  action.onClick?.(event);
+}
+
+function handleActionClick(action: Action) {
+  action.onClick?.();
+}
 
 const componentMap = {
   UButton,

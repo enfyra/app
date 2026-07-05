@@ -81,6 +81,14 @@ const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
 
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
+const STORAGE_CONFIG_LIST_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "type",
+  "driver",
+  "isEnabled",
+].join(",");
 
 registerPageHeader({
   title: "Storage Configuration",
@@ -93,7 +101,7 @@ const {
   execute: fetchStorageConfigs,
 } = useApi(() => "/enfyra_storage_config", {
   query: computed(() => ({
-    fields: ["*"].join(","),
+    fields: STORAGE_CONFIG_LIST_FIELDS,
     limit,
     page: page.value,
     meta: "*",
@@ -200,7 +208,9 @@ function getActions(config: any) {
         color: "error",
         size: "xs",
       },
-      onClick: () => deleteConfig(config),
+      onClick: () => {
+        deleteConfig(config);
+      },
     },
   ];
 }

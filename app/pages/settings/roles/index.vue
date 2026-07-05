@@ -6,8 +6,14 @@ const pageLimit = 10;
 const route = useRoute();
 const tableName = "enfyra_role";
 const { confirm } = useConfirm();
-const { getIncludeFields } = useSchema(tableName);
 const { getId } = useDatabase();
+const ROLE_LIST_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "isSystem",
+  "createdAt",
+].join(",");
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -25,7 +31,7 @@ const {
   execute: fetchRoles,
 } = useApi(() => "/enfyra_role", {
   query: computed(() => ({
-    fields: getIncludeFields(),
+    fields: ROLE_LIST_FIELDS,
     sort: "-createdAt",
     meta: "*",
     page: page.value,

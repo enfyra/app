@@ -168,6 +168,12 @@ const { confirm } = useConfirm();
 const { getId, getIdFieldName } = useDatabase();
 
 const tableName = "enfyra_websocket";
+const WEBSOCKET_EVENT_LIST_FIELDS = [
+  "id",
+  "eventName",
+  "description",
+  "isEnabled",
+].join(",");
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -215,7 +221,7 @@ const gatewayId = computed(() => pageId.value || getId(gatewayData.value?.data?.
 
 const { data: eventsData, execute: fetchEvents } = useApi(() => "/enfyra_websocket_event", {
   query: computed(() => ({
-    fields: ["*"].join(","),
+    fields: WEBSOCKET_EVENT_LIST_FIELDS,
     limit: -1,
     filter: pageId.value ? {
       gateway: { _eq: pageId.value },

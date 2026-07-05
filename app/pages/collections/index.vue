@@ -17,6 +17,13 @@ registerPageHeader({
 });
 
 const { schemas } = useSchema();
+const COLLECTION_LIST_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "isSystem",
+  "createdAt",
+].join(",");
 
 const searchQuery = ref("");
 const visibilityScope = ref<SystemVisibilityMode>(getVisibilityScope(route.query.scope, route.query.system));
@@ -78,7 +85,9 @@ const SearchInput = defineComponent({
         searchQuery.value
           ? h("button", {
               class: "absolute right-2 p-1 text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] cursor-pointer",
-              onClick: () => (searchQuery.value = ""),
+              onClick: () => {
+                searchQuery.value = "";
+              },
             }, [
               h(UIcon, { name: "lucide:x", class: "w-4 h-4" }),
             ])
@@ -128,7 +137,7 @@ const {
       conditions.push({ name: { _contains: searchQuery.value } });
     }
     return {
-      fields: "*",
+      fields: COLLECTION_LIST_FIELDS,
       sort: "-createdAt",
       meta: "totalCount,filterCount",
       page: page.value,

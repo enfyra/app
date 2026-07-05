@@ -55,6 +55,10 @@ const variantClass = computed(() => {
       return "surface-card";
   }
 });
+
+function handleActionClick() {
+  props.action?.onClick();
+}
 </script>
 
 <template>
@@ -108,7 +112,7 @@ const variantClass = computed(() => {
         variant="soft"
         color="primary"
         size="sm"
-        @click="props.action.onClick"
+        @click="handleActionClick"
       >
         {{ props.action.label }}
       </UButton>

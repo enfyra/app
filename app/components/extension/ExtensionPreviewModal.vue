@@ -49,7 +49,7 @@
             :variant="action.variant || 'solid'"
             :color="action.color || 'primary'"
             :disabled="action.disabled"
-            @click="action.onClick"
+            @click="handlePreviewHeaderActionClick(action)"
           />
         </div>
 
@@ -138,6 +138,10 @@ function clearPreview() {
   previewHeaderActions.value = [];
   previewSubHeaderActions.value = [];
   previewPageHeader.value = null;
+}
+
+function handlePreviewHeaderActionClick(action: any) {
+  action.onClick?.();
 }
 
 watch(() => props.modelValue, async (open) => {

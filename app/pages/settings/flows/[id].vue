@@ -157,6 +157,39 @@ const reordering = ref(false);
 const stepTypeOptions = STEP_TYPE_OPTIONS;
 const errorOptions = ERROR_OPTIONS;
 const editForm = ref<Record<string, any>>({});
+const FLOW_DETAIL_FIELDS = [
+  "*",
+  "steps.id",
+  "steps.key",
+  "steps.stepOrder",
+  "steps.type",
+  "steps.config",
+  "steps.scriptLanguage",
+  "steps.timeout",
+  "steps.onError",
+  "steps.retryAttempts",
+  "steps.isEnabled",
+  "steps.parent.id",
+  "steps.parentId",
+  "steps.branch",
+].join(",");
+const FLOW_STEP_EDITOR_FIELDS = [
+  "id",
+  "key",
+  "stepOrder",
+  "type",
+  "config",
+  "sourceCode",
+  "scriptLanguage",
+  "compiledCode",
+  "timeout",
+  "onError",
+  "retryAttempts",
+  "isEnabled",
+  "parent.id",
+  "parentId",
+  "branch",
+].join(",");
 
 const TriggerConfigEditor = resolveComponent('FlowTriggerConfigEditor');
 
@@ -224,7 +257,7 @@ watch(() => stepForm.value.type, () => {
 registerPageHeader({ title: "Flow Editor", gradient: "purple" });
 
 const { data: flowData, pending: loading, execute: fetchFlow } = useApi(
-  () => `/enfyra_flow?filter={"${getIdFieldName()}":{"_eq":"${flowId}"}}&fields=*,steps.*,steps.parent.id&limit=1`,
+  () => `/enfyra_flow?filter={"${getIdFieldName()}":{"_eq":"${flowId}"}}&fields=${FLOW_DETAIL_FIELDS}&limit=1`,
   { errorContext: "Fetch Flow" }
 );
 
@@ -320,6 +353,10 @@ const canUpdateFlow = computed(() =>
 const { execute: createStepApi, error: createStepError } = useApi(() => `/enfyra_flow_step`, { method: "post", errorContext: "Create Step" });
 const { execute: updateStepApi, error: updateStepError } = useApi(() => `/enfyra_flow_step`, { method: "patch", errorContext: "Update Step" });
 const { execute: deleteStepApi, error: deleteStepError } = useApi(() => `/enfyra_flow_step`, { method: "delete", errorContext: "Delete Step" });
+const { execute: fetchStepDetail } = useApi(
+  () => `/enfyra_flow_step?filter={"${getIdFieldName()}":{"_eq":"${editingStepId.value}"}}&fields=${FLOW_STEP_EDITOR_FIELDS}&limit=1`,
+  { errorContext: "Fetch Flow Step", immediate: false }
+);
 
 
 registerHeaderActions([
@@ -425,7 +462,7 @@ async function syncDrawersFromQuery(q: typeof route.query) {
       const stepId = step ? String(getId(step)) : undefined;
       if (step && (!stepDrawerOpen.value || String(editingStepId.value) !== stepId)) {
         stepDrawerUpdating.value = true;
-        onSelectStep(step);
+        await onSelectStep(step);
         nextTick(() => { stepDrawerUpdating.value = false; });
       }
     }
@@ -453,11 +490,16 @@ async function syncDrawersFromQuery(q: typeof route.query) {
   }
 }
 
-function onSelectStep(step: any | null) {
+async function onSelectStep(step: any | null) {
   if (!step) return;
   testResult.value = null;
   stepErrors.value = {};
   editingStepId.value = getId(step);
+  const stepDetailResponse = await fetchStepDetail();
+  const stepDetail = stepDetailResponse?.data?.[0];
+  if (stepDetail) {
+    step = stepDetail;
+  }
   const rawConfig = step.config && typeof step.config === 'object' ? step.config : {};
   const config = cleanStepConfig(rawConfig);
   const scriptContract = normalizeScriptContract({

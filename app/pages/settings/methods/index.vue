@@ -16,6 +16,13 @@ type MethodRecord = MethodColorRecord & {
 
 const METHOD_OPTIONS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 const CUSTOM_METHOD_RE = /^[A-Z][A-Z0-9_]*$/;
+const METHOD_LIST_FIELDS = [
+  'id',
+  'name',
+  'buttonColor',
+  'textColor',
+  'isSystem',
+].join(',');
 
 const notify = useNotify();
 const route = useRoute();
@@ -57,7 +64,7 @@ const {
   execute: fetchMethods,
 } = useApi<{ data: MethodRecord[] }>('/enfyra_method', {
   query: {
-    fields: '*',
+    fields: METHOD_LIST_FIELDS,
     sort: 'name',
     limit: 0,
   },
@@ -344,7 +351,9 @@ watch(
             {
               label: 'Edit',
               props: { icon: 'lucide:pencil', variant: 'ghost', color: 'neutral', size: 'xs' },
-              onClick: () => openEdit(method),
+              onClick: () => {
+                openEdit(method);
+              },
             },
           ]"
           @click="openEdit(method)"

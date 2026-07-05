@@ -6,8 +6,15 @@ const pageLimit = 9;
 const route = useRoute();
 const tableName = "enfyra_bootstrap_script";
 const { confirm } = useConfirm();
-const { getIncludeFields } = useSchema(tableName);
 const { getId } = useDatabase();
+const BOOTSTRAP_LIST_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "type",
+  "isSystem",
+  "createdAt",
+].join(",");
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -24,7 +31,7 @@ const {
   execute: fetchBootstrapScripts,
 } = useApi(() => "/enfyra_bootstrap_script", {
   query: computed(() => ({
-    fields: getIncludeFields(),
+    fields: BOOTSTRAP_LIST_FIELDS,
     sort: "-createdAt",
     meta: "*",
     page: page.value,

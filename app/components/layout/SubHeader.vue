@@ -38,7 +38,7 @@
                 : unref(action.disabled)) || unref(action.loading)
             "
             :loading="unref(action.loading)"
-            @click="action.onClick"
+            @click="handleSubHeaderActionClick(action)"
             :class="[
               action.class,
               (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
@@ -81,7 +81,7 @@
                 : unref(action.disabled)) || unref(action.loading)
             "
             :loading="unref(action.loading)"
-            @click="action.onClick"
+            @click="handleSubHeaderActionClick(action)"
             :class="[
               action.class,
               (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
@@ -129,4 +129,8 @@ const rightActions = computed(() => {
 const hasRightActions = computed(() => {
   return rightActions.value.length > 0;
 });
+
+function handleSubHeaderActionClick(action: any) {
+  action.onClick?.();
+}
 </script>

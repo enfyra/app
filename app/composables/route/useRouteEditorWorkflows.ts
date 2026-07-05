@@ -9,6 +9,30 @@ type RouteEditorWorkflowOptions = {
   mainTableName: ComputedRef<string | undefined>;
 };
 
+const ROUTE_HANDLER_WORKFLOW_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "isEnabled",
+  "isSystem",
+  "method.id",
+  "method.name",
+].join(",");
+
+const ROUTE_HOOK_WORKFLOW_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "isEnabled",
+  "isSystem",
+  "isGlobal",
+  "priority",
+  "route.id",
+  "route.path",
+  "methods.id",
+  "methods.name",
+].join(",");
+
 export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const notify = useNotify();
   const { confirm } = useConfirm();
@@ -27,7 +51,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     execute: fetchHandlers,
   } = useApi(() => "/enfyra_route_handler", {
     query: computed(() => ({
-      fields: getHandlerIncludeFields(),
+      fields: ROUTE_HANDLER_WORKFLOW_FIELDS,
       filter: options.routeId.value ? { route: { [getIdFieldName()]: { _eq: options.routeId.value } } } : undefined,
     })),
     errorContext: "Fetch Handlers",
@@ -40,7 +64,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     execute: fetchPreHooks,
   } = useApi(() => "/enfyra_pre_hook", {
     query: computed(() => ({
-      fields: getPreHookIncludeFields(),
+      fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: options.routeId.value ? { route: { [getIdFieldName()]: { _eq: options.routeId.value } } } : undefined,
       sort: ["priority"],
     })),
@@ -54,7 +78,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     execute: fetchPostHooks,
   } = useApi(() => "/enfyra_post_hook", {
     query: computed(() => ({
-      fields: getPostHookIncludeFields(),
+      fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: options.routeId.value ? { route: { [getIdFieldName()]: { _eq: options.routeId.value } } } : undefined,
       sort: ["priority"],
     })),
@@ -68,7 +92,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     execute: fetchGlobalPreHooks,
   } = useApi(() => "/enfyra_pre_hook", {
     query: computed(() => ({
-      fields: getPreHookIncludeFields(),
+      fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: { isGlobal: { _eq: true } },
       sort: ["priority"],
     })),
@@ -82,7 +106,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     execute: fetchGlobalPostHooks,
   } = useApi(() => "/enfyra_post_hook", {
     query: computed(() => ({
-      fields: getPostHookIncludeFields(),
+      fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: { isGlobal: { _eq: true } },
       sort: ["priority"],
     })),

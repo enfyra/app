@@ -65,6 +65,14 @@ const page = ref(1);
 const pageLimit = 12;
 const route = useRoute();
 const tableName = "enfyra_oauth_account";
+const OAUTH_ACCOUNT_LIST_FIELDS = [
+  "id",
+  "provider",
+  "providerUserId",
+  "user.id",
+  "user.email",
+  "user.name",
+].join(",");
 
 const { getId } = useDatabase();
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -82,7 +90,7 @@ const {
   execute: fetchAccounts,
 } = useApi(() => `/${tableName}`, {
   query: computed(() => ({
-    fields: "*,user.id,user._id,user.email,user.name",
+    fields: OAUTH_ACCOUNT_LIST_FIELDS,
     limit: pageLimit,
     page: page.value,
     meta: "*",

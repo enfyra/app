@@ -104,7 +104,6 @@ const page = ref(1);
 const limit = 9;
 const tableName = "enfyra_user";
 const { confirm } = useConfirm();
-const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const route = useRoute();
 const router = useRouter();
@@ -115,6 +114,16 @@ const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 const notify = useNotify();
+const USER_LIST_FIELDS = [
+  "id",
+  "name",
+  "email",
+  "avatar",
+  "isRootAdmin",
+  "createdAt",
+  "role.id",
+  "role.name",
+].join(",");
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -139,7 +148,7 @@ const {
     return {
       limit,
       page: page.value,
-      fields: getIncludeFields(),
+      fields: USER_LIST_FIELDS,
       meta: "*",
       ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
     };
