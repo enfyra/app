@@ -84,6 +84,17 @@ import { getTriggerColor } from '~/utils/flow.constants';
 
 const page = ref(1);
 const limit = 9;
+const FLOW_LIST_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "icon",
+  "triggerType",
+  "isEnabled",
+  "isSystem",
+  "timeout",
+  "steps.id",
+].join(",");
 
 const notify = useNotify();
 const { confirm } = useConfirm();
@@ -104,7 +115,7 @@ const {
   execute: fetchFlows,
 } = useApi(() => "/enfyra_flow", {
   query: computed(() => ({
-    fields: ["*", "steps.*"].join(","),
+    fields: FLOW_LIST_FIELDS,
     limit,
     page: page.value,
     meta: "*",

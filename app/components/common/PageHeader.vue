@@ -104,6 +104,10 @@ watch(
   },
   { deep: true },
 );
+
+function handlePageHeaderActionClick(action: any) {
+  action.onClick?.();
+}
 </script>
 
 <template>
@@ -177,7 +181,7 @@ watch(
                     ? action.disabled
                     : unref(action.disabled)
                 "
-                @click="action.onClick"
+                @click="handlePageHeaderActionClick(action)"
                 :class="[
                   action.class,
                   (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
@@ -214,7 +218,7 @@ watch(
                     ? action.disabled
                     : unref(action.disabled)
                 "
-                @click="action.onClick"
+                @click="handlePageHeaderActionClick(action)"
                 :class="[
                   action.class,
                   (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&

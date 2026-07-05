@@ -11,10 +11,26 @@ const route = useRoute();
 const router = useRouter();
 const tableName = "enfyra_route";
 const { confirm } = useConfirm();
-const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { getLoader: getRouteLoader } = useKeyedLoaders();
 const { registerPageHeader } = usePageHeaderRegistry();
+const ROUTE_LIST_FIELDS = [
+  "id",
+  "path",
+  "icon",
+  "isSystem",
+  "isEnabled",
+  "mainTable.id",
+  "mainTable.name",
+  "availableMethods.id",
+  "availableMethods.name",
+  "availableMethods.buttonColor",
+  "availableMethods.textColor",
+  "publicMethods.id",
+  "publicMethods.name",
+  "publicMethods.buttonColor",
+  "publicMethods.textColor",
+].join(",");
 
 const pageIconColor = 'primary';
 
@@ -97,7 +113,7 @@ const {
     }
 
     return {
-      fields: getIncludeFields(),
+      fields: ROUTE_LIST_FIELDS,
       sort: "-createdAt",
       meta: "*",
       page: page.value,

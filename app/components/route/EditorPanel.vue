@@ -35,7 +35,38 @@ const currentPageRoute = useRoute()
 const router = useRouter()
 const { loadRoutes } = useRoutes()
 const { schemas } = useSchema()
-const { getIncludeFields: getRouteIncludeFields } = useSchema('enfyra_route')
+const ROUTE_EDITOR_FIELDS = [
+  "*",
+  "mainTable.id",
+  "mainTable.name",
+  "mainTable.description",
+  "availableMethods.id",
+  "availableMethods.name",
+  "availableMethods.buttonColor",
+  "availableMethods.textColor",
+  "publicMethods.id",
+  "publicMethods.name",
+  "publicMethods.buttonColor",
+  "publicMethods.textColor",
+  "skipRoleGuardMethods.id",
+  "skipRoleGuardMethods.name",
+  "skipRoleGuardMethods.buttonColor",
+  "skipRoleGuardMethods.textColor",
+].join(",")
+const ROUTE_GUARD_SUMMARY_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "combinator",
+  "position",
+  "isEnabled",
+  "isGlobal",
+  "route.id",
+  "route.path",
+  "methods.id",
+  "methods.name",
+  "parent",
+].join(",")
 
 const routeId = ref<string | undefined>(props.routeId)
 
@@ -45,7 +76,7 @@ const {
   execute: fetchRoute,
 } = useApi(() => '/enfyra_route', {
   query: computed(() => ({
-    fields: getRouteIncludeFields(),
+    fields: ROUTE_EDITOR_FIELDS,
     filter: props.routeId
       ? { [getIdFieldName()]: { _eq: props.routeId } }
       : props.tableName
@@ -316,7 +347,7 @@ const {
   execute: fetchRouteGuards,
 } = useApi(() => '/enfyra_guard', {
   query: computed(() => ({
-    fields: '*,route.id,route.path,methods.name,parent',
+    fields: ROUTE_GUARD_SUMMARY_FIELDS,
     filter: routeId.value
       ? { _and: [{ route: { [getIdFieldName()]: { _eq: routeId.value } } }, { parent: { _is_null: true } }] }
       : undefined,
@@ -332,7 +363,7 @@ const {
   execute: fetchGlobalGuards,
 } = useApi(() => '/enfyra_guard', {
   query: computed(() => ({
-    fields: '*,route.id,route.path,methods.name,parent',
+    fields: ROUTE_GUARD_SUMMARY_FIELDS,
     filter: { _and: [{ isGlobal: { _eq: true } }, { parent: { _is_null: true } }] },
     sort: ['priority'],
   })),

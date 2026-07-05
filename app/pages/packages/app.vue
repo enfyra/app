@@ -81,6 +81,14 @@ const route = useRoute();
 const { getId } = useDatabase();
 const { fetchAppPackages } = useGlobalState();
 const { adminSocket: $adminSocket } = useAdminSocket();
+const PACKAGE_LIST_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "version",
+  "flags",
+  "createdAt",
+].join(",");
 
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -115,11 +123,10 @@ const {
   query: computed(() => ({
     page: page.value,
     limit: limit,
+    fields: PACKAGE_LIST_FIELDS,
+    meta: "*",
     filter: {
       type: { _eq: "App" },
-    },
-    deep: {
-      installedBy: {},
     },
   })),
   errorContext: "Load App Packages",

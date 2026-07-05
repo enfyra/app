@@ -15,11 +15,25 @@ const route = useRoute();
 const router = useRouter();
 const tableName = 'enfyra_guard';
 const { confirm } = useConfirm();
-const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { registerPageHeader } = usePageHeaderRegistry();
 const { getId, getIdFieldName } = useDatabase();
 const idField = getIdFieldName();
+const GUARD_LIST_FIELDS = [
+  'id',
+  'name',
+  'description',
+  'isEnabled',
+  'isGlobal',
+  'position',
+  'combinator',
+  'route.id',
+  'route.path',
+].join(',');
+const GUARD_ROUTE_OPTION_FIELDS = [
+  'id',
+  'path',
+].join(',');
 
 registerPageHeader({
   title: 'Guard Manager',
@@ -67,7 +81,7 @@ const {
     }
 
     return {
-      fields: getIncludeFields(),
+      fields: GUARD_LIST_FIELDS,
       sort: 'priority',
       meta: '*',
       page: page.value,
@@ -126,7 +140,9 @@ registerHeaderActions([
     variant: 'solid',
     color: 'primary',
     size: 'md',
-    onClick: () => openCreateGuardDrawer('global'),
+    onClick: () => {
+      void openCreateGuardDrawer('global');
+    },
     permission: {
       and: [
         {
@@ -174,7 +190,7 @@ const {
   execute: fetchRoutes,
 } = useApi(() => '/enfyra_route', {
   query: {
-    fields: '*,availableMethods.name',
+    fields: GUARD_ROUTE_OPTION_FIELDS,
     sort: 'path',
     limit: 500,
   },
@@ -233,6 +249,18 @@ const hasLoadedRoutes = computed(() => Boolean(routesData.value?.data?.length));
 async function ensureRoutesLoaded() {
   if (hasLoadedRoutes.value || routesLoading.value) return;
   await fetchRoutes();
+}
+
+function setActiveScope(scope: 'all' | GuardScope) {
+  activeScope.value = scope;
+}
+
+function setCreateScope(scope: GuardScope) {
+  createScope.value = scope;
+}
+
+function closeCreateGuardDrawer() {
+  showCreateGuardDrawer.value = false;
 }
 
 async function openCreateGuardDrawer(scope: GuardScope) {
@@ -452,7 +480,7 @@ async function deleteGuard(guard: any) {
                 size="sm"
                 :variant="activeScope === item.value ? 'solid' : 'soft'"
                 :color="activeScope === item.value ? 'primary' : 'neutral'"
-                @click="activeScope = item.value as any"
+                @click="setActiveScope(item.value as 'all' | GuardScope)"
               >
                 {{ item.label }}
               </UButton>
@@ -464,7 +492,7 @@ async function deleteGuard(guard: any) {
                 size="sm"
                 color="primary"
                 variant="solid"
-                @click="openCreateGuardDrawer('global')"
+                @click="void openCreateGuardDrawer('global')"
               />
               <UButton
                 icon="lucide:route"
@@ -472,7 +500,7 @@ async function deleteGuard(guard: any) {
                 size="sm"
                 color="neutral"
                 variant="soft"
-                @click="openCreateGuardDrawer('route')"
+                @click="void openCreateGuardDrawer('route')"
               />
             </div>
           </div>
@@ -588,7 +616,7 @@ async function deleteGuard(guard: any) {
     v-model="showCreateGuardDrawer"
     :handle="false"
     direction="right"
-    :cancel-action="{ label: 'Cancel', onClick: () => (showCreateGuardDrawer = false) }"
+    :cancel-action="{ label: 'Cancel', onClick: closeCreateGuardDrawer }"
     :primary-action="{
       label: 'Create Guard',
       loading: createGuardLoading,
@@ -610,7 +638,7 @@ async function deleteGuard(guard: any) {
                 :color="createScope === 'global' ? 'primary' : 'neutral'"
                 icon="lucide:globe-2"
                 block
-                @click="createScope = 'global'"
+                @click="setCreateScope('global')"
               >
                 Global
               </UButton>
@@ -619,7 +647,7 @@ async function deleteGuard(guard: any) {
                 :color="createScope === 'route' ? 'primary' : 'neutral'"
                 icon="lucide:route"
                 block
-                @click="createScope = 'route'"
+                @click="setCreateScope('route')"
               >
                 Route
               </UButton>

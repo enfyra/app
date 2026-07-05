@@ -21,6 +21,19 @@ export const useGlobalState = () => {
     "global:file:update:timestamp",
     () => ({})
   );
+  const GLOBAL_STORAGE_CONFIG_FIELDS = [
+    "id",
+    "name",
+    "type",
+    "isEnabled",
+  ].join(",");
+  const GLOBAL_APP_PACKAGE_FIELDS = [
+    "id",
+    "name",
+    "version",
+    "isEnabled",
+    "type",
+  ].join(",");
 
   const {
     data: settingsData,
@@ -40,7 +53,7 @@ export const useGlobalState = () => {
     execute: executeFetchStorageConfigs,
   } = useApi(() => "/enfyra_storage_config", {
     query: {
-      fields: "*",
+      fields: GLOBAL_STORAGE_CONFIG_FIELDS,
       limit: -1,
       sort: "-createdAt",
       filter: {
@@ -57,7 +70,7 @@ export const useGlobalState = () => {
     execute: executeFetchAppPackages,
   } = useApi(() => "/enfyra_package", {
     query: {
-      fields: "*",
+      fields: GLOBAL_APP_PACKAGE_FIELDS,
       limit: -1,
       filter: {
         type: {

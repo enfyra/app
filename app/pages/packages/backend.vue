@@ -121,6 +121,15 @@ const limit = 9;
 const route = useRoute();
 const { getId } = useDatabase();
 const { adminSocket: $adminSocket } = useAdminSocket();
+const PACKAGE_LIST_FIELDS = [
+  "id",
+  "name",
+  "description",
+  "version",
+  "flags",
+  "status",
+  "createdAt",
+].join(",");
 
 const pendingOps = ref(new Map<string, string>());
 
@@ -163,6 +172,8 @@ const {
   query: computed(() => ({
     page: page.value,
     limit,
+    fields: PACKAGE_LIST_FIELDS,
+    meta: "*",
     filter: {
       type: { _eq: "Server" },
     },

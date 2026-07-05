@@ -29,7 +29,7 @@
               ? action.disabled
               : unref(action.disabled)) || unref(action.loading)
           "
-          @click="action.onClick"
+          @click="handleHeaderActionClick(action)"
           :class="[
             action.class,
             (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
@@ -60,4 +60,8 @@ const leftActions = computed(() => {
     return a && a.side === 'left' && showValue;
   });
 });
+
+function handleHeaderActionClick(action: any) {
+  action.onClick?.();
+}
 </script>

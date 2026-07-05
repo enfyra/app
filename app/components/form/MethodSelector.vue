@@ -30,13 +30,20 @@ const { getId } = useDatabase();
 
 const methodsCache = useState<any[]>('methods-cache', () => []);
 const methodsLoaded = useState<boolean>('methods-loaded', () => false);
+const METHOD_SELECTOR_FIELDS = [
+  'id',
+  'name',
+  'buttonColor',
+  'textColor',
+  'isSystem',
+].join(',');
 
 const {
   data: methodsData,
   execute: fetchMethods,
 } = useApi('/enfyra_method', {
   query: {
-    fields: '*',
+    fields: METHOD_SELECTOR_FIELDS,
     limit: 0,
   },
   errorContext: "Fetch Methods",

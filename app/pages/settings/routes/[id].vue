@@ -23,8 +23,13 @@ const { confirm } = useConfirm()
 const { routes, loadRoutes } = useRoutes()
 const { retryUntilFresh } = useServerSync()
 const { getId, getIdFieldName } = useDatabase()
-const { getIncludeFields, schemas } = useSchema('enfyra_route')
+const { schemas } = useSchema('enfyra_route')
 const { registerPageHeader } = usePageHeaderRegistry()
+const ROUTE_DETAIL_HEADER_FIELDS = [
+  'id',
+  'path',
+  'isSystem',
+].join(',')
 
 const routeId = computed(() => String(route.params.id))
 const showApiTestModal = ref(false)
@@ -40,7 +45,7 @@ const {
   execute: fetchRoute,
 } = useApi('/enfyra_route', {
   query: computed(() => ({
-    fields: getIncludeFields(),
+    fields: ROUTE_DETAIL_HEADER_FIELDS,
     filter: { [getIdFieldName()]: { _eq: routeId.value } },
   })),
   errorContext: 'Fetch Route',

@@ -177,7 +177,20 @@ const isOpen = computed({
 const page = ref(1);
 const limit = 7;
 
-const { getIncludeFields } = useSchema("enfyra_route");
+const ROUTE_PICKER_FIELDS = [
+  "id",
+  "path",
+  "description",
+  "icon",
+  "isEnabled",
+  "isSystem",
+  "mainTable.id",
+  "mainTable.name",
+  "availableMethods.id",
+  "availableMethods.name",
+  "availableMethods.buttonColor",
+  "availableMethods.textColor",
+].join(",");
 
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
@@ -195,7 +208,7 @@ const {
       : {};
 
     return {
-      fields: getIncludeFields(),
+      fields: ROUTE_PICKER_FIELDS,
       page: page.value,
       limit,
       meta: "totalCount,filterCount",

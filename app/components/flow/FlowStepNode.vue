@@ -116,9 +116,7 @@ const description = computed(() => {
   const t = props.data.stepType;
   if (t === 'trigger') return props.data.triggerInfo || '';
   if (t === 'add') return 'Click to add a new step';
-  if (t === 'script' || t === 'condition') {
-    return (props.data.sourceCode ?? config.sourceCode ?? config.code)?.substring(0, 60);
-  }
+  if (t === 'script' || t === 'condition') return '';
   if (t === 'query') return `Query ${config.table}`;
   if (t === 'delete') return `Delete from ${config.table}`;
   if (t === 'http') return `${config.method || 'GET'} ${config.url?.substring(0, 40)}`;

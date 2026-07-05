@@ -26,4 +26,3 @@ export const DEFAULT_ME_FIELDS = [
   "allowedRoutePermissions.route.id",
   "allowedRoutePermissions.route.path",
 ];
-

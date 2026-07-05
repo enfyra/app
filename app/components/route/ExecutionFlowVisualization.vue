@@ -533,7 +533,7 @@ const flowGraph = computed<{ nodes: any[]; edges: any[] }>(() => {
         : group.handler.method;
       pushFlowNode(handlerId, 'handler', {
         ...group.handler,
-        label: group.handler.name || group.handler.sourceCode?.substring(0, 20) || group.handler.logic?.substring(0, 20) || 'Unnamed Handler',
+        label: group.handler.name || `${group.method} Handler`,
         isDefault: group.handler._isDefault || false,
         enabled: group.handler.isEnabled !== false,
         _method: group.method,
