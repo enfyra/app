@@ -17,114 +17,6 @@ interface ExecuteOptions {
   files?: FormData[];
   batchSize?: number;
   concurrent?: number;
-  onProgress?: (progress: any) => void;
-}
-
-interface UploadProgressEvent {
-  index: number;
-  count: number;
-  loaded: number;
-  total: number;
-  percent: number;
-}
-
-function appendQueryValue(searchParams: URLSearchParams, key: string, value: any) {
-  if (value === undefined || value === null) return;
-  if (Array.isArray(value)) {
-    value.forEach((item) => appendQueryValue(searchParams, key, item));
-    return;
-  }
-  if (typeof value === "object") {
-    searchParams.append(key, JSON.stringify(value));
-    return;
-  }
-  searchParams.append(key, String(value));
-}
-
-function buildRequestUrl(path: string, query?: Record<string, any>) {
-  const url = new URL(path, window.location.origin);
-  if (query) {
-    Object.entries(query).forEach(([key, value]) => {
-      appendQueryValue(url.searchParams, key, value);
-    });
-  }
-  return url.toString();
-}
-
-function uploadFormDataWithProgress<T>(
-  path: string,
-  formData: FormData,
-  options: {
-    method: string;
-    headers: Record<string, string>;
-    query?: Record<string, any>;
-    onProgress: (progress: UploadProgressEvent) => void;
-    index: number;
-    count: number;
-  },
-) {
-  return new Promise<T>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open(options.method.toUpperCase(), buildRequestUrl(path, options.query), true);
-    xhr.withCredentials = true;
-
-    Object.entries(options.headers).forEach(([key, value]) => {
-      if (key.toLowerCase() !== "content-type") {
-        xhr.setRequestHeader(key, value);
-      }
-    });
-
-    xhr.upload.onprogress = (event) => {
-      if (!event.lengthComputable || event.total <= 0) return;
-      const percent = Math.min(100, Math.max(0, Math.round((event.loaded / event.total) * 100)));
-      options.onProgress({
-        index: options.index,
-        count: options.count,
-        loaded: event.loaded,
-        total: event.total,
-        percent,
-      });
-    };
-
-    xhr.onload = () => {
-      const responseText = xhr.responseText;
-      let responseData: any = null;
-      if (responseText) {
-        try {
-          responseData = JSON.parse(responseText);
-        } catch {
-          responseData = responseText;
-        }
-      }
-      if (xhr.status >= 200 && xhr.status < 300) {
-        options.onProgress({
-          index: options.index,
-          count: options.count,
-          loaded: 1,
-          total: 1,
-          percent: 100,
-        });
-        resolve(responseData as T);
-        return;
-      }
-      reject({
-        status: xhr.status,
-        statusMessage: xhr.statusText,
-        data: responseData,
-        response: xhr,
-      });
-    };
-
-    xhr.onerror = () => {
-      reject({
-        status: xhr.status || undefined,
-        statusMessage: xhr.statusText || "Network error",
-        response: xhr,
-      });
-    };
-
-    xhr.send(formData);
-  });
 }
 
 function handleError(
@@ -259,58 +151,6 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         Array.isArray(executeOpts.files) &&
         executeOpts.files.length > 0
       ) {
-        if (executeOpts.onProgress && import.meta.client) {
-          const loadedByIndex = new Array(executeOpts.files.length).fill(0);
-          const totalByIndex = executeOpts.files.map((fileObj) => {
-            const file = fileObj.get("file");
-            return file instanceof File ? file.size : 0;
-          });
-
-          const reportAggregateProgress = () => {
-            const total = totalByIndex.reduce((sum, value) => sum + value, 0);
-            const loaded = loadedByIndex.reduce((sum, value) => sum + value, 0);
-            const percent = total > 0 ? Math.min(100, Math.max(0, Math.round((loaded / total) * 100))) : 0;
-            executeOpts.onProgress?.({
-              loaded,
-              total,
-              percent,
-              count: executeOpts.files?.length || 0,
-            });
-          };
-
-          executeOpts.onProgress({ loaded: 0, total: totalByIndex.reduce((sum, value) => sum + value, 0), percent: 0, count: executeOpts.files.length });
-
-          const responses = await Promise.all(
-            executeOpts.files.map(async (fileObj: FormData, index) => {
-              lastAttemptedPath = finalPath;
-              return uploadFormDataWithProgress<T>(finalPath, fileObj, {
-                method: method as string,
-                headers: {
-                  ...finalHeaders,
-                  ...(executeOpts.headersByIndex?.[index] || {}),
-                },
-                query: finalQuery,
-                index,
-                count: executeOpts.files?.length || 0,
-                onProgress: (progress) => {
-                  loadedByIndex[index] = totalByIndex[index]
-                    ? Math.min(progress.loaded, totalByIndex[index])
-                    : progress.loaded;
-                  if (progress.percent === 100 && totalByIndex[index]) {
-                    loadedByIndex[index] = totalByIndex[index];
-                  }
-                  reportAggregateProgress();
-                },
-              });
-            })
-          );
-
-          executeOpts.onProgress({ loaded: totalByIndex.reduce((sum, value) => sum + value, 0), total: totalByIndex.reduce((sum, value) => sum + value, 0), percent: 100, count: executeOpts.files.length });
-          data.value = responses as T;
-          status.value = "success";
-          return responses;
-        }
-
         const responses = await Promise.all(
           executeOpts.files.map(async (fileObj: FormData, index) => {
             lastAttemptedPath = finalPath;
@@ -356,31 +196,6 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         : finalPath;
 
       lastAttemptedPath = fullPath;
-
-      if (executeOpts?.onProgress && finalBody instanceof FormData && import.meta.client) {
-        const file = finalBody.get("file");
-        const total = file instanceof File ? file.size : 0;
-        executeOpts.onProgress({ loaded: 0, total, percent: 0, count: 1 });
-        const response = await uploadFormDataWithProgress<T>(fullPath, finalBody, {
-          method: method as string,
-          headers: finalHeaders,
-          query: finalQuery,
-          index: 0,
-          count: 1,
-          onProgress: (progress) => {
-            executeOpts.onProgress?.({
-              loaded: total ? Math.min(progress.loaded, total) : progress.loaded,
-              total,
-              percent: progress.percent,
-              count: 1,
-            });
-          },
-        });
-        executeOpts.onProgress({ loaded: total, total, percent: 100, count: 1 });
-        data.value = response;
-        status.value = "success";
-        return response;
-      }
 
       const response = await $fetch<T>(fullPath, {
         method: method as any,
