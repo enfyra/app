@@ -14,7 +14,6 @@ const { confirm } = useConfirm();
 const { getIncludeFields } = useSchema(tableName);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { getLoader: getRouteLoader } = useKeyedLoaders();
-const { isTablet } = useScreen();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const pageIconColor = 'primary';
@@ -394,13 +393,30 @@ async function deleteRoute(routeItem: any) {
   <div class="space-y-6">
     <Transition name="loading-fade" mode="out-in">
       <div v-if="showInitialLoading" key="loading">
-        <CommonLoadingState
-          title="Loading routes..."
-          description="Fetching routing configuration"
-          size="sm"
-          type="card"
-          context="page"
-        />
+        <CommonResourceListFrame
+          :loading="true"
+          :has-items="false"
+          loading-title="Loading routes..."
+          loading-description="Fetching routing configuration"
+        >
+          <template #skeleton-row>
+            <div class="eapp-resource-list-item pointer-events-none">
+              <span class="eapp-resource-list-leading skeleton-gradient skeleton-pulse-slow" />
+              <span class="min-w-0 flex-1 space-y-2">
+                <span class="flex min-w-0 items-center gap-2">
+                  <span class="block h-4 w-56 rounded skeleton-gradient skeleton-pulse-slow" />
+                  <span class="hidden h-5 w-14 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
+                </span>
+                <span class="flex flex-wrap gap-2">
+                  <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+                  <span class="block h-5 w-28 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+                </span>
+              </span>
+              <span class="hidden h-7 w-10 shrink-0 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow md:block" />
+              <span class="hidden h-8 w-16 shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
+            </div>
+          </template>
+        </CommonResourceListFrame>
       </div>
 
       <div v-else key="content" class="space-y-6">
@@ -411,22 +427,14 @@ async function deleteRoute(routeItem: any) {
         />
 
         <div v-if="routesData.length" class="space-y-6">
-          <CommonAnimatedGrid
-            :animate="false"
-            :grid-class="
-              isTablet
-                ? 'grid gap-4 grid-cols-2'
-                : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'
-            "
-          >
-            <CommonSettingsCard
+          <div class="eapp-resource-list">
+            <CommonResourceListItem
               v-for="routeItem in routesData"
               :key="getId(routeItem)"
               :title="routeItem.path"
               :description="routeItem.mainTable?.name"
               :icon="routeItem.icon || 'lucide:circle'"
               :icon-color="pageIconColor"
-              :card-class="'cursor-pointer transition-all'"
               :content-loading="routesRefreshing"
               @click="navigateTo(`/settings/routes/${getId(routeItem)}`)"
               :top-badge="routeItem.isSystem ? { label: 'System', color: 'info' } : undefined"
@@ -447,8 +455,31 @@ async function deleteRoute(routeItem: any) {
               ]"
               :methods="getRouteFooterActions(routeItem)"
               :header-actions="getRouteHeaderActions(routeItem)"
-            </CommonSettingsCard>
-          </CommonAnimatedGrid>
+            >
+              <template #skeleton-content>
+                <span class="flex min-w-0 items-center gap-2">
+                  <span class="block h-4 w-56 rounded skeleton-gradient skeleton-pulse-slow" />
+                  <span
+                    v-if="routeItem.isSystem"
+                    class="hidden h-5 w-14 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block"
+                  />
+                </span>
+                <span
+                  v-if="routeItem.mainTable?.name"
+                  class="block h-3 w-32 rounded skeleton-inline skeleton-pulse-slow"
+                />
+                <span class="flex flex-wrap gap-2">
+                  <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+                  <span class="block h-5 w-28 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+                </span>
+              </template>
+
+              <template #skeleton-actions>
+                <span class="hidden h-7 w-10 flex-shrink-0 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow md:block" />
+                <span class="hidden h-8 w-16 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
+              </template>
+            </CommonResourceListItem>
+          </div>
         </div>
 
         <CommonEmptyState

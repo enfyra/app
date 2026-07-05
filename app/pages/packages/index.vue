@@ -1,39 +1,35 @@
 <template>
   <div class="space-y-6">
     
-    <div class="grid gap-4 md:grid-cols-2">
-      <CommonSettingsCard
+    <div class="eapp-resource-list">
+      <CommonResourceListItem
         title="App Packages"
         description="Manage frontend application packages"
         icon="lucide:package"
         icon-color="primary"
-        :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
-        @click="navigateTo('/packages/app')"
-        :methods="[
+        :actions="[
           {
             label: 'Manage',
-            props: { variant: 'solid', color: 'primary', size: 'md' },
+            props: { icon: 'lucide:chevron-right', variant: 'ghost', color: 'neutral', size: 'xs' },
             to: '/packages/app',
-            block: true,
           },
         ]"
+        @click="navigateTo('/packages/app')"
       />
 
-      <CommonSettingsCard
+      <CommonResourceListItem
         title="Server Packages"
         description="Manage server packages"
         icon="lucide:server"
         icon-color="primary"
-        :card-class="'cursor-pointer lg:hover:ring-2 lg:hover:ring-primary/20 transition-all'"
-        @click="navigateTo('/packages/backend')"
-        :methods="[
+        :actions="[
           {
             label: 'Manage',
-            props: { variant: 'solid', color: 'primary', size: 'md' },
+            props: { icon: 'lucide:chevron-right', variant: 'ghost', color: 'neutral', size: 'xs' },
             to: '/packages/backend',
-            block: true,
           },
         ]"
+        @click="navigateTo('/packages/backend')"
       />
     </div>
 

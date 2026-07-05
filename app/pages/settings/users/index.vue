@@ -6,7 +6,7 @@
       @clear="clearFilters"
     />
 
-    <CommonCardListFrame
+    <CommonResourceListFrame
       v-model:page="page"
       root-class=""
       :loading="showInitialLoading"
@@ -22,18 +22,22 @@
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
       :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
     >
-      <CommonAnimatedGrid
-        :animate="false"
-        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-      >
-        <CommonSettingsCard
+        <template #skeleton-row>
+          <CommonResourceListSkeletonRow
+            title-width="w-56"
+            description-width="w-52"
+            :chips="['w-20', 'w-24']"
+            trailing-width="w-28"
+          />
+        </template>
+
+        <CommonResourceListItem
           v-for="user in users"
           :key="user.id"
           :title="user.name || user.email || 'Unnamed User'"
           :description="user.email || 'No email'"
           icon="lucide:user"
           :icon-color="pageIconColor"
-          :card-class="'cursor-pointer transition-all'"
           :content-loading="usersRefreshing"
           @click="navigateTo(`/settings/users/${getId(user)}`)"
           :stats="[
@@ -70,9 +74,21 @@
             }
           ]"
           :header-actions="getHeaderActions(user)"
-        />
-      </CommonAnimatedGrid>
-    </CommonCardListFrame>
+        >
+          <template #skeleton-content>
+            <span class="block h-4 w-56 rounded skeleton-gradient skeleton-pulse-slow" />
+            <span class="block h-3 w-52 rounded skeleton-inline skeleton-pulse-slow" />
+            <span class="flex flex-wrap gap-2">
+              <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+              <span class="block h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+            </span>
+          </template>
+
+          <template #skeleton-actions>
+            <span class="hidden h-8 w-28 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
+          </template>
+        </CommonResourceListItem>
+    </CommonResourceListFrame>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
@@ -93,7 +109,6 @@ const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = 
 const route = useRoute();
 const router = useRouter();
 const { isMounted } = useMounted();
-const { isTablet } = useScreen();
 const { getId } = useDatabase();
 
 const showFilterDrawer = ref(false);

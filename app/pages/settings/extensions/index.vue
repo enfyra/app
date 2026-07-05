@@ -1,5 +1,5 @@
 <template>
-  <CommonCardListFrame
+  <CommonResourceListFrame
     v-model:page="page"
     root-class="extension-manager-page"
     :loading="showInitialLoading"
@@ -17,18 +17,22 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-    <CommonAnimatedGrid
-      :animate="false"
-      :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-    >
-        <CommonSettingsCard
+        <template #skeleton-row>
+          <CommonResourceListSkeletonRow
+            title-width="w-44"
+            description-width="w-1/2 max-w-[28rem]"
+            :chips="['w-20', 'w-28', 'w-20']"
+            trailing-width="w-32"
+          />
+        </template>
+
+        <CommonResourceListItem
           v-for="extension in extensions"
           :key="extension.id"
           :title="extension.name"
           :description="extension.description"
           :icon="getExtensionIcon(extension)"
           :icon-color="pageIconColor"
-          :card-class="'cursor-pointer transition-all'"
           :content-loading="extensionsRefreshing"
           :stats="[
             {
@@ -58,9 +62,22 @@
           @click="navigateToDetail(extension)"
           :header-actions="getHeaderActions(extension)"
           :methods="getFooterActions(extension)"
-        </CommonSettingsCard>
-      </CommonAnimatedGrid>
-  </CommonCardListFrame>
+        >
+          <template #skeleton-content>
+            <span class="block h-4 w-44 rounded skeleton-gradient skeleton-pulse-slow" />
+            <span class="block h-3 w-1/2 max-w-[28rem] rounded skeleton-inline skeleton-pulse-slow" />
+            <span class="flex flex-wrap gap-2">
+              <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+              <span class="block h-5 w-28 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+              <span class="hidden h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
+            </span>
+          </template>
+          <template #skeleton-actions>
+            <span class="hidden h-7 w-10 flex-shrink-0 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow md:block" />
+            <span class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
+          </template>
+        </CommonResourceListItem>
+  </CommonResourceListFrame>
 </template>
 
 <script setup lang="ts">
@@ -77,7 +94,6 @@ const { getId } = useDatabase();
 const { invalidateExtensionCache } = useDynamicComponent();
 const { loadGlobalExtensions } = useGlobalExtensions();
 
-const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 

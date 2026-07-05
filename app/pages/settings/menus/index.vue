@@ -25,6 +25,7 @@ const { execute: reorderMenusApi, error: reorderMenusError } = useApi(() => '/ad
 
 const isDndUpdating = useState('menu-dnd-updating', () => false);
 const pendingReorderMenus = ref<MenuDefinition[]>([]);
+const pageMenusLoading = ref(true);
 let reorderMenusTimer: ReturnType<typeof setTimeout> | null = null;
 
 registerPageHeader({
@@ -250,12 +251,16 @@ const { menuItems, reregisterAllMenus, registerDataMenuItems } = useMenuRegistry
 
 async function refreshMenus() {
   const fetchMenusWithExtensions = () => fetchMenuDefinitions({ includeExtensions: true, showSidebarSkeleton: false });
-  await fetchMenusWithExtensions();
-  await reregisterAllMenus(fetchMenusWithExtensions as any);
+  pageMenusLoading.value = true;
+  try {
+    await reregisterAllMenus(fetchMenusWithExtensions as any);
 
-  const schemaValues = Object.values(schemas.value);
-  if (schemaValues.length > 0) {
-    await registerDataMenuItems(schemaValues);
+    const schemaValues = Object.values(schemas.value);
+    if (schemaValues.length > 0) {
+      await registerDataMenuItems(schemaValues);
+    }
+  } finally {
+    pageMenusLoading.value = false;
   }
 }
 
@@ -671,7 +676,7 @@ watch(showExtensionDrawer, async (isOpen, wasOpen) => {
   <div class="eapp-page-constrained space-y-6">
     <MenuVisualEditor
       :menus="menus"
-      :loading="false"
+      :loading="pageMenusLoading"
       @edit-menu="handleEditMenu"
       @delete-menu="deleteMenu"
       @toggle-enabled="toggleEnabled"

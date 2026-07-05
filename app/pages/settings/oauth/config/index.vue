@@ -1,5 +1,5 @@
 <template>
-  <CommonCardListFrame
+  <CommonResourceListFrame
     root-class="oauth-config-page"
     :loading="showInitialLoading"
     :has-items="configs.length > 0"
@@ -17,18 +17,22 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-      <CommonAnimatedGrid
-        :animate="false"
-        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-      >
-        <CommonSettingsCard
+        <template #skeleton-row>
+          <CommonResourceListSkeletonRow
+            title-width="w-36"
+            description-width="w-1/2 max-w-[28rem]"
+            :chips="['w-20', 'w-28']"
+            trailing-width="w-10"
+          />
+        </template>
+
+        <CommonResourceListItem
           v-for="config in configs"
           :key="config.id"
           :title="getProviderLabel(config.provider)"
           :description="config.description || `Configure ${getProviderLabel(config.provider)} OAuth`"
           :icon="getProviderIcon(config.provider)"
           :icon-color="pageIconColor"
-          :card-class="'cursor-pointer transition-all'"
           :content-loading="configsRefreshing"
           :stats="[
             {
@@ -47,9 +51,20 @@
           ]"
           @click="navigateToDetail(config)"
           :header-actions="getHeaderActions(config)"
-        />
-      </CommonAnimatedGrid>
-  </CommonCardListFrame>
+        >
+          <template #skeleton-content>
+            <span class="block h-4 w-36 rounded skeleton-gradient skeleton-pulse-slow" />
+            <span class="block h-3 w-1/2 max-w-[28rem] rounded skeleton-inline skeleton-pulse-slow" />
+            <span class="flex flex-wrap gap-2">
+              <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+              <span class="block h-5 w-28 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+            </span>
+          </template>
+          <template #skeleton-actions>
+            <span class="hidden h-7 w-10 flex-shrink-0 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow md:block" />
+          </template>
+        </CommonResourceListItem>
+  </CommonResourceListFrame>
 </template>
 
 <script setup lang="ts">
@@ -71,7 +86,6 @@ const { getLoader: getConfigLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
-const { isTablet } = useScreen();
 const route = useRoute();
 const { registerPageHeader } = usePageHeaderRegistry();
 

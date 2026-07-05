@@ -76,8 +76,8 @@ function updateColorInput(kind: 'button' | 'text', event: Event) {
 function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
   if (selectedPresetLabel.value !== preset.label) return undefined;
   return {
-    borderColor: preset.textColor,
-    backgroundColor: `${preset.buttonColor}33`,
+    '--method-preset-bg': preset.buttonColor,
+    '--method-preset-fg': preset.textColor,
   };
 }
 </script>
@@ -91,6 +91,7 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
         type="button"
         :disabled="disabled"
         class="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-default)] px-3 py-2 text-left transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+        :class="selectedPresetLabel === preset.label ? 'method-color-preset-selected' : ''"
         :style="getPresetButtonStyle(preset)"
         @click="choosePreset(preset)"
       >
@@ -106,7 +107,10 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
             <span class="block truncate text-sm font-medium text-[var(--text-primary)]">
               {{ preset.label }}
             </span>
-            <span class="block truncate text-xs text-[var(--text-tertiary)]">
+            <span
+              class="block truncate text-xs"
+              :class="selectedPresetLabel === preset.label ? 'text-[var(--text-secondary)]' : 'text-[var(--text-tertiary)]'"
+            >
               Background {{ preset.buttonColor }} · Text {{ preset.textColor }}
             </span>
           </span>
@@ -225,3 +229,25 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
     </div>
   </div>
 </template>
+
+<style scoped>
+.method-color-preset-selected {
+  border-color: color-mix(in srgb, var(--method-preset-fg) 55%, var(--border-strong));
+  background:
+    linear-gradient(0deg, color-mix(in srgb, var(--method-preset-bg) 58%, transparent), color-mix(in srgb, var(--method-preset-bg) 58%, transparent)),
+    var(--surface-default);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--method-preset-fg) 28%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--method-preset-fg) 16%, transparent);
+}
+
+.dark .method-color-preset-selected {
+  border-color: color-mix(in srgb, var(--method-preset-fg) 78%, var(--border-strong));
+  background:
+    linear-gradient(0deg, color-mix(in srgb, var(--method-preset-fg) 18%, transparent), color-mix(in srgb, var(--method-preset-fg) 18%, transparent)),
+    color-mix(in srgb, var(--method-preset-bg) 10%, var(--surface-default));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--method-preset-fg) 46%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--method-preset-fg) 22%, transparent);
+}
+</style>

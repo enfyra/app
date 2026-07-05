@@ -1,5 +1,5 @@
 <template>
-  <CommonCardListFrame
+  <CommonResourceListFrame
     v-model:page="page"
     root-class="oauth-accounts-page"
     :loading="showInitialLoading"
@@ -17,33 +17,47 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-      <CommonAnimatedGrid
-        :animate="false"
-        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3'"
-      >
-        <CommonSettingsCard
-          v-for="account in accounts"
-          :key="getId(account)"
-          :title="getProviderLabel(account.provider)"
-          :description="getUserEmail(account)"
-          :icon="getProviderIcon(account.provider)"
-          :icon-color="pageIconColor"
-          :card-class="'cursor-pointer transition-all'"
-          :content-loading="accountsRefreshing"
-          @click="navigateToDetail(account)"
-          :stats="[
-            {
-              label: 'Provider ID',
-              value: maskProviderId(account.providerUserId),
-            },
-            {
-              label: 'User',
-              value: getUserEmail(account) || '-',
-            },
-          ]"
-        />
-      </CommonAnimatedGrid>
-  </CommonCardListFrame>
+    <template #skeleton-row>
+      <CommonResourceListSkeletonRow
+        title-width="w-32"
+        description-width="w-56 max-w-[18rem]"
+        :chips="['w-32', 'w-48']"
+        :show-trailing="false"
+      />
+    </template>
+
+    <CommonResourceListItem
+      v-for="account in accounts"
+      :key="getId(account)"
+      :title="getProviderLabel(account.provider)"
+      :description="getUserEmail(account)"
+      :icon="getProviderIcon(account.provider)"
+      :icon-color="pageIconColor"
+      :content-loading="accountsRefreshing"
+      @click="navigateToDetail(account)"
+      :stats="[
+        {
+          label: 'Provider ID',
+          value: maskProviderId(account.providerUserId),
+        },
+        {
+          label: 'User',
+          value: getUserEmail(account) || '-',
+        },
+      ]"
+    >
+      <template #skeleton-content>
+        <span class="block space-y-2">
+          <span class="block h-4 w-32 rounded skeleton-gradient skeleton-pulse-slow" />
+          <span class="block h-3 w-56 max-w-[18rem] rounded skeleton-inline skeleton-pulse-slow" />
+          <span class="flex flex-wrap gap-2">
+            <span class="block h-5 w-32 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+            <span class="block h-5 w-48 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+          </span>
+        </span>
+      </template>
+    </CommonResourceListItem>
+  </CommonResourceListFrame>
 </template>
 
 <script setup lang="ts">
@@ -53,7 +67,6 @@ const route = useRoute();
 const tableName = "enfyra_oauth_account";
 
 const { getId } = useDatabase();
-const { isTablet } = useScreen();
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({

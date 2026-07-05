@@ -5,59 +5,118 @@
     </div>
 
     <Transition name="loading-fade" mode="out-in">
-      <CommonLoadingState v-if="routeLoading" title="Loading routes..." size="md" type="card" context="page" />
+      <CommonResourceListFrame
+        v-if="showInitialLoading"
+        :loading="true"
+        :has-items="false"
+        loading-title="Loading routes..."
+        loading-description="Fetching route definitions"
+      >
+        <template #skeleton-row>
+          <CommonResourceListSkeletonRow
+            title-width="w-56"
+            description-width="w-36"
+            :chips="['w-12', 'w-12', 'w-16']"
+            :show-trailing="false"
+          />
+        </template>
+      </CommonResourceListFrame>
 
-      <div v-else class="space-y-6">
-        <div v-if="customRoutes.length > 0">
-          <p class="text-sm font-semibold text-[var(--text-tertiary)] mb-3">Your Routes <UBadge size="xs" variant="soft" color="neutral" class="ml-1">{{ customRoutes.length }}</UBadge></p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3">
-            <div
+      <div v-else class="space-y-4">
+        <UTabs
+          v-model="activeScope"
+          :items="routeTabItems"
+          :content="false"
+          variant="link"
+        />
+
+        <section v-if="activeScope === 'custom'" class="space-y-3">
+          <div v-if="customRoutes.length > 0" class="eapp-resource-list">
+            <CommonResourceListItem
               v-for="r in customRoutes"
               :key="r.id"
-              class="group p-3 rounded-lg cursor-pointer surface-card-hover"
+              :title="r.path"
+              :description="r.mainTable?.name || r.description || 'Route'"
+              :icon="r.icon || 'lucide:code-2'"
+              icon-color="primary"
+              :content-loading="customRoutesRefreshing"
+              :top-badge="!r.isEnabled ? { label: 'Off', color: 'warning' } : undefined"
               @click="openTest(r)"
             >
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 eapp-primary-solid">
-                  <UIcon :name="r.icon || 'lucide:code-2'" class="w-3.5 h-3.5 text-[var(--action-primary-text)]" />
-                </div>
-                <p class="text-xs font-semibold font-mono text-[var(--text-primary)] truncate flex-1">{{ r.path }}</p>
-                <UBadge v-if="!r.isEnabled" color="warning" variant="soft" size="xs">Off</UBadge>
-              </div>
-              <div class="flex gap-1">
-                <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
-              </div>
-            </div>
-          </div>
-        </div>
-        <CommonEmptyState v-else-if="!search" title="No custom routes" description="Create a table to generate API routes" icon="lucide:route" />
+              <template #skeleton-content>
+                <span class="block h-4 w-56 rounded skeleton-gradient skeleton-pulse-slow" />
+                <span class="block h-3 w-36 rounded skeleton-inline skeleton-pulse-slow" />
+                <span class="flex flex-wrap gap-2">
+                  <span class="block h-5 w-12 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
+                  <span class="block h-5 w-12 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
+                  <span class="hidden h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
+                </span>
+              </template>
 
-        <div>
-          <button class="flex items-center gap-2 mb-3" @click="toggleSystemRoutes">
-            <UIcon :name="systemExpanded ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'" class="w-4 h-4 text-[var(--text-quaternary)]" />
-            <span class="text-sm font-semibold text-[var(--text-tertiary)]">System Routes</span>
-            <UBadge v-if="systemRoutes.length > 0" size="xs" variant="soft" color="neutral">{{ filteredSystemRoutes.length }}</UBadge>
-            <span v-if="systemLoading" class="w-3 h-3 border-2 border-[var(--border-strong)] border-t-primary-500 rounded-full animate-spin" />
-          </button>
-          <div v-if="systemExpanded && filteredSystemRoutes.length > 0" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3">
-            <div
+              <template #metadata>
+                <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                  <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
+                  <UBadge v-if="r.publicMethods?.length" color="info" variant="soft" size="xs">
+                    {{ r.publicMethods.length }} public
+                  </UBadge>
+                </div>
+              </template>
+            </CommonResourceListItem>
+          </div>
+          <CommonEmptyState
+            v-else
+            :title="search ? 'No matching custom routes' : 'No custom routes'"
+            :description="search ? 'No custom routes match your search' : 'Create a table to generate API routes'"
+            icon="lucide:route"
+          />
+        </section>
+
+        <section v-else class="space-y-3">
+          <CommonResourceListFrame
+            v-if="systemLoading"
+            :loading="true"
+            :has-items="false"
+            loading-title="Loading system routes..."
+            loading-description="Fetching system route definitions"
+          >
+            <template #skeleton-row>
+              <CommonResourceListSkeletonRow
+                title-width="w-56"
+                description-width="w-44"
+                :chips="['w-12', 'w-12', 'w-16']"
+                :show-trailing="false"
+              />
+            </template>
+          </CommonResourceListFrame>
+
+          <div v-else-if="filteredSystemRoutes.length > 0" class="eapp-resource-list">
+            <CommonResourceListItem
               v-for="r in filteredSystemRoutes"
               :key="r.id"
-              class="group p-3 rounded-lg cursor-pointer surface-card-hover"
+              :title="r.path"
+              :description="r.description || 'System route'"
+              :icon="r.icon || 'lucide:settings'"
+              icon-color="neutral"
+              :top-badge="{ label: 'System', color: 'neutral' }"
               @click="openTest(r)"
             >
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-[var(--surface-muted)]">
-                  <UIcon :name="r.icon || 'lucide:settings'" class="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
+              <template #metadata>
+                <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                  <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
+                  <UBadge v-if="r.publicMethods?.length" color="info" variant="soft" size="xs">
+                    {{ r.publicMethods.length }} public
+                  </UBadge>
                 </div>
-                <p class="text-xs font-semibold font-mono text-[var(--text-primary)] truncate flex-1">{{ r.path }}</p>
-              </div>
-              <div class="flex gap-1">
-                <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
-              </div>
-            </div>
+              </template>
+            </CommonResourceListItem>
           </div>
-        </div>
+          <CommonEmptyState
+            v-else
+            :title="search ? 'No matching system routes' : 'No system routes'"
+            :description="search ? 'No system routes match your search' : 'System routes will appear here after loading'"
+            icon="lucide:settings"
+          />
+        </section>
       </div>
     </Transition>
 
@@ -85,8 +144,17 @@ registerPageHeader({ title: "API Tester", gradient: "cyan" });
 const search = ref('');
 const selectedRoute = ref<any>(null);
 const showTestModal = ref(false);
+const route = useRoute();
+const router = useRouter();
 
 const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.name,availableMethods.buttonColor,availableMethods.textColor,publicMethods.name,publicMethods.buttonColor,publicMethods.textColor,handlers.method.name';
+type RouteScope = 'custom' | 'system';
+
+function normalizeScope(value: unknown): RouteScope {
+  return value === 'system' ? 'system' : 'custom';
+}
+
+const activeScope = ref<RouteScope>(normalizeScope(route.query.scope));
 
 const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi(
   '/enfyra_route',
@@ -101,9 +169,14 @@ const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi
   }
 );
 
+const {
+  items: customRouteItems,
+  showInitialLoading,
+  isRefreshing: customRoutesRefreshing,
+} = useStableListState(() => routesData.value?.data, () => routeLoading.value);
+
 const systemRoutes = ref<any[]>([]);
 const systemLoading = ref(false);
-const systemExpanded = ref(false);
 
 const { data: systemData, execute: fetchSystemRoutes } = useApi(
   '/enfyra_route',
@@ -121,24 +194,47 @@ const { data: systemData, execute: fetchSystemRoutes } = useApi(
 onMounted(async () => {
   await fetchRoutes();
   await fetchSchema();
+  if (activeScope.value === 'system') {
+    await loadSystemRoutes();
+  }
 });
 
-async function toggleSystemRoutes() {
-  if (systemExpanded.value) {
-    systemExpanded.value = false;
-    return;
-  }
+async function loadSystemRoutes() {
   if (systemRoutes.value.length === 0) {
     systemLoading.value = true;
     await fetchSystemRoutes();
     systemRoutes.value = systemData.value?.data || [];
     systemLoading.value = false;
   }
-  systemExpanded.value = true;
 }
 
+watch(
+  () => route.query.scope,
+  async (scope) => {
+    const next = normalizeScope(scope);
+    if (activeScope.value !== next) {
+      activeScope.value = next;
+    }
+    if (next === 'system') {
+      await loadSystemRoutes();
+    }
+  },
+);
+
+watch(activeScope, async (scope) => {
+  if (normalizeScope(route.query.scope) !== scope) {
+    const query = { ...route.query };
+    if (scope === 'custom') delete query.scope;
+    else query.scope = scope;
+    await router.replace({ query });
+  }
+  if (scope === 'system') {
+    await loadSystemRoutes();
+  }
+});
+
 const customRoutes = computed(() => {
-  const routes = routesData.value?.data || [];
+  const routes = customRouteItems.value;
   if (!search.value) return routes;
   const q = search.value.toLowerCase();
   return routes.filter((r: any) => r.path?.toLowerCase().includes(q) || r.mainTable?.name?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q));
@@ -149,6 +245,19 @@ const filteredSystemRoutes = computed(() => {
   const q = search.value.toLowerCase();
   return systemRoutes.value.filter((r: any) => r.path?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q));
 });
+
+const routeTabItems = computed(() => [
+  {
+    label: 'Your Routes',
+    value: 'custom',
+    icon: 'lucide:route',
+  },
+  {
+    label: 'System Routes',
+    value: 'system',
+    icon: 'lucide:settings',
+  },
+]);
 
 function getRouteMethods(route: any): any[] {
   const methods = route.availableMethods;

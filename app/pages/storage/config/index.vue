@@ -1,5 +1,5 @@
 <template>
-  <CommonCardListFrame
+  <CommonResourceListFrame
     v-model:page="page"
     root-class="storage-config-page"
     :loading="showInitialLoading"
@@ -14,112 +14,56 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-    <template #loading>
-      <div
-        class="space-y-3"
-      >
-        <div
-          v-for="i in 5"
-          :key="i"
-          class="bg-[var(--bg-surface)] border border-white/[0.06] rounded-lg p-4"
-        >
-          
-          <div class="hidden md:flex items-start justify-between gap-4">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-2">
-                <USkeleton class="w-5 h-5 rounded" />
-                <USkeleton class="h-5 w-32 rounded" />
-                <USkeleton class="h-5 w-16 rounded" />
-                <USkeleton class="h-5 w-16 rounded" />
-              </div>
-              <USkeleton class="h-4 w-3/4 rounded mb-2" />
-            </div>
-            <div class="flex items-center gap-2">
-              <USkeleton class="w-10 h-6 rounded-full" />
-              <USkeleton class="w-20 h-8 rounded" />
-            </div>
-          </div>
-          
-          <div class="md:hidden space-y-3">
-            <div class="flex items-start gap-3">
-              <USkeleton class="w-6 h-6 rounded flex-shrink-0" />
-              <div class="flex-1 min-w-0">
-                <USkeleton class="h-5 w-32 rounded mb-2" />
-                <div class="flex gap-1.5 mb-2">
-                  <USkeleton class="h-5 w-20 rounded" />
-                  <USkeleton class="h-5 w-16 rounded" />
-                </div>
-                <USkeleton class="h-4 w-full rounded" />
-              </div>
-            </div>
-            <div class="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.06]">
-              <div class="flex items-center gap-2">
-                <USkeleton class="h-3 w-12 rounded" />
-                <USkeleton class="w-10 h-6 rounded-full" />
-              </div>
-              <USkeleton class="w-16 h-8 rounded" />
-            </div>
-          </div>
-        </div>
-      </div>
+    <template #skeleton-row>
+      <CommonResourceListSkeletonRow
+        title-width="w-44"
+        description-width="w-1/2 max-w-[28rem]"
+        :chips="['w-24', 'w-20']"
+        trailing-width="w-32"
+      />
     </template>
 
-      <CommonAnimatedGrid
-        :animate="false"
-        grid-class="space-y-3"
-      >
-        <CommonListItem
-          v-for="config in storageConfigs"
-          :key="getId(config)"
-          :title="config.name"
-          :description="config.description || 'No description provided'"
-          :icon="getStorageIcon(config)"
-          icon-class="text-primary"
-          :content-loading="storageConfigsRefreshing"
-          @click="navigateToDetail(config)"
-        >
-          <template #title>
-            <div class="flex items-center gap-2">
-                <h3 class="font-semibold text-[var(--text-primary)]">{{ config.name }}</h3>
-                <UBadge variant="subtle" :color="getStorageBadgeColor(config)" size="sm">
-                  {{ config.type || config.driver }}
-                </UBadge>
-                <UBadge
-                  variant="subtle"
-                  :color="config.isEnabled ? 'success' : 'neutral'"
-                  size="sm"
-                >
-                  {{ config.isEnabled ? 'Active' : 'Inactive' }}
-                </UBadge>
-              </div>
-          </template>
-          <template #footer>
-            <div class="flex items-center justify-between w-full">
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-[var(--text-quaternary)]">Status:</span>
-                <USwitch
-	                  v-if="checkPermissionCondition({ or: [{ route: '/enfyra_storage_config', methods: ['PATCH'] }] })"
-	                  :model-value="config.isEnabled"
-	                  :disabled="isConfigLoading(config)"
-	                  @update:model-value="toggleConfigStatus(config)"
-                  @click.stop
-                />
-              </div>
-              <UButton
-                v-if="checkPermissionCondition({ or: [{ route: '/enfyra_storage_config', methods: ['DELETE'] }] })"
-                icon="i-lucide-trash-2"
-                variant="outline"
-                color="error"
-                size="sm"
-                @click.stop="deleteConfig(config)"
-              >
-                <span class="hidden sm:inline">Delete</span>
-              </UButton>
-            </div>
-          </template>
-        </CommonListItem>
-      </CommonAnimatedGrid>
-  </CommonCardListFrame>
+    <CommonResourceListItem
+      v-for="config in storageConfigs"
+      :key="getId(config)"
+      :title="config.name"
+      :description="config.description || 'No description provided'"
+      :icon="getStorageIcon(config)"
+      icon-color="primary"
+      :content-loading="storageConfigsRefreshing"
+      :stats="[
+        {
+          label: 'Type',
+          component: 'UBadge',
+          props: { variant: 'soft', color: getStorageBadgeColor(config) },
+          value: config.type || config.driver || 'Local Storage',
+        },
+        {
+          label: 'Status',
+          component: 'UBadge',
+          props: { variant: 'soft', color: config.isEnabled ? 'success' : 'neutral' },
+          value: config.isEnabled ? 'Active' : 'Inactive',
+        },
+      ]"
+      :header-actions="getHeaderActions(config)"
+      :actions="getActions(config)"
+      @click="navigateToDetail(config)"
+    >
+      <template #skeleton-content>
+        <span class="block h-4 w-44 rounded skeleton-gradient skeleton-pulse-slow" />
+        <span class="block h-3 w-1/2 max-w-[28rem] rounded skeleton-inline skeleton-pulse-slow" />
+        <span class="flex flex-wrap gap-2">
+          <span class="block h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+          <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+        </span>
+      </template>
+
+      <template #skeleton-actions>
+        <span class="hidden h-7 w-10 flex-shrink-0 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow md:block" />
+        <span class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
+      </template>
+    </CommonResourceListItem>
+  </CommonResourceListFrame>
 </template>
 
 <script setup lang="ts">
@@ -222,6 +166,43 @@ function navigateToDetail(config: any) {
 
 function isConfigLoading(config: any) {
   return getConfigLoader(String(getId(config))).isLoading.value;
+}
+
+function getHeaderActions(config: any) {
+  if (!checkPermissionCondition({ or: [{ route: "/enfyra_storage_config", methods: ["PATCH"] }] })) {
+    return [];
+  }
+
+  return [
+    {
+      component: "USwitch",
+      props: {
+        "model-value": config.isEnabled,
+        disabled: isConfigLoading(config),
+      },
+      onClick: (event?: Event) => event?.stopPropagation(),
+      onUpdate: () => toggleConfigStatus(config),
+    },
+  ];
+}
+
+function getActions(config: any) {
+  if (!checkPermissionCondition({ or: [{ route: "/enfyra_storage_config", methods: ["DELETE"] }] })) {
+    return [];
+  }
+
+  return [
+    {
+      label: "Delete",
+      props: {
+        icon: "i-lucide-trash-2",
+        variant: "ghost",
+        color: "error",
+        size: "xs",
+      },
+      onClick: () => deleteConfig(config),
+    },
+  ];
 }
 
 const toggleConfigStatus = async (config: any) => {

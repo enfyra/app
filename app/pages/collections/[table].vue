@@ -9,7 +9,6 @@ const { getId } = useDatabase();
 const tableName = "enfyra_table";
 const { getIncludeFields } = useSchema(tableName);
 const { isMobile, isTablet } = useScreen();
-const { isMounted } = useMounted();
 
 const table = ref<any>();
 const schemaConfirmModalOpen = ref(false);
@@ -42,12 +41,18 @@ const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
 const { registerPageHeader } = usePageHeaderRegistry();
 
+function registerCollectionPageHeader(name: unknown) {
+  registerPageHeader({
+    title: `Edit Table: ${String(name || route.params.table || 'Collection')}`,
+    gradient: "purple",
+  });
+}
+
+registerCollectionPageHeader(route.params.table);
+
 watch(() => table.value?.name, (name) => {
   if (name) {
-    registerPageHeader({
-      title: `Edit Table: ${name}`,
-      gradient: "purple",
-    });
+    registerCollectionPageHeader(name);
   }
 }, { immediate: true });
 
@@ -82,6 +87,10 @@ const {
   })),
   errorContext: "Fetch Table Data",
 });
+
+const tableLoadSettled = ref(false);
+const initializingTable = ref(false);
+const showInitialLoading = computed(() => initializingTable.value || (!table.value && !tableLoadSettled.value));
 
 const {
   data: patchTableData,
@@ -213,13 +222,19 @@ registerSubHeaderActions([
 ]);
 
 async function initializeForm() {
-  await fetchTableData();
-  const data = tableData.value?.data?.[0];
-  if (data) {
-    data.graphqlEnabled = data.gqlConfig?.isEnabled === true;
-    table.value = data;
-    formChanges.update(data);
-    hasFormChanges.value = false;
+  initializingTable.value = true;
+  try {
+    await fetchTableData();
+    const data = tableData.value?.data?.[0];
+    if (data) {
+      data.graphqlEnabled = data.gqlConfig?.isEnabled === true;
+      table.value = data;
+      formChanges.update(data);
+      hasFormChanges.value = false;
+    }
+  } finally {
+    tableLoadSettled.value = true;
+    initializingTable.value = false;
   }
 }
 
@@ -739,62 +754,59 @@ onMounted(() => {
       </template>
     </CommonModal>
 
-    <Transition name="loading-fade" mode="out-in">
-      <div v-if="!isMounted || loading" class="eapp-page-constrained">
-        <CommonFormCard>
-          <CommonLoadingState
-            type="form"
-            context="page"
-            size="sm"
-          />
-        </CommonFormCard>
-      </div>
-
-      <div v-else-if="table" class="eapp-page-constrained">
-          <div class="relative -mx-4 px-4 sm:mx-0 sm:px-0 mb-4">
-            <div class="overflow-x-auto overflow-y-hidden">
-              <UTabs
-                v-model="activeTab"
-                :items="tabItems"
-                :content="false"
-                variant="link"
-              />
-            </div>
-          </div>
-
-          <UForm @submit.prevent="save" :state="table">
-            <div v-show="activeTab === 'schema'">
-              <CommonFormCard>
-                <TableForm v-model="table" @save="save">
-                  <div class="space-y-6">
-                    <TableConstraints
-                      v-model="table"
-                      :column-names="constraintFieldNames"
-                    />
-                    <TableColumns v-model="table.columns" />
-                    <TableRelations
-                      v-model="table.relations"
-                      :table-id="getId(table)"
-                      :table-options="
-                        Object.values(schemas).map((schema: any) => ({
-                          label: schema?.name,
-                          value: getId(schema),
-                        }))
-                      "
-                    />
-                  </div>
-                </TableForm>
-              </CommonFormCard>
-            </div>
-          </UForm>
-
-          <RouteEditorPanel
-            v-if="activeTab === 'routes'"
-            :table-name="String(route.params.table ?? '')"
-            :external-api-test="showRouteApiTest"
-            @close-api-test="showRouteApiTest = false"
+    <div class="eapp-page-constrained">
+      <div
+        v-if="showInitialLoading || table"
+        class="relative -mx-4 mb-4 px-4 sm:mx-0 sm:px-0"
+      >
+        <div class="overflow-x-auto overflow-y-hidden">
+          <UTabs
+            v-model="activeTab"
+            :items="tabItems"
+            :content="false"
+            variant="link"
           />
         </div>
+      </div>
+
+      <CommonFormCard v-if="showInitialLoading">
+        <CommonDetailFormSkeleton />
+      </CommonFormCard>
+
+      <template v-else-if="table">
+        <UForm @submit.prevent="save" :state="table">
+          <div v-show="activeTab === 'schema'">
+            <CommonFormCard>
+              <TableForm v-model="table" @save="save">
+                <div class="space-y-6">
+                  <TableConstraints
+                    v-model="table"
+                    :column-names="constraintFieldNames"
+                  />
+                  <TableColumns v-model="table.columns" />
+                  <TableRelations
+                    v-model="table.relations"
+                    :table-id="getId(table)"
+                    :table-options="
+                      Object.values(schemas).map((schema: any) => ({
+                        label: schema?.name,
+                        value: getId(schema),
+                      }))
+                    "
+                  />
+                </div>
+              </TableForm>
+            </CommonFormCard>
+          </div>
+        </UForm>
+
+        <RouteEditorPanel
+          v-if="activeTab === 'routes'"
+          :table-name="String(route.params.table ?? '')"
+          :external-api-test="showRouteApiTest"
+          @close-api-test="showRouteApiTest = false"
+        />
+      </template>
 
       <CommonEmptyState
         v-else
@@ -803,7 +815,7 @@ onMounted(() => {
         icon="lucide:database"
         size="sm"
       />
-    </Transition>
+    </div>
 
       <UModal
         v-model:open="showSchemaViewer"

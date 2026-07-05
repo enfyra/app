@@ -44,7 +44,7 @@
             :items="tabs"
             :content="false"
             variant="link"
-            :ui="{ list: 'border-b-0', indicator: '!-bottom-px' }"
+            :ui="{ indicator: '!-bottom-px' }"
           />
         </div>
 

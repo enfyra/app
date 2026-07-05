@@ -9,7 +9,7 @@
       variant="soft"
     />
 
-    <CommonCardListFrame
+    <CommonResourceListFrame
       v-model:page="page"
       root-class=""
       :loading="showInitialLoading"
@@ -29,18 +29,22 @@
       pagination-active-color="secondary"
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     >
-      <CommonAnimatedGrid
-        :animate="false"
-        :grid-class="isTablet ? 'grid gap-4 grid-cols-2' : 'grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3'"
-      >
-        <CommonSettingsCard
+        <template #skeleton-row>
+          <CommonResourceListSkeletonRow
+            title-width="w-48"
+            description-width="w-1/2 max-w-[30rem]"
+            :chips="['w-20', 'w-20', 'w-24', 'w-36']"
+            :show-trailing="false"
+          />
+        </template>
+
+        <CommonResourceListItem
           v-for="pkg in packages"
           :key="getId(pkg)"
           :title="pkg.name"
           :description="pkg.description || 'No description'"
           icon="lucide:server"
           icon-color="primary"
-          :card-class="'cursor-pointer transition-all lg:hover:ring-2 lg:hover:ring-[var(--border-accent)]'"
           :content-loading="packagesRefreshing"
           @click="navigateTo(`/packages/${getId(pkg)}`)"
           :stats="[
@@ -94,11 +98,19 @@
                 ]
               : []),
           ]"
-          :methods="[]"
-          :header-actions="[]"
-        />
-      </CommonAnimatedGrid>
-    </CommonCardListFrame>
+        >
+          <template #skeleton-content>
+            <span class="block h-4 w-48 rounded skeleton-gradient skeleton-pulse-slow" />
+            <span class="block h-3 w-1/2 max-w-[30rem] rounded skeleton-inline skeleton-pulse-slow" />
+            <span class="flex flex-wrap gap-2">
+              <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+              <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+              <span class="block h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+              <span class="hidden h-5 w-36 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
+            </span>
+          </template>
+        </CommonResourceListItem>
+    </CommonResourceListFrame>
   </div>
 </template>
 
@@ -107,7 +119,6 @@ const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
 const limit = 9;
 const route = useRoute();
-const { isTablet } = useScreen();
 const { getId } = useDatabase();
 const { adminSocket: $adminSocket } = useAdminSocket();
 
