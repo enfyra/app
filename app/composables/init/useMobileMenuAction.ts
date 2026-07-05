@@ -2,7 +2,7 @@ export function useMobileMenuAction() {
   const { register: registerHeaderActions } = useHeaderActionRegistry();
   const { sidebarVisible, toggleSidebar } = useGlobalState();
   const sidebarToggleIcon = computed(() =>
-    sidebarVisible.value ? "lucide:chevron-left" : "lucide:chevron-right"
+    sidebarVisible.value ? "lucide:panel-left-close" : "lucide:panel-left-open"
   );
 
   registerHeaderActions([

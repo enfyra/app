@@ -140,7 +140,7 @@ function handlePageHeaderActionClick(action: any) {
             }"
           >
             <h1
-              class="font-bold tracking-normal text-[var(--text-primary)]"
+              class="min-w-0 break-words font-bold tracking-normal text-[var(--text-primary)]"
               :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-[22px]') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-3xl' : 'text-[26px]')"
             >
               {{ title }}
