@@ -1,4 +1,4 @@
-import { CommonBreadcrumbs } from "#components";
+import { CommonBreadCrumbs } from "#components";
 
 export function useNavigationActions() {
   const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -46,7 +46,7 @@ export function useNavigationActions() {
     },
     {
       id: "navigation-breadcrumbs",
-      component: CommonBreadcrumbs,
+      component: CommonBreadCrumbs,
       side: "left",
       get props() {
         return {
