@@ -110,7 +110,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
           color="error"
           variant="soft"
           :size="(isMobile || isTablet) ? 'lg' : 'xl'"
-          :class="(isMobile || isTablet) ? 'rounded-full !aspect-square flex-shrink-0' : 'flex-shrink-0'"
+          :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square flex-shrink-0' : 'flex-shrink-0'"
           @click.stop.prevent="close"
         />
       </div>

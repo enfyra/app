@@ -38,14 +38,9 @@
                 : unref(action.disabled)) || unref(action.loading)
             "
             :loading="unref(action.loading)"
+            :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
             @click="handleSubHeaderActionClick(action)"
-            :class="[
-              action.class,
-              (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
-              (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                ? '!bg-[var(--action-neutral-outline-bg)] !border !border-[var(--action-neutral-outline-border)] !text-[var(--action-neutral-text)] hover:!bg-[var(--action-neutral-outline-bg-hover)] hover:!text-[var(--action-neutral-text-hover)]'
-                : ''
-            ]"
+            :class="getHeaderActionButtonClass(action)"
           />
         </PermissionGate>
       </template>
@@ -81,14 +76,9 @@
                 : unref(action.disabled)) || unref(action.loading)
             "
             :loading="unref(action.loading)"
+            :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
             @click="handleSubHeaderActionClick(action)"
-            :class="[
-              action.class,
-              (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
-              (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                ? '!bg-[var(--action-neutral-outline-bg)] !border !border-[var(--action-neutral-outline-border)] !text-[var(--action-neutral-text)] hover:!bg-[var(--action-neutral-outline-bg-hover)] hover:!text-[var(--action-neutral-text-hover)]'
-                : ''
-            ]"
+            :class="getHeaderActionButtonClass(action)"
           />
         </PermissionGate>
       </template>

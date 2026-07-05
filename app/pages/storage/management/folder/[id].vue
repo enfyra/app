@@ -4,7 +4,15 @@ const route = useRoute();
 const router = useRouter();
 const showCreateModal = ref(false);
 const showUploadModal = ref(false);
-const selectedStorage = ref<{ label: string; value: string; icon: string }>();
+const selectedStorage = ref<{ label: string; value: string; icon: string; isDefault: boolean }>();
+const fileUploadProgressByIndex = ref<Record<number, number | null>>({});
+const uploadFileSizes = ref<number[]>([]);
+const {
+  trackedUploadProgressById,
+  beginTrackedUploadProgress,
+  getUploadProgressHeaders,
+  resetUploadProgress,
+} = useFileUploadProgress();
 
 const {
   storageConfigs,
@@ -109,16 +117,45 @@ const storageOptions = computed(() => {
     const storageType = config.type || "Local Storage";
     const isCloudStorage = storageType === 'Amazon S3' || storageType === 'Google Cloud Storage' || storageType === 'Cloudflare R2';
     return {
-      label: config.name,
+      label: config.isDefault ? `${config.name} (Default)` : config.name,
       value: getId(config),
       icon: isCloudStorage ? 'lucide:cloud' : 'lucide:hard-drive',
+      isDefault: config.isDefault === true,
     };
   });
 });
 
+function selectDefaultStorageConfig() {
+  const defaultOption = storageOptions.value.find((option) => option.isDefault);
+  if (defaultOption) {
+    selectedStorage.value = defaultOption;
+  }
+}
+
+const aggregateUploadProgress = computed(() => {
+  if (uploadFileSizes.value.length === 0) return null;
+  const totalBytes = uploadFileSizes.value.reduce((sum, value) => sum + value, 0);
+  if (totalBytes <= 0) return 0;
+  const loadedBytes = uploadFileSizes.value.reduce((sum, size, index) => {
+    const progress = fileUploadProgressByIndex.value[index] ?? 0;
+    return sum + (size * progress) / 100;
+  }, 0);
+  return Math.min(100, Math.max(0, Math.round((loadedBytes / totalBytes) * 100)));
+});
+
 watch(showUploadModal, async (open) => {
-  if (!open || storageConfigsFetched.value) return;
+  if (!open) {
+    fileUploadProgressByIndex.value = {};
+    uploadFileSizes.value = [];
+    resetUploadProgress();
+    return;
+  }
+  if (storageConfigsFetched.value) {
+    selectDefaultStorageConfig();
+    return;
+  }
   await fetchStorageConfigs();
+  selectDefaultStorageConfig();
 });
 
 const {
@@ -159,6 +196,10 @@ function handleFolderCreated() {
 
 async function handleFileUpload(files: File | File[]) {
   const fileArray = Array.isArray(files) ? files : [files];
+  uploadFileSizes.value = fileArray.map((file) => file.size);
+  fileUploadProgressByIndex.value = Object.fromEntries(
+    fileArray.map((_, index) => [index, 0]),
+  );
 
   const formDataArray = fileArray.map((file) => {
     const formData = new FormData();
@@ -170,18 +211,44 @@ async function handleFileUpload(files: File | File[]) {
     return formData;
   });
 
-  await uploadFilesApi({
-    files: formDataArray,
-  });
+  const uploadIds = formDataArray.map(() => beginTrackedUploadProgress());
+  const stopFileProgressWatch = watch(
+    trackedUploadProgressById,
+    (progressById) => {
+      fileUploadProgressByIndex.value = Object.fromEntries(
+        uploadIds.map((id, index) => [index, progressById[id] ?? 0]),
+      );
+    },
+    { immediate: true },
+  );
+
+  try {
+    await uploadFilesApi({
+      files: formDataArray,
+      headersByIndex: Object.fromEntries(
+        uploadIds.map((id, index) => [index, getUploadProgressHeaders(id)]),
+      ),
+    });
+  } finally {
+    stopFileProgressWatch();
+  }
 
   if (uploadError.value) {
+    resetUploadProgress();
     return;
   }
+
+  fileUploadProgressByIndex.value = Object.fromEntries(
+    fileArray.map((_, index) => [index, 100]),
+  );
 
   await fetchFiles();
 
   showUploadModal.value = false;
   selectedStorage.value = undefined;
+  fileUploadProgressByIndex.value = {};
+  uploadFileSizes.value = [];
+  resetUploadProgress();
 
   useNotify().success("Success", `${fileArray.length} file(s) uploaded successfully`);
 }
@@ -317,6 +384,8 @@ registerHeaderActions([
       accept="*/*"
       :max-size="50 * 1024 * 1024"
       :loading="uploadPending"
+      :upload-progress="aggregateUploadProgress"
+      :file-progress="fileUploadProgressByIndex"
       @upload="handleFileUpload"
     >
       <template #header-content>

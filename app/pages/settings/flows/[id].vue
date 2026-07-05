@@ -1,21 +1,43 @@
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade" mode="out-in">
-      <div v-if="!isMounted || loading" class="eapp-page-constrained space-y-6">
+    <div v-if="showInitialLoading || flow" class="eapp-page-constrained space-y-6">
+      <template v-if="showInitialLoading">
         <CommonFormCard>
-          <CommonLoadingState type="form" />
+          <CommonDetailFormSkeleton :sections="1" :rows-per-section="2" />
         </CommonFormCard>
         <CommonFormCard>
           <div class="h-[400px] flex items-center justify-center">
-            <CommonLoadingState type="dots" size="md" />
+            <FlowCanvasSkeleton />
           </div>
         </CommonFormCard>
         <CommonFormCard>
-          <CommonLoadingState type="skeleton" />
+          <template #header>
+            <div class="flex items-center justify-between gap-4">
+              <div class="h-5 w-40 rounded skeleton-gradient skeleton-pulse-slow" />
+              <div class="h-8 w-20 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow" />
+            </div>
+          </template>
+          <div class="space-y-2 p-4">
+            <div
+              v-for="row in 3"
+              :key="row"
+              class="flex items-center justify-between rounded-lg bg-[var(--surface-muted)] p-3"
+            >
+              <div class="flex items-center gap-3">
+                <span class="h-2 w-2 rounded-full skeleton-gradient skeleton-pulse-slow" />
+                <span class="h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+                <span class="h-3 w-28 rounded skeleton-inline skeleton-pulse-slow" />
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="hidden h-3 w-14 rounded skeleton-inline skeleton-pulse-slow sm:block" />
+                <span class="h-4 w-4 rounded skeleton-inline skeleton-pulse-slow" />
+              </div>
+            </div>
+          </div>
         </CommonFormCard>
-      </div>
+      </template>
 
-      <div v-else-if="flow" class="eapp-page-constrained space-y-6">
+      <template v-else-if="flow">
         <CommonFormCard>
           <UForm :state="editForm" @submit="saveFlowSettings">
             <FormEditorLazy
@@ -76,10 +98,10 @@
           @load-more="loadMoreExecutions"
           @open="openExecution"
         />
-      </div>
+      </template>
+    </div>
 
-      <CommonEmptyState v-else title="Flow not found" icon="lucide:workflow" size="lg" />
-    </Transition>
+    <CommonEmptyState v-else title="Flow not found" icon="lucide:workflow" size="lg" />
 
     <FlowStepEditorDrawer
       v-model="stepDrawerOpen"
@@ -256,16 +278,23 @@ watch(() => stepForm.value.type, () => {
 
 registerPageHeader({ title: "Flow Editor", gradient: "purple" });
 
-const { data: flowData, pending: loading, execute: fetchFlow } = useApi(
+const { data: flowData, execute: fetchFlow } = useApi(
   () => `/enfyra_flow?filter={"${getIdFieldName()}":{"_eq":"${flowId}"}}&fields=${FLOW_DETAIL_FIELDS}&limit=1`,
   { errorContext: "Fetch Flow" }
 );
 
 const flow = computed(() => flowData.value?.data?.[0] || null);
+const flowLoadSettled = ref(false);
+const showInitialLoading = computed(() => !isMounted.value || (!flow.value && !flowLoadSettled.value));
 const steps = computed(() => {
   const s = flow.value?.steps || [];
   return [...s].sort((a: any, b: any) => (a.stepOrder || 0) - (b.stepOrder || 0));
 });
+
+async function loadFlow() {
+  await fetchFlow();
+  flowLoadSettled.value = true;
+}
 
 const EXEC_LIMIT = 10;
 const EXEC_FIELDS = 'id,status,startedAt,completedAt,duration,currentStep';
@@ -373,7 +402,7 @@ registerHeaderActions([
 ]);
 
 onMounted(async () => {
-  await fetchFlow();
+  await loadFlow();
   await fetchExecutions();
   await refreshExecOverlay();
   syncEditForm();
@@ -405,7 +434,7 @@ async function saveFlowSettings() {
   }
   notify.success("Success", "Flow settings saved!");
   hasFormChanges.value = false;
-  await fetchFlow();
+  await loadFlow();
 }
 
 const stepDrawerUpdating = ref(false);
@@ -579,7 +608,7 @@ async function handleMoveStep(stepId: any, direction: number) {
   const swapOrder = swap.stepOrder;
   await updateStepApi({ body: { stepOrder: swapOrder }, id: getId(current) });
   await updateStepApi({ body: { stepOrder: currentOrder }, id: getId(swap) });
-  await fetchFlow();
+  await loadFlow();
   } finally { reordering.value = false; }
 }
 
@@ -717,7 +746,7 @@ async function saveStep() {
       if (createStepError.value) return;
     }
     stepDrawerOpen.value = false;
-    await fetchFlow();
+    await loadFlow();
   } finally {
     savingStep.value = false;
   }
@@ -755,7 +784,7 @@ async function deleteCurrentStep() {
   if (deleteStepError.value) return;
   notify.success("Success", "Step deleted.");
   stepDrawerOpen.value = false;
-  await fetchFlow();
+  await loadFlow();
 }
 
 async function triggerFlow() {

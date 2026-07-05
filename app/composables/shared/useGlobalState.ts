@@ -26,6 +26,7 @@ export const useGlobalState = () => {
     "name",
     "type",
     "isEnabled",
+    "isDefault",
   ].join(",");
   const GLOBAL_APP_PACKAGE_FIELDS = [
     "id",

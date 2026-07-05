@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { getPrimaryColorPreflightScript } from "~/utils/primary-colors";
 
-const toaster = { duration: 3000, position: "bottom-left" as const };
+const toaster = {
+  duration: 3600,
+  expand: true,
+  max: 5,
+  position: "bottom-left" as const,
+  progress: true,
+};
 
 useHead({
   script: [

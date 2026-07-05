@@ -5,10 +5,9 @@
       :disabled="moveState.moveMode"
     >
       <div
-        class="relative overflow-hidden rounded-xl surface-card transition-all duration-200 cursor-pointer hover:shadow-panel-md"
+        class="relative overflow-hidden surface-card-hover cursor-pointer"
         :class="{
-          'border-brand-500 shadow-panel-md': selectedItems.includes(file.id),
-          'hover:border-[var(--border-strong)]': !selectedItems.includes(file.id),
+          '!border-[var(--state-primary-soft-border)] shadow-[var(--card-shadow-hover)]': selectedItems.includes(file.id),
         }"
         :style="{
           borderWidth: selectedItems.includes(file.id) ? '2px' : '1px',
@@ -22,7 +21,7 @@
             v-if="file.isImage"
             :src="file.thumbnailUrl"
             :alt="file.displayName"
-            class="h-full w-full"
+            class="h-full w-full transition-transform duration-300 group-hover:scale-[1.03]"
             container-class="h-full w-full"
             object-fit="cover"
             :show-error-text="false"
@@ -30,12 +29,16 @@
 
           <div v-else class="flex h-full items-center justify-center">
             <div
-              class="flex h-20 w-20 items-center justify-center rounded-2xl"
+              class="flex h-20 w-20 items-center justify-center rounded-[var(--radius-panel)] transition-transform duration-300 group-hover:scale-105"
               :class="file.iconBackground"
             >
               <UIcon :name="file.icon" :class="file.iconColor" size="36" />
             </div>
           </div>
+
+          <div
+            class="pointer-events-none absolute inset-0 bg-[var(--surface-default)]/0 transition-colors duration-200 group-hover:bg-[var(--surface-default)]/10"
+          />
 
           <div
             v-if="isSelectionMode"

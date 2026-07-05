@@ -4,10 +4,9 @@
   >
     <UContextMenu :items="getContextMenuItems()" :disabled="isFolderDisabled">
       <div
-        class="relative rounded-xl surface-card transition-all duration-200 cursor-pointer overflow-hidden hover:shadow-panel-md"
+        class="relative surface-card-hover cursor-pointer overflow-hidden"
         :class="{
-          'border-brand-500 shadow-panel-md': props.selectedItems.includes(props.folder.id),
-          'hover:border-[var(--border-strong)]': !props.selectedItems.includes(props.folder.id),
+          '!border-[var(--state-primary-soft-border)] shadow-[var(--card-shadow-hover)]': props.selectedItems.includes(props.folder.id),
         }"
         :style="{
           borderWidth: props.selectedItems.includes(props.folder.id) ? '2px' : '1px',

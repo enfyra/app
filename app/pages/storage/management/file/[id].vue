@@ -65,6 +65,18 @@ const {
 });
 
 const showReplaceModal = ref(false);
+const {
+  uploadProgress: replaceProgress,
+  uploadProgressHeaders,
+  beginUploadProgress,
+  resetUploadProgress,
+} = useFileUploadProgress();
+
+watch(showReplaceModal, (open) => {
+  if (!open) {
+    resetUploadProgress();
+  }
+});
 
 async function handleReset() {
   const ok = await confirm({
@@ -219,16 +231,20 @@ async function handleReplaceFileSuccess(files: File | File[]) {
   const formData = new FormData();
   formData.append("file", newFile);
 
+  beginUploadProgress();
   await executeUpdateFile({
     id: fileId,
     body: formData,
+    headers: uploadProgressHeaders.value,
   });
 
   if (updateError.value) {
+    resetUploadProgress();
     return;
   }
 
   showReplaceModal.value = false;
+  resetUploadProgress();
   await initializeForm();
 
   updateFileTimestamp(fileId);
@@ -308,9 +324,9 @@ function getFileIconAndColor(mimetype: string): {
 </script>
 
 <template>
-  <div class="grid max-w-[1400px] gap-6 xl:grid-cols-[minmax(360px,520px)_1fr]">
-    <aside class="space-y-4 xl:sticky xl:top-6 xl:self-start">
-      <div class="surface-card overflow-hidden rounded-xl">
+  <div class="grid w-full min-w-0 gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)]">
+    <aside class="min-w-0 space-y-4 xl:sticky xl:top-6 xl:self-start">
+      <div class="surface-card min-w-0 overflow-hidden">
         <div class="border-b border-[var(--border-default)] px-5 py-4">
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
@@ -375,13 +391,13 @@ function getFileIconAndColor(mimetype: string): {
       </div>
     </aside>
 
-    <div class="space-y-6">
-      <div class="surface-card rounded-xl p-6">
+    <div class="min-w-0 space-y-6">
+      <div class="surface-card min-w-0 p-6">
         <div class="mb-5 flex items-center gap-3">
           <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
             <UIcon name="lucide:edit-3" class="h-5 w-5 text-primary" />
           </div>
-          <div>
+          <div class="min-w-0">
             <h3 class="text-lg font-semibold text-[var(--text-primary)]">
               File information
             </h3>
@@ -410,7 +426,7 @@ function getFileIconAndColor(mimetype: string): {
         </UForm>
       </div>
 
-      <div class="surface-card rounded-xl p-6">
+      <div class="surface-card min-w-0 p-6">
         <PermissionManager
           table-name="enfyra_file_permission"
           :current-field-id="{ field: 'file', value: fileId }"
@@ -425,6 +441,7 @@ function getFileIconAndColor(mimetype: string): {
       :title="`Replace ${form.filename || 'File'}`"
       :multiple="false"
       :loading="updateLoading"
+      :upload-progress="replaceProgress"
       @upload="handleReplaceFileSuccess"
     >
       <template #warning>

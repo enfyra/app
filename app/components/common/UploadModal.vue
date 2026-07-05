@@ -1,32 +1,44 @@
 <template>
-    <UModal v-model:open="isOpen">
+    <CommonModal
+      v-model:open="isOpen"
+      :prevent-close="isLoading"
+      :cancel-action="{
+        label: 'Cancel',
+        icon: 'lucide:x',
+        disabled: isLoading,
+        onClick: closeModal,
+      }"
+      :primary-action="{
+        label: primaryActionLabel,
+        icon: 'lucide:upload',
+        loading: isLoading,
+        disabled: selectedFiles.length === 0 || isLoading,
+        onClick: handleUpload,
+      }"
+      :ui="{ content: 'sm:max-w-2xl' }"
+    >
       <template #header>
-        <div class="flex justify-between items-center w-full gap-3">
-          <div class="text-base font-semibold min-w-0 flex-1 truncate" :title="title">
+        <div class="min-w-0">
+          <div class="truncate text-base font-semibold text-[var(--text-primary)]" :title="title">
             {{ title }}
           </div>
-          <UButton
-            icon="lucide:x"
-            color="error"
-            variant="soft"
-            @click="closeModal"
-            class="flex-shrink-0"
-          >
-            Cancel
-          </UButton>
+          <p class="mt-1 text-sm text-[var(--text-tertiary)]">
+            {{ acceptText }}
+          </p>
         </div>
       </template>
 
       <template #body>
-        <div class="space-y-3">
+        <div class="space-y-4">
           <slot name="header-content" />
+          <slot name="warning" />
+
           <div
-            class="border-2 border-dashed border-[var(--border-strong)] rounded-[var(--radius-card)] p-10 text-center transition-all duration-200 lg:hover:border-primary-400"
+            class="upload-drop-zone"
             :class="{
-              'border-primary-500 bg-primary-50 dark:bg-primary-950 scale-105':
-                isDragOver && !isLoading,
-              'border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)]': hasError,
-              'opacity-50 pointer-events-none': isLoading,
+              'upload-drop-zone-active': isDragOver && !isLoading,
+              'upload-drop-zone-error': hasError,
+              'pointer-events-none opacity-50': isLoading,
             }"
             @dragenter.prevent="handleDragEnter"
             @dragover.prevent="handleDragOver"
@@ -73,47 +85,56 @@
             <div
               v-for="(file, index) in selectedFiles"
               :key="index"
-              class="bg-[var(--state-success-soft-bg)] border border-[var(--state-success-outline-border)] rounded-[var(--radius-panel)] p-2"
+              class="upload-file-row"
             >
-              <div class="flex items-center justify-between min-w-0">
-                <div class="flex items-center space-x-4 min-w-0 flex-1">
-                  <div
-                    class="w-10 h-10 bg-[var(--state-success-soft-bg)] rounded-[var(--radius-control)] flex items-center justify-center flex-shrink-0"
-                  >
-                    <UIcon
-                      name="i-heroicons-document-check"
-                      class="w-5 h-5 text-[var(--st-success)]"
-                    />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p
-                      class="text-base font-medium text-[var(--text-primary)] truncate"
-                      :title="file.name"
-                    >
-                      {{ file.name }}
-                    </p>
-                    <p class="text-sm text-[var(--text-tertiary)]">
-                      {{ formatFileSize(file.size) }}
-                    </p>
-                  </div>
+              <div class="flex min-w-0 flex-1 items-center gap-3">
+                <div class="upload-file-icon">
+                  <UIcon
+                    name="i-heroicons-document-check"
+                    class="h-5 w-5"
+                  />
                 </div>
-                <UButton
-                  color="error"
-                  variant="soft"
-                  icon="i-heroicons-x-mark"
-                  size="lg"
-                  square
-                  class="rounded-full cursor-pointer"
-                  :disabled="isLoading"
-                  @click="removeFile(index)"
-                />
+                <div class="min-w-0 flex-1">
+                  <p
+                    class="truncate text-sm font-semibold text-[var(--text-primary)]"
+                    :title="file.name"
+                  >
+                    {{ file.name }}
+                  </p>
+                  <p class="text-xs font-medium text-[var(--text-tertiary)]">
+                    {{ formatFileSize(file.size) }}
+                  </p>
+                </div>
               </div>
+              <div
+                v-if="fileDisplayProgresses[index] !== null"
+                class="upload-file-progress"
+                :aria-label="`Upload progress ${fileDisplayProgresses[index]}%`"
+              >
+                <span>{{ fileDisplayProgresses[index] }}%</span>
+                <div class="upload-file-progress-track">
+                  <div
+                    class="upload-file-progress-bar"
+                    :style="{ width: `${fileDisplayProgresses[index]}%` }"
+                  />
+                </div>
+              </div>
+              <UButton
+                color="error"
+                variant="ghost"
+                icon="i-heroicons-x-mark"
+                size="sm"
+                square
+                class="upload-file-remove"
+                :disabled="isLoading"
+                @click="removeFile(index)"
+              />
             </div>
           </div>
 
           <div
             v-if="hasError"
-            class="bg-[var(--state-danger-soft-bg)] border border-[var(--state-danger-outline-border)] rounded-[var(--radius-panel)] p-4"
+            class="rounded-[var(--radius-panel)] border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] p-4"
           >
             <div class="flex items-center space-x-3">
               <UIcon
@@ -127,24 +148,7 @@
           </div>
         </div>
       </template>
-
-      <template #footer>
-        <div class="w-full">
-          <slot name="warning" />
-          <UButton
-            color="primary"
-            variant="solid"
-            size="lg"
-            block
-            :disabled="selectedFiles.length === 0 || isLoading"
-            :loading="isLoading"
-            @click="handleUpload"
-          >
-            {{ isLoading ? uploadingText : uploadText }}
-          </UButton>
-        </div>
-      </template>
-    </UModal>
+    </CommonModal>
 </template>
 
 <script setup lang="ts">
@@ -160,6 +164,8 @@ const props = withDefaults(defineProps<UploadModalProps>(), {
   uploadText: "Upload",
   uploadingText: "Uploading...",
   loading: false,
+  uploadProgress: null,
+  fileProgress: () => ({}),
 });
 
 const emit = defineEmits<UploadModalEmits>();
@@ -190,6 +196,45 @@ const dragText = computed(() => props.dragText || "Drag and drop files here");
 const acceptText = computed(() => props.acceptText || "or click to browse");
 const uploadText = computed(() => props.uploadText || "Upload");
 const uploadingText = computed(() => props.uploadingText || "Uploading...");
+const normalizedUploadProgress = computed(() => {
+  if (props.uploadProgress === null || props.uploadProgress === undefined) {
+    return null;
+  }
+  if (!Number.isFinite(props.uploadProgress)) {
+    return null;
+  }
+  return Math.min(100, Math.max(0, Math.round(props.uploadProgress)));
+});
+const displayUploadProgress = computed(() => {
+  if (!isLoading.value) return null;
+  return normalizedUploadProgress.value;
+});
+const getDerivedFileProgress = (index: number, total: number) => {
+  const progress = displayUploadProgress.value;
+  if (progress === null) return null;
+  if (total <= 1) return progress;
+
+  const segmentSize = 100 / total;
+  const segmentStart = index * segmentSize;
+  const segmentProgress = ((progress - segmentStart) / segmentSize) * 100;
+  return Math.min(100, Math.max(0, Math.round(segmentProgress)));
+};
+const fileDisplayProgresses = computed(() =>
+  selectedFiles.value.map((_, index) => {
+    if (!isLoading.value) return null;
+    const progress = props.fileProgress?.[index];
+    if (progress !== null && progress !== undefined && Number.isFinite(progress)) {
+      return Math.min(100, Math.max(0, Math.round(progress)));
+    }
+    return getDerivedFileProgress(index, selectedFiles.value.length);
+  }),
+);
+const primaryActionLabel = computed(() => {
+  if (!isLoading.value) return uploadText.value;
+  return displayUploadProgress.value === null
+    ? uploadingText.value
+    : `${uploadingText.value} ${displayUploadProgress.value}%`;
+});
 
 const validateFile = (file: File): string | null => {
   const acceptValue = Array.isArray(props.accept) ? props.accept.join(",") : props.accept;
@@ -381,3 +426,95 @@ watch(isOpen, (newValue) => {
   }
 });
 </script>
+
+<style scoped>
+.upload-drop-zone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: 2.5rem;
+  text-align: center;
+  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.upload-drop-zone:hover {
+  border-color: var(--border-accent);
+  background: color-mix(in srgb, var(--state-primary-soft-bg) 36%, transparent);
+}
+
+.upload-drop-zone-active {
+  border-color: var(--border-accent);
+  background: var(--state-primary-soft-bg);
+  transform: scale(1.01);
+}
+
+.upload-drop-zone-error {
+  border-color: var(--state-danger-outline-border);
+  background: var(--state-danger-soft-bg);
+}
+
+.upload-drop-zone-error:hover,
+.upload-drop-zone-error.upload-drop-zone-active {
+  border-color: var(--state-danger-outline-border);
+  background: var(--state-danger-soft-bg);
+}
+
+.upload-file-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-panel);
+  background: var(--surface-muted);
+  box-shadow: inset 3px 0 0 var(--state-success-outline-border);
+  padding: 0.75rem;
+}
+
+.upload-file-icon {
+  display: flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--state-success-outline-border);
+  background: var(--state-success-soft-bg);
+  color: var(--state-success-soft-text);
+}
+
+.upload-file-remove {
+  flex: 0 0 auto;
+  border-radius: var(--radius-subcontrol);
+  cursor: pointer;
+}
+
+.upload-file-progress {
+  display: flex;
+  min-width: 5.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--state-primary-soft-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.upload-file-progress-track {
+  width: 4.5rem;
+  height: 0.375rem;
+  overflow: hidden;
+  border-radius: var(--radius-subcontrol);
+  background: var(--surface-default);
+  box-shadow: inset 0 0 0 1px var(--border-default);
+}
+
+.upload-file-progress-bar {
+  height: 100%;
+  border-radius: var(--radius-subcontrol);
+  background: var(--action-primary-bg);
+  transition: width 0.16s ease;
+}
+</style>

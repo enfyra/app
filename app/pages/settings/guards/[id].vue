@@ -72,15 +72,8 @@
           </div>
         </template>
 
-        <Transition name="loading-fade" mode="out-in">
-          <CommonLoadingState
-            v-if="treeLoading"
-            title="Loading guard tree..."
-            size="sm"
-            type="form"
-            context="inline"
-          />
-          <div v-else class="space-y-4" :class="isReordering ? 'pointer-events-none opacity-60' : ''">
+        <GuardTreeSkeleton v-if="treeLoading" />
+        <div v-else class="space-y-4" :class="isReordering ? 'pointer-events-none opacity-60' : ''">
             <div class="p-3 rounded-lg bg-[var(--surface-muted)]">
               <p class="text-xs text-[var(--text-tertiary)]">
                 Define guard logic using nested AND/OR combinators.
@@ -190,8 +183,7 @@
               icon="lucide:shield"
               size="sm"
             />
-          </div>
-        </Transition>
+        </div>
       </CommonFormCard>
     </div>
   </div>

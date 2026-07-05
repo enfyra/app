@@ -60,7 +60,7 @@
           v-bind="{
             ...getDefaultProps(action.component, 'header'),
             ...resolveProps(action.props),
-            ...((isMobile || isTablet) && action.component === 'UButton' ? { size: 'xs', class: 'rounded-full !aspect-square' } : {})
+            ...((isMobile || isTablet) && action.component === 'UButton' ? { size: 'xs', class: '!rounded-[var(--radius-subcontrol)] !aspect-square' } : {})
           }"
           @click="handleHeaderActionClick(action, $event)"
           @update:model-value="action.onUpdate"
@@ -166,7 +166,7 @@
           :key="action.label"
           v-bind="{
             ...resolveProps(action.props),
-            ...((isMobile || isTablet) ? { size: 'xs', class: 'rounded-full !aspect-square' } : {})
+            ...((isMobile || isTablet) ? { size: 'xs', class: '!rounded-[var(--radius-subcontrol)] !aspect-square' } : {})
           }"
           :to="action.to"
           :loading="action.loading"

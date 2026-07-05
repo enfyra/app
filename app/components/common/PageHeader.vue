@@ -140,7 +140,7 @@ function handlePageHeaderActionClick(action: any) {
             }"
           >
             <h1
-              class="font-bold tracking-normal text-[var(--text-primary)]"
+              class="min-w-0 break-words font-bold tracking-normal text-[var(--text-primary)]"
               :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-[22px]') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-3xl' : 'text-[26px]')"
             >
               {{ title }}
@@ -181,14 +181,9 @@ function handlePageHeaderActionClick(action: any) {
                     ? action.disabled
                     : unref(action.disabled)
                 "
+                :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
                 @click="handlePageHeaderActionClick(action)"
-                :class="[
-                  action.class,
-                  (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
-                  (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                    ? '!bg-[var(--surface-default)] !border !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
-                    : ''
-                ]"
+                :class="getHeaderActionButtonClass(action)"
               />
             </PermissionGate>
           </template>
@@ -218,14 +213,9 @@ function handlePageHeaderActionClick(action: any) {
                     ? action.disabled
                     : unref(action.disabled)
                 "
+                :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
                 @click="handlePageHeaderActionClick(action)"
-                :class="[
-                  action.class,
-                  (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
-                  (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-                    ? '!bg-[var(--surface-default)] !border !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
-                    : ''
-                ]"
+                :class="getHeaderActionButtonClass(action)"
               />
             </PermissionGate>
           </template>

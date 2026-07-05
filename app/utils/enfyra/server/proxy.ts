@@ -16,6 +16,8 @@ export function proxyToAPI(event: H3Event, customPath?: string) {
   };
   const accept = getRequestHeader(event, "accept");
   if (accept) headers.accept = accept || "";
+  const uploadId = getRequestHeader(event, "x-enfyra-upload-id");
+  if (uploadId) headers["x-enfyra-upload-id"] = uploadId;
 
   return proxyRequest(event, targetUrl, {
     headers,

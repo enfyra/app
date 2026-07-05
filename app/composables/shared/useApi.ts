@@ -13,10 +13,10 @@ interface ExecuteOptions {
   body?: any;
   query?: any;
   headers?: Record<string, string>;
+  headersByIndex?: Record<number, Record<string, string>>;
   files?: FormData[];
   batchSize?: number;
   concurrent?: number;
-  onProgress?: (progress: any) => void;
 }
 
 function handleError(
@@ -152,12 +152,15 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         executeOpts.files.length > 0
       ) {
         const responses = await Promise.all(
-          executeOpts.files.map(async (fileObj: FormData) => {
+          executeOpts.files.map(async (fileObj: FormData, index) => {
             lastAttemptedPath = finalPath;
             return $fetch(finalPath, {
               method: method as any,
               body: fileObj,
-              headers: finalHeaders,
+              headers: {
+                ...finalHeaders,
+                ...(executeOpts.headersByIndex?.[index] || {}),
+              },
               query: finalQuery,
             }) as Promise<T>;
           })

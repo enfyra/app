@@ -29,14 +29,9 @@
               ? action.disabled
               : unref(action.disabled)) || unref(action.loading)
           "
+          :square="isHeaderActionIconOnly(action)"
           @click="handleHeaderActionClick(action)"
-          :class="[
-            action.class,
-            (isRef(action.variant) ? unref(action.variant) : action.variant) === 'outline' &&
-            (isRef(action.color) ? unref(action.color) : action.color) === 'neutral'
-              ? '!bg-[var(--surface-default)] !border-2 !border-[var(--border-strong)] !text-[var(--text-primary)] hover:!bg-[var(--surface-muted)]'
-              : ''
-          ]"
+          :class="getHeaderActionButtonClass(action)"
         />
       </template>
     </div>
