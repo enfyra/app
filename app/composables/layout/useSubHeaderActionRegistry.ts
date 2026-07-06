@@ -1,4 +1,5 @@
 import { processHeaderAction } from '~/utils/common/action-processor';
+import type { HeaderAction } from '~/types';
 
 const subActionOwners = new Map<string, number>();
 

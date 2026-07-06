@@ -85,7 +85,7 @@ export default defineNuxtConfig({
     },
   },
   imports: {
-    dirs: ["composables/**/**", "utils/**/**/**", "types/**", "types/**/**"],
+    dirs: ["composables/**/**", "utils/**/**/**"],
   },
   alias: {
     "~/app": "./app",
