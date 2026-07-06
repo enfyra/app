@@ -90,25 +90,9 @@ import {
   dismissReloadBanner,
 } from '~/composables/shared/useAdminSocket';
 
-await useInitialData();
-await Promise.all([
-  useMenuInit(),
-  useGlobalExtensionsInit({ throwOnError: true }),
-]);
 const { markInitialReady } = useInitialLoading();
-markInitialReady();
-if (import.meta.client) {
-  void nextTick(() => {
-    requestAnimationFrame(() => {
-      const { loadRoutes } = useRoutes();
-      void loadRoutes().then((loadedRoutes) => {
-        if (!loadedRoutes) return;
-        const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
-        registerDataMenuItemsFromRoutes(loadedRoutes);
-      });
-    });
-  });
-}
+const { loadRoutes } = useRoutes();
+const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
 useAppSettings();
 useRouterErrorHandler();
 useMobileMenuAction();
@@ -119,6 +103,23 @@ const { routeLoading } = useGlobalState();
 const { width } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
 const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
+
+await useInitialData();
+await Promise.all([
+  useMenuInit(),
+  useGlobalExtensionsInit({ throwOnError: true }),
+]);
+markInitialReady();
+if (import.meta.client) {
+  void nextTick(() => {
+    requestAnimationFrame(() => {
+      void loadRoutes().then((loadedRoutes) => {
+        if (!loadedRoutes) return;
+        registerDataMenuItemsFromRoutes(loadedRoutes);
+      });
+    });
+  });
+}
 
 const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
 

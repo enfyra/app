@@ -1,4 +1,8 @@
 
+import type { EffectScope } from "vue";
+
+let pageHeaderRouteWatcherScope: EffectScope | null = null;
+
 export interface PageHeaderStat {
   label: string;
   value: string | number;
@@ -25,23 +29,36 @@ export const usePageHeaderRegistry = () => {
     () => new Map()
   );
 
+  if (ownerUid !== undefined) {
+    onUnmounted(() => {
+      const nextHeaders = new Map(routeHeaders.value);
+      let shouldClearCurrentHeader = false;
+
+      for (const [path, registered] of routeHeaders.value) {
+        if (registered.ownerUid !== ownerUid) continue;
+        nextHeaders.delete(path);
+        if (pageHeaderConfig.value === registered.config) {
+          shouldClearCurrentHeader = true;
+        }
+      }
+
+      routeHeaders.value = nextHeaders;
+      if (shouldClearCurrentHeader) {
+        pageHeaderConfig.value = null;
+      }
+    });
+  }
+
   const registerPageHeader = (config: PageHeaderConfig) => {
     const currentRoute = route.path;
 
-    routeHeaders.value.set(currentRoute, { config, ownerUid });
+    routeHeaders.value = new Map(routeHeaders.value).set(currentRoute, {
+      config,
+      ownerUid,
+    });
 
-    pageHeaderConfig.value = config;
-
-    if (ownerUid !== undefined) {
-      onUnmounted(() => {
-        const registered = routeHeaders.value.get(currentRoute);
-        if (registered?.ownerUid === ownerUid) {
-          routeHeaders.value.delete(currentRoute);
-          if (route.path === currentRoute) {
-            pageHeaderConfig.value = null;
-          }
-        }
-      });
+    if (route.path === currentRoute) {
+      pageHeaderConfig.value = config;
     }
   };
 
@@ -51,18 +68,18 @@ export const usePageHeaderRegistry = () => {
 
   const hasPageHeader = computed(() => pageHeaderConfig.value !== null);
 
-  watch(
-    () => route.path,
-    (newPath) => {
-      pageHeaderConfig.value = null;
-
-      const routeHeader = routeHeaders.value.get(newPath);
-      if (routeHeader) {
-        pageHeaderConfig.value = routeHeader.config;
-      }
-    },
-    { immediate: true }
-  );
+  if (import.meta.client && !pageHeaderRouteWatcherScope) {
+    pageHeaderRouteWatcherScope = effectScope(true);
+    pageHeaderRouteWatcherScope.run(() => {
+      watch(
+        () => route.path,
+        (newPath) => {
+          pageHeaderConfig.value = routeHeaders.value.get(newPath)?.config ?? null;
+        },
+        { immediate: true, flush: "sync" }
+      );
+    });
+  }
 
   return {
     pageHeader: readonly(pageHeaderConfig),

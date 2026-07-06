@@ -33,11 +33,27 @@
       </div>
 
       <div v-else-if="previewComponent && isValidComponent" class="extension-preview-container space-y-4">
-        <div v-if="previewPageHeader" class="rounded-xl p-6 shadow-lg" :style="{ background: 'var(--gradient-primary)' }">
-          <h2 class="text-2xl font-bold text-white mb-2">{{ previewPageHeader.title }}</h2>
-          <p v-if="previewPageHeader.description" class="text-white/90 text-sm leading-relaxed">
-            {{ previewPageHeader.description }}
-          </p>
+        <div v-if="previewPageHeader" class="extension-preview-page-header">
+          <div class="flex items-center gap-3">
+            <div
+              v-if="previewPageHeader.leadingIcon !== '' && !previewPageHeader.hideLeadingIcon"
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]"
+              aria-hidden="true"
+            >
+              <UIcon :name="previewPageHeader.leadingIcon || 'lucide:blocks'" class="h-5 w-5" />
+            </div>
+            <div class="min-w-0 flex-1 space-y-1">
+              <h2 class="min-w-0 break-words text-[26px] font-bold tracking-normal text-[var(--text-primary)]">
+                {{ previewPageHeader.title }}
+              </h2>
+              <p
+                v-if="previewPageHeader.description"
+                class="text-sm leading-relaxed text-[var(--text-tertiary)]"
+              >
+                {{ previewPageHeader.description }}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div v-if="previewHeaderActions.length > 0" class="flex gap-2 justify-end flex-wrap">
@@ -220,5 +236,15 @@ async function compileAndPreview() {
 <style scoped>
 .extension-preview-container {
   isolation: isolate;
+}
+
+.extension-preview-page-header {
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-card);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--brand-500) 5%, transparent), transparent 62%),
+    var(--card-bg);
+  box-shadow: var(--card-shadow);
+  padding: 1rem 1.25rem;
 }
 </style>

@@ -1,13 +1,14 @@
 export function useDataTableVisibility(
-  tableName: string,
+  tableName: MaybeRefOrGetter<string>,
   schemas: Ref<SchemaCollection> | any
 ) {
   const hiddenColumns = ref<Set<string>>(new Set());
+  const currentTableName = computed(() => toValue(tableName));
 
   const visibleColumns = computed(() => {
     if (!isRefSchemaCollection(schemas)) return new Set();
     
-    const schema = schemas.value[tableName];
+    const schema = schemas.value[currentTableName.value];
     if (!schema?.definition) return new Set();
 
     const columnFields = schema.definition
@@ -54,15 +55,16 @@ export function useDataTableVisibility(
   };
 
   watch(
-    () => isRefSchemaCollection(schemas) ? schemas.value[tableName] : null,
+    () => isRefSchemaCollection(schemas) ? schemas.value[currentTableName.value] : null,
     (schema) => {
       if (schema?.definition) {
+        const table = currentTableName.value;
         const columnFields = schema.definition
           .filter((field: TableDefinitionField) => field.fieldType === "column")
           .map((field: TableDefinitionField) => field.name)
           .filter((name: string | undefined): name is string => !!name);
 
-        const { hidden } = loadColumnVisibility(tableName, columnFields);
+        const { hidden } = loadColumnVisibility(table, columnFields);
         const nextHidden = new Set(hidden);
 
         let needsSave = false;
@@ -110,7 +112,7 @@ export function useDataTableVisibility(
 
         hiddenColumns.value = nextHidden;
         if (needsSave) {
-          saveColumnVisibility(tableName, nextHidden);
+          saveColumnVisibility(table, nextHidden);
         }
       }
     },
@@ -126,13 +128,13 @@ export function useDataTableVisibility(
 
     hiddenColumns.value = new Set(hiddenColumns.value);
 
-    saveColumnVisibility(tableName, hiddenColumns.value);
+    saveColumnVisibility(currentTableName.value, hiddenColumns.value);
   }
 
   const columnDropdownItems = computed(() => {
     if (!isRefSchemaCollection(schemas)) return [];
     
-    const schema = schemas.value[tableName];
+    const schema = schemas.value[currentTableName.value];
     if (!schema?.definition) return [];
 
     const items = schema.definition
