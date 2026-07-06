@@ -1,4 +1,5 @@
 import { resolveComponent, markRaw } from 'vue';
+import type { HeaderAction } from '~/types';
 
 export function processHeaderAction(action: HeaderAction): HeaderAction {
   const processed = Object.create(Object.getPrototypeOf(action));

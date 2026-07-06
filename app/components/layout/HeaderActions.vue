@@ -46,6 +46,8 @@
 </template>
 
 <script setup lang="ts">
+import type { HeaderAction } from "~/types";
+
 const route = useRoute();
 const { headerActions } = useHeaderActionRegistry();
 const { isMobile, isTablet } = useScreen();
