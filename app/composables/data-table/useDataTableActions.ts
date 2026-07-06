@@ -1,6 +1,6 @@
 
 export function useDataTableActions(
-  tableName: string,
+  tableName: MaybeRefOrGetter<string>,
   fetchData: () => Promise<void>,
   data: Ref<any[]>
 ) {
@@ -13,7 +13,7 @@ export function useDataTableActions(
   const { getId } = useDatabase();
 
   const { execute: executeDelete, error: deleteError } = useApi(
-    () => `/${tableName}`,
+    () => `/${toValue(tableName)}`,
     {
       method: "delete",
       errorContext: "Delete Record",

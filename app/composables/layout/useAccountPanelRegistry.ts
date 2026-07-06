@@ -33,6 +33,8 @@ function processAccountPanelItem(item: AccountPanelItem): AccountPanelItem {
 }
 
 export function useAccountPanelRegistry(items?: AccountPanelItem | AccountPanelItem[]) {
+  const ownerUid = getCurrentInstance()?.uid;
+  const ownedItemIds = new Set<string>();
   const itemsRaw = useState<AccountPanelItem[]>("account-panel-items", () => []);
 
   const accountPanelItems = computed<AccountPanelItem[]>(() => {
@@ -49,22 +51,13 @@ export function useAccountPanelRegistry(items?: AccountPanelItem | AccountPanelI
     }
     if (ownerUid !== undefined) {
       accountPanelItemOwners.set(item.id, ownerUid);
+      ownedItemIds.add(item.id);
     }
   };
 
   const register = (nextItems: AccountPanelItem | AccountPanelItem[]) => {
-    const ownerUid = getCurrentInstance()?.uid;
     const normalizedItems = Array.isArray(nextItems) ? nextItems : [nextItems];
     normalizedItems.forEach((item) => registerOne(item, ownerUid));
-    if (ownerUid !== undefined) {
-      onUnmounted(() => {
-        normalizedItems.forEach((item) => {
-          if (accountPanelItemOwners.get(item.id) === ownerUid) {
-            unregister(item.id);
-          }
-        });
-      });
-    }
   };
 
   const unregister = (id: string) => {
@@ -79,18 +72,19 @@ export function useAccountPanelRegistry(items?: AccountPanelItem | AccountPanelI
   };
 
   if (items) {
-    const ownerUid = getCurrentInstance()?.uid;
     const normalizedItems = Array.isArray(items) ? items : [items];
     normalizedItems.forEach((item) => registerOne(item, ownerUid));
-    if (ownerUid !== undefined) {
-      onUnmounted(() => {
-        normalizedItems.forEach((item) => {
-          if (accountPanelItemOwners.get(item.id) === ownerUid) {
-            unregister(item.id);
-          }
-        });
+  }
+
+  if (ownerUid !== undefined) {
+    onUnmounted(() => {
+      ownedItemIds.forEach((id) => {
+        if (accountPanelItemOwners.get(id) === ownerUid) {
+          unregister(id);
+        }
       });
-    }
+      ownedItemIds.clear();
+    });
   }
 
   return {

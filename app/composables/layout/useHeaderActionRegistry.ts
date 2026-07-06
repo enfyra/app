@@ -6,6 +6,8 @@ const actionOwners = new Map<string, number>();
 export function useHeaderActionRegistry(
   actions?: HeaderAction | HeaderAction[]
 ) {
+  const ownerUid = getCurrentInstance()?.uid;
+  const ownedActionIds = new Set<string>();
   const actionsRaw = useState<HeaderAction[]>("header-actions", () => []);
 
   const headerActions = computed<HeaderAction[]>(() => {
@@ -22,24 +24,13 @@ export function useHeaderActionRegistry(
     }
     if (ownerUid !== undefined) {
       actionOwners.set(action.id, ownerUid);
+      ownedActionIds.add(action.id);
     }
   };
 
   const register = (actions: HeaderAction | HeaderAction[]) => {
     const arr = Array.isArray(actions) ? actions : [actions];
-    const instance = getCurrentInstance();
-    const uid = instance?.uid;
-    arr.forEach(action => registerOne(action, uid));
-
-    if (instance) {
-      onUnmounted(() => {
-        arr.forEach(action => {
-          if (actionOwners.get(action.id) === uid) {
-            unregister(action.id);
-          }
-        });
-      });
-    }
+    arr.forEach(action => registerOne(action, ownerUid));
   };
 
   const unregister = (id: string) => {
@@ -55,18 +46,18 @@ export function useHeaderActionRegistry(
 
   if (actions) {
     const arr = Array.isArray(actions) ? actions : [actions];
-    const instance = getCurrentInstance();
-    const uid = instance?.uid;
-    arr.forEach(a => registerOne(a, uid));
-    if (instance) {
-      onUnmounted(() => {
-        arr.forEach(a => {
-          if (actionOwners.get(a.id) === uid) {
-            unregister(a.id);
-          }
-        });
+    arr.forEach(a => registerOne(a, ownerUid));
+  }
+
+  if (ownerUid !== undefined) {
+    onUnmounted(() => {
+      ownedActionIds.forEach((id) => {
+        if (actionOwners.get(id) === ownerUid) {
+          unregister(id);
+        }
       });
-    }
+      ownedActionIds.clear();
+    });
   }
 
   return {

@@ -5,7 +5,7 @@ import { DataTableColumnSelector as ColumnSelector } from "#components";
 
 const route = useRoute();
 const router = useRouter();
-const tableName = route.params.table as string;
+const tableName = computed(() => route.params.table as string);
 const { schemas, schemaReady, getColumnFields } = useSchema(tableName);
 const total = ref(1);
 const page = ref(1);
@@ -22,23 +22,24 @@ const currentFilter = ref(createEmptyFilter());
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
 const { registerPageHeader } = usePageHeaderRegistry();
 
-const schema = computed(() => schemas.value[tableName]);
+const schema = computed(() => schemas.value[tableName.value]);
 const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
 
 const {
   data: singleRecordData,
   execute: fetchSingleRecord,
-} = useApi(() => getRouteForTableName(tableName), {
+} = useApi(() => getRouteForTableName(tableName.value), {
   query: { limit: 1, fields: getColumnFields() },
   immediate: false,
   errorContext: "Fetch Single Record",
 });
 
-watch(schemaReady, async (ready) => {
+watch([schemaReady, tableName, isSingleRecord], async ([ready]) => {
   if (ready && isSingleRecord.value) {
-    const cachedId = singleRecordIdMap.value[tableName];
+    const table = tableName.value;
+    const cachedId = singleRecordIdMap.value[table];
     if (cachedId) {
-      navigateTo(`/data/${tableName}/${cachedId}`, { replace: true });
+      navigateTo(`/data/${table}/${cachedId}`, { replace: true });
       return;
     }
 
@@ -47,8 +48,8 @@ watch(schemaReady, async (ready) => {
     const records = singleRecordData.value?.data;
     if (records && records.length > 0) {
       const recordId = getId(records[0]);
-      singleRecordIdMap.value[tableName] = recordId;
-      navigateTo(`/data/${tableName}/${recordId}`, { replace: true });
+      singleRecordIdMap.value[table] = recordId;
+      navigateTo(`/data/${table}/${recordId}`, { replace: true });
     }
   }
 }, { immediate: true });
@@ -57,7 +58,7 @@ onMounted(async () => {
   await ensureRoutesLoaded();
 });
 
-watch(() => schemas.value[tableName]?.name || tableName, (name) => {
+watch(() => schemas.value[tableName.value]?.name || tableName.value, (name) => {
   if (name) {
     registerPageHeader({
       title: name,
@@ -85,7 +86,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchData,
-} = useApi(() => getRouteForTableName(tableName), {
+} = useApi(() => getRouteForTableName(tableName.value), {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
@@ -145,7 +146,9 @@ registerSubHeaderActions([
     permission: {
       and: [
         {
-          route: getRouteForTableName(tableName),
+          get route() {
+            return getRouteForTableName(tableName.value);
+          },
           methods: ["DELETE"],
         },
       ],
@@ -165,7 +168,9 @@ registerSubHeaderActions([
     permission: {
       and: [
         {
-          route: getRouteForTableName(tableName),
+          get route() {
+            return getRouteForTableName(tableName.value);
+          },
           methods: ["DELETE"],
         },
       ],
@@ -188,7 +193,9 @@ registerSubHeaderActions([
     permission: {
       and: [
         {
-          route: getRouteForTableName(tableName),
+          get route() {
+            return getRouteForTableName(tableName.value);
+          },
           methods: ["GET"],
         },
       ],
@@ -199,7 +206,7 @@ registerSubHeaderActions([
 const { buildColumn, buildActionsColumn } = useDataTableColumns();
 
 const columns = computed(() => {
-  const schema = schemas.value[tableName];
+  const schema = schemas.value[tableName.value];
   if (!schema?.definition) return [];
 
   const dataColumns = schema.definition
@@ -279,7 +286,7 @@ const columns = computed(() => {
           const hasDeletePermission = checkPermissionCondition({
             and: [
               {
-                route: getRouteForTableName(tableName),
+                route: getRouteForTableName(tableName.value),
                 methods: ["DELETE"],
               },
             ],
@@ -335,9 +342,16 @@ async function clearFilters() {
   await handleFilterApply(createEmptyFilter());
 }
 
+watch(tableName, () => {
+  data.value = [];
+  total.value = 1;
+  currentFilter.value = createEmptyFilter();
+  resetSelection();
+});
+
 watch(
-  () => route.query.page,
-  async (newVal) => {
+  () => [route.query.page, tableName.value, isSingleRecord.value] as const,
+  async ([newVal]) => {
     if (isSingleRecord.value) return;
     page.value = newVal ? Number(newVal) : 1;
     await fetchData();
@@ -370,7 +384,9 @@ registerHeaderActions([
     permission: {
       and: [
         {
-          route: getRouteForTableName(tableName),
+          get route() {
+            return getRouteForTableName(tableName.value);
+          },
           methods: ["GET"],
         },
       ],
@@ -383,11 +399,13 @@ registerHeaderActions([
     variant: "solid",
     color: "primary",
     size: "md",
-    to: `/data/${route.params.table}/create`,
+    to: computed(() => `/data/${tableName.value}/create`),
     permission: {
       and: [
         {
-          route: getRouteForTableName(tableName),
+          get route() {
+            return getRouteForTableName(tableName.value);
+          },
           methods: ["POST"],
         },
       ],

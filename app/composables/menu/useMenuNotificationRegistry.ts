@@ -32,6 +32,8 @@ function matchesTarget(item: any, target: MenuNotificationRegistration["target"]
 }
 
 export function useMenuNotificationRegistry() {
+  const ownerUid = getCurrentInstance()?.uid;
+  const ownedNotificationIds = new Set<string>();
   const notifications = useState<MenuNotificationRegistration[]>(
     "menu-notifications",
     () => []
@@ -46,6 +48,7 @@ export function useMenuNotificationRegistry() {
     }
     if (ownerUid !== undefined) {
       menuNotificationOwners.set(notification.id, ownerUid);
+      ownedNotificationIds.add(notification.id);
     }
   };
 
@@ -56,25 +59,25 @@ export function useMenuNotificationRegistry() {
   };
 
   const register = (nextNotifications: MenuNotificationRegistration | MenuNotificationRegistration[]) => {
-    const ownerUid = getCurrentInstance()?.uid;
     const normalized = Array.isArray(nextNotifications) ? nextNotifications : [nextNotifications];
     normalized.forEach((notification) => registerOne(notification, ownerUid));
-
-    if (ownerUid !== undefined) {
-      onUnmounted(() => {
-        normalized.forEach((notification) => {
-          if (menuNotificationOwners.get(notification.id) === ownerUid) {
-            unregister(notification.id);
-          }
-        });
-      });
-    }
   };
 
   const clear = () => {
     notifications.value = [];
     menuNotificationOwners.clear();
   };
+
+  if (ownerUid !== undefined) {
+    onUnmounted(() => {
+      ownedNotificationIds.forEach((id) => {
+        if (menuNotificationOwners.get(id) === ownerUid) {
+          unregister(id);
+        }
+      });
+      ownedNotificationIds.clear();
+    });
+  }
 
   const getMenuNotification = (item: any): ResolvedMenuNotification | null => {
     const direct = notifications.value
