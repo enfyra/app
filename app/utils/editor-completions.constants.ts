@@ -106,6 +106,7 @@ export const VUE_COMPLETIONS = [
   { label: 'useAsyncData', type: 'function', detail: 'Nuxt: async data' },
   { label: 'useLazyFetch', type: 'function', detail: 'Nuxt: lazy fetch' },
   { label: 'useHead', type: 'function', detail: 'Nuxt: head meta' },
+  { label: 'useNotify', type: 'function', detail: 'Enfyra: success/error/warning/info(title, description?) toast adapter' },
   { label: 'useToast', type: 'function', detail: 'Nuxt UI: toast notifications' },
   { label: 'useApi', type: 'function', detail: 'Enfyra: API client { data, execute, error, pending }' },
   {

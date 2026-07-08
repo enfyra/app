@@ -54,6 +54,7 @@ export const NUXT_GLOBALS = {
   useNuxtApp: true,
   useRuntimeConfig: true,
 
+  useNotify: true,
   useToast: true,
 };
 
@@ -109,6 +110,7 @@ export const EXTENSION_COMPOSABLES = {
   usePermissions: 'usePermissions',
   useAdminSocket: 'useAdminSocket',
 
+  useNotify: 'useNotify',
   useToast: 'useToast',
   useState: 'useState',
   useRoute: 'useRoute',

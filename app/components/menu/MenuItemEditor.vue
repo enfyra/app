@@ -127,6 +127,33 @@ const typeMap = {
   },
 };
 
+function normalizePermissionValue(value: unknown) {
+  if (value == null || value === "") return null;
+
+  let parsed = value;
+  if (typeof value === "string") {
+    try {
+      parsed = JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return parsed;
+  }
+
+  if (Object.keys(parsed).length === 0) return null;
+  return parsed;
+}
+
+function buildMenuPayload() {
+  return {
+    ...form.value,
+    permission: normalizePermissionValue(form.value.permission),
+  };
+}
+
 watch(() => isOpen.value, async (open) => {
   if (open) {
     editorSettling.value = true;
@@ -321,14 +348,14 @@ async function handleSave() {
   if (props.menu && getId(props.menu)) {
     await updateMenu({
       id: Number(getId(props.menu)),
-      body: form.value,
+      body: buildMenuPayload(),
     });
 
     if (updateError.value) {
       return;
     }
   } else {
-    await createMenu({ body: form.value });
+    await createMenu({ body: buildMenuPayload() });
 
     if (createError.value) {
       return;

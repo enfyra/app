@@ -195,6 +195,7 @@ export const availableComposables = {
   useRoute,
   useRouter,
   useApi,
+  useNotify,
   useToast,
   useSchema,
   useScreen,
