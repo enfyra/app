@@ -86,6 +86,7 @@ export function getComposablesObject(): Record<string, any> {
     useRoute,
     useRouter,
     useApi,
+    useNotify,
     useToast,
     useSchema,
     useScreen,

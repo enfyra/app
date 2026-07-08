@@ -15,14 +15,16 @@
     <div
       v-else-if="error"
       class="flex items-center gap-2 text-sm text-[var(--md-error)]"
+      :title="error"
     >
       <UIcon
-        :name="error.includes('disabled') ? 'i-heroicons-lock-closed' : 'i-heroicons-exclamation-triangle'"
+        :name="isDisabledError ? 'i-heroicons-lock-closed' : 'i-heroicons-exclamation-triangle'"
         size="16"
       />
-      <span>Widget error</span>
+      <span class="min-w-0 truncate">{{ error }}</span>
       <UButton
-        v-if="!error.includes('disabled')"
+        v-if="!isDisabledError"
+        type="button"
         size="xs"
         variant="ghost"
         icon="i-heroicons-arrow-path"
@@ -75,6 +77,7 @@ const widgetComponent = ref<any>(null);
 const currentExtensionMeta = ref<any>(null);
 const loading = ref(false);
 const loadRunId = ref(0);
+const isDisabledError = computed(() => error.value?.includes("disabled") ?? false);
 
 const tryLoadFromCache = (): boolean => {
   const widgetPath = getWidgetMetaCacheKey(props.id);
@@ -102,9 +105,12 @@ const loadMatchingWidget = async () => {
   }
 
   loading.value = true;
-  await fetchAndLoadWidget(runId);
-  if (isCurrentLoad(runId)) {
-    loading.value = false;
+  try {
+    await fetchAndLoadWidget(runId);
+  } finally {
+    if (isCurrentLoad(runId)) {
+      loading.value = false;
+    }
   }
 };
 
@@ -162,15 +168,39 @@ watch(() => extensionCacheInvalidation.value, async (invalidation) => {
   loading.value = true;
   error.value = null;
   widgetComponent.value = null;
-  await fetchAndLoadWidget(runId);
-  if (isCurrentLoad(runId)) {
-    loading.value = false;
+  try {
+    await fetchAndLoadWidget(runId);
+  } finally {
+    if (isCurrentLoad(runId)) {
+      loading.value = false;
+    }
   }
 });
 
 const retry = () => {
+  widgetComponent.value = null;
   loadMatchingWidget();
 };
+
+const formatWidgetRuntimeError = (err: unknown, info: string) => {
+  const widgetName = currentExtensionMeta.value?.name || currentExtensionMeta.value?.extensionId || props.id;
+  const message = err instanceof Error ? err.message : String(err || "Unknown Vue runtime error");
+  const lifecycle = info ? ` during ${info}` : "";
+  return `Widget "${widgetName}" failed${lifecycle}: ${message}`;
+};
+
+onErrorCaptured((err, _instance, info) => {
+  error.value = formatWidgetRuntimeError(err, info);
+  widgetComponent.value = null;
+  loading.value = false;
+  console.error("[Dynamic widget extension] Runtime error", {
+    widgetId: props.id,
+    extension: currentExtensionMeta.value?.name || currentExtensionMeta.value?.extensionId,
+    info,
+    error: err,
+  });
+  return false;
+});
 
 watch(
   () => props.id,

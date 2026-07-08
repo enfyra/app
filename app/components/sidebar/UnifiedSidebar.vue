@@ -55,16 +55,44 @@ const faviconUrl = computed(() => {
 
 function filterPermittedItems(items: any[] = []): any[] {
   return items
-    .filter((item: any) => !item.permission || checkPermissionCondition(item.permission))
+    .filter((item: any) => isPermittedMenuItem(item))
     .map((item: any) => ({
       ...item,
       items: filterPermittedItems(item.items || []),
     }));
 }
 
+function normalizePermissionCondition(permission: any): any {
+  if (typeof permission !== 'string') return permission;
+  const trimmed = permission.trim();
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return permission;
+  }
+}
+
+function hasPermissionCondition(permission: any): boolean {
+  const condition = normalizePermissionCondition(permission);
+  if (!condition) return false;
+  if (Array.isArray(condition)) return condition.length > 0;
+  if (typeof condition !== 'object') return true;
+  if (condition.allowAll === true || condition.rootAdmin === true) return true;
+  if (Array.isArray(condition.and)) return condition.and.length > 0;
+  if (Array.isArray(condition.or)) return condition.or.length > 0;
+  if (typeof condition.route === 'string' && condition.route.length > 0) return true;
+  return false;
+}
+
+function isPermittedMenuItem(item: any): boolean {
+  const permission = normalizePermissionCondition(item.permission);
+  return !hasPermissionCondition(permission) || checkPermissionCondition(permission);
+}
+
 const visibleGroups = computed(() => {
   return menuGroups.value
-    .filter(group => !group.permission || checkPermissionCondition(group.permission))
+    .filter(group => isPermittedMenuItem(group))
     .map(group => {
       const permittedItems = filterPermittedItems(group.items || []);
       return { ...group, items: permittedItems };

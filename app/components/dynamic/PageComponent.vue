@@ -4,17 +4,17 @@
   <CommonEmptyState
     v-else-if="error"
     :title="
-      error.includes('disabled') ? 'Extension Disabled' : 'Extension Error'
+      isDisabledError ? 'Extension Disabled' : 'Extension Error'
     "
     :description="error"
     :icon="
-      error.includes('disabled')
+      isDisabledError
         ? 'i-heroicons-lock-closed'
         : 'i-heroicons-exclamation-triangle'
     "
     size="md"
     :action="
-      error.includes('disabled')
+      isDisabledError
         ? {
             label: 'Go to Extension Settings',
             onClick: async () => {
@@ -93,6 +93,7 @@ const currentExtensionMeta = ref<any>(null);
 const currentPermission = ref<any>(null);
 const isLoading = ref(true);
 const loadRunId = ref(0);
+const isDisabledError = computed(() => error.value?.includes("disabled") ?? false);
 
 const {
   data: menuResponse,
@@ -147,10 +148,13 @@ const loadMatchingExtension = async () => {
   }
 
   setRouteLoading(true);
-  await fetchAndLoadExtension(runId);
-  if (isCurrentLoad(runId)) {
-    setRouteLoading(false);
-    isLoading.value = false;
+  try {
+    await fetchAndLoadExtension(runId);
+  } finally {
+    if (isCurrentLoad(runId)) {
+      setRouteLoading(false);
+      isLoading.value = false;
+    }
   }
 };
 
@@ -232,17 +236,47 @@ watch(() => extensionCacheInvalidation.value, async (invalidation) => {
   currentPermission.value = null;
   extensionComponent.value = null;
   setRouteLoading(true);
-  await fetchAndLoadExtension(runId);
-  if (isCurrentLoad(runId)) {
-    setRouteLoading(false);
-    isLoading.value = false;
+  try {
+    await fetchAndLoadExtension(runId);
+  } finally {
+    if (isCurrentLoad(runId)) {
+      setRouteLoading(false);
+      isLoading.value = false;
+    }
   }
 });
 
 const retry = () => {
   isLoading.value = true;
+  extensionComponent.value = null;
   loadMatchingExtension();
 };
+
+const formatRuntimeError = (err: unknown, info: string) => {
+  const extensionName = currentExtensionMeta.value?.name || currentExtensionMeta.value?.extensionId || props.path;
+  const message = err instanceof Error ? err.message : String(err || "Unknown Vue runtime error");
+  const lifecycle = info ? ` during ${info}` : "";
+  return `Extension "${extensionName}" failed${lifecycle}: ${message}`;
+};
+
+onErrorCaptured((err, _instance, info) => {
+  error.value = formatRuntimeError(err, info);
+  extensionComponent.value = null;
+  currentPermission.value = null;
+  isLoading.value = false;
+  setRouteLoading(false);
+  console.error("[Dynamic page extension] Runtime error", {
+    path: normalizedPath.value,
+    extension: currentExtensionMeta.value?.name || currentExtensionMeta.value?.extensionId,
+    info,
+    error: err,
+  });
+  return false;
+});
+
+onBeforeUnmount(() => {
+  setRouteLoading(false);
+});
 
 watch(
   () => props.path,
