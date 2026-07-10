@@ -36,11 +36,11 @@ const resolvedLeadingIcon = computed(() => {
 });
 
 const leadingIconShellClass = computed(() =>
-  "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]",
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]",
 );
 
 const leadingIconGlyphClass = computed(() =>
-  props.variant === "minimal" ? "h-5 w-5" : "h-5 w-5",
+  "h-4 w-4",
 );
 
 const { subHeaderActions } = useSubHeaderActionRegistry();
@@ -70,7 +70,6 @@ const headerStripClass = computed(() => {
   return props.gradient === "none" ? "" : "page-header-accent";
 });
 
-const isMinimal = computed(() => props.variant === "minimal");
 const isStatsFocus = computed(() => props.variant === "stats-focus");
 
 const isVisible = ref(false);
@@ -113,7 +112,7 @@ function handlePageHeaderActionClick(action: any) {
 <template>
   <div class="page-header-shell relative" :class="headerStripClass">
     
-    <div class="page-header-inner relative" :class="[(isMobile || isTablet) ? 'px-4' : 'px-5', isMinimal ? 'py-3' : 'py-4']">
+    <div class="page-header-inner relative px-5 pt-2.5 pb-1.5 lg:px-6">
       <div
         class="flex gap-4"
         :class="(isMobile || isTablet) ? 'flex-col' : 'flex-row items-center justify-between'"
@@ -131,8 +130,7 @@ function handlePageHeaderActionClick(action: any) {
             />
           </div>
           <div
-            :class="(isMobile || isTablet) ? 'space-y-0.5' : 'space-y-1'"
-            class="min-w-0 flex-1 transition-all duration-150"
+            class="min-w-0 flex-1 space-y-0 transition-all duration-150"
             :style="{
               opacity: isVisible ? 1 : 0,
               transform: isVisible ? 'translateY(0)' : 'translateY(6px)',
@@ -141,13 +139,13 @@ function handlePageHeaderActionClick(action: any) {
           >
             <h1
               class="min-w-0 break-words font-bold tracking-normal text-[var(--text-primary)]"
-              :class="(isMobile || isTablet) ? (isMinimal ? 'text-xl' : isStatsFocus ? 'text-2xl' : 'text-[22px]') : (isMinimal ? 'text-2xl' : isStatsFocus ? 'text-3xl' : 'text-[26px]')"
+              :class="(isMobile || isTablet) ? 'text-lg leading-5' : 'text-xl leading-6'"
             >
               {{ title }}
             </h1>
             <p
               v-if="description"
-              :class="[(isMobile || isTablet) ? 'text-xs' : 'text-sm', 'text-[var(--text-tertiary)]']"
+              class="text-xs leading-4 text-[var(--text-tertiary)]"
             >
               {{ description }}
             </p>
@@ -282,12 +280,6 @@ function handlePageHeaderActionClick(action: any) {
 }
 
 .page-header-inner {
-  min-height: 82px;
-}
-
-@media (max-width: 1023px) {
-  .page-header-inner {
-    min-height: auto;
-  }
+  min-height: 56px;
 }
 </style>

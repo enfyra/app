@@ -21,6 +21,7 @@ export function getHeaderActionButtonClass(
 
   return [
     actionClass,
+    "!h-9",
     options.compact
       ? "!rounded-[var(--radius-subcontrol)]"
       : "!rounded-[var(--radius-control)]",
