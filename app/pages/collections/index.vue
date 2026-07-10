@@ -73,13 +73,14 @@ const SearchInput = defineComponent({
     const UIcon = resolveComponent("UIcon");
 
     return () =>
-      h("div", { class: "relative flex items-center" }, [
+      h("div", { class: "relative flex h-9 items-center" }, [
         h(UInput, {
           modelValue: searchQuery.value,
           "onUpdate:modelValue": (val: string) => (searchQuery.value = val),
           placeholder: "Search by table name...",
           icon: "lucide:search",
-          size: "lg",
+          size: "md",
+          ui: { base: "!h-9 !py-0" },
           class: "w-full lg:w-64",
         }),
         searchQuery.value
