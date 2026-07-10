@@ -12,6 +12,7 @@ const emit = defineEmits<{
   toggle: [field: string];
   'toggle-all': [prefix: string];
 }>();
+useSchema(toRef(props, "tableName"));
 
 const MAX_DEPTH = 3;
 const currentDepth = props.depth ?? 0;
@@ -124,6 +125,7 @@ function hasAnySelected(relName: string): boolean {
         <div class="overflow-hidden">
           <div class="px-2.5 pb-2 pt-1.5 border-t border-[var(--border-default)] bg-[var(--surface-default)] rounded-b-lg">
             <FieldPickerNode
+              v-if="expanded.has(rel.name)"
               :schemas="schemas"
               :table-name="rel.targetTable!"
               :prefix="fullPath(rel.name)"

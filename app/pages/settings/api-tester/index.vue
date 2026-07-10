@@ -9,17 +9,10 @@
         v-if="showInitialLoading"
         :loading="true"
         :has-items="false"
+        item-size="sm"
         loading-title="Loading routes..."
         loading-description="Fetching route definitions"
       >
-        <template #skeleton-row>
-          <CommonResourceListSkeletonRow
-            title-width="w-56"
-            description-width="w-36"
-            :chips="['w-12', 'w-12', 'w-16']"
-            :show-trailing="false"
-          />
-        </template>
       </CommonResourceListFrame>
 
       <div v-else class="space-y-4">
@@ -39,27 +32,19 @@
               :description="r.mainTable?.name || r.description || 'Route'"
               :icon="r.icon || 'lucide:code-2'"
               icon-color="primary"
-              :content-loading="customRoutesRefreshing"
+              size="sm"
+              :loading="customRoutesRefreshing"
               :top-badge="!r.isEnabled ? { label: 'Off', color: 'warning' } : undefined"
               @click="openTest(r)"
             >
-              <template #skeleton-content>
-                <span class="block h-4 w-56 rounded skeleton-gradient skeleton-pulse-slow" />
-                <span class="block h-3 w-36 rounded skeleton-inline skeleton-pulse-slow" />
-                <span class="flex flex-wrap gap-2">
-                  <span class="block h-5 w-12 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
-                  <span class="block h-5 w-12 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
-                  <span class="hidden h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
-                </span>
-              </template>
-
-              <template #metadata>
-                <div class="mt-2 flex flex-wrap items-center gap-1.5">
+              <template #title>
+                <span class="truncate text-sm font-semibold eapp-text-primary">{{ r.path }}</span>
+                <span class="flex shrink-0 flex-wrap items-center gap-1.5">
                   <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
                   <UBadge v-if="r.publicMethods?.length" color="info" variant="soft" size="xs">
                     {{ r.publicMethods.length }} public
                   </UBadge>
-                </div>
+                </span>
               </template>
             </CommonResourceListItem>
           </div>
@@ -76,17 +61,10 @@
             v-if="systemLoading"
             :loading="true"
             :has-items="false"
+            item-size="sm"
             loading-title="Loading system routes..."
             loading-description="Fetching system route definitions"
           >
-            <template #skeleton-row>
-              <CommonResourceListSkeletonRow
-                title-width="w-56"
-                description-width="w-44"
-                :chips="['w-12', 'w-12', 'w-16']"
-                :show-trailing="false"
-              />
-            </template>
           </CommonResourceListFrame>
 
           <div v-else-if="filteredSystemRoutes.length > 0" class="eapp-resource-list">
@@ -97,16 +75,18 @@
               :description="r.description || 'System route'"
               :icon="r.icon || 'lucide:settings'"
               icon-color="neutral"
+              size="sm"
               :top-badge="{ label: 'System', color: 'neutral' }"
               @click="openTest(r)"
             >
-              <template #metadata>
-                <div class="mt-2 flex flex-wrap items-center gap-1.5">
+              <template #title>
+                <span class="truncate text-sm font-semibold eapp-text-primary">{{ r.path }}</span>
+                <span class="flex shrink-0 flex-wrap items-center gap-1.5">
                   <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
                   <UBadge v-if="r.publicMethods?.length" color="info" variant="soft" size="xs">
                     {{ r.publicMethods.length }} public
                   </UBadge>
-                </div>
+                </span>
               </template>
             </CommonResourceListItem>
           </div>
@@ -137,13 +117,14 @@
 definePageMeta({ layout: "default", title: "API Tester" });
 
 const { registerPageHeader } = usePageHeaderRegistry();
-const { schemas, fetchSchema } = useSchema();
+const selectedRoute = ref<any>(null);
+const showTestModal = ref(false);
+const selectedTableName = computed(() => selectedRoute.value?.mainTable?.name || "");
+const { schemas } = useSchema(selectedTableName);
 
 registerPageHeader({ title: "API Tester", gradient: "cyan" });
 
 const search = ref('');
-const selectedRoute = ref<any>(null);
-const showTestModal = ref(false);
 const route = useRoute();
 const router = useRouter();
 
@@ -193,7 +174,6 @@ const { data: systemData, execute: fetchSystemRoutes } = useApi(
 
 onMounted(async () => {
   await fetchRoutes();
-  await fetchSchema();
   if (activeScope.value === 'system') {
     await loadSystemRoutes();
   }

@@ -2,7 +2,11 @@ export function useAppSettings() {
   const route = useRoute();
   const router = useRouter();
   const { settings } = useGlobalState();
-  const { schemas } = useSchema();
+  const titleTableName = computed(() => {
+    const tableParam = route.params.table;
+    return tableParam ? String(tableParam) : "";
+  });
+  const { schemas } = useSchema(titleTableName);
   const { menuItems } = useMenuRegistry();
 
   function updateAppTitleAndFavicon(newSettings: any) {
@@ -99,8 +103,7 @@ export function useAppSettings() {
   }
 
   function getTableNameFromRoute(): string | null {
-    const tableParam = route.params.table;
-    return tableParam ? String(tableParam) : null;
+    return titleTableName.value || null;
   }
 
   function getTableSchema(tableName: string) {

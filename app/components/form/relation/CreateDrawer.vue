@@ -23,7 +23,7 @@ const { getId, getIdFieldName } = useDatabase();
 
 const targetTableName = computed(() => props.relationMeta?.targetTableName || "");
 const targetTableNameResolved = computed(() => targetTableName.value || '');
-const { generateEmptyForm, validate } = useSchema(targetTableNameResolved);
+const { ensureSchema, generateEmptyForm, validate } = useSchema(targetTableNameResolved);
 
 const targetRoute = computed(() => `/${targetTableName.value}`);
 
@@ -42,8 +42,9 @@ const hasFormChanges = ref(false);
 const showDiscardModal = ref(false);
 const { isMobile, isTablet } = useScreen();
 
-watch(show, (val) => {
+watch(show, async (val) => {
   if (val) {
+    await ensureSchema();
     createForm.value = generateEmptyForm({
       excluded: [props.relationMeta.inversePropertyName],
     });

@@ -18,30 +18,38 @@ const editingIndex = ref<number | null>(null);
 const currentRelation = ref<any>(null);
 const relationErrors = ref<Record<number, Record<string, string>>>({});
 
-const { schemas, forceRefreshSchema, generateEmptyForm, validate } = useSchema("enfyra_relation");
+const { ensureSchema, generateEmptyForm, validate } = useSchema("enfyra_relation");
 const { isMobile, isTablet } = useScreen();
 
+const currentTableName = computed(() => {
+  if (!props.tableId) return "";
+  return props.tableOptions.find(
+    (table) => String(table.value) === String(props.tableId),
+  )?.label ?? "";
+});
+const { schema: currentTableMetadata } = useSchema(currentTableName);
+const incomingRelationRows = ref<any[]>([]);
+const { execute: fetchIncomingRelations } = useApi<any>("/enfyra_relation", {
+  query: computed(() => ({
+    fields: "*,sourceTable.id,sourceTable.name,targetTable.id,targetTable.name,mappedBy.id,mappedBy.propertyName",
+    filter: { targetTable: { _eq: props.tableId } },
+    limit: 0,
+  })),
+  errorContext: "Fetch Incoming Relations",
+});
+
 watch(() => props.tableId, async (id) => {
-  if (!id) return;
-  const tableId = String(id);
-  const entry = Object.values(schemas.value).find(
-    (s: any) => String(s.id) === tableId,
-  );
-  if (!entry || !(entry as any).relations) await forceRefreshSchema();
+  if (!id) {
+    incomingRelationRows.value = [];
+    return;
+  }
+  const response = await fetchIncomingRelations();
+  incomingRelationRows.value = response?.data ?? [];
 }, { immediate: true });
 
 const showInverseModal = ref(false);
 const inverseModalTarget = ref<any>(null);
 const inversePropertyNameInput = ref('');
-
-const currentTableMetadata = computed(() => {
-  if (!props.tableId) return null;
-  const tableId = String(props.tableId);
-  for (const table of Object.values(schemas.value)) {
-    if (String((table as any).id) === tableId) return table as any;
-  }
-  return null;
-});
 
 const metadataInverseRelIds = computed(() => {
   const ids = new Set<string>();
@@ -78,15 +86,21 @@ const incomingRelations = computed(() => {
     }
   }
   const incoming: any[] = [];
-  for (const table of Object.values(schemas.value)) {
-    for (const rel of (table as any).relations || []) {
-      if (String(rel.targetTableId) !== tableId) continue;
-      if (ownMappedByNames.has(rel.propertyName)) continue;
-      if (metadataInverseRelIds.value.has(String(rel.id))) continue;
-      const ownType = ownInverseTargets.get(String(rel.sourceTableId));
-      if (ownType && getInverseType(ownType) === rel.type) continue;
-      incoming.push(rel);
-    }
+  for (const row of incomingRelationRows.value) {
+    const rel = {
+      ...row,
+      sourceTableId: row.sourceTableId ?? row.sourceTable?.id,
+      sourceTableName: row.sourceTableName ?? row.sourceTable?.name,
+      targetTableId: row.targetTableId ?? row.targetTable?.id,
+      targetTableName: row.targetTableName ?? row.targetTable?.name,
+      mappedById: row.mappedById ?? row.mappedBy?.id,
+    };
+    if (String(rel.targetTableId) !== tableId) continue;
+    if (ownMappedByNames.has(rel.propertyName)) continue;
+    if (metadataInverseRelIds.value.has(String(rel.id))) continue;
+    const ownType = ownInverseTargets.get(String(rel.sourceTableId));
+    if (ownType && getInverseType(ownType) === rel.type) continue;
+    incoming.push(rel);
   }
   return incoming;
 });
@@ -230,7 +244,8 @@ const currentRelationErrors = computed({
   },
 });
 
-function openNewRelationModal() {
+async function openNewRelationModal() {
+  await ensureSchema();
   isEditing.value = true;
   isNew.value = true;
   editingIndex.value = null;

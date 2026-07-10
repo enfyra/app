@@ -1,7 +1,11 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
-const { schemas, schemaLoading } = useSchema();
+const {
+  tables: tableCatalog,
+  loading: tableCatalogLoading,
+  loadTableCatalog,
+} = useTableCatalog();
 const { confirm } = useConfirm();
 const notify = useNotify();
 const { getId } = useDatabase();
@@ -51,7 +55,7 @@ watch(
       nameError.value =
         "Use letters (a-z, A-Z), numbers and underscore. Must start with a letter.";
     else if (name === "table") nameError.value = "Table name cannot be `table`";
-    else if (schemas.value?.[name]) nameError.value = "Table name already exists";
+    else if (tableCatalog.value.some((item) => item.name === name)) nameError.value = "Table name already exists";
     else nameError.value = "";
   }
 );
@@ -162,9 +166,9 @@ registerHeaderActions([
     variant: "solid",
     color: "primary",
     size: "md",
-    loading: computed(() => createLoading.value || schemaLoading.value),
+    loading: computed(() => createLoading.value || tableCatalogLoading.value),
     submit: save,
-    disabled: computed(() => schemaLoading.value),
+    disabled: computed(() => tableCatalogLoading.value),
     permission: {
       and: [
         {
@@ -198,6 +202,10 @@ async function save() {
     await navigateTo("/collections", { replace: true });
   }
 }
+
+onMounted(() => {
+  void loadTableCatalog();
+});
 </script>
 
 <template>
@@ -233,9 +241,9 @@ async function save() {
               v-model="table.relations"
               :reserved-names="table.columns.map((c: any) => c.name)"
               :table-options="
-                Object.values(schemas).map((schema: any) => ({ 
-                  label: schema.name, 
-                  value: getId(schema)
+                tableCatalog.map((item) => ({
+                  label: item.name,
+                  value: getId(item)
                 }))
               "
             />

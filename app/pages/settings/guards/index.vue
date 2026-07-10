@@ -419,14 +419,6 @@ async function deleteGuard(guard: any) {
           loading-title="Loading guards..."
           loading-description="Fetching guard configuration"
         >
-          <template #skeleton-row>
-            <CommonResourceListSkeletonRow
-              title-width="w-44"
-              description-width="w-80 max-w-[24rem]"
-              :chips="['w-20', 'w-24', 'w-28', 'w-20']"
-              trailing-width="w-28"
-            />
-          </template>
         </CommonResourceListFrame>
       </div>
 
@@ -521,7 +513,7 @@ async function deleteGuard(guard: any) {
               :description="guard.description || (guard.isGlobal ? 'Global guard' : guard.route?.path || 'No route assigned')"
               icon="lucide:shield"
               icon-color="primary"
-              :content-loading="guardsRefreshing"
+              :loading="guardsRefreshing"
               @click="navigateTo(`/settings/guards/${getId(guard)}`)"
               :stats="[
                 {
@@ -563,24 +555,7 @@ async function deleteGuard(guard: any) {
               ]"
               :methods="getGuardFooterActions(guard)"
               :header-actions="getGuardHeaderActions(guard)"
-            >
-              <template #skeleton-content>
-                <span class="block space-y-2">
-                  <span class="block h-4 w-44 rounded skeleton-gradient skeleton-pulse-slow" />
-                  <span class="block h-3 w-80 max-w-[24rem] rounded skeleton-inline skeleton-pulse-slow" />
-                  <span class="flex flex-wrap gap-2">
-                    <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-                    <span class="block h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-                    <span class="block h-5 w-28 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-                    <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-                  </span>
-                </span>
-              </template>
-
-              <template #skeleton-actions>
-                <span class="hidden h-8 w-28 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
-              </template>
-            </CommonResourceListItem>
+            />
           </div>
         </div>
 

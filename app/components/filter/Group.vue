@@ -1,12 +1,16 @@
 <script setup lang="ts">
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   group: FilterGroup;
   schemas: Record<string, any>;
   tableName: string;
   rootTableName?: string;
   readonly?: boolean;
-}>();
+  depth?: number;
+}>(), {
+  depth: 0,
+});
+useSchema(toRef(props, "tableName"));
 const emit = defineEmits<{
   "update:group": [group: FilterGroup];
   remove: [];
@@ -281,10 +285,23 @@ function isGroupEndZoneActive(): boolean {
 }
 
 const { isMobile, isTablet } = useScreen();
+
+const groupRailClass = computed(() => {
+  if (isMobile.value || isTablet.value || props.depth >= 2) {
+    return "space-y-2 border-l-2 border-[var(--border-default)] pl-2 min-w-0";
+  }
+
+  return "space-y-2 border-l-2 border-[var(--border-default)] pl-4 min-w-0";
+});
+
+const nestedGroupClass = computed(() => [
+  "min-w-0 rounded-lg border border-[var(--border-default)]",
+  isMobile.value || isTablet.value || props.depth >= 1 ? "p-2" : "p-3",
+]);
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="min-w-0 space-y-4">
 
     <div class="flex items-center gap-2" v-if="group.conditions.length > 1">
       <USelect
@@ -303,16 +320,11 @@ const { isMobile, isTablet } = useScreen();
       </span>
     </div>
 
-    <div
-      :class="[
-        (isMobile || isTablet) ? 'space-y-2 pl-2 border-l-2 border-[var(--border-default)]' : 'space-y-2 pl-4 border-l-2 border-[var(--border-default)]',
-        ''
-      ]"
-    >
+    <div :class="groupRailClass">
       <template v-for="(item, index) in group.conditions" :key="item.id">
         <div
           :class="[
-            'relative',
+            'relative min-w-0',
             isDragging() ? 'transition-none' : 'transition-all duration-150',
             getDropClass(index),
             isItemDragging(index) ? 'opacity-50 scale-[0.98]' : '',
@@ -321,7 +333,7 @@ const { isMobile, isTablet } = useScreen();
           @dragleave="onItemDragLeave"
           @drop="(e) => onItemDrop(index, e)"
         >
-          <div class="flex items-start gap-1">
+          <div class="flex min-w-0 items-start gap-1">
             <div
               v-if="!readonly"
               :draggable="true"
@@ -346,11 +358,11 @@ const { isMobile, isTablet } = useScreen();
                 @remove="removeItem"
               />
 
-              <div v-else :class="(isMobile || isTablet) ? 'border border-[var(--border-default)] rounded-lg p-2' : 'border border-[var(--border-default)] rounded-lg p-3'">
+              <div v-else :class="nestedGroupClass">
 
                 <div
                   v-if="item.relationContext"
-                  class="mb-3 p-2 bg-[var(--state-info-soft-bg)] rounded text-sm text-[var(--state-info-soft-text)]"
+                  class="mb-3 min-w-0 p-2 bg-[var(--state-info-soft-bg)] rounded text-sm text-[var(--state-info-soft-text)] [overflow-wrap:anywhere]"
                 >
                   <span class="font-medium">Filtering in relation:</span>
                   {{ item.relationContext }}
@@ -377,6 +389,7 @@ const { isMobile, isTablet } = useScreen();
                   "
                   :root-table-name="rootTableName || tableName"
                   :readonly="!!readonly"
+                  :depth="depth + 1"
                   @update:group="(g) => onNestedGroupUpdate(g, index)"
                   @remove="() => removeItem(index)"
                 />

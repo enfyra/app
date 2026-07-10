@@ -13,7 +13,7 @@ const emit = defineEmits<{
 
 const notify = useNotify();
 const tableName = "enfyra_extension";
-const { validate, generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, validate, generateEmptyForm } = useSchema(tableName);
 const { getId, getIdFieldName } = useDatabase();
 const { me } = useAuth();
 const { invalidateExtensionCache } = useDynamicComponent();
@@ -102,6 +102,7 @@ const excludedFields = computed(() => {
 
 watch(() => isOpen.value, async (open) => {
   if (open) {
+    await ensureSchema();
     if (props.menu?.extension) {
       await fetchExtension();
       const data = extensionData.value?.data?.[0];

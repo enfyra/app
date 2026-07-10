@@ -16,7 +16,7 @@ const emit = defineEmits<{
 
 const notify = useNotify();
 const tableName = 'enfyra_websocket_event';
-const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getIdFieldName, getId } = useDatabase();
 
 const form = ref<Record<string, any>>({});
@@ -89,6 +89,7 @@ watch(
   () => isOpen.value,
   async (open) => {
     if (open) {
+      await ensureSchema();
       if (props.event && getId(props.event)) {
         await initializeForm();
         await nextTick();

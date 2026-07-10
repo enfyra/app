@@ -40,7 +40,7 @@ watch(searchQuery, (newVal) => {
 
 const targetTableName = computed(() => props.relationMeta?.targetTableName || "");
 
-const { getColumnFields, fetchSchema } = useSchema(targetTableName);
+const { getColumnFields } = useSchema(targetTableName);
 
 const { isMounted } = useMounted();
 
@@ -184,7 +184,6 @@ watch(
     if (newVal) {
       searchQuery.value = "";
       searchDebounced.value = "";
-      await fetchSchema();
       await fetchDataWithValidation();
     }
   }

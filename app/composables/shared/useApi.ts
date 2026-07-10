@@ -19,6 +19,35 @@ interface ExecuteOptions {
   concurrent?: number;
 }
 
+async function resolveApiQueryValue(value: any, invokeGetter = false): Promise<any> {
+  let resolved = unref(value);
+  if (invokeGetter && typeof resolved === "function") {
+    resolved = resolved();
+  }
+  resolved = await resolved;
+
+  if (Array.isArray(resolved)) {
+    return Promise.all(resolved.map((item) => resolveApiQueryValue(item)));
+  }
+
+  if (
+    resolved &&
+    typeof resolved === "object" &&
+    (Object.getPrototypeOf(resolved) === Object.prototype ||
+      Object.getPrototypeOf(resolved) === null)
+  ) {
+    const entries = await Promise.all(
+      Object.entries(resolved).map(async ([key, item]) => [
+        key,
+        await resolveApiQueryValue(item),
+      ]),
+    );
+    return Object.fromEntries(entries);
+  }
+
+  return resolved;
+}
+
 function handleError(
   error: any,
   context?: string,
@@ -120,7 +149,10 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         .replace(/^\/?api\/?/, "")
         .replace(/^\/+/, "");
       const finalBody = executeOpts?.body || unref(body);
-      const finalQuery = executeOpts?.query || unref(query);
+      const finalQuery = await resolveApiQueryValue(
+        executeOpts?.query ?? query,
+        executeOpts?.query === undefined,
+      );
       const finalHeaders = {
         ...(options.headers || {}),
         ...(executeOpts?.headers || {}),

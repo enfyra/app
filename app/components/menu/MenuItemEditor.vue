@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 const notify = useNotify();
 const tableName = "enfyra_menu";
-const { validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, validate, getIncludeFields, generateEmptyForm } = useSchema(tableName);
 const { getIdFieldName, getId } = useDatabase();
 
 const form = ref<Record<string, any>>({});
@@ -53,20 +53,21 @@ const {
   pending: loading,
   execute: fetchMenu,
 } = useApi(() => `/${tableName}`, {
-  query: computed(() => {
+  query: async () => {
+    const includeFields = await getIncludeFields();
     if (props.menu) {
       const menuId = getId(props.menu);
       if (menuId) {
         return {
-          fields: `${getIncludeFields()},${prefixFields("extension", EXTENSION_MENU_METADATA_FIELDS)}`,
+          fields: `${includeFields},${prefixFields("extension", EXTENSION_MENU_METADATA_FIELDS)}`,
           filter: { [getIdFieldName()]: { _eq: menuId } },
         };
       }
     }
     return {
-      fields: `${getIncludeFields()},${prefixFields("extension", EXTENSION_MENU_METADATA_FIELDS)}`,
+      fields: `${includeFields},${prefixFields("extension", EXTENSION_MENU_METADATA_FIELDS)}`,
     };
-  }),
+  },
   errorContext: "Fetch Menu",
   immediate: false,
   lazy: true,
@@ -156,6 +157,7 @@ function buildMenuPayload() {
 
 watch(() => isOpen.value, async (open) => {
   if (open) {
+    await ensureSchema();
     editorSettling.value = true;
     hasFormChanges.value = false;
     if (props.menu) {

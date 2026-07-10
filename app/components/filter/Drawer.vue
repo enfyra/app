@@ -6,7 +6,7 @@ const props = defineProps<{
   nested?: boolean;
 }>();
 
-const { schemas } = useSchema();
+const { schemas } = useSchema(toRef(props, "tableName"));
 const { addToHistory } = useFilterHistory(props.tableName);
 const { createEmptyFilter, hasActiveFilters, countActiveFilters } = useFilterQuery();
 

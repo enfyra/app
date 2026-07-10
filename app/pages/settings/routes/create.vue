@@ -20,14 +20,14 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
-const { loadRoutes } = useRoutes();
+const { routes, loadRoutes } = useRoutes();
 
 const tableName = "enfyra_route";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
@@ -75,7 +75,8 @@ const {
   errorContext: "Create Route",
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await ensureSchema();
   createForm.value = generateEmptyForm();
 });
 
@@ -117,9 +118,8 @@ async function handleCreate() {
 
   await loadRoutes();
 
-  const { registerDataMenuItems } = useMenuRegistry();
-  const { schemas } = useSchema();
-  await registerDataMenuItems(Object.values(schemas.value));
+  const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
+  registerDataMenuItemsFromRoutes(routes.value);
 
   await navigateTo(`/settings/routes/${getId(createData.value.data[0])}`, {
     replace: true,

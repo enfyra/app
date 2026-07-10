@@ -14,6 +14,8 @@ const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { getLoader: getRouteLoader } = useKeyedLoaders();
 const { registerPageHeader } = usePageHeaderRegistry();
+const { routes: cachedRoutes, loadRoutes } = useRoutes();
+const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
 const ROUTE_LIST_FIELDS = [
   "id",
   "path",
@@ -292,10 +294,7 @@ function getRouteHeaderActions(routeItem: any) {
   }
 
   const hasAssociatedTable = getId(routeItem.mainTable);
-  const { schemas } = useSchema();
-  const tableExists = hasAssociatedTable && Object.values(schemas.value).some(
-    (table: any) => getId(table) === getId(routeItem.mainTable)
-  );
+  const tableExists = Boolean(hasAssociatedTable);
 
   return [
     {
@@ -314,10 +313,7 @@ function getRouteHeaderActions(routeItem: any) {
 function getRouteFooterActions(routeItem: any) {
   
   const hasAssociatedTable = getId(routeItem.mainTable);
-  const { schemas } = useSchema();
-  const tableExists = hasAssociatedTable && Object.values(schemas.value).some(
-    (table: any) => getId(table) === getId(routeItem.mainTable)
-  );
+  const tableExists = Boolean(hasAssociatedTable);
 
   return [
     {
@@ -365,12 +361,8 @@ async function toggleEnabled(routeItem: any) {
     return;
   }
 
-  const { loadRoutes } = useRoutes();
-  const { registerDataMenuItems } = useMenuRegistry();
-  const { schemas } = useSchema();
-
   await loadRoutes();
-  await registerDataMenuItems(Object.values(schemas.value));
+  registerDataMenuItemsFromRoutes(cachedRoutes.value);
 
   notify.success("Success", `Route ${newEnabled ? "enabled" : "disabled"} successfully`);
 }
@@ -392,12 +384,8 @@ async function deleteRoute(routeItem: any) {
 
     await fetchRoutes();
 
-    const { loadRoutes } = useRoutes();
-    const { registerDataMenuItems } = useMenuRegistry();
-    const { schemas } = useSchema();
-
     await loadRoutes();
-    await registerDataMenuItems(Object.values(schemas.value));
+    registerDataMenuItemsFromRoutes(cachedRoutes.value);
 
     notify.success("Success", `Route "${routeItem.path}" has been deleted successfully!`);
   }
@@ -415,23 +403,6 @@ async function deleteRoute(routeItem: any) {
           loading-title="Loading routes..."
           loading-description="Fetching routing configuration"
         >
-          <template #skeleton-row>
-            <div class="eapp-resource-list-item pointer-events-none">
-              <span class="eapp-resource-list-leading skeleton-gradient skeleton-pulse-slow" />
-              <span class="min-w-0 flex-1 space-y-2">
-                <span class="flex min-w-0 items-center gap-2">
-                  <span class="block h-4 w-56 rounded skeleton-gradient skeleton-pulse-slow" />
-                  <span class="hidden h-5 w-14 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
-                </span>
-                <span class="flex flex-wrap gap-2">
-                  <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-                  <span class="block h-5 w-28 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-                </span>
-              </span>
-              <span class="hidden h-7 w-10 shrink-0 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow md:block" />
-              <span class="hidden h-8 w-16 shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
-            </div>
-          </template>
         </CommonResourceListFrame>
       </div>
 
@@ -451,7 +422,7 @@ async function deleteRoute(routeItem: any) {
               :description="routeItem.mainTable?.name"
               :icon="routeItem.icon || 'lucide:circle'"
               :icon-color="pageIconColor"
-              :content-loading="routesRefreshing"
+              :loading="routesRefreshing"
               @click="navigateTo(`/settings/routes/${getId(routeItem)}`)"
               :top-badge="routeItem.isSystem ? { label: 'System', color: 'info' } : undefined"
               :stats="[
@@ -471,30 +442,7 @@ async function deleteRoute(routeItem: any) {
               ]"
               :methods="getRouteFooterActions(routeItem)"
               :header-actions="getRouteHeaderActions(routeItem)"
-            >
-              <template #skeleton-content>
-                <span class="flex min-w-0 items-center gap-2">
-                  <span class="block h-4 w-56 rounded skeleton-gradient skeleton-pulse-slow" />
-                  <span
-                    v-if="routeItem.isSystem"
-                    class="hidden h-5 w-14 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block"
-                  />
-                </span>
-                <span
-                  v-if="routeItem.mainTable?.name"
-                  class="block h-3 w-32 rounded skeleton-inline skeleton-pulse-slow"
-                />
-                <span class="flex flex-wrap gap-2">
-                  <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-                  <span class="block h-5 w-28 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-                </span>
-              </template>
-
-              <template #skeleton-actions>
-                <span class="hidden h-7 w-10 flex-shrink-0 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow md:block" />
-                <span class="hidden h-8 w-16 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
-              </template>
-            </CommonResourceListItem>
+            />
           </div>
         </div>
 

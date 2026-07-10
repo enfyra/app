@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="w-full min-w-0">
     <template v-if="mode === 'single'">
       <UPopover v-model:open="showModal">
         <UButton
@@ -7,7 +7,7 @@
           :label="modelValue ? formatDate(modelValue) : 'Date'"
           icon="i-heroicons-calendar"
           size="sm"
-          class="min-w-32 min-h-8"
+          class="w-full min-w-0 min-h-8"
         />
         <template #content="{ close }">
           <div class="filter-date-picker-popover p-3 flex flex-col gap-3">
@@ -23,14 +23,14 @@
     </template>
 
     <template v-else-if="mode === 'range'">
-      <div class="flex items-center gap-1">
+      <div class="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1">
         <UPopover v-model:open="showFrom">
           <UButton
             variant="outline"
             :label="modelValue?.[0] ? formatDate(modelValue[0]) : 'From'"
             icon="i-heroicons-calendar"
             size="sm"
-            class="w-24"
+            class="w-full min-w-0"
           />
           <template #content="{ close }">
             <div class="filter-date-picker-popover p-3 flex flex-col gap-3">
@@ -50,7 +50,7 @@
             :label="modelValue?.[1] ? formatDate(modelValue[1]) : 'To'"
             icon="i-heroicons-calendar"
             size="sm"
-            class="w-24"
+            class="w-full min-w-0"
           />
           <template #content="{ close }">
             <div class="filter-date-picker-popover p-3 flex flex-col gap-3">

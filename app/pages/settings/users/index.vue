@@ -22,15 +22,6 @@
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
       :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
     >
-        <template #skeleton-row>
-          <CommonResourceListSkeletonRow
-            title-width="w-56"
-            description-width="w-52"
-            :chips="['w-20', 'w-24']"
-            trailing-width="w-28"
-          />
-        </template>
-
         <CommonResourceListItem
           v-for="user in users"
           :key="user.id"
@@ -38,7 +29,7 @@
           :description="user.email || 'No email'"
           icon="lucide:user"
           :icon-color="pageIconColor"
-          :content-loading="usersRefreshing"
+          :loading="usersRefreshing"
           @click="navigateTo(`/settings/users/${getId(user)}`)"
           :stats="[
             {
@@ -74,20 +65,7 @@
             }
           ]"
           :header-actions="getHeaderActions(user)"
-        >
-          <template #skeleton-content>
-            <span class="block h-4 w-56 rounded skeleton-gradient skeleton-pulse-slow" />
-            <span class="block h-3 w-52 rounded skeleton-inline skeleton-pulse-slow" />
-            <span class="flex flex-wrap gap-2">
-              <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-              <span class="block h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            </span>
-          </template>
-
-          <template #skeleton-actions>
-            <span class="hidden h-8 w-28 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
-          </template>
-        </CommonResourceListItem>
+        />
     </CommonResourceListFrame>
 
     <FilterDrawerLazy

@@ -1,4 +1,5 @@
 export type ResourceListColor = "primary" | "secondary" | "success" | "info" | "warning" | "error" | "neutral";
+export type ResourceListSize = "sm" | "md" | "lg";
 
 export interface ResourceListStat {
   label: string;

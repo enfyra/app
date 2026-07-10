@@ -2,7 +2,7 @@
   <UInput
     v-model="displayValue"
     :placeholder="placeholder"
-    class="min-w-32 min-h-8"
+    class="w-full min-w-0 min-h-8"
     @blur="normalizeInput"
   />
 </template>

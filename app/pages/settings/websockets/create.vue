@@ -57,7 +57,7 @@ const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 const showConnTestModal = ref(false);
 
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -113,6 +113,7 @@ const {
 });
 
 onMounted(async () => {
+  await ensureSchema();
   createForm.value = generateEmptyForm();
 });
 

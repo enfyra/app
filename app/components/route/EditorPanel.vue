@@ -33,8 +33,8 @@ const { getId, getIdFieldName } = useDatabase()
 const idField = getIdFieldName()
 const currentPageRoute = useRoute()
 const router = useRouter()
-const { loadRoutes } = useRoutes()
-const { schemas } = useSchema()
+const { routes, loadRoutes } = useRoutes()
+const { registerDataMenuItemsFromRoutes } = useMenuRegistry()
 const ROUTE_EDITOR_FIELDS = [
   "*",
   "mainTable.id",
@@ -102,18 +102,13 @@ const publicMethodStrings = computed(() => {
   return methods.filter((m: any) => m?.name).map((m: any) => m.name)
 })
 
-const mainTableInfo = computed(() => {
-  const data = routeData.value?.data?.[0]
-  if (props.tableName) return schemas.value?.[props.tableName] || data?.mainTable || null
-  if (!data?.mainTable) return null
-
-  const mainTableId = getId(data.mainTable)
-  if (!mainTableId) return data.mainTable
-
-  return Object.values(schemas.value).find((schema: any) => String(getId(schema)) === String(mainTableId)) || data.mainTable
-})
-
-const mainTableName = computed(() => mainTableInfo.value?.name || props.tableName)
+const mainTableName = computed(
+  () => props.tableName || routeData.value?.data?.[0]?.mainTable?.name || "",
+)
+const { schemas, schema: mainTableSchema } = useSchema(mainTableName)
+const mainTableInfo = computed(
+  () => mainTableSchema.value || routeData.value?.data?.[0]?.mainTable || null,
+)
 
 const {
   handlerAvailableMethods,
@@ -231,9 +226,8 @@ async function updateRoute() {
   errors.value = {}
   hasFormChanges.value = false
 
-  const { registerDataMenuItems } = useMenuRegistry()
   await loadRoutes()
-  await registerDataMenuItems(Object.values(schemas.value))
+  registerDataMenuItemsFromRoutes(routes.value)
 
   await fetchRoute()
   const freshData = routeData.value?.data?.[0]

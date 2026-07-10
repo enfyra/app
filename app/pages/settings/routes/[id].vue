@@ -23,7 +23,6 @@ const { confirm } = useConfirm()
 const { routes, loadRoutes } = useRoutes()
 const { retryUntilFresh } = useServerSync()
 const { getId, getIdFieldName } = useDatabase()
-const { schemas } = useSchema('enfyra_route')
 const { registerPageHeader } = usePageHeaderRegistry()
 const ROUTE_DETAIL_HEADER_FIELDS = [
   'id',
@@ -97,8 +96,8 @@ async function deleteRoute() {
     () => routes.value.some((r: any) => String(getId(r)) === routeId.value),
   )
 
-  const { registerDataMenuItems } = useMenuRegistry()
-  await registerDataMenuItems(Object.values(schemas.value))
+  const { registerDataMenuItemsFromRoutes } = useMenuRegistry()
+  registerDataMenuItemsFromRoutes(routes.value)
   await navigateTo('/settings/routes')
 }
 

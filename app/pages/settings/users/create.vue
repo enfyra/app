@@ -25,7 +25,7 @@ const tableName = "enfyra_user";
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -63,7 +63,8 @@ registerHeaderActions({
   },
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await ensureSchema();
   form.value = generateEmptyForm();
 });
 

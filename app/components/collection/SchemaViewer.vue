@@ -76,14 +76,11 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const { schemas: allSchemas, fetchSchema, schemaLoading } = useSchema();
-const { definition } = useSchema(toRef(props, 'tableName'));
-
-onMounted(async () => {
-  if (Object.keys(allSchemas.value).length === 0) {
-    await fetchSchema();
-  }
-});
+const {
+  schemas: allSchemas,
+  definition,
+  schemaLoading,
+} = useSchema(toRef(props, 'tableName'));
 
 const schemaData = computed(() => definition.value || null);
 

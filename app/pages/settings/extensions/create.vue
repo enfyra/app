@@ -61,7 +61,7 @@ const showUploadModal = ref(false);
 const uploadLoading = ref(false);
 const showPreviewModal = ref(false);
 
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 const { loadGlobalExtensions } = useGlobalExtensions();
@@ -129,7 +129,8 @@ const {
   errorContext: "Create Extension",
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await ensureSchema();
   createForm.value = generateEmptyForm();
 });
 

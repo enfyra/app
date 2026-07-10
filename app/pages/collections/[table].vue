@@ -2,12 +2,12 @@
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
-const { schemas, schemaLoading } = useSchema();
 const { confirm } = useConfirm();
 const notify = useNotify();
 const { getId } = useDatabase();
 const tableName = "enfyra_table";
-const { getIncludeFields } = useSchema(tableName);
+const { getIncludeFields, schemaLoading } = useSchema(tableName);
+const { tables: tableCatalog, loadTableCatalog } = useTableCatalog();
 const { isMobile, isTablet } = useScreen();
 
 const table = ref<any>();
@@ -61,9 +61,9 @@ const {
   pending: loading,
   execute: fetchTableData,
 } = useApi(() => "/enfyra_table", {
-  query: computed(() => ({
+  query: async () => ({
     fields: [
-      getIncludeFields(),
+      await getIncludeFields(),
       "columns.rules.*",
       "columns.fieldPermissions.*",
       "columns.fieldPermissions.role.id",
@@ -84,7 +84,7 @@ const {
         _eq: route.params.table,
       },
     },
-  })),
+  }),
   errorContext: "Fetch Table Data",
 });
 
@@ -445,8 +445,8 @@ watch(
   { deep: true }
 );
 
-onMounted(() => {
-  initializeForm();
+onMounted(async () => {
+  await Promise.all([initializeForm(), loadTableCatalog()]);
 });
 </script>
 
@@ -788,9 +788,9 @@ onMounted(() => {
                     v-model="table.relations"
                     :table-id="getId(table)"
                     :table-options="
-                      Object.values(schemas).map((schema: any) => ({
-                        label: schema?.name,
-                        value: getId(schema),
+                      tableCatalog.map((table) => ({
+                        label: table.name,
+                        value: getId(table),
                       }))
                     "
                   />

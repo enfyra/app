@@ -18,7 +18,7 @@ const columns = useModel(props, "modelValue");
 const isNew = ref(false);
 const errors = ref<Record<string, string>>({});
 
-const { generateEmptyForm, validate } = useSchema("enfyra_column");
+const { ensureSchema, generateEmptyForm, validate } = useSchema("enfyra_column");
 const { deleteIds, getIdFieldName, isMongoDB } = useDatabase();
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -212,7 +212,8 @@ async function saveColumn() {
   editingIndex.value = null;
 }
 
-function addNewColumn() {
+async function addNewColumn() {
+  await ensureSchema();
   isNew.value = true;
   isEditing.value = true;
   currentColumn.value = createEmptyColumn();
@@ -364,7 +365,8 @@ const typeMap = computed(() => {
   };
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await ensureSchema();
   const primaryColumn = createEmptyColumn();
   const { getIdFieldName, isMongoDB } = useDatabase();
   primaryColumn.name = getIdFieldName();

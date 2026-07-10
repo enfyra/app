@@ -255,6 +255,26 @@ button:focus-visible,
   transition: background-color 0.16s ease, box-shadow 0.16s ease;
 }
 
+.eapp-resource-list-item-sm {
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+}
+
+.eapp-resource-list-item-lg {
+  gap: 1rem;
+  padding: 1rem 1.125rem;
+}
+
+.eapp-resource-list-item-sm .eapp-resource-list-leading {
+  width: 2rem;
+  height: 2rem;
+}
+
+.eapp-resource-list-item-lg .eapp-resource-list-leading {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
 .eapp-resource-list-plain .eapp-resource-list-item:first-child {
   border-top: 1px solid color-mix(in srgb, var(--border-default) 70%, var(--surface-default));
 }
@@ -335,6 +355,16 @@ button:focus-visible,
     align-items: flex-start;
     gap: 0.75rem;
     padding: 0.875rem;
+  }
+
+  .eapp-resource-list-item-sm {
+    gap: 0.625rem;
+    padding: 0.625rem;
+  }
+
+  .eapp-resource-list-item-lg {
+    gap: 0.875rem;
+    padding: 1rem;
   }
 
   .eapp-resource-list-actions {
