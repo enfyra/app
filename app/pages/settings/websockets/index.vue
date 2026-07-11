@@ -25,6 +25,7 @@
           :icon="getGatewayIcon(gateway)"
           :icon-color="pageIconColor"
           :loading="gatewaysRefreshing"
+          :to="`/settings/websockets/${getId(gateway)}`"
           :stats="[
             {
               label: 'Status',
@@ -53,7 +54,6 @@
               value: getConnectionCount(getId(gateway)),
             },
           ]"
-          @click="navigateToDetail(gateway)"
           :header-actions="getHeaderActions(gateway)"
           :methods="getFooterActions(gateway)"
         />
@@ -157,10 +157,6 @@ function getEventCount(gatewayId: string | number | null | undefined): number {
 function getConnectionCount(gatewayId: string | number | null | undefined): number {
   if (gatewayId == null) return 0;
   return connectionCounts.value[gatewayId] || 0;
-}
-
-function navigateToDetail(gateway: any) {
-  navigateTo(`/settings/websockets/${getId(gateway)}`);
 }
 
 function getHeaderActions(gateway: any) {

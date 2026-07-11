@@ -31,3 +31,7 @@ export interface ResourceListTopBadge {
   label: string;
   color?: ResourceListColor;
 }
+
+export interface ResourceListLink {
+  to: string;
+}

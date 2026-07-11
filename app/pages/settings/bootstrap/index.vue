@@ -125,7 +125,7 @@ watch(
           icon="lucide:rocket"
           :icon-color="pageIconColor"
           :loading="bootstrapScriptsRefreshing"
-          @click="navigateTo(`/settings/bootstrap/${getId(script)}`)"
+          :to="`/settings/bootstrap/${getId(script)}`"
           :stats="[
             {
               label: 'Type',

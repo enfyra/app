@@ -25,6 +25,7 @@
           :icon="flow.icon || 'i-lucide-workflow'"
           icon-color="primary"
           :loading="flowsRefreshing"
+          :to="`/settings/flows/${getId(flow)}`"
           :stats="[
             {
               label: 'Trigger',
@@ -47,7 +48,6 @@
               value: `${(flow.timeout || 30000) / 1000}s`,
             },
           ]"
-          @click="navigateToDetail(flow)"
           :header-actions="getHeaderActions(flow)"
           :methods="getFooterActions(flow)"
         />
@@ -127,10 +127,6 @@ registerHeaderActions([
   },
 ]);
 
-
-function navigateToDetail(flow: any) {
-  navigateTo(`/settings/flows/${getId(flow)}`);
-}
 
 function getHeaderActions(flow: any) {
   const actions = [];

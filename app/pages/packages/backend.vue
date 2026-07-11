@@ -37,7 +37,7 @@
           icon="lucide:server"
           icon-color="primary"
           :loading="packagesRefreshing"
-          @click="navigateTo(`/packages/${getId(pkg)}`)"
+          :to="`/packages/${getId(pkg)}`"
           :stats="[
             {
               label: 'Version',

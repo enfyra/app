@@ -514,7 +514,7 @@ async function deleteGuard(guard: any) {
               icon="lucide:shield"
               icon-color="primary"
               :loading="guardsRefreshing"
-              @click="navigateTo(`/settings/guards/${getId(guard)}`)"
+              :to="`/settings/guards/${getId(guard)}`"
               :stats="[
                 {
                   label: 'Status',

@@ -77,21 +77,19 @@ function shortenId(id: string | number): string {
   return str.length > 12 ? `${str.slice(0, 4)}…${str.slice(-3)}` : str;
 }
 
-async function navigateToDetail(item: any) {
+function getDetailPath(item: any): string | null {
   const tableName = props.relationMeta?.targetTableName;
 
-  if (!tableName) return;
+  if (!tableName) return null;
 
   const url = resolveRelationDetailPath(tableName, item);
 
   if (url) {
-    await navigateTo(url);
-    return;
+    return url;
   }
 
   const itemId = getId(item);
-  if (!itemId) return;
-  await navigateTo(`/data/${tableName}/${itemId}`);
+  return itemId ? `/data/${tableName}/${itemId}` : null;
 }
 </script>
 
@@ -107,14 +105,14 @@ async function navigateToDetail(item: any) {
         {{ getId(item) ? shortenId(getId(item)) : "Invalid ID" }}
       </span>
 
-      <button
-        type="button"
+      <NuxtLink
+        v-if="getDetailPath(item)"
+        :to="getDetailPath(item)!"
         class="relation-inline-chip-action relation-inline-chip-action-primary px-1.5 flex items-center justify-center text-[10px] transition-colors"
         :title="`Open detail for ${getId(item)}`"
-        @click.stop="navigateToDetail(item)"
       >
         <UIcon name="lucide:arrow-up-right" class="w-3 h-3" />
-      </button>
+      </NuxtLink>
 
       <button
         v-if="!props.disabled"

@@ -26,7 +26,7 @@
           icon="lucide:package-2"
           icon-color="primary"
           :loading="packagesRefreshing"
-          @click="navigateTo(`/packages/${getId(pkg)}`)"
+          :to="`/packages/${getId(pkg)}`"
           :stats="[
             {
               label: 'Version',

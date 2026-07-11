@@ -40,11 +40,11 @@
       />
       <div v-else>
         <div v-if="guards.length > 0" class="space-y-3">
-          <div
+          <NuxtLink
             v-for="guard in guards"
             :key="getId(guard)"
+            :to="`/settings/guards/${getId(guard)}`"
             class="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent surface-muted hover:border-[var(--border-default)] transition-all cursor-pointer"
-            @click="navigateTo(`/settings/guards/${getId(guard)}`)"
           >
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div
@@ -83,17 +83,17 @@
                 class="w-4 h-4 text-[var(--text-tertiary)]"
               />
             </div>
-          </div>
+          </NuxtLink>
 
           <div v-if="globalGuards.length > 0" class="mt-4">
             <div class="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-2">
               Global Guards (also apply to this route)
             </div>
-            <div
+            <NuxtLink
               v-for="guard in globalGuards"
               :key="getId(guard)"
+              :to="`/settings/guards/${getId(guard)}`"
               class="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent surface-muted hover:border-[var(--border-default)] transition-all cursor-pointer mb-2"
-              @click="navigateTo(`/settings/guards/${getId(guard)}`)"
             >
               <div class="flex items-center gap-3 min-w-0 flex-1">
                 <div
@@ -128,7 +128,7 @@
                   class="w-4 h-4 text-[var(--text-tertiary)]"
                 />
               </div>
-            </div>
+            </NuxtLink>
           </div>
         </div>
 
@@ -144,11 +144,11 @@
           <div class="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider mb-2">
             Global Guards (apply to all routes)
           </div>
-          <div
+          <NuxtLink
             v-for="guard in globalGuards"
             :key="getId(guard)"
+            :to="`/settings/guards/${getId(guard)}`"
             class="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent surface-muted hover:border-[var(--border-default)] transition-all cursor-pointer mb-2"
-            @click="navigateTo(`/settings/guards/${getId(guard)}`)"
           >
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div
@@ -171,7 +171,7 @@
                 class="w-4 h-4 text-[var(--text-tertiary)]"
               />
             </div>
-          </div>
+          </NuxtLink>
         </div>
       </div>
     </Transition>

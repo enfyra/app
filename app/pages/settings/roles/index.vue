@@ -126,7 +126,7 @@ watch(
         icon="lucide:shield-check"
         :icon-color="pageIconColor"
         :loading="rolesRefreshing"
-        @click="navigateTo(`/settings/roles/${getId(role)}`)"
+        :to="`/settings/roles/${getId(role)}`"
         :stats="[
           {
             label: 'Created',

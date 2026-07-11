@@ -423,7 +423,7 @@ async function deleteRoute(routeItem: any) {
               :icon="routeItem.icon || 'lucide:circle'"
               :icon-color="pageIconColor"
               :loading="routesRefreshing"
-              @click="navigateTo(`/settings/routes/${getId(routeItem)}`)"
+              :to="`/settings/routes/${getId(routeItem)}`"
               :top-badge="routeItem.isSystem ? { label: 'System', color: 'info' } : undefined"
               :stats="[
                 {

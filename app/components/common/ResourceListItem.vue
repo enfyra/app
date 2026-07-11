@@ -1,7 +1,7 @@
 <template>
   <div
-    role="button"
-    :tabindex="clickable && !isLoading ? 0 : undefined"
+    :role="isNavigable ? undefined : clickable && !isLoading ? 'button' : undefined"
+    :tabindex="isNavigable ? undefined : clickable && !isLoading ? 0 : undefined"
     :class="[
       'eapp-resource-list-item',
       `eapp-resource-list-item-${size}`,
@@ -12,9 +12,16 @@
     ]"
     :aria-busy="isLoading"
     @click="handleClick"
-    @keydown.enter.prevent="handleKeyboardClick"
-    @keydown.space.prevent="handleKeyboardClick"
+    @keydown.enter="handleKeyboardClick"
+    @keydown.space="handleKeyboardClick"
   >
+    <NuxtLink
+      v-if="isNavigable && !isLoading"
+      :to="to"
+      :aria-label="`Open ${title}`"
+      class="absolute inset-0 z-0 rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--theme-focus-ring-strong)]"
+    />
+
     <span
       v-if="icon || avatar"
       :class="[
@@ -102,7 +109,7 @@
 
     <span
       v-else-if="headerActions?.length"
-      class="eapp-resource-list-header-actions"
+      class="relative z-10 eapp-resource-list-header-actions"
     >
       <component
         v-for="(action, index) in headerActions"
@@ -118,7 +125,7 @@
 
     <span
       v-if="!isLoading && normalizedActions.length"
-      class="eapp-resource-list-actions"
+      class="relative z-10 eapp-resource-list-actions"
     >
       <UButton
         v-for="action in normalizedActions"
@@ -137,7 +144,7 @@
 
 <script setup lang="ts">
 import { UAvatar, UBadge, UButton, UChip, UIcon, UKbd, USwitch, UTooltip, MethodBadge } from "#components";
-import type { ResourceListAction, ResourceListHeaderAction, ResourceListSize, ResourceListStat, ResourceListTopBadge } from "~/types/resource-list";
+import type { ResourceListAction, ResourceListHeaderAction, ResourceListLink, ResourceListSize, ResourceListStat, ResourceListTopBadge } from "~/types/resource-list";
 
 const props = withDefaults(defineProps<{
   title: string;
@@ -153,6 +160,7 @@ const props = withDefaults(defineProps<{
   topBadge?: ResourceListTopBadge;
   active?: boolean;
   clickable?: boolean;
+  to?: ResourceListLink["to"];
   itemClass?: string;
   loading?: boolean;
   size?: ResourceListSize;
@@ -170,6 +178,7 @@ const props = withDefaults(defineProps<{
   topBadge: undefined,
   active: false,
   clickable: true,
+  to: undefined,
   itemClass: "",
   loading: false,
   size: "md",
@@ -181,6 +190,7 @@ const emit = defineEmits<{
 }>();
 
 const isLoading = computed(() => props.loading);
+const isNavigable = computed(() => Boolean(props.to));
 
 const componentMap = {
   UAvatar,
@@ -259,13 +269,14 @@ const skeletonStatWidths = computed(() => {
 const normalizedActions = computed(() => props.actions || props.methods || []);
 
 function handleClick(event: MouseEvent) {
-  if (!props.clickable || isLoading.value) return;
+  if (isNavigable.value || !props.clickable || isLoading.value) return;
   props.onClick?.();
   emit("click", event);
 }
 
 function handleKeyboardClick(event: KeyboardEvent) {
-  if (!props.clickable || isLoading.value) return;
+  if (isNavigable.value || !props.clickable || isLoading.value) return;
+  event.preventDefault();
   props.onClick?.();
   emit("click", event);
 }

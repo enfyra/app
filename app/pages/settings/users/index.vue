@@ -30,7 +30,7 @@
           icon="lucide:user"
           :icon-color="pageIconColor"
           :loading="usersRefreshing"
-          @click="navigateTo(`/settings/users/${getId(user)}`)"
+          :to="`/settings/users/${getId(user)}`"
           :stats="[
             {
               label: 'Role',

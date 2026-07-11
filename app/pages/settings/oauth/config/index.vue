@@ -25,6 +25,7 @@
           :icon="getProviderIcon(config.provider)"
           :icon-color="pageIconColor"
           :loading="configsRefreshing"
+          :to="`/settings/oauth/config/${getId(config)}`"
           :stats="[
             {
               label: 'Status',
@@ -40,7 +41,6 @@
               value: maskClientId(config.clientId),
             },
           ]"
-          @click="navigateToDetail(config)"
           :header-actions="getHeaderActions(config)"
         />
   </CommonResourceListFrame>
@@ -162,10 +162,6 @@ function getProviderLabel(provider: string) {
 function maskClientId(clientId: string) {
   if (!clientId || clientId.length < 10) return clientId;
   return clientId.substring(0, 8) + "..." + clientId.substring(clientId.length - 4);
-}
-
-function navigateToDetail(config: OAuthConfigDefinition) {
-  navigateTo(`/settings/oauth/config/${getId(config)}`);
 }
 
 function getHeaderActions(config: OAuthConfigDefinition) {

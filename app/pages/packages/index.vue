@@ -7,14 +7,7 @@
         description="Manage frontend application packages"
         icon="lucide:package"
         icon-color="primary"
-        :actions="[
-          {
-            label: 'Manage',
-            props: { icon: 'lucide:chevron-right', variant: 'ghost', color: 'neutral', size: 'xs' },
-            to: '/packages/app',
-          },
-        ]"
-        @click="navigateTo('/packages/app')"
+        to="/packages/app"
       />
 
       <CommonResourceListItem
@@ -22,14 +15,7 @@
         description="Manage server packages"
         icon="lucide:server"
         icon-color="primary"
-        :actions="[
-          {
-            label: 'Manage',
-            props: { icon: 'lucide:chevron-right', variant: 'ghost', color: 'neutral', size: 'xs' },
-            to: '/packages/backend',
-          },
-        ]"
-        @click="navigateTo('/packages/backend')"
+        to="/packages/backend"
       />
     </div>
 

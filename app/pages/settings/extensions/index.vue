@@ -25,6 +25,7 @@
           :icon="getExtensionIcon(extension)"
           :icon-color="pageIconColor"
           :loading="extensionsRefreshing"
+          :to="`/settings/extensions/${getId(extension)}`"
           :stats="[
             {
               label: 'Type',
@@ -50,7 +51,6 @@
               value: extension.isEnabled ? 'Active' : 'Inactive',
             },
           ]"
-          @click="navigateToDetail(extension)"
           :header-actions="getHeaderActions(extension)"
           :methods="getFooterActions(extension)"
         />
@@ -157,10 +157,6 @@ function getExtensionTypeLabel(type: string) {
     default:
       return "Unknown";
   }
-}
-
-function navigateToDetail(extension: ExtensionDefinition) {
-  navigateTo(`/settings/extensions/${getId(extension)}`);
 }
 
 function getHeaderActions(extension: ExtensionDefinition) {

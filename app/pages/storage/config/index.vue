@@ -22,6 +22,7 @@
       :icon="getStorageIcon(config)"
       icon-color="primary"
       :loading="storageConfigsRefreshing"
+      :to="`/storage/config/${getId(config)}`"
       :stats="[
         {
           label: 'Type',
@@ -38,7 +39,6 @@
       ]"
       :header-actions="getHeaderActions(config)"
       :actions="getActions(config)"
-      @click="navigateToDetail(config)"
     />
   </CommonResourceListFrame>
 </template>
@@ -143,10 +143,6 @@ function getStorageBadgeColor(config: any) {
     "Local Storage": "neutral",
   };
   return colorMap[storageType] || "neutral";
-}
-
-function navigateToDetail(config: any) {
-  navigateTo(`/storage/config/${getId(config)}`);
 }
 
 function isConfigLoading(config: any) {

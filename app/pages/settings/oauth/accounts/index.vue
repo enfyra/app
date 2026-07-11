@@ -25,7 +25,7 @@
       :icon="getProviderIcon(account.provider)"
       :icon-color="pageIconColor"
       :loading="accountsRefreshing"
-      @click="navigateToDetail(account)"
+      :to="`/settings/oauth/accounts/${getId(account)}`"
       :stats="[
         {
           label: 'Provider ID',
@@ -121,10 +121,6 @@ function getUserEmail(account: any) {
 function maskProviderId(id: string) {
   if (!id || id.length < 12) return id ?? "-";
   return id.substring(0, 6) + "..." + id.substring(id.length - 4);
-}
-
-function navigateToDetail(account: any) {
-  navigateTo(`/settings/oauth/accounts/${getId(account)}`);
 }
 
 watch(

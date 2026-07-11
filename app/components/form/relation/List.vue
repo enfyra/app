@@ -4,6 +4,7 @@ const props = defineProps<{
   selected: any[];
   multiple?: boolean;
   disabled?: boolean;
+  getDetailPath?: (item: any) => string | null;
 
   deletePermission?: {
     and?: { route: string; methods: string[] }[];
@@ -13,7 +14,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   toggle: [id: any];
-  "navigate-detail": [item: any];
 }>();
 
 const { getId } = useDatabase();
@@ -40,10 +40,6 @@ function toggleExpand(id: any) {
   }
   
   expandedItems.value = new Set(expandedItems.value);
-}
-
-function navigateToDetail(item: any) {
-  emit("navigate-detail", item);
 }
 
 function getDisplayLabel(
@@ -311,11 +307,12 @@ const { isMobile, isTablet } = useScreen();
             class="flex-shrink-0"
           />
           <UButton
+            v-if="getDetailPath?.(item)"
             icon="lucide:external-link"
             :size="(isMobile || isTablet) ? 'xs' : 'sm'"
             variant="ghost"
             color="neutral"
-            @click.stop="navigateToDetail(item)"
+            :to="getDetailPath?.(item) || undefined"
             title="Navigate to detail page"
             class="flex-shrink-0"
           />

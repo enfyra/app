@@ -221,14 +221,7 @@ function formatCollectionDate(value: string | undefined): string {
         icon="lucide:database"
         :icon-color="collection.isSystem ? 'error' : 'primary'"
         :loading="collectionsRefreshing"
-        :actions="[
-          {
-            label: 'Open',
-            to: `/collections/${collection.name}`,
-            props: { icon: 'lucide:chevron-right', variant: 'ghost', color: 'neutral', size: 'xs' },
-          },
-        ]"
-        @click="navigateTo(`/collections/${collection.name}`)"
+        :to="`/collections/${collection.name}`"
       >
         <template #metadata>
           <div class="mt-2 flex flex-wrap items-center gap-1.5">
