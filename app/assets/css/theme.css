@@ -443,6 +443,8 @@
   --block-low: #2a2a30;
   --block-muted: #313138;
   --block-high: #3a3a42;
+  --card-border: color-mix(in srgb, var(--md-outline-variant) 72%, var(--block-base));
+  --card-border-hover: color-mix(in srgb, var(--md-outline) 72%, var(--block-base));
 
   --danger-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--md-error-container));
   --danger-surface-hover: color-mix(in srgb, var(--md-error) 16%, var(--md-error-container));
