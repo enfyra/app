@@ -253,7 +253,10 @@ export function useRuntimeMetrics() {
   const redisKeysCursor = ref('0');
   const redisKeysPattern = ref('*');
   const redisKeysFilter = ref<RedisAdminKeyFilter>('all');
-  const redisKeysPending = ref(false);
+  const redisKeysPendingCount = ref(0);
+  const redisKeysLoadMorePendingCount = ref(0);
+  const redisKeysPending = computed(() => redisKeysPendingCount.value > 0);
+  const redisKeysLoadMorePending = computed(() => redisKeysLoadMorePendingCount.value > 0);
   const redisDetailPending = ref(false);
   const redisWritePending = ref(false);
   const redisSelectedKey = ref<string | null>(null);
@@ -275,10 +278,11 @@ export function useRuntimeMetrics() {
   }
 
   async function scanRedisKeys(options: { reset?: boolean } = {}) {
-    redisKeysPending.value = true;
+    const reset = options.reset !== false;
+    redisKeysPendingCount.value++;
+    if (!reset) redisKeysLoadMorePendingCount.value++;
     try {
       redisError.value = null;
-      const reset = options.reset !== false;
       const result = await adminSocket.loadRedisKeys({
         cursor: reset ? '0' : redisKeysCursor.value,
         pattern: redisKeysPattern.value || '*',
@@ -298,7 +302,8 @@ export function useRuntimeMetrics() {
       redisError.value = errorMessage(error);
       return null;
     } finally {
-      redisKeysPending.value = false;
+      redisKeysPendingCount.value--;
+      if (!reset) redisKeysLoadMorePendingCount.value--;
     }
   }
 
@@ -535,6 +540,7 @@ export function useRuntimeMetrics() {
     redisKeysPattern,
     redisKeysFilter,
     redisKeysPending,
+    redisKeysLoadMorePending,
     redisDetailPending,
     redisWritePending,
     redisSelectedKey,

@@ -63,31 +63,6 @@ export type RedisAdminOverview = {
   keyCount: number;
   scanned: number;
   scanComplete: boolean;
-  server: {
-    redisVersion?: string;
-    mode?: string;
-    role?: string;
-    os?: string;
-    archBits?: number;
-    processId?: number;
-    tcpPort?: number;
-    configuredHz?: number;
-    uptimeSeconds?: number;
-    usedMemoryHuman?: string;
-    usedMemoryBytes?: number;
-    maxMemoryHuman?: string;
-    maxMemoryBytes?: number;
-    totalSystemMemoryHuman?: string;
-    totalSystemMemoryBytes?: number;
-    allocator?: string;
-    memFragmentationRatio?: number;
-    connectedClients?: number;
-    usedCpuSys?: number;
-    usedCpuUser?: number;
-    usedCpuSysChildren?: number;
-    usedCpuUserChildren?: number;
-  };
-  keyspace: Record<string, string>;
   userCache: {
     usedBytes: number;
     limitBytes: number;
@@ -237,17 +212,10 @@ export type RuntimeMetricsPayload = {
   health?: RuntimeHealthSnapshot;
   cluster?: {
     enabled: boolean;
-    key: string;
-    instanceId: string;
-    activeCount: number;
+    currentAppActiveCount: number;
     staleAfterMs: number;
     heartbeatIntervalMs: number;
     reconcileIntervalMs: number;
-    instances: Array<{
-      id: string;
-      lastSeenAt: string;
-      ageMs: number;
-    }>;
     serverMaxConnections: number | null;
     reserveConnections: number | null;
     targetPoolMax: number | null;

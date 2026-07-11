@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { RedisAdminKeyFilter, RedisAdminKeySummary, RedisAdminSystemKind, RedisAdminValueType } from '~/types/runtime-monitor';
-import { metricTextClass, shortText } from '~/utils/runtime-monitor/core';
-import { fmtBytes, fmtDateTime, fmtNumber, fmtSec } from '~/utils/runtime-monitor/format';
+import { shortText } from '~/utils/runtime-monitor/core';
+import { fmtBytes, fmtNumber, fmtSec } from '~/utils/runtime-monitor/format';
 
 type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
 type KeyEditorMode = 'create' | 'edit';
@@ -45,11 +45,6 @@ let copiedKeyTimer: ReturnType<typeof setTimeout> | null = null;
 
 const overview = computed(() => props.runtime.redisOverview);
 const selected = computed(() => props.runtime.redisSelectedDetail);
-const maxMemoryLabel = computed(() => {
-  const max = overview.value?.server.maxMemoryBytes;
-  if (max === 0) return 'unlimited';
-  return overview.value?.server.maxMemoryHuman || fmtBytes(max);
-});
 const redisSeverity = computed(() => overview.value?.health?.severity ?? 'ok');
 const redisWarnings = computed(() => overview.value?.health?.warnings ?? []);
 const canModifySelected = computed(() => selected.value?.modifiable !== false);
@@ -471,9 +466,9 @@ function openCreateKey() {
     <section class="surface-card min-w-0 rounded-lg p-4">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-default)] pb-3">
         <div>
-          <div class="font-medium text-[var(--text-primary)]">Redis Server</div>
+          <div class="font-medium text-[var(--text-primary)]">Redis Namespace</div>
           <div class="mt-1 text-xs text-[var(--text-tertiary)]">
-            Redis INFO · keyspace · keys
+            Current Enfyra app keys only
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -509,7 +504,7 @@ function openCreateKey() {
         </ul>
       </div>
 
-      <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="mt-4 grid gap-3 sm:grid-cols-2">
         <div class="rounded-lg border border-[var(--border-default)] p-3">
           <div class="text-xs font-medium text-[var(--text-tertiary)]">Keys</div>
           <div class="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{{ fmtNumber(overview?.keyCount ?? 0) }}</div>
@@ -518,33 +513,6 @@ function openCreateKey() {
           </div>
         </div>
         <div class="rounded-lg border border-[var(--border-default)] p-3">
-          <div class="text-xs font-medium text-[var(--text-tertiary)]">Memory</div>
-          <div class="mt-2 text-2xl font-semibold" :class="metricTextClass(redisSeverity)">
-            {{ overview?.server.usedMemoryHuman || fmtBytes(overview?.server.usedMemoryBytes) }}
-          </div>
-          <div class="mt-1 text-xs text-[var(--text-tertiary)]">
-            max {{ maxMemoryLabel }}
-          </div>
-        </div>
-        <div class="rounded-lg border border-[var(--border-default)] p-3">
-          <div class="text-xs font-medium text-[var(--text-tertiary)]">Hardware</div>
-          <div class="mt-2 truncate text-sm font-semibold text-[var(--text-primary)]">
-            {{ overview?.server.os || '-' }}
-          </div>
-          <div class="mt-1 text-xs text-[var(--text-tertiary)]">
-            {{ overview?.server.archBits ?? '-' }} bit · system {{ overview?.server.totalSystemMemoryHuman || fmtBytes(overview?.server.totalSystemMemoryBytes) }}
-          </div>
-        </div>
-        <div class="rounded-lg border border-[var(--border-default)] p-3">
-          <div class="text-xs font-medium text-[var(--text-tertiary)]">Process</div>
-          <div class="mt-2 text-sm font-semibold text-[var(--text-primary)]">
-            Redis {{ overview?.server.redisVersion || '-' }}
-          </div>
-          <div class="mt-1 text-xs text-[var(--text-tertiary)]">
-            pid {{ overview?.server.processId ?? '-' }} · port {{ overview?.server.tcpPort ?? '-' }}
-          </div>
-        </div>
-        <div class="rounded-lg border border-[var(--border-default)] p-3 sm:col-span-2 xl:col-span-4">
           <div class="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
             <div class="min-w-0">
               <div class="text-xs font-medium text-[var(--text-tertiary)]">Allocated Redis Memory</div>
@@ -564,29 +532,7 @@ function openCreateKey() {
         </div>
       </div>
 
-      <div class="mt-4 grid gap-3 xl:grid-cols-2">
-        <div class="rounded-lg border border-[var(--border-default)] p-3">
-          <div class="text-xs font-medium text-[var(--text-tertiary)]">Server Details</div>
-          <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <div>Mode / role</div>
-            <div class="text-right font-medium">{{ overview?.server.mode ?? '-' }} / {{ overview?.server.role ?? '-' }}</div>
-            <div>Uptime</div>
-            <div class="text-right font-medium">{{ fmtSec((overview?.server.uptimeSeconds ?? 0) * 1000) }}</div>
-            <div>Clients</div>
-            <div class="text-right font-medium">{{ overview?.server.connectedClients ?? '-' }}</div>
-            <div>Allocator</div>
-            <div class="truncate text-right font-medium">{{ overview?.server.allocator ?? '-' }}</div>
-            <div>Fragmentation</div>
-            <div class="text-right font-medium" :class="metricTextClass((overview?.server.memFragmentationRatio ?? 0) >= 2 ? 'warning' : 'ok')">
-              {{ overview?.server.memFragmentationRatio ?? '-' }}
-            </div>
-            <div>CPU sys/user</div>
-            <div class="text-right font-medium">{{ overview?.server.usedCpuSys ?? '-' }} / {{ overview?.server.usedCpuUser ?? '-' }}</div>
-            <div>Last read</div>
-            <div class="truncate text-right font-medium">{{ fmtDateTime(runtime.redisOverviewUpdatedAt ? new Date(runtime.redisOverviewUpdatedAt) : null) }}</div>
-          </div>
-        </div>
-
+      <div class="mt-4 grid gap-3">
         <div class="rounded-lg border border-[var(--border-default)] p-3">
           <div class="flex items-center justify-between gap-3">
             <div class="text-xs font-medium text-[var(--text-tertiary)]">Key Categories</div>
@@ -793,8 +739,8 @@ function openCreateKey() {
           variant="soft"
           color="neutral"
           icon="lucide:chevrons-right"
-          :disabled="!canLoadMore"
-          :loading="runtime.redisKeysPending"
+          :disabled="!canLoadMore || runtime.redisKeysPending"
+          :loading="runtime.redisKeysLoadMorePending"
           @click="runtime.scanRedisKeys({ reset: false })"
         >
           Load next keys
