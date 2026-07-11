@@ -75,7 +75,7 @@ const {
   extensionCacheInvalidation,
   isExtensionInvalidationMatch,
 } = useDynamicComponent();
-const { setRouteLoading } = useGlobalState();
+const { beginRouteLoading } = useGlobalState();
 const { findBestMenuMatch } = useMenuRegistry();
 const perf = useExtensionPerf();
 
@@ -93,6 +93,7 @@ const currentExtensionMeta = ref<any>(null);
 const currentPermission = ref<any>(null);
 const isLoading = ref(true);
 const loadRunId = ref(0);
+let endRouteLoading: (() => void) | null = null;
 const isDisabledError = computed(() => error.value?.includes("disabled") ?? false);
 
 const {
@@ -132,6 +133,13 @@ const tryLoadFromCache = (): boolean => {
 
 const isCurrentLoad = (runId: number) => loadRunId.value === runId;
 
+const startRouteLoading = () => {
+  endRouteLoading?.();
+  const endLoading = beginRouteLoading();
+  endRouteLoading = endLoading;
+  return endLoading;
+};
+
 const loadMatchingExtension = async () => {
   const runId = ++loadRunId.value;
   error.value = null;
@@ -147,12 +155,13 @@ const loadMatchingExtension = async () => {
     return;
   }
 
-  setRouteLoading(true);
+  const endLoading = startRouteLoading();
   try {
     await fetchAndLoadExtension(runId);
   } finally {
     if (isCurrentLoad(runId)) {
-      setRouteLoading(false);
+      endLoading();
+      if (endRouteLoading === endLoading) endRouteLoading = null;
       isLoading.value = false;
     }
   }
@@ -235,12 +244,13 @@ watch(() => extensionCacheInvalidation.value, async (invalidation) => {
   error.value = null;
   currentPermission.value = null;
   extensionComponent.value = null;
-  setRouteLoading(true);
+  const endLoading = startRouteLoading();
   try {
     await fetchAndLoadExtension(runId);
   } finally {
     if (isCurrentLoad(runId)) {
-      setRouteLoading(false);
+      endLoading();
+      if (endRouteLoading === endLoading) endRouteLoading = null;
       isLoading.value = false;
     }
   }
@@ -264,7 +274,7 @@ onErrorCaptured((err, _instance, info) => {
   extensionComponent.value = null;
   currentPermission.value = null;
   isLoading.value = false;
-  setRouteLoading(false);
+  endRouteLoading?.();
   console.error("[Dynamic page extension] Runtime error", {
     path: normalizedPath.value,
     extension: currentExtensionMeta.value?.name || currentExtensionMeta.value?.extensionId,
@@ -275,7 +285,7 @@ onErrorCaptured((err, _instance, info) => {
 });
 
 onBeforeUnmount(() => {
-  setRouteLoading(false);
+  endRouteLoading?.();
 });
 
 watch(

@@ -16,6 +16,7 @@ export const useGlobalState = () => {
     () => false
   );
   const routeLoading = useState<boolean>("global:route:loading", () => false);
+  const routeLoadingGeneration = useState<number>("global:route:loading:generation", () => 0);
 
   const fileUpdateTimestamp = useState<Record<string, number>>(
     "global:file:update:timestamp",
@@ -133,7 +134,19 @@ export const useGlobalState = () => {
   }
 
   function setRouteLoading(loading: boolean) {
+    routeLoadingGeneration.value += 1;
     routeLoading.value = loading;
+  }
+
+  function beginRouteLoading() {
+    const generation = routeLoadingGeneration.value + 1;
+    routeLoadingGeneration.value = generation;
+    routeLoading.value = true;
+
+    return () => {
+      if (routeLoadingGeneration.value !== generation) return;
+      routeLoading.value = false;
+    };
   }
   
   const MAX_FILE_TIMESTAMPS = 100;
@@ -173,6 +186,7 @@ export const useGlobalState = () => {
     toggleSidebarCollapsed,
     setSidebarCollapsed,
     setRouteLoading,
+    beginRouteLoading,
     fileUpdateTimestamp,
     updateFileTimestamp,
     getFileTimestamp,
