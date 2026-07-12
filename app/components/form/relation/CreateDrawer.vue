@@ -94,7 +94,6 @@ function confirmDiscard() {
 <template>
   <CommonDrawer
     :handle="false"
-    handle-only
     v-model="show"
     direction="right"
     footer-hint="Ready to create new record?"

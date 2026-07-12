@@ -200,7 +200,6 @@ const { isMobile, isTablet } = useScreen();
   
   <CommonDrawer
     :handle="false"
-    handle-only
     v-model="isDrawerOpen"
     direction="right"
   >

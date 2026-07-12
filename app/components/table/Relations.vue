@@ -445,7 +445,6 @@ async function removeRelation(index: number) {
 
   <CommonDrawer
     :handle="false"
-    handle-only
     v-model="isEditing"
     direction="right"
     :footer-hint="isNew ? 'Ready to create new relation?' : 'Ready to update relation?'"

@@ -574,7 +574,6 @@ watch(
 
   <CommonDrawer
     :handle="false"
-    handle-only
     v-model="isEditing"
     direction="right"
     :footer-hint="editingIndex !== null ? 'Ready to update column?' : 'Ready to create new column?'"

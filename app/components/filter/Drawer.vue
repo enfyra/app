@@ -81,7 +81,6 @@ const { isMobile, isTablet } = useScreen();
 <template>
   <CommonDrawer
     :handle="false"
-    handle-only
     :model-value="modelValue"
     @update:model-value="(value) => (value ? null : handleClose())"
     direction="right"
