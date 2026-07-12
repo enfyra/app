@@ -45,7 +45,7 @@ export default defineAppConfig({
     },
     toast: {
       slots: {
-        root: "surface-card relative group overflow-hidden p-3 flex items-start gap-3 shadow-[var(--shadow-md)] ring-1 ring-[var(--card-border)] focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",
+        root: "relative group flex items-start gap-3 overflow-visible rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--card-bg)] p-3 shadow-[var(--shadow-md)] backdrop-blur-[18px] ring-1 ring-[var(--card-border)] focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",
         wrapper: "min-w-0 flex-1 py-0.5",
         title: "truncate text-sm font-bold text-[var(--text-primary)]",
         description: "mt-1 text-sm leading-5 text-[var(--text-tertiary)]",
@@ -497,7 +497,7 @@ export default defineAppConfig({
           "data-[state=unchecked]:bg-[var(--md-surface-container-high)]",
         ].join(" "),
         thumb: [
-          "pointer-events-none block h-5 w-5 rounded-full shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+          "pointer-events-none flex h-5 w-5 items-center justify-center rounded-full shadow-lg ring-0 transition-transform duration-200 ease-in-out",
           "bg-[var(--md-outline)] group-data-[state=checked]:bg-[var(--md-on-primary)]",
           "data-[state=checked]:translate-x-5",
           "data-[state=unchecked]:translate-x-0",

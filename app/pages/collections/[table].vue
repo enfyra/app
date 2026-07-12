@@ -163,7 +163,7 @@ registerHeaderActions([
     color: "primary",
     order: 999,
     show: computed(() => activeTab.value === 'schema'),
-    loading: computed(() => saving.value || schemaLoading.value),
+    loading: computed(() => saving.value),
     disabled: computed(
       () =>
         (table.value?.isSystem &&

@@ -1,12 +1,5 @@
 <script setup lang="ts">
-const colorMode = useColorMode();
 const { $primaryColor } = useNuxtApp();
-
-const isDark = computed(() => colorMode.value === "dark");
-
-function setThemeMode(mode: "light" | "dark") {
-  colorMode.preference = mode;
-}
 </script>
 
 <template>
@@ -17,30 +10,12 @@ function setThemeMode(mode: "light" | "dark") {
           <UIcon name="lucide:sun-moon" class="h-4 w-4 shrink-0 text-[var(--text-tertiary)]" />
           <span class="truncate">Appearance</span>
         </div>
-        <div class="flex shrink-0 items-center gap-1 rounded-[var(--radius-pill)] border border-[var(--border-default)] bg-[var(--surface-muted)] p-0.5">
-          <button
-            type="button"
-            class="inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)]"
-            :class="!isDark ? 'bg-[var(--surface-default)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] ring-1 ring-inset ring-[var(--border-default)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'"
-            :aria-pressed="!isDark"
-            aria-label="Use light mode"
-            title="Light mode"
-            @click="setThemeMode('light')"
-          >
-            <UIcon name="lucide:sun" class="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            class="inline-flex h-6 w-6 items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)]"
-            :class="isDark ? 'bg-[var(--surface-default)] text-[var(--text-primary)] shadow-[var(--shadow-sm)] ring-1 ring-inset ring-[var(--border-default)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'"
-            :aria-pressed="isDark"
-            aria-label="Use dark mode"
-            title="Dark mode"
-            @click="setThemeMode('dark')"
-          >
-            <UIcon name="lucide:moon" class="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <UColorModeSwitch
+          :ui="{
+            base: '!transition-none',
+            icon: '!transition-none group-data-[state=unchecked]:!text-[var(--surface-default)]',
+          }"
+        />
       </div>
 
       <div>

@@ -7,6 +7,7 @@ const props = defineProps<{
 
 const { confirm } = useConfirm();
 const table = useModel(props, "modelValue");
+const expandedIndexCoverage = ref<string[]>([]);
 
 function addUniqueGroup() {
   if (!table.value.uniques) table.value.uniques = [];
@@ -89,19 +90,34 @@ function hasDuplicateGroup(list: string[][], groupIndex: number | string, orderM
   });
 }
 
-function isIndexAlreadyUnique(groupIndex: number | string): boolean {
-  const idx = Number(groupIndex);
-  if (!table.value.indexes) return false;
-  const indexGroup = table.value.indexes[idx];
-  if (!indexGroup || indexGroup.some((f: string) => !f)) return false;
-
-  const normalizedIndex = indexGroup.join(',');
-
-  if (!table.value.uniques) return false;
-  return table.value.uniques.some((uniqueGroup: string[]) => {
+function getCoveringUniqueConstraints(indexGroup: string[]): string[][] {
+  if (!indexGroup || indexGroup.some((field: string) => !field)) return [];
+  if (!table.value.uniques) return [];
+  return table.value.uniques.filter((uniqueGroup: string[]) => {
     if (uniqueGroup.some((f: string) => !f)) return false;
-    return uniqueGroup.join(',') === normalizedIndex;
+    return uniqueGroup.length >= indexGroup.length
+      && indexGroup.every((field: string, fieldIndex: number) => uniqueGroup[fieldIndex] === field);
   });
+}
+
+function isIndexAlreadyUnique(groupIndex: number | string): boolean {
+  const indexGroup = table.value.indexes?.[Number(groupIndex)];
+  return Array.isArray(indexGroup) && getCoveringUniqueConstraints(indexGroup).length > 0;
+}
+
+function indexCoverageKey(group: string[]): string {
+  return group.join('\u0000');
+}
+
+function isIndexCoverageExpanded(group: string[]): boolean {
+  return expandedIndexCoverage.value.includes(indexCoverageKey(group));
+}
+
+function toggleIndexCoverage(group: string[]) {
+  const key = indexCoverageKey(group);
+  expandedIndexCoverage.value = isIndexCoverageExpanded(group)
+    ? expandedIndexCoverage.value.filter(item => item !== key)
+    : [...expandedIndexCoverage.value, key];
 }
 
 function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redundant' | null {
@@ -197,7 +213,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
         <UTooltip v-if="getIndexWarningType(gIndex) === 'duplicate'" text="This combination already exists in another index">
           <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 text-[var(--md-error)]" />
         </UTooltip>
-        <UTooltip v-else-if="getIndexWarningType(gIndex) === 'redundant'" text="This combination is already a Unique constraint - index is created automatically">
+        <UTooltip v-else-if="getIndexWarningType(gIndex) === 'redundant'" text="This index is already covered by a Unique constraint - index is created automatically">
           <UIcon name="i-lucide-info" class="w-4 h-4 text-[var(--st-warning)]" />
         </UTooltip>
 
@@ -237,6 +253,37 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           @click="removeIndexGroupConfirm(gIndex)"
           :disabled="table.isSystem"
         />
+        <button
+          v-if="getIndexWarningType(gIndex) === 'redundant'"
+          type="button"
+          class="ml-auto inline-flex items-center gap-1 text-xs font-medium text-[var(--state-warning-soft-text)] hover:text-[var(--state-warning-title-text)]"
+          :aria-expanded="isIndexCoverageExpanded(group)"
+          @click="toggleIndexCoverage(group)"
+        >
+          <span>View coverage</span>
+          <UIcon
+            :name="isIndexCoverageExpanded(group) ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+            class="h-3.5 w-3.5"
+          />
+        </button>
+        <div
+          v-if="getIndexWarningType(gIndex) === 'redundant' && isIndexCoverageExpanded(group)"
+          class="w-full rounded-[var(--radius-subcontrol)] border border-[var(--state-warning-outline-border)] bg-[var(--surface-default)] px-3 py-2 text-xs text-[var(--state-warning-soft-text)]"
+        >
+          <p>
+            <code class="font-mono text-[var(--state-warning-title-text)]">{{ group.join(', ') }}</code>
+            is the leading field prefix of these unique constraints, which already create the lookup index:
+          </p>
+          <ul class="mt-1.5 space-y-1">
+            <li
+              v-for="uniqueGroup in getCoveringUniqueConstraints(group)"
+              :key="uniqueGroup.join(',')"
+              class="font-mono text-[var(--state-warning-title-text)]"
+            >
+              {{ uniqueGroup.join(', ') }}
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>

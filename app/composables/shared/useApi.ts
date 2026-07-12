@@ -19,6 +19,32 @@ interface ExecuteOptions {
   concurrent?: number;
 }
 
+function formatSchemaIndexConflict(apiError: ApiError): string | null {
+  const envelope = apiError.data?.error ?? apiError.data;
+  if (
+    envelope?.code !== 'SCHEMA_INDEX_OVER_UNIQUE_FIELD'
+    && envelope?.details?.code !== 'SCHEMA_INDEX_OVER_UNIQUE_FIELD'
+  ) return null;
+
+  const conflicts = envelope.details?.conflicts;
+  if (!Array.isArray(conflicts) || conflicts.length === 0) return null;
+
+  return conflicts
+    .map((conflict: any) => {
+      const index = Array.isArray(conflict?.index) ? conflict.index.join(', ') : '';
+      const uniques = Array.isArray(conflict?.uniqueConstraints)
+        ? conflict.uniqueConstraints
+          .map((constraint: any) => Array.isArray(constraint?.fields) ? constraint.fields.join(', ') : '')
+          .filter(Boolean)
+        : [];
+      if (!index || uniques.length === 0) return null;
+      return `Index (${index}) overlaps unique constraint${uniques.length > 1 ? 's' : ''}: ${uniques.map((fields: string) => `(${fields})`).join(', ')}.`;
+    })
+    .filter((description: string | null): description is string => Boolean(description))
+    .join(' ')
+    || null;
+}
+
 async function resolveApiQueryValue(value: any, invokeGetter = false): Promise<any> {
   let resolved = unref(value);
   if (invokeGetter && typeof resolved === "function") {
@@ -286,7 +312,11 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         if (Array.isArray(errorMessage)) {
           errorMessage = errorMessage.join(". ");
         }
-        notify.error("Error", errorMessage);
+        const schemaConflict = formatSchemaIndexConflict(apiError);
+        notify.error(
+          schemaConflict ? "Schema constraint conflict" : "Error",
+          schemaConflict || errorMessage,
+        );
       }
       error.value = apiError;
       status.value = "error";
