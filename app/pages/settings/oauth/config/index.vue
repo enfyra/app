@@ -17,15 +17,6 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-        <template #skeleton-row>
-          <CommonResourceListSkeletonRow
-            title-width="w-36"
-            description-width="w-1/2 max-w-[28rem]"
-            :chips="['w-20', 'w-28']"
-            trailing-width="w-10"
-          />
-        </template>
-
         <CommonResourceListItem
           v-for="config in configs"
           :key="config.id"
@@ -33,7 +24,8 @@
           :description="config.description || `Configure ${getProviderLabel(config.provider)} OAuth`"
           :icon="getProviderIcon(config.provider)"
           :icon-color="pageIconColor"
-          :content-loading="configsRefreshing"
+          :loading="configsRefreshing"
+          :to="`/settings/oauth/config/${getId(config)}`"
           :stats="[
             {
               label: 'Status',
@@ -49,21 +41,8 @@
               value: maskClientId(config.clientId),
             },
           ]"
-          @click="navigateToDetail(config)"
           :header-actions="getHeaderActions(config)"
-        >
-          <template #skeleton-content>
-            <span class="block h-4 w-36 rounded skeleton-gradient skeleton-pulse-slow" />
-            <span class="block h-3 w-1/2 max-w-[28rem] rounded skeleton-inline skeleton-pulse-slow" />
-            <span class="flex flex-wrap gap-2">
-              <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-              <span class="block h-5 w-28 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            </span>
-          </template>
-          <template #skeleton-actions>
-            <span class="hidden h-7 w-10 flex-shrink-0 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow md:block" />
-          </template>
-        </CommonResourceListItem>
+        />
   </CommonResourceListFrame>
 </template>
 
@@ -183,10 +162,6 @@ function getProviderLabel(provider: string) {
 function maskClientId(clientId: string) {
   if (!clientId || clientId.length < 10) return clientId;
   return clientId.substring(0, 8) + "..." + clientId.substring(clientId.length - 4);
-}
-
-function navigateToDetail(config: OAuthConfigDefinition) {
-  navigateTo(`/settings/oauth/config/${getId(config)}`);
 }
 
 function getHeaderActions(config: OAuthConfigDefinition) {

@@ -652,7 +652,7 @@ function getComponentConfigByKey(key: string) {
         componentProps: {
           ...componentPropsBase,
           disabled: disabled,
-          modelValue: props.formData[key],
+          modelValue: props.formData[key] ?? null,
           "onUpdate:modelValue": (val: Date | null) => {
             updateFormData(key, val);
           },
@@ -669,7 +669,7 @@ function getComponentConfigByKey(key: string) {
         componentProps: {
           ...componentPropsBase,
           disabled: disabled,
-          modelValue: props.formData[key],
+          modelValue: props.formData[key] ?? null,
           "onUpdate:modelValue": (val: string | null) => {
             updateFormData(key, val);
           },

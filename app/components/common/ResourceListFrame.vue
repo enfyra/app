@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ResourceListSize } from "~/types/resource-list";
+
 type PaginationColor = "primary" | "secondary" | "success" | "info" | "warning" | "error" | "neutral";
 
 const page = defineModel<number>("page", { default: 1 });
@@ -15,6 +17,7 @@ const props = withDefaults(defineProps<{
   loadingType?: "dots" | "spinner" | "skeleton" | "table" | "form" | "card" | "folder" | "file-card" | "menu" | "resource-list";
   loadingContext?: "page" | "modal" | "inline" | "button";
   skeletonRows?: number;
+  itemSize?: ResourceListSize;
   emptyTitle?: string;
   emptyDescription?: string;
   emptyIcon?: string;
@@ -39,6 +42,7 @@ const props = withDefaults(defineProps<{
   loadingType: "resource-list",
   loadingContext: "page",
   skeletonRows: 9,
+  itemSize: "md",
   emptyTitle: "No items found",
   emptyDescription: undefined,
   emptyIcon: "lucide:inbox",
@@ -83,7 +87,13 @@ const resourceListClass = computed(() => [
             name="skeleton-row"
             :row="row"
           >
-            <CommonResourceListSkeletonRow />
+            <CommonResourceListItem
+              title=""
+              description=""
+              icon="lucide:circle"
+              :size="itemSize"
+              :loading="true"
+            />
           </slot>
         </div>
         <CommonLoadingState

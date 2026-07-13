@@ -36,7 +36,7 @@ const tableName = "enfyra_storage_config";
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -109,7 +109,8 @@ const {
   errorContext: "Create Storage Configuration",
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await ensureSchema();
   createForm.value = generateEmptyForm();
 });
 

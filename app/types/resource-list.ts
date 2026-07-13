@@ -1,4 +1,5 @@
 export type ResourceListColor = "primary" | "secondary" | "success" | "info" | "warning" | "error" | "neutral";
+export type ResourceListSize = "sm" | "md" | "lg";
 
 export interface ResourceListStat {
   label: string;
@@ -29,4 +30,8 @@ export interface ResourceListHeaderAction {
 export interface ResourceListTopBadge {
   label: string;
   color?: ResourceListColor;
+}
+
+export interface ResourceListLink {
+  to: string;
 }

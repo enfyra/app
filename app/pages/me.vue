@@ -78,10 +78,6 @@ function maskProviderId(id: string) {
   return id.substring(0, 6) + "..." + id.substring(id.length - 4);
 }
 
-function navigateToOauthAccount(account: any) {
-  navigateTo(`/settings/oauth/accounts/${getId(account)}`);
-}
-
 const fieldMap = computed(() => ({
   email: {
     disabled: true
@@ -245,11 +241,11 @@ onMounted(() => {
           type="card"
         />
         <div v-else-if="oauthAccounts.length > 0" class="profile-list">
-          <div
+          <NuxtLink
             v-for="account in oauthAccounts"
             :key="getId(account)"
+            :to="`/settings/oauth/accounts/${getId(account)}`"
             class="profile-list-item group"
-            @click="navigateToOauthAccount(account)"
           >
             <div class="profile-list-icon">
               <UIcon :name="getProviderIcon(account.provider)" class="w-5 h-5 text-[var(--text-secondary)]" />
@@ -263,7 +259,7 @@ onMounted(() => {
               </p>
             </div>
             <UIcon name="lucide:chevron-right" class="w-4 h-4 text-[var(--text-quaternary)] group-hover:text-[var(--text-tertiary)] transition-colors flex-shrink-0" />
-          </div>
+          </NuxtLink>
         </div>
         <CommonEmptyState
           v-else

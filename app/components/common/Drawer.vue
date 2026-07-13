@@ -85,7 +85,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
     v-if="hasContent"
     v-model:open="isOpen"
     :handle="props.handle"
-    :handle-only="props.handleOnly"
+    :handle-only="true"
     :direction="props.direction"
     :inset="true"
     :nested="props.nested"

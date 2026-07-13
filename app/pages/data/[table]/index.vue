@@ -29,7 +29,7 @@ const {
   data: singleRecordData,
   execute: fetchSingleRecord,
 } = useApi(() => getRouteForTableName(tableName.value), {
-  query: { limit: 1, fields: getColumnFields() },
+  query: computed(() => ({ limit: 1, fields: getColumnFields() })),
   immediate: false,
   errorContext: "Fetch Single Record",
 });
@@ -350,9 +350,9 @@ watch(tableName, () => {
 });
 
 watch(
-  () => [route.query.page, tableName.value, isSingleRecord.value] as const,
-  async ([newVal]) => {
-    if (isSingleRecord.value) return;
+  () => [route.query.page, tableName.value, isSingleRecord.value, schemaReady.value] as const,
+  async ([newVal, , singleRecord, ready]) => {
+    if (!ready || singleRecord) return;
     page.value = newVal ? Number(newVal) : 1;
     await fetchData();
   },

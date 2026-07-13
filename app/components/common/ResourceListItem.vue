@@ -1,39 +1,57 @@
 <template>
   <div
-    role="button"
-    :tabindex="clickable && !contentLoading ? 0 : undefined"
+    :role="isNavigable ? undefined : clickable && !isLoading ? 'button' : undefined"
+    :tabindex="isNavigable ? undefined : clickable && !isLoading ? 0 : undefined"
     :class="[
       'eapp-resource-list-item',
+      `eapp-resource-list-item-${size}`,
       active ? 'eapp-resource-list-item-active' : '',
-      clickable && !contentLoading ? 'cursor-pointer' : 'cursor-default',
-      contentLoading ? 'pointer-events-none cursor-wait' : '',
+      clickable && !isLoading ? 'cursor-pointer' : 'cursor-default',
+      isLoading ? 'pointer-events-none cursor-wait' : '',
       itemClass,
     ]"
-    :aria-busy="contentLoading"
+    :aria-busy="isLoading"
     @click="handleClick"
-    @keydown.enter.prevent="handleKeyboardClick"
-    @keydown.space.prevent="handleKeyboardClick"
+    @keydown.enter="handleKeyboardClick"
+    @keydown.space="handleKeyboardClick"
   >
+    <NuxtLink
+      v-if="isNavigable && !isLoading"
+      :to="to"
+      :aria-label="`Open ${title}`"
+      class="absolute inset-0 z-0 rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--theme-focus-ring-strong)]"
+    />
+
     <span
       v-if="icon || avatar"
       :class="[
         'eapp-resource-list-leading',
-        contentLoading ? 'skeleton-gradient skeleton-pulse-slow' : avatar ? avatarClass : iconBgClass,
+        isLoading ? 'skeleton-gradient skeleton-pulse-slow' : avatar ? avatarClass : iconBgClass,
       ]"
     >
-      <slot v-if="contentLoading" name="skeleton-leading" />
+      <slot v-if="isLoading" name="skeleton-leading" />
       <UIcon v-else :name="normalizedIcon" class="size-4" />
     </span>
 
     <span class="min-w-0 flex-1 text-left">
-      <span v-if="contentLoading" class="block space-y-2">
+      <span v-if="isLoading" :class="['block', size === 'sm' ? 'space-y-1.5' : 'space-y-2']">
         <slot name="skeleton-content">
-          <span class="block h-4 w-1/3 max-w-72 rounded skeleton-gradient skeleton-pulse-slow" />
-          <span class="block h-3 w-2/3 max-w-[34rem] rounded skeleton-inline skeleton-pulse-slow" />
-          <span class="flex gap-2">
-            <span class="block h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            <span class="hidden h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
+          <span class="flex min-w-0 items-center gap-2">
+            <span class="block h-4 w-1/3 max-w-72 rounded skeleton-gradient skeleton-pulse-slow" />
+            <span v-if="size === 'sm'" class="block h-5 w-12 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+            <span v-if="size === 'sm'" class="block h-5 w-14 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+          </span>
+          <span v-if="description !== undefined" class="block h-3 w-2/3 max-w-[34rem] rounded skeleton-inline skeleton-pulse-slow" />
+          <span v-if="size !== 'sm' && skeletonStatWidths.length" class="flex gap-2">
+            <span
+              v-for="(width, index) in skeletonStatWidths"
+              :key="index"
+              :class="[
+                'block h-5 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow',
+                width,
+                index > 2 ? 'hidden sm:block' : '',
+              ]"
+            />
           </span>
         </slot>
       </span>
@@ -83,7 +101,7 @@
     </span>
 
     <slot
-      v-if="contentLoading && (headerActions?.length || normalizedActions.length)"
+      v-if="isLoading && (headerActions?.length || normalizedActions.length)"
       name="skeleton-actions"
     >
       <span class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
@@ -91,7 +109,7 @@
 
     <span
       v-else-if="headerActions?.length"
-      class="eapp-resource-list-header-actions"
+      class="relative z-10 eapp-resource-list-header-actions"
     >
       <component
         v-for="(action, index) in headerActions"
@@ -106,8 +124,8 @@
     </span>
 
     <span
-      v-if="!contentLoading && normalizedActions.length"
-      class="eapp-resource-list-actions"
+      v-if="!isLoading && normalizedActions.length"
+      class="relative z-10 eapp-resource-list-actions"
     >
       <UButton
         v-for="action in normalizedActions"
@@ -126,7 +144,7 @@
 
 <script setup lang="ts">
 import { UAvatar, UBadge, UButton, UChip, UIcon, UKbd, USwitch, UTooltip, MethodBadge } from "#components";
-import type { ResourceListAction, ResourceListHeaderAction, ResourceListStat, ResourceListTopBadge } from "~/types/resource-list";
+import type { ResourceListAction, ResourceListHeaderAction, ResourceListLink, ResourceListSize, ResourceListStat, ResourceListTopBadge } from "~/types/resource-list";
 
 const props = withDefaults(defineProps<{
   title: string;
@@ -142,8 +160,10 @@ const props = withDefaults(defineProps<{
   topBadge?: ResourceListTopBadge;
   active?: boolean;
   clickable?: boolean;
+  to?: ResourceListLink["to"];
   itemClass?: string;
-  contentLoading?: boolean;
+  loading?: boolean;
+  size?: ResourceListSize;
   onClick?: () => void;
 }>(), {
   description: undefined,
@@ -158,14 +178,19 @@ const props = withDefaults(defineProps<{
   topBadge: undefined,
   active: false,
   clickable: true,
+  to: undefined,
   itemClass: "",
-  contentLoading: false,
+  loading: false,
+  size: "md",
   onClick: undefined,
 });
 
 const emit = defineEmits<{
   click: [event: Event];
 }>();
+
+const isLoading = computed(() => props.loading);
+const isNavigable = computed(() => Boolean(props.to));
 
 const componentMap = {
   UAvatar,
@@ -235,16 +260,23 @@ const visibleStats = computed(() =>
   (props.stats || []).filter((stat) => stat.value !== undefined && stat.value !== null && stat.value !== ""),
 );
 
+const skeletonStatWidths = computed(() => {
+  const count = props.stats === undefined ? 3 : visibleStats.value.length;
+  const widths = ["w-16", "w-20", "w-24", "w-16"];
+  return Array.from({ length: count }, (_, index) => widths[index % widths.length]);
+});
+
 const normalizedActions = computed(() => props.actions || props.methods || []);
 
 function handleClick(event: MouseEvent) {
-  if (!props.clickable || props.contentLoading) return;
+  if (isNavigable.value || !props.clickable || isLoading.value) return;
   props.onClick?.();
   emit("click", event);
 }
 
 function handleKeyboardClick(event: KeyboardEvent) {
-  if (!props.clickable || props.contentLoading) return;
+  if (isNavigable.value || !props.clickable || isLoading.value) return;
+  event.preventDefault();
   props.onClick?.();
   emit("click", event);
 }

@@ -123,6 +123,7 @@ export interface TableApiResponse {
   name: string;
   alias?: string | null;
   description?: string | null;
+  icon?: string | null;
   isSystem?: boolean;
   indexes?: any[] | null;
   uniques?: any[][] | null;

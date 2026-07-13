@@ -118,15 +118,6 @@ watch(
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-      <template #skeleton-row>
-        <CommonResourceListSkeletonRow
-          title-width="w-40"
-          description-width="w-1/2 max-w-[28rem]"
-          :chips="['w-24', 'w-16', 'w-14']"
-          trailing-width="w-20"
-        />
-      </template>
-
       <CommonResourceListItem
         v-for="role in roles"
         :key="role.id"
@@ -134,8 +125,8 @@ watch(
         :description="role.description || 'No description'"
         icon="lucide:shield-check"
         :icon-color="pageIconColor"
-        :content-loading="rolesRefreshing"
-        @click="navigateTo(`/settings/roles/${getId(role)}`)"
+        :loading="rolesRefreshing"
+        :to="`/settings/roles/${getId(role)}`"
         :stats="[
           {
             label: 'Created',
@@ -168,19 +159,6 @@ watch(
             },
           }
         ]"
-      >
-        <template #skeleton-content>
-          <span class="block h-4 w-40 rounded skeleton-gradient skeleton-pulse-slow" />
-          <span class="block h-3 w-1/2 max-w-[28rem] rounded skeleton-inline skeleton-pulse-slow" />
-          <span class="flex flex-wrap gap-2">
-            <span class="block h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            <span class="block h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            <span class="hidden h-5 w-14 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
-          </span>
-        </template>
-        <template #skeleton-actions>
-          <span class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
-        </template>
-      </CommonResourceListItem>
+      />
   </CommonResourceListFrame>
 </template>

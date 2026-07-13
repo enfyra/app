@@ -1,6 +1,6 @@
 <template>
   
-  <div v-if="operator === '_is_null'" class="flex items-center gap-2 min-w-32">
+  <div v-if="operator === '_is_null'" class="flex w-full min-w-0 items-center gap-2">
     <UCheckbox 
       :model-value="modelValue" 
       @update:model-value="emit('update:modelValue', $event)"
@@ -18,7 +18,7 @@
       { label: 'False', value: false },
     ]"
     @update:model-value="emit('update:modelValue', $event)"
-    class="min-w-32 min-h-8"
+    class="w-full min-w-0 min-h-8"
   />
 
   <FilterDatePicker
@@ -37,13 +37,13 @@
 
   <div
     v-else-if="fieldType === 'number' && needsTwoValues(operator)"
-    class="flex items-center gap-1"
+    class="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1"
   >
     <UInput
       :model-value="modelValue?.[0] || ''"
       @update:model-value="handleRangeUpdate(0, $event)"
       type="number"
-      class="w-24"
+      class="w-full min-w-0"
       placeholder="From"
     />
     <span class="text-xs text-[var(--text-tertiary)]">and</span>
@@ -51,7 +51,7 @@
       :model-value="modelValue?.[1] || ''"
       @update:model-value="handleRangeUpdate(1, $event)"
       type="number"
-      class="w-24"
+      class="w-full min-w-0"
       placeholder="To"
     />
   </div>
@@ -65,7 +65,7 @@
     :items="enumOptions"
     multiple
     @update:model-value="emit('update:modelValue', $event)"
-    class="min-w-32 min-h-8"
+    class="w-full min-w-0 min-h-8"
   />
 
   <USelect
@@ -73,7 +73,7 @@
     :model-value="modelValue"
     :items="enumOptions"
     @update:model-value="emit('update:modelValue', $event)"
-    class="min-w-32 min-h-8"
+    class="w-full min-w-0 min-h-8"
   />
 
   <FilterArrayInput
@@ -88,7 +88,7 @@
     :model-value="modelValue"
     @update:model-value="emit('update:modelValue', $event)"
     :type="getInputType(fieldType)"
-    class="min-w-32 min-h-8"
+    class="w-full min-w-0 min-h-8"
     :placeholder="getInputPlaceholder(operator, fieldType)"
   />
 </template>

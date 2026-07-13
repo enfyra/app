@@ -40,9 +40,9 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const { getIncludeFields: getPreHookIncludeFields } = useSchema("enfyra_pre_hook");
   const { getIncludeFields: getPostHookIncludeFields } = useSchema("enfyra_post_hook");
   const { getIncludeFields: getHandlerIncludeFields } = useSchema("enfyra_route_handler");
-  const { generateEmptyForm: generateHandlerEmptyForm, validate: validateHandler } = useSchema("enfyra_route_handler");
-  const { generateEmptyForm: generatePreHookEmptyForm, validate: validatePreHook } = useSchema("enfyra_pre_hook");
-  const { generateEmptyForm: generatePostHookEmptyForm, validate: validatePostHook } = useSchema("enfyra_post_hook");
+  const { ensureSchema: ensureHandlerSchema, generateEmptyForm: generateHandlerEmptyForm, validate: validateHandler } = useSchema("enfyra_route_handler");
+  const { ensureSchema: ensurePreHookSchema, generateEmptyForm: generatePreHookEmptyForm, validate: validatePreHook } = useSchema("enfyra_pre_hook");
+  const { ensureSchema: ensurePostHookSchema, generateEmptyForm: generatePostHookEmptyForm, validate: validatePostHook } = useSchema("enfyra_post_hook");
   const methodsCache = useState<any[]>("methods-cache", () => []);
 
   const {
@@ -200,7 +200,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     errorContext: "Create Handler",
   });
 
-  function createHandler(methodObject?: MethodObject) {
+  async function createHandler(methodObject?: MethodObject) {
     if (methodObject) {
       if (handlerOccupiedMethods.value.has(methodObject.name)) {
         notify.warning("Handler exists", `This route already has a handler for ${methodObject.name}.`);
@@ -211,6 +211,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
       return;
     }
 
+    await ensureHandlerSchema();
     handlerForm.value = generateHandlerEmptyForm();
     handlerForm.value.route = { [options.idField]: options.routeId.value };
     if (methodObject) {
@@ -352,8 +353,9 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
 
   const createHookLoading = computed(() => createPreHookLoading.value || createPostHookLoading.value);
 
-  function createHook(type?: "pre" | "post", method?: string, priority?: number) {
+  async function createHook(type?: "pre" | "post", method?: string, priority?: number) {
     hookType.value = type || "pre";
+    await (hookType.value === "pre" ? ensurePreHookSchema() : ensurePostHookSchema());
     hookForm.value = hookType.value === "pre" ? generatePreHookEmptyForm() : generatePostHookEmptyForm();
     hookForm.value.route = { [options.idField]: options.routeId.value };
     if (method) {

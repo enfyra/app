@@ -17,15 +17,6 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-        <template #skeleton-row>
-          <CommonResourceListSkeletonRow
-            title-width="w-40"
-            description-width="w-44"
-            :chips="['w-20', 'w-20', 'w-16', 'w-24']"
-            trailing-width="w-32"
-          />
-        </template>
-
         <CommonResourceListItem
           v-for="gateway in gateways"
           :key="String(getId(gateway) ?? gateway.path)"
@@ -33,7 +24,8 @@
           :description="gateway.description || 'WebSocket gateway'"
           :icon="getGatewayIcon(gateway)"
           :icon-color="pageIconColor"
-          :content-loading="gatewaysRefreshing"
+          :loading="gatewaysRefreshing"
+          :to="`/settings/websockets/${getId(gateway)}`"
           :stats="[
             {
               label: 'Status',
@@ -62,25 +54,9 @@
               value: getConnectionCount(getId(gateway)),
             },
           ]"
-          @click="navigateToDetail(gateway)"
           :header-actions="getHeaderActions(gateway)"
           :methods="getFooterActions(gateway)"
-        >
-          <template #skeleton-content>
-            <span class="block h-4 w-40 rounded skeleton-gradient skeleton-pulse-slow" />
-            <span class="block h-3 w-44 rounded skeleton-inline skeleton-pulse-slow" />
-            <span class="flex flex-wrap gap-2">
-              <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-              <span class="block h-5 w-20 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-              <span class="block h-5 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-              <span class="hidden h-5 w-24 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow sm:block" />
-            </span>
-          </template>
-          <template #skeleton-actions>
-            <span class="hidden h-7 w-10 flex-shrink-0 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow md:block" />
-            <span class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
-          </template>
-        </CommonResourceListItem>
+        />
   </CommonResourceListFrame>
 </template>
 
@@ -181,10 +157,6 @@ function getEventCount(gatewayId: string | number | null | undefined): number {
 function getConnectionCount(gatewayId: string | number | null | undefined): number {
   if (gatewayId == null) return 0;
   return connectionCounts.value[gatewayId] || 0;
-}
-
-function navigateToDetail(gateway: any) {
-  navigateTo(`/settings/websockets/${getId(gateway)}`);
 }
 
 function getHeaderActions(gateway: any) {

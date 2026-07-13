@@ -4,139 +4,162 @@ import type {
   TableDefinitionField,
   FormValidationResult,
   FormChangesState,
-  ColumnType,
 } from "~/types/database";
 import {
   CREATE_RECORD_SYSTEM_FIELDS,
   isCreateRecordSystemField,
 } from "~/utils/schema/system-fields";
-const TIMESTAMP_FIELDS: { name: string; type: ColumnType }[] = [
-  { name: "createdAt", type: "timestamp" },
-  { name: "updatedAt", type: "timestamp" },
-];
 
 type MetadataDatabaseType = 'postgres' | 'mysql' | 'mongodb' | 'mariadb' | 'sqlite';
 type MetadataDatabaseContext = {
   dbType: MetadataDatabaseType | null;
-  pkField: 'id' | '_id' | null;
 };
 type MetadataResponse = {
-  data: any[];
+  data?: TableSchema;
   dbType?: MetadataDatabaseType;
-  pkField?: 'id' | '_id';
   enfyraVersion?: string | null;
 };
+
+const clientSchemaRequests = new Map<string, Promise<TableSchema | null>>();
+let clientMetadataContextRequest: Promise<MetadataResponse | null> | null = null;
 
 export function useSchema(tableName?: string | Ref<string>) {
   const schemas = useState<SchemaCollection>("schemas:data", () => ({}));
   const dbContext = useState<MetadataDatabaseContext>("database:context", () => ({
     dbType: null,
-    pkField: null,
   }));
   const enfyraVersion = useState<string | null>("enfyra:version", () => null);
+  const schemaEpoch = useState<number>("schemas:epoch", () => 0);
+  const metadataContextFetched = useState<boolean>("metadata-context:fetched", () => false);
   const schemaLoading = ref(false);
+  const requestedTableName = ref("");
+  const localSchemaRequests = new Map<string, Promise<TableSchema | null>>();
   const {
     execute: executeMetadata,
-    data: metadataData,
-  } = useApi<MetadataResponse>("/metadata", {
+  } = useApi<MetadataResponse>(() => `/metadata/${encodeURIComponent(requestedTableName.value)}`, {
     errorContext: "Fetch Schema",
+    disableErrorPage: true,
+    onError: (error: { status?: number }) => error.status === 404 || error.status === 503,
+  });
+  const { execute: executeMetadataContext } = useApi<MetadataResponse>("/metadata", {
+    errorContext: "Fetch Metadata Context",
   });
 
-  async function fetchSchema() {
-    if (Object.keys(schemas.value).length > 0 && dbContext.value.pkField) return;
+  const tableNameRef = tableName
+    ? isRef(tableName) ? tableName : ref(tableName)
+    : ref("");
 
-    schemaLoading.value = true;
-    try {
-      const response = await executeMetadata();
-      updateDatabaseContext(metadataData.value);
-      processAndCacheSchemas(metadataData.value?.data || []);
-      return response;
-    } catch (error) {
-      console.error('[useSchema] Error fetching schema:', error);
-      throw error;
-    } finally {
-      schemaLoading.value = false;
-    }
+  async function requestSchema(name: string): Promise<TableSchema | null> {
+    requestedTableName.value = name;
+    const response = await executeMetadata() as MetadataResponse | null;
+    if (!response?.data) return null;
+
+    updateDatabaseContext(response);
+    schemas.value = {
+      ...schemas.value,
+      [name]: response.data,
+    };
+    return response.data;
   }
 
-  async function forceRefreshSchema() {
-    schemas.value = {};
-    schemaLoading.value = true;
-    try {
-      const response = await executeMetadata();
-      updateDatabaseContext(metadataData.value);
-      processAndCacheSchemas(metadataData.value?.data || []);
-      return response;
-    } catch (error) {
-      console.error('[useSchema] Error refreshing schema:', error);
-      throw error;
-    } finally {
-      schemaLoading.value = false;
+  async function ensureMetadataContext(): Promise<MetadataResponse | null> {
+    if (metadataContextFetched.value && dbContext.value.dbType) return {
+      dbType: dbContext.value.dbType ?? undefined,
+      enfyraVersion: enfyraVersion.value,
+    };
+    if (import.meta.client && clientMetadataContextRequest) {
+      return clientMetadataContextRequest;
     }
+
+    let request: Promise<MetadataResponse | null>;
+    request = executeMetadataContext().then((rawResponse) => {
+      const response = rawResponse as MetadataResponse | null;
+      if (!response) return null;
+      updateDatabaseContext(response);
+      return response;
+    }).finally(() => {
+      if (import.meta.client && clientMetadataContextRequest === request) {
+        clientMetadataContextRequest = null;
+      }
+    });
+    if (import.meta.client) clientMetadataContextRequest = request;
+    return request;
   }
 
-  function processAndCacheSchemas(tables: any[]) {
-    for (const t of tables) {
-      const foreignKeyColumns = new Set<string>();
-      (t.relations || []).forEach((rel: any) => {
-        if (rel?.foreignKeyColumn) foreignKeyColumns.add(rel.foreignKeyColumn);
-      });
-
-      const definition: TableDefinitionField[] = [];
-
-      (t.columns || []).forEach((col: any) => {
-        if (col?.name && foreignKeyColumns.has(col.name)) return;
-        definition.push({ ...col, fieldType: "column" } as TableDefinitionField);
-      });
-
-      TIMESTAMP_FIELDS.forEach(({ name, type }) => {
-        if (!definition.some(d => d.name === name)) {
-          definition.push({
-            name,
-            type,
-            isNullable: false,
-            isSystem: true,
-            isUpdatable: false,
-            isHidden: false,
-            fieldType: "column",
-            isVirtual: true,
-          });
-        }
-      });
-
-      (t.relations || []).forEach((rel: any) => {
-        if (rel.propertyName) {
-          definition.push({
-            ...rel,
-            name: rel.propertyName,
-            fieldType: "relation",
-            relationType: rel.type,
-          } as TableDefinitionField);
-        }
-      });
-
-      schemas.value[t.name] = {
-        ...t,
-        definition,
-      } as TableSchema;
+  async function ensureSchema(
+    name = tableNameRef.value,
+    options?: { force?: boolean },
+  ): Promise<TableSchema | null> {
+    const normalizedName = name?.trim();
+    if (!normalizedName) return null;
+    if (!options?.force && schemas.value[normalizedName]) {
+      return schemas.value[normalizedName];
     }
+
+    const existingRequest = localSchemaRequests.get(normalizedName) ?? (
+      import.meta.client ? clientSchemaRequests.get(normalizedName) : null
+    );
+    if (existingRequest) {
+      schemaLoading.value = true;
+      try {
+        return await existingRequest;
+      } finally {
+        schemaLoading.value = false;
+      }
+    }
+
+    schemaLoading.value = true;
+    let request: Promise<TableSchema | null>;
+    request = requestSchema(normalizedName).finally(() => {
+      schemaLoading.value = false;
+      localSchemaRequests.delete(normalizedName);
+      if (import.meta.client && clientSchemaRequests.get(normalizedName) === request) {
+        clientSchemaRequests.delete(normalizedName);
+      }
+    });
+    localSchemaRequests.set(normalizedName, request);
+    if (import.meta.client) clientSchemaRequests.set(normalizedName, request);
+    return request;
   }
 
   function updateDatabaseContext(metadata: MetadataResponse | null | undefined) {
     dbContext.value = {
       dbType: metadata?.dbType ?? null,
-      pkField: metadata?.pkField ?? null,
     };
     enfyraVersion.value = metadata?.enfyraVersion?.trim() || null;
+    metadataContextFetched.value = Boolean(
+      dbContext.value.dbType,
+    );
   }
 
-  function updateSchemas(tables: any[]) {
-    processAndCacheSchemas(tables);
+  function invalidateSchemas(names?: string | string[]) {
+    const targets = names == null ? null : new Set(Array.isArray(names) ? names : [names]);
+    if (!targets) {
+      schemas.value = {};
+      localSchemaRequests.clear();
+      clientSchemaRequests.clear();
+    } else {
+      schemas.value = Object.fromEntries(
+        Object.entries(schemas.value).filter(([name]) => !targets.has(name)),
+      );
+      for (const name of targets) localSchemaRequests.delete(name);
+      for (const name of targets) clientSchemaRequests.delete(name);
+    }
+    schemaEpoch.value += 1;
   }
 
-  const tableNameRef = tableName
-    ? isRef(tableName) ? tableName : ref(tableName)
-    : ref("");
+  async function refreshSchema(name = tableNameRef.value) {
+    invalidateSchemas(name);
+    return ensureSchema(name, { force: true });
+  }
+
+  watch(
+    [tableNameRef, schemaEpoch],
+    ([name]) => {
+      if (name) void ensureSchema(name);
+    },
+    { immediate: true },
+  );
 
   const definition = computed<TableDefinitionField[]>(
     () => schemas.value[tableNameRef.value]?.definition || []
@@ -254,7 +277,8 @@ export function useSchema(tableName?: string | Ref<string>) {
     return { isValid, errors };
   }
 
-  function getIncludeFields(): string {
+  async function getIncludeFields(): Promise<string> {
+    await ensureSchema();
     if (!definition.value.length) return "*";
 
     const relations = definition.value
@@ -266,7 +290,8 @@ export function useSchema(tableName?: string | Ref<string>) {
     return ["*", ...relations].join(",");
   }
 
-  function getColumnFields(): string {
+  async function getColumnFields(): Promise<string> {
+    await ensureSchema();
     if (!definition.value.length) return "*";
 
     const columnFields = definition.value
@@ -309,10 +334,11 @@ export function useSchema(tableName?: string | Ref<string>) {
     schemas: readonly(schemas),
     schema: tableSchema,
     enfyraVersion: readonly(enfyraVersion),
-    fetchSchema,
-    forceRefreshSchema,
+    ensureSchema,
+    ensureMetadataContext,
+    refreshSchema,
+    invalidateSchemas,
     schemaLoading,
-    updateSchemas,
     schemaReady,
     definition,
     fieldMap,

@@ -8,8 +8,14 @@ import {
   exposeVueGlobals,
   setupVueGlobals,
 } from "~/composables/dynamic/runtime";
+import { availableComponents } from "~/composables/dynamic/registry";
 
 describe("dynamic extension runtime globals", () => {
+  it("exposes generated resource list components to extension templates", () => {
+    expect(availableComponents.CommonResourceListFrame).toBeDefined();
+    expect(availableComponents.CommonResourceListItem).toBeDefined();
+  });
+
   it("makes injected globals available to compiled template expressions", async () => {
     await setupVueGlobals();
     exposeVueGlobals(globalThis);

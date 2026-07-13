@@ -6,7 +6,7 @@ const props = defineProps<{
   nested?: boolean;
 }>();
 
-const { schemas } = useSchema();
+const { schemas } = useSchema(toRef(props, "tableName"));
 const { addToHistory } = useFilterHistory(props.tableName);
 const { createEmptyFilter, hasActiveFilters, countActiveFilters } = useFilterQuery();
 
@@ -81,7 +81,6 @@ const { isMobile, isTablet } = useScreen();
 <template>
   <CommonDrawer
     :handle="false"
-    handle-only
     :model-value="modelValue"
     @update:model-value="(value) => (value ? null : handleClose())"
     direction="right"

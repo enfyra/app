@@ -23,11 +23,12 @@ const UModalStub = defineComponent({
 const UDrawerStub = defineComponent({
   props: {
     open: { type: Boolean, default: false },
+    handleOnly: { type: Boolean, default: false },
   },
   emits: ['update:open'],
   setup(props, { emit, slots }) {
     return () =>
-      h('div', { 'data-testid': 'u-drawer', 'data-open': String(props.open) }, [
+      h('div', { 'data-testid': 'u-drawer', 'data-open': String(props.open), 'data-handle-only': String(props.handleOnly) }, [
         h('button', { 'data-testid': 'drawer-close', onClick: () => emit('update:open', false) }),
         slots.header?.(),
         slots.body?.(),
@@ -119,6 +120,28 @@ describe('CommonModal', () => {
 })
 
 describe('CommonDrawer', () => {
+  it('disables drag dismissal even when callers request handle interaction', async () => {
+    const wrapper = await mountSuspended(CommonDrawer, {
+      route: '/login',
+      props: {
+        modelValue: true,
+        handleOnly: false,
+      },
+      slots: {
+        header: () => 'Header',
+        body: () => 'Body',
+      },
+      global: {
+        stubs: {
+          UDrawer: UDrawerStub,
+          UButton: UButtonStub,
+        },
+      },
+    })
+
+    expect(wrapper.get('[data-testid="u-drawer"]').attributes('data-handle-only')).toBe('true')
+  })
+
   it('emits close when drawer overlay requests close', async () => {
     const wrapper = await mountSuspended(CommonDrawer, {
       route: '/login',

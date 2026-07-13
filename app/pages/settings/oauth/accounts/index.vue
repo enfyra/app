@@ -17,15 +17,6 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
-    <template #skeleton-row>
-      <CommonResourceListSkeletonRow
-        title-width="w-32"
-        description-width="w-56 max-w-[18rem]"
-        :chips="['w-32', 'w-48']"
-        :show-trailing="false"
-      />
-    </template>
-
     <CommonResourceListItem
       v-for="account in accounts"
       :key="getId(account)"
@@ -33,8 +24,8 @@
       :description="getUserEmail(account)"
       :icon="getProviderIcon(account.provider)"
       :icon-color="pageIconColor"
-      :content-loading="accountsRefreshing"
-      @click="navigateToDetail(account)"
+      :loading="accountsRefreshing"
+      :to="`/settings/oauth/accounts/${getId(account)}`"
       :stats="[
         {
           label: 'Provider ID',
@@ -45,18 +36,7 @@
           value: getUserEmail(account) || '-',
         },
       ]"
-    >
-      <template #skeleton-content>
-        <span class="block space-y-2">
-          <span class="block h-4 w-32 rounded skeleton-gradient skeleton-pulse-slow" />
-          <span class="block h-3 w-56 max-w-[18rem] rounded skeleton-inline skeleton-pulse-slow" />
-          <span class="flex flex-wrap gap-2">
-            <span class="block h-5 w-32 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            <span class="block h-5 w-48 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-          </span>
-        </span>
-      </template>
-    </CommonResourceListItem>
+    />
   </CommonResourceListFrame>
 </template>
 
@@ -141,10 +121,6 @@ function getUserEmail(account: any) {
 function maskProviderId(id: string) {
   if (!id || id.length < 12) return id ?? "-";
   return id.substring(0, 6) + "..." + id.substring(id.length - 4);
-}
-
-function navigateToDetail(account: any) {
-  navigateTo(`/settings/oauth/accounts/${getId(account)}`);
 }
 
 watch(

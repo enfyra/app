@@ -59,7 +59,7 @@ const fieldMap = computed(() => ({
   },
 }));
 
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
@@ -99,7 +99,8 @@ const {
   errorContext: "Create OAuth Config",
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await ensureSchema();
   createForm.value = generateEmptyForm();
   createForm.value.scriptLanguage ||= "typescript";
   appOrigin.value = window.location.origin;

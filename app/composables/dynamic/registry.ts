@@ -85,6 +85,8 @@ import {
   CommonLazyImage,
   CommonModal,
   CommonDrawer,
+  CommonResourceListFrame,
+  CommonResourceListItem,
   PermissionGate,
   FormEditor,
   CommonUploadModal,
@@ -186,6 +188,8 @@ export const availableComponents = {
   Image: markRaw(CommonLazyImage),
   CommonModal: markRaw(CommonModal),
   CommonDrawer: markRaw(CommonDrawer),
+  CommonResourceListFrame: markRaw(CommonResourceListFrame),
+  CommonResourceListItem: markRaw(CommonResourceListItem),
   UploadModal: markRaw(CommonUploadModal),
   Widget: markRaw(DynamicWidgetComponent),
 };

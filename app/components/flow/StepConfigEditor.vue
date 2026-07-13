@@ -239,7 +239,8 @@ function stringifyField(field: string): string {
   return JSON.stringify(val, null, 2);
 }
 
-const { schemas, fetchSchema } = useSchema();
+const queryTableName = computed(() => fields.value.table || "");
+const { schemas } = useSchema(queryTableName);
 const { createEmptyFilter, buildQuery } = useFilterQuery();
 
 const queryFilter = ref<FilterGroup>(createEmptyFilter());
@@ -267,7 +268,6 @@ function filterObjectToFilterGroup(filterObj: any): FilterGroup {
 
 watch(() => fields.value.table, async (tableName) => {
   if (tableName) {
-    await fetchSchema();
     queryFilter.value = filterObjectToFilterGroup(fields.value.filter);
   }
 }, { immediate: true });

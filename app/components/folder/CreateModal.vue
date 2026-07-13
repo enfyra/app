@@ -11,7 +11,7 @@ const emit = defineEmits<{
 
 const notify = useNotify();
 const newFolder = ref<Record<string, any>>({});
-const { generateEmptyForm, validate } = useSchema("enfyra_folder");
+const { ensureSchema, generateEmptyForm, validate } = useSchema("enfyra_folder");
 const createErrors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
 const showDiscardModal = ref(false);
@@ -37,8 +37,9 @@ const isOpen = computed({
   },
 });
 
-watch(isOpen, (newVal) => {
+watch(isOpen, async (newVal) => {
   if (newVal) {
+    await ensureSchema();
     newFolder.value = generateEmptyForm();
 
     if (props.parentId) {

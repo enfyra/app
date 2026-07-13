@@ -138,7 +138,7 @@ async function save() {
   },
   { label: 'useAuth', type: 'function', detail: 'Enfyra: { me, login, logout, isLoggedIn }' },
   { label: 'usePermissions', type: 'function', detail: 'Enfyra: { hasPermission, checkPermissionCondition }' },
-  { label: 'useSchema', type: 'function', detail: 'Enfyra: { schemas, fetchSchema, definition, editableFields, generateEmptyForm }' },
+  { label: 'useSchema', type: 'function', detail: 'Enfyra: { schemas, ensureSchema, definition, editableFields, generateEmptyForm }' },
   { label: 'useGlobalState', type: 'function', detail: 'Enfyra: { settings, storageConfigs, sidebarVisible }' },
   { label: 'useScreen', type: 'function', detail: 'Enfyra: { isMobile, isTablet, isDesktop, width, height }' },
   { label: 'useConfirm', type: 'function', detail: 'Enfyra: { confirm({ title, content }) }' },

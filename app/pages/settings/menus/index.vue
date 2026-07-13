@@ -7,8 +7,8 @@ const { confirm } = useConfirm();
 const route = useRoute();
 const router = useRouter();
 const tableName = "enfyra_menu";
-const { generateEmptyForm } = useSchema(tableName);
-const { schemas } = useSchema();
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
+const { routes, ensureRoutesLoaded } = useRoutes();
 const { getId } = useDatabase();
 const { invalidateExtensionCache } = useDynamicComponent();
 
@@ -137,6 +137,7 @@ async function openEditMenuDrawer(menu: MenuDefinition) {
 }
 
 async function openChildMenuDrawer(parentMenu: MenuDefinition) {
+  await ensureSchema();
   const parentId = getId(parentMenu);
   isSwitchingDrawerFromAction = true;
   selectedMenu.value = createChildMenuDraft(parentMenu);
@@ -247,18 +248,15 @@ registerHeaderActions([
   },
 ]);
 
-const { menuItems, reregisterAllMenus, registerDataMenuItems } = useMenuRegistry();
+const { menuItems, reregisterAllMenus, registerDataMenuItemsFromRoutes } = useMenuRegistry();
 
 async function refreshMenus() {
   const fetchMenusWithExtensions = () => fetchMenuDefinitions({ includeExtensions: true, showSidebarSkeleton: false });
   pageMenusLoading.value = true;
   try {
     await reregisterAllMenus(fetchMenusWithExtensions as any);
-
-    const schemaValues = Object.values(schemas.value);
-    if (schemaValues.length > 0) {
-      await registerDataMenuItems(schemaValues);
-    }
+    await ensureRoutesLoaded();
+    registerDataMenuItemsFromRoutes(routes.value);
   } finally {
     pageMenusLoading.value = false;
   }

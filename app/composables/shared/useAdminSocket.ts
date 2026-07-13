@@ -132,8 +132,8 @@ function startDoneCountdown() {
 export function useAdminSocket() {
   const notify = useNotify();
   const schema = useSchema();
+  const tableCatalog = useTableCatalog();
   const routes = useRoutes();
-  const { registerDataMenuItems } = useMenuRegistry();
   const menuApi = useMenuApi();
   const dynamicComponent = useDynamicComponent();
   const { loadGlobalExtensions } = useGlobalExtensions();
@@ -210,15 +210,15 @@ export function useAdminSocket() {
         const needsExtensions = steps.includes('extension') || steps.includes('menu');
         const needsStorageConfigs = steps.includes('storage') || steps.includes('storage_config') || steps.includes('enfyra_storage_config');
 
-        if (needsSchema) await schema.forceRefreshSchema();
+        if (needsSchema) {
+          schema.invalidateSchemas();
+          tableCatalog.invalidateTableCatalog();
+        }
         if (needsRoutes) await routes.loadRoutes();
         if (needsStorageConfigs) useGlobalState().invalidateStorageConfigs();
         if (needsMenus) {
           await menuApi.fetchMenuDefinitions();
           await useMenuInit({ reset: true });
-          await registerDataMenuItems(
-            Object.values(schema.schemas.value),
-          );
         }
         if (needsExtensions) {
           dynamicComponent.invalidateExtensionCache({ reason: 'updated' });

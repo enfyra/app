@@ -25,7 +25,7 @@ const tableName = "enfyra_role";
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { getId } = useDatabase();
 
@@ -65,7 +65,8 @@ registerPageHeader({
   gradient: "purple",
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await ensureSchema();
   createForm.value = generateEmptyForm();
 });
 

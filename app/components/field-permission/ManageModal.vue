@@ -19,7 +19,10 @@ const permissions = defineModel<Permission[]>("permissions", { required: true })
 
 const notify = useNotify()
 const { confirm } = useConfirm()
-const { generateEmptyForm: generateFieldPermEmptyForm } = useSchema("enfyra_field_permission")
+const {
+  ensureSchema,
+  generateEmptyForm: generateFieldPermEmptyForm,
+} = useSchema("enfyra_field_permission")
 
 type ViewMode = "list" | "form"
 const viewMode = ref<ViewMode>("list")
@@ -53,7 +56,8 @@ watch(
   { deep: true },
 )
 
-function openCreateForm() {
+async function openCreateForm() {
+  await ensureSchema()
   fieldPermMode.value = "create"
   editingKey.value = null
   const base = generateFieldPermEmptyForm()

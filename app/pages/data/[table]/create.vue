@@ -10,7 +10,7 @@ const route = useRoute();
 const notify = useNotify();
 const newRecord = ref<Record<string, any>>({});
 const tableName = route.params.table as string;
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const createErrors = ref<Record<string, string>>({});
 const { getId } = useDatabase();
@@ -27,7 +27,7 @@ registerPageHeader({
 });
 
 onMounted(async () => {
-  await ensureRoutesLoaded();
+  await Promise.all([ensureRoutesLoaded(), ensureSchema()]);
   newRecord.value = generateEmptyForm();
   if (tableName === 'enfyra_method') {
     applyMethodColorSuggestion(newRecord.value);

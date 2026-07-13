@@ -201,7 +201,7 @@ export function useMenuRegistry() {
     return null;
   };
 
-  const registerDataMenuItemsFromRoutes = (routes: any[]) => {
+  const registerDataMenuItemsFromRoutes = (routes: readonly any[]) => {
     let dataParentId = menuItems.value.find((m) => m.id === "data")?.id;
     if (!dataParentId) {
       const foundId = findParentMenuIdByPath("/data");

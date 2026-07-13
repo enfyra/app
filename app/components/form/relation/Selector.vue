@@ -40,7 +40,7 @@ watch(searchQuery, (newVal) => {
 
 const targetTableName = computed(() => props.relationMeta?.targetTableName || "");
 
-const { getColumnFields, fetchSchema } = useSchema(targetTableName);
+const { getColumnFields } = useSchema(targetTableName);
 
 const { isMounted } = useMounted();
 
@@ -121,18 +121,16 @@ function apply() {
   emit("apply", selected.value);
 }
 
-async function navigateToDetail(item: any) {
-  if (!targetTableName.value) return;
+function getDetailPath(item: any): string | null {
+  if (!targetTableName.value) return null;
 
   const url = resolveRelationDetailPath(targetTableName.value, item);
   if (url) {
-    await navigateTo(url);
-    return;
+    return url;
   }
 
   const itemId = getId(item);
-  if (!itemId) return;
-  await navigateTo(`/data/${targetTableName.value}/${itemId}`);
+  return itemId ? `/data/${targetTableName.value}/${itemId}` : null;
 }
 
 async function handleFilterApply(filter: FilterGroup) {
@@ -184,7 +182,6 @@ watch(
     if (newVal) {
       searchQuery.value = "";
       searchDebounced.value = "";
-      await fetchSchema();
       await fetchDataWithValidation();
     }
   }
@@ -203,7 +200,6 @@ const { isMobile, isTablet } = useScreen();
   
   <CommonDrawer
     :handle="false"
-    handle-only
     v-model="isDrawerOpen"
     direction="right"
   >
@@ -351,8 +347,8 @@ const { isMobile, isTablet } = useScreen();
               :selected="selected"
               :multiple="props.multiple"
               :disabled="props.disabled"
+              :get-detail-path="getDetailPath"
               @toggle="toggle"
-              @navigate-detail="navigateToDetail"
             />
           </div>
         </div>

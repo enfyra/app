@@ -454,18 +454,23 @@ function handleDragEnd() {
           <UBadge v-if="!item.isEnabled" variant="soft" color="error" size="xs">
             Disabled
           </UBadge>
-          <UBadge
+          <NuxtLink
             v-if="item.type === 'Menu' && item.extension"
-            variant="soft"
-            color="primary"
-            size="xs"
-            class="cursor-pointer"
-            :title="`Extension: ${extensionLabel}`"
-            @click.stop="navigateTo(`/settings/extensions/${getExtensionId()}`)"
+            :to="`/settings/extensions/${getExtensionId()}`"
+            class="inline-flex"
+            @click.stop
           >
-            <UIcon name="lucide:puzzle" class="mr-1 h-3 w-3" />
-            {{ extensionLabel }}
-          </UBadge>
+            <UBadge
+              variant="soft"
+              color="primary"
+              size="xs"
+              class="cursor-pointer"
+              :title="`Extension: ${extensionLabel}`"
+            >
+              <UIcon name="lucide:puzzle" class="mr-1 h-3 w-3" />
+              {{ extensionLabel }}
+            </UBadge>
+          </NuxtLink>
         </div>
       </div>
 

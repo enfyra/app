@@ -25,7 +25,7 @@ const tableName = 'enfyra_guard';
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
 
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
@@ -80,7 +80,8 @@ const {
   errorContext: 'Create Guard',
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await ensureSchema();
   createForm.value = generateEmptyForm();
 });
 

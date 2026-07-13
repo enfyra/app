@@ -170,7 +170,7 @@ const selectedNpmPackage = ref<any>(null);
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 
-const { generateEmptyForm } = useSchema(tableName);
+const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 
 const {
@@ -209,7 +209,8 @@ registerPageHeader({
   gradient: "blue",
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await ensureSchema();
   initializeForm();
   const queryType = route.query.type as string;
   if (queryType === 'app' || queryType === 'App') {

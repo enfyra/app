@@ -3,17 +3,15 @@ export function useDatabase() {
 
   const dbContext = useState<{
     dbType: MetadataDatabaseType | null;
-    pkField: 'id' | '_id' | null;
   }>("database:context", () => ({
     dbType: null,
-    pkField: null,
   }));
 
   const dbType = computed(() => dbContext.value.dbType);
   const isMongoDB = computed(() => dbType.value === 'mongodb');
 
   const getIdFieldName = (): 'id' | '_id' => {
-    return dbContext.value.pkField || (isMongoDB.value ? '_id' : 'id');
+    return isMongoDB.value ? '_id' : 'id';
   };
 
   const getId = (item: any): any => {

@@ -282,7 +282,7 @@ const formChanges = useFormChanges();
 
 const permissionTableName = computed(() => props.tableName);
 
-const { generateEmptyForm } = useSchema(permissionTableName);
+const { ensureSchema, generateEmptyForm } = useSchema(permissionTableName);
 
 const fieldMap = {
   methods: { type: 'methods-selector' },
@@ -345,11 +345,13 @@ const drawerOpen = computed({
   },
 });
 
-function createNewPermission() {
+async function createNewPermission() {
   if (!props.currentFieldId) {
     notify.error("Error", "Cannot create permission: missing field ID context");
     return;
   }
+
+  await ensureSchema();
 
   isEditing.value = false;
   currentPermission.value = null;
