@@ -45,7 +45,7 @@ export default defineAppConfig({
     },
     toast: {
       slots: {
-        root: "relative group flex items-start gap-3 overflow-visible rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--card-bg)] p-3 shadow-[var(--shadow-md)] backdrop-blur-[18px] ring-1 ring-[var(--card-border)] focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",
+        root: "relative group flex items-start gap-3 overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--card-bg)] p-3 shadow-[var(--shadow-md)] backdrop-blur-[18px] ring-1 ring-[var(--card-border)] focus:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",
         wrapper: "min-w-0 flex-1 py-0.5",
         title: "truncate text-sm font-bold text-[var(--text-primary)]",
         description: "mt-1 text-sm leading-5 text-[var(--text-tertiary)]",
