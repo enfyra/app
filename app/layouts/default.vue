@@ -31,11 +31,14 @@
           key="metadata-banner"
           class="pointer-events-none absolute right-4 top-[72px] z-[60] max-w-[min(420px,calc(100vw-2rem))] lg:right-6"
         >
-          <div class="pointer-events-auto flex items-center gap-2 rounded-full border border-[var(--card-border)] bg-[var(--surface-default)]/90 px-3 py-2 text-sm font-semibold text-[var(--text-secondary)] shadow-[var(--shadow-md)] backdrop-blur-xl">
+          <div
+            class="pointer-events-auto flex items-center gap-2 rounded-full border bg-[var(--surface-default)]/90 px-3 py-2 text-sm font-semibold shadow-[var(--shadow-md)] backdrop-blur-xl"
+            :class="reloadFailureMessage ? 'border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] text-[var(--state-danger-soft-text)]' : 'border-[var(--card-border)] text-[var(--text-secondary)]'"
+          >
             <UIcon
-              :name="isReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
-              class="h-4 w-4 shrink-0 text-[var(--state-primary-soft-text)]"
-              :class="isReloading ? 'animate-spin' : ''"
+              :name="reloadFailureMessage ? 'lucide:circle-alert' : isReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
+              class="h-4 w-4 shrink-0"
+              :class="reloadFailureMessage ? 'text-[var(--state-danger-soft-text)]' : 'text-[var(--state-primary-soft-text)]'"
             />
             <span class="truncate">{{ bannerTitle }}</span>
             <UButton
@@ -87,6 +90,7 @@ import {
   showReloadBanner,
   reloadLabels,
   reloadDoneCountdown,
+  reloadFailureMessage,
   dismissReloadBanner,
 } from '~/composables/shared/useAdminSocket';
 
@@ -124,6 +128,7 @@ if (import.meta.client) {
 const hasSubHeaderActions = computed(() => subHeaderActions.value.length > 0);
 
 const bannerTitle = computed(() => {
+  if (reloadFailureMessage.value) return reloadFailureMessage.value;
   if (isReloading.value) {
     const labels = reloadLabels.value;
     if (labels.length === 0) return 'Reloading…';

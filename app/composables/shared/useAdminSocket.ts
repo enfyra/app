@@ -12,7 +12,7 @@ import { runtimeCacheFlowLabel } from '~/utils/runtime-monitor/cache';
 
 type ReloadPayload = {
   flow: string;
-  status: 'pending' | 'done';
+  status: 'pending' | 'done' | 'failed';
   steps?: string[];
   reloadId?: string;
   instanceId?: string;
@@ -36,6 +36,7 @@ let socket: Socket | null = null;
 
 export const activeReloads = ref<ActiveReload[]>([]);
 export const reloadDoneCountdown = ref(0);
+export const reloadFailureMessage = ref<string | null>(null);
 export const runtimeMetricsByInstance = ref<Record<string, RuntimeMetricsPayload>>({});
 export const runtimeMetricsUpdatedAt = ref<number | null>(null);
 export const redisAdminOverview = ref<RedisAdminOverview | null>(null);
@@ -44,7 +45,10 @@ export const redisAdminKeyChange = ref<any | null>(null);
 
 const isReloadingRef = computed(() => activeReloads.value.length > 0);
 const showReloadBannerRef = computed(
-  () => activeReloads.value.length > 0 || reloadDoneCountdown.value > 0,
+  () =>
+    activeReloads.value.length > 0 ||
+    reloadDoneCountdown.value > 0 ||
+    reloadFailureMessage.value !== null,
 );
 const reloadLabelsRef = computed(() =>
   activeReloads.value.map((r) => runtimeCacheFlowLabel(r.flow)),
@@ -108,7 +112,16 @@ function ensureStaleReloadPruner() {
 export function dismissReloadBanner() {
   activeReloads.value = [];
   reloadDoneCountdown.value = 0;
+  reloadFailureMessage.value = null;
   clearReloadTimers();
+}
+
+export function markReloadFailed(key: string) {
+  activeReloads.value = activeReloads.value.filter((reload) => reload.key !== key);
+  reloadDoneCountdown.value = 0;
+  clearReloadTimers();
+  reloadFailureMessage.value =
+    'The saved configuration was not activated. Check Admin Logs before continuing.';
 }
 
 function startDoneCountdown() {
@@ -197,6 +210,15 @@ export function useAdminSocket() {
             },
           ];
         }
+        return;
+      }
+
+      if (data.status === 'failed') {
+        markReloadFailed(key);
+        notify.error(
+          'Runtime cache reload failed',
+          reloadFailureMessage.value ?? undefined,
+        );
         return;
       }
 
