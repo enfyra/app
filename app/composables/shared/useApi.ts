@@ -98,9 +98,15 @@ function handleError(
     error?.response?._data ??
     error?.response?.data;
 
+  const errorEnvelope =
+    data && typeof data === "object" && data !== null
+      ? ((data as { error?: unknown }).error ?? data)
+      : undefined;
   const dataMessage =
-    data && typeof data === "object" && data !== null && "message" in data
-      ? (data as { message?: unknown }).message
+    errorEnvelope &&
+    typeof errorEnvelope === "object" &&
+    "message" in errorEnvelope
+      ? (errorEnvelope as { message?: unknown }).message
       : undefined;
 
   let message: string;
@@ -308,7 +314,8 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         return null;
       }
       if (!handled) {
-        let errorMessage = apiError?.data?.message || apiError?.message || "An error occurred";
+        const envelope = apiError?.data?.error ?? apiError?.data;
+        let errorMessage = envelope?.message || apiError?.message || "An error occurred";
         if (Array.isArray(errorMessage)) {
           errorMessage = errorMessage.join(". ");
         }

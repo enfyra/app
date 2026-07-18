@@ -33,7 +33,8 @@ describe('SidebarUserInfo', () => {
     expect(wrapper.text().match(/Account/g)?.length).toBe(1)
     expect(wrapper.text()).toContain('Account')
     expect(wrapper.text()).toContain('Profile')
-    expect(wrapper.text()).toMatch(/Light|Dark/)
+    expect(wrapper.text()).toContain('Appearance')
+    expect(wrapper.text()).toContain('Accent')
     expect(wrapper.text()).toContain('Logout')
   })
 

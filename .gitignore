@@ -44,4 +44,6 @@ CLAUDE.md
 AGENTS.md
 .mcp.json
 .cursor/
-.codex
+.codex/
+.claude/
+.kilo/

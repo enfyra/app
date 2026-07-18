@@ -87,9 +87,15 @@ export function useAuth() {
       });
 
       me.value = (response as any)?.data?.[0] || null;
-    } catch (error) {
+      return me.value ? 'authenticated' as const : 'unauthenticated' as const;
+    } catch (error: any) {
       if (!options?.silent) console.error("[Auth] Fetch user error:", error);
-      me.value = null;
+      const statusCode = error?.statusCode ?? error?.status ?? error?.response?.status;
+      if (statusCode === 401) {
+        me.value = null;
+        return 'unauthenticated' as const;
+      }
+      return 'unavailable' as const;
     } finally {
       isLoading.value = false;
     }

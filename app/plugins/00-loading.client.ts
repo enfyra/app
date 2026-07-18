@@ -69,6 +69,9 @@ export default defineNuxtPlugin(() => {
     mounted.value = true;
     void hideWhenReady();
   });
+  nuxtApp.hook("app:error", () => {
+    hideLoading();
+  });
 
   watch(initialReady, () => {
     void hideWhenReady();

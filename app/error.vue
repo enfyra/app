@@ -1,6 +1,5 @@
 <template>
-  <NuxtLayout>
-    <div
+  <div
       class="relative flex flex-col items-center justify-center min-h-[calc(100vh-var(--header-height,64px)-var(--subheader-height,0px))] p-6 overflow-hidden"
       role="main"
       aria-labelledby="error-title"
@@ -62,8 +61,7 @@
           </UButton>
         </div>
       </div>
-    </div>
-  </NuxtLayout>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -102,4 +100,3 @@ useHead({
   ],
 });
 </script>
-

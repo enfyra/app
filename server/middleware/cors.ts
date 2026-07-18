@@ -3,6 +3,7 @@ import { defineEventHandler, getRequestHeader, setHeader } from "h3";
 interface CorsCache {
   origins: string[];
   timestamp: number;
+  loaded: boolean;
 }
 
 const CACHE_TTL = 5 * 60 * 1000;
@@ -12,17 +13,27 @@ const DEFAULT_ALLOWED_HEADERS = 'Content-Type, Authorization, X-Requested-With, 
 let cachedCorsData: CorsCache = {
   origins: [],
   timestamp: 0,
+  loaded: false,
 };
 let lastFetchError = 0;
 
-async function fetchAllowedOrigins(): Promise<string[]> {
+async function fetchAllowedOrigins(): Promise<string[] | null> {
+  const markUnavailable = (message: string, error?: unknown): null => {
+    lastFetchError = Date.now();
+    if (error) {
+      console.error(`[CORS] ${message}:`, error);
+    } else {
+      console.warn(`[CORS] ${message}`);
+    }
+    return null;
+  };
+
   try {
     const config = useRuntimeConfig();
     const apiUrl = config.public?.apiUrl;
-    
+
     if (!apiUrl) {
-      console.warn('[CORS] API URL not configured');
-      return [];
+      return markUnavailable('API URL not configured');
     }
 
     const response = await fetch(`${apiUrl.replace(/\/+$/, '')}/enfyra_cors_origin?fields=value,isEnabled&limit=0`, {
@@ -33,8 +44,7 @@ async function fetchAllowedOrigins(): Promise<string[]> {
     });
 
     if (!response.ok) {
-      console.warn('[CORS] Failed to fetch origins:', response.status);
-      return [];
+      return markUnavailable(`Failed to fetch origins (${response.status})`);
     }
 
     const data = await response.json();
@@ -45,36 +55,40 @@ async function fetchAllowedOrigins(): Promise<string[]> {
       .map((row: any) => row.value.trim())
       .filter((v: string) => v.length > 0);
   } catch (error: any) {
-    lastFetchError = Date.now();
-    console.error('[CORS] Error fetching origins:', error.message);
-    return [];
+    return markUnavailable('Error fetching origins', error?.message || error);
   }
 }
 
-export async function getValidatedOrigins(): Promise<string[]> {
+export async function getValidatedOrigins(): Promise<CorsCache> {
   const now = Date.now();
   const isCacheExpired = now - cachedCorsData.timestamp > CACHE_TTL;
   const inErrorCooldown = now - lastFetchError < ERROR_COOLDOWN;
 
   if (isCacheExpired && !inErrorCooldown) {
     const origins = await fetchAllowedOrigins();
-    cachedCorsData = { origins, timestamp: now };
+    if (origins !== null) {
+      cachedCorsData = { origins, timestamp: now, loaded: true };
+    }
   }
 
-  return cachedCorsData.origins;
+  return cachedCorsData;
 }
 
 export async function initCorsCache(): Promise<void> {
   const now = Date.now();
   const origins = await fetchAllowedOrigins();
-  cachedCorsData = { origins, timestamp: now };
+  if (origins === null) {
+    cachedCorsData = { origins: [], timestamp: 0, loaded: false };
+    return;
+  }
+  cachedCorsData = { origins, timestamp: now, loaded: true };
 }
 
 export async function clearCorsCache(newOrigins?: string[]) {
   if (newOrigins !== undefined && newOrigins !== null) {
-    cachedCorsData = { origins: newOrigins, timestamp: Date.now() };
+    cachedCorsData = { origins: newOrigins, timestamp: Date.now(), loaded: true };
   } else {
-    cachedCorsData = { origins: [], timestamp: 0 };
+    cachedCorsData = { origins: [], timestamp: 0, loaded: false };
   }
 }
 
@@ -97,7 +111,11 @@ export default defineEventHandler(async (event) => {
     return;
   }
   
-  const allowedOrigins = await getValidatedOrigins();
+  const corsCache = await getValidatedOrigins();
+  if (!corsCache.loaded) {
+    return;
+  }
+  const allowedOrigins = corsCache.origins;
   
   if (allowedOrigins.length === 0) {
     setHeader(event, 'Access-Control-Allow-Origin', origin);
