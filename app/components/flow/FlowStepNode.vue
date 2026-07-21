@@ -1,65 +1,117 @@
 <template>
   <div
-    class="flow-step-node relative transition-all border-2 rounded-lg shadow-sm hover:shadow-md"
-    :class="nodeClass"
+    v-if="data.stepType === 'add'"
+    class="flow-add-node group"
+    role="button"
+    tabindex="0"
     @click="handleClick"
-    :style="{ width: '220px' }"
+    @keydown.enter="handleClick"
+    @keydown.space.prevent="handleClick"
   >
-    <Handle type="target" :position="Position.Top" :style="{ opacity: 0 }" />
-    <Handle type="source" :position="Position.Bottom" :style="{ opacity: 0 }" />
+    <Handle type="target" :position="Position.Left" class="flow-handle" />
+    <div class="flow-add-btn">
+      <UIcon name="i-lucide-plus" class="w-4 h-4 transition-transform duration-200 group-hover:scale-110" />
+    </div>
+    <span class="flow-add-label">{{ data.label || 'Add step' }}</span>
+  </div>
 
-    <span v-if="data.execStatus === 'completed'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--st-success)] flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10">
-      <UIcon name="i-lucide-check" class="w-2.5 h-2.5 text-white" />
-    </span>
-    <span v-else-if="data.execStatus === 'failed'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--md-error)] flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10" :title="data.execError || 'Step failed'">
-      <UIcon name="i-lucide-x" class="w-2.5 h-2.5 text-white" />
-    </span>
-    <span v-else-if="data.execStatus === 'running'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--st-info)] flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10">
-      <UIcon name="i-lucide-loader" class="w-2.5 h-2.5 text-white animate-spin" />
-    </span>
-    <span v-else-if="data.execStatus === 'skipped'" class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-[var(--text-quaternary)] flex items-center justify-center ring-2 ring-[var(--surface-default)] z-10">
-      <UIcon name="i-lucide-minus" class="w-2.5 h-2.5 text-white" />
-    </span>
+  <div
+    v-else-if="data.stepType === 'trigger'"
+    class="flow-trigger-node"
+    role="button"
+    tabindex="0"
+    @click="handleClick"
+    @keydown.enter="handleClick"
+    @keydown.space.prevent="handleClick"
+  >
+    <Handle type="source" :position="Position.Right" class="flow-handle" />
+    <div class="flex items-center gap-2.5 px-4 py-2.5">
+      <div class="flow-trigger-icon">
+        <UIcon name="i-lucide-zap" class="w-4 h-4" />
+      </div>
+      <div class="min-w-0">
+        <div class="text-[13px] font-semibold text-[var(--text-primary)] leading-tight truncate">
+          {{ data.label }}
+        </div>
+        <div v-if="data.triggerInfo" class="text-[11px] text-[var(--text-tertiary)] leading-tight truncate">
+          {{ data.triggerInfo }}
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <div class="p-3">
-      <div class="flex items-center gap-2 mb-1.5">
-        <div :class="iconWrapperClass">
-          <UIcon :name="iconName" class="w-3.5 h-3.5" />
-        </div>
-        <div class="flex-1 min-w-0">
-          <h5 class="text-xs font-semibold text-[var(--text-primary)] truncate">
-            {{ data.label || 'Unnamed' }}
-          </h5>
-        </div>
-        <UBadge v-if="data.stepType !== 'add'" :color="typeColor" variant="soft" size="xs" class="text-[9px] flex-shrink-0">
-          {{ data.stepType }}
-        </UBadge>
-        <UBadge v-if="data.branch === 'true'" color="success" variant="soft" size="xs" class="text-[8px] flex-shrink-0">true</UBadge>
-        <UBadge v-else-if="data.branch === 'false'" color="error" variant="soft" size="xs" class="text-[8px] flex-shrink-0">false</UBadge>
+  <div
+    v-else
+    class="flow-step-card group"
+    :class="{
+      'flow-step-disabled': data.enabled === false,
+      'flow-step-selected': selected,
+    }"
+    role="button"
+    tabindex="0"
+    @click="handleClick"
+    @keydown.enter="handleClick"
+    @keydown.space.prevent="handleClick"
+  >
+    <Handle type="target" :position="Position.Left" class="flow-handle" />
+    <Handle type="source" :position="Position.Right" class="flow-handle" />
+
+    <div v-if="data.execStatus" class="flow-exec-badge" :class="`flow-exec-${data.execStatus}`">
+      <UIcon
+        :name="execIcon"
+        class="w-3 h-3"
+        :class="{ 'animate-spin': data.execStatus === 'running' }"
+      />
+    </div>
+
+    <div v-if="data.branch" class="flow-branch-tag" :class="data.branch === 'true' ? 'flow-branch-true' : 'flow-branch-false'">
+      {{ data.branch }}
+    </div>
+
+    <div class="flex items-start gap-3 px-3.5 py-3">
+      <div class="flow-step-icon" :class="`flow-icon-${data.stepType}`">
+        <UIcon :name="iconName" class="w-4 h-4" />
       </div>
 
-      <p v-if="description" class="text-[10px] text-[var(--text-tertiary)] truncate leading-tight">
-        {{ description }}
-      </p>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="text-[13px] font-medium text-[var(--text-primary)] leading-tight truncate">
+            {{ data.label || 'Unnamed' }}
+          </span>
+        </div>
+        <div v-if="description" class="text-[11px] text-[var(--text-tertiary)] leading-snug mt-0.5 truncate">
+          {{ description }}
+        </div>
 
-      <div class="flex items-center gap-1 mt-1.5 flex-wrap">
-        <UBadge
-          v-for="badge in badges"
-          :key="badge.label"
-          :color="badge.color"
-          variant="soft"
-          size="xs"
-          class="text-[8px]"
-        >
-          {{ badge.label }}
-        </UBadge>
-        <div v-if="showReorder" class="flex gap-0.5 ml-auto">
-          <button :disabled="disabled || data.isFirst" :aria-label="`Move ${data.label} up`" :class="(disabled || data.isFirst) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[var(--surface-muted)] hover:text-[var(--text-secondary)]'" class="w-5 h-5 flex items-center justify-center rounded text-[var(--text-quaternary)] transition-colors" @click.stop="!disabled && !data.isFirst && onMoveUp?.()">
-            <UIcon name="i-lucide-chevron-up" class="w-3 h-3" />
-          </button>
-          <button :disabled="disabled || data.isLast" :aria-label="`Move ${data.label} down`" :class="(disabled || data.isLast) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[var(--surface-muted)] hover:text-[var(--text-secondary)]'" class="w-5 h-5 flex items-center justify-center rounded text-[var(--text-quaternary)] transition-colors" @click.stop="!disabled && !data.isLast && onMoveDown?.()">
-            <UIcon name="i-lucide-chevron-down" class="w-3 h-3" />
-          </button>
+        <div v-if="badges.length > 0 || showReorder" class="flex items-center gap-1.5 mt-2">
+          <span
+            v-for="badge in badges"
+            :key="badge.label"
+            class="flow-meta-badge"
+            :class="`flow-meta-${badge.color}`"
+          >
+            {{ badge.label }}
+          </span>
+          <div v-if="showReorder" class="flow-reorder-actions flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              :disabled="disabled || data.isFirst"
+              :aria-label="`Move ${data.label} left`"
+              class="flow-reorder-btn"
+              :class="{ 'opacity-30 cursor-not-allowed': disabled || data.isFirst }"
+              @click.stop="!disabled && !data.isFirst && onMoveUp?.()"
+            >
+              <UIcon name="i-lucide-chevron-left" class="w-3 h-3" />
+            </button>
+            <button
+              :disabled="disabled || data.isLast"
+              :aria-label="`Move ${data.label} right`"
+              class="flow-reorder-btn"
+              :class="{ 'opacity-30 cursor-not-allowed': disabled || data.isLast }"
+              @click.stop="!disabled && !data.isLast && onMoveDown?.()"
+            >
+              <UIcon name="i-lucide-chevron-right" class="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -69,10 +121,11 @@
 <script setup lang="ts">
 import { Handle, Position } from '@vue-flow/core';
 import type { StepNodeData } from '~/types/flow';
-import { STEP_TYPE_COLOR_MAP, STEP_TYPE_ICON_MAP, type BadgeColor } from '~/utils/flow.constants';
+import { STEP_TYPE_ICON_MAP } from '~/utils/flow.constants';
 
 interface Props {
   data: StepNodeData;
+  selected?: boolean;
   onClick?: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -86,48 +139,38 @@ function handleClick() {
 }
 
 const showReorder = computed(() => !['trigger', 'add'].includes(props.data.stepType));
-const typeColor = computed((): BadgeColor => {
-  return STEP_TYPE_COLOR_MAP[props.data.stepType] || 'neutral';
-});
 
 const iconName = computed(() => {
   return STEP_TYPE_ICON_MAP[props.data.stepType] || 'lucide:circle';
 });
 
-const nodeClass = computed(() => {
-  if (props.data.stepType === 'trigger') return 'flow-step-node-trigger cursor-default';
-  if (props.data.stepType === 'add') return 'flow-step-node-add border-dashed cursor-pointer';
-  if (props.data.enabled === false) return 'border-[var(--border-default)] bg-[var(--surface-muted)] opacity-60';
-  return 'flow-step-node-default cursor-pointer';
-});
-
-const iconWrapperClass = computed(() => {
-  if (props.data.stepType === 'trigger') {
-    return 'flow-step-node-icon flow-step-node-icon-primary w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
+const execIcon = computed(() => {
+  switch (props.data.execStatus) {
+    case 'completed': return 'i-lucide-check';
+    case 'failed': return 'i-lucide-x';
+    case 'running': return 'i-lucide-loader-2';
+    case 'skipped': return 'i-lucide-minus';
+    default: return 'i-lucide-circle';
   }
-  if (props.data.stepType === 'add') {
-    return 'flow-step-node-icon flow-step-node-icon-muted w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
-  }
-  return 'flow-step-node-icon flow-step-node-icon-primary w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
 });
 
 const description = computed(() => {
   const config = props.data.config || {};
   const t = props.data.stepType;
   if (t === 'trigger') return props.data.triggerInfo || '';
-  if (t === 'add') return 'Click to add a new step';
+  if (t === 'add') return '';
   if (t === 'script' || t === 'condition') return '';
-  if (t === 'query') return `Query ${config.table}`;
-  if (t === 'delete') return `Delete from ${config.table}`;
-  if (t === 'http') return `${config.method || 'GET'} ${config.url?.substring(0, 40)}`;
-  if (t === 'trigger_flow') return `Trigger: ${config.flowName || config.flowId}`;
+  if (t === 'query') return `Query ${config.table || ''}`;
+  if (t === 'delete') return `Delete from ${config.table || ''}`;
+  if (t === 'http') return `${config.method || 'GET'} ${(config.url || '').substring(0, 40)}`;
+  if (t === 'trigger_flow') return `Trigger: ${config.flowName || config.flowId || ''}`;
   if (t === 'sleep') return `Wait ${config.ms || 1000}ms`;
-  if (t === 'log') return config.message?.substring(0, 60);
+  if (t === 'log') return (config.message || '').substring(0, 60);
   return '';
 });
 
 const badges = computed(() => {
-  const b: { label: string; color: BadgeColor }[] = [];
+  const b: { label: string; color: string }[] = [];
   if (props.data.enabled === false) b.push({ label: 'Disabled', color: 'neutral' });
   if (props.data.onError === 'skip') b.push({ label: 'Skip on error', color: 'warning' });
   if (props.data.onError === 'retry') b.push({ label: `Retry ${props.data.retryAttempts || 0}x`, color: 'info' });
@@ -137,52 +180,247 @@ const badges = computed(() => {
 </script>
 
 <style scoped>
-.flow-step-node-trigger {
-  color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--md-primary) 58%, var(--border-default));
-  background: color-mix(in srgb, var(--md-primary) 22%, var(--surface-default));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 18%, transparent), var(--shadow-panel-sm);
+.flow-handle {
+  opacity: 0;
+  width: 8px;
+  height: 8px;
 }
 
-.flow-step-node-trigger:hover {
+.flow-add-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.flow-add-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-subcontrol);
+  border: 1.5px dashed var(--border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-quaternary);
+  background: var(--surface-default);
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.flow-add-node:hover .flow-add-btn {
   border-color: var(--md-primary);
-  background: color-mix(in srgb, var(--md-primary) 26%, var(--surface-default));
+  color: var(--md-primary);
+  background: color-mix(in srgb, var(--md-primary) 6%, var(--surface-default));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 12%, transparent);
 }
 
-.flow-step-node-default {
-  color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--md-primary) 24%, var(--border-default));
-  background: color-mix(in srgb, var(--md-primary) 5%, var(--surface-default));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 5%, transparent);
+.flow-add-node:focus-visible {
+  outline: none;
 }
 
-.flow-step-node-default:hover {
-  border-color: color-mix(in srgb, var(--md-primary) 48%, var(--border-default));
-  background: color-mix(in srgb, var(--md-primary) 9%, var(--surface-default));
+.flow-add-node:focus-visible .flow-add-btn {
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 3px var(--theme-focus-ring);
 }
 
-.flow-step-node-add {
-  color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--text-secondary) 62%, transparent);
-  background: color-mix(in srgb, var(--text-primary) 3%, var(--surface-default));
+.flow-add-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-quaternary);
+  white-space: nowrap;
+  transition: color 0.2s ease;
 }
 
-.flow-step-node-add:hover {
-  border-color: color-mix(in srgb, var(--md-primary) 62%, transparent);
+.flow-add-node:hover .flow-add-label {
+  color: var(--md-primary);
+}
+
+.flow-trigger-node {
+  border-radius: var(--radius-control);
+  border: 1.5px solid color-mix(in srgb, var(--md-primary) 40%, var(--border-default));
   background: color-mix(in srgb, var(--md-primary) 8%, var(--surface-default));
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.flow-step-node-icon {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 24%, transparent);
+.flow-trigger-node:hover,
+.flow-trigger-node:focus-visible {
+  border-color: var(--md-primary);
+  box-shadow: var(--shadow-sm);
+  outline: none;
 }
 
-.flow-step-node-icon-primary {
-  color: color-mix(in srgb, var(--md-primary) 76%, var(--text-primary));
-  background: color-mix(in srgb, var(--md-primary) 22%, var(--surface-default));
+.flow-trigger-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-subcontrol);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+  background: var(--md-primary);
 }
 
-.flow-step-node-icon-muted {
+.flow-step-card {
+  position: relative;
+  width: 240px;
+  border-radius: var(--radius-control);
+  border: 1.5px solid var(--border-default);
+  background: var(--surface-default);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.flow-step-card:hover,
+.flow-step-card:focus-visible {
+  border-color: color-mix(in srgb, var(--md-primary) 50%, var(--border-default));
+  box-shadow: var(--shadow-sm);
+  outline: none;
+}
+
+.flow-step-selected {
+  border-color: var(--md-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 15%, transparent) !important;
+}
+
+.flow-step-disabled {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.flow-exec-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: white;
+  box-shadow: 0 0 0 2px var(--surface-default);
+}
+
+.flow-exec-completed { background: var(--st-success); }
+.flow-exec-failed { background: var(--md-error); }
+.flow-exec-running { background: var(--st-info); }
+.flow-exec-skipped { background: var(--text-quaternary); }
+
+.flow-branch-tag {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 6px;
+  border-radius: var(--radius-subcontrol);
+  z-index: 5;
+}
+
+.flow-branch-true {
+  color: var(--st-success);
+  background: color-mix(in srgb, var(--st-success) 12%, var(--surface-default));
+}
+
+.flow-branch-false {
+  color: var(--md-error);
+  background: color-mix(in srgb, var(--md-error) 12%, var(--surface-default));
+}
+
+.flow-step-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-subcontrol);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flow-icon-script {
+  color: var(--md-primary);
+  background: color-mix(in srgb, var(--md-primary) 10%, var(--surface-default));
+}
+
+.flow-icon-condition {
+  color: var(--st-warning);
+  background: color-mix(in srgb, var(--st-warning) 10%, var(--surface-default));
+}
+
+.flow-icon-query {
+  color: var(--st-info);
+  background: color-mix(in srgb, var(--st-info) 10%, var(--surface-default));
+}
+
+.flow-icon-delete {
+  color: var(--md-error);
+  background: color-mix(in srgb, var(--md-error) 10%, var(--surface-default));
+}
+
+.flow-icon-http {
+  color: var(--md-secondary);
+  background: color-mix(in srgb, var(--md-secondary) 10%, var(--surface-default));
+}
+
+.flow-icon-trigger_flow {
+  color: var(--st-info);
+  background: color-mix(in srgb, var(--st-info) 10%, var(--surface-default));
+}
+
+.flow-icon-sleep,
+.flow-icon-log {
+  color: var(--text-tertiary);
+  background: color-mix(in srgb, var(--text-primary) 5%, var(--surface-default));
+}
+
+.flow-meta-badge {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: var(--radius-subcontrol);
+  letter-spacing: 0.01em;
+}
+
+.flow-meta-neutral {
+  color: var(--text-tertiary);
+  background: color-mix(in srgb, var(--text-primary) 5%, var(--surface-default));
+}
+
+.flow-meta-warning {
+  color: var(--st-warning);
+  background: color-mix(in srgb, var(--st-warning) 10%, var(--surface-default));
+}
+
+.flow-meta-info {
+  color: var(--st-info);
+  background: color-mix(in srgb, var(--st-info) 10%, var(--surface-default));
+}
+
+.flow-reorder-btn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-subcontrol);
+  color: var(--text-quaternary);
+  transition: all 0.15s ease;
+}
+
+.flow-reorder-btn:hover:not(:disabled) {
+  background: var(--surface-muted);
   color: var(--text-secondary);
-  background: color-mix(in srgb, var(--text-primary) 6%, var(--surface-default));
+}
+
+.flow-step-card:focus-within .flow-reorder-actions {
+  opacity: 1;
 }
 </style>

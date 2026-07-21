@@ -106,17 +106,17 @@ export function getStepTimelineClass(s: { status: string }): string {
   return 'eapp-surface-muted border-[var(--border-default)]';
 }
 
-export const NODE_WIDTH = 220;
-export const NODE_SPACING_Y = 100;
-export const CENTER_X = 200;
-export const START_Y = 30;
-export const BRANCH_OFFSET_X = 260;
+export const NODE_WIDTH = 240;
+export const NODE_SPACING_X = 300;
+export const CENTER_Y = 300;
+export const START_X = 40;
+export const BRANCH_OFFSET_Y = 160;
 
-export const EDGE_STYLE_DEFAULT = { stroke: '#94a3b8', strokeWidth: 2 };
-export const EDGE_STYLE_TRUE = { stroke: '#22c55e', strokeWidth: 2 };
-export const EDGE_STYLE_FALSE = { stroke: '#ef4444', strokeWidth: 2 };
-export const EDGE_STYLE_TRUE_DASHED = { stroke: '#22c55e', strokeWidth: 1, strokeDasharray: '4' };
-export const EDGE_STYLE_FALSE_DASHED = { stroke: '#ef4444', strokeWidth: 1, strokeDasharray: '4' };
+export const EDGE_STYLE_DEFAULT = { stroke: 'var(--flow-edge)', strokeWidth: 1.5 };
+export const EDGE_STYLE_TRUE = { stroke: 'var(--st-success)', strokeWidth: 1.5 };
+export const EDGE_STYLE_FALSE = { stroke: 'var(--md-error)', strokeWidth: 1.5 };
+export const EDGE_STYLE_TRUE_DASHED = { stroke: 'var(--st-success)', strokeWidth: 1.5, strokeDasharray: '6 4' };
+export const EDGE_STYLE_FALSE_DASHED = { stroke: 'var(--md-error)', strokeWidth: 1.5, strokeDasharray: '6 4' };
 
-export const EDGE_LABEL_STYLE_TRUE = { fill: '#22c55e', fontSize: 13, fontWeight: 700 };
-export const EDGE_LABEL_STYLE_FALSE = { fill: '#ef4444', fontSize: 13, fontWeight: 700 };
+export const EDGE_LABEL_STYLE_TRUE = { fill: 'var(--st-success)', fontSize: 11, fontWeight: 600, letterSpacing: '0.02em' };
+export const EDGE_LABEL_STYLE_FALSE = { fill: 'var(--md-error)', fontSize: 11, fontWeight: 600, letterSpacing: '0.02em' };
