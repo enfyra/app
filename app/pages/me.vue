@@ -35,21 +35,11 @@ const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 const { getId } = useDatabase();
 
-const userId = computed(() => {
-  const data = apiData.value?.data?.[0];
-  return data ? getId(data) : null;
-});
-
 const {
   data: oauthData,
   pending: oauthLoading,
   execute: fetchOauthAccounts,
-} = useApi(() => "/enfyra_oauth_account", {
-  query: computed(() => ({
-    fields: "*,user.id,user._id,user.email",
-    filter: userId.value ? { user: { _eq: userId.value } } : undefined,
-    sort: "-createdAt",
-  })),
+} = useApi(() => "/me/oauth-accounts", {
   errorContext: "Fetch OAuth Accounts",
 });
 
