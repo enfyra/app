@@ -105,6 +105,8 @@ const {
   errorContext: "Fetch Data",
 });
 
+const tableLoading = computed(() => !schemaReady.value || loading.value);
+
 const { hiddenColumns, visibleColumns, columnDropdownItems } =
   useDataTableVisibility(tableName, schemas);
 
@@ -429,7 +431,7 @@ registerHeaderActions([
       <DataTableLazy
         :data="data"
         :columns="columns"
-        :loading="loading"
+        :loading="tableLoading"
         :page-size="pageLimit"
         :selectable="isSelectionMode"
         :selected-items="selectedRowIds"
