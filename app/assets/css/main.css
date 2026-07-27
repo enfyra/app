@@ -179,7 +179,7 @@ button:focus-visible,
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.eapp-surface-hover:hover {
+.eapp-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover {
   border-color: var(--card-border-hover);
   box-shadow: var(--card-shadow-hover);
 }
@@ -692,8 +692,8 @@ button:focus-visible,
   transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.eapp-identity-surface-hover:hover,
-.eapp-primary-surface-hover:hover {
+.eapp-identity-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover,
+.eapp-primary-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover {
   border-color: color-mix(in srgb, var(--brand-500) 16%, var(--card-border-hover));
   background:
     linear-gradient(
@@ -705,8 +705,8 @@ button:focus-visible,
   box-shadow: var(--card-shadow-hover);
 }
 
-.dark .eapp-identity-surface-hover:hover,
-.dark .eapp-primary-surface-hover:hover {
+.dark .eapp-identity-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover,
+.dark .eapp-primary-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover {
   border-color: color-mix(in srgb, var(--brand-400) 18%, var(--card-border-hover));
   background:
     linear-gradient(

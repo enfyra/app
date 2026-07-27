@@ -123,13 +123,14 @@ export function useSchema(tableName?: string | Ref<string>) {
   }
 
   function updateDatabaseContext(metadata: MetadataResponse | null | undefined) {
-    dbContext.value = {
-      dbType: metadata?.dbType ?? null,
-    };
-    enfyraVersion.value = metadata?.enfyraVersion?.trim() || null;
-    metadataContextFetched.value = Boolean(
-      dbContext.value.dbType,
-    );
+    if (!metadata) return;
+    if (metadata.dbType !== undefined) {
+      dbContext.value = { dbType: metadata.dbType ?? null };
+      metadataContextFetched.value = Boolean(dbContext.value.dbType);
+    }
+    if (metadata.enfyraVersion !== undefined) {
+      enfyraVersion.value = metadata.enfyraVersion?.trim() || null;
+    }
   }
 
   function invalidateSchemas(names?: string | string[]) {

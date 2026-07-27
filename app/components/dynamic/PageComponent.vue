@@ -155,6 +155,13 @@ const loadMatchingExtension = async () => {
     return;
   }
 
+  if (tryLoadFromCache()) {
+    currentPermission.value = matchedMenu.value.permission ?? { allowAll: true };
+    isLoading.value = false;
+    await fetchAndLoadExtension(runId);
+    return;
+  }
+
   const endLoading = startRouteLoading();
   try {
     await fetchAndLoadExtension(runId);
