@@ -1,6 +1,10 @@
 import { createError, getRequestURL, type H3Event } from "h3";
+import { getValidatedOrigins } from "../middleware/cors";
 
-export function requireValidRedirectUrl(value: unknown) {
+export async function requireValidRedirectUrl(
+  value: unknown,
+  event?: H3Event
+) {
   if (typeof value !== "string" || value.length === 0) {
     throw createError({
       statusCode: 400,
@@ -8,21 +12,41 @@ export function requireValidRedirectUrl(value: unknown) {
     });
   }
 
+  let parsed: URL;
   try {
-    const parsed = new URL(value);
+    parsed = new URL(value);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
       throw new Error("invalid protocol");
     }
     if (!parsed.origin) {
       throw new Error("missing origin");
     }
-    return parsed.toString();
   } catch {
     throw createError({
       statusCode: 400,
       statusMessage: "Redirect URL must be an absolute http(s) URL",
     });
   }
+
+  const corsCache = await getValidatedOrigins();
+  if (corsCache.loaded && corsCache.origins.length > 0) {
+    if (!corsCache.origins.includes(parsed.origin)) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: "Redirect origin is not allowed",
+      });
+    }
+  } else if (event) {
+    const appOrigin = getRequestURL(event).origin;
+    if (parsed.origin !== appOrigin) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: "Redirect origin is not allowed",
+      });
+    }
+  }
+
+  return parsed.toString();
 }
 
 export function requireValidCookieBridgePrefix(value: unknown) {

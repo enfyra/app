@@ -11,6 +11,11 @@ export function useDataTableActions(
   const { confirm } = useConfirm();
   const { createLoader } = useLoader();
   const { getId } = useDatabase();
+  const { hasPermission } = usePermissions();
+
+  const canDelete = computed(() =>
+    hasPermission(`/${toValue(tableName)}`, 'DELETE')
+  );
 
   const { execute: executeDelete, error: deleteError } = useApi(
     () => `/${toValue(tableName)}`,
@@ -88,6 +93,7 @@ export function useDataTableActions(
   return {
     selectedRows,
     isSelectionMode,
+    canDelete,
     handleDelete,
     handleBulkDelete,
     handleSelectionChange,

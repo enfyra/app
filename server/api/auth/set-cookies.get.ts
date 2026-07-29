@@ -10,7 +10,7 @@ import { setAuthCookies } from "../../utils/auth-cookies";
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
   const query = getQuery(event);
-  const redirect = requireValidRedirectUrl(query.redirect);
+  const redirect = await requireValidRedirectUrl(query.redirect, event);
   const error =
     typeof query.error === "string" && query.error.length > 0
       ? query.error

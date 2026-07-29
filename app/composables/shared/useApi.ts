@@ -151,10 +151,11 @@ function handleError(
   return apiError;
 }
 
-function shouldNavigateToErrorPage(apiError: ApiError): boolean {
+function shouldNavigateToErrorPage(apiError: ApiError, method: string): boolean {
   const s = apiError.status;
   if (s === 401) return false;
-  if (s === 403 || s === 404) return true;
+  const isReadRequest = method.toLowerCase() === 'get';
+  if (s === 403 || s === 404) return isReadRequest;
   if (s != null && s >= 500) return true;
   if (s == null) return true;
   return false;
@@ -286,7 +287,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       if (
         !handled &&
         !disableErrorPage &&
-        shouldNavigateToErrorPage(apiError)
+        shouldNavigateToErrorPage(apiError, String(method || 'get'))
       ) {
         const statusCode =
           apiError.status != null && apiError.status >= 400
