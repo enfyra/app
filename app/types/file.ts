@@ -12,27 +12,3 @@ export interface FileItem {
   updatedAt?: string;
   createdAt?: string;
 }
-
-export interface FileGridProps {
-  files: FileItem[];
-  loading?: boolean;
-  emptyTitle?: string;
-  emptyDescription?: string;
-  isSelectionMode?: boolean;
-  selectedItems?: string[];
-  copyFileUrl?: (file: FileItem) => void;
-}
-
-export interface FileContextMenu {
-  label: string;
-  icon: string;
-  onSelect: () => void;
-  color?:
-    | "primary"
-    | "secondary"
-    | "success"
-    | "info"
-    | "warning"
-    | "error"
-    | "neutral";
-}

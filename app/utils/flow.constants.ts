@@ -106,7 +106,6 @@ export function getStepTimelineClass(s: { status: string }): string {
   return 'eapp-surface-muted border-[var(--border-default)]';
 }
 
-export const NODE_WIDTH = 240;
 export const NODE_SPACING_X = 300;
 export const CENTER_Y = 300;
 export const START_X = 40;

@@ -28,11 +28,3 @@ export function getFolderIconColor(folder: any): string {
 export function getDefaultFolderIcon(): string {
   return "lucide:folder";
 }
-
-export function getSystemFolderIcon(): string {
-  return "lucide:shield";
-}
-
-export function getFolderOpenIcon(): string {
-  return "lucide:folder-open";
-}

@@ -906,10 +906,6 @@ export async function validateEnfyraNoReturnScript(
   };
 }
 
-export async function lintEnfyraTypeScript(source: string): Promise<Diagnostic[]> {
-  return lintEnfyraScript(source, 'typescript');
-}
-
 interface VueScriptBlock {
   content: string;
   contentStart: number;

@@ -99,22 +99,3 @@ export function getFileIconAndColor(mimetype: string): FileIconConfig {
     background: "bg-[var(--surface-muted)]",
   };
 }
-
-export function getFileColor(mimetype: string): string {
-  if (mimetype?.startsWith("image/")) {
-    return "text-green-500 dark:text-green-400";
-  }
-  if (mimetype?.startsWith("video/")) {
-    return "text-purple-500 dark:text-purple-400";
-  }
-  if (mimetype?.startsWith("audio/")) {
-    return "text-orange-500 dark:text-orange-400";
-  }
-  if (mimetype?.includes("pdf") || mimetype?.startsWith("text/")) {
-    return "text-red-500 dark:text-red-400";
-  }
-  if (mimetype?.includes("zip") || mimetype?.includes("archive")) {
-    return "text-yellow-500 dark:text-yellow-400";
-  }
-  return "text-[var(--text-quaternary)]";
-}

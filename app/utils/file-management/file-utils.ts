@@ -5,14 +5,3 @@ export function formatFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
-
-export function transformFileForDisplay(file: any) {
-  return {
-    ...file,
-    displayName: file.filename || file.title || "Untitled",
-    size: formatFileSize(parseInt(file.filesize || "0")),
-    modifiedAt: file.updatedAt || file.createdAt || "",
-    assetUrl: `/assets/${file.id}`,
-    previewUrl: `/assets/${file.id}`,
-  };
-}

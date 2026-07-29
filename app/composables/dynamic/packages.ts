@@ -88,10 +88,6 @@ async function fetchVersionMap(): Promise<Map<string, string>> {
   }
 }
 
-export function invalidateVersionCache(): void {
-  versionCache = null;
-}
-
 async function loadSinglePackage(
   packageName: string,
   packagesObject: Record<string, any>,
