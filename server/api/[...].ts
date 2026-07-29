@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
   if (event.method === "GET" && oauthMatch) {
     const provider = oauthMatch[1];
     const query = getQuery(event);
-    const redirectParam = requireValidRedirectUrl(query.redirect);
+    const redirectParam = await requireValidRedirectUrl(query.redirect, event);
     if (!apiUrl) {
       throw createError({ statusCode: 500, message: "API URL not configured" });
     }
