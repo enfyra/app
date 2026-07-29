@@ -48,7 +48,7 @@
               value: new Date(user.createdAt).toLocaleDateString(),
             },
           ]"
-          :methods="[
+          :methods="hasPermission('/enfyra_user', 'DELETE') ? [
             {
               label: 'Delete',
               props: {
@@ -63,7 +63,7 @@
                 deleteUser(user);
               },
             }
-          ]"
+          ] : []"
           :header-actions="getHeaderActions(user)"
         />
     </CommonResourceListFrame>
@@ -87,6 +87,7 @@ const route = useRoute();
 const router = useRouter();
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
+const { hasPermission } = usePermissions();
 
 const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());

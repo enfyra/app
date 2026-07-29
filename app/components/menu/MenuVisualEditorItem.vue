@@ -22,6 +22,7 @@ const emit = defineEmits<{
 
 const { getId } = useDatabase();
 const { isMobile } = useScreen();
+const { hasPermission } = usePermissions();
 const isDndUpdating = useState('menu-dnd-updating', () => false);
 const isMenuDragActive = useState('menu-dnd-drag-active', () => false);
 const itemLevel = computed(() => props.level || 0);
@@ -161,44 +162,50 @@ const menuItems = computed(() => {
           if (originalMenu) emit('edit-extension', originalMenu);
         }
       });
-      items.push({
-        label: 'Delete Extension',
-        icon: 'lucide:trash-2',
-        color: 'error',
-        onSelect: () => {
-          if (originalMenu) emit('delete-extension', originalMenu);
-        }
-      });
+      if (hasPermission('/enfyra_extension', 'DELETE')) {
+        items.push({
+          label: 'Delete Extension',
+          icon: 'lucide:trash-2',
+          color: 'error',
+          onSelect: () => {
+            if (originalMenu) emit('delete-extension', originalMenu);
+          }
+        });
+      }
     } else {
-      items.push({
-        label: 'Create Extension',
-        icon: 'lucide:puzzle',
-        onSelect: () => {
-          if (originalMenu) emit('edit-extension', originalMenu);
-        }
-      });
+      if (hasPermission('/enfyra_extension', 'POST')) {
+        items.push({
+          label: 'Create Extension',
+          icon: 'lucide:puzzle',
+          onSelect: () => {
+            if (originalMenu) emit('edit-extension', originalMenu);
+          }
+        });
+      }
     }
     return items;
   }
 
-  items.push(
-    {
-      label: 'Edit',
-      icon: 'lucide:edit',
-      onSelect: () => {
-        if (originalMenu) emit('edit-menu', originalMenu);
+  if (hasPermission('/enfyra_menu', 'PATCH')) {
+    items.push(
+      {
+        label: 'Edit',
+        icon: 'lucide:edit',
+        onSelect: () => {
+          if (originalMenu) emit('edit-menu', originalMenu);
+        }
+      },
+      {
+        label: originalMenu.isEnabled ? 'Disable' : 'Enable',
+        icon: originalMenu.isEnabled ? 'lucide:toggle-left' : 'lucide:toggle-right',
+        onSelect: () => {
+          if (originalMenu) emit('toggle-enabled', { menu: originalMenu, enabled: !originalMenu.isEnabled });
+        }
       }
-    },
-    {
-      label: originalMenu.isEnabled ? 'Disable' : 'Enable',
-      icon: originalMenu.isEnabled ? 'lucide:toggle-left' : 'lucide:toggle-right',
-      onSelect: () => {
-        if (originalMenu) emit('toggle-enabled', { menu: originalMenu, enabled: !originalMenu.isEnabled });
-      }
-    }
-  );
+    );
+  }
 
-  if (originalMenu.type === 'Dropdown Menu' && canAcceptChildMenus.value) {
+  if (originalMenu.type === 'Dropdown Menu' && canAcceptChildMenus.value && hasPermission('/enfyra_menu', 'POST')) {
     items.push({
       label: 'Add Child Menu',
       icon: 'lucide:plus-circle',
@@ -210,35 +217,43 @@ const menuItems = computed(() => {
 
   if (originalMenu.type === 'Menu') {
     if (originalMenu.extension) {
-      items.push({
-        label: 'Extension',
-        icon: 'lucide:puzzle',
-        children: [
-          {
-            label: 'Edit Extension',
-            icon: 'lucide:edit',
-            onSelect: () => {
-              if (originalMenu) emit('edit-extension', originalMenu);
-            }
-          },
-          {
-            label: 'Delete Extension',
-            icon: 'lucide:trash-2',
-            color: 'error',
-            onSelect: () => {
-              if (originalMenu) emit('delete-extension', originalMenu);
-            }
+      const extensionChildren: any[] = [];
+      if (hasPermission('/enfyra_extension', 'PATCH')) {
+        extensionChildren.push({
+          label: 'Edit Extension',
+          icon: 'lucide:edit',
+          onSelect: () => {
+            if (originalMenu) emit('edit-extension', originalMenu);
           }
-        ]
-      });
+        });
+      }
+      if (hasPermission('/enfyra_extension', 'DELETE')) {
+        extensionChildren.push({
+          label: 'Delete Extension',
+          icon: 'lucide:trash-2',
+          color: 'error',
+          onSelect: () => {
+            if (originalMenu) emit('delete-extension', originalMenu);
+          }
+        });
+      }
+      if (extensionChildren.length > 0) {
+        items.push({
+          label: 'Extension',
+          icon: 'lucide:puzzle',
+          children: extensionChildren
+        });
+      }
     } else {
-      items.push({
-        label: 'Create Extension',
-        icon: 'lucide:puzzle',
-        onSelect: () => {
-          if (originalMenu) emit('edit-extension', originalMenu);
-        }
-      });
+      if (hasPermission('/enfyra_extension', 'POST')) {
+        items.push({
+          label: 'Create Extension',
+          icon: 'lucide:puzzle',
+          onSelect: () => {
+            if (originalMenu) emit('edit-extension', originalMenu);
+          }
+        });
+      }
     }
   }
 
@@ -258,22 +273,24 @@ const menuItems = computed(() => {
         handleCancelMove();
       }
     });
-  } else if (!originalMenu.isSystem) {
+  } else if (!originalMenu.isSystem && hasPermission('/enfyra_menu', 'DELETE')) {
     items.push({
       type: 'separator'
     });
 
-    items.push({
-      label: 'Move',
-      icon: 'lucide:move',
-      onSelect: () => {
-        if (originalMenu) {
-          const menuId = getId(originalMenu);
-          movingMenuId.value = menuId;
-          emit('move-menu', originalMenu);
+    if (hasPermission('/enfyra_menu', 'PATCH')) {
+      items.push({
+        label: 'Move',
+        icon: 'lucide:move',
+        onSelect: () => {
+          if (originalMenu) {
+            const menuId = getId(originalMenu);
+            movingMenuId.value = menuId;
+            emit('move-menu', originalMenu);
+          }
         }
-      }
-    });
+      });
+    }
 
     items.push({
       label: 'Delete',
