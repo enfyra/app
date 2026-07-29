@@ -77,15 +77,6 @@ export interface MenuApiItem {
   updatedAt?: string;
 }
 
-export interface MenuContextMenuItem {
-  label?: string;
-  icon?: string;
-  onSelect?: () => void;
-  color?: "primary" | "secondary" | "success" | "info" | "warning" | "error" | "neutral";
-  type?: "separator";
-  children?: MenuContextMenuItem[];
-}
-
 export interface DragEventAdded {
   element: MenuTreeItem;
   newIndex: number;

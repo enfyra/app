@@ -2,8 +2,6 @@ export const ACCESS_TOKEN_KEY = "accessToken";
 export const EXP_TIME_KEY = "exp_time";
 export const REFRESH_TOKEN_KEY = "refreshToken";
 
-export const ENFYRA_API_PREFIX = "/api";
-
 export const DEFAULT_ME_FIELDS = [
   "id",
   "email",

@@ -1,10 +1,3 @@
-export function useStableList<T = any>(
-  source: () => T[] | null | undefined,
-  loading: () => boolean,
-) {
-  return useStableListState(source, loading).items;
-}
-
 export function useStableListState<T = any>(
   source: () => T[] | null | undefined,
   loading: () => boolean,

@@ -25,15 +25,6 @@ export function normalizeScriptContract<T extends ScriptContractFields>(
   };
 }
 
-export function clearCompiledCodeOnScriptChange<T extends ScriptContractFields>(
-  record: T,
-): T {
-  return {
-    ...record,
-    compiledCode: null,
-  };
-}
-
 export function stripLegacyScriptFields<T extends Record<string, any>>(
   config: T | null | undefined,
 ): Record<string, any> {
@@ -44,16 +35,4 @@ export function stripLegacyScriptFields<T extends Record<string, any>>(
   delete cleaned.compiledCode;
   delete cleaned.code;
   return cleaned;
-}
-
-export function getScriptSource(
-  record: ScriptContractFields | null | undefined,
-  fallbackConfig?: Record<string, any> | null,
-): string | null {
-  return (
-    record?.sourceCode ??
-    fallbackConfig?.sourceCode ??
-    fallbackConfig?.code ??
-    null
-  );
 }

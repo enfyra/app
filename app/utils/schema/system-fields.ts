@@ -8,10 +8,6 @@ export const CREATE_RECORD_SYSTEM_FIELDS = new Set([
   'isRootAdmin',
 ]);
 
-export function isRecordPrimaryKeyField(key: string) {
-  return RECORD_PRIMARY_KEY_FIELDS.has(key);
-}
-
 export function isCreateRecordSystemField(key: string) {
   return CREATE_RECORD_SYSTEM_FIELDS.has(key);
 }

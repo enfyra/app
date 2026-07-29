@@ -329,7 +329,6 @@ export type RuntimeRequestRow = Pick<
   | 'status4xx'
   | 'status5xx'
 >;
-export type RuntimeDatabaseMetric = RuntimeAppMetrics['database']['queries'][number];
 export type RuntimeDatabaseRow = {
   context: string;
   op: string;
@@ -341,7 +340,6 @@ export type RuntimeDatabaseRow = {
   p95Ms: number;
   p99Ms: number;
 };
-export type RuntimeFlowMetric = RuntimeAppMetrics['flows']['rows'][number];
 export type RuntimeFlowRow = {
   flowId: string | number;
   flowName: string;

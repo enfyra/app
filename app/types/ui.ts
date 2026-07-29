@@ -33,31 +33,6 @@ export interface DataTableProps {
   skeletonRows?: number;
 }
 
-export interface ColumnSelectorProps {
-  items: Array<{
-    label: string;
-    type: "checkbox";
-    checked: boolean;
-    onSelect: (e: Event) => void;
-  }>;
-}
-
-export interface BulkActionsProps {
-  selectedCount: number;
-  onDelete?: () => void;
-}
-
-export interface LoadingProps {
-  show?: boolean;
-  message?: string;
-}
-
-export interface GlobalLoadingProps {
-  show: boolean;
-  title?: string;
-  description?: string;
-}
-
 export interface RouteLoadingProps {
   show?: boolean;
   message?: string;
@@ -185,13 +160,6 @@ export interface AccountPanelItem {
 
 export type UniqueCheckStatus = 'idle' | 'checking' | 'valid' | 'invalid' | 'incomplete';
 
-export interface SettingsCardStat {
-  label: string;
-  value?: string | number;
-  component?: any;
-  props?: Record<string, any>;
-}
-
 export interface SettingsCardAction {
   label: string;
   props?: Record<string, any>;
@@ -208,18 +176,6 @@ export interface SettingsCardHeaderAction {
   label?: string;
   onClick?: (e?: Event) => void;
   onUpdate?: (value: any) => void;
-}
-
-export interface SettingsCardProps {
-  title: string;
-  description?: string;
-  icon: string;
-  iconColor?: "primary" | "success" | "warning" | "error" | "neutral";
-  stats?: SettingsCardStat[];
-  actions?: SettingsCardAction[];
-  headerActions?: SettingsCardHeaderAction[];
-  cardClass?: string;
-  contentLoading?: boolean;
 }
 
 export type SystemVisibilityMode = "custom" | "system" | "all";
