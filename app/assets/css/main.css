@@ -176,7 +176,10 @@ button:focus-visible,
 }
 
 .eapp-surface-hover {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard);
 }
 
 .eapp-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover {
@@ -252,7 +255,9 @@ button:focus-visible,
   border-bottom: 1px solid color-mix(in srgb, var(--border-default) 70%, var(--surface-default));
   background: transparent;
   color: var(--text-primary);
-  transition: background-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .eapp-resource-list-item-sm {
@@ -385,7 +390,10 @@ button:focus-visible,
   border: 1px solid var(--card-border);
   border-radius: var(--radius-card);
   box-shadow: var(--card-shadow);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard);
 }
 
 .dark .surface-card-hover {
@@ -510,7 +518,11 @@ button:focus-visible,
   background: var(--pagination-bg) !important;
   color: var(--pagination-text) !important;
   box-shadow: none !important;
-  transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.14s ease;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .eapp-pagination :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
@@ -545,7 +557,11 @@ button:focus-visible,
 .eapp-accent-soft-hover,
 .eapp-identity-soft-hover,
 .eapp-primary-soft-hover {
-  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .eapp-accent-soft-hover:hover,
@@ -689,7 +705,10 @@ button:focus-visible,
 
 .eapp-identity-surface-hover,
 .eapp-primary-surface-hover {
-  transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .eapp-identity-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover,
@@ -1182,7 +1201,7 @@ button:focus-visible,
 
 .card-float {
   box-shadow: var(--shadow-lg), 0 0 30px color-mix(in srgb, var(--brand-500) 6%, transparent);
-  transition: box-shadow 0.3s var(--ease-smooth);
+  transition: box-shadow var(--duration-emphasized) var(--ease-smooth);
 }
 
 .dark .card-float {
@@ -1199,7 +1218,7 @@ button:focus-visible,
 
 .card-float-primary {
   box-shadow: var(--shadow-primary);
-  transition: box-shadow 0.3s var(--ease-smooth);
+  transition: box-shadow var(--duration-emphasized) var(--ease-smooth);
 }
 
 .card-float-primary:hover {
@@ -1208,7 +1227,7 @@ button:focus-visible,
 
 .card-static {
   box-shadow: var(--shadow-xl);
-  transition: box-shadow 0.3s var(--ease-smooth);
+  transition: box-shadow var(--duration-emphasized) var(--ease-smooth);
 }
 
 .card-static:hover {
@@ -1419,7 +1438,7 @@ button:focus-visible,
 }
 
 .magnetic-hover {
-  transition: transform 0.2s var(--ease-smooth);
+  transition: transform var(--duration-base) var(--ease-smooth);
 }
 
 .magnetic-hover:hover {
@@ -1437,7 +1456,10 @@ button:focus-visible,
   border-radius: var(--radius-control);
   font-size: 14px;
   line-height: 20px;
-  transition: all 0.2s ease;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .menu-item-active {
@@ -1500,7 +1522,10 @@ button:focus-visible,
   font-size: 14px;
   line-height: 20px;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .menu-dropdown-item-active {
@@ -1535,36 +1560,6 @@ button:focus-visible,
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
-}
-
-.item-grid-enter-active {
-  transition:
-    opacity 260ms ease,
-    transform 260ms ease,
-    filter 260ms ease;
-}
-
-.item-grid-leave-active {
-  position: absolute;
-  pointer-events: none;
-  transition:
-    opacity 90ms ease,
-    transform 90ms ease;
-}
-
-.item-grid-move {
-  transition: transform 120ms ease;
-}
-
-.item-grid-enter-from {
-  opacity: 0;
-  filter: saturate(0.92);
-  transform: translateY(8px) scale(0.99);
-}
-
-.item-grid-leave-to {
-  opacity: 0;
-  transform: scale(0.995);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -1669,7 +1664,7 @@ button:focus-visible,
 }
 
 [data-slot="progress"] [data-slot="indicator"] {
-  transition: transform 0.1s linear !important;
+  transition: transform var(--duration-instant) linear !important;
 }
 
 [data-state="closed"][data-vaul-overlay],
@@ -1678,4 +1673,69 @@ button:focus-visible,
 [data-state="closed"][data-slot="content"],
 [data-state="closed"][role="dialog"] {
   pointer-events: none !important;
+}
+
+/*
+ * Reduced motion: keep functional progress visible (skeleton surfaces stay,
+ * spinners keep turning slowly) but remove translation, scaling, shimmer,
+ * and continuous decorative movement.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .transition-all,
+  .transition-colors,
+  .transition-opacity,
+  .transition-transform,
+  .transition-shadow,
+  .transition {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .duration-75,
+  .duration-100,
+  .duration-150,
+  .duration-200,
+  .duration-300,
+  .duration-500,
+  .duration-700,
+  .duration-1000,
+  [class*="duration-[var(--duration-"] {
+    transition-duration: 1ms !important;
+  }
+
+  .animate-float,
+  .animate-slide-up,
+  .animate-glow-pulse,
+  .animate-pulse-glow,
+  .animate-shimmer,
+  .skeleton-shimmer::before,
+  .skeleton-pulse-slow,
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  .animate-slide-up {
+    opacity: 1;
+    transform: none;
+  }
+
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce,
+  .animate-ping {
+    animation-duration: 1.6s !important;
+  }
+
+  .magnetic-hover {
+    transition: none !important;
+  }
+
+  .magnetic-hover:hover {
+    transform: none !important;
+  }
+
+  .hover\:-translate-y-px:hover,
+  .active\:scale-\[0\.99\]:active {
+    transform: none !important;
+  }
 }

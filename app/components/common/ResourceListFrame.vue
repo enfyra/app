@@ -49,7 +49,7 @@ const props = withDefaults(defineProps<{
   emptySize: "sm",
   total: 0,
   itemsPerPage: 0,
-  paginationClass: "mt-6",
+  paginationClass: "",
   paginationAlign: "between",
   paginationLoading: false,
   paginationShowRange: true,

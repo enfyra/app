@@ -74,9 +74,19 @@ export const usePageHeaderRegistry = () => {
       watch(
         () => route.path,
         (newPath) => {
-          pageHeaderConfig.value = routeHeaders.value.get(newPath)?.config ?? null;
+          const registered = routeHeaders.value.get(newPath);
+          if (registered) {
+            pageHeaderConfig.value = registered.config;
+            return;
+          }
+          const previous = pageHeaderConfig.value;
+          nextTick(() => {
+            if (pageHeaderConfig.value === previous) {
+              pageHeaderConfig.value = null;
+            }
+          });
         },
-        { immediate: true, flush: "sync" }
+        { flush: "sync" }
       );
     });
   }

@@ -2,7 +2,7 @@
   <div class="guard-tree-node">
     <div
       :class="[
-        'relative rounded-xl border transition-all',
+        'relative rounded-xl border transition-colors transition-border-color',
         depth === 0
           ? 'border-[var(--border-default)] surface-card p-4'
           : 'border-transparent bg-[var(--surface-muted)] p-3',
@@ -71,9 +71,11 @@
           >
             <UButton
               icon="lucide:more-vertical"
+              aria-label="More actions"
               color="neutral"
               variant="ghost"
               size="xs"
+              class="min-h-[44px] min-w-[44px]"
               @click.stop
             />
           </UDropdownMenu>
@@ -98,10 +100,15 @@
           <template #item="{ element: rule }">
             <div
               :class="[
-                'flex items-center justify-between gap-2 p-2.5 rounded-lg border border-transparent surface-muted transition-all',
+                'flex items-center justify-between gap-2 p-2.5 rounded-lg border border-transparent surface-muted transition-colors transition-border-color',
                 !readonly ? 'hover:border-[var(--border-default)] cursor-pointer' : '',
               ]"
               @click="!readonly && $emit('editRule', rule, guard)"
+              :tabindex="readonly ? -1 : 0"
+              :role="readonly ? undefined : 'button'"
+              :aria-label="readonly ? undefined : `Edit ${getRuleLabel(rule.type)} rule`"
+              @keydown.enter.prevent="!readonly && $emit('editRule', rule, guard)"
+              @keydown.space.prevent="!readonly && $emit('editRule', rule, guard)"
             >
               <div class="flex items-center gap-2 min-w-0 flex-1">
                 <UIcon
@@ -149,9 +156,11 @@
                 <UButton
                   v-if="!readonly"
                   icon="lucide:trash-2"
+                  aria-label="Delete rule"
                   color="error"
                   variant="ghost"
                   size="xs"
+                  class="min-h-[44px] min-w-[44px]"
                   @click.stop="$emit('deleteRule', rule)"
                 />
               </div>

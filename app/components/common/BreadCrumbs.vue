@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { humanizeIdentifier } from "~/utils/form/humanize-label";
+
 const props = defineProps<{
   icon?: string;
   iconMap?: Record<string, string>;
@@ -18,7 +20,7 @@ const items = computed(() => {
   };
 
   const segments = pathParts.map((seg, i) => {
-    const label = props.labelMap?.[seg] || seg;
+    const label = props.labelMap?.[seg] || humanizeIdentifier(seg);
     const to = "/" + pathParts.slice(0, i + 1).join("/");
     const isLast = i === pathParts.length - 1;
     return {

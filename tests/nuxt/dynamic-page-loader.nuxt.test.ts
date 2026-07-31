@@ -132,15 +132,18 @@ describe('DynamicPageComponent', () => {
 })
 
 describe('CommonRouteLoading', () => {
-  it('uses a translucent theme surface with backdrop blur', async () => {
+  it('renders a workspace-scoped translucent overlay without teleporting', async () => {
     const wrapper = await mountSuspended(CommonRouteLoading, {
       props: { show: true, message: 'Navigating...' },
     })
-    const overlay = document.body.querySelector('.fixed.inset-0')
+    const overlay = wrapper.find('[role="status"]')
 
-    expect(overlay?.className).toContain('var(--shell-main-bg)')
-    expect(overlay?.className).toContain('42%')
-    expect(overlay?.classList.contains('backdrop-blur-sm')).toBe(true)
+    expect(overlay.exists()).toBe(true)
+    expect(overlay.classes()).toContain('absolute')
+    expect(overlay.classes()).toContain('inset-0')
+    expect(overlay.classes()).toContain('pointer-events-none')
+    expect(overlay.classes().join(' ')).toContain('var(--shell-main-bg)')
+    expect(document.body.querySelector('.fixed.inset-0')).toBeNull()
 
     wrapper.unmount()
   })

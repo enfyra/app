@@ -32,7 +32,7 @@ const showTitle = computed(() =>
 <template>
   <div 
     :class="[
-      'transition-all duration-300 ease-in-out',
+      'transition-opacity transition-transform duration-[var(--duration-base)] ease-[var(--ease-standard)]',
       loadingType === 'table' || loadingType === 'form' || loadingType === 'card' || loadingType === 'folder' || loadingType === 'file-card' || loadingType === 'menu' ? 'w-full' : 'flex flex-col items-center justify-center',
       context === 'inline' ? 'py-2 gap-2' : (loadingType === 'table' || loadingType === 'form' || loadingType === 'card' || loadingType === 'folder' || loadingType === 'file-card' || loadingType === 'menu') ? 'py-4' : 'py-8 gap-4',
       context === 'button' ? 'py-1 gap-1' : ''

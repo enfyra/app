@@ -395,7 +395,7 @@ async function deleteRoute(routeItem: any) {
 
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade" mode="out-in">
+    <Transition name="loading-fade">
       <div v-if="showInitialLoading" key="loading">
         <CommonResourceListFrame
           :loading="true"
@@ -457,7 +457,6 @@ async function deleteRoute(routeItem: any) {
         <CommonPaginationBar
           v-if="routesData.length > 0 && total > pageLimit"
           v-model:page="page"
-          class="mt-6"
           :items-per-page="pageLimit"
           :total="total"
           :loading="loading"

@@ -57,7 +57,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div>
-    <Transition name="loading-fade" mode="out-in">
+    <Transition name="loading-fade">
       <div
         v-if="debouncedLoading && folders.length === 0"
         class="col-span-full"

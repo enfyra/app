@@ -268,10 +268,11 @@ watch(open, (isOpen) => {
         <UButton
           v-if="viewMode === 'form'"
           icon="lucide:arrow-left"
+          aria-label="Back"
           variant="ghost"
           color="neutral"
           size="sm"
-          class="!rounded-[var(--radius-subcontrol)] !aspect-square -ml-1"
+          class="!rounded-[var(--radius-subcontrol)] !aspect-square -ml-1 min-h-[44px] min-w-[44px]"
           @click="cancelForm"
         />
         <UIcon
@@ -315,6 +316,11 @@ watch(open, (isOpen) => {
               :key="permKey(it)"
               class="cursor-pointer transition-colors rounded-lg px-3 border border-[var(--border-default)] hover:bg-[var(--surface-muted)]"
               @click="openEditForm(it)"
+              tabindex="0"
+              role="button"
+              :aria-label="`Edit ${it.name || 'field permission'}`"
+              @keydown.enter.prevent="openEditForm(it)"
+              @keydown.space.prevent="openEditForm(it)"
             >
               <div class="flex items-start justify-between gap-3 py-3">
                 <div class="min-w-0">
@@ -352,10 +358,11 @@ watch(open, (isOpen) => {
 
                 <UButton
                   icon="lucide:trash-2"
+                  aria-label="Delete field permission"
                   variant="ghost"
                   color="error"
                   size="xs"
-                  class="!rounded-[var(--radius-subcontrol)] !aspect-square flex-shrink-0"
+                  class="!rounded-[var(--radius-subcontrol)] !aspect-square min-h-[44px] min-w-[44px] flex-shrink-0"
                   @click.stop="quickDeleteFieldPerm(it)"
                 />
               </div>

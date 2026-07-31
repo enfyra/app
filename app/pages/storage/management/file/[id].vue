@@ -436,7 +436,8 @@ function getFileIconAndColor(mimetype: string): {
       </div>
     </div>
 
-    <CommonUploadModal
+    <LazyCommonUploadModal
+      v-if="showReplaceModal"
       v-model="showReplaceModal"
       :title="`Replace ${form.filename || 'File'}`"
       :multiple="false"
@@ -456,6 +457,6 @@ function getFileIconAndColor(mimetype: string): {
           }"
         />
       </template>
-    </CommonUploadModal>
+    </LazyCommonUploadModal>
   </div>
 </template>

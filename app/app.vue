@@ -22,7 +22,7 @@ useHead({
 <template>
   <UApp :toaster="toaster">
     <NuxtLayout>
-      <NuxtPage :page-key="(route) => route.path" />
+      <NuxtPage :page-key="(route) => route.path" :transition="{ name: 'eapp-page' }" />
     </NuxtLayout>
   </UApp>
 </template>

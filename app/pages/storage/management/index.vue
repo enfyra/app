@@ -339,7 +339,8 @@ registerHeaderActions([
       </div>
     </div>
 
-    <CommonUploadModal
+    <LazyCommonUploadModal
+      v-if="showUploadModal"
       v-model="showUploadModal"
       title="Upload Files"
       :multiple="true"
@@ -381,7 +382,7 @@ registerHeaderActions([
           />
         </div>
       </template>
-    </CommonUploadModal>
+    </LazyCommonUploadModal>
 
     <FolderCreateModal
       v-model="showCreateModal"

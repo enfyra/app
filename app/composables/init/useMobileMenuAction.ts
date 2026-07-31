@@ -9,6 +9,7 @@ export function useMobileMenuAction() {
     {
       id: "sidebar-toggle",
       icon: sidebarToggleIcon,
+      ariaLabel: "Toggle sidebar",
       variant: "ghost",
       color: "neutral",
       size: "md",

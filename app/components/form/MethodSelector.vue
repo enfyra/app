@@ -155,7 +155,7 @@ onMounted(async () => {
       :disabled="disabled"
       :aria-pressed="isSelected(m)"
       type="button"
-      class="inline-flex h-7 items-center gap-1.5 rounded-md border px-2 font-mono text-xs font-semibold uppercase transition hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+      class="inline-flex h-11 items-center gap-1.5 rounded-md border px-2 font-mono text-xs font-semibold uppercase transition hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50 md:h-9"
       :style="getMethodButtonStyle(m)"
       @click="selectMethod(m)"
     >
@@ -171,10 +171,11 @@ onMounted(async () => {
       to="/settings/methods?create=true"
       type="button"
       icon="lucide:plus"
+      aria-label="Create method"
       variant="outline"
       color="neutral"
       size="xs"
-      class="!size-7 shrink-0 !p-0"
+      class="!size-11 shrink-0 !p-0 md:!size-9"
       title="Create method"
       @click.stop
     />

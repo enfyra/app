@@ -326,6 +326,11 @@ async function removeRelation(index: number) {
       :key="rel.id ?? index"
       class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
       @click="editRelation(rel, index)"
+      tabindex="0"
+      role="button"
+      :aria-label="`Edit relation ${rel.propertyName || 'Unnamed'}`"
+      @keydown.enter.prevent="editRelation(rel, index)"
+      @keydown.space.prevent="editRelation(rel, index)"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
         <UIcon name="lucide:link" class="w-4 h-4 text-muted-foreground shrink-0" />
@@ -353,10 +358,11 @@ async function removeRelation(index: number) {
         >
           <UButton
             :icon="rel.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
+            :aria-label="rel.isPublished ? 'Unpublish relation' : 'Publish relation'"
             :color="rel.isPublished ? 'success' : 'neutral'"
             variant="ghost"
             size="xs"
-            class="cursor-pointer"
+            class="min-h-[44px] min-w-[44px] cursor-pointer"
             @click.stop="rel.isPublished = !rel.isPublished"
           />
         </UTooltip>
@@ -373,21 +379,23 @@ async function removeRelation(index: number) {
           >
             <UButton
               icon="lucide:shield"
+              aria-label="Field permissions"
               color="secondary"
               variant="ghost"
               size="xs"
-              class="cursor-pointer"
+              class="min-h-[44px] min-w-[44px] cursor-pointer"
               @click.stop="handleShieldClick(rel, index)"
             />
           </UChip>
         </UTooltip>
         <UButton
           icon="lucide:trash"
+          aria-label="Delete relation"
           color="error"
           variant="ghost"
           size="xs"
           :disabled="rel.isSystem"
-          class="cursor-not-allowed enabled:cursor-pointer"
+          class="min-h-[44px] min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
           @click.stop="removeRelation(index)"
         />
       </div>

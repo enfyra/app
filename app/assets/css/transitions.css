@@ -1,9 +1,13 @@
-.fade-enter-active {
-  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/*
+ * Single source of truth for named Vue transitions.
+ * Durations/easings come from the semantic motion tokens in theme.css.
+ * Route motion stays restrained: short leave, slightly longer enter,
+ * 3-4px maximum translation, no scale on full pages.
+ */
 
+.fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity var(--duration-base) var(--ease-standard);
 }
 
 .fade-enter-from,
@@ -11,14 +15,9 @@
   opacity: 0;
 }
 
-.fade-enter-to,
-.fade-leave-from {
-  opacity: 1;
-}
-
 .loading-fade-enter-active,
 .loading-fade-leave-active {
-  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
 .loading-fade-enter-from,
@@ -26,77 +25,38 @@
   opacity: 0;
 }
 
-.glass-enter-active {
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+/*
+ * eapp-page: route-level workspace transition. Both entering and leaving
+ * pages share a CSS Grid cell (grid-area: 1/1) via the .route-stack wrapper
+ * in default.vue, so the leaving page stays in layout flow and never
+ * collapses the flex gap. The leaving page is pointer-inert while it fades.
+ */
+.eapp-page-enter-active {
+  transition:
+    opacity var(--duration-base) var(--ease-enter),
+    transform var(--duration-base) var(--ease-enter);
 }
 
-.glass-leave-active {
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+.eapp-page-leave-active {
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-exit);
 }
 
-.glass-enter-from {
+.eapp-page-enter-from {
   opacity: 0;
-  backdrop-filter: blur(0px);
+  transform: translateY(3px);
 }
 
-.glass-leave-to {
+.eapp-page-leave-to {
   opacity: 0;
-  backdrop-filter: blur(0px);
-}
-
-.glass-enter-to,
-.glass-leave-from {
-  opacity: 1;
-  backdrop-filter: blur(20px);
-}
-
-.slide-up-enter-active {
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.slide-up-leave-active {
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.slide-up-enter-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.glow-enter-active {
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.glow-leave-active {
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.glow-enter-from {
-  opacity: 0;
-  box-shadow: 0 0 0 color-mix(in srgb, var(--brand-500) 0%, transparent);
-}
-
-.glow-leave-to {
-  opacity: 0;
-  box-shadow: 0 0 0 color-mix(in srgb, var(--brand-500) 0%, transparent);
-}
-
-.glow-enter-to {
-  opacity: 1;
-  box-shadow: var(--shadow-glow);
 }
 
 .metadata-banner-enter-active,
 .metadata-banner-leave-active {
   transition:
-    max-height 0.32s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.26s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height var(--duration-emphasized) var(--ease-standard),
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-emphasized) var(--ease-standard);
   overflow: hidden;
 }
 
@@ -114,30 +74,83 @@
   transform: translateY(0);
 }
 
-.item-grid-move,
-.item-grid-enter-active,
-.item-grid-leave-active {
-  transition:
-    opacity 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+/*
+ * item-grid: opt-in list animation for curated non-API content. API-backed
+ * lists keep records mounted and do not replay entry motion on refetch.
+ */
+
+/*
+ * sidebar-menu-loading: skeleton ↔ tree swap during menu reload.
+ */
+.sidebar-menu-loading-enter-active,
+.sidebar-menu-loading-leave-active {
+  transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
-.item-grid-enter-from {
+.sidebar-menu-loading-enter-from,
+.sidebar-menu-loading-leave-to {
   opacity: 0;
-  transform: translateY(0.5rem) scale(0.98);
-}
-
-.item-grid-leave-to {
-  opacity: 0;
-  transform: translateY(-0.375rem) scale(0.98);
 }
 
 .item-grid-enter-active {
   z-index: 1;
+  transition:
+    opacity var(--duration-base) var(--ease-enter),
+    transform var(--duration-base) var(--ease-enter),
+    filter var(--duration-base) var(--ease-enter);
 }
 
 .item-grid-leave-active {
-  position: absolute;
-  z-index: 0;
+  /* Dormant while AnimatedGrid remains opt-in with no animated callers. */
   pointer-events: none;
+  will-change: opacity;
+  transition: opacity var(--duration-instant) var(--ease-exit);
+}
+
+.item-grid-move {
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.item-grid-enter-from {
+  opacity: 0;
+  filter: saturate(0.92);
+  transform: translateY(8px) scale(0.99);
+}
+
+.item-grid-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-menu-loading-enter-active,
+  .sidebar-menu-loading-leave-active {
+    transition-duration: 1ms !important;
+  }
+
+  .fade-enter-active,
+  .fade-leave-active,
+  .loading-fade-enter-active,
+  .loading-fade-leave-active,
+  .eapp-page-enter-active,
+  .eapp-page-leave-active,
+  .metadata-banner-enter-active,
+  .metadata-banner-leave-active,
+  .item-grid-enter-active,
+  .item-grid-leave-active {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .item-grid-move {
+    transition: none !important;
+  }
+
+  .eapp-page-enter-from,
+  .metadata-banner-enter-from,
+  .metadata-banner-leave-to,
+  .item-grid-enter-from,
+  .item-grid-leave-to {
+    transform: none;
+    filter: none;
+  }
 }

@@ -12,6 +12,7 @@
 
     <main
       id="main-content"
+      tabindex="-1"
       class="relative flex flex-1 flex-col min-h-0 overflow-hidden"
       :style="{ background: 'transparent' }"
     >
@@ -57,11 +58,10 @@
 
       <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
 
-      <section class="flex-1 min-h-0 overflow-y-auto relative app-workspace" :style="{ background: 'transparent' }">
-        <div class="flex flex-col flex-1 min-h-full gap-4 px-5 py-4 lg:px-6">
+      <section class="flex-1 min-h-0 overflow-y-scroll relative app-workspace">
+        <div class="relative flex flex-col flex-1 min-h-full gap-4 px-5 py-4 lg:px-6">
           <CommonPageHeader
             v-if="hasPageHeader"
-            :key="`${pageHeader!.title}-${pageHeader?.description || ''}-${pageHeader?.variant || 'default'}-${pageHeader?.gradient || 'none'}-${pageHeader?.leadingIcon ?? ''}-${pageHeader?.hideLeadingIcon ? '0' : '1'}`"
             :title="pageHeader!.title"
             :description="pageHeader?.description"
             :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
@@ -70,8 +70,11 @@
             :leading-icon="pageHeader?.leadingIcon"
             :hide-leading-icon="pageHeader?.hideLeadingIcon"
           />
-          <slot />
+          <div class="grid min-w-0 w-full flex-1 route-stack">
+            <slot />
+          </div>
         </div>
+        <CommonRouteLoading :show="routeLoadingVisible" message="Navigating..." />
       </section>
     </main>
   </div>
@@ -81,7 +84,6 @@
   <CommonGlobalConfirm />
   <DynamicGlobalExtensionsHost />
   <FolderDetailModal />
-  <CommonRouteLoading :show="routeLoading" message="Navigating..." />
 </template>
 
 <script setup lang="ts">
@@ -103,10 +105,17 @@ useMobileMenuAction();
 useNavigationActions();
 useAdminSocket();
 
-const { routeLoading } = useGlobalState();
+const { routeLoadingVisible } = useGlobalState();
+const route = useRoute();
 const { width } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
 const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
+useWorkspaceScroll();
+
+watch(() => route.path, async () => {
+  await nextTick();
+  document.getElementById('main-content')?.focus({ preventScroll: true });
+});
 
 await useInitialData();
 await Promise.all([
@@ -141,24 +150,15 @@ const bannerTitle = computed(() => {
 
 <style scoped>
 .app-workspace {
-  scrollbar-gutter: stable;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
-  scrollbar-width: thin;
+  background: var(--bg-app);
 }
 
-.app-workspace::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+.route-stack > * {
+  grid-area: 1 / 1;
+  min-width: 0;
 }
 
-.app-workspace::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.app-workspace::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
-  border-radius: 999px;
-  background: var(--scrollbar-thumb);
-  background-clip: padding-box;
+.route-stack {
+  grid-template-columns: minmax(0, 1fr);
 }
 </style>

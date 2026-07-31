@@ -17,6 +17,13 @@ const props = withDefaults(defineProps<{
 const STORAGE_KEY = "sidebar-menu-open-keys";
 const openMenuKeys = useState<Record<string, boolean>>("sidebar-menu-open-keys", () => ({}));
 const { getMenuNotification } = useMenuNotificationRegistry();
+const { schedulePrefetchIntent, cancelPrefetchIntent } = useExtensionPrefetch();
+
+function handleItemIntent(item: any) {
+  const target = item?.to ?? item?.route;
+  const path = typeof target === "string" ? target : target?.path;
+  schedulePrefetchIntent(path);
+}
 
 function menuKey(item: any): string {
   return item.to || item.label;
@@ -24,7 +31,7 @@ function menuKey(item: any): string {
 
 function isMenuOpen(item: any): boolean {
   const key = menuKey(item);
-  return openMenuKeys.value[key] ?? true;
+  return openMenuKeys.value[key] ?? (item.active || item.branchActive);
 }
 
 function toggleMenu(item: any) {
@@ -147,6 +154,10 @@ watch(
         class="app-sidebar-link"
         :class="{ active: item.active, collapsed: props.collapsed, 'with-count': hasNotification(item) }"
         :title="props.collapsed ? item.label : undefined"
+        @pointerenter="handleItemIntent(item)"
+        @pointerleave="cancelPrefetchIntent"
+        @focus="handleItemIntent(item)"
+        @blur="cancelPrefetchIntent"
       >
         <UIcon
           v-if="props.level === 0 || !props.useDots"
@@ -193,6 +204,7 @@ watch(
           :aria-expanded="isMenuOpen(item)"
           :aria-disabled="isDisabledParent(item)"
           :disabled="isDisabledParent(item)"
+          :aria-label="props.collapsed ? item.label : undefined"
           @click="toggleMenu(item)"
         >
           <UIcon
@@ -365,7 +377,7 @@ watch(
 
 .nested .app-sidebar-link {
   grid-template-columns: 20px minmax(0, 1fr);
-  min-height: 30px;
+  min-height: 40px;
   border-radius: var(--radius-subcontrol);
   padding: 0 8px;
   color: var(--text-tertiary);

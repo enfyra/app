@@ -115,7 +115,6 @@ watch(
     :items-per-page="pageLimit"
     :pagination-loading="loading"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
         <CommonResourceListItem
           v-for="script in bootstrapScripts"

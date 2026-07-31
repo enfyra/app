@@ -250,19 +250,23 @@ const columns = computed(() => {
         config.width = Math.min(Math.max(maxIdLength * 9 + 72, 84), 220);
         config.minWidth = 84;
         config.maxWidth = 220;
+        config.format = "id";
       }
 
-      if (field.type === "timestamp") {
+      if (fieldName === "id" || fieldName === "_id") {
+        // already set above
+      } else if (field.type === "timestamp" || field.type === "datetime" || (field.type as string) === "datetime") {
         config.format = "datetime";
       } else if (field.type === "date") {
         config.format = "date";
       } else if (field.type === "boolean") {
-        config.format = "badge";
-        config.formatOptions = {
-          badgeColor: (value: boolean) => (value ? "success" : "neutral"),
-          badgeVariant: "soft",
-          badgeMap: { true: "Yes", false: "No" },
-        };
+        config.format = "boolean";
+      } else if (field.type === "int" || field.type === "bigint" || (field.type as string) === "float" || (field.type as string) === "decimal" || (field.type as string) === "numeric" || (field.type as string) === "number") {
+        config.format = "number";
+      } else if (field.type === "simple-json" || (field.type as string) === "json" || (field.type as string) === "jsonb") {
+        config.format = "json";
+      } else if (field.type === "text" || field.type === "richtext") {
+        config.format = "text-long";
       } else {
         config.format = "custom";
         config.formatOptions = {
@@ -345,7 +349,6 @@ async function clearFilters() {
 }
 
 watch(tableName, () => {
-  data.value = [];
   total.value = 1;
   currentFilter.value = createEmptyFilter();
   resetSelection();
@@ -418,7 +421,7 @@ registerHeaderActions([
 
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade" mode="out-in">
+    <Transition name="loading-fade">
       <div v-if="!isSingleRecord" key="list" class="space-y-6">
 
     <div
@@ -447,7 +450,6 @@ registerHeaderActions([
         :total="total"
         :loading="loading"
         :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-        :ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
       />
     </div>
 

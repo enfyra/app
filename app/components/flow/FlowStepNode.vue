@@ -10,7 +10,7 @@
   >
     <Handle type="target" :position="Position.Left" class="flow-handle" />
     <div class="flow-add-btn">
-      <UIcon name="i-lucide-plus" class="w-4 h-4 transition-transform duration-200 group-hover:scale-110" />
+      <UIcon name="i-lucide-plus" class="w-4 h-4 transition-transform duration-[var(--duration-base)] group-hover:scale-110" />
     </div>
     <span class="flow-add-label">{{ data.label || 'Add step' }}</span>
   </div>
@@ -205,7 +205,11 @@ const badges = computed(() => {
   justify-content: center;
   color: var(--text-quaternary);
   background: var(--surface-default);
-  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .flow-add-node:hover .flow-add-btn {
@@ -229,7 +233,7 @@ const badges = computed(() => {
   font-weight: 500;
   color: var(--text-quaternary);
   white-space: nowrap;
-  transition: color 0.2s ease;
+  transition: color var(--duration-base) var(--ease-standard);
 }
 
 .flow-add-node:hover .flow-add-label {
@@ -242,7 +246,9 @@ const badges = computed(() => {
   background: color-mix(in srgb, var(--md-primary) 8%, var(--surface-default));
   box-shadow: var(--shadow-xs);
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .flow-trigger-node:hover,
@@ -272,7 +278,9 @@ const badges = computed(() => {
   background: var(--surface-default);
   box-shadow: var(--shadow-xs);
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
 }
 
 .flow-step-card:hover,
@@ -412,7 +420,9 @@ const badges = computed(() => {
   justify-content: center;
   border-radius: var(--radius-subcontrol);
   color: var(--text-quaternary);
-  transition: all 0.15s ease;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
 }
 
 .flow-reorder-btn:hover:not(:disabled) {

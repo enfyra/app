@@ -107,10 +107,11 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
           v-if="props.showClose"
           type="button"
           icon="lucide:x"
+          aria-label="Close"
           color="error"
           variant="soft"
           :size="(isMobile || isTablet) ? 'lg' : 'xl'"
-          :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square flex-shrink-0' : 'flex-shrink-0'"
+          :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square min-h-[44px] min-w-[44px] flex-shrink-0' : 'min-h-[44px] min-w-[44px] flex-shrink-0'"
           @click.stop.prevent="close"
         />
       </div>

@@ -30,7 +30,7 @@
       </div>
     </template>
 
-    <Transition name="loading-fade" mode="out-in">
+    <Transition name="loading-fade">
       <CommonLoadingState
         v-if="loading"
         title="Loading guards..."
@@ -44,7 +44,7 @@
             v-for="guard in guards"
             :key="getId(guard)"
             :to="`/settings/guards/${getId(guard)}`"
-            class="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent surface-muted hover:border-[var(--border-default)] transition-all cursor-pointer"
+            class="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent surface-muted hover:border-[var(--border-default)] transition-colors transition-border-color cursor-pointer"
           >
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div
@@ -93,7 +93,7 @@
               v-for="guard in globalGuards"
               :key="getId(guard)"
               :to="`/settings/guards/${getId(guard)}`"
-              class="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent surface-muted hover:border-[var(--border-default)] transition-all cursor-pointer mb-2"
+              class="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent surface-muted hover:border-[var(--border-default)] transition-colors transition-border-color cursor-pointer mb-2"
             >
               <div class="flex items-center gap-3 min-w-0 flex-1">
                 <div
@@ -148,7 +148,7 @@
             v-for="guard in globalGuards"
             :key="getId(guard)"
             :to="`/settings/guards/${getId(guard)}`"
-            class="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent surface-muted hover:border-[var(--border-default)] transition-all cursor-pointer mb-2"
+            class="flex items-center justify-between gap-3 p-3 rounded-xl border border-transparent surface-muted hover:border-[var(--border-default)] transition-colors transition-border-color cursor-pointer mb-2"
           >
             <div class="flex items-center gap-3 min-w-0 flex-1">
               <div

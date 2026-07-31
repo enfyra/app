@@ -6,6 +6,7 @@
     >
       <input
         v-model="localEditingName"
+        aria-label="Rename"
         @keyup.enter="!editingLoading && $emit('save-edit')"
         @keyup.escape="!editingLoading && $emit('cancel-edit')"
         :disabled="editingLoading"
@@ -23,19 +24,21 @@
         <UButton
           v-if="localEditingName.trim() !== originalName"
           icon="lucide:check"
+          aria-label="Save"
           size="xs"
           color="success"
           variant="solid"
           @click.stop="$emit('save-edit')"
-          class="!p-1 !min-w-[24px] !w-6 !h-6 flex items-center justify-center"
+          class="!p-1 !min-h-[44px] !min-w-[44px] flex items-center justify-center"
         />
         <UButton
           icon="lucide:x"
+          aria-label="Cancel"
           size="xs"
           color="error"
           variant="solid"
           @click.stop="$emit('cancel-edit')"
-          class="!p-1 !min-w-[24px] !w-6 !h-6 flex items-center justify-center [&_svg]:text-white"
+          class="!p-1 !min-h-[44px] !min-w-[44px] flex items-center justify-center [&_svg]:text-white"
         />
       </div>
     </div>

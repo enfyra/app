@@ -48,6 +48,7 @@ export interface PermissionGateProps {
 export interface HeaderAction {
   id: string;
   label?: string | ComputedRef<string>;
+  ariaLabel?: string;
   icon?: string | ComputedRef<string>;
   variant?:
     | "solid"

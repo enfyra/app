@@ -87,7 +87,9 @@ onUnmounted(() => {
                   size="lg"
                   variant="soft"
                   icon="lucide:arrow-left"
+                  aria-label="Close log viewer"
                   color="neutral"
+                  class="min-h-[44px] min-w-[44px]"
                   @click="handleClose"
                 />
                 <div class="w-8 h-8 rounded-lg eapp-primary-solid flex items-center justify-center">
@@ -114,7 +116,8 @@ onUnmounted(() => {
                       variant="ghost"
                       color="neutral"
                       icon="lucide:x"
-                      class="-mr-1"
+                      aria-label="Clear search"
+                      class="-mr-1 min-h-[44px] min-w-[44px]"
                       @click="handleClearSearch"
                     />
                   </template>
@@ -124,6 +127,8 @@ onUnmounted(() => {
                   variant="soft"
                   color="neutral"
                   icon="lucide:copy"
+                  aria-label="Copy log"
+                  class="min-h-[44px] min-w-[44px]"
                   :disabled="lines.length === 0"
                   @click="handleCopy"
                 />
@@ -132,6 +137,8 @@ onUnmounted(() => {
                   variant="soft"
                   color="neutral"
                   icon="lucide:download"
+                  aria-label="Download log"
+                  class="min-h-[44px] min-w-[44px]"
                   :disabled="!filename"
                   @click="handleDownload"
                 />
@@ -140,6 +147,8 @@ onUnmounted(() => {
                   variant="soft"
                   color="neutral"
                   icon="lucide:refresh-cw"
+                  aria-label="Reload log"
+                  class="min-h-[44px] min-w-[44px]"
                   :loading="loading"
                   :disabled="!filename"
                   @click="handleReload"
@@ -160,7 +169,8 @@ onUnmounted(() => {
                     variant="ghost"
                     color="neutral"
                     icon="lucide:x"
-                    class="-mr-1"
+                    aria-label="Clear search"
+                    class="-mr-1 min-h-[44px] min-w-[44px]"
                     @click="handleClearSearch"
                   />
                 </template>
@@ -170,6 +180,8 @@ onUnmounted(() => {
                 variant="soft"
                 color="neutral"
                 icon="lucide:copy"
+                aria-label="Copy log"
+                class="min-h-[44px] min-w-[44px]"
                 :disabled="lines.length === 0"
                 @click="handleCopy"
               />
@@ -178,6 +190,8 @@ onUnmounted(() => {
                 variant="soft"
                 color="neutral"
                 icon="lucide:download"
+                aria-label="Download log"
+                class="min-h-[44px] min-w-[44px]"
                 :disabled="!filename"
                 @click="handleDownload"
               />
@@ -186,6 +200,8 @@ onUnmounted(() => {
                 variant="soft"
                 color="neutral"
                 icon="lucide:refresh-cw"
+                aria-label="Reload log"
+                class="min-h-[44px] min-w-[44px]"
                 :loading="loading"
                 :disabled="!filename"
                 @click="handleReload"

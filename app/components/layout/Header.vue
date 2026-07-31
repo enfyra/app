@@ -32,6 +32,7 @@
           :square="isHeaderActionIconOnly(action)"
           @click="handleHeaderActionClick(action)"
           :class="getHeaderActionButtonClass(action)"
+          :aria-label="action.ariaLabel || (isRef(action.label) ? unref(action.label) : action.label) || action.id"
         />
       </template>
     </div>

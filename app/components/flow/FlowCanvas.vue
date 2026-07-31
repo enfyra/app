@@ -333,7 +333,7 @@ watch(() => nodes.value.length, async () => {
 }
 
 .flow-canvas-wrapper :deep(.vue-flow__edge-path) {
-  transition: stroke 0.2s ease;
+  transition: stroke var(--duration-base) var(--ease-standard);
 }
 
 .flow-canvas-wrapper :deep(.vue-flow__edge:hover .vue-flow__edge-path) {
@@ -363,7 +363,9 @@ watch(() => nodes.value.length, async () => {
   background: var(--surface-default) !important;
   border-bottom: 1px solid var(--border-subtle) !important;
   color: var(--text-secondary) !important;
-  transition: all 0.15s ease !important;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard) !important;
 }
 
 .flow-canvas-wrapper :deep(.vue-flow__controls-button:hover) {

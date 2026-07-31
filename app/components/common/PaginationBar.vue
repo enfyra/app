@@ -42,7 +42,15 @@ const rootClass = computed(() =>
 </script>
 
 <template>
-  <div v-if="hasPagination" :class="['eapp-pagination', rootClass]">
+  <div
+    v-if="hasPagination"
+    :class="[
+      'eapp-pagination sticky bottom-0 z-10',
+      '-mx-5 px-5 lg:-mx-6 lg:px-6 py-3',
+      'bg-[var(--bg-app)]',
+      rootClass,
+    ]"
+  >
     <div class="flex min-w-0 items-center gap-2">
       <UPagination
         v-model:page="page"

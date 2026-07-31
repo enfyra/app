@@ -1,4 +1,7 @@
 
+const ROUTE_LOADING_DELAY_MS = 180;
+let routeLoadingDelayTimer: ReturnType<typeof setTimeout> | null = null;
+
 export const useGlobalState = () => {
   const settings = useState<any>("global:settings", () => {});
   const storageConfigs = useState<any[]>("global:storage:configs", () => []);
@@ -17,6 +20,7 @@ export const useGlobalState = () => {
   );
   const routeLoading = useState<boolean>("global:route:loading", () => false);
   const routeLoadingGeneration = useState<number>("global:route:loading:generation", () => 0);
+  const routeLoadingVisible = useState<boolean>("global:route:loading:visible", () => false);
 
   const fileUpdateTimestamp = useState<Record<string, number>>(
     "global:file:update:timestamp",
@@ -133,19 +137,45 @@ export const useGlobalState = () => {
     sidebarCollapsed.value = collapsed;
   }
 
+  function cancelRouteLoadingDelay() {
+    if (routeLoadingDelayTimer) {
+      clearTimeout(routeLoadingDelayTimer);
+      routeLoadingDelayTimer = null;
+    }
+  }
+
+  function scheduleRouteLoadingVisible() {
+    if (routeLoadingVisible.value || routeLoadingDelayTimer) return;
+    routeLoadingDelayTimer = setTimeout(() => {
+      routeLoadingDelayTimer = null;
+      if (routeLoading.value) {
+        routeLoadingVisible.value = true;
+      }
+    }, ROUTE_LOADING_DELAY_MS);
+  }
+
   function setRouteLoading(loading: boolean) {
     routeLoadingGeneration.value += 1;
     routeLoading.value = loading;
+    if (loading) {
+      scheduleRouteLoadingVisible();
+    } else {
+      cancelRouteLoadingDelay();
+      routeLoadingVisible.value = false;
+    }
   }
 
   function beginRouteLoading() {
     const generation = routeLoadingGeneration.value + 1;
     routeLoadingGeneration.value = generation;
     routeLoading.value = true;
+    scheduleRouteLoadingVisible();
 
     return () => {
       if (routeLoadingGeneration.value !== generation) return;
       routeLoading.value = false;
+      cancelRouteLoadingDelay();
+      routeLoadingVisible.value = false;
     };
   }
   
@@ -181,6 +211,7 @@ export const useGlobalState = () => {
     sidebarVisible,
     sidebarCollapsed,
     routeLoading,
+    routeLoadingVisible,
     toggleSidebar,
     setSidebarVisible,
     toggleSidebarCollapsed,

@@ -8,8 +8,6 @@ const { checkPermissionCondition } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
-const suppressSidebarPersist = ref(false);
-const hoverOpenedSidebar = ref(false);
 const showMenuSkeleton = ref(false);
 let menuSkeletonTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -21,7 +19,6 @@ if (import.meta.client) {
 }
 
 watch(sidebarVisible, (val) => {
-  if (suppressSidebarPersist.value) return;
   if (import.meta.client && width.value >= 1024) {
     localStorage.setItem('sidebar-open', String(val));
   }
@@ -166,17 +163,15 @@ const navigationItems = computed(() => {
   return groups;
 });
 
-function collectRailItems(items: any[]): any[] {
-  return items.flatMap((item) => {
-    const children = item.children?.length ? collectRailItems(item.children) : [];
-    if (item.to && !item.collapsible) {
-      return [{ ...item, children: undefined, collapsible: false }, ...children];
-    }
-    return children;
-  });
+function collectTopLevelRailItems(items: any[]): any[] {
+  return items.map((item) => ({
+    ...item,
+    children: undefined,
+    collapsible: false,
+  }));
 }
 
-const collapsedRailItems = computed(() => collectRailItems(navigationItems.value.flat()));
+const collapsedRailItems = computed(() => collectTopLevelRailItems(navigationItems.value.flat()));
 
 const componentGroups = computed(() => {
   return visibleGroups.value.filter(g => g.position !== 'bottom' && g.component);
@@ -188,26 +183,24 @@ const bottomGroups = computed(() => {
 
 const isMobile = computed(() => width.value < 1024);
 const isDesktopCollapsed = computed(() => !isMobile.value && !sidebarVisible.value);
-
-function setSidebarVisibleTransient(value: boolean) {
-  suppressSidebarPersist.value = true;
-  sidebarVisible.value = value;
-  nextTick(() => {
-    suppressSidebarPersist.value = false;
-  });
-}
+const isPeeking = ref(false);
+let peekLeaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 function showSidebarPeek() {
-  if (isDesktopCollapsed.value) {
-    hoverOpenedSidebar.value = true;
-    setSidebarVisibleTransient(true);
+  if (!isDesktopCollapsed.value) return;
+  if (peekLeaveTimer) {
+    clearTimeout(peekLeaveTimer);
+    peekLeaveTimer = null;
   }
+  isPeeking.value = true;
 }
 
 function hideSidebarPeek() {
-  if (!hoverOpenedSidebar.value) return;
-  hoverOpenedSidebar.value = false;
-  setSidebarVisibleTransient(false);
+  if (!isPeeking.value) return;
+  peekLeaveTimer = setTimeout(() => {
+    isPeeking.value = false;
+    peekLeaveTimer = null;
+  }, 120);
 }
 
 const renderExpandedSidebarContent = computed(() => {
@@ -229,101 +222,168 @@ onUnmounted(() => {
   if (menuSkeletonTimer) {
     clearTimeout(menuSkeletonTimer);
   }
+  if (peekLeaveTimer) {
+    clearTimeout(peekLeaveTimer);
+    peekLeaveTimer = null;
+  }
 });
 </script>
 
 <template>
-  <USidebar
-    v-model:open="sidebarVisible"
-    variant="sidebar"
-    collapsible="icon"
-    class="eapp-sidebar"
-    :style="{ '--sidebar-width': '280px' }"
-    :ui="{
-      gap: '!duration-[120ms]',
-      container: 'h-full !z-[99999] !duration-[140ms]',
-      inner: '!bg-[var(--shell-sidebar-bg)] !border-r !border-[var(--shell-sidebar-border)] !divide-transparent backdrop-blur-xl shadow-none',
-      header: 'px-[18px] pb-3 pt-6 group-data-[state=collapsed]/sidebar:px-2',
-      body: 'flex min-h-0 flex-1 flex-col gap-5 !overflow-y-auto border-0 px-[18px] group-data-[state=collapsed]/sidebar:px-3',
-      footer: 'flex flex-col gap-1.5 overflow-hidden w-full p-0 px-[18px] pb-7 max-lg:pb-4 group-data-[state=collapsed]/sidebar:px-3',
-    }"
-    @mouseenter="showSidebarPeek"
-    @mouseleave="hideSidebarPeek"
-    @focusin="showSidebarPeek"
-  >
-    <template #title>
-      <div
-        class="flex min-w-0 items-center overflow-hidden"
-        :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
-      >
-        <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
-          <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
-          <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
+  <div class="relative h-full" @mouseenter="showSidebarPeek" @mouseleave="hideSidebarPeek" @focusin="showSidebarPeek" @focusout="hideSidebarPeek">
+    <USidebar
+      v-model:open="sidebarVisible"
+      variant="sidebar"
+      collapsible="icon"
+      class="eapp-sidebar"
+      :style="{ '--sidebar-width': '280px' }"
+      :ui="{
+        gap: '!duration-[120ms]',
+        container: 'h-full !z-[99999] !duration-[140ms]',
+        inner: '!bg-[var(--shell-sidebar-bg)] !border-r !border-[var(--shell-sidebar-border)] !divide-transparent backdrop-blur-xl shadow-none',
+        header: 'px-[18px] pb-3 pt-6 group-data-[state=collapsed]/sidebar:px-2',
+        body: 'flex min-h-0 flex-1 flex-col gap-5 !overflow-y-auto border-0 px-[18px] group-data-[state=collapsed]/sidebar:px-3',
+        footer: 'flex min-h-0 w-full flex-col gap-1.5 overflow-y-auto p-0 px-[18px] pb-7 max-lg:pb-4 group-data-[state=collapsed]/sidebar:px-3',
+      }"
+    >
+      <template #title>
+        <div
+          class="flex min-w-0 items-center overflow-hidden"
+          :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
+        >
+          <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
+            <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
+            <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
+          </div>
+          <div v-if="renderExpandedSidebarContent" class="min-w-0 flex-1 transition-opacity duration-100" :class="{ 'opacity-0': !showExpandedSidebarLabels }">
+            <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
+            <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
+          </div>
         </div>
-        <div v-if="renderExpandedSidebarContent" class="min-w-0 flex-1 transition-opacity duration-100" :class="{ 'opacity-0': !showExpandedSidebarLabels }">
-          <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
-          <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
+      </template>
+      <template #description />
+
+      <template #default>
+        <div v-for="group in componentGroups" :key="group.id" class="mb-3">
+          <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
         </div>
-      </div>
-    </template>
-    <template #description />
 
-    <template #default>
-      <div v-for="group in componentGroups" :key="group.id" class="mb-3">
-        <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
-      </div>
-
-      <nav class="app-sidebar-nav" aria-label="Main navigation">
-        <Transition name="sidebar-menu-loading" mode="out-in">
-          <div
-            v-if="showMenuSkeleton"
-            key="menu-skeleton"
-            class="app-sidebar-menu-skeleton"
-            :class="{ collapsed: !renderExpandedSidebarContent }"
-            aria-label="Loading navigation"
-          >
+        <nav class="app-sidebar-nav" aria-label="Main navigation">
+          <div class="sidebar-menu-stack">
+          <Transition name="sidebar-menu-loading">
             <div
-              v-for="i in 7"
-              :key="i"
-              class="app-sidebar-menu-skeleton-row"
+              v-if="showMenuSkeleton"
+              key="menu-skeleton"
+              class="app-sidebar-menu-skeleton"
+              :class="{ collapsed: !renderExpandedSidebarContent }"
+              aria-label="Loading navigation"
             >
-              <div class="app-sidebar-menu-skeleton-icon skeleton-gradient skeleton-pulse-slow" />
               <div
-                v-if="renderExpandedSidebarContent"
-                class="app-sidebar-menu-skeleton-label skeleton-gradient skeleton-pulse-slow"
-                :style="{ width: `${64 + (i % 4) * 12}%` }"
+                v-for="i in 7"
+                :key="i"
+                class="app-sidebar-menu-skeleton-row"
+              >
+                <div class="app-sidebar-menu-skeleton-icon skeleton-gradient skeleton-pulse-slow" />
+                <div
+                  v-if="renderExpandedSidebarContent"
+                  class="app-sidebar-menu-skeleton-label skeleton-gradient skeleton-pulse-slow"
+                  :style="{ width: `${64 + (i % 4) * 12}%` }"
+                />
+              </div>
+            </div>
+
+            <div v-else key="menu-tree" class="app-sidebar-menu-tree">
+              <SidebarMenuTree
+                v-for="(group, groupIndex) in (!renderExpandedSidebarContent ? [collapsedRailItems] : navigationItems)"
+                :key="groupIndex"
+                :items="group"
+                :collapsed="!renderExpandedSidebarContent"
+                :labels-visible="showExpandedSidebarLabels"
               />
+            </div>
+          </Transition>
+          </div>
+        </nav>
+      </template>
+
+      <template #footer>
+        <template v-for="group in bottomGroups" :key="group.id" >
+          <PermissionGate :condition="group.permission as any">
+            <component
+              v-if="group.component"
+              :is="group.component"
+              v-bind="{ ...(group.componentProps || {}), collapsed: !renderExpandedSidebarContent }"
+            />
+          </PermissionGate>
+        </template>
+      </template>
+    </USidebar>
+
+    <Transition name="fade">
+      <div
+        v-if="isPeeking"
+        class="sidebar-peek-overlay"
+        @mouseenter="showSidebarPeek"
+        @mouseleave="hideSidebarPeek"
+      >
+        <div class="sidebar-peek-panel">
+          <div class="px-[18px] pb-3 pt-6">
+            <div class="flex min-w-0 items-center gap-3 px-1.5">
+              <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
+                <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
+                <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
+                <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
+              </div>
             </div>
           </div>
 
-          <div v-else key="menu-tree" class="app-sidebar-menu-tree">
-            <SidebarMenuTree
-              v-for="(group, groupIndex) in (!renderExpandedSidebarContent ? [collapsedRailItems] : navigationItems)"
-              :key="groupIndex"
-              :items="group"
-              :collapsed="!renderExpandedSidebarContent"
-              :labels-visible="showExpandedSidebarLabels"
-            />
-          </div>
-        </Transition>
-      </nav>
-    </template>
+          <div class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-[18px]">
+            <div v-for="group in componentGroups" :key="group.id" class="mb-3">
+              <component :is="group.component" v-bind="group.componentProps || {}" />
+            </div>
 
-    <template #footer>
-      <template v-for="group in bottomGroups" :key="group.id" >
-        <PermissionGate :condition="group.permission as any">
-          <component
-            v-if="group.component"
-            :is="group.component"
-            v-bind="{ ...(group.componentProps || {}), collapsed: !renderExpandedSidebarContent }"
-          />
-        </PermissionGate>
-      </template>
-    </template>
-  </USidebar>
+            <nav class="app-sidebar-nav" aria-label="Expanded navigation">
+              <div class="app-sidebar-menu-tree">
+                <SidebarMenuTree
+                  v-for="(group, groupIndex) in navigationItems"
+                  :key="groupIndex"
+                  :items="group"
+                  :collapsed="false"
+                  :labels-visible="true"
+                />
+              </div>
+            </nav>
+          </div>
+
+          <div class="flex flex-col gap-1.5 overflow-hidden w-full p-0 px-[18px] pb-7">
+            <template v-for="group in bottomGroups" :key="group.id">
+              <PermissionGate :condition="group.permission as any">
+                <component
+                  v-if="group.component"
+                  :is="group.component"
+                  v-bind="{ ...(group.componentProps || {}), collapsed: false }"
+                />
+              </PermissionGate>
+            </template>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </div>
 </template>
 
 <style scoped>
+.sidebar-menu-stack {
+  display: grid;
+}
+
+.sidebar-menu-stack > * {
+  grid-area: 1 / 1;
+}
+
 .app-sidebar-nav {
   display: grid;
   gap: 8px;
@@ -375,5 +435,26 @@ onUnmounted(() => {
 
 .eapp-sidebar:deep([data-slot="container"]) {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-peek-overlay {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  bottom: 0;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.sidebar-peek-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 280px;
+  background: var(--shell-sidebar-bg);
+  border-right: 1px solid var(--shell-sidebar-border);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
 }
 </style>

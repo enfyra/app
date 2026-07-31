@@ -25,6 +25,11 @@
           v-if="isPermission(item)"
           class="flex items-center justify-between p-3 border border-muted rounded-lg lg:hover:bg-muted/50 cursor-pointer transition-colors"
           @click="editPermission(Number(index), item)"
+          tabindex="0"
+          role="button"
+          aria-label="Edit permission"
+          @keydown.enter.prevent="editPermission(Number(index), item)"
+          @keydown.space.prevent="editPermission(Number(index), item)"
         >
           <div class="flex items-center gap-2">
             <UIcon
@@ -56,9 +61,11 @@
           <div class="flex items-center gap-1">
             <UButton
               icon="lucide:trash"
+              aria-label="Delete permission"
               size="md"
               variant="ghost"
               color="error"
+              class="min-h-[44px] min-w-[44px]"
               @click.stop="removeItem(Number(index))"
               :disabled="disabled"
             />
@@ -70,10 +77,11 @@
             v-if="!disabled"
             @click="removeItem(Number(index))"
             icon="lucide:x"
+            aria-label="Remove group"
             size="xs"
             color="error"
             variant="ghost"
-            class="absolute top-2 right-2 opacity-60 lg:hover:opacity-100"
+            class="absolute top-2 right-2 min-h-[44px] min-w-[44px] opacity-60 lg:hover:opacity-100"
           />
           <FormPermissionGroup
             :group="item"

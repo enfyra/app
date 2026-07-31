@@ -179,8 +179,13 @@ watch(
         <div
           v-for="filter in popularFilters"
           :key="`popular-${filter.id}`"
-          class="flex items-center justify-between p-3 rounded-lg border border-warning-400/20 bg-warning-400/5 lg:hover:border-warning-400/30 cursor-pointer transition-all duration-200 group"
+          class="flex items-center justify-between p-3 rounded-lg border border-warning-400/20 bg-warning-400/5 lg:hover:border-warning-400/30 cursor-pointer transition-colors transition-border-color duration-[var(--duration-fast)] group"
           @click="applySavedFilter(filter)"
+          tabindex="0"
+          role="button"
+          :aria-label="`Apply saved filter ${filter.name}`"
+          @keydown.enter.prevent="applySavedFilter(filter)"
+          @keydown.space.prevent="applySavedFilter(filter)"
         >
           <div class="flex-1 min-w-0">
             <div class="text-sm font-medium text-[var(--text-primary)] truncate">
@@ -204,8 +209,13 @@ watch(
         <div
           v-for="filter in filteredSavedFilters"
           :key="filter.id"
-          class="flex items-center justify-between p-3 rounded-lg surface-card-hover cursor-pointer transition-all duration-200 group"
+          class="flex items-center justify-between p-3 rounded-lg surface-card-hover cursor-pointer transition-colors transition-border-color duration-[var(--duration-fast)] group"
           @click="applySavedFilter(filter)"
+          tabindex="0"
+          role="button"
+          :aria-label="`Apply saved filter ${filter.name}`"
+          @keydown.enter.prevent="applySavedFilter(filter)"
+          @keydown.space.prevent="applySavedFilter(filter)"
         >
           <div class="flex-1 min-w-0">
             <div class="text-sm font-medium text-[var(--text-primary)] truncate">
@@ -220,10 +230,11 @@ watch(
             <UButton
               @click.stop="startRenaming(filter)"
               icon="lucide:edit-2"
+              aria-label="Rename saved filter"
               size="lg"
               variant="soft"
               color="primary"
-              class="px-3 py-2"
+              class="min-h-[44px] min-w-[44px] px-3 py-2"
             />
             <UButton
               @click.stop="removeSavedFilter(filter.id)"
@@ -232,10 +243,11 @@ watch(
                   ? 'lucide:alert-triangle'
                   : 'lucide:trash-2'
               "
+              :aria-label="deleteConfirmations[filter.id] ? 'Confirm delete saved filter' : 'Delete saved filter'"
               size="lg"
               :variant="deleteConfirmations[filter.id] ? 'solid' : 'soft'"
               color="error"
-              class="px-3 py-2"
+              class="min-h-[44px] min-w-[44px] px-3 py-2"
             >
               {{ deleteConfirmations[filter.id] ? "Sure?" : "" }}
             </UButton>

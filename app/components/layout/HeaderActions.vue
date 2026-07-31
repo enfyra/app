@@ -34,7 +34,7 @@
           :disabled="unref(action.disabled) || unref(action.loading)"
           :to="unref(action.to)"
           :replace="unref(action.replace)"
-          :aria-label="action.label || action.id"
+          :aria-label="action.ariaLabel || (isRef(action.label) ? unref(action.label) : action.label) || action.id"
           :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
           :class="getHeaderActionButtonClass(action)"
           @click="handleActionClick(action)"

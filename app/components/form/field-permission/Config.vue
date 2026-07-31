@@ -65,35 +65,39 @@ async function fetchDefaultList() {
   }
 }
 
-const { data: rolesData, execute: searchRoles, pending: rolesLoading } = useApi(
-  () => "/enfyra_role",
-  {
-    immediate: false,
-    watch: false,
-    query: computed(() => ({
-      fields: "id,name",
-      limit: 10,
-      ...(searchTerm.value.trim().length
-        ? { filter: { name: { _contains: searchTerm.value.trim() } } }
-        : {}),
-    })),
-  }
-);
+const {
+  data: rolesData,
+  execute: searchRoles,
+  pending: rolesLoading,
+  cancel: cancelRoleSearch,
+} = useApi(() => "/enfyra_role", {
+  immediate: false,
+  watch: false,
+  query: computed(() => ({
+    fields: "id,name",
+    limit: 10,
+    ...(searchTerm.value.trim().length
+      ? { filter: { name: { _contains: searchTerm.value.trim() } } }
+      : {}),
+  })),
+});
 
-const { data: usersData, execute: searchUsers, pending: usersLoading } = useApi(
-  () => "/enfyra_user",
-  {
-    immediate: false,
-    watch: false,
-    query: computed(() => ({
-      fields: "id,name,email",
-      limit: 10,
-      ...(searchTerm.value.trim().length
-        ? { filter: { email: { _contains: searchTerm.value.trim() } } }
-        : {}),
-    })),
-  }
-);
+const {
+  data: usersData,
+  execute: searchUsers,
+  pending: usersLoading,
+  cancel: cancelUserSearch,
+} = useApi(() => "/enfyra_user", {
+  immediate: false,
+  watch: false,
+  query: computed(() => ({
+    fields: "id,name,email",
+    limit: 10,
+    ...(searchTerm.value.trim().length
+      ? { filter: { email: { _contains: searchTerm.value.trim() } } }
+      : {}),
+  })),
+});
 
 watch(
   rolesData,
@@ -122,16 +126,21 @@ watch(
 
 const loading = computed(() => (mode.value === "role" ? rolesLoading.value : usersLoading.value));
 
-watch(
-  searchTerm,
-  debounce(async () => {
-    if (suppressSearch.value) return;
-    if (!menuOpen.value) return;
-    menuOpen.value = false;
-    await fetchDefaultList();
-    if (!loading.value) menuOpen.value = true;
-  }, 250)
-);
+const debouncedSearch = debounce(async () => {
+  if (suppressSearch.value) return;
+  if (!menuOpen.value) return;
+  menuOpen.value = false;
+  await fetchDefaultList();
+  if (!loading.value) menuOpen.value = true;
+}, 250);
+
+watch(searchTerm, debouncedSearch);
+
+onBeforeUnmount(() => {
+  debouncedSearch.cancel();
+  cancelRoleSearch();
+  cancelUserSearch();
+});
 
 watch(
   menuOpen,

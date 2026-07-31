@@ -161,6 +161,10 @@ function shouldNavigateToErrorPage(apiError: ApiError, method: string): boolean 
   return false;
 }
 
+function isAbortError(error: any): boolean {
+  return error?.name === "AbortError" || error?.cause?.name === "AbortError";
+}
+
 export function useApi<T = any>(url: string | (() => string), options: any = {}) {
   const notify = useNotify();
   const { method = "get", body, query, errorContext, onError, disableErrorPage } = options;
@@ -169,8 +173,12 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
   const error = ref<ApiError | null>(null);
   const pending = ref(false);
   const status = ref<string>("idle");
+  let abortController: AbortController | null = null;
 
   const execute = async (executeOpts?: ExecuteOptions) => {
+    abortController?.abort();
+    const currentController = new AbortController();
+    abortController = currentController;
     pending.value = true;
     error.value = null;
     status.value = "pending";
@@ -227,6 +235,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
                 ...(executeOpts.headersByIndex?.[index] || {}),
               },
               query: finalQuery,
+              signal: currentController.signal,
             }) as Promise<T>;
           })
         );
@@ -247,6 +256,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
               body: finalBody ? toRaw(finalBody) : undefined,
               headers: finalHeaders,
               query: finalQuery,
+              signal: currentController.signal,
             });
           })
         );
@@ -267,12 +277,16 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         body: finalBody ? toRaw(finalBody) : undefined,
         headers: finalHeaders,
         query: finalQuery,
+        signal: currentController.signal,
       });
 
       data.value = response;
       status.value = "success";
       return response;
     } catch (err) {
+      if (isAbortError(err) || currentController.signal.aborted) {
+        return null;
+      }
       const apiError = handleError(err, errorContext, undefined, {
         method: String(method || "get"),
         path: lastAttemptedPath,
@@ -330,8 +344,18 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       status.value = "error";
       return null;
     } finally {
-      pending.value = false;
+      if (abortController === currentController) {
+        abortController = null;
+        pending.value = false;
+      }
     }
+  };
+
+  const cancel = () => {
+    abortController?.abort();
+    abortController = null;
+    pending.value = false;
+    if (status.value === "pending") status.value = "idle";
   };
 
   const refresh = () => {
@@ -344,6 +368,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
     pending,
     refresh,
     execute,
+    cancel,
     status,
   };
 }

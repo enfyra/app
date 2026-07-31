@@ -94,7 +94,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
       class="group relative"
     >
       <div
-        class="relative rounded-[var(--radius-card)] border transition-all duration-200 overflow-hidden"
+        class="relative rounded-[var(--radius-card)] border transition-colors transition-shadow duration-[var(--duration-fast)] overflow-hidden"
         :class="[animationClass, shimmerClass]"
         :style="{
           backgroundColor: 'var(--bg-elevated)',
@@ -239,7 +239,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
       class="group relative"
     >
       <div
-        class="relative rounded-[var(--radius-card)] border transition-all duration-200 overflow-hidden"
+        class="relative rounded-[var(--radius-card)] border transition-colors transition-shadow duration-[var(--duration-fast)] overflow-hidden"
         :class="[animationClass, shimmerClass]"
         :style="{
           backgroundColor: 'var(--bg-elevated)',

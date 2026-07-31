@@ -37,7 +37,6 @@ const emit = defineEmits<{
 
 const searchTerm = ref('');
 const isMenuOpen = ref(false);
-const isLoading = ref(false);
 const tables = ref<any[]>([]);
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -50,7 +49,7 @@ const tableItems = computed(() =>
   tables.value.map((t: any) => ({ label: t.name, value: t.name }))
 );
 
-const { data: tablesData, execute: fetchTables } = useApi(
+const { execute: fetchTables, pending: isLoading, cancel: cancelFetchTables } = useApi(
   () => {
     const params = new URLSearchParams({ fields: 'id,name', limit: '10', sort: 'name' });
     if (searchTerm.value) {
@@ -62,13 +61,8 @@ const { data: tablesData, execute: fetchTables } = useApi(
 );
 
 async function loadTables() {
-  isLoading.value = true;
-  try {
-    await fetchTables();
-    tables.value = tablesData.value?.data || [];
-  } finally {
-    isLoading.value = false;
-  }
+  const response = await fetchTables();
+  if (response) tables.value = response.data || [];
 }
 
 watch(searchTerm, () => {
@@ -80,8 +74,9 @@ watch(isMenuOpen, (open) => {
   if (open && tables.value.length === 0) loadTables();
 });
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   if (debounceTimer) clearTimeout(debounceTimer);
+  cancelFetchTables();
 });
 
 function onSelect(item: any) {

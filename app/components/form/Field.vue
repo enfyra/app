@@ -277,7 +277,7 @@ const nonBooleanOuterClass = computed(() => {
           >
         </label>
 
-        <div v-if="!isRelationField" class="flex items-center gap-1 opacity-0 lg:group-hover:opacity-100 transition-opacity">
+        <div v-if="!isRelationField" class="flex items-center gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity">
           <Transition name="fade">
             <UIcon
               v-if="copyStatus === 'success'"
@@ -296,6 +296,7 @@ const nonBooleanOuterClass = computed(() => {
               size="xs"
               variant="ghost"
               color="neutral"
+              aria-label="Field actions"
               @click.stop
             />
           </UDropdownMenu>
