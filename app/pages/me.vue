@@ -264,9 +264,8 @@ onMounted(() => {
       <ProfileApiTokensCard />
 
     </template>
+    <ProfileChangePasswordModal v-model:open="passwordModalOpen" />
   </div>
-
-  <ProfileChangePasswordModal v-model:open="passwordModalOpen" />
 </template>
 
 <style scoped>

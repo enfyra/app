@@ -253,10 +253,11 @@ watch(open, (isOpen) => {
         <UButton
           v-if="viewMode === 'form'"
           icon="lucide:arrow-left"
+          aria-label="Back"
           variant="ghost"
           color="neutral"
           size="sm"
-          class="!rounded-[var(--radius-subcontrol)] !aspect-square -ml-1"
+          class="!rounded-[var(--radius-subcontrol)] !aspect-square -ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="cancelForm"
         />
         <UIcon
@@ -310,6 +311,11 @@ watch(open, (isOpen) => {
               <div
                 class="cursor-pointer transition-colors px-3 py-3 hover:bg-[var(--surface-muted)]"
                 @click="openEditForm(r)"
+                tabindex="0"
+                role="button"
+                :aria-label="`Edit ${r.ruleType} rule`"
+                @keydown.enter.prevent="openEditForm(r)"
+                @keydown.space.prevent="openEditForm(r)"
               >
                 <div class="flex items-start justify-between gap-2">
                   <div class="min-w-0 flex-1">
@@ -330,10 +336,11 @@ watch(open, (isOpen) => {
                   </div>
                   <UButton
                     icon="lucide:trash-2"
+                    aria-label="Delete rule"
                     variant="ghost"
                     color="error"
                     size="xs"
-                    class="!rounded-[var(--radius-subcontrol)] !aspect-square flex-shrink-0"
+                    class="!rounded-[var(--radius-subcontrol)] !aspect-square pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] flex-shrink-0"
                     @click.stop="quickDelete(r)"
                   />
                 </div>

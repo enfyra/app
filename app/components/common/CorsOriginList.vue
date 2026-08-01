@@ -32,7 +32,7 @@
 
         <USwitch
           :model-value="origin.isEnabled"
-          :disabled="rowLoading(origin.id)"
+          :loading="rowLoading(origin.id)"
           :aria-label="`Toggle ${origin.value}`"
           @update:model-value="(v: boolean) => toggleEnabled(origin, v)"
         />

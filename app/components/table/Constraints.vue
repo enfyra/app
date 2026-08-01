@@ -136,7 +136,9 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
         Unique Constraints
         <UButton
           icon="lucide:plus"
+          aria-label="Add unique constraint"
           size="sm"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           color="primary"
           @click="addUniqueGroup()"
           :disabled="table.isSystem"
@@ -166,9 +168,11 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           <UButton
             v-if="group.length > 1"
             icon="i-lucide-x"
+            aria-label="Remove field from unique constraint"
             size="xs"
             variant="ghost"
             color="neutral"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
             @click="removeFieldFromGroup(table.uniques, gIndex, fIndex)"
             :disabled="table.isSystem"
           />
@@ -176,15 +180,19 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
 
         <UButton
           icon="i-lucide:plus"
+          aria-label="Add field to unique constraint"
           size="sm"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="addFieldToGroup(table.uniques, gIndex)"
           :disabled="table.isSystem || !canAddFieldToGroup(group)"
         />
         <UButton
           icon="i-lucide:trash"
+          aria-label="Delete unique constraint"
           color="error"
           variant="ghost"
           size="md"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="removeUniqueGroupConfirm(gIndex)"
           :disabled="table.isSystem"
         />
@@ -197,7 +205,9 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
         Index
         <UButton
           icon="lucide:plus"
+          aria-label="Add index"
           size="sm"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           color="primary"
           @click="addIndexGroup()"
           :disabled="table.isSystem"
@@ -231,9 +241,11 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           <UButton
             v-if="group.length > 1"
             icon="i-lucide-x"
+            aria-label="Remove field from index"
             size="xs"
             variant="ghost"
             color="neutral"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
             @click="removeFieldFromGroup(table.indexes, gIndex, fIndex)"
             :disabled="table.isSystem"
           />
@@ -241,15 +253,19 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
 
         <UButton
           icon="i-lucide:plus"
+          aria-label="Add field to index"
           size="sm"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="addFieldToGroup(table.indexes, gIndex)"
           :disabled="table.isSystem || !canAddFieldToGroup(group)"
         />
         <UButton
           icon="i-lucide:trash"
+          aria-label="Delete index"
           color="error"
           variant="ghost"
           size="md"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="removeIndexGroupConfirm(gIndex)"
           :disabled="table.isSystem"
         />

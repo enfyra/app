@@ -417,6 +417,11 @@ function handleDragEnd() {
       ]"
       :style="rowStyle"
       @click="handleItemClick(item)"
+      :tabindex="canEditMenu ? 0 : -1"
+      :role="canEditMenu ? 'button' : undefined"
+      :aria-label="canEditMenu ? `Edit menu ${item.label}` : undefined"
+      @keydown.enter.prevent="canEditMenu && handleItemClick(item)"
+      @keydown.space.prevent="canEditMenu && handleItemClick(item)"
     >
       <button
         type="button"
@@ -513,6 +518,7 @@ function handleDragEnd() {
             variant="soft"
             icon="lucide:x"
             aria-label="Cancel move"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
             @click.stop="handleCancelMove"
           />
         </template>
@@ -529,6 +535,7 @@ function handleDragEnd() {
             variant="ghost"
             icon="lucide:more-vertical"
             aria-label="Menu actions"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
             @click.stop
           />
         </UDropdownMenu>
@@ -838,6 +845,28 @@ function handleDragEnd() {
   .menu-row-actions {
     grid-column: 4;
     justify-content: flex-start;
+  }
+}
+
+@media (pointer: coarse) {
+  .menu-editor-row {
+    grid-template-columns: 44px 44px 40px minmax(220px, 1fr) auto;
+  }
+
+  .menu-row-drag,
+  .menu-row-chevron {
+    width: 44px;
+    height: 44px;
+  }
+
+  .menu-row-drag {
+    width: 44px;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 640px) {
+  .menu-editor-row {
+    grid-template-columns: 44px 44px 36px minmax(0, 1fr);
   }
 }
 </style>

@@ -28,7 +28,7 @@ const { $primaryColor } = useNuxtApp();
             v-for="color in $primaryColor.colors"
             :key="color.value"
             type="button"
-            class="flex h-6 w-6 items-center justify-center rounded-full transition-transform duration-150 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-default)]"
+            class="flex h-6 w-6 items-center justify-center rounded-full transition-transform duration-[var(--duration-fast)] hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--md-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-default)]"
             :class="$primaryColor.current.value === color.value ? 'ring-2 ring-inset ring-[var(--md-primary)]' : 'ring-1 ring-inset ring-[var(--border-default)]'"
             :aria-label="`Use ${color.label} accent`"
             :aria-pressed="$primaryColor.current.value === color.value"

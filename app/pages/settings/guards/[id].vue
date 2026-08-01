@@ -102,8 +102,13 @@
                 >
                   <template #item="{ element: rule }">
                     <div
-                      class="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-transparent surface-muted hover:border-[var(--border-default)] transition-all cursor-pointer"
+                      class="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-transparent surface-muted hover:border-[var(--border-default)] transition-colors transition-border-color cursor-pointer"
                       @click="handleEditRule(rule)"
+                      tabindex="0"
+                      role="button"
+                      :aria-label="`Edit ${getRuleLabel(rule.type)} rule`"
+                      @keydown.enter.prevent="handleEditRule(rule)"
+                      @keydown.space.prevent="handleEditRule(rule)"
                     >
                       <div class="flex items-center gap-2 min-w-0 flex-1">
                         <UIcon name="lucide:grip-vertical" class="w-3.5 h-3.5 text-[var(--text-quaternary)] cursor-grab drag-handle-rule flex-shrink-0" @click.stop />
@@ -121,7 +126,7 @@
                           {{ rule.isEnabled ? 'Enabled' : 'Disabled' }}
                         </UBadge>
                         <UIcon :name="rule.isEnabled ? 'lucide:circle-check' : 'lucide:circle-x'" :class="['w-5 h-5 md:hidden', rule.isEnabled ? 'text-[var(--st-success)]' : 'text-[var(--st-warning)]']" />
-                        <UButton icon="lucide:trash-2" color="error" variant="ghost" size="xs" @click.stop="handleDeleteRule(rule)" />
+                        <UButton icon="lucide:trash-2" aria-label="Delete rule" color="error" variant="ghost" size="xs" class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]" @click.stop="handleDeleteRule(rule)" />
                       </div>
                     </div>
                   </template>
@@ -186,46 +191,45 @@
         </div>
       </CommonFormCard>
     </div>
+    <GuardCreateRuleDrawer
+      v-model="showCreateRuleDrawer"
+      v-model:form="ruleForm"
+      v-model:errors="ruleErrors"
+      :loading="createRuleLoading"
+      :guard-position="rootPosition"
+      @save="saveRule"
+      @cancel="showCreateRuleDrawer = false"
+    />
+
+    <GuardEditRuleDrawer
+      v-model="showEditRuleDrawer"
+      v-model:form="editRuleForm"
+      v-model:errors="editRuleErrors"
+      :loading="updateRuleLoading"
+      :guard-position="rootPosition"
+      @save="saveEditRule"
+      @cancel="showEditRuleDrawer = false"
+    />
+
+    <GuardCreateChildDrawer
+      v-model="showCreateChildDrawer"
+      v-model:form="childForm"
+      v-model:errors="childErrors"
+      :loading="createChildLoading"
+      :parent-guard="addChildTargetGuard"
+      @save="saveChild"
+      @cancel="showCreateChildDrawer = false"
+    />
+
+    <GuardEditChildDrawer
+      v-model="showEditChildDrawer"
+      v-model:form="editChildForm"
+      v-model:errors="editChildErrors"
+      :loading="updateChildLoading"
+      @save="saveEditChild"
+      @cancel="showEditChildDrawer = false"
+    />
   </div>
-
-  <GuardCreateRuleDrawer
-    v-model="showCreateRuleDrawer"
-    v-model:form="ruleForm"
-    v-model:errors="ruleErrors"
-    :loading="createRuleLoading"
-    :guard-position="rootPosition"
-    @save="saveRule"
-    @cancel="showCreateRuleDrawer = false"
-  />
-
-  <GuardEditRuleDrawer
-    v-model="showEditRuleDrawer"
-    v-model:form="editRuleForm"
-    v-model:errors="editRuleErrors"
-    :loading="updateRuleLoading"
-    :guard-position="rootPosition"
-    @save="saveEditRule"
-    @cancel="showEditRuleDrawer = false"
-  />
-
-  <GuardCreateChildDrawer
-    v-model="showCreateChildDrawer"
-    v-model:form="childForm"
-    v-model:errors="childErrors"
-    :loading="createChildLoading"
-    :parent-guard="addChildTargetGuard"
-    @save="saveChild"
-    @cancel="showCreateChildDrawer = false"
-  />
-
-  <GuardEditChildDrawer
-    v-model="showEditChildDrawer"
-    v-model:form="editChildForm"
-    v-model:errors="editChildErrors"
-    :loading="updateChildLoading"
-    @save="saveEditChild"
-    @cancel="showEditChildDrawer = false"
-  />
 </template>
 
 <script setup lang="ts">

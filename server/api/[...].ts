@@ -2,6 +2,7 @@ import {
   createError,
   defineEventHandler,
   getQuery,
+  getRequestURL,
   sendRedirect,
 } from "h3";
 import {
@@ -45,13 +46,25 @@ export default defineEventHandler(async (event) => {
   if (event.method === "GET" && oauthMatch) {
     const provider = oauthMatch[1];
     const query = getQuery(event);
-    const redirectParam = await requireValidRedirectUrl(query.redirect, event);
+
+    let redirectParam: string;
+    let cookieBridgePrefix: string | undefined;
+    try {
+      redirectParam = await requireValidRedirectUrl(query.redirect, event);
+      cookieBridgePrefix = requireValidCookieBridgePrefix(query.cookieBridgePrefix);
+    } catch (err: any) {
+      const message = err?.statusMessage || err?.message || "OAuth validation failed";
+      const loginUrl = new URL("/login", getRequestURL(event).origin);
+      loginUrl.searchParams.set("error", message);
+      if (typeof query.redirect === "string" && query.redirect.length > 0) {
+        loginUrl.searchParams.set("redirect", query.redirect);
+      }
+      return sendRedirect(event, loginUrl.toString(), 302);
+    }
+
     if (!apiUrl) {
       throw createError({ statusCode: 500, message: "API URL not configured" });
     }
-    const cookieBridgePrefix = requireValidCookieBridgePrefix(
-      query.cookieBridgePrefix
-    );
     const backendUrl = new URL(
       `${apiUrl.replace(/\/+$/, "")}/auth/${provider}`
     );

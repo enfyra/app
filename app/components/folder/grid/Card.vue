@@ -14,6 +14,12 @@
           cursor: isFolderDisabled ? 'not-allowed' : 'pointer'
         }"
         @click="handleFolderClick"
+        :tabindex="isFolderDisabled ? -1 : 0"
+        role="button"
+        :aria-disabled="isFolderDisabled"
+        :aria-label="`${isSelectionMode ? 'Select' : 'Open'} ${folder.displayName}`"
+        @keydown.enter.prevent="handleFolderClick"
+        @keydown.space.prevent="handleFolderClick"
       >
         <div
           v-if="isFolderDisabled"
@@ -32,7 +38,13 @@
         <div
           v-if="isSelectionMode"
           class="absolute top-3 right-3 z-20 rounded-md p-1.5 cursor-pointer bg-[var(--surface-default)] shadow-theme-xs"
-            @click.stop="$emit('toggle-selection', folder.id)"
+          tabindex="0"
+          role="checkbox"
+          :aria-checked="selectedItems.includes(folder.id)"
+          :aria-label="`Select ${folder.displayName}`"
+          @click.stop="$emit('toggle-selection', folder.id)"
+          @keydown.enter.prevent.stop="$emit('toggle-selection', folder.id)"
+          @keydown.space.prevent.stop="$emit('toggle-selection', folder.id)"
           >
             <UCheckbox
               :model-value="selectedItems.includes(folder.id)"
@@ -70,7 +82,8 @@
                 <UButton
                   variant="soft"
                   size="sm"
-                  class="h-8 w-8 p-0"
+                  aria-label="More actions"
+                  class="h-8 w-8 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] p-0"
                   @click.stop
                 >
                   <UIcon name="lucide:more-vertical" class="w-4 h-4 text-[var(--text-tertiary)]" />

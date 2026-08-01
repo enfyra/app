@@ -15,7 +15,6 @@
     :items-per-page="limit"
     :pagination-loading="loading"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
         <CommonResourceListItem
           v-for="gateway in gateways"
@@ -172,7 +171,7 @@ function getHeaderActions(gateway: any) {
       component: 'USwitch',
       props: {
         'model-value': gateway.isEnabled,
-        disabled: getGatewayLoader(idKey).isLoading
+        loading: getGatewayLoader(idKey).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleGatewayStatus(gateway)

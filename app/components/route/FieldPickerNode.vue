@@ -99,7 +99,7 @@ function hasAnySelected(relName: string): boolean {
         <UIcon
           v-if="rel.canExpand"
           name="lucide:chevron-right"
-          :class="['w-3.5 h-3.5 transition-transform duration-200', expanded.has(rel.name) ? 'rotate-90' : '']"
+          :class="['w-3.5 h-3.5 transition-transform duration-[var(--duration-base)]', expanded.has(rel.name) ? 'rotate-90' : '']"
         />
         <UIcon v-else-if="rel.isCircular" name="lucide:refresh-cw" class="w-3.5 h-3.5 text-warning-500" />
         <UIcon v-else name="lucide:lock" class="w-3.5 h-3.5 text-[var(--text-quaternary)]" />
@@ -119,7 +119,7 @@ function hasAnySelected(relName: string): boolean {
       </button>
       <div
         v-if="rel.canExpand"
-        class="grid transition-all duration-200 ease-out"
+        class="grid transition-colors transition-transform duration-[var(--duration-fast)] ease-[var(--ease-exit)]"
         :class="expanded.has(rel.name) ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'"
       >
         <div class="overflow-hidden">

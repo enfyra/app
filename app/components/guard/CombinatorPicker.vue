@@ -1,16 +1,22 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3" role="listbox" aria-label="Combinator">
     <div
       v-for="option in options"
       :key="option.value"
       :class="[
-        'relative rounded-xl border p-4 cursor-pointer transition-all',
+        'relative rounded-xl border p-4 cursor-pointer transition-colors transition-border-color',
         modelValue === option.value
           ? option.activeClass
           : 'border-transparent surface-muted hover:border-[var(--border-default)]',
         disabled ? 'opacity-50 pointer-events-none' : '',
       ]"
       @click="!disabled && emit('update:modelValue', option.value)"
+      role="option"
+      :tabindex="disabled ? -1 : 0"
+      :aria-selected="modelValue === option.value"
+      :aria-disabled="disabled"
+      @keydown.enter.prevent="!disabled && emit('update:modelValue', option.value)"
+      @keydown.space.prevent="!disabled && emit('update:modelValue', option.value)"
     >
       <div
         v-if="modelValue === option.value"

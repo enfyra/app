@@ -8,7 +8,8 @@
       icon: 'i-lucide-play',
       loading: pending,
       disabled: !canSend,
-      onClick: sendRequest,
+      tone: isDestructiveMethod ? 'danger' : 'primary',
+      onClick: handleSend,
     }"
   >
     <template #header>
@@ -64,11 +65,11 @@
             <UButton size="xs" variant="ghost" icon="i-lucide-plus" @click="addQueryParam">Add</UButton>
           </div>
           <div class="space-y-1.5">
-            <div v-for="(param, idx) in queryParams" :key="idx" class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
-              <USwitch v-model="param.enabled" size="xs" class="flex-shrink-0" />
-              <UInput v-model="param.key" placeholder="key" class="w-full sm:w-[120px] font-mono text-xs" :disabled="!param.enabled" />
-              <UInput v-model="param.value" placeholder="value" class="w-full sm:flex-1 font-mono text-xs min-w-0" :disabled="!param.enabled" />
-              <UButton size="xs" variant="ghost" color="error" icon="i-lucide-x" class="flex-shrink-0" @click="queryParams.splice(idx, 1)" />
+            <div v-for="param in queryParams" :key="param.id" class="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+              <USwitch v-model="param.enabled" size="xs" class="flex-shrink-0" :aria-label="`Toggle ${param.key || 'parameter'}`" />
+              <UInput v-model="param.key" placeholder="key" class="w-full sm:w-[120px] font-mono text-xs" :disabled="!param.enabled" aria-label="Parameter key" />
+              <UInput v-model="param.value" placeholder="value" class="w-full sm:flex-1 font-mono text-xs min-w-0" :disabled="!param.enabled" aria-label="Parameter value" />
+              <UButton size="xs" variant="ghost" color="error" icon="i-lucide-x" class="flex-shrink-0" aria-label="Remove parameter" @click="removeQueryParam(param.id)" />
             </div>
           </div>
         </div>
@@ -136,6 +137,7 @@ const emit = defineEmits<{
 }>();
 
 const notify = useNotify();
+const { confirm } = useConfirm();
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -146,9 +148,10 @@ const httpMethods = computed(() => props.availableMethods.filter((m: any) => m?.
 const method = ref<string>('GET');
 const filterObject = ref<any>(null);
 const selectedFields = ref<string[]>([]);
-const queryParams = ref<{ key: string; value: string; enabled: boolean }[]>([
-  { key: 'limit', value: '50', enabled: true },
-  { key: 'sort', value: '-createdAt', enabled: false },
+let queryParamCounter = 0;
+const queryParams = ref<{ id: number; key: string; value: string; enabled: boolean }[]>([
+  { id: ++queryParamCounter, key: 'limit', value: '50', enabled: true },
+  { id: ++queryParamCounter, key: 'sort', value: '-createdAt', enabled: false },
 ]);
 const body = ref('{\n  \n}');
 const recordId = ref('');
@@ -156,24 +159,37 @@ const pending = ref(false);
 const showFullUrl = ref(false);
 const response = ref<{ status: number; body: string; duration: number } | null>(null);
 const responseError = ref('');
+let abortController: AbortController | null = null;
+
+const isDestructiveMethod = computed(() => method.value === 'DELETE');
 
 const { createEmptyFilter, buildQuery } = useFilterQuery();
 
 watch(() => props.modelValue, (open) => {
   if (open) {
     pending.value = false;
+    abortController?.abort();
+    abortController = null;
     response.value = null;
     responseError.value = '';
     recordId.value = '';
     filterObject.value = createEmptyFilter();
     const hasTable = !!props.mainTableName;
     queryParams.value = [
-      { key: 'limit', value: '10', enabled: hasTable },
-      { key: 'sort', value: '-createdAt', enabled: false },
+      { id: ++queryParamCounter, key: 'limit', value: '10', enabled: hasTable },
+      { id: ++queryParamCounter, key: 'sort', value: '-createdAt', enabled: false },
     ];
     const available = httpMethods.value.filter((m: any) => isMethodAvailable(m.name));
     method.value = available[0]?.name || 'GET';
   }
+});
+
+watch(method, () => {
+  response.value = null;
+  responseError.value = '';
+  abortController?.abort();
+  abortController = null;
+  pending.value = false;
 });
 
 function isMethodAvailable(m: string): boolean {
@@ -212,7 +228,11 @@ function getMethodButtonStyle(methodRecord: any) {
 }
 
 function addQueryParam() {
-  queryParams.value.push({ key: '', value: '', enabled: true });
+  queryParams.value.push({ id: ++queryParamCounter, key: '', value: '', enabled: true });
+}
+
+function removeQueryParam(id: number) {
+  queryParams.value = queryParams.value.filter((p) => p.id !== id);
 }
 
 function toggleField(field: string) {
@@ -271,7 +291,24 @@ async function copyResponse() {
   notify.success("Copied");
 }
 
+async function handleSend() {
+  if (isDestructiveMethod.value) {
+    const confirmed = await confirm({
+      title: `Send ${method.value} request?`,
+      content: `This will send a ${method.value} request to ${props.routePath}${recordId.value ? `/${recordId.value}` : ''}. This action may permanently modify or delete data.`,
+      confirmText: `Send ${method.value}`,
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return;
+  }
+  await sendRequest();
+}
+
 async function sendRequest() {
+  abortController?.abort();
+  const controller = new AbortController();
+  abortController = controller;
+
   pending.value = true;
   response.value = null;
   responseError.value = '';
@@ -279,7 +316,7 @@ async function sendRequest() {
 
   try {
     const url = fullUrl.value;
-    const opts: RequestInit = { method: method.value, headers: { 'Content-Type': 'application/json' } };
+    const opts: RequestInit = { method: method.value, headers: { 'Content-Type': 'application/json' }, signal: controller.signal };
 
     if (['POST', 'PATCH'].includes(method.value) && body.value?.trim()) {
       try {
@@ -293,6 +330,8 @@ async function sendRequest() {
     }
 
     const res = await fetch(url, opts);
+    if (controller.signal.aborted) return;
+
     const contentType = res.headers.get('content-type') || '';
     let text: string;
     if (contentType.includes('json')) {
@@ -303,10 +342,17 @@ async function sendRequest() {
     }
 
     response.value = { status: res.status, body: text, duration: Date.now() - start };
+    if (res.status >= 400) {
+      responseError.value = `Request failed with status ${res.status}`;
+    }
   } catch (err: any) {
+    if (err.name === 'AbortError') return;
     responseError.value = err.message || 'Request failed';
   } finally {
-    pending.value = false;
+    if (abortController === controller) {
+      pending.value = false;
+      abortController = null;
+    }
   }
 }
 </script>

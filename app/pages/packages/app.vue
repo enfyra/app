@@ -11,7 +11,6 @@
     :total="total"
     :items-per-page="limit"
     :pagination-loading="loading"
-    pagination-class="mt-4"
     pagination-align="center"
     :pagination-show-range="false"
     pagination-color="secondary"

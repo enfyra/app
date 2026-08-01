@@ -225,16 +225,36 @@ export function useAppSettings() {
   };
 
   watch(
-    () => settings.value,
-    (newSettings) => {
-      updateAppTitleAndFavicon(newSettings);
-      scheduleTitleUpdate();
-    },
-    { immediate: true, deep: true }
+    () => settings.value?.projectFavicon,
+    () => updateAppTitleAndFavicon(settings.value),
+    { immediate: true }
+  );
+
+  watch(
+    () => [
+      settings.value?.projectName,
+      settings.value?.projectDescription,
+    ],
+    scheduleTitleUpdate,
+    { immediate: true }
   );
 
   router.afterEach(scheduleTitleUpdate);
 
-  watch(() => schemas.value, scheduleTitleUpdate, { deep: true });
-  watch(() => menuItems.value, scheduleTitleUpdate, { deep: true });
+  watch(
+    () => {
+      const tableName = titleTableName.value;
+      const schema = tableName ? schemas.value[tableName] : undefined;
+      return [schema?.name, schema?.description];
+    },
+    scheduleTitleUpdate
+  );
+
+  watch(
+    () => {
+      const menu = findMenuByRoute(route.path) || findParentMenu(route.path);
+      return [menu?.label, menu?.description];
+    },
+    scheduleTitleUpdate
+  );
 }

@@ -95,7 +95,7 @@
     --text-primary: var(--md-on-surface);
     --text-secondary: var(--md-on-surface-variant);
     --text-tertiary: color-mix(in srgb, var(--md-on-surface-variant) 70%, var(--md-surface));
-    --text-quaternary: color-mix(in srgb, var(--md-on-surface) 45%, var(--md-surface));
+    --text-quaternary: color-mix(in srgb, var(--md-on-surface) 58%, var(--md-surface));
     --text-disabled: color-mix(in srgb, var(--md-on-surface) 48%, var(--md-surface));
     --text-muted: var(--text-tertiary);
 
@@ -307,7 +307,16 @@
     --glow-rose: 0 0 30px rgba(251, 113, 133, 0.25);
     --glow-subtle: 0 0 50px color-mix(in srgb, var(--md-primary) 8%, transparent);
 
-    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    --duration-instant: 80ms;
+    --duration-fast: 140ms;
+    --duration-base: 220ms;
+    --duration-emphasized: 320ms;
+
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-enter: cubic-bezier(0, 0, 0.2, 1);
+    --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+    --ease-smooth: var(--ease-standard);
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 

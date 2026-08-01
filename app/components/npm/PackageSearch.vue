@@ -232,6 +232,7 @@ const {
   data: searchData,
   pending: loading,
   execute: executeSearch,
+  cancel: cancelSearch,
 } = useApi("/npm-search", {
   immediate: false,
   query: computed(() => ({
@@ -257,22 +258,26 @@ watch(searchTerm, (newQuery, oldQuery) => {
   }
 });
 
-watch(
-  searchTerm,
-  debounce(async (query: string) => {
-    if (query.length < 2) {
-      packages.value = [];
-      isMenuOpen.value = false;
-      return;
-    }
-
+const debouncedSearch = debounce(async (query: string) => {
+  if (query.length < 2) {
+    packages.value = [];
     isMenuOpen.value = false;
-    await executeSearch();
-    if (!loading.value) {
-      isMenuOpen.value = true;
-    }
-  }, 300)
-);
+    return;
+  }
+
+  isMenuOpen.value = false;
+  await executeSearch();
+  if (!loading.value) {
+    isMenuOpen.value = true;
+  }
+}, 300);
+
+watch(searchTerm, debouncedSearch);
+
+onBeforeUnmount(() => {
+  debouncedSearch.cancel();
+  cancelSearch();
+});
 
 watch(loading, (isLoading) => {
   if (isLoading) {

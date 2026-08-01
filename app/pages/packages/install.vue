@@ -11,9 +11,14 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-4" role="radiogroup" aria-label="Package type">
             <div
               @click="packageType = 'Server'"
+              role="radio"
+              tabindex="0"
+              :aria-checked="packageType === 'Server'"
+              @keydown.enter.prevent="packageType = 'Server'"
+              @keydown.space.prevent="packageType = 'Server'"
               :class="[
                 'package-type-card group',
                 packageType === 'Server' ? 'package-type-card-active shadow-theme-md' : '',
@@ -57,6 +62,11 @@
 
             <div
               @click="packageType = 'App'"
+              role="radio"
+              tabindex="0"
+              :aria-checked="packageType === 'App'"
+              @keydown.enter.prevent="packageType = 'App'"
+              @keydown.space.prevent="packageType = 'App'"
               :class="[
                 'package-type-card group',
                 packageType === 'App' ? 'package-type-card-active shadow-theme-md' : '',

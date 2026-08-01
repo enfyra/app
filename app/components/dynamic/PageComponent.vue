@@ -1,60 +1,88 @@
 <template>
-  <div v-if="isLoading" />
+  <div class="dynamic-page-stack">
+  <Transition name="fade">
+    <div
+      v-if="isLoading"
+      key="loading-frame"
+      class="flex flex-1 flex-col gap-4"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading page"
+    >
+      <div class="surface-card rounded-[var(--radius-card)] p-5 lg:p-6">
+        <CommonLoadingSkeleton type="text" :lines="2" />
+      </div>
+      <div class="grid gap-4 grid-cols-1 md:grid-cols-2 2xl:grid-cols-3">
+        <div
+          v-for="i in 3"
+          :key="i"
+          class="surface-card rounded-[var(--radius-card)] p-5"
+        >
+          <CommonLoadingSkeleton type="text" :lines="3" />
+        </div>
+      </div>
+    </div>
 
-  <CommonEmptyState
-    v-else-if="error"
-    :title="
-      isDisabledError ? 'Extension Disabled' : 'Extension Error'
-    "
-    :description="error"
-    :icon="
-      isDisabledError
-        ? 'i-heroicons-lock-closed'
-        : 'i-heroicons-exclamation-triangle'
-    "
-    size="md"
-    :action="
-      isDisabledError
-        ? {
-            label: 'Go to Extension Settings',
-            onClick: async () => {
-              await navigateTo('/settings/extensions');
-            },
-            icon: 'i-heroicons-cog-6-tooth',
-          }
-        : {
-            label: 'Retry',
-            onClick: retry,
-            icon: 'i-heroicons-arrow-path',
-          }
-    "
-  />
-
-  <PermissionGate
-    v-else-if="extensionComponent"
-    :condition="currentPermission"
-    class="flex-1 flex flex-col"
-  >
-    <component
-      :is="extensionComponent"
-      class="flex-1"
+    <CommonEmptyState
+      v-else-if="error"
+      key="error-state"
+      :title="
+        isDisabledError ? 'Extension Disabled' : 'Extension Error'
+      "
+      :description="error"
+      :icon="
+        isDisabledError
+          ? 'i-heroicons-lock-closed'
+          : 'i-heroicons-exclamation-triangle'
+      "
+      size="md"
+      :action="
+        isDisabledError
+          ? {
+              label: 'Go to Extension Settings',
+              onClick: async () => {
+                await navigateTo('/settings/extensions');
+              },
+              icon: 'i-heroicons-cog-6-tooth',
+            }
+          : {
+              label: 'Retry',
+              onClick: retry,
+              icon: 'i-heroicons-arrow-path',
+            }
+      "
     />
-  </PermissionGate>
 
-  <CommonEmptyState
-    v-else
-    title="Extension Not Found"
-    :description="`No extension found for route: ${props.path}`"
-    icon="i-heroicons-puzzle-piece"
-    size="md"
-    :action="{
-      label: 'Browse Extensions',
-      onClick: async () => {
-        await navigateTo('/settings/extensions');
-      },
-      icon: 'i-heroicons-cog-6-tooth',
-    }"
-  />
+    <div
+      v-else-if="extensionComponent"
+      key="extension-content"
+      class="flex-1 flex flex-col"
+    >
+      <PermissionGate :condition="currentPermission">
+        <component
+          :is="extensionComponent"
+          class="flex-1"
+        />
+      </PermissionGate>
+    </div>
+
+    <CommonEmptyState
+      v-else
+      key="not-found-state"
+      title="Extension Not Found"
+      :description="`No extension found for route: ${props.path}`"
+      icon="i-heroicons-puzzle-piece"
+      size="md"
+      :action="{
+        label: 'Browse Extensions',
+        onClick: async () => {
+          await navigateTo('/settings/extensions');
+        },
+        icon: 'i-heroicons-cog-6-tooth',
+      }"
+    />
+  </Transition>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -247,10 +275,10 @@ watch(() => extensionCacheInvalidation.value, async (invalidation) => {
   );
   if (!matchesPath && !isExtensionInvalidationMatch(currentExtension, invalidation)) return;
 
-  isLoading.value = true;
   error.value = null;
-  currentPermission.value = null;
-  extensionComponent.value = null;
+  if (!extensionComponent.value) {
+    isLoading.value = true;
+  }
   const endLoading = startRouteLoading();
   try {
     await fetchAndLoadExtension(runId);
@@ -307,3 +335,19 @@ watch(
   { immediate: true }
 );
 </script>
+
+<style scoped>
+.dynamic-page-stack {
+  display: grid;
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dynamic-page-stack > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+</style>

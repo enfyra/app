@@ -26,7 +26,7 @@ const COLLECTION_LIST_FIELDS = [
   "relations.id",
 ].join(",");
 
-const searchQuery = ref("");
+const searchQuery = ref(typeof route.query.search === "string" ? route.query.search : "");
 const visibilityScope = ref<SystemVisibilityMode>(getVisibilityScope(route.query.scope, route.query.system));
 const router = useRouter();
 
@@ -53,8 +53,19 @@ watch(visibilityScope, (v) => {
 })
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
+function syncSearchToUrl(value: string) {
+  const query = { ...route.query };
+  if (value) query.search = value;
+  else delete query.search;
+  if ((query.search ?? "") !== (route.query.search ?? "")) {
+    router.replace({ query });
+  }
+}
+
 watch(searchQuery, (newVal) => {
   if (searchTimeout) clearTimeout(searchTimeout);
+
+  syncSearchToUrl(newVal);
 
   if (newVal === "") {
     page.value = 1;
@@ -67,6 +78,14 @@ watch(searchQuery, (newVal) => {
     fetchCollections();
   }, 550);
 });
+
+watch(
+  () => route.query.search,
+  (val) => {
+    const next = typeof val === "string" ? val : "";
+    if (searchQuery.value !== next) searchQuery.value = next;
+  },
+);
 
 const SearchInput = defineComponent({
   setup() {
@@ -86,7 +105,9 @@ const SearchInput = defineComponent({
         }),
         searchQuery.value
           ? h("button", {
-              class: "absolute right-2 p-1 text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] cursor-pointer",
+              class: "absolute right-1 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] cursor-pointer",
+              "aria-label": "Clear search",
+              type: "button",
               onClick: () => {
                 searchQuery.value = "";
               },
@@ -211,7 +232,6 @@ function formatCollectionDate(value: string | undefined): string {
     :items-per-page="pageLimit"
     :pagination-loading="loading"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
       <CommonResourceListItem
         v-for="collection in displayedCollections"
@@ -219,7 +239,7 @@ function formatCollectionDate(value: string | undefined): string {
         :title="collection.name || 'Untitled Collection'"
         :description="collection.description || 'No description'"
         icon="lucide:database"
-        :icon-color="collection.isSystem ? 'error' : 'primary'"
+        :icon-color="collection.isSystem ? 'neutral' : 'primary'"
         :loading="collectionsRefreshing"
         :to="`/collections/${collection.name}`"
       >
@@ -228,7 +248,7 @@ function formatCollectionDate(value: string | undefined): string {
             <UBadge color="primary" variant="soft" size="xs">
               {{ getFieldCount(collection) }} fields
             </UBadge>
-            <UBadge :color="collection.isSystem ? 'error' : 'neutral'" variant="soft" size="xs">
+            <UBadge color="neutral" variant="soft" size="xs">
               {{ collection.isSystem ? "System" : "Custom" }}
             </UBadge>
             <UBadge color="info" variant="soft" size="xs">

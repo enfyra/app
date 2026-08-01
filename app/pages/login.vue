@@ -188,7 +188,7 @@
 
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <USwitch v-model="form.remember" size="sm" />
+                <USwitch id="remember" v-model="form.remember" size="sm" />
                 <label for="remember" class="text-sm text-[var(--text-tertiary)] cursor-pointer select-none">
                   Remember me
                 </label>
@@ -273,7 +273,6 @@ const showDemoLogin = computed(() => {
 
 const { login, oauthLogin, fetchUser } = useAuth();
 const route = useRoute();
-const notify = useNotify();
 const colorMode = useColorMode();
 const { $primaryColor } = useNuxtApp();
 const demoLoading = ref(false);
@@ -346,7 +345,6 @@ async function handleLogin() {
     return;
   }
   loginError.value = res.message;
-  notify.error("Login failed", res.message);
 }
 
 async function handleDemoLogin() {
@@ -364,7 +362,6 @@ async function handleDemoLogin() {
     }
     const hint = "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.";
     loginError.value = `${res.message} (${hint})`;
-    notify.error("Demo login failed", loginError.value);
   } finally {
     demoLoading.value = false;
   }

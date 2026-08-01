@@ -10,7 +10,7 @@
       class="w-full"
       :ui="{
         root: 'lg:hover:!bg-muted/50 lg:hover:!border-primary/50 transition-colors',
-        base: 'transition-all duration-200 !cursor-pointer',
+        base: 'transition-colors duration-[var(--duration-fast)] !cursor-pointer',
       }"
     >
       <template #leading>

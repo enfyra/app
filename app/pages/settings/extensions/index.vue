@@ -15,7 +15,6 @@
     :items-per-page="limit"
     :pagination-loading="loading"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
         <CommonResourceListItem
           v-for="extension in extensions"
@@ -167,7 +166,7 @@ function getHeaderActions(extension: ExtensionDefinition) {
       component: 'USwitch',
       props: {
         'model-value': extension.isEnabled,
-        disabled: getExtensionLoader(String(getId(extension) ?? '')).isLoading
+        loading: getExtensionLoader(String(getId(extension) ?? '')).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleExtensionStatus(extension)

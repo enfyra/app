@@ -11,7 +11,7 @@ export function useRoutes() {
     execute: executeRoutes
   } = useApi(() => '/enfyra_route', {
     query: {
-      fields: ['id', 'path', 'isEnabled', 'updatedAt', 'mainTable.id', 'mainTable.name', 'mainTable.isSystem', 'mainTable.alias', 'mainTable.icon'].join(','),
+      fields: ['id', 'path', 'isEnabled', 'updatedAt', 'mainTable.id', 'mainTable.name', 'mainTable.isSystem', 'mainTable.alias', 'mainTable.icon', 'mainTable.description', 'mainTable.isSingleRecord'].join(','),
       limit: 0,
       sort: 'path'
     },

@@ -121,7 +121,7 @@ export default defineAppConfig({
           "shrink-0",
           "rounded-[var(--radius-control)]",
           "text-sm font-medium",
-          "transition-all duration-300",
+          "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
           "outline-none",
           "disabled:cursor-not-allowed disabled:!opacity-100 aria-disabled:cursor-not-allowed aria-disabled:!opacity-100",
           "focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",
@@ -331,7 +331,7 @@ export default defineAppConfig({
           "placeholder:text-[var(--control-placeholder)]",
           "focus:border-[var(--control-border-focus)]",
           "focus:outline-none focus:ring-3 focus:ring-[var(--theme-focus-ring)]",
-          "transition-all duration-300",
+          "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
           "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
           "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
           "disabled:cursor-not-allowed disabled:opacity-100",
@@ -350,7 +350,7 @@ export default defineAppConfig({
           "placeholder:text-[var(--control-placeholder)]",
           "focus:border-[var(--control-border-focus)]",
           "focus:outline-none focus:ring-3 focus:ring-[var(--theme-focus-ring)]",
-          "transition-all duration-300",
+          "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
           "resize-none",
           "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
           "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
@@ -370,7 +370,7 @@ export default defineAppConfig({
           "appearance-none",
           "focus:border-[var(--control-border-focus)]",
           "focus:outline-none focus:ring-3 focus:ring-[var(--theme-focus-ring)]",
-          "transition-all duration-300",
+          "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
           "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
           "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
           "disabled:cursor-not-allowed disabled:opacity-100",
@@ -403,7 +403,7 @@ export default defineAppConfig({
           "shadow-theme-xs",
           "focus:border-[var(--control-border-focus)]",
           "focus:outline-none focus:ring-3 focus:ring-[var(--theme-focus-ring)]",
-          "transition-all duration-300",
+          "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
           "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
           "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
           "disabled:cursor-not-allowed disabled:opacity-100",
@@ -437,7 +437,7 @@ export default defineAppConfig({
           "shadow-theme-xs",
           "focus-within:border-[var(--control-border-focus)]",
           "focus-within:outline-none focus-within:ring-3 focus-within:ring-[var(--theme-focus-ring)]",
-          "transition-all duration-300",
+          "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
           "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
           "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
           "disabled:cursor-not-allowed disabled:opacity-100",
@@ -471,7 +471,7 @@ export default defineAppConfig({
     },
     card: {
       slots: {
-        root: "rounded-[var(--radius-card)] border border-[var(--card-border)] [background:var(--card-bg)] shadow-[var(--card-shadow)] transition-all duration-300 overflow-hidden relative group",
+        root: "rounded-[var(--radius-card)] border border-[var(--card-border)] [background:var(--card-bg)] shadow-[var(--card-shadow)] transition-colors transition-shadow transition-opacity duration-[var(--duration-base)] overflow-hidden relative group",
       },
     },
     drawer: {
@@ -490,25 +490,26 @@ export default defineAppConfig({
     switch: {
       slots: {
         base: [
-          "group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out",
+          "group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-[var(--duration-base)] ease-[var(--ease-standard)]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)] focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "data-[state=checked]:bg-[var(--action-primary-bg)]",
           "data-[state=unchecked]:bg-[var(--md-surface-container-high)]",
         ].join(" "),
         thumb: [
-          "pointer-events-none flex h-5 w-5 items-center justify-center rounded-full shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+          "pointer-events-none flex h-5 w-5 items-center justify-center rounded-full shadow-lg ring-0 transition-transform duration-[var(--duration-base)] ease-[var(--ease-standard)]",
           "bg-[var(--md-outline)] group-data-[state=checked]:bg-[var(--md-on-primary)]",
           "data-[state=checked]:translate-x-5",
           "data-[state=unchecked]:translate-x-0",
         ].join(" "),
+        icon: "group-data-[state=unchecked]:text-white",
       },
     },
     checkbox: {
       slots: {
         base: [
           "rounded-[var(--radius-subcontrol)]",
-          "transition-all duration-200",
+          "transition-colors transition-shadow transition-opacity duration-[var(--duration-fast)]",
           "border border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs",
           "data-[state=checked]:border-[var(--action-primary-bg)] data-[state=checked]:bg-[var(--action-primary-bg)]",
           "data-[state=unchecked]:hover:border-[var(--control-border-focus)] data-[state=unchecked]:hover:bg-[var(--surface-muted)]",

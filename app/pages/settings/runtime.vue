@@ -15,6 +15,13 @@ function updateTabScrollState() {
   canScrollTabsRight.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 8;
 }
 
+function scrollTabs(direction: 'left' | 'right') {
+  const el = tabScroller.value;
+  if (!el) return;
+  const amount = direction === 'left' ? -el.clientWidth * 0.8 : el.clientWidth * 0.8;
+  el.scrollBy({ left: amount, behavior: 'smooth' });
+}
+
 onMounted(() => {
   nextTick(updateTabScrollState);
   window.addEventListener('resize', updateTabScrollState, { passive: true });
@@ -46,6 +53,19 @@ const runtimeTabItems = computed(() =>
   }),
 );
 
+const tabComponentNames: Record<string, string> = {
+  overview: 'RuntimeOverviewTab',
+  requests: 'RuntimeRequestsTab',
+  cache: 'RuntimeCacheTab',
+  redis: 'RuntimeRedisTab',
+  database: 'RuntimeDatabaseTab',
+  flows: 'RuntimeFlowsTab',
+  workers: 'RuntimeWorkersTab',
+  connections: 'RuntimeConnectionsTab',
+};
+
+const activeTabComponent = computed(() => tabComponentNames[runtime.activeTab] ?? null);
+
 registerPageHeader({
   title: 'Runtime Monitor',
   description: 'Live server runtime metrics',
@@ -68,18 +88,24 @@ registerPageHeader({
 
     <template v-else>
       <div class="relative -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div
+        <button
           v-if="canScrollTabsLeft"
-          class="pointer-events-none absolute inset-y-0 left-4 z-10 flex w-8 items-center justify-start bg-gradient-to-r from-[var(--surface-muted)] to-transparent sm:left-0"
+          type="button"
+          aria-label="Scroll tabs left"
+          class="absolute inset-y-0 left-4 z-10 flex w-8 pointer-coarse:min-w-[44px] items-center justify-start bg-gradient-to-r from-[var(--surface-muted)] to-transparent sm:left-0"
+          @click="scrollTabs('left')"
         >
           <UIcon name="lucide:chevron-left" class="h-4 w-4 text-[var(--text-quaternary)]" />
-        </div>
-        <div
+        </button>
+        <button
           v-if="canScrollTabsRight"
-          class="pointer-events-none absolute inset-y-0 right-4 z-10 flex w-8 items-center justify-end bg-gradient-to-l from-[var(--surface-muted)] to-transparent sm:right-0"
+          type="button"
+          aria-label="Scroll tabs right"
+          class="absolute inset-y-0 right-4 z-10 flex w-8 pointer-coarse:min-w-[44px] items-center justify-end bg-gradient-to-l from-[var(--surface-muted)] to-transparent sm:right-0"
+          @click="scrollTabs('right')"
         >
           <UIcon name="lucide:chevron-right" class="h-4 w-4 text-[var(--text-quaternary)]" />
-        </div>
+        </button>
 
         <div
           ref="tabScroller"
@@ -95,14 +121,9 @@ registerPageHeader({
         </div>
       </div>
 
-      <RuntimeOverviewTab v-if="runtime.activeTab === 'overview'" :runtime="runtime" />
-      <RuntimeRequestsTab v-else-if="runtime.activeTab === 'requests'" :runtime="runtime" />
-      <RuntimeCacheTab v-else-if="runtime.activeTab === 'cache'" :runtime="runtime" />
-      <RuntimeRedisTab v-else-if="runtime.activeTab === 'redis'" :runtime="runtime" />
-      <RuntimeDatabaseTab v-else-if="runtime.activeTab === 'database'" :runtime="runtime" />
-      <RuntimeFlowsTab v-else-if="runtime.activeTab === 'flows'" :runtime="runtime" />
-      <RuntimeWorkersTab v-else-if="runtime.activeTab === 'workers'" :runtime="runtime" />
-      <RuntimeConnectionsTab v-else-if="runtime.activeTab === 'connections'" :runtime="runtime" />
+      <KeepAlive>
+        <component :is="activeTabComponent" v-if="activeTabComponent" :key="runtime.activeTab" :runtime="runtime" />
+      </KeepAlive>
 
       <RuntimeMetricGuide :guide="runtime.activeGuide" />
     </template>

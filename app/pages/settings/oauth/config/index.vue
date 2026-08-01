@@ -15,7 +15,6 @@
     :items-per-page="limit"
     :pagination-loading="loading"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-    :pagination-ui="{ item: 'h-9 w-9 rounded-xl transition-all duration-300' }"
   >
         <CommonResourceListItem
           v-for="config in configs"
@@ -172,7 +171,7 @@ function getHeaderActions(config: OAuthConfigDefinition) {
       component: 'USwitch',
       props: {
         'model-value': config.isEnabled,
-        disabled: getConfigLoader(String(getId(config) ?? '')).isLoading
+        loading: getConfigLoader(String(getId(config) ?? '')).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleConfigStatus(config)

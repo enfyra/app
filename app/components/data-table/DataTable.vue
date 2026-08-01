@@ -330,16 +330,29 @@ function getCellTextClass(columnId: string | undefined) {
     <template v-else-if="table">
       
       <div class="lg:hidden">
+        <div
+          v-if="isRefreshing"
+          class="mb-2 h-[3px] overflow-hidden rounded-full bg-[var(--border-subtle)]"
+          aria-hidden="true"
+        >
+          <div class="table-progress-bar h-full w-2/5 rounded-full bg-[var(--brand-500)]" />
+        </div>
         <CommonAnimatedGrid
           v-if="tableRows.length > 0"
           grid-class="grid grid-cols-1 md:grid-cols-2 gap-3"
+          :class="isRefreshing ? 'opacity-50 pointer-events-none transition-opacity duration-[var(--duration-base)]' : 'opacity-100 transition-opacity duration-[var(--duration-base)]'"
         >
           <article
             v-for="row in tableRows"
             :key="row.id"
-            class="surface-card rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:bg-[var(--surface-muted)] active:scale-[0.99]"
+            class="surface-card rounded-xl overflow-hidden cursor-pointer transition-colors duration-[var(--duration-fast)] hover:bg-[var(--surface-muted)] active:scale-[0.99]"
             :class="selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original)) ? 'ring-2 ring-[var(--color-primary-500)]' : ''"
             @click="handleRowClick(row.original)"
+            tabindex="0"
+            role="button"
+            :aria-label="`Open record ${row.id}`"
+            @keydown.enter.prevent="handleRowClick(row.original)"
+            @keydown.space.prevent="handleRowClick(row.original)"
           >
             <header class="flex items-start gap-3 p-4">
               <div v-if="props.selectable" class="pt-0.5 flex-shrink-0" @click.stop>
@@ -453,7 +466,7 @@ function getCellTextClass(columnId: string | undefined) {
 
     <div
       class="hidden lg:block surface-card rounded-2xl overflow-hidden relative"
-      :class="isRefreshing ? 'after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-primary after:animate-pulse' : ''"
+      :class="isRefreshing ? 'table-refreshing' : ''"
     >
       <div class="max-w-full overflow-x-auto overflow-y-auto custom-scrollbar">
         <table class="w-full min-w-max table-fixed divide-y divide-[var(--table-header-border)]" aria-label="Data table">
@@ -483,6 +496,10 @@ function getCellTextClass(columnId: string | undefined) {
                     'cursor-pointer select-none hover:bg-[var(--table-header-hover-bg)] transition-colors',
                 ]"
                 @click="header.column.getToggleSortingHandler()?.($event)"
+                :tabindex="header.column.getCanSort() ? 0 : undefined"
+                :role="header.column.getCanSort() ? 'button' : undefined"
+                @keydown.enter.prevent="header.column.getCanSort() && header.column.getToggleSortingHandler()?.($event)"
+                @keydown.space.prevent="header.column.getCanSort() && header.column.getToggleSortingHandler()?.($event)"
                 scope="col"
                 :aria-sort="
                   header.column.getIsSorted() === 'asc'
@@ -527,8 +544,8 @@ function getCellTextClass(columnId: string | undefined) {
             </tr>
           </thead>
           <tbody
-            class="divide-y divide-[var(--table-cell-border)] transition-opacity duration-200"
-            :class="isRefreshing ? 'opacity-70' : 'opacity-100'"
+            class="divide-y divide-[var(--table-cell-border)] transition-opacity duration-[var(--duration-base)]"
+            :class="isRefreshing ? 'opacity-50 pointer-events-none' : 'opacity-100'"
           >
             <template v-if="showInitialLoading">
               <tr v-for="i in (props.skeletonRows || 5)" :key="`skeleton-${i}`" class="animate-pulse">
@@ -559,12 +576,15 @@ function getCellTextClass(columnId: string | undefined) {
               >
                 <tr
                   :class="[
-                    'group cursor-pointer transition-all duration-200',
+                    'group cursor-pointer transition-colors duration-[var(--duration-fast)]',
                     selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
                       ? 'bg-brand-50 dark:bg-brand-500/10'
                       : 'hover:bg-[var(--surface-muted)]',
                   ]"
                   @click="handleRowClick(row.original)"
+                  tabindex="0"
+                  @keydown.enter.prevent="handleRowClick(row.original)"
+                  @keydown.space.prevent="handleRowClick(row.original)"
                 >
                   <td
                     v-for="cell in row.getVisibleCells()"
@@ -584,7 +604,7 @@ function getCellTextClass(columnId: string | undefined) {
                     ]"
                   >
                     <p
-                      v-if="isIdentifierColumn(cell.column.id) || typeof cell.column.columnDef.cell !== 'function'"
+                      v-if="typeof cell.column.columnDef.cell !== 'function'"
                   :class="getCellTextClass(cell.column.id)"
                       :title="String(cell.getValue())"
                     >
@@ -602,12 +622,15 @@ function getCellTextClass(columnId: string | undefined) {
               <tr
                 v-else
                 :class="[
-                  'group cursor-pointer transition-all duration-200',
+                  'group cursor-pointer transition-colors duration-[var(--duration-fast)]',
                   selectedRows.some((selectedRow: any) => getId(selectedRow) === getId(row.original))
                     ? 'bg-brand-50 dark:bg-brand-500/10'
                     : 'hover:bg-[var(--surface-muted)]',
                 ]"
                 @click="handleRowClick(row.original)"
+                tabindex="0"
+                @keydown.enter.prevent="handleRowClick(row.original)"
+                @keydown.space.prevent="handleRowClick(row.original)"
               >
                 <td
                   v-for="cell in row.getVisibleCells()"
@@ -627,7 +650,7 @@ function getCellTextClass(columnId: string | undefined) {
                   ]"
                 >
                   <p
-                    v-if="isIdentifierColumn(cell.column.id) || typeof cell.column.columnDef.cell !== 'function'"
+                    v-if="typeof cell.column.columnDef.cell !== 'function'"
                     :class="getCellTextClass(cell.column.id)"
                     :title="String(cell.getValue())"
                   >
@@ -662,3 +685,42 @@ function getCellTextClass(columnId: string | undefined) {
     </template>
   </div>
 </template>
+
+<style scoped>
+.table-refreshing::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 3px;
+  background: var(--brand-500);
+  border-radius: 0 0 2px 2px;
+  animation: table-progress 1.2s ease-in-out infinite;
+  z-index: 10;
+}
+
+.table-progress-bar {
+  animation: table-progress 1.2s ease-in-out infinite;
+}
+
+@keyframes table-progress {
+  0% { transform: translateX(-100%); width: 40%; }
+  50% { transform: translateX(80%); width: 50%; }
+  100% { transform: translateX(200%); width: 40%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .table-refreshing::before {
+    animation: none;
+    width: 100%;
+    transform: none;
+    opacity: 0.6;
+  }
+
+  .table-progress-bar {
+    animation: none;
+    width: 100%;
+    opacity: 0.6;
+  }
+}
+</style>

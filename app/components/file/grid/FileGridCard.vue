@@ -15,6 +15,11 @@
           cursor: moveState.moveMode ? 'not-allowed' : 'pointer',
         }"
         @click="handleFileClick"
+        tabindex="0"
+        role="button"
+        :aria-label="`${isSelectionMode ? 'Select' : 'Open'} ${file.displayName}`"
+        @keydown.enter.prevent="handleFileClick"
+        @keydown.space.prevent="handleFileClick"
       >
         <div class="relative aspect-[4/3] overflow-hidden bg-[var(--surface-muted)]">
           <CommonLazyImage
@@ -44,6 +49,12 @@
             v-if="isSelectionMode"
             class="absolute right-3 top-3 z-20 rounded-md bg-[var(--surface-default)]/95 p-1.5 shadow-theme-xs backdrop-blur"
             @click.stop="handleCheckboxClick"
+            tabindex="0"
+            role="checkbox"
+            :aria-checked="selectedItems.includes(file.id)"
+            :aria-label="`Select ${file.displayName}`"
+            @keydown.enter.prevent.stop="handleCheckboxClick"
+            @keydown.space.prevent.stop="handleCheckboxClick"
           >
             <UCheckbox
               :model-value="selectedItems.includes(file.id)"
@@ -96,10 +107,12 @@
             <UDropdownMenu :items="getDropdownMenuItems()">
               <UButton
                 icon="lucide:more-horizontal"
+                aria-label="More actions"
                 variant="ghost"
                 color="neutral"
                 size="sm"
                 square
+                class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                 @click.stop
               />
             </UDropdownMenu>

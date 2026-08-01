@@ -26,7 +26,7 @@
       </PermissionGate>
     </div>
 
-    <Transition name="loading-fade" mode="out-in">
+    <Transition name="loading-fade">
       <CommonLoadingState
         v-if="showInitialLoading"
         title="Loading permissions..."
@@ -52,6 +52,11 @@
             <div
               @click="editPermission(permission)"
               class="surface-card rounded-lg p-3 cursor-pointer hover:bg-[var(--surface-muted)] transition-colors"
+              tabindex="0"
+              role="button"
+              :aria-label="`Edit ${permission.description || 'permission'}`"
+              @keydown.enter.prevent="editPermission(permission)"
+              @keydown.space.prevent="editPermission(permission)"
             >
               <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2 min-w-0">
@@ -106,10 +111,11 @@
                   >
                     <UButton
                       icon="lucide:trash"
+                      aria-label="Delete permission"
                       color="error"
                       variant="ghost"
                       size="xs"
-                      class="ml-1"
+                      class="ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                       @click.stop="deletePermission(permission)"
                       :loading="deleting === permission.id"
                       :disabled="deleting === permission.id"
@@ -167,10 +173,11 @@
                 >
                   <UButton
                     icon="lucide:trash"
+                    aria-label="Delete permission"
                     color="error"
                     variant="ghost"
                     size="xs"
-                    class="ml-1"
+                    class="ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                     @click.stop="deletePermission(permission)"
                     :loading="deleting === permission.id"
                     :disabled="deleting === permission.id"

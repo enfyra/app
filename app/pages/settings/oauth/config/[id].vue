@@ -16,15 +16,14 @@
         </UForm>
       </CommonFormCard>
     </div>
+    <CommonEmptyState
+      v-if="!loading && !configData?.data?.[0]"
+      title="OAuth configuration not found"
+      description="The requested OAuth configuration could not be loaded"
+      icon="lucide:key"
+      size="sm"
+    />
   </div>
-
-  <CommonEmptyState
-    v-if="!loading && !configData?.data?.[0]"
-    title="OAuth configuration not found"
-    description="The requested OAuth configuration could not be loaded"
-    icon="lucide:key"
-    size="sm"
-  />
 </template>
 
 <script setup lang="ts">

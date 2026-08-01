@@ -17,15 +17,14 @@
         </UForm>
       </CommonFormCard>
     </div>
+    <CommonEmptyState
+      v-if="!loading && !configData?.data?.[0]"
+      title="Storage configuration not found"
+      description="The requested storage configuration could not be loaded"
+      icon="lucide:hard-drive"
+      size="sm"
+    />
   </div>
-
-  <CommonEmptyState
-    v-if="!loading && !configData?.data?.[0]"
-    title="Storage configuration not found"
-    description="The requested storage configuration could not be loaded"
-    icon="lucide:hard-drive"
-    size="sm"
-  />
 </template>
 
 <script setup lang="ts">

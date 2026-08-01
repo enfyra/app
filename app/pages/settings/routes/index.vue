@@ -301,7 +301,8 @@ function getRouteHeaderActions(routeItem: any) {
       component: 'USwitch',
       props: {
         'model-value': routeItem.isEnabled,
-        disabled: getRouteLoader(getId(routeItem)).isLoading || tableExists
+        disabled: tableExists,
+        loading: getRouteLoader(getId(routeItem)).isLoading,
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleEnabled(routeItem),
@@ -395,7 +396,7 @@ async function deleteRoute(routeItem: any) {
 
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade" mode="out-in">
+    <Transition name="loading-fade">
       <div v-if="showInitialLoading" key="loading">
         <CommonResourceListFrame
           :loading="true"
@@ -457,7 +458,6 @@ async function deleteRoute(routeItem: any) {
         <CommonPaginationBar
           v-if="routesData.length > 0 && total > pageLimit"
           v-model:page="page"
-          class="mt-6"
           :items-per-page="pageLimit"
           :total="total"
           :loading="loading"
@@ -465,12 +465,12 @@ async function deleteRoute(routeItem: any) {
         />
       </div>
     </Transition>
-  </div>
 
-  <FilterDrawerLazy
-    v-model="showFilterDrawer"
-    :table-name="tableName"
-    :current-filter="currentFilter"
-    @apply="handleFilterApply"
-  />
+    <FilterDrawerLazy
+      v-model="showFilterDrawer"
+      :table-name="tableName"
+      :current-filter="currentFilter"
+      @apply="handleFilterApply"
+    />
+  </div>
 </template>

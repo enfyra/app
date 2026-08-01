@@ -63,6 +63,11 @@
                 :key="route.id"
                 class="flex items-center justify-between p-3 border border-muted rounded-lg lg:hover:bg-muted/20 cursor-pointer transition-colors"
                 @click="selectRoute(route)"
+                tabindex="0"
+                role="button"
+                :aria-label="`Select route ${route.path}`"
+                @keydown.enter.prevent="selectRoute(route)"
+                @keydown.space.prevent="selectRoute(route)"
               >
                 <div class="flex items-center gap-3">
                   <UIcon name="lucide:route" class="w-5 h-5 text-primary" />
@@ -126,8 +131,10 @@
               <div class="flex items-center gap-2">
                 <UButton
                   icon="lucide:chevron-left"
+                  aria-label="Previous page"
                   variant="outline"
                   size="sm"
+                  class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                   :disabled="page <= 1"
                   @click="page--"
                 />
@@ -136,8 +143,10 @@
                 }}</span>
                 <UButton
                   icon="lucide:chevron-right"
+                  aria-label="Next page"
                   variant="outline"
                   size="sm"
+                  class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                   :disabled="page >= Math.ceil(total / limit)"
                   @click="page++"
                 />

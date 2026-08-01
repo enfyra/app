@@ -72,38 +72,6 @@ const headerStripClass = computed(() => {
 
 const isStatsFocus = computed(() => props.variant === "stats-focus");
 
-const isVisible = ref(false);
-
-function triggerAnimation() {
-  isVisible.value = false;
-  setTimeout(() => {
-    nextTick(() => {
-      isVisible.value = true;
-    });
-  }, 50);
-}
-
-onMounted(() => {
-  triggerAnimation();
-});
-
-watch(
-  () => [
-    props.title,
-    props.description,
-    props.variant,
-    props.gradient,
-    props.stats,
-    resolvedLeadingIcon.value,
-    props.leadingIcon,
-    props.hideLeadingIcon,
-  ],
-  () => {
-    triggerAnimation();
-  },
-  { deep: true },
-);
-
 function handlePageHeaderActionClick(action: any) {
   action.onClick?.();
 }
@@ -112,7 +80,7 @@ function handlePageHeaderActionClick(action: any) {
 <template>
   <div class="page-header-shell relative" :class="headerStripClass">
     
-    <div class="page-header-inner relative px-5 pt-2.5 pb-1.5 lg:px-6">
+    <div class="page-header-inner relative px-5 py-3 lg:px-6">
       <div
         class="flex gap-4"
         :class="(isMobile || isTablet) ? 'flex-col' : 'flex-row items-center justify-between'"
@@ -129,26 +97,25 @@ function handlePageHeaderActionClick(action: any) {
               :class="leadingIconGlyphClass"
             />
           </div>
-          <div
-            class="min-w-0 flex-1 space-y-0 transition-all duration-150"
-            :style="{
-              opacity: isVisible ? 1 : 0,
-              transform: isVisible ? 'translateY(0)' : 'translateY(6px)',
-              transitionDelay: '40ms',
-            }"
-          >
-            <h1
-              class="min-w-0 break-words font-bold tracking-normal text-[var(--text-primary)]"
-              :class="(isMobile || isTablet) ? 'text-lg leading-5' : 'text-xl leading-6'"
-            >
-              {{ title }}
-            </h1>
-            <p
-              v-if="description"
-              class="text-xs leading-4 text-[var(--text-tertiary)]"
-            >
-              {{ description }}
-            </p>
+          <div class="relative min-w-0 flex-1">
+            <div class="header-title-stack">
+            <Transition name="page-header-fade">
+              <div :key="title" class="space-y-0">
+                <h1
+                  class="min-w-0 break-words font-bold tracking-normal text-[var(--text-primary)]"
+                  :class="(isMobile || isTablet) ? 'text-lg leading-5' : 'text-xl leading-6'"
+                >
+                  {{ title }}
+                </h1>
+                <p
+                  v-if="description"
+                  class="text-xs leading-4 text-[var(--text-tertiary)]"
+                >
+                  {{ description }}
+                </p>
+              </div>
+            </Transition>
+            </div>
           </div>
         </div>
 
@@ -182,6 +149,7 @@ function handlePageHeaderActionClick(action: any) {
                 :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
                 @click="handlePageHeaderActionClick(action)"
                 :class="getHeaderActionButtonClass(action)"
+                :aria-label="action.ariaLabel || (isRef(action.label) ? unref(action.label) : action.label) || action.id"
               />
             </PermissionGate>
           </template>
@@ -214,6 +182,7 @@ function handlePageHeaderActionClick(action: any) {
                 :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
                 @click="handlePageHeaderActionClick(action)"
                 :class="getHeaderActionButtonClass(action)"
+                :aria-label="action.ariaLabel || (isRef(action.label) ? unref(action.label) : action.label) || action.id"
               />
             </PermissionGate>
           </template>
@@ -232,15 +201,10 @@ function handlePageHeaderActionClick(action: any) {
           v-for="(stat, index) in stats"
           :key="index"
           :class="[
-            'surface-card relative overflow-hidden group transition-all duration-300',
+            'surface-card relative overflow-hidden group',
             'rounded-[var(--radius-card)]',
             isStatsFocus ? ((isMobile || isTablet) ? 'p-3' : 'p-6') : ((isMobile || isTablet) ? 'p-2.5' : 'p-4')
           ]"
-          :style="{
-            opacity: isVisible ? 1 : 0,
-            transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
-            transitionDelay: `${200 + index * 50}ms`,
-          }"
         >
           
           <div
@@ -281,5 +245,30 @@ function handlePageHeaderActionClick(action: any) {
 
 .page-header-inner {
   min-height: 56px;
+}
+
+.page-header-fade-enter-active,
+.page-header-fade-leave-active {
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.header-title-stack {
+  display: grid;
+}
+
+.header-title-stack > * {
+  grid-area: 1 / 1;
+}
+
+.page-header-fade-enter-from,
+.page-header-fade-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-header-fade-enter-active,
+  .page-header-fade-leave-active {
+    transition-duration: 1ms !important;
+  }
 }
 </style>

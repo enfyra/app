@@ -71,7 +71,7 @@ const sizeClasses = {
 const variantClasses = computed(() => {
   const variants = {
     form: "",
-    settings: "group cursor-pointer transition-all duration-200 ease-in-out hover:-translate-y-px hover:shadow-md",
+    settings: "group cursor-pointer transition-colors transition-shadow transition-transform duration-[var(--duration-fast)] ease-[var(--ease-standard)] hover:-translate-y-px hover:shadow-md",
     stats: props.elevated ? "shadow-glow" : "",
     simple: "",
   };

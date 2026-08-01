@@ -42,6 +42,11 @@ function formatTime(d: string | null) {
         :key="exec.id"
         class="flex items-center justify-between p-3 bg-[var(--surface-muted)] rounded-lg text-sm cursor-pointer hover:bg-[var(--surface-muted)] transition-colors"
         @click="emit('open', exec)"
+        tabindex="0"
+        role="button"
+        :aria-label="`Open ${exec.status} execution from ${formatTime(exec.startedAt)}`"
+        @keydown.enter.prevent="emit('open', exec)"
+        @keydown.space.prevent="emit('open', exec)"
       >
         <div class="flex items-center gap-3">
           <span class="w-2 h-2 rounded-full flex-shrink-0" :class="getExecutionStatusDotClass(exec.status)" />

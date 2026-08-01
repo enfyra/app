@@ -458,6 +458,11 @@ watch(
       :key="column.id ?? index"
       class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
       @click="editColumn(column, index)"
+      tabindex="0"
+      role="button"
+      :aria-label="`Edit column ${column.name || 'Unnamed'}`"
+      @keydown.enter.prevent="editColumn(column, index)"
+      @keydown.space.prevent="editColumn(column, index)"
     >
       <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
         <UIcon name="lucide:type" class="w-4 h-4 text-muted-foreground shrink-0" />
@@ -484,10 +489,11 @@ watch(
         >
           <UButton
             :icon="column.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
+            :aria-label="column.isPublished ? 'Unpublish column' : 'Publish column'"
             :color="column.isPublished ? 'success' : 'neutral'"
             variant="ghost"
             size="xs"
-            class="cursor-pointer"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
             @click.stop="column.isPublished = !column.isPublished"
           />
         </UTooltip>
@@ -505,10 +511,11 @@ watch(
           >
             <UButton
               icon="lucide:shield"
+              aria-label="Field permissions"
               color="secondary"
               variant="ghost"
               size="xs"
-              class="cursor-pointer"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
               @click.stop="handleShieldClick(column, index)"
             />
           </UChip>
@@ -527,21 +534,23 @@ watch(
           >
             <UButton
               icon="lucide:ruler"
+              aria-label="Validation rules"
               color="info"
               variant="ghost"
               size="xs"
-              class="cursor-pointer"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
               @click.stop="handleRuleClick(column, index)"
             />
           </UChip>
         </UTooltip>
         <UButton
           icon="lucide:trash"
+          aria-label="Delete column"
           color="error"
           variant="ghost"
           size="xs"
           :disabled="column.isSystem || column.isPrimary"
-          class="cursor-not-allowed enabled:cursor-pointer"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
           @click.stop="removeColumn(index)"
         />
       </div>

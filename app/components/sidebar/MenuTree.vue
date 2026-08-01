@@ -17,6 +17,13 @@ const props = withDefaults(defineProps<{
 const STORAGE_KEY = "sidebar-menu-open-keys";
 const openMenuKeys = useState<Record<string, boolean>>("sidebar-menu-open-keys", () => ({}));
 const { getMenuNotification } = useMenuNotificationRegistry();
+const { schedulePrefetchIntent, cancelPrefetchIntent } = useExtensionPrefetch();
+
+function handleItemIntent(item: any) {
+  const target = item?.to ?? item?.route;
+  const path = typeof target === "string" ? target : target?.path;
+  schedulePrefetchIntent(path);
+}
 
 function menuKey(item: any): string {
   return item.to || item.label;
@@ -24,7 +31,7 @@ function menuKey(item: any): string {
 
 function isMenuOpen(item: any): boolean {
   const key = menuKey(item);
-  return openMenuKeys.value[key] ?? true;
+  return openMenuKeys.value[key] ?? (item.active || item.branchActive);
 }
 
 function toggleMenu(item: any) {
@@ -147,6 +154,10 @@ watch(
         class="app-sidebar-link"
         :class="{ active: item.active, collapsed: props.collapsed, 'with-count': hasNotification(item) }"
         :title="props.collapsed ? item.label : undefined"
+        @pointerenter="handleItemIntent(item)"
+        @pointerleave="cancelPrefetchIntent"
+        @focus="handleItemIntent(item)"
+        @blur="cancelPrefetchIntent"
       >
         <UIcon
           v-if="props.level === 0 || !props.useDots"
@@ -193,6 +204,7 @@ watch(
           :aria-expanded="isMenuOpen(item)"
           :aria-disabled="isDisabledParent(item)"
           :disabled="isDisabledParent(item)"
+          :aria-label="props.collapsed ? item.label : undefined"
           @click="toggleMenu(item)"
         >
           <UIcon
@@ -239,12 +251,19 @@ watch(
           @leave="childrenLeave"
           @after-leave="afterChildrenLeave"
         >
-          <div
-            v-if="(item.children?.length || item.loading) && !props.collapsed && isMenuOpen(item)"
-            class="app-sidebar-children"
-          >
+         <div
+           v-if="(item.children?.length || item.loading) && !props.collapsed && isMenuOpen(item)"
+           class="app-sidebar-children"
+         >
+            <SidebarDataSection
+              v-if="isDataMenuItem(item) && item.children?.length"
+              :children="item.children"
+              :collapsed="props.collapsed"
+              :labels-visible="props.labelsVisible"
+              :loading="item.loading"
+            />
             <SidebarMenuTree
-              v-if="item.children?.length"
+              v-else-if="item.children?.length"
               :items="item.children"
               :collapsed="props.collapsed"
               :labels-visible="props.labelsVisible"
@@ -279,14 +298,14 @@ watch(
 <style scoped>
 .app-sidebar-tree {
   display: grid;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
 }
 
 .app-sidebar-tree.nested {
-  gap: 1px;
-  margin: 1px 0 8px 12px;
-  padding-left: 12px;
+  gap: 2px;
+  margin: 2px 0 6px 10px;
+  padding-left: 10px;
   border-left: 1px solid var(--nav-child-border);
 }
 
@@ -296,9 +315,9 @@ watch(
 
 .app-sidebar-child-skeleton {
   display: grid;
-  gap: 1px;
-  margin: 1px 0 8px 12px;
-  padding-left: 12px;
+  gap: 0;
+  margin: 0 0 4px 10px;
+  padding-left: 10px;
   border-left: 1px solid var(--nav-child-border);
 }
 
@@ -306,10 +325,10 @@ watch(
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  min-height: 30px;
+  gap: 8px;
+  min-height: 26px;
   border-radius: var(--radius-subcontrol);
-  padding: 0 8px;
+  padding: 0 6px;
 }
 
 .app-sidebar-child-skeleton-dot {
@@ -343,16 +362,16 @@ watch(
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  min-height: 40px;
+  min-height: 32px;
   min-width: 0;
   overflow: hidden;
   position: relative;
   border: 0;
   border-radius: var(--radius-control);
   background: transparent;
-  padding: 0 10px;
+  padding: 0 8px;
   color: var(--nav-item-text);
   cursor: pointer;
   font: inherit;
@@ -365,9 +384,9 @@ watch(
 
 .nested .app-sidebar-link {
   grid-template-columns: 20px minmax(0, 1fr);
-  min-height: 30px;
+  min-height: 28px;
   border-radius: var(--radius-subcontrol);
-  padding: 0 8px;
+  padding: 0 6px;
   color: var(--text-tertiary);
   font-size: 12px;
   font-weight: 650;
@@ -400,7 +419,7 @@ watch(
 .app-sidebar-link.collapsed {
   grid-template-columns: 1fr;
   place-items: center;
-  min-height: 42px;
+  min-height: 36px;
   padding: 0;
 }
 

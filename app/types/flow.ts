@@ -1,6 +1,20 @@
 export type StepType = 'script' | 'condition' | 'query' | 'delete' | 'http' | 'trigger_flow' | 'sleep' | 'log';
 export type StepErrorHandling = 'stop' | 'skip' | 'retry';
-export type TriggerType = 'schedule' | 'manual';
+export type TriggerType = 'schedule' | 'event' | 'webhook';
+export type TableEventType = 'create' | 'update' | 'delete';
+
+export interface FlowTrigger {
+  id: string | number;
+  type: TriggerType;
+  isEnabled: boolean;
+  config?: Record<string, any>;
+  tableEvent?: TableEventType | null;
+  route?: string | number | null;
+  table?: string | number | null;
+  tableName?: string | null;
+  routePath?: string | null;
+}
+
 export type BranchType = 'true' | 'false' | null;
 
 export interface FlowStep {
@@ -39,8 +53,7 @@ export interface FlowStepEditorForm {
 export interface FlowDefinition {
   id: string | number;
   name: string;
-  triggerType: TriggerType;
-  triggerConfig?: Record<string, any>;
+  triggers?: FlowTrigger[];
   timeout?: number;
   maxExecutions?: number;
   isEnabled: boolean;

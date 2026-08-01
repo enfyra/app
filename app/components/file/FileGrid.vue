@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <div
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4"
+      class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6"
     >
       <div v-if="transformedFiles.length > 0" class="contents">
         <FileGridCard

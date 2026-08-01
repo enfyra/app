@@ -198,7 +198,7 @@ async function handleLogout() {
 </script>
 
 <template>
-  <div class="w-full overflow-hidden">
+  <div class="w-full shrink-0">
     <button
       v-if="collapsed"
       type="button"

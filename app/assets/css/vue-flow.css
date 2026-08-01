@@ -7,7 +7,9 @@
 .vue-flow__edge-path {
   stroke: var(--flow-edge, var(--border-default));
   stroke-width: 1.5;
-  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+  transition:
+    stroke var(--duration-base) var(--ease-standard),
+    stroke-width var(--duration-base) var(--ease-standard);
 }
 
 .vue-flow__edge:hover .vue-flow__edge-path {

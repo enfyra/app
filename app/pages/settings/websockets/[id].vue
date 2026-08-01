@@ -103,6 +103,7 @@
               component: 'USwitch',
               props: {
                 'model-value': event.isEnabled,
+                loading: togglingEventId === getId(event),
               },
               onClick: (e?: Event) => e?.stopPropagation(),
               onUpdate: () => toggleEventStatus(event),
@@ -143,15 +144,14 @@
       :gateway-path="form?.path || gateway?.path || ''"
       @save="handleSaveEvent"
     />
+    <CommonEmptyState
+      v-if="!loading && !gatewayData?.data?.[0]"
+      title="WebSocket gateway not found"
+      description="The requested WebSocket gateway could not be loaded"
+      icon="lucide:radio-tower"
+      size="sm"
+    />
   </div>
-
-  <CommonEmptyState
-    v-if="!loading && !gatewayData?.data?.[0]"
-    title="WebSocket gateway not found"
-    description="The requested WebSocket gateway could not be loaded"
-    icon="lucide:radio-tower"
-    size="sm"
-  />
 </template>
 
 <script setup lang="ts">
@@ -255,6 +255,7 @@ const {
   method: "patch",
   errorContext: "Toggle Event Status",
 });
+const togglingEventId = ref<string | number | null>(null);
 
 const {
   error: deleteEventError,
@@ -400,18 +401,26 @@ async function deleteGateway() {
 
 async function toggleEventStatus(event: any) {
   const eventId = getId(event);
-  await executeToggleEvent({
-    id: eventId,
-    body: { isEnabled: !event.isEnabled }
-  });
+  togglingEventId.value = eventId;
+  try {
+    await executeToggleEvent({
+      id: eventId,
+      body: { isEnabled: !event.isEnabled }
+    });
 
-  if (toggleEventError.value) {
-    return;
+    if (toggleEventError.value) {
+      return;
+    }
+
+    notify.success("Success", `Event has been ${event.isEnabled ? 'disabled' : 'enabled'}.`);
+
+    if (eventsData.value?.data) {
+      const idx = eventsData.value.data.findIndex((e: any) => getId(e) === eventId);
+      if (idx !== -1) eventsData.value.data[idx].isEnabled = !event.isEnabled;
+    }
+  } finally {
+    togglingEventId.value = null;
   }
-
-  notify.success("Success", `Event has been ${event.isEnabled ? 'disabled' : 'enabled'}.`);
-
-  await fetchEvents();
 }
 
 async function deleteEvent(event: any) {

@@ -13,7 +13,7 @@
           <div class="filter-date-picker-popover p-3 flex flex-col gap-3">
             <div class="flex items-center justify-between">
               <span class="text-sm font-semibold">Select Date</span>
-              <UButton icon="lucide:x" color="neutral" variant="ghost" size="xs" @click="close" />
+              <UButton icon="lucide:x" aria-label="Close date picker" color="neutral" variant="ghost" size="xs" class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]" @click="close" />
             </div>
             <UCalendar v-model="tempValue" class="w-fit" />
             <UButton color="primary" size="sm" @click="applyAndClose(close)">Apply</UButton>
@@ -36,7 +36,7 @@
             <div class="filter-date-picker-popover p-3 flex flex-col gap-3">
               <div class="flex items-center justify-between">
                 <span class="text-sm font-semibold">From</span>
-                <UButton icon="lucide:x" color="neutral" variant="ghost" size="xs" @click="close" />
+                <UButton icon="lucide:x" aria-label="Close start date picker" color="neutral" variant="ghost" size="xs" class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]" @click="close" />
               </div>
               <UCalendar v-model="tempFrom" class="w-fit" />
               <UButton color="primary" size="sm" @click="applyRange('from', close)">Apply</UButton>
@@ -56,7 +56,7 @@
             <div class="filter-date-picker-popover p-3 flex flex-col gap-3">
               <div class="flex items-center justify-between">
                 <span class="text-sm font-semibold">To</span>
-                <UButton icon="lucide:x" color="neutral" variant="ghost" size="xs" @click="close" />
+                <UButton icon="lucide:x" aria-label="Close end date picker" color="neutral" variant="ghost" size="xs" class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]" @click="close" />
               </div>
               <UCalendar v-model="tempTo" class="w-fit" />
               <UButton color="primary" size="sm" @click="applyRange('to', close)">Apply</UButton>

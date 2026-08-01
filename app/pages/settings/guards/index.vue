@@ -212,6 +212,7 @@ const { execute: updateGuardApi, error: updateError } = useApi(
     errorContext: 'Toggle Guard',
   },
 );
+const togglingGuardId = ref<string | number | null>(null);
 
 const { execute: deleteGuardApi, error: deleteError } = useApi(
   () => '/enfyra_guard',
@@ -335,6 +336,7 @@ function getGuardHeaderActions(guard: any) {
       component: 'USwitch',
       props: {
         'model-value': guard.isEnabled,
+        loading: togglingGuardId.value === getId(guard),
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleEnabled(guard),
@@ -362,6 +364,7 @@ function getGuardFooterActions(guard: any) {
 
 async function toggleEnabled(guard: any) {
   const newEnabled = !guard.isEnabled;
+  togglingGuardId.value = getId(guard);
 
   if (apiData.value?.data) {
     const idx = apiData.value.data.findIndex(
@@ -372,21 +375,25 @@ async function toggleEnabled(guard: any) {
     }
   }
 
-  await updateGuardApi({ id: getId(guard), body: { isEnabled: newEnabled } });
+  try {
+    await updateGuardApi({ id: getId(guard), body: { isEnabled: newEnabled } });
 
-  if (updateError.value) {
-    if (apiData.value?.data) {
-      const idx = apiData.value.data.findIndex(
-        (g: any) => getId(g) === getId(guard),
-      );
-      if (idx !== -1) {
-        apiData.value.data[idx].isEnabled = !newEnabled;
+    if (updateError.value) {
+      if (apiData.value?.data) {
+        const idx = apiData.value.data.findIndex(
+          (g: any) => getId(g) === getId(guard),
+        );
+        if (idx !== -1) {
+          apiData.value.data[idx].isEnabled = !newEnabled;
+        }
       }
+      return;
     }
-    return;
-  }
 
-  notify.success('Success', `Guard ${newEnabled ? 'enabled' : 'disabled'} successfully`);
+    notify.success('Success', `Guard ${newEnabled ? 'enabled' : 'disabled'} successfully`);
+  } finally {
+    togglingGuardId.value = null;
+  }
 }
 
 async function deleteGuard(guard: any) {
@@ -411,7 +418,7 @@ async function deleteGuard(guard: any) {
 
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade" mode="out-in">
+    <Transition name="loading-fade">
       <div v-if="showInitialLoading" key="loading">
         <CommonResourceListFrame
           :loading="true"
@@ -570,7 +577,6 @@ async function deleteGuard(guard: any) {
         <CommonPaginationBar
           v-if="guardsData.length > 0 && total > pageLimit"
           v-model:page="page"
-          class="mt-6"
           :items-per-page="pageLimit"
           :total="total"
           :loading="loading"
@@ -578,90 +584,89 @@ async function deleteGuard(guard: any) {
         />
       </div>
     </Transition>
-  </div>
+    <FilterDrawerLazy
+      v-model="showFilterDrawer"
+      :table-name="tableName"
+      :current-filter="currentFilter"
+      @apply="handleFilterApply"
+    />
 
-  <FilterDrawerLazy
-    v-model="showFilterDrawer"
-    :table-name="tableName"
-    :current-filter="currentFilter"
-    @apply="handleFilterApply"
-  />
+    <CommonDrawer
+      v-model="showCreateGuardDrawer"
+      :handle="false"
+      direction="right"
+      :cancel-action="{ label: 'Cancel', onClick: closeCreateGuardDrawer }"
+      :primary-action="{
+        label: 'Create Guard',
+        loading: createGuardLoading,
+        disabled: createGuardLoading,
+        onClick: createGuardFromTemplate,
+      }"
+    >
+      <template #header>
+        <h2 class="text-xl font-semibold">Create Guard</h2>
+      </template>
 
-  <CommonDrawer
-    v-model="showCreateGuardDrawer"
-    :handle="false"
-    direction="right"
-    :cancel-action="{ label: 'Cancel', onClick: closeCreateGuardDrawer }"
-    :primary-action="{
-      label: 'Create Guard',
-      loading: createGuardLoading,
-      disabled: createGuardLoading,
-      onClick: createGuardFromTemplate,
-    }"
-  >
-    <template #header>
-      <h2 class="text-xl font-semibold">Create Guard</h2>
-    </template>
+      <template #body>
+        <div class="space-y-6">
+          <section class="space-y-3">
+            <UFormField label="Scope">
+              <div class="grid grid-cols-2 gap-2">
+                <UButton
+                  :variant="createScope === 'global' ? 'solid' : 'soft'"
+                  :color="createScope === 'global' ? 'primary' : 'neutral'"
+                  icon="lucide:globe-2"
+                  block
+                  @click="setCreateScope('global')"
+                >
+                  Global
+                </UButton>
+                <UButton
+                  :variant="createScope === 'route' ? 'solid' : 'soft'"
+                  :color="createScope === 'route' ? 'primary' : 'neutral'"
+                  icon="lucide:route"
+                  block
+                  @click="setCreateScope('route')"
+                >
+                  Route
+                </UButton>
+              </div>
+            </UFormField>
 
-    <template #body>
-      <div class="space-y-6">
-        <section class="space-y-3">
-          <UFormField label="Scope">
-            <div class="grid grid-cols-2 gap-2">
-              <UButton
-                :variant="createScope === 'global' ? 'solid' : 'soft'"
-                :color="createScope === 'global' ? 'primary' : 'neutral'"
-                icon="lucide:globe-2"
-                block
-                @click="setCreateScope('global')"
-              >
-                Global
-              </UButton>
-              <UButton
-                :variant="createScope === 'route' ? 'solid' : 'soft'"
-                :color="createScope === 'route' ? 'primary' : 'neutral'"
-                icon="lucide:route"
-                block
-                @click="setCreateScope('route')"
-              >
-                Route
-              </UButton>
+            <UFormField
+              v-if="createScope === 'route'"
+              label="Route"
+              required
+            >
+              <USelect
+                v-model="selectedRouteId"
+                :items="routeOptions"
+                value-key="value"
+                class="w-full"
+                :loading="routesLoading"
+                :disabled="routesLoading && routeOptions.length === 0"
+                :placeholder="routesLoading ? 'Loading routes...' : 'Select route'"
+              />
+            </UFormField>
+          </section>
+
+          <section class="space-y-3">
+            <div>
+              <h3 class="text-sm font-semibold text-[var(--text-primary)]">
+                Templates
+              </h3>
+              <p class="text-xs text-[var(--text-tertiary)]">
+                A template creates the root guard and the first rule in one step.
+              </p>
             </div>
-          </UFormField>
-
-          <UFormField
-            v-if="createScope === 'route'"
-            label="Route"
-            required
-          >
-            <USelect
-              v-model="selectedRouteId"
-              :items="routeOptions"
-              value-key="value"
-              class="w-full"
-              :loading="routesLoading"
-              :disabled="routesLoading && routeOptions.length === 0"
-              :placeholder="routesLoading ? 'Loading routes...' : 'Select route'"
+            <GuardTemplateGrid
+              v-model="selectedTemplate"
+              :templates="createTemplates"
             />
-          </UFormField>
-        </section>
+          </section>
+        </div>
+      </template>
 
-        <section class="space-y-3">
-          <div>
-            <h3 class="text-sm font-semibold text-[var(--text-primary)]">
-              Templates
-            </h3>
-            <p class="text-xs text-[var(--text-tertiary)]">
-              A template creates the root guard and the first rule in one step.
-            </p>
-          </div>
-          <GuardTemplateGrid
-            v-model="selectedTemplate"
-            :templates="createTemplates"
-          />
-        </section>
-      </div>
-    </template>
-
-  </CommonDrawer>
+    </CommonDrawer>
+  </div>
 </template>

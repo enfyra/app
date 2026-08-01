@@ -325,7 +325,7 @@ const nestedGroupClass = computed(() => [
         <div
           :class="[
             'relative min-w-0',
-            isDragging() ? 'transition-none' : 'transition-all duration-150',
+            isDragging() ? 'transition-none' : 'transition-colors transition-border-color duration-[var(--duration-fast)]',
             getDropClass(index),
             isItemDragging(index) ? 'opacity-50 scale-[0.98]' : '',
           ]"
@@ -415,7 +415,7 @@ const nestedGroupClass = computed(() => [
         v-if="!readonly && isDragging()"
         ref="endZoneEl"
         :class="[
-          'h-10 rounded-lg border-2 border-dashed transition-all duration-150',
+          'h-10 rounded-lg border-2 border-dashed transition-colors transition-border-color duration-[var(--duration-fast)]',
           'mt-2 mb-2',
           isGroupEndZoneActive()
             ? 'border-primary-400 bg-primary-50 dark:bg-primary-950/30'
@@ -495,7 +495,7 @@ const nestedGroupClass = computed(() => [
 }
 
 .drop-indicator {
-  transition: padding 150ms ease;
+  transition: padding var(--duration-fast) var(--ease-standard);
   padding-top: 22px;
   padding-bottom: 22px;
 }
