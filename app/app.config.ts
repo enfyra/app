@@ -502,6 +502,7 @@ export default defineAppConfig({
           "data-[state=checked]:translate-x-5",
           "data-[state=unchecked]:translate-x-0",
         ].join(" "),
+        icon: "group-data-[state=unchecked]:text-white",
       },
     },
     checkbox: {

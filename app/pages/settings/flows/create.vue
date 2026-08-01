@@ -7,7 +7,7 @@
             v-model="createForm"
             :table-name="tableName"
             :errors="createErrors"
-            :excluded="['steps']"
+            :excluded="['steps', 'triggers']"
             :field-map="createFieldMap"
             @update:errors="(errors) => (createErrors = errors)"
             mode="create"
@@ -37,15 +37,7 @@ const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
-const TriggerConfigEditor = resolveComponent('FlowTriggerConfigEditor');
-const createFieldMap = computed(() => ({
-  triggerConfig: {
-    label: 'Trigger Configuration',
-    hideDescription: true,
-    component: TriggerConfigEditor,
-    componentProps: { triggerType: createForm.value.triggerType },
-  },
-}));
+const createFieldMap = computed(() => ({}));
 
 registerPageHeader({
   title: "Create New Flow",
@@ -85,11 +77,6 @@ onMounted(async () => {
 
 async function handleCreate() {
   if (!await validateForm(createForm.value, createErrors)) return;
-
-  if (createForm.value.triggerType === 'schedule' && !createForm.value.triggerConfig?.cron) {
-    createErrors.value.triggerConfig = 'Cron expression is required for schedule trigger';
-    return;
-  }
 
   const body = { ...createForm.value };
 

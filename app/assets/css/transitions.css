@@ -26,10 +26,10 @@
 }
 
 /*
- * eapp-page: route-level workspace transition. Both entering and leaving
- * pages share a CSS Grid cell (grid-area: 1/1) via the .route-stack wrapper
- * in default.vue, so the leaving page stays in layout flow and never
- * collapses the flex gap. The leaving page is pointer-inert while it fades.
+ * eapp-page: route-level workspace transition. NuxtPage uses out-in mode so
+ * the leaving page finishes before the entering page mounts. The route-stack
+ * grid keeps either page in layout flow without collapsing the flex gap.
+ * The leaving page is pointer-inert while it fades.
  */
 .eapp-page-enter-active {
   transition:

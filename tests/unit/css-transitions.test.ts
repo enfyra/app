@@ -128,6 +128,11 @@ describe('motion contract', () => {
     expect(leaveBlock).not.toMatch(/position:\s*absolute/)
   })
 
+  it('sequences route leave before enter so pages do not overlap', () => {
+    const app = readAppFile('app.vue')
+    expect(app).toContain(`:transition="{ name: 'eapp-page', mode: 'out-in' }"`)
+  })
+
   it('contains transition grid stacks so wide tables cannot expand the workspace', () => {
     const layout = readAppFile('layouts/default.vue')
     const dynamicPage = readAppFile('components/dynamic/PageComponent.vue')

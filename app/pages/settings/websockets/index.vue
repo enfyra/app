@@ -171,7 +171,7 @@ function getHeaderActions(gateway: any) {
       component: 'USwitch',
       props: {
         'model-value': gateway.isEnabled,
-        disabled: getGatewayLoader(idKey).isLoading
+        loading: getGatewayLoader(idKey).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleGatewayStatus(gateway)

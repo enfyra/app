@@ -126,7 +126,7 @@
                           {{ rule.isEnabled ? 'Enabled' : 'Disabled' }}
                         </UBadge>
                         <UIcon :name="rule.isEnabled ? 'lucide:circle-check' : 'lucide:circle-x'" :class="['w-5 h-5 md:hidden', rule.isEnabled ? 'text-[var(--st-success)]' : 'text-[var(--st-warning)]']" />
-                        <UButton icon="lucide:trash-2" aria-label="Delete rule" color="error" variant="ghost" size="xs" class="min-h-[44px] min-w-[44px]" @click.stop="handleDeleteRule(rule)" />
+                        <UButton icon="lucide:trash-2" aria-label="Delete rule" color="error" variant="ghost" size="xs" class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]" @click.stop="handleDeleteRule(rule)" />
                       </div>
                     </div>
                   </template>

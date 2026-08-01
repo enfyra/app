@@ -138,7 +138,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           icon="lucide:plus"
           aria-label="Add unique constraint"
           size="sm"
-          class="min-h-[44px] min-w-[44px]"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           color="primary"
           @click="addUniqueGroup()"
           :disabled="table.isSystem"
@@ -172,7 +172,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
             size="xs"
             variant="ghost"
             color="neutral"
-            class="min-h-[44px] min-w-[44px]"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
             @click="removeFieldFromGroup(table.uniques, gIndex, fIndex)"
             :disabled="table.isSystem"
           />
@@ -182,7 +182,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           icon="i-lucide:plus"
           aria-label="Add field to unique constraint"
           size="sm"
-          class="min-h-[44px] min-w-[44px]"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="addFieldToGroup(table.uniques, gIndex)"
           :disabled="table.isSystem || !canAddFieldToGroup(group)"
         />
@@ -192,7 +192,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           color="error"
           variant="ghost"
           size="md"
-          class="min-h-[44px] min-w-[44px]"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="removeUniqueGroupConfirm(gIndex)"
           :disabled="table.isSystem"
         />
@@ -207,7 +207,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           icon="lucide:plus"
           aria-label="Add index"
           size="sm"
-          class="min-h-[44px] min-w-[44px]"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           color="primary"
           @click="addIndexGroup()"
           :disabled="table.isSystem"
@@ -245,7 +245,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
             size="xs"
             variant="ghost"
             color="neutral"
-            class="min-h-[44px] min-w-[44px]"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
             @click="removeFieldFromGroup(table.indexes, gIndex, fIndex)"
             :disabled="table.isSystem"
           />
@@ -255,7 +255,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           icon="i-lucide:plus"
           aria-label="Add field to index"
           size="sm"
-          class="min-h-[44px] min-w-[44px]"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="addFieldToGroup(table.indexes, gIndex)"
           :disabled="table.isSystem || !canAddFieldToGroup(group)"
         />
@@ -265,7 +265,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           color="error"
           variant="ghost"
           size="md"
-          class="min-h-[44px] min-w-[44px]"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="removeIndexGroupConfirm(gIndex)"
           :disabled="table.isSystem"
         />

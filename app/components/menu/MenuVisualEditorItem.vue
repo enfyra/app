@@ -518,7 +518,7 @@ function handleDragEnd() {
             variant="soft"
             icon="lucide:x"
             aria-label="Cancel move"
-            class="min-h-[44px] min-w-[44px]"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
             @click.stop="handleCancelMove"
           />
         </template>
@@ -535,7 +535,7 @@ function handleDragEnd() {
             variant="ghost"
             icon="lucide:more-vertical"
             aria-label="Menu actions"
-            class="min-h-[44px] min-w-[44px]"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
             @click.stop
           />
         </UDropdownMenu>
@@ -608,7 +608,7 @@ function handleDragEnd() {
 
 .menu-editor-row {
   display: grid;
-  grid-template-columns: 44px 44px 40px minmax(220px, 1fr) auto;
+  grid-template-columns: 18px 24px 40px minmax(220px, 1fr) auto;
   align-items: center;
   gap: 12px;
   min-height: 64px;
@@ -637,8 +637,8 @@ function handleDragEnd() {
 .menu-row-drag,
 .menu-row-chevron {
   display: inline-flex;
-  width: 44px;
-  height: 44px;
+  width: 24px;
+  height: 24px;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-subcontrol);
@@ -647,7 +647,7 @@ function handleDragEnd() {
 }
 
 .menu-row-drag {
-  width: 44px;
+  width: 18px;
   cursor: move;
   opacity: 0;
 }
@@ -834,7 +834,7 @@ function handleDragEnd() {
 
 @media (max-width: 640px) {
   .menu-editor-row {
-    grid-template-columns: 44px 44px 36px minmax(0, 1fr);
+    grid-template-columns: 18px 22px 36px minmax(0, 1fr);
   }
 
   .menu-row-main {
@@ -845,6 +845,28 @@ function handleDragEnd() {
   .menu-row-actions {
     grid-column: 4;
     justify-content: flex-start;
+  }
+}
+
+@media (pointer: coarse) {
+  .menu-editor-row {
+    grid-template-columns: 44px 44px 40px minmax(220px, 1fr) auto;
+  }
+
+  .menu-row-drag,
+  .menu-row-chevron {
+    width: 44px;
+    height: 44px;
+  }
+
+  .menu-row-drag {
+    width: 44px;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 640px) {
+  .menu-editor-row {
+    grid-template-columns: 44px 44px 36px minmax(0, 1fr);
   }
 }
 </style>

@@ -112,7 +112,7 @@
                 color="neutral"
                 size="sm"
                 square
-                class="min-h-[44px] min-w-[44px]"
+                class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                 @click.stop
               />
             </UDropdownMenu>

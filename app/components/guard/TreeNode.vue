@@ -75,7 +75,7 @@
               color="neutral"
               variant="ghost"
               size="xs"
-              class="min-h-[44px] min-w-[44px]"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
               @click.stop
             />
           </UDropdownMenu>
@@ -160,7 +160,7 @@
                   color="error"
                   variant="ghost"
                   size="xs"
-                  class="min-h-[44px] min-w-[44px]"
+                  class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                   @click.stop="$emit('deleteRule', rule)"
                 />
               </div>

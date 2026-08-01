@@ -166,7 +166,7 @@ function getHeaderActions(extension: ExtensionDefinition) {
       component: 'USwitch',
       props: {
         'model-value': extension.isEnabled,
-        disabled: getExtensionLoader(String(getId(extension) ?? '')).isLoading
+        loading: getExtensionLoader(String(getId(extension) ?? '')).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleExtensionStatus(extension)

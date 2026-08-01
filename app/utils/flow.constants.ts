@@ -61,7 +61,8 @@ export const EXECUTION_STATUS_DOT_CLASS_MAP: Record<string, string> = {
 
 export const TRIGGER_TYPE_COLOR_MAP: Record<string, BadgeColor> = {
   schedule: 'info',
-  manual: 'neutral',
+  event: 'warning',
+  webhook: 'success',
 };
 
 export function getStepTypeColor(stepType: string): BadgeColor {

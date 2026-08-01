@@ -362,7 +362,7 @@ async function removeRelation(index: number) {
             :color="rel.isPublished ? 'success' : 'neutral'"
             variant="ghost"
             size="xs"
-            class="min-h-[44px] min-w-[44px] cursor-pointer"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
             @click.stop="rel.isPublished = !rel.isPublished"
           />
         </UTooltip>
@@ -383,7 +383,7 @@ async function removeRelation(index: number) {
               color="secondary"
               variant="ghost"
               size="xs"
-              class="min-h-[44px] min-w-[44px] cursor-pointer"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
               @click.stop="handleShieldClick(rel, index)"
             />
           </UChip>
@@ -395,7 +395,7 @@ async function removeRelation(index: number) {
           variant="ghost"
           size="xs"
           :disabled="rel.isSystem"
-          class="min-h-[44px] min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
           @click.stop="removeRelation(index)"
         />
       </div>

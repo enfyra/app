@@ -234,7 +234,7 @@ watch(
               size="lg"
               variant="soft"
               color="primary"
-              class="min-h-[44px] min-w-[44px] px-3 py-2"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] px-3 py-2"
             />
             <UButton
               @click.stop="removeSavedFilter(filter.id)"
@@ -247,7 +247,7 @@ watch(
               size="lg"
               :variant="deleteConfirmations[filter.id] ? 'solid' : 'soft'"
               color="error"
-              class="min-h-[44px] min-w-[44px] px-3 py-2"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] px-3 py-2"
             >
               {{ deleteConfirmations[filter.id] ? "Sure?" : "" }}
             </UButton>

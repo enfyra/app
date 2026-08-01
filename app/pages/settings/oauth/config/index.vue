@@ -171,7 +171,7 @@ function getHeaderActions(config: OAuthConfigDefinition) {
       component: 'USwitch',
       props: {
         'model-value': config.isEnabled,
-        disabled: getConfigLoader(String(getId(config) ?? '')).isLoading
+        loading: getConfigLoader(String(getId(config) ?? '')).isLoading
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleConfigStatus(config)

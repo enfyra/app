@@ -158,7 +158,7 @@ function getHeaderActions(config: any) {
       component: "USwitch",
       props: {
         "model-value": config.isEnabled,
-        disabled: isConfigLoading(config),
+        loading: isConfigLoading(config),
       },
       onClick: (event?: Event) => event?.stopPropagation(),
       onUpdate: () => toggleConfigStatus(config),

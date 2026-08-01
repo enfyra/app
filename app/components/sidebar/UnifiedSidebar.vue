@@ -111,12 +111,24 @@ function isRouteExactActive(itemRoute?: string): boolean {
 function convertItem(item: any): any {
   const itemRoute = item.route || item.path || undefined;
   const isDataItem = item.id === "data" || itemRoute === "/data" || item.label === "Data";
+
+  if (isDataItem) {
+    return {
+      id: item.id,
+      label: item.label,
+      icon: item.icon || 'lucide:database',
+      to: '/data',
+      active: isRouteActive('/data'),
+      count: item.count || item.badge,
+      loading: routesLoading.value && !routesFetched.value,
+    };
+  }
+
   const result: any = {
     id: item.id,
     label: item.label,
     icon: item.icon || 'lucide:circle',
     count: item.count || item.badge,
-    loading: isDataItem && routesLoading.value && !routesFetched.value,
   };
 
   if (item.items?.length) {
@@ -139,10 +151,24 @@ const navigationItems = computed(() => {
   const groups: any[][] = [];
 
   for (const group of topGroups) {
+    const groupRoute = group.route || group.path || undefined;
+    const isDataGroup = group.id === "data" || groupRoute === "/data" || group.label === "Data";
+
+    if (isDataGroup) {
+      groups.push([{
+        id: group.id,
+        label: group.label,
+        icon: group.icon || 'lucide:database',
+        to: '/data',
+        active: isRouteActive('/data'),
+        count: group.count || group.badge,
+        loading: routesLoading.value && !routesFetched.value,
+      }]);
+      continue;
+    }
+
     if (!group.items || group.items.length === 0) {
-      const groupRoute = group.route || group.path || undefined;
       if (!groupRoute) continue;
-      const isDataGroup = group.id === "data" || groupRoute === "/data" || group.label === "Data";
       groups.push([{
         id: group.id,
         label: group.label,
@@ -241,9 +267,9 @@ onUnmounted(() => {
         gap: '!duration-[120ms]',
         container: 'h-full !z-[99999] !duration-[140ms]',
         inner: '!bg-[var(--shell-sidebar-bg)] !border-r !border-[var(--shell-sidebar-border)] !divide-transparent backdrop-blur-xl shadow-none',
-        header: 'px-[18px] pb-3 pt-6 group-data-[state=collapsed]/sidebar:px-2',
-        body: 'flex min-h-0 flex-1 flex-col gap-5 !overflow-y-auto border-0 px-[18px] group-data-[state=collapsed]/sidebar:px-3',
-        footer: 'flex min-h-0 w-full flex-col gap-1.5 overflow-y-auto p-0 px-[18px] pb-7 max-lg:pb-4 group-data-[state=collapsed]/sidebar:px-3',
+       header: 'px-3.5 pb-2.5 pt-4 group-data-[state=collapsed]/sidebar:px-2',
+        body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto border-0 px-3.5 group-data-[state=collapsed]/sidebar:px-2',
+        footer: 'flex min-h-0 w-full flex-col gap-1.5 overflow-y-auto p-0 px-3.5 pb-5 max-lg:pb-4 group-data-[state=collapsed]/sidebar:px-2',
       }"
     >
       <template #title>
@@ -327,7 +353,7 @@ onUnmounted(() => {
         @mouseleave="hideSidebarPeek"
       >
         <div class="sidebar-peek-panel">
-          <div class="px-[18px] pb-3 pt-6">
+          <div class="px-3.5 pb-2.5 pt-4">
             <div class="flex min-w-0 items-center gap-3 px-1.5">
               <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
                 <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
@@ -340,7 +366,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-[18px]">
+        <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3.5">
             <div v-for="group in componentGroups" :key="group.id" class="mb-3">
               <component :is="group.component" v-bind="group.componentProps || {}" />
             </div>
@@ -357,8 +383,7 @@ onUnmounted(() => {
               </div>
             </nav>
           </div>
-
-          <div class="flex flex-col gap-1.5 overflow-hidden w-full p-0 px-[18px] pb-7">
+          <div class="flex flex-col gap-1.5 overflow-hidden w-full p-0 px-3.5 pb-5">
             <template v-for="group in bottomGroups" :key="group.id">
               <PermissionGate :condition="group.permission as any">
                 <component
@@ -406,17 +431,17 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  min-height: 40px;
+  gap: 8px;
+  min-height: 32px;
   background: color-mix(in srgb, var(--nav-item-hover-bg) 34%, transparent);
   border-radius: var(--radius-control);
-  padding: 0 10px;
+  padding: 0 8px;
 }
 
 .app-sidebar-menu-skeleton.collapsed .app-sidebar-menu-skeleton-row {
   grid-template-columns: 1fr;
   place-items: center;
-  min-height: 42px;
+  min-height: 36px;
   padding: 0;
 }
 

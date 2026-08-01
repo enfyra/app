@@ -251,12 +251,19 @@ watch(
           @leave="childrenLeave"
           @after-leave="afterChildrenLeave"
         >
-          <div
-            v-if="(item.children?.length || item.loading) && !props.collapsed && isMenuOpen(item)"
-            class="app-sidebar-children"
-          >
+         <div
+           v-if="(item.children?.length || item.loading) && !props.collapsed && isMenuOpen(item)"
+           class="app-sidebar-children"
+         >
+            <SidebarDataSection
+              v-if="isDataMenuItem(item) && item.children?.length"
+              :children="item.children"
+              :collapsed="props.collapsed"
+              :labels-visible="props.labelsVisible"
+              :loading="item.loading"
+            />
             <SidebarMenuTree
-              v-if="item.children?.length"
+              v-else-if="item.children?.length"
               :items="item.children"
               :collapsed="props.collapsed"
               :labels-visible="props.labelsVisible"
@@ -291,14 +298,14 @@ watch(
 <style scoped>
 .app-sidebar-tree {
   display: grid;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
 }
 
 .app-sidebar-tree.nested {
-  gap: 1px;
-  margin: 1px 0 8px 12px;
-  padding-left: 12px;
+  gap: 2px;
+  margin: 2px 0 6px 10px;
+  padding-left: 10px;
   border-left: 1px solid var(--nav-child-border);
 }
 
@@ -308,9 +315,9 @@ watch(
 
 .app-sidebar-child-skeleton {
   display: grid;
-  gap: 1px;
-  margin: 1px 0 8px 12px;
-  padding-left: 12px;
+  gap: 0;
+  margin: 0 0 4px 10px;
+  padding-left: 10px;
   border-left: 1px solid var(--nav-child-border);
 }
 
@@ -318,10 +325,10 @@ watch(
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  min-height: 30px;
+  gap: 8px;
+  min-height: 26px;
   border-radius: var(--radius-subcontrol);
-  padding: 0 8px;
+  padding: 0 6px;
 }
 
 .app-sidebar-child-skeleton-dot {
@@ -355,16 +362,16 @@ watch(
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  min-height: 40px;
+  min-height: 32px;
   min-width: 0;
   overflow: hidden;
   position: relative;
   border: 0;
   border-radius: var(--radius-control);
   background: transparent;
-  padding: 0 10px;
+  padding: 0 8px;
   color: var(--nav-item-text);
   cursor: pointer;
   font: inherit;
@@ -377,9 +384,9 @@ watch(
 
 .nested .app-sidebar-link {
   grid-template-columns: 20px minmax(0, 1fr);
-  min-height: 40px;
+  min-height: 28px;
   border-radius: var(--radius-subcontrol);
-  padding: 0 8px;
+  padding: 0 6px;
   color: var(--text-tertiary);
   font-size: 12px;
   font-weight: 650;
@@ -412,7 +419,7 @@ watch(
 .app-sidebar-link.collapsed {
   grid-template-columns: 1fr;
   place-items: center;
-  min-height: 42px;
+  min-height: 36px;
   padding: 0;
 }
 

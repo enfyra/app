@@ -493,7 +493,7 @@ watch(
             :color="column.isPublished ? 'success' : 'neutral'"
             variant="ghost"
             size="xs"
-            class="min-h-[44px] min-w-[44px] cursor-pointer"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
             @click.stop="column.isPublished = !column.isPublished"
           />
         </UTooltip>
@@ -515,7 +515,7 @@ watch(
               color="secondary"
               variant="ghost"
               size="xs"
-              class="min-h-[44px] min-w-[44px] cursor-pointer"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
               @click.stop="handleShieldClick(column, index)"
             />
           </UChip>
@@ -538,7 +538,7 @@ watch(
               color="info"
               variant="ghost"
               size="xs"
-              class="min-h-[44px] min-w-[44px] cursor-pointer"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
               @click.stop="handleRuleClick(column, index)"
             />
           </UChip>
@@ -550,7 +550,7 @@ watch(
           variant="ghost"
           size="xs"
           :disabled="column.isSystem || column.isPrimary"
-          class="min-h-[44px] min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
+          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
           @click.stop="removeColumn(index)"
         />
       </div>

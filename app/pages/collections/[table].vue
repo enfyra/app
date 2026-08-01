@@ -191,6 +191,7 @@ const activeTab = ref((route.query.tab as string) || 'schema')
 const tabItems = [
   { label: 'Schema', icon: 'i-lucide-table-2', value: 'schema' },
   { label: 'Routes', icon: 'i-lucide-route', value: 'routes' },
+  { label: 'Triggers', icon: 'i-lucide-zap', value: 'triggers' },
 ]
 
 watch(activeTab, (tab) => {
@@ -805,6 +806,12 @@ onMounted(async () => {
           :table-name="String(route.params.table ?? '')"
           :external-api-test="showRouteApiTest"
           @close-api-test="showRouteApiTest = false"
+        />
+
+        <FlowTriggersPanel
+          v-if="activeTab === 'triggers'"
+          mode="table"
+          :table-id="getId(table)"
         />
       </template>
 

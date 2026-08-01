@@ -83,7 +83,7 @@
                   variant="soft"
                   size="sm"
                   aria-label="More actions"
-                  class="h-8 w-8 min-h-[44px] min-w-[44px] p-0"
+                  class="h-8 w-8 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] p-0"
                   @click.stop
                 >
                   <UIcon name="lucide:more-vertical" class="w-4 h-4 text-[var(--text-tertiary)]" />

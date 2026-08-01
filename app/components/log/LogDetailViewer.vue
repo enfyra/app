@@ -89,7 +89,7 @@ onUnmounted(() => {
                   icon="lucide:arrow-left"
                   aria-label="Close log viewer"
                   color="neutral"
-                  class="min-h-[44px] min-w-[44px]"
+                  class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                   @click="handleClose"
                 />
                 <div class="w-8 h-8 rounded-lg eapp-primary-solid flex items-center justify-center">
@@ -117,7 +117,7 @@ onUnmounted(() => {
                       color="neutral"
                       icon="lucide:x"
                       aria-label="Clear search"
-                      class="-mr-1 min-h-[44px] min-w-[44px]"
+                      class="-mr-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                       @click="handleClearSearch"
                     />
                   </template>
@@ -128,7 +128,7 @@ onUnmounted(() => {
                   color="neutral"
                   icon="lucide:copy"
                   aria-label="Copy log"
-                  class="min-h-[44px] min-w-[44px]"
+                  class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                   :disabled="lines.length === 0"
                   @click="handleCopy"
                 />
@@ -138,7 +138,7 @@ onUnmounted(() => {
                   color="neutral"
                   icon="lucide:download"
                   aria-label="Download log"
-                  class="min-h-[44px] min-w-[44px]"
+                  class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                   :disabled="!filename"
                   @click="handleDownload"
                 />
@@ -148,7 +148,7 @@ onUnmounted(() => {
                   color="neutral"
                   icon="lucide:refresh-cw"
                   aria-label="Reload log"
-                  class="min-h-[44px] min-w-[44px]"
+                  class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                   :loading="loading"
                   :disabled="!filename"
                   @click="handleReload"
@@ -170,7 +170,7 @@ onUnmounted(() => {
                     color="neutral"
                     icon="lucide:x"
                     aria-label="Clear search"
-                    class="-mr-1 min-h-[44px] min-w-[44px]"
+                    class="-mr-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                     @click="handleClearSearch"
                   />
                 </template>
@@ -181,7 +181,7 @@ onUnmounted(() => {
                 color="neutral"
                 icon="lucide:copy"
                 aria-label="Copy log"
-                class="min-h-[44px] min-w-[44px]"
+                class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                 :disabled="lines.length === 0"
                 @click="handleCopy"
               />
@@ -191,7 +191,7 @@ onUnmounted(() => {
                 color="neutral"
                 icon="lucide:download"
                 aria-label="Download log"
-                class="min-h-[44px] min-w-[44px]"
+                class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                 :disabled="!filename"
                 @click="handleDownload"
               />
@@ -201,7 +201,7 @@ onUnmounted(() => {
                 color="neutral"
                 icon="lucide:refresh-cw"
                 aria-label="Reload log"
-                class="min-h-[44px] min-w-[44px]"
+                class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                 :loading="loading"
                 :disabled="!filename"
                 @click="handleReload"

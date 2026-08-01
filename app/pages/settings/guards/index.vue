@@ -212,6 +212,7 @@ const { execute: updateGuardApi, error: updateError } = useApi(
     errorContext: 'Toggle Guard',
   },
 );
+const togglingGuardId = ref<string | number | null>(null);
 
 const { execute: deleteGuardApi, error: deleteError } = useApi(
   () => '/enfyra_guard',
@@ -335,6 +336,7 @@ function getGuardHeaderActions(guard: any) {
       component: 'USwitch',
       props: {
         'model-value': guard.isEnabled,
+        loading: togglingGuardId.value === getId(guard),
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleEnabled(guard),
@@ -362,6 +364,7 @@ function getGuardFooterActions(guard: any) {
 
 async function toggleEnabled(guard: any) {
   const newEnabled = !guard.isEnabled;
+  togglingGuardId.value = getId(guard);
 
   if (apiData.value?.data) {
     const idx = apiData.value.data.findIndex(
@@ -372,21 +375,25 @@ async function toggleEnabled(guard: any) {
     }
   }
 
-  await updateGuardApi({ id: getId(guard), body: { isEnabled: newEnabled } });
+  try {
+    await updateGuardApi({ id: getId(guard), body: { isEnabled: newEnabled } });
 
-  if (updateError.value) {
-    if (apiData.value?.data) {
-      const idx = apiData.value.data.findIndex(
-        (g: any) => getId(g) === getId(guard),
-      );
-      if (idx !== -1) {
-        apiData.value.data[idx].isEnabled = !newEnabled;
+    if (updateError.value) {
+      if (apiData.value?.data) {
+        const idx = apiData.value.data.findIndex(
+          (g: any) => getId(g) === getId(guard),
+        );
+        if (idx !== -1) {
+          apiData.value.data[idx].isEnabled = !newEnabled;
+        }
       }
+      return;
     }
-    return;
-  }
 
-  notify.success('Success', `Guard ${newEnabled ? 'enabled' : 'disabled'} successfully`);
+    notify.success('Success', `Guard ${newEnabled ? 'enabled' : 'disabled'} successfully`);
+  } finally {
+    togglingGuardId.value = null;
+  }
 }
 
 async function deleteGuard(guard: any) {

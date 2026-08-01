@@ -29,6 +29,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   modelValue?: string;
+  valueKey?: 'id' | 'name';
 }>();
 
 const emit = defineEmits<{
@@ -42,11 +43,14 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const selectedItem = computed(() => {
   if (!props.modelValue) return undefined;
-  return { label: props.modelValue, value: props.modelValue };
+  const match = tables.value.find((t: any) => String(t[props.valueKey || 'name']) === String(props.modelValue));
+  return match
+    ? { label: match.name, value: String(match[props.valueKey || 'name']) }
+    : { label: props.modelValue, value: props.modelValue };
 });
 
 const tableItems = computed(() =>
-  tables.value.map((t: any) => ({ label: t.name, value: t.name }))
+  tables.value.map((t: any) => ({ label: t.name, value: String(t[props.valueKey || 'name']) }))
 );
 
 const { execute: fetchTables, pending: isLoading, cancel: cancelFetchTables } = useApi(

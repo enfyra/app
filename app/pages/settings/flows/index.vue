@@ -29,8 +29,8 @@
             {
               label: 'Trigger',
               component: 'UBadge',
-              props: { variant: 'soft', color: getTriggerColor(flow.triggerType) },
-              value: flow.triggerType,
+              props: { variant: 'soft', color: getTriggerColor((flow.triggers || []).filter((t: any) => t.isEnabled)[0]?.type || 'code') },
+              value: (flow.triggers || []).filter((t: any) => t.isEnabled).length ? (flow.triggers || []).filter((t: any) => t.isEnabled).map((t: any) => t.type).join(', ') : 'code',
             },
             {
               label: 'Status',
@@ -64,11 +64,13 @@ const FLOW_LIST_FIELDS = [
   "name",
   "description",
   "icon",
-  "triggerType",
   "isEnabled",
   "isSystem",
   "timeout",
   "steps.id",
+  "triggers.id",
+  "triggers.type",
+  "triggers.isEnabled",
 ].join(",");
 
 const notify = useNotify();
@@ -134,7 +136,7 @@ function getHeaderActions(flow: any) {
       component: 'USwitch',
       props: {
         'model-value': flow.isEnabled,
-        disabled: getFlowLoader(flow.id.toString()).isLoading,
+        loading: getFlowLoader(flow.id.toString()).isLoading,
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleFlowStatus(flow),

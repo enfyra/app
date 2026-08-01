@@ -134,7 +134,7 @@
                   aria-label="Previous page"
                   variant="outline"
                   size="sm"
-                  class="min-h-[44px] min-w-[44px]"
+                  class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                   :disabled="page <= 1"
                   @click="page--"
                 />
@@ -146,7 +146,7 @@
                   aria-label="Next page"
                   variant="outline"
                   size="sm"
-                  class="min-h-[44px] min-w-[44px]"
+                  class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                   :disabled="page >= Math.ceil(total / limit)"
                   @click="page++"
                 />

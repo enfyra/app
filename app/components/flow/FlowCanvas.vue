@@ -67,11 +67,17 @@ const vueFlowRef = ref<any>(null);
 const hasFitted = ref(false);
 
 function getTriggerInfo(flow: any): string {
-  const t = flow?.triggerType;
-  const c = flow?.triggerConfig;
-  if (t === 'schedule') return `Cron: ${c?.cron || 'not set'}`;
-  if (t === 'manual') return 'Manual trigger';
-  return t || 'Unknown';
+  const triggers = flow?.triggers || [];
+  if (!triggers.length) return 'Code trigger only';
+  return triggers
+    .filter((t: any) => t.isEnabled)
+    .map((t: any) => {
+      if (t.type === 'schedule') return `Cron: ${t.config?.cron || 'not set'}`;
+      if (t.type === 'event') return `Event: ${t.tableEvent || '?'} on ${t.tableName || t.table?.name || '#' + t.table}`;
+      if (t.type === 'webhook') return `Webhook: ${t.routePath || t.route?.path || '#' + t.route}`;
+      return t.type;
+    })
+    .join(' · ') || 'Code trigger only';
 }
 
 const nodeTypes = markRaw({
@@ -156,7 +162,7 @@ const nodes = computed(() => {
     type: 'flowStep',
     position: { x: currentX, y: CENTER_Y },
     data: {
-      label: props.flow?.triggerType?.toUpperCase() || 'TRIGGER',
+      label: 'TRIGGER',
       stepType: 'trigger',
       triggerInfo: getTriggerInfo(props.flow),
     },

@@ -92,7 +92,7 @@ registerPageHeader({
           v-if="canScrollTabsLeft"
           type="button"
           aria-label="Scroll tabs left"
-          class="absolute inset-y-0 left-4 z-10 flex w-8 min-w-[44px] items-center justify-start bg-gradient-to-r from-[var(--surface-muted)] to-transparent sm:left-0"
+          class="absolute inset-y-0 left-4 z-10 flex w-8 pointer-coarse:min-w-[44px] items-center justify-start bg-gradient-to-r from-[var(--surface-muted)] to-transparent sm:left-0"
           @click="scrollTabs('left')"
         >
           <UIcon name="lucide:chevron-left" class="h-4 w-4 text-[var(--text-quaternary)]" />
@@ -101,7 +101,7 @@ registerPageHeader({
           v-if="canScrollTabsRight"
           type="button"
           aria-label="Scroll tabs right"
-          class="absolute inset-y-0 right-4 z-10 flex w-8 min-w-[44px] items-center justify-end bg-gradient-to-l from-[var(--surface-muted)] to-transparent sm:right-0"
+          class="absolute inset-y-0 right-4 z-10 flex w-8 pointer-coarse:min-w-[44px] items-center justify-end bg-gradient-to-l from-[var(--surface-muted)] to-transparent sm:right-0"
           @click="scrollTabs('right')"
         >
           <UIcon name="lucide:chevron-right" class="h-4 w-4 text-[var(--text-quaternary)]" />

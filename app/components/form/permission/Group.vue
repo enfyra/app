@@ -65,7 +65,7 @@
               size="md"
               variant="ghost"
               color="error"
-              class="min-h-[44px] min-w-[44px]"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
               @click.stop="removeItem(Number(index))"
               :disabled="disabled"
             />
@@ -81,7 +81,7 @@
             size="xs"
             color="error"
             variant="ghost"
-            class="absolute top-2 right-2 min-h-[44px] min-w-[44px] opacity-60 lg:hover:opacity-100"
+            class="absolute top-2 right-2 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] opacity-60 lg:hover:opacity-100"
           />
           <FormPermissionGroup
             :group="item"

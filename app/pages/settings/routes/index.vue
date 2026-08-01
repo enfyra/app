@@ -301,7 +301,8 @@ function getRouteHeaderActions(routeItem: any) {
       component: 'USwitch',
       props: {
         'model-value': routeItem.isEnabled,
-        disabled: getRouteLoader(getId(routeItem)).isLoading || tableExists
+        disabled: tableExists,
+        loading: getRouteLoader(getId(routeItem)).isLoading,
       },
       onClick: (e?: Event) => e?.stopPropagation(),
       onUpdate: () => toggleEnabled(routeItem),

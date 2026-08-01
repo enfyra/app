@@ -80,7 +80,7 @@ function handlePageHeaderActionClick(action: any) {
 <template>
   <div class="page-header-shell relative" :class="headerStripClass">
     
-    <div class="page-header-inner relative px-5 pt-2.5 pb-1.5 lg:px-6">
+    <div class="page-header-inner relative px-5 py-3 lg:px-6">
       <div
         class="flex gap-4"
         :class="(isMobile || isTablet) ? 'flex-col' : 'flex-row items-center justify-between'"

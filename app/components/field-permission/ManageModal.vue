@@ -272,7 +272,7 @@ watch(open, (isOpen) => {
           variant="ghost"
           color="neutral"
           size="sm"
-          class="!rounded-[var(--radius-subcontrol)] !aspect-square -ml-1 min-h-[44px] min-w-[44px]"
+          class="!rounded-[var(--radius-subcontrol)] !aspect-square -ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="cancelForm"
         />
         <UIcon
@@ -362,7 +362,7 @@ watch(open, (isOpen) => {
                   variant="ghost"
                   color="error"
                   size="xs"
-                  class="!rounded-[var(--radius-subcontrol)] !aspect-square min-h-[44px] min-w-[44px] flex-shrink-0"
+                  class="!rounded-[var(--radius-subcontrol)] !aspect-square pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] flex-shrink-0"
                   @click.stop="quickDeleteFieldPerm(it)"
                 />
               </div>

@@ -44,7 +44,7 @@
               v-model="editForm"
               :table-name="'enfyra_flow'"
               :errors="flowErrors"
-              :excluded="['steps', 'isSystem']"
+              :excluded="['steps', 'isSystem', 'triggers']"
               :field-map="flowFieldMap"
               @update:errors="(e: any) => flowErrors = e"
               @has-changed="(v: boolean) => hasFormChanges = v"
@@ -89,6 +89,12 @@
             />
           </div>
         </CommonFormCard>
+
+        <FlowTriggersCard
+          :flow-id="flowId!"
+          :triggers="flow?.triggers || []"
+          @refresh="loadFlow"
+        />
 
         <FlowExecutionsCard
           :executions="executions"
@@ -181,6 +187,13 @@ const errorOptions = ERROR_OPTIONS;
 const editForm = ref<Record<string, any>>({});
 const FLOW_DETAIL_FIELDS = [
   "*",
+  "triggers.id",
+  "triggers.type",
+  "triggers.isEnabled",
+  "triggers.config",
+  "triggers.tableEvent",
+  "triggers.route.id",
+  "triggers.table.id",
   "steps.id",
   "steps.key",
   "steps.stepOrder",
@@ -213,16 +226,8 @@ const FLOW_STEP_EDITOR_FIELDS = [
   "branch",
 ].join(",");
 
-const TriggerConfigEditor = resolveComponent('FlowTriggerConfigEditor');
-
 const flowFieldMap = computed(() => ({
   name: { description: `@DISPATCH.trigger('${editForm.value.name || 'name'}')` },
-  triggerConfig: {
-    label: 'Trigger Configuration',
-    hideDescription: true,
-    component: TriggerConfigEditor,
-    componentProps: { triggerType: editForm.value.triggerType },
-  },
 }));
 
 const conditionSteps = computed(() => steps.value.filter((s: any) => s.type === 'condition'));
@@ -426,6 +431,7 @@ async function saveFlowSettings() {
   const body = { ...editForm.value };
   delete body.id;
   delete body.steps;
+  delete body.triggers;
   delete body.createdAt;
   delete body.updatedAt;
   await updateFlowApi({ body, id: flowId });
