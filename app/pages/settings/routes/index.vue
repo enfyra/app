@@ -465,12 +465,12 @@ async function deleteRoute(routeItem: any) {
         />
       </div>
     </Transition>
-  </div>
 
-  <FilterDrawerLazy
-    v-model="showFilterDrawer"
-    :table-name="tableName"
-    :current-filter="currentFilter"
-    @apply="handleFilterApply"
-  />
+    <FilterDrawerLazy
+      v-model="showFilterDrawer"
+      :table-name="tableName"
+      :current-filter="currentFilter"
+      @apply="handleFilterApply"
+    />
+  </div>
 </template>

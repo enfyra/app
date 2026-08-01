@@ -191,46 +191,45 @@
         </div>
       </CommonFormCard>
     </div>
+    <GuardCreateRuleDrawer
+      v-model="showCreateRuleDrawer"
+      v-model:form="ruleForm"
+      v-model:errors="ruleErrors"
+      :loading="createRuleLoading"
+      :guard-position="rootPosition"
+      @save="saveRule"
+      @cancel="showCreateRuleDrawer = false"
+    />
+
+    <GuardEditRuleDrawer
+      v-model="showEditRuleDrawer"
+      v-model:form="editRuleForm"
+      v-model:errors="editRuleErrors"
+      :loading="updateRuleLoading"
+      :guard-position="rootPosition"
+      @save="saveEditRule"
+      @cancel="showEditRuleDrawer = false"
+    />
+
+    <GuardCreateChildDrawer
+      v-model="showCreateChildDrawer"
+      v-model:form="childForm"
+      v-model:errors="childErrors"
+      :loading="createChildLoading"
+      :parent-guard="addChildTargetGuard"
+      @save="saveChild"
+      @cancel="showCreateChildDrawer = false"
+    />
+
+    <GuardEditChildDrawer
+      v-model="showEditChildDrawer"
+      v-model:form="editChildForm"
+      v-model:errors="editChildErrors"
+      :loading="updateChildLoading"
+      @save="saveEditChild"
+      @cancel="showEditChildDrawer = false"
+    />
   </div>
-
-  <GuardCreateRuleDrawer
-    v-model="showCreateRuleDrawer"
-    v-model:form="ruleForm"
-    v-model:errors="ruleErrors"
-    :loading="createRuleLoading"
-    :guard-position="rootPosition"
-    @save="saveRule"
-    @cancel="showCreateRuleDrawer = false"
-  />
-
-  <GuardEditRuleDrawer
-    v-model="showEditRuleDrawer"
-    v-model:form="editRuleForm"
-    v-model:errors="editRuleErrors"
-    :loading="updateRuleLoading"
-    :guard-position="rootPosition"
-    @save="saveEditRule"
-    @cancel="showEditRuleDrawer = false"
-  />
-
-  <GuardCreateChildDrawer
-    v-model="showCreateChildDrawer"
-    v-model:form="childForm"
-    v-model:errors="childErrors"
-    :loading="createChildLoading"
-    :parent-guard="addChildTargetGuard"
-    @save="saveChild"
-    @cancel="showCreateChildDrawer = false"
-  />
-
-  <GuardEditChildDrawer
-    v-model="showEditChildDrawer"
-    v-model:form="editChildForm"
-    v-model:errors="editChildErrors"
-    :loading="updateChildLoading"
-    @save="saveEditChild"
-    @cancel="showEditChildDrawer = false"
-  />
 </template>
 
 <script setup lang="ts">

@@ -144,15 +144,14 @@
       :gateway-path="form?.path || gateway?.path || ''"
       @save="handleSaveEvent"
     />
+    <CommonEmptyState
+      v-if="!loading && !gatewayData?.data?.[0]"
+      title="WebSocket gateway not found"
+      description="The requested WebSocket gateway could not be loaded"
+      icon="lucide:radio-tower"
+      size="sm"
+    />
   </div>
-
-  <CommonEmptyState
-    v-if="!loading && !gatewayData?.data?.[0]"
-    title="WebSocket gateway not found"
-    description="The requested WebSocket gateway could not be loaded"
-    icon="lucide:radio-tower"
-    size="sm"
-  />
 </template>
 
 <script setup lang="ts">

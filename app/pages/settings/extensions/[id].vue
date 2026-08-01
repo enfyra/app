@@ -18,38 +18,37 @@
         </UForm>
       </CommonFormCard>
     </div>
+    <CommonEmptyState
+      v-if="!loading && !extensionData?.data?.[0]"
+      title="Extension not found"
+      description="The requested extension could not be loaded"
+      icon="lucide:puzzle"
+      size="sm"
+    />
+
+    <CommonUploadModalLazy
+      v-model="showUploadModal"
+      title="Upload Extension"
+      accept=".vue"
+      :multiple="false"
+      :max-size="5 * 1024 * 1024"
+      drag-text="Drag and drop your .vue extension file here"
+      accept-text="Only .vue files are accepted"
+      upload-text="Upload Extension"
+      uploading-text="Uploading..."
+      :loading="uploadLoading"
+      @upload="handleUpload"
+      @error="
+        (message) =>
+          notify.error('Upload Error', message)
+      "
+    />
+
+    <ExtensionPreviewModal
+      v-model="showPreviewModal"
+      :code="form?.code || ''"
+    />
   </div>
-
-  <CommonEmptyState
-    v-if="!loading && !extensionData?.data?.[0]"
-    title="Extension not found"
-    description="The requested extension could not be loaded"
-    icon="lucide:puzzle"
-    size="sm"
-  />
-
-  <CommonUploadModalLazy
-    v-model="showUploadModal"
-    title="Upload Extension"
-    accept=".vue"
-    :multiple="false"
-    :max-size="5 * 1024 * 1024"
-    drag-text="Drag and drop your .vue extension file here"
-    accept-text="Only .vue files are accepted"
-    upload-text="Upload Extension"
-    uploading-text="Uploading..."
-    :loading="uploadLoading"
-    @upload="handleUpload"
-    @error="
-      (message) =>
-        notify.error('Upload Error', message)
-    "
-  />
-
-  <ExtensionPreviewModal
-    v-model="showPreviewModal"
-    :code="form?.code || ''"
-  />
 </template>
 
 <script setup lang="ts">

@@ -584,90 +584,89 @@ async function deleteGuard(guard: any) {
         />
       </div>
     </Transition>
-  </div>
+    <FilterDrawerLazy
+      v-model="showFilterDrawer"
+      :table-name="tableName"
+      :current-filter="currentFilter"
+      @apply="handleFilterApply"
+    />
 
-  <FilterDrawerLazy
-    v-model="showFilterDrawer"
-    :table-name="tableName"
-    :current-filter="currentFilter"
-    @apply="handleFilterApply"
-  />
+    <CommonDrawer
+      v-model="showCreateGuardDrawer"
+      :handle="false"
+      direction="right"
+      :cancel-action="{ label: 'Cancel', onClick: closeCreateGuardDrawer }"
+      :primary-action="{
+        label: 'Create Guard',
+        loading: createGuardLoading,
+        disabled: createGuardLoading,
+        onClick: createGuardFromTemplate,
+      }"
+    >
+      <template #header>
+        <h2 class="text-xl font-semibold">Create Guard</h2>
+      </template>
 
-  <CommonDrawer
-    v-model="showCreateGuardDrawer"
-    :handle="false"
-    direction="right"
-    :cancel-action="{ label: 'Cancel', onClick: closeCreateGuardDrawer }"
-    :primary-action="{
-      label: 'Create Guard',
-      loading: createGuardLoading,
-      disabled: createGuardLoading,
-      onClick: createGuardFromTemplate,
-    }"
-  >
-    <template #header>
-      <h2 class="text-xl font-semibold">Create Guard</h2>
-    </template>
+      <template #body>
+        <div class="space-y-6">
+          <section class="space-y-3">
+            <UFormField label="Scope">
+              <div class="grid grid-cols-2 gap-2">
+                <UButton
+                  :variant="createScope === 'global' ? 'solid' : 'soft'"
+                  :color="createScope === 'global' ? 'primary' : 'neutral'"
+                  icon="lucide:globe-2"
+                  block
+                  @click="setCreateScope('global')"
+                >
+                  Global
+                </UButton>
+                <UButton
+                  :variant="createScope === 'route' ? 'solid' : 'soft'"
+                  :color="createScope === 'route' ? 'primary' : 'neutral'"
+                  icon="lucide:route"
+                  block
+                  @click="setCreateScope('route')"
+                >
+                  Route
+                </UButton>
+              </div>
+            </UFormField>
 
-    <template #body>
-      <div class="space-y-6">
-        <section class="space-y-3">
-          <UFormField label="Scope">
-            <div class="grid grid-cols-2 gap-2">
-              <UButton
-                :variant="createScope === 'global' ? 'solid' : 'soft'"
-                :color="createScope === 'global' ? 'primary' : 'neutral'"
-                icon="lucide:globe-2"
-                block
-                @click="setCreateScope('global')"
-              >
-                Global
-              </UButton>
-              <UButton
-                :variant="createScope === 'route' ? 'solid' : 'soft'"
-                :color="createScope === 'route' ? 'primary' : 'neutral'"
-                icon="lucide:route"
-                block
-                @click="setCreateScope('route')"
-              >
-                Route
-              </UButton>
+            <UFormField
+              v-if="createScope === 'route'"
+              label="Route"
+              required
+            >
+              <USelect
+                v-model="selectedRouteId"
+                :items="routeOptions"
+                value-key="value"
+                class="w-full"
+                :loading="routesLoading"
+                :disabled="routesLoading && routeOptions.length === 0"
+                :placeholder="routesLoading ? 'Loading routes...' : 'Select route'"
+              />
+            </UFormField>
+          </section>
+
+          <section class="space-y-3">
+            <div>
+              <h3 class="text-sm font-semibold text-[var(--text-primary)]">
+                Templates
+              </h3>
+              <p class="text-xs text-[var(--text-tertiary)]">
+                A template creates the root guard and the first rule in one step.
+              </p>
             </div>
-          </UFormField>
-
-          <UFormField
-            v-if="createScope === 'route'"
-            label="Route"
-            required
-          >
-            <USelect
-              v-model="selectedRouteId"
-              :items="routeOptions"
-              value-key="value"
-              class="w-full"
-              :loading="routesLoading"
-              :disabled="routesLoading && routeOptions.length === 0"
-              :placeholder="routesLoading ? 'Loading routes...' : 'Select route'"
+            <GuardTemplateGrid
+              v-model="selectedTemplate"
+              :templates="createTemplates"
             />
-          </UFormField>
-        </section>
+          </section>
+        </div>
+      </template>
 
-        <section class="space-y-3">
-          <div>
-            <h3 class="text-sm font-semibold text-[var(--text-primary)]">
-              Templates
-            </h3>
-            <p class="text-xs text-[var(--text-tertiary)]">
-              A template creates the root guard and the first rule in one step.
-            </p>
-          </div>
-          <GuardTemplateGrid
-            v-model="selectedTemplate"
-            :templates="createTemplates"
-          />
-        </section>
-      </div>
-    </template>
-
-  </CommonDrawer>
+    </CommonDrawer>
+  </div>
 </template>

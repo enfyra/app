@@ -6,3 +6,7 @@ await navigateTo(route.fullPath.replace("/settings/routings", "/settings/routes"
   redirectCode: 301,
 });
 </script>
+
+<template>
+  <div aria-hidden="true" />
+</template>

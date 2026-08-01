@@ -209,13 +209,12 @@ onMounted(() => {
       </CommonFormCard>
     </div>
 
+    <CommonEmptyState
+      v-if="!loading && !apiData?.data?.[0]"
+      title="User not found"
+      description="The requested user could not be loaded"
+      icon="lucide:user-x"
+      size="sm"
+    />
   </div>
-
-  <CommonEmptyState
-    v-if="!loading && !apiData?.data?.[0]"
-    title="User not found"
-    description="The requested user could not be loaded"
-    icon="lucide:user-x"
-    size="sm"
-  />
 </template>

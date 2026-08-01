@@ -53,17 +53,18 @@
       "
     />
 
-    <PermissionGate
+    <div
       v-else-if="extensionComponent"
       key="extension-content"
-      :condition="currentPermission"
       class="flex-1 flex flex-col"
     >
-      <component
-        :is="extensionComponent"
-        class="flex-1"
-      />
-    </PermissionGate>
+      <PermissionGate :condition="currentPermission">
+        <component
+          :is="extensionComponent"
+          class="flex-1"
+        />
+      </PermissionGate>
+    </div>
 
     <CommonEmptyState
       v-else
