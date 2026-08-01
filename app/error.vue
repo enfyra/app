@@ -4,7 +4,7 @@
       role="main"
       aria-labelledby="error-title"
     >
-      <div class="relative mx-auto w-full max-w-[472px] text-center">
+      <div class="relative mx-auto w-full max-w-[472px] text-center overflow-hidden">
         <h1
           id="error-title"
           class="mb-8 font-bold text-[var(--text-primary)] text-title-md xl:text-title-2xl"
@@ -25,12 +25,12 @@
           </div>
         </div>
 
-        <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-2">
+        <h2 class="text-xl font-semibold text-[var(--text-primary)] mb-2 [overflow-wrap:anywhere]">
           {{ error.statusMessage || "Server Error" }}
         </h2>
 
         <p
-          class="mt-4 mb-8 text-base text-[var(--text-tertiary)] sm:text-lg max-w-md mx-auto"
+          class="mt-4 mb-8 text-base text-[var(--text-tertiary)] sm:text-lg max-w-md mx-auto [overflow-wrap:anywhere]"
           role="alert"
         >
           {{ errorDescription }}
