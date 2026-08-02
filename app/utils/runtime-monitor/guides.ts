@@ -152,6 +152,27 @@ export const runtimeTabGuides: Record<string, RuntimeGuide> = {
       },
     ],
   },
+  guards: {
+    title: 'Guards Guide',
+    description: 'Guard rejections recorded when rate-limit or IP-filter rules block a request.',
+    groups: [
+      {
+        title: 'Repeated Offenders',
+        items: [
+          ['Scope + Subject', 'The rate-limit scope (ip, user, route) and the identifier that was blocked. Multiple hits from the same subject in the recent window are grouped here.'],
+          ['Guard', 'The guard name that rejected the request.'],
+        ],
+      },
+      {
+        title: 'Recent Rejections',
+        items: [
+          ['Error code', 'RATE_LIMIT_EXCEEDED (429), IP_NOT_ALLOWED (403), or IP_BLOCKED (403).'],
+          ['Route / Method', 'Which endpoint and HTTP method was rejected.'],
+          ['Auto-refresh', 'This tab polls every 10 seconds. Use Refresh to force an immediate reload.'],
+        ],
+      },
+    ],
+  },
   connections: {
     title: 'Connections Guide',
     description: 'These numbers separate live sockets, async queues, and database pool pressure.',

@@ -1,4 +1,15 @@
 <script setup lang="ts">
+import type { Component } from 'vue';
+import RuntimeOverviewTab from '~/components/runtime/RuntimeOverviewTab.vue';
+import RuntimeRequestsTab from '~/components/runtime/RuntimeRequestsTab.vue';
+import RuntimeCacheTab from '~/components/runtime/RuntimeCacheTab.vue';
+import RuntimeRedisTab from '~/components/runtime/RuntimeRedisTab.vue';
+import RuntimeDatabaseTab from '~/components/runtime/RuntimeDatabaseTab.vue';
+import RuntimeFlowsTab from '~/components/runtime/RuntimeFlowsTab.vue';
+import RuntimeWorkersTab from '~/components/runtime/RuntimeWorkersTab.vue';
+import RuntimeConnectionsTab from '~/components/runtime/RuntimeConnectionsTab.vue';
+import RuntimeGuardsTab from '~/components/runtime/RuntimeGuardsTab.vue';
+
 const { registerPageHeader } = usePageHeaderRegistry();
 const { me } = useAuth();
 const runtime = useRuntimeMetrics();
@@ -53,18 +64,19 @@ const runtimeTabItems = computed(() =>
   }),
 );
 
-const tabComponentNames: Record<string, string> = {
-  overview: 'RuntimeOverviewTab',
-  requests: 'RuntimeRequestsTab',
-  cache: 'RuntimeCacheTab',
-  redis: 'RuntimeRedisTab',
-  database: 'RuntimeDatabaseTab',
-  flows: 'RuntimeFlowsTab',
-  workers: 'RuntimeWorkersTab',
-  connections: 'RuntimeConnectionsTab',
+const tabComponents: Record<string, Component> = {
+  overview: RuntimeOverviewTab,
+  requests: RuntimeRequestsTab,
+  cache: RuntimeCacheTab,
+  redis: RuntimeRedisTab,
+  database: RuntimeDatabaseTab,
+  flows: RuntimeFlowsTab,
+  workers: RuntimeWorkersTab,
+  connections: RuntimeConnectionsTab,
+  guards: RuntimeGuardsTab,
 };
 
-const activeTabComponent = computed(() => tabComponentNames[runtime.activeTab] ?? null);
+const activeTabComponent = computed(() => tabComponents[runtime.activeTab] ?? null);
 
 registerPageHeader({
   title: 'Runtime Monitor',
