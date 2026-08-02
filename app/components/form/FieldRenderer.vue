@@ -739,7 +739,6 @@ function getComponentType(): string {
 
 <template>
   <div>
-    
     <div v-if="props.loading">
       <FieldLoadingSkeleton :type="getComponentType()" />
     </div>

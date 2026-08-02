@@ -67,35 +67,6 @@ const { isMobile, isTablet } = useScreen();
     >
       <div class="space-y-0.5">
         <label
-          for="field-graphqlEnabled"
-          class="text-sm font-medium"
-          :style="{ color: 'var(--text-primary)' }"
-        >
-          Enable GraphQL
-        </label>
-        <p
-          class="text-xs"
-          :style="{ color: 'var(--text-tertiary)' }"
-        >
-          When enabled, this table will be available via GraphQL API queries and mutations.
-        </p>
-      </div>
-
-      <USwitch
-        id="field-graphqlEnabled"
-        v-model="table.graphqlEnabled"
-        :checked="table.graphqlEnabled || false"
-      />
-    </div>
-
-    <div
-      :class="(isMobile || isTablet) ? 'flex items-center justify-between py-4 border-t' : 'flex items-center justify-between py-4 border-b'"
-      :style="{
-        borderColor: 'var(--border-subtle)',
-      }"
-    >
-      <div class="space-y-0.5">
-        <label
           for="field-validateBody"
           class="text-sm font-medium"
           :style="{ color: 'var(--text-primary)' }"
