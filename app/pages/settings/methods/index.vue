@@ -83,6 +83,12 @@ const { execute: updateMethod } = useApi('/enfyra_method', {
   disableErrorPage: true,
 });
 
+const { execute: deleteMethodApi } = useApi('/enfyra_method', {
+  method: 'delete',
+  errorContext: 'Delete Method',
+  disableErrorPage: true,
+});
+
 const {
   items: methods,
   showInitialLoading,
@@ -257,11 +263,74 @@ function isMethodSelected(method: string) {
   return currentMethodLabel.value === method;
 }
 
+async function deleteMethod(method: MethodRecord) {
+  if (method.isSystem) {
+    notify.error('Cannot Delete', 'System methods cannot be deleted.');
+    return;
+  }
+
+  const id = getId(method);
+  if (!id) return;
+
+  const methodName = getMethodLabel(method);
+  const isConfirmed = await confirm({
+    title: 'Delete Method',
+    content: `Are you sure you want to delete method "${methodName}"? This action cannot be undone.`,
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+  });
+  if (!isConfirmed) return;
+
+  const response = await deleteMethodApi({ id });
+  if (!response) return;
+
+  notify.success('Success', `Method "${methodName}" deleted successfully.`);
+  await fetchMethods();
+  if (form.id === id) {
+    resetForm();
+    snapshotForm();
+    await closeDrawer(true);
+  }
+}
+
 function methodSwatches(method: MethodRecord) {
   const colors = getMethodColors(method);
   return [
     { key: 'button', label: 'Button', value: colors.buttonColor },
     { key: 'text', label: 'Text', value: colors.textColor },
+  ];
+}
+
+function getMethodStats(method: MethodRecord) {
+  return [
+    {
+      label: 'Type',
+      component: 'UBadge',
+      props: {
+        variant: 'soft',
+        color: method.isSystem ? 'info' : 'primary',
+      },
+      value: method.isSystem ? 'System' : 'Custom',
+    },
+  ];
+}
+
+function getMethodFooterActions(method: MethodRecord) {
+  return [
+    {
+      label: 'Delete',
+      props: {
+        icon: 'i-lucide-trash-2',
+        variant: 'solid',
+        color: 'error',
+        size: 'sm',
+      },
+      disabled: method.isSystem,
+      onClick: (e?: Event) => {
+        e?.stopPropagation();
+        void deleteMethod(method);
+      },
+    },
   ];
 }
 
@@ -308,17 +377,60 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <CommonResourceListFrame
-      :loading="showInitialLoading"
-      :has-items="methods.length > 0"
-      loading-title="Loading methods..."
-      loading-description="Fetching route method definitions"
-      empty-title="No methods found"
-      empty-description="Create the first method to make it selectable in route forms."
-      empty-icon="lucide:badge"
-    >
-      <template #empty>
+    <Transition name="loading-fade">
+      <div v-if="showInitialLoading" key="loading">
+        <CommonResourceListFrame
+          :loading="true"
+          :has-items="false"
+          :skeleton-rows="4"
+          loading-title="Loading methods..."
+          loading-description="Fetching route method definitions"
+        />
+      </div>
+
+      <div v-else key="content" class="space-y-6">
+        <div v-if="methods.length" class="space-y-6">
+          <div class="eapp-resource-list">
+            <CommonResourceListItem
+              v-for="method in methods"
+              :key="getId(method) || getMethodLabel(method)"
+              :title="getMethodLabel(method)"
+              :description="method.isSystem ? 'Built-in route method' : 'Custom route method'"
+              icon="lucide:badge"
+              :icon-color="method.isSystem ? 'neutral' : 'primary'"
+              :loading="methodsRefreshing"
+              :top-badge="method.isSystem ? { label: 'System', color: 'info' } : { label: 'Custom', color: 'primary' }"
+              :stats="getMethodStats(method)"
+              :methods="getMethodFooterActions(method)"
+              @click="openEdit(method)"
+            >
+              <template #title>
+                <span class="inline-flex items-center gap-2">
+                  <MethodBadge :method="method" size="sm" />
+                </span>
+              </template>
+              <template #metadata>
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  <span
+                    v-for="sw in methodSwatches(method)"
+                    :key="sw.key"
+                    class="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--badge-neutral-soft-border)] bg-[var(--badge-neutral-soft-bg)] px-2 py-0.5"
+                  >
+                    <span
+                      class="size-3 rounded-full ring-1 ring-inset ring-[var(--border-default)]"
+                      :style="{ backgroundColor: sw.value }"
+                    />
+                    <span class="text-xs font-medium eapp-text-tertiary">{{ sw.label }}</span>
+                    <span class="font-mono text-xs eapp-text-secondary">{{ sw.value }}</span>
+                  </span>
+                </div>
+              </template>
+            </CommonResourceListItem>
+          </div>
+        </div>
+
         <CommonEmptyState
+          v-else
           title="No methods found"
           description="Create the first method to make it selectable in route forms."
           icon="lucide:badge"
@@ -328,49 +440,8 @@ watch(
             New Method
           </UButton>
         </CommonEmptyState>
-      </template>
-
-        <CommonResourceListItem
-          v-for="method in methods"
-          :key="getId(method) || getMethodLabel(method)"
-          :title="getMethodLabel(method)"
-          :description="method.isSystem ? 'Built-in route method' : 'Custom route method'"
-          icon="lucide:badge"
-          :icon-color="method.isSystem ? 'neutral' : 'primary'"
-          :loading="methodsRefreshing"
-          :actions="[
-            {
-              label: 'Edit',
-              props: { icon: 'lucide:pencil', variant: 'ghost', color: 'neutral', size: 'xs' },
-              onClick: () => {
-                openEdit(method);
-              },
-            },
-          ]"
-          @click="openEdit(method)"
-        >
-          <template #metadata>
-            <div class="mt-2 flex flex-wrap items-center gap-2">
-              <MethodBadge :method="method" size="xs" />
-              <UBadge :color="method.isSystem ? 'neutral' : 'primary'" variant="soft" size="xs">
-                {{ method.isSystem ? 'System' : 'Custom' }}
-              </UBadge>
-              <span
-                v-for="sw in methodSwatches(method)"
-                :key="sw.key"
-                class="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--badge-neutral-soft-border)] bg-[var(--badge-neutral-soft-bg)] px-2 py-0.5"
-              >
-                <span
-                  class="size-3 rounded-full ring-1 ring-inset ring-[var(--border-default)]"
-                  :style="{ backgroundColor: sw.value }"
-                />
-                <span class="text-xs font-medium eapp-text-tertiary">{{ sw.label }}</span>
-                <span class="font-mono text-xs eapp-text-secondary">{{ sw.value }}</span>
-              </span>
-            </div>
-          </template>
-        </CommonResourceListItem>
-    </CommonResourceListFrame>
+      </div>
+    </Transition>
 
     <CommonDrawer
       :model-value="drawerOpen"
@@ -403,17 +474,18 @@ watch(
 
       <template #body>
         <div class="space-y-6">
-          <section>
+          <section class="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-nested)] p-4">
             <div class="mb-3 flex items-center justify-between gap-3">
               <div>
-                <h3 class="font-semibold text-[var(--text-primary)]">Method</h3>
-                <p class="text-sm text-[var(--text-secondary)]">
-                  Select a common HTTP method. Use custom only when the preset list does not fit.
+                <h3 class="text-sm font-semibold text-[var(--text-primary)]">Method</h3>
+                <p class="text-xs text-[var(--text-secondary)]">
+                  Select a common HTTP method, or use custom when the preset list does not fit.
                 </p>
               </div>
               <MethodBadge
                 v-if="currentMethodLabel"
                 :method="{ name: currentMethodLabel, buttonColor: form.buttonColor, textColor: form.textColor }"
+                size="sm"
               />
             </div>
 
@@ -464,8 +536,8 @@ watch(
             </p>
           </section>
 
-          <section>
-            <h3 class="mb-3 font-semibold text-[var(--text-primary)]">Colors</h3>
+          <section class="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-nested)] p-4">
+            <h3 class="mb-3 text-sm font-semibold text-[var(--text-primary)]">Colors</h3>
             <MethodColorPairPicker
               v-model:button-color="form.buttonColor"
               v-model:text-color="form.textColor"
@@ -478,6 +550,34 @@ watch(
             class="rounded-lg border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] px-4 py-3 text-sm font-medium text-[var(--state-danger-soft-text)]"
           >
             {{ visibleColorError }}
+          </div>
+
+          <div
+            v-if="mode === 'edit'"
+            class="rounded-xl border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] p-4"
+          >
+            <div class="flex items-center gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--state-danger-outline-border)]/20 text-[var(--state-danger-soft-text)]">
+                <UIcon name="lucide:trash-2" class="size-4" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-[var(--state-danger-soft-text)]">Danger zone</h3>
+                <p class="text-xs text-[var(--state-danger-soft-text)]/80">
+                  Permanently delete this method. This cannot be undone.
+                </p>
+              </div>
+              <UButton
+                color="error"
+                variant="solid"
+                size="sm"
+                icon="lucide:trash-2"
+                :disabled="form.isSystem"
+                :title="form.isSystem ? 'System methods cannot be deleted' : ''"
+                @click="deleteMethod({ id: form.id ?? undefined, name: form.name, isSystem: form.isSystem })"
+              >
+                Delete
+              </UButton>
+            </div>
           </div>
         </div>
       </template>
