@@ -6,19 +6,15 @@ import {
 } from '~/utils/form/method-selector';
 import { getMethodColors } from '~/utils/http.constants';
 
-const GQL_METHODS = ['GQL_QUERY', 'GQL_MUTATION'];
-
 const props = withDefaults(
   defineProps<{
     modelValue: any;
     disabled?: boolean;
     multiple?: boolean;
     allowedMethods?: string[];
-    excludeGqlMethods?: boolean;
   }>(),
   {
     multiple: false,
-    excludeGqlMethods: false,
   }
 );
 
@@ -67,9 +63,6 @@ const availableMethods = computed(() => {
   if (Array.isArray(allowed)) {
     const allowedSet = new Set(allowed);
     list = list.filter((m: any) => m?.name && allowedSet.has(m.name));
-  }
-  if (props.excludeGqlMethods) {
-    list = list.filter((m: any) => m?.name && !GQL_METHODS.includes(m.name));
   }
   return list;
 });

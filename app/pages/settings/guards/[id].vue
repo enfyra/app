@@ -259,7 +259,6 @@ const fieldMap = computed(() => ({
   methods: {
     type: 'methods-selector',
     excluded: isGlobalGuardForm.value,
-    componentProps: { excludeGqlMethods: true },
   },
 }));
 
