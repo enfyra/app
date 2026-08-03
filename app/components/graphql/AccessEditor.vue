@@ -302,16 +302,19 @@ watch(() => props.tableId, async () => {
 
 <template>
   <div class="space-y-6">
-    <CommonLoadingState
-      v-if="loading"
-      title="Loading GraphQL access..."
-      description="Fetching operation registry and permissions"
-      size="sm"
-      type="form"
-      context="page"
-    />
+    <div class="loading-fade-stack">
+    <Transition name="loading-fade">
+      <CommonLoadingState
+        v-if="loading"
+        key="loading"
+        title="Loading GraphQL access..."
+        description="Fetching operation registry and permissions"
+        size="sm"
+        type="form"
+        context="page"
+      />
 
-    <template v-else>
+      <div v-else key="content" class="space-y-6">
       <CommonFormCard>
         <div class="space-y-6">
           <div class="flex items-start justify-between gap-4">
@@ -499,7 +502,21 @@ watch(() => props.tableId, async () => {
             </div>
           </template>
         </CommonDrawer>
-      </template>
-    </template>
+        </template>
+      </div>
+    </Transition>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.loading-fade-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.loading-fade-stack > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+</style>

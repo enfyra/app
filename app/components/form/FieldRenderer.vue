@@ -769,18 +769,21 @@ function getComponentType(): string {
 
 <style>
 .field-input {
-  opacity: 0;
-  animation: fadeIn 0.24s ease forwards;
+  animation: fieldFadeIn 0.12s ease-out both;
 }
 
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(2px);
+@keyframes fieldFadeIn {
+  from {
+    opacity: 0.72;
   }
-  100% {
+  to {
     opacity: 1;
-    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-input {
+    animation: none;
   }
 }
 </style>
