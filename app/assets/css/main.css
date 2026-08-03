@@ -28,7 +28,7 @@ button:focus-visible,
   html {
     font-family: 'Outfit', 'Manrope', system-ui, sans-serif;
     background: var(--bg-app);
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
     overscroll-behavior-x: auto;
     overscroll-behavior-y: contain;
     position: relative;
@@ -41,7 +41,7 @@ button:focus-visible,
 
   body,
   #__nuxt {
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
     overscroll-behavior-x: auto;
     overscroll-behavior-y: contain;
     touch-action: pan-x pan-y;

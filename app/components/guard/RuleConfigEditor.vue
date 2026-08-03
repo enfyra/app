@@ -81,7 +81,7 @@ const emit = defineEmits<{
 }>();
 
 const isRateLimit = computed(() =>
-  ['rate_limit_by_ip', 'rate_limit_by_user', 'rate_limit_by_route'].includes(props.ruleType),
+  ['rate_limit_by_ip', 'rate_limit_by_user', 'rate_limit_by_route', 'rate_limit_by_operation'].includes(props.ruleType),
 );
 
 const isIpList = computed(() =>

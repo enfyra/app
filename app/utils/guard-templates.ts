@@ -56,6 +56,20 @@ export const guardTemplates: GuardTemplate[] = [
     config: { ips: [''] },
     recommendedScope: 'global',
   },
+  {
+    key: 'gql-operation-cap',
+    title: 'GraphQL Operation Cap',
+    description: 'Caps total GraphQL requests per (table, operation) pair.',
+    icon: 'lucide:braces',
+    color: 'primary',
+    position: 'pre_auth',
+    ruleType: 'rate_limit_by_operation',
+    config: { maxRequests: 500, perSeconds: 60 },
+    targetType: 'graphql',
+    gqlOperation: null,
+    allowedScopes: ['graphql'],
+    recommendedScope: 'graphql',
+  },
 ];
 
 export function getGuardTemplate(key: string | null | undefined) {
@@ -63,6 +77,9 @@ export function getGuardTemplate(key: string | null | undefined) {
 }
 
 export function getGuardTemplatesForScope(scope: GuardScope) {
+  if (scope === 'graphql') {
+    return guardTemplates.filter((template) => template.targetType === 'graphql');
+  }
   return guardTemplates.filter((template) => !template.allowedScopes || template.allowedScopes.includes(scope));
 }
 
@@ -79,6 +96,8 @@ export function buildGuardBodyFromTemplate(
     routeId?: string | null;
     routePath?: string | null;
     methods?: string[];
+    tableId?: string | null;
+    gqlOperation?: string | null;
   },
 ) {
   const body: Record<string, any> = {
@@ -89,10 +108,21 @@ export function buildGuardBodyFromTemplate(
     priority: template.priority ?? 0,
     isEnabled: true,
     isGlobal: options.scope === 'global',
+    type: template.targetType || 'route',
   };
 
   if (options.scope === 'route' && options.routeId) {
     body.route = { [options.idField]: options.routeId };
+  }
+
+  if (options.scope === 'graphql') {
+    body.isGlobal = false;
+    if (options.tableId) {
+      body.table = { [options.idField]: options.tableId };
+    }
+    if (options.gqlOperation != null) {
+      body.gqlOperation = options.gqlOperation;
+    }
   }
 
   if (options.methods?.length) {

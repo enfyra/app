@@ -27,4 +27,5 @@ export interface FilterProps {
   tableName: string;
   rootTableName?: string;
   readonly?: boolean;
+  allowedFields?: string[];
 }

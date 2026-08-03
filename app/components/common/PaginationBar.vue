@@ -46,8 +46,8 @@ const rootClass = computed(() =>
     v-if="hasPagination"
     :class="[
       'eapp-pagination sticky bottom-0 z-10',
-      '-mx-5 px-5 lg:-mx-6 lg:px-6 py-3',
-      'bg-[var(--bg-app)]',
+      '-mx-4 px-4 sm:-mx-6 sm:px-6',
+      'border-t border-[color-mix(in_srgb,var(--shell-main-border)_60%,transparent)] bg-[var(--shell-main-bg)] py-3',
       rootClass,
     ]"
   >
