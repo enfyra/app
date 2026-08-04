@@ -70,6 +70,16 @@ export function injectRichTextCustomStyles(config: RichTextEditorConfig) {
       if (resolved.light) toRule(`html:not(.dark) ${sel}`, resolved.light);
       if (resolved.dark) toRule(`html.dark ${sel}`, resolved.dark);
     }
+
+    Object.entries(format.classStyles || {}).forEach(([className, classStyle]) => {
+      const safeClassName = className.trim().replace(/[^a-zA-Z0-9_-]/g, "");
+      if (!safeClassName) return;
+      const classResolved = resolveCssStyles(classStyle);
+      const classSelector = `${METADATA_SCOPE} .${safeClassName}`;
+      if (classResolved.shared) toRule(classSelector, classResolved.shared);
+      if (classResolved.light) toRule(`html:not(.dark) ${classSelector}`, classResolved.light);
+      if (classResolved.dark) toRule(`html.dark ${classSelector}`, classResolved.dark);
+    });
   });
 
   styleEl.textContent = cssRules.join("\n");

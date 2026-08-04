@@ -62,12 +62,15 @@ const effectiveConfig = computed<RichTextEditorConfig>(() => {
   const base = enfyraConfig.richText || {};
   const override = props.editorConfig || {};
 
-  const defaultToolbar = 'clear | h1 h2 h3 h4 h5 h6 | bold italic underline strike | bullist numlist | alignleft aligncenter alignright alignjustify | link image table blockquote hr';
+  const defaultToolbar = 'clear | h1 h2 h3 h4 h5 h6 | bold italic underline strike | bullist numlist | alignleft aligncenter alignright alignjustify | link image table blockquote hr codeblock';
 
   const customButtonNames = override.customButtons?.map(btn => btn.name) || [];
-  const finalToolbar = customButtonNames.length > 0
-    ? defaultToolbar + ' | ' + customButtonNames.join(' ')
-    : defaultToolbar;
+  const configuredToolbar = override.toolbar ?? base.toolbar;
+  const finalToolbar = configuredToolbar ?? (
+    customButtonNames.length > 0
+      ? defaultToolbar + ' | ' + customButtonNames.join(' ')
+      : defaultToolbar
+  );
 
   const result = {
     ...base,
@@ -87,8 +90,19 @@ const effectiveConfig = computed<RichTextEditorConfig>(() => {
 });
 
 const toolbarButtons = computed<ButtonGroup[]>(() => {
-  const toolbar = effectiveConfig.value.toolbar || 'bold italic underline | link image | bullist numlist | align';
-  const result = toolbar.split('|').map(group => group.trim().split(/\s+/).filter(Boolean));
+  const toolbar = effectiveConfig.value.toolbar ?? 'bold italic underline | link image | bullist numlist | align';
+  const pluginByButton: Record<string, string> = {
+    link: 'link',
+    bullist: 'lists',
+    numlist: 'lists',
+    table: 'table',
+    codeblock: 'code',
+  };
+  const enabledPlugins = effectiveConfig.value.plugins;
+  const result = toolbar.split('|').map(group => group.trim().split(/\s+/).filter((key) => {
+    const plugin = pluginByButton[key];
+    return !plugin || !enabledPlugins || enabledPlugins.includes(plugin);
+  }));
   return result;
 });
 
@@ -499,11 +513,11 @@ const availableButtons = computed<Record<string, ButtonConfig>>(() => {
         }
       } else if (btn.onAction) {
         if (typeof btn.onAction === 'function') {
-          btn.onAction(editor.value);
+          btn.onAction(editor.value, btn.params);
         } else if (typeof btn.onAction === 'string') {
           const action = buttonActions[btn.onAction];
           if (action) {
-            action(editor.value);
+            action(editor.value, btn.params);
           }
         }
       }
