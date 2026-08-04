@@ -207,58 +207,32 @@ watch(
   { immediate: true }
 );
 
-function getFieldCount(collection: any): number {
-  return (collection.columns?.length ?? 0) + (collection.relations?.length ?? 0);
-}
-
-function formatCollectionDate(value: string | undefined): string {
-  if (!value) return "No date";
-  return new Date(value).toLocaleDateString();
-}
-
 </script>
 
 <template>
-  <CommonResourceListFrame
-    v-model:page="page"
-    :loading="showInitialLoading"
-    :has-items="displayedCollections.length > 0"
-    loading-title="Loading collections..."
-    loading-description="Fetching table collections"
-    empty-icon="lucide:database"
-    :empty-title="searchQuery ? 'No results found' : 'No collections found'"
-    :empty-description="searchQuery ? 'No tables found matching your search' : 'No table collections have been created yet'"
-    :total="total"
-    :items-per-page="pageLimit"
-    :pagination-loading="loading"
-    :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-  >
-      <CommonResourceListItem
-        v-for="collection in displayedCollections"
-        :key="collection.id"
-        :title="collection.name || 'Untitled Collection'"
-        :description="collection.description || 'No description'"
-        icon="lucide:database"
-        :icon-color="collection.isSystem ? 'neutral' : 'primary'"
-        :loading="collectionsRefreshing"
-        :to="`/collections/${collection.name}`"
-      >
-        <template #metadata>
-          <div class="mt-2 flex flex-wrap items-center gap-1.5">
-            <UBadge color="primary" variant="soft" size="xs">
-              {{ getFieldCount(collection) }} fields
-            </UBadge>
-            <UBadge color="neutral" variant="soft" size="xs">
-              {{ collection.isSystem ? "System" : "Custom" }}
-            </UBadge>
-            <UBadge color="info" variant="soft" size="xs">
-              /{{ collection.name }}
-            </UBadge>
-            <UBadge color="neutral" variant="soft" size="xs">
-              {{ formatCollectionDate(collection.createdAt) }}
-            </UBadge>
-          </div>
-        </template>
-      </CommonResourceListItem>
-  </CommonResourceListFrame>
+  <div class="space-y-6">
+    <CommonResourceListFrame
+      :loading="showInitialLoading"
+      :has-items="displayedCollections.length > 0"
+      loading-title="Loading collections..."
+      loading-description="Fetching table collections"
+      empty-icon="lucide:database"
+      :empty-title="searchQuery ? 'No results found' : 'No collections found'"
+      :empty-description="searchQuery ? 'No tables found matching your search' : 'No table collections have been created yet'"
+    >
+      <CollectionList
+        :collections="displayedCollections"
+        :refreshing="collectionsRefreshing"
+      />
+    </CommonResourceListFrame>
+
+    <CommonPaginationBar
+      v-if="displayedCollections.length > 0 && total > pageLimit"
+      v-model:page="page"
+      :items-per-page="pageLimit"
+      :total="total"
+      :loading="loading"
+      :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    />
+  </div>
 </template>
