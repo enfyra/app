@@ -11,6 +11,7 @@
             :table-name="tableName"
             :excluded="['createdAt', 'updatedAt', 'children', 'rules', 'parent']"
             :field-map="fieldMap"
+            :sections="guardFormSections"
             :loading="loading"
           />
 
@@ -197,6 +198,7 @@
       v-model:errors="ruleErrors"
       :loading="createRuleLoading"
       :guard-position="rootPosition"
+      :guard-type="rootGuard?.type"
       @save="saveRule"
       @cancel="showCreateRuleDrawer = false"
     />
@@ -207,6 +209,7 @@
       v-model:errors="editRuleErrors"
       :loading="updateRuleLoading"
       :guard-position="rootPosition"
+      :guard-type="rootGuard?.type"
       @save="saveEditRule"
       @cancel="showEditRuleDrawer = false"
     />
@@ -251,15 +254,42 @@ const { validateForm } = useFormValidation(tableName);
 const { registerPageHeader } = usePageHeaderRegistry();
 
 const isGlobalGuardForm = computed(() => form.value?.isGlobal === true);
+const isGraphqlGuardForm = computed(() => form.value?.type === 'graphql');
 
 const fieldMap = computed(() => ({
+  name: { label: 'Name' },
+  description: { label: 'Description' },
+  type: {
+    label: 'Guard target',
+    description: 'Choose whether this guard protects REST routes or GraphQL operations.',
+    component: resolveComponent('GuardTargetTypePicker'),
+  },
   position: { component: resolveComponent('GuardPositionPicker') },
   combinator: { component: resolveComponent('GuardCombinatorPicker') },
-  route: { excluded: isGlobalGuardForm.value },
+  route: {
+    excluded: isGlobalGuardForm.value || isGraphqlGuardForm.value,
+    description: 'Choose the REST route protected by this guard.',
+  },
   methods: {
     type: 'methods-selector',
-    excluded: isGlobalGuardForm.value,
-    componentProps: { excludeGqlMethods: true },
+    excluded: isGlobalGuardForm.value || isGraphqlGuardForm.value,
+    description: 'Leave empty to protect every HTTP method on the selected route.',
+  },
+  isGlobal: {
+    label: 'All routes',
+    description: 'Apply this guard to every REST route.',
+    excluded: isGraphqlGuardForm.value,
+  },
+  gqlOperation: {
+    label: 'Operation',
+    description: 'Choose one GraphQL operation, or keep All operations selected.',
+    component: resolveComponent('GuardOperationPicker'),
+    excluded: !isGraphqlGuardForm.value,
+  },
+  table: {
+    label: 'Table',
+    description: 'Choose one table, or leave empty to protect all GraphQL tables.',
+    excluded: !isGraphqlGuardForm.value,
   },
 }));
 
@@ -349,10 +379,24 @@ watch(
   () => form.value?.isGlobal,
   (isGlobal) => {
     if (!isGlobal) return;
-    form.value.route = null;
-    form.value.methods = [];
+    form.value = normalizeGuardTargetPayload(form.value);
     delete errors.value.route;
     delete errors.value.methods;
+  },
+);
+
+watch(
+  () => form.value?.type,
+  (type) => {
+    form.value = normalizeGuardTargetPayload(form.value);
+    if (type === 'graphql') {
+      delete errors.value.route;
+      delete errors.value.methods;
+      delete errors.value.isGlobal;
+    } else {
+      delete errors.value.gqlOperation;
+      delete errors.value.table;
+    }
   },
 );
 
@@ -508,6 +552,7 @@ const ruleTypeMap: Record<string, { label: string; icon: string; iconColor: stri
   rate_limit_by_ip: { label: 'Rate Limit (by IP)', icon: 'lucide:gauge', iconColor: 'text-[var(--st-warning)]' },
   rate_limit_by_user: { label: 'Rate Limit (by User)', icon: 'lucide:user-check', iconColor: 'text-[var(--st-info)]' },
   rate_limit_by_route: { label: 'Rate Limit (by Route)', icon: 'lucide:route', iconColor: 'eapp-primary-text' },
+  rate_limit_by_operation: { label: 'Rate Limit (by Operation)', icon: 'lucide:braces', iconColor: 'eapp-primary-text' },
   ip_whitelist: { label: 'IP Whitelist', icon: 'lucide:shield-check', iconColor: 'text-[var(--st-success)]' },
   ip_blacklist: { label: 'IP Blacklist', icon: 'lucide:shield-x', iconColor: 'text-[var(--md-error)]' },
 };
@@ -551,11 +596,7 @@ async function initializeForm() {
 async function updateGuard() {
   if (!form.value) return;
 
-  const body = { ...form.value };
-  if (body.isGlobal === true) {
-    body.route = null;
-    body.methods = [];
-  }
+  const body = normalizeGuardTargetPayload(form.value);
 
   if (!(await validateForm(body, errors))) return;
 
@@ -620,7 +661,7 @@ const {
 });
 
 function getDefaultConfig(type: string): Record<string, any> {
-  if (['rate_limit_by_ip', 'rate_limit_by_user', 'rate_limit_by_route'].includes(type)) {
+  if (['rate_limit_by_ip', 'rate_limit_by_user', 'rate_limit_by_route', 'rate_limit_by_operation'].includes(type)) {
     return { maxRequests: 100, perSeconds: 60 };
   }
   if (['ip_whitelist', 'ip_blacklist'].includes(type)) {

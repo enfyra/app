@@ -99,7 +99,6 @@ const fieldMap = computed(() => ({
   method: {
     type: 'method-selector',
     componentProps: {
-      excludeGqlMethods: true,
       ...(props.allowedMethods ? { allowedMethods: props.allowedMethods } : {}),
     },
   },

@@ -15,47 +15,39 @@ export function useWorkspaceScroll() {
   const route = useRoute();
   const router = useRouter();
 
-  let workspaceEl: HTMLElement | null = null;
   let currentPath = route.path;
   let isPopNavigation = false;
+  let removeBeforeEach: (() => void) | null = null;
+
+  const onPopState = () => {
+    isPopNavigation = true;
+  };
 
   onMounted(() => {
-    workspaceEl = document.querySelector(".app-workspace");
-
-    router.beforeEach((to) => {
-      if (workspaceEl && workspaceEl.scrollTop > 0) {
-        savePosition(currentPath, workspaceEl.scrollTop);
-      }
+    removeBeforeEach = router.beforeEach((to) => {
+      savePosition(currentPath, window.scrollY);
       currentPath = to.path;
       return true;
     });
 
-    const onPopState = () => {
-      isPopNavigation = true;
-    };
     window.addEventListener("popstate", onPopState);
+  });
 
-    const cleanup = () => {
-      window.removeEventListener("popstate", onPopState);
-    };
-
-    onUnmounted(cleanup);
+  onUnmounted(() => {
+    window.removeEventListener("popstate", onPopState);
+    removeBeforeEach?.();
   });
 
   watch(
     () => route.path,
     (newPath) => {
       nextTick(() => {
-        const el = document.querySelector(".app-workspace");
-        if (!el) return;
-
+        let top = 0;
         if (isPopNavigation) {
-          const saved = scrollPositions.get(newPath);
-          el.scrollTop = saved ?? 0;
+          top = scrollPositions.get(newPath) ?? 0;
           isPopNavigation = false;
-        } else {
-          el.scrollTop = 0;
         }
+        window.scrollTo({ top, left: 0, behavior: "auto" });
       });
     },
   );

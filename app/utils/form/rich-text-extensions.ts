@@ -165,7 +165,9 @@ function createCustomFormatsExtension(config: RichTextEditorConfig, theme: "ligh
 }
 
 export function buildRichTextExtensions(config: RichTextEditorConfig, lowlight: any, theme: "light" | "dark"): AnyExtension[] {
-  return [
+  const enabledPlugins = config.plugins ? new Set(config.plugins) : null;
+  const isEnabled = (plugin: string) => enabledPlugins === null || enabledPlugins.has(plugin);
+  const extensions: AnyExtension[] = [
     StarterKit.configure({
       codeBlock: false,
       code: false,
@@ -174,14 +176,14 @@ export function buildRichTextExtensions(config: RichTextEditorConfig, lowlight: 
       heading: {
         levels: [1, 2, 3, 4, 5, 6],
       },
-      bulletList: {
+      bulletList: isEnabled("lists") ? {
         keepMarks: true,
         keepAttributes: false,
-      },
-      orderedList: {
+      } : false,
+      orderedList: isEnabled("lists") ? {
         keepMarks: true,
         keepAttributes: false,
-      },
+      } : false,
     }) as AnyExtension,
     Placeholder.configure({
       placeholder: "Type something...",
@@ -192,9 +194,13 @@ export function buildRichTextExtensions(config: RichTextEditorConfig, lowlight: 
       alignments: ["left", "center", "right", "justify"],
       defaultAlignment: "left",
     }) as AnyExtension,
-    Link.configure({
-      openOnClick: false,
-    }) as AnyExtension,
+  ];
+
+  if (isEnabled("link")) {
+    extensions.push(Link.configure({ openOnClick: false }) as AnyExtension);
+  }
+
+  extensions.push(
     Image.extend({
       addAttributes() {
         return {
@@ -204,19 +210,29 @@ export function buildRichTextExtensions(config: RichTextEditorConfig, lowlight: 
         };
       },
     }) as AnyExtension,
-    Table.configure({
-      resizable: true,
-      handleWidth: 5,
-      cellMinWidth: 50,
-      lastColumnResizable: true,
-    }) as AnyExtension,
-    TableRow as AnyExtension,
-    CustomTableHeader as AnyExtension,
-    CustomTableCell as AnyExtension,
-    CodeBlockLowlight.configure({
+  );
+
+  if (isEnabled("table")) {
+    extensions.push(
+      Table.configure({
+        resizable: true,
+        handleWidth: 5,
+        cellMinWidth: 50,
+        lastColumnResizable: true,
+      }) as AnyExtension,
+      TableRow as AnyExtension,
+      CustomTableHeader as AnyExtension,
+      CustomTableCell as AnyExtension,
+    );
+  }
+
+  if (isEnabled("code")) {
+    extensions.push(CodeBlockLowlight.configure({
       lowlight,
       defaultLanguage: "auto",
-    }) as AnyExtension,
-    createCustomFormatsExtension(config, theme),
-  ];
+    }) as AnyExtension);
+  }
+
+  extensions.push(createCustomFormatsExtension(config, theme));
+  return extensions;
 }

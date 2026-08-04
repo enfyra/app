@@ -77,7 +77,6 @@ const {
       "relations.fieldPermissions.allowedUsers.id",
       "relations.fieldPermissions.allowedUsers.email",
       "relations.fieldPermissions.allowedUsers.name",
-      "gqlConfig.isEnabled",
     ].join(","),
     filter: {
       name: {
@@ -191,6 +190,7 @@ const activeTab = ref((route.query.tab as string) || 'schema')
 const tabItems = [
   { label: 'Schema', icon: 'i-lucide-table-2', value: 'schema' },
   { label: 'Routes', icon: 'i-lucide-route', value: 'routes' },
+  { label: 'GraphQL', icon: 'i-lucide-braces', value: 'graphql' },
   { label: 'Triggers', icon: 'i-lucide-zap', value: 'triggers' },
 ]
 
@@ -228,7 +228,6 @@ async function initializeForm() {
     await fetchTableData();
     const data = tableData.value?.data?.[0];
     if (data) {
-      data.graphqlEnabled = data.gqlConfig?.isEnabled === true;
       table.value = data;
       formChanges.update(data);
       hasFormChanges.value = false;
@@ -800,6 +799,12 @@ onMounted(async () => {
             </CommonFormCard>
           </div>
         </UForm>
+
+        <GraphqlAccessEditor
+          v-if="activeTab === 'graphql'"
+          :table-id="getId(table)"
+          :table-name="String(table.name)"
+        />
 
         <RouteEditorPanel
           v-if="activeTab === 'routes'"

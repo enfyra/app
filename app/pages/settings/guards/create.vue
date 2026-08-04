@@ -9,6 +9,7 @@
             v-model:errors="createErrors"
             :excluded="['createdAt', 'updatedAt', 'children', 'rules', 'parent']"
             :field-map="fieldMap"
+            :sections="guardFormSections"
             mode="create"
           />
         </UForm>
@@ -31,15 +32,42 @@ const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
 
 const isGlobalGuardForm = computed(() => createForm.value?.isGlobal === true);
+const isGraphqlGuardForm = computed(() => createForm.value?.type === 'graphql');
 
 const fieldMap = computed(() => ({
+  name: { label: 'Name' },
+  description: { label: 'Description' },
+  type: {
+    label: 'Guard target',
+    description: 'Choose whether this guard protects REST routes or GraphQL operations.',
+    component: resolveComponent('GuardTargetTypePicker'),
+  },
   position: { component: resolveComponent('GuardPositionPicker') },
   combinator: { component: resolveComponent('GuardCombinatorPicker') },
-  route: { excluded: isGlobalGuardForm.value },
+  route: {
+    excluded: isGlobalGuardForm.value || isGraphqlGuardForm.value,
+    description: 'Choose the REST route protected by this guard.',
+  },
   methods: {
     type: 'methods-selector',
-    excluded: isGlobalGuardForm.value,
-    componentProps: { excludeGqlMethods: true },
+    excluded: isGlobalGuardForm.value || isGraphqlGuardForm.value,
+    description: 'Leave empty to protect every HTTP method on the selected route.',
+  },
+  isGlobal: {
+    label: 'All routes',
+    description: 'Apply this guard to every REST route.',
+    excluded: isGraphqlGuardForm.value,
+  },
+  gqlOperation: {
+    label: 'Operation',
+    description: 'Choose one GraphQL operation, or keep All operations selected.',
+    component: resolveComponent('GuardOperationPicker'),
+    excluded: !isGraphqlGuardForm.value,
+  },
+  table: {
+    label: 'Table',
+    description: 'Choose one table, or leave empty to protect all GraphQL tables.',
+    excluded: !isGraphqlGuardForm.value,
   },
 }));
 
@@ -89,19 +117,29 @@ watch(
   () => createForm.value?.isGlobal,
   (isGlobal) => {
     if (!isGlobal) return;
-    createForm.value.route = null;
-    createForm.value.methods = [];
+    createForm.value = normalizeGuardTargetPayload(createForm.value);
     delete createErrors.value.route;
     delete createErrors.value.methods;
   },
 );
 
+watch(
+  () => createForm.value?.type,
+  (type) => {
+    createForm.value = normalizeGuardTargetPayload(createForm.value);
+    if (type === 'graphql') {
+      delete createErrors.value.route;
+      delete createErrors.value.methods;
+      delete createErrors.value.isGlobal;
+    } else {
+      delete createErrors.value.gqlOperation;
+      delete createErrors.value.table;
+    }
+  },
+);
+
 async function handleCreate() {
-  const body = { ...createForm.value };
-  if (body.isGlobal === true) {
-    body.route = null;
-    body.methods = [];
-  }
+  const body = normalizeGuardTargetPayload(createForm.value);
 
   if (!(await validateForm(body, createErrors))) return;
 

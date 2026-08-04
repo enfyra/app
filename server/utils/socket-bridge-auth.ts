@@ -7,8 +7,6 @@ import {
 } from '~/constants/enfyra';
 import { isAccessTokenExpired } from '~/utils/enfyra/server/refreshToken';
 
-import { addWsNs } from './ws-namespace';
-
 const encoder = new Encoder();
 
 function parseCookieHeader(header: string | undefined): Record<string, string> {
@@ -45,6 +43,8 @@ export async function resolveSocketBridgeAuth(
 > {
   const authHeader = req.headers?.authorization;
   if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+    const accessToken = authHeader.slice('Bearer '.length);
+    if (isAccessTokenExpired(accessToken)) return { ok: false };
     return {
       ok: true,
       upstreamHeaders: buildUpstreamHeaders(req, { authorization: authHeader }),
@@ -61,15 +61,47 @@ export async function resolveSocketBridgeAuth(
   return { ok: false };
 }
 
+export function classifyUpstreamSocketIoPacket(
+  packet: string,
+): 'connected' | 'auth_error' | 'other' {
+  const packetType = Number(packet[0]);
+  if (packetType === PacketType.CONNECT) return 'connected';
+  if (packetType !== PacketType.CONNECT_ERROR) return 'other';
+
+  const commaIndex = packet.indexOf(',');
+  const payload = packet.slice(commaIndex === -1 ? 1 : commaIndex + 1);
+  try {
+    const error = JSON.parse(payload) as {
+      message?: unknown;
+      code?: unknown;
+      data?: { code?: unknown };
+    };
+    const message = typeof error.message === 'string' ? error.message : '';
+    const code = error.data?.code ?? error.code;
+    if (
+      code === 'AUTH_INVALID' ||
+      code === 'AUTH_REQUIRED' ||
+      message.includes('Invalid authentication token') ||
+      message.includes('Authentication token required') ||
+      message.includes(ENFYRA_SOCKET_AUTH_ERROR)
+    ) {
+      return 'auth_error';
+    }
+  } catch {}
+
+  return 'other';
+}
+
 export function sendSocketBridgeAuthError(browserSocket: {
   send: (data: string) => void;
-}) {
+}, namespace = '/ws/enfyra-admin') {
+  const browserNamespace = namespace.startsWith('/') ? namespace : `/${namespace}`;
   const packs = encoder.encode({
     type: PacketType.CONNECT_ERROR,
-    nsp: '/enfyra-admin',
+    nsp: browserNamespace,
     data: { message: ENFYRA_SOCKET_AUTH_ERROR },
   }) as string[];
   const encoded = packs[0];
   if (!encoded) return;
-  browserSocket.send(`4${addWsNs(encoded)}`);
+  browserSocket.send(`4${encoded}`);
 }

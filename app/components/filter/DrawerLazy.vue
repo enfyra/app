@@ -2,9 +2,13 @@
   <div>
     <Suspense>
       <FilterDrawer
+        :key="props.historyKey || props.tableName"
         :model-value="props.modelValue"
         :table-name="props.tableName"
         :current-filter="props.currentFilter"
+        :allowed-fields="props.allowedFields"
+        :history-key="props.historyKey"
+        :title="props.title"
         @update:model-value="(value) => emit('update:modelValue', value)"
         @apply="(filter) => emit('apply', filter)"
       />
@@ -27,6 +31,9 @@ const props = defineProps<{
   modelValue: boolean;
   tableName: string;
   currentFilter?: FilterGroup;
+  allowedFields?: string[];
+  historyKey?: string;
+  title?: string;
 }>()
 
 const emit = defineEmits<{

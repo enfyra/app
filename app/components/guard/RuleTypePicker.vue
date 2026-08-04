@@ -58,9 +58,12 @@ const props = withDefaults(defineProps<{
   modelValue: string | null;
   disabled?: boolean;
   guardPosition?: string | null;
+  /** Guard target type: 'route' | 'graphql'. Filters rules that only make sense for one target. */
+  guardType?: string | null;
 }>(), {
   disabled: false,
   guardPosition: null,
+  guardType: null,
 });
 
 const emit = defineEmits<{
@@ -78,6 +81,7 @@ const allOptions = [
     checkColor: 'eapp-status-warning-text',
     description: 'Limit requests per IP address. Best for preventing abuse from a single source.',
     requiresAuth: false,
+    requiresGraphql: false,
   },
   {
     value: 'rate_limit_by_user',
@@ -89,6 +93,7 @@ const allOptions = [
     checkColor: 'eapp-primary-text',
     description: 'Limit requests per authenticated user. Requires Post-Auth position.',
     requiresAuth: true,
+    requiresGraphql: false,
   },
   {
     value: 'rate_limit_by_route',
@@ -100,6 +105,19 @@ const allOptions = [
     checkColor: 'eapp-primary-text',
     description: 'Limit total requests to this route regardless of source. Protects against traffic spikes.',
     requiresAuth: false,
+    requiresGraphql: false,
+  },
+  {
+    value: 'rate_limit_by_operation',
+    label: 'Rate Limit by Operation',
+    icon: 'lucide:braces',
+    iconColor: 'eapp-primary-text',
+    iconBg: 'eapp-primary-solid',
+    activeClass: 'eapp-primary-soft',
+    checkColor: 'eapp-primary-text',
+    description: 'Limit GraphQL requests per (table, operation) pair. GraphQL guards only.',
+    requiresAuth: false,
+    requiresGraphql: true,
   },
   {
     value: 'ip_whitelist',
@@ -111,6 +129,7 @@ const allOptions = [
     checkColor: 'eapp-status-success-text',
     description: 'Only allow requests from specific IPs or CIDR ranges. All other IPs are blocked.',
     requiresAuth: false,
+    requiresGraphql: false,
   },
   {
     value: 'ip_blacklist',
@@ -122,13 +141,24 @@ const allOptions = [
     checkColor: 'eapp-status-danger-text',
     description: 'Block requests from specific IPs or CIDR ranges. All other IPs are allowed.',
     requiresAuth: false,
+    requiresGraphql: false,
   },
 ];
 
 const filteredOptions = computed(() => {
+  let result = allOptions;
+
   if (props.guardPosition === 'pre_auth') {
-    return allOptions.filter((o) => !o.requiresAuth);
+    result = result.filter((o) => !o.requiresAuth);
   }
-  return allOptions;
+
+  if (props.guardType === 'graphql') {
+    // GraphQL guards key by (table, operation): route-wide limiting is meaningless.
+    result = result.filter((o) => o.value !== 'rate_limit_by_route');
+  } else if (props.guardType === 'route') {
+    result = result.filter((o) => o.value !== 'rate_limit_by_operation');
+  }
+
+  return result;
 });
 </script>

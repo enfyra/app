@@ -401,6 +401,7 @@ async function deleteRoute(routeItem: any) {
         <CommonResourceListFrame
           :loading="true"
           :has-items="false"
+          :skeleton-rows="4"
           loading-title="Loading routes..."
           loading-description="Fetching routing configuration"
         >

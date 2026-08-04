@@ -92,7 +92,7 @@ const showDiscardModal = ref(false);
 const fieldMap = {
   position: { component: resolveComponent('GuardPositionPicker') },
   combinator: { component: resolveComponent('GuardCombinatorPicker') },
-  methods: { type: 'methods-selector', componentProps: { excludeGqlMethods: true } },
+  methods: { type: 'methods-selector' },
 };
 
 const localOpen = computed({

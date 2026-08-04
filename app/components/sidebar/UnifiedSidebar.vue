@@ -256,7 +256,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative h-full" @mouseenter="showSidebarPeek" @mouseleave="hideSidebarPeek" @focusin="showSidebarPeek" @focusout="hideSidebarPeek">
+  <div class="relative sticky top-0 h-dvh self-start" @mouseenter="showSidebarPeek" @mouseleave="hideSidebarPeek" @focusin="showSidebarPeek" @focusout="hideSidebarPeek">
     <USidebar
       v-model:open="sidebarVisible"
       variant="sidebar"

@@ -54,6 +54,8 @@ interface Props {
   errors: Record<string, string>;
   loading: boolean;
   guardPosition?: string | null;
+  /** Guard target type ('route' | 'graphql'); filters rule types that only apply to one target. */
+  guardType?: string | null;
 }
 
 const props = defineProps<Props>();
@@ -103,7 +105,7 @@ const excludedFields = computed(() => {
 const fieldMap = computed(() => ({
   type: {
     component: resolveComponent('GuardRuleTypePicker'),
-    componentProps: { guardPosition: props.guardPosition },
+    componentProps: { guardPosition: props.guardPosition, guardType: props.guardType },
   },
   config: {
     component: resolveComponent('GuardRuleConfigEditor'),

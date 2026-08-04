@@ -82,6 +82,14 @@ export function usePermissions() {
   const checkPermissionCondition = (
     condition: PermissionCondition
   ): boolean => {
+    if (me.value?.isRootAdmin) {
+      return true;
+    }
+
+    if (condition && typeof condition === "object" && "route" in condition) {
+      return checkPermissionRule(condition as PermissionRule);
+    }
+
     if (condition.rootAdmin === true) {
       return !!me.value?.isRootAdmin;
     }

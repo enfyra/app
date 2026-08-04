@@ -7,6 +7,7 @@ const props = withDefaults(defineProps<{
   rootTableName?: string;
   readonly?: boolean;
   depth?: number;
+  allowedFields?: string[];
 }>(), {
   depth: 0,
 });
@@ -51,10 +52,13 @@ function updateGroup() {
 }
 
 function addCondition() {
-  const availableOptions = getCombinedOptionsForContext(
+  const allOptions = getCombinedOptionsForContext(
     props.tableName,
     props.schemas
   );
+  const availableOptions = props.allowedFields?.length
+    ? allOptions.filter((option) => props.allowedFields!.includes(option.value))
+    : allOptions;
   const firstField = availableOptions.find(
     (opt) => opt.fieldCategory === "column"
   );
@@ -353,6 +357,7 @@ const nestedGroupClass = computed(() => [
                 :schemas="schemas"
                 :table-name="tableName"
                 :readonly="!!readonly"
+                :allowed-fields="allowedFields"
                 @update:condition="(condition) => onConditionUpdate(condition, index)"
                 @convert-to-group="(newGroup, idx) => onConvertToGroup(newGroup, idx)"
                 @remove="removeItem"

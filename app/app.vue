@@ -5,7 +5,7 @@ const toaster = {
   duration: 3600,
   expand: true,
   max: 5,
-  position: "bottom-left" as const,
+  position: "bottom-right" as const,
   progress: true,
 };
 

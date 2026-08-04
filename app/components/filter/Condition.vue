@@ -8,6 +8,7 @@ const props = defineProps<{
   schemas: Record<string, any>;
   tableName: string;
   readonly?: boolean;
+  allowedFields?: string[];
 }>();
 
 const emit = defineEmits<{
@@ -45,6 +46,12 @@ const enumOptions = computed(() => {
   return [];
 });
 
+const fieldOptions = computed(() => {
+  const options = getCombinedOptionsForContext(props.tableName, props.schemas);
+  if (!props.allowedFields?.length) return options;
+  return options.filter((option) => props.allowedFields!.includes(option.value));
+});
+
 const { isMobile, isTablet } = useScreen();
 </script>
 
@@ -64,7 +71,7 @@ const { isMobile, isTablet } = useScreen();
               ? condition.field.split('.').pop()
               : condition.field
           "
-          :items="getCombinedOptionsForContext(tableName, schemas)"
+          :items="fieldOptions"
           @update:model-value="(val) => onFieldSelectChange(val as string)"
           :placeholder="
             parentGroup.relationContext

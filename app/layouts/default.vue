@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-1 text-sm" style="height: 100dvh; background: var(--shell-content-bg); color: var(--text-primary);">
+  <div class="flex min-h-dvh text-sm" style="background: var(--shell-content-bg); color: var(--text-primary);">
 
     <a
       href="#main-content"
@@ -13,13 +13,13 @@
     <main
       id="main-content"
       tabindex="-1"
-      class="relative flex flex-1 flex-col min-h-0 overflow-hidden"
+      class="relative flex min-w-0 flex-1 flex-col"
       :style="{ background: 'transparent' }"
     >
       <header class="sticky top-0 flex w-full z-50 backdrop-blur-xl" :style="{ background: 'transparent' }">
         <div class="flex flex-col items-center justify-between grow lg:flex-row">
           <div class="flex items-center justify-between w-full gap-2 sm:gap-4 lg:justify-normal lg:border-b-0 h-16">
-            <div class="mr-[10px] flex flex-1 items-center justify-between gap-4 px-4 lg:px-6">
+            <div class="flex flex-1 items-center justify-between gap-4 px-4 lg:px-6">
               <LayoutHeader />
             </div>
           </div>
@@ -58,7 +58,7 @@
 
       <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
 
-      <section class="flex-1 min-h-0 overflow-y-scroll relative app-workspace">
+      <section class="relative flex-1 app-workspace">
         <div class="relative flex flex-col flex-1 min-h-full gap-4 px-5 py-4 lg:px-6">
           <CommonPageHeader
             v-if="hasPageHeader"

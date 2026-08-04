@@ -249,8 +249,6 @@ const emit = defineEmits<{
   toggleHook: [hook: any, enabled: boolean];
 }>();
 
-const GQL_METHODS = ['GQL_QUERY', 'GQL_MUTATION'];
-
 const createHookItems = computed(() => [[
   {
     label: 'Pre-hook',
@@ -268,7 +266,7 @@ const createHookItems = computed(() => [[
 
 const filteredAvailableMethods = computed(() => {
   const methods = Array.isArray(props.availableMethods) ? props.availableMethods : [];
-  return methods.filter(method => !GQL_METHODS.includes(method));
+  return methods;
 });
 
 const hasAvailableMethods = computed(() => filteredAvailableMethods.value.length > 0);

@@ -21,7 +21,9 @@ describe('sticky pagination layout', () => {
     ]
 
     expect(pagination).toContain('eapp-pagination sticky bottom-0')
-    expect(pagination).toContain('bg-[var(--bg-app)]')
+    expect(pagination).toContain('bg-[var(--shell-main-bg)]')
+    expect(pagination).toContain('-mx-4 px-4')
+    expect(pagination).toContain('sm:-mx-6 sm:px-6')
     expect(resourceList).toContain('paginationClass: ""')
 
     for (const consumer of consumers) {

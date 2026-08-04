@@ -5,6 +5,7 @@ import { Server as EngineServer } from 'engine.io';
 import { WebSocket } from 'ws';
 
 import {
+  classifyUpstreamSocketIoPacket,
   resolveSocketBridgeAuth,
   sendSocketBridgeAuthError,
 } from '../utils/socket-bridge-auth';
@@ -109,7 +110,6 @@ function startBridge(
       const type = frame[0];
       if (type === '0') {
         ready = true;
-        retryCount = 0;
         if (hasConnectedOnce) {
           for (const upstreamNamespace of browserNamespacesByUpstream.keys()) {
             safeSend(ws, `40${upstreamNamespace},`);
@@ -122,10 +122,21 @@ function startBridge(
         buffer.length = 0;
       } else if (type === '4') {
         const payload = frame.slice(1);
+        const packetStatus = classifyUpstreamSocketIoPacket(payload);
         const upstreamNamespace = getSocketIoNamespace(payload);
         const browserNamespace = upstreamNamespace
           ? browserNamespacesByUpstream.get(upstreamNamespace)
           : null;
+        if (packetStatus === 'auth_error') {
+          sendSocketBridgeAuthError(
+            browserSocket,
+            browserNamespace ?? undefined,
+          );
+          cleanup();
+          try { browserSocket.close(); } catch {}
+          return;
+        }
+        if (packetStatus === 'connected') retryCount = 0;
         safeSend(
           browserSocket,
           browserNamespace && browserNamespace !== upstreamNamespace

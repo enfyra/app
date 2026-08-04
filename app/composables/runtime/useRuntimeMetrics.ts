@@ -49,6 +49,7 @@ const BASE_TAB_ITEMS = [
   { label: 'Flows', icon: 'i-lucide-git-branch', value: 'flows' },
   { label: 'Workers', icon: 'i-lucide-cpu', value: 'workers' },
   { label: 'Connections', icon: 'i-lucide-network', value: 'connections' },
+  { label: 'Guards', icon: 'i-lucide-shield-alert', value: 'guards' },
 ];
 
 export function useRuntimeMetrics() {

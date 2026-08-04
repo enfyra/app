@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+  <div :class="['grid grid-cols-1 gap-3', templates.length > 1 ? 'md:grid-cols-2' : '']">
     <button
       v-for="template in templates"
       :key="template.key"

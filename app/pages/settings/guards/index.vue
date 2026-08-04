@@ -25,10 +25,15 @@ const GUARD_LIST_FIELDS = [
   'description',
   'isEnabled',
   'isGlobal',
+  'type',
+  'gqlOperation',
   'position',
   'combinator',
   'route.id',
   'route.path',
+  'table.id',
+  'table.name',
+  'table.alias',
 ].join(',');
 const GUARD_ROUTE_OPTION_FIELDS = [
   'id',
@@ -41,9 +46,34 @@ registerPageHeader({
 });
 
 const showFilterDrawer = ref(false);
-const currentFilter = ref(createEmptyFilter());
-const activeScope = ref<'all' | GuardScope>('all');
+const activeType = ref<'route' | 'graphql'>('route');
+const switchingType = ref(false);
+const suppressListTransition = ref(false);
+const filtersByType = reactive<Record<'route' | 'graphql', FilterGroup>>({
+  route: createEmptyFilter(),
+  graphql: createEmptyFilter(),
+});
+const currentFilter = computed<FilterGroup>({
+  get: () => filtersByType[activeType.value],
+  set: (value) => {
+    filtersByType[activeType.value] = value;
+  },
+});
+const activeFilterFields = computed(() => getGuardFilterFields(activeType.value));
 const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
+
+const guardTabItems = computed(() => [
+  {
+    label: 'Route Guards',
+    value: 'route',
+    icon: 'lucide:route',
+  },
+  {
+    label: 'GraphQL Guards',
+    value: 'graphql',
+    icon: 'lucide:braces',
+  },
+]);
 
 const filterLabel = computed(() => {
   const activeCount = activeFilterCount.value;
@@ -66,12 +96,8 @@ const {
   query: computed(() => {
     const conditions: any[] = [
       { parent: { _is_null: true } },
+      { type: { _eq: activeType.value } },
     ];
-    if (activeScope.value === 'global') {
-      conditions.push({ isGlobal: { _eq: true } });
-    } else if (activeScope.value === 'route') {
-      conditions.push({ isGlobal: { _eq: false } });
-    }
 
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
@@ -100,11 +126,53 @@ const {
 const globalGuardCount = computed(() => guardsData.value.filter((guard: any) => guard.isGlobal).length);
 const routeGuardCount = computed(() => guardsData.value.filter((guard: any) => !guard.isGlobal).length);
 const enabledGuardCount = computed(() => guardsData.value.filter((guard: any) => guard.isEnabled).length);
-const total = computed(() => {
-  if (hasActiveFilters(currentFilter.value)) {
-    return apiData.value?.meta?.filterCount ?? 0;
+const allTablesGuardCount = computed(() => guardsData.value.filter((guard: any) => !guard.table).length);
+const operationGuardCount = computed(() => guardsData.value.filter((guard: any) => guard.gqlOperation).length);
+const total = computed(() => apiData.value?.meta?.filterCount ?? 0);
+const isListLoading = computed(() => loading.value || switchingType.value || guardsRefreshing.value);
+const isPageLoading = computed(() => showInitialLoading.value || isListLoading.value);
+const listStateKey = computed(() => {
+  if (isPageLoading.value) return `${activeType.value}:loading`;
+  return `${activeType.value}:${guardsData.value.length > 0 ? 'items' : 'empty'}`;
+});
+const summaryCards = computed(() => {
+  if (activeType.value === 'graphql') {
+    return [
+      {
+        label: 'Active',
+        value: enabledGuardCount.value,
+        description: 'Enabled GraphQL guards in this view',
+      },
+      {
+        label: 'All tables',
+        value: allTablesGuardCount.value,
+        description: 'Apply across every GraphQL table',
+      },
+      {
+        label: 'Specific operation',
+        value: operationGuardCount.value,
+        description: 'Target one GraphQL operation',
+      },
+    ];
   }
-  return apiData.value?.meta?.totalCount || 0;
+
+  return [
+    {
+      label: 'Active',
+      value: enabledGuardCount.value,
+      description: 'Enabled REST guards in this view',
+    },
+    {
+      label: 'Global',
+      value: globalGuardCount.value,
+      description: 'Apply to every REST route',
+    },
+    {
+      label: 'Route-specific',
+      value: routeGuardCount.value,
+      description: 'Bound to one REST route',
+    },
+  ];
 });
 
 registerHeaderActions([
@@ -141,7 +209,7 @@ registerHeaderActions([
     color: 'primary',
     size: 'md',
     onClick: () => {
-      void openCreateGuardDrawer('global');
+      void openCreateGuardDrawer(activeType.value === 'graphql' ? 'graphql' : 'route');
     },
     permission: {
       and: [
@@ -179,10 +247,33 @@ watch(
   { immediate: true },
 );
 
-watch(activeScope, async () => {
+async function handleTypeChange(value: string | number) {
+  const nextType = value === 'graphql' ? 'graphql' : 'route';
+  if (nextType === activeType.value) return;
+
+  suppressListTransition.value = true;
+  switchingType.value = true;
+  activeType.value = nextType;
   page.value = 1;
-  await fetchGuards();
-});
+  try {
+    await nextTick();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    await fetchGuards();
+    if (guardsRefreshing.value) {
+      await new Promise<void>((resolve) => {
+        const stop = watch(guardsRefreshing, (refreshing) => {
+          if (refreshing) return;
+          stop();
+          resolve();
+        });
+      });
+    }
+  } finally {
+    switchingType.value = false;
+    await nextTick();
+    suppressListTransition.value = false;
+  }
+}
 
 const {
   data: routesData,
@@ -204,6 +295,33 @@ const routeOptions = computed(() =>
     value: getId(item),
   })),
 );
+
+const {
+  data: tablesData,
+  pending: tablesLoading,
+  execute: fetchTables,
+} = useApi(() => '/enfyra_table', {
+  query: {
+    fields: 'id,name,alias',
+    sort: 'name',
+    limit: 500,
+  },
+  immediate: false,
+  errorContext: 'Fetch Tables',
+});
+
+const tableOptions = computed(() =>
+  (tablesData.value?.data || []).map((item: any) => ({
+    label: item.alias || item.name,
+    value: getId(item),
+  })),
+);
+const hasLoadedTables = computed(() => Boolean(tablesData.value?.data?.length));
+
+async function ensureTablesLoaded() {
+  if (hasLoadedTables.value || tablesLoading.value) return;
+  await fetchTables();
+}
 
 const { execute: updateGuardApi, error: updateError } = useApi(
   () => '/enfyra_guard',
@@ -244,6 +362,7 @@ const showCreateGuardDrawer = ref(false);
 const createScope = ref<GuardScope>('global');
 const selectedTemplate = ref<string | null>(null);
 const selectedRouteId = ref<string | null>(null);
+const selectedTableId = ref<string | null>(null);
 const createTemplates = computed(() => getGuardTemplatesForScope(createScope.value));
 const hasLoadedRoutes = computed(() => Boolean(routesData.value?.data?.length));
 
@@ -252,12 +371,11 @@ async function ensureRoutesLoaded() {
   await fetchRoutes();
 }
 
-function setActiveScope(scope: 'all' | GuardScope) {
-  activeScope.value = scope;
-}
-
 function setCreateScope(scope: GuardScope) {
   createScope.value = scope;
+  selectedTemplate.value = getGuardTemplatesForScope(scope)[0]?.key || null;
+  selectedRouteId.value = null;
+  selectedTableId.value = null;
 }
 
 function closeCreateGuardDrawer() {
@@ -268,15 +386,21 @@ async function openCreateGuardDrawer(scope: GuardScope) {
   createScope.value = scope;
   selectedTemplate.value = createTemplates.value[0]?.key || null;
   selectedRouteId.value = null;
+  selectedTableId.value = null;
   showCreateGuardDrawer.value = true;
   if (scope === 'route') {
     void ensureRoutesLoaded();
+  } else if (scope === 'graphql') {
+    void ensureTablesLoaded();
   }
 }
 
 watch(createScope, (scope) => {
-  if (showCreateGuardDrawer.value && scope === 'route') {
+  if (!showCreateGuardDrawer.value) return;
+  if (scope === 'route') {
     void ensureRoutesLoaded();
+  } else if (scope === 'graphql') {
+    void ensureTablesLoaded();
   }
 });
 
@@ -290,6 +414,10 @@ async function createGuardFromTemplate() {
     notify.error('Validation Error', 'Select a route for this guard');
     return;
   }
+  if (createScope.value === 'graphql' && !selectedTableId.value) {
+    notify.error('Validation Error', 'Select a table for this guard');
+    return;
+  }
 
   const routeItem = (routesData.value?.data || []).find((item: any) => String(getId(item)) === String(selectedRouteId.value));
 
@@ -299,6 +427,8 @@ async function createGuardFromTemplate() {
       idField,
       routeId: selectedRouteId.value,
       routePath: routeItem?.path,
+      tableId: selectedTableId.value,
+      gqlOperation: template.targetType === 'graphql' ? template.gqlOperation ?? null : null,
     }),
   });
   if (createGuardError.value) return;
@@ -418,176 +548,153 @@ async function deleteGuard(guard: any) {
 
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade">
-      <div v-if="showInitialLoading" key="loading">
-        <CommonResourceListFrame
-          :loading="true"
-          :has-items="false"
-          loading-title="Loading guards..."
-          loading-description="Fetching guard configuration"
-        >
-        </CommonResourceListFrame>
+    <div class="overflow-x-auto overflow-y-hidden">
+      <UTabs
+        :model-value="activeType"
+        :items="guardTabItems"
+        :content="false"
+        variant="link"
+        @update:model-value="handleTypeChange"
+      />
+    </div>
+
+    <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div
+        v-for="card in summaryCards"
+        :key="card.label"
+        class="surface-card rounded-lg p-4"
+      >
+        <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-quaternary)]">
+          {{ card.label }}
+        </p>
+        <USkeleton v-if="isPageLoading" class="mt-2 h-8 w-12" />
+        <p v-else class="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
+          {{ card.value }}
+        </p>
+        <USkeleton v-if="isPageLoading" class="mt-1 h-4 w-44 max-w-full" />
+        <p v-else class="mt-1 text-xs text-[var(--text-tertiary)]">
+          {{ card.description }}
+        </p>
       </div>
+    </section>
 
-      <div v-else key="content" class="space-y-6">
-        <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div class="surface-card rounded-lg p-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-quaternary)]">
-              Active
-            </p>
-            <p class="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
-              {{ enabledGuardCount }}
-            </p>
-            <p class="mt-1 text-xs text-[var(--text-tertiary)]">
-              Enabled root guards in this view
-            </p>
-          </div>
-          <div class="surface-card rounded-lg p-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-quaternary)]">
-              Global
-            </p>
-            <p class="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
-              {{ globalGuardCount }}
-            </p>
-            <p class="mt-1 text-xs text-[var(--text-tertiary)]">
-              Apply to every detected route
-            </p>
-          </div>
-          <div class="surface-card rounded-lg p-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-quaternary)]">
-              Route
-            </p>
-            <p class="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
-              {{ routeGuardCount }}
-            </p>
-            <p class="mt-1 text-xs text-[var(--text-tertiary)]">
-              Bound to one route
-            </p>
-          </div>
-        </section>
+    <FilterActiveSummary
+      v-if="hasActiveFilters(currentFilter)"
+      :count="activeFilterCount"
+      @clear="clearFilters"
+    />
 
-        <section class="surface-card rounded-lg p-3">
-          <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div class="flex flex-wrap gap-2">
-              <UButton
-                v-for="item in [
-                  { label: 'All', value: 'all' },
-                  { label: 'Global', value: 'global' },
-                  { label: 'Route', value: 'route' },
+    <div class="guard-list-stage grid min-h-[22rem] grid-cols-[minmax(0,1fr)]">
+      <Transition name="loading-fade" :css="!suppressListTransition">
+        <div
+          :key="listStateKey"
+          class="col-start-1 row-start-1 min-w-0"
+        >
+          <CommonResourceListFrame
+            v-if="isPageLoading"
+            :loading="true"
+            :has-items="false"
+            :skeleton-rows="4"
+            loading-title="Loading guards..."
+            :loading-description="activeType === 'graphql'
+              ? 'Fetching GraphQL guard configuration'
+              : 'Fetching route guard configuration'"
+          />
+
+          <div v-else-if="guardsData.length" class="space-y-6">
+            <div class="eapp-resource-list">
+              <CommonResourceListItem
+                v-for="guard in guardsData"
+                :key="getId(guard)"
+                :title="guard.name"
+                :description="guard.type === 'graphql'
+                  ? `${guard.table?.alias || guard.table?.name || 'All tables'} · ${guard.gqlOperation || 'All operations'}`
+                  : (guard.description || (guard.isGlobal ? 'Global guard' : guard.route?.path || 'No route assigned'))"
+                icon="lucide:shield"
+                icon-color="primary"
+                :to="`/settings/guards/${getId(guard)}`"
+                :stats="[
+                  {
+                    label: 'Status',
+                    component: 'UBadge',
+                    props: {
+                      variant: 'soft',
+                      color: guard.isEnabled ? 'success' : 'warning',
+                    },
+                    value: guard.isEnabled ? 'Enabled' : 'Disabled',
+                  },
+                  {
+                    label: 'Position',
+                    component: guard.position ? 'UBadge' : undefined,
+                    props: guard.position ? {
+                      variant: 'soft',
+                      color: positionColorMap[guard.position] || 'neutral',
+                    } : undefined,
+                    value: guard.position === 'pre_auth' ? 'Pre-Auth' : guard.position === 'post_auth' ? 'Post-Auth' : '-',
+                  },
+                  ...(guard.type === 'graphql'
+                    ? [{
+                        label: 'Operation',
+                        component: 'UBadge',
+                        props: {
+                          variant: 'soft',
+                          color: 'warning',
+                        },
+                        value: guard.gqlOperation || 'All',
+                      }]
+                    : [{
+                        label: 'Scope',
+                        component: 'UBadge',
+                        props: {
+                          variant: 'soft',
+                          color: guard.isGlobal ? 'error' : 'neutral',
+                        },
+                        value: guard.isGlobal ? 'Global' : 'Route-specific',
+                      }]),
+                  {
+                    label: 'Combinator',
+                    component: 'UBadge',
+                    props: {
+                      variant: 'soft',
+                      color: combinatorColorMap[guard.combinator] || 'neutral',
+                    },
+                    value: (guard.combinator || 'and').toUpperCase(),
+                  },
                 ]"
-                :key="item.value"
-                size="sm"
-                :variant="activeScope === item.value ? 'solid' : 'soft'"
-                :color="activeScope === item.value ? 'primary' : 'neutral'"
-                @click="setActiveScope(item.value as 'all' | GuardScope)"
-              >
-                {{ item.label }}
-              </UButton>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <UButton
-                icon="lucide:globe-2"
-                label="Global template"
-                size="sm"
-                color="primary"
-                variant="solid"
-                @click="void openCreateGuardDrawer('global')"
-              />
-              <UButton
-                icon="lucide:route"
-                label="Route template"
-                size="sm"
-                color="neutral"
-                variant="soft"
-                @click="void openCreateGuardDrawer('route')"
+                :methods="getGuardFooterActions(guard)"
+                :header-actions="getGuardHeaderActions(guard)"
               />
             </div>
-          </div>
-        </section>
 
-        <FilterActiveSummary
-          v-if="hasActiveFilters(currentFilter)"
-          :count="activeFilterCount"
-          @clear="clearFilters"
-        />
-
-        <div v-if="guardsData.length" class="space-y-6">
-          <div class="eapp-resource-list">
-            <CommonResourceListItem
-              v-for="guard in guardsData"
-              :key="getId(guard)"
-              :title="guard.name"
-              :description="guard.description || (guard.isGlobal ? 'Global guard' : guard.route?.path || 'No route assigned')"
-              icon="lucide:shield"
-              icon-color="primary"
-              :loading="guardsRefreshing"
-              :to="`/settings/guards/${getId(guard)}`"
-              :stats="[
-                {
-                  label: 'Status',
-                  component: 'UBadge',
-                  props: {
-                    variant: 'soft',
-                    color: guard.isEnabled ? 'success' : 'warning',
-                  },
-                  value: guard.isEnabled ? 'Enabled' : 'Disabled',
-                },
-                {
-                  label: 'Position',
-                  component: guard.position ? 'UBadge' : undefined,
-                  props: guard.position ? {
-                    variant: 'soft',
-                    color: positionColorMap[guard.position] || 'neutral',
-                  } : undefined,
-                  value: guard.position === 'pre_auth' ? 'Pre-Auth' : guard.position === 'post_auth' ? 'Post-Auth' : '-',
-                },
-                {
-                  label: 'Scope',
-                  component: 'UBadge',
-                  props: {
-                    variant: 'soft',
-                    color: guard.isGlobal ? 'error' : 'neutral',
-                  },
-                  value: guard.isGlobal ? 'Global' : 'Route-specific',
-                },
-                {
-                  label: 'Combinator',
-                  component: 'UBadge',
-                  props: {
-                    variant: 'soft',
-                    color: combinatorColorMap[guard.combinator] || 'neutral',
-                  },
-                  value: (guard.combinator || 'and').toUpperCase(),
-                },
-              ]"
-              :methods="getGuardFooterActions(guard)"
-              :header-actions="getGuardHeaderActions(guard)"
+            <CommonPaginationBar
+              v-if="total > pageLimit"
+              v-model:page="page"
+              :items-per-page="pageLimit"
+              :total="total"
+              :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
             />
           </div>
+
+          <CommonEmptyState
+            v-else
+            :title="activeType === 'graphql' ? 'No GraphQL guards found' : 'No route guards found'"
+            :description="activeType === 'graphql'
+              ? 'Create a GraphQL guard to limit queries or mutations by table and operation.'
+              : 'Create a route guard to add rate limiting or IP filtering to REST endpoints.'"
+            :icon="activeType === 'graphql' ? 'lucide:braces' : 'lucide:shield'"
+            size="sm"
+          />
         </div>
+      </Transition>
+    </div>
 
-        <CommonEmptyState
-          v-else
-          title="No guards found"
-          description="No guard configurations have been created yet. Create a guard to add rate limiting or IP filtering."
-          icon="lucide:shield"
-          size="sm"
-        />
-
-        <CommonPaginationBar
-          v-if="guardsData.length > 0 && total > pageLimit"
-          v-model:page="page"
-          :items-per-page="pageLimit"
-          :total="total"
-          :loading="loading"
-          :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-        />
-      </div>
-    </Transition>
     <FilterDrawerLazy
       v-model="showFilterDrawer"
       :table-name="tableName"
       :current-filter="currentFilter"
+      :allowed-fields="activeFilterFields"
+      :history-key="`enfyra_guard:${activeType}`"
+      :title="activeType === 'graphql' ? 'Filter GraphQL Guards' : 'Filter Route Guards'"
       @apply="handleFilterApply"
     />
 
@@ -599,7 +706,10 @@ async function deleteGuard(guard: any) {
       :primary-action="{
         label: 'Create Guard',
         loading: createGuardLoading,
-        disabled: createGuardLoading,
+        disabled: createGuardLoading
+          || !selectedTemplate
+          || (createScope === 'route' && !selectedRouteId)
+          || (createScope === 'graphql' && !selectedTableId),
         onClick: createGuardFromTemplate,
       }"
     >
@@ -611,7 +721,7 @@ async function deleteGuard(guard: any) {
         <div class="space-y-6">
           <section class="space-y-3">
             <UFormField label="Scope">
-              <div class="grid grid-cols-2 gap-2">
+              <div class="grid grid-cols-3 gap-2">
                 <UButton
                   :variant="createScope === 'global' ? 'solid' : 'soft'"
                   :color="createScope === 'global' ? 'primary' : 'neutral'"
@@ -629,6 +739,15 @@ async function deleteGuard(guard: any) {
                   @click="setCreateScope('route')"
                 >
                   Route
+                </UButton>
+                <UButton
+                  :variant="createScope === 'graphql' ? 'solid' : 'soft'"
+                  :color="createScope === 'graphql' ? 'primary' : 'neutral'"
+                  icon="lucide:braces"
+                  block
+                  @click="setCreateScope('graphql')"
+                >
+                  GraphQL
                 </UButton>
               </div>
             </UFormField>
@@ -648,6 +767,22 @@ async function deleteGuard(guard: any) {
                 :placeholder="routesLoading ? 'Loading routes...' : 'Select route'"
               />
             </UFormField>
+
+            <UFormField
+              v-if="createScope === 'graphql'"
+              label="Table"
+              required
+            >
+              <USelect
+                v-model="selectedTableId"
+                :items="tableOptions"
+                value-key="value"
+                class="w-full"
+                :loading="tablesLoading"
+                :disabled="tablesLoading && tableOptions.length === 0"
+                :placeholder="tablesLoading ? 'Loading tables...' : 'Select table'"
+              />
+            </UFormField>
           </section>
 
           <section class="space-y-3">
@@ -659,10 +794,12 @@ async function deleteGuard(guard: any) {
                 A template creates the root guard and the first rule in one step.
               </p>
             </div>
-            <GuardTemplateGrid
-              v-model="selectedTemplate"
-              :templates="createTemplates"
-            />
+            <div class="px-px">
+              <GuardTemplateGrid
+                v-model="selectedTemplate"
+                :templates="createTemplates"
+              />
+            </div>
           </section>
         </div>
       </template>

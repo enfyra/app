@@ -4,10 +4,13 @@ const props = defineProps<{
   tableName: string;
   currentFilter?: FilterGroup; 
   nested?: boolean;
+  allowedFields?: string[];
+  historyKey?: string;
+  title?: string;
 }>();
 
 const { schemas } = useSchema(toRef(props, "tableName"));
-const { addToHistory } = useFilterHistory(props.tableName);
+const { addToHistory } = useFilterHistory(props.historyKey || props.tableName);
 const { createEmptyFilter, hasActiveFilters, countActiveFilters } = useFilterQuery();
 
 const emit = defineEmits<{
@@ -107,7 +110,7 @@ const { isMobile, isTablet } = useScreen();
         <div class="flex items-start gap-2 md:gap-3 min-w-0 flex-1">
           <UIcon name="i-lucide-filter" :class="(isMobile || isTablet) ? 'w-6 h-6' : 'w-8 h-8 mt-1'" />
           <div class="min-w-0 flex-1">
-            <h3 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg font-semibold'">Filter {{ tableName }}</h3>
+            <h3 :class="(isMobile || isTablet) ? 'text-base font-semibold truncate' : 'text-lg font-semibold'">{{ title || `Filter ${tableName}` }}</h3>
             <p class="text-xs md:text-sm text-[var(--text-tertiary)] mt-1">
               {{
                 hasActiveConditions
@@ -131,6 +134,7 @@ const { isMobile, isTablet } = useScreen();
             v-model="localFilter"
             :schemas="schemas"
             :table-name="tableName"
+            :allowed-fields="allowedFields"
           />
 
           <FilterPreview
@@ -141,7 +145,7 @@ const { isMobile, isTablet } = useScreen();
           />
 
           <FilterSavedFilters
-            :table-name="tableName"
+            :table-name="historyKey || tableName"
             :current-filter="localFilter"
             @apply-filter="applySavedFilter"
             @clear-filters="handleClear"

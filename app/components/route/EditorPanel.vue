@@ -594,6 +594,8 @@ watch(showEditHookDrawer, (isOpen) => {
           v-model:errors="errors"
           @has-changed="(hasChanged: boolean) => hasFormChanges = hasChanged"
           table-name="enfyra_route"
+          mode="update"
+          :current-record-id="routeId"
           :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards']"
           :field-map="typeMap"
           :loading="routeLoading"
