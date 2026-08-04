@@ -19,7 +19,7 @@
       <header class="sticky top-0 flex w-full z-50 backdrop-blur-xl" :style="{ background: 'transparent' }">
         <div class="flex flex-col items-center justify-between grow lg:flex-row">
           <div class="flex items-center justify-between w-full gap-2 sm:gap-4 lg:justify-normal lg:border-b-0 h-16">
-            <div class="mr-[10px] flex flex-1 items-center justify-between gap-4 px-4 lg:px-6">
+            <div class="flex flex-1 items-center justify-between gap-4 px-4 lg:px-6">
               <LayoutHeader />
             </div>
           </div>
