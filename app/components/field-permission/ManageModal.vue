@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { parseConditionJson, validateFieldPermissionCondition } from "~/utils/field-permissions/condition"
 import { validateFieldPermissionScope } from "~/utils/field-permissions/scope"
+import { fieldPermissionConflictKey, fieldPermissionKey, normalizeFieldPermissionPayload } from "~/utils/field-permissions/normalize"
 import type { FormEditorVirtualField } from "~/types/form-editor"
 
 type Permission = Record<string, any> & {
   id?: string | number
+  _id?: string | number
   _tmpId?: string
 }
 
@@ -16,6 +18,7 @@ const props = defineProps<{
 
 const open = defineModel<boolean>("open", { required: true })
 const permissions = defineModel<Permission[]>("permissions", { required: true })
+const workingPermissions = ref<Permission[]>([])
 
 const notify = useNotify()
 const { confirm } = useConfirm()
@@ -27,18 +30,14 @@ const {
 type ViewMode = "list" | "form"
 const viewMode = ref<ViewMode>("list")
 
-const fieldPermItems = computed(() => permissions.value || [])
+const fieldPermItems = computed(() => workingPermissions.value || [])
 
 const fieldPermForm = ref<Record<string, any>>({})
 const fieldPermErrors = ref<Record<string, string>>({})
 const fieldPermMode = ref<"create" | "update">("create")
 const editingKey = ref<string | null>(null)
 
-function permKey(p: Permission): string {
-  if (p.id != null) return `id:${String(p.id)}`
-  if (p._tmpId) return `tmp:${p._tmpId}`
-  return `tmp:${Math.random().toString(36).slice(2)}`
-}
+const permKey = fieldPermissionKey
 
 watch(
   () => [fieldPermForm.value?.role, fieldPermForm.value?.allowedUsers],
@@ -98,11 +97,20 @@ async function quickDeleteFieldPerm(item: Permission) {
   })
   if (!ok) return
   const key = permKey(item)
-  permissions.value = (permissions.value || []).filter((p) => permKey(p) !== key)
+  workingPermissions.value = (workingPermissions.value || []).filter((p) => permKey(p) !== key)
 }
 
 function saveFieldPerm() {
-  const body: any = { ...fieldPermForm.value }
+  const body: any = normalizeFieldPermissionPayload(fieldPermForm.value, props.targetType)
+
+  if (!['read', 'create', 'update'].includes(String(body.action))) {
+    notify.error("Validation Error", "Action must be read, create, or update")
+    return
+  }
+  if (!['allow', 'deny'].includes(String(body.effect))) {
+    notify.error("Validation Error", "Effect must be allow or deny")
+    return
+  }
 
   const scope = validateFieldPermissionScope(body)
   if (!scope.ok) {
@@ -128,20 +136,31 @@ function saveFieldPerm() {
     body.condition = null
   }
 
-  const list = (permissions.value || []).slice()
-  if (fieldPermMode.value === "update" && editingKey.value) {
+  const list = (workingPermissions.value || []).slice()
+  if (fieldPermMode.value === "update") {
     const idx = list.findIndex((p) => permKey(p) === editingKey.value)
     const existing = idx !== -1 ? list[idx] : null
-    if (existing) {
-      body.id = existing.id
-      if (existing._tmpId) body._tmpId = existing._tmpId
-      list[idx] = body
+    if (!existing) {
+      notify.error("Validation Error", "This permission rule changed before it could be updated")
+      return
     }
+    body.id = existing.id
+    if (existing._id != null) body._id = existing._id
+    if (existing._tmpId) body._tmpId = existing._tmpId
+    if (list.some((item, itemIndex) => itemIndex !== idx && fieldPermissionConflictKey(item) === fieldPermissionConflictKey(body))) {
+      notify.error("Validation Error", "A duplicate field permission already exists")
+      return
+    }
+    list[idx] = body
   } else {
+    if (list.some((item) => fieldPermissionConflictKey(item) === fieldPermissionConflictKey(body))) {
+      notify.error("Validation Error", "A duplicate field permission already exists")
+      return
+    }
     body._tmpId = `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     list.push(body)
   }
-  permissions.value = list
+  workingPermissions.value = list
   viewMode.value = "list"
 }
 
@@ -247,18 +266,28 @@ const isConditionValid = computed(() => !conditionParse.value.error && condition
 
 watch(open, (isOpen) => {
   if (isOpen) {
+    workingPermissions.value = JSON.parse(JSON.stringify(permissions.value || []))
     viewMode.value = "list"
   } else {
     viewMode.value = "list"
   }
-})
+}, { immediate: true })
+
+function finishPermissionSession() {
+  permissions.value = JSON.parse(JSON.stringify(
+    (workingPermissions.value || []).map((permission) =>
+      normalizeFieldPermissionPayload(permission, props.targetType),
+    ),
+  ))
+  open.value = false
+}
 </script>
 
 <template>
   <CommonModal
     v-model:open="open"
     :handle="false"
-    :cancel-action="viewMode === 'list' ? { label: 'Done', tone: 'neutral', onClick: () => (open = false) } : false"
+    :cancel-action="viewMode === 'list' ? { label: 'Done', tone: 'neutral', onClick: finishPermissionSession } : false"
     :primary-action="viewMode === 'list'
       ? { label: 'Create rule', icon: 'lucide:plus', onClick: openCreateForm }
       : { label: fieldPermMode === 'update' ? 'Update' : 'Create', disabled: !isConditionValid, onClick: saveFieldPerm }"
