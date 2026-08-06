@@ -17,7 +17,7 @@ export interface RoutePermission {
   id: string;
   isEnabled: boolean;
   allowedUsers?: { id: string }[];
-  methods: { id: string; method: string }[];
+  methods: { id: string; name?: string; method?: string }[];
   route: { id: string; path: string };
 }
 

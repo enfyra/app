@@ -54,6 +54,10 @@ export async function useMenuInit(options: { reset?: boolean } = {}) {
       type: "Dropdown Menu",
       order: 2,
       position: "top" as any,
+      permission: {
+        route: "/enfyra_route",
+        methods: ["GET"],
+      },
     } as any);
   }
 
