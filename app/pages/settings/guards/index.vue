@@ -585,7 +585,7 @@ async function deleteGuard(guard: any) {
     />
 
     <div class="guard-list-stage grid min-h-[22rem] grid-cols-[minmax(0,1fr)]">
-      <Transition name="loading-fade" :css="!suppressListTransition">
+      <Transition name="loading-fade" mode="out-in" :css="!suppressListTransition">
         <div
           :key="listStateKey"
           class="col-start-1 row-start-1 min-w-0"

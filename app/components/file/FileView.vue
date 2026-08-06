@@ -306,7 +306,7 @@ function getContextMenuItems(file: any) {
 
 <template>
   <div>
-    <Transition name="loading-fade">
+    <Transition name="loading-fade" mode="out-in">
       <div
         v-if="debouncedLoading && files.length === 0"
         class="col-span-full"

@@ -25,6 +25,8 @@ describe('sticky pagination layout', () => {
     expect(pagination).toContain('-mx-4 px-4')
     expect(pagination).toContain('sm:-mx-6 sm:px-6')
     expect(resourceList).toContain('paginationClass: ""')
+    expect(resourceList).toContain('eapp-resource-list-pagination')
+    expect(resourceList).toContain('eapp-pagination-separated')
 
     for (const consumer of consumers) {
       expect(consumer).not.toMatch(/(?:class|pagination-class)="mt-\d+"/)

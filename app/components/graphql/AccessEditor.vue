@@ -303,7 +303,7 @@ watch(() => props.tableId, async () => {
 <template>
   <div class="space-y-6">
     <div class="loading-fade-stack">
-    <Transition name="loading-fade">
+    <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="loading"
         key="loading"

@@ -377,7 +377,7 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade">
+    <Transition name="loading-fade" mode="out-in">
       <div v-if="showInitialLoading" key="loading">
         <CommonResourceListFrame
           :loading="true"

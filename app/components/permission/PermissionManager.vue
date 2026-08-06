@@ -26,7 +26,7 @@
       </PermissionGate>
     </div>
 
-    <Transition name="loading-fade">
+    <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="showInitialLoading"
         title="Loading permissions..."

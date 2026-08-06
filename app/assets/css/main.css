@@ -245,6 +245,16 @@ button:focus-visible,
   box-shadow: none;
 }
 
+.eapp-resource-list-loading {
+  display: grid;
+  gap: 0.5rem;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .eapp-resource-list-item {
   position: relative;
   display: flex;
@@ -324,6 +334,50 @@ button:focus-visible,
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-control);
+}
+
+.eapp-resource-list-item-loading {
+  align-items: flex-start;
+  width: calc(100% - 1rem);
+  margin: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-subcontrol);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.eapp-resource-list-item-refreshing {
+  opacity: 0.62;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.eapp-resource-list-leading-loading {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+}
+
+.eapp-resource-list-loading .eapp-resource-list-item-loading {
+  width: 100%;
+  margin: 0;
+}
+
+.eapp-resource-list-pagination {
+  margin-top: 1rem;
+}
+
+.eapp-pagination-separated {
+  margin-inline: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-inline: 1rem !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: var(--radius-panel);
+  background: var(--card-bg) !important;
+  box-shadow: var(--card-shadow);
 }
 
 .eapp-resource-list-stat {
@@ -1590,77 +1644,89 @@ button:focus-visible,
   }
 }
 
+:root {
+  --eapp-skeleton-surface: color-mix(in srgb, var(--md-primary) 8%, var(--surface-nested));
+  --eapp-skeleton-border: color-mix(in srgb, var(--md-primary) 16%, var(--border-subtle));
+}
+
+.dark {
+  --eapp-skeleton-surface: color-mix(in srgb, var(--md-primary) 12%, var(--surface-nested));
+  --eapp-skeleton-border: color-mix(in srgb, var(--md-primary) 24%, var(--border-subtle));
+}
+
+.eapp-surface-muted.animate-pulse,
+.eapp-surface-muted.skeleton-pulse-slow {
+  background: var(--eapp-skeleton-surface) !important;
+  border-color: var(--eapp-skeleton-border);
+}
+
 .skeleton-base {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 8%, transparent) 0%, color-mix(in srgb, var(--brand-600) 12%, transparent) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--eapp-skeleton-surface) !important;
+  border: 1px solid var(--eapp-skeleton-border);
 }
 
 .dark .skeleton-base {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 10%, transparent) 0%, color-mix(in srgb, var(--brand-600) 15%, transparent) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--eapp-skeleton-surface) !important;
 }
 
 .skeleton-gradient {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 10%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 6%, var(--surface-default)) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--eapp-skeleton-surface) !important;
+  border: 1px solid var(--eapp-skeleton-border);
 }
 
 .dark .skeleton-gradient {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 18%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 10%, var(--surface-default)) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--eapp-skeleton-surface) !important;
 }
 
 .skeleton-card {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--card-bg);
+  border-color: var(--card-border);
+  box-shadow: var(--card-shadow);
 }
 
 .skeleton-preview-bg {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 8%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 5%, var(--surface-default)) 100%);
+  background: var(--eapp-skeleton-surface) !important;
+  border: 1px solid var(--eapp-skeleton-border);
 }
 
 .dark .skeleton-preview-bg {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 15%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 8%, var(--surface-default)) 100%);
+  background: var(--eapp-skeleton-surface) !important;
 }
 
 .skeleton-icon {
-  background: var(--border-strong);
+  background: var(--eapp-skeleton-surface);
+  border: 1px solid var(--eapp-skeleton-border);
 }
 
 .dark .skeleton-icon {
-  background: color-mix(in srgb, var(--brand-500) 20%, transparent);
+  background: var(--eapp-skeleton-surface);
 }
 
 .skeleton-badge {
-  background: linear-gradient(135deg, var(--border-strong) 0%, var(--border-default) 100%);
+  background: var(--eapp-skeleton-surface);
+  border: 1px solid var(--eapp-skeleton-border);
 }
 
 .dark .skeleton-badge {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 15%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 10%, var(--surface-default)) 100%);
+  background: var(--eapp-skeleton-surface);
 }
 
 .skeleton-primary {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 20%, transparent) 0%, color-mix(in srgb, var(--brand-600) 25%, transparent) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--eapp-skeleton-surface) !important;
+  border: 1px solid var(--eapp-skeleton-border);
 }
 
 .dark .skeleton-primary {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-500) 25%, transparent) 0%, color-mix(in srgb, var(--brand-500) 30%, transparent) 100%);
+  background: var(--eapp-skeleton-surface) !important;
 }
 
 .skeleton-inline {
-  background: linear-gradient(135deg, var(--border-default) 0%, var(--border-strong) 100%);
+  background: var(--eapp-skeleton-surface) !important;
+  border: 1px solid var(--eapp-skeleton-border);
 }
 
 .dark .skeleton-inline {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--md-primary) 15%, var(--surface-muted)) 0%, color-mix(in srgb, var(--md-primary) 10%, var(--surface-default)) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--eapp-skeleton-surface) !important;
 }
 
 [data-slot="progress"] [data-slot="indicator"] {

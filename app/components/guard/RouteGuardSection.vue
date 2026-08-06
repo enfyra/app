@@ -30,7 +30,7 @@
       </div>
     </template>
 
-    <Transition name="loading-fade">
+    <Transition name="loading-fade" mode="out-in">
       <CommonLoadingState
         v-if="loading"
         title="Loading guards..."

@@ -1,6 +1,6 @@
 <template>
   <div class="dynamic-page-stack">
-  <Transition name="fade">
+  <Transition name="fade" mode="out-in">
     <div
       v-if="isLoading"
       key="loading-frame"

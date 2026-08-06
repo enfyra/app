@@ -4,7 +4,7 @@
       <UInput v-model="search" placeholder="Search routes..." icon="i-lucide-search" size="sm" class="flex-1" />
     </div>
 
-    <Transition name="loading-fade">
+    <Transition name="loading-fade" mode="out-in">
       <CommonResourceListFrame
         v-if="showInitialLoading"
         :loading="true"

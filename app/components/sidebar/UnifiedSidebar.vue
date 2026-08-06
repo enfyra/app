@@ -407,7 +407,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   min-height: 32px;
-  background: color-mix(in srgb, var(--nav-item-hover-bg) 34%, transparent);
+  background: var(--surface-nested);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-control);
   padding: 0 8px;
 }

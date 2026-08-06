@@ -155,7 +155,7 @@ function handleDragEnd() {
     :class="isDndUpdating ? 'pointer-events-none opacity-60 select-none' : ''"
   >
     <div v-if="props.loading" class="menu-preview-stage" aria-busy="true" aria-label="Loading menu structure">
-      <div class="menu-preview surface-card">
+      <div class="menu-preview eapp-surface-card eapp-radius-panel">
         <div class="menu-preview-header">
           <div class="space-y-2">
             <div class="h-3 w-28 rounded skeleton-inline skeleton-pulse-slow" />
@@ -324,9 +324,10 @@ function handleDragEnd() {
   display: grid;
   gap: 10px;
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-panel);
-  background: var(--surface-default);
-  padding: 10px;
+  border-radius: var(--radius-subcontrol);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  padding: 12px;
 }
 
 .menu-visual-skeleton-item > :first-child {

@@ -104,9 +104,9 @@
   width: min(220px, 100%);
   align-items: center;
   gap: 8px;
-  border: 2px solid color-mix(in srgb, var(--border-default) 72%, transparent);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--surface-default) 88%, var(--md-primary));
+  background: var(--card-bg);
   padding: 12px;
   box-shadow: var(--card-shadow);
 }
@@ -117,7 +117,7 @@
 
 .flow-canvas-skeleton-node-add {
   border-style: dashed;
-  background: color-mix(in srgb, var(--surface-muted) 90%, var(--md-primary));
+  background: var(--surface-nested);
 }
 
 .flow-canvas-skeleton-edge {

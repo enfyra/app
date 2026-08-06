@@ -414,7 +414,7 @@ onMounted(async () => {
 
 <template>
   <div v-if="hasPermission" class="space-y-6">
-    <Transition name="loading-fade">
+    <Transition name="loading-fade" mode="out-in">
       <CommonResourceListFrame
         v-if="isInitialLoading && !selectedFile"
         :loading="true"
