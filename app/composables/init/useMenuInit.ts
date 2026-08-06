@@ -34,11 +34,7 @@ export async function useMenuInit(options: { reset?: boolean } = {}) {
       type: "Menu",
       order: 1,
       position: "top" as any,
-      permission: {
-        and: [
-          { route: `/enfyra_table`, methods: ["GET"] }
-        ]
-      }
+      isPublic: false,
     } as any);
   }
 
@@ -54,10 +50,7 @@ export async function useMenuInit(options: { reset?: boolean } = {}) {
       type: "Dropdown Menu",
       order: 2,
       position: "top" as any,
-      permission: {
-        route: "/enfyra_route",
-        methods: ["GET"],
-      },
+      isPublic: false,
     } as any);
   }
 
@@ -70,5 +63,6 @@ export async function useMenuInit(options: { reset?: boolean } = {}) {
     order: 9998,
     position: "bottom",
     component: SidebarUserInfo,
+    isPublic: true,
   } as any);
 }

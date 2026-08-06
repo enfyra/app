@@ -1,3 +1,5 @@
+import { canSeeMenu as canSeeMenuByRole } from "~/utils/menu-visibility";
+
 export function usePermissions() {
   const { me } = useAuth();
 
@@ -160,10 +162,17 @@ export function usePermissions() {
     );
   };
 
+  const hasMenuPermission = (menu: unknown): boolean => {
+    const { getId } = useDatabase();
+    const roleId = me.value?.role ? getId(me.value.role) : null;
+    return canSeeMenuByRole(menu as any, roleId, me.value?.isRootAdmin === true);
+  };
+
   return {
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,
     checkPermissionCondition,
+    hasMenuPermission,
   };
 }

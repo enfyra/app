@@ -4,7 +4,7 @@ const router = useRouter();
 const { menuGroups } = useMenuRegistry();
 const { menuDefinitionsPending } = useMenuApi();
 const { routesLoading, routesFetched } = useRoutes();
-const { checkPermissionCondition } = usePermissions();
+const { hasMenuPermission } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
@@ -51,49 +51,23 @@ const faviconUrl = computed(() => {
 });
 
 function filterPermittedItems(items: any[] = []): any[] {
-  return items
-    .filter((item: any) => isPermittedMenuItem(item))
-    .map((item: any) => ({
-      ...item,
-      items: filterPermittedItems(item.items || []),
-    }));
-}
-
-function normalizePermissionCondition(permission: any): any {
-  if (typeof permission !== 'string') return permission;
-  const trimmed = permission.trim();
-  if (!trimmed) return null;
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    return permission;
-  }
-}
-
-function hasPermissionCondition(permission: any): boolean {
-  const condition = normalizePermissionCondition(permission);
-  if (!condition) return false;
-  if (Array.isArray(condition)) return condition.length > 0;
-  if (typeof condition !== 'object') return true;
-  if (condition.allowAll === true || condition.rootAdmin === true) return true;
-  if (Array.isArray(condition.and)) return condition.and.length > 0;
-  if (Array.isArray(condition.or)) return condition.or.length > 0;
-  if (typeof condition.route === 'string' && condition.route.length > 0) return true;
-  return false;
-}
-
-function isPermittedMenuItem(item: any): boolean {
-  const permission = normalizePermissionCondition(item.permission);
-  return !hasPermissionCondition(permission) || checkPermissionCondition(permission);
+  return items.reduce<any[]>((visible, item: any) => {
+    const children = filterPermittedItems(item.items || []);
+    if (hasMenuPermission(item) || children.length > 0) {
+      visible.push({ ...item, items: children });
+    }
+    return visible;
+  }, []);
 }
 
 const visibleGroups = computed(() => {
-  return menuGroups.value
-    .filter(group => isPermittedMenuItem(group))
-    .map(group => {
-      const permittedItems = filterPermittedItems(group.items || []);
-      return { ...group, items: permittedItems };
-    });
+  return menuGroups.value.reduce<any[]>((visible, group) => {
+    const permittedItems = filterPermittedItems(group.items || []);
+    if (hasMenuPermission(group) || permittedItems.length > 0) {
+      visible.push({ ...group, items: permittedItems });
+    }
+    return visible;
+  }, []);
 });
 
 function isRouteActive(itemRoute?: string): boolean {

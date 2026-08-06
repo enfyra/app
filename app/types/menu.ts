@@ -1,6 +1,13 @@
 import type { PermissionCondition } from "./permissions";
 import type { ExtensionDefinition } from "./extensions";
 
+export interface MenuPermission {
+  id?: number | string;
+  _id?: string;
+  isEnabled: boolean;
+  role?: { id?: number | string; _id?: string; name?: string } | null;
+}
+
 export interface MenuDefinition {
   id?: number;
   _id?: string;
@@ -8,10 +15,12 @@ export interface MenuDefinition {
   icon: string;
   isEnabled: boolean;
   isSystem: boolean;
+  isPublic?: boolean;
   label: string;
   order: number;
   path: string;
   permission: PermissionCondition | null;
+  menuPermissions?: MenuPermission[];
   type: "Dropdown Menu" | "Menu";
   parent: number | string | { id: number | string } | null;
   sidebar: { id?: number; _id?: string } | null;
@@ -45,6 +54,8 @@ export interface MenuItem {
   description?: string;
   isEnabled?: boolean;
   isSystem?: boolean;
+  isPublic?: boolean;
+  menuPermissions?: MenuPermission[];
   menus?: MenuItem[];
   extension?: ExtensionDefinition;
   createdAt?: string;
@@ -63,10 +74,12 @@ export interface MenuApiItem {
   icon: string;
   isEnabled: boolean;
   isSystem: boolean;
+  isPublic?: boolean;
   label: string;
   order: number;
   path: string;
   permission: PermissionCondition | null;
+  menuPermissions?: MenuPermission[];
   type: "Dropdown Menu" | "Menu";
   parent: number | string | null;
   sidebar: { id?: number; _id?: string } | null;

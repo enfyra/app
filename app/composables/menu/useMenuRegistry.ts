@@ -223,6 +223,12 @@ export function useMenuRegistry() {
       return;
     }
 
+    const dataParent = menuItems.value.find((item) => item.id === dataParentId);
+    const inheritedVisibility = {
+      isPublic: dataParent?.isPublic === true,
+      menuPermissions: dataParent?.menuPermissions,
+    };
+
     routes.forEach((route: any) => {
       if (!route.mainTable) return;
       if (route.isEnabled === false) return;
@@ -240,11 +246,7 @@ export function useMenuRegistry() {
         icon: table.icon || "lucide:database",
         parent: dataParentId as any,
         type: "Menu",
-        permission: {
-          or: [
-            { route: route.path, methods: ["GET"] }
-          ]
-        }
+        ...inheritedVisibility,
       });
     });
   };
@@ -280,6 +282,11 @@ export function useMenuRegistry() {
     const routesRef = routes || useState<any[]>('routes:all', () => []);
     const routesValue = isRef(routesRef) ? routesRef.value : routesRef;
     const nonSystemTables = tables.filter((table) => !table.isSystem);
+    const dataParent = menuItems.value.find((item) => item.id === dataParentId);
+    const inheritedVisibility = {
+      isPublic: dataParent?.isPublic === true,
+      menuPermissions: dataParent?.menuPermissions,
+    };
 
     nonSystemTables.forEach((table) => {
       const tableName = table.name || table.table_name;
@@ -299,11 +306,7 @@ export function useMenuRegistry() {
           icon: table.icon || "lucide:database",
           parent: dataParentId as any,
           type: "Menu",
-          permission: {
-            or: [
-              { route: dynamicRoute, methods: ["GET"] }
-            ]
-          }
+          ...inheritedVisibility,
         });
       }
     });
