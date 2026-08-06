@@ -42,15 +42,20 @@ const searchResults = ref<string[]>([]);
 const searchLoading = ref(false);
 const hasMore = ref(false);
 const loadingMore = ref(false);
-
 const page = ref(1);
 const limit = ref(20);
 
-const files = computed(() => {
-  const raw = (logsData.value as any)?.files;
-  if (!Array.isArray(raw)) return [];
-  return raw;
-});
+const {
+  items: files,
+  showInitialLoading,
+  isRefreshing: logsRefreshing,
+} = useStableListState(
+  () => {
+    const raw = (logsData.value as any)?.files;
+    return Array.isArray(raw) ? raw : undefined;
+  },
+  () => logsPending.value || statsPending.value,
+);
 
 const stats = computed(() => {
   if ((logsData.value as any)?.stats) {
@@ -58,8 +63,6 @@ const stats = computed(() => {
   }
   return (statsData.value as any) || null;
 });
-
-const isInitialLoading = computed(() => (logsPending.value && !logsData.value) || (statsPending.value && !statsData.value));
 
 const filteredFiles = computed(() => {
   if (!fileSearchQuery.value) return files.value;
@@ -71,8 +74,12 @@ const filteredFiles = computed(() => {
 });
 
 const displayLines = computed(() => {
-  if (isSearchMode.value && searchResults.value.length > 0) {
-    return searchResults.value;
+  if (isSearchMode.value) {
+    if (searchResults.value.length > 0) return searchResults.value;
+    if (searchLoading.value && logContent.value) {
+      return logContent.value.split("\n").filter((line: string) => line.trim());
+    }
+    return [];
   }
   if (!logContent.value) return [];
   return logContent.value.split("\n").filter((line: string) => line.trim());
@@ -151,7 +158,9 @@ async function loadLogContent(file?: string, append: boolean = false) {
   if (!filename) return;
 
   if (!append) {
+    const isNewFile = selectedFile.value !== filename;
     selectedFile.value = filename;
+    if (isNewFile) logContent.value = "";
     logLoading.value = true;
     logError.value = null;
     logSearchQuery.value = "";
@@ -378,7 +387,7 @@ registerHeaderActions([
     icon: "lucide:refresh-cw",
     variant: "solid",
     color: "primary",
-    loading: computed(() => isInitialLoading.value),
+    loading: computed(() => logsPending.value || statsPending.value),
     onClick: loadLogs,
     permission: { and: [{ route: "/logs", methods: ["GET"] }] },
   },
@@ -414,17 +423,15 @@ onMounted(async () => {
 
 <template>
   <div v-if="hasPermission" class="space-y-6">
-    <Transition name="loading-fade" mode="out-in">
-      <CommonResourceListFrame
-        v-if="isInitialLoading && !selectedFile"
-        :loading="true"
-        :has-items="false"
-        loading-title="Loading log files..."
-        loading-description="Fetching server logs"
-      >
-      </CommonResourceListFrame>
+    <CommonResourceListFrame
+      v-if="showInitialLoading && !selectedFile"
+      :loading="true"
+      :has-items="false"
+      loading-title="Loading log files..."
+      loading-description="Fetching server logs"
+    />
 
-      <div v-else class="space-y-6">
+    <div v-else class="space-y-6">
         <div v-if="stats && !selectedFile" class="grid gap-4 grid-cols-1 md:grid-cols-3">
           <div class="rounded-xl p-4 surface-card">
             <div class="flex items-center gap-3">
@@ -482,6 +489,7 @@ onMounted(async () => {
               :description="file.modifiedAt || 'Unknown date'"
               :icon="getFileIcon(file)"
               :icon-color="getFileIconColor(file)"
+              :loading="logsRefreshing"
               :stats="[
                 { label: 'Size', value: formatFileSize(file.size) },
               ]"
@@ -512,8 +520,7 @@ onMounted(async () => {
             size="sm"
           />
         </div>
-      </div>
-    </Transition>
+    </div>
 
     <LogDetailViewer
       v-model:search-query="logSearchQuery"

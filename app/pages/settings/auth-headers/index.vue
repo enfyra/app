@@ -16,16 +16,14 @@
         </div>
       </div>
 
-      <div
+      <CommonResourceListFrame
         v-if="showInitialLoading"
-        class="surface-card flex min-h-48 items-center justify-center p-6"
-      >
-        <CommonLoadingState
-          title="Loading authentication headers..."
-          description="Fetching the active header resolution order"
-          size="md"
-        />
-      </div>
+        variant="plain"
+        :loading="true"
+        :has-items="false"
+        loading-title="Loading authentication headers..."
+        loading-description="Fetching the active header resolution order"
+      />
 
       <CommonEmptyState
         v-else-if="headers.length === 0"
@@ -52,7 +50,7 @@
 
         <div
           v-for="(header, index) in headers"
-          :key="String(getId(header) ?? `${header.headerKey}-${header.scheme}`)"
+          :key="String(getId(header) ?? `${header.headerKey}-${header.credentialType}-${header.scheme}`)"
           class="surface-card flex flex-col gap-3 p-4 transition sm:flex-row sm:items-center"
           :class="[
             dragIndex === index ? 'opacity-60' : '',
@@ -181,7 +179,7 @@
           <section class="space-y-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-nested)] p-4">
             <div>
               <h3 class="text-sm font-semibold text-[var(--text-primary)]">Header mapping</h3>
-              <p class="mt-1 text-xs text-[var(--text-secondary)]">Header names are normalized to lowercase before matching.</p>
+              <p class="mt-1 text-xs text-[var(--text-secondary)]">Header names are normalized to lowercase before matching. The same key may have PAT and JWT mappings; priority decides which verifier runs first.</p>
             </div>
             <UFormField label="Header key" :error="headerKeyError || undefined">
               <UInput
@@ -382,9 +380,9 @@ const headerKeyValidationError = computed(() => {
   if (!/^[!#$%&'*+.^_`|~0-9a-z-]+$/.test(value)) return 'Use a valid HTTP header name.';
   const duplicate = headers.value.some((header) => {
     const sameId = form.id != null && String(getId(header)) === String(form.id);
-    return !sameId && header.headerKey === value && header.scheme === form.scheme;
+    return !sameId && header.headerKey === value && header.credentialType === form.credentialType && header.scheme === form.scheme;
   });
-  return duplicate ? 'This header and format already exist.' : null;
+  return duplicate ? 'This header, verifier, and format already exist.' : null;
 });
 const headerKeyError = computed(() => (
   headerKeyTouched.value || validationAttempted.value

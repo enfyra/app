@@ -210,11 +210,7 @@ onUnmounted(() => {
           </div>
 
           <div class="flex-1 overflow-auto bg-[var(--surface-muted)]">
-            <div v-if="loading || searchLoading" class="flex items-center justify-center h-full">
-              <CommonLoadingState :label="isSearchMode ? 'Searching...' : 'Loading log content...'" />
-            </div>
-
-            <div v-else-if="error" class="flex items-center justify-center h-full">
+            <div v-if="error && lines.length === 0" class="flex items-center justify-center h-full">
               <div class="text-center space-y-3">
                 <UIcon name="lucide:alert-triangle" class="w-12 h-12 text-[var(--md-error)] mx-auto" />
                 <p class="text-[var(--md-error)] font-medium text-lg">{{ error }}</p>
@@ -223,6 +219,10 @@ onUnmounted(() => {
                   Go back
                 </UButton>
               </div>
+            </div>
+
+            <div v-else-if="lines.length === 0 && (loading || searchLoading)" class="flex items-center justify-center h-full">
+              <CommonLoadingState :label="isSearchMode ? 'Searching...' : 'Loading log content...'" />
             </div>
 
             <div v-else-if="lines.length === 0" class="flex items-center justify-center h-full">
