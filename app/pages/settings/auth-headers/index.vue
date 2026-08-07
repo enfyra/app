@@ -118,7 +118,8 @@
 
             <USwitch
               :model-value="header.isEnabled"
-              :disabled="header.isSystem || !canUpdate || moving"
+              :loading="isHeaderToggling(header)"
+              :disabled="header.isSystem || !canUpdate || moving || togglingHeaderId !== null"
               :aria-label="`${header.headerKey} enabled`"
               @update:model-value="toggleHeader(header)"
             />
@@ -303,6 +304,7 @@ const drawerOpen = ref(false);
 const mode = ref<'create' | 'edit'>('create');
 const saving = ref(false);
 const moving = ref(false);
+const togglingHeaderId = ref<string | number | null>(null);
 const dragIndex = ref<number | null>(null);
 const dropTargetIndex = ref<number | null>(null);
 const dropPosition = ref<'before' | 'after' | null>(null);
@@ -516,14 +518,24 @@ function confirmDiscard() {
 }
 
 async function toggleHeader(header: AuthHeaderRecord) {
-  if (header.isSystem || !canUpdate.value) return;
+  if (header.isSystem || !canUpdate.value || togglingHeaderId.value !== null) return;
   const id = getId(header);
   if (id == null) return;
   const nextEnabled = !header.isEnabled;
-  const response = await updateHeader({ id, body: { isEnabled: nextEnabled } });
-  if (!response) return;
-  await fetchHeaders();
-  notify.success('Updated', `${header.headerKey} is now ${nextEnabled ? 'active' : 'inactive'}.`);
+  togglingHeaderId.value = id;
+  try {
+    const response = await updateHeader({ id, body: { isEnabled: nextEnabled } });
+    if (!response) return;
+    await fetchHeaders();
+    notify.success('Updated', `${header.headerKey} is now ${nextEnabled ? 'active' : 'inactive'}.`);
+  } finally {
+    togglingHeaderId.value = null;
+  }
+}
+
+function isHeaderToggling(header: AuthHeaderRecord) {
+  const id = getId(header);
+  return id != null && String(togglingHeaderId.value) === String(id);
 }
 
 function startDrag(index: number, event: DragEvent) {

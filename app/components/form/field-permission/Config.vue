@@ -54,9 +54,20 @@ const searchTerm = ref("");
 const menuOpen = ref(false);
 const suppressSearch = ref(false);
 const syncingFromForm = ref(false);
+const userMenuAnchor = ref<HTMLElement | null>(null);
+const userMenuWidth = ref<number | null>(null);
+let userMenuResizeObserver: ResizeObserver | null = null;
 
 const roleItems = ref<Array<{ label: string; value: string; description?: string }>>([]);
 const userItems = ref<Array<{ label: string; value: string; description?: string }>>([]);
+
+const userMenuContent = computed(() => {
+  if (mode.value !== "user" || !userMenuWidth.value) return undefined;
+  return {
+    align: "start" as const,
+    style: { width: `${userMenuWidth.value}px` },
+  };
+});
 
 async function fetchDefaultList() {
   if (mode.value === "role") {
@@ -141,6 +152,17 @@ onBeforeUnmount(() => {
   debouncedSearch.cancel();
   cancelRoleSearch();
   cancelUserSearch();
+  userMenuResizeObserver?.disconnect();
+});
+
+onMounted(() => {
+  if (typeof ResizeObserver === "undefined" || !userMenuAnchor.value) return;
+  const updateWidth = () => {
+    userMenuWidth.value = userMenuAnchor.value?.getBoundingClientRect().width ?? null;
+  };
+  updateWidth();
+  userMenuResizeObserver = new ResizeObserver(updateWidth);
+  userMenuResizeObserver.observe(userMenuAnchor.value);
 });
 
 watch(
@@ -335,36 +357,39 @@ async function setMode(next: Mode) {
       />
     </div>
 
-    <UInputMenu
-      v-model="selectedMenuItem"
-      :items="mode === 'role' ? roleItems : userItems"
-      v-model:search-term="searchTerm"
-      v-model:open="menuOpen"
-      :multiple="mode === 'user'"
-      :loading="loading"
-      :placeholder="mode === 'role' ? 'Search role...' : 'Search user (email)...'"
-      by="value"
-      class="w-full"
-    >
-      <template #leading>
-        <UIcon :name="mode === 'role' ? 'lucide:shield' : 'lucide:user'" class="w-4 h-4 text-muted-foreground" />
-      </template>
-      <template #item="{ item }">
-        <div class="flex items-start gap-2 w-full min-w-0">
-          <UIcon :name="mode === 'role' ? 'lucide:shield' : 'lucide:user'" class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-          <div class="min-w-0">
-            <div class="text-sm truncate">{{ item.label }}</div>
-            <div v-if="item.description" class="text-xs text-[var(--text-tertiary)] truncate">
-              {{ item.description }}
+    <div ref="userMenuAnchor" class="w-full min-w-0">
+      <UInputMenu
+        v-model="selectedMenuItem"
+        :items="mode === 'role' ? roleItems : userItems"
+        v-model:search-term="searchTerm"
+        v-model:open="menuOpen"
+        :multiple="mode === 'user'"
+        :loading="loading"
+        :placeholder="mode === 'role' ? 'Search role...' : 'Search user (email)...'"
+        :content="userMenuContent"
+        by="value"
+        class="w-full"
+      >
+        <template #leading>
+          <UIcon :name="mode === 'role' ? 'lucide:shield' : 'lucide:user'" class="w-4 h-4 text-muted-foreground" />
+        </template>
+        <template #item="{ item }">
+          <div class="flex items-start gap-2 w-full min-w-0">
+            <UIcon :name="mode === 'role' ? 'lucide:shield' : 'lucide:user'" class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+            <div class="min-w-0">
+              <div class="text-sm truncate">{{ item.label }}</div>
+              <div v-if="item.description" class="text-xs text-[var(--text-tertiary)] truncate">
+                {{ item.description }}
+              </div>
             </div>
           </div>
-        </div>
-      </template>
-      <template #empty>
-        <span class="text-xs text-muted-foreground px-2">
-          {{ loading ? "Loading..." : "No results" }}
-        </span>
-      </template>
-    </UInputMenu>
+        </template>
+        <template #empty>
+          <span class="text-xs text-muted-foreground px-2">
+            {{ loading ? "Loading..." : "No results" }}
+          </span>
+        </template>
+      </UInputMenu>
+    </div>
   </div>
 </template>
