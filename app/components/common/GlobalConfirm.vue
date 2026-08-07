@@ -13,6 +13,17 @@ const isDestructive = computed(() => {
   return text.includes('delete') || text.includes('remove') || text.includes('destroy');
 });
 
+const isUnsavedChanges = computed(() => {
+  const title = options.value.title?.toLowerCase() || '';
+  const content = options.value.content?.toLowerCase() || '';
+  const confirmText = options.value.confirmText?.toLowerCase() || '';
+  return (
+    title.includes('unsaved') ||
+    title.includes('discard') ||
+    (content.includes('unsaved') && confirmText.includes('discard'))
+  );
+});
+
 const cancelAction = computed(() => ({
   label: options.value.cancelText,
   tone: options.value.cancelText?.toLowerCase() === 'keep editing' ? 'primary' as const : undefined,
@@ -36,7 +47,17 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <CommonUnsavedChangesModal
+    v-if="isUnsavedChanges"
+    v-model="isVisible"
+    :title="options.title"
+    :content="options.content"
+    :cancel-label="options.cancelText"
+    :discard-label="options.confirmText"
+    @discard="onConfirm"
+  />
   <CommonModal
+    v-else
     v-model:open="isVisible"
     :handle="false"
     :ui="{

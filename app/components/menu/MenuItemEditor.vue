@@ -102,6 +102,8 @@ const excludedFields = computed(() => {
     "menus",
     "parent",
     "extension",
+    "permission",
+    "menuPermissions",
   ];
 
   if (!form.value.type) {
@@ -122,37 +124,11 @@ const excludedFields = computed(() => {
 
 const editorMode = computed(() => props.menu && getId(props.menu) ? 'update' : 'create');
 
-const typeMap = {
-  permission: {
-    type: "permission",
-  },
-};
-
-function normalizePermissionValue(value: unknown) {
-  if (value == null || value === "") return null;
-
-  let parsed = value;
-  if (typeof value === "string") {
-    try {
-      parsed = JSON.parse(value);
-    } catch {
-      return value;
-    }
-  }
-
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    return parsed;
-  }
-
-  if (Object.keys(parsed).length === 0) return null;
-  return parsed;
-}
-
 function buildMenuPayload() {
-  return {
-    ...form.value,
-    permission: normalizePermissionValue(form.value.permission),
-  };
+  const payload = { ...form.value };
+  delete payload.permission;
+  delete payload.menuPermissions;
+  return payload;
 }
 
 watch(() => isOpen.value, async (open) => {
@@ -239,6 +215,7 @@ async function initializeForm() {
     const data = menuData.value?.data?.[0];
     if (data) {
       form.value = { ...data };
+      form.value.isPublic = form.value.isPublic === true;
       
       if (form.value.parent) {
         const parentId = getId(form.value.parent);
@@ -283,6 +260,7 @@ async function initializeForm() {
   }
   
   form.value = { ...props.menu };
+  form.value.isPublic = form.value.isPublic === true;
   
   if (form.value.parent) {
     const parentId = getId(form.value.parent);
@@ -418,28 +396,25 @@ function confirmDiscard() {
               @has-changed="onEditorChanged"
               :table-name="tableName"
               :excluded="excludedFields"
-              :field-map="typeMap"
               :loading="loading"
               :mode="editorMode"
               :current-record-id="props.menu ? getId(props.menu) : null"
             />
           </UForm>
         </CommonFormCard>
+        <MenuPermissionManager
+          v-if="menu && getId(menu)"
+          :menu-id="getId(menu)!"
+          :is-public="form.isPublic === true"
+        />
       </div>
     </template>
 
   </CommonDrawer>
 
-  <CommonModal
-    v-model:open="showDiscardModal"
-    :cancel-action="{ label: 'Keep editing', tone: 'primary', onClick: () => (showDiscardModal = false) }"
-    :danger-action="{ label: 'Discard Changes', onClick: confirmDiscard }"
-  >
-    <template #header>Discard Changes</template>
-    <template #body>
-      <div class="text-sm text-[var(--text-secondary)]">
-        You have unsaved changes. Are you sure you want to close? All changes will be lost.
-      </div>
-    </template>
-  </CommonModal>
+  <CommonUnsavedChangesModal
+    v-model="showDiscardModal"
+    content="You have unsaved changes. Are you sure you want to close? All changes will be lost."
+    @discard="confirmDiscard"
+  />
 </template>

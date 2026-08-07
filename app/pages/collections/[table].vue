@@ -255,7 +255,8 @@ async function save() {
 }
 
 async function patchTable() {
-  await executePatchTable({ id: getId(table.value), body: table.value });
+  const submittedTable = JSON.parse(JSON.stringify(table.value || {}));
+  await executePatchTable({ id: getId(table.value), body: submittedTable });
 
   if (updateError.value) return;
 
@@ -266,15 +267,15 @@ async function patchTable() {
     return;
   }
 
-  await afterPatchSuccess();
+  await afterPatchSuccess(submittedTable);
 }
 
-async function afterPatchSuccess() {
+async function afterPatchSuccess(submittedTable: any = null) {
+  const patchResponse = patchTableData.value?.data?.[0];
   await fetchTableData();
-  const updatedData = tableData.value?.data?.[0];
-  if (updatedData) {
-    table.value = updatedData;
-  }
+  table.value = patchResponse && typeof patchResponse === "object"
+    ? patchResponse
+    : submittedTable || tableData.value?.data?.[0] || table.value;
 
   notify.success("Success", "Table structure updated!");
 

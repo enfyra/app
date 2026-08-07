@@ -1,5 +1,30 @@
+import { canSeeMenu as canSeeMenuByRole } from "~/utils/menu-visibility";
+
 export function usePermissions() {
   const { me } = useAuth();
+
+  const asRelationArray = (value: unknown): any[] => {
+    if (Array.isArray(value)) return value;
+    if (value == null) return [];
+    return [value];
+  };
+
+  const relationId = (value: unknown): string | null => {
+    if (value && typeof value === "object") {
+      const candidate = value as { id?: unknown; _id?: unknown };
+      const id = candidate.id ?? candidate._id;
+      return id == null ? null : String(id);
+    }
+    return value == null ? null : String(value);
+  };
+
+  const methodName = (value: unknown): string | null => {
+    if (typeof value === "string") return value.toUpperCase();
+    if (!value || typeof value !== "object") return null;
+    const candidate = value as { name?: unknown; method?: unknown };
+    const name = candidate.name ?? candidate.method;
+    return typeof name === "string" ? name.toUpperCase() : null;
+  };
 
   const hasPermission = (routePath: string, method: string): boolean => {
     if (!me.value) {
@@ -17,19 +42,20 @@ export function usePermissions() {
     if (me.value.allowedRoutePermissions) {
       const { getId } = useDatabase();
       const myId = getId(me.value);
-      const directPermissions = me.value.allowedRoutePermissions.filter(
+      const directPermissions = asRelationArray(me.value.allowedRoutePermissions).filter(
         (permission: any) =>
           permission.route?.path === normalizedRoutePath &&
           permission.isEnabled &&
-          permission.allowedUsers?.some((user: any) => getId(user) === myId)
+          asRelationArray(permission.allowedUsers).some(
+            (user: unknown) => relationId(user) === String(myId)
+          )
       );
 
       if (directPermissions.length > 0) {
         const hasDirectMethodPermission = directPermissions.some((permission: any) => {
-          if (permission.methods && permission.methods.length > 0) {
-            return permission.methods.some((methodObj: any) => methodObj.name === method);
-          }
-          return false;
+          return asRelationArray(permission.methods).some(
+            (methodObj: unknown) => methodName(methodObj) === method.toUpperCase()
+          );
         });
 
         return hasDirectMethodPermission;
@@ -38,7 +64,7 @@ export function usePermissions() {
 
     if (!me.value.role?.routePermissions) return false;
 
-    const routePermissions = me.value.role.routePermissions.filter(
+    const routePermissions = asRelationArray(me.value.role.routePermissions).filter(
       (permission: any) =>
         permission.route?.path === normalizedRoutePath && permission.isEnabled
     );
@@ -46,17 +72,20 @@ export function usePermissions() {
     if (!routePermissions.length) return false;
 
     const hasMethodPermission = routePermissions.some((permission: any) =>
-      permission.methods?.some((methodObj: any) => methodObj.name === method)
+      asRelationArray(permission.methods).some(
+        (methodObj: unknown) => methodName(methodObj) === method.toUpperCase()
+      )
     );
 
     if (hasMethodPermission) {
       const { getId } = useDatabase();
       const myId = getId(me.value);
       return routePermissions.some((permission: any) => {
-        if (!permission.allowedUsers || permission.allowedUsers.length === 0) {
+        const allowedUsers = asRelationArray(permission.allowedUsers);
+        if (allowedUsers.length === 0) {
           return true;
         }
-        return permission.allowedUsers.some((userId: any) => String(userId) === String(myId));
+        return allowedUsers.some((userId: unknown) => relationId(userId) === String(myId));
       });
     }
 
@@ -133,10 +162,17 @@ export function usePermissions() {
     );
   };
 
+  const hasMenuPermission = (menu: unknown): boolean => {
+    const { getId } = useDatabase();
+    const roleId = me.value?.role ? getId(me.value.role) : null;
+    return canSeeMenuByRole(menu as any, roleId, me.value?.isRootAdmin === true);
+  };
+
   return {
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,
     checkPermissionCondition,
+    hasMenuPermission,
   };
 }

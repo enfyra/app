@@ -1,6 +1,6 @@
 <template>
   <div class="dynamic-page-stack">
-  <Transition name="fade">
+  <Transition name="fade" mode="out-in">
     <div
       v-if="isLoading"
       key="loading-frame"
@@ -58,12 +58,10 @@
       key="extension-content"
       class="flex-1 flex flex-col"
     >
-      <PermissionGate :condition="currentPermission">
-        <component
-          :is="extensionComponent"
-          class="flex-1"
-        />
-      </PermissionGate>
+      <component
+        :is="extensionComponent"
+        class="flex-1"
+      />
     </div>
 
     <CommonEmptyState
@@ -118,7 +116,6 @@ const extensionMetaCacheKey = computed(() => matchedMenu.value ? `menu:${matched
 const error = ref<string | null>(null);
 const extensionComponent = ref<any>(null);
 const currentExtensionMeta = ref<any>(null);
-const currentPermission = ref<any>(null);
 const isLoading = ref(true);
 const loadRunId = ref(0);
 let endRouteLoading: (() => void) | null = null;
@@ -171,7 +168,6 @@ const startRouteLoading = () => {
 const loadMatchingExtension = async () => {
   const runId = ++loadRunId.value;
   error.value = null;
-  currentPermission.value = null;
 
   if (!matchedMenu.value) {
     showError({
@@ -184,7 +180,6 @@ const loadMatchingExtension = async () => {
   }
 
   if (tryLoadFromCache()) {
-    currentPermission.value = matchedMenu.value.permission ?? { allowAll: true };
     isLoading.value = false;
     await fetchAndLoadExtension(runId);
     return;
@@ -218,7 +213,6 @@ const fetchAndLoadExtension = async (runId: number) => {
     }
 
     const menuItem = menuResponse.value.data[0];
-    currentPermission.value = menuItem.permission ?? { allowAll: true };
 
     if (!menuItem.extension || menuItem.extension.length === 0) {
       error.value = `No extension found for route: /${props.path}`;
@@ -307,7 +301,6 @@ const formatRuntimeError = (err: unknown, info: string) => {
 onErrorCaptured((err, _instance, info) => {
   error.value = formatRuntimeError(err, info);
   extensionComponent.value = null;
-  currentPermission.value = null;
   isLoading.value = false;
   endRouteLoading?.();
   console.error("[Dynamic page extension] Runtime error", {
@@ -329,7 +322,6 @@ watch(
     isLoading.value = true;
     extensionComponent.value = null;
     currentExtensionMeta.value = null;
-    currentPermission.value = null;
     loadMatchingExtension();
   },
   { immediate: true }

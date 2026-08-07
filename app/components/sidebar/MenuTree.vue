@@ -327,7 +327,9 @@ watch(
   align-items: center;
   gap: 8px;
   min-height: 26px;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-subcontrol);
+  background: var(--surface-nested);
   padding: 0 6px;
 }
 

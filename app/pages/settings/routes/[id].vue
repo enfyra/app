@@ -45,6 +45,7 @@ registerPageHeader({
 
 const {
   data: routeData,
+  error: routeError,
   pending: loading,
   execute: fetchRoute,
 } = useApi('/enfyra_route', {
@@ -55,7 +56,7 @@ const {
   errorContext: 'Fetch Route',
 })
 
-useNotFoundGuard(loading, () => !!routeData.value?.data?.[0], 'Route not found')
+useNotFoundGuard(loading, () => !!routeData.value?.data?.[0], 'Route not found', routeError)
 
 watch(() => routeData.value?.data?.[0]?.path, (path) => {
   if (path) {

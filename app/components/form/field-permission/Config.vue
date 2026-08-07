@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { debounce } from "lodash-es";
+import { switchFieldPermissionScope } from "~/utils/field-permissions/normalize";
 
 type Mode = "role" | "user";
 
@@ -26,17 +27,17 @@ function normalizeId(v: any): string | null {
 }
 
 const selectedRoleId = computed(() => normalizeId(props.modelValue));
-const selectedUserId = computed(() => {
+const selectedUserIds = computed(() => {
   const users = props.formData?.allowedUsers;
-  if (!Array.isArray(users) || users.length === 0) return null;
-  return normalizeId(users[0]);
+  if (!Array.isArray(users)) return [];
+  return users.map(normalizeId).filter((id): id is string => Boolean(id));
 });
 
 watch(
-  () => [selectedRoleId.value, selectedUserId.value],
-  ([rid, uid]) => {
+  () => [selectedRoleId.value, selectedUserIds.value.join(",")],
+  ([rid, userIds]) => {
     if (hasManualMode.value) return;
-    if (uid) {
+    if (userIds) {
       mode.value = "user";
       return;
     }
@@ -53,9 +54,20 @@ const searchTerm = ref("");
 const menuOpen = ref(false);
 const suppressSearch = ref(false);
 const syncingFromForm = ref(false);
+const userMenuAnchor = ref<HTMLElement | null>(null);
+const userMenuWidth = ref<number | null>(null);
+let userMenuResizeObserver: ResizeObserver | null = null;
 
 const roleItems = ref<Array<{ label: string; value: string; description?: string }>>([]);
 const userItems = ref<Array<{ label: string; value: string; description?: string }>>([]);
+
+const userMenuContent = computed(() => {
+  if (mode.value !== "user" || !userMenuWidth.value) return undefined;
+  return {
+    align: "start" as const,
+    style: { width: `${userMenuWidth.value}px` },
+  };
+});
 
 async function fetchDefaultList() {
   if (mode.value === "role") {
@@ -140,6 +152,17 @@ onBeforeUnmount(() => {
   debouncedSearch.cancel();
   cancelRoleSearch();
   cancelUserSearch();
+  userMenuResizeObserver?.disconnect();
+});
+
+onMounted(() => {
+  if (typeof ResizeObserver === "undefined" || !userMenuAnchor.value) return;
+  const updateWidth = () => {
+    userMenuWidth.value = userMenuAnchor.value?.getBoundingClientRect().width ?? null;
+  };
+  updateWidth();
+  userMenuResizeObserver = new ResizeObserver(updateWidth);
+  userMenuResizeObserver.observe(userMenuAnchor.value);
 });
 
 watch(
@@ -166,17 +189,17 @@ const selectedItem = computed(() => {
     return { label, value: id };
   }
 
-  const uid = selectedUserId.value;
-  if (!uid) return null;
-  const fromList = userItems.value.find((i) => String(i.value) === String(uid));
-  if (fromList) return fromList;
   const users = props.formData?.allowedUsers;
-  const first = Array.isArray(users) && users.length ? users[0] : null;
-  const label =
-    first && typeof first === "object"
-      ? String(first.email ?? first.name ?? first.label ?? "Selected user")
+  if (!Array.isArray(users) || users.length === 0) return null;
+  return selectedUserIds.value.map((uid) => {
+    const fromList = userItems.value.find((i) => String(i.value) === String(uid));
+    if (fromList) return fromList;
+    const selected = users.find((user: any) => normalizeId(user) === uid);
+    const label = selected && typeof selected === "object"
+      ? String(selected.email ?? selected.name ?? selected.label ?? "Selected user")
       : "Selected user";
-  return { label, value: uid };
+    return { label, value: uid };
+  });
 });
 
 const selectedMenuItem = ref<any>(null);
@@ -186,32 +209,36 @@ watch(
   (v) => {
     syncingFromForm.value = true;
     if (v == null) {
-      selectedMenuItem.value = null;
+      selectedMenuItem.value = mode.value === "user" ? [] : null;
       syncingFromForm.value = false;
       return;
     }
 
-    const value = (v as any)?.value ?? v;
-    const items = mode.value === "role" ? roleItems.value : userItems.value;
-    const found = items.find((i) => String(i.value) === String(value));
-    selectedMenuItem.value = found || v;
+    if (mode.value === "user") {
+      selectedMenuItem.value = Array.isArray(v) ? v : [];
+    } else {
+      const value = (v as any)?.value ?? v;
+      const found = roleItems.value.find((i) => String(i.value) === String(value));
+      selectedMenuItem.value = found || v;
+    }
     syncingFromForm.value = false;
   },
   { immediate: true }
 );
 
 function applySelection(item: any) {
-  const id =
-    item == null
-      ? null
-      : typeof item === "string" || typeof item === "number"
-        ? String(item)
-        : item?.value != null
-          ? String(item.value)
-          : null;
-  if (!id) return;
+  const selections = mode.value === "user"
+    ? (Array.isArray(item) ? item : item == null ? [] : [item])
+    : [item];
+  const ids = [...new Set(
+    selections
+      .map((entry: any) => normalizeId(entry))
+      .filter((id): id is string => Boolean(id)),
+  )];
 
   if (mode.value === "role") {
+    const id = ids[0];
+    if (!id) return;
     hasManualMode.value = true;
     if (props.formData) {
       props.formData.role = id;
@@ -226,23 +253,26 @@ function applySelection(item: any) {
   hasManualMode.value = true;
   if (props.formData) {
     props.formData.role = null;
-    props.formData.allowedUsers = [{ id }];
+    props.formData.allowedUsers = ids.map((id) => ({ id }));
   }
   props.onUpdateRole?.(null);
   emit("update:modelValue", null);
-  props.onUpdateAllowedUsers?.([{ id }]);
+  props.onUpdateAllowedUsers?.(ids.map((id) => ({ id })));
 }
 
 watch(
   selectedMenuItem,
   (item, prev) => {
-    if (item == null) return;
     if (syncingFromForm.value) return;
-    const nextVal = typeof item === "object" ? item?.value : item;
-    const prevVal = typeof prev === "object" ? prev?.value : prev;
-    if (nextVal != null && prevVal != null && String(nextVal) === String(prevVal)) return;
+    const nextIds = (mode.value === "user" ? (Array.isArray(item) ? item : []) : [item])
+      .map((entry: any) => normalizeId(entry))
+      .filter((id): id is string => Boolean(id));
+    const prevIds = (mode.value === "user" ? (Array.isArray(prev) ? prev : []) : [prev])
+      .map((entry: any) => normalizeId(entry))
+      .filter((id): id is string => Boolean(id));
+    if (nextIds.join(",") === prevIds.join(",")) return;
     applySelection(item);
-    menuOpen.value = false;
+    if (mode.value === "role") menuOpen.value = false;
   }
 );
 
@@ -256,7 +286,7 @@ function clearSelection() {
   props.onUpdateRole?.(null);
   emit("update:modelValue", null);
   props.onUpdateAllowedUsers?.([]);
-  selectedMenuItem.value = null;
+  selectedMenuItem.value = mode.value === "user" ? [] : null;
   searchTerm.value = "";
   nextTick(() => {
     suppressSearch.value = false;
@@ -266,8 +296,22 @@ function clearSelection() {
 async function setMode(next: Mode) {
   hasManualMode.value = true;
   mode.value = next;
+  const scoped = switchFieldPermissionScope(props.formData, next);
+  if (props.formData) {
+    props.formData.role = scoped.role;
+    props.formData.allowedUsers = scoped.allowedUsers;
+  }
+  if (next === "role") {
+    props.onUpdateRole?.(scoped.role);
+    props.onUpdateAllowedUsers?.([]);
+    emit("update:modelValue", scoped.role);
+  } else {
+    props.onUpdateRole?.(null);
+    props.onUpdateAllowedUsers?.(scoped.allowedUsers);
+    emit("update:modelValue", null);
+  }
   syncingFromForm.value = true;
-  selectedMenuItem.value = null;
+  selectedMenuItem.value = next === "user" ? [] : null;
   syncingFromForm.value = false;
   suppressSearch.value = true;
   searchTerm.value = "";
@@ -313,35 +357,39 @@ async function setMode(next: Mode) {
       />
     </div>
 
-    <UInputMenu
-      v-model="selectedMenuItem"
-      :items="mode === 'role' ? roleItems : userItems"
-      v-model:search-term="searchTerm"
-      v-model:open="menuOpen"
-      :loading="loading"
-      :placeholder="mode === 'role' ? 'Search role...' : 'Search user (email)...'"
-      by="value"
-      class="w-full"
-    >
-      <template #leading>
-        <UIcon :name="mode === 'role' ? 'lucide:shield' : 'lucide:user'" class="w-4 h-4 text-muted-foreground" />
-      </template>
-      <template #item="{ item }">
-        <div class="flex items-start gap-2 w-full min-w-0">
-          <UIcon :name="mode === 'role' ? 'lucide:shield' : 'lucide:user'" class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-          <div class="min-w-0">
-            <div class="text-sm truncate">{{ item.label }}</div>
-            <div v-if="item.description" class="text-xs text-[var(--text-tertiary)] truncate">
-              {{ item.description }}
+    <div ref="userMenuAnchor" class="w-full min-w-0">
+      <UInputMenu
+        v-model="selectedMenuItem"
+        :items="mode === 'role' ? roleItems : userItems"
+        v-model:search-term="searchTerm"
+        v-model:open="menuOpen"
+        :multiple="mode === 'user'"
+        :loading="loading"
+        :placeholder="mode === 'role' ? 'Search role...' : 'Search user (email)...'"
+        :content="userMenuContent"
+        by="value"
+        class="w-full"
+      >
+        <template #leading>
+          <UIcon :name="mode === 'role' ? 'lucide:shield' : 'lucide:user'" class="w-4 h-4 text-muted-foreground" />
+        </template>
+        <template #item="{ item }">
+          <div class="flex items-start gap-2 w-full min-w-0">
+            <UIcon :name="mode === 'role' ? 'lucide:shield' : 'lucide:user'" class="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+            <div class="min-w-0">
+              <div class="text-sm truncate">{{ item.label }}</div>
+              <div v-if="item.description" class="text-xs text-[var(--text-tertiary)] truncate">
+                {{ item.description }}
+              </div>
             </div>
           </div>
-        </div>
-      </template>
-      <template #empty>
-        <span class="text-xs text-muted-foreground px-2">
-          {{ loading ? "Loading..." : "No results" }}
-        </span>
-      </template>
-    </UInputMenu>
+        </template>
+        <template #empty>
+          <span class="text-xs text-muted-foreground px-2">
+            {{ loading ? "Loading..." : "No results" }}
+          </span>
+        </template>
+      </UInputMenu>
+    </div>
   </div>
 </template>

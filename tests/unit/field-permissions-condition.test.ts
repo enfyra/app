@@ -27,18 +27,37 @@ describe('field permission condition helpers', () => {
       ok: true,
       errors: [],
     })
+
+    expect(
+      validateFieldPermissionCondition({
+        owner: { id: { _eq: '@USER.id' } },
+      }),
+    ).toEqual({
+      ok: true,
+      errors: [],
+    })
   })
 
   it('rejects unsupported operators and macros with path-aware errors', () => {
     expect(
       validateFieldPermissionCondition({
-        ownerId: { _neq: '@USER.email' },
+        ownerId: { _equals: '@USER.id' },
       }),
     ).toEqual({
       ok: false,
       errors: [
-        'ownerId._neq operator is not supported',
-        'ownerId._neq macro is not supported',
+        'ownerId._equals operator is not supported',
+      ],
+    })
+
+    expect(
+      validateFieldPermissionCondition({
+        ownerId: { _eq: '@USER.email' },
+      }),
+    ).toEqual({
+      ok: false,
+      errors: [
+        'ownerId._eq macro is not supported',
       ],
     })
   })

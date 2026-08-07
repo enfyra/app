@@ -2,19 +2,25 @@ import { processHeaderAction } from '~/utils/common/action-processor';
 import type { HeaderAction } from '~/types';
 
 const subActionOwners = new Map<string, number>();
+const subActionRoutes = new Map<string, string>();
 
 export function useSubHeaderActionRegistry(
   actions?: HeaderAction | HeaderAction[]
 ) {
   const ownerUid = getCurrentInstance()?.uid;
+  const route = ownerUid !== undefined ? useRoute() : null;
+  const ownerRoutePath = route?.path ?? "";
   const ownedActionIds = new Set<string>();
   const actionsRaw = useState<HeaderAction[]>("sub-header-actions", () => []);
 
   const subHeaderActions = computed<HeaderAction[]>(() => {
-    return [...actionsRaw.value].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    return [...actionsRaw.value]
+      .filter((action) => !subActionRoutes.has(action.id) || subActionRoutes.get(action.id) === route?.path)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   });
 
   const registerOne = (action: HeaderAction, ownerUid?: number) => {
+    if (ownerUid !== undefined && !action.global && route && route.path !== ownerRoutePath) return;
     const processed = processHeaderAction(action);
     const existingIndex = actionsRaw.value.findIndex(a => a.id === action.id);
     if (existingIndex > -1) {
@@ -26,6 +32,8 @@ export function useSubHeaderActionRegistry(
       subActionOwners.set(action.id, ownerUid);
       ownedActionIds.add(action.id);
     }
+    if (action.global || ownerUid === undefined) subActionRoutes.delete(action.id);
+    else subActionRoutes.set(action.id, ownerRoutePath);
   };
 
   const register = (actions: HeaderAction | HeaderAction[]) => {
@@ -33,15 +41,30 @@ export function useSubHeaderActionRegistry(
     arr.forEach(action => registerOne(action, ownerUid));
   };
 
+  const cleanupOwnedActions = (includeGlobal: boolean) => {
+    ownedActionIds.forEach((id) => {
+      const action = actionsRaw.value.find((item) => item.id === id);
+      if (subActionOwners.get(id) !== ownerUid) {
+        ownedActionIds.delete(id);
+        return;
+      }
+      if (!includeGlobal && action?.global) return;
+      unregister(id);
+      ownedActionIds.delete(id);
+    });
+  };
+
   const unregister = (id: string) => {
     const index = actionsRaw.value.findIndex(a => a.id === id);
     if (index > -1) actionsRaw.value.splice(index, 1);
     subActionOwners.delete(id);
+    subActionRoutes.delete(id);
   };
 
   const clear = () => {
     actionsRaw.value = [];
     subActionOwners.clear();
+    subActionRoutes.clear();
   };
 
   if (actions) {
@@ -50,13 +73,17 @@ export function useSubHeaderActionRegistry(
   }
 
   if (ownerUid !== undefined) {
+    const stopRouteWatch = watch(
+      () => route!.path,
+      (newPath, oldPath) => {
+        if (newPath !== oldPath) cleanupOwnedActions(false);
+      },
+      { flush: "sync" },
+    );
+
     onUnmounted(() => {
-      ownedActionIds.forEach((id) => {
-        if (subActionOwners.get(id) === ownerUid) {
-          unregister(id);
-        }
-      });
-      ownedActionIds.clear();
+      stopRouteWatch();
+      cleanupOwnedActions(true);
     });
   }
 

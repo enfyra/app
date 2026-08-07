@@ -6,8 +6,10 @@
       'eapp-resource-list-item',
       `eapp-resource-list-item-${size}`,
       active ? 'eapp-resource-list-item-active' : '',
+      isSkeletonLoading ? 'eapp-resource-list-item-loading' : '',
+      isRefreshing ? 'eapp-resource-list-item-refreshing' : '',
       clickable && !isLoading ? 'cursor-pointer' : 'cursor-default',
-      isLoading ? 'pointer-events-none cursor-wait' : '',
+      isSkeletonLoading ? 'pointer-events-none cursor-wait' : '',
       itemClass,
     ]"
     :aria-busy="isLoading"
@@ -26,31 +28,28 @@
       v-if="icon || avatar"
       :class="[
         'eapp-resource-list-leading',
-        isLoading ? 'skeleton-gradient skeleton-pulse-slow' : avatar ? avatarClass : iconBgClass,
+        isSkeletonLoading ? 'eapp-surface-muted animate-pulse eapp-resource-list-leading-loading' : avatar ? avatarClass : iconBgClass,
       ]"
     >
-      <slot v-if="isLoading" name="skeleton-leading" />
+      <slot v-if="isSkeletonLoading" name="skeleton-leading" />
       <UIcon v-else :name="normalizedIcon" class="size-4" />
     </span>
 
     <span class="min-w-0 flex-1 text-left">
-      <span v-if="isLoading" :class="['block', size === 'sm' ? 'space-y-1.5' : 'space-y-2']">
+      <span v-if="isSkeletonLoading" :class="['block', size === 'sm' ? 'space-y-1.5' : 'space-y-2']">
         <slot name="skeleton-content">
-          <span class="flex min-w-0 items-center gap-2">
-            <span class="block h-4 w-1/3 max-w-72 rounded skeleton-gradient skeleton-pulse-slow" />
-            <span v-if="size === 'sm'" class="block h-5 w-12 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-            <span v-if="size === 'sm'" class="block h-5 w-14 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+          <span class="flex min-w-0 items-start gap-3">
+            <span class="min-w-0 flex-1 space-y-2">
+              <span class="block h-4 w-1/3 max-w-72 rounded eapp-surface-muted animate-pulse" />
+              <span v-if="description !== undefined" class="block h-3 w-2/3 max-w-[34rem] rounded eapp-surface-muted animate-pulse" />
+            </span>
+            <span class="hidden h-6 w-16 flex-shrink-0 rounded-[var(--radius-pill)] eapp-surface-muted animate-pulse md:block" />
           </span>
-          <span v-if="description !== undefined" class="block h-3 w-2/3 max-w-[34rem] rounded skeleton-inline skeleton-pulse-slow" />
-          <span v-if="size !== 'sm' && skeletonStatWidths.length" class="flex gap-2">
+          <span v-if="size !== 'sm' && skeletonStatCount" class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <span
-              v-for="(width, index) in skeletonStatWidths"
+              v-for="index in skeletonStatCount"
               :key="index"
-              :class="[
-                'block h-5 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow',
-                width,
-                index > 2 ? 'hidden sm:block' : '',
-              ]"
+              class="block h-12 rounded-[var(--radius-subcontrol)] eapp-surface-muted animate-pulse"
             />
           </span>
         </slot>
@@ -101,7 +100,7 @@
     </span>
 
     <slot
-      v-if="isLoading && (headerActions?.length || normalizedActions.length)"
+      v-if="isSkeletonLoading && (headerActions?.length || normalizedActions.length)"
       name="skeleton-actions"
     >
       <span class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
@@ -124,7 +123,7 @@
     </span>
 
     <span
-      v-if="!isLoading && normalizedActions.length"
+      v-if="!isSkeletonLoading && normalizedActions.length"
       class="relative z-10 eapp-resource-list-actions"
     >
       <UButton
@@ -190,6 +189,9 @@ const emit = defineEmits<{
 }>();
 
 const isLoading = computed(() => props.loading);
+const hasContent = computed(() => Boolean(props.title || props.description || props.stats?.length));
+const isSkeletonLoading = computed(() => isLoading.value && !hasContent.value);
+const isRefreshing = computed(() => isLoading.value && hasContent.value);
 const isNavigable = computed(() => Boolean(props.to));
 
 const componentMap = {
@@ -260,11 +262,7 @@ const visibleStats = computed(() =>
   (props.stats || []).filter((stat) => stat.value !== undefined && stat.value !== null && stat.value !== ""),
 );
 
-const skeletonStatWidths = computed(() => {
-  const count = props.stats === undefined ? 3 : visibleStats.value.length;
-  const widths = ["w-16", "w-20", "w-24", "w-16"];
-  return Array.from({ length: count }, (_, index) => widths[index % widths.length]);
-});
+const skeletonStatCount = computed(() => props.stats === undefined ? 4 : visibleStats.value.length);
 
 const normalizedActions = computed(() => props.actions || props.methods || []);
 

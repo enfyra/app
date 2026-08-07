@@ -120,7 +120,7 @@ watch(() => route.path, async () => {
 await useInitialData();
 await Promise.all([
   useMenuInit(),
-  useGlobalExtensionsInit({ throwOnError: true }),
+  useGlobalExtensionsInit({ throwOnError: false }),
 ]);
 markInitialReady();
 if (import.meta.client) {

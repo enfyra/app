@@ -29,7 +29,7 @@
         :class="[
           (isMobile || isTablet) ? 'w-8 h-8 rounded-[var(--radius-control)]' : 'w-10 h-10 rounded-[var(--radius-control)]',
           'flex items-center justify-center flex-shrink-0 self-start',
-          iconBgClass
+          contentLoading ? 'eapp-surface-muted' : iconBgClass
         ]"
       >
         <div v-if="contentLoading" class="h-1/2 w-1/2 rounded-[var(--radius-subcontrol)] skeleton-gradient skeleton-pulse-slow" />

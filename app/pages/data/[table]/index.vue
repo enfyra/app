@@ -421,7 +421,7 @@ registerHeaderActions([
 
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade">
+    <Transition name="loading-fade" mode="out-in">
       <div v-if="!isSingleRecord" key="list" class="space-y-6">
 
     <div

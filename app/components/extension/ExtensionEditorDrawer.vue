@@ -314,16 +314,9 @@ const isLoading = computed(() => extensionLoading.value || loading.value);
     :code="form?.code || ''"
   />
 
-  <CommonModal
-    v-model:open="showDiscardModal"
-    :cancel-action="{ label: 'Keep editing', tone: 'primary', onClick: () => (showDiscardModal = false) }"
-    :danger-action="{ label: 'Discard Changes', onClick: confirmDiscard }"
-  >
-    <template #header>Discard Changes</template>
-    <template #body>
-      <div class="text-sm text-[var(--text-secondary)]">
-        You have unsaved changes. Are you sure you want to close? All changes will be lost.
-      </div>
-    </template>
-  </CommonModal>
+  <CommonUnsavedChangesModal
+    v-model="showDiscardModal"
+    content="You have unsaved changes. Are you sure you want to close? All changes will be lost."
+    @discard="confirmDiscard"
+  />
 </template>

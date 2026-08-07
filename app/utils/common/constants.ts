@@ -11,7 +11,7 @@ export const DEFAULT_ME_FIELDS = [
   "role.name",
   "role.routePermissions.id",
   "role.routePermissions.isEnabled",
-  "role.routePermissions.allowedUsers",
+  "role.routePermissions.allowedUsers.id",
   "role.routePermissions.methods.id",
   "role.routePermissions.methods.name",
   "role.routePermissions.route.id",

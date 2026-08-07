@@ -429,24 +429,47 @@ export default defineAppConfig({
     },
     inputMenu: {
       slots: {
-        base: [
-          "min-h-11 w-full rounded-[var(--radius-control)] border border-[var(--control-border)]",
-          "!bg-[var(--control-bg)]",
-          "px-4 py-2.5 text-sm",
-          "text-[var(--control-text)]",
-          "shadow-theme-xs",
-          "focus-within:border-[var(--control-border-focus)]",
-          "focus-within:outline-none focus-within:ring-3 focus-within:ring-[var(--theme-focus-ring)]",
-          "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
-          "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
-          "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
-          "disabled:cursor-not-allowed disabled:opacity-100",
-          "disabled:border-[var(--control-disabled-border)] disabled:!bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
-        ].join(" "),
         item: [
           "data-highlighted:not-data-disabled:!text-[var(--text-primary)]",
           "data-highlighted:not-data-disabled:before:!bg-[var(--state-primary-soft-bg)]",
         ].join(" "),
+        tagsItem:
+          "!w-auto !min-h-0 !border-0 !shadow-none !ring-0 !rounded-[var(--radius-subcontrol)] !bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] !px-2 !py-0.5 !text-xs !font-medium",
+        tagsInput: "min-w-24 !w-auto !min-h-0 !border-0 !bg-transparent !shadow-none !p-0 !ring-0",
+      },
+      variants: {
+        multiple: {
+          false: {
+            base: [
+              "min-h-11 w-full rounded-[var(--radius-control)] border border-[var(--control-border)]",
+              "!bg-[var(--control-bg)]",
+              "px-4 py-2.5 text-sm",
+              "text-[var(--control-text)]",
+              "shadow-theme-xs",
+              "focus-within:border-[var(--control-border-focus)]",
+              "focus-within:outline-none focus-within:ring-3 focus-within:ring-[var(--theme-focus-ring)]",
+              "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
+              "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
+              "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
+              "disabled:cursor-not-allowed disabled:opacity-100",
+              "disabled:border-[var(--control-disabled-border)] disabled:!bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
+            ].join(" "),
+          },
+          true: {
+            root: [
+              "flex min-h-11 w-full min-w-0 flex-wrap items-center gap-1 rounded-[var(--radius-control)]",
+              "border border-[var(--control-border)] !bg-[var(--control-bg)] py-2.5 ps-9 pe-9 text-sm text-[var(--control-text)]",
+              "shadow-theme-xs",
+              "focus-within:border-[var(--control-border-focus)]",
+              "focus-within:outline-none focus-within:ring-3 focus-within:ring-[var(--theme-focus-ring)]",
+              "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
+              "aria-[invalid=true]:!border-[var(--control-invalid-border)]",
+              "aria-[invalid=true]:!ring-[var(--control-invalid-ring)]",
+              "disabled:cursor-not-allowed disabled:opacity-100",
+              "disabled:border-[var(--control-disabled-border)] disabled:!bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
+            ].join(" "),
+          },
+        },
       },
       compoundVariants: [
         {

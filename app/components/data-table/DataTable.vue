@@ -338,7 +338,7 @@ function getCellTextClass(columnId: string | undefined) {
           <div class="table-progress-bar h-full w-2/5 rounded-full bg-[var(--brand-500)]" />
         </div>
         <CommonAnimatedGrid
-          v-if="tableRows.length > 0"
+          v-if="!showInitialLoading && tableRows.length > 0"
           grid-class="grid grid-cols-1 md:grid-cols-2 gap-3"
           :class="isRefreshing ? 'opacity-50 pointer-events-none transition-opacity duration-[var(--duration-base)]' : 'opacity-100 transition-opacity duration-[var(--duration-base)]'"
         >

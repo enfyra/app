@@ -80,7 +80,10 @@ const resourceListClass = computed(() => [
   <div :class="rootClass">
     <div v-if="loading" key="loading">
       <slot name="loading">
-        <div v-if="showResourceListSkeleton" :class="resourceListClass">
+        <div
+          v-if="showResourceListSkeleton"
+          :class="[resourceListClass, 'eapp-resource-list-loading']"
+        >
           <slot
             v-for="row in skeletonRows"
             :key="row"
@@ -112,20 +115,21 @@ const resourceListClass = computed(() => [
         <slot />
       </div>
 
-      <CommonPaginationBar
-        v-if="showPagination"
-        v-model:page="page"
-        :class="paginationClass"
-        :items-per-page="itemsPerPage"
-        :total="total"
-        :loading="paginationLoading"
-        :show-range="paginationShowRange"
-        :align="paginationAlign"
-        :color="paginationColor"
-        :active-color="paginationActiveColor"
-        :to="to"
-        :ui="paginationUi"
-      />
+      <div v-if="showPagination" class="eapp-resource-list-pagination">
+        <CommonPaginationBar
+          v-model:page="page"
+          :class="[paginationClass, 'eapp-pagination-separated']"
+          :items-per-page="itemsPerPage"
+          :total="total"
+          :loading="paginationLoading"
+          :show-range="paginationShowRange"
+          :align="paginationAlign"
+          :color="paginationColor"
+          :active-color="paginationActiveColor"
+          :to="to"
+          :ui="paginationUi"
+        />
+      </div>
     </div>
 
     <div v-else key="empty">
