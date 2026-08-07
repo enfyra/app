@@ -277,9 +277,10 @@ async function patchTable() {
 async function afterPatchSuccess(submittedTable: any = null) {
   const patchResponse = patchTableData.value?.data?.[0];
   await fetchTableData();
-  table.value = patchResponse && typeof patchResponse === "object"
-    ? patchResponse
-    : submittedTable || tableData.value?.data?.[0] || table.value;
+  const refreshedTable = tableData.value?.data?.[0];
+  table.value = refreshedTable && typeof refreshedTable === "object"
+    ? refreshedTable
+    : submittedTable || patchResponse || table.value;
 
   notify.success("Success", "Table structure updated!");
 
