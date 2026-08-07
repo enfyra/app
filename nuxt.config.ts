@@ -1,3 +1,5 @@
+import { resolvePublicApiUrl } from './app/utils/enfyra/runtime/api-url'
+
 export default defineNuxtConfig({
   srcDir: 'app',
   compatibilityDate: "2025-05-15",
@@ -154,7 +156,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiUrl: process.env.API_URL?.replace(/\/+$/, ''),
+      apiUrl: resolvePublicApiUrl(process.env),
       demoLoginPrefill: process.env.NUXT_PUBLIC_DEMO_LOGIN_PREFILL === 'true',
     },
   },

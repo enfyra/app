@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { isSchemaMutationPreviewResponse } from '~/utils/schema/schema-confirm';
+
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
@@ -14,6 +16,7 @@ const table = ref<any>();
 const schemaConfirmModalOpen = ref(false);
 const schemaConfirmDetails = ref<any>(null);
 const schemaConfirmLoading = ref(false);
+const schemaConfirmOperation = ref<'update' | 'delete'>('update');
 
 const deleteModalOpen = ref(false);
 const deleteConfirmText = ref("");
@@ -261,8 +264,9 @@ async function patchTable() {
   if (updateError.value) return;
 
   const preview = patchTableData.value?.data?.[0];
-  if (preview?._preview) {
+  if (isSchemaMutationPreviewResponse(patchTableData.value)) {
     schemaConfirmDetails.value = preview;
+    schemaConfirmOperation.value = 'update';
     schemaConfirmModalOpen.value = true;
     return;
   }
@@ -313,8 +317,16 @@ async function executeDelete() {
   }
 
   deleteModalOpen.value = false;
-  await executeDeleteTable({ id: getId(table.value) });
+  const deletionResponse = await executeDeleteTable({ id: getId(table.value) });
   if (deleteError.value) return;
+
+  if (isSchemaMutationPreviewResponse(deletionResponse)) {
+    schemaConfirmDetails.value = deletionResponse.data?.[0];
+    schemaConfirmOperation.value = 'delete';
+    schemaConfirmModalOpen.value = true;
+    return;
+  }
+
   await afterDeleteSuccess(String(route.params.table));
 }
 
@@ -418,9 +430,30 @@ async function onSchemaConfirmSubmit() {
     const confirmQuery = {
       schema_confirm_hash: schemaConfirmDetails.value?.requiredConfirmHash,
     };
-    await executePatchTable({ id: getId(table.value), body: table.value, query: confirmQuery });
+    if (schemaConfirmOperation.value === 'delete') {
+      const confirmationResponse = await executeDeleteTable({
+        id: getId(table.value),
+        query: confirmQuery,
+      });
+      if (deleteError.value) return;
+      if (isSchemaMutationPreviewResponse(confirmationResponse)) {
+        schemaConfirmDetails.value = confirmationResponse.data?.[0];
+        notify.error('Confirmation not applied', 'The schema deletion still requires confirmation.');
+        return;
+      }
+      schemaConfirmModalOpen.value = false;
+      await afterDeleteSuccess(String(route.params.table));
+      return;
+    }
+    const confirmationResponse = await executePatchTable({ id: getId(table.value), body: table.value, query: confirmQuery });
     if (updateError.value) {
       schemaConfirmModalOpen.value = false;
+      return;
+    }
+    if (isSchemaMutationPreviewResponse(confirmationResponse)) {
+      const preview = (confirmationResponse as any)?.data?.[0];
+      schemaConfirmDetails.value = preview;
+      notify.error('Confirmation not applied', 'The schema mutation still requires confirmation.');
       return;
     }
     schemaConfirmModalOpen.value = false;
@@ -490,7 +523,7 @@ onMounted(async () => {
                   <span class="font-bold font-mono">{{ schemaConfirmTableName }}</span>
                 </div>
                 <div class="mt-1 text-xs text-[var(--text-tertiary)]">
-                  Operation: update
+                Operation: {{ schemaConfirmOperation }}
                 </div>
               </div>
               <div
