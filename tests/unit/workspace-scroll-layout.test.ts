@@ -30,4 +30,12 @@ describe('document-scrolling app shell', () => {
     expect(workspaceScroll).toContain('window.scrollTo')
     expect(workspaceScroll).not.toContain('workspaceEl.scrollTop')
   })
+
+  it('locks document scrolling while the mobile sidebar is open', () => {
+    const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
+
+    expect(sidebar).toContain("import { useScrollLock } from '@vueuse/core';")
+    expect(sidebar).toMatch(/useScrollLock\([^)]*document\.body/)
+    expect(sidebar).toContain('documentScrollLocked.value = mobile && visible')
+  })
 })
