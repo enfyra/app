@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useScrollLock } from '@vueuse/core';
+
 const route = useRoute();
 const router = useRouter();
 const { menuGroups } = useMenuRegistry();
@@ -182,6 +184,12 @@ const bottomGroups = computed(() => {
 });
 
 const isMobile = computed(() => width.value < 1024);
+const documentScrollLocked = useScrollLock(import.meta.client ? document.body : null);
+
+watch([isMobile, sidebarVisible], ([mobile, visible]) => {
+  documentScrollLocked.value = mobile && visible;
+}, { immediate: true });
+
 const isDesktopCollapsed = computed(() => !isMobile.value && !sidebarVisible.value);
 const isPeeking = ref(false);
 let peekLeaveTimer: ReturnType<typeof setTimeout> | null = null;
