@@ -35,7 +35,8 @@ describe('document-scrolling app shell', () => {
     const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
 
     expect(sidebar).toContain("import { useScrollLock } from '@vueuse/core';")
-    expect(sidebar).toMatch(/useScrollLock\([^)]*document\.body/)
+    expect(sidebar).toMatch(/useScrollLock\([^)]*document\.documentElement/)
+    expect(sidebar).not.toMatch(/useScrollLock\([^)]*document\.body/)
     expect(sidebar).toContain('documentScrollLocked.value = mobile && visible')
   })
 })

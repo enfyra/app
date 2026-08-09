@@ -184,7 +184,7 @@ const bottomGroups = computed(() => {
 });
 
 const isMobile = computed(() => width.value < 1024);
-const documentScrollLocked = useScrollLock(import.meta.client ? document.body : null);
+const documentScrollLocked = useScrollLock(import.meta.client ? document.documentElement : null);
 
 watch([isMobile, sidebarVisible], ([mobile, visible]) => {
   documentScrollLocked.value = mobile && visible;
