@@ -10,6 +10,7 @@ const { hasMenuPermission } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
+const suppressSidebarPersist = ref(false);
 const showMenuSkeleton = ref(false);
 let menuSkeletonTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -21,7 +22,7 @@ if (import.meta.client) {
 }
 
 watch(sidebarVisible, (val) => {
-  if (import.meta.client && width.value >= 1024) {
+  if (!suppressSidebarPersist.value && import.meta.client && width.value >= 1024) {
     localStorage.setItem('sidebar-open', String(val));
   }
 });
@@ -191,24 +192,56 @@ watch([isMobile, sidebarVisible], ([mobile, visible]) => {
 }, { immediate: true });
 
 const isDesktopCollapsed = computed(() => !isMobile.value && !sidebarVisible.value);
-const isPeeking = ref(false);
+const hoverOpenedSidebar = ref(false);
+const sidebarPointerInside = ref(false);
 let peekLeaveTimer: ReturnType<typeof setTimeout> | null = null;
 
+function setSidebarVisibleTransient(value: boolean) {
+  suppressSidebarPersist.value = true;
+  sidebarVisible.value = value;
+  nextTick(() => {
+    suppressSidebarPersist.value = false;
+  });
+}
+
 function showSidebarPeek() {
-  if (!isDesktopCollapsed.value) return;
   if (peekLeaveTimer) {
     clearTimeout(peekLeaveTimer);
     peekLeaveTimer = null;
   }
-  isPeeking.value = true;
+  if (!isDesktopCollapsed.value) return;
+  hoverOpenedSidebar.value = true;
+  setSidebarVisibleTransient(true);
 }
 
 function hideSidebarPeek() {
-  if (!isPeeking.value) return;
+  if (!hoverOpenedSidebar.value) return;
+  if (peekLeaveTimer) {
+    clearTimeout(peekLeaveTimer);
+  }
   peekLeaveTimer = setTimeout(() => {
-    isPeeking.value = false;
+    hoverOpenedSidebar.value = false;
+    setSidebarVisibleTransient(false);
     peekLeaveTimer = null;
   }, 120);
+}
+
+function handleSidebarMouseEnter() {
+  sidebarPointerInside.value = true;
+  showSidebarPeek();
+}
+
+function handleSidebarMouseLeave() {
+  sidebarPointerInside.value = false;
+  hideSidebarPeek();
+}
+
+function handleSidebarFocusOut(event: FocusEvent) {
+  if (sidebarPointerInside.value) return;
+  const nextTarget = event.relatedTarget;
+  const currentTarget = event.currentTarget;
+  if (nextTarget instanceof Node && currentTarget instanceof HTMLElement && currentTarget.contains(nextTarget)) return;
+  hideSidebarPeek();
 }
 
 const renderExpandedSidebarContent = computed(() => {
@@ -238,7 +271,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative sticky top-0 h-dvh self-start" @mouseenter="showSidebarPeek" @mouseleave="hideSidebarPeek" @focusin="showSidebarPeek" @focusout="hideSidebarPeek">
+  <div class="relative sticky top-0 h-dvh self-start" @mouseenter="handleSidebarMouseEnter" @mouseleave="handleSidebarMouseLeave" @focusin="showSidebarPeek" @focusout="handleSidebarFocusOut">
     <USidebar
       v-model:open="sidebarVisible"
       variant="sidebar"
@@ -326,59 +359,6 @@ onUnmounted(() => {
         </template>
       </template>
     </USidebar>
-
-    <Transition name="fade">
-      <div
-        v-if="isPeeking"
-        class="sidebar-peek-overlay"
-        @mouseenter="showSidebarPeek"
-        @mouseleave="hideSidebarPeek"
-      >
-        <div class="sidebar-peek-panel">
-          <div class="px-3.5 pb-2.5 pt-4">
-            <div class="flex min-w-0 items-center gap-3 px-1.5">
-              <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
-                <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
-                <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
-                <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
-              </div>
-            </div>
-          </div>
-
-        <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3.5">
-            <div v-for="group in componentGroups" :key="group.id" class="mb-3">
-              <component :is="group.component" v-bind="group.componentProps || {}" />
-            </div>
-
-            <nav class="app-sidebar-nav" aria-label="Expanded navigation">
-              <div class="app-sidebar-menu-tree">
-                <SidebarMenuTree
-                  v-for="(group, groupIndex) in navigationItems"
-                  :key="groupIndex"
-                  :items="group"
-                  :collapsed="false"
-                  :labels-visible="true"
-                />
-              </div>
-            </nav>
-          </div>
-          <div class="flex flex-col gap-1.5 overflow-hidden w-full p-0 px-3.5 pb-5">
-            <template v-for="group in bottomGroups" :key="group.id">
-              <PermissionGate :condition="group.permission as any">
-                <component
-                  v-if="group.component"
-                  :is="group.component"
-                  v-bind="{ ...(group.componentProps || {}), collapsed: false }"
-                />
-              </PermissionGate>
-            </template>
-          </div>
-        </div>
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -443,26 +423,5 @@ onUnmounted(() => {
 
 .eapp-sidebar:deep([data-slot="container"]) {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.sidebar-peek-overlay {
-  position: absolute;
-  top: 0;
-  left: 100%;
-  bottom: 0;
-  z-index: 100;
-  pointer-events: auto;
-}
-
-.sidebar-peek-panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 280px;
-  background: var(--shell-sidebar-bg);
-  border-right: 1px solid var(--shell-sidebar-border);
-  box-shadow: var(--shadow-xl);
-  backdrop-filter: blur(18px);
-  overflow: hidden;
 }
 </style>
