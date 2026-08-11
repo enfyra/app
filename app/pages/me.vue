@@ -209,7 +209,7 @@ onMounted(() => {
             v-model:errors="errors"
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             table-name="enfyra_user"
-            :excluded="['isRootAdmin', 'isSystem', 'allowedRoutePermissions', 'createdAt', 'updatedAt', 'password']"
+            :excluded="['isRootAdmin', 'isSystem', 'roles', 'allowedRoutePermissions', 'createdAt', 'updatedAt', 'password']"
             :field-map="fieldMap"
             :loading="loading"
             mode="update"

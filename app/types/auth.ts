@@ -5,11 +5,11 @@ export interface User {
   email: string;
   isRootAdmin: boolean;
   isSystem: boolean;
-  role?: {
+  roles?: Array<{
     id: string;
     name: string;
     routePermissions: RoutePermission[];
-  };
+  }>;
   allowedRoutePermissions?: RoutePermission[];
 }
 

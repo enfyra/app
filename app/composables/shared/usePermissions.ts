@@ -62,9 +62,9 @@ export function usePermissions() {
       }
     }
 
-    if (!me.value.role?.routePermissions) return false;
-
-    const routePermissions = asRelationArray(me.value.role.routePermissions).filter(
+    const routePermissions = asRelationArray(me.value.roles).flatMap((role: any) =>
+      asRelationArray(role?.routePermissions)
+    ).filter(
       (permission: any) =>
         permission.route?.path === normalizedRoutePath && permission.isEnabled
     );
@@ -163,9 +163,11 @@ export function usePermissions() {
   };
 
   const hasMenuPermission = (menu: unknown): boolean => {
-    const { getId } = useDatabase();
-    const roleId = me.value?.role ? getId(me.value.role) : null;
-    return canSeeMenuByRole(menu as any, roleId, me.value?.isRootAdmin === true);
+    return canSeeMenuByRole(
+      menu as any,
+      me.value?.roles ?? [],
+      me.value?.isRootAdmin === true,
+    );
   };
 
   return {

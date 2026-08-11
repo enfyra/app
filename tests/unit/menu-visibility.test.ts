@@ -20,6 +20,16 @@ describe("menu visibility", () => {
     expect(canSeeMenu(menu, 9)).toBe(false);
   });
 
+  it("shows a private menu when any assigned role has an enabled rule", () => {
+    const menu = {
+      isPublic: false,
+      menuPermissions: [{ isEnabled: true, role: { id: "moderator" } }],
+    };
+
+    expect(canSeeMenu(menu, [{ id: "member" }, { id: "moderator" }])).toBe(true);
+    expect(canSeeMenu(menu, [{ id: "member" }, { id: "editor" }])).toBe(false);
+  });
+
   it("hides menus without an explicit public flag or role rule", () => {
     expect(canSeeMenu({}, 9)).toBe(false);
   });

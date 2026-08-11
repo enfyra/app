@@ -22,7 +22,7 @@ function asPermissionArray(value: MenuVisibilityRecord["menuPermissions"]): Menu
 
 export function canSeeMenu(
   menu: MenuVisibilityRecord | null | undefined,
-  roleId: unknown,
+  roles: unknown,
   isRootAdmin = false,
 ): boolean {
   if (!menu || menu.isEnabled === false) return false;
@@ -30,10 +30,14 @@ export function canSeeMenu(
 
   const permissions = asPermissionArray(menu.menuPermissions);
 
-  const normalizedRoleId = relationId(roleId);
-  if (!normalizedRoleId) return false;
+  const roleIds = new Set(
+    (Array.isArray(roles) ? roles : [roles])
+      .map(relationId)
+      .filter((roleId): roleId is string => roleId !== null),
+  );
+  if (roleIds.size === 0) return false;
 
   return permissions.some((permission) =>
-    permission.isEnabled !== false && relationId(permission.role) === normalizedRoleId,
+    permission.isEnabled !== false && roleIds.has(relationId(permission.role) ?? ''),
   );
 }
