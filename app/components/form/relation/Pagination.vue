@@ -1,69 +1,65 @@
 <script setup lang="ts">
 const props = defineProps<{
-  page: number;
-  total: number;
-  limit: number;
+  canGoPrevious: boolean;
+  canGoNext: boolean;
   loading: boolean;
   disabled?: boolean;
 }>();
 
 const emit = defineEmits<{
-  "update:page": [page: number];
+  previous: [];
+  next: [];
   apply: [];
 }>();
 
-const totalPages = computed(() => Math.ceil(props.total / props.limit) || 1);
-const isValidPage = computed(
-  () => props.page >= 1 && props.page <= totalPages.value
-);
+function previous() {
+  if (!props.loading && props.canGoPrevious) emit("previous");
+}
 
-function goToPage(newPage: number) {
-  if (newPage >= 1 && newPage <= totalPages.value) {
-    emit("update:page", newPage);
-  }
+function next() {
+  if (!props.loading && props.canGoNext) emit("next");
 }
 
 function apply() {
-  if (props.disabled) return;
-  emit("apply");
+  if (!props.disabled) emit("apply");
 }
 
 const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
-  <div class="flex justify-between items-center">
-    <div :class="(isMobile || isTablet) ? 'text-xs text-muted-foreground flex gap-1.5 items-center' : 'text-xs text-muted-foreground flex gap-2 items-center'">
-      <span v-if="!isMobile && !isTablet">Page {{ page }} / {{ totalPages }}</span>
-      <span v-if="!isValidPage && !isMobile && !isTablet" class="text-[var(--md-error)]">(Invalid page)</span>
+  <div class="flex items-center justify-between">
+    <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5' : 'flex items-center gap-2'">
       <UButton
         icon="i-lucide-chevron-left"
         :size="(isMobile || isTablet) ? 'sm' : 'xs'"
-        @click="goToPage(page - 1)"
-        :disabled="page <= 1 || totalPages <= 1 || loading"
-        :title="`Go to page ${page - 1}`"
+        :disabled="!canGoPrevious || loading"
+        title="Previous records"
         :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
         color="primary"
-      />
-      <span v-if="isMobile || isTablet" class="text-xs font-medium">{{ page }}/{{ totalPages }}</span>
+        @click="previous"
+      >
+        <span v-if="!isMobile && !isTablet">Previous</span>
+      </UButton>
       <UButton
         icon="i-lucide-chevron-right"
         :size="(isMobile || isTablet) ? 'sm' : 'xs'"
-        @click="goToPage(page + 1)"
-        :disabled="page >= totalPages || totalPages <= 1 || loading"
-        :title="`Go to page ${page + 1}`"
+        :disabled="!canGoNext || loading"
+        title="Next records"
         :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
         color="primary"
-      />
-      
+        @click="next"
+      >
+        <span v-if="!isMobile && !isTablet">Next</span>
+      </UButton>
     </div>
     <UButton
       icon="lucide:check"
-      @click="apply"
       color="primary"
       :size="(isMobile || isTablet) ? 'sm' : 'sm'"
       :disabled="disabled"
       :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
+      @click="apply"
     >
       <span v-if="!isMobile && !isTablet">Apply</span>
     </UButton>

@@ -1,4 +1,4 @@
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, nextTick } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import CommonDrawer from '~/components/common/Drawer.vue'
@@ -56,6 +56,36 @@ const UButtonStub = defineComponent({
 })
 
 describe('CommonModal', () => {
+  it('locks the document scroll root until the last shared overlay closes', async () => {
+    const initialOverflow = document.documentElement.style.overflow
+    const mountOptions = {
+      route: '/login',
+      props: { open: true },
+      slots: {
+        header: () => 'Title',
+        body: () => 'Body',
+      },
+      global: {
+        stubs: {
+          UModal: UModalStub,
+        },
+      },
+    }
+
+    const first = await mountSuspended(CommonModal, mountOptions)
+    const second = await mountSuspended(CommonModal, mountOptions)
+
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    first.unmount()
+    await nextTick()
+    expect(document.documentElement.style.overflow).toBe('hidden')
+
+    second.unmount()
+    await nextTick()
+    expect(document.documentElement.style.overflow).toBe(initialOverflow)
+  })
+
   it('defaults closed when modelValue is omitted', async () => {
     const wrapper = await mountSuspended(CommonModal, {
       route: '/login',

@@ -48,6 +48,14 @@ const isOpen = computed({
   },
 });
 
+const { lock, unlock } = useOverlayScrollLock();
+
+watch(
+  () => isOpen.value && hasContent.value,
+  (open) => open ? lock() : unlock(),
+  { immediate: true, flush: 'sync' },
+);
+
 const { isMobile, isTablet } = useScreen();
 
 const mergedUi = computed(() => ({

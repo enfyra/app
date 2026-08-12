@@ -69,7 +69,7 @@ async function createNewRecord() {
   if (createdId == null || String(createdId) === "") return;
   emit("update:selected", [
     ...props.selected,
-    { [getIdFieldName()]: createdId },
+    createdRecord ?? { [getIdFieldName()]: createdId },
   ]);
   emit("created");
   emit("update:modelValue", false);

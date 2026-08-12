@@ -13,15 +13,15 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  toggle: [id: any];
+  toggle: [item: any];
 }>();
 
 const { getId } = useDatabase();
 const expandedItems = ref<Set<any>>(new Set());
 
-function toggle(id: any) {
+function toggle(item: any) {
   if (props.disabled) return;
-  emit("toggle", id);
+  emit("toggle", item);
 }
 
 function isSelected(id: any) {
@@ -273,7 +273,7 @@ const { isMobile, isTablet } = useScreen();
       >
         
         <button
-          @click.stop="toggle(getId(item))"
+          @click.stop="toggle(item)"
           :class="(isMobile || isTablet) ? 'flex-1 px-2 py-2 flex items-center gap-1.5 text-left min-w-0' : 'flex-1 px-4 py-3 flex items-center gap-2 text-left min-w-0'"
         >
           <UIcon

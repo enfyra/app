@@ -50,6 +50,14 @@ const isOpen = computed({
   set: (value) => emit('update:modelValue', value),
 });
 
+const { lock, unlock } = useOverlayScrollLock();
+
+watch(
+  () => isOpen.value && hasContent.value,
+  (open) => open ? lock() : unlock(),
+  { immediate: true, flush: 'sync' },
+);
+
 const { isMobile, isTablet } = useScreen();
 
 
