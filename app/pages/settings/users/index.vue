@@ -32,15 +32,15 @@
           :to="`/settings/users/${getId(user)}`"
           :stats="[
             {
-              label: 'Role',
-              component: user.role ? 'UBadge' : null,
-              props: user.role
+              label: 'Roles',
+              component: user.roles?.length ? 'UBadge' : null,
+              props: user.roles?.length
                 ? {
                     variant: 'soft',
                     color: 'primary',
                   }
                 : undefined,
-              value: user.role?.name || 'No role',
+              value: user.roles?.map((role: any) => role.name).join(', ') || 'No roles',
             },
             {
               label: 'Joined',
@@ -99,8 +99,8 @@ const USER_LIST_FIELDS = [
   "avatar",
   "isRootAdmin",
   "createdAt",
-  "role.id",
-  "role.name",
+  "roles.id",
+  "roles.name",
 ].join(",");
 
 const { registerPageHeader } = usePageHeaderRegistry();

@@ -35,7 +35,24 @@ describe('document-scrolling app shell', () => {
     const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
 
     expect(sidebar).toContain("import { useScrollLock } from '@vueuse/core';")
-    expect(sidebar).toMatch(/useScrollLock\([^)]*document\.body/)
+    expect(sidebar).toMatch(/useScrollLock\([^)]*document\.documentElement/)
+    expect(sidebar).not.toMatch(/useScrollLock\([^)]*document\.body/)
     expect(sidebar).toContain('documentScrollLocked.value = mobile && visible')
+  })
+
+  it('temporarily expands the collapsed desktop sidebar on hover', () => {
+    const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
+
+    expect(sidebar).toContain('collapsible="icon"')
+    expect(sidebar).toContain('v-model:open="sidebarVisible"')
+    expect(sidebar).toContain('const suppressSidebarPersist = ref(false)')
+    expect(sidebar).toContain('setSidebarVisibleTransient(true)')
+    expect(sidebar).toContain('setSidebarVisibleTransient(false)')
+    expect(sidebar).toContain('@mouseenter="handleSidebarMouseEnter"')
+    expect(sidebar).toContain('@mouseleave="handleSidebarMouseLeave"')
+    expect(sidebar).toContain('@focusout="handleSidebarFocusOut"')
+    expect(sidebar).toContain('if (sidebarPointerInside.value) return')
+    expect(sidebar).toContain('if (width.value < 1024)')
+    expect(sidebar).not.toContain('sidebar-peek-overlay')
   })
 })
