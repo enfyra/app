@@ -9,8 +9,19 @@ function toGlobalName(pkgName: string): string {
   return pkgName.replace(/[^a-zA-Z0-9]/g, "_").replace(/^(\d)/, "_$1");
 }
 
-function rewriteCdnPaths(code: string, cdnBase: string): string {
-  return code.replace(/((?:from|import)\s*["'])\/([@a-z])/g, `$1${cdnBase}/$2`);
+function rewriteCdnPaths(code: string, cdnBase: string, sourceUrl: string): string {
+  return code.replace(
+    /((?:from|import)\s*["'])([^"']+)(["'])/g,
+    (_match, prefix: string, specifier: string, suffix: string) => {
+      if (specifier.startsWith("/")) {
+        return `${prefix}${cdnBase}${specifier}${suffix}`;
+      }
+      if (specifier.startsWith(".")) {
+        return `${prefix}${new URL(specifier, sourceUrl).href}${suffix}`;
+      }
+      return `${prefix}${specifier}${suffix}`;
+    },
+  );
 }
 
 function replaceExternalImports(code: string, externals: string[]): string {
@@ -48,18 +59,20 @@ async function fetchBundle(cdnBase: string, spec: string, externals: string[]): 
   }
 
   let code = await entryRes.text();
+  let sourceUrl = entryUrl;
 
   if (code.length < 1024) {
     const bundlePath = code.match(/export\s+(?:\*|\{[^}]*\})\s+from\s*["'](\/[^"']+)["']/);
     if (bundlePath?.[1]) {
-      const bundleRes = await fetch(`${cdnBase}${bundlePath[1]}`);
+      sourceUrl = `${cdnBase}${bundlePath[1]}`;
+      const bundleRes = await fetch(sourceUrl);
       if (bundleRes.ok) {
         code = await bundleRes.text();
       }
     }
   }
 
-  code = rewriteCdnPaths(code, cdnBase);
+  code = rewriteCdnPaths(code, cdnBase, sourceUrl);
   code = replaceExternalImports(code, [...externals, "vue"]);
 
   return code;
