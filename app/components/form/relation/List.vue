@@ -25,7 +25,7 @@ function toggle(item: any) {
 }
 
 function isSelected(id: any) {
-  return props.selected.some((sel) => getId(sel) === id);
+  return props.selected.some((selectedId) => String(selectedId) === String(id));
 }
 
 function isExpanded(id: any) {
@@ -256,50 +256,45 @@ function formatFieldValue(value: any, type: string): string {
   return str;
 }
 
-const { isMobile, isTablet } = useScreen();
 </script>
 
 <template>
-  <div :class="(isMobile || isTablet) ? 'space-y-1.5' : 'space-y-2'">
+  <div class="divide-y divide-[var(--border-default)]">
     <div
       v-for="item in data"
       :key="getId(item)"
-      class="border rounded-lg overflow-hidden hover:bg-[var(--surface-muted)] transition-colors"
-      :class="isSelected(getId(item)) ? 'border-primary-400' : 'border-[var(--border-default)]'"
+      class="overflow-hidden transition-colors"
+      :class="isSelected(getId(item))
+        ? 'bg-[var(--state-primary-soft-bg)] hover:bg-[var(--state-primary-soft-bg-hover)]'
+        : 'hover:bg-[var(--surface-muted)]'"
     >
-      
-      <div
-        class="flex items-center min-w-0"
-      >
-        
+      <div class="flex min-h-11 items-center min-w-0">
         <button
           @click.stop="toggle(item)"
-          :class="(isMobile || isTablet) ? 'flex-1 px-2 py-2 flex items-center gap-1.5 text-left min-w-0' : 'flex-1 px-4 py-3 flex items-center gap-2 text-left min-w-0'"
+          class="flex min-h-11 min-w-0 flex-1 items-center gap-2 px-3 py-2 text-left"
         >
           <UIcon
             v-if="isSelected(getId(item))"
             name="lucide:check-circle"
-            :class="(isMobile || isTablet) ? 'w-4 h-4 flex-shrink-0 text-primary-400' : 'w-5 h-5 flex-shrink-0 text-primary-400'"
+            class="h-4 w-4 flex-shrink-0 text-primary-400"
           />
           <UIcon
             v-else
             name="lucide:circle"
-            :class="(isMobile || isTablet) ? 'w-4 h-4 flex-shrink-0 text-muted-foreground' : 'w-5 h-5 flex-shrink-0 text-muted-foreground'"
+            class="h-4 w-4 flex-shrink-0 text-muted-foreground"
           />
-          <div class="flex-1 min-w-0 overflow-hidden">
-            <div v-if="!isMobile && !isTablet" class="text-xs text-muted-foreground mb-0.5 truncate">
-              ID: {{ shortenId(getId(item)) }}
-            </div>
-            <div :class="(isMobile || isTablet) ? 'text-sm truncate' : 'font-medium truncate'">
+          <div class="flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden">
+            <div class="truncate text-sm font-medium">
               {{ getDisplayLabel(item) }}
             </div>
+            <span class="shrink-0 font-mono text-xs text-muted-foreground">{{ shortenId(getId(item)) }}</span>
           </div>
         </button>
 
-        <div :class="(isMobile || isTablet) ? 'flex items-center gap-0.5 px-1 border-l border-[var(--border-default)] flex-shrink-0' : 'flex items-center gap-1 px-2 border-l border-[var(--border-default)] flex-shrink-0'">
+        <div class="flex flex-shrink-0 items-center gap-0.5 border-l border-[var(--border-default)] px-1.5">
           <UButton
             :icon="isExpanded(getId(item)) ? 'lucide:chevron-up' : 'lucide:chevron-down'"
-            :size="(isMobile || isTablet) ? 'xs' : 'sm'"
+            size="xs"
             variant="ghost"
             color="neutral"
             @click.stop="toggleExpand(getId(item))"
@@ -309,7 +304,7 @@ const { isMobile, isTablet } = useScreen();
           <UButton
             v-if="getDetailPath?.(item)"
             icon="lucide:external-link"
-            :size="(isMobile || isTablet) ? 'xs' : 'sm'"
+            size="xs"
             variant="ghost"
             color="neutral"
             :to="getDetailPath?.(item) || undefined"
@@ -321,9 +316,9 @@ const { isMobile, isTablet } = useScreen();
 
       <div
         v-if="isExpanded(getId(item))"
-        :class="(isMobile || isTablet) ? 'border-t border-[var(--border-default)] bg-[var(--surface-muted)] px-2 py-2' : 'border-t border-[var(--border-default)] bg-[var(--surface-muted)] px-4 py-3'"
+        class="border-t border-[var(--border-default)] bg-[var(--surface-muted)] px-3 py-2"
       >
-        <div :class="(isMobile || isTablet) ? 'grid grid-cols-1 gap-2 text-xs' : 'grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm'">
+        <div class="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
           <div
             v-for="field in getExpandedFields(item)"
             :key="field.key"

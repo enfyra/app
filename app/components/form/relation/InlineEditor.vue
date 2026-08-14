@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { resolveRelationDetailPath } from '~/utils/relation-detail-paths';
+import { getDetailPathForTable } from '~/utils/relation-detail-paths';
+import { getRelationId } from '~/utils/relation-records';
+import type { RelationId } from '~/types/relation';
 
 const props = defineProps<{
   relationMeta: any;
@@ -10,52 +12,52 @@ defineOptions({ inheritAttrs: false });
 
 const emit = defineEmits(["update:modelValue"]);
 const showModal = ref(false);
-const selectedIds = ref<any[]>([]);
+const selectedIds = ref<RelationId[]>([]);
 const { getId } = useDatabase();
+
+function normalizeRelationIds(values: unknown[]): RelationId[] {
+  const seen = new Set<string>();
+  return values.reduce<RelationId[]>((ids, value) => {
+    const id = getRelationId(value, getId);
+    if (id === null || seen.has(String(id))) return ids;
+    seen.add(String(id));
+    ids.push(id);
+    return ids;
+  }, []);
+}
 
 watch(
   () => props.modelValue,
   () => {
-    if (
-      props.relationMeta.type === "one-to-one" ||
-      props.relationMeta.type === "many-to-one"
-    ) {
-      selectedIds.value =
-        props.modelValue && getId(props.modelValue) ? [props.modelValue] : [];
-    } else {
-      selectedIds.value = Array.isArray(props.modelValue)
-        ? props.modelValue.filter((item) => item && getId(item))
-        : [];
-    }
+    const values = props.relationMeta.type === "one-to-one" || props.relationMeta.type === "many-to-one"
+      ? [props.modelValue]
+      : Array.isArray(props.modelValue) ? props.modelValue : [];
+    selectedIds.value = normalizeRelationIds(values);
   },
   { immediate: true }
 );
 
-function applySelection(ids: any[]) {
+function applySelection(ids: RelationId[]) {
+  const nextIds = normalizeRelationIds(ids);
   let result;
   switch (props.relationMeta.type) {
     case "one-to-one":
     case "many-to-one":
-      result = ids.length > 0 ? ids[0] : null;
+      result = nextIds[0] ?? null;
       break;
     case "one-to-many":
     case "many-to-many":
-      result = ids;
+      result = nextIds;
       break;
     default:
-      result = ids;
+      result = nextIds;
   }
 
   emit("update:modelValue", result);
   showModal.value = false;
 }
 
-function removeId(id: any) {
-  if (id === undefined || id === null) {
-    console.warn("Cannot remove item with undefined/null id:", id);
-    return;
-  }
-
+function removeId(id: RelationId) {
   if (
     props.relationMeta.type === "one-to-one" ||
     props.relationMeta.type === "many-to-one"
@@ -63,53 +65,36 @@ function removeId(id: any) {
     emit("update:modelValue", null);
     selectedIds.value = [];
   } else {
-    const updated = selectedIds.value.filter((i) => getId(i) !== id);
+    const updated = selectedIds.value.filter((selectedId) => selectedId !== id);
     emit("update:modelValue", updated);
     selectedIds.value = updated;
   }
 }
 
-function shortenId(id: string | number): string {
-  if (id === undefined || id === null) {
-    return "Invalid ID";
-  }
-  const str = String(id);
-  return str.length > 12 ? `${str.slice(0, 4)}…${str.slice(-3)}` : str;
-}
-
-function getDetailPath(item: any): string | null {
+function getDetailPath(id: RelationId): string | null {
   const tableName = props.relationMeta?.targetTableName;
-
   if (!tableName) return null;
-
-  const url = resolveRelationDetailPath(tableName, item);
-
-  if (url) {
-    return url;
-  }
-
-  const itemId = getId(item);
-  return itemId ? `/data/${tableName}/${itemId}` : null;
+  return getDetailPathForTable(tableName, id) || `/data/${tableName}/${id}`;
 }
 </script>
 
 <template>
   <div class="flex flex-wrap gap-2 items-center">
     <div
-      v-for="item in selectedIds"
-      :key="getId(item)"
+      v-for="id in selectedIds"
+      :key="id"
       class="relation-inline-chip eapp-primary-soft inline-flex items-stretch overflow-hidden rounded-md"
-      :title="getId(item) ? String(getId(item)) : 'Invalid ID'"
+      :title="String(id)"
     >
-      <span class="relation-inline-chip-label px-2 py-0.5 font-mono text-xs">
-        {{ getId(item) ? shortenId(getId(item)) : "Invalid ID" }}
+      <span class="relation-inline-chip-label max-w-48 truncate px-2 py-0.5 text-xs">
+        {{ id }}
       </span>
 
       <NuxtLink
-        v-if="getDetailPath(item)"
-        :to="getDetailPath(item)!"
+        v-if="getDetailPath(id)"
+        :to="getDetailPath(id)!"
         class="relation-inline-chip-action relation-inline-chip-action-primary px-1.5 flex items-center justify-center text-[10px] transition-colors"
-        :title="`Open detail for ${getId(item)}`"
+        :title="`Open detail for ${id}`"
       >
         <UIcon name="lucide:arrow-up-right" class="w-3 h-3" />
       </NuxtLink>
@@ -119,7 +104,7 @@ function getDetailPath(item: any): string | null {
         type="button"
         class="relation-inline-chip-action relation-inline-chip-action-danger px-1.5 flex items-center justify-center text-[10px] transition-colors"
         title="Remove relation"
-        @click.stop="removeId(getId(item))"
+        @click.stop="removeId(id)"
       >
         <UIcon name="lucide:x" class="w-3 h-3" />
       </button>

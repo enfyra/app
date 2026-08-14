@@ -19,7 +19,7 @@ const show = computed({
   },
 });
 
-const { getId, getIdFieldName } = useDatabase();
+const { getId } = useDatabase();
 
 const targetTableName = computed(() => props.relationMeta?.targetTableName || "");
 const targetTableNameResolved = computed(() => targetTableName.value || '');
@@ -67,10 +67,7 @@ async function createNewRecord() {
   const createdRecord = extractCreatedRecord(response ?? createData.value);
   const createdId = getId(createdRecord);
   if (createdId == null || String(createdId) === "") return;
-  emit("update:selected", [
-    ...props.selected,
-    createdRecord ?? { [getIdFieldName()]: createdId },
-  ]);
+  emit("update:selected", [...props.selected, createdId]);
   emit("created");
   emit("update:modelValue", false);
 }
