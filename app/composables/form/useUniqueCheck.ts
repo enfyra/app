@@ -250,7 +250,7 @@ export function useUniqueCheck(
       };
 
       try {
-        const response = await $fetch<{ data: any[]; meta?: { total?: number } }>(
+        const response = await useAuthFetch<{ data: any[]; meta?: { total?: number } }>(
           `/api/${tableNameRef.value}`,
           {
             query: {

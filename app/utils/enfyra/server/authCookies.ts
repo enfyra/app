@@ -1,4 +1,4 @@
-import { setCookie, type H3Event } from "h3";
+import { deleteCookie, setCookie, type H3Event } from "h3";
 import {
   ACCESS_TOKEN_KEY,
   EXP_TIME_KEY,
@@ -45,6 +45,12 @@ export function setAuthCookies(
     String(expTime),
     createCookieOptions(refreshMaxAge ?? accessMaxAge)
   );
+}
+
+export function clearAuthCookies(event: H3Event) {
+  for (const name of [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, EXP_TIME_KEY]) {
+    deleteCookie(event, name, createCookieOptions());
+  }
 }
 
 export function getJwtCookieMaxAge(token: string): number | undefined {

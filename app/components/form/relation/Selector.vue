@@ -19,14 +19,14 @@ const isDrawerOpen = computed({
   set: (value) => emit("update:open", value),
 });
 
-const selected = ref<any[]>([...props.selectedIds]);
-const selectedRecords = ref<any[]>([]);
-const selectedExpandedLimit = ref(0);
+const draftSelected = ref<any[]>([...props.selectedIds]);
+const confirmedSelected = ref<any[]>([...props.selectedIds]);
+const confirmedRecords = ref<any[]>([]);
+const showAllConfirmed = ref(false);
 const pendingRemoval = ref<any | null>(null);
 const normalRecords = ref<any[]>([]);
 const selectedLoading = ref(false);
 const normalLoading = ref(false);
-const showSelected = ref(false);
 const showCreateDrawer = ref(false);
 const showFilterDrawer = ref(false);
 const searchQuery = ref("");
@@ -47,21 +47,31 @@ const { isMounted } = useMounted();
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const idField = computed(() => getIdFieldName());
-const selectedIds = computed(() => {
+function uniqueRelationItems(items: any[]): any[] {
   const seen = new Set<string>();
-  return selected.value.filter((item) => {
+  return items.filter((item) => {
     const id = getId(item);
     if (id === null || id === undefined || seen.has(String(id))) return false;
     seen.add(String(id));
     return true;
   });
+}
+
+const draftSelectedIds = computed(() => uniqueRelationItems(draftSelected.value));
+const confirmedIds = computed(() => uniqueRelationItems(confirmedSelected.value));
+const confirmedIdValues = computed(() => confirmedIds.value.map((item) => getId(item)));
+const confirmedVisibleRecords = computed(() => (
+  showAllConfirmed.value
+    ? confirmedRecords.value
+    : confirmedRecords.value.slice(0, SELECTED_PREVIEW_LIMIT)
+));
+const confirmedOverflowCount = computed(() => Math.max(0, confirmedRecords.value.length - confirmedVisibleRecords.value.length));
+const hasPendingSelectionChanges = computed(() => {
+  const draft = new Set(draftSelectedIds.value.map((item) => String(getId(item))));
+  const confirmed = new Set(confirmedIds.value.map((item) => String(getId(item))));
+  if (draft.size !== confirmed.size) return true;
+  return [...draft].some((id) => !confirmed.has(id));
 });
-const selectedIdValues = computed(() => selectedIds.value.map((item) => getId(item)));
-const selectedVisibleRecords = computed(() => {
-  if (!showSelected.value) return [];
-  return selectedRecords.value.slice(0, selectedExpandedLimit.value || SELECTED_PREVIEW_LIMIT);
-});
-const selectedOverflowCount = computed(() => Math.max(0, selectedRecords.value.length - selectedVisibleRecords.value.length));
 const loading = computed(() => selectedLoading.value || normalLoading.value);
 const canLoadMore = computed(() => hasMoreNormal.value && !loading.value);
 
@@ -73,8 +83,8 @@ function getNormalFilter(pointer = normalPointer.value): Record<string, any> {
   const conditions: Record<string, any>[] = [];
   const baseFilter = getBaseFilter();
   if (baseFilter && Object.keys(baseFilter).length > 0) conditions.push(baseFilter);
-  if (selectedIdValues.value.length > 0) {
-    conditions.push({ [idField.value]: { _not_in: selectedIdValues.value } });
+  if (confirmedIdValues.value.length > 0) {
+    conditions.push({ [idField.value]: { _not_in: confirmedIdValues.value } });
   }
   if (pointer !== null && pointer !== undefined) {
     conditions.push({ [idField.value]: { _lt: pointer } });
@@ -86,7 +96,7 @@ function getNormalFilter(pointer = normalPointer.value): Record<string, any> {
 }
 
 async function fetchRecords(query: Record<string, any>) {
-  return await $fetch<any>(`/api${targetRoute.value}`, { query });
+  return await useAuthFetch<any>(`/api${targetRoute.value}`, { query });
 }
 
 async function refreshRecords({ reset = false } = {}) {
@@ -100,11 +110,11 @@ async function refreshRecords({ reset = false } = {}) {
 
   const sequence = ++requestSequence.value;
   const fields = await getColumnFields();
-  const selectedQuery = selectedIdValues.value.length > 0
+  const selectedQuery = confirmedIdValues.value.length > 0
     ? {
         fields,
-        filter: { [idField.value]: { _in: selectedIdValues.value } },
-        limit: selectedIdValues.value.length,
+        filter: { [idField.value]: { _in: confirmedIdValues.value } },
+        limit: confirmedIdValues.value.length,
       }
     : null;
   const normalQuery = {
@@ -124,7 +134,7 @@ async function refreshRecords({ reset = false } = {}) {
     if (sequence !== requestSequence.value) return;
 
     const selectedById = new Map((selectedResponse?.data || []).map((item: any) => [String(getId(item)), item]));
-    selectedRecords.value = selectedIds.value.map((item) => selectedById.get(String(getId(item))) || item);
+    confirmedRecords.value = confirmedIds.value.map((item) => selectedById.get(String(getId(item))) || item);
 
     const normalData = normalResponse?.data || [];
     normalRecords.value = normalData.slice(0, LIST_LIMIT);
@@ -159,43 +169,37 @@ function toggle(item: any) {
   const id = getId(item);
   if (id === null || id === undefined) return;
 
-  const isCurrentlySelected = selected.value.some((candidate) => getId(candidate) === id);
+  const isCurrentlySelected = draftSelected.value.some((candidate) => getId(candidate) === id);
   if (isCurrentlySelected) {
     pendingRemoval.value = item;
     return;
   }
 
-  selected.value = props.multiple ? [...selected.value, item] : [item];
-  void refreshRecords({ reset: true });
+  draftSelected.value = props.multiple ? [...draftSelected.value, item] : [item];
 }
 
 function confirmRemoval() {
   if (!pendingRemoval.value) return;
   const id = getId(pendingRemoval.value);
-  selected.value = selected.value.filter((candidate) => getId(candidate) !== id);
+  draftSelected.value = draftSelected.value.filter((candidate) => getId(candidate) !== id);
   pendingRemoval.value = null;
-  void refreshRecords({ reset: true });
 }
 
 function cancelRemoval() {
   pendingRemoval.value = null;
 }
 
-function toggleSelectedSection() {
-  showSelected.value = !showSelected.value;
-  selectedExpandedLimit.value = showSelected.value ? SELECTED_PREVIEW_LIMIT : 0;
-}
-
-function expandSelectedSection() {
-  showSelected.value = true;
-  selectedExpandedLimit.value = Math.max(
-    SELECTED_PREVIEW_LIMIT,
-    selectedExpandedLimit.value + SELECTED_PREVIEW_LIMIT,
-  );
+function shortenId(id: string | number): string {
+  const value = String(id);
+  return value.length > 12 ? `${value.slice(0, 4)}…${value.slice(-3)}` : value;
 }
 
 function apply() {
-  if (!props.disabled) emit("apply", selected.value);
+  if (props.disabled) return;
+  const nextSelection = [...draftSelectedIds.value];
+  confirmedSelected.value = nextSelection;
+  emit("apply", nextSelection);
+  void refreshRecords({ reset: true });
 }
 
 function getDetailPath(item: any): string | null {
@@ -235,12 +239,15 @@ watch(searchQuery, (newVal) => {
 });
 
 watch(() => props.selectedIds, () => {
-  selected.value = [...props.selectedIds];
+  draftSelected.value = [...props.selectedIds];
+  confirmedSelected.value = [...props.selectedIds];
   void refreshRecords({ reset: true });
 });
 
 watch(() => props.open, (open) => {
   if (!open) return;
+  draftSelected.value = [...confirmedSelected.value];
+  showAllConfirmed.value = false;
   searchQuery.value = "";
   searchDebounced.value = "";
   void refreshRecords({ reset: true });
@@ -280,38 +287,39 @@ const { isMobile, isTablet } = useScreen();
           </div>
 
           <div class="flex items-center gap-2">
-            <UBadge v-if="selected.length > 0" variant="soft" color="primary" size="sm">{{ selected.length }} selected</UBadge>
+            <UBadge v-if="hasPendingSelectionChanges" variant="soft" color="info" size="sm">Changes pending confirmation</UBadge>
             <span class="text-xs text-muted-foreground">{{ props.multiple ? 'Multiple selection enabled' : 'Single selection' }}</span>
           </div>
         </div>
 
-        <div v-if="selectedRecords.length > 0" class="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] px-3 py-2">
-          <button type="button" class="flex min-w-0 flex-1 items-center gap-2 text-left" @click="toggleSelectedSection">
-            <UIcon :name="showSelected ? 'lucide:chevron-down' : 'lucide:chevron-right'" class="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span class="text-sm font-medium">Selected</span>
-            <UBadge variant="soft" color="primary" size="xs">{{ selectedRecords.length }}</UBadge>
-            <span v-if="showSelected && selectedOverflowCount > 0" class="truncate text-xs text-muted-foreground">{{ selectedVisibleRecords.length }} shown</span>
+        <div v-if="confirmedRecords.length > 0" class="flex flex-wrap items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] px-3 py-2">
+          <span class="text-sm font-medium">Selected</span>
+          <UBadge variant="soft" color="primary" size="xs">{{ confirmedRecords.length }}</UBadge>
+          <button
+            v-for="item in confirmedVisibleRecords"
+            :key="getId(item)"
+            type="button"
+            :title="String(getId(item))"
+            @click="toggle(item)"
+          >
+            <UBadge
+              :color="draftSelectedIds.some((candidate) => getId(candidate) === getId(item)) ? 'primary' : 'neutral'"
+              :variant="draftSelectedIds.some((candidate) => getId(candidate) === getId(item)) ? 'soft' : 'outline'"
+              size="xs"
+              class="font-mono"
+            >
+              {{ shortenId(getId(item)) }}
+            </UBadge>
           </button>
           <UButton
-            v-if="selectedOverflowCount > 0"
+            v-if="confirmedOverflowCount > 0"
             size="xs"
             variant="ghost"
             color="primary"
-            @click="expandSelectedSection"
+            @click="showAllConfirmed = true"
           >
-            +{{ Math.min(SELECTED_PREVIEW_LIMIT, selectedOverflowCount) }}
+            +{{ confirmedOverflowCount }}
           </UButton>
-        </div>
-
-        <div v-if="showSelected && selectedRecords.length > 0" class="max-h-48 overflow-y-auto rounded-lg border border-[var(--border-default)] bg-[var(--surface-default)] p-2">
-          <FormRelationList
-            :data="selectedVisibleRecords"
-            :selected="selected"
-            :multiple="props.multiple"
-            :disabled="props.disabled"
-            :get-detail-path="getDetailPath"
-            @toggle="toggle"
-          />
         </div>
 
         <div class="relative">
@@ -341,7 +349,7 @@ const { isMobile, isTablet } = useScreen();
           <FormRelationList
             v-else
             :data="normalRecords"
-            :selected="selected"
+            :selected="draftSelected"
             :multiple="props.multiple"
             :disabled="props.disabled"
             :get-detail-path="getDetailPath"
@@ -369,9 +377,9 @@ const { isMobile, isTablet } = useScreen();
   <FormRelationCreateDrawer
     v-model="showCreateDrawer"
     :relation-meta="props.relationMeta"
-    :selected="selected"
+    :selected="draftSelected"
     @created="() => refreshRecords({ reset: true })"
-    @update:selected="selected = $event"
+    @update:selected="draftSelected = $event"
   />
 
   <FilterDrawerLazy v-model="showFilterDrawer" :table-name="targetTableName" :current-filter="currentFilter" @apply="handleFilterApply" />

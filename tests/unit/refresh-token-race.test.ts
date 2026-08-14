@@ -21,6 +21,21 @@ describe("refreshAccessToken race behavior", () => {
     vi.useRealTimers();
   });
 
+  it("refreshes shortly before access-token expiry", async () => {
+    const { shouldRefreshAccessToken } = await import(
+      "~/utils/enfyra/server/refreshToken"
+    );
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-12T00:00:00.000Z"));
+
+    expect(
+      shouldRefreshAccessToken(tokenWithExp(Math.floor(Date.now() / 1000) + 29))
+    ).toBe(true);
+    expect(
+      shouldRefreshAccessToken(tokenWithExp(Math.floor(Date.now() / 1000) + 31))
+    ).toBe(false);
+  });
+
   it("does not delete auth cookies when refresh fails", async () => {
     const { refreshAccessToken } = await import(
       "~/utils/enfyra/server/refreshToken"

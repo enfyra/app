@@ -74,7 +74,7 @@ async function handleReload(action: (typeof reloadActions)[number]) {
     const basePath = action.path.replace(/^\/+/, '');
     const fullUrl = `${normalizeUrl(apiUrl, '/api')}/${basePath}`;
 
-    const response = await $fetch<ReloadResponse>(fullUrl, {
+    const response = await useAuthFetch<ReloadResponse>(fullUrl, {
       method: 'POST',
       credentials: 'include',
     });

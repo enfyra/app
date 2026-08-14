@@ -106,7 +106,7 @@ async function searchInLog(query: string) {
     const basePath = `logs/${encodeURIComponent(selectedFile.value)}`;
     const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
 
-    const response = await $fetch<any>(fullUrl, {
+    const response = await useAuthFetch<any>(fullUrl, {
       method: "GET",
       credentials: "include",
       query: { id: query.trim() },
@@ -183,7 +183,7 @@ async function loadLogContent(file?: string, append: boolean = false) {
     const basePath = `logs/${encodeURIComponent(filename)}`;
     const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
 
-    const response = await $fetch<any>(fullUrl, {
+    const response = await useAuthFetch<any>(fullUrl, {
       method: "GET",
       credentials: "include",
       query: {
@@ -324,7 +324,7 @@ async function downloadLog(file?: any) {
     const basePath = `logs/${encodeURIComponent(filename)}/tail`;
     const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
 
-    const response = await $fetch<any>(fullUrl, {
+    const response = await useAuthFetch<any>(fullUrl, {
       method: "GET",
       credentials: "include",
       query: { lines: 10000 },
