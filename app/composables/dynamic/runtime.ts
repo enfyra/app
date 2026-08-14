@@ -113,6 +113,7 @@ export function getComposablesObject(): Record<string, any> {
     useSeoMeta,
     useCookie,
     useNuxtApp,
+    useColorMode,
   };
 }
 

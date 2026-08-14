@@ -222,6 +222,7 @@ export const availableComposables = {
   useSeoMeta,
   useCookie,
   useNuxtApp,
+  useColorMode,
 };
 
 export function getComposablesForPreview(previewState?: PreviewState) {

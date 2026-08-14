@@ -182,6 +182,7 @@ onMounted(() => {
   { label: 'useDatabase', type: 'function', detail: 'Enfyra: { getId, getIdFieldName }' },
   { label: 'useRoutes', type: 'function', detail: 'Enfyra: route management' },
   { label: 'useHighlight', type: 'function', detail: 'Enfyra: code highlighting' },
+  { label: 'useColorMode', type: 'function', detail: 'Nuxt: reactive color mode (light/dark/system)' },
   { label: 'useMounted', type: 'function', detail: 'Enfyra: { isMounted }' },
   {
     label: 'packages',
