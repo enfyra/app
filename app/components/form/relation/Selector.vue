@@ -160,7 +160,6 @@ function toggle(item: any) {
 
   const nextSelection = props.multiple ? [...draftSelectedIds.value, id] : [id];
   draftSelected.value = nextSelection;
-  if (!props.multiple) commitSelection(nextSelection, { close: true });
 }
 
 function removeSelection(id: RelationId) {
@@ -172,11 +171,11 @@ function apply() {
   commitSelection(draftSelected.value);
 }
 
-function commitSelection(nextSelection: unknown[], options: { close?: boolean } = {}) {
+function commitSelection(nextSelection: unknown[]) {
   const next = normalizeRelationIds(nextSelection);
   confirmedSelected.value = next;
   emit("apply", next);
-  if (options.close) isDrawerOpen.value = false;
+  isDrawerOpen.value = false;
   void refreshRecords({ reset: true });
 }
 
@@ -206,6 +205,10 @@ function clearAllFilters() {
   searchDebounced.value = "";
   currentFilter.value = createEmptyFilter();
   void refreshRecords({ reset: true });
+}
+
+function showAllConfirmedRecords() {
+  showAllConfirmed.value = true;
 }
 
 watch(searchQuery, (newVal) => {
@@ -280,7 +283,7 @@ const { isMobile, isTablet } = useScreen();
               size="sm"
               variant="ghost"
               color="primary"
-              @click="showAllConfirmed = true"
+              @click="showAllConfirmedRecords"
             >
               +{{ selectedOverflowCount }}
             </UButton>
