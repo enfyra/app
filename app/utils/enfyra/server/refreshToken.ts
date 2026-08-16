@@ -16,6 +16,7 @@ interface RefreshTokenResponse {
 }
 
 const REFRESH_REUSE_WINDOW_MS = 2000;
+const ACCESS_TOKEN_REFRESH_LEEWAY_MS = 30_000;
 const refreshRequests = new Map<string, Promise<RefreshTokenResponse>>();
 const refreshResults = new Map<
   string,
@@ -48,13 +49,22 @@ export function isAccessTokenExpired(accessToken: string): boolean {
   return Date.now() >= expirationTime;
 }
 
+export function shouldRefreshAccessToken(accessToken: string): boolean {
+  const decoded = decodeJWT(accessToken);
+  if (!decoded || !decoded.exp) {
+    return true;
+  }
+
+  return Date.now() >= decoded.exp * 1000 - ACCESS_TOKEN_REFRESH_LEEWAY_MS;
+}
+
 export function validateTokens(event: H3Event): TokenValidationResult {
   const accessToken = getCookie(event, ACCESS_TOKEN_KEY);
   const refreshToken = getCookie(event, REFRESH_TOKEN_KEY);
 
-  if (accessToken && !isAccessTokenExpired(accessToken)) {
+  if (accessToken && !shouldRefreshAccessToken(accessToken)) {
     return { accessToken, needsRefresh: false };
-  } else if (refreshToken && (!accessToken || isAccessTokenExpired(accessToken))) {
+  } else if (refreshToken && (!accessToken || shouldRefreshAccessToken(accessToken))) {
     return { accessToken: null, needsRefresh: true };
   }
 

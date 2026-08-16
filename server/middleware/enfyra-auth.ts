@@ -3,6 +3,8 @@ import {
   validateTokens,
   refreshAccessToken,
 } from "~/utils/enfyra/server/refreshToken";
+import { clearAuthCookies } from "~/utils/enfyra/server/authCookies";
+import { isInvalidRefreshSessionError } from "~/utils/enfyra/server/sessionExpiry";
 import { REFRESH_TOKEN_KEY } from "~/constants/enfyra";
 
 export default defineEventHandler(async (event) => {
@@ -47,6 +49,9 @@ export default defineEventHandler(async (event) => {
           );
         }
       } catch (error) {
+        if (isInvalidRefreshSessionError(error)) {
+          clearAuthCookies(event);
+        }
         currentAccessToken = null;
       }
     }

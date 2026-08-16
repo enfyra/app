@@ -55,7 +55,7 @@ export function useExtensionPrefetch() {
 
     const task = (async () => {
       try {
-        const response = await $fetch<{ data?: any[] }>("/api/enfyra_menu", {
+        const response = await useAuthFetch<{ data?: any[] }>("/api/enfyra_menu", {
           query: {
             fields: ["*", prefixFields("extension", EXTENSION_RUNTIME_FIELDS)].join(","),
             filter: {

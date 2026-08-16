@@ -291,8 +291,8 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         path: lastAttemptedPath,
       });
       const handled = onError ? onError(apiError, errorContext) === true : false;
-      if (!handled && apiError.status === 401 && import.meta.client) {
-        window.location.reload();
+      if (!handled && apiError.status === 401 && typeof window !== "undefined") {
+        redirectToLoginOnce();
         error.value = apiError;
         status.value = "error";
         return null;

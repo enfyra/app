@@ -80,7 +80,7 @@ export function useAuth() {
         queryParams.fields = options.fields.join(",");
       }
 
-      const response = await $fetch("/me", {
+      const response = await useAuthFetch("/me", {
         method: "GET",
         query: queryParams,
         baseURL: baseUrl,

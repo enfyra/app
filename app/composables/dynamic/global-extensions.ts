@@ -30,7 +30,7 @@ export function useGlobalExtensions() {
     globalExtensionsError.value = null;
 
     try {
-      const response = await $fetch<{ data?: ExtensionDefinition[] }>("/api/enfyra_extension", {
+      const response = await useAuthFetch<{ data?: ExtensionDefinition[] }>("/api/enfyra_extension", {
         query: {
           fields: EXTENSION_RUNTIME_FIELDS,
           limit: 0,
