@@ -56,6 +56,7 @@ export type ColumnType =
   | 'varchar'
   | 'text'
   | 'int'
+  | 'float'
   | 'bigint'
   | 'boolean'
   | 'date'

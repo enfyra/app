@@ -680,6 +680,7 @@ function getComponentConfigByKey(key: string) {
     }
 
     case "int":
+    case "float":
       if (column?.isPrimary && column?.isGenerated) {
         return {
           component: UInput,
