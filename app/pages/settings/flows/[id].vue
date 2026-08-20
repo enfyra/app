@@ -445,28 +445,46 @@ async function saveFlowSettings() {
 
 const stepDrawerUpdating = ref(false);
 const execDrawerUpdating = ref(false);
+const stepDrawerHistoryEntry = ref(false);
+const execDrawerHistoryEntry = ref(false);
 
 watch(stepDrawerOpen, (isOpen) => {
   if (stepDrawerUpdating.value) return;
   if (isOpen) {
+    stepDrawerHistoryEntry.value = true;
     router.push({ query: { ...route.query, editStep: editingStepId.value || 'new' } });
-  } else {
-    const q = { ...route.query };
-    delete q.editStep;
-    delete q.editStepKey;
-    router.replace({ query: q });
+    return;
   }
+
+  if (stepDrawerHistoryEntry.value) {
+    stepDrawerHistoryEntry.value = false;
+    router.back();
+    return;
+  }
+
+  const q = { ...route.query };
+  delete q.editStep;
+  delete q.editStepKey;
+  router.replace({ query: q });
 });
 
 watch(execDrawerOpen, (isOpen) => {
   if (execDrawerUpdating.value) return;
   if (isOpen && selectedExec.value) {
+    execDrawerHistoryEntry.value = true;
     router.push({ query: { ...route.query, exec: String(getId(selectedExec.value)) } });
-  } else {
-    const q = { ...route.query };
-    delete q.exec;
-    router.replace({ query: q });
+    return;
   }
+
+  if (execDrawerHistoryEntry.value) {
+    execDrawerHistoryEntry.value = false;
+    router.back();
+    return;
+  }
+
+  const q = { ...route.query };
+  delete q.exec;
+  router.replace({ query: q });
 });
 
 watch(() => route.query, (q) => {
@@ -504,9 +522,6 @@ async function syncDrawersFromQuery(q: typeof route.query) {
   } else if (stepDrawerOpen.value) {
     stepDrawerUpdating.value = true;
     stepDrawerOpen.value = false;
-    const nextQuery = { ...route.query };
-    delete nextQuery.editStepKey;
-    if ('editStepKey' in route.query) router.replace({ query: nextQuery });
     nextTick(() => { stepDrawerUpdating.value = false; });
   }
 

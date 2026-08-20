@@ -64,6 +64,8 @@ const selectedMenu = ref<MenuDefinition | null>(null);
 const menuItemEditorRef = ref();
 const showExtensionDrawer = ref(false);
 const selectedMenuForExtension = ref<MenuDefinition | null>(null);
+const drawerHistoryEntry = ref(false);
+const isClearingDrawerQuery = ref(false);
 let isSwitchingDrawerFromAction = false;
 
 function queryValue(value: unknown): string | null {
@@ -99,12 +101,26 @@ function findMenuById(id: unknown) {
   return menus.value.find((menu) => String(getId(menu)) === targetId) || null;
 }
 
-async function replaceDrawerQuery(query: Record<string, any>) {
-  await router.replace({ query: { ...getDrawerBaseQuery(), ...query } });
+async function openDrawerQuery(query: Record<string, any>) {
+  drawerHistoryEntry.value = true;
+  await router.push({ query: { ...getDrawerBaseQuery(), ...query } });
 }
 
 async function clearDrawerQuery() {
-  await router.replace({ query: getDrawerBaseQuery() });
+  if (isClearingDrawerQuery.value) return;
+  isClearingDrawerQuery.value = true;
+  try {
+    if (drawerHistoryEntry.value) {
+      drawerHistoryEntry.value = false;
+      router.back();
+      return;
+    }
+
+    await router.replace({ query: getDrawerBaseQuery() });
+  } finally {
+    await nextTick();
+    isClearingDrawerQuery.value = false;
+  }
 }
 
 async function openCreateMenuDrawer() {
@@ -114,7 +130,7 @@ async function openCreateMenuDrawer() {
   selectedMenuForExtension.value = null;
   showEditModal.value = true;
   try {
-    await replaceDrawerQuery({ menuDrawer: 'create' });
+    await openDrawerQuery({ menuDrawer: 'create' });
   } finally {
     await nextTick();
     isSwitchingDrawerFromAction = false;
@@ -129,7 +145,7 @@ async function openEditMenuDrawer(menu: MenuDefinition) {
   selectedMenuForExtension.value = null;
   showEditModal.value = true;
   try {
-    await replaceDrawerQuery({ menuDrawer: 'edit', menuId: menuId ? String(menuId) : undefined });
+    await openDrawerQuery({ menuDrawer: 'edit', menuId: menuId ? String(menuId) : undefined });
   } finally {
     await nextTick();
     isSwitchingDrawerFromAction = false;
@@ -145,7 +161,7 @@ async function openChildMenuDrawer(parentMenu: MenuDefinition) {
   selectedMenuForExtension.value = null;
   showEditModal.value = true;
   try {
-    await replaceDrawerQuery({
+    await openDrawerQuery({
       menuDrawer: 'create',
       parentMenuId: parentId ? String(parentId) : undefined,
     });
@@ -163,7 +179,7 @@ async function openExtensionDrawer(menu: MenuDefinition) {
   selectedMenu.value = null;
   showExtensionDrawer.value = true;
   try {
-    await replaceDrawerQuery({
+    await openDrawerQuery({
       extensionDrawer: 'edit',
       extensionMenuId: menuId ? String(menuId) : undefined,
     });

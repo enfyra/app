@@ -59,6 +59,12 @@ interface Array<T> {
   reduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T): T;
   reduce(callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: T[]) => T, initialValue: T): T;
   reduce<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: T[]) => U, initialValue: U): U;
+  join(separator?: string): string;
+  push(...items: T[]): number;
+  pop(): T | undefined;
+  shift(): T | undefined;
+  unshift(...items: T[]): number;
+  sort(compareFn?: (a: T, b: T) => number): this;
   slice(start?: number, end?: number): T[];
   [Symbol.iterator](): IterableIterator<T>;
 }
@@ -123,6 +129,7 @@ interface NumberConstructor {
   isFinite(number: unknown): boolean;
   isInteger(number: unknown): boolean;
   isNaN(number: unknown): boolean;
+  isSafeInteger(number: unknown): boolean;
   parseFloat(string: string): number;
   parseInt(string: string, radix?: number): number;
 }
@@ -204,6 +211,23 @@ interface SetConstructor {
   new <T = any>(values?: readonly T[] | Iterable<T> | null): Set<T>;
 }
 declare const Set: SetConstructor;
+interface Map<K, V> {
+  readonly size: number;
+  clear(): void;
+  delete(key: K): boolean;
+  entries(): IterableIterator<[K, V]>;
+  forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void, thisArg?: any): void;
+  get(key: K): V | undefined;
+  has(key: K): boolean;
+  keys(): IterableIterator<K>;
+  set(key: K, value: V): this;
+  values(): IterableIterator<V>;
+  [Symbol.iterator](): IterableIterator<[K, V]>;
+}
+interface MapConstructor {
+  new <K = any, V = any>(entries?: readonly (readonly [K, V])[] | Iterable<readonly [K, V]> | null): Map<K, V>;
+}
+declare const Map: MapConstructor;
 declare namespace Intl {
   type DateTimeFormatOptions = Record<string, any>;
   type NumberFormatOptions = Record<string, any>;
@@ -267,6 +291,15 @@ type EnfyraFindArgs = {
   debugMode?: boolean | string;
   aggregate?: any;
 };
+type EnfyraAggregateArgs = {
+  filter?: any;
+  dimensions?: string[];
+  measures?: Record<string, any>;
+  sort?: Array<{ field: string; direction?: 'asc' | 'desc' }>;
+  page?: number;
+  limit?: number;
+  [key: string]: any;
+};
 type EnfyraCreateArgs = {
   data: any;
   fields?: string | string[];
@@ -289,6 +322,7 @@ type EnfyraDeleteResult = {
 type EnfyraRepository = {
   find(args?: EnfyraFindArgs): Promise<EnfyraQueryResult>;
   findOne(args?: EnfyraFindArgs): Promise<any>;
+  aggregate(args: EnfyraAggregateArgs): Promise<any>;
   exists(filter: any): Promise<boolean>;
   create(args: EnfyraCreateArgs): Promise<EnfyraQueryResult>;
   update(args: EnfyraUpdateArgs): Promise<EnfyraQueryResult>;
@@ -627,6 +661,10 @@ async function getEnfyraJavaScriptSyntaxError(
   } catch (error: any) {
     return error?.message || 'Syntax error';
   }
+}
+
+export async function lintEnfyraTypeScript(source: string): Promise<Diagnostic[]> {
+  return lintEnfyraScript(source, 'typescript');
 }
 
 export async function lintEnfyraScript(
