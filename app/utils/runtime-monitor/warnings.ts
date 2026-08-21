@@ -18,6 +18,7 @@ export function workerWarnings(metrics: RuntimeMetricsPayload) {
   const warnings: string[] = [];
   if (metrics.executor.pool.waitingTasks > 0) warnings.push(`${metrics.executor.pool.waitingTasks} executor task${metrics.executor.pool.waitingTasks > 1 ? 's are' : ' is'} waiting.`);
   if (isolateHeapSeverity(metrics) !== 'ok') warnings.push(`Isolate heap pressure is ${fmtPercent(metrics.executor.maxHeapRatio)}.`);
+  if (metrics.executor.p99QueueWaitMs >= 1000) warnings.push(`Executor queue p99 wait is ${fmtMs(metrics.executor.p99QueueWaitMs)}.`);
   if (metrics.executor.p99TaskMs >= 1000) warnings.push(`Executor p99 latency is ${fmtMs(metrics.executor.p99TaskMs)}.`);
   if (metrics.executor.taskErrorTotal > 0) warnings.push(`${metrics.executor.taskErrorTotal} executor task error${metrics.executor.taskErrorTotal > 1 ? 's' : ''}.`);
   if (metrics.executor.taskTimeoutTotal > 0) warnings.push(`${metrics.executor.taskTimeoutTotal} executor timeout${metrics.executor.taskTimeoutTotal > 1 ? 's' : ''}.`);

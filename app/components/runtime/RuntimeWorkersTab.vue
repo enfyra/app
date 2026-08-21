@@ -5,6 +5,7 @@ import {
 } from '~/utils/runtime-monitor/core';
 import {
   executorQueueSeverity,
+  queueWaitSeverity,
   rotationSeverity,
   taskErrorSeverity,
   taskLatencySeverity,
@@ -63,7 +64,11 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
             /
             {{ fmtNumber(metrics.averages?.executorWaitingTasks ?? metrics.executor.pool.waitingTasks, 1) }}
           </div>
-          <div>Task p95 / p99</div>
+          <div>Queue wait p95 / p99</div>
+          <div class="text-right font-medium" :class="metricTextClass(queueWaitSeverity(metrics))">
+            {{ fmtMs(metrics.executor.p95QueueWaitMs) }} / {{ fmtMs(metrics.executor.p99QueueWaitMs) }}
+          </div>
+          <div>Execution p95 / p99</div>
           <div class="text-right font-medium" :class="metricTextClass(taskLatencySeverity(metrics))">
             {{ fmtMs(metrics.executor.p95TaskMs) }} / {{ fmtMs(metrics.executor.p99TaskMs) }}
           </div>
