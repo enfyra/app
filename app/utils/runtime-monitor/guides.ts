@@ -30,8 +30,10 @@ export const runtimeTabGuides: Record<string, RuntimeGuide> = {
         items: [
           ['RAM / CPU', 'Effective resources detected by Enfyra for auto-tuning. If host and effective differ, the process is running under container/cgroup limits.'],
           ['Workers', 'Executor worker capacity selected from effective CPU and memory. This is capacity, not current request count.'],
-          ['Lane cap', 'Maximum concurrent executor tasks per worker. Waiting tasks mean demand is above this capacity at that moment.'],
-          ['Total lanes', 'Maximum executor task lanes across all runner processes in this instance.'],
+          ['Isolate lanes', 'Physical isolated-vm lanes per runner. A lane is the fault boundary: an isolate failure affects only tasks admitted to that isolate.'],
+          ['Tasks / isolate', 'Concurrent task contexts admitted to each physical isolate. This is tuned by the kernel; it is not an environment override.'],
+          ['Task cap', 'Maximum concurrent executor tasks per worker after multiplying isolate lanes by tasks per isolate. Waiting tasks mean demand is above this capacity at that moment.'],
+          ['Total task cap', 'Maximum executor tasks across all runner processes in this instance.'],
           ['Reusable contexts', 'Scrubbed execution contexts currently retained for reuse. This is not the configured lane capacity.'],
           ['SQL target pool', 'Total SQL pool max assigned per process after Enfyra reserves DB connections and divides capacity across active instances.'],
         ],

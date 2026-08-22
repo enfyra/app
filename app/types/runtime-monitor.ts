@@ -178,6 +178,7 @@ export type RuntimeMetricsPayload = {
       isolateMemoryLimitMb: number;
       tasksPerWorkerCap: number;
       isolatePoolSize: number;
+      tasksPerIsolate?: number;
     };
     pool: {
       max: number;
