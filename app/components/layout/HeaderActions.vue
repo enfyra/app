@@ -30,6 +30,7 @@
             'primary'
           "
           :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
+          :loading-auto="true"
           :loading="unref(action.loading)"
           :disabled="unref(action.disabled) || unref(action.loading)"
           :to="unref(action.to)"
@@ -97,9 +98,10 @@ const visibleButtonActions = computed(() => {
 
 const handleActionClick = (action: HeaderAction) => {
   if (action.submit) {
-    action.submit();
-  } else if (action.onClick) {
-    action.onClick();
+    return action.submit();
+  }
+  if (action.onClick) {
+    return action.onClick();
   }
 };
 </script>

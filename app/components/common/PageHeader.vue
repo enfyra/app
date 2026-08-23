@@ -73,7 +73,7 @@ const headerStripClass = computed(() => {
 const isStatsFocus = computed(() => props.variant === "stats-focus");
 
 function handlePageHeaderActionClick(action: any) {
-  action.onClick?.();
+  return action.onClick?.();
 }
 </script>
 
@@ -141,6 +141,7 @@ function handlePageHeaderActionClick(action: any) {
                   'neutral'
                 "
                 :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
+                :loading-auto="true"
                 :disabled="
                   typeof action.disabled === 'boolean'
                     ? action.disabled
@@ -174,6 +175,7 @@ function handlePageHeaderActionClick(action: any) {
                   'neutral'
                 "
                 :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
+                :loading-auto="true"
                 :disabled="
                   typeof action.disabled === 'boolean'
                     ? action.disabled
