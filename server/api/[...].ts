@@ -7,6 +7,7 @@ import {
 } from "h3";
 import {
   requireValidCookieBridgePrefix,
+  requireValidOAuthState,
   requireValidRedirectUrl,
 } from "../utils/oauth";
 import { proxyToAPI } from "~/utils/enfyra/server/proxy";
@@ -49,9 +50,11 @@ export default defineEventHandler(async (event) => {
 
     let redirectParam: string;
     let cookieBridgePrefix: string | undefined;
+    let state: string | undefined;
     try {
       redirectParam = await requireValidRedirectUrl(query.redirect, event);
       cookieBridgePrefix = requireValidCookieBridgePrefix(query.cookieBridgePrefix);
+      state = requireValidOAuthState(query.state);
     } catch (err: any) {
       const message = err?.statusMessage || err?.message || "OAuth validation failed";
       const loginUrl = new URL("/login", getRequestURL(event).origin);
@@ -69,6 +72,9 @@ export default defineEventHandler(async (event) => {
       `${apiUrl.replace(/\/+$/, "")}/auth/${provider}`
     );
     backendUrl.searchParams.set("redirect", redirectParam);
+    if (state !== undefined) {
+      backendUrl.searchParams.set("state", state);
+    }
     if (cookieBridgePrefix) {
       backendUrl.searchParams.set("cookieBridgePrefix", cookieBridgePrefix);
     }

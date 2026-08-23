@@ -4,13 +4,18 @@ import {
   getQuery,
   sendRedirect,
 } from "h3";
-import { buildUrlWithQuery, requireValidRedirectUrl } from "../../utils/oauth";
+import {
+  buildUrlWithQuery,
+  requireValidOAuthState,
+  requireValidRedirectUrl,
+} from "../../utils/oauth";
 import { setAuthCookies } from "../../utils/auth-cookies";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
   const query = getQuery(event);
   const redirect = await requireValidRedirectUrl(query.redirect, event);
+  const state = requireValidOAuthState(query.state);
   const error =
     typeof query.error === "string" && query.error.length > 0
       ? query.error
@@ -19,7 +24,7 @@ export default defineEventHandler(async (event) => {
   if (error) {
     return sendRedirect(
       event,
-      buildUrlWithQuery(redirect, { error }),
+      buildUrlWithQuery(redirect, { error, state }),
       302
     );
   }
@@ -64,5 +69,5 @@ export default defineEventHandler(async (event) => {
 
   setAuthCookies(event, { accessToken, refreshToken, expTime });
 
-  return sendRedirect(event, redirect, 302);
+  return sendRedirect(event, buildUrlWithQuery(redirect, { state }), 302);
 });

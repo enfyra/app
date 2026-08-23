@@ -30,7 +30,7 @@
         <div
           v-if="showReloadBanner"
           key="metadata-banner"
-          class="pointer-events-none absolute right-4 top-[72px] z-[60] max-w-[min(420px,calc(100vw-2rem))] lg:right-6"
+          class="pointer-events-none fixed right-4 top-[72px] z-[60] max-w-[min(420px,calc(100vw-2rem))] lg:right-6"
         >
           <div
             class="pointer-events-auto flex items-center gap-2 rounded-full border bg-[var(--surface-default)]/90 px-3 py-2 text-sm font-semibold shadow-[var(--shadow-md)] backdrop-blur-xl"
