@@ -117,7 +117,7 @@ const {
   showInitialLoading,
   isRefreshing: packagesRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const total = computed(() => apiData.value?.meta?.filterCount || 0);
 
 watch(
   page,
