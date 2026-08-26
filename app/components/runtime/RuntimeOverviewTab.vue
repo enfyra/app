@@ -11,6 +11,7 @@ import {
   hardwareMemoryLabel,
   sampleAgeLabel,
 } from '~/utils/runtime-monitor/format';
+import type { RuntimeMetricsPayload } from '~/types/runtime-monitor';
 import {
   metricTextClass,
 } from '~/utils/runtime-monitor/core';
@@ -25,6 +26,26 @@ import { overviewWarnings } from '~/utils/runtime-monitor/warnings';
 type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
 
 defineProps<{ runtime: RuntimeMetricsViewModel }>();
+
+function totalTaskCapacity(metrics: RuntimeMetricsPayload) {
+  return metrics.executor.tuning.maxConcurrentWorkers * metrics.executor.tuning.tasksPerWorkerCap;
+}
+
+function tasksPerIsolate(metrics: RuntimeMetricsPayload) {
+  return metrics.executor.tuning.tasksPerIsolate ?? 1;
+}
+
+function reusableContextCount(metrics: RuntimeMetricsPayload) {
+  return metrics.executor.pool.workers.reduce(
+    (total, worker) => total + (worker.contextStats.idle ?? 0),
+    0,
+  );
+}
+
+function runnerRssLabel(metrics: RuntimeMetricsPayload) {
+  if (metrics.executor.runnerRssBytes <= 0) return '-';
+  return fmtMb(metrics.executor.runnerRssBytes / 1024 / 1024);
+}
 </script>
 
 <template>
@@ -151,20 +172,28 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
             <div class="text-right font-medium">{{ metrics.executor.tuning.maxConcurrentWorkers }}</div>
             <div>Isolate limit</div>
             <div class="text-right font-medium">{{ fmtMb(metrics.executor.tuning.isolateMemoryLimitMb) }}</div>
+            <div>Isolate lanes</div>
+            <div class="text-right font-medium">{{ metrics.executor.tuning.isolatePoolSize }} / worker</div>
+            <div>Tasks / isolate</div>
+            <div class="text-right font-medium">{{ tasksPerIsolate(metrics) }}</div>
             <div>Task cap</div>
             <div class="text-right font-medium">{{ metrics.executor.tuning.tasksPerWorkerCap }} / worker</div>
-            <div>Warm isolates</div>
-            <div class="text-right font-medium">{{ metrics.executor.tuning.isolatePoolSize }} / worker</div>
+            <div>Total task cap</div>
+            <div class="text-right font-medium">{{ totalTaskCapacity(metrics) }}</div>
+            <div>Reusable contexts</div>
+            <div class="text-right font-medium">{{ reusableContextCount(metrics) }}</div>
           </div>
         </div>
 
         <div class="rounded-lg border border-[var(--border-default)] p-3">
           <div class="text-xs font-medium text-[var(--text-tertiary)]">Memory</div>
           <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <div>RSS</div>
+            <div>Main RSS</div>
             <div class="text-right font-medium">{{ fmtMb(metrics.instance.rssMb) }}</div>
             <div>RSS avg</div>
             <div class="text-right font-medium">{{ fmtMb(metrics.averages?.rssMb ?? metrics.instance.rssMb) }}</div>
+            <div>Runner RSS</div>
+            <div class="text-right font-medium">{{ runnerRssLabel(metrics) }}</div>
             <div>Heap</div>
             <div class="text-right font-medium" :class="metricTextClass(heapSeverity(metrics))">
               {{ fmtMb(metrics.instance.heapUsedMb) }} / {{ fmtMb(metrics.instance.heapTotalMb) }}

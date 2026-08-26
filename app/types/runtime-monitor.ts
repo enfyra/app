@@ -144,6 +144,9 @@ export type RuntimeMetricsPayload = {
     executorWaitingTasks: number;
     executorP95TaskMs: number;
     executorP99TaskMs: number;
+    executorP95QueueWaitMs: number;
+    executorP99QueueWaitMs: number;
+    executorRunnerRssMb: number;
     executorMaxHeapRatio: number;
     websocketConnections: number;
     queueDepth: number;
@@ -175,6 +178,7 @@ export type RuntimeMetricsPayload = {
       isolateMemoryLimitMb: number;
       tasksPerWorkerCap: number;
       isolatePoolSize: number;
+      tasksPerIsolate?: number;
     };
     pool: {
       max: number;
@@ -186,6 +190,7 @@ export type RuntimeMetricsPayload = {
         draining: boolean;
         ageMs: number;
         lastHeapRatio: number;
+        lastRssBytes?: number;
         contextStats: Record<string, number>;
       }>;
     };
@@ -197,6 +202,10 @@ export type RuntimeMetricsPayload = {
     avgTaskMs: number;
     p95TaskMs: number;
     p99TaskMs: number;
+    avgQueueWaitMs: number;
+    p95QueueWaitMs: number;
+    p99QueueWaitMs: number;
+    runnerRssBytes: number;
     maxHeapRatio: number;
   };
   queues: Record<string, RuntimeQueueStats | null>;

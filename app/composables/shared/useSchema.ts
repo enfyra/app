@@ -237,6 +237,7 @@ export function useSchema(tableName?: string | Ref<string>) {
         case "boolean": result[key] = false; break;
         case "array": result[key] = []; break;
         case "int":
+        case "float":
         case "number": result[key] = 0; break;
         default: result[key] = "";
       }

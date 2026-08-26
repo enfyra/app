@@ -16,6 +16,7 @@ const { getId, getIdFieldName } = useDatabase();
 
 const LIST_LIMIT = 10;
 const SELECTED_PREVIEW_LIMIT = 5;
+const RELATION_REQUEST_TIMEOUT_MS = 15_000;
 
 const isDrawerOpen = computed({
   get: () => props.open || false,
@@ -35,6 +36,7 @@ const normalPointer = ref<any>(null);
 const pointerHistory = ref<any[]>([]);
 const hasMoreNormal = ref(true);
 const requestSequence = ref(0);
+const loadError = ref<string | null>(null);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
 const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
@@ -44,6 +46,8 @@ const { definition, getColumnFields } = useSchema(targetTableName);
 const { isMounted } = useMounted();
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+let activeRequestController: AbortController | null = null;
+let activeRequestTimer: ReturnType<typeof setTimeout> | null = null;
 
 const idField = computed(() => getIdFieldName());
 function normalizeRelationIds(items: unknown[]): RelationId[] {
@@ -93,12 +97,27 @@ function getNormalFilter(pointer = normalPointer.value): Record<string, any> {
   return { _and: conditions };
 }
 
-async function fetchRecords(query: Record<string, any>) {
-  return await useAuthFetch<any>(`/api${targetRoute.value}`, { query });
+async function fetchRecords(query: Record<string, any>, signal: AbortSignal) {
+  return await useAuthFetch<any>(`/api${targetRoute.value}`, { query, signal });
+}
+
+function cancelActiveRequest() {
+  activeRequestController?.abort();
+  activeRequestController = null;
+  if (activeRequestTimer) {
+    clearTimeout(activeRequestTimer);
+    activeRequestTimer = null;
+  }
 }
 
 async function refreshRecords({ reset = false } = {}) {
-  if (!targetTableName.value) return;
+  if (!targetTableName.value) {
+    requestSequence.value += 1;
+    cancelActiveRequest();
+    normalLoading.value = false;
+    loadError.value = null;
+    return;
+  }
   if (reset) {
     normalPointer.value = null;
     pointerHistory.value = [];
@@ -107,23 +126,48 @@ async function refreshRecords({ reset = false } = {}) {
   }
 
   const sequence = ++requestSequence.value;
-  const fields = await getColumnFields();
-  const normalQuery = {
-    fields,
-    filter: getNormalFilter(reset ? null : normalPointer.value),
-    sort: `-${idField.value}`,
-    limit: LIST_LIMIT + 1,
-  };
-
+  cancelActiveRequest();
+  const controller = new AbortController();
+  let timedOut = false;
+  activeRequestController = controller;
+  const requestTimer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, RELATION_REQUEST_TIMEOUT_MS);
+  activeRequestTimer = requestTimer;
   normalLoading.value = true;
+  loadError.value = null;
   try {
-    const normalResponse = await fetchRecords(normalQuery);
+    const fields = await getColumnFields();
+    if (sequence !== requestSequence.value) return;
+
+    const normalQuery = {
+      fields,
+      filter: getNormalFilter(reset ? null : normalPointer.value),
+      sort: `-${idField.value}`,
+      limit: LIST_LIMIT + 1,
+    };
+    const normalResponse = await fetchRecords(normalQuery, controller.signal);
     if (sequence !== requestSequence.value) return;
 
     const normalData = normalResponse?.data || [];
     normalRecords.value = normalData.slice(0, LIST_LIMIT);
     hasMoreNormal.value = normalData.length > LIST_LIMIT;
+  } catch {
+    if (sequence !== requestSequence.value) return;
+    normalRecords.value = [];
+    hasMoreNormal.value = false;
+    loadError.value = timedOut
+      ? "Loading relations timed out. Try again."
+      : "Unable to load relations. Try again.";
   } finally {
+    if (activeRequestController === controller) {
+      activeRequestController = null;
+    }
+    clearTimeout(requestTimer);
+    if (activeRequestTimer === requestTimer) {
+      activeRequestTimer = null;
+    }
     if (sequence === requestSequence.value) {
       normalLoading.value = false;
     }
@@ -234,6 +278,12 @@ watch(() => props.open, (open) => {
   void refreshRecords({ reset: true });
 });
 
+onBeforeUnmount(() => {
+  requestSequence.value += 1;
+  cancelActiveRequest();
+  if (searchTimeout) clearTimeout(searchTimeout);
+});
+
 const { isMobile, isTablet } = useScreen();
 </script>
 
@@ -309,6 +359,15 @@ const { isMobile, isTablet } = useScreen();
 
         <div class="overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--surface-default)]">
           <CommonLoadingState v-if="!isMounted || loading" type="form" context="inline" size="md" />
+          <CommonEmptyState
+            v-else-if="loadError"
+            variant="naked"
+            title="Unable to load relations"
+            :description="loadError"
+            icon="lucide:circle-alert"
+            size="sm"
+            :action="{ label: 'Retry', onClick: () => refreshRecords({ reset: true }), icon: 'lucide:refresh-cw' }"
+          />
           <CommonEmptyState
             v-else-if="normalRecords.length === 0"
             variant="naked"

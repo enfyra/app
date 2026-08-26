@@ -114,6 +114,24 @@ return { path, downloadUrl, amount }
     expect(diagnostics).toEqual([])
   })
 
+  it('accepts ES2015 collection helpers and DynamicRepository aggregate', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const html = ['<body>', '</body>'].join('')
+const rawLimit = Number(@QUERY.limit ?? 50)
+const limit = Number.isSafeInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 100) : 50
+const policyByModel = new Map<string, any>()
+policyByModel.set('default', { limit })
+const result = await #ai_credit_ledger.aggregate({
+  filter: { kind: { _eq: 'adjustment' } },
+  measures: { requests: { count: 'id' } },
+  limit,
+})
+return { html, result, policy: policyByModel.get('default') }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
   it('rejects stale DynamicRepository where option', async () => {
     const diagnostics = await lintEnfyraTypeScript(`
 return await @REPOS.enfyra_user.find({ where: { email: { _eq: @BODY.email } } })

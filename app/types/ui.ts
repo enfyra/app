@@ -85,14 +85,14 @@ export interface HeaderAction {
     | Readonly<Ref<boolean>>
     | ComputedRef<boolean>;
   permission?: PermissionCondition;
-  onClick?: () => void;
+  onClick?: () => unknown;
   to?: string | Ref<string> | Readonly<Ref<string>> | ComputedRef<string>;
   replace?:
     | boolean
     | Ref<boolean>
     | Readonly<Ref<boolean>>
     | ComputedRef<boolean>;
-  submit?: () => void;
+  submit?: () => unknown;
   showOn?: string[];
   hideOn?: string[];
   class?: string;

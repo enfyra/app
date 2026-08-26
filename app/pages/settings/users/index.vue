@@ -139,7 +139,11 @@ const {
   showInitialLoading,
   isRefreshing: usersRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const total = computed(() =>
+  hasActiveFilters(currentFilter.value)
+    ? apiData.value?.meta?.filterCount || 0
+    : apiData.value?.meta?.totalCount || 0,
+);
 
 const filterLabel = computed(() => {
   const activeCount = activeFilterCount.value;

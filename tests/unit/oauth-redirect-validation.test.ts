@@ -18,7 +18,7 @@ vi.mock('../../server/middleware/cors', async (importOriginal) => {
 });
 
 import { getValidatedOrigins } from '../../server/middleware/cors';
-import { requireValidRedirectUrl } from '../../server/utils/oauth';
+import { requireValidOAuthState, requireValidRedirectUrl } from '../../server/utils/oauth';
 
 const mockedGetValidatedOrigins = vi.mocked(getValidatedOrigins);
 
@@ -104,5 +104,16 @@ describe('OAuth redirect origin validation', () => {
       'https://admin.example.com/settings'
     );
     expect(result).toBe('https://admin.example.com/settings');
+  });
+
+  it('preserves a valid opaque OAuth state', () => {
+    expect(requireValidOAuthState('opaque-state+/= referral')).toBe(
+      'opaque-state+/= referral'
+    );
+  });
+
+  it('rejects a non-string or oversized OAuth state', () => {
+    expect(() => requireValidOAuthState(['state'])).toThrow();
+    expect(() => requireValidOAuthState('x'.repeat(4097))).toThrow();
   });
 });

@@ -1,6 +1,8 @@
 import { createError, getRequestURL, type H3Event } from "h3";
 import { getValidatedOrigins } from "../middleware/cors";
 
+const MAX_OAUTH_STATE_LENGTH = 4096;
+
 export async function requireValidRedirectUrl(
   value: unknown,
   event?: H3Event
@@ -47,6 +49,21 @@ export async function requireValidRedirectUrl(
   }
 
   return parsed.toString();
+}
+
+export function requireValidOAuthState(value: unknown) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (typeof value !== "string" || value.length > MAX_OAUTH_STATE_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "OAuth state must be a string no longer than 4096 characters",
+    });
+  }
+
+  return value;
 }
 
 export function requireValidCookieBridgePrefix(value: unknown) {

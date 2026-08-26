@@ -450,6 +450,8 @@ function applySelectedGuardTemplate() {
 watch(selectedGuardTemplate, applySelectedGuardTemplate)
 
 const showApiTestModal = ref(false)
+const syncingDrawerFromQuery = ref(false)
+const drawerHistoryEntry = ref(false)
 
 watch(() => props.externalApiTest, (val) => {
   if (val) showApiTestModal.value = true
@@ -461,21 +463,54 @@ watch(showApiTestModal, (val) => {
 
 const routePath = computed(() => routeData.value?.data?.[0]?.path || '')
 
-function setSyncedQuery(patch: Record<string, string | undefined>) {
-  if (!props.syncQuery) return
+function buildSyncedQuery(patch: Record<string, string | undefined>) {
   const query = { ...currentPageRoute.query }
   for (const [key, value] of Object.entries(patch)) {
     if (value == null) delete query[key]
     else query[key] = value
   }
+  return query
+}
+
+function setSyncedQuery(patch: Record<string, string | undefined>) {
+  if (!props.syncQuery || syncingDrawerFromQuery.value) return
+  const query = buildSyncedQuery(patch)
+  const isOpening = Object.values(patch).some((value) => value != null)
+
+  if (isOpening) {
+    drawerHistoryEntry.value = true
+    router.push({ query })
+    return
+  }
+
+  if (drawerHistoryEntry.value) {
+    drawerHistoryEntry.value = false
+    router.back()
+    return
+  }
+
   router.replace({ query })
+}
+
+async function syncDrawerFromQuery<T>(callback: () => T | Promise<T>) {
+  syncingDrawerFromQuery.value = true
+  try {
+    await callback()
+  } finally {
+    await nextTick()
+    syncingDrawerFromQuery.value = false
+  }
 }
 
 watch(() => currentPageRoute.query.createHandler, (value) => {
   if (!props.syncQuery) return
   const shouldOpen = value === 'true'
-  if (shouldOpen && !showCreateHandlerDrawer.value) createHandler()
-  if (!shouldOpen && showCreateHandlerDrawer.value) showCreateHandlerDrawer.value = false
+  if (shouldOpen && !showCreateHandlerDrawer.value) {
+    void syncDrawerFromQuery(createHandler)
+  }
+  if (!shouldOpen && showCreateHandlerDrawer.value) {
+    void syncDrawerFromQuery(() => { showCreateHandlerDrawer.value = false })
+  }
 }, { immediate: true })
 
 watch(showCreateHandlerDrawer, (isOpen) => {
@@ -485,17 +520,21 @@ watch(showCreateHandlerDrawer, (isOpen) => {
 watch(() => currentPageRoute.query.editHandler, async (value) => {
   if (!props.syncQuery) return
   if (typeof value === 'string' && value && value !== editingHandlerId.value) {
-    editingHandlerId.value = value
-    editHandlerErrors.value = {}
-    await fetchEditHandler()
-    showEditHandlerDrawer.value = true
+    await syncDrawerFromQuery(async () => {
+      editingHandlerId.value = value
+      editHandlerErrors.value = {}
+      await fetchEditHandler()
+      showEditHandlerDrawer.value = true
+    })
     return
   }
   if (!value && showEditHandlerDrawer.value) {
-    showEditHandlerDrawer.value = false
-    editingHandlerId.value = null
-    editHandlerForm.value = {}
-    editHandlerErrors.value = {}
+    await syncDrawerFromQuery(() => {
+      showEditHandlerDrawer.value = false
+      editingHandlerId.value = null
+      editHandlerForm.value = {}
+      editHandlerErrors.value = {}
+    })
   }
 }, { immediate: true })
 
@@ -506,8 +545,12 @@ watch(showEditHandlerDrawer, (isOpen) => {
 watch(() => currentPageRoute.query.createHook, (value) => {
   if (!props.syncQuery) return
   const shouldOpen = value === 'true' || value === 'pre' || value === 'post'
-  if (shouldOpen && !showCreateHookDrawer.value) createHook(value === 'post' ? 'post' : 'pre')
-  if (!shouldOpen && showCreateHookDrawer.value) showCreateHookDrawer.value = false
+  if (shouldOpen && !showCreateHookDrawer.value) {
+    void syncDrawerFromQuery(() => createHook(value === 'post' ? 'post' : 'pre'))
+  }
+  if (!shouldOpen && showCreateHookDrawer.value) {
+    void syncDrawerFromQuery(() => { showCreateHookDrawer.value = false })
+  }
 }, { immediate: true })
 
 watch(showCreateHookDrawer, (isOpen) => {
@@ -519,30 +562,34 @@ watch(() => [currentPageRoute.query.editHook, currentPageRoute.query.editHookTyp
   if (typeof hookId === 'string' && hookId) {
     const nextType = hookTypeParam === 'post' ? 'post' : 'pre'
     if (hookId === editingHookId.value && nextType === editHookType.value && showEditHookDrawer.value) return
-    editingHookId.value = hookId
-    editHookType.value = nextType
-    editHookErrors.value = {}
-    if (nextType === 'pre') {
-      await fetchEditPreHook()
-      if (editPreHookData.value?.data?.[0]) {
-        editHookForm.value = { ...editPreHookData.value.data[0], route: { [idField]: routeId.value } }
-        showEditHookDrawer.value = true
+    await syncDrawerFromQuery(async () => {
+      editingHookId.value = hookId
+      editHookType.value = nextType
+      editHookErrors.value = {}
+      if (nextType === 'pre') {
+        await fetchEditPreHook()
+        if (editPreHookData.value?.data?.[0]) {
+          editHookForm.value = { ...editPreHookData.value.data[0], route: { [idField]: routeId.value } }
+          showEditHookDrawer.value = true
+        }
+      } else {
+        await fetchEditPostHook()
+        if (editPostHookData.value?.data?.[0]) {
+          editHookForm.value = { ...editPostHookData.value.data[0], route: { [idField]: routeId.value } }
+          showEditHookDrawer.value = true
+        }
       }
-    } else {
-      await fetchEditPostHook()
-      if (editPostHookData.value?.data?.[0]) {
-        editHookForm.value = { ...editPostHookData.value.data[0], route: { [idField]: routeId.value } }
-        showEditHookDrawer.value = true
-      }
-    }
+    })
     return
   }
   if (!hookId && showEditHookDrawer.value) {
-    showEditHookDrawer.value = false
-    editingHookId.value = null
-    editHookForm.value = {}
-    editHookErrors.value = {}
-    editHookType.value = 'pre'
+    await syncDrawerFromQuery(() => {
+      showEditHookDrawer.value = false
+      editingHookId.value = null
+      editHookForm.value = {}
+      editHookErrors.value = {}
+      editHookType.value = 'pre'
+    })
   }
 }, { immediate: true })
 

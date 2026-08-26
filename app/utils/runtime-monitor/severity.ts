@@ -38,6 +38,13 @@ export function taskLatencySeverity(metrics: RuntimeMetricsPayload): RuntimeSeve
   return 'ok';
 }
 
+export function queueWaitSeverity(metrics: RuntimeMetricsPayload): RuntimeSeverity {
+  const p99 = metrics.executor.p99QueueWaitMs;
+  if (p99 >= 5000) return 'error';
+  if (p99 >= 1000) return 'warning';
+  return 'ok';
+}
+
 export function taskErrorSeverity(metrics: RuntimeMetricsPayload): RuntimeSeverity {
   if (metrics.executor.taskTimeoutTotal > 0 || metrics.executor.crashesTotal > 0) {
     return 'error';
@@ -80,6 +87,7 @@ export function workerSeverity(metrics: RuntimeMetricsPayload): RuntimeSeverity 
   return maxSeverity(
     isolateHeapSeverity(metrics),
     executorQueueSeverity(metrics),
+    queueWaitSeverity(metrics),
     taskLatencySeverity(metrics),
     taskErrorSeverity(metrics),
     contextSeverity(metrics),

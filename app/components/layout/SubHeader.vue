@@ -32,6 +32,7 @@
               'neutral'
             "
             :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
+            :loading-auto="true"
             :disabled="
               (typeof action.disabled === 'boolean'
                 ? action.disabled
@@ -70,6 +71,7 @@
               'neutral'
             "
             :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
+            :loading-auto="true"
             :disabled="
               (typeof action.disabled === 'boolean'
                 ? action.disabled
@@ -121,6 +123,6 @@ const hasRightActions = computed(() => {
 });
 
 function handleSubHeaderActionClick(action: any) {
-  action.onClick?.();
+  return action.onClick?.();
 }
 </script>

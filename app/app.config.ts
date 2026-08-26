@@ -122,6 +122,7 @@ export default defineAppConfig({
           "rounded-[var(--radius-control)]",
           "text-sm font-medium",
           "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
+          "active:!transition-none",
           "outline-none",
           "disabled:cursor-not-allowed disabled:!opacity-100 aria-disabled:cursor-not-allowed aria-disabled:!opacity-100",
           "focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring)]",

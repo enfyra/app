@@ -23,6 +23,7 @@
             'neutral'
           "
           :size="action.size || (isMobile ? 'sm' : 'md')"
+          :loading-auto="true"
           :loading="unref(action.loading)"
           :disabled="
             (typeof action.disabled === 'boolean'
@@ -58,6 +59,6 @@ const leftActions = computed(() => {
 });
 
 function handleHeaderActionClick(action: any) {
-  action.onClick?.();
+  return action.onClick?.();
 }
 </script>
