@@ -86,6 +86,14 @@ const {
         _eq: route.params.table,
       },
     },
+    deep: {
+      columns: {
+        limit: 0,
+      },
+      relations: {
+        limit: 0,
+      },
+    },
   }),
   errorContext: "Fetch Table Data",
 });
