@@ -591,7 +591,7 @@ onUnmounted(() => {
         class="relative flex flex-col rounded-lg overflow-hidden"
         :class="[
           props.disabled ? 'bg-[var(--surface-muted)]' : 'bg-transparent dark:bg-[var(--surface-muted)]',
-          !isResizing ? 'transition-[height] duration-300 ease-out' : ''
+          !isResizing ? 'transition-[height] duration-[var(--duration-emphasized)] ease-[var(--ease-enter)]' : ''
         ]"
         :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
       >

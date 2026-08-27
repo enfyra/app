@@ -131,4 +131,19 @@ describe('guard target UI contract', () => {
     expect(filterDrawer).toContain('<FilterSavedFilters')
     expect(filterDrawer).toContain(':table-name="historyKey || tableName"')
   })
+
+  it('clears rule drawer dirty state when a successful save closes the drawer', () => {
+    for (const path of [
+      'components/guard/CreateRuleDrawer.vue',
+      'components/guard/EditRuleDrawer.vue',
+      'components/guard/CreateChildDrawer.vue',
+      'components/guard/EditChildDrawer.vue',
+      'components/guard/CreateForRouteDrawer.vue',
+    ]) {
+      const source = readAppFile(path)
+      expect(source).toContain('watch(() => props.modelValue')
+      expect(source).toContain('hasChanged.value = false')
+      expect(source).toContain('showDiscardModal.value = false')
+    }
+  })
 })

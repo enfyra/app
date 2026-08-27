@@ -164,7 +164,7 @@ function isActive(item: any): boolean {
   font-size: 12px;
   font-weight: 650;
   text-decoration: none;
-  transition: background-color 80ms ease, color 80ms ease;
+  transition: background-color var(--duration-instant) var(--ease-standard), color var(--duration-instant) var(--ease-standard);
 }
 
 .data-section-item:hover {
@@ -217,7 +217,7 @@ function isActive(item: any): boolean {
   color: var(--text-quaternary);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 80ms ease, color 80ms ease, background-color 80ms ease;
+  transition: opacity var(--duration-instant) var(--ease-standard), color var(--duration-instant) var(--ease-standard), background-color var(--duration-instant) var(--ease-standard);
 }
 
 .data-section-item:hover .data-section-pin,
@@ -250,7 +250,7 @@ function isActive(item: any): boolean {
   font-size: 11px;
   font-weight: 600;
   text-decoration: none;
-  transition: background-color 80ms ease, color 80ms ease;
+  transition: background-color var(--duration-instant) var(--ease-standard), color var(--duration-instant) var(--ease-standard);
   margin-top: 2px;
 }
 

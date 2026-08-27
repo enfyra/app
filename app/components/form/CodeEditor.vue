@@ -625,7 +625,7 @@ function handleMouseUp(e?: MouseEvent) {
     @transitionend="handleHeightTransitionEnd"
     :class="[
       attrs.class,
-      !isResizing ? 'transition-[height] duration-300 ease-out' : '',
+      !isResizing ? 'transition-[height] duration-[var(--duration-emphasized)] ease-[var(--ease-enter)]' : '',
       props.error
         ? 'border border-[var(--state-danger-outline-border)] ring-2 ring-[var(--md-error)]/20'
         : 'border border-[var(--border-strong)]'

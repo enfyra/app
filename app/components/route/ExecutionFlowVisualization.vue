@@ -603,7 +603,7 @@ function toggleHook(hook: any, type: HookType, enabled: boolean) {
   background: color-mix(in srgb, var(--execution-stage-soft) 38%, var(--surface-default));
   font-size: 0.75rem;
   font-weight: 650;
-  transition: border-color 160ms ease, background-color 160ms ease;
+  transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 
 .route-execution-empty:hover,

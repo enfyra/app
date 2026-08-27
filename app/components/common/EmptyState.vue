@@ -65,7 +65,7 @@ function handleActionClick() {
   <div
     :class="[
       'flex w-full flex-col items-center justify-center text-center',
-      'transition-colors duration-200',
+      'transition-colors duration-[var(--duration-base)]',
       sizeClass.root,
       variantClass,
     ]"

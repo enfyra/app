@@ -296,7 +296,7 @@ onUnmounted(() => {
             <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
             <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
           </div>
-          <div v-if="renderExpandedSidebarContent" class="min-w-0 flex-1 transition-opacity duration-100" :class="{ 'opacity-0': !showExpandedSidebarLabels }">
+          <div v-if="renderExpandedSidebarContent" class="min-w-0 flex-1 transition-opacity duration-[var(--duration-instant)]" :class="{ 'opacity-0': !showExpandedSidebarLabels }">
             <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
             <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
           </div>

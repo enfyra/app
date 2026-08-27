@@ -351,8 +351,8 @@ watch(
 .sidebar-children-leave-active {
   overflow: hidden;
   transition:
-    height 180ms cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 140ms ease;
+    height var(--duration-fast) var(--ease-spring),
+    opacity var(--duration-fast) var(--ease-standard);
 }
 
 .sidebar-children-enter-from,
@@ -381,7 +381,7 @@ watch(
   font-weight: 650;
   text-align: left;
   text-decoration: none;
-  transition: background-color 80ms ease, color 80ms ease;
+  transition: background-color var(--duration-instant) var(--ease-standard), color var(--duration-instant) var(--ease-standard);
 }
 
 .nested .app-sidebar-link {
@@ -481,7 +481,7 @@ watch(
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: opacity 100ms ease;
+  transition: opacity var(--duration-instant) var(--ease-standard);
 }
 
 .app-sidebar-text.hidden,
@@ -496,7 +496,7 @@ watch(
   height: 16px;
   color: currentColor;
   opacity: 0.75;
-  transition: transform 80ms ease, color 80ms ease;
+  transition: transform var(--duration-instant) var(--ease-standard), color var(--duration-instant) var(--ease-standard);
 }
 
 .app-sidebar-chevron.open {

@@ -300,7 +300,7 @@ async function handleCreate() {
   background: var(--card-bg);
   padding: 1.25rem;
   color: var(--text-primary);
-  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .package-type-card:hover {
@@ -328,7 +328,7 @@ async function handleCreate() {
   border-radius: var(--radius-control);
   background: var(--surface-muted);
   color: var(--text-secondary);
-  transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .package-type-card:hover .package-type-icon {
