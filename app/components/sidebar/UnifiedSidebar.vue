@@ -271,7 +271,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative sticky top-0 h-dvh self-start" @mouseenter="handleSidebarMouseEnter" @mouseleave="handleSidebarMouseLeave" @focusin="showSidebarPeek" @focusout="handleSidebarFocusOut">
+  <div class="relative sticky top-0 h-svh self-start" @mouseenter="handleSidebarMouseEnter" @mouseleave="handleSidebarMouseLeave" @focusin="showSidebarPeek" @focusout="handleSidebarFocusOut">
     <USidebar
       v-model:open="sidebarVisible"
       variant="sidebar"
@@ -423,5 +423,9 @@ onUnmounted(() => {
 
 .eapp-sidebar:deep([data-slot="container"]) {
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.eapp-sidebar:deep([data-slot="footer"]) {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
 }
 </style>

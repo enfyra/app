@@ -19,7 +19,8 @@ describe('document-scrolling app shell', () => {
     expect(layout).not.toContain('height: 100dvh')
     expect(layout).not.toContain('overflow-y-scroll')
     expect(layout).toContain('header class="sticky top-0')
-    expect(sidebar).toContain('sticky top-0 h-dvh self-start')
+    expect(sidebar).toContain('sticky top-0 h-svh self-start')
+    expect(sidebar).not.toContain('sticky top-0 h-dvh self-start')
     expect(mainStyles).toContain('overflow-x: clip !important')
   })
 
