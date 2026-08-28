@@ -66,6 +66,16 @@ return { nodeName }
     expect(diagnostics).toEqual([])
   })
 
+  it('accepts @TRANSACTION as an atomic repository mutation scope', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+await @TRANSACTION.run(async () => {
+  await @REPOS.orders.create({ data: @BODY })
+})
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
   it('accepts DynamicRepository exists with a direct filter', async () => {
     const diagnostics = await lintEnfyraTypeScript(`
 const used = await @REPOS.enfyra_user.exists({ email: { _eq: @BODY.email } })

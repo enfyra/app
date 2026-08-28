@@ -120,7 +120,7 @@ function copyToClipboard() {
 <style scoped>
 .slide-down-enter-active,
 .slide-down-leave-active {
-  transition: all 0.2s ease;
+  transition: background-color var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), opacity var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard);
 }
 
 .slide-down-enter-from,

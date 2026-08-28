@@ -433,7 +433,7 @@ watch(isOpen, (newValue) => {
   border-radius: var(--radius-card);
   padding: 2.5rem;
   text-align: center;
-  transition: border-color 0.16s ease, background-color 0.16s ease, color 0.16s ease, transform 0.16s ease;
+  transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
 }
 
 .upload-drop-zone:hover {
@@ -515,6 +515,6 @@ watch(isOpen, (newValue) => {
   height: 100%;
   border-radius: var(--radius-subcontrol);
   background: var(--action-primary-bg);
-  transition: width 0.16s ease;
+  transition: width var(--duration-fast) var(--ease-standard);
 }
 </style>

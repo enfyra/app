@@ -456,7 +456,6 @@ async function onSchemaConfirmSubmit() {
     }
     const confirmationResponse = await executePatchTable({ id: getId(table.value), body: table.value, query: confirmQuery });
     if (updateError.value) {
-      schemaConfirmModalOpen.value = false;
       return;
     }
     if (isSchemaMutationPreviewResponse(confirmationResponse)) {

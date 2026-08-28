@@ -1,4 +1,12 @@
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+const mocks = vi.hoisted(() => ({
+  useAuthFetch: vi.fn(),
+}))
+
+mockNuxtImport('useAuthFetch', () => mocks.useAuthFetch)
+
 import { useDynamicWidgetLoader } from '~/composables/dynamic/widgets'
 import { useDynamicComponent } from '~/composables/dynamic/useDynamicComponent'
 import { EXTENSION_RUNTIME_FIELDS } from '~/utils/extension-fields'
@@ -6,13 +14,13 @@ import { EXTENSION_RUNTIME_FIELDS } from '~/utils/extension-fields'
 describe('dynamic widget loader', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
-    vi.stubGlobal('$fetch', vi.fn())
+    mocks.useAuthFetch.mockReset()
     useState<Map<string, any>>('extension-meta-cache', () => new Map()).value.clear()
     useDynamicComponent().clearCache()
   })
 
   it('batch fetches widget metadata requested in the same tick', async () => {
-    const fetchMock = vi.mocked($fetch)
+    const fetchMock = mocks.useAuthFetch
     fetchMock.mockResolvedValue({
       data: [
         {
@@ -70,7 +78,7 @@ describe('dynamic widget loader', () => {
   })
 
   it('serves subsequent widget metadata requests from cache', async () => {
-    const fetchMock = vi.mocked($fetch)
+    const fetchMock = mocks.useAuthFetch
     fetchMock.mockResolvedValue({
       data: [
         {

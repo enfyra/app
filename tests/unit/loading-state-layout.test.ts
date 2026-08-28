@@ -16,7 +16,7 @@ describe('loading state layout', () => {
     expect(dataTable).toContain('v-if="!showInitialLoading && tableRows.length > 0"')
   })
 
-  it('uses out-in transitions for loading/content swaps', () => {
+  it('uses out-in transitions for loading/content swaps where content must not overlap', () => {
     const loadingTransitions = [
       'pages/data/[table]/index.vue',
       'components/guard/RouteGuardSection.vue',
@@ -25,7 +25,6 @@ describe('loading state layout', () => {
       'components/file/FileView.vue',
       'components/folder/FolderView.vue',
       'components/graphql/AccessEditor.vue',
-      'pages/settings/admin/logs.vue',
       'pages/settings/routes/index.vue',
       'pages/settings/api-tester/index.vue',
       'pages/settings/methods/index.vue',

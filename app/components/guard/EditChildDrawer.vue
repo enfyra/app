@@ -59,6 +59,12 @@ const emit = defineEmits<{
 const hasChanged = ref(false);
 const showDiscardModal = ref(false);
 
+watch(() => props.modelValue, (isOpen) => {
+  if (isOpen) return;
+  hasChanged.value = false;
+  showDiscardModal.value = false;
+});
+
 const fieldMap = {
   combinator: { component: resolveComponent('GuardCombinatorPicker') },
 };

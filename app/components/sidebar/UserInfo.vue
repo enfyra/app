@@ -244,7 +244,7 @@ async function handleLogout() {
       </div>
 
       <div
-        class="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        class="grid overflow-hidden transition-[grid-template-rows,opacity] duration-[var(--duration-emphasized)] ease-[var(--ease-spring)]"
         :class="panelGridClass"
       >
         <div class="min-h-0 overflow-hidden">

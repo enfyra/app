@@ -57,7 +57,7 @@ function select(value: SystemVisibilityMode) {
       :aria-pressed="currentMode === option.value"
       :disabled="isDisabled"
       :class="[
-        'h-7 rounded-[var(--radius-subcontrol)] px-3 text-xs font-semibold transition-colors duration-150',
+        'h-7 rounded-[var(--radius-subcontrol)] px-3 text-xs font-semibold transition-colors duration-[var(--duration-fast)]',
         'disabled:cursor-not-allowed disabled:opacity-60',
         currentMode === option.value
           ? 'bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]'

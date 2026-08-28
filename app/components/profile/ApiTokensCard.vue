@@ -444,7 +444,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 12px;
   padding: 14px 16px;
-  transition: background-color 160ms ease;
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
 .profile-token-row:hover {

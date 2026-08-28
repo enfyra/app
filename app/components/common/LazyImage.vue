@@ -59,7 +59,7 @@
       :class="[objectFitClass, imageClass]"
       :style="{
         opacity: isLoading ? 0 : 1,
-        transition: 'opacity 0.3s ease-out',
+        transition: 'opacity var(--duration-emphasized) var(--ease-enter)',
       }"
       loading="lazy"
       decoding="async"

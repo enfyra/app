@@ -29,6 +29,7 @@ const macroReplacements = new Map([
   ['@PKGS', '$ctx.$pkgs'],
   ['@SOCKET', '$ctx.$socket'],
   ['@TRIGGER', '$ctx.$trigger'],
+  ['@TRANSACTION', '$ctx.$transaction'],
   ['@FLOW', '$ctx.$flow'],
   ['@FLOW_PAYLOAD', '$ctx.$flow.$payload'],
   ['@FLOW_LAST', '$ctx.$flow.$last'],
@@ -338,6 +339,9 @@ type EnfyraStorage = {
   $delete(fileId: string | number): Promise<any>;
   $registerFile(options: Record<string, any>): Promise<any>;
 };
+type EnfyraTransaction = {
+  run<T>(callback: () => Promise<T>): Promise<T>;
+};
 type EnfyraThrow = {
   (statusCode: number, message?: string): never;
   400(message: string): never;
@@ -371,6 +375,7 @@ type EnfyraContext = {
   $logs: (...args: any[]) => any;
   $socket: Record<string, any>;
   $trigger: (...args: any[]) => Promise<any>;
+  $transaction: EnfyraTransaction;
   $flow: { $payload: any; $last: any; $meta: any; [key: string]: any };
   $throw: EnfyraThrow;
   $error: any;
