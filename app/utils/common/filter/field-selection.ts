@@ -2,6 +2,7 @@ import type { FilterCondition, FilterGroup } from './filter-types';
 import type { SchemaCollection } from '~/types';
 import { generateFilterId, mapDbTypeToFilterType, getOperatorsByType } from './filter-operators';
 import { getCombinedOptionsForContext } from './filter-utils';
+import { getDefaultFilterValue } from './filter-helpers';
 
 export function createFieldSelectionHandler(schemas: SchemaCollection, tableName: string) {
   return function handleFieldSelectChange(
@@ -23,7 +24,7 @@ export function createFieldSelectionHandler(schemas: SchemaCollection, tableName
       condition.field = fieldPath;
       condition.type = mapDbTypeToFilterType(selectedOption.fieldType || "string");
       condition.operator = getOperatorsByType(condition.type)[0]?.value || "_eq";
-      condition.value = null;
+      condition.value = getDefaultFilterValue(condition.type, condition.operator);
 
       emit("update:condition", { ...condition });
     } else if (selectedOption.fieldCategory === "relation") {
@@ -35,6 +36,9 @@ export function createFieldSelectionHandler(schemas: SchemaCollection, tableName
       const targetOptions = getCombinedOptionsForContext(targetTableName, schemas);
       const firstField = targetOptions.find((opt) => opt.fieldCategory === "column");
 
+      const firstFieldType = firstField?.fieldType
+        ? mapDbTypeToFilterType(firstField.fieldType)
+        : "string";
       const newGroup: FilterGroup = {
         id: generateFilterId(),
         operator: "and",
@@ -44,8 +48,8 @@ export function createFieldSelectionHandler(schemas: SchemaCollection, tableName
             id: generateFilterId(),
             field: firstField?.value || "",
             operator: "_eq",
-            value: null,
-            type: firstField?.fieldType ? mapDbTypeToFilterType(firstField.fieldType) : "string",
+            value: getDefaultFilterValue(firstFieldType, "_eq"),
+            type: firstFieldType,
           },
         ],
       };

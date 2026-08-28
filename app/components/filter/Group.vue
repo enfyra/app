@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getDefaultFilterValue } from '~/utils/common/filter/filter-helpers';
 
 const props = withDefaults(defineProps<{
   group: FilterGroup;
@@ -63,14 +64,15 @@ function addCondition() {
     (opt) => opt.fieldCategory === "column"
   );
 
+  const type = firstField?.fieldType
+    ? mapDbTypeToFilterType(firstField.fieldType)
+    : "string";
   const newCondition: FilterCondition = {
     id: generateFilterId(),
     field: firstField?.value || "",
     operator: "_eq",
-    value: null,
-    type: firstField?.fieldType
-      ? mapDbTypeToFilterType(firstField.fieldType)
-      : "string",
+    value: getDefaultFilterValue(type, "_eq"),
+    type,
   };
   props.group.conditions.push(newCondition);
   updateGroup();
