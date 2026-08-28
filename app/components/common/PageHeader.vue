@@ -210,7 +210,7 @@ function handlePageHeaderActionClick(action: any) {
         >
           
           <div
-            class="absolute inset-0 bg-[var(--state-primary-soft-bg)] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            class="absolute inset-0 bg-[var(--state-primary-soft-bg)] opacity-0 group-hover:opacity-100 transition-opacity duration-[var(--duration-emphasized)]"
           />
 
           <div class="relative">

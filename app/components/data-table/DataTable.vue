@@ -604,7 +604,7 @@ function getCellTextClass(columnId: string | undefined) {
                     ]"
                   >
                     <p
-                      v-if="typeof cell.column.columnDef.cell !== 'function'"
+                      v-if="isIdentifierColumn(cell.column.id) || typeof cell.column.columnDef.cell !== 'function'"
                   :class="getCellTextClass(cell.column.id)"
                       :title="String(cell.getValue())"
                     >
@@ -650,7 +650,7 @@ function getCellTextClass(columnId: string | undefined) {
                   ]"
                 >
                   <p
-                    v-if="typeof cell.column.columnDef.cell !== 'function'"
+                    v-if="isIdentifierColumn(cell.column.id) || typeof cell.column.columnDef.cell !== 'function'"
                     :class="getCellTextClass(cell.column.id)"
                     :title="String(cell.getValue())"
                   >

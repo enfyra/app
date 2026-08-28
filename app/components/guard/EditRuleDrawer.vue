@@ -62,6 +62,12 @@ const emit = defineEmits<{
 const hasChanged = ref(false);
 const showDiscardModal = ref(false);
 
+watch(() => props.modelValue, (isOpen) => {
+  if (isOpen) return;
+  hasChanged.value = false;
+  showDiscardModal.value = false;
+});
+
 const localOpen = computed({
   get: () => props.modelValue,
   set: (value) => {

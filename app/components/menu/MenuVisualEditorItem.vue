@@ -444,7 +444,7 @@ function handleDragEnd() {
         <UIcon
           name="lucide:chevron-right"
           :class="[
-            'h-4 w-4 transition-transform duration-150 ease-out',
+            'h-4 w-4 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-enter)]',
             isExpanded ? 'rotate-90' : ''
           ]"
         />
@@ -616,7 +616,7 @@ function handleDragEnd() {
   border: 1px solid transparent;
   border-radius: var(--radius-panel);
   background: transparent;
-  transition: background-color 110ms ease, border-color 110ms ease, box-shadow 110ms ease;
+  transition: background-color var(--duration-instant) var(--ease-standard), border-color var(--duration-instant) var(--ease-standard), box-shadow var(--duration-instant) var(--ease-standard);
 }
 
 .menu-editor-row.is-editable:hover {
@@ -643,7 +643,7 @@ function handleDragEnd() {
   justify-content: center;
   border-radius: var(--radius-subcontrol);
   color: var(--text-quaternary);
-  transition: background-color 110ms ease, color 110ms ease;
+  transition: background-color var(--duration-instant) var(--ease-standard), color var(--duration-instant) var(--ease-standard);
 }
 
 .menu-row-drag {
@@ -737,7 +737,7 @@ function handleDragEnd() {
   padding-bottom: 8px;
   border: 1px solid transparent;
   border-radius: var(--radius-panel);
-  transition: background-color 110ms ease, border-color 110ms ease, box-shadow 110ms ease;
+  transition: background-color var(--duration-instant) var(--ease-standard), border-color var(--duration-instant) var(--ease-standard), box-shadow var(--duration-instant) var(--ease-standard);
 }
 
 .menu-editor-children::before {

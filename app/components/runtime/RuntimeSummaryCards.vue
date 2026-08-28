@@ -82,7 +82,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
         </div>
         <div class="h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
           <div
-            class="h-full rounded-full bg-[var(--action-primary-bg)] transition-[width] duration-200"
+            class="h-full rounded-full bg-[var(--action-primary-bg)] transition-[width] duration-[var(--duration-base)]"
             :style="{ width: `${runtime.nextUpdateProgress * 100}%` }"
           />
         </div>

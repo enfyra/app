@@ -274,7 +274,7 @@ const cardExamples = [
   padding: 0.875rem 1rem;
   border-bottom: 1px solid var(--border-default);
   background: transparent;
-  transition: background-color 0.16s ease, box-shadow 0.16s ease;
+  transition: background-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .resource-demo-row:last-child {

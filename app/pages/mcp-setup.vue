@@ -369,7 +369,7 @@ onMounted(() => {
   padding: 8px 16px;
   border-radius: 8px;
   border: 1px solid var(--border-subtle);
-  transition: background-color 150ms ease;
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
 .mcp-setup-fallback-link:hover {
@@ -387,7 +387,7 @@ onMounted(() => {
   text-decoration: none;
   padding: 10px 20px;
   border-radius: 10px;
-  transition: opacity 150ms ease, transform 150ms ease;
+  transition: opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
 }
 
 .mcp-setup-dashboard-link:hover {

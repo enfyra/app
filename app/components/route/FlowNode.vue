@@ -146,7 +146,7 @@ function handleClick() {
   border-radius: var(--radius-control);
   background: var(--surface-default);
   box-shadow: var(--shadow-xs);
-  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 
 .route-execution-node::before {
