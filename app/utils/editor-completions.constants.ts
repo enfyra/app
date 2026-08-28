@@ -7,6 +7,7 @@ export const ENFYRA_COMPLETIONS = [
   { label: '@HELPERS', type: 'variable', detail: 'Helpers: $jwt, $bcrypt, autoSlug' },
   { label: '@STORAGE', type: 'variable', detail: 'Storage helpers: upload, update, progress, delete, registerFile' },
   { label: '@SOCKET', type: 'variable', detail: 'WebSocket helper ($ctx.$socket)' },
+  { label: '@TRANSACTION', type: 'variable', detail: 'Atomic repository mutation scope ($ctx.$transaction)' },
   { label: '@FETCH', type: 'function', detail: 'Safe fetch helper ($ctx.$helpers.$fetch)' },
   { label: '@DATA', type: 'variable', detail: 'Response data (post-hooks)' },
   { label: '@STATUS', type: 'variable', detail: 'Status code (post-hooks)' },
