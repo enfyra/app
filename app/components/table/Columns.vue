@@ -4,6 +4,7 @@ import {
   isMongoPrimaryKeyColumn,
   normalizeMongoPrimaryKeyColumn,
 } from '~/utils/schema/mongo-primary-key';
+import { normalizeColumnPublication } from '~/utils/schema/column-publication';
 
 const props = defineProps<{
   modelValue: any[];
@@ -136,7 +137,13 @@ function createEmptyColumn(): any {
 }
 
 function normalizeColumnForDatabase(column: any): any {
-  return isMongoDB.value ? normalizeMongoPrimaryKeyColumn(column) : column;
+  const normalizedColumn = normalizeColumnPublication(column);
+  return isMongoDB.value ? normalizeMongoPrimaryKeyColumn(normalizedColumn) : normalizedColumn;
+}
+
+function toggleColumnPublished(column: any) {
+  column.isPublished = !column.isPublished;
+  normalizeColumnPublication(column);
 }
 
 function isPrimaryColumn(column: any): boolean {
@@ -334,6 +341,9 @@ const typeMap = computed(() => {
     name: {
       disabled: editingPrimaryColumn,
     },
+    isNullable: {
+      disabled: currentColumn.value?.isPublished === false,
+    },
     defaultValue: getDefaultValueType(currentType),
     
     ...(currentType === "uuid" && getUuidTypeMap()),
@@ -494,7 +504,7 @@ watch(
             variant="ghost"
             size="xs"
             class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
-            @click.stop="column.isPublished = !column.isPublished"
+            @click.stop="toggleColumnPublished(column)"
           />
         </UTooltip>
         <UTooltip
