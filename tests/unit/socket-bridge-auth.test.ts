@@ -15,6 +15,19 @@ function tokenWithExp(exp: number) {
 }
 
 describe("socket bridge auth", () => {
+  it("forwards the native ESV PAT header without treating it as a JWT", async () => {
+    const req = {
+      headers: {
+        "x-enfyra-pat": "efy_pat_test",
+      },
+    };
+
+    await expect(resolveSocketBridgeAuth(req as any)).resolves.toEqual({
+      ok: true,
+      upstreamHeaders: { "x-enfyra-pat": "efy_pat_test" },
+    });
+  });
+
   it("accepts a valid access token cookie without rotating refresh tokens", async () => {
     const accessToken = tokenWithExp(Math.floor(Date.now() / 1000) + 3600);
     const req = {

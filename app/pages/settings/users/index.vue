@@ -127,6 +127,7 @@ const {
       limit,
       page: page.value,
       fields: USER_LIST_FIELDS,
+      sort: "-createdAt",
       meta: "*",
       ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
     };
