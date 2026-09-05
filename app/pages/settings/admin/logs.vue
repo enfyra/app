@@ -1,553 +1,110 @@
 <script setup lang="ts">
-const { register: registerHeaderActions } = useHeaderActionRegistry();
-const notify = useNotify();
+import type { RuntimeLogRow } from '~/types/runtime-log';
+
 const { registerPageHeader } = usePageHeaderRegistry();
 const { checkPermissionCondition } = usePermissions();
 const { me } = useAuth();
 const route = useRoute();
-const router = useRouter();
-
-const hasPermission = computed(() => {
-  if (me.value?.isRootAdmin) return true;
-  return checkPermissionCondition({
-    or: [{ route: "/logs", methods: ["GET"] }],
-  });
-});
-
-registerPageHeader({
-  title: "Server Logs",
-  description: "Monitor and inspect backend log files",
-  variant: "stats-focus",
-  gradient: "cyan",
-});
-
-const { data: logsData, pending: logsPending, execute: fetchLogs } = useApi<any>(() => "/logs", {
-  method: "get",
-  errorContext: "Fetch log files",
-});
-
-const { data: statsData, pending: statsPending, execute: fetchStats } = useApi<any>(() => "/logs/stats", {
-  method: "get",
-  errorContext: "Fetch log stats",
-});
-
-const selectedFile = ref<string | null>(null);
-const logContent = ref<string>("");
-const logLoading = ref(false);
-const logError = ref<string | null>(null);
-const logSearchQuery = ref("");
-const fileSearchQuery = ref("");
-const isSearchMode = ref(false);
-const searchResults = ref<string[]>([]);
-const searchLoading = ref(false);
-const hasMore = ref(false);
-const loadingMore = ref(false);
+const kind = ref('system');
+const correlationId = ref(String(route.query.correlationId ?? ''));
+const component = ref('');
+const code = ref('');
+const hours = ref(24);
 const page = ref(1);
-const limit = ref(20);
-
-const {
-  items: files,
-  showInitialLoading,
-  isRefreshing: logsRefreshing,
-} = useStableListState(
-  () => {
-    const raw = (logsData.value as any)?.files;
-    return Array.isArray(raw) ? raw : undefined;
-  },
-  () => logsPending.value || statsPending.value,
-);
-
-const stats = computed(() => {
-  if ((logsData.value as any)?.stats) {
-    return (logsData.value as any).stats;
-  }
-  return (statsData.value as any) || null;
-});
-
-const filteredFiles = computed(() => {
-  if (!fileSearchQuery.value) return files.value;
-  const query = fileSearchQuery.value.toLowerCase();
-  return files.value.filter((file: any) => {
-    const name = (file.filename || file.name || "").toLowerCase();
-    return name.includes(query);
-  });
-});
-
-const displayLines = computed(() => {
-  if (isSearchMode.value) {
-    if (searchResults.value.length > 0) return searchResults.value;
-    if (searchLoading.value && logContent.value) {
-      return logContent.value.split("\n").filter((line: string) => line.trim());
-    }
-    return [];
-  }
-  if (!logContent.value) return [];
-  return logContent.value.split("\n").filter((line: string) => line.trim());
-});
-
-async function loadLogs() {
-  await Promise.all([fetchLogs(), fetchStats()]);
-}
-
-async function searchInLog(query: string) {
-  if (!selectedFile.value || !query.trim()) {
-    isSearchMode.value = false;
-    searchResults.value = [];
-    return;
-  }
-
-  searchLoading.value = true;
-  isSearchMode.value = true;
-
-  try {
-    const { getAppUrl, normalizeUrl } = await import("~/utils/api/url");
-    const apiUrl = getAppUrl();
-    const apiPrefix = "/api";
-    const basePath = `logs/${encodeURIComponent(selectedFile.value)}`;
-    const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
-
-    const response = await useAuthFetch<any>(fullUrl, {
-      method: "GET",
-      credentials: "include",
-      query: { id: query.trim() },
-    });
-
-    let results: string[] = [];
-
-    if (response && response.lines) {
-      results = response.lines.map((line: any) => {
-        if (typeof line === "string") {
-          try {
-            const obj = JSON.parse(line.trim());
-            return JSON.stringify(obj, null, 2);
-          } catch {
-            return line;
-          }
-        }
-        return JSON.stringify(line, null, 2);
-      });
-    } else if (response && response.data) {
-      const data = Array.isArray(response.data) ? response.data : [response.data];
-      results = data.map((item: any) => {
-        if (typeof item === "string") return item;
-        return JSON.stringify(item, null, 2);
-      });
-    } else if (response) {
-      const data = Array.isArray(response) ? response : [response];
-      results = data.map((item: any) => {
-        if (typeof item === "string") return item;
-        return JSON.stringify(item, null, 2);
-      });
-    }
-
-    searchResults.value = results;
-
-    if (results.length === 0) {
-      notify.warning("No results", `No logs found for "${query}"`);
-    }
-  } catch (err: any) {
-    notify.error("Search failed", err?.data?.message || err?.message || "Could not search logs");
-    searchResults.value = [];
-  } finally {
-    searchLoading.value = false;
-  }
-}
-
-async function loadLogContent(file?: string, append: boolean = false) {
-  const filename = file || selectedFile.value;
-  if (!filename) return;
-
-  if (!append) {
-    const isNewFile = selectedFile.value !== filename;
-    selectedFile.value = filename;
-    if (isNewFile) logContent.value = "";
-    logLoading.value = true;
-    logError.value = null;
-    logSearchQuery.value = "";
-    isSearchMode.value = false;
-    searchResults.value = [];
-    page.value = 1;
-  } else {
-    loadingMore.value = true;
-    page.value++;
-  }
-
-  if (route.query.file !== filename) {
-    router.push({ query: { file: filename } });
-  }
-
-  try {
-    const { getAppUrl, normalizeUrl } = await import("~/utils/api/url");
-    const apiUrl = getAppUrl();
-    const apiPrefix = "/api";
-    const basePath = `logs/${encodeURIComponent(filename)}`;
-    const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
-
-    const response = await useAuthFetch<any>(fullUrl, {
-      method: "GET",
-      credentials: "include",
-      query: {
-        page: page.value,
-        pageSize: limit.value,
-      },
-    });
-
-    let lines: string[] = [];
-
-    if (response && response.lines) {
-      lines = response.lines.map((line: any) => {
-        if (typeof line === "string") {
-          try {
-            const obj = JSON.parse(line.trim());
-            return JSON.stringify(obj, null, 2);
-          } catch {
-            return line;
-          }
-        }
-        return JSON.stringify(line, null, 2);
-      });
-    } else if (typeof response === "string") {
-      try {
-        const parsed = JSON.parse(response);
-        if (parsed.lines) {
-          lines = parsed.lines.map((line: any) => {
-            if (typeof line === "string") {
-              try {
-                const obj = JSON.parse(line.trim());
-                return JSON.stringify(obj, null, 2);
-              } catch {
-                return line;
-              }
-            }
-            return JSON.stringify(line, null, 2);
-          });
-        } else {
-          lines = [JSON.stringify(parsed, null, 2)];
-        }
-      } catch {
-        lines = [response];
-      }
-    } else if (response) {
-      lines = [JSON.stringify(response, null, 2)];
-    }
-
-    hasMore.value = response?.hasMore ?? false;
-
-    if (append) {
-      const existingLines = logContent.value.split("\n").filter((line: string) => line.trim());
-      logContent.value = [...existingLines, ...lines].join("\n");
-    } else {
-      logContent.value = lines.join("\n");
-    }
-  } catch (err: any) {
-    logError.value = err?.data?.message || err?.message || "Failed to load log content";
-    notify.error("Failed to load log", logError.value || "Failed to load log content");
-  } finally {
-    logLoading.value = false;
-    loadingMore.value = false;
-  }
-}
-
-async function loadMoreLogs() {
-  if (!hasMore.value || loadingMore.value) return;
-  await loadLogContent(undefined, true);
-}
-
-function clearSearch() {
-  logSearchQuery.value = "";
-  isSearchMode.value = false;
-  searchResults.value = [];
-}
-
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
-
-const debouncedSearch = (query: string) => {
-  if (searchTimeout) {
-    clearTimeout(searchTimeout);
-  }
-  searchTimeout = setTimeout(() => {
-    if (query.trim()) {
-      searchInLog(query);
-    } else {
-      isSearchMode.value = false;
-      searchResults.value = [];
-    }
-  }, 500);
-};
-
-watch(logSearchQuery, (newQuery) => {
-  if (selectedFile.value) {
-    debouncedSearch(newQuery);
-  }
-});
-
-function handleSelectFile(file: any) {
-  const name = file?.filename || file?.name;
-  if (!name) return;
-  loadLogContent(name);
-}
-
-function getFileIcon(file: any) {
-  const name = (file.filename || file.name || "").toLowerCase();
-  if (name.includes("crash")) return "lucide:skull";
-  if (name.includes("error")) return "lucide:alert-circle";
-  if (name.includes("access")) return "lucide:globe";
-  if (name.includes("debug")) return "lucide:bug";
-  return "lucide:file-text";
-}
-
-function getFileIconColor(file: any) {
-  const name = (file.filename || file.name || "").toLowerCase();
-  if (name.includes("crash")) return "error";
-  if (name.includes("error")) return "warning";
-  if (name.includes("access")) return "success";
-  if (name.includes("debug")) return "neutral";
-  return "primary";
-}
-
-function formatFileSize(size: string | number | undefined): string {
-  if (!size) return "N/A";
-  if (typeof size === "string") return size;
-  if (size < 1024) return `${size} B`;
-  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-async function downloadLog(file?: any) {
-  const filename = file?.filename || file?.name || selectedFile.value;
-  if (!filename) return;
-
-  try {
-    const { getAppUrl, normalizeUrl } = await import("~/utils/api/url");
-    const apiUrl = getAppUrl();
-    const apiPrefix = "/api";
-    const basePath = `logs/${encodeURIComponent(filename)}/tail`;
-    const fullUrl = `${normalizeUrl(apiUrl, apiPrefix)}/${basePath}`;
-
-    const response = await useAuthFetch<any>(fullUrl, {
-      method: "GET",
-      credentials: "include",
-      query: { lines: 10000 },
-    });
-
-    let content = "";
-    if (response && response.lines) {
-      content = response.lines.map((line: any) => {
-        if (typeof line === "string") return line;
-        return JSON.stringify(line);
-      }).join("\n");
-    } else if (typeof response === "string") {
-      content = response;
-    } else {
-      content = JSON.stringify(response, null, 2);
-    }
-
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    notify.success("Download started");
-  } catch (err: any) {
-    notify.error("Download failed", err?.message || "Could not download file");
-  }
-}
-
-async function copyToClipboard() {
-  const content = displayLines.value.join("\n");
-  if (!content) return;
-  try {
-    await navigator.clipboard.writeText(content);
-    notify.success("Copied to clipboard");
-  } catch {
-    notify.error("Failed to copy");
-  }
-}
-
-function closeLogViewer() {
-  selectedFile.value = null;
-  logContent.value = "";
-  logSearchQuery.value = "";
-  logError.value = null;
-  isSearchMode.value = false;
-  searchResults.value = [];
-  hasMore.value = false;
-  loadingMore.value = false;
-  page.value = 1;
-  router.push({ query: {} });
-}
-
-registerHeaderActions([
-  {
-    id: "refresh-logs",
-    label: "Refresh",
-    icon: "lucide:refresh-cw",
-    variant: "solid",
-    color: "primary",
-    loading: computed(() => logsPending.value || statsPending.value),
-    onClick: loadLogs,
-    permission: { and: [{ route: "/logs", methods: ["GET"] }] },
-  },
+const selected = ref<RuntimeLogRow | null>(null);
+const detailOpen = ref(false);
+const path = computed(() => kind.value === 'system' ? '/enfyra_system_error' : '/enfyra_user_log');
+const canRead = (target: string) => !!me.value?.isRootAdmin || checkPermissionCondition({ or: [{ route: target, methods: ['GET'] }] });
+const tabs = computed(() => [
+  { label: 'System errors', value: 'system', icon: 'lucide:bug', disabled: !canRead('/enfyra_system_error') },
+  { label: 'User logs', value: 'user', icon: 'lucide:terminal', disabled: !canRead('/enfyra_user_log') },
 ]);
-
-watch(
-  () => route.query.file,
-  (newFile) => {
-    if (newFile && typeof newFile === "string" && newFile !== selectedFile.value) {
-      loadLogContent(newFile);
-    } else if (!newFile) {
-      selectedFile.value = null;
-      logContent.value = "";
-      logSearchQuery.value = "";
-      logError.value = null;
-      isSearchMode.value = false;
-      searchResults.value = [];
-    }
-  },
-  { immediate: false }
-);
-
-onMounted(async () => {
-  if (!hasPermission.value) return;
-
-  if (route.query.file && typeof route.query.file === "string") {
-    await Promise.all([loadLogs(), loadLogContent(route.query.file)]);
-  } else {
-    await loadLogs();
-  }
+const commonFields = ['eventId', 'occurredAt', 'correlationId', 'instanceId', 'component', 'sourceKind', 'sourceId', 'statusCode'];
+const filter = ref<Record<string, unknown>>({});
+const fields = computed(() => [...commonFields, ...(kind.value === 'system' ? ['code', 'message', 'severity'] : ['entryCount', 'truncated'])]);
+const { data, pending, error, execute } = useApi<{ data: RuntimeLogRow[]; meta?: { filterCount?: number } }>(() => path.value, {
+  query: () => ({ fields: fields.value, filter: filter.value, sort: '-occurredAt', limit: 25, page: page.value, meta: 'filterCount' }),
+  disableErrorPage: true,
 });
+const { items, showInitialLoading } = useStableListState(() => data.value?.data, () => pending.value);
+const total = computed(() => Number(data.value?.meta?.filterCount ?? 0));
+const detailId = ref('');
+const { data: detailData, pending: detailPending, error: detailError, execute: fetchDetail } = useApi<{ data: RuntimeLogRow[] }>(() => path.value, {
+  query: () => ({ filter: { eventId: { _eq: detailId.value } }, limit: 1, fields: [...fields.value, ...(kind.value === 'system' ? ['stack', 'details', 'fingerprint'] : ['entries'])] }),
+  disableErrorPage: true,
+});
+const detail = computed(() => detailData.value?.data?.[0] ?? selected.value);
+function formatValue(value: unknown): string {
+  if (typeof value === 'string') { try { return JSON.stringify(JSON.parse(value), null, 2); } catch { return value; } }
+  return JSON.stringify(value, null, 2) ?? '';
+}
+function search() {
+  page.value = 1;
+  filter.value = {
+    occurredAt: { _gte: new Date(Date.now() - hours.value * 3600_000).toISOString() },
+    ...(correlationId.value.trim() ? { correlationId: { _eq: correlationId.value.trim() } } : {}),
+    ...(component.value.trim() ? { component: { _eq: component.value.trim() } } : {}),
+    ...(kind.value === 'system' && code.value.trim() ? { code: { _eq: code.value.trim() } } : {}),
+  };
+  if (canRead(path.value)) void execute();
+}
+async function inspect(row: RuntimeLogRow) {
+  selected.value = row; detailId.value = row.eventId; detailData.value = null; detailOpen.value = true;
+  await fetchDetail();
+}
+function traceRelated() {
+  correlationId.value = detail.value?.correlationId ?? '';
+  detailOpen.value = false;
+  kind.value = kind.value === 'system' ? 'user' : 'system';
+}
+watch(kind, () => { data.value = null; selected.value = null; detailOpen.value = false; search(); });
+onMounted(() => { if (!canRead(path.value) && canRead('/enfyra_user_log')) kind.value = 'user'; else search(); });
+registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and user script logs by correlation ID', variant: 'default' });
 </script>
 
 <template>
-  <div v-if="hasPermission" class="space-y-6">
-    <CommonResourceListFrame
-      v-if="showInitialLoading && !selectedFile"
-      :loading="true"
-      :has-items="false"
-      loading-title="Loading log files..."
-      loading-description="Fetching server logs"
-    />
-
-    <div v-else class="space-y-6">
-        <div v-if="stats && !selectedFile" class="grid gap-4 grid-cols-1 md:grid-cols-3">
-          <div class="rounded-xl p-4 surface-card">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg eapp-primary-solid flex items-center justify-center">
-                <UIcon name="lucide:files" class="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-[var(--text-primary)]">
-                  {{ stats.fileCount ?? 0 }}
-                </p>
-                <p class="text-xs text-[var(--text-tertiary)]">Total Files</p>
-              </div>
+  <div class="eapp-page-constrained-wide space-y-5">
+    <UTabs v-model="kind" :items="tabs" :content="false" />
+    <template v-if="canRead(path)">
+      <form class="surface-card rounded-lg p-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5" @submit.prevent="search">
+        <UFormField label="Correlation ID"><UInput v-model="correlationId" placeholder="req_…" class="w-full" /></UFormField>
+        <UFormField label="Component"><UInput v-model="component" placeholder="Script, Server…" class="w-full" /></UFormField>
+        <UFormField v-if="kind === 'system'" label="Error code"><UInput v-model="code" placeholder="SYSTEM_ERROR" class="w-full" /></UFormField>
+        <UFormField label="Time window"><USelect v-model="hours" :items="[{ label: 'Last hour', value: 1 }, { label: 'Last 24 hours', value: 24 }, { label: 'Last 7 days', value: 168 }, { label: 'Last 30 days', value: 720 }]" class="w-full" /></UFormField>
+        <div class="flex items-end"><UButton type="submit" icon="lucide:search" :loading="pending">Search / Refresh</UButton></div>
+      </form>
+      <p class="text-sm text-[var(--text-tertiary)]">Open an entry for details. Use its correlation ID to find related errors and @LOGS output. Records are retained for 30 days.</p>
+      <UAlert v-if="error" color="error" title="Could not load logs" :description="error.message" />
+      <CommonResourceListFrame :loading="showInitialLoading" :has-items="items.length > 0" :total="total" :items-per-page="25" :page="page" :pagination-loading="pending" empty-title="No matching records" empty-description="Adjust the filters or refresh after reproducing the issue." @update:page="page = $event; execute()">
+        <div class="divide-y divide-[var(--border-subtle)]">
+          <button v-for="row in items" :key="row.eventId" type="button" class="w-full text-left px-4 py-3 hover:bg-[var(--surface-nested)] flex gap-3 min-w-0" @click="inspect(row)">
+            <UIcon :name="kind === 'system' ? 'lucide:bug' : 'lucide:terminal'" class="mt-1 shrink-0" />
+            <div class="min-w-0 flex-1 space-y-1">
+              <div class="font-medium truncate">{{ row.message ?? `${row.entryCount} log entries` }}</div>
+              <div class="text-xs text-[var(--text-tertiary)] flex flex-wrap gap-x-3 gap-y-1"><time>{{ new Date(row.occurredAt).toLocaleString() }}</time><span>{{ row.component }}</span><span>{{ row.code ?? row.sourceKind }}</span><span>{{ row.statusCode }}</span></div>
+              <div class="font-mono text-xs truncate">{{ row.correlationId ?? row.eventId }}</div>
             </div>
-          </div>
-          <div class="rounded-xl p-4 surface-card">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg eapp-primary-solid flex items-center justify-center">
-                <UIcon name="lucide:hard-drive" class="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p class="text-2xl font-bold text-[var(--text-primary)]">
-                  {{ stats.totalSizeFormatted ?? "N/A" }}
-                </p>
-                <p class="text-xs text-[var(--text-tertiary)]">Total Size</p>
-              </div>
-            </div>
-          </div>
-          <div class="rounded-xl p-4 surface-card">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--st-warning)] to-[var(--md-primary)] flex items-center justify-center">
-                <UIcon name="lucide:clock" class="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <p class="text-sm font-bold text-[var(--text-primary)]">Live</p>
-                <p class="text-xs text-[var(--text-tertiary)]">Monitoring</p>
-              </div>
-            </div>
-          </div>
+            <UIcon name="lucide:chevron-right" class="shrink-0" />
+          </button>
         </div>
-
-        <div v-if="!selectedFile" class="space-y-4">
-          <UInput
-            v-model="fileSearchQuery"
-            placeholder="Search log files..."
-            size="sm"
-            class="w-64"
-            icon="lucide:search"
-          />
-
-          <div v-if="files.length > 0" class="eapp-resource-list">
-            <CommonResourceListItem
-              v-for="file in filteredFiles"
-              :key="file.filename || file.name"
-              :title="file.filename || file.name"
-              :description="file.modifiedAt || 'Unknown date'"
-              :icon="getFileIcon(file)"
-              :icon-color="getFileIconColor(file)"
-              :loading="logsRefreshing"
-              :stats="[
-                { label: 'Size', value: formatFileSize(file.size) },
-              ]"
-              :header-actions="[
-                {
-                  component: 'UButton',
-                  props: { icon: 'lucide:download', size: 'xs', variant: 'ghost', color: 'neutral' },
-                  onClick: (e?: Event) => { e?.stopPropagation(); downloadLog(file); },
-                },
-              ]"
-              @click="handleSelectFile(file)"
-            />
-          </div>
-
-          <CommonEmptyState
-            v-if="files.length === 0"
-            title="No log files found"
-            description="Server log files will appear here after the backend writes them."
-            icon="lucide:file-x"
-            size="sm"
-          />
-
-          <CommonEmptyState
-            v-else-if="filteredFiles.length === 0"
-            title="No matching files"
-            :description="`No files match '${fileSearchQuery}'`"
-            icon="lucide:search-x"
-            size="sm"
-          />
+      </CommonResourceListFrame>
+    </template>
+    <CommonEmptyState v-else title="Access denied" description="A route read permission is required to view these logs." icon="lucide:lock" />
+    <CommonModal v-model:open="detailOpen" :ui="{ content: 'sm:max-w-3xl' }" :cancel-action="{ label: 'Close' }">
+      <template #header><div class="font-semibold">{{ kind === 'system' ? 'System error' : 'User log' }}</div></template>
+      <template #body>
+        <div class="space-y-4 min-w-0">
+          <UAlert v-if="detailError" color="error" title="Could not load details" :description="detailError.message" />
+          <p v-if="detailPending">Loading details…</p>
+          <template v-if="detail">
+            <p class="break-all font-mono text-sm">{{ detail.correlationId ?? detail.eventId }}</p>
+            <UButton v-if="detail.correlationId && canRead(kind === 'system' ? '/enfyra_user_log' : '/enfyra_system_error')" variant="soft" icon="lucide:link" @click="traceRelated">{{ kind === 'system' ? 'Find related user logs' : 'Find related errors' }}</UButton>
+            <p v-if="detail.truncated" class="text-sm text-[var(--text-tertiary)]">Log output was truncated to stay within the storage limit.</p>
+            <pre class="text-xs whitespace-pre-wrap break-all max-h-[55vh] overflow-auto eapp-surface-muted rounded-lg p-4">{{ formatValue(detail) }}</pre>
+            <p class="text-xs text-[var(--text-tertiary)]">Private details and entries require root administrator access or the corresponding field read permission.</p>
+          </template>
         </div>
-    </div>
-
-    <LogDetailViewer
-      v-model:search-query="logSearchQuery"
-      :filename="selectedFile"
-      :lines="displayLines"
-      :loading="logLoading"
-      :error="logError"
-      :is-search-mode="isSearchMode"
-      :search-result-count="searchResults.length"
-      :search-loading="searchLoading"
-      :has-more="hasMore"
-      :loading-more="loadingMore"
-      @close="closeLogViewer"
-      @reload="loadLogContent()"
-      @download="downloadLog()"
-      @copy="copyToClipboard"
-      @clear-search="clearSearch"
-      @load-more="loadMoreLogs"
-    />
-  </div>
-
-  <div v-else class="flex items-center justify-center py-12">
-    <CommonEmptyState
-      title="Access denied"
-      description="You do not have permission to view server logs"
-      icon="lucide:lock"
-      size="md"
-    />
+      </template>
+    </CommonModal>
   </div>
 </template>
