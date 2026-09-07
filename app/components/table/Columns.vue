@@ -4,6 +4,11 @@ import {
   isMongoPrimaryKeyColumn,
   normalizeMongoPrimaryKeyColumn,
 } from '~/utils/schema/mongo-primary-key';
+import { normalizeColumnPublication } from '~/utils/schema/column-publication';
+import {
+  normalizeColumnOptions,
+  validateColumnOptions,
+} from '~/utils/schema/column-options';
 
 const props = defineProps<{
   modelValue: any[];
@@ -136,7 +141,15 @@ function createEmptyColumn(): any {
 }
 
 function normalizeColumnForDatabase(column: any): any {
-  return isMongoDB.value ? normalizeMongoPrimaryKeyColumn(column) : column;
+  const normalizedColumn = normalizeColumnOptions(
+    normalizeColumnPublication(column),
+  );
+  return isMongoDB.value ? normalizeMongoPrimaryKeyColumn(normalizedColumn) : normalizedColumn;
+}
+
+function toggleColumnPublished(column: any) {
+  column.isPublished = !column.isPublished;
+  normalizeColumnPublication(column);
 }
 
 function isPrimaryColumn(column: any): boolean {
@@ -151,12 +164,15 @@ function editColumn(col: any, index: number) {
 
   if (!col) return;
   editingIndex.value = index;
-  currentColumn.value = normalizeColumnForDatabase({ ...toRaw(col) });
+  currentColumn.value = normalizeColumnForDatabase(
+    structuredClone(toRaw(col)),
+  );
 
   handleUuidType(currentColumn.value);
 }
 
 async function saveColumn() {
+  normalizeColumnOptions(currentColumn.value);
   const customValidators = {
     name: (value: string) => {
       if (!value?.trim()) {
@@ -179,7 +195,9 @@ async function saveColumn() {
         return "Must select data type";
       }
       return null;
-    }
+    },
+    options: (value: unknown) =>
+      validateColumnOptions(currentColumn.value?.type, value),
   };
 
   const { isValid, errors: validationErrors } = validate(currentColumn.value, customValidators);
@@ -334,6 +352,9 @@ const typeMap = computed(() => {
     name: {
       disabled: editingPrimaryColumn,
     },
+    isNullable: {
+      disabled: currentColumn.value?.isPublished === false,
+    },
     defaultValue: getDefaultValueType(currentType),
     
     ...(currentType === "uuid" && getUuidTypeMap()),
@@ -395,6 +416,7 @@ function handleTypeChange(newType: string, oldType: string) {
       currentColumn.value.defaultValue = null;
     }
   }
+  normalizeColumnOptions(currentColumn.value);
 }
 
 function handleOptionsChange(currentType: string, newOptions: any[]) {
@@ -494,7 +516,7 @@ watch(
             variant="ghost"
             size="xs"
             class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
-            @click.stop="column.isPublished = !column.isPublished"
+            @click.stop="toggleColumnPublished(column)"
           />
         </UTooltip>
         <UTooltip

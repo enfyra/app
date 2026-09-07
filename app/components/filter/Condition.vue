@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { createFieldSelectionHandler } from '~/utils/common/filter/field-selection';
+import { getDefaultFilterValue } from '~/utils/common/filter/filter-helpers';
 
 const props = defineProps<{
   condition: FilterCondition;
@@ -23,6 +24,24 @@ function updateCondition() {
 
 function updateValue(newValue: any) {
   props.condition.value = newValue;
+  updateCondition();
+}
+
+function updateOperator(operator: string) {
+  props.condition.operator = operator;
+
+  if (operator === '_is_null') {
+    props.condition.value = null;
+  } else if (props.condition.type === 'date') {
+    const expectsRange = operator === '_between';
+    const hasRange = Array.isArray(props.condition.value) && props.condition.value.length === 2;
+    const hasSingleValue = typeof props.condition.value === 'string' && props.condition.value.length > 0;
+
+    if ((expectsRange && !hasRange) || (!expectsRange && !hasSingleValue)) {
+      props.condition.value = getDefaultFilterValue(props.condition.type, operator);
+    }
+  }
+
   updateCondition();
 }
 
@@ -90,9 +109,9 @@ const { isMobile, isTablet } = useScreen();
         <label v-if="(isMobile || isTablet) && !readonly" class="text-xs text-[var(--text-tertiary)] mb-1 block">Operator</label>
         <USelect
           v-if="!readonly"
-          v-model="condition.operator"
+          :model-value="condition.operator"
           :items="getOperatorsByType(condition.type || 'string')"
-          @update:model-value="updateCondition"
+          @update:model-value="(operator) => updateOperator(operator as string)"
           class="w-full min-w-0 min-h-8"
           :size="(isMobile || isTablet) ? 'sm' : 'md'"
         />

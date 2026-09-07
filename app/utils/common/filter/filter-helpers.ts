@@ -29,6 +29,15 @@ export function getInputPlaceholder(operator: string, type: string): string {
   return 'Enter value...';
 }
 
+export function getDefaultFilterValue(fieldType: string, operator: string): string | [string, string] | null {
+  if (fieldType !== 'date') return null;
+
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+  return operator === '_between' ? [today, today] : today;
+}
+
 export function getArrayPlaceholder(fieldType: string): string {
   return fieldType === 'number' ? '1,2,3' : 'value1,value2,value3';
 }

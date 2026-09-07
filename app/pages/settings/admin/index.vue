@@ -13,13 +13,13 @@ registerPageHeader({
 const adminTools = computed(() => {
   const isRootAdmin = !!me.value?.isRootAdmin;
   const canReadLogs = isRootAdmin || checkPermissionCondition({
-    or: [{ route: '/logs', methods: ['GET'] }],
+    or: [{ route: '/enfyra_system_error', methods: ['GET'] }, { route: '/enfyra_user_log', methods: ['GET'] }],
   });
 
   return [
     {
       title: 'Server Logs',
-      description: 'Inspect backend log files and search recent server events.',
+      description: 'Trace system errors and user script logs by correlation ID.',
       icon: 'lucide:file-search',
       to: '/settings/admin/logs',
       visible: canReadLogs,

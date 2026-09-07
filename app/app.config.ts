@@ -705,6 +705,14 @@ export default defineAppConfig({
       },
       compoundVariants: [
         {
+          orientation: "horizontal",
+          variant: "link",
+          class: {
+            list: "border-b-0 mb-0",
+            indicator: "!bottom-0",
+          },
+        },
+        {
           color: "primary",
           variant: "pill",
           class: {

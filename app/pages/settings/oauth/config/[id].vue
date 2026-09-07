@@ -30,8 +30,9 @@
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildOAuthRedirectUri,
+  OAUTH_LIFECYCLE_SCRIPT_DESCRIPTION,
   validateOAuthConfigForm,
-  validateOAuthUserProvisioningScript,
+  validateOAuthLifecycleScript,
 } from "~/utils/oauth-config";
 
 definePageMeta({
@@ -74,8 +75,8 @@ const fieldMap = computed(() => ({
     excluded: form.value?.autoSetCookies === true,
   },
   sourceCode: {
-    label: "User Provisioning Script",
-    description: "Must return an object merged into newly created OAuth users. Existing identity fields take precedence. Use @REPOS or #table_name when lookup is needed.",
+    label: "OAuth Lifecycle Script",
+    description: OAUTH_LIFECYCLE_SCRIPT_DESCRIPTION,
   },
 }));
 
@@ -214,7 +215,7 @@ async function updateConfig() {
   syncRedirectUri();
   if (!await validateForm(form.value, errors)) return;
   if (!validateOAuthConfigForm(form.value, errors.value)) return;
-  if (!await validateOAuthUserProvisioningScript(form.value, errors.value)) return;
+  if (!await validateOAuthLifecycleScript(form.value, errors.value)) return;
 
   await executeUpdateConfig({
     id: route.params.id as string,

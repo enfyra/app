@@ -8,6 +8,7 @@ import {
 import { isAccessTokenExpired } from '~/utils/enfyra/server/refreshToken';
 
 const encoder = new Encoder();
+const ENFYRA_PAT_HEADER = 'x-enfyra-pat';
 
 function parseCookieHeader(header: string | undefined): Record<string, string> {
   if (!header) return {};
@@ -41,6 +42,14 @@ export async function resolveSocketBridgeAuth(
 ): Promise<
   { ok: true; upstreamHeaders: Record<string, string> } | { ok: false }
 > {
+  const patHeader = req.headers?.[ENFYRA_PAT_HEADER];
+  if (typeof patHeader === 'string' && patHeader.startsWith('efy_pat_')) {
+    return {
+      ok: true,
+      upstreamHeaders: buildUpstreamHeaders(req, { [ENFYRA_PAT_HEADER]: patHeader }),
+    };
+  }
+
   const authHeader = req.headers?.authorization;
   if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
     const accessToken = authHeader.slice('Bearer '.length);
