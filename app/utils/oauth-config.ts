@@ -1,5 +1,8 @@
 import { normalizeScriptLanguage } from "~/utils/script-contract";
 
+export const OAUTH_LIFECYCLE_SCRIPT_DESCRIPTION =
+  "Runs once inside the OAuth transaction. Use @USER for the resolved user and @DATA.oauth for event, provider, profile, claims, accessToken, and token metadata. profile contains providerUserId, email, emailVerified, name, givenName, familyName, username, avatarUrl, profileUrl, and locale. Mutate data through @REPOS and do not return a value.";
+
 export function isValidAbsoluteHttpUrl(value: unknown): value is string {
   if (typeof value !== "string" || value.length === 0) {
     return false;
@@ -62,7 +65,7 @@ export function validateOAuthConfigForm(
   return isValid;
 }
 
-export async function validateOAuthUserProvisioningScript(
+export async function validateOAuthLifecycleScript(
   form: Record<string, any>,
   errors: Record<string, string>
 ) {
@@ -72,19 +75,26 @@ export async function validateOAuthUserProvisioningScript(
     return true;
   }
 
-  const { validateEnfyraObjectReturnScript } = await import(
+  const { lintEnfyraScript, validateEnfyraNoReturnScript } = await import(
     "~/utils/editor/enfyraTypeScriptLinter"
   );
-  const result = await validateEnfyraObjectReturnScript(
+  const diagnostics = await lintEnfyraScript(
     sourceCode,
     normalizeScriptLanguage(form.scriptLanguage)
   );
+  const error = diagnostics.find((diagnostic) => diagnostic.severity === "error");
+  if (error) {
+    errors.sourceCode = error.message;
+    return false;
+  }
+  const result = await validateEnfyraNoReturnScript(sourceCode);
 
   if (result.ok) {
     delete errors.sourceCode;
     return true;
   }
 
-  errors.sourceCode = `Must return an object. ${result.message}`;
+  errors.sourceCode =
+    "OAuth lifecycle scripts must perform side effects and must not return a value.";
   return false;
 }
