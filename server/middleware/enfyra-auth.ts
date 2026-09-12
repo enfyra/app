@@ -10,6 +10,7 @@ import { REFRESH_TOKEN_KEY } from "~/constants/enfyra";
 export default defineEventHandler(async (event) => {
   const url = event.node.req.url || "";
   const path = url.split("?")[0] || "";
+  if (!/^\/(api|assets|ws)(\/|$)/.test(path)) return;
 
   const loginPath = "/api/login";
   const logoutPath = "/api/logout";

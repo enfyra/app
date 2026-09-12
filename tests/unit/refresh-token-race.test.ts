@@ -18,6 +18,7 @@ vi.mock("ofetch", () => ({
 describe("refreshAccessToken race behavior", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    fetchMock.mockReset();
     vi.useRealTimers();
   });
 
@@ -88,7 +89,7 @@ describe("refreshAccessToken race behavior", () => {
     expect(deleteCookie).not.toHaveBeenCalled();
   });
 
-  it("reuses a just-rotated refresh result for late requests with the old token", async () => {
+  it("reuses a rotated refresh result when a late parallel request still carries the old token", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-12T00:00:00.000Z"));
     const { refreshAccessToken } = await import(
@@ -120,8 +121,12 @@ describe("refreshAccessToken race behavior", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(setCookie).toHaveBeenCalledTimes(6);
 
-    vi.advanceTimersByTime(2001);
-    fetchMock.mockResolvedValueOnce(response);
+    vi.advanceTimersByTime(5000);
+    fetchMock.mockRejectedValueOnce(
+      Object.assign(new Error("Refresh token has been revoked or already used!"), {
+        statusCode: 400,
+      })
+    );
 
     await expect(
       refreshAccessToken(
@@ -131,7 +136,7 @@ describe("refreshAccessToken race behavior", () => {
       )
     ).resolves.toBe(response.accessToken);
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("keeps socket reconnects from rotating tokens while HTTP requests refresh once", async () => {
