@@ -1,9 +1,14 @@
+import {
+  BACKEND_READINESS_TIMEOUT_MS,
+  BACKEND_READINESS_TRANSPORT_MARGIN_MS,
+} from '~/constants/enfyra';
+
 export default defineNuxtPlugin(async () => {
   const { initialReady } = useInitialLoading();
   const mounted = ref(false);
   let hidden = false;
   let failed = false;
-  
+
   const loadingHtml = `
     <div id="app-loading" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: var(--bg-app); display: flex; align-items: center; justify-content: center; z-index: 9999; font-family: system-ui, sans-serif; opacity: 1; transition: opacity 0.5s ease-out;">
       <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
@@ -13,7 +18,7 @@ export default defineNuxtPlugin(async () => {
               stroke-dasharray="60" stroke-dashoffset="40" stroke-linecap="round"/>
           </svg>
         </div>
-        <p id="app-loading-message" role="status" style="color: var(--text-tertiary); font-size: 14px; margin: 0; font-weight: 500;">Starting your project…</p>
+        <p id="app-loading-message" role="status" style="color: var(--text-tertiary); font-size: 14px; margin: 0; font-weight: 500;">Loading your project…</p>
         <p id="app-loading-detail" hidden style="color: var(--text-tertiary); font-size: 13px; margin: -6px 0 0; text-align: center;">Check the deployment status or try again.</p>
         <button id="app-loading-retry" class="enfyra-loading-retry" type="button" hidden>Try again</button>
       </div>
@@ -103,10 +108,10 @@ export default defineNuxtPlugin(async () => {
     void hideWhenReady();
   }, { immediate: true });
 
+  const readinessTimeoutMs = BACKEND_READINESS_TIMEOUT_MS + BACKEND_READINESS_TRANSPORT_MARGIN_MS;
+
   try {
-    await $fetch('/_enfyra/ready', { retry: 0, timeout: 35_000 });
-    const message = document.getElementById('app-loading-message');
-    if (message) message.textContent = 'Loading your project…';
+    await $fetch('/_enfyra/ready', { retry: 0, timeout: readinessTimeoutMs });
   } catch {
     failed = true;
     const loading = document.getElementById('app-loading');

@@ -1,12 +1,13 @@
 import { createError, setHeader, type H3Event } from 'h3';
+import { BACKEND_READINESS_TIMEOUT_MS } from '~/constants/enfyra';
 import { createBackendReadinessGate } from './backend-readiness-gate';
 import type { BackendReadinessGate } from '../types/backend-readiness';
 
-let backend: { url: string; gate: BackendReadinessGate } | undefined;
+let backend: { url: string; timeoutMs: number; gate: BackendReadinessGate } | undefined;
 
-function gateFor(baseUrl: string) {
+function gateFor(baseUrl: string, timeoutMs: number) {
   const url = `${baseUrl.replace(/\/+$/, '')}/health/ready`;
-  if (backend?.url === url) return backend.gate;
+  if (backend?.url === url && backend.timeoutMs === timeoutMs) return backend.gate;
   const gate = createBackendReadinessGate(async (signal) => {
     try {
       const response = await fetch(url, {
@@ -24,12 +25,16 @@ function gateFor(baseUrl: string) {
       signal.throwIfAborted();
       return false;
     }
-  });
-  backend = { url, gate };
+  }, { timeoutMs });
+  backend = { url, timeoutMs, gate };
   return gate;
 }
 
-export async function waitForBackend(event: H3Event, baseUrl: string): Promise<void> {
+export async function waitForBackend(
+  event: H3Event,
+  baseUrl: string,
+  timeoutMs = BACKEND_READINESS_TIMEOUT_MS,
+): Promise<void> {
   if (!baseUrl) throw createError({ statusCode: 503, message: 'Backend is not configured' });
   const controller = new AbortController();
   const onClose = () => controller.abort();
@@ -37,7 +42,7 @@ export async function waitForBackend(event: H3Event, baseUrl: string): Promise<v
   event.node.req.once('aborted', onClose);
   if (event.node.req.aborted || event.node.res.destroyed) controller.abort();
   try {
-    await gateFor(baseUrl).wait(controller.signal);
+    await gateFor(baseUrl, timeoutMs).wait(controller.signal);
   } catch {
     if (controller.signal.aborted) throw createError({ statusCode: 499, message: 'Request canceled' });
     setHeader(event, 'Retry-After', 1);
