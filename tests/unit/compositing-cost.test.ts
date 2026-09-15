@@ -91,6 +91,13 @@ describe('compositing cost guard', () => {
     expect(header![0]).toContain('bg-[var(--shell-main-bg)]')
     expect(header![0]).not.toMatch(/backdrop-blur/)
     expect(header![0]).not.toMatch(/bg-transparent/)
+
+    // Even with an opaque background, an unpromoted sticky element is repainted
+    // on the main thread every scroll frame. The layer hint keeps the header off
+    // that path. It is only safe while the header subtree holds no `fixed`
+    // descendant, which would otherwise resolve against the new containing block.
+    expect(header![0]).toContain('will-change-transform')
+    expect(layout).not.toMatch(/<header[\s\S]*?(?:fixed|absolute)[\s\S]*?<\/header>/)
   })
 
   it('never gates a scrollbar rule on a universal hover selector', () => {
@@ -106,14 +113,25 @@ describe('compositing cost guard', () => {
     expect(scrollbars).not.toContain('*:not(:hover)')
   })
 
-  it('paints the shell canvas once, not once per wrapper', () => {
+  it('paints the shell canvas once on a viewport-fixed layer', () => {
     const layout = readAppFile('layouts/default.vue')
 
-    // The root element owns the single canvas gradient. Wrapper elements must
-    // stay transparent so the scroll path does not stack opaque paints.
-    expect(layout).toContain("style=\"background: var(--shell-content-bg); color: var(--text-primary);\"")
-    expect(layout).not.toMatch(/\.app-workspace\s*\{[^}]*background/)
+    // The root element must stay transparent so the scroll path does not stack
+    // opaque paints.
+    expect(layout).not.toMatch(/.app-workspace\s*\{[^}]*background/)
     expect(layout).not.toMatch(/:style="\{ background: 'transparent' \}"/)
+
+    // The canvas lives on a viewport-fixed layer, not on the document-height
+    // root: a gradient on the root scrolls with the content and re-paints the
+    // newly exposed band every frame.
+    const canvas = layout.match(/\.eapp-shell-canvas \{[\s\S]*?\}/)?.[0]
+    expect(canvas, 'shell canvas rule should exist').toBeDefined()
+    expect(canvas).toContain('position: fixed')
+    expect(canvas).toContain('inset: 0')
+    expect(canvas).toContain('background: var(--shell-content-bg)')
+    expect(canvas).toContain('pointer-events: none')
+    expect(layout).toContain('<div class="eapp-shell-canvas" aria-hidden="true"></div>')
+    expect(layout).not.toMatch(/style="background: var\(--shell-content-bg\)/)
   })
 
   it('never animates opacity on an element that carries a blur', () => {
