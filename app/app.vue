@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { getPrimaryColorPreflightScript } from "~/utils/primary-colors";
-
 const toaster = {
   duration: 3600,
   expand: true,
@@ -8,15 +6,6 @@ const toaster = {
   position: "bottom-right" as const,
   progress: true,
 };
-
-useHead({
-  script: [
-    {
-      innerHTML: getPrimaryColorPreflightScript(),
-      tagPosition: "head",
-    },
-  ],
-});
 </script>
 
 <template>

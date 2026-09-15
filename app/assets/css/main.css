@@ -602,10 +602,14 @@ button:focus-visible,
     box-shadow var(--duration-fast) var(--ease-standard);
 }
 
-.eapp-pagination :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
-  border-color: var(--pagination-border-hover) !important;
-  background: var(--pagination-bg-hover) !important;
-  color: var(--pagination-text-hover) !important;
+/* Hover feedback is pointer-only: on touch, the sticky emulated `:hover` left the
+   last-tapped page button looking selected. */
+@media (hover: hover) and (pointer: fine) {
+  .eapp-pagination :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
+    border-color: var(--pagination-border-hover) !important;
+    background: var(--pagination-bg-hover) !important;
+    color: var(--pagination-text-hover) !important;
+  }
 }
 
 .eapp-pagination :where([aria-current="page"]) {

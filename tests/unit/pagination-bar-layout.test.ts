@@ -115,4 +115,20 @@ describe('pagination layout', () => {
     // The chip must not be driven by the raw flag, or it would blink on fast fetches.
     expect(pagination).not.toMatch(/v-if="loading"/)
   })
+
+  it('gates pagination hover feedback to fine pointers', () => {
+    const css = readAppFile('assets/css/main.css')
+    const selector = '.eapp-pagination :where(a, button):hover'
+
+    // Touch leaves an emulated `:hover` on the last-tapped button, which read as
+    // a second selected page. Hover feedback is pointer-only.
+    expect(css.split(selector)).toHaveLength(2)
+
+    const mediaOpen = '@media (hover: hover) and (pointer: fine) {'
+    const mediaStart = css.indexOf(mediaOpen)
+    const mediaEnd = css.indexOf('\n}', mediaStart)
+    expect(mediaStart, 'fine-pointer media query should exist').toBeGreaterThan(-1)
+    expect(mediaEnd, 'fine-pointer media query should close').toBeGreaterThan(mediaStart)
+    expect(css.slice(mediaStart, mediaEnd)).toContain(selector)
+  })
 })

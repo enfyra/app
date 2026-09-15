@@ -80,15 +80,40 @@ describe('compositing cost guard', () => {
     expect(theme).toContain('--block-base: #242429')
   })
 
-  it('keeps the layout header blur desktop-only over an opaque mobile background', () => {
+  it('keeps the layout header opaque with no filter in the scroll path', () => {
     const layout = readAppFile('layouts/default.vue')
     const header = layout.match(/<header[\s\S]*?>/)
     expect(header, 'layout header should exist').not.toBeNull()
 
+    // A translucent sticky header over scrolling content re-filters its backdrop
+    // every frame, which is the per-frame cost this contract removes.
     expect(header![0]).toContain('sticky top-0')
-    expect(header![0]).toContain('max-lg:bg-[var(--shell-main-bg)]')
-    expect(header![0]).toContain('lg:backdrop-blur-xl')
-    expect(header![0]).not.toMatch(/(?<!lg:)backdrop-blur/)
+    expect(header![0]).toContain('bg-[var(--shell-main-bg)]')
+    expect(header![0]).not.toMatch(/backdrop-blur/)
+    expect(header![0]).not.toMatch(/bg-transparent/)
+  })
+
+  it('never gates a scrollbar rule on a universal hover selector', () => {
+    const scrollbars = readAppFile('assets/css/scrollbars.css')
+    const hoverSubjects = [...scrollbars.matchAll(/^([^{]*:hover[^{]*)\{/gm)].map((match) => match[1]!.trim())
+
+    // The pointer crossing scrolled content flips a universal `:hover` match
+    // continuously, and every flip invalidates style for the whole document.
+    // A bare `*:hover` / `*:not(:hover)` subject is the offender; a scrollbar
+    // pseudo-element hover such as `*::-webkit-scrollbar-thumb:hover` is not.
+    const offenders = hoverSubjects.filter((subject) => /^\*(:not\(:hover\))?$/.test(subject) || /^\*:not\(:hover\)/.test(subject))
+    expect(offenders).toEqual([])
+    expect(scrollbars).not.toContain('*:not(:hover)')
+  })
+
+  it('paints the shell canvas once, not once per wrapper', () => {
+    const layout = readAppFile('layouts/default.vue')
+
+    // The root element owns the single canvas gradient. Wrapper elements must
+    // stay transparent so the scroll path does not stack opaque paints.
+    expect(layout).toContain("style=\"background: var(--shell-content-bg); color: var(--text-primary);\"")
+    expect(layout).not.toMatch(/\.app-workspace\s*\{[^}]*background/)
+    expect(layout).not.toMatch(/:style="\{ background: 'transparent' \}"/)
   })
 
   it('never animates opacity on an element that carries a blur', () => {
