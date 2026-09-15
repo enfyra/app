@@ -9,10 +9,11 @@ function readAppFile(path: string) {
   return readFileSync(join(appDir, path), 'utf8')
 }
 
-describe('sticky pagination layout', () => {
-  it('keeps the sticky background flush without transparent top margins', () => {
+describe('pagination layout', () => {
+  it('keeps the main bar in flow as a full-bleed workspace edge', () => {
     const pagination = readAppFile('components/common/PaginationBar.vue')
     const resourceList = readAppFile('components/common/ResourceListFrame.vue')
+    const css = readAppFile('assets/css/main.css')
     const consumers = [
       readAppFile('pages/settings/guards/index.vue'),
       readAppFile('pages/settings/routes/index.vue'),
@@ -20,16 +21,98 @@ describe('sticky pagination layout', () => {
       readAppFile('pages/packages/backend.vue'),
     ]
 
-    expect(pagination).toContain('eapp-pagination sticky bottom-0')
+    // The main bar is not sticky any more; a fixed mini bar replaces it instead.
+    expect(pagination).not.toContain('sticky bottom-')
+    expect(pagination).toContain("'eapp-pagination',")
     expect(pagination).toContain('bg-[var(--shell-main-bg)]')
     expect(pagination).toContain('-mx-4 px-4')
     expect(pagination).toContain('sm:-mx-6 sm:px-6')
+    expect(pagination).toContain('v-bind="$attrs"')
+    expect(pagination).toContain('inheritAttrs: false')
+
     expect(resourceList).toContain('paginationClass: ""')
-    expect(resourceList).toContain('eapp-resource-list-pagination')
+    expect(resourceList).toContain('class="contents"')
     expect(resourceList).toContain('eapp-pagination-separated')
+    expect(css).toContain('.eapp-pagination-separated {\n  margin-top: 1rem;')
 
     for (const consumer of consumers) {
       expect(consumer).not.toMatch(/(?:class|pagination-class)="mt-\d+"/)
     }
+  })
+
+  it('shows the fixed mini bar only while the main bar is off screen', () => {
+    const pagination = readAppFile('components/common/PaginationBar.vue')
+    const css = readAppFile('assets/css/main.css')
+    const visibility = readAppFile('composables/layout/useMiniBarVisibility.ts')
+
+    expect(pagination).toContain('ref="mainBar"')
+    expect(pagination).toContain('useMiniBarVisibility(mainBar)')
+    expect(pagination).toContain('const showMini = computed(() => hasPagination.value && isMiniVisible.value)')
+    expect(pagination).toContain('<Teleport to="body">')
+    expect(pagination).toContain('eapp-pagination-mini fixed inset-x-3 bottom-3')
+
+    // The handoff must be driven by an observer on the main bar, with a reserve
+    // band so the mini bar retires before the main bar reaches the fold.
+    expect(visibility).toContain('IntersectionObserver')
+    expect(visibility).toContain('HANDOFF_GAP_PX')
+    expect(visibility).toContain('rootMargin')
+    expect(visibility).toContain('isMiniVisible.value = !record.isIntersecting')
+    expect(visibility).toContain('observer.disconnect()')
+
+    const miniRule = css.match(/\.eapp-pagination-mini \{[^}]*\}/)?.[0]
+    expect(miniRule, 'mini pagination rule should exist').toBeDefined()
+    expect(pagination).toContain('rounded-[var(--radius-panel)]')
+    expect(miniRule).toContain('border: 1px solid var(--card-border)')
+    expect(miniRule).toContain('box-shadow: var(--card-shadow-hover)')
+    expect(miniRule).toContain('env(safe-area-inset-bottom)')
+
+    // Over moving content a blur would re-run every frame.
+    expect(miniRule).not.toContain('backdrop-filter')
+  })
+
+  it('sizes the mini bar controls below the main bar controls', () => {
+    const pagination = readAppFile('components/common/PaginationBar.vue')
+
+    const mainSize = pagination.match(/<UPagination\s[\s\S]*?\/>/)
+    expect(mainSize, 'main pagination should render').not.toBeNull()
+    expect(mainSize![0]).toContain('size="sm"')
+
+    const miniSize = pagination.match(/<UPagination[\s\S]*?size="xs"[\s\S]*?\/>/)
+    expect(miniSize, 'mini pagination should use the smaller size').not.toBeNull()
+  })
+
+  it('hides only the jump-to-ends controls on mobile', () => {
+    const pagination = readAppFile('components/common/PaginationBar.vue')
+
+    // UPagination has no prop for first/last alone: `showControls` also removes
+    // prev/next, so the ends are hidden per slot instead.
+    expect(pagination).toContain('EDGE_CONTROL_UI')
+    expect(pagination).toContain("first: 'max-md:!hidden'")
+    expect(pagination).toContain("last: 'max-md:!hidden'")
+    expect(pagination).not.toMatch(/:show-controls/)
+    expect(pagination).not.toContain('showEdgesResolved')
+
+    // `showEdges` is a reka-ui prop about first/last page + ellipsis in the item
+    // window, not about the end controls, so it must not be repurposed for this.
+    const edgesBindings = pagination.match(/:show-edges="showEdges"/g) ?? []
+    expect(edgesBindings.length, 'both bars pass showEdges through').toBe(2)
+  })
+
+  it('never binds loading to the pagination disabled prop', () => {
+    const pagination = readAppFile('components/common/PaginationBar.vue')
+
+    // reka-ui derives prev/next disabled from `page === 1` / `page === pageCount`
+    // OR the root `disabled` prop. Wiring the fetch flag there made prev flip
+    // enabled -> disabled -> enabled on every page change.
+    expect(pagination).not.toMatch(/:disabled=/)
+    expect(pagination).not.toMatch(/:show-controls/)
+
+    // Loading is still surfaced, but only through the deferred chip.
+    expect(pagination).toContain('useDeferredBusy')
+    expect(pagination).toContain('showLoadingChip')
+    expect(pagination).toContain('v-if="showLoadingChip"')
+
+    // The chip must not be driven by the raw flag, or it would blink on fast fetches.
+    expect(pagination).not.toMatch(/v-if="loading"/)
   })
 })

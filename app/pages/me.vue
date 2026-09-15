@@ -283,7 +283,6 @@ onMounted(() => {
   background: var(--card-bg);
   box-shadow: var(--card-shadow);
   padding: 22px;
-  backdrop-filter: blur(18px);
 }
 
 .profile-card-header {

@@ -115,7 +115,7 @@ const resourceListClass = computed(() => [
         <slot />
       </div>
 
-      <div v-if="showPagination" class="eapp-resource-list-pagination">
+      <div v-if="showPagination" class="contents">
         <CommonPaginationBar
           v-model:page="page"
           :class="[paginationClass, 'eapp-pagination-separated']"

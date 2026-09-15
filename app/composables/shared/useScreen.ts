@@ -1,23 +1,31 @@
 let listenerRegistered = false;
+let resizeFrame: number | null = null;
 
 export function useScreen() {
   const width = useState("screen:width", () => typeof window !== "undefined" ? window.innerWidth : 0);
   const height = useState("screen:height", () => typeof window !== "undefined" ? window.innerHeight : 0);
 
+  function syncViewport() {
+    width.value = window.innerWidth;
+    height.value = window.innerHeight;
+  }
+
   if (import.meta.client && !listenerRegistered) {
     listenerRegistered = true;
     window.addEventListener("resize", () => {
-      width.value = window.innerWidth;
-      height.value = window.innerHeight;
-    });
+      if (resizeFrame !== null) return;
+      resizeFrame = requestAnimationFrame(() => {
+        resizeFrame = null;
+        syncViewport();
+      });
+    }, { passive: true });
   }
 
   const instance = getCurrentInstance();
   if (instance) {
     onMounted(() => {
       if (typeof window !== "undefined") {
-        width.value = window.innerWidth;
-        height.value = window.innerHeight;
+        syncViewport();
       }
     });
   }
@@ -34,9 +42,12 @@ export function useScreen() {
     return "desktop";
   });
 
+  const widthRef = computed(() => width.value);
+  const heightRef = computed(() => height.value);
+
   return {
-    width: computed(() => width.value),
-    height: computed(() => height.value),
+    width: widthRef,
+    height: heightRef,
     isMobile,
     isTablet,
     isDesktop,

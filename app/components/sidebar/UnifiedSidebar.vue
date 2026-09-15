@@ -281,7 +281,7 @@ onUnmounted(() => {
       :ui="{
         gap: '!duration-[120ms]',
         container: 'h-full !z-[99999] !duration-[140ms]',
-        inner: '!bg-[var(--shell-sidebar-bg)] !border-r !border-[var(--shell-sidebar-border)] !divide-transparent backdrop-blur-xl shadow-none',
+        inner: '!bg-[var(--shell-sidebar-bg)] !border-r !border-[var(--shell-sidebar-border)] !divide-transparent shadow-none',
        header: 'px-3.5 pb-2.5 pt-4 group-data-[state=collapsed]/sidebar:px-2',
         body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto border-0 px-3.5 group-data-[state=collapsed]/sidebar:px-2',
         footer: 'flex min-h-0 w-full flex-col gap-1.5 overflow-y-auto p-0 px-3.5 pb-5 max-lg:pb-4 group-data-[state=collapsed]/sidebar:px-2',

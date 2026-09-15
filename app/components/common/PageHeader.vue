@@ -238,7 +238,6 @@ function handlePageHeaderActionClick(action: any) {
     linear-gradient(90deg, color-mix(in srgb, var(--brand-500) 5%, transparent), transparent 62%),
     var(--card-bg);
   box-shadow: var(--card-shadow);
-  backdrop-filter: blur(18px);
 }
 
 .page-header-shell::before {
