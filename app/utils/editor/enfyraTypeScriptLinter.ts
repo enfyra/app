@@ -1,4 +1,4 @@
-import { parse } from 'acorn';
+import { parse, tokenizer } from 'acorn';
 import type { Diagnostic } from '@codemirror/lint';
 
 type TypeScriptModule = typeof import('typescript');
@@ -6,6 +6,11 @@ type TypeScriptModule = typeof import('typescript');
 interface TransformedCode {
   code: string;
   sourceMap: number[];
+}
+
+interface SourceRange {
+  start: number;
+  end: number;
 }
 
 const macroReplacements = new Map([
@@ -440,6 +445,31 @@ declare module 'vue' {
 
 let typescriptModulePromise: Promise<TypeScriptModule> | null = null;
 
+function findRegularExpressionRanges(source: string): SourceRange[] {
+  const maskedSource = source.replace(
+    /@[A-Z0-9_]+|[#%][A-Za-z_][A-Za-z0-9_]*/g,
+    token => '_'.repeat(token.length),
+  );
+  const ranges: SourceRange[] = [];
+
+  try {
+    const scanner = tokenizer(maskedSource, { ecmaVersion: 2022 });
+    for (
+      let token = scanner.getToken();
+      token.type.label !== 'eof';
+      token = scanner.getToken()
+    ) {
+      if (token.type.label === 'regexp') {
+        ranges.push({ start: token.start, end: token.end });
+      }
+    }
+  } catch {
+    return ranges;
+  }
+
+  return ranges;
+}
+
 function loadTypeScript() {
   typescriptModulePromise ??= import('typescript');
   return typescriptModulePromise;
@@ -459,6 +489,8 @@ export function transformEnfyraCode(source: string): TransformedCode {
   let pos = 0;
   let templateExprDepth = 0;
   let braceDepth = 0;
+  const regularExpressionRanges = findRegularExpressionRanges(source);
+  let regularExpressionIndex = 0;
 
   const pushOriginal = (from: number, to: number) => {
     for (let index = from; index < to; index++) {
@@ -479,6 +511,24 @@ export function transformEnfyraCode(source: string): TransformedCode {
   const isIdentifierChar = (char: string) => /[A-Za-z0-9_]/.test(char);
 
   while (pos < len) {
+    while (
+      regularExpressionIndex < regularExpressionRanges.length &&
+      regularExpressionRanges[regularExpressionIndex]!.end <= pos
+    ) {
+      regularExpressionIndex++;
+    }
+    const regularExpression = regularExpressionRanges[regularExpressionIndex];
+    if (
+      state === CODE &&
+      regularExpression &&
+      regularExpression.start === pos
+    ) {
+      pushOriginal(regularExpression.start, regularExpression.end);
+      pos = regularExpression.end;
+      regularExpressionIndex++;
+      continue;
+    }
+
     const char = source[pos];
     const next = source[pos + 1];
 

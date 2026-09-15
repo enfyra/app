@@ -2,6 +2,7 @@ import {
   lintEnfyraScript,
   lintEnfyraTypeScript,
   lintVueSfcScripts,
+  transformEnfyraCode,
   validateEnfyraRequiredReturnScript,
 } from '~/utils/editor/enfyraTypeScriptLinter'
 
@@ -55,6 +56,20 @@ await @TRIGGER('flow_name', { item })
 `)
 
     expect(diagnostics).toEqual([])
+  })
+
+  it('keeps email CSS literal after a regular expression containing quotes', () => {
+    const source = [
+      `const escaped = value.replace(/\\\"/g, '&quot;')`,
+      `const html = '<table width="100%" style="color:#33434d">@BODY %pkg #repo</table>'`,
+      'return { body: @BODY, repo: #projects, pkg: %resend }',
+    ].join('\n')
+
+    expect(transformEnfyraCode(source).code).toBe([
+      `const escaped = value.replace(/\\\"/g, '&quot;')`,
+      `const html = '<table width="100%" style="color:#33434d">@BODY %pkg #repo</table>'`,
+      'return { body: $ctx.$body, repo: $ctx.$repos.projects, pkg: $ctx.$pkgs.resend }',
+    ].join('\n'))
   })
 
   it('accepts the @ENV macro as sanitized environment context', async () => {
