@@ -344,35 +344,27 @@ registerHeaderActions([
 
     <div
       v-if="folderTotal > pageLimit || fileTotal > pageLimit"
-      class="mt-6 flex flex-col justify-center gap-4 lg:flex-row"
+      class="mt-6 space-y-4"
     >
-      <div v-if="folderTotal > pageLimit" class="flex items-center gap-2">
-        <span class="text-sm text-[var(--text-tertiary)]">Folders:</span>
+      <div v-if="folderTotal > pageLimit">
+        <p class="mb-2 text-xs font-medium text-[var(--text-tertiary)]">Folders</p>
         <CommonPaginationBar
           v-model:page="folderPage"
-          align="center"
           :items-per-page="pageLimit"
           :total="folderTotal"
           :loading="childFoldersPending"
-          :show-range="false"
           :to="(p) => ({ path: route.path, query: { ...route.query, folderPage: p } })"
-          color="secondary"
-          active-color="secondary"
         />
       </div>
 
-      <div v-if="fileTotal > pageLimit" class="flex items-center gap-2">
-        <span class="text-sm text-[var(--text-tertiary)]">Files:</span>
+      <div v-if="fileTotal > pageLimit">
+        <p class="mb-2 text-xs font-medium text-[var(--text-tertiary)]">Files</p>
         <CommonPaginationBar
           v-model:page="filePage"
-          align="center"
           :items-per-page="pageLimit"
           :total="fileTotal"
           :loading="filesPending"
-          :show-range="false"
           :to="(p) => ({ path: route.path, query: { ...route.query, filePage: p } })"
-          color="secondary"
-          active-color="secondary"
         />
       </div>
     </div>

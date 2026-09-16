@@ -361,20 +361,6 @@ button:focus-visible,
   margin: 0;
 }
 
-.eapp-pagination-separated {
-  margin-top: 1rem;
-  margin-inline: 0 !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  padding-inline: 1rem !important;
-  padding-left: 1rem !important;
-  padding-right: 1rem !important;
-  border: 1px solid var(--card-border) !important;
-  border-radius: var(--radius-panel);
-  background: var(--card-bg) !important;
-  box-shadow: var(--card-shadow);
-}
-
 /*
  * Mini bar: a fixed stand-in shown only while the main bar is off screen. It is
  * inset from the canvas edges and carries the card chrome so scrolled content

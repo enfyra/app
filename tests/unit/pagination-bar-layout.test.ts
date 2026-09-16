@@ -13,7 +13,6 @@ describe('pagination layout', () => {
   it('keeps the main bar in flow as a full-bleed workspace edge', () => {
     const pagination = readAppFile('components/common/PaginationBar.vue')
     const resourceList = readAppFile('components/common/ResourceListFrame.vue')
-    const css = readAppFile('assets/css/main.css')
     const consumers = [
       readAppFile('pages/settings/guards/index.vue'),
       readAppFile('pages/settings/routes/index.vue'),
@@ -32,11 +31,60 @@ describe('pagination layout', () => {
 
     expect(resourceList).toContain('paginationClass: ""')
     expect(resourceList).toContain('class="contents"')
-    expect(resourceList).toContain('eapp-pagination-separated')
-    expect(css).toContain('.eapp-pagination-separated {\n  margin-top: 1rem;')
+    expect(resourceList).toContain(":class=\"[paginationClass, 'mt-4']\"")
 
     for (const consumer of consumers) {
       expect(consumer).not.toMatch(/(?:class|pagination-class)="mt-\d+"/)
+    }
+  })
+
+  it('renders the same bar everywhere instead of per-caller variants', () => {
+    const css = readAppFile('assets/css/main.css')
+    const resourceList = readAppFile('components/common/ResourceListFrame.vue')
+    const barSites = [
+      'components/common/ResourceListFrame.vue',
+      'pages/settings/guards/index.vue',
+      'pages/settings/routes/index.vue',
+      'pages/storage/management/index.vue',
+      'pages/storage/management/folder/[id].vue',
+      'pages/collections/index.vue',
+      'pages/data/[table]/index.vue',
+    ]
+    const frameSites = [
+      'pages/packages/app.vue',
+      'pages/packages/backend.vue',
+    ]
+
+    // The frame used to paint its pagination as a nested card while every direct
+    // caller rendered a full-bleed workspace edge, so the same control read as two
+    // different components depending on the page.
+    expect(css).not.toContain('eapp-pagination-separated')
+    expect(resourceList).not.toContain('eapp-pagination-separated')
+
+    // No site may re-tint, re-align, or drop the range, or the divergence returns.
+    for (const site of barSites) {
+      const source = readAppFile(site)
+      const blocks = source.match(/<CommonPaginationBar[\s\S]*?\/>/g) ?? []
+      expect(blocks.length, `${site} should render a pagination bar`).toBeGreaterThan(0)
+      for (const block of blocks) {
+        for (const prop of ['align=', 'color=', 'active-color=', 'show-range=']) {
+          expect(block, `${site} should not override ${prop}`).not.toContain(prop)
+        }
+      }
+    }
+
+    // Pages that hand the pagination to the frame must not pass the same knobs.
+    for (const site of frameSites) {
+      const source = readAppFile(site)
+      expect(source).toContain('<CommonResourceListFrame')
+      for (const prop of ['pagination-align', 'pagination-color', 'pagination-active-color', 'pagination-show-range', 'pagination-ui']) {
+        expect(source, `${site} should not pass ${prop}`).not.toContain(prop)
+      }
+    }
+
+    // The frame must not re-expose those knobs either.
+    for (const prop of ['paginationAlign', 'paginationColor', 'paginationActiveColor', 'paginationShowRange', 'paginationUi']) {
+      expect(resourceList, `frame should not declare ${prop}`).not.toContain(prop)
     }
   })
 
