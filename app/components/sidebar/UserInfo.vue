@@ -217,7 +217,7 @@ async function handleLogout() {
 
     <div
       v-else
-      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--block-base)] shadow-[var(--shadow-sm)] backdrop-blur-xl"
+      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--block-base)] shadow-[var(--shadow-sm)]"
     >
       <div
         role="button"

@@ -112,5 +112,7 @@ export function sendSocketBridgeAuthError(browserSocket: {
   }) as string[];
   const encoded = packs[0];
   if (!encoded) return;
-  browserSocket.send(`4${encoded}`);
+  try {
+    browserSocket.send(`4${encoded}`);
+  } catch {}
 }

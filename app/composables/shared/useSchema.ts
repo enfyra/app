@@ -304,6 +304,22 @@ export function useSchema(tableName?: string | Ref<string>) {
     return columnFields.length > 0 ? columnFields.join(",") : "*";
   }
 
+  async function getReadableFields(): Promise<string> {
+    await ensureSchema();
+    if (!definition.value.length) return "*";
+
+    const fields = definition.value
+      .filter((field) => canReadField(field))
+      .map((field) => {
+        const name = field.propertyName || field.name;
+        if (!name) return null;
+        return field.fieldType === "relation" ? `${name}.*` : name;
+      })
+      .filter((field): field is string => Boolean(field));
+
+    return fields.length > 0 ? fields.join(",") : "*";
+  }
+
   function useFormChanges(): FormChangesState {
     const originalData = ref<Record<string, any>>({});
 
@@ -348,6 +364,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     validate,
     getIncludeFields,
     getColumnFields,
+    getReadableFields,
     sortFieldsByOrder,
     useFormChanges,
   };

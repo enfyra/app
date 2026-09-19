@@ -9,12 +9,16 @@ import {
   requireValidOAuthState,
   requireValidRedirectUrl,
 } from "../../utils/oauth";
+import { consumeOAuthBrowserBinding } from "../../utils/oauth-browser-state";
 import { setAuthCookies } from "../../utils/auth-cookies";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
   const query = getQuery(event);
-  const redirect = await requireValidRedirectUrl(query.redirect, event);
+  const redirect = consumeOAuthBrowserBinding(
+    event,
+    await requireValidRedirectUrl(query.redirect, event),
+  );
   const state = requireValidOAuthState(query.state);
   const error =
     typeof query.error === "string" && query.error.length > 0

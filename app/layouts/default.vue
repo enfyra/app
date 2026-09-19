@@ -1,5 +1,6 @@
 <template>
-  <div class="flex min-h-dvh text-sm" style="background: var(--shell-content-bg); color: var(--text-primary);">
+  <div class="flex min-h-svh text-sm" style="color: var(--text-primary);">
+    <div class="eapp-shell-canvas" aria-hidden="true"></div>
 
     <a
       href="#main-content"
@@ -14,9 +15,10 @@
       id="main-content"
       tabindex="-1"
       class="relative flex min-w-0 flex-1 flex-col"
-      :style="{ background: 'transparent' }"
     >
-      <header class="sticky top-0 flex w-full z-50 backdrop-blur-xl" :style="{ background: 'transparent' }">
+      <header
+        class="sticky top-0 flex w-full z-50 will-change-transform max-lg:border-b max-lg:border-[color-mix(in_srgb,var(--shell-main-border)_60%,transparent)] bg-[var(--shell-main-bg)]"
+      >
         <div class="flex flex-col items-center justify-between grow lg:flex-row">
           <div class="flex items-center justify-between w-full gap-2 sm:gap-4 lg:justify-normal lg:border-b-0 h-16">
             <div class="flex flex-1 items-center justify-between gap-4 px-4 lg:px-6">
@@ -149,8 +151,15 @@ const bannerTitle = computed(() => {
 </script>
 
 <style scoped>
-.app-workspace {
-  background: var(--bg-app);
+/* Single canvas painter for the shell. It is viewport-fixed rather than sized to
+   the document: a gradient on a document-height element scrolls with the content
+   and re-paints the newly exposed band every frame. Fixed, it paints once. */
+.eapp-shell-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--shell-content-bg);
 }
 
 .route-stack > * {

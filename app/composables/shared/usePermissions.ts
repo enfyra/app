@@ -1,4 +1,6 @@
 import { canSeeMenu as canSeeMenuByRole } from "~/utils/menu-visibility";
+import type { PermissionCondition, PermissionRule } from "~/types/permissions";
+import { evaluatePermissionCondition } from "~/utils/permission-condition";
 
 export function usePermissions() {
   const { me } = useAuth();
@@ -111,43 +113,11 @@ export function usePermissions() {
   const checkPermissionCondition = (
     condition: PermissionCondition
   ): boolean => {
-    if (me.value?.isRootAdmin) {
-      return true;
-    }
-
-    if (condition && typeof condition === "object" && "route" in condition) {
-      return checkPermissionRule(condition as PermissionRule);
-    }
-
-    if (condition.rootAdmin === true) {
-      return !!me.value?.isRootAdmin;
-    }
-
-    if (condition.allowAll === true) {
-      return true;
-    }
-
-    if (condition.and) {
-      return condition.and.every((item) => {
-        if ("route" in item) {
-          return checkPermissionRule(item as PermissionRule);
-        } else {
-          return checkPermissionCondition(item as PermissionCondition);
-        }
-      });
-    }
-
-    if (condition.or) {
-      return condition.or.some((item) => {
-        if ("route" in item) {
-          return checkPermissionRule(item as PermissionRule);
-        } else {
-          return checkPermissionCondition(item as PermissionCondition);
-        }
-      });
-    }
-
-    return false;
+    return evaluatePermissionCondition(
+      condition,
+      !!me.value?.isRootAdmin,
+      checkPermissionRule,
+    );
   };
 
   const hasAnyPermission = (routes: string[], methods: string[]): boolean => {

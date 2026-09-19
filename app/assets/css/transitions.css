@@ -26,6 +26,30 @@
 }
 
 /*
+ * mini-pagination: fixed pagination stand-in. It enters quickly so it is already
+ * gone before the main bar reaches the fold, and mirrors the 3px rise used by
+ * route motion. Leaving is faster than entering, so the handoff never shows the
+ * two bars together.
+ */
+.mini-pagination-enter-active {
+  transition:
+    opacity var(--duration-base) var(--ease-enter),
+    transform var(--duration-base) var(--ease-enter);
+}
+
+.mini-pagination-leave-active {
+  transition:
+    opacity var(--duration-fast) var(--ease-exit),
+    transform var(--duration-fast) var(--ease-exit);
+}
+
+.mini-pagination-enter-from,
+.mini-pagination-leave-to {
+  opacity: 0;
+  transform: translateY(3px);
+}
+
+/*
  * eapp-page: route-level workspace transition. NuxtPage uses out-in mode so
  * the leaving page finishes before the entering page mounts. The route-stack
  * grid keeps either page in layout flow without collapsing the flex gap.
@@ -135,6 +159,8 @@
   .eapp-page-leave-active,
   .metadata-banner-enter-active,
   .metadata-banner-leave-active,
+  .mini-pagination-enter-active,
+  .mini-pagination-leave-active,
   .item-grid-enter-active,
   .item-grid-leave-active {
     transition-duration: 1ms !important;
@@ -148,6 +174,8 @@
   .eapp-page-enter-from,
   .metadata-banner-enter-from,
   .metadata-banner-leave-to,
+  .mini-pagination-enter-from,
+  .mini-pagination-leave-to,
   .item-grid-enter-from,
   .item-grid-leave-to {
     transform: none;

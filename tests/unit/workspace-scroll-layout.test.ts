@@ -15,10 +15,14 @@ describe('document-scrolling app shell', () => {
     const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
     const mainStyles = readAppFile('assets/css/main.css')
 
-    expect(layout).toContain('min-h-dvh')
+    // Stable viewport units only: `dvh` re-resolves when the mobile address bar
+    // shows or hides, which relayouts the whole shell mid-scroll.
+    expect(layout).toContain('min-h-svh')
+    expect(layout).not.toContain('dvh')
     expect(layout).not.toContain('height: 100dvh')
     expect(layout).not.toContain('overflow-y-scroll')
-    expect(layout).toContain('header class="sticky top-0')
+    expect(layout).toMatch(/<header[\s\S]{0,400}?sticky top-0/)
+    expect(layout).toContain('bg-[var(--shell-main-bg)]')
     expect(sidebar).toContain('sticky top-0 h-svh self-start')
     expect(sidebar).not.toContain('sticky top-0 h-dvh self-start')
     expect(mainStyles).toContain('overflow-x: clip !important')

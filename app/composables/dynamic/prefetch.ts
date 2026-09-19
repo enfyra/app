@@ -23,8 +23,6 @@ export function useExtensionPrefetch() {
   const {
     getCachedExtensionMeta,
     setCachedExtensionMeta,
-    getCachedComponent,
-    loadDynamicComponent,
   } = useDynamicComponent();
   const router = useRouter();
 
@@ -48,7 +46,7 @@ export function useExtensionPrefetch() {
     if (checkedMenuIdSet.has(menuId) || inFlightPrefetches.has(cacheKey)) return;
 
     const cachedMeta = getCachedExtensionMeta(cacheKey);
-    if (cachedMeta && getCachedComponent(cachedMeta.extensionId, cachedMeta.updatedAt)) {
+    if (cachedMeta) {
       markMenuChecked(menuId);
       return;
     }
@@ -69,7 +67,6 @@ export function useExtensionPrefetch() {
         if (!extension.isEnabled || !extension.compiledCode) return;
 
         setCachedExtensionMeta(cacheKey, extension);
-        await loadDynamicComponent(extension.compiledCode, extension.extensionId, extension.updatedAt, false);
       } catch {
         markMenuChecked(menuId);
         return;

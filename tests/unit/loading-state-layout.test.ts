@@ -4,9 +4,14 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 const appDir = join(dirname(fileURLToPath(import.meta.url)), '../../app')
+const repoDir = join(appDir, '..')
 
 function readAppFile(path: string) {
   return readFileSync(join(appDir, path), 'utf8')
+}
+
+function readRepoFile(path: string) {
+  return readFileSync(join(repoDir, path), 'utf8')
 }
 
 describe('loading state layout', () => {
@@ -42,5 +47,35 @@ describe('loading state layout', () => {
 
     expect(resourceListItem).toContain('const isSkeletonLoading = computed(() => isLoading.value && !hasContent.value);')
     expect(resourceListItem).toContain("isRefreshing ? 'eapp-resource-list-item-refreshing' : ''")
+  })
+
+  it('shows one loading message and one splash for the whole backend wait', () => {
+    const splash = readAppFile('plugins/00-loading.client.ts')
+
+    const messageElements = splash.match(/<p id="app-loading-message"/g) ?? []
+    expect(messageElements).toHaveLength(1)
+    expect(splash.match(/Loading your project…/g) ?? []).toHaveLength(1)
+    expect(splash).not.toMatch(/Starting your project/)
+  })
+
+  it('surfaces a retryable error state when the backend wait cannot finish', () => {
+    const splash = readAppFile('plugins/00-loading.client.ts')
+
+    expect(splash).toContain("loading?.setAttribute('data-state', 'error')")
+    expect(splash).toContain("message.textContent = 'Your project is taking longer to start.'")
+    expect(splash).toContain("{ once: true }")
+    expect(splash).toContain('if (failed || !mounted.value || !initialReady.value) return;')
+  })
+
+  it('shares one hard-coded readiness budget between the gate and the browser', () => {
+    const constants = readAppFile('constants/enfyra.ts')
+    const gate = readRepoFile('server/utils/backend-readiness.ts')
+    const splash = readAppFile('plugins/00-loading.client.ts')
+
+    expect(constants).toMatch(/BACKEND_READINESS_TIMEOUT_MS = \d+/)
+    expect(gate).toContain("import { BACKEND_READINESS_TIMEOUT_MS } from '~/constants/enfyra'")
+    expect(gate).toContain('timeoutMs = BACKEND_READINESS_TIMEOUT_MS')
+    expect(splash).toContain('BACKEND_READINESS_TIMEOUT_MS + BACKEND_READINESS_TRANSPORT_MARGIN_MS')
+    expect(readRepoFile('nuxt.config.ts')).not.toMatch(/[Rr]eadiness.*process\.env/)
   })
 })

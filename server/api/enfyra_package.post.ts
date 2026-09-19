@@ -5,16 +5,18 @@ import {
   createError,
 } from "h3";
 import { $fetch } from "ofetch";
+import { buildPackageProxyHeaders } from "~/utils/enfyra/server/packageProxy";
 
 export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
     const config = useRuntimeConfig();
     const apiUrl = (config.public as any).apiUrl;
-    const headers = {
-      cookie: getHeader(event, "cookie") || "",
-      authorization: event.context.proxyHeaders?.authorization || "",
-    };
+    const headers = buildPackageProxyHeaders(
+      getHeader(event, "cookie"),
+      event.context.proxyHeaders?.authorization,
+      getHeader(event, "x-enfyra-pat")
+    );
 
     const finalBody = body.type === "App"
       ? { ...body, status: "installed" }

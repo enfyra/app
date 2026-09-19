@@ -99,44 +99,45 @@
       </span>
     </span>
 
-    <slot
-      v-if="isSkeletonLoading && (headerActions?.length || normalizedActions.length)"
-      name="skeleton-actions"
-    >
-      <span class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
-    </slot>
-
     <span
-      v-else-if="headerActions?.length"
-      class="relative z-10 eapp-resource-list-header-actions"
+      v-if="isSkeletonLoading && (headerActions?.length || normalizedActions.length)"
+      class="relative z-10 eapp-resource-list-actions-group"
     >
-      <component
-        v-for="(action, index) in headerActions"
-        :key="index"
-        :is="getComponent(action.component)"
-        v-bind="{ ...getDefaultProps(action.component, 'header'), ...resolveProps(action.props) }"
-        @click="handleHeaderActionClick(action, $event)"
-        @update:model-value="action.onUpdate"
-      >
-        <template v-if="action.label">{{ action.label }}</template>
-      </component>
+      <slot name="skeleton-actions">
+        <span class="hidden h-8 w-20 flex-shrink-0 rounded-[var(--radius-control)] skeleton-inline skeleton-pulse-slow md:block" />
+      </slot>
     </span>
 
     <span
-      v-if="!isSkeletonLoading && normalizedActions.length"
-      class="relative z-10 eapp-resource-list-actions"
+      v-else-if="headerActions?.length || normalizedActions.length"
+      class="relative z-10 eapp-resource-list-actions-group"
     >
-      <UButton
-        v-for="action in normalizedActions"
-        :key="action.label"
-        v-bind="resolveProps(action.props)"
-        :to="action.to"
-        :loading="action.loading"
-        :disabled="action.disabled || action.loading"
-        @click="handleActionClick(action, $event)"
-      >
-        <span class="hidden sm:inline">{{ action.label }}</span>
-      </UButton>
+      <span v-if="headerActions?.length" class="eapp-resource-list-header-actions">
+        <component
+          v-for="(action, index) in headerActions"
+          :key="index"
+          :is="getComponent(action.component)"
+          v-bind="{ ...getDefaultProps(action.component, 'header'), ...resolveProps(action.props) }"
+          @click="handleHeaderActionClick(action, $event)"
+          @update:model-value="action.onUpdate"
+        >
+          <template v-if="action.label">{{ action.label }}</template>
+        </component>
+      </span>
+
+      <span v-if="normalizedActions.length" class="eapp-resource-list-actions">
+        <UButton
+          v-for="action in normalizedActions"
+          :key="action.label"
+          v-bind="resolveProps(action.props)"
+          :to="action.to"
+          :loading="action.loading"
+          :disabled="action.disabled || action.loading"
+          @click="handleActionClick(action, $event)"
+        >
+          <span class="hidden sm:inline">{{ action.label }}</span>
+        </UButton>
+      </span>
     </span>
   </div>
 </template>

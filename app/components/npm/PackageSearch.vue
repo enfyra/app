@@ -94,7 +94,7 @@
     <Transition name="fade-slide">
       <div
         v-if="selectedPackage"
-        class="eapp-accent-soft relative overflow-hidden rounded-xl p-4 backdrop-blur-sm"
+        class="eapp-accent-soft relative overflow-hidden rounded-xl p-4"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1 space-y-2">

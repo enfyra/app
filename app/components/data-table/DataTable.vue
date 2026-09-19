@@ -148,7 +148,8 @@ const selectedRows = computed(() => {
 });
 const tableRows = computed(() => table.value?.getRowModel().rows || []);
 const showInitialLoading = computed(() => props.loading && props.data.length === 0);
-const isRefreshing = computed(() => props.loading && props.data.length > 0);
+const { active: refreshIndicator } = useDeferredBusy(() => props.loading && props.data.length > 0);
+const isRefreshing = computed(() => refreshIndicator.value);
 
 watch(
   () => props.selectedItems,
@@ -442,8 +443,9 @@ function getCellTextClass(columnId: string | undefined) {
         <div
           v-for="i in (props.skeletonRows || 5)"
           :key="`mobile-skeleton-${i}`"
-          class="surface-card rounded-xl overflow-hidden animate-pulse"
+          class="surface-card rounded-xl overflow-hidden"
         >
+          <div class="animate-pulse">
           <div class="flex items-start gap-3 p-4">
             <div class="flex-1 space-y-2">
               <div class="h-4 skeleton-base rounded w-3/4"></div>
@@ -459,6 +461,7 @@ function getCellTextClass(columnId: string | undefined) {
           </div>
           <div class="px-4 py-2.5 border-t border-[var(--border-default)] bg-[var(--surface-muted)]/40">
             <div class="h-3 skeleton-base rounded w-40"></div>
+          </div>
           </div>
         </div>
       </div>

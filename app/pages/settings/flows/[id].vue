@@ -147,6 +147,10 @@
 </template>
 
 <script setup lang="ts">
+import {
+  buildFlowExecutionDetailFilter,
+  resolveRouteIdentifier,
+} from "~/utils/flow-editor";
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import type { FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS } from '~/utils/flow.constants';
@@ -165,7 +169,7 @@ const { isMounted } = useMounted();
 const { getId, getIdFieldName } = useDatabase();
 const { registerPageHeader } = usePageHeaderRegistry();
 
-const flowId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+const flowId = computed(() => resolveRouteIdentifier(route.params.id));
 const { adminSocket } = useAdminSocket();
 const stepDrawerOpen = ref(false);
 const editingStepId = ref<string | number | null>(null);
@@ -283,8 +287,8 @@ watch(() => stepForm.value.type, () => {
 
 registerPageHeader({ title: "Flow Editor", gradient: "purple" });
 
-const { data: flowData, execute: fetchFlow } = useApi(
-  () => `/enfyra_flow?filter={"${getIdFieldName()}":{"_eq":"${flowId}"}}&fields=${FLOW_DETAIL_FIELDS}&limit=1`,
+const { data: flowData, executeWithResult: fetchFlow } = useApi(
+  () => `/enfyra_flow?filter={"${getIdFieldName()}":{"_eq":"${flowId.value}"}}&fields=${FLOW_DETAIL_FIELDS}&limit=1`,
   { errorContext: "Fetch Flow" }
 );
 
@@ -297,8 +301,9 @@ const steps = computed(() => {
 });
 
 async function loadFlow() {
-  await fetchFlow();
+  const result = await fetchFlow();
   flowLoadSettled.value = true;
+  return result;
 }
 
 const EXEC_LIMIT = 10;
@@ -307,9 +312,9 @@ const allExecutions = ref<any[]>([]);
 const hasMoreExecs = ref(true);
 const execCursor = ref<number | null>(null);
 
-const { data: execData, execute: fetchExecApi } = useApi(
+const { executeWithResult: fetchExecApi } = useApi(
   () => {
-    const filter: any = { flow: { _eq: flowId } };
+    const filter: any = { flow: { _eq: flowId.value } };
     if (execCursor.value) filter.id = { _lt: execCursor.value };
     return `/enfyra_flow_execution?filter=${JSON.stringify(filter)}&sort=-id&limit=${EXEC_LIMIT}&fields=${EXEC_FIELDS}`;
   },
@@ -320,8 +325,9 @@ async function fetchExecutions() {
   execCursor.value = null;
   allExecutions.value = [];
   hasMoreExecs.value = true;
-  await fetchExecApi();
-  const items = execData.value?.data || [];
+  const result = await fetchExecApi();
+  if (!result.ok) return;
+  const items = (result.data as any)?.data || [];
   allExecutions.value = items;
   hasMoreExecs.value = items.length >= EXEC_LIMIT;
   if (items.length > 0) execCursor.value = items[items.length - 1].id;
@@ -330,8 +336,9 @@ async function fetchExecutions() {
 async function loadMoreExecutions() {
   if (!hasMoreExecs.value || execLoading.value) return;
   execLoading.value = true;
-  await fetchExecApi();
-  const items = execData.value?.data || [];
+    const result = await fetchExecApi();
+    if (!result.ok) return;
+    const items = (result.data as any)?.data || [];
   allExecutions.value = [...allExecutions.value, ...items];
   hasMoreExecs.value = items.length >= EXEC_LIMIT;
   if (items.length > 0) execCursor.value = items[items.length - 1].id;
@@ -341,11 +348,16 @@ async function loadMoreExecutions() {
 const executions = computed(() => allExecutions.value);
 
 const latestExecDetail = ref<any>(null);
-const { data: latestExecData, execute: fetchLatestExecDetail } = useApi(
+const { executeWithResult: fetchLatestExecDetail } = useApi(
   () => {
     const latest = allExecutions.value[0];
     if (!latest) return '/enfyra_flow_execution?limit=0';
-    return `/enfyra_flow_execution?filter={"${getIdFieldName()}":{"_eq":"${getId(latest)}"}}&fields=id,status,completedSteps,currentStep,error&limit=1`;
+    const filter = buildFlowExecutionDetailFilter(
+      flowId.value,
+      getId(latest),
+      getIdFieldName(),
+    );
+    return `/enfyra_flow_execution?filter=${encodeURIComponent(JSON.stringify(filter))}&fields=id,status,completedSteps,currentStep,error&limit=1`;
   },
   { errorContext: "Fetch Latest Exec Detail" }
 );
@@ -370,13 +382,12 @@ const latestExecOverlay = computed(() => {
 });
 
 async function refreshExecOverlay() {
-  await fetchLatestExecDetail();
-  if (latestExecData.value?.data?.[0]) {
-    latestExecDetail.value = latestExecData.value.data[0];
-  }
+  const result = await fetchLatestExecDetail();
+  if (!result.ok) return;
+  latestExecDetail.value = (result.data as any)?.data?.[0] || null;
 }
 
-const { execute: updateFlowApi, error: updateError, pending: saveFlowPending } = useApi(() => `/enfyra_flow`, { method: "patch", errorContext: "Update Flow" });
+const { executeWithResult: updateFlowApi, pending: saveFlowPending } = useApi(() => `/enfyra_flow`, { method: "patch", errorContext: "Update Flow" });
 
 const { checkPermissionCondition } = usePermissions();
 const canUpdateFlow = computed(() =>
@@ -384,12 +395,22 @@ const canUpdateFlow = computed(() =>
     and: [{ route: "/enfyra_flow", methods: ["PATCH"] }],
   })
 );
-const { execute: createStepApi, error: createStepError } = useApi(() => `/enfyra_flow_step`, { method: "post", errorContext: "Create Step" });
-const { execute: updateStepApi, error: updateStepError } = useApi(() => `/enfyra_flow_step`, { method: "patch", errorContext: "Update Step" });
-const { execute: deleteStepApi, error: deleteStepError } = useApi(() => `/enfyra_flow_step`, { method: "delete", errorContext: "Delete Step" });
-const { execute: fetchStepDetail } = useApi(
+const { executeWithResult: createStepApi } = useApi(() => `/enfyra_flow_step`, { method: "post", errorContext: "Create Step" });
+const {
+  executeWithResult: updateStepWithResult,
+} = useApi(() => `/enfyra_flow_step`, { method: "patch", errorContext: "Update Step" });
+const { executeWithResult: deleteStepApi } = useApi(() => `/enfyra_flow_step`, { method: "delete", errorContext: "Delete Step" });
+const { executeWithResult: fetchStepDetail } = useApi(
   () => `/enfyra_flow_step?filter={"${getIdFieldName()}":{"_eq":"${editingStepId.value}"}}&fields=${FLOW_STEP_EDITOR_FIELDS}&limit=1`,
   { errorContext: "Fetch Flow Step", immediate: false }
+);
+const { executeWithResult: testStepApi } = useApi(() => `/admin/test/run`, {
+  method: "post",
+  errorContext: "Test Step",
+});
+const { executeWithResult: triggerFlowApi } = useApi(
+  () => `/admin/flow/trigger/${flowId.value}`,
+  { method: "post", errorContext: "Trigger Flow" },
 );
 
 
@@ -406,12 +427,30 @@ registerHeaderActions([
   },
 ]);
 
-onMounted(async () => {
-  await loadFlow();
+let flowPageLoadRun = 0;
+
+async function loadFlowPage() {
+  const run = ++flowPageLoadRun;
+  flowLoadSettled.value = false;
+  hasFormChanges.value = false;
+  stepDrawerOpen.value = false;
+  execDrawerOpen.value = false;
+  editingStepId.value = null;
+  selectedExec.value = null;
+  latestExecDetail.value = null;
+  flowData.value = null;
+  const flowResult = await loadFlow();
+  if (!flowResult.ok || run !== flowPageLoadRun) return;
   await fetchExecutions();
+  if (run !== flowPageLoadRun) return;
   await refreshExecOverlay();
-  syncEditForm();
+  if (run !== flowPageLoadRun) return;
+  syncEditForm(true);
   await syncDrawersFromQuery(route.query);
+}
+
+onMounted(async () => {
+  await loadFlowPage();
   adminSocket?.on('flow:execution', onFlowExecution);
 });
 
@@ -419,25 +458,30 @@ onUnmounted(() => {
   adminSocket?.off('flow:execution', onFlowExecution);
 });
 
-function syncEditForm() {
+function syncEditForm(force = false) {
   if (!flow.value) return;
+  if (hasFormChanges.value && !force) return;
   const { steps: _, ...rest } = flow.value;
   editForm.value = { ...rest };
 }
 
 watch(flow, () => syncEditForm());
 
+watch(flowId, (nextId, previousId) => {
+  if (!previousId || nextId === previousId) return;
+  void loadFlowPage();
+});
+
 async function saveFlowSettings() {
+  if (saveFlowPending.value) return;
   const body = { ...editForm.value };
   delete body.id;
   delete body.steps;
   delete body.triggers;
   delete body.createdAt;
   delete body.updatedAt;
-  await updateFlowApi({ body, id: flowId });
-  if (updateError.value) {
-    return;
-  }
+  const result = await updateFlowApi({ body, id: flowId.value });
+  if (!result.ok) return;
   notify.success("Success", "Flow settings saved!");
   hasFormChanges.value = false;
   await loadFlow();
@@ -544,12 +588,21 @@ async function onSelectStep(step: any | null) {
   if (!step) return;
   testResult.value = null;
   stepErrors.value = {};
-  editingStepId.value = getId(step);
-  const stepDetailResponse = await fetchStepDetail();
-  const stepDetail = stepDetailResponse?.data?.[0];
-  if (stepDetail) {
-    step = stepDetail;
+  const requestedStepId = getId(step);
+  editingStepId.value = requestedStepId;
+  const stepDetailResult = await fetchStepDetail();
+  if (
+    !stepDetailResult.ok ||
+    String(editingStepId.value) !== String(requestedStepId)
+  ) {
+    return;
   }
+  const stepDetail = (stepDetailResult.data as any)?.data?.[0];
+  if (!stepDetail || String(getId(stepDetail)) !== String(requestedStepId)) {
+    notify.error("Error", "Unable to load the full step details");
+    return;
+  }
+  step = stepDetail;
   const rawConfig = step.config && typeof step.config === 'object' ? step.config : {};
   const config = cleanStepConfig(rawConfig);
   const scriptContract = normalizeScriptContract({
@@ -627,8 +680,18 @@ async function handleMoveStep(stepId: any, direction: number) {
   const swap = group[swapIdx];
   const currentOrder = current.stepOrder;
   const swapOrder = swap.stepOrder;
-  await updateStepApi({ body: { stepOrder: swapOrder }, id: getId(current) });
-  await updateStepApi({ body: { stepOrder: currentOrder }, id: getId(swap) });
+  const currentId = getId(current);
+  const swapId = getId(swap);
+  const result = await updateStepWithResult({
+    body: {
+      flowId: flowId.value,
+      swapWithId: swapId,
+      expectedCurrentOrder: currentOrder,
+      expectedSwapOrder: swapOrder,
+    },
+    id: currentId,
+  });
+  if (!result.ok) return;
   await loadFlow();
   } finally { reordering.value = false; }
 }
@@ -658,13 +721,10 @@ async function testCurrentStep() {
   }
   testing.value = true;
   testResult.value = null;
-  testAbortController = new AbortController();
-  const testTimeout = setTimeout(() => testAbortController?.abort(), 35000);
+  const controller = new AbortController();
+  testAbortController = controller;
+  const testTimeout = setTimeout(() => controller.abort(), 35000);
   try {
-    const { execute: testApi, data: testData, error: testError } = useApi(
-      () => `/admin/test/run`,
-      { method: "post", errorContext: "Test Step" }
-    );
     let mockFlow;
     if (testPayloadJson.value?.trim()) {
       try {
@@ -675,12 +735,12 @@ async function testCurrentStep() {
         return;
       }
     }
-    await testApi({
+    const result = await testStepApi({
       body: {
         kind: 'flow_step',
         id: editingStepId.value || undefined,
         stepId: editingStepId.value || undefined,
-        flowId,
+        flowId: flowId.value,
         key: stepForm.value.key,
         type: stepForm.value.type,
         config,
@@ -690,16 +750,26 @@ async function testCurrentStep() {
         timeout: stepForm.value.timeout || 5000,
         mockFlow,
       },
+      signal: controller.signal,
     });
-    if (testError.value) {
-      testResult.value = { success: false, error: testError.value.message, duration: 0 };
-    } else {
-      testResult.value = testData.value;
+    if (testAbortController !== controller) return;
+    if (!result.ok) {
+      if (!result.aborted) {
+        testResult.value = {
+          success: false,
+          error: result.error?.message || "Test failed",
+          duration: 0,
+        };
+      }
+      return;
     }
+    testResult.value = result.data;
   } finally {
     clearTimeout(testTimeout);
-    testAbortController = null;
-    testing.value = false;
+    if (testAbortController === controller) {
+      testAbortController = null;
+      testing.value = false;
+    }
   }
 }
 
@@ -759,12 +829,15 @@ async function saveStep() {
       branch: stepForm.value.parentId ? stepForm.value.branch : null,
     };
     if (editingStepId.value) {
-      await updateStepApi({ body, id: editingStepId.value });
-      if (updateStepError.value) return;
+      const result = await updateStepWithResult({
+        body,
+        id: editingStepId.value,
+      });
+      if (!result.ok) return;
     } else {
-      body.flow = { [getIdFieldName()]: flowId };
-      await createStepApi({ body });
-      if (createStepError.value) return;
+      body.flow = { [getIdFieldName()]: flowId.value };
+      const result = await createStepApi({ body });
+      if (!result.ok) return;
     }
     stepDrawerOpen.value = false;
     await loadFlow();
@@ -798,25 +871,31 @@ function duplicateStep() {
 }
 
 async function deleteCurrentStep() {
-  if (!editingStepId.value) return;
+  if (!editingStepId.value || savingStep.value) return;
   const ok = await confirm({ title: "Delete Step", content: `Delete step "${stepForm.value.key}"?`, confirmText: "Delete", cancelText: "Cancel" });
   if (!ok) return;
-  await deleteStepApi({ id: editingStepId.value });
-  if (deleteStepError.value) return;
-  notify.success("Success", "Step deleted.");
-  stepDrawerOpen.value = false;
-  await loadFlow();
+  savingStep.value = true;
+  try {
+    const result = await deleteStepApi({ id: editingStepId.value });
+    if (!result.ok) return;
+    notify.success("Success", "Step deleted.");
+    stepDrawerOpen.value = false;
+    await loadFlow();
+  } finally {
+    savingStep.value = false;
+  }
 }
 
 async function triggerFlow() {
-  const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Trigger Flow" });
-  await triggerApi({ body: { payload: { trigger: 'manual' } } });
-  if (triggerError.value) return;
+  const result = await triggerFlowApi({
+    body: { payload: { trigger: 'manual' } },
+  });
+  if (!result.ok) return;
   notify.success("Flow triggered");
 }
 
 function onFlowExecution(data: { flowId?: string | number; status: string; [key: string]: any }) {
-  const matchId = String(data.flowId ?? data.flow_id ?? data.id) === String(flowId)
+  const matchId = String(data.flowId ?? data.flow_id ?? data.id) === String(flowId.value)
   if (!matchId) return
   if (data.status === 'completed' || data.status === 'failed') {
     refreshExecutions()
@@ -833,28 +912,51 @@ async function refreshExecutions() {
   }
 }
 
-const { execute: fetchExecDetail, data: execDetailData } = useApi(
-  () => `/enfyra_flow_execution?filter={"${getIdFieldName()}":{"_eq":"${getId(selectedExec.value)}"}}&fields=id,status,startedAt,completedAt,duration,currentStep,completedSteps,error,context&limit=1`,
+const { executeWithResult: fetchExecDetail } = useApi(
+  () => {
+    const filter = buildFlowExecutionDetailFilter(
+      flowId.value,
+      getId(selectedExec.value),
+      getIdFieldName(),
+    );
+    return `/enfyra_flow_execution?filter=${encodeURIComponent(JSON.stringify(filter))}&fields=id,status,startedAt,completedAt,duration,currentStep,completedSteps,error,context,flow.id&limit=1`;
+  },
   { errorContext: "Fetch Execution Detail" }
 );
 
 async function rerunExecution() {
   if (!selectedExec.value) return;
   const payload = parsedContext.value?.$payload || {};
-  const { execute: triggerApi, error: triggerError } = useApi(() => `/admin/flow/trigger/${flowId}`, { method: "post", errorContext: "Re-run Flow" });
-  await triggerApi({ body: { payload } });
-  if (triggerError.value) return;
+  const result = await triggerFlowApi({ body: { payload } });
+  if (!result.ok) return;
   notify.success("Flow re-triggered");
   execDrawerOpen.value = false;
 }
 
 async function openExecution(exec: any) {
+  const requestedExecutionId = getId(exec);
+  const requestedFlowId = flowId.value;
   selectedExec.value = exec;
   execDrawerOpen.value = true;
-  await fetchExecDetail();
-  if (execDetailData.value?.data?.[0]) {
-    selectedExec.value = execDetailData.value.data[0];
+  const result = await fetchExecDetail();
+  if (
+    !result.ok ||
+    flowId.value !== requestedFlowId ||
+    String(getId(selectedExec.value)) !== String(requestedExecutionId)
+  ) return;
+  const detail = (result.data as any)?.data?.[0];
+  const detailFlowId = getId(detail?.flow) ?? detail?.flow;
+  if (
+    !detail ||
+    String(getId(detail)) !== String(requestedExecutionId) ||
+    String(detailFlowId) !== String(requestedFlowId)
+  ) {
+    notify.error("Error", "Execution does not belong to this flow");
+    execDrawerOpen.value = false;
+    selectedExec.value = null;
+    return;
   }
+  selectedExec.value = detail;
 }
 
 const expandedSteps = ref<Record<string, boolean>>({});

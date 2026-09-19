@@ -1,4 +1,5 @@
 import { resolvePublicApiUrl } from './app/utils/enfyra/runtime/api-url'
+import { getPrimaryColorPreflightScript } from './app/utils/primary-colors'
 
 export default defineNuxtConfig({
   srcDir: 'app',
@@ -68,6 +69,12 @@ export default defineNuxtConfig({
         },
       ],
       title: "Enfyra App - Content Management System",
+      script: [
+        {
+          innerHTML: getPrimaryColorPreflightScript(),
+          tagPosition: 'head',
+        },
+      ],
       style: [
         {
           innerHTML: `

@@ -11,10 +11,6 @@
     :total="total"
     :items-per-page="limit"
     :pagination-loading="loading"
-    pagination-align="center"
-    :pagination-show-range="false"
-    pagination-color="secondary"
-    pagination-active-color="secondary"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
   >
         <CommonResourceListItem

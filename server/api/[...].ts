@@ -10,6 +10,7 @@ import {
   requireValidOAuthState,
   requireValidRedirectUrl,
 } from "../utils/oauth";
+import { createOAuthBrowserBinding } from "../utils/oauth-browser-state";
 import { proxyToAPI } from "~/utils/enfyra/server/proxy";
 
 const OAUTH_PROVIDERS = ["google", "facebook", "github"];
@@ -52,7 +53,10 @@ export default defineEventHandler(async (event) => {
     let cookieBridgePrefix: string | undefined;
     let state: string | undefined;
     try {
-      redirectParam = await requireValidRedirectUrl(query.redirect, event);
+      redirectParam = createOAuthBrowserBinding(
+        event,
+        await requireValidRedirectUrl(query.redirect, event),
+      );
       cookieBridgePrefix = requireValidCookieBridgePrefix(query.cookieBridgePrefix);
       state = requireValidOAuthState(query.state);
     } catch (err: any) {

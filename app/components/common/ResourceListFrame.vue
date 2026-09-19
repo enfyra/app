@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import type { ResourceListSize } from "~/types/resource-list";
 
-type PaginationColor = "primary" | "secondary" | "success" | "info" | "warning" | "error" | "neutral";
-
 const page = defineModel<number>("page", { default: 1 });
 
 const props = withDefaults(defineProps<{
@@ -25,12 +23,7 @@ const props = withDefaults(defineProps<{
   total?: number;
   itemsPerPage?: number;
   paginationClass?: string;
-  paginationAlign?: "between" | "center";
   paginationLoading?: boolean;
-  paginationShowRange?: boolean;
-  paginationColor?: PaginationColor;
-  paginationActiveColor?: PaginationColor;
-  paginationUi?: Record<string, string>;
   to?: (page: number) => any;
 }>(), {
   variant: "contained",
@@ -50,12 +43,7 @@ const props = withDefaults(defineProps<{
   total: 0,
   itemsPerPage: 0,
   paginationClass: "",
-  paginationAlign: "between",
   paginationLoading: false,
-  paginationShowRange: true,
-  paginationColor: "primary",
-  paginationActiveColor: "primary",
-  paginationUi: undefined,
   to: undefined,
 });
 
@@ -115,19 +103,14 @@ const resourceListClass = computed(() => [
         <slot />
       </div>
 
-      <div v-if="showPagination" class="eapp-resource-list-pagination">
+      <div v-if="showPagination" class="contents">
         <CommonPaginationBar
           v-model:page="page"
-          :class="[paginationClass, 'eapp-pagination-separated']"
+          :class="[paginationClass, 'mt-4']"
           :items-per-page="itemsPerPage"
           :total="total"
           :loading="paginationLoading"
-          :show-range="paginationShowRange"
-          :align="paginationAlign"
-          :color="paginationColor"
-          :active-color="paginationActiveColor"
           :to="to"
-          :ui="paginationUi"
         />
       </div>
     </div>

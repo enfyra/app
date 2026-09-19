@@ -412,7 +412,7 @@ const {
     fields: getIncludeFields(),
     filter: { parent: { _is_null: false } },
     sort: ['priority'],
-    limit: -1,
+    limit: 0,
   })),
   errorContext: 'Fetch Descendant Guards',
 });
@@ -425,7 +425,7 @@ const {
   query: computed(() => ({
     fields: '*,guard,users.id',
     sort: ['priority'],
-    limit: -1,
+    limit: 0,
   })),
   errorContext: 'Fetch Guard Rules',
 });
