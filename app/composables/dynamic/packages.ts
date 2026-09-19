@@ -1,3 +1,11 @@
+import {
+  assertPackageAliasesAvailable,
+  createPackageRegistry,
+  deletePackageValue,
+  getCanonicalPackage,
+  setPackageValue,
+} from "~/utils/dynamic-package-registry";
+
 const PERF_ENABLED =
   typeof window !== "undefined" &&
   typeof URLSearchParams !== "undefined" &&
@@ -12,19 +20,11 @@ export function getGlobalNameForPackage(packageName: string): string {
     .replace(/^(\d)/, "_$1");
 }
 
-function getPackageAliases(packageName: string): string[] {
-  const safeName = packageName.replace(/[^a-zA-Z0-9]/g, "_");
-  return safeName === packageName ? [packageName] : [packageName, safeName];
-}
-
 function getPackageFromObject(
   packagesObject: Record<string, any>,
   packageName: string,
 ): any {
-  for (const alias of getPackageAliases(packageName)) {
-    if (packagesObject[alias] !== undefined) return packagesObject[alias];
-  }
-  return undefined;
+  return getCanonicalPackage(packagesObject, packageName);
 }
 
 function setPackageOnObject(
@@ -35,24 +35,14 @@ function setPackageOnObject(
   if (typeof window !== "undefined" && !(window as any).packages) {
     (window as any).packages = packagesObject;
   }
-  for (const alias of getPackageAliases(packageName)) {
-    packagesObject[alias] = value;
-    if (typeof window !== "undefined") {
-      (window as any).packages[alias] = value;
-    }
-  }
+  setPackageValue(packagesObject, packageName, value);
 }
 
 function deletePackageFromObject(
   packagesObject: Record<string, any>,
   packageName: string,
 ): void {
-  for (const alias of getPackageAliases(packageName)) {
-    delete packagesObject[alias];
-    if (typeof window !== "undefined" && (window as any).packages) {
-      delete (window as any).packages[alias];
-    }
-  }
+  deletePackageValue(packagesObject, packageName);
 }
 
 function getLoadedExternalNames(
@@ -79,12 +69,18 @@ async function fetchVersionMap(): Promise<Map<string, string>> {
   try {
     const filter = JSON.stringify({ type: { _eq: "App" }, isEnabled: { _eq: true } });
     const res = await fetch(`/api/enfyra_package?filter=${encodeURIComponent(filter)}&fields=name,version`);
-    if (!res.ok) return new Map();
+    if (!res.ok) {
+      throw new Error(`Package catalog request failed with ${res.status}`);
+    }
     const data = await res.json();
+    if (!Array.isArray(data?.data)) {
+      throw new Error("Package catalog returned an invalid response");
+    }
     versionCache = new Map((data.data || []).map((p: any) => [p.name, p.version]));
     return versionCache;
-  } catch {
-    return new Map();
+  } catch (error) {
+    versionCache = null;
+    throw new Error("Unable to load the App package catalog", { cause: error });
   }
 }
 
@@ -103,6 +99,7 @@ async function loadSinglePackage(
   }
 
   const promise = (async () => {
+    assertPackageAliasesAvailable(packagesObject, packageName);
     try {
       const versionMap = await fetchVersionMap();
       const version = versionMap.get(packageName);
@@ -123,8 +120,12 @@ async function loadSinglePackage(
       const moduleUrl = URL.createObjectURL(
         new Blob([code], { type: "application/javascript" })
       );
-      const moduleResult = await import(/* @vite-ignore */ moduleUrl);
-      URL.revokeObjectURL(moduleUrl);
+      let moduleResult: any;
+      try {
+        moduleResult = await import(/* @vite-ignore */ moduleUrl);
+      } finally {
+        URL.revokeObjectURL(moduleUrl);
+      }
 
       const executedResult =
         moduleResult.default !== undefined ? moduleResult.default : moduleResult;
@@ -133,7 +134,7 @@ async function loadSinglePackage(
 
       if (typeof window !== "undefined") {
         const globalName = getGlobalNameForPackage(packageName);
-        const packageExports = moduleResult.default || moduleResult;
+        const packageExports = executedResult;
         (globalThis as any)[globalName] = packageExports;
         (window as any)[globalName] = packageExports;
       }
@@ -141,8 +142,8 @@ async function loadSinglePackage(
       return executedResult;
     } catch (err) {
       console.error(`[getPackages] Failed to load "${packageName}":`, err);
-      setPackageOnObject(packagesObject, packageName, null);
-      return null;
+      deletePackageFromObject(packagesObject, packageName);
+      throw new Error(`Failed to load package "${packageName}"`, { cause: err });
     } finally {
       loadingPackages.delete(packageName);
     }
@@ -234,12 +235,9 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
   }
 
   const g = globalThis as any;
-  const packagesObject: Record<string, any> = g.packages || {};
-
-  if (!g.packages) {
-    g.packages = packagesObject;
-    (window as any).packages = packagesObject;
-  }
+  const packagesObject = createPackageRegistry(g.packages);
+  g.packages = packagesObject;
+  (window as any).packages = packagesObject;
 
   const versionMap = await fetchVersionMap();
   const requestedPackageNames =
@@ -252,18 +250,6 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
     (pkgName: string) =>
       getPackageFromObject(packagesObject, pkgName) === undefined
   );
-
-  const previouslyFailed = uniquePackageNames.filter(
-    (pkgName: string) => getPackageFromObject(packagesObject, pkgName) === null
-  );
-
-  if (previouslyFailed.length > 0) {
-    previouslyFailed.forEach((pkgName: string) => {
-      deletePackageFromObject(packagesObject, pkgName);
-      loadingPackages.delete(pkgName);
-    });
-    packagesToLoad.push(...previouslyFailed);
-  }
 
   if (packagesToLoad.length === 0) {
     return packagesObject;
@@ -286,7 +272,7 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
   const failedPackages = packagesToLoad.filter(
     (pkgName) => {
       const value = getPackageFromObject(packagesObject, pkgName);
-      return value === null || value === undefined;
+      return value === undefined;
     }
   );
 

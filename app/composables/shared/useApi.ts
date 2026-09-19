@@ -1,11 +1,10 @@
-interface ApiError {
-  message: string;
-  status?: number;
-  statusMessage?: string;
-  url?: string;
-  data?: any;
-  response?: any;
-}
+import type { ApiError, ApiExecutionResult } from "~/types/api";
+import {
+  assertValidApiIdentifiers,
+  buildApiPath,
+  runBoundedApiBatch,
+  shouldCancelPreviousApiRequest,
+} from "~/utils/api/execution";
 
 interface ExecuteOptions {
   id?: string | number;
@@ -17,6 +16,7 @@ interface ExecuteOptions {
   files?: FormData[];
   batchSize?: number;
   concurrent?: number;
+  signal?: AbortSignal;
 }
 
 function formatSchemaIndexConflict(apiError: ApiError): string | null {
@@ -172,15 +172,36 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
   const error = ref<ApiError | null>(null);
   const pending = ref(false);
   const status = ref<string>("idle");
-  let abortController: AbortController | null = null;
+  const activeControllers = new Set<AbortController>();
+  let latestController: AbortController | null = null;
+  const cancelPrevious = shouldCancelPreviousApiRequest(
+    String(method),
+    options.cancelPrevious,
+  );
 
-  const execute = async (executeOpts?: ExecuteOptions) => {
-    abortController?.abort();
+  const executeRequest = async (
+    executeOpts?: ExecuteOptions,
+  ): Promise<ApiExecutionResult<T>> => {
+    if (cancelPrevious) {
+      for (const controller of activeControllers) controller.abort();
+    }
     const currentController = new AbortController();
-    abortController = currentController;
+    const hadActiveRequests = activeControllers.size > 0;
+    activeControllers.add(currentController);
+    latestController = currentController;
+    const abortFromExternalSignal = () => currentController.abort();
+    if (executeOpts?.signal) {
+      if (executeOpts.signal.aborted) currentController.abort();
+      else {
+        executeOpts.signal.addEventListener("abort", abortFromExternalSignal, {
+          once: true,
+        });
+      }
+    }
     pending.value = true;
-    error.value = null;
+    if (cancelPrevious || !hadActiveRequests) error.value = null;
     status.value = "pending";
+    const canCommit = () => !cancelPrevious || latestController === currentController;
 
     let lastAttemptedPath: string | undefined;
 
@@ -188,6 +209,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       const basePath = (typeof url === "function" ? url() : url)
         .replace(/^\/?api\/?/, "")
         .replace(/^\/+/, "");
+      if (executeOpts) assertValidApiIdentifiers(executeOpts);
       const finalBody = executeOpts?.body || unref(body);
       const finalQuery = await resolveApiQueryValue(
         executeOpts?.query ?? query,
@@ -197,6 +219,10 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         ...(options.headers || {}),
         ...(executeOpts?.headers || {}),
       };
+      const batchConcurrency = Math.max(
+        1,
+        Number(executeOpts?.concurrent ?? executeOpts?.batchSize ?? 4) || 4,
+      );
 
       const isBatchOperation =
         !options.disableBatch &&
@@ -209,10 +235,6 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
             Array.isArray(executeOpts.files) &&
             executeOpts.files.length > 0));
 
-      const buildPath = (...segments: (string | number)[]): string => {
-        return segments.filter(Boolean).join("/");
-      };
-
       const finalPath = "/api/" + basePath;
       lastAttemptedPath = finalPath;
 
@@ -223,50 +245,74 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         Array.isArray(executeOpts.files) &&
         executeOpts.files.length > 0
       ) {
-        const responses = await Promise.all(
-          executeOpts.files.map(async (fileObj: FormData, index) => {
+        const responses = await runBoundedApiBatch(
+          executeOpts.files,
+          async (fileObj: FormData, index) => {
             lastAttemptedPath = finalPath;
-            return $fetch(finalPath, {
-              method: method as any,
-              body: fileObj,
-              headers: {
-                ...finalHeaders,
-                ...(executeOpts.headersByIndex?.[index] || {}),
-              },
-              query: finalQuery,
-              signal: currentController.signal,
-            }) as Promise<T>;
-          })
+            try {
+              return await $fetch<T>(finalPath, {
+                method: method as any,
+                body: fileObj,
+                headers: {
+                  ...finalHeaders,
+                  ...(executeOpts.headersByIndex?.[index] || {}),
+                },
+                query: finalQuery,
+                signal: currentController.signal,
+              });
+            } catch (requestError: any) {
+              if (requestError && typeof requestError === "object") {
+                requestError.request ??= finalPath;
+              }
+              throw requestError;
+            }
+          },
+          batchConcurrency,
         );
 
+        if (!canCommit()) {
+          return { ok: false, error: null, aborted: true };
+        }
         data.value = responses as T;
         status.value = "success";
-        return responses;
+        return { ok: true, data: responses as T };
       }
 
       // Handle batch operations with ids
       if (isBatchOperation && executeOpts?.ids && executeOpts.ids.length > 0) {
-        const responses = await Promise.all(
-          executeOpts.ids.map(async (id) => {
-            const fullPath = buildPath(finalPath, id);
+        const responses = await runBoundedApiBatch(
+          executeOpts.ids,
+          async (id) => {
+            const fullPath = buildApiPath(finalPath, id);
             lastAttemptedPath = fullPath;
-            return $fetch<T>(fullPath, {
-              method: method as any,
-              body: finalBody ? toRaw(finalBody) : undefined,
-              headers: finalHeaders,
-              query: finalQuery,
-              signal: currentController.signal,
-            });
-          })
+            try {
+              return await $fetch<T>(fullPath, {
+                method: method as any,
+                body: finalBody ? toRaw(finalBody) : undefined,
+                headers: finalHeaders,
+                query: finalQuery,
+                signal: currentController.signal,
+              });
+            } catch (requestError: any) {
+              if (requestError && typeof requestError === "object") {
+                requestError.request ??= fullPath;
+              }
+              throw requestError;
+            }
+          },
+          batchConcurrency,
         );
 
+        if (!canCommit()) {
+          return { ok: false, error: null, aborted: true };
+        }
         data.value = responses as T;
         status.value = "success";
-        return responses;
+        return { ok: true, data: responses as T };
       }
 
-      const fullPath = executeOpts?.id
-        ? buildPath(finalPath, executeOpts.id)
+      const fullPath = executeOpts && Object.prototype.hasOwnProperty.call(executeOpts, "id")
+        ? buildApiPath(finalPath, executeOpts.id)
         : finalPath;
 
       lastAttemptedPath = fullPath;
@@ -279,12 +325,19 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         signal: currentController.signal,
       });
 
+      if (!canCommit()) {
+        return { ok: false, error: null, aborted: true };
+      }
       data.value = response;
       status.value = "success";
-      return response;
+      return { ok: true, data: response };
     } catch (err) {
-      if (isAbortError(err) || currentController.signal.aborted) {
-        return null;
+      if (
+        !canCommit() ||
+        isAbortError(err) ||
+        currentController.signal.aborted
+      ) {
+        return { ok: false, error: null, aborted: true };
       }
       const apiError = handleError(err, errorContext, undefined, {
         method: String(method || "get"),
@@ -295,7 +348,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         redirectToLoginOnce();
         error.value = apiError;
         status.value = "error";
-        return null;
+        return { ok: false, error: apiError, aborted: false };
       }
       if (
         !handled &&
@@ -325,7 +378,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         );
         error.value = apiError;
         status.value = "error";
-        return null;
+        return { ok: false, error: apiError, aborted: false };
       }
       if (!handled) {
         const envelope = apiError?.data?.error ?? apiError?.data;
@@ -341,18 +394,27 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       }
       error.value = apiError;
       status.value = "error";
-      return null;
+      return { ok: false, error: apiError, aborted: false };
     } finally {
-      if (abortController === currentController) {
-        abortController = null;
-        pending.value = false;
-      }
+      executeOpts?.signal?.removeEventListener(
+        "abort",
+        abortFromExternalSignal,
+      );
+      activeControllers.delete(currentController);
+      if (latestController === currentController) latestController = null;
+      pending.value = activeControllers.size > 0;
     }
   };
 
+  const execute = async (executeOpts?: ExecuteOptions) => {
+    const result = await executeRequest(executeOpts);
+    return result.ok ? result.data : null;
+  };
+
   const cancel = () => {
-    abortController?.abort();
-    abortController = null;
+    for (const controller of activeControllers) controller.abort();
+    activeControllers.clear();
+    latestController = null;
     pending.value = false;
     if (status.value === "pending") status.value = "idle";
   };
@@ -367,6 +429,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
     pending,
     refresh,
     execute,
+    executeWithResult: executeRequest,
     cancel,
     status,
   };

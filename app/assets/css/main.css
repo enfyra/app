@@ -366,12 +366,22 @@ button:focus-visible,
  * inset from the canvas edges and carries the card chrome so scrolled content
  * stays readable around it. Never add a blur here: the bar sits over moving
  * content, so a filter would re-run on every frame.
+ *
+ * The bottom padding is set here rather than by a Tailwind `py-*` utility because
+ * this rule is unlayered and therefore wins over the layered utilities. It has to
+ * track the bar's `py` at each breakpoint, so raise both together.
  */
 .eapp-pagination-mini {
   border: 1px solid var(--card-border);
   background: var(--card-bg);
   box-shadow: var(--card-shadow-hover);
   padding-bottom: max(0.375rem, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .eapp-pagination-mini {
+    padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

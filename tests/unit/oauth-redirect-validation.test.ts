@@ -18,7 +18,11 @@ vi.mock('../../server/middleware/cors', async (importOriginal) => {
 });
 
 import { getValidatedOrigins } from '../../server/middleware/cors';
-import { requireValidOAuthState, requireValidRedirectUrl } from '../../server/utils/oauth';
+import {
+  requireValidOAuthState,
+  requireValidPostLoginRedirectUrl,
+  requireValidRedirectUrl,
+} from '../../server/utils/oauth';
 
 const mockedGetValidatedOrigins = vi.mocked(getValidatedOrigins);
 
@@ -90,6 +94,30 @@ describe('OAuth redirect origin validation', () => {
 
     await expect(
       requireValidRedirectUrl('javascript:alert(1)')
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it('resolves and validates a relative post-login redirect', async () => {
+    mockedGetValidatedOrigins.mockResolvedValue({
+      origins: [],
+      timestamp: 0,
+      loaded: false,
+    });
+
+    await expect(
+      requireValidPostLoginRedirectUrl('/settings/routes', mockEvent)
+    ).resolves.toBe('https://myapp.com/settings/routes');
+  });
+
+  it('rejects an unsafe post-login redirect protocol', async () => {
+    mockedGetValidatedOrigins.mockResolvedValue({
+      origins: [],
+      timestamp: 0,
+      loaded: false,
+    });
+
+    await expect(
+      requireValidPostLoginRedirectUrl('javascript:alert(1)', mockEvent)
     ).rejects.toMatchObject({ statusCode: 400 });
   });
 

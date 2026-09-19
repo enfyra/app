@@ -307,10 +307,9 @@ function toggleTheme() {
   colorMode.preference = isDark.value ? "light" : "dark";
 }
 
-async function completeLogin() {
+async function completeLogin(redirect?: string) {
   await fetchUser({ fields: DEFAULT_ME_FIELDS });
 
-  const redirect = route.query.redirect as string | undefined;
   if (redirect) window.location.href = redirect;
   else await navigateTo("/");
 }
@@ -339,9 +338,12 @@ function getOAuthProviderLabel(provider: OAuthProvider) {
 
 async function handleLogin() {
   loginError.value = null;
-  const res = await login(form);
+  const redirect = Array.isArray(route.query.redirect)
+    ? route.query.redirect[0]
+    : route.query.redirect;
+  const res = await login({ ...form, redirect: redirect || undefined });
   if (res.ok) {
-    await completeLogin();
+    await completeLogin((res.data as any)?.redirect);
     return;
   }
   loginError.value = res.message;
@@ -355,9 +357,12 @@ async function handleDemoLogin() {
       email: DEMO_LOGIN_EMAIL,
       password: DEMO_LOGIN_PASSWORD,
       remember: true,
+      redirect: Array.isArray(route.query.redirect)
+        ? route.query.redirect[0] || undefined
+        : route.query.redirect || undefined,
     });
     if (res.ok) {
-      await completeLogin();
+      await completeLogin((res.data as any)?.redirect);
       return;
     }
     const hint = "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.";

@@ -157,6 +157,22 @@ return { html, result, policy: policyByModel.get('default') }
     expect(diagnostics).toEqual([])
   })
 
+  it('accepts package stream preflight, collection, and response callbacks', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const upstream = await $ctx.$pkgs.undici.request('https://example.com')
+const guarded = await $ctx.$streams.preflight(upstream.body, { timeoutMs: 1000 })
+const bufferedUpstream = await $ctx.$pkgs.undici.request('https://example.com/buffered')
+const buffered = await $ctx.$streams.readText(bufferedUpstream.body, { timeoutMs: 1000, maxBytes: 1024 })
+await $ctx.$res.stream(guarded.stream, {
+  observer: async (text, kind) => { $ctx.$logs(text, kind) },
+  transform: (text, kind) => kind === 'chunk' ? text : undefined,
+})
+return { buffered }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
   it('rejects stale DynamicRepository where option', async () => {
     const diagnostics = await lintEnfyraTypeScript(`
 return await @REPOS.enfyra_user.find({ where: { email: { _eq: @BODY.email } } })

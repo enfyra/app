@@ -54,6 +54,8 @@
 </template>
 
 <script setup lang="ts">
+import { normalizePermissionCondition } from "~/utils/permission-condition";
+
 const { isMobile, isTablet } = useScreen();
 
 const props = defineProps<{
@@ -175,25 +177,19 @@ watch(showModal, (isOpen) => {
 });
 
 function updateModelValue() {
-  let result;
-
-  if (localFormPermissionGroups.value.length === 0) {
-    result = null;
-  } else if (localFormPermissionGroups.value.length === 1) {
-    const group = localFormPermissionGroups.value[0];
-    const conditions = group.conditions || group.rules || [];
-    if (group.type === "and") {
-      result = { and: conditions };
-    } else {
-      result = { or: conditions };
-    }
-  } else {
-    
-    const andGroups = localFormPermissionGroups.value.map((group: any) => ({
-      [group.type]: group.conditions || group.rules || [],
-    }));
-    result = { and: andGroups };
-  }
+  const groups = localFormPermissionGroups.value
+    .map((group: any) =>
+      normalizePermissionCondition({
+        [group.type]: group.conditions || group.rules || [],
+      }),
+    )
+    .filter((group) => group !== null);
+  const result =
+    groups.length === 0
+      ? null
+      : groups.length === 1
+        ? groups[0]
+        : normalizePermissionCondition({ and: groups });
 
   emit("update:modelValue", result);
 }

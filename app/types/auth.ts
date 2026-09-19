@@ -25,4 +25,5 @@ export interface LoginPayload {
   email: string;
   password: string;
   remember?: boolean;
+  redirect?: string;
 }

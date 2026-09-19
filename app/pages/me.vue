@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { buildProfileUpdatePayload } from "~/utils/profile-update";
+
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
@@ -16,17 +18,19 @@ registerPageHeader({
 });
 
 const hasFormChanges = ref(false);
+const savingProfile = ref(false);
 const formEditorRef = ref();
-const { useFormChanges } = useSchema();
+const { getReadableFields, useFormChanges } = useSchema("enfyra_user");
 const formChanges = useFormChanges();
+const profileFields = getReadableFields();
 
 const {
   data: apiData,
   pending: loading,
-  execute: fetchMe,
+  executeWithResult: fetchMe,
 } = useApi(() => `/me`, {
   query: {
-    fields: "*",
+    fields: profileFields,
   },
   errorContext: "Load Profile",
 });
@@ -82,8 +86,9 @@ const fieldMap = computed(() => ({
 }));
 
 async function initializeForm() {
-  await fetchMe();
-  const data = apiData.value?.data?.[0];
+  const result = await fetchMe();
+  if (!result.ok) return;
+  const data = (result.data as any)?.data?.[0];
   if (data) {
     form.value = { ...data };
     formChanges.update(data);
@@ -92,9 +97,8 @@ async function initializeForm() {
 }
 
 const {
-  execute: updateProfile,
+  executeWithResult: updateProfile,
   pending: updateLoading,
-  error: updateError,
 } = useApi(() => `/me`, {
   method: "patch",
   errorContext: "Update Profile",
@@ -151,34 +155,50 @@ registerHeaderActions([
     color: "primary",
     size: "md",
     order: 999,
-    loading: computed(() => updateLoading.value),
-    disabled: computed(() => !hasFormChanges.value),
+    loading: computed(() => updateLoading.value || savingProfile.value),
+    disabled: computed(() => !hasFormChanges.value || savingProfile.value),
     submit: saveProfile,
   },
 ]);
 
 async function saveProfile() {
-  if (!form.value) return;
+  if (!form.value || savingProfile.value) return;
+  savingProfile.value = true;
+  try {
+    if (!await validateForm(form.value, errors)) return;
 
-  if (!await validateForm(form.value, errors)) return;
+    const body = buildProfileUpdatePayload(
+      form.value,
+      formChanges.originalData.value,
+    );
+    if (Object.keys(body).length === 0) {
+      hasFormChanges.value = false;
+      formEditorRef.value?.confirmChanges();
+      return;
+    }
 
-  await updateProfile({ body: form.value });
+    const updateResult = await updateProfile({ body });
+    if (!updateResult.ok) return;
 
-  if (updateError.value) {
-    return;
+    notify.success("Success", "Profile updated successfully!");
+    errors.value = {};
+
+    const refreshResult = await fetchMe();
+    const updatedData = refreshResult.ok
+      ? (refreshResult.data as any)?.data?.[0]
+      : null;
+    if (updatedData) {
+      form.value = { ...updatedData };
+      formChanges.update(updatedData);
+    } else {
+      formChanges.update({ ...formChanges.originalData.value, ...body });
+    }
+
+    hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
+  } finally {
+    savingProfile.value = false;
   }
-
-  notify.success("Success", "Profile updated successfully!");
-  errors.value = {};
-
-  await fetchMe();
-  const updatedData = apiData.value?.data?.[0];
-  if (updatedData) {
-    form.value = { ...updatedData };
-    formChanges.update(updatedData);
-  }
-
-  formEditorRef.value?.confirmChanges();
 }
 
 onMounted(() => {

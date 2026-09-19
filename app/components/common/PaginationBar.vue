@@ -32,6 +32,11 @@ const props = withDefaults(defineProps<{
 const mainBar = ref<HTMLElement | null>(null);
 const { isMiniVisible } = useMiniBarVisibility(mainBar);
 
+// The mini bar is the only pagination on screen once the main bar scrolls away, so
+// on desktop it stands in at the main bar's own scale instead of staying phone-sized.
+const { isMobile } = useScreen();
+const miniSize = computed(() => (isMobile.value ? 'xs' : 'sm'));
+
 // Loading is reported by the chip only, and deferred so a quick fetch shows no
 // chip instead of blinking one.
 const { active: showLoadingChip } = useDeferredBusy(() => props.loading);
@@ -52,10 +57,10 @@ const pageEnd = computed(() => Math.min((page.value || 1) * props.itemsPerPage, 
 const hasPagination = computed(() => props.total > props.itemsPerPage);
 const showMini = computed(() => hasPagination.value && isMiniVisible.value);
 
-// One row at every width keeps both bars the same height, so the handoff between
-// them does not shift layout. Seven controls do not fit a phone, and UPagination
-// exposes no prop that hides only the jump-to-ends controls (`showControls` takes
-// prev/next with them), so those two are hidden by class below `md`.
+// The main bar keeps one row at every width so its height is stable. Seven controls
+// do not fit a phone, and UPagination exposes no prop that hides only the
+// jump-to-ends controls (`showControls` takes prev/next with them), so those two are
+// hidden by class below `md`.
 const EDGE_CONTROL_UI = {
   first: 'max-md:!hidden',
   last: 'max-md:!hidden',
@@ -74,8 +79,8 @@ const mainUi = computed(() => ({
 
 const miniUi = computed(() => ({
   root: '!w-auto',
-  list: 'flex-nowrap gap-0.5',
-  item: '!min-w-7',
+  list: 'flex-nowrap gap-0.5 md:gap-1',
+  item: '!min-w-7 md:!min-w-8',
   ...props.ui,
   ...EDGE_CONTROL_UI,
 }));
@@ -129,11 +134,11 @@ const miniUi = computed(() => ({
     <Transition name="mini-pagination">
       <div
         v-show="showMini"
-        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-md items-center justify-between gap-3 rounded-[var(--radius-panel)] px-3 py-1.5"
+        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-md items-center justify-between gap-3 rounded-[var(--radius-panel)] px-3 py-1.5 md:max-w-lg md:gap-4 md:px-4 md:py-2.5"
       >
         <UPagination
           v-model:page="page"
-          size="xs"
+          :size="miniSize"
           :items-per-page="itemsPerPage"
           :total="total"
           :show-edges="showEdges"
@@ -145,7 +150,7 @@ const miniUi = computed(() => ({
           :ui="miniUi"
         />
 
-        <p v-if="showRange" class="shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--text-tertiary)]">
+        <p v-if="showRange" class="shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--text-tertiary)] md:text-sm">
           <span class="sr-only">Showing {{ pageStart }} to {{ pageEnd }} of {{ total }} results</span>
           <span aria-hidden="true">
             <span class="text-[var(--text-secondary)]">{{ pageStart }}-{{ pageEnd }}</span>

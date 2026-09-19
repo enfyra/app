@@ -266,8 +266,19 @@ interface Iterable<T> {
 interface IterableIterator<T> extends Iterator<T> {
   [Symbol.iterator](): IterableIterator<T>;
 }
+interface AsyncIterator<T, TReturn = any, TNext = undefined> {
+  next(...args: [] | [TNext]): Promise<IteratorResult<T, TReturn>>;
+  return?(value?: TReturn): Promise<IteratorResult<T, TReturn>>;
+}
+interface AsyncIterable<T> {
+  [Symbol.asyncIterator](): AsyncIterator<T>;
+}
+interface AsyncIterableIterator<T> extends AsyncIterator<T> {
+  [Symbol.asyncIterator](): AsyncIterableIterator<T>;
+}
 interface SymbolConstructor {
   readonly iterator: symbol;
+  readonly asyncIterator: symbol;
 }
 declare const Symbol: SymbolConstructor;
 type PropertyKey = string | number | symbol;
@@ -347,6 +358,25 @@ type EnfyraStorage = {
 type EnfyraTransaction = {
   run<T>(callback: () => Promise<T>): Promise<T>;
 };
+type EnfyraStreamChunkKind = 'chunk' | 'end' | 'error';
+type EnfyraReadable = AsyncIterable<any>;
+type EnfyraResponseStreamOptions = {
+  statusCode?: number;
+  mimetype?: string;
+  filename?: string;
+  headers?: Record<string, string | number | readonly string[] | undefined | null>;
+  observer?: (text: string, kind: EnfyraStreamChunkKind) => void | Promise<void>;
+  transform?: (text: string, kind: EnfyraStreamChunkKind) => string | null | undefined | Promise<string | null | undefined>;
+};
+type EnfyraResponse = {
+  stream(stream: EnfyraReadable, options?: EnfyraResponseStreamOptions): Promise<void>;
+  [key: string]: any;
+};
+type EnfyraStreams = {
+  preflight(stream: EnfyraReadable, options?: { timeoutMs?: number }): Promise<{ stream: EnfyraReadable; firstChunk: any }>;
+  readBytes(stream: EnfyraReadable, options?: { timeoutMs?: number; maxBytes?: number }): Promise<any>;
+  readText(stream: EnfyraReadable, options?: { timeoutMs?: number; maxBytes?: number }): Promise<string>;
+};
 type EnfyraThrow = {
   (statusCode: number, message?: string): never;
   400(message: string): never;
@@ -368,7 +398,8 @@ type EnfyraContext = {
   $query: Record<string, any>;
   $user: any;
   $req: any;
-  $res: any;
+  $res: EnfyraResponse;
+  $streams: EnfyraStreams;
   $share: Record<string, any>;
   $api: any;
   $uploadedFile: any;

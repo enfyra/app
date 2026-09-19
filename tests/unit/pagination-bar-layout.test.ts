@@ -118,15 +118,19 @@ describe('pagination layout', () => {
     expect(miniRule).not.toContain('backdrop-filter')
   })
 
-  it('sizes the mini bar controls below the main bar controls', () => {
+  it('sizes the mini bar controls below the main bar controls on mobile only', () => {
     const pagination = readAppFile('components/common/PaginationBar.vue')
 
     const mainSize = pagination.match(/<UPagination\s[\s\S]*?\/>/)
     expect(mainSize, 'main pagination should render').not.toBeNull()
     expect(mainSize![0]).toContain('size="sm"')
 
-    const miniSize = pagination.match(/<UPagination[\s\S]*?size="xs"[\s\S]*?\/>/)
-    expect(miniSize, 'mini pagination should use the smaller size').not.toBeNull()
+    // The mini bar is the only pagination on screen once the main bar is scrolled
+    // away, so on desktop it stands in at the main bar's own scale. It drops to the
+    // smaller control size only below `md`, the app's 768px mobile threshold.
+    expect(pagination).toContain("const miniSize = computed(() => (isMobile.value ? 'xs' : 'sm'))")
+    expect(pagination).toContain(':size="miniSize"')
+    expect(pagination).not.toMatch(/size="xs"/)
   })
 
   it('hides only the jump-to-ends controls on mobile', () => {
