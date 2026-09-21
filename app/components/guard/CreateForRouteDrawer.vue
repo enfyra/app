@@ -38,7 +38,7 @@
               v-model="localForm"
               v-model:errors="localErrors"
               :table-name="'enfyra_guard'"
-              :excluded="['createdAt', 'updatedAt', 'children', 'rules', 'parent', 'route', 'isGlobal', 'isSystem']"
+              :excluded="['createdAt', 'updatedAt', 'children', 'rules', 'parent', 'route', 'isGlobal', 'isSystem', 'type', 'gqlOperation', 'table', 'excludeRoutes']"
               :field-map="fieldMap"
               mode="create"
               @has-changed="(v) => (hasChanged = v)"

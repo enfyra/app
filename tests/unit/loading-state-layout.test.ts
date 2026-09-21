@@ -78,4 +78,31 @@ describe('loading state layout', () => {
     expect(splash).toContain('BACKEND_READINESS_TIMEOUT_MS + BACKEND_READINESS_TRANSPORT_MARGIN_MS')
     expect(readRepoFile('nuxt.config.ts')).not.toMatch(/[Rr]eadiness.*process\.env/)
   })
+
+  it('skeletons the relation drawer as rows, not as form cards', () => {
+    const selector = readAppFile('components/form/relation/Selector.vue')
+    const list = readAppFile('components/form/relation/List.vue')
+    const skeleton = readAppFile('components/common/loading/Skeleton.vue')
+    const loadingState = readAppFile('components/common/LoadingState.vue')
+
+    expect(selector).toContain('type="list" context="inline"')
+    expect(loadingState).toContain("loadingType === 'list'")
+    expect(skeleton).toContain("type === 'list'")
+
+    // Row skeleton must mirror the real row: radio + label + id + two trailing actions.
+    const listTemplate = list.slice(list.indexOf('<template>'))
+    expect(listTemplate).toContain('class="flex min-h-11 items-center min-w-0"')
+    expect(listTemplate).toContain("name=\"lucide:circle\"")
+    expect(listTemplate).toContain('font-mono text-xs text-muted-foreground')
+    expect(listTemplate).toContain('border-l border-[var(--border-default)] px-1.5')
+
+    const listSkeleton = skeleton.slice(
+      skeleton.indexOf("type === 'list'"),
+      skeleton.indexOf("type === 'form'"),
+    )
+    expect(listSkeleton).toContain('class="flex min-h-11 min-w-0 items-center"')
+    expect(listSkeleton).toContain('h-4 w-4 flex-shrink-0 rounded-full')
+    expect(listSkeleton).toContain('h-3 w-10 flex-shrink-0 rounded')
+    expect(listSkeleton).toContain('border-l border-[var(--border-default)] px-1.5')
+  })
 })

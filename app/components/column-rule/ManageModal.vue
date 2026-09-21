@@ -52,9 +52,9 @@ const ALL_RULE_TYPES: { value: RuleType; label: string; desc: string }[] = [
   { value: "maxItems", label: "Max items (array)", desc: "Maximum array length" },
 ]
 
-const numberTypes = ["int", "bigint", "float", "decimal"]
-const stringTypes = ["varchar", "text", "richtext", "code", "uuid"]
-const arrayTypes = ["array-select"]
+const numberTypes = ["int", "bigint", "long", "float", "double", "decimal"]
+const stringTypes = ["string", "varchar", "text", "longtext", "richtext", "code", "uuid", "objectId", "ObjectId"]
+const arrayTypes = ["array", "array-select"]
 
 function typesForColumn(colType: string): RuleType[] {
   if (numberTypes.includes(colType)) return ["min", "max"]

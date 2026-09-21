@@ -2,13 +2,14 @@ import type { TableDefinitionField } from '~/types/database';
 import type { RelationId } from '~/types/relation';
 
 const SEARCHABLE_COLUMN_TYPES = new Set([
+  'string',
   'varchar',
   'text',
+  'longtext',
   'enum',
   'richtext',
   'code',
   'uuid',
-  'ObjectId',
 ]);
 
 export function getRelationId(

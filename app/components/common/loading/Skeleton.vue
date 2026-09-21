@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
-  type?: 'text' | 'avatar' | 'card' | 'table' | 'form' | 'folder' | 'file-card' | 'menu';
+  type?: 'text' | 'avatar' | 'card' | 'table' | 'form' | 'list' | 'folder' | 'file-card' | 'menu';
   lines?: number;
   animated?: boolean;
   shimmer?: boolean;
@@ -202,6 +202,43 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
             :class="shimmerClass"
           ></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div v-else-if="type === 'list'" class="divide-y divide-[var(--border-default)]">
+    <div
+      v-for="i in lines"
+      :key="i"
+      class="flex min-h-11 min-w-0 items-center"
+    >
+      <div class="flex min-h-11 min-w-0 flex-1 items-center gap-2 px-3 py-2">
+        <div
+          class="h-4 w-4 flex-shrink-0 rounded-full skeleton-gradient"
+          :class="[animationClass, shimmerClass]"
+        />
+        <div class="flex min-w-0 flex-1 items-baseline gap-2 overflow-hidden">
+          <div
+            class="h-4 rounded skeleton-inline"
+            :class="[animationClass, shimmerClass]"
+            :style="{ width: `${45 + (i % 4) * 12}%` }"
+          />
+          <div
+            class="h-3 w-10 flex-shrink-0 rounded skeleton-gradient"
+            :class="[animationClass, shimmerClass]"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-shrink-0 items-center gap-0.5 border-l border-[var(--border-default)] px-1.5">
+        <div
+          class="h-6 w-6 rounded skeleton-inline"
+          :class="[animationClass, shimmerClass]"
+        />
+        <div
+          class="h-6 w-6 rounded skeleton-inline"
+          :class="[animationClass, shimmerClass]"
+        />
       </div>
     </div>
   </div>

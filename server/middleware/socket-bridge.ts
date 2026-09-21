@@ -40,9 +40,6 @@ type EngineSocket = {
   request: IncomingMessage;
 };
 
-const UPSTREAM_MAX_RETRIES = 10;
-const UPSTREAM_RETRY_BASE = 2000;
-const UPSTREAM_RETRY_MAX = 15_000;
 const UPSTREAM_BUFFER_MAX_MESSAGES = 50;
 const UPSTREAM_BUFFER_MAX_BYTES = 1024 * 1024;
 
@@ -75,11 +72,7 @@ function startBridge(
   let upstream: WebSocket | null = null;
   let ready = false;
   let browserClosed = false;
-  let hasConnectedOnce = false;
   const browserNamespacesByUpstream = new Map<string, string>();
-  const connectedNamespacesByUpstream = new Set<string>();
-  let retryTimer: ReturnType<typeof setTimeout> | null = null;
-  let retryCount = 0;
 
   function connectUpstream() {
     if (browserClosed) return;
@@ -101,12 +94,6 @@ function startBridge(
       const type = frame[0];
       if (type === '0') {
         ready = true;
-        if (hasConnectedOnce) {
-          for (const upstreamNamespace of connectedNamespacesByUpstream) {
-            safeSend(ws, `40${upstreamNamespace},`);
-          }
-        }
-        hasConnectedOnce = true;
         for (const msg of buffer.drain()) {
           safeSend(ws, toUpstreamFrame(msg));
         }
@@ -121,20 +108,13 @@ function startBridge(
         if (packetStatus === 'auth_error') {
           sendSocketBridgeAuthError(
             browserSocket,
-            browserNamespace ?? undefined,
+            browserNamespace ?? upstreamNamespace ?? '/',
           );
           cleanup();
           try { browserSocket.close(); } catch {}
           return;
         }
-        if (packetStatus === 'connected') {
-          retryCount = 0;
-          if (upstreamNamespace) connectedNamespacesByUpstream.add(upstreamNamespace);
-        } else if (
-          packetType === PacketType.CONNECT_ERROR &&
-          upstreamNamespace
-        ) {
-          connectedNamespacesByUpstream.delete(upstreamNamespace);
+        if (packetType === PacketType.CONNECT_ERROR && upstreamNamespace) {
           browserNamespacesByUpstream.delete(upstreamNamespace);
         }
         safeSend(
@@ -151,41 +131,23 @@ function startBridge(
     });
 
     ws.on('close', () => {
+      if (upstream !== ws || browserClosed) return;
       ready = false;
-      if (upstream === ws && !browserClosed) scheduleRetry();
+      cleanup();
+      try { browserSocket.close(); } catch {}
     });
 
     ws.on('error', () => {});
   }
 
-  function scheduleRetry() {
-    if (browserClosed) return;
-    if (retryCount >= UPSTREAM_MAX_RETRIES) {
-      try { browserSocket.close(); } catch {}
-      return;
-    }
-    const delay = Math.min(
-      UPSTREAM_RETRY_BASE * 2 ** retryCount,
-      UPSTREAM_RETRY_MAX,
-    );
-    retryCount++;
-    retryTimer = setTimeout(() => {
-      if (!browserClosed) connectUpstream();
-    }, delay);
-  }
-
   function cleanup() {
     browserClosed = true;
-    if (retryTimer) {
-      clearTimeout(retryTimer);
-      retryTimer = null;
-    }
     if (upstream) {
       try { upstream.close(); } catch {}
       upstream = null;
     }
     buffer.clear();
-    connectedNamespacesByUpstream.clear();
+    browserNamespacesByUpstream.clear();
   }
 
   const forwardFromBrowser = (data: string | Buffer) => {
@@ -197,7 +159,6 @@ function startBridge(
       if (browserNamespace && upstreamNamespace) {
         if (Number(rewritten[0]) === PacketType.DISCONNECT) {
           browserNamespacesByUpstream.delete(upstreamNamespace);
-          connectedNamespacesByUpstream.delete(upstreamNamespace);
           if (!ready) return;
         } else {
           browserNamespacesByUpstream.set(upstreamNamespace, browserNamespace);
@@ -292,8 +253,14 @@ function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
         );
         if (browserClosed) return;
         if (!auth.ok) {
-          sendSocketBridgeAuthError(browserSocket);
-          try { browserSocket.close(); } catch {}
+          relay = (data) => {
+            if (browserClosed || typeof data !== 'string' || Number(data[0]) !== PacketType.CONNECT) return;
+            sendSocketBridgeAuthError(browserSocket, getSocketIoNamespace(data) ?? '/');
+            browserClosed = true;
+            pendingBrowser.clear();
+            try { browserSocket.close(); } catch {}
+          };
+          for (const data of pendingBrowser.drain()) relay(data);
           return;
         }
         relay = startBridge(

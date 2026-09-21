@@ -51,11 +51,13 @@ export function mapDbTypeToFilterType(dbType: string): string {
   switch (dbType.toLowerCase()) {
     case "int":
     case "bigint":
+    case "long":
     case "decimal":
     case "float":
     case "double":
       return "number";
     case "boolean":
+    case "bool":
       return "boolean";
     case "date":
     case "datetime":

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { Decoder, PacketType } from "socket.io-parser";
 import {
   classifyUpstreamSocketIoPacket,
   resolveSocketBridgeAuth,
@@ -78,6 +79,11 @@ describe("socket bridge auth", () => {
     ).toBe("auth_error");
     expect(
       classifyUpstreamSocketIoPacket(
+        '4{"message":"Connection rejected","data":{"code":"AUTH_REQUIRED"}}'
+      )
+    ).toBe("auth_error");
+    expect(
+      classifyUpstreamSocketIoPacket(
         `4/enfyra-admin,{"message":"${ENFYRA_SOCKET_AUTH_ERROR}"}`
       )
     ).toBe("auth_error");
@@ -113,12 +119,22 @@ describe("socket bridge auth", () => {
     sendSocketBridgeAuthError({ send: externalSend }, "/chat");
     sendSocketBridgeAuthError({ send: defaultSend });
 
-    expect(send).toHaveBeenCalledTimes(1);
-    expect(send.mock.calls[0]?.[0]).toContain("44/ws/chat,");
-    expect(send.mock.calls[0]?.[0]).toContain(ENFYRA_SOCKET_AUTH_ERROR);
-    expect(externalSend).toHaveBeenCalledTimes(1);
-    expect(externalSend.mock.calls[0]?.[0]).toContain("44/chat,");
-    expect(externalSend.mock.calls[0]?.[0]).not.toContain("44/ws/chat,");
-    expect(defaultSend.mock.calls[0]?.[0]).toContain("44/ws/enfyra-admin,");
+    for (const [sender, namespace] of [
+      [send, '/ws/chat'],
+      [externalSend, '/chat'],
+      [defaultSend, '/ws/enfyra-admin'],
+    ] as const) {
+      expect(sender).toHaveBeenCalledTimes(1);
+      const decoder = new Decoder();
+      const decoded = vi.fn();
+      decoder.on('decoded', decoded);
+      expect(() => decoder.add(sender.mock.calls[0]?.[0])).not.toThrow();
+      expect(decoded).toHaveBeenCalledWith({
+        type: PacketType.CONNECT_ERROR,
+        nsp: namespace,
+        data: { message: ENFYRA_SOCKET_AUTH_ERROR },
+      });
+      decoder.destroy();
+    }
   });
 });

@@ -77,7 +77,7 @@ export function classifyUpstreamSocketIoPacket(
   if (packetType === PacketType.CONNECT) return 'connected';
   if (packetType !== PacketType.CONNECT_ERROR) return 'other';
 
-  const commaIndex = packet.indexOf(',');
+  const commaIndex = packet[1] === '/' ? packet.indexOf(',') : -1;
   const payload = packet.slice(commaIndex === -1 ? 1 : commaIndex + 1);
   try {
     const error = JSON.parse(payload) as {
@@ -113,6 +113,6 @@ export function sendSocketBridgeAuthError(browserSocket: {
   const encoded = packs[0];
   if (!encoded) return;
   try {
-    browserSocket.send(`4${encoded}`);
+    browserSocket.send(encoded);
   } catch {}
 }

@@ -3,7 +3,7 @@ const props = withDefaults(defineProps<{
   title?: string;
   description?: string;
   size?: "sm" | "md" | "lg";
-  type?: 'dots' | 'spinner' | 'skeleton' | 'table' | 'form' | 'card' | 'folder' | 'file-card' | 'menu';
+  type?: 'dots' | 'spinner' | 'skeleton' | 'table' | 'form' | 'list' | 'card' | 'folder' | 'file-card' | 'menu';
   context?: 'page' | 'modal' | 'inline' | 'button';
 }>(), {
   size: 'md',
@@ -24,8 +24,12 @@ const loadingType = computed(() => {
   }
 });
 
+const BLOCK_LOADING_TYPES = ['table', 'form', 'list', 'card', 'folder', 'file-card', 'menu'];
+const isBlockType = computed(() => BLOCK_LOADING_TYPES.includes(loadingType.value));
+const isEdgeToEdgeType = computed(() => loadingType.value === 'list');
+
 const showTitle = computed(() => 
-  props.context !== 'button' && props.context !== 'inline' && loadingType.value !== 'table' && loadingType.value !== 'form' && loadingType.value !== 'card' && loadingType.value !== 'folder' && loadingType.value !== 'file-card' && loadingType.value !== 'menu'
+  props.context !== 'button' && props.context !== 'inline' && !isBlockType.value
 );
 </script>
 
@@ -33,8 +37,8 @@ const showTitle = computed(() =>
   <div 
     :class="[
       'transition-opacity transition-transform duration-[var(--duration-base)] ease-[var(--ease-standard)]',
-      loadingType === 'table' || loadingType === 'form' || loadingType === 'card' || loadingType === 'folder' || loadingType === 'file-card' || loadingType === 'menu' ? 'w-full' : 'flex flex-col items-center justify-center',
-      context === 'inline' ? 'py-2 gap-2' : (loadingType === 'table' || loadingType === 'form' || loadingType === 'card' || loadingType === 'folder' || loadingType === 'file-card' || loadingType === 'menu') ? 'py-4' : 'py-8 gap-4',
+      isBlockType ? 'w-full' : 'flex flex-col items-center justify-center',
+      isEdgeToEdgeType ? '' : context === 'inline' ? 'py-2 gap-2' : isBlockType ? 'py-4' : 'py-8 gap-4',
       context === 'button' ? 'py-1 gap-1' : ''
     ]"
     role="status"
@@ -58,6 +62,13 @@ const showTitle = computed(() =>
     <CommonLoadingSkeleton 
       v-else-if="loadingType === 'table'" 
       type="table" 
+      :animated="true" 
+    />
+    
+    <CommonLoadingSkeleton 
+      v-else-if="loadingType === 'list'" 
+      type="list" 
+      :lines="8"
       :animated="true" 
     />
     

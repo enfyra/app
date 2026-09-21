@@ -32,7 +32,8 @@
     "postinstall": "nuxt prepare",
     "start": "node .output/server/index.mjs",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:transport": "vitest run --config vitest.transport.config.ts"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",

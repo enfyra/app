@@ -14,6 +14,8 @@ describe('relation record helpers', () => {
     const definition: TableDefinitionField[] = [
       { fieldType: 'column', name: 'title', type: 'varchar' },
       { fieldType: 'column', name: 'body', type: 'text' },
+      { fieldType: 'column', name: 'nativeTitle', type: 'string' },
+      { fieldType: 'column', name: 'ownerId', type: 'objectId' },
       { fieldType: 'column', name: 'privateNote', type: 'text', metadataAccess: { read: false } },
       { fieldType: 'column', name: 'publishedAt', type: 'datetime' },
     ];
@@ -23,6 +25,7 @@ describe('relation record helpers', () => {
         { id: { _eq: 'directus' } },
         { title: { _contains: 'directus' } },
         { body: { _contains: 'directus' } },
+        { nativeTitle: { _contains: 'directus' } },
       ],
     });
   });

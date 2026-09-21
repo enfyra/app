@@ -17,7 +17,7 @@
       class="relative flex min-w-0 flex-1 flex-col"
     >
       <header
-        class="sticky top-0 flex w-full z-50 will-change-transform max-lg:border-b max-lg:border-[color-mix(in_srgb,var(--shell-main-border)_60%,transparent)] bg-[var(--shell-main-bg)]"
+        class="sticky top-0 flex w-full z-50 lg:will-change-transform max-lg:border-b max-lg:border-[color-mix(in_srgb,var(--shell-main-border)_60%,transparent)] bg-[var(--shell-main-bg)]"
       >
         <div class="flex flex-col items-center justify-between grow lg:flex-row">
           <div class="flex items-center justify-between w-full gap-2 sm:gap-4 lg:justify-normal lg:border-b-0 h-16">
@@ -159,7 +159,13 @@ const bannerTitle = computed(() => {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: var(--shell-content-bg);
+  background: var(--shell-mobile-content-bg);
+}
+
+@media (min-width: 1024px) {
+  .eapp-shell-canvas {
+    background: var(--shell-content-bg);
+  }
 }
 
 .route-stack > * {

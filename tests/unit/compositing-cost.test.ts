@@ -92,11 +92,11 @@ describe('compositing cost guard', () => {
     expect(header![0]).not.toMatch(/backdrop-blur/)
     expect(header![0]).not.toMatch(/bg-transparent/)
 
-    // Even with an opaque background, an unpromoted sticky element is repainted
-    // on the main thread every scroll frame. The layer hint keeps the header off
-    // that path. It is only safe while the header subtree holds no `fixed`
-    // descendant, which would otherwise resolve against the new containing block.
-    expect(header![0]).toContain('will-change-transform')
+    // Desktop keeps the layer hint, but mobile leaves sticky compositing to the
+    // browser so visual-viewport changes do not force another promoted layer.
+    const headerClasses = header![0].match(/class="([^"]*)"/)?.[1]?.split(/\s+/) ?? []
+    expect(headerClasses).toContain('lg:will-change-transform')
+    expect(headerClasses).not.toContain('will-change-transform')
     expect(layout).not.toMatch(/<header[\s\S]*?(?:fixed|absolute)[\s\S]*?<\/header>/)
   })
 
@@ -128,10 +128,16 @@ describe('compositing cost guard', () => {
     expect(canvas, 'shell canvas rule should exist').toBeDefined()
     expect(canvas).toContain('position: fixed')
     expect(canvas).toContain('inset: 0')
-    expect(canvas).toContain('background: var(--shell-content-bg)')
+    expect(canvas).toContain('background: var(--shell-mobile-content-bg)')
     expect(canvas).toContain('pointer-events: none')
+    expect(layout).toContain('@media (min-width: 1024px)')
+    expect(layout).toContain('background: var(--shell-content-bg)')
     expect(layout).toContain('<div class="eapp-shell-canvas" aria-hidden="true"></div>')
     expect(layout).not.toMatch(/style="background: var\(--shell-content-bg\)/)
+
+    const theme = readAppFile('assets/css/theme.css')
+    expect(theme).toContain('--shell-mobile-content-bg: var(--md-background)')
+    expect(theme).toContain('--shell-mobile-content-bg: color-mix(in srgb, var(--md-primary) 0.5%, #17171b)')
   })
 
   it('never animates opacity on an element that carries a blur', () => {

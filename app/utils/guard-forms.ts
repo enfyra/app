@@ -15,7 +15,7 @@ const commonGuardFilterFields = [
 export function getGuardFilterFields(type: GuardTargetType): string[] {
   return type === 'graphql'
     ? [...commonGuardFilterFields, 'table', 'gqlOperation']
-    : [...commonGuardFilterFields, 'isGlobal', 'route', 'methods'];
+    : [...commonGuardFilterFields, 'isGlobal', 'route', 'methods', 'excludeRoutes'];
 }
 
 export const guardFormSections: FormEditorSection[] = [
@@ -27,7 +27,15 @@ export const guardFormSections: FormEditorSection[] = [
   {
     id: 'target',
     title: 'Target',
-    fields: ['type', 'isGlobal', 'route', 'methods', 'table', 'gqlOperation'],
+    fields: [
+      'type',
+      'isGlobal',
+      'route',
+      'methods',
+      'excludeRoutes',
+      'table',
+      'gqlOperation',
+    ],
   },
   {
     id: 'evaluation',
@@ -45,6 +53,7 @@ export function normalizeGuardTargetPayload<T extends Record<string, any>>(
     body.route = null;
     body.methods = [];
     body.isGlobal = false;
+    body.excludeRoutes = [];
     return body as T;
   }
 
@@ -53,6 +62,8 @@ export function normalizeGuardTargetPayload<T extends Record<string, any>>(
   if (body.isGlobal === true) {
     body.route = null;
     body.methods = [];
+  } else {
+    body.excludeRoutes = [];
   }
   return body as T;
 }

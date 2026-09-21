@@ -2,7 +2,6 @@ import type { Ref } from 'vue';
 
 export const columnTypes = [
   { label: "UUID", value: "uuid", icon: "ph:key" },
-  { label: "ObjectId", value: "ObjectId", icon: "ph:key" },
   { label: "Integer", value: "int", icon: "tabler:123" },
   { label: "Float", value: "float", icon: "mdi:decimal" },
   { label: "Varchar", value: "varchar", icon: "mdi:format-text" },
@@ -11,6 +10,7 @@ export const columnTypes = [
   { label: "Date Time", value: "datetime", icon: "mdi:calendar-clock" },
   { label: "Timestamp", value: "timestamp", icon: "mdi:clock-time-four-outline" },
   { label: "Text", value: "text", icon: "mdi:file-document-outline" },
+  { label: "Long Text", value: "longtext", icon: "mdi:file-document-multiple-outline" },
   { label: "Rich Text", value: "richtext", icon: "mdi:format-text" },
   { label: "Code", value: "code", icon: "mdi:code-braces-box" },
   { label: "JSON", value: "simple-json", icon: "mdi:code-json" },
@@ -23,18 +23,19 @@ export const columnTypes = [
 ];
 
 export const mongoColumnTypes = [
+  { label: "ObjectId", value: "objectId", icon: "ph:key" },
   { label: "UUID", value: "uuid", icon: "ph:key" },
-  { label: "String", value: "varchar", icon: "mdi:format-text" },
-  { label: "Number", value: "float", icon: "mdi:decimal" },
+  { label: "String", value: "string", icon: "mdi:format-text" },
   { label: "Integer", value: "int", icon: "tabler:123" },
-  { label: "Long", value: "bigint", icon: "tabler:123" },
-  { label: "Boolean", value: "boolean", icon: "mdi:toggle-switch" },
-  { label: "Date", value: "date", icon: "mdi:calendar" },
-  { label: "Date Time", value: "datetime", icon: "mdi:calendar-clock" },
-  { label: "Timestamp", value: "timestamp", icon: "mdi:clock-time-four-outline" },
+  { label: "Long", value: "long", icon: "tabler:123" },
+  { label: "Double", value: "double", icon: "mdi:decimal" },
+  { label: "Boolean", value: "bool", icon: "mdi:toggle-switch" },
+  { label: "Date", value: "date", icon: "mdi:calendar-clock" },
+  { label: "Object", value: "object", icon: "mdi:code-json" },
+  { label: "Array", value: "array", icon: "mdi:format-list-bulleted" },
+  { label: "JSON (any)", value: "json", icon: "mdi:code-json" },
   { label: "Rich Text", value: "richtext", icon: "mdi:format-text" },
   { label: "Code", value: "code", icon: "mdi:code-braces-box" },
-  { label: "Object", value: "simple-json", icon: "mdi:code-json" },
   { label: "Array Select", value: "array-select", icon: "mdi:format-list-bulleted" },
   { label: "Enum", value: "enum", icon: "lucide:type" },
 ];
@@ -53,16 +54,24 @@ export const relationTypes = [
 export type ColumnType = 
   | 'uuid'
   | 'ObjectId'
+  | 'objectId'
+  | 'string'
   | 'varchar'
   | 'text'
+  | 'longtext'
   | 'int'
+  | 'long'
   | 'float'
+  | 'double'
   | 'bigint'
   | 'boolean'
+  | 'bool'
   | 'date'
   | 'datetime'
   | 'enum'
   | 'array'
+  | 'object'
+  | 'json'
   | 'array-select'
   | 'simple-json'
   | 'richtext'
