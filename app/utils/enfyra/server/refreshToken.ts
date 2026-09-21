@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from "./forwardedHeaders";
 import { getCookie, type H3Event } from "h3";
 import { $fetch } from "ofetch";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "~/constants/enfyra";
@@ -94,6 +95,7 @@ export async function refreshAccessToken(
         {
           method: "POST",
           body: { refreshToken },
+          headers: buildForwardedHeaders(event.node.req),
         }
       );
       refreshRequests.set(refreshToken, refreshRequest);

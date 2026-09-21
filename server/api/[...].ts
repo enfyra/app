@@ -12,6 +12,7 @@ import {
 } from "../utils/oauth";
 import { createOAuthBrowserBinding } from "../utils/oauth-browser-state";
 import { proxyToAPI } from "~/utils/enfyra/server/proxy";
+import { buildForwardedHeaders } from "~/utils/enfyra/server/forwardedHeaders";
 
 const OAUTH_PROVIDERS = ["google", "facebook", "github"];
 const OAUTH_INIT_PATTERN = new RegExp(`/auth/(${OAUTH_PROVIDERS.join("|")})/?$`);
@@ -36,7 +37,7 @@ export default defineEventHandler(async (event) => {
     }
     const backendPath = pathWithoutPrefix.startsWith("/") ? pathWithoutPrefix : `/${pathWithoutPrefix}`;
     const backendUrl = `${apiUrl.replace(/\/+$/, "")}${backendPath}${queryString ? `?${queryString}` : ""}`;
-    const response = await fetch(backendUrl, { redirect: "manual" });
+    const response = await fetch(backendUrl, { redirect: "manual", headers: buildForwardedHeaders(event.node.req) });
     const location = response.headers.get("location") || response.headers.get("Location");
     if (location && response.status >= 300 && response.status < 400) {
       return sendRedirect(event, location, response.status as 301 | 302 | 307 | 308);
@@ -82,7 +83,7 @@ export default defineEventHandler(async (event) => {
     if (cookieBridgePrefix) {
       backendUrl.searchParams.set("cookieBridgePrefix", cookieBridgePrefix);
     }
-    const response = await fetch(backendUrl, { redirect: "manual" });
+    const response = await fetch(backendUrl, { redirect: "manual", headers: buildForwardedHeaders(event.node.req) });
     const location = response.headers.get("location") || response.headers.get("Location");
     if (location && response.status >= 300 && response.status < 400) {
       return sendRedirect(event, location, 302);

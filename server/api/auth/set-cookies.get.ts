@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from "~/utils/enfyra/server/forwardedHeaders";
 import {
   createError,
   defineEventHandler,
@@ -58,6 +59,7 @@ export default defineEventHandler(async (event) => {
     baseURL: apiUrl,
     method: "POST",
     body: { code },
+    headers: buildForwardedHeaders(event.node.req),
   });
 
   const accessToken = tokens.accessToken;

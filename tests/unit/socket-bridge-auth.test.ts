@@ -16,6 +16,13 @@ function tokenWithExp(exp: number) {
 }
 
 describe("socket bridge auth", () => {
+  it("preserves the observed socket peer after untrusted forwarding headers", async () => {
+    const req = { headers: { 'x-enfyra-pat': 'efy_pat_test', 'x-forwarded-for': '1.1.1.1' }, socket: { remoteAddress: '198.51.100.20' } };
+    await expect(resolveSocketBridgeAuth(req as any)).resolves.toEqual({
+      ok: true,
+      upstreamHeaders: { 'x-enfyra-client-context': expect.any(String), 'x-enfyra-pat': 'efy_pat_test', 'x-forwarded-for': '1.1.1.1, 198.51.100.20' },
+    });
+  });
   it("forwards the native ESV PAT header without treating it as a JWT", async () => {
     const req = {
       headers: {
@@ -25,7 +32,7 @@ describe("socket bridge auth", () => {
 
     await expect(resolveSocketBridgeAuth(req as any)).resolves.toEqual({
       ok: true,
-      upstreamHeaders: { "x-enfyra-pat": "efy_pat_test" },
+      upstreamHeaders: { 'x-enfyra-client-context': expect.any(String), "x-enfyra-pat": "efy_pat_test", "x-forwarded-for": "unknown" },
     });
   });
 
@@ -39,7 +46,7 @@ describe("socket bridge auth", () => {
 
     await expect(resolveSocketBridgeAuth(req as any)).resolves.toEqual({
       ok: true,
-      upstreamHeaders: { cookie: req.headers.cookie },
+      upstreamHeaders: { 'x-enfyra-client-context': expect.any(String), cookie: req.headers.cookie, "x-forwarded-for": "unknown" },
     });
   });
 

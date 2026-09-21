@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from "~/utils/enfyra/server/forwardedHeaders";
 import {
   defineEventHandler,
   readBody,
@@ -27,6 +28,7 @@ export default defineEventHandler(async (event) => {
       method: "POST",
       body: credentials,
       headers: {
+        ...buildForwardedHeaders(event.node.req),
         cookie: getHeader(event, "cookie") || "",
       },
     });

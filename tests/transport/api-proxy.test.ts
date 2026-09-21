@@ -30,6 +30,30 @@ afterEach(async () => {
 });
 
 describe('API proxy real transport', () => {
+  it('appends the transport peer after caller-controlled forwarding headers', async () => {
+    config.public.apiUrl = await listen(createServer((req, res) => {
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify(req.headers));
+    }));
+    const response = await fetch((await bridge()) + '/api/audit', {
+      headers: { 'x-forwarded-for': '198.51.100.20', 'cf-connecting-ip': '198.51.100.20' },
+    });
+    const headers = await response.json();
+    expect(headers['x-forwarded-for']).toBe('198.51.100.20, 127.0.0.1');
+    const context = JSON.parse(Buffer.from(headers['x-enfyra-client-context'], 'base64url').toString());
+    expect(context.peerIp).toBe('127.0.0.1');
+    expect(context.headers['x-forwarded-for']).toBe('198.51.100.20');
+    expect(context.headers['cf-connecting-ip']).toBe('198.51.100.20');
+  });
+
+  it('supplies the transport peer when no forwarding headers exist', async () => {
+    config.public.apiUrl = await listen(createServer((req, res) => {
+      res.setHeader('content-type', 'application/json');
+      res.end(JSON.stringify(req.headers));
+    }));
+    const response = await fetch((await bridge()) + '/api/audit');
+    expect((await response.json())['x-forwarded-for']).toBe('127.0.0.1');
+  });
   it('closes a silent upstream when the downstream request disconnects', async () => {
     let entered = false;
     let closed = false;

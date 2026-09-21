@@ -46,7 +46,7 @@ describe("refreshAccessToken race behavior", () => {
     fetchMock.mockRejectedValueOnce(new Error("already used"));
 
     await expect(
-      refreshAccessToken({} as any, "old-refresh-token", "https://api.test")
+      refreshAccessToken({ node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any, "old-refresh-token", "https://api.test")
     ).rejects.toThrow("already used");
 
     expect(deleteCookie).not.toHaveBeenCalled();
@@ -74,7 +74,7 @@ describe("refreshAccessToken race behavior", () => {
       })
     );
 
-    const events = Array.from({ length: 20 }, () => ({}) as any);
+    const events = Array.from({ length: 20 }, () => ({ node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } }) as any);
     const calls = events.map((event) =>
       refreshAccessToken(event, "same-old-refresh-token", "https://api.test")
     );
@@ -105,14 +105,14 @@ describe("refreshAccessToken race behavior", () => {
 
     await expect(
       refreshAccessToken(
-        {} as any,
+        { node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any,
         "old-refresh-token-reuse",
         "https://api.test"
       )
     ).resolves.toBe(response.accessToken);
     await expect(
       refreshAccessToken(
-        {} as any,
+        { node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any,
         "old-refresh-token-reuse",
         "https://api.test"
       )
@@ -130,7 +130,7 @@ describe("refreshAccessToken race behavior", () => {
 
     await expect(
       refreshAccessToken(
-        {} as any,
+        { node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any,
         "old-refresh-token-reuse",
         "https://api.test"
       )
@@ -166,7 +166,7 @@ describe("refreshAccessToken race behavior", () => {
       } as any)
     );
     const httpRequests = Array.from({ length: 15 }, () =>
-      refreshAccessToken({} as any, "old-refresh-token", "https://api.test")
+      refreshAccessToken({ node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any, "old-refresh-token", "https://api.test")
     );
 
     await expect(Promise.all(socketReconnects)).resolves.toEqual(

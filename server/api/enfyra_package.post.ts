@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from "~/utils/enfyra/server/forwardedHeaders";
 import {
   defineEventHandler,
   readBody,
@@ -24,7 +25,7 @@ export default defineEventHandler(async (event) => {
 
     return await $fetch(`${apiUrl}/enfyra_package`, {
       method: "POST",
-      headers: { ...headers, "Content-Type": "application/json" },
+      headers: { ...headers, ...buildForwardedHeaders(event.node.req), "Content-Type": "application/json" },
       body: finalBody,
     });
   } catch (error: any) {

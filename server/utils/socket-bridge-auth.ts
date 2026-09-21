@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from '~/utils/enfyra/server/forwardedHeaders';
 import type { IncomingMessage } from 'node:http';
 import { Encoder, PacketType } from 'socket.io-parser';
 
@@ -31,7 +32,7 @@ function buildUpstreamHeaders(
   req: IncomingMessage,
   extra: Record<string, string>,
 ): Record<string, string> {
-  const upstreamHeaders: Record<string, string> = { ...extra };
+  const upstreamHeaders: Record<string, string> = { ...extra, ...buildForwardedHeaders(req) };
   const cookie = req.headers?.cookie;
   if (typeof cookie === 'string') upstreamHeaders.cookie = cookie;
   return upstreamHeaders;

@@ -2,6 +2,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import { type H3Event, getRequestHeader, proxyRequest } from "h3";
+import { buildForwardedHeaders } from "./forwardedHeaders";
 
 export function buildApiProxyTarget(baseUrl: string | undefined, rawPath: string): string {
   const base = (baseUrl || "").replace(/\/+$/, "");
@@ -16,6 +17,7 @@ export async function proxyToAPI(event: H3Event, customPath?: string) {
 
   const headers: Record<string, string> = {
     ...(event.context.proxyHeaders || {}),
+    ...buildForwardedHeaders(event.node.req),
   };
   const accept = getRequestHeader(event, "accept");
   if (accept) headers.accept = accept || "";
