@@ -12,7 +12,7 @@ describe('mongo primary key schema helpers', () => {
     expect(isMongoPrimaryKeyColumn({ name: 'slug', isPrimary: true })).toBe(false)
   })
 
-  it('normalizes Mongo primary key metadata to _id ObjectId', () => {
+  it('normalizes Mongo primary key metadata to native _id objectId', () => {
     expect(
       normalizeMongoPrimaryKeyColumn({
         name: 'id',
@@ -22,7 +22,7 @@ describe('mongo primary key schema helpers', () => {
       }),
     ).toEqual({
       name: '_id',
-      type: 'ObjectId',
+      type: 'objectId',
       isPrimary: true,
       label: 'Primary key',
     })

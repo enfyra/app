@@ -17,7 +17,6 @@ type MetadataDatabaseContext = {
 type MetadataResponse = {
   data?: TableSchema;
   dbType?: MetadataDatabaseType;
-  enfyraVersion?: string | null;
 };
 
 const clientSchemaRequests = new Map<string, Promise<TableSchema | null>>();
@@ -28,7 +27,11 @@ export function useSchema(tableName?: string | Ref<string>) {
   const dbContext = useState<MetadataDatabaseContext>("database:context", () => ({
     dbType: null,
   }));
-  const enfyraVersion = useState<string | null>("enfyra:version", () => null);
+  const settings = useState<Record<string, any>>("global:settings", () => ({}));
+  const enfyraVersion = computed<string | null>(() => {
+    const version = String(settings.value?.enfyraVersion ?? "").trim();
+    return version === "" ? null : version;
+  });
   const schemaEpoch = useState<number>("schemas:epoch", () => 0);
   const metadataContextFetched = useState<boolean>("metadata-context:fetched", () => false);
   const schemaLoading = ref(false);
@@ -65,7 +68,6 @@ export function useSchema(tableName?: string | Ref<string>) {
   async function ensureMetadataContext(): Promise<MetadataResponse | null> {
     if (metadataContextFetched.value && dbContext.value.dbType) return {
       dbType: dbContext.value.dbType ?? undefined,
-      enfyraVersion: enfyraVersion.value,
     };
     if (import.meta.client && clientMetadataContextRequest) {
       return clientMetadataContextRequest;
@@ -127,9 +129,6 @@ export function useSchema(tableName?: string | Ref<string>) {
     if (metadata.dbType !== undefined) {
       dbContext.value = { dbType: metadata.dbType ?? null };
       metadataContextFetched.value = Boolean(dbContext.value.dbType);
-    }
-    if (metadata.enfyraVersion !== undefined) {
-      enfyraVersion.value = metadata.enfyraVersion?.trim() || null;
     }
   }
 
@@ -304,6 +303,22 @@ export function useSchema(tableName?: string | Ref<string>) {
     return columnFields.length > 0 ? columnFields.join(",") : "*";
   }
 
+  async function getReadableFields(): Promise<string> {
+    await ensureSchema();
+    if (!definition.value.length) return "*";
+
+    const fields = definition.value
+      .filter((field) => canReadField(field))
+      .map((field) => {
+        const name = field.propertyName || field.name;
+        if (!name) return null;
+        return field.fieldType === "relation" ? `${name}.*` : name;
+      })
+      .filter((field): field is string => Boolean(field));
+
+    return fields.length > 0 ? fields.join(",") : "*";
+  }
+
   function useFormChanges(): FormChangesState {
     const originalData = ref<Record<string, any>>({});
 
@@ -348,6 +363,7 @@ export function useSchema(tableName?: string | Ref<string>) {
     validate,
     getIncludeFields,
     getColumnFields,
+    getReadableFields,
     sortFieldsByOrder,
     useFormChanges,
   };

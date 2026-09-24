@@ -18,6 +18,7 @@ vi.mock("ofetch", () => ({
 describe("refreshAccessToken race behavior", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    fetchMock.mockReset();
     vi.useRealTimers();
   });
 
@@ -45,7 +46,7 @@ describe("refreshAccessToken race behavior", () => {
     fetchMock.mockRejectedValueOnce(new Error("already used"));
 
     await expect(
-      refreshAccessToken({} as any, "old-refresh-token", "https://api.test")
+      refreshAccessToken({ node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any, "old-refresh-token", "https://api.test")
     ).rejects.toThrow("already used");
 
     expect(deleteCookie).not.toHaveBeenCalled();
@@ -73,7 +74,7 @@ describe("refreshAccessToken race behavior", () => {
       })
     );
 
-    const events = Array.from({ length: 20 }, () => ({}) as any);
+    const events = Array.from({ length: 20 }, () => ({ node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } }) as any);
     const calls = events.map((event) =>
       refreshAccessToken(event, "same-old-refresh-token", "https://api.test")
     );
@@ -88,7 +89,7 @@ describe("refreshAccessToken race behavior", () => {
     expect(deleteCookie).not.toHaveBeenCalled();
   });
 
-  it("reuses a just-rotated refresh result for late requests with the old token", async () => {
+  it("reuses a rotated refresh result when a late parallel request still carries the old token", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-12T00:00:00.000Z"));
     const { refreshAccessToken } = await import(
@@ -104,14 +105,14 @@ describe("refreshAccessToken race behavior", () => {
 
     await expect(
       refreshAccessToken(
-        {} as any,
+        { node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any,
         "old-refresh-token-reuse",
         "https://api.test"
       )
     ).resolves.toBe(response.accessToken);
     await expect(
       refreshAccessToken(
-        {} as any,
+        { node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any,
         "old-refresh-token-reuse",
         "https://api.test"
       )
@@ -120,18 +121,22 @@ describe("refreshAccessToken race behavior", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(setCookie).toHaveBeenCalledTimes(6);
 
-    vi.advanceTimersByTime(2001);
-    fetchMock.mockResolvedValueOnce(response);
+    vi.advanceTimersByTime(5000);
+    fetchMock.mockRejectedValueOnce(
+      Object.assign(new Error("Refresh token has been revoked or already used!"), {
+        statusCode: 400,
+      })
+    );
 
     await expect(
       refreshAccessToken(
-        {} as any,
+        { node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any,
         "old-refresh-token-reuse",
         "https://api.test"
       )
     ).resolves.toBe(response.accessToken);
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("keeps socket reconnects from rotating tokens while HTTP requests refresh once", async () => {
@@ -161,7 +166,7 @@ describe("refreshAccessToken race behavior", () => {
       } as any)
     );
     const httpRequests = Array.from({ length: 15 }, () =>
-      refreshAccessToken({} as any, "old-refresh-token", "https://api.test")
+      refreshAccessToken({ node: { req: { headers: {}, socket: { remoteAddress: '198.51.100.20' } } } } as any, "old-refresh-token", "https://api.test")
     );
 
     await expect(Promise.all(socketReconnects)).resolves.toEqual(

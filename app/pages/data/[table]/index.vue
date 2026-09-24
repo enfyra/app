@@ -13,7 +13,7 @@ const pageLimit = 10;
 const data = ref([]);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
-const { getId } = useDatabase();
+const { getId, isMongoDB } = useDatabase();
 const singleRecordIdMap = useState<Record<string, string>>('singleRecordIdMap', () => ({}));
 
 const showFilterDrawer = ref(false);
@@ -255,17 +255,17 @@ const columns = computed(() => {
 
       if (fieldName === "id" || fieldName === "_id") {
         // already set above
-      } else if (field.type === "timestamp" || field.type === "datetime" || (field.type as string) === "datetime") {
+      } else if (field.type === "timestamp" || field.type === "datetime") {
         config.format = "datetime";
       } else if (field.type === "date") {
-        config.format = "date";
-      } else if (field.type === "boolean") {
+        config.format = isMongoDB.value ? "datetime" : "date";
+      } else if (field.type === "boolean" || field.type === "bool") {
         config.format = "boolean";
-      } else if (field.type === "int" || field.type === "bigint" || (field.type as string) === "float" || (field.type as string) === "decimal" || (field.type as string) === "numeric" || (field.type as string) === "number") {
+      } else if (["int", "bigint", "long", "float", "double", "decimal", "numeric", "number"].includes(field.type as string)) {
         config.format = "number";
-      } else if (field.type === "simple-json" || (field.type as string) === "json" || (field.type as string) === "jsonb") {
+      } else if (["simple-json", "json", "jsonb", "object", "array"].includes(field.type as string)) {
         config.format = "json";
-      } else if (field.type === "text" || field.type === "richtext") {
+      } else if (field.type === "text" || field.type === "longtext" || field.type === "richtext") {
         config.format = "text-long";
       } else {
         config.format = "custom";

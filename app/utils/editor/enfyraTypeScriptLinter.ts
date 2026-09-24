@@ -1,4 +1,4 @@
-import { parse } from 'acorn';
+import { parse, tokenizer } from 'acorn';
 import type { Diagnostic } from '@codemirror/lint';
 
 type TypeScriptModule = typeof import('typescript');
@@ -6,6 +6,11 @@ type TypeScriptModule = typeof import('typescript');
 interface TransformedCode {
   code: string;
   sourceMap: number[];
+}
+
+interface SourceRange {
+  start: number;
+  end: number;
 }
 
 const macroReplacements = new Map([
@@ -261,8 +266,19 @@ interface Iterable<T> {
 interface IterableIterator<T> extends Iterator<T> {
   [Symbol.iterator](): IterableIterator<T>;
 }
+interface AsyncIterator<T, TReturn = any, TNext = undefined> {
+  next(...args: [] | [TNext]): Promise<IteratorResult<T, TReturn>>;
+  return?(value?: TReturn): Promise<IteratorResult<T, TReturn>>;
+}
+interface AsyncIterable<T> {
+  [Symbol.asyncIterator](): AsyncIterator<T>;
+}
+interface AsyncIterableIterator<T> extends AsyncIterator<T> {
+  [Symbol.asyncIterator](): AsyncIterableIterator<T>;
+}
 interface SymbolConstructor {
   readonly iterator: symbol;
+  readonly asyncIterator: symbol;
 }
 declare const Symbol: SymbolConstructor;
 type PropertyKey = string | number | symbol;
@@ -342,6 +358,25 @@ type EnfyraStorage = {
 type EnfyraTransaction = {
   run<T>(callback: () => Promise<T>): Promise<T>;
 };
+type EnfyraStreamChunkKind = 'chunk' | 'end' | 'error';
+type EnfyraReadable = AsyncIterable<any>;
+type EnfyraResponseStreamOptions = {
+  statusCode?: number;
+  mimetype?: string;
+  filename?: string;
+  headers?: Record<string, string | number | readonly string[] | undefined | null>;
+  observer?: (text: string, kind: EnfyraStreamChunkKind) => void | Promise<void>;
+  transform?: (text: string, kind: EnfyraStreamChunkKind) => string | null | undefined | Promise<string | null | undefined>;
+};
+type EnfyraResponse = {
+  stream(stream: EnfyraReadable, options?: EnfyraResponseStreamOptions): Promise<void>;
+  [key: string]: any;
+};
+type EnfyraStreams = {
+  preflight(stream: EnfyraReadable, options?: { timeoutMs?: number }): Promise<{ stream: EnfyraReadable; firstChunk: any }>;
+  readBytes(stream: EnfyraReadable, options?: { timeoutMs?: number; maxBytes?: number }): Promise<any>;
+  readText(stream: EnfyraReadable, options?: { timeoutMs?: number; maxBytes?: number }): Promise<string>;
+};
 type EnfyraThrow = {
   (statusCode: number, message?: string): never;
   400(message: string): never;
@@ -363,7 +398,8 @@ type EnfyraContext = {
   $query: Record<string, any>;
   $user: any;
   $req: any;
-  $res: any;
+  $res: EnfyraResponse;
+  $streams: EnfyraStreams;
   $share: Record<string, any>;
   $api: any;
   $uploadedFile: any;
@@ -440,6 +476,31 @@ declare module 'vue' {
 
 let typescriptModulePromise: Promise<TypeScriptModule> | null = null;
 
+function findRegularExpressionRanges(source: string): SourceRange[] {
+  const maskedSource = source.replace(
+    /@[A-Z0-9_]+|[#%][A-Za-z_][A-Za-z0-9_]*/g,
+    token => '_'.repeat(token.length),
+  );
+  const ranges: SourceRange[] = [];
+
+  try {
+    const scanner = tokenizer(maskedSource, { ecmaVersion: 2022 });
+    for (
+      let token = scanner.getToken();
+      token.type.label !== 'eof';
+      token = scanner.getToken()
+    ) {
+      if (token.type.label === 'regexp') {
+        ranges.push({ start: token.start, end: token.end });
+      }
+    }
+  } catch {
+    return ranges;
+  }
+
+  return ranges;
+}
+
 function loadTypeScript() {
   typescriptModulePromise ??= import('typescript');
   return typescriptModulePromise;
@@ -459,6 +520,8 @@ export function transformEnfyraCode(source: string): TransformedCode {
   let pos = 0;
   let templateExprDepth = 0;
   let braceDepth = 0;
+  const regularExpressionRanges = findRegularExpressionRanges(source);
+  let regularExpressionIndex = 0;
 
   const pushOriginal = (from: number, to: number) => {
     for (let index = from; index < to; index++) {
@@ -479,6 +542,24 @@ export function transformEnfyraCode(source: string): TransformedCode {
   const isIdentifierChar = (char: string) => /[A-Za-z0-9_]/.test(char);
 
   while (pos < len) {
+    while (
+      regularExpressionIndex < regularExpressionRanges.length &&
+      regularExpressionRanges[regularExpressionIndex]!.end <= pos
+    ) {
+      regularExpressionIndex++;
+    }
+    const regularExpression = regularExpressionRanges[regularExpressionIndex];
+    if (
+      state === CODE &&
+      regularExpression &&
+      regularExpression.start === pos
+    ) {
+      pushOriginal(regularExpression.start, regularExpression.end);
+      pos = regularExpression.end;
+      regularExpressionIndex++;
+      continue;
+    }
+
     const char = source[pos];
     const next = source[pos + 1];
 

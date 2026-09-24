@@ -51,6 +51,33 @@ export async function requireValidRedirectUrl(
   return parsed.toString();
 }
 
+export async function requireValidPostLoginRedirectUrl(
+  value: unknown,
+  event: H3Event,
+) {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Redirect URL must be a string",
+    });
+  }
+
+  let redirect: string;
+  try {
+    redirect = new URL(value, getRequestURL(event).origin).toString();
+  } catch {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Redirect URL is invalid",
+    });
+  }
+
+  return requireValidRedirectUrl(redirect, event);
+}
+
 export function requireValidOAuthState(value: unknown) {
   if (value === undefined) {
     return undefined;

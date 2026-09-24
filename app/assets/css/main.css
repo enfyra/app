@@ -147,7 +147,6 @@ button:focus-visible,
   border: 1px solid var(--card-border);
   box-shadow: var(--card-shadow);
   border-radius: var(--radius-card);
-  backdrop-filter: blur(18px);
 }
 
 .dark .surface-card {
@@ -161,7 +160,6 @@ button:focus-visible,
   border: 1px solid var(--card-border);
   box-shadow: var(--card-shadow);
   border-radius: var(--radius-card);
-  backdrop-filter: blur(18px);
 }
 
 .eapp-surface-muted {
@@ -216,7 +214,6 @@ button:focus-visible,
   border: 1px solid var(--card-border);
   box-shadow: var(--card-shadow);
   border-radius: var(--radius-card);
-  backdrop-filter: blur(18px);
 }
 
 .dark .eapp-modal-surface {
@@ -260,7 +257,8 @@ button:focus-visible,
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 0.875rem;
+  --eapp-resource-list-gap: 0.875rem;
+  gap: var(--eapp-resource-list-gap);
   padding: 0.875rem 1rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border-default) 70%, var(--surface-default));
   background: transparent;
@@ -271,12 +269,12 @@ button:focus-visible,
 }
 
 .eapp-resource-list-item-sm {
-  gap: 0.625rem;
+  --eapp-resource-list-gap: 0.625rem;
   padding: 0.625rem 0.75rem;
 }
 
 .eapp-resource-list-item-lg {
-  gap: 1rem;
+  --eapp-resource-list-gap: 1rem;
   padding: 1rem 1.125rem;
 }
 
@@ -363,21 +361,33 @@ button:focus-visible,
   margin: 0;
 }
 
-.eapp-resource-list-pagination {
-  margin-top: 1rem;
+/*
+ * Mini bar: a fixed stand-in shown only while the main bar is off screen. It is
+ * inset from the canvas edges and carries the card chrome so scrolled content
+ * stays readable around it. Never add a blur here: the bar sits over moving
+ * content, so a filter would re-run on every frame.
+ *
+ * The bottom padding is set here rather than by a Tailwind `py-*` utility because
+ * this rule is unlayered and therefore wins over the layered utilities. It has to
+ * track the bar's `py` at each breakpoint, so raise both together.
+ */
+.eapp-pagination-mini {
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow-hover);
+  padding-bottom: max(0.375rem, env(safe-area-inset-bottom));
 }
 
-.eapp-pagination-separated {
-  margin-inline: 0 !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  padding-inline: 1rem !important;
-  padding-left: 1rem !important;
-  padding-right: 1rem !important;
-  border: 1px solid var(--card-border) !important;
-  border-radius: var(--radius-panel);
-  background: var(--card-bg) !important;
-  box-shadow: var(--card-shadow);
+@media (min-width: 768px) {
+  .eapp-pagination-mini {
+    padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eapp-pagination.eapp-pagination-floating {
+    transition-duration: 1ms !important;
+  }
 }
 
 .eapp-resource-list-stat {
@@ -401,6 +411,19 @@ button:focus-visible,
   color: var(--text-secondary);
 }
 
+/*
+ * The trailing controls share one centred cluster. Keeping them as separate row
+ * items broke their alignment on mobile, where the row switches to flex-start and
+ * a 24px switch next to a 28px button then lines up on its top edge instead of
+ * its centre. The cluster keeps the row's own gap so spacing is unchanged.
+ */
+.eapp-resource-list-actions-group {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--eapp-resource-list-gap, 0.875rem);
+}
+
 .eapp-resource-list-header-actions,
 .eapp-resource-list-actions {
   display: inline-flex;
@@ -412,22 +435,18 @@ button:focus-visible,
 @media (max-width: 767px) {
   .eapp-resource-list-item {
     align-items: flex-start;
-    gap: 0.75rem;
+    --eapp-resource-list-gap: 0.75rem;
     padding: 0.875rem;
   }
 
   .eapp-resource-list-item-sm {
-    gap: 0.625rem;
+    --eapp-resource-list-gap: 0.625rem;
     padding: 0.625rem;
   }
 
   .eapp-resource-list-item-lg {
-    gap: 0.875rem;
+    --eapp-resource-list-gap: 0.875rem;
     padding: 1rem;
-  }
-
-  .eapp-resource-list-actions {
-    margin-left: auto;
   }
 }
 
@@ -579,10 +598,14 @@ button:focus-visible,
     box-shadow var(--duration-fast) var(--ease-standard);
 }
 
-.eapp-pagination :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
-  border-color: var(--pagination-border-hover) !important;
-  background: var(--pagination-bg-hover) !important;
-  color: var(--pagination-text-hover) !important;
+/* Hover feedback is pointer-only: on touch, the sticky emulated `:hover` left the
+   last-tapped page button looking selected. */
+@media (hover: hover) and (pointer: fine) {
+  .eapp-pagination :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
+    border-color: var(--pagination-border-hover) !important;
+    background: var(--pagination-bg-hover) !important;
+    color: var(--pagination-text-hover) !important;
+  }
 }
 
 .eapp-pagination :where([aria-current="page"]) {
@@ -742,7 +765,6 @@ button:focus-visible,
     var(--card-bg);
   color: var(--text-primary);
   box-shadow: var(--card-shadow);
-  backdrop-filter: blur(18px);
 }
 
 .dark .eapp-identity-surface,

@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from "~/utils/enfyra/server/forwardedHeaders";
 import { defineEventHandler, getHeader, getCookie, deleteCookie } from "h3";
 import { $fetch } from "ofetch";
 import {
@@ -19,6 +20,7 @@ export default defineEventHandler(async (event) => {
     const result = await $fetch(normalizeUrl(apiUrl, "/auth/logout"), {
       method: "POST",
       headers: {
+        ...buildForwardedHeaders(event.node.req),
         cookie: getHeader(event, "cookie") || "",
         authorization: event.context.proxyHeaders?.authorization,
       },

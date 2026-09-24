@@ -2,6 +2,7 @@ import {
   lintEnfyraScript,
   lintEnfyraTypeScript,
   lintVueSfcScripts,
+  transformEnfyraCode,
   validateEnfyraRequiredReturnScript,
 } from '~/utils/editor/enfyraTypeScriptLinter'
 
@@ -55,6 +56,20 @@ await @TRIGGER('flow_name', { item })
 `)
 
     expect(diagnostics).toEqual([])
+  })
+
+  it('keeps email CSS literal after a regular expression containing quotes', () => {
+    const source = [
+      `const escaped = value.replace(/\\\"/g, '&quot;')`,
+      `const html = '<table width="100%" style="color:#33434d">@BODY %pkg #repo</table>'`,
+      'return { body: @BODY, repo: #projects, pkg: %resend }',
+    ].join('\n')
+
+    expect(transformEnfyraCode(source).code).toBe([
+      `const escaped = value.replace(/\\\"/g, '&quot;')`,
+      `const html = '<table width="100%" style="color:#33434d">@BODY %pkg #repo</table>'`,
+      'return { body: $ctx.$body, repo: $ctx.$repos.projects, pkg: $ctx.$pkgs.resend }',
+    ].join('\n'))
   })
 
   it('accepts the @ENV macro as sanitized environment context', async () => {
@@ -137,6 +152,22 @@ const result = await #ai_credit_ledger.aggregate({
   limit,
 })
 return { html, result, policy: policyByModel.get('default') }
+`)
+
+    expect(diagnostics).toEqual([])
+  })
+
+  it('accepts package stream preflight, collection, and response callbacks', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const upstream = await $ctx.$pkgs.undici.request('https://example.com')
+const guarded = await $ctx.$streams.preflight(upstream.body, { timeoutMs: 1000 })
+const bufferedUpstream = await $ctx.$pkgs.undici.request('https://example.com/buffered')
+const buffered = await $ctx.$streams.readText(bufferedUpstream.body, { timeoutMs: 1000, maxBytes: 1024 })
+await $ctx.$res.stream(guarded.stream, {
+  observer: async (text, kind) => { $ctx.$logs(text, kind) },
+  transform: (text, kind) => kind === 'chunk' ? text : undefined,
+})
+return { buffered }
 `)
 
     expect(diagnostics).toEqual([])

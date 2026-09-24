@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from "./forwardedHeaders";
 import { getCookie, type H3Event } from "h3";
 import { $fetch } from "ofetch";
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from "~/constants/enfyra";
@@ -15,7 +16,7 @@ interface RefreshTokenResponse {
   expTime: number;
 }
 
-const REFRESH_REUSE_WINDOW_MS = 2000;
+const REFRESH_REUSE_WINDOW_MS = 30_000;
 const ACCESS_TOKEN_REFRESH_LEEWAY_MS = 30_000;
 const refreshRequests = new Map<string, Promise<RefreshTokenResponse>>();
 const refreshResults = new Map<
@@ -94,6 +95,7 @@ export async function refreshAccessToken(
         {
           method: "POST",
           body: { refreshToken },
+          headers: buildForwardedHeaders(event.node.req),
         }
       );
       refreshRequests.set(refreshToken, refreshRequest);

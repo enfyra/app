@@ -75,6 +75,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const { isMongoDB } = useDatabase();
 
 const {
   schemas: allSchemas,
@@ -172,28 +173,51 @@ const examplePayload = computed(() => {
     }
 
     switch (field.type?.toLowerCase()) {
+      case "string":
       case "varchar":
       case "text":
+      case "longtext":
       case "richtext":
+      case "code":
         example[fieldName] = `Example ${fieldName}`;
         break;
       case "int":
         example[fieldName] = 123;
         break;
+      case "bigint":
+      case "long":
+        example[fieldName] = "9223372036854775807";
+        break;
       case "float":
+      case "double":
         example[fieldName] = 123.45;
         break;
       case "boolean":
+      case "bool":
         example[fieldName] = true;
         break;
       case "date":
-        example[fieldName] = new Date().toISOString().split("T")[0];
+        example[fieldName] = isMongoDB.value
+          ? new Date().toISOString()
+          : new Date().toISOString().split("T")[0];
         break;
+      case "datetime":
       case "timestamp":
         example[fieldName] = new Date().toISOString();
         break;
       case "uuid":
         example[fieldName] = "550e8400-e29b-41d4-a716-446655440000";
+        break;
+      case "objectid":
+        example[fieldName] = "507f1f77bcf86cd799439011";
+        break;
+      case "object":
+      case "simple-json":
+      case "json":
+        example[fieldName] = { key: "value" };
+        break;
+      case "array":
+        example[fieldName] = ["value1", "value2"];
         break;
       case "array-select":
         example[fieldName] = (field.options && Array.isArray(field.options)) ? [field.options[0]] : ["option1"];
@@ -247,8 +271,12 @@ const examplePatchPayload = computed(() => {
     }
 
     switch (field.type?.toLowerCase()) {
+      case "string":
       case "varchar":
       case "text":
+      case "longtext":
+      case "richtext":
+      case "code":
         example[fieldName] = `Updated ${fieldName}`;
         fieldsAdded++;
         break;
@@ -256,8 +284,29 @@ const examplePatchPayload = computed(() => {
         example[fieldName] = 456;
         fieldsAdded++;
         break;
+      case "bigint":
+      case "long":
+        example[fieldName] = "9223372036854775806";
+        fieldsAdded++;
+        break;
+      case "float":
+      case "double":
+        example[fieldName] = 456.78;
+        fieldsAdded++;
+        break;
       case "boolean":
+      case "bool":
         example[fieldName] = false;
+        fieldsAdded++;
+        break;
+      case "object":
+      case "simple-json":
+      case "json":
+        example[fieldName] = { updated: true };
+        fieldsAdded++;
+        break;
+      case "array":
+        example[fieldName] = ["updated"];
         fieldsAdded++;
         break;
       default:

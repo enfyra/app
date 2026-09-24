@@ -33,6 +33,7 @@ const emit = defineEmits<{
 }>();
 
 const formEditorVirtualEmit = inject(FORM_EDITOR_VIRTUAL_EMIT_KEY, null);
+const { isMongoDB } = useDatabase();
 
 function attachVirtualEmit(
   key: string,
@@ -78,7 +79,7 @@ function updateFormData(key: string, value: any) {
   const finalType = config.type || column?.type;
 
   if (typeof value === "string" && value.trim() === "") {
-    const stringTypes = ["varchar", "text", "uuid", "richtext", "code", "simple-json"];
+    const stringTypes = ["string", "varchar", "text", "longtext", "objectId", "ObjectId", "uuid", "richtext", "code"];
     
     if (!finalType || stringTypes.includes(finalType)) {
       value = null;
@@ -188,7 +189,7 @@ function getComponentConfigByKey(key: string) {
   const isSystemField = key === "createdAt" || key === "updatedAt";
   const disabled = config.disabled ?? isSystemField;
   const hasError = !!props.errors?.[key];
-  const isSimpleJsonField = finalType === "simple-json";
+  const isSimpleJsonField = ["simple-json", "json"].includes(finalType);
 
   const fieldProps = {
     ...config.fieldProps,
@@ -260,6 +261,7 @@ function getComponentConfigByKey(key: string) {
 
   switch (finalType) {
     case "boolean":
+    case "bool":
       return {
         component: USwitch,
         componentProps: {
@@ -415,6 +417,9 @@ function getComponentConfigByKey(key: string) {
     }
 
     case "simple-json":
+    case "json":
+    case "object":
+    case "array":
       if (disabled) {
         return {
           component: UInput,
@@ -471,6 +476,7 @@ function getComponentConfigByKey(key: string) {
       };
 
     case "text":
+    case "longtext":
       return {
         component: UTextarea,
         componentProps: {
@@ -647,6 +653,21 @@ function getComponentConfigByKey(key: string) {
       };
 
     case "date": {
+      if (isMongoDB.value) {
+        return {
+          component: FormDateTimeField,
+          componentProps: {
+            ...componentPropsBase,
+            disabled,
+            modelValue: props.formData[key] ?? null,
+            "onUpdate:modelValue": (val: string | null) => {
+              updateFormData(key, val);
+            },
+            ...(hasError && { error: props.errors[key] }),
+          },
+          fieldProps,
+        };
+      }
       return {
         component: FormDateField,
         componentProps: {
@@ -680,7 +701,9 @@ function getComponentConfigByKey(key: string) {
     }
 
     case "int":
+    case "long":
     case "float":
+    case "double":
       if (column?.isPrimary && column?.isGenerated) {
         return {
           component: UInput,
@@ -747,7 +770,7 @@ function getComponentType(): string {
     <div v-else class="field-input w-full min-w-0">
       <UFormField
         class="block w-full min-w-0"
-        :error="getComponentType() === 'simple-json' ? undefined : errorMessage"
+        :error="['simple-json', 'json'].includes(getComponentType()) ? undefined : errorMessage"
       >
         <div
           class="w-full min-w-0"
@@ -758,7 +781,7 @@ function getComponentType(): string {
           />
         </div>
         <p
-          v-if="getComponentType() === 'simple-json' && hasError && errorMessage"
+          v-if="['simple-json', 'json'].includes(getComponentType()) && hasError && errorMessage"
           class="mt-1 text-xs text-[var(--md-error)]"
         >
           {{ errorMessage }}

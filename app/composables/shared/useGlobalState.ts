@@ -46,7 +46,7 @@ export const useGlobalState = () => {
     execute: executeFetchSettings,
   } = useApi(() => "/enfyra_setting", {
     query: {
-      fields: ["*", "methods.*"].join(","),
+      fields: "*",
       limit: 0,
     },
     errorContext: "Fetch Settings",
@@ -60,7 +60,7 @@ export const useGlobalState = () => {
   } = useApi(() => "/enfyra_storage_config", {
     query: {
       fields: GLOBAL_STORAGE_CONFIG_FIELDS,
-      limit: -1,
+      limit: 0,
       sort: "-createdAt",
       filter: {
         isEnabled: {
@@ -77,7 +77,7 @@ export const useGlobalState = () => {
   } = useApi(() => "/enfyra_package", {
     query: {
       fields: GLOBAL_APP_PACKAGE_FIELDS,
-      limit: -1,
+      limit: 0,
       filter: {
         type: {
           _eq: "App",

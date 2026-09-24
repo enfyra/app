@@ -145,7 +145,7 @@ onMounted(() => {
 
 <template>
   <div class="general-settings-page eapp-page-constrained">
-    <div class="general-settings-card surface-card">
+    <div class="surface-card">
       <div class="general-settings-card-inner">
         <CommonLoadingState
           v-if="loading"
@@ -196,7 +196,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="general-settings-card surface-card">
+    <div class="surface-card">
       <div class="general-settings-card-inner">
         <div class="general-settings-card-header">
           <h3>
@@ -217,13 +217,6 @@ onMounted(() => {
 .general-settings-page {
   display: grid;
   gap: 18px;
-}
-
-.general-settings-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-card);
-  backdrop-filter: blur(18px);
 }
 
 .general-settings-card-inner {

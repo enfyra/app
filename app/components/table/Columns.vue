@@ -24,7 +24,7 @@ const isNew = ref(false);
 const errors = ref<Record<string, string>>({});
 
 const { ensureSchema, generateEmptyForm, validate } = useSchema("enfyra_column");
-const { deleteIds, getIdFieldName, isMongoDB } = useDatabase();
+const { dbType, deleteIds, getIdFieldName, isMongoDB } = useDatabase();
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const localColumnsWithKeys = computed(() => columns.value.map((c: any, i: number) => ({ ...c, _localKey: i })));
@@ -243,7 +243,7 @@ async function addNewColumn() {
   editingIndex.value = null;
   deleteIds(currentColumn.value);
 
-  if (!currentColumn.value.type) currentColumn.value.type = "varchar";
+  currentColumn.value.type = isMongoDB.value ? "string" : "varchar";
 
   handleUuidType(currentColumn.value);
 }
@@ -297,10 +297,13 @@ const { isMobile, isTablet } = useScreen();
 function getDefaultValueType(columnType: string) {
   switch (columnType) {
     case "boolean":
+    case "bool":
       return "boolean";
 
     case "int":
+    case "long":
     case "float":
+    case "double":
       return "number";
 
     case "date":
@@ -310,15 +313,21 @@ function getDefaultValueType(columnType: string) {
     case "timestamp":
       return columnType;
 
+    case "string":
     case "text":
+    case "longtext":
     case "richtext":
     case "varchar":
     case "uuid":
+    case "objectId":
     case "ObjectId":
       return "text";
 
     case "code":
     case "simple-json":
+    case "json":
+    case "object":
+    case "array":
       return "code";
 
     case "array-select":
@@ -337,17 +346,21 @@ const typeMap = computed(() => {
   const editingPrimaryColumn = isPrimaryColumn(currentColumn.value);
   const availableColumnTypes = editingPrimaryColumn
     ? isMongoDB.value
-      ? columnTypes.filter((colType) => colType.value === "ObjectId")
+      ? mongoColumnTypes.filter((colType) => colType.value === "objectId")
       : columnTypes.filter((colType) => ["uuid", "int"].includes(colType.value))
     : isMongoDB.value
       ? mongoColumnTypes
-      : columnTypes.filter((colType) => colType.value !== "ObjectId");
+      : columnTypes.filter(
+          (colType) =>
+            colType.value !== "longtext" ||
+            ["mysql", "mariadb"].includes(dbType.value ?? ""),
+        );
 
   return {
     type: {
       type: "enum",
       options: availableColumnTypes,
-      default: editingPrimaryColumn && isMongoDB.value ? "ObjectId" : undefined, 
+      default: editingPrimaryColumn && isMongoDB.value ? "objectId" : undefined, 
     },
     name: {
       disabled: editingPrimaryColumn,
@@ -362,13 +375,13 @@ const typeMap = computed(() => {
     ...(["array-select", "enum"].includes(currentType) &&
       getArrayEnumTypeMap(currentType, currentColumn.value?.options)),
 
-    ...(currentType === "text" && {
+    ...(["text", "longtext"].includes(currentType) && {
       defaultValue: {
         excluded: true,
       },
     }),
 
-    ...(currentType === "simple-json" && {
+    ...(["simple-json", "json", "object", "array"].includes(currentType) && {
       defaultValue: {
         type: "code",
         componentProps: {
@@ -391,7 +404,7 @@ onMounted(async () => {
   const primaryColumn = createEmptyColumn();
   const { getIdFieldName, isMongoDB } = useDatabase();
   primaryColumn.name = getIdFieldName();
-  primaryColumn.type = isMongoDB.value ? "ObjectId" : "int"; 
+  primaryColumn.type = isMongoDB.value ? "objectId" : "int"; 
   primaryColumn.isPrimary = true;
   primaryColumn.isGenerated = true;
   primaryColumn.isNullable = false;

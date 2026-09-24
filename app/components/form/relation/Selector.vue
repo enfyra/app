@@ -358,7 +358,7 @@ const { isMobile, isTablet } = useScreen();
         </div>
 
         <div class="overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--surface-default)]">
-          <CommonLoadingState v-if="!isMounted || loading" type="form" context="inline" size="md" />
+          <CommonLoadingState v-if="!isMounted || loading" type="list" context="inline" size="md" />
           <CommonEmptyState
             v-else-if="loadError"
             variant="naked"

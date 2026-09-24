@@ -1,6 +1,6 @@
 {
   "name": "enfyra-app",
-  "version": "2.2.19-patch-1",
+  "version": "2.3.0",
   "description": "Dynamic admin interface for Enfyra backend - auto-generates management UI from database schemas",
   "license": "MIT",
   "author": "dothinh115 <dothinh115@gmail.com>",
@@ -32,7 +32,8 @@
     "postinstall": "nuxt prepare",
     "start": "node .output/server/index.mjs",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:transport": "vitest run --config vitest.transport.config.ts"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",

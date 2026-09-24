@@ -53,6 +53,11 @@ const fieldMap = computed(() => ({
     excluded: isGlobalGuardForm.value || isGraphqlGuardForm.value,
     description: 'Leave empty to protect every HTTP method on the selected route.',
   },
+  excludeRoutes: {
+    label: 'Exclude routes',
+    excluded: !isGlobalGuardForm.value || isGraphqlGuardForm.value,
+    description: 'Global guard only. Routes listed here are skipped instead of protected.',
+  },
   isGlobal: {
     label: 'All routes',
     description: 'Apply this guard to every REST route.',
@@ -116,10 +121,13 @@ onMounted(async () => {
 watch(
   () => createForm.value?.isGlobal,
   (isGlobal) => {
-    if (!isGlobal) return;
     createForm.value = normalizeGuardTargetPayload(createForm.value);
-    delete createErrors.value.route;
-    delete createErrors.value.methods;
+    if (isGlobal) {
+      delete createErrors.value.route;
+      delete createErrors.value.methods;
+    } else {
+      delete createErrors.value.excludeRoutes;
+    }
   },
 );
 

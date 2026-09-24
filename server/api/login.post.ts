@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from "~/utils/enfyra/server/forwardedHeaders";
 import {
   defineEventHandler,
   readBody,
@@ -8,18 +9,26 @@ import {
 import { $fetch } from "ofetch";
 import { normalizeUrl } from "~/utils/api/url";
 import { setAuthCookies } from "../utils/auth-cookies";
+import { sanitizeLoginResponse } from "../utils/auth-response";
+import { requireValidPostLoginRedirectUrl } from "../utils/oauth";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const apiUrl = config.public.apiUrl;
 
   try {
-    const body = await readBody(event);
+    const body = await readBody<Record<string, unknown>>(event);
+    const { redirect: redirectValue, ...credentials } = body;
+    const redirect = await requireValidPostLoginRedirectUrl(
+      redirectValue,
+      event,
+    );
 
     const response = await $fetch<any>(normalizeUrl(apiUrl, "/auth/login"), {
       method: "POST",
-      body,
+      body: credentials,
       headers: {
+        ...buildForwardedHeaders(event.node.req),
         cookie: getHeader(event, "cookie") || "",
       },
     });
@@ -28,7 +37,10 @@ export default defineEventHandler(async (event) => {
 
     setAuthCookies(event, { accessToken, refreshToken, expTime });
 
-    return response;
+    return {
+      ...sanitizeLoginResponse(response),
+      ...(redirect ? { redirect } : {}),
+    };
   } catch (err: any) {
     const statusCode = err?.response?.status || err?.statusCode || 401;
     const errorData = err?.response?._data || err?.data;

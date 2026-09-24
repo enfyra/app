@@ -1,5 +1,5 @@
 export const MONGO_PRIMARY_KEY_NAME = '_id';
-export const MONGO_PRIMARY_KEY_TYPE = 'ObjectId';
+export const MONGO_PRIMARY_KEY_TYPE = 'objectId';
 
 export function isMongoPrimaryKeyColumn(column: any): boolean {
   return (

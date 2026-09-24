@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from '~/utils/enfyra/server/forwardedHeaders';
 import {
   createError,
   defineEventHandler,
@@ -44,6 +45,7 @@ export function createCorsOriginProxyHandler({ method, path }: ProxyOptions) {
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      ...buildForwardedHeaders(event.node.req),
     };
     const authHeader =
       (event.context.proxyHeaders as Record<string, string> | undefined)

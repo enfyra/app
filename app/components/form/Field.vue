@@ -85,7 +85,7 @@ const isRequiredField = computed(() => {
   const field = props.columnMap.get(props.keyName);
   if (!field) return false;
   if (field?.isNullable === false && field?.isGenerated !== true && (props.mode === 'create' || field?.isHidden !== true)) {
-    if (field?.type === 'boolean') return false;
+    if (field?.type === 'boolean' || field?.type === 'bool') return false;
     if (props.keyName === 'createdAt' || props.keyName === 'updatedAt') return false;
     return true;
   }
@@ -170,7 +170,7 @@ const isBooleanField = computed(() => {
   const field = props.columnMap.get(props.keyName);
   const configType = typeof fieldConfig.value === "string" ? fieldConfig.value : fieldConfig.value?.type;
 
-  return field?.type === "boolean" || configType === "boolean";
+  return ["boolean", "bool"].includes(field?.type ?? "") || configType === "boolean";
 });
 
 const { isMobile, isTablet } = useScreen();
@@ -268,7 +268,7 @@ const nonBooleanOuterClass = computed(() => {
               column?.isNullable === false &&
               column?.isGenerated !== true &&
               (props.mode === 'create' || column?.isHidden !== true) &&
-              column?.type !== 'boolean' &&
+              !['boolean', 'bool'].includes(column?.type ?? '') &&
               keyName !== 'createdAt' &&
               keyName !== 'updatedAt'
             "

@@ -10,7 +10,7 @@ export default defineVitestConfig({
     globals: true,
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.test.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/.kilo/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.kilo/**', 'tests/transport/**'],
     server: {
       deps: {
         inline: ['@material/material-color-utilities'],

@@ -55,6 +55,43 @@ describe('guard target UI contract', () => {
     })
   })
 
+  it('clears excludeRoutes unless the guard is a global root guard', () => {
+    expect(normalizeGuardTargetPayload({
+      type: 'route',
+      isGlobal: true,
+      route: { id: 10 },
+      methods: [{ name: 'POST' }],
+      excludeRoutes: [{ id: 3 }],
+    })).toMatchObject({
+      type: 'route',
+      isGlobal: true,
+      route: null,
+      methods: [],
+      excludeRoutes: [{ id: 3 }],
+    })
+
+    expect(normalizeGuardTargetPayload({
+      type: 'route',
+      isGlobal: false,
+      route: { id: 10 },
+      excludeRoutes: [{ id: 3 }],
+    })).toMatchObject({
+      type: 'route',
+      isGlobal: false,
+      route: { id: 10 },
+      excludeRoutes: [],
+    })
+
+    expect(normalizeGuardTargetPayload({
+      type: 'graphql',
+      excludeRoutes: [{ id: 3 }],
+    })).toMatchObject({
+      type: 'graphql',
+      isGlobal: false,
+      excludeRoutes: [],
+    })
+  })
+
   it('places target selection before evaluation behavior', () => {
     expect(guardFormSections.map((section) => section.id)).toEqual([
       'details',
@@ -130,6 +167,47 @@ describe('guard target UI contract', () => {
     expect(filterDrawer).toContain(':table-name="tableName"')
     expect(filterDrawer).toContain('<FilterSavedFilters')
     expect(filterDrawer).toContain(':table-name="historyKey || tableName"')
+  })
+
+  it('hides targeting fields from sub-guard drawers', () => {
+    // A sub-guard only carries name/description/combinator/priority/isEnabled:
+    // it inherits route, position, and methods from its root, its `type` is never
+    // read for classification, and excludeRoutes is rejected on a child guard.
+    const targetingFields = [
+      'route',
+      'isGlobal',
+      'position',
+      'methods',
+      'type',
+      'gqlOperation',
+      'table',
+      'excludeRoutes',
+    ]
+
+    for (const path of [
+      'components/guard/CreateChildDrawer.vue',
+      'components/guard/EditChildDrawer.vue',
+    ]) {
+      const source = readAppFile(path)
+      const excluded = source.slice(source.indexOf(':excluded="['), source.indexOf(']"', source.indexOf(':excluded="[')))
+      for (const field of targetingFields) {
+        expect(excluded, `${path} must exclude ${field}`).toContain(`'${field}'`)
+      }
+    }
+  })
+
+  it('hides GraphQL-only and global-only fields from the route-editor guard drawer', () => {
+    // This drawer always creates a route-attached root guard (route set by the
+    // route editor, isGlobal forced false), so type/gqlOperation/table and
+    // excludeRoutes would all be rejected by GuardValidationService.
+    const source = readAppFile('components/guard/CreateForRouteDrawer.vue')
+    const excluded = source.slice(source.indexOf(':excluded="['), source.indexOf(']"', source.indexOf(':excluded="[')))
+
+    for (const field of ['type', 'gqlOperation', 'table', 'excludeRoutes', 'isGlobal', 'route']) {
+      expect(excluded, `CreateForRouteDrawer must exclude ${field}`).toContain(`'${field}'`)
+    }
+    expect(excluded).not.toContain("'position'")
+    expect(excluded).not.toContain("'methods'")
   })
 
   it('clears rule drawer dirty state when a successful save closes the drawer', () => {

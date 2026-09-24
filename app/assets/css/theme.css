@@ -267,6 +267,7 @@
     --shell-sidebar-border: var(--md-outline-variant);
     --shell-main-bg: var(--md-surface);
     --shell-main-border: var(--md-outline-variant);
+    --shell-mobile-content-bg: var(--md-background);
     --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 5%, transparent), transparent 28rem), var(--md-background);
     --nav-item-text: var(--md-on-surface-variant);
     --nav-item-hover-bg: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface));
@@ -474,6 +475,7 @@
   --surface-chrome: color-mix(in srgb, var(--md-primary) 1%, #1b1b20);
   --shell-sidebar-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
   --shell-main-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
+  --shell-mobile-content-bg: color-mix(in srgb, var(--md-primary) 0.5%, #17171b);
   --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 1.5%, transparent), transparent 28rem), color-mix(in srgb, var(--md-primary) 0.5%, #17171b);
   --flow-surface-bg: color-mix(in srgb, var(--md-primary) 1%, #19191d);
   --flow-surface-border: color-mix(in srgb, var(--md-outline) 58%, transparent);

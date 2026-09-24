@@ -275,6 +275,11 @@ const fieldMap = computed(() => ({
     excluded: isGlobalGuardForm.value || isGraphqlGuardForm.value,
     description: 'Leave empty to protect every HTTP method on the selected route.',
   },
+  excludeRoutes: {
+    label: 'Exclude routes',
+    excluded: !isGlobalGuardForm.value || isGraphqlGuardForm.value,
+    description: 'Global guard only. Routes listed here are skipped instead of protected.',
+  },
   isGlobal: {
     label: 'All routes',
     description: 'Apply this guard to every REST route.',
@@ -378,10 +383,13 @@ const errors = ref<Record<string, string>>({});
 watch(
   () => form.value?.isGlobal,
   (isGlobal) => {
-    if (!isGlobal) return;
     form.value = normalizeGuardTargetPayload(form.value);
-    delete errors.value.route;
-    delete errors.value.methods;
+    if (isGlobal) {
+      delete errors.value.route;
+      delete errors.value.methods;
+    } else {
+      delete errors.value.excludeRoutes;
+    }
   },
 );
 
@@ -412,7 +420,7 @@ const {
     fields: getIncludeFields(),
     filter: { parent: { _is_null: false } },
     sort: ['priority'],
-    limit: -1,
+    limit: 0,
   })),
   errorContext: 'Fetch Descendant Guards',
 });
@@ -425,7 +433,7 @@ const {
   query: computed(() => ({
     fields: '*,guard,users.id',
     sort: ['priority'],
-    limit: -1,
+    limit: 0,
   })),
   errorContext: 'Fetch Guard Rules',
 });

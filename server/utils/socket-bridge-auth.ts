@@ -1,3 +1,4 @@
+import { buildForwardedHeaders } from '~/utils/enfyra/server/forwardedHeaders';
 import type { IncomingMessage } from 'node:http';
 import { Encoder, PacketType } from 'socket.io-parser';
 
@@ -31,7 +32,7 @@ function buildUpstreamHeaders(
   req: IncomingMessage,
   extra: Record<string, string>,
 ): Record<string, string> {
-  const upstreamHeaders: Record<string, string> = { ...extra };
+  const upstreamHeaders: Record<string, string> = { ...extra, ...buildForwardedHeaders(req) };
   const cookie = req.headers?.cookie;
   if (typeof cookie === 'string') upstreamHeaders.cookie = cookie;
   return upstreamHeaders;
@@ -77,7 +78,7 @@ export function classifyUpstreamSocketIoPacket(
   if (packetType === PacketType.CONNECT) return 'connected';
   if (packetType !== PacketType.CONNECT_ERROR) return 'other';
 
-  const commaIndex = packet.indexOf(',');
+  const commaIndex = packet[1] === '/' ? packet.indexOf(',') : -1;
   const payload = packet.slice(commaIndex === -1 ? 1 : commaIndex + 1);
   try {
     const error = JSON.parse(payload) as {
@@ -112,5 +113,7 @@ export function sendSocketBridgeAuthError(browserSocket: {
   }) as string[];
   const encoded = packs[0];
   if (!encoded) return;
-  browserSocket.send(`4${encoded}`);
+  try {
+    browserSocket.send(encoded);
+  } catch {}
 }

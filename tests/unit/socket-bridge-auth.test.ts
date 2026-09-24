@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { Decoder, PacketType } from "socket.io-parser";
 import {
   classifyUpstreamSocketIoPacket,
   resolveSocketBridgeAuth,
@@ -15,6 +16,13 @@ function tokenWithExp(exp: number) {
 }
 
 describe("socket bridge auth", () => {
+  it("preserves the observed socket peer after untrusted forwarding headers", async () => {
+    const req = { headers: { 'x-enfyra-pat': 'efy_pat_test', 'x-forwarded-for': '1.1.1.1' }, socket: { remoteAddress: '198.51.100.20' } };
+    await expect(resolveSocketBridgeAuth(req as any)).resolves.toEqual({
+      ok: true,
+      upstreamHeaders: { 'x-enfyra-client-context': expect.any(String), 'x-enfyra-pat': 'efy_pat_test', 'x-forwarded-for': '1.1.1.1, 198.51.100.20' },
+    });
+  });
   it("forwards the native ESV PAT header without treating it as a JWT", async () => {
     const req = {
       headers: {
@@ -24,7 +32,7 @@ describe("socket bridge auth", () => {
 
     await expect(resolveSocketBridgeAuth(req as any)).resolves.toEqual({
       ok: true,
-      upstreamHeaders: { "x-enfyra-pat": "efy_pat_test" },
+      upstreamHeaders: { 'x-enfyra-client-context': expect.any(String), "x-enfyra-pat": "efy_pat_test", "x-forwarded-for": "unknown" },
     });
   });
 
@@ -38,7 +46,7 @@ describe("socket bridge auth", () => {
 
     await expect(resolveSocketBridgeAuth(req as any)).resolves.toEqual({
       ok: true,
-      upstreamHeaders: { cookie: req.headers.cookie },
+      upstreamHeaders: { 'x-enfyra-client-context': expect.any(String), cookie: req.headers.cookie, "x-forwarded-for": "unknown" },
     });
   });
 
@@ -78,6 +86,11 @@ describe("socket bridge auth", () => {
     ).toBe("auth_error");
     expect(
       classifyUpstreamSocketIoPacket(
+        '4{"message":"Connection rejected","data":{"code":"AUTH_REQUIRED"}}'
+      )
+    ).toBe("auth_error");
+    expect(
+      classifyUpstreamSocketIoPacket(
         `4/enfyra-admin,{"message":"${ENFYRA_SOCKET_AUTH_ERROR}"}`
       )
     ).toBe("auth_error");
@@ -113,12 +126,22 @@ describe("socket bridge auth", () => {
     sendSocketBridgeAuthError({ send: externalSend }, "/chat");
     sendSocketBridgeAuthError({ send: defaultSend });
 
-    expect(send).toHaveBeenCalledTimes(1);
-    expect(send.mock.calls[0]?.[0]).toContain("44/ws/chat,");
-    expect(send.mock.calls[0]?.[0]).toContain(ENFYRA_SOCKET_AUTH_ERROR);
-    expect(externalSend).toHaveBeenCalledTimes(1);
-    expect(externalSend.mock.calls[0]?.[0]).toContain("44/chat,");
-    expect(externalSend.mock.calls[0]?.[0]).not.toContain("44/ws/chat,");
-    expect(defaultSend.mock.calls[0]?.[0]).toContain("44/ws/enfyra-admin,");
+    for (const [sender, namespace] of [
+      [send, '/ws/chat'],
+      [externalSend, '/chat'],
+      [defaultSend, '/ws/enfyra-admin'],
+    ] as const) {
+      expect(sender).toHaveBeenCalledTimes(1);
+      const decoder = new Decoder();
+      const decoded = vi.fn();
+      decoder.on('decoded', decoded);
+      expect(() => decoder.add(sender.mock.calls[0]?.[0])).not.toThrow();
+      expect(decoded).toHaveBeenCalledWith({
+        type: PacketType.CONNECT_ERROR,
+        nsp: namespace,
+        data: { message: ENFYRA_SOCKET_AUTH_ERROR },
+      });
+      decoder.destroy();
+    }
   });
 });

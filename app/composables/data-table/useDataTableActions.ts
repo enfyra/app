@@ -17,7 +17,7 @@ export function useDataTableActions(
     hasPermission(`/${toValue(tableName)}`, 'DELETE')
   );
 
-  const { execute: executeDelete, error: deleteError } = useApi(
+  const { executeWithResult: executeDelete } = useApi(
     () => `/${toValue(tableName)}`,
     {
       method: "delete",
@@ -38,11 +38,8 @@ export function useDataTableActions(
     const deleteLoader = createLoader();
 
     await deleteLoader.withLoading(async () => {
-      await executeDelete({ id });
-
-      if (deleteError.value) {
-        return;
-      }
+      const outcome = await executeDelete({ id });
+      if (!outcome.ok) return;
 
       notify.success("Success", "Record deleted successfully");
       await fetchData();
@@ -77,11 +74,8 @@ export function useDataTableActions(
     await deleteLoader.withLoading(async () => {
       const ids = rows.map((row) => getId(row));
 
-      await executeDelete({ ids });
-
-      if (deleteError.value) {
-        return;
-      }
+      const outcome = await executeDelete({ ids });
+      if (!outcome.ok) return;
 
       notify.success("Success", `${rows.length} record(s) deleted successfully`);
 

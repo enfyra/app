@@ -31,7 +31,7 @@ export default defineAppConfig({
     pagination: {
       slots: {
         root: 'w-full', 
-        item: '!w-fit min-w-9',
+        item: '!w-fit min-w-8',
         list: 'w-full flex-wrap'
       }
     },

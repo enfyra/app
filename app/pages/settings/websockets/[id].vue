@@ -222,7 +222,7 @@ const gatewayId = computed(() => pageId.value || getId(gatewayData.value?.data?.
 const { data: eventsData, execute: fetchEvents } = useApi(() => "/enfyra_websocket_event", {
   query: computed(() => ({
     fields: WEBSOCKET_EVENT_LIST_FIELDS,
-    limit: -1,
+    limit: 0,
     filter: pageId.value ? {
       gateway: { _eq: pageId.value },
     } : undefined,

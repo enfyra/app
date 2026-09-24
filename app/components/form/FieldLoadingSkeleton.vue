@@ -2,17 +2,17 @@
   <div class="field-skeleton">
     
     <div
-      v-if="['text', 'richtext'].includes(type)"
+      v-if="['text', 'longtext', 'richtext'].includes(type)"
       class="h-16 animate-pulse rounded eapp-surface-muted"
     />
 
     <div
-      v-else-if="['int', 'number', 'uuid', 'varchar'].includes(type)"
+      v-else-if="['int', 'long', 'float', 'double', 'number', 'uuid', 'objectId', 'string', 'varchar'].includes(type)"
       class="h-8 animate-pulse rounded eapp-surface-muted"
     />
 
     <div
-      v-else-if="type === 'boolean'"
+      v-else-if="['boolean', 'bool'].includes(type)"
       class="w-10 h-5 animate-pulse rounded-full eapp-surface-muted"
     />
 
@@ -27,7 +27,7 @@
     />
 
     <div
-      v-else-if="['code', 'simple-json'].includes(type)"
+      v-else-if="['code', 'simple-json', 'json', 'object', 'array'].includes(type)"
       class="h-24 animate-pulse rounded eapp-surface-muted"
     />
 
