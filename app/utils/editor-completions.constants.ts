@@ -18,11 +18,18 @@ export const ENFYRA_COMPLETIONS = [
   { label: '@DISPATCH', type: 'variable', detail: 'Flow trigger service' },
   { label: '@DISPATCH.trigger', type: 'function', detail: 'Trigger another flow' },
   { label: '@REPOS', type: 'variable', detail: 'All repositories' },
-  { label: '@THROW400', type: 'function', detail: 'Throw Bad Request' },
-  { label: '@THROW401', type: 'function', detail: 'Throw Unauthorized' },
-  { label: '@THROW403', type: 'function', detail: 'Throw Forbidden' },
-  { label: '@THROW404', type: 'function', detail: 'Throw Not Found' },
-  { label: '@THROW500', type: 'function', detail: 'Throw Internal Error' },
+  { label: '@THROW.http', type: 'function', detail: '(statusCode, message?) — quick generic error' },
+  { label: '@THROW.json', type: 'function', detail: '(body, { statusCode?, headers? }) — complete custom error' },
+  { label: '@THROW400', type: 'function', detail: '(message) — quick HTTP 400 error' },
+  { label: '@THROW401', type: 'function', detail: '(message) — quick HTTP 401 error' },
+  { label: '@THROW403', type: 'function', detail: '(message) — quick HTTP 403 error' },
+  { label: '@THROW404', type: 'function', detail: '(message) — quick HTTP 404 error' },
+  { label: '@THROW409', type: 'function', detail: '(message) — quick HTTP 409 error' },
+  { label: '@THROW422', type: 'function', detail: '(message) — quick HTTP 422 error' },
+  { label: '@THROW429', type: 'function', detail: '(message) — quick HTTP 429 error' },
+  { label: '@THROW500', type: 'function', detail: '(message) — quick HTTP 500 error' },
+  { label: '@THROW503', type: 'function', detail: '(message) — quick HTTP 503 error' },
+  { label: '@RES.json', type: 'function', detail: '(body, { statusCode?, headers? }) — complete success response' },
 ];
 
 export const ENFYRA_METHOD_COMPLETIONS = [
