@@ -123,6 +123,10 @@ return { used }
   { statusCode: 502, headers: { 'x-should-retry': 'true' } },
 )
 `)
+    const invalidBodyDiagnostics = await lintEnfyraTypeScript(`
+@THROW.json(['invalid'], { statusCode: 500 })
+@THROW.json({ error: 'invalid' }, { statusCode: 500 })
+`)
     const customSuccessDiagnostics = await lintEnfyraTypeScript(`
 return await @RES.json(
   { data: { id: 'project-1' }, success: true },
@@ -132,6 +136,7 @@ return await @RES.json(
 
     expect(removedThrowDiagnostics.some((diagnostic) => diagnostic.message.includes("Property 'error' does not exist"))).toBe(true)
     expect(removedThrowDiagnostics.some((diagnostic) => diagnostic.message.includes("Property 'notFound' does not exist"))).toBe(true)
+    expect(invalidBodyDiagnostics.length).toBeGreaterThanOrEqual(2)
     expect(customErrorDiagnostics).toEqual([])
     expect(customSuccessDiagnostics).toEqual([])
   })

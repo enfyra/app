@@ -19,7 +19,7 @@ export const ENFYRA_COMPLETIONS = [
   { label: '@DISPATCH.trigger', type: 'function', detail: 'Trigger another flow' },
   { label: '@REPOS', type: 'variable', detail: 'All repositories' },
   { label: '@THROW.http', type: 'function', detail: '(statusCode, message?) — quick generic error' },
-  { label: '@THROW.json', type: 'function', detail: '(body, { statusCode?, headers? }) — complete custom error' },
+  { label: '@THROW.json', type: 'function', detail: '(body, { statusCode?, headers? }) — custom error with server trace' },
   { label: '@THROW400', type: 'function', detail: '(message) — quick HTTP 400 error' },
   { label: '@THROW401', type: 'function', detail: '(message) — quick HTTP 401 error' },
   { label: '@THROW403', type: 'function', detail: '(message) — quick HTTP 403 error' },

@@ -386,7 +386,7 @@ type EnfyraStreams = {
 type EnfyraThrow = {
   http(statusCode: number, message?: string): never;
   json(
-    body: unknown,
+    body: Record<string, unknown> & { error?: Record<string, unknown> },
     options?: {
       statusCode?: number;
       headers?: EnfyraResponseStreamOptions['headers'];
