@@ -8,8 +8,30 @@
 @import "./vue-json-pretty.css";
 @import "./highlight.css";
 @import "./vue-flow.css";
-@import "./richtext-editor.css";
 @import "prosemirror-tables/style/tables.css";
+
+.rich-text-editor .ProseMirror table {
+  margin-block: 0.75rem;
+}
+
+.rich-text-editor .ProseMirror td,
+.rich-text-editor .ProseMirror th {
+  border: 1px solid var(--border-default);
+  padding: 0.5rem 0.625rem;
+}
+
+.rich-text-editor .ProseMirror th {
+  background: var(--surface-muted);
+  font-weight: 600;
+}
+
+.rich-text-editor .ProseMirror .column-resize-handle {
+  background-color: var(--column-resize-handle);
+}
+
+.rich-text-editor .ProseMirror .selectedCell::after {
+  background: var(--theme-focus-ring);
+}
 
 button:focus-visible,
 [role="button"]:focus-visible {

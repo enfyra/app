@@ -1,22 +1,17 @@
 import { Extension, Mark, Node, type AnyExtension } from "@tiptap/core";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
-import StarterKit from "@tiptap/starter-kit";
 import { Table } from "@tiptap/extension-table";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableRow } from "@tiptap/extension-table-row";
 import TextAlign from "@tiptap/extension-text-align";
-import Underline from "@tiptap/extension-underline";
-import type { RichTextEditorConfig } from "../../../enfyra.config.types";
+import type { RichTextEditorConfig, RichTextEditorFormatConfig } from "~/types/rich-text-editor";
 
 const tableSpanAttributes = {
   colspan: {
     default: 1,
     parseHTML: (element: HTMLElement) => element.getAttribute("colspan") || 1,
-    renderHTML: (attributes: Record<string, any>) => {
+    renderHTML: (attributes: Record<string, unknown>) => {
       if (attributes.colspan === 1) return {};
       return { colspan: attributes.colspan };
     },
@@ -24,7 +19,7 @@ const tableSpanAttributes = {
   rowspan: {
     default: 1,
     parseHTML: (element: HTMLElement) => element.getAttribute("rowspan") || 1,
-    renderHTML: (attributes: Record<string, any>) => {
+    renderHTML: (attributes: Record<string, unknown>) => {
       if (attributes.rowspan === 1) return {};
       return { rowspan: attributes.rowspan };
     },
@@ -34,14 +29,14 @@ const tableSpanAttributes = {
     parseHTML: (element: HTMLElement) => {
       const style = element.getAttribute("style") || "";
       const match = style.match(/width:\s*(\d+(?:\.\d+)?)/i);
-      if (match?.[1]) return [parseInt(match[1])];
+      if (match?.[1]) return [Number.parseInt(match[1], 10)];
       const colwidth = element.getAttribute("colwidth");
-      return colwidth ? [parseInt(colwidth)] : null;
+      return colwidth ? [Number.parseInt(colwidth, 10)] : null;
     },
-    renderHTML: (attributes: Record<string, any>) => {
-      if (!attributes.colwidth || attributes.colwidth.length === 0) return {};
-      const width = attributes.colwidth[0];
-      return { style: `width: ${width}px` };
+    renderHTML: (attributes: Record<string, unknown>) => {
+      const colwidth = attributes.colwidth;
+      if (!Array.isArray(colwidth) || colwidth.length === 0) return {};
+      return { style: `width: ${colwidth[0]}px` };
     },
   },
 };
@@ -64,153 +59,110 @@ const CustomTableHeader = TableHeader.extend({
   },
 });
 
-function createCustomFormatsExtension(config: RichTextEditorConfig, theme: "light" | "dark"): Extension {
-  const formats = config.formats;
-  const marks: any[] = [];
-  const nodes: any[] = [];
+function resolveFormatClasses(
+  key: string,
+  format: RichTextEditorFormatConfig,
+  theme: "light" | "dark",
+): string {
+  if (!format.classes) return "";
+  const resolved = typeof format.classes === "function"
+    ? format.classes(theme)
+    : format.classes;
+  const classes = Array.isArray(resolved) ? resolved : [resolved];
+  return classes.filter(Boolean).join(" ");
+}
 
-  Object.keys(formats || {}).forEach((key) => {
-    const format = formats![key];
+function getFormatAttributes(
+  key: string,
+  format: RichTextEditorFormatConfig,
+  theme: "light" | "dark",
+): Record<string, { default: string }> {
+  const attributes = Object.fromEntries(
+    Object.entries(format.attributes ?? {}).map(([name, value]) => [name, { default: value }]),
+  );
+  const classes = resolveFormatClasses(key, format, theme);
+  const tag = format.tag || (format.inline ? "span" : key);
+  const className = [classes, tag === "span" || !format.tag ? key : ""]
+    .filter(Boolean)
+    .join(" ");
+
+  if (className) attributes.class = { default: className };
+  return attributes;
+}
+
+function createCustomFormatsExtension(
+  config: RichTextEditorConfig,
+  theme: "light" | "dark",
+): Extension {
+  const marks: AnyExtension[] = [];
+  const nodes: AnyExtension[] = [];
+
+  Object.entries(config.formats ?? {}).forEach(([key, format]) => {
     if (!format) return;
 
-    let classes: string[] = [];
-    if (format.classes) {
-      if (typeof format.classes === "function") {
-        const cls = format.classes(theme);
-        classes = Array.isArray(cls) ? cls : [cls];
-      } else {
-        classes = Array.isArray(format.classes) ? format.classes : [format.classes];
-      }
-    }
+    const tag = format.tag || (format.inline ? "span" : key);
+    const attributes = getFormatAttributes(key, format, theme);
 
     if (format.inline) {
-      const tag = format.tag || "span";
-      const shouldAddKeyClass = tag === "span";
-      const allClasses = shouldAddKeyClass ? [...classes, key].join(" ") : classes.join(" ");
       marks.push(Mark.create({
         name: key,
         addAttributes() {
-          const attrs: any = { ...format.attributes };
-          if (allClasses) attrs.class = { default: allClasses };
-          return attrs;
+          return attributes;
         },
         parseHTML() {
-          return [
-            {
-              tag,
-              getAttrs: (node: any) => {
-                if (tag !== "span" || (node.classList && node.classList.contains(key))) {
-                  return {};
-                }
-                return false;
-              },
+          return [{
+            tag,
+            getAttrs: (node) => {
+              if (tag !== "span" || node.classList.contains(key)) return {};
+              return false;
             },
-          ];
-        },
-        renderHTML({ HTMLAttributes }) {
-          const attrs: any = {};
-          if (allClasses) attrs.class = allClasses;
-          return [tag, { ...attrs, ...HTMLAttributes }, 0];
-        },
-      }));
-    } else if (format.wrapper) {
-      const tag = format.tag || key;
-      const shouldAddKeyClass = !format.tag;
-      const allClasses = shouldAddKeyClass ? [...classes, key].join(" ") : classes.join(" ");
-      nodes.push(Node.create({
-        name: key,
-        addAttributes() {
-          const attrs: any = { ...format.attributes };
-          if (allClasses) attrs.class = { default: allClasses };
-          return attrs;
-        },
-        content: "block*",
-        group: "block",
-        parseHTML() {
-          return [{ tag }];
+          }];
         },
         renderHTML({ HTMLAttributes }) {
           return [tag, HTMLAttributes, 0];
         },
       }));
-    } else {
-      const tag = format.tag || key;
-      const shouldAddKeyClass = !format.tag;
-      const allClasses = shouldAddKeyClass ? [...classes, key].join(" ") : classes.join(" ");
-      nodes.push(Node.create({
-        name: key,
-        addAttributes() {
-          const attrs: any = { ...format.attributes };
-          if (allClasses) attrs.class = { default: allClasses };
-          return attrs;
-        },
-        content: "inline*",
-        group: "block",
-        parseHTML() {
-          return [{ tag }];
-        },
-        renderHTML({ HTMLAttributes }) {
-          return [tag, HTMLAttributes, 0];
-        },
-      }));
+      return;
     }
+
+    nodes.push(Node.create({
+      name: key,
+      content: format.wrapper ? "block*" : "inline*",
+      group: "block",
+      addAttributes() {
+        return attributes;
+      },
+      parseHTML() {
+        return [{ tag }];
+      },
+      renderHTML({ HTMLAttributes }) {
+        return [tag, HTMLAttributes, 0];
+      },
+    }));
   });
 
   return Extension.create({
-    name: "customFormats",
+    name: "enfyraCustomFormats",
     addExtensions() {
       return [...marks, ...nodes];
     },
   });
 }
 
-export function buildRichTextExtensions(config: RichTextEditorConfig, lowlight: any, theme: "light" | "dark"): AnyExtension[] {
+export function buildRichTextExtensions(
+  config: RichTextEditorConfig,
+  lowlight: unknown,
+  theme: "light" | "dark",
+): AnyExtension[] {
   const enabledPlugins = config.plugins ? new Set(config.plugins) : null;
   const isEnabled = (plugin: string) => enabledPlugins === null || enabledPlugins.has(plugin);
   const extensions: AnyExtension[] = [
-    StarterKit.configure({
-      codeBlock: false,
-      code: false,
-      underline: false,
-      link: false,
-      heading: {
-        levels: [1, 2, 3, 4, 5, 6],
-      },
-      bulletList: isEnabled("lists") ? {
-        keepMarks: true,
-        keepAttributes: false,
-      } : false,
-      orderedList: isEnabled("lists") ? {
-        keepMarks: true,
-        keepAttributes: false,
-      } : false,
-    }) as AnyExtension,
-    Placeholder.configure({
-      placeholder: "Type something...",
-    }) as AnyExtension,
-    Underline,
     TextAlign.configure({
       types: ["heading", "paragraph"],
       alignments: ["left", "center", "right", "justify"],
       defaultAlignment: "left",
-    }) as AnyExtension,
+    }),
   ];
-
-  if (isEnabled("link")) {
-    extensions.push(Link.configure({ openOnClick: false }) as AnyExtension);
-  }
-
-  extensions.push(
-    Image.extend({
-      addAttributes() {
-        return {
-          ...this.parent?.(),
-          width: { default: null },
-          height: { default: null },
-        };
-      },
-    }) as AnyExtension,
-  );
 
   if (isEnabled("table")) {
     extensions.push(
@@ -219,10 +171,10 @@ export function buildRichTextExtensions(config: RichTextEditorConfig, lowlight: 
         handleWidth: 5,
         cellMinWidth: 50,
         lastColumnResizable: true,
-      }) as AnyExtension,
-      TableRow as AnyExtension,
-      CustomTableHeader as AnyExtension,
-      CustomTableCell as AnyExtension,
+      }),
+      TableRow,
+      CustomTableHeader,
+      CustomTableCell,
     );
   }
 
@@ -230,7 +182,7 @@ export function buildRichTextExtensions(config: RichTextEditorConfig, lowlight: 
     extensions.push(CodeBlockLowlight.configure({
       lowlight,
       defaultLanguage: "auto",
-    }) as AnyExtension);
+    }));
   }
 
   extensions.push(createCustomFormatsExtension(config, theme));

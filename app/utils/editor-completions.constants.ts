@@ -254,6 +254,7 @@ export const VUE_TEMPLATE_COMPLETIONS = [
   { label: 'UButton-primary', type: 'snippet', detail: 'Primary button', apply: 'UButton label="Save" color="primary" @click="" />' },
   { label: 'UFormField-input', type: 'snippet', detail: 'Form field with input', apply: 'UFormField label="Name">\n  <UInput v-model="" />\n</UFormField>' },
   { label: 'CommonEmptyState-basic', type: 'snippet', detail: 'Empty state', apply: 'CommonEmptyState title="No data" description="Nothing to show yet." icon="lucide:inbox" />' },
+  { label: 'RichTextEditor-basic', type: 'snippet', detail: 'Configurable Enfyra rich text editor', apply: 'RichTextEditor v-model="content" :editor-config="editorConfig" :height="360" />' },
 ];
 
 export const VUE_COMPONENT_COMPLETIONS = [
@@ -265,6 +266,7 @@ export const VUE_COMPONENT_COMPLETIONS = [
   { label: 'DataTable', type: 'class', detail: 'Data: sortable table' },
   { label: 'DataTableLazy', type: 'class', detail: 'Data: lazy-loaded table' },
   { label: 'FormEditor', type: 'class', detail: 'Form: metadata-driven editor' },
+  { label: 'RichTextEditor', type: 'class', detail: 'Enfyra: configurable rich text editor' },
   { label: 'FilterDrawer', type: 'class', detail: 'Filter builder drawer' },
   { label: 'PermissionGate', type: 'class', detail: 'Permission: conditional render' },
   { label: 'DynamicWidgetComponent', type: 'class', detail: 'Extension: embed widget by ID' },

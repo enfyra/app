@@ -1,4 +1,4 @@
-import type { RichTextEditorConfig } from "../../../enfyra.config.types";
+import type { RichTextEditorConfig } from "~/types/rich-text-editor";
 
 type ResolvedCssStyles = {
   light?: Record<string, string>;

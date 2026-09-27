@@ -1,31 +1,12 @@
-export interface RichTextEditorButtonConfig {
-  name: string;
-  text?: string;
-  tooltip?: string;
-  format?: string;
-  icon?: string;
-  onAction?: string | ((editor: any, params?: any) => void);
-  params?: any[];
-}
+import type { RichTextEditorConfig } from "./app/types/rich-text-editor";
 
-export interface RichTextEditorConfig {
-  plugins?: string[];
-  toolbar?: string;
-  customButtons?: RichTextEditorButtonConfig[];
-  buttonActions?: Record<string, (editor: any, params?: any) => void>;
-  formats?: Record<string, {
-    tag?: string;
-    inline?: string | boolean;
-    block?: string | boolean;
-    wrapper?: boolean;
-    classes?: string | string[] | ((theme: 'light' | 'dark') => string | string[]);
-    css?: Record<string, string> | { dark?: Record<string, string>; light?: Record<string, string> } | ((theme: 'light' | 'dark') => Record<string, string>);
-    classStyles?: Record<string, Record<string, string> | ((theme: 'light' | 'dark') => Record<string, string>)>;
-    attributes?: Record<string, string>;
-  }>;
-}
+export type {
+  RichTextEditorButtonConfig,
+  RichTextEditorConfig,
+  RichTextEditorController,
+  RichTextEditorFormatConfig,
+} from "./app/types/rich-text-editor";
 
 export interface EnfyraConfig {
   richText?: RichTextEditorConfig;
 }
-

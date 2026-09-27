@@ -11,10 +11,10 @@ describe('dynamic package helpers', () => {
     const code = `
       import { debounce } from "lodash-es"
       import { ref } from "vue"
-      import type { Editor } from "@tiptap/core"
+      import type { ZodType } from "zod"
       import "./local.css"
       const pkg = await import("dayjs")
-      const direct = await getPackages(["marked", "@tiptap/vue-3"])
+      const direct = await getPackages(["marked", "@vueuse/core"])
       const { zod, "bad": ignored } = await getPackages()
       const packages = await getPackages()
       packages["date-fns"].format(new Date(), "yyyy")
@@ -23,7 +23,7 @@ describe('dynamic package helpers', () => {
 
     expect(detectPackages(code)).toEqual([
       'marked',
-      '@tiptap/vue-3',
+      '@vueuse/core',
       'zod',
       'bad',
       'date-fns',
@@ -34,7 +34,7 @@ describe('dynamic package helpers', () => {
   })
 
   it('creates browser-safe global names for scoped packages', () => {
-    expect(getGlobalNameForPackage('@tiptap/vue-3')).toBe('_tiptap_vue_3')
+    expect(getGlobalNameForPackage('@vueuse/core')).toBe('_vueuse_core')
     expect(getGlobalNameForPackage('3d-force-graph')).toBe('_3d_force_graph')
   })
 

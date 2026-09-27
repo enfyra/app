@@ -11,9 +11,11 @@ import {
 import { availableComponents } from "~/composables/dynamic/registry";
 
 describe("dynamic extension runtime globals", () => {
-  it("exposes generated resource list components to extension templates", () => {
+  it("exposes shared app components to extension templates", () => {
     expect(availableComponents.CommonResourceListFrame).toBeDefined();
     expect(availableComponents.CommonResourceListItem).toBeDefined();
+    expect(availableComponents.RichTextEditor).toBeDefined();
+    expect(availableComponents).not.toHaveProperty("UEditor");
   });
 
   it("makes injected globals available to compiled template expressions", async () => {

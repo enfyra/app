@@ -18,6 +18,7 @@
       :model-value="modelValue"
       :disabled="disabled"
       :height="height"
+      :placeholder="placeholder"
       :editor-config="editorConfig"
       @update:model-value="$emit('update:modelValue', $event)"
     />
@@ -25,6 +26,8 @@
 </template>
 
 <script setup lang="ts">
+import type { RichTextEditorConfig } from "~/types/rich-text-editor";
+
 const RichTextEditor = defineAsyncComponent(
   () => import("./RichTextEditor.vue")
 );
@@ -33,7 +36,8 @@ defineProps<{
   modelValue: string | null;
   disabled?: boolean;
   height?: number;
-  editorConfig?: any;
+  placeholder?: string;
+  editorConfig?: RichTextEditorConfig;
 }>();
 
 defineEmits<{

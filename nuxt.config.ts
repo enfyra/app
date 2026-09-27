@@ -1,5 +1,6 @@
 import { resolvePublicApiUrl } from './app/utils/enfyra/runtime/api-url'
 import { getPrimaryColorPreflightScript } from './app/utils/primary-colors'
+import normalizeViteResolveAlias from './modules/normalize-vite-resolve-alias'
 
 export default defineNuxtConfig({
   srcDir: 'app',
@@ -18,6 +19,7 @@ export default defineNuxtConfig({
     "@nuxtjs/color-mode",
     "nuxt-codemirror",
     "@tailwindcss/vite",
+    normalizeViteResolveAlias,
   ],
   
   colorMode: {
@@ -100,6 +102,18 @@ export default defineNuxtConfig({
     "~/app": "./app",
   },
   vite: {
+    resolve: {
+      dedupe: [
+        '@tiptap/core',
+        '@tiptap/pm',
+        '@tiptap/starter-kit',
+        '@tiptap/vue-3',
+        'prosemirror-model',
+        'prosemirror-state',
+        'prosemirror-transform',
+        'prosemirror-view',
+      ],
+    },
     optimizeDeps: {
       exclude: [
         'console-browserify',
@@ -129,20 +143,17 @@ export default defineNuxtConfig({
         'vuedraggable',
         'vue-json-pretty',
         'lodash-es',
-        '@tiptap/vue-3',
+        '@tiptap/core',
         '@tiptap/starter-kit',
-        '@tiptap/extension-placeholder',
-        '@tiptap/extension-underline',
+        '@tiptap/vue-3',
+        '@tiptap/extension-code-block',
         '@tiptap/extension-text-align',
-        '@tiptap/extension-link',
-        '@tiptap/extension-image',
         '@tiptap/extension-table',
         '@tiptap/extension-table-row',
         '@tiptap/extension-table-cell',
         '@tiptap/extension-table-header',
         '@tiptap/extension-code-block-lowlight',
         'lowlight',
-        '@tiptap/core',
         '@vue-flow/background',
       ],
     },

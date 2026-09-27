@@ -29,7 +29,7 @@ const props = withDefaults(defineProps<{
   activeVariant: 'soft',
 });
 
-const mainBar = ref<HTMLElement | null>(null);
+const mainBar = shallowRef<HTMLElement | null>(null);
 const { isMiniVisible } = useMiniBarVisibility(mainBar);
 
 // The mini bar is the only pagination on screen once the main bar scrolls away, so
