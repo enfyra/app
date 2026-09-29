@@ -74,7 +74,7 @@ function getTriggerInfo(flow: any): string {
     .map((t: any) => {
       if (t.type === 'schedule') return `Cron: ${t.config?.cron || 'not set'}`;
       if (t.type === 'event') return `Event: ${t.tableEvent || '?'} on ${t.tableName || t.table?.name || '#' + t.table}`;
-      if (t.type === 'webhook') return `Webhook: ${t.routePath || t.route?.path || '#' + t.route}`;
+      if (t.type === 'webhook') return `Webhook: ${t.config?.method || 'All methods'} ${t.routePath || t.route?.path || '#' + t.route}`;
       return t.type;
     })
     .join(' · ') || 'Code trigger only';

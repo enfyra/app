@@ -45,19 +45,15 @@ describe('document-scrolling app shell', () => {
     expect(sidebar).toContain('documentScrollLocked.value = mobile && visible')
   })
 
-  it('temporarily expands the collapsed desktop sidebar on hover', () => {
+  it('keeps the desktop rail collapsed and opens children with the native click popover', () => {
     const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
 
     expect(sidebar).toContain('collapsible="icon"')
     expect(sidebar).toContain('v-model:open="sidebarVisible"')
-    expect(sidebar).toContain('const suppressSidebarPersist = ref(false)')
-    expect(sidebar).toContain('setSidebarVisibleTransient(true)')
-    expect(sidebar).toContain('setSidebarVisibleTransient(false)')
-    expect(sidebar).toContain('@mouseenter="handleSidebarMouseEnter"')
-    expect(sidebar).toContain('@mouseleave="handleSidebarMouseLeave"')
-    expect(sidebar).toContain('@focusout="handleSidebarFocusOut"')
-    expect(sidebar).toContain('if (sidebarPointerInside.value) return')
+    expect(sidebar).toContain('<UNavigationMenu')
+    expect(sidebar).toContain("mode: 'click'")
+    expect(sidebar).not.toContain('@mouseenter="handleSidebarMouseEnter"')
+    expect(sidebar).not.toContain('setSidebarVisibleTransient')
     expect(sidebar).toContain('if (width.value < 1024)')
-    expect(sidebar).not.toContain('sidebar-peek-overlay')
   })
 })

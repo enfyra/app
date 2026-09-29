@@ -58,6 +58,15 @@ await @TRIGGER('flow_name', { item })
     expect(diagnostics).toEqual([])
   })
 
+  it('recognizes named multipart upload fields in dynamic scripts', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const files = $ctx.$uploadFile['attachments']
+const saved = await @STORAGE.$upload({ file: Array.isArray(files) ? files[0] : files })
+return saved
+`)
+    expect(diagnostics).toEqual([])
+  })
+
   it('keeps email CSS literal after a regular expression containing quotes', () => {
     const source = [
       `const escaped = value.replace(/\\\"/g, '&quot;')`,

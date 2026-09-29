@@ -1,66 +1,29 @@
 <template>
-  <CommonResourceListFrame
+  <DataTableSettingsTable
     v-model:page="page"
-    root-class="extension-manager-page"
+    :data="extensions"
+    :columns="columns"
+    :actions="getRowActions"
     :loading="showInitialLoading"
-    :has-items="extensions.length > 0"
-    loading-title="Loading extensions..."
-    loading-description="Fetching extension registry"
-    loading-size="md"
-    empty-title="No extensions found"
-    empty-description="No extensions have been created yet"
-    empty-icon="lucide:puzzle"
-    empty-size="lg"
     :total="total"
-    :items-per-page="limit"
+    :page-limit="limit"
+    page-size-key="extensions"
     :pagination-loading="loading"
+    @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-  >
-        <CommonResourceListItem
-          v-for="extension in extensions"
-          :key="extension.id"
-          :title="extension.name"
-          :description="extension.description"
-          :icon="getExtensionIcon(extension)"
-          :icon-color="pageIconColor"
-          :loading="extensionsRefreshing"
-          :to="`/settings/extensions/${getId(extension)}`"
-          :stats="[
-            {
-              label: 'Type',
-              component: 'UBadge',
-              props: { variant: 'soft', color: 'primary' },
-              value: getExtensionTypeLabel(extension.type),
-            },
-            ...(extension.menu?.path
-              ? [
-                  {
-                    label: 'Route',
-                    value: extension.menu.path,
-                  },
-                ]
-              : []),
-            {
-              label: 'Status',
-              component: 'UBadge',
-              props: {
-                variant: 'soft',
-                color: extension.isEnabled ? 'success' : 'neutral',
-              },
-              value: extension.isEnabled ? 'Active' : 'Inactive',
-            },
-          ]"
-          :header-actions="getHeaderActions(extension)"
-          :methods="getFooterActions(extension)"
-        />
-  </CommonResourceListFrame>
+    @row-click="extension => navigateTo(`/settings/extensions/${getId(extension)}`)"
+  />
 </template>
 
 <script setup lang="ts">
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const page = ref(1);
-const limit = 10;
+const limit = useSettingsPageSize('extensions');
 
 const notify = useNotify();
 const { confirm } = useConfirm();
@@ -77,8 +40,6 @@ registerPageHeader({
   title: "Extension Manager",
   gradient: "purple",
 });
-
-const pageIconColor = 'primary';
 
 const {
   data: apiData,
@@ -99,7 +60,6 @@ const { fetchMenuDefinitions } = useMenuApi();
 const {
   items: extensions,
   showInitialLoading,
-  isRefreshing: extensionsRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
@@ -132,19 +92,6 @@ registerHeaderActions([
   },
 ]);
 
-function getExtensionIcon(extension: ExtensionDefinition) {
-  switch (extension.type) {
-    case "page":
-      return "i-lucide-file-text";
-    case "widget":
-      return "i-lucide-layout-dashboard";
-    case "global":
-      return "i-lucide-orbit";
-    default:
-      return "i-lucide-puzzle";
-  }
-}
-
 function getExtensionTypeLabel(type: string) {
   switch (type) {
     case "page":
@@ -158,42 +105,25 @@ function getExtensionTypeLabel(type: string) {
   }
 }
 
-function getHeaderActions(extension: ExtensionDefinition) {
-  const actions = [];
+const columns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('name', 'Extension'),
+  settingsTextColumn('description', 'Description'),
+  { accessorKey: 'type', header: 'Type', enableSorting: false, cell: ({ getValue }) => getExtensionTypeLabel(String(getValue())) },
+  { id: 'route', header: 'Route', enableSorting: false, cell: ({ row }) => row.original.menu?.path || '_' },
+  settingsStatusColumn(),
+];
 
-  if (checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['PATCH'] }] })) {
-    actions.push({
-      component: 'USwitch',
-      props: {
-        'model-value': extension.isEnabled,
-        loading: getExtensionLoader(String(getId(extension) ?? '')).isLoading
-      },
-      onClick: (e?: Event) => e?.stopPropagation(),
-      onUpdate: () => toggleExtensionStatus(extension)
-    });
-  }
-
-  return actions;
-}
-
-function getFooterActions(extension: ExtensionDefinition) {
-  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['DELETE'] }] });
-
+function getRowActions(extension: Record<string, any>): DataTableRowAction[] {
   return [
-    {
-      label: 'Delete',
-      props: {
-        icon: 'i-lucide-trash-2',
-        variant: 'solid',
-        color: 'error',
-        size: 'sm',
-      },
-      disabled: !hasDeletePermission || extension.isSystem,
-      onClick: (e?: Event) => {
-        e?.stopPropagation();
-        deleteExtension(extension);
-      },
-    }
+    ...(checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['PATCH'] }] }) ? [{
+      label: extension.isEnabled ? 'Disable' : 'Enable', icon: extension.isEnabled ? 'lucide:power-off' : 'lucide:power',
+      disabled: getExtensionLoader(String(getId(extension) ?? '')).isLoading.value,
+      onSelect: () => toggleExtensionStatus(extension as ExtensionDefinition),
+    }] : []),
+    ...(checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['DELETE'] }] }) && !extension.isSystem ? [{
+      label: 'Delete', icon: 'lucide:trash-2', color: 'error',
+      onSelect: () => deleteExtension(extension as ExtensionDefinition),
+    }] : []),
   ];
 }
 
@@ -280,12 +210,11 @@ const deleteExtension = async (extension: ExtensionDefinition) => {
   }
 };
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchExtensions();
-  },
-  { immediate: true }
-);
+async function setPageSize(size: number) {
+  if (page.value !== 1) await navigateTo({ path: route.path, query: { ...route.query, page: undefined } }, { replace: true });
+  limit.value = size;
+}
+
+watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
+watch([page, limit], () => { void fetchExtensions(); }, { immediate: true });
 </script>

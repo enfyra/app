@@ -64,7 +64,7 @@
         <div class="space-y-4">
           <template v-if="editorForm.type === 'schedule'">
             <UFormField label="Cron expression">
-              <UInput v-model="editorForm.cron" placeholder="0 2 * * *" class="w-full" />
+              <UInput v-model="editorForm.cron" placeholder="0 2 * * *" size="sm" :ui="{ base: '!h-9 !px-2.5 !py-1.5 !text-xs' }" class="w-full" />
               <template #hint>
                 <span class="text-xs text-[var(--text-tertiary)]">Five fields: minute hour day month weekday</span>
               </template>
@@ -87,6 +87,8 @@
                 :items="timezoneItems"
                 v-model:search-term="tzSearchTerm"
                 placeholder="Search timezone..."
+                size="sm"
+                :ui="{ base: '!min-h-9 !px-2.5 !py-1.5 !text-xs' }"
                 class="w-full"
                 by="value"
                 :filter="true"
@@ -109,6 +111,8 @@
               <USelect
                 v-model="editorForm.tableEvent"
                 :items="tableEventOptions"
+                size="sm"
+                :ui="{ base: '!h-9 !px-2.5 !py-1.5 !pr-8 !text-xs' }"
                 class="w-full"
               />
               <template #hint>
@@ -125,6 +129,8 @@
                 v-model:search-term="routeSearchTerm"
                 v-model:open="routeMenuOpen"
                 placeholder="Search route..."
+                size="sm"
+                :ui="{ base: '!min-h-9 !px-2.5 !py-1.5 !text-xs' }"
                 class="w-full"
                 by="value"
                 :loading="routesLoading"
@@ -145,13 +151,16 @@
                 <span class="text-xs text-[var(--text-tertiary)]">Flow runs after this route's handler completes successfully</span>
               </template>
             </UFormField>
+            <UFormField label="HTTP method">
+              <USelect v-model="editorForm.routeMethod" :items="routeMethodOptions" :disabled="!editorForm.routeId" placeholder="Select HTTP method" size="sm" :ui="{ base: '!h-9 !px-2.5 !py-1.5 !pr-8 !text-xs' }" class="w-full" />
+            </UFormField>
           </template>
         </div>
       </template>
       <template #footer>
         <div class="flex justify-end gap-2">
-          <UButton label="Cancel" variant="ghost" @click="editorOpen = false" />
-          <UButton label="Save" variant="solid" color="primary" :loading="saving" @click="saveTrigger" />
+          <UButton label="Cancel" variant="ghost" size="sm" @click="editorOpen = false" />
+          <UButton label="Save" variant="solid" color="primary" size="sm" :loading="saving" @click="saveTrigger" />
         </div>
       </template>
     </UModal>
@@ -227,6 +236,7 @@ const editorForm = ref({
   tableId: '',
   tableEvent: 'create' as TableEventType,
   routeId: '',
+  routeMethod: '',
 });
 
 const editorTitle = computed(() => {
@@ -241,7 +251,7 @@ function triggerIcon(type: string): string {
 function triggerSummary(t: FlowTrigger): string {
   if (t.type === 'schedule') return t.config?.cron || 'cron';
   if (t.type === 'event') return `${t.tableName || '?'} → ${t.tableEvent || '*'}`;
-  if (t.type === 'webhook') return t.routePath || '?';
+  if (t.type === 'webhook') return `${t.config?.method || 'All methods'} ${t.routePath || (typeof t.route === 'object' ? t.route?.path : null) || '?'}`;
   return '';
 }
 
@@ -254,7 +264,9 @@ function startAdd(type: TriggerType) {
     tableId: '',
     tableEvent: 'create',
     routeId: '',
+    routeMethod: '',
   };
+  selectedRoute.value = null;
   if (type === 'webhook') void loadRoutes();
   editorOpen.value = true;
 }
@@ -262,11 +274,17 @@ function startAdd(type: TriggerType) {
 const routeSearchTerm = ref('');
 const routeMenuOpen = ref(false);
 const routes = ref<any[]>([]);
+const selectedRoute = ref<any>(null);
 let routeDebounce: ReturnType<typeof setTimeout> | null = null;
 
 const { execute: fetchRoutes, pending: routesLoading } = useApi(
   () => {
-    const params = new URLSearchParams({ fields: 'id,path', limit: '20', sort: 'path' });
+    const params = new URLSearchParams({
+      fields: 'id,path,methodConfigs.available,methodConfigs.method.name',
+      limit: '20',
+      sort: 'path',
+      deep: JSON.stringify({ methodConfigs: { limit: 0 } }),
+    });
     if (routeSearchTerm.value) {
       params.set('filter', JSON.stringify({ path: { _contains: routeSearchTerm.value } }));
     }
@@ -283,10 +301,16 @@ async function loadRoutes() {
 const routeItems = computed(() =>
   routes.value.map((r: any) => ({ label: r.path, value: String(r.id) }))
 );
+const routeMethodOptions = computed<{ label: string; value: string }[]>(() => {
+  const route = selectedRoute.value;
+  return (route?.methodConfigs ?? [])
+    .filter((config: any) => config.available === true && config.method?.name)
+    .map((config: any) => ({ label: config.method.name, value: config.method.name }));
+});
 
 const selectedRouteItem = computed(() => {
   if (!editorForm.value.routeId) return undefined;
-  const match = routes.value.find((r: any) => String(r.id) === editorForm.value.routeId);
+  const match = selectedRoute.value;
   return match ? { label: match.path, value: String(match.id) } : undefined;
 });
 
@@ -300,7 +324,11 @@ watch(routeMenuOpen, (open) => {
 });
 
 function onRouteSelect(item: any) {
-  if (item?.value) editorForm.value.routeId = item.value;
+  if (item?.value) {
+    editorForm.value.routeId = item.value;
+    editorForm.value.routeMethod = '';
+    selectedRoute.value = routes.value.find((route: any) => String(route.id) === item.value) ?? null;
+  }
 }
 
 async function saveTrigger() {
@@ -309,13 +337,14 @@ async function saveTrigger() {
   try {
     if (form.type === 'webhook') {
       if (!form.routeId) { notify.error('Error', 'Please select a route'); saving.value = false; return; }
+      if (!routeMethodOptions.value.some(option => option.value === form.routeMethod)) { notify.error('Error', 'Please select an available HTTP method'); return; }
       const { execute: createTrigger, error: triggerError } = useApi(() => '/enfyra_flow_trigger', { method: 'post', errorContext: 'Create Trigger' });
       await createTrigger({
         body: {
           flow: { [getIdFieldName()]: props.flowId },
           type: 'webhook',
           isEnabled: true,
-          config: {},
+          config: { method: form.routeMethod },
           route: { [getIdFieldName()]: form.routeId },
         },
       });

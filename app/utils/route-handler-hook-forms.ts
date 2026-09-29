@@ -1,4 +1,4 @@
-const ROUTE_HANDLER_BASE_EXCLUDED_FIELDS = ['createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'route'];
+const ROUTE_HANDLER_BASE_EXCLUDED_FIELDS = ['createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'route', 'routeMethodConfig', 'timeout'];
 const ROUTE_HOOK_BASE_EXCLUDED_FIELDS = ['createdAt', 'updatedAt', 'route', 'isSystem'];
 
 type RouteScriptValidateResult = {

@@ -15,10 +15,11 @@ function readRepoFile(path: string) {
 }
 
 describe('loading state layout', () => {
-  it('does not render mobile table content alongside the initial skeleton', () => {
+  it('does not render table rows alongside the initial loading skeleton', () => {
     const dataTable = readAppFile('components/data-table/DataTable.vue')
 
-    expect(dataTable).toContain('v-if="!showInitialLoading && tableRows.length > 0"')
+    expect(dataTable).toContain(':data="showInitialLoading ? [] : props.data"')
+    expect(dataTable).toContain('v-if="!slots.loading" #loading')
   })
 
   it('uses out-in transitions for loading/content swaps where content must not overlap', () => {
@@ -30,9 +31,6 @@ describe('loading state layout', () => {
       'components/file/FileView.vue',
       'components/folder/FolderView.vue',
       'components/graphql/AccessEditor.vue',
-      'pages/settings/routes/index.vue',
-      'pages/settings/api-tester/index.vue',
-      'pages/settings/methods/index.vue',
     ]
 
     for (const path of loadingTransitions) {
@@ -40,6 +38,10 @@ describe('loading state layout', () => {
     }
 
     expect(readAppFile('components/dynamic/PageComponent.vue')).toContain('<Transition name="fade" mode="out-in">')
+    for (const path of ['pages/settings/routes/index.vue', 'pages/settings/api-tester/index.vue', 'pages/settings/methods/index.vue']) {
+      expect(readAppFile(path)).toContain('<DataTableSettingsTable')
+      expect(readAppFile(path)).toMatch(/:loading="(?:showInitialLoading|showInitialLoading \|\| routeLoading)"/)
+    }
   })
 
   it('keeps existing list content visible while a refresh is pending', () => {

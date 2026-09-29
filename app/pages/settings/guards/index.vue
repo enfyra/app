@@ -7,10 +7,13 @@ import {
   getGuardTemplatesForScope,
 } from '~/utils/guard-templates';
 import type { GuardScope } from '~/types/guard-template';
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
 
 const notify = useNotify();
 const page = ref(1);
-const pageLimit = 12;
+const pageLimit = useSettingsPageSize('guards');
 const route = useRoute();
 const router = useRouter();
 const tableName = 'enfyra_guard';
@@ -238,14 +241,13 @@ async function clearFilters() {
   await handleFilterApply(createEmptyFilter());
 }
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchGuards();
-  },
-  { immediate: true },
-);
+async function setPageSize(size: number) {
+  if (page.value !== 1) await router.replace({ query: { ...route.query, page: undefined } });
+  pageLimit.value = size;
+}
+
+watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
+watch([page, pageLimit], () => { void fetchGuards(); }, { immediate: true });
 
 async function handleTypeChange(value: string | number) {
   const nextType = value === 'graphql' ? 'graphql' : 'route';
@@ -450,45 +452,28 @@ async function createGuardFromTemplate() {
   await navigateTo(`/settings/guards/${createdGuardId}`);
 }
 
-const positionColorMap: Record<string, string> = {
-  pre_auth: 'warning',
-  post_auth: 'info',
-};
+const columns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('name', 'Guard'),
+  { id: 'target', header: 'Target', enableSorting: false,
+    cell: ({ row }) => row.original.type === 'graphql'
+      ? `${row.original.table?.alias || row.original.table?.name || 'All tables'} · ${row.original.gqlOperation || 'All operations'}`
+      : row.original.description || (row.original.isGlobal ? 'Global guard' : row.original.route?.path || '_'),
+  },
+  { accessorKey: 'position', header: 'Position', enableSorting: false,
+    cell: ({ getValue }) => getValue() === 'pre_auth' ? 'Pre-Auth' : getValue() === 'post_auth' ? 'Post-Auth' : '_',
+  },
+  { id: 'scope', header: 'Scope', enableSorting: false,
+    cell: ({ row }) => row.original.type === 'graphql' ? row.original.gqlOperation || 'All' : row.original.isGlobal ? 'Global' : 'Route-specific',
+  },
+  { accessorKey: 'combinator', header: 'Combinator', enableSorting: false, cell: ({ getValue }) => String(getValue() || 'and').toUpperCase() },
+  settingsStatusColumn(),
+];
 
-const combinatorColorMap: Record<string, string> = {
-  and: 'primary',
-  or: 'secondary',
-};
-
-function getGuardHeaderActions(guard: any) {
+function getRowActions(guard: Record<string, any>): DataTableRowAction[] {
   return [
-    {
-      component: 'USwitch',
-      props: {
-        'model-value': guard.isEnabled,
-        loading: togglingGuardId.value === getId(guard),
-      },
-      onClick: (e?: Event) => e?.stopPropagation(),
-      onUpdate: () => toggleEnabled(guard),
-    },
-  ];
-}
-
-function getGuardFooterActions(guard: any) {
-  return [
-    {
-      label: 'Delete',
-      props: {
-        icon: 'i-lucide-trash-2',
-        variant: 'solid',
-        color: 'error',
-        size: 'sm',
-      },
-      onClick: (e?: Event) => {
-        e?.stopPropagation();
-        deleteGuard(guard);
-      },
-    },
+    { label: guard.isEnabled ? 'Disable' : 'Enable', icon: guard.isEnabled ? 'lucide:power-off' : 'lucide:power',
+      disabled: togglingGuardId.value === getId(guard), onSelect: () => toggleEnabled(guard) },
+    { label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteGuard(guard) },
   ];
 }
 
@@ -590,99 +575,19 @@ async function deleteGuard(guard: any) {
           :key="listStateKey"
           class="col-start-1 row-start-1 min-w-0"
         >
-          <CommonResourceListFrame
-            v-if="isPageLoading"
-            :loading="true"
-            :has-items="false"
-            :skeleton-rows="4"
-            loading-title="Loading guards..."
-            :loading-description="activeType === 'graphql'
-              ? 'Fetching GraphQL guard configuration'
-              : 'Fetching route guard configuration'"
-          />
-
-          <div v-else-if="guardsData.length" class="space-y-6">
-            <div class="eapp-resource-list">
-              <CommonResourceListItem
-                v-for="guard in guardsData"
-                :key="getId(guard)"
-                :title="guard.name"
-                :description="guard.type === 'graphql'
-                  ? `${guard.table?.alias || guard.table?.name || 'All tables'} · ${guard.gqlOperation || 'All operations'}`
-                  : (guard.description || (guard.isGlobal ? 'Global guard' : guard.route?.path || 'No route assigned'))"
-                icon="lucide:shield"
-                icon-color="primary"
-                :to="`/settings/guards/${getId(guard)}`"
-                :stats="[
-                  {
-                    label: 'Status',
-                    component: 'UBadge',
-                    props: {
-                      variant: 'soft',
-                      color: guard.isEnabled ? 'success' : 'warning',
-                    },
-                    value: guard.isEnabled ? 'Enabled' : 'Disabled',
-                  },
-                  {
-                    label: 'Position',
-                    component: guard.position ? 'UBadge' : undefined,
-                    props: guard.position ? {
-                      variant: 'soft',
-                      color: positionColorMap[guard.position] || 'neutral',
-                    } : undefined,
-                    value: guard.position === 'pre_auth' ? 'Pre-Auth' : guard.position === 'post_auth' ? 'Post-Auth' : '-',
-                  },
-                  ...(guard.type === 'graphql'
-                    ? [{
-                        label: 'Operation',
-                        component: 'UBadge',
-                        props: {
-                          variant: 'soft',
-                          color: 'warning',
-                        },
-                        value: guard.gqlOperation || 'All',
-                      }]
-                    : [{
-                        label: 'Scope',
-                        component: 'UBadge',
-                        props: {
-                          variant: 'soft',
-                          color: guard.isGlobal ? 'error' : 'neutral',
-                        },
-                        value: guard.isGlobal ? 'Global' : 'Route-specific',
-                      }]),
-                  {
-                    label: 'Combinator',
-                    component: 'UBadge',
-                    props: {
-                      variant: 'soft',
-                      color: combinatorColorMap[guard.combinator] || 'neutral',
-                    },
-                    value: (guard.combinator || 'and').toUpperCase(),
-                  },
-                ]"
-                :methods="getGuardFooterActions(guard)"
-                :header-actions="getGuardHeaderActions(guard)"
-              />
-            </div>
-
-            <CommonPaginationBar
-              v-if="total > pageLimit"
-              v-model:page="page"
-              :items-per-page="pageLimit"
-              :total="total"
-              :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-            />
-          </div>
-
-          <CommonEmptyState
-            v-else
-            :title="activeType === 'graphql' ? 'No GraphQL guards found' : 'No route guards found'"
-            :description="activeType === 'graphql'
-              ? 'Create a GraphQL guard to limit queries or mutations by table and operation.'
-              : 'Create a route guard to add rate limiting or IP filtering to REST endpoints.'"
-            :icon="activeType === 'graphql' ? 'lucide:braces' : 'lucide:shield'"
-            size="sm"
+          <DataTableSettingsTable
+            v-model:page="page"
+            :data="isPageLoading ? [] : guardsData"
+            :columns="columns"
+            :actions="getRowActions"
+            :loading="isPageLoading"
+            :total="total"
+            :page-limit="pageLimit"
+            page-size-key="guards"
+            :pagination-loading="loading"
+            :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+            @page-size-change="setPageSize"
+            @row-click="guard => navigateTo(`/settings/guards/${getId(guard)}`)"
           />
         </div>
       </Transition>

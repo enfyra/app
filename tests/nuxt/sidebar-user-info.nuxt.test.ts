@@ -8,6 +8,23 @@ vi.mock('~/composables/shared/useConfirm', () => ({
   useConfirm: () => ({ confirm: vi.fn().mockResolvedValue(false) }),
 }))
 
+describe('collapsed sidebar navigation', () => {
+  it('uses Nuxt UI navigation with click popovers instead of hover expansion', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { resolve } = await import('node:path')
+    const source = readFileSync(resolve(process.cwd(), 'app/components/sidebar/UnifiedSidebar.vue'), 'utf8')
+    expect(source).toContain('<UNavigationMenu')
+    expect(source).toContain("mode: 'click'")
+    expect(source).toContain('highlight\n')
+    expect(source).not.toContain("ms-5 border-s border-[var(--nav-child-border)]")
+    expect(source).toMatch(/const isDataItem[\s\S]*?active: isRouteExactActive\('\/data'\)/)
+    expect(source).toMatch(/const isDataGroup[\s\S]*?active: isRouteExactActive\('\/data'\)/)
+    expect(source).toContain('branchActive: children.some((child: any) => child.active || child.branchActive)')
+    expect(source).not.toContain('showSidebarPeek')
+    expect(source).not.toContain('SidebarMenuTree')
+  })
+})
+
 describe('SidebarUserInfo', () => {
   it('expands account actions inline instead of rendering a dropdown menu', async () => {
     const { me } = useAuth()

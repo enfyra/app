@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import { useScrollLock } from '@vueuse/core';
+import type { NavigationMenuItem } from '@nuxt/ui';
+import { selectSidebarCollections } from '~/utils/sidebar-collection-items';
 
 const route = useRoute();
 const router = useRouter();
 const { menuGroups } = useMenuRegistry();
 const { menuDefinitionsPending } = useMenuApi();
 const { routesLoading, routesFetched } = useRoutes();
+const { sidebarCollections } = useDataCollectionPreferences();
 const { hasMenuPermission } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const { getFileUrl } = useFileUrl();
-const suppressSidebarPersist = ref(false);
 const showMenuSkeleton = ref(false);
+const { getMenuNotification } = useMenuNotificationRegistry();
+const { schedulePrefetchIntent, cancelPrefetchIntent } = useExtensionPrefetch();
+const openMenuKeys = useState<Record<string, boolean>>('sidebar-menu-open-keys', () => ({}));
 let menuSkeletonTimer: ReturnType<typeof setTimeout> | null = null;
 
 if (import.meta.client) {
@@ -22,10 +27,21 @@ if (import.meta.client) {
 }
 
 watch(sidebarVisible, (val) => {
-  if (!suppressSidebarPersist.value && import.meta.client && width.value >= 1024) {
+  if (import.meta.client && width.value >= 1024) {
     localStorage.setItem('sidebar-open', String(val));
   }
 });
+
+onMounted(() => {
+  try {
+    const saved = localStorage.getItem('sidebar-menu-open-keys');
+    if (saved) openMenuKeys.value = JSON.parse(saved);
+  } catch {}
+});
+
+watch(openMenuKeys, (value) => {
+  if (import.meta.client) localStorage.setItem('sidebar-menu-open-keys', JSON.stringify(value));
+}, { deep: true });
 
 watch(menuDefinitionsPending, (pending) => {
   if (menuSkeletonTimer) {
@@ -90,14 +106,17 @@ function convertItem(item: any): any {
   const isDataItem = item.id === "data" || itemRoute === "/data" || item.label === "Data";
 
   if (isDataItem) {
+    const children = item.items?.map(convertItem) ?? [];
     return {
       id: item.id,
       label: item.label,
       icon: item.icon || 'lucide:database',
       to: '/data',
-      active: isRouteActive('/data'),
+      active: isRouteExactActive('/data'),
       count: item.count || item.badge,
       loading: routesLoading.value && !routesFetched.value,
+      children,
+      branchActive: children.some((child: any) => child.active || child.branchActive),
     };
   }
 
@@ -132,14 +151,17 @@ const navigationItems = computed(() => {
     const isDataGroup = group.id === "data" || groupRoute === "/data" || group.label === "Data";
 
     if (isDataGroup) {
+      const children = group.items?.map(convertItem) ?? [];
       groups.push([{
         id: group.id,
         label: group.label,
         icon: group.icon || 'lucide:database',
         to: '/data',
-        active: isRouteActive('/data'),
+        active: isRouteExactActive('/data'),
         count: group.count || group.badge,
         loading: routesLoading.value && !routesFetched.value,
+        children,
+        branchActive: children.some((child: any) => child.active || child.branchActive),
       }]);
       continue;
     }
@@ -166,15 +188,70 @@ const navigationItems = computed(() => {
   return groups;
 });
 
-function collectTopLevelRailItems(items: any[]): any[] {
-  return items.map((item) => ({
-    ...item,
-    children: undefined,
-    collapsible: false,
-  }));
+function menuBadge(item: any) {
+  const notification = getMenuNotification(item);
+  const value = item.count ?? notification?.value;
+  if (value != null) return { label: String(value), color: notification?.color ?? 'primary', variant: 'soft' as const };
+  return notification ? { label: '•', color: notification.color, variant: 'soft' as const } : undefined;
 }
 
-const collapsedRailItems = computed(() => collectTopLevelRailItems(navigationItems.value.flat()));
+function dataMenuItems(items: any[]): NavigationMenuItem[] {
+  return [
+    ...selectSidebarCollections(items, sidebarCollections.value.maxVisible, sidebarCollections.value.pinned).map(toNavigationItem),
+    { label: `Browse all ${items.length}`, icon: 'lucide:layout-grid', to: '/data' },
+  ];
+}
+
+function toNavigationItem(item: any): NavigationMenuItem {
+  const isDataParent = item.id === 'data' || item.to === '/data';
+  const children = isDataParent && item.children?.length ? dataMenuItems(item.children) : item.children?.map(toNavigationItem);
+  const key = String(item.to || item.label);
+  const hasChildren = Boolean(children?.length);
+  return {
+    label: item.label,
+    icon: item.icon,
+    value: key,
+    ...(item.to && !hasChildren ? { to: item.to } : {}),
+    ...(hasChildren ? { children, type: 'trigger' as const, defaultOpen: Boolean(item.active || item.branchActive) } : {}),
+    active: item.active,
+    badge: menuBadge(item),
+    ...(isDataParent && item.loading && !hasChildren ? { disabled: true } : {}),
+  };
+}
+
+function prefetchMenuIntent(event: Event) {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const link = target.closest('a[data-slot="link"], a[data-slot="childLink"]');
+  if (link instanceof HTMLAnchorElement) schedulePrefetchIntent(link.getAttribute('href') || undefined);
+}
+
+function groupOpenValues(group: NavigationMenuItem[]): string[] {
+  return group.filter(item => item.children?.length && (openMenuKeys.value[String(item.value)] ?? item.defaultOpen))
+    .map(item => String(item.value));
+}
+
+function updateGroupOpenValues(group: NavigationMenuItem[], values: string | string[] | undefined) {
+  const opened = new Set(Array.isArray(values) ? values : values ? [values] : []);
+  openMenuKeys.value = {
+    ...openMenuKeys.value,
+    ...Object.fromEntries(group.filter(item => item.children?.length).map(item => [String(item.value), opened.has(String(item.value))])),
+  };
+}
+
+const nativeNavigationItems = computed<NavigationMenuItem[][]>(() => navigationItems.value.map(group => group.map(toNavigationItem)));
+const navigationMenuUi = computed(() => ({
+  root: 'w-full',
+  list: 'gap-1',
+  link: !sidebarVisible.value
+    ? 'mx-auto !size-9 justify-center !rounded-[var(--radius-control)] !p-0 !text-xs'
+    : 'min-h-9 rounded-[var(--radius-control)] px-2.5 py-1.5 !text-[13px]',
+  linkLeadingIcon: 'size-5 shrink-0',
+  linkLabel: !sidebarVisible.value ? 'sr-only' : 'truncate',
+  content: !sidebarVisible.value ? 'w-56 rounded-[var(--radius-panel)] border border-[var(--card-border)] bg-[var(--card-bg)] p-2 shadow-[var(--shadow-md)]' : undefined,
+  childList: !sidebarVisible.value ? 'w-full space-y-1' : undefined,
+  childLink: 'min-h-8 items-center rounded-[var(--radius-subcontrol)] px-2.5 py-1.5 !text-xs',
+}));
 
 const componentGroups = computed(() => {
   return visibleGroups.value.filter(g => g.position !== 'bottom' && g.component);
@@ -191,67 +268,8 @@ watch([isMobile, sidebarVisible], ([mobile, visible]) => {
   documentScrollLocked.value = mobile && visible;
 }, { immediate: true });
 
-const isDesktopCollapsed = computed(() => !isMobile.value && !sidebarVisible.value);
-const hoverOpenedSidebar = ref(false);
-const sidebarPointerInside = ref(false);
-let peekLeaveTimer: ReturnType<typeof setTimeout> | null = null;
-
-function setSidebarVisibleTransient(value: boolean) {
-  suppressSidebarPersist.value = true;
-  sidebarVisible.value = value;
-  nextTick(() => {
-    suppressSidebarPersist.value = false;
-  });
-}
-
-function showSidebarPeek() {
-  if (peekLeaveTimer) {
-    clearTimeout(peekLeaveTimer);
-    peekLeaveTimer = null;
-  }
-  if (!isDesktopCollapsed.value) return;
-  hoverOpenedSidebar.value = true;
-  setSidebarVisibleTransient(true);
-}
-
-function hideSidebarPeek() {
-  if (!hoverOpenedSidebar.value) return;
-  if (peekLeaveTimer) {
-    clearTimeout(peekLeaveTimer);
-  }
-  peekLeaveTimer = setTimeout(() => {
-    hoverOpenedSidebar.value = false;
-    setSidebarVisibleTransient(false);
-    peekLeaveTimer = null;
-  }, 120);
-}
-
-function handleSidebarMouseEnter() {
-  sidebarPointerInside.value = true;
-  showSidebarPeek();
-}
-
-function handleSidebarMouseLeave() {
-  sidebarPointerInside.value = false;
-  hideSidebarPeek();
-}
-
-function handleSidebarFocusOut(event: FocusEvent) {
-  if (sidebarPointerInside.value) return;
-  const nextTarget = event.relatedTarget;
-  const currentTarget = event.currentTarget;
-  if (nextTarget instanceof Node && currentTarget instanceof HTMLElement && currentTarget.contains(nextTarget)) return;
-  hideSidebarPeek();
-}
-
-const renderExpandedSidebarContent = computed(() => {
-  if (!sidebarVisible.value) return false;
-  return true;
-});
-
-const showExpandedSidebarLabels = computed(() => {
-  return sidebarVisible.value;
-});
+const renderExpandedSidebarContent = computed(() => sidebarVisible.value);
+const showExpandedSidebarLabels = computed(() => sidebarVisible.value);
 
 router.afterEach(() => {
   if (width.value < 1024) {
@@ -263,21 +281,17 @@ onUnmounted(() => {
   if (menuSkeletonTimer) {
     clearTimeout(menuSkeletonTimer);
   }
-  if (peekLeaveTimer) {
-    clearTimeout(peekLeaveTimer);
-    peekLeaveTimer = null;
-  }
 });
 </script>
 
 <template>
-  <div class="relative sticky top-0 h-svh self-start" @mouseenter="handleSidebarMouseEnter" @mouseleave="handleSidebarMouseLeave" @focusin="showSidebarPeek" @focusout="handleSidebarFocusOut">
+  <div class="relative sticky top-0 h-svh self-start">
     <USidebar
       v-model:open="sidebarVisible"
       variant="sidebar"
       collapsible="icon"
       class="eapp-sidebar"
-      :style="{ '--sidebar-width': '280px' }"
+      :style="{ '--sidebar-width': '256px' }"
       :ui="{
         gap: '!duration-[120ms]',
         container: 'h-full !z-[99999] !duration-[140ms]',
@@ -309,7 +323,7 @@ onUnmounted(() => {
           <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
         </div>
 
-        <nav class="app-sidebar-nav" aria-label="Main navigation">
+        <nav class="app-sidebar-nav" aria-label="Main navigation" @pointerover="prefetchMenuIntent" @pointerout="cancelPrefetchIntent" @focusin="prefetchMenuIntent" @focusout="cancelPrefetchIntent">
           <div class="sidebar-menu-stack">
           <Transition name="sidebar-menu-loading">
             <div
@@ -334,12 +348,20 @@ onUnmounted(() => {
             </div>
 
             <div v-else key="menu-tree" class="app-sidebar-menu-tree">
-              <SidebarMenuTree
-                v-for="(group, groupIndex) in (!renderExpandedSidebarContent ? [collapsedRailItems] : navigationItems)"
+              <UNavigationMenu
+                v-for="(group, groupIndex) in nativeNavigationItems"
                 :key="groupIndex"
                 :items="group"
+                :model-value="groupOpenValues(group)"
+                @update:model-value="value => updateGroupOpenValues(group, value)"
+                orientation="vertical"
                 :collapsed="!renderExpandedSidebarContent"
-                :labels-visible="showExpandedSidebarLabels"
+                tooltip
+                :popover="{ mode: 'click', content: { side: 'right', align: 'start', sideOffset: 8, collisionPadding: 8 } }"
+                variant="pill"
+                color="neutral"
+                highlight
+                :ui="navigationMenuUi"
               />
             </div>
           </Transition>

@@ -31,7 +31,7 @@ export default defineAppConfig({
     pagination: {
       slots: {
         root: 'w-full', 
-        item: '!w-fit min-w-8',
+        item: 'min-w-8',
         list: 'w-full flex-wrap'
       }
     },
@@ -536,6 +536,7 @@ export default defineAppConfig({
           "transition-colors transition-shadow transition-opacity duration-[var(--duration-fast)]",
           "border border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs",
           "data-[state=checked]:border-[var(--action-primary-bg)] data-[state=checked]:bg-[var(--action-primary-bg)]",
+          "data-[state=indeterminate]:border-[var(--action-primary-bg)] data-[state=indeterminate]:bg-[var(--action-primary-bg)]",
           "data-[state=unchecked]:hover:border-[var(--control-border-focus)] data-[state=unchecked]:hover:bg-[var(--surface-muted)]",
           "focus-visible:ring-[3px] focus-visible:ring-[var(--theme-focus-ring-strong)]",
         ].join(" "),
@@ -754,7 +755,7 @@ export default defineAppConfig({
           active: true,
           highlight: true,
           class: {
-            link: "text-[var(--nav-item-active-text)] before:!bg-[var(--nav-item-active-bg)] before:!border before:!border-transparent before:!shadow-none hover:!text-[var(--nav-item-active-text)] hover:before:!bg-[var(--nav-item-active-bg-hover)]",
+            link: "!text-[var(--nav-item-hover-text)] before:!bg-[var(--nav-item-hover-bg)] before:!border-0 before:!shadow-none hover:!text-[var(--nav-item-hover-text)] hover:before:!bg-[var(--nav-item-hover-bg)]",
             linkLeadingIcon: "!text-current group-hover:!text-current",
             linkTrailingIcon: "!text-current group-hover:!text-current",
           },
@@ -762,7 +763,7 @@ export default defineAppConfig({
         {
           active: true,
           class: {
-            childLink: "text-[var(--state-primary-soft-text)] before:!bg-[var(--state-primary-soft-bg)] before:!border-0 before:!shadow-none hover:!text-[var(--state-primary-soft-text)] hover:before:!bg-[var(--state-primary-soft-bg-hover)]",
+            childLink: "!text-[var(--nav-item-hover-text)] before:!bg-[var(--nav-item-hover-bg)] before:!border-0 before:!shadow-none hover:!text-[var(--nav-item-hover-text)] hover:before:!bg-[var(--nav-item-hover-bg)]",
           },
         },
       ],

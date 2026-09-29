@@ -5,6 +5,8 @@ import {
   normalizeMongoPrimaryKeyColumn,
 } from '~/utils/schema/mongo-primary-key';
 import { normalizeColumnPublication } from '~/utils/schema/column-publication';
+import { TABLE_CELL_FORMATTER_EXAMPLE, validateTableCellFormatter } from '~/utils/data-table-cell-formatter';
+import { tableCellMaxLength, withRichTextMetadata, withTableCellMetadata } from '~/utils/column-display-metadata';
 import {
   normalizeColumnOptions,
   validateColumnOptions,
@@ -19,6 +21,68 @@ const { confirm } = useConfirm();
 const isEditing = ref(false);
 const editingIndex = ref<number | null>(null);
 const currentColumn = ref<any>(null);
+const formatterExampleOpen = ref(false);
+const originalColumn = ref('');
+const tableCellFormatter = computed({
+  get: () => String(currentColumn.value?.metadata?.tableCell?.formatter ?? ''),
+  set: (source: string) => {
+    if (!currentColumn.value) return;
+    currentColumn.value.metadata = withTableCellMetadata(currentColumn.value.metadata, { formatter: source });
+  },
+});
+const tableCellMaxCharacters = computed({
+  get: () => tableCellMaxLength(currentColumn.value?.metadata),
+  set: (value: number | null) => {
+    if (!currentColumn.value) return;
+    currentColumn.value.metadata = withTableCellMetadata(currentColumn.value.metadata, {
+      maxLength: value === tableCellMaxLength(null) ? null : value,
+    });
+  },
+});
+const richTextToolbar = computed({
+  get: () => String(currentColumn.value?.metadata?.richText?.toolbar ?? ''),
+  set: (toolbar: string) => {
+    if (!currentColumn.value) return;
+    const existing = currentColumn.value.metadata?.richText ?? {};
+    currentColumn.value.metadata = withRichTextMetadata(currentColumn.value.metadata, {
+      ...existing,
+      toolbar: toolbar.trim() || undefined,
+    });
+  },
+});
+const richTextPlugins = computed({
+  get: () => currentColumn.value?.metadata?.richText?.plugins ?? richTextDefaultPlugins,
+  set: (plugins: string[]) => {
+    if (!currentColumn.value) return;
+    const existing = currentColumn.value.metadata?.richText ?? {};
+    currentColumn.value.metadata = withRichTextMetadata(currentColumn.value.metadata, {
+      ...existing,
+      plugins,
+    });
+  },
+});
+const richTextPluginOptions = [
+  { label: 'Links', value: 'link' },
+  { label: 'Lists', value: 'lists' },
+  { label: 'Code blocks', value: 'code' },
+  { label: 'Tables', value: 'table' },
+];
+const richTextDefaultPlugins = richTextPluginOptions.map(item => item.value);
+const richTextPluginsAreDefault = computed(() => currentColumn.value?.metadata?.richText?.plugins === undefined);
+function useDefaultRichTextPlugins() {
+  if (!currentColumn.value) return;
+  const existing = currentColumn.value.metadata?.richText ?? {};
+  currentColumn.value.metadata = withRichTextMetadata(currentColumn.value.metadata, {
+    ...existing,
+    plugins: undefined,
+  });
+}
+function setRichTextPlugin(plugin: string, checked: boolean) {
+  const selected: string[] = richTextPlugins.value;
+  richTextPlugins.value = checked
+    ? [...new Set([...selected, plugin])]
+    : selected.filter((value: string) => value !== plugin);
+}
 const columns = useModel(props, "modelValue");
 const isNew = ref(false);
 const errors = ref<Record<string, string>>({});
@@ -108,7 +172,11 @@ function handleRuleClick(_column: any, index: number) {
 }
 
 async function handleDrawerClose() {
-  if (!hasFormChanges.value) return;
+  if (!currentColumn.value) return;
+  if (!hasFormChanges.value && JSON.stringify(currentColumn.value) === originalColumn.value) {
+    discardChanges();
+    return;
+  }
   isEditing.value = true;
   const ok = await confirm({
     title: "Unsaved Changes",
@@ -126,6 +194,9 @@ function discardChanges() {
   isNew.value = false;
   currentColumn.value = null;
   editingIndex.value = null;
+  originalColumn.value = '';
+  hasFormChanges.value = false;
+  formatterExampleOpen.value = false;
 }
 
 function handleUuidType(column: any): any {
@@ -169,6 +240,9 @@ function editColumn(col: any, index: number) {
   );
 
   handleUuidType(currentColumn.value);
+  originalColumn.value = JSON.stringify(currentColumn.value);
+  hasFormChanges.value = false;
+  formatterExampleOpen.value = false;
 }
 
 async function saveColumn() {
@@ -200,6 +274,14 @@ async function saveColumn() {
       validateColumnOptions(currentColumn.value?.type, value),
   };
 
+  const formatterError = validateTableCellFormatter(tableCellFormatter.value);
+  if (formatterError) {
+    errors.value = { ...errors.value, tableCellFormatter: formatterError };
+    return;
+  }
+  const { tableCellFormatter: _formatterError, ...otherErrors } = errors.value;
+  errors.value = otherErrors;
+
   const { isValid, errors: validationErrors } = validate(currentColumn.value, customValidators);
   
   if (!isValid) {
@@ -228,6 +310,9 @@ async function saveColumn() {
   isNew.value = false;
   currentColumn.value = null;
   editingIndex.value = null;
+  originalColumn.value = '';
+  hasFormChanges.value = false;
+  formatterExampleOpen.value = false;
 }
 
 async function addNewColumn() {
@@ -246,6 +331,9 @@ async function addNewColumn() {
   currentColumn.value.type = isMongoDB.value ? "string" : "varchar";
 
   handleUuidType(currentColumn.value);
+  originalColumn.value = JSON.stringify(currentColumn.value);
+  hasFormChanges.value = false;
+  formatterExampleOpen.value = false;
 }
 
 async function removeColumn(index: number) {
@@ -680,11 +768,65 @@ watch(
                 'isPublished',
                 'isPrimary',
                 'table',
+                'metadata',
                 'fieldPermissions',
                 'rules',
               ]"
               :field-map="typeMap"
             />
+            <div v-if="!isPrimaryColumn(currentColumn)" class="mt-6 space-y-3">
+              <h3 class="text-sm font-semibold text-highlighted">Table cell display</h3>
+              <p class="text-xs text-muted">These controls update this column's metadata when you save the collection. Only a single safe return expression is supported; record values stay unchanged.</p>
+              <UFormField label="Maximum characters" description="Long cell text is shortened in the table. Default: 80 characters." class="max-w-52">
+                <UInputNumber v-model="tableCellMaxCharacters" :min="1" :max="4096" class="w-full" />
+              </UFormField>
+              <label class="block text-sm font-medium text-highlighted">Formatter function (optional)</label>
+              <UCollapsible v-model:open="formatterExampleOpen" class="rounded-lg border border-default">
+                <UButton
+                  type="button"
+                  label="View formatter example"
+                  icon="lucide:code-2"
+                  :trailing-icon="formatterExampleOpen ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  class="w-full justify-start"
+                />
+                <template #content>
+                  <pre class="overflow-x-auto border-t border-default bg-elevated/30 p-3 text-xs leading-5 text-highlighted"><code>{{ TABLE_CELL_FORMATTER_EXAMPLE }}</code></pre>
+                </template>
+              </UCollapsible>
+              <FormCodeEditorLazy v-model="tableCellFormatter" language="javascript" height="220px" :test-run="false" />
+              <p v-if="errors.tableCellFormatter" class="text-xs text-error">{{ errors.tableCellFormatter }}</p>
+            </div>
+            <div v-if="currentColumn?.type === 'richtext'" class="mt-6 space-y-3 border-t border-default pt-5">
+              <h3 class="text-sm font-semibold text-highlighted">Rich text editor</h3>
+              <p class="text-xs text-muted">Choose editor features for this field. These settings are saved in column metadata; custom formats and buttons remain unchanged.</p>
+              <UFormField label="Enabled plugins" description="Select the optional editor features available for this field.">
+                <div class="flex flex-wrap gap-3">
+                  <label v-for="plugin in richTextPluginOptions" :key="plugin.value" class="inline-flex items-center gap-2 text-sm text-default">
+                    <UCheckbox
+                      :model-value="richTextPlugins.includes(plugin.value)"
+                      @update:model-value="checked => setRichTextPlugin(plugin.value, Boolean(checked))"
+                    />
+                    {{ plugin.label }}
+                  </label>
+                </div>
+              </UFormField>
+              <UButton
+                v-if="!richTextPluginsAreDefault"
+                type="button"
+                label="Use default plugins"
+                color="neutral"
+                variant="link"
+                size="xs"
+                class="!p-0"
+                @click="useDefaultRichTextPlugins"
+              />
+              <UFormField label="Toolbar layout" description="Separate buttons with spaces; use | between groups. Example: undo redo | bold italic | link image table">
+                <UInput v-model="richTextToolbar" placeholder="Use default toolbar" class="w-full" />
+              </UFormField>
+            </div>
           </div>
         </div>
       </template>

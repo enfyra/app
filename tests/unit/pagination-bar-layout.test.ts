@@ -43,8 +43,6 @@ describe('pagination layout', () => {
     const resourceList = readAppFile('components/common/ResourceListFrame.vue')
     const barSites = [
       'components/common/ResourceListFrame.vue',
-      'pages/settings/guards/index.vue',
-      'pages/settings/routes/index.vue',
       'pages/storage/management/index.vue',
       'pages/storage/management/folder/[id].vue',
       'pages/collections/index.vue',
@@ -72,6 +70,12 @@ describe('pagination layout', () => {
         }
       }
     }
+
+    const settingsTable = readAppFile('components/data-table/SettingsTable.vue')
+    expect(settingsTable).toContain('useMiniBarVisibility(paginationFooter, tableScope)')
+    expect(settingsTable).toContain('eapp-pagination-mini fixed inset-x-3 bottom-3')
+    expect(settingsTable).toContain('ref="paginationFooter"')
+    expect(settingsTable).toContain('ref="tableScope"')
 
     // Pages that hand the pagination to the frame must not pass the same knobs.
     for (const site of frameSites) {
@@ -104,7 +108,7 @@ describe('pagination layout', () => {
     expect(visibility).toContain('IntersectionObserver')
     expect(visibility).toContain('HANDOFF_GAP_PX')
     expect(visibility).toContain('rootMargin')
-    expect(visibility).toContain('isMiniVisible.value = !record.isIntersecting')
+    expect(visibility).toContain('isMainOffscreen.value = !record.isIntersecting')
     expect(visibility).toContain('observer.disconnect()')
 
     const miniRule = css.match(/\.eapp-pagination-mini \{[^}]*\}/)?.[0]
@@ -168,9 +172,22 @@ describe('pagination layout', () => {
     expect(pagination).not.toMatch(/v-if="loading"/)
   })
 
+  it('keeps number and icon pagination controls square in both bars', () => {
+    const config = readAppFile('app.config.ts')
+    const css = readAppFile('assets/css/main.css')
+    expect(config).not.toContain("item: '!w-fit min-w-8'")
+    expect(css).toContain('[data-slot="item"]')
+    expect(css).toContain('[data-slot="first"]')
+    expect(css).toContain('[data-slot="prev"]')
+    expect(css).toContain('[data-slot="next"]')
+    expect(css).toContain('[data-slot="last"]')
+    expect(css).toContain('aspect-ratio: 1')
+    expect(css).toContain('padding-inline: 0')
+  })
+
   it('gates pagination hover feedback to fine pointers', () => {
     const css = readAppFile('assets/css/main.css')
-    const selector = '.eapp-pagination :where(a, button):hover'
+    const selector = ':where(.eapp-pagination, .eapp-settings-pagination) :where(a, button):hover'
 
     // Touch leaves an emulated `:hover` on the last-tapped button, which read as
     // a second selected page. Hover feedback is pointer-only.

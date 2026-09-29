@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import { h } from 'vue';
+import { UBadge } from '#components';
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const page = ref(1);
-const pageLimit = 10;
+const pageLimit = useSettingsPageSize('roles');
 const route = useRoute();
 const tableName = "enfyra_role";
 const { confirm } = useConfirm();
@@ -23,8 +29,6 @@ registerPageHeader({
   gradient: "purple",
 });
 
-const pageIconColor = 'primary';
-
 const {
   data: apiData,
   pending: loading,
@@ -43,7 +47,6 @@ const {
 const {
   items: roles,
   showInitialLoading,
-  isRefreshing: rolesRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => {
   return apiData.value?.meta?.totalCount || 0;
@@ -92,72 +95,42 @@ async function deleteRole(id: string) {
   await fetchRoles();
 }
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchRoles();
+const columns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('name', 'Role'),
+  settingsTextColumn('description', 'Description'),
+  { accessorKey: 'isSystem', header: 'Origin', enableSorting: false,
+    cell: ({ getValue }) => h(UBadge, { label: getValue() ? 'System' : 'Custom', color: getValue() ? 'info' : 'neutral', variant: 'soft' }),
   },
-  { immediate: true }
-);
+  settingsDateColumn(),
+];
+
+function getRowActions(role: Record<string, any>): DataTableRowAction[] {
+  if (role.isSystem) return [];
+  return [{ label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteRole(getId(role)) }];
+}
+
+async function setPageSize(size: number) {
+  if (page.value !== 1) await navigateTo({ path: route.path, query: { ...route.query, page: undefined } }, { replace: true });
+  pageLimit.value = size;
+}
+
+watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
+watch([page, pageLimit], () => { void fetchRoles(); }, { immediate: true });
 </script>
 
 <template>
-  <CommonResourceListFrame
+  <DataTableSettingsTable
     v-model:page="page"
+    :data="roles"
+    :columns="columns"
+    :actions="getRowActions"
     :loading="showInitialLoading"
-    :has-items="roles.length > 0"
-    loading-title="Loading roles..."
-    loading-description="Fetching role definitions"
-    empty-title="No roles found"
-    empty-description="No role definitions have been created yet"
-    empty-icon="lucide:shield-check"
     :total="total"
-    :items-per-page="pageLimit"
+    :page-limit="pageLimit"
+    page-size-key="roles"
     :pagination-loading="loading"
+    @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-  >
-      <CommonResourceListItem
-        v-for="role in roles"
-        :key="role.id"
-        :title="role.name"
-        :description="role.description || 'No description'"
-        icon="lucide:shield-check"
-        :icon-color="pageIconColor"
-        :loading="rolesRefreshing"
-        :to="`/settings/roles/${getId(role)}`"
-        :stats="[
-          {
-            label: 'Created',
-            value: new Date(role.createdAt).toLocaleDateString(),
-          },
-          {
-            label: 'System',
-            component: role.isSystem ? 'UBadge' : undefined,
-            props: role.isSystem ? { variant: 'soft', color: 'info' } : undefined,
-            value: role.isSystem ? 'System' : '-'
-          },
-          {
-            label: 'Users',
-            value: '-'
-          }
-        ]"
-        :methods="[
-          {
-            label: 'Delete',
-            props: {
-              icon: 'i-lucide-trash-2',
-              variant: 'solid',
-              color: 'error',
-              size: 'sm',
-            },
-            disabled: role.isSystem,
-            onClick: (e?: Event) => {
-              e?.stopPropagation();
-              deleteRole(getId(role));
-            },
-          }
-        ]"
-      />
-  </CommonResourceListFrame>
+    @row-click="role => navigateTo(`/settings/roles/${getId(role)}`)"
+  />
 </template>

@@ -9,8 +9,8 @@ export interface FlowTrigger {
   isEnabled: boolean;
   config?: Record<string, any>;
   tableEvent?: TableEventType | null;
-  route?: string | number | null;
-  table?: string | number | null;
+  route?: string | number | { id?: string | number; path?: string } | null;
+  table?: string | number | { id?: string | number; name?: string } | null;
   tableName?: string | null;
   routePath?: string | null;
 }

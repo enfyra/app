@@ -119,7 +119,7 @@ onMounted(() => {
       </div>
 
       <div v-else class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full min-w-[900px] text-sm">
           <thead>
             <tr class="border-b border-[var(--border-subtle)] text-left text-xs text-[var(--text-tertiary)]">
               <th class="pb-2 pr-3 font-medium">Time</th>

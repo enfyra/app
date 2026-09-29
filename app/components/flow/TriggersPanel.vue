@@ -9,7 +9,7 @@
         <UPopover v-model:open="addOpen">
           <UButton icon="lucide:plus" size="sm" variant="solid" color="primary" label="Attach Flow" />
           <template #content>
-            <div class="w-72 p-3 space-y-3">
+            <div class="w-64 space-y-2.5 p-3 text-sm">
               <UFormField label="Flow">
                 <UInputMenu
                   :model-value="selectedFlowItem"
@@ -17,6 +17,8 @@
                   v-model:search-term="flowSearchTerm"
                   v-model:open="flowMenuOpen"
                   placeholder="Search flow..."
+                  size="sm"
+                  :ui="{ base: '!min-h-9 !px-2.5 !py-1.5 !text-xs' }"
                   class="w-full"
                   by="value"
                   :loading="flowsLoading"
@@ -34,15 +36,19 @@
                   </template>
                 </UInputMenu>
               </UFormField>
-              <UFormField v-if="mode === 'table'" label="Event type">
-                <USelect v-model="newTableEvent" :items="tableEventOptions" class="w-full" />
+              <UFormField v-if="mode === 'route'" label="HTTP method">
+                <USelect v-model="newRouteMethod" :items="routeMethodOptions" placeholder="Select HTTP method" size="sm" :ui="{ base: '!h-9 !px-2.5 !py-1.5 !pr-8 !text-xs' }" class="w-full" />
+              </UFormField>
+              <UFormField v-else label="Event type">
+                <USelect v-model="newTableEvent" :items="tableEventOptions" size="sm" :ui="{ base: '!h-9 !px-2.5 !py-1.5 !pr-8 !text-xs' }" class="w-full" />
               </UFormField>
               <UButton
                 label="Attach"
+                size="sm"
                 color="primary"
                 variant="solid"
-                class="w-full"
-                :disabled="!newFlowId"
+                class="!min-h-9 w-full"
+                :disabled="!newFlowId || (mode === 'route' && !newRouteMethod)"
                 :loading="attaching"
                 @click="attachFlow"
               />
@@ -73,7 +79,7 @@
         <div class="flex items-center gap-3 min-w-0">
           <UBadge :color="getTriggerColor(t.type)" variant="soft" size="sm" class="shrink-0">
             <UIcon :name="t.type === 'webhook' ? 'lucide:globe' : 'lucide:database'" class="size-3 mr-1" />
-            {{ t.type === 'webhook' ? 'webhook' : t.tableEvent }}
+            {{ t.type === 'webhook' ? t.config?.method || 'All methods' : t.tableEvent }}
           </UBadge>
           <NuxtLink
             :to="`/settings/flows/${t.flow?.id}`"
@@ -100,6 +106,7 @@ const props = defineProps<{
   mode: 'route' | 'table';
   routeId?: string | number;
   tableId?: string | number;
+  availableMethods?: string[];
 }>();
 
 const notify = useNotify();
@@ -109,7 +116,9 @@ const { getIdFieldName } = useDatabase();
 const idField = getIdFieldName();
 const addOpen = ref(false);
 const newFlowId = ref('');
+const newRouteMethod = ref('');
 const newTableEvent = ref<TableEventType>('create');
+const routeMethodOptions = computed(() => (props.availableMethods ?? []).map(method => ({ label: method, value: method })));
 const attaching = ref(false);
 const togglingId = ref<string | number | null>(null);
 
@@ -186,6 +195,8 @@ async function attachFlow() {
       config: {},
     };
     if (props.mode === 'route') {
+      if (!newRouteMethod.value || !props.availableMethods?.includes(newRouteMethod.value)) return;
+      body.config = { method: newRouteMethod.value };
       body.route = { [idField]: props.routeId };
     } else {
       body.table = { [idField]: props.tableId };
@@ -197,6 +208,7 @@ async function attachFlow() {
     notify.success('Success', 'Flow attached');
     addOpen.value = false;
     newFlowId.value = '';
+    newRouteMethod.value = '';
     await fetchTriggers();
   } finally {
     attaching.value = false;

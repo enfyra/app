@@ -1,7 +1,10 @@
 <script setup lang="ts">
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import { DataTableColumnSelector as ColumnSelector } from "#components";
+import { createSelectionColumn } from '~/utils/data-table-selection';
+import { resolveTableCellDisplay } from '~/utils/data-table-cell-formatter';
+import { UBadge } from '#components';
+import type { RowSelectionState, VisibilityState } from '@tanstack/vue-table';
 
 const route = useRoute();
 const router = useRouter();
@@ -13,7 +16,7 @@ const pageLimit = 10;
 const data = ref([]);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
-const { getId, isMongoDB } = useDatabase();
+const { getId } = useDatabase();
 const singleRecordIdMap = useState<Record<string, string>>('singleRecordIdMap', () => ({}));
 
 const showFilterDrawer = ref(false);
@@ -107,55 +110,70 @@ const {
 
 const tableLoading = computed(() => !schemaReady.value || loading.value);
 
-const { hiddenColumns, visibleColumns, columnDropdownItems } =
-  useDataTableVisibility(tableName, schemas);
+const columnVisibility = ref<VisibilityState>({});
+watch([tableName, schema], ([name, definition]) => {
+  if (!import.meta.client) return;
+  const fields = definition?.definition?.filter(field => field.fieldType === 'column' && field.name && field.metadataAccess?.read !== false) ?? [];
+  if (!fields.length) return;
+  try {
+    const savedValue = localStorage.getItem(`columnVisibility_${name}`);
+    const saved = savedValue === null ? [] : JSON.parse(savedValue);
+    const hidden = new Set<string>(Array.isArray(saved) ? saved : []);
+    if (savedValue === null) {
+      if (fields.length >= 7) {
+        for (const field of fields) {
+          if (field.name === 'createdAt' || field.name === 'updatedAt') hidden.add(field.name);
+        }
+      }
+      const visible = fields.filter(field => !hidden.has(field.name!));
+      if (fields.length >= 10 && visible.length >= 10) {
+        const oldestFirst = [...visible].sort((left, right) => {
+          if (left.name?.toLowerCase() === 'id') return -1;
+          if (right.name?.toLowerCase() === 'id') return 1;
+          const age = (left.createdAt ? new Date(left.createdAt).getTime() : 0)
+            - (right.createdAt ? new Date(right.createdAt).getTime() : 0);
+          return age || left.name!.localeCompare(right.name!);
+        });
+        const keep = new Set(oldestFirst.slice(0, 10).map(field => field.name));
+        for (const field of visible) if (!keep.has(field.name)) hidden.add(field.name!);
+      }
+    }
+    columnVisibility.value = Object.fromEntries(fields.map(field => [field.name!, !hidden.has(field.name!)]));
+  } catch {
+    columnVisibility.value = {};
+  }
+}, { immediate: true });
+watch(columnVisibility, visibility => {
+  if (!import.meta.client || !schema.value?.definition?.length) return;
+  try {
+    localStorage.setItem(`columnVisibility_${tableName.value}`, JSON.stringify(
+      Object.keys(visibility).filter(name => visibility[name] === false),
+    ));
+  } catch {}
+}, { deep: true });
 
 const {
   selectedRows,
-  isSelectionMode,
   handleDelete,
   handleBulkDelete,
   handleSelectionChange,
-  resetSelection,
 } = useDataTableActions(tableName, fetchData, data);
 
-const selectedRowIds = computed(() =>
-  selectedRows.value.map((row) => String(getId(row)))
-);
+const rowSelection = ref<RowSelectionState>({});
+watch(rowSelection, (selection) => {
+  const selected = new Set(Object.keys(selection).filter((id) => selection[id]));
+  handleSelectionChange(data.value.filter((row) => selected.has(String(getId(row)))));
+});
+watch(data, (rows) => {
+  const visible = new Set(rows.map((row) => String(getId(row))));
+  const retained = Object.keys(rowSelection.value).filter((id) => rowSelection.value[id] && visible.has(id));
+  if (retained.length !== Object.keys(rowSelection.value).length) rowSelection.value = Object.fromEntries(retained.map((id) => [id, true]));
+  const selected = new Set(retained);
+  handleSelectionChange(rows.filter((row) => selected.has(String(getId(row)))));
+});
 
-const { isMobile, isTablet } = useScreen();
 
 registerSubHeaderActions([
-  {
-    id: "toggle-selection",
-    label: computed(() =>
-      isSelectionMode.value ? "Cancel Selection" : "Select Items"
-    ),
-    icon: computed(() =>
-      isSelectionMode.value ? "lucide:x" : "lucide:check-square"
-    ),
-    variant: computed(() => (isSelectionMode.value ? "ghost" : "outline")),
-    color: computed(() => (isSelectionMode.value ? "error" : "primary")),
-    onClick: () => {
-      if (isSelectionMode.value) {
-        resetSelection();
-      } else {
-        isSelectionMode.value = true;
-      }
-    },
-    side: "right",
-    show: computed(() => !isMobile.value && !isTablet.value && !isSingleRecord.value),
-    permission: {
-      and: [
-        {
-          get route() {
-            return getRouteForTableName(tableName.value);
-          },
-          methods: ["DELETE"],
-        },
-      ],
-    },
-  },
   {
     id: "bulk-delete-selected",
     label: computed(() => `Delete Selected (${selectedRows.value.length})`),
@@ -165,7 +183,7 @@ registerSubHeaderActions([
     side: "right",
     onClick: () => handleBulkDelete(selectedRows.value),
     show: computed(
-      () => isSelectionMode.value && selectedRows.value.length > 0 && !isSingleRecord.value
+      () => selectedRows.value.length > 0 && !isSingleRecord.value
     ),
     permission: {
       and: [
@@ -178,34 +196,9 @@ registerSubHeaderActions([
       ],
     },
   },
-  {
-    id: "column-picker-component",
-    component: ColumnSelector,
-    get key() {
-      return `column-picker-${Array.from(hiddenColumns.value).join("-")}`;
-    },
-    get props() {
-      return {
-        items: columnDropdownItems.value,
-        variant: "outline",
-        color: "neutral",
-      };
-    },
-    side: "right",
-    permission: {
-      and: [
-        {
-          get route() {
-            return getRouteForTableName(tableName.value);
-          },
-          methods: ["GET"],
-        },
-      ],
-    },
-  },
 ]);
 
-const { buildColumn, buildActionsColumn } = useDataTableColumns();
+const { buildActionsColumn } = useDataTableColumns();
 
 const columns = computed(() => {
   const schema = schemas.value[tableName.value];
@@ -216,8 +209,7 @@ const columns = computed(() => {
       (field) =>
         field.fieldType === "column" &&
         field.name &&
-        field.metadataAccess?.read !== false &&
-        visibleColumns.value.has(field.name)
+        field.metadataAccess?.read !== false
     )
     .sort((a, b) => {
       const aName = a.name?.toLowerCase() || '';
@@ -235,50 +227,24 @@ const columns = computed(() => {
       return aSortKey - bSortKey;
     })
     .map((field) => {
-      const fieldNameRaw = field.name!;
-      let config: DataTableColumnConfig = {
-        id: fieldNameRaw,
-        header: field.label || fieldNameRaw,
+      const name = field.name!;
+      const isId = ['id', '_id'].includes(name.toLowerCase());
+      const formatter = field.metadata?.tableCell?.formatter;
+      return {
+        id: name,
+        accessorKey: name,
+        header: field.label || name,
+        enableSorting: true,
+        ...(isId && { size: 84, minSize: 84, maxSize: 220 }),
+        cell: ({ getValue }: { getValue: () => unknown }) => {
+          const value = getValue();
+          if (field.type === 'code' && typeof formatter !== 'string') return value == null || value === '' ? '_' : 'Code';
+          const display = resolveTableCellDisplay(field.metadata ?? {}, value);
+          return display.color
+            ? h(UBadge, { label: display.text, color: display.color, variant: display.variant ?? 'soft' })
+            : display.text;
+        },
       };
-      const fieldName = fieldNameRaw.toLowerCase();
-
-      if (fieldName === "id" || fieldName === "_id") {
-        const maxIdLength = Math.max(
-          fieldNameRaw.length,
-          ...data.value.map((record) => String(record?.[fieldNameRaw] ?? "").length)
-        );
-        config.width = Math.min(Math.max(maxIdLength * 9 + 72, 84), 220);
-        config.minWidth = 84;
-        config.maxWidth = 220;
-        config.format = "id";
-      }
-
-      if (fieldName === "id" || fieldName === "_id") {
-        // already set above
-      } else if (field.type === "timestamp" || field.type === "datetime") {
-        config.format = "datetime";
-      } else if (field.type === "date") {
-        config.format = isMongoDB.value ? "datetime" : "date";
-      } else if (field.type === "boolean" || field.type === "bool") {
-        config.format = "boolean";
-      } else if (["int", "bigint", "long", "float", "double", "decimal", "numeric", "number"].includes(field.type as string)) {
-        config.format = "number";
-      } else if (["simple-json", "json", "jsonb", "object", "array"].includes(field.type as string)) {
-        config.format = "json";
-      } else if (field.type === "text" || field.type === "longtext" || field.type === "richtext") {
-        config.format = "text-long";
-      } else {
-        config.format = "custom";
-        config.formatOptions = {
-          formatter: (value: unknown) => {
-            if (value === null || value === undefined) return "-";
-            const str = String(value);
-            return str.length > 50 ? str.slice(0, 50) + "..." : str;
-          },
-        };
-      }
-
-      return buildColumn(config);
     });
 
   const actionsConfig = {
@@ -309,7 +275,7 @@ const columns = computed(() => {
 
   const actionsColumn = buildActionsColumn(actionsConfig);
 
-  return [...dataColumns, actionsColumn];
+  return [createSelectionColumn<Record<string, any>>(), ...dataColumns, actionsColumn];
 });
 
 watch(
@@ -351,7 +317,7 @@ async function clearFilters() {
 watch(tableName, () => {
   total.value = 1;
   currentFilter.value = createEmptyFilter();
-  resetSelection();
+  rowSelection.value = {};
 });
 
 watch(
@@ -435,13 +401,20 @@ registerHeaderActions([
         :data="data"
         :columns="columns"
         :loading="tableLoading"
-        :page-size="pageLimit"
-        :selectable="isSelectionMode"
-        :selected-items="selectedRowIds"
+        :get-row-id="(row: Record<string, any>) => String(getId(row))"
+        v-model:row-selection="rowSelection"
+        v-model:column-visibility="columnVisibility"
         :skeleton-rows="pageLimit"
-        @selection-change="handleSelectionChange"
         @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
-      />
+      >
+        <template #toolbar>
+          <span class="text-sm font-medium text-highlighted">{{ tableName }}</span>
+          <UBadge color="neutral" variant="subtle" :label="`${total.toLocaleString()} records`" />
+        </template>
+        <template #footer>
+          {{ selectedRows.length }} of {{ data.length }} row(s) selected.
+        </template>
+      </DataTableLazy>
 
       <CommonPaginationBar
         v-if="Math.ceil(total / pageLimit) > 1"

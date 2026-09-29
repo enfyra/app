@@ -11,8 +11,10 @@ const HANDOFF_GAP_PX = 12;
  * Reports whether a main bar has left the viewport, so a fixed mini bar can stand
  * in for it. The main bar stays a normal in-flow element; this only observes it.
  */
-export function useMiniBarVisibility(target: Ref<HTMLElement | null>) {
-  const isMiniVisible = ref(false);
+export function useMiniBarVisibility(target: Ref<HTMLElement | null>, scope?: Ref<HTMLElement | null>) {
+  const isMainOffscreen = ref(false);
+  const isScopeVisible = ref(false);
+  const isMiniVisible = computed(() => isMainOffscreen.value && (!scope || isScopeVisible.value));
 
   if (import.meta.client && typeof IntersectionObserver !== "undefined") {
     watchPostEffect((onCleanup) => {
@@ -21,13 +23,28 @@ export function useMiniBarVisibility(target: Ref<HTMLElement | null>) {
 
       const observer = new IntersectionObserver(
         ([record]) => {
-          if (record) isMiniVisible.value = !record.isIntersecting;
+          if (record) isMainOffscreen.value = !record.isIntersecting;
         },
         { rootMargin: `0px 0px ${HANDOFF_GAP_PX}px 0px`, threshold: 0 },
       );
       observer.observe(el);
 
-      onCleanup(() => observer.disconnect());
+      onCleanup(() => {
+        observer.disconnect();
+        isMainOffscreen.value = false;
+      });
+    });
+    if (scope) watchPostEffect((onCleanup) => {
+      const el = scope.value;
+      if (!el) return;
+      const observer = new IntersectionObserver(([record]) => {
+        if (record) isScopeVisible.value = record.isIntersecting;
+      });
+      observer.observe(el);
+      onCleanup(() => {
+        observer.disconnect();
+        isScopeVisible.value = false;
+      });
     });
   }
 

@@ -410,6 +410,7 @@ type EnfyraContext = {
   $share: Record<string, any>;
   $api: any;
   $uploadedFile: any;
+  $uploadFile: Record<string, any | any[]>;
   $pkgs: Record<string, any>;
   $cache: Record<string, any>;
   $repos: EnfyraRepos;

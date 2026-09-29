@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { UIcon, UBadge } from "#components";
+import { createSelectionColumn } from '~/utils/data-table-selection';
+import type { RowSelectionState } from '@tanstack/vue-table';
 
 interface Props {
   files: any[];
@@ -103,6 +105,7 @@ function deleteFile(file: any) {
 }
 
 const fileColumns = computed(() => [
+  createSelectionColumn<any>(),
   buildColumn({
     id: "filename",
     header: "Name",
@@ -232,26 +235,31 @@ function toggleItemSelection(fileId: string) {
   emit("toggle-selection", fileId);
 }
 
+const rowSelection = ref<RowSelectionState>({});
+watch(() => props.selectedItems, (items) => {
+  const selected = new Set(items.map(String));
+  const next: RowSelectionState = {};
+  for (const file of props.files) {
+    const id = String(getId(file));
+    if (selected.has(id)) next[id] = true;
+  }
+  const keys = Object.keys(next);
+  if (keys.length !== Object.keys(rowSelection.value).length || keys.some((id) => !rowSelection.value[id])) rowSelection.value = next;
+}, { immediate: true });
+
 function handleSelectionChange(selectedRows: any[]) {
-  const selectedIds = selectedRows.map((row) => getId(row));
-  const currentSelected = [...props.selectedItems];
+  const selectedIds = new Set(selectedRows.map((row) => String(getId(row))));
+  const currentFileSelections = new Set(props.selectedItems.map(String));
 
-  const currentFileSelections = currentSelected.filter((id) =>
-    props.files.some((file) => getId(file) === id)
-  );
-
-  currentFileSelections.forEach((itemId) => {
-    if (!selectedIds.includes(itemId)) {
-      emit("toggle-selection", itemId);
-    }
-  });
-
-  selectedIds.forEach((itemId) => {
-    if (!currentFileSelections.includes(itemId)) {
-      emit("toggle-selection", itemId);
-    }
-  });
+  for (const file of props.files) {
+    const id = String(getId(file));
+    if (selectedIds.has(id) !== currentFileSelections.has(id)) emit("toggle-selection", id);
+  }
 }
+
+watch(rowSelection, (selection) => {
+  handleSelectionChange(transformedFiles.value.filter((file: any) => selection[String(getId(file))]));
+});
 
 function getContextMenuItems(file: any) {
   const menuItems: any = [
@@ -335,16 +343,14 @@ function getContextMenuItems(file: any) {
           :data="transformedFiles"
           :columns="fileColumns"
           :loading="false"
-          :page-size="50"
-          :selectable="!moveState.moveMode && isSelectionMode"
+          :get-row-id="(file: any) => String(getId(file))"
+          v-model:row-selection="rowSelection"
           :context-menu-items="
             !isSelectionMode && !moveState.moveMode
               ? getContextMenuItems
               : undefined
           "
-          :selected-items="selectedItems"
           @row-click="handleFileClick"
-          @selection-change="handleSelectionChange"
         />
       </div>
 

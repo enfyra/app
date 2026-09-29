@@ -65,6 +65,7 @@ const rightActions = computed(() => {
 const hasActions = computed(() => {
   return leftActions.value.length > 0 || rightActions.value.length > 0;
 });
+const hasConditionalActions = computed(() => subHeaderActions.value.some(action => action?.show !== undefined));
 
 const headerStripClass = computed(() => {
   return props.gradient === "none" ? "" : "page-header-accent";
@@ -83,7 +84,7 @@ function handlePageHeaderActionClick(action: any) {
     <div class="page-header-inner relative px-5 py-3 lg:px-6">
       <div
         class="flex gap-4"
-        :class="(isMobile || isTablet) ? 'flex-col' : 'flex-row items-center justify-between'"
+        :class="[(isMobile || isTablet) ? 'flex-col' : 'flex-row items-center justify-between', hasConditionalActions ? ((isMobile || isTablet) ? 'min-h-[88px]' : 'min-h-[40px]') : '']"
       >
         
         <div class="flex min-w-0 flex-1 items-center gap-3">

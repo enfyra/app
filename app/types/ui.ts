@@ -1,4 +1,6 @@
 import type { ComputedRef, Ref } from "vue";
+import type { TableProps } from "@nuxt/ui/components/Table.vue";
+import type { RowSelectionState } from "@tanstack/vue-table";
 import type { PermissionCondition } from "./permissions";
 
 export interface UploadModalProps {
@@ -22,15 +24,13 @@ export interface UploadModalEmits {
   error: [message: string];
 }
 
-export interface DataTableProps {
-  data: any[];
-  columns: any[];
-  pageSize?: number;
-  loading?: boolean;
-  selectable?: boolean;
-  contextMenuItems?: (row: any) => any[];
-  selectedItems?: string[];
+export interface DataTableProps extends Omit<TableProps<any>, 'data' | 'columns'> {
+  data: Record<string, any>[];
+  columns: NonNullable<TableProps<any>['columns']>;
+  contextMenuItems?: (row: Record<string, any>) => any[];
   skeletonRows?: number;
+  rowSelection?: RowSelectionState;
+  showColumnVisibility?: boolean;
 }
 
 export interface RouteLoadingProps {

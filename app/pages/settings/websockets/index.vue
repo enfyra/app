@@ -1,70 +1,30 @@
 <template>
-  <CommonResourceListFrame
+  <DataTableSettingsTable
     v-model:page="page"
-    root-class="websocket-manager-page"
+    :data="gateways"
+    :columns="columns"
+    :actions="getRowActions"
     :loading="showInitialLoading"
-    :has-items="gateways.length > 0"
-    loading-title="Loading WebSocket gateways..."
-    loading-description="Fetching WebSocket configurations"
-    loading-size="md"
-    empty-title="No WebSocket gateways found"
-    empty-description="No WebSocket gateways have been created yet"
-    empty-icon="lucide:radio-tower"
-    empty-size="lg"
     :total="total"
-    :items-per-page="limit"
+    :page-limit="limit"
+    page-size-key="websockets"
     :pagination-loading="loading"
+    @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-  >
-        <CommonResourceListItem
-          v-for="gateway in gateways"
-          :key="String(getId(gateway) ?? gateway.path)"
-          :title="gateway.path"
-          :description="gateway.description || 'WebSocket gateway'"
-          :icon="getGatewayIcon(gateway)"
-          :icon-color="pageIconColor"
-          :loading="gatewaysRefreshing"
-          :to="`/settings/websockets/${getId(gateway)}`"
-          :stats="[
-            {
-              label: 'Status',
-              component: 'UBadge',
-              props: {
-                variant: 'soft',
-                color: gateway.isEnabled ? 'success' : 'neutral',
-              },
-              value: gateway.isEnabled ? 'Active' : 'Inactive',
-            },
-            {
-              label: 'Auth',
-              component: 'UBadge',
-              props: {
-                variant: 'soft',
-                color: gateway.requireAuth ? 'warning' : 'neutral',
-              },
-              value: gateway.requireAuth ? 'Required' : 'Public',
-            },
-            {
-              label: 'Events',
-              value: getEventCount(getId(gateway)),
-            },
-            {
-              label: 'Connections',
-              value: getConnectionCount(getId(gateway)),
-            },
-          ]"
-          :header-actions="getHeaderActions(gateway)"
-          :methods="getFooterActions(gateway)"
-        />
-  </CommonResourceListFrame>
+    @row-click="gateway => navigateTo(`/settings/websockets/${getId(gateway)}`)"
+  />
 </template>
 
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import type { SettingsCardAction, SettingsCardHeaderAction } from '~/types/ui';
+import { h } from 'vue';
+import { UBadge } from '#components';
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
 
 const page = ref(1);
-const limit = 10;
+const limit = useSettingsPageSize('websockets');
 const WEBSOCKET_LIST_FIELDS = [
   "id",
   "path",
@@ -89,8 +49,6 @@ registerPageHeader({
   gradient: "cyan",
 });
 
-const pageIconColor = 'primary';
-
 const {
   data: apiData,
   pending: loading,
@@ -109,7 +67,6 @@ const {
 const {
   items: gateways,
   showInitialLoading,
-  isRefreshing: gatewaysRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
@@ -143,10 +100,6 @@ registerHeaderActions([
   },
 ]);
 
-function getGatewayIcon(_gateway: any) {
-  return "i-lucide-radio-tower";
-}
-
 function getEventCount(gatewayId: string | number | null | undefined): number {
   if (gatewayId == null) return 0;
   const gateway = gateways.value.find((g: any) => getId(g) == gatewayId);
@@ -158,49 +111,30 @@ function getConnectionCount(gatewayId: string | number | null | undefined): numb
   return connectionCounts.value[gatewayId] || 0;
 }
 
-function getHeaderActions(gateway: any) {
-  const actions: SettingsCardHeaderAction[] = [];
+const columns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('path', 'Gateway'),
+  settingsTextColumn('description', 'Description'),
+  { accessorKey: 'requireAuth', header: 'Auth', enableSorting: false,
+    cell: ({ getValue }) => h(UBadge, { label: getValue() ? 'Required' : 'Public', color: getValue() ? 'warning' : 'neutral', variant: 'soft' }),
+  },
+  { id: 'events', header: 'Events', enableSorting: false, cell: ({ row }) => String(getEventCount(getId(row.original))) },
+  { id: 'connections', header: 'Connections', enableSorting: false, cell: ({ row }) => String(getConnectionCount(getId(row.original))) },
+  settingsStatusColumn(),
+];
+
+function getRowActions(gateway: Record<string, any>): DataTableRowAction[] {
   const id = getId(gateway);
-  if (id == null) {
-    return actions;
-  }
-  const idKey = String(id);
-
-  if (checkPermissionCondition({ or: [{ route: '/enfyra_websocket', methods: ['PATCH'] }] })) {
-    actions.push({
-      component: 'USwitch',
-      props: {
-        'model-value': gateway.isEnabled,
-        loading: getGatewayLoader(idKey).isLoading
-      },
-      onClick: (e?: Event) => e?.stopPropagation(),
-      onUpdate: () => toggleGatewayStatus(gateway)
-    });
-  }
-
-  return actions;
-}
-
-function getFooterActions(gateway: any) {
-  const actions: SettingsCardAction[] = [];
-  const hasDeletePermission = checkPermissionCondition({ or: [{ route: '/enfyra_websocket', methods: ['DELETE'] }] });
-
-  actions.push({
-    label: 'Delete',
-    props: {
-      icon: 'i-lucide-trash-2',
-      variant: 'solid',
-      color: 'error',
-      size: 'sm',
-    },
-    disabled: !hasDeletePermission || gateway.isSystem,
-    onClick: (e?: Event) => {
-      e?.stopPropagation();
-      deleteGateway(gateway);
-    },
-  });
-
-  return actions;
+  if (id == null) return [];
+  return [
+    ...(checkPermissionCondition({ or: [{ route: '/enfyra_websocket', methods: ['PATCH'] }] }) ? [{
+      label: gateway.isEnabled ? 'Disable' : 'Enable', icon: gateway.isEnabled ? 'lucide:power-off' : 'lucide:power',
+      disabled: getGatewayLoader(String(id)).isLoading.value,
+      onSelect: () => toggleGatewayStatus(gateway),
+    }] : []),
+    ...(checkPermissionCondition({ or: [{ route: '/enfyra_websocket', methods: ['DELETE'] }] }) && !gateway.isSystem ? [{
+      label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteGateway(gateway),
+    }] : []),
+  ];
 }
 
 const toggleGatewayStatus = async (gateway: any) => {
@@ -275,12 +209,11 @@ const deleteGateway = async (gateway: any) => {
   }
 };
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchGateways();
-  },
-  { immediate: true }
-);
+async function setPageSize(size: number) {
+  if (page.value !== 1) await navigateTo({ path: route.path, query: { ...route.query, page: undefined } }, { replace: true });
+  limit.value = size;
+}
+
+watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
+watch([page, limit], () => { void fetchGateways(); }, { immediate: true });
 </script>

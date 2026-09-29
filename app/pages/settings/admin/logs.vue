@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ColumnDef } from '@tanstack/vue-table';
 import type { RuntimeLogRow } from '~/types/runtime-log';
 
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -18,6 +19,7 @@ const timeWindows = [
   { label: 'Last 30 days', value: 720 },
 ];
 const page = ref(1);
+const pageLimit = useSettingsPageSize('server-logs', 20);
 const selected = ref<RuntimeLogRow | null>(null);
 const detailOpen = ref(false);
 const path = computed(() => kind.value === 'system' ? '/enfyra_system_error' : '/enfyra_user_log');
@@ -26,11 +28,11 @@ const tabs = computed(() => [
   { label: 'System errors', value: 'system', icon: 'lucide:bug', disabled: !canRead('/enfyra_system_error') },
   { label: 'User logs', value: 'user', icon: 'lucide:terminal', disabled: !canRead('/enfyra_user_log') },
 ]);
-const commonFields = ['eventId', 'occurredAt', 'correlationId', 'instanceId', 'component', 'sourceKind', 'sourceId', 'statusCode'];
+const commonFields = ['id', 'eventId', 'occurredAt', 'correlationId', 'instanceId', 'component', 'sourceKind', 'sourceId', 'statusCode'];
 const filter = ref<Record<string, unknown>>({});
 const fields = computed(() => [...commonFields, ...(kind.value === 'system' ? ['code', 'message', 'severity'] : ['entryCount', 'truncated'])]);
 const { data, pending, error, execute } = useApi<{ data: RuntimeLogRow[]; meta?: { filterCount?: number } }>(() => path.value, {
-  query: () => ({ fields: fields.value, filter: filter.value, sort: '-occurredAt', limit: 25, page: page.value, meta: 'filterCount' }),
+  query: () => ({ fields: fields.value, filter: filter.value, sort: '-occurredAt', limit: pageLimit.value, page: page.value, meta: 'filterCount' }),
   disableErrorPage: true,
 });
 const { items: stableItems, showInitialLoading } = useStableListState(() => data.value?.data, () => pending.value);
@@ -73,6 +75,28 @@ const detailFacts = computed(() => detail.value ? [
 ].filter(([, value]) => value != null && value !== '') : []);
 function rowTitle(row: RuntimeLogRow): string {
   return row.message?.split(/\r?\n|\s+at\s+(?=\S+\s*\()/)[0]?.trim() || `${row.entryCount ?? 0} log entries`;
+}
+const columns = computed<ColumnDef<Record<string, any>>[]>(() => [
+  { accessorKey: 'occurredAt', header: 'Occurred', enableSorting: false,
+    cell: ({ row }) => new Date(row.original.occurredAt).toLocaleString(),
+  },
+  { id: 'message', header: kind.value === 'system' ? 'Error' : 'Entries', enableSorting: false,
+    cell: ({ row }) => h('span', { class: 'block max-w-96 truncate', title: rowTitle(row.original as RuntimeLogRow) }, rowTitle(row.original as RuntimeLogRow)),
+  },
+  { accessorKey: 'component', header: 'Component', enableSorting: false,
+    cell: ({ getValue }) => getValue() || '_',
+  },
+  { id: 'code', header: 'Code / Source', enableSorting: false,
+    cell: ({ row }) => row.original.code || row.original.sourceKind || '_',
+  },
+  { accessorKey: 'correlationId', header: 'Correlation ID', enableSorting: false,
+    cell: ({ getValue }) => h('span', { class: 'block max-w-40 truncate font-mono', title: String(getValue() || '') }, String(getValue() || '_')),
+  },
+]);
+function setPageSize(size: number) {
+  page.value = 1;
+  pageLimit.value = size;
+  if (canRead(path.value)) void execute();
 }
 function resetFilters() {
   correlationId.value = ''; component.value = ''; code.value = '';
@@ -176,37 +200,20 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
       </div>
 
       <UAlert v-if="error" color="error" title="Could not load logs" :description="error.message" />
-      <CommonResourceListFrame variant="plain" :loading="listLoading" :has-items="items.length > 0" :total="total" :items-per-page="25" :page="page" :pagination-loading="pending" item-size="sm" empty-title="No matching records" empty-description="Adjust the filters or refresh after reproducing the issue." @update:page="page = $event; execute()">
-        <CommonResourceListItem
-          v-for="row in items"
-          :key="row.eventId"
-          :title="rowTitle(row)"
-          :icon="kind === 'system' ? 'lucide:bug' : 'lucide:terminal'"
-          item-class="server-log-row"
-          size="sm"
-          @click="inspect(row)"
-        >
-          <template #title>
-            <span class="flex w-full min-w-0 items-start gap-3">
-              <span class="min-w-0 flex-1 truncate text-sm font-semibold eapp-text-primary" :title="rowTitle(row)">{{ rowTitle(row) }}</span>
-              <UIcon name="lucide:chevron-right" class="server-log-row-chevron mt-0.5 size-4 shrink-0 eapp-text-tertiary" />
-            </span>
-          </template>
-          <template #description>
-            <span class="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs eapp-text-tertiary">
-              <time :datetime="row.occurredAt">{{ new Date(row.occurredAt).toLocaleString() }}</time>
-              <span aria-hidden="true">·</span>
-              <span>{{ row.component }}</span>
-              <UBadge v-if="row.code || row.sourceKind" color="neutral" variant="soft" size="xs" class="max-w-full"><span class="truncate">{{ row.code ?? row.sourceKind }}</span></UBadge>
-              <UBadge v-if="row.statusCode" :color="row.statusCode >= 400 ? 'error' : 'neutral'" variant="soft" size="xs">{{ row.statusCode }}</UBadge>
-              <UBadge v-if="row.truncated" color="warning" variant="soft" size="xs">Truncated</UBadge>
-            </span>
-          </template>
-          <template #metadata>
-            <span v-if="row.correlationId" class="mt-2 flex min-w-0 items-center gap-1.5 font-mono text-xs eapp-text-tertiary"><UIcon name="lucide:link" class="size-3 shrink-0" /><span class="truncate">{{ row.correlationId }}</span></span>
-          </template>
-        </CommonResourceListItem>
-      </CommonResourceListFrame>
+      <DataTableSettingsTable
+        v-model:page="page"
+        :data="items"
+        :columns="columns"
+        :loading="listLoading"
+        :total="total"
+        :page-limit="pageLimit"
+        page-size-key="server-logs"
+        :pagination-loading="pending"
+        compact
+        @page-size-change="setPageSize"
+        @update:page="execute()"
+        @row-click="row => inspect(row as RuntimeLogRow)"
+      />
     </section>
 
     <CommonEmptyState v-if="!canRead(path)" title="Access denied" description="A route read permission is required to view these logs." icon="lucide:lock" />
@@ -257,27 +264,3 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
     </CommonDrawer>
   </div>
 </template>
-
-<style scoped>
-:deep(.server-log-row) {
-  transition:
-    background-color var(--duration-fast) var(--ease-standard),
-    box-shadow var(--duration-fast) var(--ease-standard);
-}
-
-:deep(.server-log-row:hover) {
-  background: color-mix(in srgb, var(--md-primary) 2.5%, var(--surface-default));
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 42%, transparent);
-}
-
-:deep(.server-log-row-chevron) {
-  transition:
-    color var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
-}
-
-:deep(.server-log-row:hover .server-log-row-chevron) {
-  color: var(--md-primary);
-  transform: translateX(2px);
-}
-</style>

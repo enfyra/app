@@ -411,8 +411,6 @@ watch(currentHeight, () => {
   }
 });
 
-let resizeFinalizeTimeout: number | null = null;
-let resizeRemountTimeout: number | null = null;
 let initialMountTimeout: number | null = null;
 
 function applyGuttersBorder() {
@@ -421,39 +419,6 @@ function applyGuttersBorder() {
   if (gutters) {
     (gutters as HTMLElement).style.borderRight = '1px solid var(--border-neutral)';
   }
-}
-
-function finishResizeSync() {
-  if (resizeFinalizeTimeout) {
-    window.clearTimeout(resizeFinalizeTimeout);
-    resizeFinalizeTimeout = null;
-  }
-  if (resizeRemountTimeout) {
-    window.clearTimeout(resizeRemountTimeout);
-    resizeRemountTimeout = null;
-  }
-  resizeRemountTimeout = window.setTimeout(() => {
-    resizeRemountTimeout = null;
-    if (editorRef.value) {
-      editorRef.value.style.height = "100%";
-    }
-    recreateEditor(extensions.value);
-    nextTick(() => {
-      applyGuttersBorder();
-    });
-  }, 60);
-}
-
-function scheduleResizeFinishFallback() {
-  if (resizeFinalizeTimeout) window.clearTimeout(resizeFinalizeTimeout);
-  resizeFinalizeTimeout = window.setTimeout(() => {
-    finishResizeSync();
-  }, 380);
-}
-
-function handleHeightTransitionEnd(event: TransitionEvent) {
-  if (event.target !== containerRef.value || event.propertyName !== "height") return;
-  finishResizeSync();
 }
 
 onMounted(async () => {
@@ -490,12 +455,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  if (resizeFinalizeTimeout) {
-    window.clearTimeout(resizeFinalizeTimeout);
-  }
-  if (resizeRemountTimeout) {
-    window.clearTimeout(resizeRemountTimeout);
-  }
   if (initialMountTimeout) {
     window.clearTimeout(initialMountTimeout);
   }
@@ -604,16 +563,8 @@ function handleMouseUp(e?: MouseEvent) {
   document.body.style.userSelect = "";
   document.body.style.cursor = "";
   
-  if (editorRef.value) {
-    editorRef.value.style.height = "100%";
-  }
-  
-  nextTick(() => {
-    requestAnimationFrame(() => {
-      currentHeight.value = finalHeight;
-      scheduleResizeFinishFallback();
-    });
-  });
+  currentHeight.value = finalHeight;
+  nextTick(() => { editorView.value?.requestMeasure(); });
 }
 </script>
 
@@ -621,15 +572,8 @@ function handleMouseUp(e?: MouseEvent) {
   <div 
     v-bind="containerAttrs"
     ref="containerRef" 
-    class="rounded-md overflow-hidden relative"
-    @transitionend="handleHeightTransitionEnd"
-    :class="[
-      attrs.class,
-      !isResizing ? 'transition-[height] duration-[var(--duration-emphasized)] ease-[var(--ease-enter)]' : '',
-      props.error
-        ? 'border border-[var(--state-danger-outline-border)] ring-2 ring-[var(--md-error)]/20'
-        : 'border border-[var(--border-strong)]'
-    ]"
+    class="group/code-editor relative flex flex-col"
+    :class="attrs.class"
     :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
   >
     <div
@@ -653,12 +597,17 @@ function handleMouseUp(e?: MouseEvent) {
       </UTooltip>
     </div>
 
-    <div ref="editorRef" class="codemirror-editor h-full" />
+    <div
+      class="relative min-h-0 flex-1 overflow-hidden rounded-[var(--radius-control)] border bg-[var(--control-bg)] shadow-theme-xs transition-colors focus-within:border-[var(--control-border-focus)] focus-within:ring-3 focus-within:ring-inset focus-within:ring-primary"
+      :class="props.error ? 'border-[var(--state-danger-outline-border)] ring-2 ring-[var(--md-error)]/20' : 'border-[var(--control-border)]'"
+    >
+      <div ref="editorRef" class="codemirror-editor h-full" />
+    </div>
 
     <Teleport to="body">
       <div
         v-if="isResizing && previewStyle"
-        class="fixed pointer-events-none z-50 border-2 border-dashed border-brand-500 dark:border-brand-400 bg-brand-500/5 rounded-md"
+        class="fixed pointer-events-none z-50 rounded-[var(--radius-control)] border-2 border-dashed border-[var(--control-border-focus)] bg-[var(--theme-focus-ring)]"
         :style="previewStyle"
       ></div>
     </Teleport>
@@ -666,13 +615,14 @@ function handleMouseUp(e?: MouseEvent) {
     <div
       ref="resizeHandleRef"
       @mousedown="handleMouseDown"
-      class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize hover:bg-[var(--surface-muted)] transition-colors group z-50 select-none"
-      :class="{ 'bg-[var(--surface-muted)]': isResizing }"
-      style="touch-action: none; pointer-events: auto;"
+      data-resize-handle
+      class="relative flex h-4 shrink-0 cursor-ns-resize select-none items-center justify-center"
+      style="touch-action: none"
     >
-      <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
-        <div class="w-12 h-0.5 bg-[var(--text-quaternary)] group-hover:bg-[var(--text-tertiary)] rounded-full"></div>
-      </div>
+      <div
+        class="h-1 w-14 rounded-full bg-[var(--text-tertiary)] transition-colors group-hover/code-editor:bg-[var(--control-border-focus)]"
+        :class="{ '!bg-[var(--control-border-focus)]': isResizing }"
+      />
     </div>
   </div>
 

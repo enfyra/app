@@ -608,7 +608,22 @@ button:focus-visible,
   border-bottom-left-radius: var(--radius-panel);
 }
 
-.eapp-pagination :where(a, button) {
+:where(.eapp-pagination, .eapp-settings-pagination) :where([data-slot="item"], [data-slot="first"], [data-slot="prev"], [data-slot="next"], [data-slot="last"]) {
+  aspect-ratio: 1;
+  width: 2rem;
+  min-width: 2rem;
+  padding-inline: 0;
+  justify-content: center;
+}
+
+@media (max-width: 767px) {
+  .eapp-pagination-mini :where([data-slot="item"], [data-slot="first"], [data-slot="prev"], [data-slot="next"], [data-slot="last"]) {
+    width: 1.75rem;
+    min-width: 1.75rem;
+  }
+}
+
+:where(.eapp-pagination, .eapp-settings-pagination) :where(a, button) {
   border-color: var(--pagination-border) !important;
   background: var(--pagination-bg) !important;
   color: var(--pagination-text) !important;
@@ -623,21 +638,21 @@ button:focus-visible,
 /* Hover feedback is pointer-only: on touch, the sticky emulated `:hover` left the
    last-tapped page button looking selected. */
 @media (hover: hover) and (pointer: fine) {
-  .eapp-pagination :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
+  :where(.eapp-pagination, .eapp-settings-pagination) :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
     border-color: var(--pagination-border-hover) !important;
     background: var(--pagination-bg-hover) !important;
     color: var(--pagination-text-hover) !important;
   }
 }
 
-.eapp-pagination :where([aria-current="page"]) {
+:where(.eapp-pagination, .eapp-settings-pagination) :where([aria-current="page"]) {
   border-color: var(--pagination-active-border) !important;
   background: var(--pagination-active-bg) !important;
   color: var(--pagination-active-text) !important;
   box-shadow: var(--pagination-active-shadow) !important;
 }
 
-.eapp-pagination :where(button:disabled:not([aria-current="page"]), a[aria-disabled="true"]:not([aria-current="page"]), [data-disabled="true"]:not([aria-current="page"])) {
+:where(.eapp-pagination, .eapp-settings-pagination) :where(button:disabled:not([aria-current="page"]), a[aria-disabled="true"]:not([aria-current="page"]), [data-disabled="true"]:not([aria-current="page"])) {
   border-color: var(--pagination-disabled-border) !important;
   background: var(--pagination-disabled-bg) !important;
   color: var(--pagination-disabled-text) !important;

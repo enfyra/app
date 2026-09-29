@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import { h } from 'vue';
+import { UBadge } from '#components';
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const page = ref(1);
-const pageLimit = 10;
+const pageLimit = useSettingsPageSize('bootstrap');
 const route = useRoute();
 const tableName = "enfyra_bootstrap_script";
 const { confirm } = useConfirm();
@@ -22,8 +28,6 @@ registerPageHeader({
   title: "Bootstrap Manager",
   gradient: "purple",
 });
-
-const pageIconColor = 'primary';
 
 const {
   data: apiData,
@@ -51,7 +55,6 @@ const { execute: removeScript, error: removeScriptError } = useApi(
 const {
   items: bootstrapScripts,
   showInitialLoading,
-  isRefreshing: bootstrapScriptsRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => {
   return apiData.value?.meta?.totalCount || 0;
@@ -91,74 +94,43 @@ async function deleteScript(id: number) {
   await fetchBootstrapScripts();
 }
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchBootstrapScripts();
+const columns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('name', 'Script'),
+  settingsTextColumn('description', 'Description'),
+  settingsTextColumn('type', 'Type'),
+  { accessorKey: 'isSystem', header: 'Origin', enableSorting: false,
+    cell: ({ getValue }) => h(UBadge, { label: getValue() ? 'System' : 'Custom', color: getValue() ? 'info' : 'neutral', variant: 'soft' }),
   },
-  { immediate: true }
-);
+  settingsDateColumn(),
+];
+
+function getRowActions(script: Record<string, any>): DataTableRowAction[] {
+  if (script.isSystem) return [];
+  return [{ label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteScript(getId(script)) }];
+}
+
+async function setPageSize(size: number) {
+  if (page.value !== 1) await navigateTo({ path: route.path, query: { ...route.query, page: undefined } }, { replace: true });
+  pageLimit.value = size;
+}
+
+watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
+watch([page, pageLimit], () => { void fetchBootstrapScripts(); }, { immediate: true });
 </script>
 
 <template>
-  <CommonResourceListFrame
+  <DataTableSettingsTable
     v-model:page="page"
+    :data="bootstrapScripts"
+    :columns="columns"
+    :actions="getRowActions"
     :loading="showInitialLoading"
-    :has-items="bootstrapScripts.length > 0"
-    loading-title="Loading bootstrap scripts..."
-    loading-description="Fetching bootstrap scripts"
-    empty-title="No bootstrap scripts found"
-    empty-description="No bootstrap scripts have been created yet"
-    empty-icon="lucide:rocket"
     :total="total"
-    :items-per-page="pageLimit"
+    :page-limit="pageLimit"
+    page-size-key="bootstrap"
     :pagination-loading="loading"
+    @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-  >
-        <CommonResourceListItem
-          v-for="script in bootstrapScripts"
-          :key="script.id"
-          :title="script.name"
-          :description="script.description || 'No description'"
-          icon="lucide:rocket"
-          :icon-color="pageIconColor"
-          :loading="bootstrapScriptsRefreshing"
-          :to="`/settings/bootstrap/${getId(script)}`"
-          :stats="[
-            {
-              label: 'Type',
-              component: 'UBadge',
-              props: { variant: 'soft', color: 'warning' },
-              value: script.type || 'Unknown',
-            },
-            {
-              label: 'System',
-              component: script.isSystem ? 'UBadge' : undefined,
-              props: script.isSystem ? { variant: 'soft', color: 'info' } : undefined,
-              value: script.isSystem ? 'System' : '-'
-            },
-            {
-              label: 'Created',
-              value: new Date(script.createdAt).toLocaleDateString(),
-            },
-          ]"
-          :methods="[
-            {
-              label: 'Delete',
-              props: {
-                icon: 'i-lucide-trash-2',
-                variant: 'solid',
-                color: 'error',
-                size: 'sm',
-              },
-              disabled: script.isSystem,
-              onClick: (e?: Event) => {
-                e?.stopPropagation();
-                deleteScript(getId(script));
-              },
-            }
-          ]"
-        />
-  </CommonResourceListFrame>
+    @row-click="script => navigateTo(`/settings/bootstrap/${getId(script)}`)"
+  />
 </template>

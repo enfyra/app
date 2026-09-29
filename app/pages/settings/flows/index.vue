@@ -1,64 +1,28 @@
 <template>
-  <CommonResourceListFrame
+  <DataTableSettingsTable
     v-model:page="page"
-    root-class="flow-manager-page"
+    :data="flows"
+    :columns="columns"
+    :actions="getRowActions"
     :loading="showInitialLoading"
-    :has-items="flows.length > 0"
-    loading-title="Loading flows..."
-    loading-description="Fetching flow configurations"
-    loading-size="md"
-    empty-title="No flows found"
-    empty-description="No flows have been created yet"
-    empty-icon="lucide:workflow"
-    empty-size="lg"
     :total="total"
-    :items-per-page="limit"
+    :page-limit="limit"
+    page-size-key="flows"
     :pagination-loading="loading"
+    @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-  >
-        <CommonResourceListItem
-          v-for="flow in flows"
-          :key="flow.id"
-          :title="flow.name"
-          :description="flow.description || 'Flow'"
-          :icon="flow.icon || 'i-lucide-workflow'"
-          icon-color="primary"
-          :loading="flowsRefreshing"
-          :to="`/settings/flows/${getId(flow)}`"
-          :stats="[
-            {
-              label: 'Trigger',
-              component: 'UBadge',
-              props: { variant: 'soft', color: getTriggerColor((flow.triggers || []).filter((t: any) => t.isEnabled)[0]?.type || 'code') },
-              value: (flow.triggers || []).filter((t: any) => t.isEnabled).length ? (flow.triggers || []).filter((t: any) => t.isEnabled).map((t: any) => t.type).join(', ') : 'code',
-            },
-            {
-              label: 'Status',
-              component: 'UBadge',
-              props: { variant: 'soft', color: flow.isEnabled ? 'success' : 'neutral' },
-              value: flow.isEnabled ? 'Active' : 'Inactive',
-            },
-            {
-              label: 'Steps',
-              value: flow.steps?.length || 0,
-            },
-            {
-              label: 'Timeout',
-              value: `${(flow.timeout || 30000) / 1000}s`,
-            },
-          ]"
-          :header-actions="getHeaderActions(flow)"
-          :methods="getFooterActions(flow)"
-        />
-  </CommonResourceListFrame>
+    @row-click="flow => navigateTo(`/settings/flows/${getId(flow)}`)"
+  />
 </template>
 
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import { getTriggerColor } from '~/utils/flow.constants';
+import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
 
 const page = ref(1);
-const limit = 10;
+const limit = useSettingsPageSize('flows');
 const FLOW_LIST_FIELDS = [
   "id",
   "name",
@@ -104,7 +68,6 @@ const {
 const {
   items: flows,
   showInitialLoading,
-  isRefreshing: flowsRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
@@ -129,31 +92,27 @@ registerHeaderActions([
 ]);
 
 
-function getHeaderActions(flow: any) {
-  const actions = [];
-  if (checkPermissionCondition({ or: [{ route: '/enfyra_flow', methods: ['PATCH'] }] })) {
-    actions.push({
-      component: 'USwitch',
-      props: {
-        'model-value': flow.isEnabled,
-        loading: getFlowLoader(flow.id.toString()).isLoading,
-      },
-      onClick: (e?: Event) => e?.stopPropagation(),
-      onUpdate: () => toggleFlowStatus(flow),
-    });
-  }
-  return actions;
-}
+const columns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('name', 'Flow'),
+  { ...settingsTextColumn('description', 'Description'), meta: { style: { th: { width: '38%' }, td: { width: '38%' } } } },
+  { id: 'triggers', header: 'Triggers', enableSorting: false,
+    cell: ({ row }) => (row.original.triggers || []).filter((trigger: any) => trigger.isEnabled).map((trigger: any) => trigger.type).join(', ') || 'code',
+  },
+  { id: 'steps', header: 'Steps', enableSorting: false, cell: ({ row }) => String(row.original.steps?.length || 0) },
+  { id: 'timeout', header: 'Timeout', enableSorting: false, cell: ({ row }) => `${(row.original.timeout || 30000) / 1000}s` },
+  settingsStatusColumn(),
+];
 
-function getFooterActions(flow: any) {
-  const hasDelete = checkPermissionCondition({ or: [{ route: '/enfyra_flow', methods: ['DELETE'] }] });
+function getRowActions(flow: Record<string, any>): DataTableRowAction[] {
   return [
-    {
-      label: 'Delete',
-      props: { icon: 'i-lucide-trash-2', variant: 'solid', color: 'error', size: 'sm' },
-      disabled: !hasDelete || flow.isSystem,
-      onClick: (e?: Event) => { e?.stopPropagation(); deleteFlow(flow); },
-    },
+    ...(checkPermissionCondition({ or: [{ route: '/enfyra_flow', methods: ['PATCH'] }] }) ? [{
+      label: flow.isEnabled ? 'Disable' : 'Enable', icon: flow.isEnabled ? 'lucide:power-off' : 'lucide:power',
+      disabled: getFlowLoader(String(getId(flow))).isLoading.value,
+      onSelect: () => toggleFlowStatus(flow),
+    }] : []),
+    ...(checkPermissionCondition({ or: [{ route: '/enfyra_flow', methods: ['DELETE'] }] }) && !flow.isSystem ? [{
+      label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteFlow(flow),
+    }] : []),
   ];
 }
 
@@ -200,12 +159,11 @@ const deleteFlow = async (flow: any) => {
   }
 };
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchFlows();
-  },
-  { immediate: true }
-);
+async function setPageSize(size: number) {
+  if (page.value !== 1) await navigateTo({ path: route.path, query: { ...route.query, page: undefined } }, { replace: true });
+  limit.value = size;
+}
+
+watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
+watch([page, limit], () => { void fetchFlows(); }, { immediate: true });
 </script>

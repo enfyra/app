@@ -1,51 +1,25 @@
 <template>
-  <CommonResourceListFrame
-    root-class="oauth-config-page"
-    :loading="showInitialLoading"
-    :has-items="configs.length > 0"
-    loading-title="Loading OAuth configurations..."
-    loading-description="Fetching OAuth provider settings"
-    loading-size="md"
-    empty-title="No OAuth configurations found"
-    empty-description="Configure OAuth providers to enable social login"
-    empty-icon="lucide:key"
-    empty-size="lg"
+  <DataTableSettingsTable
     v-model:page="page"
+    :data="configs"
+    :columns="columns"
+    :actions="getRowActions"
+    :loading="showInitialLoading"
     :total="total"
-    :items-per-page="limit"
+    :page-limit="limit"
+    page-size-key="oauth-config"
     :pagination-loading="loading"
+    @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-  >
-        <CommonResourceListItem
-          v-for="config in configs"
-          :key="config.id"
-          :title="getProviderLabel(config.provider)"
-          :description="config.description || `Configure ${getProviderLabel(config.provider)} OAuth`"
-          :icon="getProviderIcon(config.provider)"
-          :icon-color="pageIconColor"
-          :loading="configsRefreshing"
-          :to="`/settings/oauth/config/${getId(config)}`"
-          :stats="[
-            {
-              label: 'Status',
-              component: 'UBadge',
-              props: {
-                variant: 'soft',
-                color: config.isEnabled ? 'success' : 'neutral',
-              },
-              value: config.isEnabled ? 'Active' : 'Inactive',
-            },
-            {
-              label: 'Client ID',
-              value: maskClientId(config.clientId),
-            },
-          ]"
-          :header-actions="getHeaderActions(config)"
-        />
-  </CommonResourceListFrame>
+    @row-click="config => navigateTo(`/settings/oauth/config/${getId(config)}`)"
+  />
 </template>
 
 <script setup lang="ts">
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 interface OAuthConfigDefinition {
   id?: string;
@@ -57,7 +31,7 @@ interface OAuthConfigDefinition {
 }
 
 const page = ref(1);
-const limit = 10;
+const limit = useSettingsPageSize('oauth-config');
 
 const notify = useNotify();
 const { getLoader: getConfigLoader } = useKeyedLoaders();
@@ -79,8 +53,6 @@ registerPageHeader({
   gradient: "blue",
 });
 
-const pageIconColor = 'primary';
-
 const {
   data: apiData,
   pending: loading,
@@ -99,7 +71,6 @@ const {
 const {
   items: configs,
   showInitialLoading,
-  isRefreshing: configsRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
 
@@ -132,19 +103,6 @@ registerHeaderActions([
   },
 ]);
 
-function getProviderIcon(provider: string) {
-  switch (provider) {
-    case "google":
-      return "logos:google-icon";
-    case "facebook":
-      return "logos:facebook";
-    case "github":
-      return "mdi:github";
-    default:
-      return "lucide:key";
-  }
-}
-
 function getProviderLabel(provider: string) {
   switch (provider) {
     case "google":
@@ -163,22 +121,20 @@ function maskClientId(clientId: string) {
   return clientId.substring(0, 8) + "..." + clientId.substring(clientId.length - 4);
 }
 
-function getHeaderActions(config: OAuthConfigDefinition) {
-  const actions = [];
+const columns: ColumnDef<Record<string, any>>[] = [
+  { accessorKey: 'provider', header: 'Provider', enableSorting: false, cell: ({ getValue }) => getProviderLabel(String(getValue())) },
+  settingsTextColumn('description', 'Description'),
+  { accessorKey: 'clientId', header: 'Client ID', enableSorting: false, cell: ({ getValue }) => maskClientId(String(getValue() ?? '')) },
+  settingsStatusColumn(),
+];
 
-  if (checkPermissionCondition({ or: [{ route: '/enfyra_oauth_config', methods: ['PATCH'] }] })) {
-    actions.push({
-      component: 'USwitch',
-      props: {
-        'model-value': config.isEnabled,
-        loading: getConfigLoader(String(getId(config) ?? '')).isLoading
-      },
-      onClick: (e?: Event) => e?.stopPropagation(),
-      onUpdate: () => toggleConfigStatus(config)
-    });
-  }
-
-  return actions;
+function getRowActions(config: Record<string, any>): DataTableRowAction[] {
+  if (!checkPermissionCondition({ or: [{ route: '/enfyra_oauth_config', methods: ['PATCH'] }] })) return [];
+  return [{
+    label: config.isEnabled ? 'Disable' : 'Enable', icon: config.isEnabled ? 'lucide:power-off' : 'lucide:power',
+    disabled: getConfigLoader(String(getId(config) ?? '')).isLoading.value,
+    onSelect: () => toggleConfigStatus(config as OAuthConfigDefinition),
+  }];
 }
 
 const toggleConfigStatus = async (config: OAuthConfigDefinition) => {
@@ -220,12 +176,11 @@ const toggleConfigStatus = async (config: OAuthConfigDefinition) => {
     } successfully!`);
 };
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchConfigs();
-  },
-  { immediate: true }
-);
+async function setPageSize(size: number) {
+  if (page.value !== 1) await navigateTo({ path: route.path, query: { ...route.query, page: undefined } }, { replace: true });
+  limit.value = size;
+}
+
+watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
+watch([page, limit], () => { void fetchConfigs(); }, { immediate: true });
 </script>
