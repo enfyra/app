@@ -6,6 +6,12 @@ import {
   getGuardTemplate,
   getGuardTemplatesForScope,
 } from '~/utils/guard-templates'
+import {
+  getRouteMethodConfigFieldMap,
+  getRouteMethodFileFieldMap,
+  routeMethodConfigSections,
+} from '~/utils/route-method-config-forms'
+import type { RouteMethodFileFieldDraft } from '~/types/route-method-config'
 
 const props = withDefaults(defineProps<{
   tableName?: string
@@ -114,10 +120,10 @@ const methodConfigs = computed<any[]>(() => {
 })
 const methodConfigColumns = [
   { id: 'method', header: 'Method', accessorFn: (config: any) => config.method?.name ?? 'Method' },
-  { id: 'status', header: 'Status', accessorFn: (config: any) => config.available },
+  { id: 'status', header: 'Enabled', accessorFn: (config: any) => config.available, enableSorting: false },
   { id: 'access', header: 'Access', accessorFn: (config: any) => config.available ? config.isPublic ? 'Public' : config.skipRoleGuard ? 'Authenticated · role check skipped' : 'Authenticated' : 'Unavailable' },
-  { id: 'timeout', header: 'Code budget', accessorFn: (config: any) => config.timeout },
-  { id: 'actions', header: '', enableSorting: false, cell: () => '' },
+  { id: 'timeout', header: 'Timeout', accessorFn: (config: any) => config.timeout },
+  { id: 'actions', header: '', enableSorting: false, cell: () => '', meta: { class: { th: 'w-10', td: 'w-10 text-right' } } },
 ]
 
 const availableMethodRecords = computed(() => {
@@ -255,7 +261,7 @@ const methodConfigDraft = reactive({
   requestBodyType: 'none',
   maxUploadFileSize: null as number | null,
   maxFiles: null as number | null,
-  fileFields: [] as Array<{ id?: string | number; name: string; required: boolean; maxCount: number; maxFileSize: number | null; allowedMimeTypes: string[] | null; sort: number }>,
+  fileFields: [] as RouteMethodFileFieldDraft[],
 })
 const selectedMethodConfig = computed(() => methodConfigs.value.find((config) => String(getId(config)) === selectedMethodConfigId.value) ?? null)
 const changedMethodConfigFields = computed(() => {
@@ -282,12 +288,54 @@ const methodConfigFileFieldsChanged = computed(() => JSON.stringify(methodConfig
   })),
 ))
 const methodConfigHasChanges = computed(() => Object.keys(changedMethodConfigFields.value).length > 0 || methodConfigFileFieldsChanged.value)
+const methodConfigSaving = computed(() => updateMethodConfigLoading.value || methodFileFieldsLoading.value)
+const methodConfigReadonly = computed(() => props.canUpdateRoute === false || methodConfigSaving.value)
+const methodConfigErrors = ref<Record<string, string>>({})
+const methodConfigFieldErrors = ref<Record<string, Record<string, string>>>({})
+const methodConfigFieldMap = computed(() => getRouteMethodConfigFieldMap({
+  readonly: methodConfigReadonly.value,
+  available: methodConfigDraft.available,
+  isPublic: methodConfigDraft.isPublic,
+  multipartAllowed: ['POST', 'PATCH', 'PUT'].includes(selectedMethodConfig.value?.method?.name),
+}))
+const methodConfigSections = computed(() => routeMethodConfigSections.map(section => ({
+  ...section,
+  fields: section.id === 'request-body' && (methodConfigDraft.requestBodyType === 'multipart' || methodConfigDraft.fileFields.length)
+    ? [...section.fields, 'maxUploadFileSize', 'maxFiles']
+    : section.fields,
+})))
+const methodFileFieldMap = computed(() => getRouteMethodFileFieldMap(methodConfigReadonly.value))
+const methodConfigForm = computed({
+  get: () => methodConfigDraft,
+  set: (value: Record<string, any>) => {
+    Object.assign(methodConfigDraft, value)
+    methodConfigDraft.timeout = Number(value.timeout)
+    for (const key of ['maxUploadFileSize', 'maxFiles'] as const) {
+      methodConfigDraft[key] = value[key] == null || value[key] === '' ? null : Number(value[key])
+    }
+  },
+})
+
+function updateMethodFileFieldDraft(index: number, value: Record<string, any>) {
+  const field = methodConfigDraft.fileFields[index]
+  if (!field) return
+  Object.assign(field, value, {
+    maxCount: Number(value.maxCount),
+    maxFileSize: value.maxFileSize == null || value.maxFileSize === '' ? null : Number(value.maxFileSize),
+  })
+}
+const { togglingMethodConfigId, toggleMethodAvailability } = useRouteMethodAvailability({
+  canUpdate: () => props.canUpdateRoute !== false,
+  isSaving: () => methodConfigDrawerOpen.value || methodConfigSaving.value,
+  refresh: fetchRoute,
+})
 
 function addMethodFileField() {
   methodConfigDraft.fileFields.push({ name: 'file', required: false, maxCount: 1, maxFileSize: null, allowedMimeTypes: null, sort: methodConfigDraft.fileFields.length })
 }
 
 function openMethodConfig(config: any) {
+  if (togglingMethodConfigId.value !== null || methodConfigSaving.value) return
   selectedMethodConfigId.value = String(getId(config))
   Object.assign(methodConfigDraft, {
     available: config.available === true,
@@ -304,6 +352,8 @@ function openMethodConfig(config: any) {
       allowedMimeTypes: field.allowedMimeTypes ?? null, sort: field.sort ?? 0,
     })),
   })
+  methodConfigErrors.value = {}
+  methodConfigFieldErrors.value = {}
   methodConfigDrawerOpen.value = true
 }
 
@@ -848,7 +898,7 @@ watch(showEditHookDrawer, (isOpen) => {
     </CommonFormCard>
     </template>
 
-    <CommonFormCard v-if="activeEditorTab === 'methods' && methodConfigs.length" title="Method Configurations" description="Choose a method to view or change its configuration.">
+    <CommonFormCard v-if="activeEditorTab === 'methods' && methodConfigs.length" title="Methods" description="Toggle a method to enable it, or select its row for more settings.">
       <DataTable
         :data="methodConfigs"
         :columns="methodConfigColumns"
@@ -860,13 +910,22 @@ watch(showEditHookDrawer, (isOpen) => {
           <MethodBadge :method="row.original.method" size="sm" />
         </template>
         <template #status-cell="{ row }">
-          <UBadge :label="row.original.available ? 'Enabled' : 'Disabled'" :color="row.original.available ? 'success' : 'neutral'" variant="subtle" />
+          <div class="flex w-fit items-center" @click.stop @keydown.stop>
+            <USwitch
+              :model-value="row.original.available === true"
+              size="sm"
+              :loading="togglingMethodConfigId === String(getId(row.original))"
+              :disabled="canUpdateRoute === false || togglingMethodConfigId !== null || methodConfigDrawerOpen || methodConfigSaving"
+              :aria-label="`Enable ${row.original.method?.name}`"
+              @update:model-value="value => toggleMethodAvailability(row.original, value)"
+            />
+          </div>
         </template>
         <template #timeout-cell="{ row }">
-          {{ Number(row.original.timeout).toLocaleString() }} ms
+          <span class="whitespace-nowrap font-mono text-xs tabular-nums">{{ Number(row.original.timeout).toLocaleString() }} <span class="text-[var(--text-tertiary)]">ms</span></span>
         </template>
-        <template #actions-cell="{ row }">
-          <UButton label="Configure" icon="lucide:settings-2" color="neutral" variant="soft" size="sm" @click.stop="openMethodConfig(row.original)" />
+        <template #actions-cell>
+          <UIcon name="lucide:chevron-right" class="size-4 align-middle text-[var(--text-tertiary)]" aria-hidden="true" />
         </template>
       </DataTable>
     </CommonFormCard>
@@ -874,84 +933,64 @@ watch(showEditHookDrawer, (isOpen) => {
     <CommonDrawer
       :model-value="methodConfigDrawerOpen"
       :handle="false"
+      :show-close="false"
       direction="right"
       :cancel-action="{ label: 'Cancel', onClick: closeMethodConfig }"
-      :primary-action="canUpdateRoute === false ? false : { label: 'Save configuration', loading: updateMethodConfigLoading || methodFileFieldsLoading, disabled: !methodConfigHasChanges || updateMethodConfigLoading || methodFileFieldsLoading, onClick: saveMethodConfig }"
+      :primary-action="canUpdateRoute === false ? false : { label: 'Save changes', loading: methodConfigSaving, disabled: !methodConfigHasChanges || methodConfigSaving, onClick: saveMethodConfig }"
       @update:model-value="(open) => { if (!open) closeMethodConfig() }"
     >
       <template #header>
-        <div class="flex items-center gap-3">
-          <UBadge color="neutral" variant="outline" size="sm" class="font-mono font-semibold">{{ selectedMethodConfig?.method?.name }}</UBadge>
-          <h2 class="text-lg font-semibold text-[var(--text-primary)]">Method configuration</h2>
+        <div class="flex min-w-0 items-start justify-between gap-4">
+          <div class="min-w-0 space-y-1.5">
+            <div class="flex items-center gap-2.5">
+              <MethodBadge v-if="selectedMethodConfig?.method" :method="selectedMethodConfig.method" size="sm" />
+              <h2 class="text-base font-semibold text-[var(--text-primary)]">Method settings</h2>
+            </div>
+            <p class="truncate font-mono text-xs text-[var(--text-tertiary)]" :title="routePath">{{ routePath }}</p>
+          </div>
+          <UButton type="button" icon="lucide:x" color="neutral" variant="ghost" size="sm" aria-label="Close method settings" :disabled="methodConfigSaving" @click.stop.prevent="closeMethodConfig" />
         </div>
       </template>
       <template #body>
-        <div v-if="selectedMethodConfig" class="space-y-7 py-2 text-sm">
-          <section class="space-y-3" :aria-label="`${selectedMethodConfig.method?.name} access settings`">
-            <h3 class="font-semibold text-[var(--text-primary)]">Access</h3>
-            <div class="flex items-center justify-between gap-4 rounded-lg border border-[var(--border-subtle)] px-4 py-3">
-              <div><p class="font-medium">Enable method</p><p class="text-xs text-[var(--text-tertiary)]">Allow requests using {{ selectedMethodConfig.method?.name }}.</p></div>
-              <USwitch v-model="methodConfigDraft.available" size="sm" :disabled="canUpdateRoute === false || updateMethodConfigLoading" :aria-label="`Enable ${selectedMethodConfig.method?.name}`" />
-            </div>
-            <div class="flex items-center justify-between gap-4 rounded-lg border border-[var(--border-subtle)] px-4 py-3">
-              <div><p class="font-medium">Public access</p><p class="text-xs text-[var(--text-tertiary)]">Allow requests without authentication.</p></div>
-              <USwitch v-model="methodConfigDraft.isPublic" size="sm" :disabled="canUpdateRoute === false || updateMethodConfigLoading || !methodConfigDraft.available" :aria-label="`Allow public ${selectedMethodConfig.method?.name}`" />
-            </div>
-            <div class="flex items-center justify-between gap-4 rounded-lg border border-[var(--border-subtle)] px-4 py-3">
-              <div><p class="font-medium">Skip role guard</p><p class="text-xs text-[var(--text-tertiary)]">Keep authentication but bypass role checks.</p></div>
-              <USwitch v-model="methodConfigDraft.skipRoleGuard" size="sm" :disabled="canUpdateRoute === false || updateMethodConfigLoading || !methodConfigDraft.available || methodConfigDraft.isPublic" :aria-label="`Skip role guard for ${selectedMethodConfig.method?.name}`" />
-            </div>
-          </section>
-          <section class="space-y-4" :aria-label="`${selectedMethodConfig.method?.name} execution settings`">
-            <h3 class="font-semibold text-[var(--text-primary)]">Execution</h3>
-            <label class="block space-y-1.5 font-medium text-[var(--text-primary)]">Dynamic code budget (ms)
-              <UInput v-model.number="methodConfigDraft.timeout" type="number" min="1" step="1" size="sm" class="max-w-48 font-mono" :disabled="canUpdateRoute === false || updateMethodConfigLoading" :aria-label="`Dynamic timeout for ${selectedMethodConfig.method?.name} in milliseconds`" />
-              <span class="block text-xs font-normal text-[var(--text-tertiary)]">Total time available to the dynamic execution batch.</span>
-            </label>
-            <label class="block space-y-1.5 font-medium text-[var(--text-primary)]">Description
-              <UInput v-model="methodConfigDraft.description" size="sm" class="w-full" :disabled="canUpdateRoute === false || updateMethodConfigLoading" :aria-label="`Description for ${selectedMethodConfig.method?.name}`" />
-            </label>
-          </section>
-          <section class="space-y-4 border-t border-[var(--border-subtle)] pt-5" aria-label="Request body settings">
-            <h3 class="font-semibold text-[var(--text-primary)]">Request body</h3>
-            <UFormField label="Content type" description="Multipart accepts form fields and only the listed file fields for this method.">
-              <USelect
-                v-model="methodConfigDraft.requestBodyType"
-                :items="['none', 'json', 'urlencoded', 'multipart', 'raw']"
-                class="w-full max-w-xs"
-                :disabled="canUpdateRoute === false || updateMethodConfigLoading"
-              />
-            </UFormField>
-            <template v-if="methodConfigDraft.requestBodyType === 'multipart' || methodConfigDraft.fileFields.length">
-              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <UFormField label="Maximum file size (MB)" description="Empty uses the server limit.">
-                  <UInput v-model.number="methodConfigDraft.maxUploadFileSize" type="number" min="1" class="w-full" :disabled="canUpdateRoute === false || updateMethodConfigLoading" />
-                </UFormField>
-                <UFormField label="Maximum files" description="Empty uses the total of field limits.">
-                  <UInput v-model.number="methodConfigDraft.maxFiles" type="number" min="1" step="1" class="w-full" :disabled="canUpdateRoute === false || updateMethodConfigLoading" />
-                </UFormField>
+        <CommonFormCard v-if="selectedMethodConfig" :bordered="false">
+          <UForm :state="methodConfigForm" @submit="saveMethodConfig">
+            <FormEditorLazy
+              v-model="methodConfigForm"
+              v-model:errors="methodConfigErrors"
+              table-name="enfyra_route_method_config"
+              mode="update"
+              :current-record-id="getId(selectedMethodConfig)"
+              :sections="methodConfigSections"
+              :field-map="methodConfigFieldMap"
+            />
+            <div v-if="methodConfigDraft.requestBodyType === 'multipart' || methodConfigDraft.fileFields.length" class="mt-10 space-y-5">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-[var(--text-quaternary)]">File fields</h3>
+                <UButton v-if="methodConfigDraft.requestBodyType === 'multipart'" type="button" label="Add field" icon="lucide:plus" color="neutral" size="sm" variant="outline" :disabled="methodConfigReadonly" @click.stop.prevent="addMethodFileField" />
               </div>
-              <div class="space-y-2">
-                <div class="flex items-center justify-between gap-3">
-                  <div>
-                    <h4 class="font-medium">File fields</h4>
-                    <p class="text-xs text-muted">With no entries, the field <code>file</code> accepts one upload. Dynamic code reads <code>$ctx.$uploadFile['file']</code>.</p>
+              <p v-if="!methodConfigDraft.fileFields.length" class="text-sm text-[var(--text-tertiary)]">The default <code>file</code> field accepts one upload.</p>
+              <CommonFormCard v-for="(field, index) in methodConfigDraft.fileFields" :key="field.id ?? `new-${index}`" size="sm">
+                <template #header>
+                  <div class="flex items-center justify-between gap-3">
+                    <h4 class="text-sm font-medium">{{ field.name || `Field ${index + 1}` }}</h4>
+                    <UButton type="button" icon="lucide:trash-2" color="error" variant="ghost" size="sm" :aria-label="`Remove ${field.name || `field ${index + 1}`}`" :disabled="methodConfigReadonly" @click.stop.prevent="methodConfigDraft.fileFields.splice(index, 1)" />
                   </div>
-                  <UButton v-if="methodConfigDraft.requestBodyType === 'multipart'" type="button" label="Add field" icon="lucide:plus" size="sm" variant="soft" :disabled="canUpdateRoute === false || methodFileFieldsLoading" @click="addMethodFileField" />
-                </div>
-                <div v-for="(field, index) in methodConfigDraft.fileFields" :key="field.id ?? `new-${index}`" class="grid grid-cols-1 gap-2 rounded-lg border border-default p-3 sm:grid-cols-[minmax(0,1fr)_6rem_auto_auto] sm:items-end">
-                  <UFormField label="Field name"><UInput v-model="field.name" class="w-full" :disabled="canUpdateRoute === false" /></UFormField>
-                  <UFormField label="Max count"><UInput v-model.number="field.maxCount" type="number" min="1" step="1" class="w-full" :disabled="canUpdateRoute === false" /></UFormField>
-                  <UCheckbox v-model="field.required" label="Required" :disabled="canUpdateRoute === false" />
-                  <UButton type="button" icon="lucide:trash-2" color="error" variant="ghost" :aria-label="`Remove ${field.name}`" :disabled="canUpdateRoute === false" @click="methodConfigDraft.fileFields.splice(index, 1)" />
-                  <UFormField label="Per-file size (MB)" class="sm:col-span-2"><UInput v-model.number="field.maxFileSize" type="number" min="1" step="1" placeholder="Use method limit" class="w-full" :disabled="canUpdateRoute === false" /></UFormField>
-                  <UFormField label="Allowed MIME types" description="Comma-separated exact content types; empty accepts any." class="sm:col-span-2"><UInput :model-value="field.allowedMimeTypes?.join(', ') ?? ''" placeholder="image/png, application/pdf" class="w-full" :disabled="canUpdateRoute === false" @update:model-value="value => field.allowedMimeTypes = String(value).trim() ? String(value).split(',').map(type => type.trim()) : null" /></UFormField>
-                </div>
-              </div>
-            </template>
-            <p class="font-mono text-xs text-muted">Configuration #{{ getId(selectedMethodConfig) }}</p>
-          </section>
-        </div>
+                </template>
+                <FormEditorLazy
+                  :model-value="field"
+                  :errors="methodConfigFieldErrors[String(field.id ?? `new-${index}`)] ?? {}"
+                  table-name="enfyra_route_method_config_file_field"
+                  :mode="field.id == null ? 'create' : 'update'"
+                  :current-record-id="field.id ?? null"
+                  :includes="['name', 'maxCount', 'maxFileSize', 'allowedMimeTypes', 'required']"
+                  :field-map="methodFileFieldMap"
+                  @update:model-value="value => updateMethodFileFieldDraft(index, value)"
+                  @update:errors="value => methodConfigFieldErrors[String(field.id ?? `new-${index}`)] = value"
+                />
+              </CommonFormCard>
+            </div>
+          </UForm>
+        </CommonFormCard>
       </template>
     </CommonDrawer>
 

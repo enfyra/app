@@ -848,12 +848,13 @@ onMounted(async () => {
           :table-name="String(table.name)"
         />
 
-        <RouteEditorPanel
-          v-if="activeTab === 'routes'"
-          :table-name="String(route.params.table ?? '')"
-          :external-api-test="showRouteApiTest"
-          @close-api-test="showRouteApiTest = false"
-        />
+        <div v-if="activeTab === 'routes'" class="collection-route-panel border-t border-[var(--border-subtle)] pt-4">
+          <RouteEditorPanel
+            :table-name="String(route.params.table ?? '')"
+            :external-api-test="showRouteApiTest"
+            @close-api-test="showRouteApiTest = false"
+          />
+        </div>
 
         <FlowTriggersPanel
           v-if="activeTab === 'triggers'"
