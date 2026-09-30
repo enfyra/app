@@ -31,7 +31,7 @@
 </template>
 <script setup lang="ts">
 import { h } from 'vue';
-import { UAvatar, UBadge } from '#components';
+import { UBadge } from '#components';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
 import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
@@ -56,7 +56,6 @@ const USER_LIST_FIELDS = [
   "id",
   "name",
   "email",
-  "avatar",
   "isRootAdmin",
   "createdAt",
   "roles.id",
@@ -184,10 +183,10 @@ async function clearFilters() {
 
 const columns: ColumnDef<Record<string, any>>[] = [
   { id: 'user', header: 'User', enableSorting: false,
-    cell: ({ row }) => h('div', { class: 'flex items-center gap-2' }, [
-      h(UAvatar, { src: row.original.avatar, alt: row.original.name || row.original.email, size: 'xs' }),
-      h('span', row.original.name || row.original.email || 'Unnamed User'),
-    ]),
+    cell: ({ row }) => {
+      const label = row.original.name || row.original.email || 'Unnamed User';
+      return h('span', { class: 'block truncate', title: label }, label);
+    },
   },
   settingsTextColumn('email', 'Email'),
   { id: 'roles', header: 'Roles', enableSorting: false,

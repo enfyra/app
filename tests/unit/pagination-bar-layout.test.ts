@@ -46,7 +46,6 @@ describe('pagination layout', () => {
       'pages/storage/management/index.vue',
       'pages/storage/management/folder/[id].vue',
       'pages/collections/index.vue',
-      'pages/data/[table]/index.vue',
     ]
     const frameSites = [
       'pages/packages/app.vue',
@@ -72,10 +71,15 @@ describe('pagination layout', () => {
     }
 
     const settingsTable = readAppFile('components/data-table/SettingsTable.vue')
-    expect(settingsTable).toContain('useMiniBarVisibility(paginationFooter, tableScope)')
-    expect(settingsTable).toContain('eapp-pagination-mini fixed inset-x-3 bottom-3')
-    expect(settingsTable).toContain('ref="paginationFooter"')
+    const tablePagination = readAppFile('components/data-table/Pagination.vue')
+    const dataPage = readAppFile('pages/data/[table]/index.vue')
+    expect(tablePagination).toContain('useMiniBarVisibility(paginationFooter, tableScope)')
+    expect(tablePagination).toContain('eapp-pagination-mini fixed inset-x-3 bottom-3')
+    expect(tablePagination).toContain('ref="paginationFooter"')
     expect(settingsTable).toContain('ref="tableScope"')
+    expect(settingsTable).toContain('<DataTablePagination')
+    expect(dataPage.match(/<template #footer>[\s\S]*?<\/template>/)?.[0]).toContain('<DataTablePagination')
+    expect(dataPage).not.toContain('<CommonPaginationBar')
 
     // Pages that hand the pagination to the frame must not pass the same knobs.
     for (const site of frameSites) {
@@ -137,21 +141,25 @@ describe('pagination layout', () => {
     expect(pagination).not.toMatch(/size="xs"/)
   })
 
-  it('hides only the jump-to-ends controls on mobile', () => {
+  it('keeps all controls visible on mobile in main and mini pagers', () => {
+    for (const path of ['components/common/PaginationBar.vue', 'components/data-table/Pagination.vue']) {
+      const pagination = readAppFile(path)
+      expect(pagination).not.toContain('max-md:!hidden')
+      expect(pagination).not.toContain('EDGE_CONTROL_UI')
+      expect(pagination).not.toMatch(/:show-controls/)
+      expect(pagination).toContain('flex-wrap')
+      expect(pagination).not.toContain(':sibling-count="isMobile ? 1 : 2"')
+    }
     const pagination = readAppFile('components/common/PaginationBar.vue')
+    expect(pagination.match(/:show-edges="showEdges"/g)).toHaveLength(2)
+  })
 
-    // UPagination has no prop for first/last alone: `showControls` also removes
-    // prev/next, so the ends are hidden per slot instead.
-    expect(pagination).toContain('EDGE_CONTROL_UI')
-    expect(pagination).toContain("first: 'max-md:!hidden'")
-    expect(pagination).toContain("last: 'max-md:!hidden'")
-    expect(pagination).not.toMatch(/:show-controls/)
-    expect(pagination).not.toContain('showEdgesResolved')
-
-    // `showEdges` is a reka-ui prop about first/last page + ellipsis in the item
-    // window, not about the end controls, so it must not be repurposed for this.
-    const edgesBindings = pagination.match(/:show-edges="showEdges"/g) ?? []
-    expect(edgesBindings.length, 'both bars pass showEdges through').toBe(2)
+  it('starts Data table fetches from local paging state instead of waiting for route navigation', () => {
+    const page = readAppFile('pages/data/[table]/index.vue')
+    expect(page).toContain('watch([page, pageLimit, tableName, isSingleRecord, schemaReady]')
+    expect(page).toContain('if (schemaReady.value && !isSingleRecord.value) void fetchData()')
+    expect(page).toContain('watch(() => route.query.page')
+    expect(page).not.toContain('() => [route.query.page, tableName.value')
   })
 
   it('never binds loading to the pagination disabled prop', () => {

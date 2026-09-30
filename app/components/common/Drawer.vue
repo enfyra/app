@@ -68,7 +68,7 @@ function close() {
 function runAction(action: DialogFooterAction | false | undefined, fallbackClose = false) {
   if (!action) return;
   if (action.onClick) {
-    action.onClick();
+    return action.onClick();
   } else if (action.closeOnClick === true || fallbackClose) {
     close();
   }
@@ -144,6 +144,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               :key="action.label"
               :label="action.label"
               :icon="action.icon"
+              :loading-auto="true"
               :loading="actionState(action.loading)"
               :disabled="actionState(action.disabled)"
               :type="action.type || 'button'"
@@ -156,6 +157,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               v-if="props.dangerAction"
               :label="props.dangerAction.label"
               :icon="props.dangerAction.icon"
+              :loading-auto="true"
               :loading="actionState(props.dangerAction.loading)"
               :disabled="actionState(props.dangerAction.disabled)"
               :type="props.dangerAction.type || 'button'"
@@ -170,6 +172,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               v-if="props.cancelAction"
               :label="props.cancelAction.label"
               :icon="props.cancelAction.icon"
+              :loading-auto="true"
               :loading="actionState(props.cancelAction.loading)"
               :disabled="actionState(props.cancelAction.disabled)"
               :type="props.cancelAction.type || 'button'"
@@ -182,6 +185,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               v-if="props.primaryAction"
               :label="props.primaryAction.label"
               :icon="props.primaryAction.icon"
+              :loading-auto="true"
               :loading="actionState(props.primaryAction.loading)"
               :disabled="actionState(props.primaryAction.disabled)"
               :type="props.primaryAction.type || 'button'"

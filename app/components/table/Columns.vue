@@ -330,6 +330,7 @@ async function addNewColumn() {
 
   currentColumn.value.type = isMongoDB.value ? "string" : "varchar";
 
+  normalizeColumnForDatabase(currentColumn.value);
   handleUuidType(currentColumn.value);
   originalColumn.value = JSON.stringify(currentColumn.value);
   hasFormChanges.value = false;
@@ -683,6 +684,7 @@ watch(
       <UButton
         icon="lucide:plus"
         label="Add Column"
+        :loading-auto="true"
         @click="addNewColumn()"
         :size="(isMobile || isTablet) ? 'sm' : 'md'"
       />

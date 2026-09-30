@@ -176,9 +176,7 @@ export type RuntimeMetricsPayload = {
     tuning: {
       maxConcurrentWorkers: number;
       isolateMemoryLimitMb: number;
-      tasksPerWorkerCap: number;
-      isolatePoolSize: number;
-      tasksPerIsolate?: number;
+      isolatesPerWorker: number;
     };
     pool: {
       max: number;

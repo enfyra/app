@@ -12,7 +12,8 @@ const tableName = computed(() => route.params.table as string);
 const { schemas, schemaReady, getColumnFields } = useSchema(tableName);
 const total = ref(1);
 const page = ref(1);
-const pageLimit = 10;
+const pageLimit = useSettingsPageSize(`data:${tableName.value}`);
+const tableScope = shallowRef<HTMLElement | null>(null);
 const data = ref([]);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
@@ -96,7 +97,7 @@ const {
       : {};
 
     return {
-      limit: pageLimit,
+      limit: pageLimit.value,
       page: page.value,
       fields: getColumnFields(),
       sort: "-createdAt",
@@ -301,12 +302,10 @@ async function handleFilterApply(filter: FilterGroup) {
   if (page.value === 1) {
     await fetchData();
   } else {
+    page.value = 1;
     const newQuery = { ...route.query };
     delete newQuery.page;
-
-    await router.replace({
-      query: newQuery,
-    });
+    void router.replace({ query: newQuery });
   }
 }
 
@@ -320,15 +319,21 @@ watch(tableName, () => {
   rowSelection.value = {};
 });
 
-watch(
-  () => [route.query.page, tableName.value, isSingleRecord.value, schemaReady.value] as const,
-  async ([newVal, , singleRecord, ready]) => {
-    if (!ready || singleRecord) return;
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchData();
-  },
-  { immediate: true }
-);
+watch(() => route.query.page, value => {
+  page.value = Math.max(1, Number(value) || 1);
+}, { immediate: true });
+
+watch([page, pageLimit, tableName, isSingleRecord, schemaReady], () => {
+  if (schemaReady.value && !isSingleRecord.value) void fetchData();
+}, { immediate: true });
+
+function setPageSize(size: number) {
+  page.value = 1;
+  pageLimit.value = size;
+  if (route.query.page) {
+    void router.replace({ path: route.path, query: { ...route.query, page: undefined } });
+  }
+}
 
 registerHeaderActions([
   {
@@ -396,7 +401,7 @@ registerHeaderActions([
       <FilterActiveSummary :count="activeFilterCount" @clear="clearFilters" />
     </div>
 
-    <div class="space-y-6">
+    <div ref="tableScope" class="min-w-0">
       <DataTableLazy
         :data="data"
         :columns="columns"
@@ -412,18 +417,22 @@ registerHeaderActions([
           <UBadge color="neutral" variant="subtle" :label="`${total.toLocaleString()} records`" />
         </template>
         <template #footer>
-          {{ selectedRows.length }} of {{ data.length }} row(s) selected.
+          <DataTablePagination
+            v-model:page="page"
+            :items-per-page="pageLimit"
+            :total="total"
+            :loading="loading"
+            :show-page-size="true"
+            :scope="tableScope"
+            :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+            @page-size-change="setPageSize"
+          >
+            <template v-if="selectedRows.length" #summary>
+              <span class="ml-2">{{ selectedRows.length }} selected</span>
+            </template>
+          </DataTablePagination>
         </template>
       </DataTableLazy>
-
-      <CommonPaginationBar
-        v-if="Math.ceil(total / pageLimit) > 1"
-        v-model:page="page"
-        :items-per-page="pageLimit"
-        :total="total"
-        :loading="loading"
-        :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-      />
     </div>
 
     <FilterDrawerLazy

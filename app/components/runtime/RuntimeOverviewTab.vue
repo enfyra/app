@@ -28,18 +28,7 @@ type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
 defineProps<{ runtime: RuntimeMetricsViewModel }>();
 
 function totalTaskCapacity(metrics: RuntimeMetricsPayload) {
-  return metrics.executor.tuning.maxConcurrentWorkers * metrics.executor.tuning.tasksPerWorkerCap;
-}
-
-function tasksPerIsolate(metrics: RuntimeMetricsPayload) {
-  return metrics.executor.tuning.tasksPerIsolate ?? 1;
-}
-
-function reusableContextCount(metrics: RuntimeMetricsPayload) {
-  return metrics.executor.pool.workers.reduce(
-    (total, worker) => total + (worker.contextStats.idle ?? 0),
-    0,
-  );
+  return metrics.executor.tuning.maxConcurrentWorkers * metrics.executor.tuning.isolatesPerWorker;
 }
 
 function runnerRssLabel(metrics: RuntimeMetricsPayload) {
@@ -172,16 +161,10 @@ function runnerRssLabel(metrics: RuntimeMetricsPayload) {
             <div class="text-right font-medium">{{ metrics.executor.tuning.maxConcurrentWorkers }}</div>
             <div>Isolate limit</div>
             <div class="text-right font-medium">{{ fmtMb(metrics.executor.tuning.isolateMemoryLimitMb) }}</div>
-            <div>Isolate lanes</div>
-            <div class="text-right font-medium">{{ metrics.executor.tuning.isolatePoolSize }} / worker</div>
-            <div>Tasks / isolate</div>
-            <div class="text-right font-medium">{{ tasksPerIsolate(metrics) }}</div>
-            <div>Task cap</div>
-            <div class="text-right font-medium">{{ metrics.executor.tuning.tasksPerWorkerCap }} / worker</div>
+            <div>Isolate cap</div>
+            <div class="text-right font-medium">{{ metrics.executor.tuning.isolatesPerWorker }} / worker</div>
             <div>Total task cap</div>
             <div class="text-right font-medium">{{ totalTaskCapacity(metrics) }}</div>
-            <div>Reusable contexts</div>
-            <div class="text-right font-medium">{{ reusableContextCount(metrics) }}</div>
           </div>
         </div>
 

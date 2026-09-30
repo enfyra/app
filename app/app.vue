@@ -10,11 +10,13 @@ const toaster = {
 
 <template>
   <UApp :toaster="toaster">
-    <NuxtLayout>
-      <NuxtPage
-        :page-key="(route) => route.path"
-        :transition="{ name: 'eapp-page', mode: 'out-in' }"
-      />
-    </NuxtLayout>
+    <UTheme :props="{ dropdownMenu: { modal: false } }">
+      <NuxtLayout>
+        <NuxtPage
+          :page-key="(route) => route.path"
+          :transition="{ name: 'eapp-page', mode: 'out-in' }"
+        />
+      </NuxtLayout>
+    </UTheme>
   </UApp>
 </template>

@@ -2,6 +2,7 @@
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import CommonSystemVisibilityControl from "~/components/common/SystemVisibilityControl.vue";
+import RouteCollectionVisibilityControl from "~/components/route/CollectionVisibilityControl.vue";
 import type { SystemVisibilityMode } from "~/types/ui";
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
@@ -157,22 +158,17 @@ registerSubHeaderActions([
   },
   {
     id: "toggle-collection-routes",
-    icon: "lucide:table",
-    get label() {
-      return showCollectionRoutes.value ? "Hide Collection Routes" : "Collection Routes";
+    component: RouteCollectionVisibilityControl,
+    get props() {
+      return {
+        modelValue: showCollectionRoutes.value,
+        "onUpdate:modelValue": (value: boolean) => {
+          showCollectionRoutes.value = value;
+        },
+      };
     },
-    get variant() {
-      return showCollectionRoutes.value ? "solid" as const : "outline" as const;
-    },
-    get color() {
-      return showCollectionRoutes.value ? "info" as const : "neutral" as const;
-    },
-    size: "md",
     side: "right",
     order: 1,
-    onClick: () => {
-      showCollectionRoutes.value = !showCollectionRoutes.value;
-    },
   },
 ]);
 

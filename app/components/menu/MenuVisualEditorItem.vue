@@ -526,7 +526,6 @@ function handleDragEnd() {
         <UDropdownMenu
           v-if="menuItems.length > 0"
           :items="[menuItems]"
-          :modal="false"
           :content="{ side: 'bottom', align: 'end' }"
         >
           <UButton

@@ -169,6 +169,7 @@
             ...((isMobile || isTablet) ? { size: 'xs', class: '!rounded-[var(--radius-subcontrol)] !aspect-square' } : {})
           }"
           :to="action.to"
+          :loading-auto="true"
           :loading="action.loading"
           :disabled="action.disabled || action.loading"
           @click="handleActionClick(action)"
@@ -239,7 +240,7 @@ function handleHeaderActionClick(action: HeaderAction, event: Event) {
 }
 
 function handleActionClick(action: Action) {
-  action.onClick?.();
+  return action.onClick?.();
 }
 
 const componentMap = {

@@ -271,7 +271,8 @@ export default defineAppConfig({
     },
     badge: {
       slots: {
-        base: "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-semibold",
+        base: "inline-flex min-w-0 max-w-full items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-semibold",
+        label: "min-w-0 truncate",
       },
       compoundVariants: [
         {
@@ -491,6 +492,11 @@ export default defineAppConfig({
         label: "mb-1.5 block text-sm font-medium text-[var(--text-secondary)]",
         description: "text-theme-xs text-[var(--text-tertiary)]",
         error: "mt-1.5 text-theme-xs !text-[var(--form-error-text)]",
+      },
+    },
+    table: {
+      slots: {
+        td: "text-[var(--text-primary)]",
       },
     },
     card: {
