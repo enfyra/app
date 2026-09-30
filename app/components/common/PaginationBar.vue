@@ -68,7 +68,7 @@ const mainUi = computed(() => ({
 }));
 
 const miniUi = computed(() => ({
-  root: '!w-auto',
+  root: 'md:w-auto',
   list: 'flex-wrap gap-0.5 md:gap-1',
   item: '!min-w-7 md:!min-w-8',
   ...props.ui,

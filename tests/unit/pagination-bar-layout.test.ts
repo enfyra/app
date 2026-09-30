@@ -195,7 +195,7 @@ describe('pagination layout', () => {
 
   it('gates pagination hover feedback to fine pointers', () => {
     const css = readAppFile('assets/css/main.css')
-    const selector = ':where(.eapp-pagination, .eapp-settings-pagination) :where(a, button):hover'
+    const selector = ':where(.eapp-pagination-controls) :where(a, button):hover'
 
     // Touch leaves an emulated `:hover` on the last-tapped button, which read as
     // a second selected page. Hover feedback is pointer-only.

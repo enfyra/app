@@ -2,6 +2,7 @@ import type { ComputedRef, Ref } from "vue";
 import type { TableProps } from "@nuxt/ui/components/Table.vue";
 import type { RowSelectionState } from "@tanstack/vue-table";
 import type { PermissionCondition } from "./permissions";
+import type { DataTablePaginationConfig } from "./table-pagination";
 
 export interface UploadModalProps {
   modelValue: boolean;
@@ -31,6 +32,8 @@ export interface DataTableProps extends Omit<TableProps<any>, 'data' | 'columns'
   skeletonRows?: number;
   rowSelection?: RowSelectionState;
   showColumnVisibility?: boolean;
+  paginationConfig?: DataTablePaginationConfig;
+  page?: number;
 }
 
 export interface RouteLoadingProps {

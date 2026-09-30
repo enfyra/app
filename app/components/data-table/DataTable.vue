@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { UContextMenu } from '#components'
 import type { ColumnDef, RowSelectionState, SortingState, Table, VisibilityState } from '@tanstack/vue-table'
-import type { DataTableProps } from '~/types'
+import type { DataTableProps } from '~/types/ui'
 
 const props = withDefaults(defineProps<DataTableProps>(), {
   loading: false,
@@ -11,12 +11,16 @@ const props = withDefaults(defineProps<DataTableProps>(), {
 
 const emit = defineEmits<{
   'row-click': [row: Record<string, any>]
+  'load-more': []
+  'page-size-change': [size: number]
 }>()
 
 const slots = useSlots()
-const wrapperKeys = new Set(['contextMenuItems', 'skeletonRows', 'showColumnVisibility', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions'])
+const wrapperKeys = new Set(['contextMenuItems', 'skeletonRows', 'showColumnVisibility', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page'])
 const tableOptions = computed(() => Object.fromEntries(Object.entries(props).filter(([key]) => !wrapperKeys.has(key))))
 const tableRef = useTemplateRef<{ tableApi?: Table<Record<string, any>>; tableRef?: HTMLElement }>('tableRef')
+const page = defineModel<number>('page', { default: 1 })
+const tableScope = shallowRef<HTMLElement | null>(null)
 const sorting = defineModel<SortingState>('sorting', { default: () => [] })
 const columnVisibility = defineModel<VisibilityState>('columnVisibility', { default: () => ({}) })
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
@@ -65,7 +69,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="min-w-0 w-full overflow-hidden rounded-lg border border-default bg-default">
+  <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-lg border border-default bg-default">
     <div v-if="slots.toolbar || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default px-4 py-3">
       <div v-if="slots.toolbar" class="flex flex-wrap items-center gap-3">
         <slot name="toolbar" :table-api="tableRef?.tableApi" />
@@ -102,8 +106,17 @@ defineExpose({
         </template>
       </UTable>
     </component>
-    <div v-if="slots.footer" class="border-t border-default px-4 py-3 text-sm text-muted">
+    <div v-if="slots.footer || props.paginationConfig" class="space-y-3 border-t border-default px-4 py-3 text-sm text-muted">
       <slot name="footer" :table-api="tableRef?.tableApi" />
+      <DataTablePagination
+        v-if="props.paginationConfig"
+        v-bind="props.paginationConfig"
+        v-model:page="page"
+        :loaded-count="props.paginationConfig.loadedCount ?? props.data.length"
+        :scope="tableScope"
+        @load-more="emit('load-more')"
+        @page-size-change="size => emit('page-size-change', size)"
+      />
     </div>
   </div>
 </template>

@@ -30,9 +30,9 @@ export default defineAppConfig({
     },
     pagination: {
       slots: {
-        root: 'w-full', 
+        root: 'eapp-pagination-controls w-full border-t border-default pt-3 md:border-t-0 md:pt-0',
         item: 'min-w-8',
-        list: 'w-full flex-wrap'
+        list: 'w-full flex-wrap justify-end'
       }
     },
     skeleton: {
@@ -381,6 +381,19 @@ export default defineAppConfig({
         item: [
           'cursor-pointer hover:bg-[var(--state-primary-soft-bg)]'
         ],
+      },
+      variants: {
+        size: {
+          xs: { base: 'h-7' },
+          sm: { base: 'h-8' },
+          md: { base: 'h-11' },
+          lg: { base: 'h-12' },
+          xl: { base: 'h-14' },
+        },
+        variant: {
+          outline: '!ring-0 focus:!ring-3 focus:!ring-[var(--theme-focus-ring)]',
+          subtle: '!ring-0 focus:!ring-3 focus:!ring-[var(--theme-focus-ring)]',
+        },
       },
       compoundVariants: [
         {
