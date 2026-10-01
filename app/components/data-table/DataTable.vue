@@ -66,7 +66,7 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default">
+  <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
     <div v-if="slots.toolbar || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default px-4 py-3">
       <div v-if="slots.toolbar" class="flex flex-wrap items-center gap-3">
         <slot name="toolbar" :table-api="tableRef?.tableApi" />

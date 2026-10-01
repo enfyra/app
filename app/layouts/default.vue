@@ -17,14 +17,14 @@
         id="workspace"
         role="main"
         tabindex="-1"
-        class="eapp-shell-main overflow-hidden bg-default lg:rounded-[var(--radius-shell)] lg:border lg:border-default lg:shadow-sm"
+        class="eapp-shell-main overflow-hidden bg-[var(--shell-main-bg)] lg:rounded-[var(--radius-shell)] lg:border lg:border-default lg:shadow-sm"
         :ui="{ root: 'min-h-0' }"
       >
         <template #header>
           <UDashboardNavbar
             as="header"
             :toggle="false"
-            class="bg-default"
+            class="bg-[var(--shell-main-bg)]"
             :ui="{ left: 'flex-1', right: 'hidden' }"
           >
             <template #left>
@@ -33,6 +33,7 @@
           </UDashboardNavbar>
           <CommonPageHeader
             v-if="hasPageHeader"
+            class="bg-[var(--shell-main-bg)]"
             :title="pageHeader!.title"
             :description="pageHeader?.description"
             :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
@@ -41,7 +42,7 @@
             :leading-icon="pageHeader?.leadingIcon"
             :hide-leading-icon="pageHeader?.hideLeadingIcon"
           />
-          <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
+          <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" class="bg-[var(--shell-main-bg)]" />
         </template>
 
         <template #body>
@@ -106,13 +107,13 @@ import {
 
 const pageSurfaceUi = {
   card: {
-    root: 'rounded-[var(--radius-card)] border border-default bg-transparent ring-0 shadow-none',
+    root: 'rounded-[var(--radius-card)] border border-default bg-default ring-0 shadow-none',
     header: 'px-4 sm:px-6',
     body: 'px-4 sm:px-6',
     footer: 'px-4 sm:px-6',
   },
   pageCard: {
-    root: 'rounded-[var(--radius-card)] border border-default bg-transparent ring-0 shadow-none',
+    root: 'rounded-[var(--radius-card)] border border-default bg-default ring-0 shadow-none',
     container: 'p-4 sm:p-6',
   },
 };

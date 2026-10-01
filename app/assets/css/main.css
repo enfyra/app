@@ -513,7 +513,7 @@ button:focus-visible,
 .eapp-shell-main .eapp-form-region {
   border: 1px solid var(--ui-border);
   border-radius: var(--radius-card);
-  background: transparent;
+  background: var(--surface-default);
   box-shadow: none;
   padding: 1.25rem;
 }
@@ -522,6 +522,7 @@ button:focus-visible,
 .eapp-tabbed-panel .eapp-form-region {
   border: 0;
   border-radius: 0;
+  background: transparent;
   padding: 0;
 }
 
@@ -533,6 +534,12 @@ button:focus-visible,
   border: 1px solid var(--ui-border);
   border-radius: var(--radius-card);
   box-shadow: none;
+}
+
+@layer base {
+  .eapp-bordered-region {
+    background-color: var(--surface-default);
+  }
 }
 
 .eapp-radius-panel {

@@ -85,7 +85,7 @@ describe('compositing cost guard', () => {
     const header = layout.match(/<UDashboardNavbar[\s\S]*?>/)
 
     expect(header).not.toBeNull()
-    expect(header![0]).toContain('bg-default')
+    expect(header![0]).toContain('bg-[var(--shell-main-bg)]')
     expect(header![0]).not.toContain('backdrop-blur')
     expect(layout).not.toContain('will-change-transform')
     expect(layout).not.toContain('eapp-shell-header::before')
@@ -115,7 +115,7 @@ describe('compositing cost guard', () => {
     expect(theme).toContain('--shell-bg: var(--md-surface)')
     expect(theme).toContain('--shell-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b)')
     expect(theme).toContain('--shell-sidebar-bg: var(--shell-bg)')
-    expect(theme).toContain('--shell-main-bg: var(--surface-default)')
+    expect(theme).toContain('--shell-main-bg: var(--surface-workspace)')
     expect(theme).not.toMatch(/--shell-[\w-]+:\s*radial-gradient/)
   })
 

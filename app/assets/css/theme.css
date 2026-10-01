@@ -83,6 +83,7 @@
     --surface-default: var(--block-base);
     --surface-muted: var(--block-muted);
     --surface-nested: var(--block-low);
+    --surface-workspace: color-mix(in srgb, var(--md-primary-container) 3%, color-mix(in srgb, var(--block-base) 98%, #808080));
     --surface-overlay: color-mix(in srgb, var(--md-scrim) 45%, transparent);
     --surface-header: var(--block-muted);
 
@@ -271,7 +272,7 @@
     --shell-bg: var(--md-surface);
     --shell-sidebar-bg: var(--shell-bg);
     --shell-sidebar-border: var(--md-outline-variant);
-    --shell-main-bg: var(--surface-default);
+    --shell-main-bg: var(--surface-workspace);
     --shell-main-border: var(--md-outline-variant);
     --shell-mobile-content-bg: var(--shell-main-bg);
     --shell-content-bg: var(--shell-main-bg);
@@ -459,6 +460,7 @@
   --block-low: #2a2a30;
   --block-muted: #313138;
   --block-high: #3a3a42;
+  --surface-workspace: color-mix(in srgb, var(--md-primary) 1%, #1d1d22);
   --card-border: color-mix(in srgb, var(--md-outline-variant) 72%, var(--block-base));
   --card-border-hover: color-mix(in srgb, var(--md-outline) 72%, var(--block-base));
 

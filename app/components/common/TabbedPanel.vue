@@ -14,7 +14,7 @@ const slots = useSlots();
 const tabHeaderUi = { list: 'border-b-0 mb-0', indicator: '!bottom-0' };
 const panelUi = computed(() => ({
   root: props.framed
-    ? 'eapp-tabbed-panel flex min-w-0 min-h-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-default bg-transparent ring-0 divide-y-0 shadow-none'
+    ? 'eapp-tabbed-panel flex min-w-0 min-h-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-default bg-default ring-0 divide-y-0 shadow-none'
     : 'eapp-tabbed-panel flex min-w-0 min-h-0 flex-col rounded-none border-0 bg-transparent ring-0 divide-y-0 shadow-none',
   header: props.framed
     ? 'bg-muted px-5 sm:px-5 py-0 shadow-[inset_0_-1px_0_var(--ui-border)]'
