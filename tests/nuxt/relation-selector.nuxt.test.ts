@@ -24,11 +24,16 @@ mockNuxtImport('useMounted', () => () => ({ isMounted: ref(true) }))
 mockNuxtImport('useSchema', () => () => ({
   definition: ref([]),
   getColumnFields: mocks.getColumnFields,
+  ensureSchema: vi.fn().mockResolvedValue(undefined),
+  generateEmptyForm: () => ({}),
+  validate: () => ({ isValid: true, errors: {} }),
 }))
+mockNuxtImport('useApi', () => () => ({ data: ref(null), pending: ref(false), execute: vi.fn() }))
 mockNuxtImport('useScreen', () => () => ({ isMobile: ref(false), isTablet: ref(false) }))
 mockNuxtImport('useAuthFetch', () => mocks.useAuthFetch)
 
 import RelationSelector from '~/components/form/relation/Selector.vue'
+import RelationCreateDrawer from '~/components/form/relation/CreateDrawer.vue'
 
 const DrawerStub = defineComponent({
   props: { modelValue: Boolean },
@@ -40,6 +45,36 @@ describe('FormRelationSelector', () => {
     vi.useRealTimers()
     vi.clearAllMocks()
     mocks.getColumnFields.mockResolvedValue('id,name')
+  })
+
+  it('keeps record creation inside the real relation drawer context', async () => {
+    mocks.useAuthFetch.mockResolvedValue({ data: [], meta: {} })
+    const wrapper = await mountSuspended(RelationSelector, {
+      props: {
+        relationMeta: { propertyName: 'users', targetTableName: 'users', type: 'many-to-many' },
+        selectedIds: [],
+        open: false,
+      },
+      global: { stubs: {
+        FormRelationActions: defineComponent({
+          emits: ['open-create'],
+          template: '<button data-testid="create-related" @click="$emit(\'open-create\')">Add New</button>',
+        }),
+        FormEditorLazy: defineComponent({ template: '<div data-testid="new-record-form" />' }),
+        CommonUnsavedChangesModal: true,
+        FilterDrawerLazy: true,
+      } },
+    })
+    expect(wrapper.findComponent(RelationCreateDrawer).exists()).toBe(false)
+    await wrapper.setProps({ open: true })
+    await flushPromises()
+    const createButton = document.body.querySelector<HTMLButtonElement>('[data-testid="create-related"]')
+    expect(createButton).not.toBeNull()
+    createButton!.click()
+    await flushPromises()
+    expect(wrapper.findComponent(RelationCreateDrawer).exists()).toBe(true)
+    expect(document.body.querySelector('[data-testid="new-record-form"]')).not.toBeNull()
+    wrapper.unmount()
   })
 
   it('leaves loading and shows a retry state when relation records fail to load', async () => {

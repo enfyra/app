@@ -99,7 +99,9 @@ registerPageHeader({
     />
 
     <template v-else>
-      <div class="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+      <CommonTabbedPanel>
+        <template #header>
+      <div class="relative">
         <button
           v-if="canScrollTabsLeft"
           type="button"
@@ -133,9 +135,13 @@ registerPageHeader({
         </div>
       </div>
 
+        </template>
+
       <KeepAlive>
         <component :is="activeTabComponent" v-if="activeTabComponent" :key="runtime.activeTab" :runtime="runtime" />
       </KeepAlive>
+
+      </CommonTabbedPanel>
 
       <RuntimeMetricGuide :guide="runtime.activeGuide" />
     </template>

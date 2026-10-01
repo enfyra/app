@@ -89,10 +89,12 @@ import {
   CommonResourceListItem,
   PermissionGate,
   FormEditor,
+  FormRichTextEditorLazy,
   CommonUploadModal,
   DynamicWidgetComponent,
   FilterDrawer,
   DataTable,
+  CommonTabbedPanel,
   NuxtLink,
 } from "#components";
 
@@ -116,6 +118,7 @@ export const availableComponents = {
   UProgress: markRaw(UProgress),
   UTable: markRaw(UTable),
   DataTable: markRaw(DataTable),
+  TabbedPanel: markRaw(CommonTabbedPanel),
   UPagination: markRaw(UPagination),
   UBreadcrumb: markRaw(UBreadcrumb),
   UTabs: markRaw(UTabs),
@@ -181,6 +184,7 @@ export const availableComponents = {
   UKbd: markRaw(UKbd),
   PermissionGate: markRaw(PermissionGate),
   FormEditor: markRaw(FormEditor),
+  RichTextEditor: markRaw(FormRichTextEditorLazy),
   FilterDrawer: markRaw(FilterDrawer),
   LoadingState: markRaw(CommonLoadingState),
   EmptyState: markRaw(CommonEmptyState),

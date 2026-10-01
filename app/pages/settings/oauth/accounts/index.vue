@@ -1,47 +1,24 @@
 <template>
-  <CommonResourceListFrame
+  <DataTableSettingsTable
     v-model:page="page"
-    root-class="oauth-accounts-page"
+    :data="accounts"
+    :columns="columns"
     :loading="showInitialLoading"
-    :has-items="accounts.length > 0"
-    loading-title="Loading OAuth accounts..."
-    loading-description="Fetching linked OAuth accounts"
-    loading-size="md"
-    empty-title="No OAuth accounts found"
-    empty-description="OAuth accounts will appear when users link their social login"
-    empty-icon="lucide:link"
-    empty-size="lg"
     :total="total"
-    :items-per-page="pageLimit"
+    :page-limit="pageLimit"
+    page-size-key="oauth-accounts"
     :pagination-loading="loading"
+    @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-  >
-    <CommonResourceListItem
-      v-for="account in accounts"
-      :key="getId(account)"
-      :title="getProviderLabel(account.provider)"
-      :description="getUserEmail(account)"
-      :icon="getProviderIcon(account.provider)"
-      :icon-color="pageIconColor"
-      :loading="accountsRefreshing"
-      :to="`/settings/oauth/accounts/${getId(account)}`"
-      :stats="[
-        {
-          label: 'Provider ID',
-          value: maskProviderId(account.providerUserId),
-        },
-        {
-          label: 'User',
-          value: getUserEmail(account) || '-',
-        },
-      ]"
-    />
-  </CommonResourceListFrame>
+    @row-click="account => navigateTo(`/settings/oauth/accounts/${getId(account)}`)"
+  />
 </template>
 
 <script setup lang="ts">
+import type { ColumnDef } from '@tanstack/vue-table';
+
 const page = ref(1);
-const pageLimit = 12;
+const pageLimit = useSettingsPageSize('oauth-accounts');
 const route = useRoute();
 const tableName = "enfyra_oauth_account";
 const OAUTH_ACCOUNT_LIST_FIELDS = [
@@ -61,8 +38,6 @@ registerPageHeader({
   gradient: "blue",
 });
 
-const pageIconColor = 'primary';
-
 const {
   data: apiData,
   pending: loading,
@@ -81,22 +56,8 @@ const {
 const {
   items: accounts,
   showInitialLoading,
-  isRefreshing: accountsRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.totalCount || 0);
-
-function getProviderIcon(provider: string) {
-  switch (provider) {
-    case "google":
-      return "logos:google-icon";
-    case "facebook":
-      return "logos:facebook";
-    case "github":
-      return "mdi:github";
-    default:
-      return "lucide:link";
-  }
-}
 
 function getProviderLabel(provider: string) {
   switch (provider) {
@@ -122,12 +83,17 @@ function maskProviderId(id: string) {
   return id.substring(0, 6) + "..." + id.substring(id.length - 4);
 }
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchAccounts();
-  },
-  { immediate: true }
-);
+const columns: ColumnDef<Record<string, any>>[] = [
+  { accessorKey: 'provider', header: 'Provider', enableSorting: false, cell: ({ getValue }) => getProviderLabel(String(getValue())) },
+  { id: 'user', header: 'User', enableSorting: false, cell: ({ row }) => getUserEmail(row.original) || '_' },
+  { accessorKey: 'providerUserId', header: 'Provider ID', enableSorting: false, cell: ({ getValue }) => maskProviderId(String(getValue() ?? '')) },
+];
+
+async function setPageSize(size: number) {
+  if (page.value !== 1) await navigateTo({ path: route.path, query: { ...route.query, page: undefined } }, { replace: true });
+  pageLimit.value = size;
+}
+
+watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
+watch([page, pageLimit], () => { void fetchAccounts(); }, { immediate: true });
 </script>

@@ -17,6 +17,22 @@ describe('button feedback', () => {
     expect(config).not.toContain('active:translate-y-px')
   })
 
+  it('reserves desktop and mobile header space for conditional selection actions', () => {
+    const pageHeader = readAppFile('components/common/PageHeader.vue')
+    expect(pageHeader).toContain('hasConditionalActions')
+    expect(pageHeader).toContain('min-h-[88px]')
+    expect(pageHeader).toContain('min-h-[40px]')
+    expect(pageHeader).toContain("'flex-col'")
+  })
+
+  it('keeps shared card and list actions pending for their click promise', () => {
+    for (const path of ['components/common/ResourceListItem.vue', 'components/common/SettingsCard.vue']) {
+      const source = readAppFile(path)
+      expect(source).toContain(':loading-auto="true"')
+      expect(source).toMatch(/function handleActionClick[\s\S]*?return action\.onClick\?\.\(/)
+    }
+  })
+
   it('starts header action loading from the click promise', () => {
     const actionSurfaces = [
       'components/layout/Header.vue',

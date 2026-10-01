@@ -42,7 +42,7 @@ const adminTools = computed(() => {
         v-for="tool in adminTools"
         :key="tool.to"
         :to="tool.to"
-        class="surface-card group rounded-lg p-4 transition-colors hover:border-[var(--border-strong)]"
+        class="eapp-bordered-region group p-4 transition-colors hover:border-[var(--border-strong)]"
       >
         <div class="flex items-start gap-3">
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-500/10 text-primary-600 dark:text-primary-400">

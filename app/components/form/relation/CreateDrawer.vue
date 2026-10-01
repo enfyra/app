@@ -40,7 +40,6 @@ const createForm = ref(generateEmptyForm());
 const createErrors = ref({});
 const hasFormChanges = ref(false);
 const showDiscardModal = ref(false);
-const { isMobile, isTablet } = useScreen();
 
 watch(show, async (val) => {
   if (val) {
@@ -93,7 +92,7 @@ function confirmDiscard() {
     :handle="false"
     v-model="show"
     direction="right"
-    footer-hint="Ready to create new record?"
+    nested
     :cancel-action="{ label: 'Cancel', onClick: handleClose }"
     :primary-action="{
       label: 'Create Record',
@@ -104,40 +103,30 @@ function confirmDiscard() {
     }"
   >
     <template #header>
-      <div :class="(isMobile || isTablet) ? 'flex items-center gap-2 min-w-0 flex-1' : 'flex items-center gap-3'">
-        <div
-          :class="(isMobile || isTablet) ? 'accent-tile accent-tile-primary flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg shadow-theme-xs' : 'accent-tile accent-tile-primary flex h-10 w-10 items-center justify-center rounded-xl shadow-theme-xs'"
-        >
-          <UIcon name="lucide:plus" :class="(isMobile || isTablet) ? 'text-xs text-current' : 'text-sm text-current'" />
+      <div class="flex min-w-0 flex-1 items-center gap-3">
+        <div class="accent-tile accent-tile-primary flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-control)]">
+          <UIcon name="lucide:plus" class="size-5 text-current" />
         </div>
         <div class="min-w-0 flex-1">
-          <h2 :class="(isMobile || isTablet) ? 'text-base font-semibold text-foreground truncate' : 'text-xl font-semibold text-foreground'">
+          <h2 class="text-base font-semibold text-default sm:text-xl">
             Create New Record
           </h2>
-          <p :class="(isMobile || isTablet) ? 'text-xs text-muted-foreground truncate' : 'text-sm text-muted-foreground'">
+          <p class="mt-1 truncate text-sm text-muted">
             {{ targetTableName }} table
           </p>
         </div>
       </div>
     </template>
-      <template #body>
-        <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'">
-          
-          <div :class="(isMobile || isTablet) ? 'bg-[var(--surface-muted)] rounded-lg border border-muted/30 p-3' : 'bg-[var(--surface-muted)] rounded-xl border border-muted/30 p-6'">
-            <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
-              <UIcon name="lucide:edit-3" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />
-              <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-foreground' : 'text-lg font-semibold text-foreground'">Form Fields</h3>
-            </div>
-            <FormEditorLazy
-              v-model="createForm"
-              @has-changed="(changed) => (hasFormChanges = changed)"
-              :table-name="targetTableNameResolved"
-              :errors="createErrors"
-            />
-          </div>
-        </div>
-      </template>
-    </CommonDrawer>
+    <template #body>
+      <FormEditorLazy
+        v-model="createForm"
+        mode="create"
+        :table-name="targetTableNameResolved"
+        :errors="createErrors"
+        @has-changed="(changed) => (hasFormChanges = changed)"
+      />
+    </template>
+  </CommonDrawer>
 
   <CommonUnsavedChangesModal
     v-model="showDiscardModal"

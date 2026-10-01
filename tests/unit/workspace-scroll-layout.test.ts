@@ -9,55 +9,89 @@ function readAppFile(path: string) {
   return readFileSync(join(appDir, path), 'utf8')
 }
 
-describe('document-scrolling app shell', () => {
-  it('uses the document as the primary vertical scroll container', () => {
+describe('native Nuxt UI dashboard shell', () => {
+  it('lets DashboardGroup and DashboardPanel own the fixed frame and body scrolling', () => {
     const layout = readAppFile('layouts/default.vue')
-    const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
-    const mainStyles = readAppFile('assets/css/main.css')
 
-    // Stable viewport units only: `dvh` re-resolves when the mobile address bar
-    // shows or hides, which relayouts the whole shell mid-scroll.
-    expect(layout).toContain('min-h-svh')
+    expect(layout).toContain('<UDashboardGroup')
+    expect(layout).toContain('<UDashboardPanel')
+    expect(layout).toContain('<template #header>')
+    expect(layout).toContain('<template #body>')
+    expect(layout).toContain('<UDashboardNavbar')
+    expect(layout).not.toMatch(/overflow-y-(?:auto|scroll)/)
+    expect(layout).not.toContain('sticky')
+    expect(layout).not.toContain('::before')
+    expect(layout).not.toContain('eapp-shell-canvas')
     expect(layout).not.toContain('dvh')
-    expect(layout).not.toContain('height: 100dvh')
-    expect(layout).not.toContain('overflow-y-scroll')
-    expect(layout).toMatch(/<header[\s\S]{0,400}?sticky top-0/)
-    expect(layout).toContain('bg-[var(--shell-main-bg)]')
-    expect(sidebar).toContain('sticky top-0 h-svh self-start')
-    expect(sidebar).not.toContain('sticky top-0 h-dvh self-start')
-    expect(mainStyles).toContain('overflow-x: clip !important')
   })
 
-  it('restores route positions through the document scroll offset', () => {
+  it('restores route positions through the native panel body', () => {
+    const layout = readAppFile('layouts/default.vue')
     const workspaceScroll = readAppFile('composables/layout/useWorkspaceScroll.ts')
 
-    expect(workspaceScroll).toContain('window.scrollY')
-    expect(workspaceScroll).toContain('window.scrollTo')
-    expect(workspaceScroll).not.toContain('workspaceEl.scrollTop')
+    expect(layout).toContain('workspaceContent.value?.parentElement')
+    expect(workspaceScroll).toContain('workspace.value?.scrollTop')
+    expect(workspaceScroll).toContain('workspace.value?.scrollTo')
+    expect(workspaceScroll).not.toContain('window.scrollY')
+    expect(workspaceScroll).not.toContain('window.scrollTo')
   })
 
-  it('locks document scrolling while the mobile sidebar is open', () => {
+  it('aligns the desktop sidebar and stationary frame with one inset', () => {
+    const layout = readAppFile('layouts/default.vue')
+    const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
+    const theme = readAppFile('assets/css/theme.css')
+
+    expect(theme).toContain('--shell-inset: 1.5rem')
+    expect(layout).toContain('lg:py-[var(--shell-inset)]')
+    expect(layout).toContain('lg:pe-[var(--shell-inset)]')
+    expect(layout).toContain('lg:rounded-[var(--radius-shell)]')
+    expect(layout).toContain('lg:border-default')
+    expect(theme).toContain('--shell-sidebar-inset: calc(var(--shell-inset) + 0.75rem)')
+    expect(sidebar).toContain('variant="inset"')
+    expect(sidebar).toContain("container: 'py-[var(--shell-sidebar-inset)]'")
+    expect(sidebar).not.toContain('!border-r')
+    expect(sidebar).not.toContain('sticky top-0')
+  })
+
+  it('keeps the page header outside the native scrolling body as a full-width header section', () => {
+    const layout = readAppFile('layouts/default.vue')
+    const pageHeader = readAppFile('components/common/PageHeader.vue')
+    const headerPosition = layout.indexOf('<CommonPageHeader')
+    const bodyPosition = layout.indexOf('<template #body>')
+
+    expect(headerPosition).toBeGreaterThan(0)
+    expect(headerPosition).toBeLessThan(bodyPosition)
+    expect(pageHeader).toContain('<UPageHeader')
+    expect(pageHeader).not.toContain('page-header-shell')
+    expect(pageHeader).not.toContain('box-shadow')
+    expect(pageHeader).not.toContain('<style')
+  })
+
+  it('observes pagination within the native body scroll boundary', () => {
+    const visibility = readAppFile('composables/layout/useMiniBarVisibility.ts')
+
+    expect(visibility.match(/root: el.closest/g)).toHaveLength(2)
+    expect(visibility).toContain('.eapp-shell-main > [data-slot="body"]')
+    expect(visibility).toContain('observer.disconnect()')
+  })
+
+  it('delegates mobile menu scroll locking to Nuxt UI', () => {
     const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
 
-    expect(sidebar).toContain("import { useScrollLock } from '@vueuse/core';")
-    expect(sidebar).toMatch(/useScrollLock\([^)]*document\.documentElement/)
-    expect(sidebar).not.toMatch(/useScrollLock\([^)]*document\.body/)
-    expect(sidebar).toContain('documentScrollLocked.value = mobile && visible')
+    expect(sidebar).toContain('<USidebar')
+    expect(sidebar).not.toContain('useScrollLock')
+    expect(sidebar).not.toContain('documentScrollLocked')
   })
 
-  it('temporarily expands the collapsed desktop sidebar on hover', () => {
+  it('keeps the desktop rail collapsed and opens children with the native click popover', () => {
     const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
 
     expect(sidebar).toContain('collapsible="icon"')
     expect(sidebar).toContain('v-model:open="sidebarVisible"')
-    expect(sidebar).toContain('const suppressSidebarPersist = ref(false)')
-    expect(sidebar).toContain('setSidebarVisibleTransient(true)')
-    expect(sidebar).toContain('setSidebarVisibleTransient(false)')
-    expect(sidebar).toContain('@mouseenter="handleSidebarMouseEnter"')
-    expect(sidebar).toContain('@mouseleave="handleSidebarMouseLeave"')
-    expect(sidebar).toContain('@focusout="handleSidebarFocusOut"')
-    expect(sidebar).toContain('if (sidebarPointerInside.value) return')
+    expect(sidebar).toContain('<UNavigationMenu')
+    expect(sidebar).toContain("mode: 'click'")
+    expect(sidebar).not.toContain('@mouseenter="handleSidebarMouseEnter"')
+    expect(sidebar).not.toContain('setSidebarVisibleTransient')
     expect(sidebar).toContain('if (width.value < 1024)')
-    expect(sidebar).not.toContain('sidebar-peek-overlay')
   })
 })

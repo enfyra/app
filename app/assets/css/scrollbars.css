@@ -37,6 +37,33 @@
   display: none;
 }
 
+.eapp-sidebar-scroll {
+  --scrollbar-thumb: color-mix(in srgb, var(--md-primary) 18%, transparent);
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+  scrollbar-gutter: auto;
+}
+
+.eapp-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.eapp-sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .eapp-sidebar-scroll:hover {
+    scrollbar-color: color-mix(in srgb, var(--md-primary) 30%, transparent) transparent;
+  }
+
+  .eapp-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--md-primary) 30%, transparent);
+  }
+}
+
 [data-state="collapsed"] [data-slot="body"] {
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -45,4 +72,3 @@
 [data-state="collapsed"] [data-slot="body"]::-webkit-scrollbar {
   display: none;
 }
-

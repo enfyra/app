@@ -10,11 +10,6 @@
         :sync-query="true"
         @close-api-test="showApiTestModal = false"
       />
-
-      <FlowTriggersPanel
-        mode="route"
-        :route-id="routeId"
-      />
     </div>
   </div>
 </template>

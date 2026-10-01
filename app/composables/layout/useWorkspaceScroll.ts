@@ -1,3 +1,5 @@
+import type { Ref } from 'vue';
+
 const scrollPositions = new Map<string, number>();
 const MAX_SAVED_POSITIONS = 50;
 const savedKeys: string[] = [];
@@ -11,7 +13,7 @@ function savePosition(key: string, top: number) {
   }
 }
 
-export function useWorkspaceScroll() {
+export function useWorkspaceScroll(workspace: Ref<HTMLElement | null>) {
   const route = useRoute();
   const router = useRouter();
 
@@ -25,7 +27,7 @@ export function useWorkspaceScroll() {
 
   onMounted(() => {
     removeBeforeEach = router.beforeEach((to) => {
-      savePosition(currentPath, window.scrollY);
+      savePosition(currentPath, workspace.value?.scrollTop ?? 0);
       currentPath = to.path;
       return true;
     });
@@ -47,7 +49,7 @@ export function useWorkspaceScroll() {
           top = scrollPositions.get(newPath) ?? 0;
           isPopNavigation = false;
         }
-        window.scrollTo({ top, left: 0, behavior: "auto" });
+        workspace.value?.scrollTo({ top, left: 0, behavior: "auto" });
       });
     },
   );

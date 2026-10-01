@@ -9,90 +9,35 @@
       variant="soft"
     />
 
-    <CommonResourceListFrame
+    <DataTableSettingsTable
       v-model:page="page"
-      root-class=""
-      :loading="showInitialLoading"
-      :has-items="packages.length > 0"
-      loading-title="Loading packages..."
-      loading-description="Fetching installed server packages"
-      empty-title="No server packages installed"
-      empty-description="Install packages to enhance your handlers and hooks"
-      empty-icon="lucide:server"
+      :data="packages"
+      :columns="columns"
+      :loading="showInitialLoading || packagesRefreshing"
       :total="total"
-      :items-per-page="limit"
+      :page-limit="limit"
+      page-size-key="server-packages"
       :pagination-loading="loading"
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      @page-size-change="setPageSize"
+      @row-click="pkg => navigateTo(`/packages/${getId(pkg)}`)"
     >
-        <CommonResourceListItem
-          v-for="pkg in packages"
-          :key="getId(pkg)"
-          :title="pkg.name"
-          :description="pkg.description || 'No description'"
-          icon="lucide:server"
-          icon-color="primary"
-          :loading="packagesRefreshing"
-          :to="`/packages/${getId(pkg)}`"
-          :stats="[
-            {
-              label: 'Version',
-              component: 'UBadge',
-              props: {
-                variant: 'soft',
-                color: 'primary',
-              },
-              value: pkg.version,
-            },
-            ...(pkg.status && pkg.status !== 'installed'
-              ? [
-                  {
-                    label: 'Status',
-                    component: 'UBadge',
-                    props: {
-                      variant: 'soft',
-                      color: pkg.status === 'failed' ? 'error' : 'warning',
-                    },
-                    value: pkg.status,
-                  },
-                ]
-              : []),
-            {
-              label: 'Installed',
-              value: new Date(pkg.createdAt).toLocaleDateString(),
-            },
-            ...(pkg.flags
-              ? [
-                  {
-                    label: 'Flags',
-                    value: pkg.flags,
-                  },
-                ]
-              : []),
-            ...(pkg.status === 'installed'
-              ? [
-                  {
-                    label: 'Usage',
-                    value: `$ctx.$pkgs.${pkg.name.replace(/[@\/\-]/g, '')}`,
-                    component: 'UBadge',
-                    props: {
-                      variant: 'solid',
-                      color: 'primary',
-                      class:
-                        'font-mono',
-                    },
-                  },
-                ]
-              : []),
-          ]"
-        />
-    </CommonResourceListFrame>
+      <template #empty>
+        <CommonEmptyState variant="naked" title="No server packages installed" description="Install packages to enhance your handlers and hooks" icon="lucide:server" size="sm" />
+      </template>
+    </DataTableSettingsTable>
   </div>
 </template>
 
 <script setup lang="ts">
+import { h } from 'vue';
+import { UBadge } from '#components';
+import type { ColumnDef } from '@tanstack/vue-table';
+import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
-const limit = 10;
+const limit = useSettingsPageSize('server-packages');
+const router = useRouter();
 const route = useRoute();
 const { getId } = useDatabase();
 const { adminSocket: $adminSocket } = useAdminSocket();
@@ -105,6 +50,27 @@ const PACKAGE_LIST_FIELDS = [
   "status",
   "createdAt",
 ].join(",");
+
+const columns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('name', 'Package'),
+  settingsTextColumn('description', 'Description'),
+  settingsTextColumn('version', 'Version'),
+  {
+    accessorKey: 'status', header: 'Status', enableSorting: false,
+    cell: ({ getValue }) => {
+      const status = String(getValue() || 'installed');
+      return h(UBadge, { label: status, color: status === 'installed' ? 'success' : status === 'failed' ? 'error' : 'warning', variant: 'soft' });
+    },
+  },
+  settingsTextColumn('flags', 'Flags'),
+  { id: 'usage', header: 'Usage', enableSorting: false, accessorFn: pkg => pkg.status === 'installed' ? `$ctx.$pkgs.${String(pkg.name).replace(/[@\/\-]/g, '')}` : '_', cell: ({ getValue }) => h('span', { class: 'block truncate font-mono', title: String(getValue()) }, String(getValue())), meta: { style: { th: { width: '240px' }, td: { width: '240px' } } } },
+  settingsDateColumn('createdAt', 'Installed'),
+];
+
+async function setPageSize(size: number) {
+  if (page.value !== 1) await router.replace({ query: { ...route.query, page: undefined } });
+  limit.value = size;
+}
 
 const pendingOps = ref(new Map<string, string>());
 
@@ -146,7 +112,7 @@ const {
 } = useApi("/enfyra_package", {
   query: computed(() => ({
     page: page.value,
-    limit,
+    limit: limit.value,
     fields: PACKAGE_LIST_FIELDS,
     meta: "*",
     filter: {
@@ -163,8 +129,10 @@ const {
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.filterCount || 0);
 
+watch(() => route.query.page, value => { page.value = Math.max(1, Number(value) || 1); }, { immediate: true });
+
 watch(
-  page,
+  [page, limit],
   () => {
     loadPackages();
   },

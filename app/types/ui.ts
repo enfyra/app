@@ -1,5 +1,9 @@
+import type { DropdownMenuItem } from "@nuxt/ui";
 import type { ComputedRef, Ref } from "vue";
+import type { TableProps } from "@nuxt/ui/components/Table.vue";
+import type { PaginationState, RowSelectionState } from "@tanstack/vue-table";
 import type { PermissionCondition } from "./permissions";
+import type { DataTablePaginationConfig } from "./table-pagination";
 
 export interface UploadModalProps {
   modelValue: boolean;
@@ -22,15 +26,15 @@ export interface UploadModalEmits {
   error: [message: string];
 }
 
-export interface DataTableProps {
-  data: any[];
-  columns: any[];
-  pageSize?: number;
-  loading?: boolean;
-  selectable?: boolean;
-  contextMenuItems?: (row: any) => any[];
-  selectedItems?: string[];
-  skeletonRows?: number;
+export interface DataTableProps extends Omit<TableProps<any>, 'data' | 'columns'> {
+  data: Record<string, any>[];
+  columns: NonNullable<TableProps<any>['columns']>;
+  contextMenuItems?: (row: Record<string, any>) => any[];
+  rowSelection?: RowSelectionState;
+  pagination?: PaginationState;
+  showColumnVisibility?: boolean;
+  paginationConfig?: DataTablePaginationConfig;
+  page?: number;
 }
 
 export interface RouteLoadingProps {
@@ -119,6 +123,7 @@ export interface DialogFooterAction {
 }
 
 export interface AccountPanelItem {
+  children?: DropdownMenuItem[] | ComputedRef<DropdownMenuItem[]>;
   id: string;
   order?: number;
   label?: string | ComputedRef<string>;

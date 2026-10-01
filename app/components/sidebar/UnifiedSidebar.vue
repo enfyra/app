@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { useScrollLock } from '@vueuse/core';
+import type { NavigationMenuItem } from '@nuxt/ui';
+import { selectSidebarCollections } from '~/utils/sidebar-collection-items';
 
 const route = useRoute();
 const router = useRouter();
 const { menuGroups } = useMenuRegistry();
 const { menuDefinitionsPending } = useMenuApi();
 const { routesLoading, routesFetched } = useRoutes();
+const { sidebarCollections } = useDataCollectionPreferences();
 const { hasMenuPermission } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
+const accountSheetOpen = useState('account-sheet-open', () => false);
 const { getFileUrl } = useFileUrl();
-const suppressSidebarPersist = ref(false);
 const showMenuSkeleton = ref(false);
+const { getMenuNotification } = useMenuNotificationRegistry();
+const { schedulePrefetchIntent, cancelPrefetchIntent } = useExtensionPrefetch();
+const openMenuKeys = useState<Record<string, boolean>>('sidebar-menu-open-keys', () => ({}));
 let menuSkeletonTimer: ReturnType<typeof setTimeout> | null = null;
 
 if (import.meta.client) {
@@ -22,10 +27,21 @@ if (import.meta.client) {
 }
 
 watch(sidebarVisible, (val) => {
-  if (!suppressSidebarPersist.value && import.meta.client && width.value >= 1024) {
+  if (import.meta.client && width.value >= 1024) {
     localStorage.setItem('sidebar-open', String(val));
   }
 });
+
+onMounted(() => {
+  try {
+    const saved = localStorage.getItem('sidebar-menu-open-keys');
+    if (saved) openMenuKeys.value = JSON.parse(saved);
+  } catch {}
+});
+
+watch(openMenuKeys, (value) => {
+  if (import.meta.client) localStorage.setItem('sidebar-menu-open-keys', JSON.stringify(value));
+}, { deep: true });
 
 watch(menuDefinitionsPending, (pending) => {
   if (menuSkeletonTimer) {
@@ -90,14 +106,17 @@ function convertItem(item: any): any {
   const isDataItem = item.id === "data" || itemRoute === "/data" || item.label === "Data";
 
   if (isDataItem) {
+    const children = item.items?.map(convertItem) ?? [];
     return {
       id: item.id,
       label: item.label,
       icon: item.icon || 'lucide:database',
       to: '/data',
-      active: isRouteActive('/data'),
+      active: isRouteExactActive('/data'),
       count: item.count || item.badge,
       loading: routesLoading.value && !routesFetched.value,
+      children,
+      branchActive: children.some((child: any) => child.active || child.branchActive),
     };
   }
 
@@ -132,14 +151,17 @@ const navigationItems = computed(() => {
     const isDataGroup = group.id === "data" || groupRoute === "/data" || group.label === "Data";
 
     if (isDataGroup) {
+      const children = group.items?.map(convertItem) ?? [];
       groups.push([{
         id: group.id,
         label: group.label,
         icon: group.icon || 'lucide:database',
         to: '/data',
-        active: isRouteActive('/data'),
+        active: isRouteExactActive('/data'),
         count: group.count || group.badge,
         loading: routesLoading.value && !routesFetched.value,
+        children,
+        branchActive: children.some((child: any) => child.active || child.branchActive),
       }]);
       continue;
     }
@@ -166,15 +188,70 @@ const navigationItems = computed(() => {
   return groups;
 });
 
-function collectTopLevelRailItems(items: any[]): any[] {
-  return items.map((item) => ({
-    ...item,
-    children: undefined,
-    collapsible: false,
-  }));
+function menuBadge(item: any) {
+  const notification = getMenuNotification(item);
+  const value = item.count ?? notification?.value;
+  if (value != null) return { label: String(value), color: notification?.color ?? 'primary', variant: 'soft' as const };
+  return notification ? { label: '•', color: notification.color, variant: 'soft' as const } : undefined;
 }
 
-const collapsedRailItems = computed(() => collectTopLevelRailItems(navigationItems.value.flat()));
+function dataMenuItems(items: any[]): NavigationMenuItem[] {
+  return [
+    ...selectSidebarCollections(items, sidebarCollections.value.maxVisible, sidebarCollections.value.pinned).map(toNavigationItem),
+    { label: `Browse all ${items.length}`, icon: 'lucide:layout-grid', to: '/data' },
+  ];
+}
+
+function toNavigationItem(item: any): NavigationMenuItem {
+  const isDataParent = item.id === 'data' || item.to === '/data';
+  const children = isDataParent && item.children?.length ? dataMenuItems(item.children) : item.children?.map(toNavigationItem);
+  const key = String(item.to || item.label);
+  const hasChildren = Boolean(children?.length);
+  return {
+    label: item.label,
+    icon: item.icon,
+    value: key,
+    ...(item.to && !hasChildren ? { to: item.to } : {}),
+    ...(hasChildren ? { children, type: 'trigger' as const, defaultOpen: Boolean(item.active || item.branchActive) } : {}),
+    active: item.active,
+    badge: menuBadge(item),
+    ...(isDataParent && item.loading && !hasChildren ? { disabled: true } : {}),
+  };
+}
+
+function prefetchMenuIntent(event: Event) {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const link = target.closest('a[data-slot="link"], a[data-slot="childLink"]');
+  if (link instanceof HTMLAnchorElement) schedulePrefetchIntent(link.getAttribute('href') || undefined);
+}
+
+function groupOpenValues(group: NavigationMenuItem[]): string[] {
+  return group.filter(item => item.children?.length && (openMenuKeys.value[String(item.value)] ?? item.defaultOpen))
+    .map(item => String(item.value));
+}
+
+function updateGroupOpenValues(group: NavigationMenuItem[], values: string | string[] | undefined) {
+  const opened = new Set(Array.isArray(values) ? values : values ? [values] : []);
+  openMenuKeys.value = {
+    ...openMenuKeys.value,
+    ...Object.fromEntries(group.filter(item => item.children?.length).map(item => [String(item.value), opened.has(String(item.value))])),
+  };
+}
+
+const nativeNavigationItems = computed<NavigationMenuItem[][]>(() => navigationItems.value.map(group => group.map(toNavigationItem)));
+const navigationMenuUi = computed(() => ({
+  root: 'w-full',
+  list: 'gap-1',
+  link: !sidebarVisible.value
+    ? 'mx-auto !size-9 justify-center !rounded-[var(--radius-control)] !p-0 !text-xs'
+    : 'min-h-9 rounded-[var(--radius-control)] px-2.5 py-1.5 !text-[13px]',
+  linkLeadingIcon: 'size-5 shrink-0',
+  linkLabel: !sidebarVisible.value ? 'sr-only' : 'truncate',
+  content: !sidebarVisible.value ? 'w-56 rounded-[var(--radius-panel)] border border-[var(--card-border)] bg-[var(--card-bg)] p-2 shadow-[var(--shadow-md)]' : undefined,
+  childList: !sidebarVisible.value ? 'w-full space-y-1' : 'border-[var(--nav-child-border)]',
+  childLink: 'min-h-8 items-center rounded-[var(--radius-subcontrol)] px-2.5 py-1.5 !text-xs',
+}));
 
 const componentGroups = computed(() => {
   return visibleGroups.value.filter(g => g.position !== 'bottom' && g.component);
@@ -184,74 +261,8 @@ const bottomGroups = computed(() => {
   return visibleGroups.value.filter(g => g.position === 'bottom');
 });
 
-const isMobile = computed(() => width.value < 1024);
-const documentScrollLocked = useScrollLock(import.meta.client ? document.documentElement : null);
-
-watch([isMobile, sidebarVisible], ([mobile, visible]) => {
-  documentScrollLocked.value = mobile && visible;
-}, { immediate: true });
-
-const isDesktopCollapsed = computed(() => !isMobile.value && !sidebarVisible.value);
-const hoverOpenedSidebar = ref(false);
-const sidebarPointerInside = ref(false);
-let peekLeaveTimer: ReturnType<typeof setTimeout> | null = null;
-
-function setSidebarVisibleTransient(value: boolean) {
-  suppressSidebarPersist.value = true;
-  sidebarVisible.value = value;
-  nextTick(() => {
-    suppressSidebarPersist.value = false;
-  });
-}
-
-function showSidebarPeek() {
-  if (peekLeaveTimer) {
-    clearTimeout(peekLeaveTimer);
-    peekLeaveTimer = null;
-  }
-  if (!isDesktopCollapsed.value) return;
-  hoverOpenedSidebar.value = true;
-  setSidebarVisibleTransient(true);
-}
-
-function hideSidebarPeek() {
-  if (!hoverOpenedSidebar.value) return;
-  if (peekLeaveTimer) {
-    clearTimeout(peekLeaveTimer);
-  }
-  peekLeaveTimer = setTimeout(() => {
-    hoverOpenedSidebar.value = false;
-    setSidebarVisibleTransient(false);
-    peekLeaveTimer = null;
-  }, 120);
-}
-
-function handleSidebarMouseEnter() {
-  sidebarPointerInside.value = true;
-  showSidebarPeek();
-}
-
-function handleSidebarMouseLeave() {
-  sidebarPointerInside.value = false;
-  hideSidebarPeek();
-}
-
-function handleSidebarFocusOut(event: FocusEvent) {
-  if (sidebarPointerInside.value) return;
-  const nextTarget = event.relatedTarget;
-  const currentTarget = event.currentTarget;
-  if (nextTarget instanceof Node && currentTarget instanceof HTMLElement && currentTarget.contains(nextTarget)) return;
-  hideSidebarPeek();
-}
-
-const renderExpandedSidebarContent = computed(() => {
-  if (!sidebarVisible.value) return false;
-  return true;
-});
-
-const showExpandedSidebarLabels = computed(() => {
-  return sidebarVisible.value;
-});
+const renderExpandedSidebarContent = computed(() => sidebarVisible.value);
+const showExpandedSidebarLabels = computed(() => sidebarVisible.value);
 
 router.afterEach(() => {
   if (width.value < 1024) {
@@ -263,103 +274,112 @@ onUnmounted(() => {
   if (menuSkeletonTimer) {
     clearTimeout(menuSkeletonTimer);
   }
-  if (peekLeaveTimer) {
-    clearTimeout(peekLeaveTimer);
-    peekLeaveTimer = null;
-  }
 });
 </script>
 
 <template>
-  <div class="relative sticky top-0 h-svh self-start" @mouseenter="handleSidebarMouseEnter" @mouseleave="handleSidebarMouseLeave" @focusin="showSidebarPeek" @focusout="handleSidebarFocusOut">
-    <USidebar
-      v-model:open="sidebarVisible"
-      variant="sidebar"
-      collapsible="icon"
-      class="eapp-sidebar"
-      :style="{ '--sidebar-width': '280px' }"
-      :ui="{
-        gap: '!duration-[120ms]',
-        container: 'h-full !z-[99999] !duration-[140ms]',
-        inner: '!bg-[var(--shell-sidebar-bg)] !border-r !border-[var(--shell-sidebar-border)] !divide-transparent shadow-none',
-       header: 'px-3.5 pb-2.5 pt-4 group-data-[state=collapsed]/sidebar:px-2',
-        body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto border-0 px-3.5 group-data-[state=collapsed]/sidebar:px-2',
-        footer: 'flex min-h-0 w-full flex-col gap-1.5 overflow-y-auto p-0 px-3.5 pb-5 max-lg:pb-4 group-data-[state=collapsed]/sidebar:px-2',
-      }"
-    >
-      <template #title>
-        <div
-          class="flex min-w-0 items-center overflow-hidden"
-          :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
-        >
-          <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
-            <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
-            <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
-          </div>
-          <div v-if="renderExpandedSidebarContent" class="min-w-0 flex-1 transition-opacity duration-[var(--duration-instant)]" :class="{ 'opacity-0': !showExpandedSidebarLabels }">
-            <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
-            <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
-          </div>
+  <USidebar
+    v-model:open="sidebarVisible"
+    variant="inset"
+    :menu="{ dismissible: !accountSheetOpen }"
+    collapsible="icon"
+    class="eapp-sidebar"
+    :style="{ '--sidebar-width': 'var(--shell-sidebar-width)' }"
+    :ui="{
+      container: 'py-[var(--shell-sidebar-inset)]',
+      inner: '!bg-[var(--shell-sidebar-bg)] !border-0 !divide-transparent shadow-none',
+      header: 'px-3.5 pb-2.5 pt-4 lg:py-0 group-data-[state=collapsed]/sidebar:px-2',
+      body: '!overflow-hidden border-0 p-0',
+      footer: 'eapp-sidebar-scroll flex min-h-0 w-full flex-col gap-1.5 overflow-x-hidden overflow-y-auto border-t border-[var(--nav-child-border)] px-3.5 pt-3 pb-4 lg:pb-0 group-data-[state=collapsed]/sidebar:px-2',
+    }"
+  >
+    <template #title>
+      <div
+        class="flex min-w-0 items-center overflow-hidden"
+        :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
+      >
+        <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
+          <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
+          <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
         </div>
-      </template>
-      <template #description />
+        <div v-if="renderExpandedSidebarContent" class="min-w-0 flex-1 transition-opacity duration-[var(--duration-instant)]" :class="{ 'opacity-0': !showExpandedSidebarLabels }">
+          <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
+          <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
+        </div>
+      </div>
+    </template>
+    <template #description />
 
-      <template #default>
+    <template #default>
+      <SidebarScrollArea :collapsed="!renderExpandedSidebarContent">
         <div v-for="group in componentGroups" :key="group.id" class="mb-3">
           <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
         </div>
 
-        <nav class="app-sidebar-nav" aria-label="Main navigation">
+        <nav class="app-sidebar-nav" aria-label="Main navigation" @pointerover="prefetchMenuIntent" @pointerout="cancelPrefetchIntent" @focusin="prefetchMenuIntent" @focusout="cancelPrefetchIntent">
           <div class="sidebar-menu-stack">
-          <Transition name="sidebar-menu-loading">
-            <div
-              v-if="showMenuSkeleton"
-              key="menu-skeleton"
-              class="app-sidebar-menu-skeleton"
-              :class="{ collapsed: !renderExpandedSidebarContent }"
-              aria-label="Loading navigation"
-            >
+            <Transition name="sidebar-menu-loading">
               <div
-                v-for="i in 7"
-                :key="i"
-                class="app-sidebar-menu-skeleton-row"
+                v-if="showMenuSkeleton"
+                key="menu-skeleton"
+                class="app-sidebar-menu-skeleton"
+                :class="{ collapsed: !renderExpandedSidebarContent }"
+                aria-label="Loading navigation"
               >
-                <div class="app-sidebar-menu-skeleton-icon skeleton-gradient skeleton-pulse-slow" />
                 <div
-                  v-if="renderExpandedSidebarContent"
-                  class="app-sidebar-menu-skeleton-label skeleton-gradient skeleton-pulse-slow"
-                  :style="{ width: `${64 + (i % 4) * 12}%` }"
-                />
+                  v-for="i in 7"
+                  :key="i"
+                  class="app-sidebar-menu-skeleton-row"
+                >
+                  <div class="app-sidebar-menu-skeleton-icon skeleton-gradient skeleton-pulse-slow" />
+                  <div
+                    v-if="renderExpandedSidebarContent"
+                    class="app-sidebar-menu-skeleton-label skeleton-gradient skeleton-pulse-slow"
+                    :style="{ width: `${64 + (i % 4) * 12}%` }"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div v-else key="menu-tree" class="app-sidebar-menu-tree">
-              <SidebarMenuTree
-                v-for="(group, groupIndex) in (!renderExpandedSidebarContent ? [collapsedRailItems] : navigationItems)"
-                :key="groupIndex"
-                :items="group"
-                :collapsed="!renderExpandedSidebarContent"
-                :labels-visible="showExpandedSidebarLabels"
-              />
-            </div>
-          </Transition>
+              <div v-else key="menu-tree" class="app-sidebar-menu-tree">
+                <template v-for="(group, groupIndex) in nativeNavigationItems" :key="groupIndex">
+                  <USeparator
+                    v-if="groupIndex > 0 && (group.some(item => item.children?.length) || nativeNavigationItems[groupIndex - 1]?.some(item => item.children?.length))"
+                    class="-mx-3.5 w-auto"
+                    :ui="{ border: 'border-[var(--nav-child-border)]' }"
+                  />
+                  <UNavigationMenu
+                    :items="group"
+                    :model-value="groupOpenValues(group)"
+                    @update:model-value="value => updateGroupOpenValues(group, value)"
+                    orientation="vertical"
+                    :collapsed="!renderExpandedSidebarContent"
+                    tooltip
+                    :popover="{ mode: 'click', content: { side: 'right', align: 'start', sideOffset: 8, collisionPadding: 8 } }"
+                    variant="pill"
+                    color="neutral"
+                    highlight
+                    :ui="navigationMenuUi"
+                  />
+                </template>
+              </div>
+            </Transition>
           </div>
         </nav>
-      </template>
+      </SidebarScrollArea>
+    </template>
 
-      <template #footer>
-        <template v-for="group in bottomGroups" :key="group.id" >
-          <PermissionGate :condition="group.permission as any">
-            <component
-              v-if="group.component"
-              :is="group.component"
-              v-bind="{ ...(group.componentProps || {}), collapsed: !renderExpandedSidebarContent }"
-            />
-          </PermissionGate>
-        </template>
+    <template #footer>
+      <template v-for="group in bottomGroups" :key="group.id" >
+        <PermissionGate :condition="group.permission as any">
+          <component
+            v-if="group.component"
+            :is="group.component"
+            v-bind="{ ...(group.componentProps || {}), collapsed: !renderExpandedSidebarContent }"
+          />
+        </PermissionGate>
       </template>
-    </USidebar>
-  </div>
+    </template>
+  </USidebar>
 </template>
 
 <style scoped>
@@ -421,11 +441,13 @@ onUnmounted(() => {
   border-radius: var(--radius-pill);
 }
 
-.eapp-sidebar:deep([data-slot="container"]) {
-  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+.eapp-sidebar:deep([data-slot="footer"]) {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
-.eapp-sidebar:deep([data-slot="footer"]) {
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+@media (min-width: 1024px) {
+  .eapp-sidebar:deep([data-slot="footer"]) {
+    padding-bottom: max(0px, calc(env(safe-area-inset-bottom) - var(--shell-sidebar-inset)));
+  }
 }
 </style>

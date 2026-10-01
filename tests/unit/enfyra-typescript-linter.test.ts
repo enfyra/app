@@ -58,6 +58,15 @@ await @TRIGGER('flow_name', { item })
     expect(diagnostics).toEqual([])
   })
 
+  it('recognizes named multipart upload fields in dynamic scripts', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+const files = $ctx.$uploadFile['attachments']
+const saved = await @STORAGE.$upload({ file: Array.isArray(files) ? files[0] : files })
+return saved
+`)
+    expect(diagnostics).toEqual([])
+  })
+
   it('keeps email CSS literal after a regular expression containing quotes', () => {
     const source = [
       `const escaped = value.replace(/\\\"/g, '&quot;')`,
@@ -91,14 +100,57 @@ await @TRANSACTION.run(async () => {
     expect(diagnostics).toEqual([])
   })
 
-  it('accepts DynamicRepository exists with a direct filter', async () => {
-    const diagnostics = await lintEnfyraTypeScript(`
+  it('lowers readable throw aliases to the canonical HTTP method', async () => {
+    const source = `
 const used = await @REPOS.enfyra_user.exists({ email: { _eq: @BODY.email } })
-if (used) @THROW409('enfyra_user', 'email', @BODY.email)
+if (used) @THROW409('Email is already in use')
 return { used }
-`)
+`
+    const diagnostics = await lintEnfyraTypeScript(source)
 
     expect(diagnostics).toEqual([])
+    expect(transformEnfyraCode(source).code).toContain(
+      "$ctx.$throw.http(409, 'Email is already in use')",
+    )
+
+    const missingMessage = await lintEnfyraTypeScript('@THROW400()')
+    const extraDetails = await lintEnfyraTypeScript(
+      '@THROW400("Invalid request", { field: "email" })',
+    )
+    expect(missingMessage.some((diagnostic) => diagnostic.message.includes('require exactly one message'))).toBe(true)
+    expect(extraDetails.some((diagnostic) => diagnostic.message.includes('require exactly one message'))).toBe(true)
+  })
+
+  it('separates custom error JSON from custom success JSON', async () => {
+    const removedThrowDiagnostics = await lintEnfyraTypeScript(`
+@THROW.error(502, { code: 'upstream_error' })
+@THROW.notFound('Project')
+`)
+    const customErrorDiagnostics = await lintEnfyraTypeScript(`
+@THROW.json(
+  { error: { code: 'upstream_error', should_retry: true } },
+  { statusCode: 502, headers: { 'x-should-retry': 'true' } },
+)
+`)
+    const invalidBodyDiagnostics = await lintEnfyraTypeScript(`
+@THROW.json(['invalid'], { statusCode: 500 })
+@THROW.json({ error: 'invalid' }, { statusCode: 500 })
+@THROW.json({ success: true, error: {} }, { statusCode: 500 })
+@THROW.json({ statusCode: 200, error: {} }, { statusCode: 500 })
+@THROW.json({ error: { statusCode: 200 } }, { statusCode: 500 })
+`)
+    const customSuccessDiagnostics = await lintEnfyraTypeScript(`
+return await @RES.json(
+  { data: { id: 'project-1' }, success: true },
+  { statusCode: 201, headers: { 'x-resource-created': 'true' } },
+)
+`)
+
+    expect(removedThrowDiagnostics.some((diagnostic) => diagnostic.message.includes("Property 'error' does not exist"))).toBe(true)
+    expect(removedThrowDiagnostics.some((diagnostic) => diagnostic.message.includes("Property 'notFound' does not exist"))).toBe(true)
+    expect(invalidBodyDiagnostics.length).toBeGreaterThanOrEqual(5)
+    expect(customErrorDiagnostics).toEqual([])
+    expect(customSuccessDiagnostics).toEqual([])
   })
 
   it('accepts common Object static methods in admin scripts', async () => {

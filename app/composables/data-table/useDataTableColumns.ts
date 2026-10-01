@@ -1,55 +1,6 @@
 import type { ColumnDef } from "@tanstack/vue-table";
 import { UBadge, UDropdownMenu, UButton, UIcon, UTooltip } from "#components";
-
-export interface DataTableColumnConfig {
-  id: string;
-  accessorKey?: string;
-  header: string;
-  columnType?: string;
-
-  sortable?: boolean;
-  hideable?: boolean;
-  resizable?: boolean;
-
-  width?: number;
-  minWidth?: number;
-  maxWidth?: number;
-
-  cell?: (props: { row: any; getValue: () => any }) => any;
-
-  format?: "date" | "datetime" | "currency" | "filesize" | "badge" | "boolean" | "id" | "number" | "json" | "text-long" | "custom";
-  formatOptions?: {
-    dateFormat?: Intl.DateTimeFormatOptions;
-
-    currency?: string;
-
-    badgeColor?: (value: any) => string;
-    badgeVariant?: "soft" | "solid" | "outline";
-    badgeMap?: Record<string, string>;
-
-    formatter?: (value: any, row: any) => string;
-  };
-}
-
-export interface DataTableActionsConfig {
-  actions?: Array<{
-    label: string;
-    icon: string;
-    color?: string;
-    class?: string;
-    show?: (row: any) => boolean;
-    onSelect: (row: any) => void;
-  }>;
-
-  inlineEdit?: {
-    enabled: boolean;
-    field: string;
-    onSave: (rowId: string, value: string) => Promise<void>;
-    validation?: (value: string) => string | null;
-  };
-
-  width?: number;
-}
+import type { DataTableActionsConfig, DataTableColumnConfig } from '~/types/data-table-columns';
 
 export function useDataTableColumns() {
   function buildColumn(config: DataTableColumnConfig): ColumnDef<any> {
@@ -94,10 +45,12 @@ export function useDataTableColumns() {
       maxSize: config.width || 50,
       minSize: config.width || 50,
       cell: ({ row }) => {
-        const actions =
-          config.actions?.filter(
-            (action) => !action.show || action.show(row.original)
-          ) || [];
+        const availableActions = typeof config.actions === 'function'
+          ? config.actions(row.original)
+          : config.actions ?? [];
+        const actions = availableActions.filter(
+          (action) => !action.show || action.show(row.original)
+        );
 
         return h(
           "div",
@@ -112,6 +65,11 @@ export function useDataTableColumns() {
                 {
                   items: actions.map((action) => ({
                     ...action,
+                    color: 'neutral',
+                    ui: action.color === 'error' ? {
+                      item: 'text-error data-highlighted:text-error',
+                      itemLeadingIcon: 'text-error group-data-highlighted:text-error',
+                    } : undefined,
                     onSelect: () => action.onSelect(row.original),
                   })),
                 },

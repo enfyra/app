@@ -69,7 +69,7 @@
           />
         </div>
 
-        <div class="surface-card rounded-xl overflow-hidden">
+        <div class="eapp-bordered-region overflow-hidden">
           <div class="p-8 min-h-[60vh]">
             <component :is="previewComponent" v-if="isValidComponent" />
           </div>

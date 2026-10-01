@@ -5,9 +5,9 @@
       :disabled="moveState.moveMode"
     >
       <div
-        class="relative overflow-hidden surface-card-hover cursor-pointer"
+        class="eapp-bordered-region relative cursor-pointer overflow-hidden hover:bg-elevated"
         :class="{
-          '!border-[var(--state-primary-soft-border)] shadow-[var(--card-shadow-hover)]': selectedItems.includes(file.id),
+          '!border-[var(--state-primary-soft-border)]': selectedItems.includes(file.id),
         }"
         :style="{
           borderWidth: selectedItems.includes(file.id) ? '2px' : '1px',

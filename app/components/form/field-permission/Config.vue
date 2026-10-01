@@ -54,7 +54,7 @@ const searchTerm = ref("");
 const menuOpen = ref(false);
 const suppressSearch = ref(false);
 const syncingFromForm = ref(false);
-const userMenuAnchor = ref<HTMLElement | null>(null);
+const userMenuAnchor = shallowRef<HTMLElement | null>(null);
 const userMenuWidth = ref<number | null>(null);
 let userMenuResizeObserver: ResizeObserver | null = null;
 

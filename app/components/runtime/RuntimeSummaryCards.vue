@@ -16,7 +16,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
 
 <template>
   <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-    <div class="surface-card rounded-lg p-4">
+    <div class="eapp-bordered-region p-4">
       <div class="text-xs font-medium text-[var(--text-tertiary)]">Instances</div>
       <div class="mt-2 text-2xl font-semibold" :class="metricTextClass(runtime.clusterSeverity())">
         {{ runtime.appClusterStats.activeCount }}
@@ -26,7 +26,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
       </div>
     </div>
 
-    <div class="surface-card rounded-lg p-4">
+    <div class="eapp-bordered-region p-4">
       <div class="text-xs font-medium text-[var(--text-tertiary)]">RSS</div>
       <div class="mt-2 text-2xl font-semibold text-[var(--text-primary)]">
         {{ fmtMb(runtime.totals.rssMb) }}
@@ -36,7 +36,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
       </div>
     </div>
 
-    <div class="surface-card rounded-lg p-4">
+    <div class="eapp-bordered-region p-4">
       <div class="text-xs font-medium text-[var(--text-tertiary)]">Heap</div>
       <div
         class="mt-2 text-2xl font-semibold"
@@ -49,7 +49,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
       </div>
     </div>
 
-    <div class="surface-card rounded-lg p-4">
+    <div class="eapp-bordered-region p-4">
       <div class="text-xs font-medium text-[var(--text-tertiary)]">Event Loop</div>
       <div
         class="mt-2 text-2xl font-semibold"
@@ -62,7 +62,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
       </div>
     </div>
 
-    <div class="surface-card rounded-lg p-4">
+    <div class="eapp-bordered-region p-4">
       <div class="flex items-center justify-between gap-2">
         <div class="text-xs font-medium text-[var(--text-tertiary)]">Updated</div>
         <UBadge :color="badgeColor(runtime.updatedSeverity())" variant="soft" size="xs">

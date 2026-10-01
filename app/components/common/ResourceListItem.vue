@@ -131,6 +131,7 @@
           :key="action.label"
           v-bind="resolveProps(action.props)"
           :to="action.to"
+          :loading-auto="true"
           :loading="action.loading"
           :disabled="action.disabled || action.loading"
           @click="handleActionClick(action, $event)"
@@ -287,6 +288,6 @@ function handleHeaderActionClick(action: ResourceListHeaderAction, event: Event)
 
 function handleActionClick(action: ResourceListAction, event: Event) {
   event.stopPropagation();
-  action.onClick?.(event);
+  return action.onClick?.(event);
 }
 </script>

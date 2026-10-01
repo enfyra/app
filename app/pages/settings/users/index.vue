@@ -6,66 +6,20 @@
       @clear="clearFilters"
     />
 
-    <CommonResourceListFrame
+    <DataTableSettingsTable
       v-model:page="page"
-      root-class=""
+      :data="users"
+      :columns="columns"
+      :actions="getRowActions"
       :loading="showInitialLoading"
-      :has-items="users.length > 0"
-      loading-title="Loading users..."
-      loading-description="Fetching user accounts"
-      empty-title="No users found"
-      empty-description="No user accounts have been created yet"
-      empty-icon="lucide:users"
       :total="total"
-      :items-per-page="limit"
+      :page-limit="limit"
+      page-size-key="users"
       :pagination-loading="loading"
+      @page-size-change="setPageSize"
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-    >
-        <CommonResourceListItem
-          v-for="user in users"
-          :key="user.id"
-          :title="user.name || user.email || 'Unnamed User'"
-          :description="user.email || 'No email'"
-          icon="lucide:user"
-          :icon-color="pageIconColor"
-          :loading="usersRefreshing"
-          :to="`/settings/users/${getId(user)}`"
-          :stats="[
-            {
-              label: 'Roles',
-              component: user.roles?.length ? 'UBadge' : null,
-              props: user.roles?.length
-                ? {
-                    variant: 'soft',
-                    color: 'primary',
-                  }
-                : undefined,
-              value: user.roles?.map((role: any) => role.name).join(', ') || 'No roles',
-            },
-            {
-              label: 'Joined',
-              value: new Date(user.createdAt).toLocaleDateString(),
-            },
-          ]"
-          :methods="hasPermission('/enfyra_user', 'DELETE') ? [
-            {
-              label: 'Delete',
-              props: {
-                icon: 'i-lucide-trash-2',
-                variant: 'solid',
-                color: 'error',
-                size: 'sm',
-              },
-              disabled: user.isRootAdmin,
-              onClick: (e?: Event) => {
-                e?.stopPropagation();
-                deleteUser(user);
-              },
-            }
-          ] : []"
-          :header-actions="getHeaderActions(user)"
-        />
-    </CommonResourceListFrame>
+      @row-click="user => navigateTo(`/settings/users/${getId(user)}`)"
+    />
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
@@ -76,9 +30,15 @@
   </div>
 </template>
 <script setup lang="ts">
+import { h } from 'vue';
+import { UBadge } from '#components';
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
-const limit = 10;
+const limit = useSettingsPageSize('users');
 const tableName = "enfyra_user";
 const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
@@ -96,7 +56,6 @@ const USER_LIST_FIELDS = [
   "id",
   "name",
   "email",
-  "avatar",
   "isRootAdmin",
   "createdAt",
   "roles.id",
@@ -110,8 +69,6 @@ registerPageHeader({
   variant: "default",
   gradient: "blue",
 });
-
-const pageIconColor = 'primary';
 
 const {
   data: apiData,
@@ -138,7 +95,6 @@ const {
 const {
   items: users,
   showInitialLoading,
-  isRefreshing: usersRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() =>
   hasActiveFilters(currentFilter.value)
@@ -225,30 +181,25 @@ async function clearFilters() {
   await handleFilterApply(createEmptyFilter());
 }
 
-function getHeaderActions(user: any) {
-  const actions = [];
+const columns: ColumnDef<Record<string, any>>[] = [
+  { id: 'user', header: 'User', enableSorting: false,
+    cell: ({ row }) => {
+      const label = row.original.name || row.original.email || 'Unnamed User';
+      return h('span', { class: 'block truncate', title: label }, label);
+    },
+  },
+  settingsTextColumn('email', 'Email'),
+  { id: 'roles', header: 'Roles', enableSorting: false,
+    cell: ({ row }) => row.original.roles?.length
+      ? h(UBadge, { label: row.original.roles.map((role: any) => role.name).join(', '), color: 'primary', variant: 'soft' })
+      : 'No roles',
+  },
+  settingsDateColumn('createdAt', 'Joined'),
+];
 
-  if (user.avatar) {
-    actions.push({
-      component: "UAvatar",
-      props: {
-        src: user.avatar,
-        alt: user.name,
-        size: "xs",
-      },
-    });
-  } else {
-    actions.push({
-      component: "UAvatar",
-      props: {
-        alt: user.name,
-        size: "xs",
-      },
-      label: user.email?.charAt(0)?.toUpperCase() || "?",
-    });
-  }
-
-  return actions;
+function getRowActions(user: Record<string, any>): DataTableRowAction[] {
+  if (!hasPermission('/enfyra_user', 'DELETE') || user.isRootAdmin) return [];
+  return [{ label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteUser(user) }];
 }
 
 async function deleteUser(user: any) {
@@ -290,12 +241,17 @@ async function deleteUser(user: any) {
   }
 }
 
-watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
-    await fetchUsers();
-  },
-  { immediate: true }
-);
+async function setPageSize(size: number) {
+  if (page.value !== 1) {
+    await router.replace({ query: { ...route.query, page: undefined } });
+    limit.value = size;
+  } else {
+    limit.value = size;
+  }
+}
+
+watch(() => route.query.page, newVal => {
+  page.value = Math.max(1, Number(newVal) || 1);
+}, { immediate: true });
+watch([page, limit], () => { void fetchUsers(); }, { immediate: true });
 </script>

@@ -1,4 +1,5 @@
 import type { Ref } from 'vue';
+import type { ColumnTableCellMetadata } from './table-cell-formatter';
 
 export const columnTypes = [
   { label: "UUID", value: "uuid", icon: "ph:key" },
@@ -186,6 +187,7 @@ export interface TableDefinitionField {
   };
   createdAt?: string;
   updatedAt?: string;
+  metadata?: ColumnTableCellMetadata | null;
   metadataAccess?: {
     read?: boolean;
     create?: boolean;

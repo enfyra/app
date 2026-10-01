@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { unref } from 'vue';
+import { DrawerTitle } from 'vaul-vue';
 import type { DialogFooterAction } from '~/types/ui';
 
 const props = withDefaults(
   defineProps<{
     modelValue: boolean;
-    direction?: 'left' | 'right';
+    direction?: 'left' | 'right' | 'bottom';
+    title?: string;
     class?: string;
     handle?: boolean;
     handleOnly?: boolean;
@@ -68,7 +70,7 @@ function close() {
 function runAction(action: DialogFooterAction | false | undefined, fallbackClose = false) {
   if (!action) return;
   if (action.onClick) {
-    action.onClick();
+    return action.onClick();
   } else if (action.closeOnClick === true || fallbackClose) {
     close();
   }
@@ -95,18 +97,20 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
     :handle="props.handle"
     :handle-only="true"
     :direction="props.direction"
+    :title="props.title"
     :inset="true"
     :nested="props.nested"
     :style="props.zIndex ? { zIndex: props.zIndex } : undefined"
     :ui="{
-      container: 'h-[100dvh]',
-      content: `overflow-hidden bg-[var(--surface-default)] ${props.fullWidth ? 'w-full' : '!w-[36rem] !max-w-[calc(100%-2rem)]'}`,
-      header: 'pt-0 pb-2 flex items-center justify-between flex-shrink-0',
-      body: 'flex-1 overflow-y-auto min-h-0 custom-scrollbar',
+      container: props.direction === 'bottom' ? '!h-auto max-h-[85dvh] !gap-0 !p-3 !pb-[max(0.75rem,env(safe-area-inset-bottom))]' : 'h-[100dvh]',
+      content: `overflow-hidden bg-[var(--surface-default)] ${props.direction === 'bottom' ? '' : props.fullWidth ? 'w-full' : '!w-[36rem] !max-w-[calc(100%-2rem)]'}`,
+      header: `${props.direction === 'bottom' ? '!pt-0 !pb-3' : 'pt-0 pb-2'} flex items-center justify-between flex-shrink-0`,
+      body: `flex-1 overflow-y-auto min-h-0 custom-scrollbar ${props.direction === 'bottom' ? '!p-0' : ''}`,
       footer: 'mb-2 md:mb-4',
     }"
   >
     <template #header>
+      <DrawerTitle v-if="props.title" class="sr-only">{{ props.title }}</DrawerTitle>
       <div v-if="hasHeader" class="flex items-center justify-between w-full" @click.stop>
         <div class="flex-1 min-w-0">
           <slot name="header" />
@@ -116,8 +120,8 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
           type="button"
           icon="lucide:x"
           aria-label="Close"
-          color="error"
-          variant="soft"
+          :color="props.direction === 'bottom' ? 'neutral' : 'error'"
+          :variant="props.direction === 'bottom' ? 'ghost' : 'soft'"
           :size="(isMobile || isTablet) ? 'lg' : 'xl'"
           :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square min-h-[44px] min-w-[44px] flex-shrink-0' : 'min-h-[44px] min-w-[44px] flex-shrink-0'"
           @click.stop.prevent="close"
@@ -131,7 +135,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
       </div>
     </template>
 
-    <template #footer>
+    <template v-if="hasFooter" #footer>
       <div v-if="hasFooter" @click.stop>
         <slot name="footer" />
         <div v-if="!slots.footer && hasManagedFooter" class="flex w-full items-center justify-between gap-3">
@@ -144,6 +148,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               :key="action.label"
               :label="action.label"
               :icon="action.icon"
+              :loading-auto="true"
               :loading="actionState(action.loading)"
               :disabled="actionState(action.disabled)"
               :type="action.type || 'button'"
@@ -156,6 +161,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               v-if="props.dangerAction"
               :label="props.dangerAction.label"
               :icon="props.dangerAction.icon"
+              :loading-auto="true"
               :loading="actionState(props.dangerAction.loading)"
               :disabled="actionState(props.dangerAction.disabled)"
               :type="props.dangerAction.type || 'button'"
@@ -170,6 +176,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               v-if="props.cancelAction"
               :label="props.cancelAction.label"
               :icon="props.cancelAction.icon"
+              :loading-auto="true"
               :loading="actionState(props.cancelAction.loading)"
               :disabled="actionState(props.cancelAction.disabled)"
               :type="props.cancelAction.type || 'button'"
@@ -182,6 +189,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               v-if="props.primaryAction"
               :label="props.primaryAction.label"
               :icon="props.primaryAction.icon"
+              :loading-auto="true"
               :loading="actionState(props.primaryAction.loading)"
               :disabled="actionState(props.primaryAction.disabled)"
               :type="props.primaryAction.type || 'button'"

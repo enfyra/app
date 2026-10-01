@@ -23,6 +23,7 @@ const emit = defineEmits<{
 const { getId } = useDatabase();
 const isDndUpdating = useState('menu-dnd-updating', () => false);
 const isMenuDragActive = useState('menu-dnd-drag-active', () => false);
+const { isDesktop } = useScreen();
 
 function buildChildren(parentId: string | number | null, allMenus: MenuDefinition[]): MenuTreeItem[] {
   if (!parentId) return [];
@@ -155,7 +156,7 @@ function handleDragEnd() {
     :class="isDndUpdating ? 'pointer-events-none opacity-60 select-none' : ''"
   >
     <div v-if="props.loading" class="menu-preview-stage" aria-busy="true" aria-label="Loading menu structure">
-      <div class="menu-preview eapp-surface-card eapp-radius-panel">
+      <div class="menu-preview eapp-bordered-region">
         <div class="menu-preview-header">
           <div class="space-y-2">
             <div class="h-3 w-28 rounded skeleton-inline skeleton-pulse-slow" />
@@ -212,7 +213,7 @@ function handleDragEnd() {
     </div>
     
     <div v-else class="menu-preview-stage">
-      <div class="menu-preview surface-card">
+      <div class="menu-preview eapp-bordered-region">
         <div class="menu-preview-header">
           <div>
             <p class="menu-preview-kicker">Navigation preview</p>
@@ -241,7 +242,7 @@ function handleDragEnd() {
         <draggable
           v-model="menuTreeItems"
           :animation="200"
-          :disabled="isDndUpdating"
+          :disabled="isDndUpdating || !isDesktop"
           handle=".drag-handle"
           ghost-class="ghost-item"
           chosen-class="chosen-item"
@@ -323,10 +324,6 @@ function handleDragEnd() {
 .menu-visual-skeleton-item {
   display: grid;
   gap: 10px;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-subcontrol);
-  background: var(--card-bg);
-  box-shadow: var(--card-shadow);
   padding: 12px;
 }
 
@@ -363,6 +360,20 @@ function handleDragEnd() {
 
 .dragging-item {
   opacity: 0.5;
+}
+
+@media (max-width: 1023px) {
+  .menu-preview {
+    padding: 12px;
+  }
+
+  .menu-preview-header {
+    padding: 0 0 10px;
+  }
+
+  .menu-root-drop-zone {
+    gap: 4px;
+  }
 }
 
 .menu-visual-editor :deep(.sortable-ghost) {

@@ -1,8 +1,7 @@
 <template>
   <div
     :class="[
-      'relative group overflow-hidden cursor-pointer h-full flex flex-col surface-card-hover',
-      (isMobile || isTablet) ? 'p-2' : 'p-4',
+      'relative group cursor-pointer h-full flex flex-col',
       topBadge ? 'pt-6' : '',
       contentLoading ? 'pointer-events-none cursor-wait' : '',
       cardClass,
@@ -169,6 +168,7 @@
             ...((isMobile || isTablet) ? { size: 'xs', class: '!rounded-[var(--radius-subcontrol)] !aspect-square' } : {})
           }"
           :to="action.to"
+          :loading-auto="true"
           :loading="action.loading"
           :disabled="action.disabled || action.loading"
           @click="handleActionClick(action)"
@@ -230,7 +230,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   iconColor: "primary",
   statsLayout: "list",
-  cardClass: "",
+  cardClass: "eapp-bordered-region p-4",
   contentLoading: false,
 });
 
@@ -239,7 +239,7 @@ function handleHeaderActionClick(action: HeaderAction, event: Event) {
 }
 
 function handleActionClick(action: Action) {
-  action.onClick?.();
+  return action.onClick?.();
 }
 
 const componentMap = {

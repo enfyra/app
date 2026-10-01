@@ -16,135 +16,13 @@
         </div>
       </div>
 
-      <CommonResourceListFrame
-        v-if="showInitialLoading"
-        variant="plain"
-        :loading="true"
-        :has-items="false"
-        loading-title="Loading authentication headers..."
-        loading-description="Fetching the active header resolution order"
+      <DataTableSettingsTable
+        :data="headers"
+        :columns="columns"
+        :actions="getRowActions"
+        :loading="showInitialLoading || loading"
+        @row-click="header => canUpdate && openEdit(header as AuthHeaderRecord)"
       />
-
-      <CommonEmptyState
-        v-else-if="headers.length === 0"
-        title="No authentication headers"
-        description="Add a header mapping to let requests authenticate through a custom request header."
-        icon="lucide:key-round"
-        size="sm"
-      >
-        <UButton
-          v-if="canCreate"
-          label="Add header mapping"
-          icon="lucide:plus"
-          color="primary"
-          variant="solid"
-          @click="openCreate"
-        />
-      </CommonEmptyState>
-
-      <div v-else class="space-y-2">
-        <div class="mb-3 flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
-          <UIcon name="lucide:grip-vertical" class="size-4" />
-          <span>Drag a mapping or use the arrow controls to change priority.</span>
-        </div>
-
-        <div
-          v-for="(header, index) in headers"
-          :key="String(getId(header) ?? `${header.headerKey}-${header.credentialType}-${header.scheme}`)"
-          class="surface-card flex flex-col gap-3 p-4 transition sm:flex-row sm:items-center"
-          :class="[
-            dragIndex === index ? 'opacity-60' : '',
-            getDropClass(index),
-          ]"
-          draggable="true"
-          @dragstart="startDrag(index, $event)"
-          @dragover="handleDragOver(index, $event)"
-          @dragleave="handleDragLeave"
-          @drop.prevent="dropHeader(index, $event)"
-          @dragend="endDrag"
-        >
-          <div class="flex min-w-0 flex-1 items-center gap-3">
-            <button
-              type="button"
-              class="flex size-9 shrink-0 cursor-grab items-center justify-center rounded-[var(--radius-control)] text-[var(--text-tertiary)] hover:bg-[var(--surface-muted)] active:cursor-grabbing"
-              :aria-label="`Drag ${header.headerKey}`"
-            >
-              <UIcon name="lucide:grip-vertical" class="size-5" />
-            </button>
-            <div class="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] bg-[var(--state-primary-soft-bg)] text-sm font-semibold text-[var(--state-primary-soft-text)]">
-              {{ index + 1 }}
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <code class="truncate text-sm font-semibold text-[var(--text-primary)]">{{ header.headerKey }}</code>
-                <UBadge
-                  :color="header.isSystem ? 'info' : 'primary'"
-                  variant="soft"
-                  size="xs"
-                >
-                  {{ header.isSystem ? 'System' : 'Custom' }}
-                </UBadge>
-                <UBadge color="neutral" variant="outline" size="xs">
-                  {{ header.credentialType.toUpperCase() }} / {{ header.scheme }}
-                </UBadge>
-              </div>
-              <p class="mt-1 truncate text-xs text-[var(--text-tertiary)]">
-                {{ header.description || 'No description' }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between gap-2 sm:justify-end">
-            <div class="flex items-center gap-1">
-              <UButton
-                icon="lucide:chevron-up"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="index === 0 || moving"
-                :aria-label="`Move ${header.headerKey} up`"
-                @click="moveHeader(index, -1)"
-              />
-              <UButton
-                icon="lucide:chevron-down"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                :disabled="index === headers.length - 1 || moving"
-                :aria-label="`Move ${header.headerKey} down`"
-                @click="moveHeader(index, 1)"
-              />
-            </div>
-
-            <USwitch
-              :model-value="header.isEnabled"
-              :loading="isHeaderToggling(header)"
-              :disabled="header.isSystem || !canUpdate || moving || togglingHeaderId !== null"
-              :aria-label="`${header.headerKey} enabled`"
-              @update:model-value="toggleHeader(header)"
-            />
-
-            <UButton
-              icon="lucide:pencil"
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              :disabled="!canUpdate"
-              :aria-label="`Edit ${header.headerKey}`"
-              @click="openEdit(header)"
-            />
-            <UButton
-              icon="lucide:trash-2"
-              color="error"
-              variant="ghost"
-              size="sm"
-              :disabled="header.isSystem || !canDelete"
-              :aria-label="`Delete ${header.headerKey}`"
-              @click="deleteHeader(header)"
-            />
-          </div>
-        </div>
-      </div>
     </div>
 
     <CommonDrawer
@@ -242,6 +120,12 @@
 </template>
 
 <script setup lang="ts">
+import { h } from 'vue';
+import { UBadge } from '#components';
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
+
 type AuthHeaderRecord = {
   id?: string | number;
   _id?: string | number;
@@ -305,9 +189,6 @@ const mode = ref<'create' | 'edit'>('create');
 const saving = ref(false);
 const moving = ref(false);
 const togglingHeaderId = ref<string | number | null>(null);
-const dragIndex = ref<number | null>(null);
-const dropTargetIndex = ref<number | null>(null);
-const dropPosition = ref<'before' | 'after' | null>(null);
 const closingDrawer = ref(false);
 const showDiscardModal = ref(false);
 const headerKeyTouched = ref(false);
@@ -533,76 +414,9 @@ async function toggleHeader(header: AuthHeaderRecord) {
   }
 }
 
-function isHeaderToggling(header: AuthHeaderRecord) {
-  const id = getId(header);
-  return id != null && String(togglingHeaderId.value) === String(id);
-}
-
-function startDrag(index: number, event: DragEvent) {
-  dragIndex.value = index;
-  dropTargetIndex.value = null;
-  dropPosition.value = null;
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', String(index));
-  }
-}
-
-function endDrag() {
-  dragIndex.value = null;
-  dropTargetIndex.value = null;
-  dropPosition.value = null;
-}
-
-function handleDragOver(index: number, event: DragEvent) {
-  if (dragIndex.value == null || moving.value) return;
-  event.preventDefault();
-  if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-
-  const target = event.currentTarget as HTMLElement;
-  const rect = target.getBoundingClientRect();
-  dropTargetIndex.value = index;
-  dropPosition.value = event.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
-}
-
-function handleDragLeave(event: DragEvent) {
-  const current = event.currentTarget as HTMLElement | null;
-  const related = event.relatedTarget as Node | null;
-  if (current && related && current.contains(related)) return;
-  dropTargetIndex.value = null;
-  dropPosition.value = null;
-}
-
-function getDropClass(index: number): string {
-  if (dragIndex.value == null || dropTargetIndex.value !== index || !dropPosition.value) {
-    return '';
-  }
-  return `drop-target drop-target--${dropPosition.value}`;
-}
-
-async function dropHeader(targetIndex: number, event: DragEvent) {
-  const sourceIndex = dragIndex.value;
-  const activeTargetIndex = dropTargetIndex.value ?? targetIndex;
-  const activePosition = dropPosition.value ?? (() => {
-    const target = event.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after';
-  })();
-  const insertIndex = activeTargetIndex + (activePosition === 'after' ? 1 : 0);
-  endDrag();
-  if (sourceIndex == null) return;
-
-  const nextIndex = Math.max(
-    0,
-    Math.min(headers.value.length - 1, insertIndex > sourceIndex ? insertIndex - 1 : insertIndex),
-  );
-  if (sourceIndex === nextIndex) return;
-  await moveHeader(sourceIndex, -1, nextIndex);
-}
-
-async function moveHeader(index: number, direction: -1 | 1, targetIndex?: number) {
+async function moveHeader(index: number, direction: -1 | 1) {
   if (moving.value || !canUpdate.value) return;
-  const nextIndex = targetIndex ?? index + direction;
+  const nextIndex = index + direction;
   if (nextIndex < 0 || nextIndex >= headers.value.length) return;
   const ordered = [...headers.value];
   const [moved] = ordered.splice(index, 1);
@@ -641,32 +455,34 @@ async function deleteHeader(header: AuthHeaderRecord) {
   await fetchHeaders();
 }
 
+const columns: ColumnDef<Record<string, any>>[] = [
+  { accessorKey: 'priority', header: 'Priority', enableSorting: false, cell: ({ row }) => String(headers.value.findIndex(item => String(getId(item)) === String(getId(row.original))) + 1) },
+  settingsTextColumn('headerKey', 'Header'),
+  { id: 'credential', header: 'Credential', enableSorting: false,
+    cell: ({ row }) => `${row.original.credentialType.toUpperCase()} / ${row.original.scheme}`,
+  },
+  settingsTextColumn('description', 'Description'),
+  { accessorKey: 'isSystem', header: 'Origin', enableSorting: false,
+    cell: ({ getValue }) => h(UBadge, { label: getValue() ? 'System' : 'Custom', color: getValue() ? 'info' : 'neutral', variant: 'soft' }),
+  },
+  settingsStatusColumn(),
+];
+
+function getRowActions(row: Record<string, any>): DataTableRowAction[] {
+  const header = row as AuthHeaderRecord;
+  const index = headers.value.findIndex(item => String(getId(item)) === String(getId(header)));
+  return [
+    ...(canUpdate.value && index > 0 ? [{ label: 'Move up', icon: 'lucide:chevron-up', disabled: moving.value,
+      onSelect: () => moveHeader(index, -1) }] : []),
+    ...(canUpdate.value && index >= 0 && index < headers.value.length - 1 ? [{ label: 'Move down', icon: 'lucide:chevron-down', disabled: moving.value,
+      onSelect: () => moveHeader(index, 1) }] : []),
+    ...(canUpdate.value ? [{ label: 'Edit', icon: 'lucide:pencil', onSelect: () => openEdit(header) }] : []),
+    ...(canUpdate.value && !header.isSystem ? [{ label: header.isEnabled ? 'Disable' : 'Enable', icon: 'lucide:power',
+      disabled: moving.value || togglingHeaderId.value !== null, onSelect: () => toggleHeader(header) }] : []),
+    ...(canDelete.value && !header.isSystem ? [{ label: 'Delete', icon: 'lucide:trash-2', color: 'error',
+      onSelect: () => deleteHeader(header) }] : []),
+  ];
+}
+
 await fetchHeaders();
 </script>
-
-<style scoped>
-.drop-target {
-  position: relative;
-}
-
-.drop-target::after {
-  position: absolute;
-  z-index: 2;
-  right: 1rem;
-  left: 1rem;
-  height: 3px;
-  border-radius: 9999px;
-  background: var(--state-primary-solid-bg);
-  box-shadow: 0 0 0 2px var(--state-primary-soft-bg), 0 4px 14px color-mix(in srgb, var(--state-primary-solid-bg) 35%, transparent);
-  content: '';
-  pointer-events: none;
-}
-
-.drop-target--before::after {
-  top: -2px;
-}
-
-.drop-target--after::after {
-  bottom: -2px;
-}
-</style>

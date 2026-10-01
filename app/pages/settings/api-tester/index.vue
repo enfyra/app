@@ -4,101 +4,25 @@
       <UInput v-model="search" placeholder="Search routes..." icon="i-lucide-search" size="sm" class="flex-1" />
     </div>
 
-    <Transition name="loading-fade" mode="out-in">
-      <CommonResourceListFrame
-        v-if="showInitialLoading"
-        :loading="true"
-        :has-items="false"
-        item-size="sm"
-        loading-title="Loading routes..."
-        loading-description="Fetching route definitions"
-      >
-      </CommonResourceListFrame>
+    <CommonTabbedPanel>
+      <template #header>
+        <UTabs v-model="activeScope" :items="routeTabItems" :content="false" variant="link" />
+      </template>
+    <DataTableSettingsTable
+      v-model:page="page"
+      :data="visibleRoutes"
+      :columns="columns"
+      :loading="showInitialLoading || routeLoading"
+      :total="total"
+      :page-limit="pageLimit"
+      page-size-key="api-tester"
+      compact
+      :pagination-loading="routeLoading"
+      @page-size-change="setPageSize"
+      @row-click="openTest"
+    />
 
-      <div v-else class="space-y-4">
-        <UTabs
-          v-model="activeScope"
-          :items="routeTabItems"
-          :content="false"
-          variant="link"
-        />
-
-        <section v-if="activeScope === 'custom'" class="space-y-3">
-          <div v-if="customRoutes.length > 0" class="eapp-resource-list">
-            <CommonResourceListItem
-              v-for="r in customRoutes"
-              :key="r.id"
-              :title="r.path"
-              :description="r.mainTable?.name || r.description || 'Route'"
-              :icon="r.icon || 'lucide:code-2'"
-              icon-color="primary"
-              size="sm"
-              :loading="customRoutesRefreshing"
-              :top-badge="!r.isEnabled ? { label: 'Off', color: 'warning' } : undefined"
-              @click="openTest(r)"
-            >
-              <template #title>
-                <span class="truncate text-sm font-semibold eapp-text-primary">{{ r.path }}</span>
-                <span class="flex shrink-0 flex-wrap items-center gap-1.5">
-                  <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
-                  <UBadge v-if="r.publicMethods?.length" color="info" variant="soft" size="xs">
-                    {{ r.publicMethods.length }} public
-                  </UBadge>
-                </span>
-              </template>
-            </CommonResourceListItem>
-          </div>
-          <CommonEmptyState
-            v-else
-            :title="search ? 'No matching custom routes' : 'No custom routes'"
-            :description="search ? 'No custom routes match your search' : 'Create a table to generate API routes'"
-            icon="lucide:route"
-          />
-        </section>
-
-        <section v-else class="space-y-3">
-          <CommonResourceListFrame
-            v-if="systemLoading"
-            :loading="true"
-            :has-items="false"
-            item-size="sm"
-            loading-title="Loading system routes..."
-            loading-description="Fetching system route definitions"
-          >
-          </CommonResourceListFrame>
-
-          <div v-else-if="filteredSystemRoutes.length > 0" class="eapp-resource-list">
-            <CommonResourceListItem
-              v-for="r in filteredSystemRoutes"
-              :key="r.id"
-              :title="r.path"
-              :description="r.description || 'System route'"
-              :icon="r.icon || 'lucide:settings'"
-              icon-color="neutral"
-              size="sm"
-              :top-badge="{ label: 'System', color: 'neutral' }"
-              @click="openTest(r)"
-            >
-              <template #title>
-                <span class="truncate text-sm font-semibold eapp-text-primary">{{ r.path }}</span>
-                <span class="flex shrink-0 flex-wrap items-center gap-1.5">
-                  <MethodBadge v-for="m in getRouteMethods(r)" :key="m.name" :method="m" />
-                  <UBadge v-if="r.publicMethods?.length" color="info" variant="soft" size="xs">
-                    {{ r.publicMethods.length }} public
-                  </UBadge>
-                </span>
-              </template>
-            </CommonResourceListItem>
-          </div>
-          <CommonEmptyState
-            v-else
-            :title="search ? 'No matching system routes' : 'No system routes'"
-            :description="search ? 'No system routes match your search' : 'System routes will appear here after loading'"
-            icon="lucide:settings"
-          />
-        </section>
-      </div>
-    </Transition>
+    </CommonTabbedPanel>
 
     <RouteApiTestModal
       v-model="showTestModal"
@@ -114,6 +38,9 @@
 </template>
 
 <script setup lang="ts">
+import type { ColumnDef } from '@tanstack/vue-table';
+import { settingsStatusColumn } from '~/utils/settings-table';
+
 definePageMeta({ layout: "default", title: "API Tester" });
 
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -125,8 +52,20 @@ const { schemas } = useSchema(selectedTableName);
 registerPageHeader({ title: "API Tester", gradient: "cyan" });
 
 const search = ref('');
+const debouncedSearch = ref('');
+const pageLimit = useSettingsPageSize('api-tester');
 const route = useRoute();
 const router = useRouter();
+const page = computed({
+  get: () => Math.max(1, Number(route.query.page) || 1),
+  set: value => { if (value !== page.value) void router.replace({ query: { ...route.query, page: value > 1 ? String(value) : undefined } }); },
+});
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+watch(search, value => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { debouncedSearch.value = value.trim(); }, 250);
+});
+onBeforeUnmount(() => clearTimeout(searchTimer));
 
 const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.name,availableMethods.buttonColor,availableMethods.textColor,publicMethods.name,publicMethods.buttonColor,publicMethods.textColor,handlers.method.name';
 type RouteScope = 'custom' | 'system';
@@ -135,96 +74,74 @@ function normalizeScope(value: unknown): RouteScope {
   return value === 'system' ? 'system' : 'custom';
 }
 
-const activeScope = ref<RouteScope>(normalizeScope(route.query.scope));
+const activeScope = computed<RouteScope>({
+  get: () => normalizeScope(route.query.scope),
+  set: value => { void router.replace({ query: { ...route.query, scope: value === 'system' ? 'system' : undefined, page: undefined } }); },
+});
+function setPageSize(size: number) {
+  if (page.value !== 1) {
+    void router.replace({ query: { ...route.query, page: undefined } }).then(() => { pageLimit.value = size; });
+  } else {
+    pageLimit.value = size;
+  }
+}
 
 const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi(
   '/enfyra_route',
   {
-    query: {
+    query: computed(() => ({
       fields: routeFields,
-      filter: { isSystem: { _eq: false } },
-      limit: 0,
+      filter: { _and: [
+        { isSystem: { _eq: activeScope.value === 'system' } },
+        ...(debouncedSearch.value ? [{ _or: [
+          { path: { _contains: debouncedSearch.value } },
+          { description: { _contains: debouncedSearch.value } },
+        ] }] : []),
+      ] },
+      limit: pageLimit.value,
+      page: page.value,
+      meta: 'filterCount',
       sort: 'path',
-    },
+    })),
     errorContext: 'Fetch Routes',
   }
 );
 
 const {
-  items: customRouteItems,
+  items: routeItems,
   showInitialLoading,
-  isRefreshing: customRoutesRefreshing,
 } = useStableListState(() => routesData.value?.data, () => routeLoading.value);
+const total = computed(() => routesData.value?.meta?.filterCount ?? 0);
+const visibleRoutes = computed(() => routeItems.value);
 
-const systemRoutes = ref<any[]>([]);
-const systemLoading = ref(false);
-
-const { data: systemData, execute: fetchSystemRoutes } = useApi(
-  '/enfyra_route',
-  {
-    query: {
-      fields: routeFields,
-      filter: { isSystem: { _eq: true } },
-      limit: 0,
-      sort: 'path',
-    },
-    errorContext: 'Fetch System Routes',
+await fetchRoutes();
+watch([activeScope, page, pageLimit, debouncedSearch], (next, previous) => {
+  if (page.value > 1 && next[3] !== previous[3]) {
+    page.value = 1;
+    return;
   }
-);
-
-onMounted(async () => {
-  await fetchRoutes();
-  if (activeScope.value === 'system') {
-    await loadSystemRoutes();
-  }
+  void fetchRoutes();
 });
 
-async function loadSystemRoutes() {
-  if (systemRoutes.value.length === 0) {
-    systemLoading.value = true;
-    await fetchSystemRoutes();
-    systemRoutes.value = systemData.value?.data || [];
-    systemLoading.value = false;
-  }
+function clippedCell(value: string, width: string) {
+  return h('span', { class: `block truncate ${width}`, title: value }, value);
 }
 
-watch(
-  () => route.query.scope,
-  async (scope) => {
-    const next = normalizeScope(scope);
-    if (activeScope.value !== next) {
-      activeScope.value = next;
-    }
-    if (next === 'system') {
-      await loadSystemRoutes();
-    }
+const columns: ColumnDef<Record<string, any>>[] = [
+  { accessorKey: 'path', header: 'Route', enableSorting: false,
+    cell: ({ row }) => clippedCell(row.original.path || '_', 'max-w-72 font-medium'),
   },
-);
-
-watch(activeScope, async (scope) => {
-  if (normalizeScope(route.query.scope) !== scope) {
-    const query = { ...route.query };
-    if (scope === 'custom') delete query.scope;
-    else query.scope = scope;
-    await router.replace({ query });
-  }
-  if (scope === 'system') {
-    await loadSystemRoutes();
-  }
-});
-
-const customRoutes = computed(() => {
-  const routes = customRouteItems.value;
-  if (!search.value) return routes;
-  const q = search.value.toLowerCase();
-  return routes.filter((r: any) => r.path?.toLowerCase().includes(q) || r.mainTable?.name?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q));
-});
-
-const filteredSystemRoutes = computed(() => {
-  if (!search.value) return systemRoutes.value;
-  const q = search.value.toLowerCase();
-  return systemRoutes.value.filter((r: any) => r.path?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q));
-});
+  { id: 'table', header: 'Table', enableSorting: false,
+    cell: ({ row }) => clippedCell(row.original.mainTable?.name || row.original.description || '_', 'max-w-44'),
+  },
+  { id: 'methods', header: 'Methods', enableSorting: false,
+    cell: ({ row }) => clippedCell(getRouteMethods(row.original).map((method: any) => method.name).join(', ') || '_', 'max-w-48'),
+  },
+  { id: 'publicMethods', header: 'Public', enableSorting: false,
+    cell: ({ row }) => String(row.original.publicMethods?.length || 0),
+  },
+  settingsStatusColumn(),
+];
 
 const routeTabItems = computed(() => [
   {

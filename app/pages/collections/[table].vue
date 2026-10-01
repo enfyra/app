@@ -797,27 +797,18 @@ onMounted(async () => {
     </CommonModal>
 
     <div class="eapp-page-constrained">
-      <div
-        v-if="showInitialLoading || table"
-        class="relative -mx-4 mb-4 px-4 sm:mx-0 sm:px-0"
-      >
-        <div class="overflow-x-auto overflow-y-hidden">
-          <UTabs
-            v-model="activeTab"
-            :items="tabItems"
-            :content="false"
-            variant="link"
-          />
-        </div>
-      </div>
+      <CommonTabbedPanel>
+        <template #header>
+          <UTabs v-model="activeTab" :items="tabItems" :content="false" variant="link" />
+        </template>
 
       <CommonFormCard v-if="showInitialLoading">
         <CommonDetailFormSkeleton />
       </CommonFormCard>
 
       <template v-else-if="table">
-        <UForm @submit.prevent="save" :state="table">
-          <div v-show="activeTab === 'schema'">
+        <UForm v-show="activeTab === 'schema'" @submit.prevent="save" :state="table">
+          <div>
             <CommonFormCard>
               <TableForm v-model="table" @save="save">
                 <div class="space-y-6">
@@ -848,12 +839,14 @@ onMounted(async () => {
           :table-name="String(table.name)"
         />
 
-        <RouteEditorPanel
-          v-if="activeTab === 'routes'"
-          :table-name="String(route.params.table ?? '')"
-          :external-api-test="showRouteApiTest"
-          @close-api-test="showRouteApiTest = false"
-        />
+        <div v-if="activeTab === 'routes'" class="collection-route-panel">
+          <RouteEditorPanel
+            :embedded="true"
+            :table-name="String(route.params.table ?? '')"
+            :external-api-test="showRouteApiTest"
+            @close-api-test="showRouteApiTest = false"
+          />
+        </div>
 
         <FlowTriggersPanel
           v-if="activeTab === 'triggers'"
@@ -869,6 +862,7 @@ onMounted(async () => {
         icon="lucide:database"
         size="sm"
       />
+      </CommonTabbedPanel>
     </div>
 
       <UModal

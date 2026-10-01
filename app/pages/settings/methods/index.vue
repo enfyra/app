@@ -1,5 +1,9 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
+import { h } from 'vue';
+import { UBadge } from '#components';
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
 import {
   getMethodColors,
   getMethodLabel,
@@ -92,7 +96,6 @@ const { execute: deleteMethodApi } = useApi('/enfyra_method', {
 const {
   items: methods,
   showInitialLoading,
-  isRefreshing: methodsRefreshing,
 } = useStableListState(() => methodsData.value?.data, () => loading.value);
 const methodNames = computed(() => new Set(methods.value.map((method) => getMethodLabel(method))));
 const currentMethodLabel = computed(() => normalizeMethodName(form.name));
@@ -293,45 +296,24 @@ async function deleteMethod(method: MethodRecord) {
   }
 }
 
-function methodSwatches(method: MethodRecord) {
-  const colors = getMethodColors(method);
-  return [
-    { key: 'button', label: 'Button', value: colors.buttonColor },
-    { key: 'text', label: 'Text', value: colors.textColor },
-  ];
-}
-
-function getMethodStats(method: MethodRecord) {
-  return [
-    {
-      label: 'Type',
-      component: 'UBadge',
-      props: {
-        variant: 'soft',
-        color: method.isSystem ? 'info' : 'primary',
-      },
-      value: method.isSystem ? 'System' : 'Custom',
+const columns: ColumnDef<Record<string, any>>[] = [
+  { accessorKey: 'name', header: 'Method', enableSorting: false,
+    cell: ({ row }) => h(resolveComponent('MethodBadge'), { method: row.original, size: 'sm' }),
+  },
+  { accessorKey: 'isSystem', header: 'Origin', enableSorting: false,
+    cell: ({ getValue }) => h(UBadge, { label: getValue() ? 'System' : 'Custom', color: getValue() ? 'info' : 'primary', variant: 'soft' }),
+  },
+  { id: 'colors', header: 'Colors', enableSorting: false,
+    cell: ({ row }) => {
+      const colors = getMethodColors(row.original);
+      return `Button ${colors.buttonColor} · Text ${colors.textColor}`;
     },
-  ];
-}
+  },
+];
 
-function getMethodFooterActions(method: MethodRecord) {
-  return [
-    {
-      label: 'Delete',
-      props: {
-        icon: 'i-lucide-trash-2',
-        variant: 'solid',
-        color: 'error',
-        size: 'sm',
-      },
-      disabled: method.isSystem,
-      onClick: (e?: Event) => {
-        e?.stopPropagation();
-        void deleteMethod(method);
-      },
-    },
-  ];
+function getRowActions(method: Record<string, any>): DataTableRowAction[] {
+  if (method.isSystem) return [];
+  return [{ label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteMethod(method as MethodRecord) }];
 }
 
 function normalizeCustomMethodInput(value: string) {
@@ -377,71 +359,13 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <Transition name="loading-fade" mode="out-in">
-      <div v-if="showInitialLoading" key="loading">
-        <CommonResourceListFrame
-          :loading="true"
-          :has-items="false"
-          :skeleton-rows="4"
-          loading-title="Loading methods..."
-          loading-description="Fetching route method definitions"
-        />
-      </div>
-
-      <div v-else key="content" class="space-y-6">
-        <div v-if="methods.length" class="space-y-6">
-          <div class="eapp-resource-list">
-            <CommonResourceListItem
-              v-for="method in methods"
-              :key="getId(method) || getMethodLabel(method)"
-              :title="getMethodLabel(method)"
-              :description="method.isSystem ? 'Built-in route method' : 'Custom route method'"
-              icon="lucide:badge"
-              :icon-color="method.isSystem ? 'neutral' : 'primary'"
-              :loading="methodsRefreshing"
-              :top-badge="method.isSystem ? { label: 'System', color: 'info' } : { label: 'Custom', color: 'primary' }"
-              :stats="getMethodStats(method)"
-              :methods="getMethodFooterActions(method)"
-              @click="openEdit(method)"
-            >
-              <template #title>
-                <span class="inline-flex items-center gap-2">
-                  <MethodBadge :method="method" size="sm" />
-                </span>
-              </template>
-              <template #metadata>
-                <div class="mt-2 flex flex-wrap items-center gap-2">
-                  <span
-                    v-for="sw in methodSwatches(method)"
-                    :key="sw.key"
-                    class="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-[var(--badge-neutral-soft-border)] bg-[var(--badge-neutral-soft-bg)] px-2 py-0.5"
-                  >
-                    <span
-                      class="size-3 rounded-full ring-1 ring-inset ring-[var(--border-default)]"
-                      :style="{ backgroundColor: sw.value }"
-                    />
-                    <span class="text-xs font-medium eapp-text-tertiary">{{ sw.label }}</span>
-                    <span class="font-mono text-xs eapp-text-secondary">{{ sw.value }}</span>
-                  </span>
-                </div>
-              </template>
-            </CommonResourceListItem>
-          </div>
-        </div>
-
-        <CommonEmptyState
-          v-else
-          title="No methods found"
-          description="Create the first method to make it selectable in route forms."
-          icon="lucide:badge"
-          size="sm"
-        >
-          <UButton icon="lucide:plus" color="primary" variant="solid" @click="openCreate">
-            New Method
-          </UButton>
-        </CommonEmptyState>
-      </div>
-    </Transition>
+    <DataTableSettingsTable
+      :data="methods"
+      :columns="columns"
+      :actions="getRowActions"
+      :loading="showInitialLoading || loading"
+      @row-click="method => openEdit(method as MethodRecord)"
+    />
 
     <CommonDrawer
       :model-value="drawerOpen"

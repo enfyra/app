@@ -1,13 +1,17 @@
-import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import MePage from '~/pages/me.vue'
 
+const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
+
+mockNuxtImport('$fetch', () => fetchMock)
+
 describe('profile OAuth accounts', () => {
   beforeEach(() => {
-    vi.restoreAllMocks()
-    vi.stubGlobal('$fetch', vi.fn(async (path: string) => {
+    fetchMock.mockReset()
+    fetchMock.mockImplementation(async (path: string) => {
       if (path === '/api/me') {
         return {
           data: [{ id: 'user-1', email: 'user@example.test' }],
@@ -19,19 +23,19 @@ describe('profile OAuth accounts', () => {
         }
       }
       return { data: [] }
-    }))
+    })
   })
 
   it('loads linked accounts through the owner-scoped endpoint', async () => {
-    await mountSuspended(MePage, {
-      route: '/me',
+    const wrapper = await mountSuspended(MePage, {
+      route: '/me?tab=profile',
       global: {
         stubs: {
           CommonEmptyState: true,
           CommonLoadingState: true,
           FormEditorLazy: true,
-          ProfileApiTokensCard: true,
-          ProfileChangePasswordModal: true,
+          ProfileApiTokensTable: true,
+          ProfileChangePasswordForm: true,
           UForm: true,
           UIcon: true,
         },
@@ -39,7 +43,6 @@ describe('profile OAuth accounts', () => {
     })
     await flushPromises()
 
-    const fetchMock = vi.mocked($fetch)
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/me/oauth-accounts',
       expect.any(Object),
@@ -48,5 +51,7 @@ describe('profile OAuth accounts', () => {
       '/api/enfyra_oauth_account',
       expect.any(Object),
     )
+    expect(wrapper.find('a[href^="/settings/oauth"]').exists()).toBe(false)
+    wrapper.unmount()
   })
 })

@@ -37,74 +37,69 @@
         </CommonFormCard>
       </template>
 
-      <template v-else-if="flow">
-        <CommonFormCard>
-          <UForm :state="editForm" @submit="saveFlowSettings">
-            <FormEditorLazy
-              v-model="editForm"
-              :table-name="'enfyra_flow'"
-              :errors="flowErrors"
-              :excluded="['steps', 'isSystem', 'triggers']"
-              :field-map="flowFieldMap"
-              @update:errors="(e: any) => flowErrors = e"
-              @has-changed="(v: boolean) => hasFormChanges = v"
-              mode="update"
-            />
-
-            <div
-              class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
-            >
-              <UButton
-                v-if="canUpdateFlow"
-                label="Save"
-                icon="lucide:save"
-                variant="solid"
-                color="primary"
-                type="submit"
-                :loading="saveFlowPending"
-                :disabled="!hasFormChanges"
+      <CommonTabbedPanel v-else-if="flow" v-model="activeEditorTab" :items="flowTabs" :unmount-on-hide="false">
+        <template #settings>
+          <CommonFormCard>
+            <UForm :state="editForm" @submit="saveFlowSettings">
+              <FormEditorLazy
+                v-model="editForm"
+                :table-name="'enfyra_flow'"
+                :errors="flowErrors"
+                :excluded="['steps', 'isSystem', 'triggers']"
+                :field-map="flowFieldMap"
+                @update:errors="(e: any) => flowErrors = e"
+                @has-changed="(v: boolean) => hasFormChanges = v"
+                mode="update"
               />
+
+            </UForm>
+          </CommonFormCard>
+        </template>
+        <template #steps>
+          <CommonFormCard>
+            <template #header>
+              <div class="flex items-center justify-end">
+                <UButton icon="lucide:plus" size="sm" variant="solid" color="primary" @click="() => openCreateStep()">
+                  Add Step
+                </UButton>
+              </div>
+            </template>
+            <div class="h-[400px] md:h-[500px] lg:h-[600px]">
+              <KeepAlive>
+              <FlowCanvas
+                v-if="activeEditorTab === 'steps'"
+                :flow="flow"
+                :steps="steps"
+                @select-step="onSelectStep"
+                @add-step="openCreateStep"
+                @move-step="handleMoveStep"
+                :reordering="reordering"
+                :execution-overlay="latestExecOverlay"
+              />
+              </KeepAlive>
             </div>
-          </UForm>
-        </CommonFormCard>
-
-        <CommonFormCard>
-          <template #header>
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-[var(--text-primary)]">Flow Steps</h3>
-              <UButton icon="lucide:plus" size="sm" variant="solid" color="primary" @click="() => openCreateStep()">
-                Add Step
-              </UButton>
-            </div>
-          </template>
-          <div class="h-[400px] md:h-[500px] lg:h-[600px]">
-            <FlowCanvas
-              :flow="flow"
-              :steps="steps"
-              @select-step="onSelectStep"
-              @add-step="openCreateStep"
-              @move-step="handleMoveStep"
-              :reordering="reordering"
-              :execution-overlay="latestExecOverlay"
-            />
-          </div>
-        </CommonFormCard>
-
-        <FlowTriggersCard
-          :flow-id="flowId!"
-          :triggers="flow?.triggers || []"
-          @refresh="loadFlow"
-        />
-
-        <FlowExecutionsCard
-          :executions="executions"
-          :has-more="hasMoreExecs"
-          :loading="execLoading"
-          @refresh="refreshExecutions"
-          @load-more="loadMoreExecutions"
-          @open="openExecution"
-        />
-      </template>
+          </CommonFormCard>
+        </template>
+        <template #triggers>
+          <FlowTriggersCard
+            :show-title="false"
+            :flow-id="flowId!"
+            :triggers="flow?.triggers || []"
+            @refresh="loadFlow"
+          />
+        </template>
+        <template #history>
+          <FlowExecutionsCard
+            :show-title="false"
+            :executions="executions"
+            :has-more="hasMoreExecs"
+            :loading="execLoading"
+            @refresh="refreshExecutions"
+            @load-more="loadMoreExecutions"
+            @open="openExecution"
+          />
+        </template>
+      </CommonTabbedPanel>
     </div>
 
     <CommonEmptyState v-else title="Flow not found" icon="lucide:workflow" size="lg" />
@@ -163,6 +158,22 @@ definePageMeta({ layout: "default", title: "Flow Editor" });
 
 const route = useRoute();
 const router = useRouter();
+const activeEditorTab = computed({
+  get: () => {
+    const tab = route.query.tab;
+    return tab === 'steps' || tab === 'triggers' || tab === 'history' ? tab : 'settings';
+  },
+  set: (value: string | number) => {
+    const tab = value === 'steps' || value === 'triggers' || value === 'history' ? value : 'settings';
+    void router.push({ query: { ...route.query, tab } });
+  },
+});
+const flowTabs = [
+  { label: 'Settings', value: 'settings', slot: 'settings', icon: 'lucide:settings-2' },
+  { label: 'Steps', value: 'steps', slot: 'steps', icon: 'lucide:workflow' },
+  { label: 'Triggers', value: 'triggers', slot: 'triggers', icon: 'lucide:zap' },
+  { label: 'History', value: 'history', slot: 'history', icon: 'lucide:history' },
+];
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { isMounted } = useMounted();
@@ -197,7 +208,9 @@ const FLOW_DETAIL_FIELDS = [
   "triggers.config",
   "triggers.tableEvent",
   "triggers.route.id",
+  "triggers.route.path",
   "triggers.table.id",
+  "triggers.table.name",
   "steps.id",
   "steps.key",
   "steps.stepOrder",
@@ -424,6 +437,14 @@ registerHeaderActions([
     size: "md",
     onClick: triggerFlow,
     permission: { and: [{ route: "/enfyra_flow_execution", methods: ["POST"] }] },
+  },
+  {
+    id: 'save-flow-settings', label: 'Save', icon: 'lucide:save', variant: 'solid', color: 'primary', order: 999,
+    show: computed(() => activeEditorTab.value === 'settings' && !!flow.value && canUpdateFlow.value),
+    loading: saveFlowPending,
+    disabled: computed(() => saveFlowPending.value || !hasFormChanges.value),
+    onClick: saveFlowSettings,
+    permission: { and: [{ route: '/enfyra_flow', methods: ['PATCH'] }] },
   },
 ]);
 

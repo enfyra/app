@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { CalendarDate } from "@internationalized/date";
+import type { TableColumn } from "@nuxt/ui";
+
+const props = withDefaults(defineProps<{ active?: boolean }>(), { active: true });
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 type ApiTokenRecord = {
   id: string;
@@ -48,6 +52,26 @@ const {
 });
 
 const apiTokens = computed(() => apiTokenData.value?.data || []);
+const page = ref(1);
+const pageLimit = useSettingsPageSize('me-api-tokens', 20);
+const pageTokens = computed(() => apiTokens.value.slice((page.value - 1) * pageLimit.value, page.value * pageLimit.value));
+const revokingTokenId = ref<string | null>(null);
+const tokenColumns: TableColumn<ApiTokenRecord>[] = [
+  { accessorKey: 'name', header: 'Name' },
+  { id: 'token', header: 'Token', cell: ({ row }) => tokenPreview(row.original as ApiTokenRecord) },
+  { accessorKey: 'expiresAt', header: 'Expires', cell: ({ getValue }) => formatTokenDate(getValue() as string | null) },
+  { accessorKey: 'lastUsedAt', header: 'Last used', cell: ({ getValue }) => formatTokenDate(getValue() as string | null, 'Never used') },
+  { accessorKey: 'createdAt', header: 'Created', cell: ({ getValue }) => formatTokenDate(getValue() as string | null) },
+  { id: 'actions', header: '', enableHiding: false, enableSorting: false, meta: { style: { th: { width: '112px' }, td: { width: '112px' } } } },
+];
+watch(pageLimit, () => { page.value = 1; });
+watch(() => apiTokens.value.length, count => {
+  page.value = Math.min(page.value, Math.max(1, Math.ceil(count / pageLimit.value)));
+});
+function setPageSize(size: number) {
+  pageLimit.value = size;
+  page.value = 1;
+}
 const apiTokenModalOpen = ref(false);
 const apiTokenForm = ref({
   name: "MCP token",
@@ -190,27 +214,33 @@ async function handleCopyApiToken(token: string) {
 }
 
 async function handleRevokeApiToken(token: ApiTokenRecord) {
+  if (revokeApiTokenLoading.value) return;
   const ok = await confirm({
     title: "Revoke API token",
     content: `Revoke ${token.name}? This deletes the token immediately.`,
   });
-  if (!ok) return;
+  if (!ok || revokeApiTokenLoading.value) return;
 
-  await revokeApiToken({ id: token.id });
-  if (revokeApiTokenError.value) {
-    notify.error(
-      "Revoke API token failed",
-      revokeApiTokenError.value.message || "Unable to revoke API token.",
-    );
-    return;
+  revokingTokenId.value = token.id;
+  try {
+    await revokeApiToken({ id: token.id });
+    if (revokeApiTokenError.value) {
+      notify.error(
+        "Revoke API token failed",
+        revokeApiTokenError.value.message || "Unable to revoke API token.",
+      );
+      return;
+    }
+
+    notify.success("API token revoked", "The token can no longer be used.");
+    await fetchApiTokens();
+  } finally {
+    revokingTokenId.value = null;
   }
-
-  notify.success("API token revoked", "The token can no longer be used.");
-  await fetchApiTokens();
 }
 
-function formatTokenDate(value: string | null) {
-  if (!value) return "Never used";
+function formatTokenDate(value: string | null, emptyLabel = "_") {
+  if (!value) return emptyLabel;
   if (value === "never") return "No expiration";
   return new Intl.DateTimeFormat(undefined, {
     year: "numeric",
@@ -223,6 +253,30 @@ function tokenPreview(token: ApiTokenRecord) {
   return `${token.prefix}...${token.last4}`;
 }
 
+registerHeaderActions([
+  {
+    id: 'create-api-token',
+    label: 'Create token',
+    icon: 'lucide:plus',
+    color: 'primary',
+    variant: 'solid',
+    order: 999,
+    show: computed(() => props.active),
+    onClick: openApiTokenModal,
+  },
+  {
+    id: 'refresh-api-tokens',
+    label: 'Refresh',
+    icon: 'lucide:refresh-cw',
+    color: 'neutral',
+    variant: 'outline',
+    order: 1,
+    show: computed(() => props.active),
+    loading: apiTokensLoading,
+    onClick: fetchApiTokens,
+  },
+]);
+
 onMounted(() => {
   fetchApiTokens();
 });
@@ -233,63 +287,28 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="profile-card">
-    <div class="profile-card-header actions">
-      <div>
-        <h3>API Tokens</h3>
-        <p>Create long-lived tokens for MCP servers and external API clients</p>
-      </div>
-      <UButton
-        color="primary"
-        variant="solid"
-        icon="lucide:plus"
-        @click="openApiTokenModal"
-      >
-        Create token
-      </UButton>
-    </div>
-
-    <CommonLoadingState
-      v-if="apiTokensLoading"
-      title="Loading..."
-      description="Fetching API tokens"
-      size="sm"
-      type="card"
-    />
-    <div v-else-if="apiTokens.length > 0" class="profile-list">
-      <div
-        v-for="token in apiTokens"
-        :key="token.id"
-        class="profile-token-row"
-      >
-        <div class="min-w-0">
-          <div class="flex flex-wrap items-center gap-2">
-            <p class="text-sm font-semibold text-[var(--text-primary)]">{{ token.name }}</p>
-            <UBadge color="neutral" variant="soft">{{ tokenPreview(token) }}</UBadge>
-          </div>
-          <p class="text-xs text-[var(--text-tertiary)] mt-1">
-            Expires {{ formatTokenDate(token.expiresAt) }} · Last used {{ formatTokenDate(token.lastUsedAt) }}
-          </p>
-        </div>
-        <UButton
-          color="error"
-          variant="ghost"
-          icon="lucide:trash-2"
-          :loading="revokeApiTokenLoading"
-          @click="handleRevokeApiToken(token)"
-        >
-          Revoke
-        </UButton>
-      </div>
-    </div>
-    <CommonEmptyState
-      v-else
-      class="profile-empty"
-      title="No API tokens"
-      description="Create a token to connect MCP servers or custom API clients"
-      icon="lucide:key"
-      size="sm"
-    />
+  <div class="space-y-4">
+    <p class="text-sm text-muted">Create long-lived tokens for MCP servers and external API clients.</p>
+    <DataTable
+      v-model:page="page"
+      :data="pageTokens"
+      :columns="tokenColumns"
+      :loading="apiTokensLoading"
+      :show-column-visibility="false"
+      :ui="{ base: 'table-fixed !min-w-[900px]', th: 'px-3 py-3', td: 'max-w-0 overflow-hidden text-ellipsis px-3 py-3' }"
+      :pagination-config="{ total: apiTokens.length, itemsPerPage: pageLimit, showPageSize: true }"
+      @page-size-change="setPageSize"
+    >
+      <template #token-cell="{ row }">
+        <code class="font-mono text-xs">{{ tokenPreview(row.original as ApiTokenRecord) }}</code>
+      </template>
+      <template #actions-cell="{ row }">
+        <UButton type="button" label="Revoke" icon="lucide:trash-2" color="error" variant="ghost" size="sm" :aria-label="`Revoke ${row.original.name}`" :loading="revokingTokenId === row.original.id" :disabled="revokeApiTokenLoading" @click.stop="handleRevokeApiToken(row.original as ApiTokenRecord)" />
+      </template>
+      <template #empty>
+        <CommonEmptyState v-if="!apiTokensLoading" variant="naked" title="No API tokens" description="Create a token to connect MCP servers or custom API clients" icon="lucide:key" size="sm" />
+      </template>
+    </DataTable>
 
     <CommonModal
       v-model:open="apiTokenModalOpen"
@@ -393,89 +412,3 @@ onBeforeUnmount(() => {
     </CommonModal>
   </div>
 </template>
-
-<style scoped>
-.profile-card {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--card-border);
-  border-radius: 18px;
-  background: var(--card-bg);
-  box-shadow: var(--card-shadow);
-  padding: 22px;
-}
-
-.profile-card-header {
-  position: relative;
-  margin-bottom: 18px;
-}
-
-.profile-card-header.actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.profile-card-header h3 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-.profile-card-header p {
-  margin: 4px 0 0;
-  color: var(--text-tertiary);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.profile-list {
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  border-radius: 13px;
-}
-
-.profile-token-row {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 14px 16px;
-  transition: background-color var(--duration-fast) var(--ease-standard);
-}
-
-.profile-token-row:hover {
-  background: var(--nav-item-hover-bg);
-}
-
-.profile-list > * + * {
-  border-top: 1px solid var(--border-subtle);
-}
-
-.profile-empty {
-  min-height: 172px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 13px;
-}
-
-@media (min-width: 640px) {
-  .profile-token-row {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-
-@media (max-width: 640px) {
-  .profile-card {
-    padding: 16px;
-  }
-
-  .profile-card-header.actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-}
-</style>

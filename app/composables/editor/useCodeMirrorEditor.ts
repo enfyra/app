@@ -10,7 +10,7 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
   const getModelValue = () => ensureString(isRef(modelValue) ? modelValue.value : modelValue);
   const code = ref(getModelValue());
   const editorRef = ref<HTMLDivElement>();
-  const editorView = ref<any>();
+  const editorView = shallowRef<any>();
   let updateListenerExtension: any = null;
   
   const modules = computed(() => {

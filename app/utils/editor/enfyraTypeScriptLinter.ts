@@ -8,6 +8,8 @@ interface TransformedCode {
   sourceMap: number[];
 }
 
+type ThrowAliasMode = 'http' | 'validation';
+
 interface SourceRange {
   start: number;
   end: number;
@@ -39,18 +41,21 @@ const macroReplacements = new Map([
   ['@FLOW_PAYLOAD', '$ctx.$flow.$payload'],
   ['@FLOW_LAST', '$ctx.$flow.$last'],
   ['@FLOW_META', '$ctx.$flow.$meta'],
-  ['@THROW400', "$ctx.$throw['400']"],
-  ['@THROW401', "$ctx.$throw['401']"],
-  ['@THROW403', "$ctx.$throw['403']"],
-  ['@THROW404', "$ctx.$throw['404']"],
-  ['@THROW409', "$ctx.$throw['409']"],
-  ['@THROW422', "$ctx.$throw['422']"],
-  ['@THROW429', "$ctx.$throw['429']"],
-  ['@THROW500', "$ctx.$throw['500']"],
-  ['@THROW503', "$ctx.$throw['503']"],
   ['@THROW', '$ctx.$throw'],
   ['@ERROR', '$ctx.$error'],
   ['@STATUS', '$ctx.$statusCode'],
+]);
+
+const throwAliasStatus = new Map([
+  ['@THROW400', 400],
+  ['@THROW401', 401],
+  ['@THROW403', 403],
+  ['@THROW404', 404],
+  ['@THROW409', 409],
+  ['@THROW422', 422],
+  ['@THROW429', 429],
+  ['@THROW500', 500],
+  ['@THROW503', 503],
 ]);
 
 const libSource = `
@@ -369,8 +374,9 @@ type EnfyraResponseStreamOptions = {
   transform?: (text: string, kind: EnfyraStreamChunkKind) => string | null | undefined | Promise<string | null | undefined>;
 };
 type EnfyraResponse = {
+  json(value: unknown, options?: { statusCode?: number; headers?: EnfyraResponseStreamOptions['headers'] }): Promise<void>;
+  bytes(value: any, options?: { statusCode?: number; mimetype?: string; filename?: string; headers?: EnfyraResponseStreamOptions['headers'] }): Promise<void>;
   stream(stream: EnfyraReadable, options?: EnfyraResponseStreamOptions): Promise<void>;
-  [key: string]: any;
 };
 type EnfyraStreams = {
   preflight(stream: EnfyraReadable, options?: { timeoutMs?: number }): Promise<{ stream: EnfyraReadable; firstChunk: any }>;
@@ -378,17 +384,18 @@ type EnfyraStreams = {
   readText(stream: EnfyraReadable, options?: { timeoutMs?: number; maxBytes?: number }): Promise<string>;
 };
 type EnfyraThrow = {
-  (statusCode: number, message?: string): never;
-  400(message: string): never;
-  401(message?: string): never;
-  403(message?: string): never;
-  404(resource: string, id?: any): never;
-  409(resource: string, field: string, value: any): never;
-  422(message: string, details?: any): never;
-  429(limit: number, window: string): never;
-  500(message: string, details?: any): never;
-  503(service: string): never;
-  [statusCode: string]: (...args: any[]) => never;
+  http(statusCode: number, message?: string): never;
+  json(
+    body: Record<string, unknown> & {
+      success?: never;
+      statusCode?: never;
+      error?: Record<string, unknown> & { statusCode?: never };
+    },
+    options?: {
+      statusCode?: number;
+      headers?: EnfyraResponseStreamOptions['headers'];
+    },
+  ): never;
 };
 type EnfyraContext = {
   $body: any;
@@ -403,6 +410,7 @@ type EnfyraContext = {
   $share: Record<string, any>;
   $api: any;
   $uploadedFile: any;
+  $uploadFile: Record<string, any | any[]>;
   $pkgs: Record<string, any>;
   $cache: Record<string, any>;
   $repos: EnfyraRepos;
@@ -506,7 +514,10 @@ function loadTypeScript() {
   return typescriptModulePromise;
 }
 
-export function transformEnfyraCode(source: string): TransformedCode {
+export function transformEnfyraCode(
+  source: string,
+  throwAliasMode: ThrowAliasMode = 'http',
+): TransformedCode {
   const output: string[] = [];
   const sourceMap: number[] = [];
   const len = source.length;
@@ -589,11 +600,23 @@ export function transformEnfyraCode(source: string): TransformedCode {
         pos++;
         while (pos < len && isUpperMacroChar(source[pos] || '')) pos++;
         const token = source.slice(start, pos);
-        const replacement = macroReplacements.get(token);
-        if (replacement) {
-          pushReplacement(replacement, start, pos);
+        const throwStatus = throwAliasStatus.get(token);
+        let callStart = pos;
+        while (callStart < len && /\s/.test(source[callStart] || '')) callStart++;
+        if (throwStatus && source[callStart] === '(') {
+          const target = throwAliasMode === 'validation'
+            ? '$ctx.$throwAlias'
+            : '$ctx.$throw.http';
+          const replacement = `${target}(${throwStatus}${source[callStart + 1] === ')' ? '' : ', '}`;
+          pushReplacement(replacement, start, callStart + 1);
+          pos = callStart + 1;
         } else {
-          pushOriginal(start, pos);
+          const replacement = macroReplacements.get(token);
+          if (replacement) {
+            pushReplacement(replacement, start, pos);
+          } else {
+            pushOriginal(start, pos);
+          }
         }
       } else if (char === '#' || char === '%') {
         const start = pos;
@@ -708,7 +731,52 @@ function mapTypeScriptDiagnostic(
   };
 }
 
+async function validateThrowAliases(source: string): Promise<Diagnostic[]> {
+  const ts = await loadTypeScript();
+  const transformed = transformEnfyraCode(source, 'validation');
+  const sourceFile = ts.createSourceFile(
+    'enfyra-script.ts',
+    transformed.code,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TS,
+  );
+  const diagnostics: Diagnostic[] = [];
+
+  const visit = (node: import('typescript').Node): void => {
+    if (
+      ts.isCallExpression(node)
+      && ts.isPropertyAccessExpression(node.expression)
+      && ts.isIdentifier(node.expression.expression)
+      && node.expression.expression.text === '$ctx'
+      && node.expression.name.text === '$throwAlias'
+      && node.arguments.length !== 2
+    ) {
+      const virtualStart = node.getStart(sourceFile);
+      const virtualEnd = Math.max(node.end - 1, virtualStart);
+      const sourceStart = transformed.sourceMap[virtualStart] ?? 0;
+      const sourceEnd = transformed.sourceMap[
+        Math.min(virtualEnd, transformed.sourceMap.length - 1)
+      ];
+      diagnostics.push({
+        from: sourceStart,
+        to: sourceEnd !== undefined && sourceEnd >= sourceStart
+          ? sourceEnd + 1
+          : sourceStart + 1,
+        severity: 'error',
+        message: '@THROW status aliases require exactly one message',
+      });
+    }
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sourceFile);
+  return diagnostics;
+}
+
 async function lintEnfyraJavaScriptSyntax(source: string): Promise<Diagnostic[]> {
+  const aliasDiagnostics = await validateThrowAliases(source);
+  if (aliasDiagnostics.length > 0) return aliasDiagnostics;
   const transformed = transformEnfyraCode(source);
   try {
     parse(transformed.code, {
@@ -760,6 +828,9 @@ export async function lintEnfyraScript(
   if (language === 'javascript') {
     return lintEnfyraJavaScriptSyntax(source);
   }
+
+  const aliasDiagnostics = await validateThrowAliases(source);
+  if (aliasDiagnostics.length > 0) return aliasDiagnostics;
 
   const ts = await loadTypeScript();
   const transformed = transformEnfyraCode(source);

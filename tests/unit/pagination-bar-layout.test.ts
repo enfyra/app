@@ -43,16 +43,14 @@ describe('pagination layout', () => {
     const resourceList = readAppFile('components/common/ResourceListFrame.vue')
     const barSites = [
       'components/common/ResourceListFrame.vue',
-      'pages/settings/guards/index.vue',
-      'pages/settings/routes/index.vue',
       'pages/storage/management/index.vue',
       'pages/storage/management/folder/[id].vue',
-      'pages/collections/index.vue',
-      'pages/data/[table]/index.vue',
     ]
     const frameSites = [
       'pages/packages/app.vue',
       'pages/packages/backend.vue',
+      'pages/storage/config/index.vue',
+      'pages/collections/index.vue',
     ]
 
     // The frame used to paint its pagination as a nested card while every direct
@@ -73,10 +71,24 @@ describe('pagination layout', () => {
       }
     }
 
+    const settingsTable = readAppFile('components/data-table/SettingsTable.vue')
+    const tablePagination = readAppFile('components/data-table/Pagination.vue')
+    const dataPage = readAppFile('pages/data/[table]/index.vue')
+    expect(tablePagination).toContain('useMiniBarVisibility(floatingTarget, tableScope)')
+    expect(tablePagination).toContain('floating: true')
+    expect(tablePagination).toContain('v-if="floating && !isCursor"')
+    expect(tablePagination).toContain('ref="paginationFooter"')
+    expect(settingsTable).toContain(':pagination-config=')
+    expect(settingsTable).not.toContain('<DataTablePagination')
+    expect(dataPage).toContain(':pagination-config=')
+    expect(dataPage).not.toContain('<DataTablePagination')
+    expect(dataPage).not.toContain('<CommonPaginationBar')
+
     // Pages that hand the pagination to the frame must not pass the same knobs.
     for (const site of frameSites) {
       const source = readAppFile(site)
-      expect(source).toContain('<CommonResourceListFrame')
+      expect(source).toContain('<DataTableSettingsTable')
+      expect(source).not.toContain('<CommonResourceListFrame')
       for (const prop of ['pagination-align', 'pagination-color', 'pagination-active-color', 'pagination-show-range', 'pagination-ui']) {
         expect(source, `${site} should not pass ${prop}`).not.toContain(prop)
       }
@@ -98,13 +110,17 @@ describe('pagination layout', () => {
     expect(pagination).toContain('const showMini = computed(() => hasPagination.value && isMiniVisible.value)')
     expect(pagination).toContain('<Teleport to="body">')
     expect(pagination).toContain('eapp-pagination-mini fixed inset-x-3 bottom-3')
+    const miniBar = pagination.match(/class="eapp-pagination eapp-pagination-mini[^"]*"/)?.[0]
+    expect(miniBar).not.toContain('flex-wrap')
+    expect(pagination).toContain("list: 'flex-nowrap gap-0.5 md:gap-1'")
+    expect(pagination).toContain('class="min-w-0 flex-1 overflow-x-auto"')
 
     // The handoff must be driven by an observer on the main bar, with a reserve
     // band so the mini bar retires before the main bar reaches the fold.
     expect(visibility).toContain('IntersectionObserver')
     expect(visibility).toContain('HANDOFF_GAP_PX')
     expect(visibility).toContain('rootMargin')
-    expect(visibility).toContain('isMiniVisible.value = !record.isIntersecting')
+    expect(visibility).toContain('isMainOffscreen.value = !record.isIntersecting')
     expect(visibility).toContain('observer.disconnect()')
 
     const miniRule = css.match(/\.eapp-pagination-mini \{[^}]*\}/)?.[0]
@@ -133,21 +149,25 @@ describe('pagination layout', () => {
     expect(pagination).not.toMatch(/size="xs"/)
   })
 
-  it('hides only the jump-to-ends controls on mobile', () => {
+  it('keeps all controls visible on mobile in main and mini pagers', () => {
+    for (const path of ['components/common/PaginationBar.vue', 'components/data-table/Pagination.vue']) {
+      const pagination = readAppFile(path)
+      expect(pagination).not.toContain('max-md:!hidden')
+      expect(pagination).not.toContain('EDGE_CONTROL_UI')
+      expect(pagination).not.toMatch(/:show-controls/)
+      expect(pagination).toContain('flex-wrap')
+      expect(pagination).not.toContain(':sibling-count="isMobile ? 1 : 2"')
+    }
     const pagination = readAppFile('components/common/PaginationBar.vue')
+    expect(pagination.match(/:show-edges="showEdges"/g)).toHaveLength(2)
+  })
 
-    // UPagination has no prop for first/last alone: `showControls` also removes
-    // prev/next, so the ends are hidden per slot instead.
-    expect(pagination).toContain('EDGE_CONTROL_UI')
-    expect(pagination).toContain("first: 'max-md:!hidden'")
-    expect(pagination).toContain("last: 'max-md:!hidden'")
-    expect(pagination).not.toMatch(/:show-controls/)
-    expect(pagination).not.toContain('showEdgesResolved')
-
-    // `showEdges` is a reka-ui prop about first/last page + ellipsis in the item
-    // window, not about the end controls, so it must not be repurposed for this.
-    const edgesBindings = pagination.match(/:show-edges="showEdges"/g) ?? []
-    expect(edgesBindings.length, 'both bars pass showEdges through').toBe(2)
+  it('starts Data table fetches from local paging state instead of waiting for route navigation', () => {
+    const page = readAppFile('pages/data/[table]/index.vue')
+    expect(page).toContain('watch([page, pageLimit, tableName, isSingleRecord, schemaReady]')
+    expect(page).toContain('if (schemaReady.value && !isSingleRecord.value) void fetchData()')
+    expect(page).toContain('watch(() => route.query.page')
+    expect(page).not.toContain('() => [route.query.page, tableName.value')
   })
 
   it('never binds loading to the pagination disabled prop', () => {
@@ -168,9 +188,22 @@ describe('pagination layout', () => {
     expect(pagination).not.toMatch(/v-if="loading"/)
   })
 
+  it('keeps number and icon pagination controls square in both bars', () => {
+    const config = readAppFile('app.config.ts')
+    const css = readAppFile('assets/css/main.css')
+    expect(config).not.toContain("item: '!w-fit min-w-8'")
+    expect(css).toContain('[data-slot="item"]')
+    expect(css).toContain('[data-slot="first"]')
+    expect(css).toContain('[data-slot="prev"]')
+    expect(css).toContain('[data-slot="next"]')
+    expect(css).toContain('[data-slot="last"]')
+    expect(css).toContain('aspect-ratio: 1')
+    expect(css).toContain('padding-inline: 0')
+  })
+
   it('gates pagination hover feedback to fine pointers', () => {
     const css = readAppFile('assets/css/main.css')
-    const selector = '.eapp-pagination :where(a, button):hover'
+    const selector = ':where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where(a, button):hover'
 
     // Touch leaves an emulated `:hover` on the last-tapped button, which read as
     // a second selected page. Hover feedback is pointer-only.

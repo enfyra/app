@@ -108,7 +108,7 @@ async function handleReload(action: (typeof reloadActions)[number]) {
         <div
           v-for="action in reloadActions"
           :key="action.id"
-          class="flex items-start gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] p-3"
+          class="flex items-start gap-3 rounded-lg border border-[var(--border-default)] p-3"
         >
           <div
             :class="[

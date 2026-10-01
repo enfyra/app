@@ -21,7 +21,7 @@ const emit = defineEmits<{
 }>();
 
 const { getId } = useDatabase();
-const { isMobile } = useScreen();
+const { isDesktop } = useScreen();
 const { hasPermission } = usePermissions();
 const isDndUpdating = useState('menu-dnd-updating', () => false);
 const isMenuDragActive = useState('menu-dnd-drag-active', () => false);
@@ -34,9 +34,9 @@ const originalMenu = computed(() => {
 const childrenStyle = computed(() => {
   const parentLevel = props.level || 0;
   const base = 12 + parentLevel * 14;
-  const guideLeft = isMobile.value ? base + 62 : base + 66;
+  const guideLeft = isDesktop.value ? base + 66 : 6;
   return {
-    paddingLeft: '10px',
+    paddingLeft: isDesktop.value ? '10px' : '12px',
     '--menu-children-guide-left': `${guideLeft}px`,
   };
 });
@@ -61,6 +61,13 @@ function handleItemClick(menu: MenuTreeItem) {
     }
     emit('edit-menu', originalMenu);
   }
+}
+
+function handleIconClick(event: Event) {
+  if (isDesktop.value) return;
+  event.stopPropagation();
+  if (props.item.isDropdown) isExpanded.value = !isExpanded.value;
+  else if (canEditMenu.value) handleItemClick(props.item);
 }
 
 function isDescendant(menuId: string | number, potentialParentId: string | number, allMenus: MenuDefinition[]): boolean {
@@ -420,8 +427,8 @@ function handleDragEnd() {
       :tabindex="canEditMenu ? 0 : -1"
       :role="canEditMenu ? 'button' : undefined"
       :aria-label="canEditMenu ? `Edit menu ${item.label}` : undefined"
-      @keydown.enter.prevent="canEditMenu && handleItemClick(item)"
-      @keydown.space.prevent="canEditMenu && handleItemClick(item)"
+      @keydown.enter.self.prevent="canEditMenu && handleItemClick(item)"
+      @keydown.space.self.prevent="canEditMenu && handleItemClick(item)"
     >
       <button
         type="button"
@@ -451,9 +458,18 @@ function handleDragEnd() {
       </button>
       <span v-else class="menu-row-chevron-placeholder" />
 
-      <span :class="['menu-row-icon accent-tile', iconToneClass]">
+      <component
+        :is="isDesktop ? 'span' : 'button'"
+        :type="isDesktop ? undefined : 'button'"
+        :disabled="isDesktop ? undefined : item.isDropdown ? !hasChildren : !canEditMenu"
+        :aria-label="isDesktop ? undefined : item.isDropdown ? `Toggle children of ${item.label}` : `Edit menu ${item.label}`"
+        :aria-expanded="isDesktop || !item.isDropdown ? undefined : isExpanded"
+        :class="['menu-row-icon accent-tile', iconToneClass]"
+        @click="handleIconClick"
+      >
         <UIcon :name="item.icon || 'lucide:circle'" class="h-4 w-4 text-current" />
-      </span>
+        <UIcon v-if="!isDesktop && item.isDropdown" name="lucide:chevron-right" class="absolute -bottom-0.5 -right-0.5 size-3 rounded-[var(--radius-subcontrol)] bg-default" :class="isExpanded ? 'rotate-90' : ''" />
+      </component>
 
       <div class="menu-row-main">
         <div class="menu-row-title-line">
@@ -479,18 +495,18 @@ function handleDragEnd() {
           <NuxtLink
             v-if="item.type === 'Menu' && item.extension"
             :to="`/settings/extensions/${getExtensionId()}`"
-            class="inline-flex"
+            class="menu-row-extension inline-flex min-w-0 max-w-full"
             @click.stop
           >
             <UBadge
               variant="soft"
               color="primary"
               size="xs"
-              class="cursor-pointer"
+              class="max-w-full cursor-pointer overflow-hidden"
               :title="`Extension: ${extensionLabel}`"
             >
               <UIcon name="lucide:puzzle" class="mr-1 h-3 w-3" />
-              {{ extensionLabel }}
+              <span class="min-w-0 truncate">{{ extensionLabel }}</span>
             </UBadge>
           </NuxtLink>
         </div>
@@ -526,7 +542,6 @@ function handleDragEnd() {
         <UDropdownMenu
           v-if="menuItems.length > 0"
           :items="[menuItems]"
-          :modal="false"
           :content="{ side: 'bottom', align: 'end' }"
         >
           <UButton
@@ -549,7 +564,7 @@ function handleDragEnd() {
       <draggable
         v-model="childrenItems"
         :animation="140"
-        :disabled="isDndUpdating"
+        :disabled="isDndUpdating || !isDesktop"
         handle=".drag-handle"
         ghost-class="ghost-item"
         chosen-class="chosen-item"
@@ -619,9 +634,11 @@ function handleDragEnd() {
   transition: background-color var(--duration-instant) var(--ease-standard), border-color var(--duration-instant) var(--ease-standard), box-shadow var(--duration-instant) var(--ease-standard);
 }
 
-.menu-editor-row.is-editable:hover {
-  border-color: var(--card-border-hover);
-  background: var(--state-primary-soft-bg);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .menu-editor-row.is-editable:hover {
+    border-color: var(--card-border-hover);
+    background: var(--state-primary-soft-bg);
+  }
 }
 
 .menu-editor-row.is-moving {
@@ -657,18 +674,22 @@ function handleDragEnd() {
   height: 24px;
 }
 
-.menu-editor-row:hover .menu-row-drag {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .menu-editor-row:hover .menu-row-drag {
+    opacity: 1;
+  }
 }
 
 .menu-row-chevron:not(:disabled) {
   cursor: pointer;
 }
 
-.menu-row-chevron:not(:disabled):hover,
-.menu-row-drag:hover {
-  background: var(--state-neutral-soft-bg);
-  color: var(--text-secondary);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .menu-row-chevron:not(:disabled):hover,
+  .menu-row-drag:hover {
+    background: var(--state-neutral-soft-bg);
+    color: var(--text-secondary);
+  }
 }
 
 .menu-row-chevron:disabled {
@@ -832,9 +853,40 @@ function handleDragEnd() {
   box-shadow: var(--shadow-md);
 }
 
-@media (max-width: 640px) {
+@media (pointer: coarse) {
   .menu-editor-row {
-    grid-template-columns: 18px 22px 36px minmax(0, 1fr);
+    grid-template-columns: 44px 44px 40px minmax(0, 1fr) auto;
+  }
+
+  .menu-row-drag,
+  .menu-row-chevron {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .menu-editor-row {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 10px 4px;
+  }
+
+  .menu-row-drag,
+  .menu-row-chevron,
+  .menu-row-chevron-placeholder {
+    display: none;
+  }
+
+  .menu-row-icon {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    align-self: start;
+  }
+
+  .menu-row-icon:disabled {
+    cursor: default;
   }
 
   .menu-row-main {
@@ -843,30 +895,41 @@ function handleDragEnd() {
   }
 
   .menu-row-actions {
-    grid-column: 4;
-    justify-content: flex-start;
+    grid-column: 3;
+    grid-row: 1;
+    align-self: start;
+    flex-wrap: wrap;
+    max-width: 64px;
+  }
+
+  .menu-row-meta {
+    gap: 4px;
+  }
+
+  .menu-row-title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+
+  .menu-row-extension {
+    flex-basis: 100%;
+  }
+
+  .menu-row-actions :deep(button[aria-label="Menu actions"]:hover) {
+    background: transparent !important;
+    box-shadow: none;
   }
 }
 
-@media (pointer: coarse) {
+@media (pointer: coarse) and (max-width: 1023px) {
   .menu-editor-row {
-    grid-template-columns: 44px 44px 40px minmax(220px, 1fr) auto;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
   }
 
-  .menu-row-drag,
-  .menu-row-chevron {
+  .menu-row-icon {
     width: 44px;
     height: 44px;
-  }
-
-  .menu-row-drag {
-    width: 44px;
-  }
-}
-
-@media (pointer: coarse) and (max-width: 640px) {
-  .menu-editor-row {
-    grid-template-columns: 44px 44px 36px minmax(0, 1fr);
   }
 }
 </style>

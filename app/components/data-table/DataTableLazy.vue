@@ -1,39 +1,47 @@
 <script setup lang="ts">
-import type { DataTableProps } from "~/types";
+import type { DataTableProps } from "~/types/ui";
 
 defineOptions({
   inheritAttrs: false,
 });
 
 const props = withDefaults(defineProps<DataTableProps>(), {
-  skeletonRows: 5,
+  showColumnVisibility: true,
 });
 
-defineEmits<{
+const emit = defineEmits<{
   "row-click": [row: any];
-  "selection-change": [selectedRows: any[]];
+  "load-more": [];
+  "page-size-change": [size: number];
+  "update:rowSelection": [selection: Record<string, boolean>];
 }>();
+
+const rowSelection = computed({
+  get: () => props.rowSelection ?? {},
+  set: (selection: Record<string, boolean>) => emit('update:rowSelection', selection),
+});
+const page = defineModel<number>('page', { default: 1 });
+const columnVisibility = defineModel<Record<string, boolean>>('columnVisibility', { default: () => ({}) });
 
 const DataTable = defineAsyncComponent(() => import("./DataTable.vue"));
 </script>
 
 <template>
-  <div>
+  <div v-bind="$attrs">
     <Suspense>
       <DataTable
-        :data="props.data"
-        :columns="props.columns"
-        :page-size="props.pageSize"
-        :loading="props.loading"
-        :selectable="props.selectable"
-        :selected-items="props.selectedItems"
-        :context-menu-items="props.contextMenuItems"
-        :skeleton-rows="props.skeletonRows"
-        @row-click="(row) => $emit('row-click', row)"
-        @selection-change="
-          (selectedRows) => $emit('selection-change', selectedRows)
-        "
-      />
+        v-bind="props"
+        v-model:row-selection="rowSelection"
+        v-model:column-visibility="columnVisibility"
+        v-model:page="page"
+        @row-click="(row) => emit('row-click', row)"
+        @load-more="emit('load-more')"
+        @page-size-change="size => emit('page-size-change', size)"
+      >
+        <template v-for="(_, name) in $slots" #[name]="slotData">
+          <slot :name="name" v-bind="slotData" />
+        </template>
+      </DataTable>
     </Suspense>
   </div>
 </template>

@@ -5,10 +5,10 @@
       :key="template.key"
       type="button"
       :class="[
-        'group h-full text-left rounded-lg border-2 p-4 transition-colors',
+        'group h-full text-left rounded-[var(--radius-card)] border-2 p-4 transition-colors',
         modelValue === template.key
-          ? 'border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)] shadow-panel-sm'
-          : 'surface-card border-transparent hover:border-[var(--border-default)] hover:bg-[var(--surface-muted)]',
+          ? 'border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)]'
+          : 'border-default hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]',
       ]"
       @click="emit('update:modelValue', template.key)"
     >

@@ -28,29 +28,7 @@
             :loading="loading"
           />
 
-          <div
-            class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
-          >
-            <UButton
-              v-if="hasFormChanges"
-              label="Reset"
-              icon="lucide:rotate-ccw"
-              variant="outline"
-              color="warning"
-              :disabled="!hasFormChanges"
-              @click="handleReset"
-            />
-            <UButton
-              v-if="canUpdateGateway"
-              label="Save"
-              icon="lucide:save"
-              variant="solid"
-              color="primary"
-              type="submit"
-              :loading="updateLoading"
-              :disabled="!hasFormChanges"
-            />
-          </div>
+
         </UForm>
       </CommonFormCard>
     </div>
@@ -78,61 +56,11 @@
         </UButton>
       </div>
 
-      <div v-if="events.length > 0" class="eapp-resource-list">
-        <CommonResourceListItem
-          v-for="event in events"
-          :key="getId(event)"
-          :title="event.eventName"
-          :description="event.description || 'No description'"
-          icon="lucide:zap"
-          icon-color="primary"
-          @click="handleEditEvent(event)"
-          :stats="[
-            {
-              label: 'Status',
-              component: 'UBadge',
-              props: {
-                variant: 'soft',
-                color: event.isEnabled ? 'success' : 'neutral',
-              },
-              value: event.isEnabled ? 'Active' : 'Inactive'
-            }
-          ]"
-          :header-actions="[
-            {
-              component: 'USwitch',
-              props: {
-                'model-value': event.isEnabled,
-                loading: togglingEventId === getId(event),
-              },
-              onClick: (e?: Event) => e?.stopPropagation(),
-              onUpdate: () => toggleEventStatus(event),
-            }
-          ]"
-          :methods="[
-            {
-              label: 'Delete',
-              props: {
-                icon: 'lucide:trash-2',
-                variant: 'solid',
-                color: 'error',
-                size: 'sm',
-              },
-              onClick: (e?: Event) => {
-                e?.stopPropagation();
-                deleteEvent(event);
-              },
-            }
-          ]"
-        />
-      </div>
-
-      <CommonEmptyState
-        v-else
-        title="No event handlers"
-        description="No event handlers defined. Click 'Create Event' to add one."
-        icon="lucide:zap-off"
-        size="sm"
+      <DataTableSettingsTable
+        :data="events"
+        :columns="eventColumns"
+        :actions="getEventActions"
+        @row-click="handleEditEvent"
       />
     </div>
 
@@ -155,6 +83,10 @@
 </template>
 
 <script setup lang="ts">
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
+
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
@@ -184,6 +116,18 @@ const formChanges = useFormChanges();
 
 const gateway = ref<any>(null);
 const events = ref<any[]>([]);
+const eventColumns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('eventName', 'Event'),
+  settingsTextColumn('description', 'Description'),
+  settingsStatusColumn(),
+];
+function getEventActions(event: Record<string, any>): DataTableRowAction[] {
+  return [
+    { label: 'Edit', icon: 'lucide:pencil', onSelect: () => handleEditEvent(event) },
+    { label: event.isEnabled ? 'Disable' : 'Enable', icon: 'lucide:power', disabled: togglingEventId.value === getId(event), onSelect: () => toggleEventStatus(event) },
+    { label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteEvent(event) },
+  ];
+}
 
 const showEventDrawer = ref(false);
 const selectedEvent = ref<any>(null);
@@ -273,6 +217,28 @@ const canUpdateGateway = computed(() =>
 );
 
 registerHeaderActions([
+  {
+    id: 'reset-websockets-settings',
+    label: 'Reset',
+    icon: 'lucide:rotate-ccw',
+    variant: 'outline',
+    color: 'warning',
+    order: 998,
+    show: computed(() => hasFormChanges.value),
+    disabled: computed(() => updateLoading.value),
+    onClick: handleReset,
+  },
+  {
+    id: 'save-websockets-settings',
+    label: 'Save',
+    icon: 'lucide:save',
+    color: 'primary',
+    order: 999,
+    show: canUpdateGateway,
+    loading: computed(() => updateLoading.value),
+    disabled: computed(() => !hasFormChanges.value || updateLoading.value),
+    onClick: updateGateway,
+  },
   {
     id: "delete-websocket",
     label: "Delete",

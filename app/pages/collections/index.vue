@@ -2,11 +2,14 @@
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { defineComponent, h } from "vue";
+import { UBadge } from "#components";
+import type { ColumnDef } from "@tanstack/vue-table";
 import CommonSystemVisibilityControl from "~/components/common/SystemVisibilityControl.vue";
 import type { SystemVisibilityMode } from "~/types/ui";
+import { settingsDateColumn, settingsTextColumn } from "~/utils/settings-table";
 
 const page = ref(1);
-const pageLimit = 10;
+const pageLimit = useSettingsPageSize('collections');
 const route = useRoute();
 
 const { registerPageHeader } = usePageHeaderRegistry();
@@ -164,7 +167,8 @@ const {
       sort: "-createdAt",
       meta: "totalCount,filterCount",
       page: page.value,
-      limit: pageLimit,
+      limit: pageLimit.value,
+      deep: { columns: { limit: 0 }, relations: { limit: 0 } },
       ...(conditions.length > 0 && {
         filter: { _and: conditions },
       }),
@@ -179,6 +183,41 @@ const {
   isRefreshing: collectionsRefreshing,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.filterCount ?? 0);
+const columns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('name', 'Collection'),
+  settingsTextColumn('description', 'Description'),
+  {
+    id: 'fields',
+    header: 'Fields',
+    enableSorting: false,
+    accessorFn: collection => (collection.columns?.length ?? 0) + (collection.relations?.length ?? 0),
+    meta: { style: { th: { width: '88px' }, td: { width: '88px' } } },
+  },
+  {
+    id: 'apiPath',
+    header: 'API path',
+    enableSorting: false,
+    accessorFn: collection => collection.name ? `/${collection.name}` : '_',
+    cell: ({ getValue }) => h('span', { class: 'block truncate font-mono', title: String(getValue()) }, String(getValue())),
+    meta: { style: { th: { width: '240px' }, td: { width: '240px' } } },
+  },
+  {
+    accessorKey: 'isSystem',
+    header: 'Type',
+    enableSorting: false,
+    cell: ({ getValue }) => h(UBadge, { label: getValue() ? 'System' : 'Custom', color: 'neutral', variant: 'soft' }),
+  },
+  settingsDateColumn(),
+];
+
+async function setPageSize(size: number) {
+  if (page.value !== 1) await router.replace({ query: { ...route.query, page: undefined } });
+  pageLimit.value = size;
+}
+
+onBeforeUnmount(() => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+});
 
 registerHeaderActions({
   id: "create-collection",
@@ -199,9 +238,9 @@ registerHeaderActions({
 });
 
 watch(
-  () => [route.query.page, route.query.scope, route.query.system],
+  () => [route.query.page, route.query.scope, route.query.system, pageLimit.value],
   async ([newPage]) => {
-    page.value = newPage ? Number(newPage) : 1;
+    page.value = Math.max(1, Number(newPage) || 1);
     await fetchCollections();
   },
   { immediate: true }
@@ -211,28 +250,28 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <CommonResourceListFrame
-      :loading="showInitialLoading"
-      :has-items="displayedCollections.length > 0"
-      loading-title="Loading collections..."
-      loading-description="Fetching table collections"
-      empty-icon="lucide:database"
-      :empty-title="searchQuery ? 'No results found' : 'No collections found'"
-      :empty-description="searchQuery ? 'No tables found matching your search' : 'No table collections have been created yet'"
-    >
-      <CollectionList
-        :collections="displayedCollections"
-        :refreshing="collectionsRefreshing"
-      />
-    </CommonResourceListFrame>
-
-    <CommonPaginationBar
-      v-if="displayedCollections.length > 0 && total > pageLimit"
+    <DataTableSettingsTable
       v-model:page="page"
-      :items-per-page="pageLimit"
+      :data="displayedCollections"
+      :columns="columns"
+      :loading="showInitialLoading || collectionsRefreshing"
+      :page-limit="pageLimit"
       :total="total"
-      :loading="loading"
+      page-size-key="collections"
+      :pagination-loading="loading"
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-    />
+      @page-size-change="setPageSize"
+      @row-click="collection => navigateTo(`/collections/${collection.name}`)"
+    >
+      <template #empty>
+        <CommonEmptyState
+          variant="naked"
+          icon="lucide:database"
+          :title="searchQuery ? 'No results found' : 'No collections found'"
+          :description="searchQuery ? 'No tables found matching your search' : 'No table collections have been created yet'"
+          size="sm"
+        />
+      </template>
+    </DataTableSettingsTable>
   </div>
 </template>

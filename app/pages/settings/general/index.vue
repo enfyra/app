@@ -1,9 +1,22 @@
 <script setup lang="ts">
 const notify = useNotify();
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { confirm } = useConfirm();
 const { checkPermissionCondition } = usePermissions();
 const { getIdFieldName } = useDatabase();
 const errors = ref<Record<string, string>>({});
+const route = useRoute();
+const router = useRouter();
+const activeTab = computed({
+  get: () => route.query.tab === 'cors' ? 'cors' : 'general',
+  set: (value: string | number) => {
+    void router.push({ query: { ...route.query, tab: value === 'cors' ? 'cors' : 'general' } });
+  },
+});
+const settingsTabs = [
+  { label: 'General', value: 'general', slot: 'general', icon: 'lucide:settings-2' },
+  { label: 'CORS', value: 'cors', slot: 'cors', icon: 'lucide:globe' },
+];
 
 const { validateForm } = useFormValidation("enfyra_setting");
 
@@ -138,6 +151,22 @@ async function handleSaveSetting() {
   formEditorRef.value?.confirmChanges();
 }
 
+registerHeaderActions([
+  {
+    id: 'reset-general-settings', label: 'Reset', icon: 'lucide:rotate-ccw', variant: 'outline', color: 'warning', order: 1,
+    show: computed(() => activeTab.value === 'general' && hasFormChanges.value),
+    disabled: computed(() => loading.value || saveLoading.value),
+    onClick: handleReset,
+  },
+  {
+    id: 'save-general-settings', label: 'Save', icon: 'lucide:save', variant: 'solid', color: 'primary', order: 999,
+    show: computed(() => activeTab.value === 'general' && canUpdateSetting.value),
+    loading: saveLoading,
+    disabled: computed(() => loading.value || saveLoading.value || !hasFormChanges.value),
+    onClick: handleSaveSetting,
+  },
+]);
+
 onMounted(() => {
   initializeForm();
 });
@@ -145,117 +174,54 @@ onMounted(() => {
 
 <template>
   <div class="general-settings-page eapp-page-constrained">
-    <div class="surface-card">
-      <div class="general-settings-card-inner">
-        <CommonLoadingState
-          v-if="loading"
-          title="Loading settings…"
-          description="Fetching configuration from the server"
-          size="sm"
-          type="form"
-          context="inline"
-          class="min-h-[12rem]"
-        />
-        <UForm v-else @submit="handleSaveSetting" :state="setting">
-          <FormEditorLazy
-            ref="formEditorRef"
-            table-name="enfyra_setting"
-            mode="update"
-            layout="grid"
-            v-model="setting"
-            v-model:errors="errors"
-            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
-            :loading="false"
-            :excluded="[getIdFieldName(), 'createdAt', 'updatedAt']"
-            :sections="generalFormSections"
-            :field-map="fieldMap"
+    <CommonTabbedPanel v-model="activeTab" :items="settingsTabs" :unmount-on-hide="false">
+      <template #general>
+        <CommonFormCard class="general-settings-section-inner">
+          <CommonLoadingState
+            v-if="loading"
+            title="Loading settings…"
+            description="Fetching configuration from the server"
+            size="sm"
+            type="form"
+            context="inline"
+            class="min-h-[12rem]"
           />
-
-          <div class="general-settings-actions">
-            <UButton
-              v-if="hasFormChanges"
-              label="Reset"
-              icon="lucide:rotate-ccw"
-              variant="outline"
-              color="warning"
-              :disabled="!hasFormChanges"
-              @click="handleReset"
+          <UForm v-else @submit="handleSaveSetting" :state="setting">
+            <FormEditorLazy
+              ref="formEditorRef"
+              table-name="enfyra_setting"
+              mode="update"
+              layout="grid"
+              v-model="setting"
+              v-model:errors="errors"
+              @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
+              :loading="false"
+              :excluded="[getIdFieldName(), 'createdAt', 'updatedAt']"
+              :sections="generalFormSections"
+              :field-map="fieldMap"
             />
-            <UButton
-              v-if="canUpdateSetting"
-              label="Save"
-              icon="lucide:save"
-              variant="solid"
-              color="primary"
-              type="submit"
-              :loading="saveLoading"
-              :disabled="!hasFormChanges"
-            />
-          </div>
-        </UForm>
-      </div>
-    </div>
 
-    <div class="surface-card">
-      <div class="general-settings-card-inner">
-        <div class="general-settings-card-header">
-          <h3>
-            CORS Allowed Origins
-          </h3>
-          <p>
-            Manage the list of origins allowed to call the API. Changes take
-            effect immediately.
-          </p>
-        </div>
-        <CommonCorsOriginList />
-      </div>
-    </div>
+          </UForm>
+        </CommonFormCard>
+      </template>
+      <template #cors>
+        <CommonFormCard class="general-settings-section-inner">
+          <p class="mb-4 text-sm text-muted">Changes take effect immediately.</p>
+          <CommonCorsOriginList />
+        </CommonFormCard>
+      </template>
+    </CommonTabbedPanel>
   </div>
 </template>
 
 <style scoped>
 .general-settings-page {
   display: grid;
-  gap: 18px;
+  gap: 24px;
 }
 
-.general-settings-card-inner {
+.general-settings-section-inner {
   position: relative;
-  padding: 22px;
 }
 
-.general-settings-card-header {
-  margin-bottom: 18px;
-}
-
-.general-settings-card-header h3 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-.general-settings-card-header p {
-  margin: 4px 0 0;
-  color: var(--text-tertiary);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.general-settings-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 22px;
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 18px;
-}
-
-@media (max-width: 640px) {
-  .general-settings-card-inner {
-    padding: 16px;
-  }
-}
 </style>

@@ -1,13 +1,8 @@
 <template>
-  <div
-    class="h-12 flex items-center shrink-0 relative overflow-hidden border-b border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-muted)_70%,transparent)] backdrop-blur-xl"
-    :class="[(isMobile || isTablet) ? 'px-4' : 'px-6', hasRightActions ? 'justify-between' : 'justify-start']"
+  <UDashboardToolbar
+    :class="hasRightActions ? 'justify-between' : 'justify-start'"
   >
 
-    <div
-      class="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--border-accent)] to-transparent"
-      :class="props.accentPosition === 'top' ? 'top-0' : 'bottom-0'"
-    ></div>
     <div class="flex items-center gap-1.5 md:gap-3">
       <template v-for="action in leftActions" :key="action.key || action.id">
         <PermissionGate :condition="action.permission">
@@ -87,7 +82,7 @@
 
       <slot name="actions" />
     </div>
-  </div>
+  </UDashboardToolbar>
 </template>
 
 <script setup lang="ts">
@@ -95,7 +90,7 @@ interface Props {
   accentPosition?: 'top' | 'bottom';
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   accentPosition: 'bottom',
 });
 

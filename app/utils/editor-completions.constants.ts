@@ -18,11 +18,18 @@ export const ENFYRA_COMPLETIONS = [
   { label: '@DISPATCH', type: 'variable', detail: 'Flow trigger service' },
   { label: '@DISPATCH.trigger', type: 'function', detail: 'Trigger another flow' },
   { label: '@REPOS', type: 'variable', detail: 'All repositories' },
-  { label: '@THROW400', type: 'function', detail: 'Throw Bad Request' },
-  { label: '@THROW401', type: 'function', detail: 'Throw Unauthorized' },
-  { label: '@THROW403', type: 'function', detail: 'Throw Forbidden' },
-  { label: '@THROW404', type: 'function', detail: 'Throw Not Found' },
-  { label: '@THROW500', type: 'function', detail: 'Throw Internal Error' },
+  { label: '@THROW.http', type: 'function', detail: '(statusCode, message?) — quick generic error' },
+  { label: '@THROW.json', type: 'function', detail: '(body, { statusCode?, headers? }) — custom error with server trace' },
+  { label: '@THROW400', type: 'function', detail: '(message) — quick HTTP 400 error' },
+  { label: '@THROW401', type: 'function', detail: '(message) — quick HTTP 401 error' },
+  { label: '@THROW403', type: 'function', detail: '(message) — quick HTTP 403 error' },
+  { label: '@THROW404', type: 'function', detail: '(message) — quick HTTP 404 error' },
+  { label: '@THROW409', type: 'function', detail: '(message) — quick HTTP 409 error' },
+  { label: '@THROW422', type: 'function', detail: '(message) — quick HTTP 422 error' },
+  { label: '@THROW429', type: 'function', detail: '(message) — quick HTTP 429 error' },
+  { label: '@THROW500', type: 'function', detail: '(message) — quick HTTP 500 error' },
+  { label: '@THROW503', type: 'function', detail: '(message) — quick HTTP 503 error' },
+  { label: '@RES.json', type: 'function', detail: '(body, { statusCode?, headers? }) — complete success response' },
 ];
 
 export const ENFYRA_METHOD_COMPLETIONS = [
@@ -254,6 +261,7 @@ export const VUE_TEMPLATE_COMPLETIONS = [
   { label: 'UButton-primary', type: 'snippet', detail: 'Primary button', apply: 'UButton label="Save" color="primary" @click="" />' },
   { label: 'UFormField-input', type: 'snippet', detail: 'Form field with input', apply: 'UFormField label="Name">\n  <UInput v-model="" />\n</UFormField>' },
   { label: 'CommonEmptyState-basic', type: 'snippet', detail: 'Empty state', apply: 'CommonEmptyState title="No data" description="Nothing to show yet." icon="lucide:inbox" />' },
+  { label: 'RichTextEditor-basic', type: 'snippet', detail: 'Configurable Enfyra rich text editor', apply: 'RichTextEditor v-model="content" :editor-config="editorConfig" :height="360" />' },
 ];
 
 export const VUE_COMPONENT_COMPLETIONS = [
@@ -265,6 +273,7 @@ export const VUE_COMPONENT_COMPLETIONS = [
   { label: 'DataTable', type: 'class', detail: 'Data: sortable table' },
   { label: 'DataTableLazy', type: 'class', detail: 'Data: lazy-loaded table' },
   { label: 'FormEditor', type: 'class', detail: 'Form: metadata-driven editor' },
+  { label: 'RichTextEditor', type: 'class', detail: 'Enfyra: configurable rich text editor' },
   { label: 'FilterDrawer', type: 'class', detail: 'Filter builder drawer' },
   { label: 'PermissionGate', type: 'class', detail: 'Permission: conditional render' },
   { label: 'DynamicWidgetComponent', type: 'class', detail: 'Extension: embed widget by ID' },
@@ -289,6 +298,7 @@ export const VUE_COMPONENT_COMPLETIONS = [
   { label: 'UAvatar', type: 'class', detail: 'Nuxt UI: avatar' },
   { label: 'UPagination', type: 'class', detail: 'Nuxt UI: pagination' },
   { label: 'UTabs', type: 'class', detail: 'Nuxt UI: tabs' },
+  { label: 'TabbedPanel', type: 'class', detail: 'Enfyra: shared tab header and content frame' },
   { label: 'UIcon', type: 'class', detail: 'Nuxt UI: icon' },
   {
     label: 'DataTable-example',

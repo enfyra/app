@@ -1,58 +1,35 @@
 <template>
-  <CommonResourceListFrame
+  <DataTableSettingsTable
     v-model:page="page"
-    :loading="showInitialLoading"
-    :has-items="packages.length > 0"
-    loading-title="Loading packages..."
-    loading-description="Fetching installed packages"
-    empty-title="No packages installed"
-    empty-description="Install your first package using the form above"
-    empty-icon="lucide:package"
+    :data="packages"
+    :columns="columns"
+    :loading="showInitialLoading || packagesRefreshing"
     :total="total"
-    :items-per-page="limit"
+    :page-limit="limit"
+    page-size-key="app-packages"
     :pagination-loading="loading"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    @page-size-change="setPageSize"
+    @row-click="pkg => navigateTo(`/packages/${getId(pkg)}`)"
   >
-        <CommonResourceListItem
-          v-for="pkg in packages"
-          :key="getId(pkg)"
-          :title="pkg.name"
-          :description="pkg.description || 'No description'"
-          icon="lucide:package-2"
-          icon-color="primary"
-          :loading="packagesRefreshing"
-          :to="`/packages/${getId(pkg)}`"
-          :stats="[
-            {
-              label: 'Version',
-              component: 'UBadge',
-              props: {
-                variant: 'soft',
-                color: 'primary',
-              },
-              value: pkg.version,
-            },
-            {
-              label: 'Installed',
-              value: new Date(pkg.createdAt).toLocaleDateString(),
-            },
-            ...(pkg.flags
-              ? [
-                  {
-                    label: 'Flags',
-                    value: pkg.flags,
-                  },
-                ]
-              : []),
-          ]"
-        />
-  </CommonResourceListFrame>
+    <template #empty>
+      <CommonEmptyState variant="naked" title="No packages installed" description="Install your first app package" icon="lucide:package" size="sm" />
+    </template>
+  </DataTableSettingsTable>
 </template>
 
 <script setup lang="ts">
+import { settingsDateColumn, settingsTextColumn } from "~/utils/settings-table";
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
-const limit = 10;
+const limit = useSettingsPageSize('app-packages');
+const router = useRouter();
+const columns = [settingsTextColumn('name', 'Package'), settingsTextColumn('description', 'Description'), settingsTextColumn('version', 'Version'), settingsTextColumn('flags', 'Flags'), settingsDateColumn('createdAt', 'Installed')];
+
+async function setPageSize(size: number) {
+  if (page.value !== 1) await router.replace({ query: { ...route.query, page: undefined } });
+  limit.value = size;
+}
 const route = useRoute();
 const { getId } = useDatabase();
 const { fetchAppPackages } = useGlobalState();
@@ -98,7 +75,7 @@ const {
 } = useApi("/enfyra_package", {
   query: computed(() => ({
     page: page.value,
-    limit: limit,
+    limit: limit.value,
     fields: PACKAGE_LIST_FIELDS,
     meta: "*",
     filter: {
@@ -115,8 +92,10 @@ const {
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => apiData.value?.meta?.filterCount || 0);
 
+watch(() => route.query.page, value => { page.value = Math.max(1, Number(value) || 1); }, { immediate: true });
+
 watch(
-  page,
+  [page, limit],
   () => {
     loadPackages();
   },

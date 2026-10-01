@@ -6,6 +6,12 @@ import {
   getGuardTemplate,
   getGuardTemplatesForScope,
 } from '~/utils/guard-templates'
+import {
+  getRouteMethodConfigFieldMap,
+  getRouteMethodFileFieldMap,
+  routeMethodConfigSections,
+} from '~/utils/route-method-config-forms'
+import type { RouteMethodFileFieldDraft } from '~/types/route-method-config'
 
 const props = withDefaults(defineProps<{
   tableName?: string
@@ -15,12 +21,16 @@ const props = withDefaults(defineProps<{
   showEmptyState?: boolean
   canUpdateRoute?: boolean
   syncQuery?: boolean
+  showTabDivider?: boolean
+  embedded?: boolean
 }>(), {
   externalApiTest: false,
   showMainTableCard: false,
   showEmptyState: true,
   canUpdateRoute: true,
   syncQuery: false,
+  showTabDivider: true,
+  embedded: false,
 })
 
 const emit = defineEmits<{
@@ -33,6 +43,20 @@ const { getId, getIdFieldName } = useDatabase()
 const idField = getIdFieldName()
 const currentPageRoute = useRoute()
 const router = useRouter()
+const activeEditorTab = ref<'overview' | 'methods' | 'execution' | 'access'>('overview')
+const editorTabs = [
+  { label: 'Overview', value: 'overview', icon: 'lucide:settings-2' },
+  { label: 'Methods', value: 'methods', icon: 'lucide:list-filter' },
+  { label: 'Execution', value: 'execution', icon: 'lucide:workflow' },
+  { label: 'Access', value: 'access', icon: 'lucide:shield-check' },
+]
+const editorTabUi = computed(() => props.embedded ? {
+  root: 'w-full items-start',
+  list: 'w-fit min-w-0 gap-1 rounded-[var(--radius-control)] border-0 bg-muted p-1',
+  trigger: 'h-9 grow-0 rounded-[var(--radius-subcontrol)] px-3 text-xs data-[state=active]:shadow-xs',
+  leadingIcon: 'size-4',
+  indicator: 'hidden',
+} : props.showTabDivider ? undefined : { list: 'border-b-0', indicator: '!bottom-0' })
 const { routes, loadRoutes } = useRoutes()
 const { registerDataMenuItemsFromRoutes } = useMenuRegistry()
 const ROUTE_EDITOR_FIELDS = [
@@ -40,18 +64,32 @@ const ROUTE_EDITOR_FIELDS = [
   "mainTable.id",
   "mainTable.name",
   "mainTable.description",
+  "methodConfigs.id",
+  "methodConfigs.method.id",
+  "methodConfigs.method.name",
+  "methodConfigs.method.buttonColor",
+  "methodConfigs.method.textColor",
+  "methodConfigs.available",
+  "methodConfigs.isPublic",
+  "methodConfigs.skipRoleGuard",
+  "methodConfigs.timeout",
+  "methodConfigs.requestBodyType",
+  "methodConfigs.maxUploadFileSize",
+  "methodConfigs.maxFiles",
+  "methodConfigs.description",
+  "methodConfigs.fileFields.id",
+  "methodConfigs.fileFields.name",
+  "methodConfigs.fileFields.required",
+  "methodConfigs.fileFields.maxCount",
+  "methodConfigs.fileFields.maxFileSize",
+  "methodConfigs.fileFields.allowedMimeTypes",
+  "methodConfigs.fileFields.sort",
   "availableMethods.id",
   "availableMethods.name",
-  "availableMethods.buttonColor",
-  "availableMethods.textColor",
   "publicMethods.id",
   "publicMethods.name",
-  "publicMethods.buttonColor",
-  "publicMethods.textColor",
   "skipRoleGuardMethods.id",
   "skipRoleGuardMethods.name",
-  "skipRoleGuardMethods.buttonColor",
-  "skipRoleGuardMethods.textColor",
 ].join(",")
 const ROUTE_GUARD_SUMMARY_FIELDS = [
   "id",
@@ -77,6 +115,7 @@ const {
 } = useApi(() => '/enfyra_route', {
   query: computed(() => ({
     fields: ROUTE_EDITOR_FIELDS,
+    deep: { methodConfigs: { limit: 0, deep: { fileFields: { limit: 0 } } } },
     filter: props.routeId
       ? { [getIdFieldName()]: { _eq: props.routeId } }
       : props.tableName
@@ -86,10 +125,22 @@ const {
   errorContext: 'Fetch Route',
 })
 
+const methodConfigs = computed<any[]>(() => {
+  const configs = routeData.value?.data?.[0]?.methodConfigs
+  return Array.isArray(configs) ? configs : []
+})
+const methodConfigColumns = [
+  { id: 'method', header: 'Method', accessorFn: (config: any) => config.method?.name ?? 'Method' },
+  { id: 'status', header: 'Enabled', accessorFn: (config: any) => config.available, enableSorting: false },
+  { id: 'access', header: 'Access', accessorFn: (config: any) => config.available ? config.isPublic ? 'Public' : config.skipRoleGuard ? 'Authenticated · role check skipped' : 'Authenticated' : 'Unavailable' },
+  { id: 'timeout', header: 'Timeout', accessorFn: (config: any) => config.timeout },
+  { id: 'actions', header: '', enableSorting: false, cell: () => '', meta: { class: { th: 'w-10', td: 'w-10 text-right' } } },
+]
+
 const availableMethodRecords = computed(() => {
-  const methods = routeData.value?.data?.[0]?.availableMethods
-  if (!Array.isArray(methods)) return []
-  return methods.filter((m: any) => m?.name)
+  return methodConfigs.value
+    .filter((config) => config.available === true && config.method?.name)
+    .map((config) => config.method)
 })
 
 const availableMethodStrings = computed(() => {
@@ -97,9 +148,9 @@ const availableMethodStrings = computed(() => {
 })
 
 const publicMethodStrings = computed(() => {
-  const methods = routeData.value?.data?.[0]?.publicMethods
-  if (!Array.isArray(methods)) return []
-  return methods.filter((m: any) => m?.name).map((m: any) => m.name)
+  return methodConfigs.value
+    .filter((config) => config.available === true && config.isPublic === true && config.method?.name)
+    .map((config) => config.method.name)
 })
 
 const mainTableName = computed(
@@ -188,33 +239,217 @@ const {
   errorContext: 'Update Route',
 })
 
-function filterPublicToAvailable(body: Record<string, any>) {
-  const available = body.availableMethods || []
-  const availableSet = new Set(available.filter((m: any) => m?.name).map((m: any) => m.name))
-  for (const key of ['publicMethods', 'skipRoleGuardMethods'] as const) {
-    if (Array.isArray(body[key])) {
-      body[key] = availableSet.size > 0
-        ? body[key].filter((m: any) => m?.name && availableSet.has(m.name))
-        : []
+const {
+  error: updateMethodConfigError,
+  execute: executeUpdateMethodConfig,
+  pending: updateMethodConfigLoading,
+} = useApi(() => '/enfyra_route_method_config', {
+  method: 'patch',
+  errorContext: 'Update Route Method Configuration',
+})
+
+const { executeWithResult: createMethodFileField, pending: createMethodFileFieldLoading } = useApi(
+  () => '/enfyra_route_method_config_file_field',
+  { method: 'post', errorContext: 'Create multipart file field' },
+)
+const { executeWithResult: updateMethodFileField, pending: updateMethodFileFieldLoading } = useApi(
+  () => '/enfyra_route_method_config_file_field',
+  { method: 'patch', errorContext: 'Update multipart file field' },
+)
+const { executeWithResult: deleteMethodFileField, pending: deleteMethodFileFieldLoading } = useApi(
+  () => '/enfyra_route_method_config_file_field',
+  { method: 'delete', errorContext: 'Remove multipart file field' },
+)
+const methodFileFieldsLoading = computed(() => createMethodFileFieldLoading.value || updateMethodFileFieldLoading.value || deleteMethodFileFieldLoading.value)
+const selectedMethodConfigId = ref<string | null>(null)
+const methodConfigDrawerOpen = ref(false)
+const methodConfigDraft = reactive({
+  available: false,
+  isPublic: false,
+  skipRoleGuard: false,
+  timeout: 30_000,
+  description: '',
+  requestBodyType: 'none',
+  maxUploadFileSize: null as number | null,
+  maxFiles: null as number | null,
+  fileFields: [] as RouteMethodFileFieldDraft[],
+})
+const selectedMethodConfig = computed(() => methodConfigs.value.find((config) => String(getId(config)) === selectedMethodConfigId.value) ?? null)
+const changedMethodConfigFields = computed(() => {
+  const config = selectedMethodConfig.value
+  if (!config) return {}
+  const nextPublic = methodConfigDraft.available && methodConfigDraft.isPublic
+  const nextSkipRole = methodConfigDraft.available && !nextPublic && methodConfigDraft.skipRoleGuard
+  return {
+    ...(methodConfigDraft.available !== (config.available === true) ? { available: methodConfigDraft.available } : {}),
+    ...(nextPublic !== (config.isPublic === true) ? { isPublic: nextPublic } : {}),
+    ...(nextSkipRole !== (config.skipRoleGuard === true) ? { skipRoleGuard: nextSkipRole } : {}),
+    ...(methodConfigDraft.timeout !== Number(config.timeout) ? { timeout: methodConfigDraft.timeout } : {}),
+    ...(methodConfigDraft.description !== (config.description ?? '') ? { description: methodConfigDraft.description } : {}),
+    ...(methodConfigDraft.requestBodyType !== (config.requestBodyType ?? 'none') ? { requestBodyType: methodConfigDraft.requestBodyType } : {}),
+    ...(methodConfigDraft.maxUploadFileSize !== (config.maxUploadFileSize ?? null) ? { maxUploadFileSize: methodConfigDraft.maxUploadFileSize } : {}),
+    ...(methodConfigDraft.maxFiles !== (config.maxFiles ?? null) ? { maxFiles: methodConfigDraft.maxFiles } : {}),
+  }
+})
+const methodConfigFileFieldsChanged = computed(() => JSON.stringify(methodConfigDraft.fileFields) !== JSON.stringify(
+  (selectedMethodConfig.value?.fileFields ?? []).map((field: any) => ({
+    id: getId(field) ?? undefined, name: field.name, required: field.required === true,
+    maxCount: field.maxCount ?? 1, maxFileSize: field.maxFileSize ?? null,
+    allowedMimeTypes: field.allowedMimeTypes ?? null, sort: field.sort ?? 0,
+  })),
+))
+const methodConfigHasChanges = computed(() => Object.keys(changedMethodConfigFields.value).length > 0 || methodConfigFileFieldsChanged.value)
+const methodConfigSaving = computed(() => updateMethodConfigLoading.value || methodFileFieldsLoading.value)
+const methodConfigReadonly = computed(() => props.canUpdateRoute === false || methodConfigSaving.value)
+const methodConfigErrors = ref<Record<string, string>>({})
+const methodConfigFieldErrors = ref<Record<string, Record<string, string>>>({})
+const methodConfigFieldMap = computed(() => getRouteMethodConfigFieldMap({
+  readonly: methodConfigReadonly.value,
+  available: methodConfigDraft.available,
+  isPublic: methodConfigDraft.isPublic,
+  multipartAllowed: ['POST', 'PATCH', 'PUT'].includes(selectedMethodConfig.value?.method?.name),
+}))
+const methodConfigSections = computed(() => routeMethodConfigSections.map(section => ({
+  ...section,
+  fields: section.id === 'request-body' && (methodConfigDraft.requestBodyType === 'multipart' || methodConfigDraft.fileFields.length)
+    ? [...section.fields, 'maxUploadFileSize', 'maxFiles']
+    : section.fields,
+})))
+const methodFileFieldMap = computed(() => getRouteMethodFileFieldMap(methodConfigReadonly.value))
+const methodConfigForm = computed({
+  get: () => methodConfigDraft,
+  set: (value: Record<string, any>) => {
+    Object.assign(methodConfigDraft, value)
+    methodConfigDraft.timeout = Number(value.timeout)
+    for (const key of ['maxUploadFileSize', 'maxFiles'] as const) {
+      methodConfigDraft[key] = value[key] == null || value[key] === '' ? null : Number(value[key])
+    }
+  },
+})
+
+function updateMethodFileFieldDraft(index: number, value: Record<string, any>) {
+  const field = methodConfigDraft.fileFields[index]
+  if (!field) return
+  Object.assign(field, value, {
+    maxCount: Number(value.maxCount),
+    maxFileSize: value.maxFileSize == null || value.maxFileSize === '' ? null : Number(value.maxFileSize),
+  })
+}
+const { togglingMethodConfigId, toggleMethodAvailability } = useRouteMethodAvailability({
+  canUpdate: () => props.canUpdateRoute !== false,
+  isSaving: () => methodConfigDrawerOpen.value || methodConfigSaving.value,
+  refresh: fetchRoute,
+})
+
+function addMethodFileField() {
+  methodConfigDraft.fileFields.push({ name: 'file', required: false, maxCount: 1, maxFileSize: null, allowedMimeTypes: null, sort: methodConfigDraft.fileFields.length })
+}
+
+function openMethodConfig(config: any) {
+  if (togglingMethodConfigId.value !== null || methodConfigSaving.value) return
+  selectedMethodConfigId.value = String(getId(config))
+  Object.assign(methodConfigDraft, {
+    available: config.available === true,
+    isPublic: config.isPublic === true,
+    skipRoleGuard: config.skipRoleGuard === true,
+    timeout: Number(config.timeout),
+    description: config.description ?? '',
+    requestBodyType: config.requestBodyType ?? 'none',
+    maxUploadFileSize: config.maxUploadFileSize ?? null,
+    maxFiles: config.maxFiles ?? null,
+    fileFields: (config.fileFields ?? []).map((field: any) => ({
+      id: getId(field) ?? undefined, name: field.name, required: field.required === true,
+      maxCount: field.maxCount ?? 1, maxFileSize: field.maxFileSize ?? null,
+      allowedMimeTypes: field.allowedMimeTypes ?? null, sort: field.sort ?? 0,
+    })),
+  })
+  methodConfigErrors.value = {}
+  methodConfigFieldErrors.value = {}
+  methodConfigDrawerOpen.value = true
+}
+
+async function closeMethodConfig() {
+  if (updateMethodConfigLoading.value || methodFileFieldsLoading.value) return
+  if (methodConfigHasChanges.value && !await confirm({
+    title: 'Discard method changes?',
+    content: 'The multipart fields and method settings you edited have not been saved.',
+  })) return
+  methodConfigDrawerOpen.value = false
+  selectedMethodConfigId.value = null
+}
+
+async function saveMethodConfig() {
+  const config = selectedMethodConfig.value
+  if (!config || !methodConfigHasChanges.value) return
+  if (props.canUpdateRoute === false) return
+  if (!Number.isSafeInteger(methodConfigDraft.timeout) || methodConfigDraft.timeout < 1) {
+    notify.error('Invalid Timeout', 'Enter a positive whole number of milliseconds.')
+    return
+  }
+  const fields = methodConfigDraft.fileFields
+  if (methodConfigDraft.requestBodyType === 'multipart' && !['POST', 'PATCH', 'PUT'].includes(config.method?.name)) {
+    notify.error('Unsupported method', 'Multipart uploads are available for POST, PATCH, and PUT methods.')
+    return
+  }
+  const names = fields.map(field => field.name.trim())
+  if (methodConfigDraft.requestBodyType === 'multipart' && (
+    names.some((name, index) => !name || names.indexOf(name) !== index)
+    || fields.some(field => !Number.isSafeInteger(Number(field.maxCount)) || Number(field.maxCount) < 1)
+    || fields.some(field => field.maxFileSize != null && (!Number.isSafeInteger(Number(field.maxFileSize)) || Number(field.maxFileSize) < 1))
+    || fields.some(field => field.allowedMimeTypes != null && (!Array.isArray(field.allowedMimeTypes) || field.allowedMimeTypes.some(type => !type.trim())))
+    || (methodConfigDraft.maxFiles != null && (!Number.isSafeInteger(Number(methodConfigDraft.maxFiles)) || Number(methodConfigDraft.maxFiles) < 1))
+    || (methodConfigDraft.maxUploadFileSize != null && (!Number.isSafeInteger(Number(methodConfigDraft.maxUploadFileSize)) || Number(methodConfigDraft.maxUploadFileSize) < 1))
+  )) {
+    notify.error('Invalid multipart configuration', 'File field names must be unique and limits must be positive whole numbers.')
+    return
+  }
+  if (methodConfigDraft.requestBodyType !== 'multipart' && fields.length && (config.requestBodyType === 'multipart' || methodConfigFileFieldsChanged.value)) {
+    notify.error('Multipart fields still configured', 'Remove file fields before switching this method away from multipart.')
+    return
+  }
+  if (Object.keys(changedMethodConfigFields.value).length) {
+    const result = await executeUpdateMethodConfig({ id: getId(config), body: changedMethodConfigFields.value })
+    if (updateMethodConfigError.value || result == null) { await fetchRoute(); return }
+  }
+  if (methodConfigFileFieldsChanged.value) {
+    const original = (config.fileFields ?? []) as any[]
+    for (const field of fields) {
+      const body = {
+        name: field.name.trim(), required: field.required, maxCount: Number(field.maxCount),
+        maxFileSize: field.maxFileSize == null ? null : Number(field.maxFileSize),
+        allowedMimeTypes: field.allowedMimeTypes, sort: fields.indexOf(field),
+      }
+      const saved = field.id != null
+        ? original.find(item => String(getId(item)) === String(field.id))
+        : null
+      if (field.id != null && JSON.stringify(body) === JSON.stringify({
+        name: saved?.name, required: saved?.required === true, maxCount: saved?.maxCount ?? 1,
+        maxFileSize: saved?.maxFileSize ?? null, allowedMimeTypes: saved?.allowedMimeTypes ?? null, sort: saved?.sort ?? 0,
+      })) continue
+      const result = field.id != null
+        ? await updateMethodFileField({ id: field.id, body })
+        : await createMethodFileField({ body: { ...body, routeMethodConfig: { [idField]: getId(config) } } })
+      if (!result.ok) { await fetchRoute(); return }
+    }
+    for (const field of original) {
+      if (fields.some(item => String(item.id) === String(getId(field)))) continue
+      const result = await deleteMethodFileField({ id: getId(field) })
+      if (!result.ok) { await fetchRoute(); return }
     }
   }
-  for (const key of ['availableMethods', 'publicMethods', 'skipRoleGuardMethods'] as const) {
-    if (Array.isArray(body[key])) {
-      body[key] = body[key]
-        .map((m: any) => {
-          const id = getId(m)
-          return id != null ? { id, name: m.name } : null
-        })
-        .filter(Boolean)
-    }
-  }
+  methodConfigDrawerOpen.value = false
+  selectedMethodConfigId.value = null
+  await fetchRoute()
+  notify.success('Success', `${config.method?.name} configuration updated!`)
 }
 
 async function updateRoute() {
   if (!form.value || !routeId.value) return
 
   const body = { ...form.value }
-  filterPublicToAvailable(body)
+  for (const field of ['methodConfigs', 'availableMethods', 'publicMethods', 'skipRoleGuardMethods']) {
+    delete body[field]
+  }
 
   if (!await validateForm(body, errors)) return
 
@@ -261,7 +496,7 @@ registerHeaderActions([
     variant: 'outline',
     color: 'warning',
     order: 1,
-    show: computed(() => props.syncQuery !== true && hasFormChanges.value),
+    show: computed(() => activeEditorTab.value === 'overview' && hasFormChanges.value),
     disabled: computed(() => routeLoading.value || updateLoading.value || !hasFormChanges.value),
     onClick: handleReset,
   },
@@ -272,7 +507,7 @@ registerHeaderActions([
     variant: 'solid',
     color: 'primary',
     order: 999,
-    show: computed(() => props.syncQuery !== true && !!routeData.value?.data?.[0] && props.canUpdateRoute !== false),
+    show: computed(() => activeEditorTab.value === 'overview' && !!routeData.value?.data?.[0] && props.canUpdateRoute !== false),
     loading: computed(() => updateLoading.value),
     disabled: computed(() => routeLoading.value || !routeId.value || !hasFormChanges.value),
     onClick: updateRoute,
@@ -299,25 +534,17 @@ async function refreshAll() {
 
 watch(() => routeData.value?.data?.[0], async (newRoute) => {
   if (newRoute) {
-    routeId.value = String(getId(newRoute))
+    const nextRouteId = String(getId(newRoute))
+    if (methodConfigDrawerOpen.value && routeId.value && routeId.value !== nextRouteId) closeMethodConfig()
+    routeId.value = nextRouteId
     form.value = { ...newRoute }
     formChanges.update(newRoute)
+    if (methodConfigDrawerOpen.value && !selectedMethodConfig.value) closeMethodConfig()
 
     typeMap.value = {
       isEnabled: {
         disabled: !!mainTableInfo.value,
       },
-      publicMethods: {
-        type: 'methods-selector',
-        allowedMethodsKey: 'availableMethods'
-      },
-      skipRoleGuardMethods: {
-        type: 'methods-selector',
-        allowedMethodsKey: 'availableMethods'
-      },
-      availableMethods: {
-        type: 'methods-selector'
-      }
     }
 
     await refreshAll()
@@ -506,6 +733,7 @@ watch(() => currentPageRoute.query.createHandler, (value) => {
   if (!props.syncQuery) return
   const shouldOpen = value === 'true'
   if (shouldOpen && !showCreateHandlerDrawer.value) {
+    activeEditorTab.value = 'execution'
     void syncDrawerFromQuery(createHandler)
   }
   if (!shouldOpen && showCreateHandlerDrawer.value) {
@@ -521,6 +749,7 @@ watch(() => currentPageRoute.query.editHandler, async (value) => {
   if (!props.syncQuery) return
   if (typeof value === 'string' && value && value !== editingHandlerId.value) {
     await syncDrawerFromQuery(async () => {
+      activeEditorTab.value = 'execution'
       editingHandlerId.value = value
       editHandlerErrors.value = {}
       await fetchEditHandler()
@@ -546,6 +775,7 @@ watch(() => currentPageRoute.query.createHook, (value) => {
   if (!props.syncQuery) return
   const shouldOpen = value === 'true' || value === 'pre' || value === 'post'
   if (shouldOpen && !showCreateHookDrawer.value) {
+    activeEditorTab.value = 'execution'
     void syncDrawerFromQuery(() => createHook(value === 'post' ? 'post' : 'pre'))
   }
   if (!shouldOpen && showCreateHookDrawer.value) {
@@ -563,6 +793,7 @@ watch(() => [currentPageRoute.query.editHook, currentPageRoute.query.editHookTyp
     const nextType = hookTypeParam === 'post' ? 'post' : 'pre'
     if (hookId === editingHookId.value && nextType === editHookType.value && showEditHookDrawer.value) return
     await syncDrawerFromQuery(async () => {
+      activeEditorTab.value = 'execution'
       editingHookId.value = hookId
       editHookType.value = nextType
       editHookErrors.value = {}
@@ -603,14 +834,29 @@ watch(showEditHookDrawer, (isOpen) => {
 
 <template>
   <div class="space-y-6">
-    <CommonFormCard v-if="showMainTableCard && mainTableInfo">
+    <CommonTabbedPanel :framed="!props.embedded">
+      <template #header>
+      <div v-if="routeData?.data?.[0] || routeLoading">
+      <UTabs
+        v-model="activeEditorTab"
+        :items="editorTabs"
+        :content="false"
+        :variant="props.embedded ? 'pill' : 'link'"
+        :size="props.embedded ? 'sm' : 'md'"
+        :ui="editorTabUi"
+      />
+      </div>
+      </template>
+
+    <template v-if="activeEditorTab === 'overview'">
+    <CommonFormCard v-if="showMainTableCard && mainTableInfo" :bordered="false">
       <template #header>
         <div class="flex items-center gap-2">
           <UIcon name="lucide:database" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
           <h3 class="text-lg font-semibold text-[var(--text-primary)]">Main Table</h3>
         </div>
       </template>
-      <div class="p-4 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20">
+      <div class="eapp-bordered-region p-4">
         <div class="flex flex-col md:flex-row md:items-center gap-3">
           <div class="flex items-center gap-3 min-w-0 flex-1">
             <div class="w-12 h-12 shrink-0 rounded-lg bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
@@ -643,37 +889,113 @@ watch(showEditHookDrawer, (isOpen) => {
           table-name="enfyra_route"
           mode="update"
           :current-record-id="routeId"
-          :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards']"
+          :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards', 'methodConfigs', 'availableMethods', 'publicMethods', 'skipRoleGuardMethods']"
           :field-map="typeMap"
           :loading="routeLoading"
         />
 
-        <div class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6">
-          <UButton
-            v-if="hasFormChanges"
-            label="Reset"
-            icon="lucide:rotate-ccw"
-            variant="outline"
-            color="warning"
-            :disabled="!hasFormChanges"
-            @click="handleReset"
-          />
-          <UButton
-            v-if="canUpdateRoute !== false"
-            label="Save"
-            icon="lucide:save"
-            variant="solid"
-            color="primary"
-            type="submit"
-            :loading="updateLoading"
-            :disabled="!hasFormChanges"
-          />
-        </div>
       </UForm>
     </CommonFormCard>
+    </template>
+
+    <CommonFormCard v-if="activeEditorTab === 'methods' && methodConfigs.length" :bordered="false" title="Methods" description="Toggle a method to enable it, or select its row for more settings.">
+      <DataTable
+        :data="methodConfigs"
+        :columns="methodConfigColumns"
+        :get-row-id="(config) => String(getId(config))"
+        :show-column-visibility="false"
+        @row-click="openMethodConfig"
+      >
+        <template #method-cell="{ row }">
+          <MethodBadge :method="row.original.method" size="sm" />
+        </template>
+        <template #status-cell="{ row }">
+          <div class="flex w-fit items-center" @click.stop @keydown.stop>
+            <USwitch
+              :model-value="row.original.available === true"
+              size="sm"
+              :loading="togglingMethodConfigId === String(getId(row.original))"
+              :disabled="canUpdateRoute === false || togglingMethodConfigId !== null || methodConfigDrawerOpen || methodConfigSaving"
+              :aria-label="`Enable ${row.original.method?.name}`"
+              @update:model-value="value => toggleMethodAvailability(row.original, value)"
+            />
+          </div>
+        </template>
+        <template #timeout-cell="{ row }">
+          <span class="whitespace-nowrap font-mono text-xs tabular-nums">{{ Number(row.original.timeout).toLocaleString() }} <span class="text-[var(--text-tertiary)]">ms</span></span>
+        </template>
+        <template #actions-cell>
+          <UIcon name="lucide:chevron-right" class="size-4 align-middle text-[var(--text-tertiary)]" aria-hidden="true" />
+        </template>
+      </DataTable>
+    </CommonFormCard>
+
+    <CommonDrawer
+      :model-value="methodConfigDrawerOpen"
+      :handle="false"
+      :show-close="false"
+      direction="right"
+      :cancel-action="{ label: 'Cancel', onClick: closeMethodConfig }"
+      :primary-action="canUpdateRoute === false ? false : { label: 'Save changes', loading: methodConfigSaving, disabled: !methodConfigHasChanges || methodConfigSaving, onClick: saveMethodConfig }"
+      @update:model-value="(open) => { if (!open) closeMethodConfig() }"
+    >
+      <template #header>
+        <div class="flex min-w-0 items-start justify-between gap-4">
+          <div class="min-w-0 space-y-1.5">
+            <div class="flex items-center gap-2.5">
+              <MethodBadge v-if="selectedMethodConfig?.method" :method="selectedMethodConfig.method" size="sm" />
+              <h2 class="text-base font-semibold text-[var(--text-primary)]">Method settings</h2>
+            </div>
+            <p class="truncate font-mono text-xs text-[var(--text-tertiary)]" :title="routePath">{{ routePath }}</p>
+          </div>
+          <UButton type="button" icon="lucide:x" color="neutral" variant="ghost" size="sm" aria-label="Close method settings" :disabled="methodConfigSaving" @click.stop.prevent="closeMethodConfig" />
+        </div>
+      </template>
+      <template #body>
+        <CommonFormCard v-if="selectedMethodConfig" :bordered="false">
+          <UForm :state="methodConfigForm" @submit="saveMethodConfig">
+            <FormEditorLazy
+              v-model="methodConfigForm"
+              v-model:errors="methodConfigErrors"
+              table-name="enfyra_route_method_config"
+              mode="update"
+              :current-record-id="getId(selectedMethodConfig)"
+              :sections="methodConfigSections"
+              :field-map="methodConfigFieldMap"
+            />
+            <div v-if="methodConfigDraft.requestBodyType === 'multipart' || methodConfigDraft.fileFields.length" class="mt-10 space-y-5">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-[var(--text-quaternary)]">File fields</h3>
+                <UButton v-if="methodConfigDraft.requestBodyType === 'multipart'" type="button" label="Add field" icon="lucide:plus" color="neutral" size="sm" variant="outline" :disabled="methodConfigReadonly" @click.stop.prevent="addMethodFileField" />
+              </div>
+              <p v-if="!methodConfigDraft.fileFields.length" class="text-sm text-[var(--text-tertiary)]">The default <code>file</code> field accepts one upload.</p>
+              <CommonFormCard v-for="(field, index) in methodConfigDraft.fileFields" :key="field.id ?? `new-${index}`" size="sm">
+                <template #header>
+                  <div class="flex items-center justify-between gap-3">
+                    <h4 class="text-sm font-medium">{{ field.name || `Field ${index + 1}` }}</h4>
+                    <UButton type="button" icon="lucide:trash-2" color="error" variant="ghost" size="sm" :aria-label="`Remove ${field.name || `field ${index + 1}`}`" :disabled="methodConfigReadonly" @click.stop.prevent="methodConfigDraft.fileFields.splice(index, 1)" />
+                  </div>
+                </template>
+                <FormEditorLazy
+                  :model-value="field"
+                  :errors="methodConfigFieldErrors[String(field.id ?? `new-${index}`)] ?? {}"
+                  table-name="enfyra_route_method_config_file_field"
+                  :mode="field.id == null ? 'create' : 'update'"
+                  :current-record-id="field.id ?? null"
+                  :includes="['name', 'maxCount', 'maxFileSize', 'allowedMimeTypes', 'required']"
+                  :field-map="methodFileFieldMap"
+                  @update:model-value="value => updateMethodFileFieldDraft(index, value)"
+                  @update:errors="value => methodConfigFieldErrors[String(field.id ?? `new-${index}`)] = value"
+                />
+              </CommonFormCard>
+            </div>
+          </UForm>
+        </CommonFormCard>
+      </template>
+    </CommonDrawer>
 
     <RouteExecutionFlowVisualization
-      v-if="routeData?.data?.[0]"
+      v-if="activeEditorTab === 'execution' && routeData?.data?.[0]"
       :route-data="routeData"
       :available-methods="availableMethodStrings"
       :handlers="displayHandlers"
@@ -694,15 +1016,22 @@ watch(showEditHookDrawer, (isOpen) => {
       @toggle-hook="toggleHook"
     />
 
+    <FlowTriggersPanel
+      v-if="activeEditorTab === 'execution' && routeId"
+      mode="route"
+      :route-id="routeId"
+      :available-methods="availableMethodStrings"
+    />
+
     <GuardRouteGuardSection
-      v-if="routeId"
+      v-if="activeEditorTab === 'access' && routeId"
       :guards="routeGuards"
       :global-guards="globalGuards"
       :loading="guardsLoading"
       @create-guard="openCreateGuardDrawer"
     />
 
-    <CommonFormCard v-if="routeId">
+    <CommonFormCard v-if="activeEditorTab === 'access' && routeId">
       <PermissionManager
         table-name="enfyra_route_permission"
         :current-field-id="{ field: 'route', value: routeId }"
@@ -718,6 +1047,8 @@ watch(showEditHookDrawer, (isOpen) => {
       icon="lucide:route"
       size="sm"
     />
+
+    </CommonTabbedPanel>
 
     <RouteCreateHandlerDrawer
       v-model="showCreateHandlerDrawer"
