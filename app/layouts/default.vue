@@ -106,13 +106,13 @@ import {
 
 const pageSurfaceUi = {
   card: {
-    root: 'rounded-[var(--radius-card)] border-0 bg-transparent ring ring-default shadow-none',
+    root: 'rounded-[var(--radius-card)] border border-default bg-transparent ring-0 shadow-none',
     header: 'px-4 sm:px-6',
     body: 'px-4 sm:px-6',
     footer: 'px-4 sm:px-6',
   },
   pageCard: {
-    root: 'rounded-[var(--radius-card)] border-0 bg-transparent ring ring-default shadow-none',
+    root: 'rounded-[var(--radius-card)] border border-default bg-transparent ring-0 shadow-none',
     container: 'p-4 sm:p-6',
   },
 };

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useDataCollectionPreferences } from '~/composables/menu/useDataCollectionPreferences';
+import type { ColumnDef } from '@tanstack/vue-table';
 
 interface CollectionItem {
   tableName: string;
@@ -16,12 +17,21 @@ type SortMode = 'name' | 'recent';
 const { registerPageHeader } = usePageHeaderRegistry();
 const { routes, routesLoading, ensureRoutesLoaded } = useRoutes();
 const { checkPermissionCondition } = usePermissions();
-const { isPinned, togglePin, addRecent } = useDataCollectionPreferences();
+const { prefs, isPinned, togglePin, addRecent } = useDataCollectionPreferences();
 const router = useRouter();
 
 const searchQuery = ref('');
 const sortBy = ref<SortMode>('name');
 const initialLoading = ref(true);
+const page = ref(1);
+const pageSize = useSettingsPageSize('data-directory', 20);
+const columns: ColumnDef<CollectionItem>[] = [
+  { accessorKey: 'label', header: 'Collection', enableSorting: false, meta: { style: { th: { width: '28%' }, td: { width: '28%' } } } },
+  { accessorKey: 'apiPath', header: 'API path', enableSorting: false, meta: { style: { th: { width: '24%' }, td: { width: '24%' } } } },
+  { accessorKey: 'description', header: 'Description', enableSorting: false },
+  { accessorKey: 'isSingleRecord', header: 'Type', enableSorting: false, meta: { style: { th: { width: '100px' }, td: { width: '100px' } } } },
+  { id: 'pin', header: '', enableSorting: false, enableHiding: false, meta: { style: { th: { width: '56px' }, td: { width: '56px' } } } },
+];
 
 const normalizedSearch = computed(() => searchQuery.value.trim().toLocaleLowerCase());
 const hasSearch = computed(() => normalizedSearch.value.length > 0);
@@ -51,7 +61,6 @@ const filtered = computed<CollectionItem[]>(() => {
     ? catalog.value.filter(c => [c.label, c.tableName, c.apiPath].some(v => v.toLocaleLowerCase().includes(q)))
     : [...catalog.value];
   if (sortBy.value === 'recent') {
-    const { prefs } = useDataCollectionPreferences();
     const order = new Map(prefs.value.recent.map((t, i) => [t, i]));
     return list.sort((a, b) => {
       const ai = order.get(a.tableName), bi = order.get(b.tableName);
@@ -70,6 +79,16 @@ const visible = computed(() => {
   const rest = filtered.value.filter(c => !isPinned(c.tableName));
   return [...pinnedItems, ...rest];
 });
+const pageRows = computed(() => visible.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
+watch([searchQuery, sortBy, pageSize], () => { page.value = 1; });
+watch(() => visible.value.length, total => {
+  page.value = Math.min(page.value, Math.max(1, Math.ceil(total / pageSize.value)));
+});
+
+function pin(item: CollectionItem) {
+  togglePin(item.tableName);
+  page.value = 1;
+}
 
 function open(item: CollectionItem) {
   addRecent(item.tableName);
@@ -89,71 +108,55 @@ registerPageHeader({
 </script>
 
 <template>
-  <div class="flex flex-col gap-5 min-w-0 pb-5">
-    <DataDirectorySearchBar
-      v-model="searchQuery"
-      v-model:sort-by="sortBy"
-      :total="catalog.length"
-      :match-count="filtered.length"
+  <div class="min-w-0 w-full">
+    <DataTable
+      v-model:page="page"
+      :data="pageRows"
+      :columns="columns"
       :loading="isLoading"
-      :has-search="hasSearch"
-    />
-
-    <div v-if="isLoading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-      <div v-for="i in 8" :key="i" class="eapp-bordered-region p-4">
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
-          <div class="flex-1 space-y-2 pt-1">
-            <div class="h-4 w-3/4 rounded skeleton-gradient skeleton-pulse-slow" />
-            <div class="h-3 w-1/2 rounded skeleton-gradient skeleton-pulse-slow" />
+      :show-column-visibility="false"
+      :get-row-id="item => item.tableName"
+      :pagination-config="{ total: visible.length, itemsPerPage: pageSize, showPageSize: true, loading: isLoading }"
+      :ui="{ base: 'table-fixed !min-w-[900px]', th: 'px-4 py-3', td: 'max-w-0 overflow-hidden px-4 py-3' }"
+      @page-size-change="pageSize = $event"
+      @row-click="open($event as CollectionItem)"
+    >
+      <template #toolbar>
+        <DataDirectorySearchBar v-model="searchQuery" v-model:sort-by="sortBy" :total="catalog.length" :match-count="filtered.length" :loading="isLoading" :has-search="hasSearch" />
+      </template>
+      <template #label-cell="{ row }">
+        <div class="flex min-w-0 items-center gap-3">
+          <UIcon :name="row.original.icon" class="size-5 shrink-0 text-primary" />
+          <div class="min-w-0">
+            <span class="block truncate font-medium text-highlighted" :title="row.original.label">{{ row.original.label }}</span>
+            <span v-if="row.original.label !== row.original.tableName" class="block truncate font-mono text-xs text-muted" :title="row.original.tableName">{{ row.original.tableName }}</span>
           </div>
         </div>
-        <div class="mt-3 space-y-1.5">
-          <div class="h-3 w-full rounded skeleton-gradient skeleton-pulse-slow" />
-          <div class="h-3 w-2/3 rounded skeleton-gradient skeleton-pulse-slow" />
-        </div>
-      </div>
-    </div>
-
-    <template v-else>
-      <section class="flex flex-col gap-3">
-        <div v-if="hasSearch" class="flex items-center gap-2 px-1">
-          <UIcon name="lucide:scan-search" class="w-3.5 h-3.5 text-[var(--text-tertiary)]" />
-          <h2 class="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">
-            Results for "{{ searchQuery.trim() }}"
-          </h2>
-        </div>
-
-        <div v-if="visible.length > 0" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          <DataCollectionCard
-            v-for="item in visible"
-            :key="item.tableName"
-            :item="item"
-            :pinned="isPinned(item.tableName)"
-            @open="open"
-            @toggle-pin="togglePin"
-          />
-        </div>
-
-        <div v-else-if="hasSearch" class="surface-card rounded-[var(--radius-card)] flex flex-col items-center justify-center py-16 px-6 text-center">
-          <div class="w-12 h-12 rounded-[var(--radius-control)] accent-tile accent-tile-neutral flex items-center justify-center mb-3">
-            <UIcon name="lucide:search-x" class="w-6 h-6" />
-          </div>
-          <h3 class="text-sm font-semibold text-[var(--text-primary)] mb-1">No collections found</h3>
-          <p class="text-xs text-[var(--text-tertiary)] max-w-xs">Try a shorter name, table name, or API path like <code class="px-1 py-0.5 rounded bg-[var(--surface-muted)] text-[var(--text-secondary)] font-mono text-[11px]">/users</code></p>
-        </div>
-
-        <div v-else-if="catalog.length === 0" class="surface-card rounded-[var(--radius-card)] flex flex-col items-center justify-center py-16 px-6 text-center">
-          <div class="w-12 h-12 rounded-[var(--radius-control)] accent-tile accent-tile-neutral flex items-center justify-center mb-3">
-            <UIcon name="lucide:database-zap" class="w-6 h-6" />
-          </div>
-          <h3 class="text-sm font-semibold text-[var(--text-primary)] mb-1">No collections</h3>
-          <p class="text-xs text-[var(--text-tertiary)] max-w-xs">No enabled non-system collections are visible to your current role.</p>
-        </div>
-      </section>
-    </template>
+      </template>
+      <template #apiPath-cell="{ row }">
+        <span class="block truncate font-mono text-xs text-muted" :title="row.original.apiPath">{{ row.original.apiPath }}</span>
+      </template>
+      <template #description-cell="{ row }">
+        <span class="block truncate text-muted" :title="row.original.description || undefined">{{ row.original.description || '—' }}</span>
+      </template>
+      <template #isSingleRecord-cell="{ row }">
+        <UBadge v-if="row.original.isSingleRecord" label="Single" color="neutral" variant="subtle" size="sm" />
+        <span v-else class="text-xs text-muted">Multiple</span>
+      </template>
+      <template #pin-cell="{ row }">
+        <UButton
+          :icon="isPinned(row.original.tableName) ? 'lucide:pin' : 'lucide:pin-off'"
+          :color="isPinned(row.original.tableName) ? 'primary' : 'neutral'"
+          :variant="isPinned(row.original.tableName) ? 'soft' : 'ghost'"
+          size="xs"
+          :aria-label="`${isPinned(row.original.tableName) ? 'Unpin' : 'Pin'} ${row.original.label}`"
+          :aria-pressed="isPinned(row.original.tableName)"
+          @click.stop="pin(row.original as CollectionItem)"
+        />
+      </template>
+      <template #empty>
+        <CommonEmptyState variant="naked" :title="hasSearch ? 'No collections found' : 'No collections'" :description="hasSearch ? 'Try a collection name, table name, or API path.' : 'No enabled non-system collections are visible to your current role.'" :icon="hasSearch ? 'lucide:search-x' : 'lucide:database-zap'" size="sm" />
+      </template>
+    </DataTable>
   </div>
 </template>
-
-<style scoped>
-</style>

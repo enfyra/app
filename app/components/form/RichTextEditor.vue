@@ -41,10 +41,12 @@ const emit = defineEmits<{
 
 const editorComponentRef = shallowRef<{ editor?: Editor } | null>(null);
 const editorContainerRef = ref<HTMLDivElement>();
+const editorBodyRef = ref<HTMLDivElement>();
 const resizeHandleRef = ref<HTMLDivElement>();
 const isResizing = ref(false);
 const startY = ref(0);
 const startHeight = ref(0);
+const resizeHandleHeight = ref(0);
 const previewHeight = ref<string | null>(null);
 const previewStyle = ref<{ top: string; left: string; width: string; height: string } | null>(null);
 const initialHeight = props.height ?? 300;
@@ -358,12 +360,15 @@ function handleEditorShellMouseDown(event: MouseEvent) {
 function handleMouseDown(event: MouseEvent) {
   event.preventDefault();
   event.stopPropagation();
-  if (!editorContainerRef.value) return;
+  if (!editorContainerRef.value || !editorBodyRef.value) return;
 
-  const rect = editorContainerRef.value.getBoundingClientRect();
+  const containerRect = editorContainerRef.value.getBoundingClientRect();
+  const rect = editorBodyRef.value.getBoundingClientRect();
   isResizing.value = true;
   startY.value = event.clientY;
-  startHeight.value = rect.height;
+  startHeight.value = containerRect.height;
+  resizeHandleHeight.value = containerRect.height - rect.height;
+  previewHeight.value = null;
   previewStyle.value = {
     top: `${rect.top}px`,
     left: `${rect.left}px`,
@@ -381,17 +386,17 @@ function handleMouseDown(event: MouseEvent) {
 }
 
 function handleMouseMove(event: MouseEvent) {
-  if (!isResizing.value || !editorContainerRef.value) return;
+  if (!isResizing.value || !editorBodyRef.value) return;
   event.preventDefault();
   event.stopPropagation();
-  const height = `${Math.max(minHeight.value, startHeight.value + event.clientY - startY.value)}px`;
-  const rect = editorContainerRef.value.getBoundingClientRect();
-  previewHeight.value = height;
+  const height = Math.max(minHeight.value, startHeight.value + event.clientY - startY.value);
+  const rect = editorBodyRef.value.getBoundingClientRect();
+  previewHeight.value = `${height}px`;
   previewStyle.value = {
     top: `${rect.top}px`,
     left: `${rect.left}px`,
     width: `${rect.width}px`,
-    height,
+    height: `${Math.max(0, height - resizeHandleHeight.value)}px`,
   };
 }
 
@@ -435,6 +440,7 @@ onBeforeUnmount(removeResizeListeners);
       :style="{ height: currentHeight, minHeight: `${minHeight}px` }"
     >
       <div
+        ref="editorBodyRef"
         class="rich-text-editor relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-control)] border border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs transition-colors transition-shadow duration-[var(--duration-base)] focus-within:border-[var(--control-border-focus)] focus-within:outline-none focus-within:ring-3 focus-within:ring-inset focus-within:ring-primary"
         :class="disabled ? 'cursor-not-allowed !border-[var(--control-disabled-border)] !bg-[var(--control-disabled-bg)] text-[var(--control-disabled-text)]' : 'cursor-text'"
         @mousedown="handleEditorShellMouseDown"

@@ -1,5 +1,5 @@
 export const useCodeMirrorLazy = () => {
-  const codeMirrorModules = ref<any>(null)
+  const codeMirrorModules = shallowRef<any>(null)
   const loading = ref(false)
   const initialized = ref(false)
 
@@ -123,7 +123,7 @@ export const useCodeMirrorLazy = () => {
   }
 
   return {
-    codeMirrorModules: readonly(codeMirrorModules),
+    codeMirrorModules: shallowReadonly(codeMirrorModules),
     loading: readonly(loading),
     initCodeMirror,
     reset,

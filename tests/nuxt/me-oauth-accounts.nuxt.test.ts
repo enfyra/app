@@ -27,15 +27,15 @@ describe('profile OAuth accounts', () => {
   })
 
   it('loads linked accounts through the owner-scoped endpoint', async () => {
-    await mountSuspended(MePage, {
-      route: '/me',
+    const wrapper = await mountSuspended(MePage, {
+      route: '/me?tab=profile',
       global: {
         stubs: {
           CommonEmptyState: true,
           CommonLoadingState: true,
           FormEditorLazy: true,
-          ProfileApiTokensCard: true,
-          ProfileChangePasswordModal: true,
+          ProfileApiTokensTable: true,
+          ProfileChangePasswordForm: true,
           UForm: true,
           UIcon: true,
         },
@@ -51,5 +51,7 @@ describe('profile OAuth accounts', () => {
       '/api/enfyra_oauth_account',
       expect.any(Object),
     )
+    expect(wrapper.find('a[href^="/settings/oauth"]').exists()).toBe(false)
+    wrapper.unmount()
   })
 })

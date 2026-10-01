@@ -287,8 +287,8 @@ onUnmounted(() => {
       container: 'py-[var(--shell-sidebar-inset)]',
       inner: '!bg-[var(--shell-sidebar-bg)] !border-0 !divide-transparent shadow-none',
       header: 'px-3.5 pb-2.5 pt-4 lg:py-0 group-data-[state=collapsed]/sidebar:px-2',
-      body: 'scrollbar-hide overflow-x-hidden border-0 px-3.5 group-data-[state=collapsed]/sidebar:px-2',
-      footer: 'flex min-h-0 w-full flex-col gap-1.5 overflow-x-hidden overflow-y-auto border-t border-[var(--nav-child-border)] px-3.5 pt-3 pb-4 lg:pb-0 group-data-[state=collapsed]/sidebar:px-2',
+      body: '!overflow-hidden border-0 p-0',
+      footer: 'eapp-sidebar-scroll flex min-h-0 w-full flex-col gap-1.5 overflow-x-hidden overflow-y-auto border-t border-[var(--nav-child-border)] px-3.5 pt-3 pb-4 lg:pb-0 group-data-[state=collapsed]/sidebar:px-2',
     }"
   >
     <template #title>
@@ -309,59 +309,61 @@ onUnmounted(() => {
     <template #description />
 
     <template #default>
-      <div v-for="group in componentGroups" :key="group.id" class="mb-3">
-        <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
-      </div>
-
-      <nav class="app-sidebar-nav" aria-label="Main navigation" @pointerover="prefetchMenuIntent" @pointerout="cancelPrefetchIntent" @focusin="prefetchMenuIntent" @focusout="cancelPrefetchIntent">
-        <div class="sidebar-menu-stack">
-        <Transition name="sidebar-menu-loading">
-          <div
-            v-if="showMenuSkeleton"
-            key="menu-skeleton"
-            class="app-sidebar-menu-skeleton"
-            :class="{ collapsed: !renderExpandedSidebarContent }"
-            aria-label="Loading navigation"
-          >
-            <div
-              v-for="i in 7"
-              :key="i"
-              class="app-sidebar-menu-skeleton-row"
-            >
-              <div class="app-sidebar-menu-skeleton-icon skeleton-gradient skeleton-pulse-slow" />
-              <div
-                v-if="renderExpandedSidebarContent"
-                class="app-sidebar-menu-skeleton-label skeleton-gradient skeleton-pulse-slow"
-                :style="{ width: `${64 + (i % 4) * 12}%` }"
-              />
-            </div>
-          </div>
-
-          <div v-else key="menu-tree" class="app-sidebar-menu-tree">
-            <template v-for="(group, groupIndex) in nativeNavigationItems" :key="groupIndex">
-              <USeparator
-                v-if="groupIndex > 0 && (group.some(item => item.children?.length) || nativeNavigationItems[groupIndex - 1]?.some(item => item.children?.length))"
-                class="-mx-3.5 w-auto"
-                :ui="{ border: 'border-[var(--nav-child-border)]' }"
-              />
-              <UNavigationMenu
-                :items="group"
-                :model-value="groupOpenValues(group)"
-                @update:model-value="value => updateGroupOpenValues(group, value)"
-                orientation="vertical"
-                :collapsed="!renderExpandedSidebarContent"
-                tooltip
-                :popover="{ mode: 'click', content: { side: 'right', align: 'start', sideOffset: 8, collisionPadding: 8 } }"
-                variant="pill"
-                color="neutral"
-                highlight
-                :ui="navigationMenuUi"
-              />
-            </template>
-          </div>
-        </Transition>
+      <SidebarScrollArea :collapsed="!renderExpandedSidebarContent">
+        <div v-for="group in componentGroups" :key="group.id" class="mb-3">
+          <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
         </div>
-      </nav>
+
+        <nav class="app-sidebar-nav" aria-label="Main navigation" @pointerover="prefetchMenuIntent" @pointerout="cancelPrefetchIntent" @focusin="prefetchMenuIntent" @focusout="cancelPrefetchIntent">
+          <div class="sidebar-menu-stack">
+            <Transition name="sidebar-menu-loading">
+              <div
+                v-if="showMenuSkeleton"
+                key="menu-skeleton"
+                class="app-sidebar-menu-skeleton"
+                :class="{ collapsed: !renderExpandedSidebarContent }"
+                aria-label="Loading navigation"
+              >
+                <div
+                  v-for="i in 7"
+                  :key="i"
+                  class="app-sidebar-menu-skeleton-row"
+                >
+                  <div class="app-sidebar-menu-skeleton-icon skeleton-gradient skeleton-pulse-slow" />
+                  <div
+                    v-if="renderExpandedSidebarContent"
+                    class="app-sidebar-menu-skeleton-label skeleton-gradient skeleton-pulse-slow"
+                    :style="{ width: `${64 + (i % 4) * 12}%` }"
+                  />
+                </div>
+              </div>
+
+              <div v-else key="menu-tree" class="app-sidebar-menu-tree">
+                <template v-for="(group, groupIndex) in nativeNavigationItems" :key="groupIndex">
+                  <USeparator
+                    v-if="groupIndex > 0 && (group.some(item => item.children?.length) || nativeNavigationItems[groupIndex - 1]?.some(item => item.children?.length))"
+                    class="-mx-3.5 w-auto"
+                    :ui="{ border: 'border-[var(--nav-child-border)]' }"
+                  />
+                  <UNavigationMenu
+                    :items="group"
+                    :model-value="groupOpenValues(group)"
+                    @update:model-value="value => updateGroupOpenValues(group, value)"
+                    orientation="vertical"
+                    :collapsed="!renderExpandedSidebarContent"
+                    tooltip
+                    :popover="{ mode: 'click', content: { side: 'right', align: 'start', sideOffset: 8, collisionPadding: 8 } }"
+                    variant="pill"
+                    color="neutral"
+                    highlight
+                    :ui="navigationMenuUi"
+                  />
+                </template>
+              </div>
+            </Transition>
+          </div>
+        </nav>
+      </SidebarScrollArea>
     </template>
 
     <template #footer>

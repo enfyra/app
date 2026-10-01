@@ -502,6 +502,7 @@ export default defineAppConfig({
     },
     table: {
       slots: {
+        base: "relative",
         td: "text-[var(--text-primary)]",
       },
     },

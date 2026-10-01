@@ -28,11 +28,10 @@ const menuWrapper = computed(() => props.contextMenuItems ? UContextMenu : 'div'
 const visibilityItems = computed(() => tableRef.value?.tableApi?.getAllColumns()
   .filter(column => column.getCanHide())
   .map(column => ({
+    id: column.id,
     label: typeof column.columnDef.header === 'string' ? column.columnDef.header : column.id,
-    type: 'checkbox' as const,
     checked: column.getIsVisible(),
     onUpdateChecked: (checked: boolean) => column.toggleVisibility(checked),
-    onSelect: (event: Event) => event.preventDefault(),
   })) ?? [])
 
 const columns = computed<ColumnDef<Record<string, any>>[]>(() => props.columns.map((column) => {
@@ -72,9 +71,23 @@ defineExpose({
       <div v-if="slots.toolbar" class="flex flex-wrap items-center gap-3">
         <slot name="toolbar" :table-api="tableRef?.tableApi" />
       </div>
-      <UDropdownMenu v-if="props.showColumnVisibility && visibilityItems.length" :items="visibilityItems" :content="{ align: 'end' }">
+      <UPopover v-if="props.showColumnVisibility && visibilityItems.length" :content="{ align: 'end' }">
         <UButton type="button" label="Columns" icon="lucide:columns-3" color="neutral" variant="outline" size="sm" aria-label="Choose visible columns" />
-      </UDropdownMenu>
+        <template #content>
+          <fieldset aria-label="Visible columns" class="max-h-80 min-w-48 max-w-[calc(100vw-2rem)] space-y-1 overflow-y-auto p-2">
+            <UCheckbox
+              v-for="item in visibilityItems"
+              :key="item.id"
+              :label="item.label"
+              :model-value="item.checked"
+              variant="card"
+              indicator="end"
+              :ui="{ root: 'w-full cursor-pointer items-center rounded-[var(--radius-subcontrol)] border-0 p-2 pointer-coarse:min-h-[44px]', wrapper: 'min-w-0 flex-1', label: 'cursor-pointer break-words' }"
+              @update:model-value="value => item.onUpdateChecked(value === true)"
+            />
+          </fieldset>
+        </template>
+      </UPopover>
     </div>
     <component :is="menuWrapper" :items="props.contextMenuItems ? menuItems : undefined">
       <UTable

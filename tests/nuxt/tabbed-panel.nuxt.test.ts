@@ -3,11 +3,12 @@ import { describe, expect, it } from 'vitest'
 import { h, ref } from 'vue'
 import { UCard, UTabs } from '#components'
 import TabbedPanel from '~/components/common/TabbedPanel.vue'
+import { availableComponents } from '~/composables/dynamic/registry'
 
 describe('Shared tabbed panel', () => {
   it('retains native tab events and mounted draft content inside one frame', async () => {
     const draftValue = ref('original')
-    const wrapper = await mountSuspended(TabbedPanel, {
+    const wrapper = await mountSuspended(availableComponents.TabbedPanel, {
       props: { modelValue: 'one', items: [{ label: 'One', value: 'one', slot: 'one' }, { label: 'Two', value: 'two', slot: 'two' }] },
       slots: {
         one: () => h('input', { 'aria-label': 'Draft', value: draftValue.value, onInput: (event: Event) => { draftValue.value = (event.target as HTMLInputElement).value } }),

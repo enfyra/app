@@ -48,10 +48,13 @@ const minHeight = computed(() => {
   return parseInt(heightStr) || 400;
 });
 const containerRef = ref<HTMLDivElement>();
+const editorBodyRef = ref<HTMLDivElement>();
 const resizeHandleRef = ref<HTMLDivElement>();
 const isResizing = ref(false);
 const startY = ref(0);
 const startHeight = ref(0);
+const resizeHandleHeight = ref(0);
+const previewHeight = ref<string | null>(null);
 const previewStyle = ref<{ top: string; left: string; width: string; height: string } | null>(null);
 const showTestSetup = ref(false);
 const testMethod = ref("GET");
@@ -489,9 +492,12 @@ function handleMouseDown(e: MouseEvent) {
   e.stopPropagation();
   isResizing.value = true;
   startY.value = e.clientY;
-  if (containerRef.value) {
-    const rect = containerRef.value.getBoundingClientRect();
-    startHeight.value = rect.height;
+  if (containerRef.value && editorBodyRef.value) {
+    const containerRect = containerRef.value.getBoundingClientRect();
+    const rect = editorBodyRef.value.getBoundingClientRect();
+    startHeight.value = containerRect.height;
+    resizeHandleHeight.value = containerRect.height - rect.height;
+    previewHeight.value = null;
     
     previewStyle.value = {
       top: `${rect.top}px`,
@@ -518,7 +524,7 @@ function handleMouseDown(e: MouseEvent) {
 }
 
 function handleMouseMove(e: MouseEvent) {
-  if (!isResizing.value || !containerRef.value) return;
+  if (!isResizing.value || !editorBodyRef.value) return;
   
   e.preventDefault();
   e.stopPropagation();
@@ -527,12 +533,13 @@ function handleMouseMove(e: MouseEvent) {
   const newHeight = Math.max(minHeight.value, startHeight.value + deltaY);
   const heightStr = `${newHeight}px`;
   
-  const rect = containerRef.value.getBoundingClientRect();
+  const rect = editorBodyRef.value.getBoundingClientRect();
+  previewHeight.value = heightStr;
   previewStyle.value = {
     top: `${rect.top}px`,
     left: `${rect.left}px`,
     width: `${rect.width}px`,
-    height: heightStr
+    height: `${Math.max(0, newHeight - resizeHandleHeight.value)}px`
   };
 }
 
@@ -544,9 +551,10 @@ function handleMouseUp(e?: MouseEvent) {
   
   if (!containerRef.value) return;
   
-  const finalHeight = previewStyle.value?.height || currentHeight.value;
+  const finalHeight = previewHeight.value || currentHeight.value;
   isResizing.value = false;
   previewStyle.value = null;
+  previewHeight.value = null;
   
   document.removeEventListener("mousemove", handleMouseMove);
   document.removeEventListener("mouseup", handleMouseUp);
@@ -598,6 +606,7 @@ function handleMouseUp(e?: MouseEvent) {
     </div>
 
     <div
+      ref="editorBodyRef"
       class="relative min-h-0 flex-1 overflow-hidden rounded-[var(--radius-control)] border bg-[var(--control-bg)] shadow-theme-xs transition-colors focus-within:border-[var(--control-border-focus)] focus-within:ring-3 focus-within:ring-inset focus-within:ring-primary"
       :class="props.error ? 'border-[var(--state-danger-outline-border)] ring-2 ring-[var(--md-error)]/20' : 'border-[var(--control-border)]'"
     >

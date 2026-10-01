@@ -9,6 +9,16 @@ const mounted: { unmount: () => void }[] = []
 afterEach(() => { mounted.splice(0).forEach(wrapper => wrapper.unmount()) })
 
 describe('table pagination theme boundary', () => {
+  it('does not draw a separate border above cursor Load more', async () => {
+    const wrapper = await mountSuspended(TablePagination, { props: { mode: 'cursor', itemsPerPage: 10, loadedCount: 10, hasMore: true } })
+    mounted.push(wrapper)
+    const button = wrapper.get('button')
+    expect(button.text()).toContain('Load more')
+    expect(button.element.parentElement!.classList.contains('border-t')).toBe(false)
+    await button.trigger('click')
+    expect(wrapper.emitted('load-more')).toHaveLength(1)
+  })
+
   it('renders selection and range together in the pagination summary', async () => {
     const wrapper = await mountSuspended(DataTable, {
       props: {

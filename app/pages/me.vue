@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { buildProfileUpdatePayload } from "~/utils/profile-update";
 
-const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const notify = useNotify();
@@ -11,10 +10,9 @@ const { validateForm } = useFormValidation("enfyra_user");
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
-  title: "Profile",
-  description: "Update your personal information",
+  title: "Account",
+  description: "Manage your profile, password, linked accounts, and API tokens",
   variant: "default",
-  gradient: "blue",
 });
 
 const hasFormChanges = ref(false);
@@ -67,11 +65,6 @@ function getProviderLabel(provider: string) {
   }
 }
 
-function maskProviderId(id: string) {
-  if (!id || id.length < 12) return id ?? "-";
-  return id.substring(0, 6) + "..." + id.substring(id.length - 4);
-}
-
 const fieldMap = computed(() => ({
   email: {
     disabled: true
@@ -104,7 +97,19 @@ const {
   errorContext: "Update Profile",
 });
 
-const passwordModalOpen = ref(false);
+const route = useRoute();
+const router = useRouter();
+const profileTabs = [
+  { label: 'Profile', value: 'profile', slot: 'profile', icon: 'lucide:user' },
+  { label: 'Password', value: 'password', slot: 'password', icon: 'lucide:key-round' },
+  { label: 'API Tokens', value: 'api-tokens', slot: 'api-tokens', icon: 'lucide:key' },
+];
+const activeTab = computed({
+  get: () => profileTabs.some(tab => tab.value === route.query.tab) ? String(route.query.tab) : 'profile',
+  set: (value: string | number) => {
+    void router.push({ query: { ...route.query, tab: profileTabs.some(tab => tab.value === value) ? value : 'profile' } });
+  },
+});
 
 async function handleReset() {
   const ok = await confirm({
@@ -123,18 +128,6 @@ async function handleReset() {
   }
 }
 
-registerSubHeaderActions([
-  {
-    id: "change-password",
-    label: "Change Password",
-    icon: "lucide:key-round",
-    variant: "outline",
-    color: "primary",
-    side: "right",
-    onClick: () => { passwordModalOpen.value = true; },
-  },
-]);
-
 registerHeaderActions([
   {
     id: "reset-profile",
@@ -143,9 +136,9 @@ registerHeaderActions([
     variant: "outline",
     color: "warning",
     order: 1,
-    disabled: computed(() => !hasFormChanges.value),
+    disabled: computed(() => !hasFormChanges.value || savingProfile.value || updateLoading.value),
     onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
+    show: computed(() => activeTab.value === 'profile' && hasFormChanges.value),
   },
   {
     id: "save-profile",
@@ -156,7 +149,8 @@ registerHeaderActions([
     size: "md",
     order: 999,
     loading: computed(() => updateLoading.value || savingProfile.value),
-    disabled: computed(() => !hasFormChanges.value || savingProfile.value),
+    disabled: computed(() => !hasFormChanges.value || savingProfile.value || updateLoading.value),
+    show: computed(() => activeTab.value === 'profile'),
     submit: saveProfile,
   },
 ]);
@@ -207,7 +201,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="profile-page">
+  <div class="eapp-page-constrained-wide">
     <CommonEmptyState
       v-if="!loading && !apiData?.data?.[0]"
       title="Profile not found"
@@ -215,160 +209,62 @@ onMounted(() => {
       icon="lucide:user-x"
       size="sm"
     />
-
-    <template v-else>
-      <div class="profile-card">
-        <div class="profile-card-header">
-          <h3>Personal Information</h3>
-          <p>Update your account details and preferences</p>
-        </div>
-        <UForm :state="form" @submit="saveProfile">
-          <FormEditorLazy
-            ref="formEditorRef"
-            v-model="form"
-            v-model:errors="errors"
-            @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            table-name="enfyra_user"
-            :excluded="['isRootAdmin', 'isSystem', 'roles', 'allowedRoutePermissions', 'createdAt', 'updatedAt', 'password']"
-            :field-map="fieldMap"
-            :loading="loading"
-            mode="update"
-            layout="grid"
-          />
-        </UForm>
-      </div>
-
-      <div class="profile-card">
-        <div class="profile-card-header">
-          <h3>Linked Accounts</h3>
-          <p>OAuth providers connected to your profile</p>
-        </div>
-        <CommonLoadingState
-          v-if="oauthLoading"
-          title="Loading..."
-          description="Fetching linked accounts"
-          size="sm"
-          type="card"
-        />
-        <div v-else-if="oauthAccounts.length > 0" class="profile-list">
-          <NuxtLink
-            v-for="account in oauthAccounts"
-            :key="getId(account)"
-            :to="`/settings/oauth/accounts/${getId(account)}`"
-            class="profile-list-item group"
-          >
-            <div class="profile-list-icon">
-              <UIcon :name="getProviderIcon(account.provider)" class="w-5 h-5 text-[var(--text-secondary)]" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-[var(--text-primary)]">
+    <CommonTabbedPanel v-else v-model="activeTab" :items="profileTabs">
+      <template #profile>
+        <CommonFormCard :bordered="false">
+          <UForm :state="form" @submit="saveProfile">
+            <FormEditorLazy
+              ref="formEditorRef"
+              v-model="form"
+              v-model:errors="errors"
+              @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+              table-name="enfyra_user"
+              :excluded="['isRootAdmin', 'isSystem', 'roles', 'allowedRoutePermissions', 'createdAt', 'updatedAt', 'password']"
+              :field-map="fieldMap"
+              :loading="loading"
+              mode="update"
+              layout="grid"
+            />
+          </UForm>
+        </CommonFormCard>
+        <section class="space-y-4 border-t border-default pt-6">
+          <h3 class="text-base font-semibold text-highlighted">Linked accounts</h3>
+          <CommonLoadingState v-if="oauthLoading" title="Loading..." description="Fetching linked accounts" size="sm" type="list" />
+          <div v-else-if="oauthAccounts.length" class="divide-y divide-default">
+            <div v-for="account in oauthAccounts" :key="getId(account)" class="space-y-3 py-4">
+              <p class="flex items-center gap-3 text-sm font-medium text-highlighted">
+                <UIcon :name="getProviderIcon(account.provider)" class="size-5 shrink-0" />
                 {{ getProviderLabel(account.provider) }}
               </p>
-              <p class="text-xs text-[var(--text-tertiary)]">
-                {{ maskProviderId(account.providerUserId ?? '') }}
-              </p>
+              <dl class="grid gap-4 text-sm sm:grid-cols-2 xl:grid-cols-4">
+                <div class="min-w-0">
+                  <dt class="text-xs text-muted">Account ID</dt>
+                  <dd class="mt-1 break-all font-mono">{{ getId(account) || '_' }}</dd>
+                </div>
+                <div class="min-w-0">
+                  <dt class="text-xs text-muted">Provider user ID</dt>
+                  <dd class="mt-1 break-all font-mono">{{ account.providerUserId || '_' }}</dd>
+                </div>
+                <div v-if="account.createdAt" class="min-w-0">
+                  <dt class="text-xs text-muted">Linked on</dt>
+                  <dd class="mt-1">{{ new Date(account.createdAt).toLocaleString() }}</dd>
+                </div>
+                <div v-if="account.updatedAt" class="min-w-0">
+                  <dt class="text-xs text-muted">Updated</dt>
+                  <dd class="mt-1">{{ new Date(account.updatedAt).toLocaleString() }}</dd>
+                </div>
+              </dl>
             </div>
-            <UIcon name="lucide:chevron-right" class="w-4 h-4 text-[var(--text-quaternary)] group-hover:text-[var(--text-tertiary)] transition-colors flex-shrink-0" />
-          </NuxtLink>
-        </div>
-        <CommonEmptyState
-          v-else
-          class="profile-empty"
-          title="No linked accounts"
-          description="Connect your account with Google, GitHub, or other providers"
-          icon="lucide:link"
-          size="sm"
-        />
-      </div>
-
-      <ProfileApiTokensCard />
-
-    </template>
-    <ProfileChangePasswordModal v-model:open="passwordModalOpen" />
+          </div>
+          <CommonEmptyState v-else variant="naked" title="No linked accounts" description="Connect your account with Google, GitHub, or other providers" icon="lucide:link" size="sm" />
+        </section>
+      </template>
+      <template #password>
+        <ProfileChangePasswordForm :active="activeTab === 'password'" />
+      </template>
+      <template #api-tokens>
+        <ProfileApiTokensTable :active="activeTab === 'api-tokens'" />
+      </template>
+    </CommonTabbedPanel>
   </div>
 </template>
-
-<style scoped>
-.profile-page {
-  display: grid;
-  gap: 18px;
-  max-width: 980px;
-}
-
-.profile-card {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--card-border);
-  border-radius: 18px;
-  background: var(--card-bg);
-  box-shadow: var(--card-shadow);
-  padding: 22px;
-}
-
-.profile-card-header {
-  position: relative;
-  margin-bottom: 18px;
-}
-
-.profile-card-header h3 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-.profile-card-header p {
-  margin: 4px 0 0;
-  color: var(--text-tertiary);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.profile-list {
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  border-radius: 13px;
-}
-
-.profile-list-item {
-  display: flex;
-  gap: 12px;
-  padding: 14px 16px;
-  transition: background-color var(--duration-fast) var(--ease-standard);
-}
-
-.profile-list-item {
-  align-items: center;
-  cursor: pointer;
-}
-
-.profile-list-item:hover {
-  background: var(--nav-item-hover-bg);
-}
-
-.profile-list > * + * {
-  border-top: 1px solid var(--border-subtle);
-}
-
-.profile-list-icon {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border-radius: 11px;
-  background: var(--surface-muted);
-}
-
-.profile-empty {
-  min-height: 172px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 13px;
-}
-
-@media (max-width: 640px) {
-  .profile-card {
-    padding: 16px;
-  }
-}
-</style>

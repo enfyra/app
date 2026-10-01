@@ -58,7 +58,7 @@ function loadMore() {
       </label>
       <UIcon v-if="showLoading && !isCursor" name="lucide:loader-circle" class="size-4 animate-spin text-muted" aria-label="Loading page" />
     </div>
-    <div v-if="isCursor" class="col-span-2 flex w-full justify-center border-t border-default pt-3 md:col-span-1 md:col-start-2 md:row-start-1 md:border-t-0 md:pt-0">
+    <div v-if="isCursor" class="col-span-2 flex w-full justify-center md:col-span-1 md:col-start-2 md:row-start-1">
       <UButton label="Load more" icon="lucide:chevron-down" color="neutral" variant="outline" size="sm" :loading="loading" :disabled="!hasMore || loading" @click="loadMore" />
     </div>
     <UPagination
