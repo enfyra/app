@@ -83,7 +83,7 @@
     --surface-default: var(--block-base);
     --surface-muted: var(--block-muted);
     --surface-nested: var(--block-low);
-    --surface-workspace: color-mix(in srgb, var(--md-primary-container) 3%, color-mix(in srgb, var(--block-base) 98%, #808080));
+    --surface-workspace: color-mix(in srgb, var(--md-primary-container) 2%, color-mix(in srgb, var(--block-base) 99%, #808080));
     --surface-overlay: color-mix(in srgb, var(--md-scrim) 45%, transparent);
     --surface-header: var(--block-muted);
 

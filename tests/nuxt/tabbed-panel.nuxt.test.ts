@@ -2,6 +2,9 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import { h, ref } from 'vue'
 import { UCard, UTabs } from '#components'
+import { useAppConfig } from '#imports'
+import { tv } from '@nuxt/ui/utils/tv'
+import tabsTheme from '#build/ui/tabs'
 import TabbedPanel from '~/components/common/TabbedPanel.vue'
 import { availableComponents } from '~/composables/dynamic/registry'
 
@@ -37,6 +40,30 @@ describe('Shared tabbed panel', () => {
       expect(wrapper.get('[data-slot="header"]').text()).toBe('External tabs')
       expect(wrapper.get('[data-slot="body"]').text()).toBe('Panel contents')
       expect(wrapper.findAll('[role="tablist"]')).toHaveLength(1)
+    } finally { wrapper.unmount() }
+  })
+
+  it('keeps pill navigation independent of the header underline and uses theme roles', async () => {
+    const items = [{ label: 'Overview', value: 'overview' }, { label: 'Usage', value: 'usage' }]
+    expect(availableComponents.UTabs).toBe(UTabs)
+    const wrapper = await mountSuspended(TabbedPanel, {
+      slots: {
+        header: () => h(UTabs, { modelValue: 'overview', items, variant: 'link', content: false }),
+        default: () => h(availableComponents.UTabs, { modelValue: 'overview', items, variant: 'pill', color: 'primary', content: false }),
+      },
+    })
+    try {
+      const pill = wrapper.findAllComponents(UTabs)[1]!
+      const ui = tv({ extend: tabsTheme, ...(useAppConfig().ui.tabs as unknown as typeof tabsTheme) })({ variant: 'pill', color: 'primary', orientation: 'horizontal' })
+      expect(pill.get('[data-slot="list"]').classes()).toContain('bg-elevated')
+      expect(pill.get('[data-slot="list"]').classes()).toContain('max-w-full')
+      expect(pill.get('[data-slot="list"]').classes()).toContain('overflow-x-auto')
+      expect(pill.get('[data-slot="list"]').classes()).not.toContain('border-b-0')
+      expect(ui.indicator()).toContain('bg-primary')
+      expect(ui.indicator()).not.toContain('!bottom-0')
+      expect(ui.indicator()).not.toContain('!h-0.5')
+      expect(pill.get('[data-slot="trigger"]').classes()).toContain('data-[state=active]:bg-primary')
+      expect(pill.get('[data-slot="trigger"]').classes()).toContain('data-[state=active]:text-inverted')
     } finally { wrapper.unmount() }
   })
 })

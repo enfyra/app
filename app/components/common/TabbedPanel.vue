@@ -24,30 +24,28 @@ const panelUi = computed(() => ({
 </script>
 
 <template>
-  <UTheme :ui="{ tabs: tabHeaderUi }">
-    <UCard v-bind="$attrs" :ui="panelUi">
-      <template v-if="slots.header" #header>
-        <slot name="header" />
+  <UCard v-bind="$attrs" :ui="panelUi">
+    <template v-if="slots.header" #header>
+      <UTheme :ui="{ tabs: tabHeaderUi }"><slot name="header" /></UTheme>
+    </template>
+    <slot v-if="slots.header" />
+    <UTabs
+      v-else
+      :model-value="props.modelValue"
+      :items="props.items"
+      :unmount-on-hide="props.unmountOnHide"
+      variant="link"
+      :ui="{
+        root: 'gap-0',
+        list: 'min-w-0 overflow-x-auto overflow-y-hidden border-b-0 bg-muted px-5 shadow-[inset_0_-1px_0_var(--ui-border)]',
+        indicator: '!bottom-0',
+        content: 'mt-0 p-5 space-y-6',
+      }"
+      @update:model-value="value => emit('update:modelValue', value)"
+    >
+      <template v-for="(_, name) in slots" #[name]="slotProps">
+        <slot :name="name" v-bind="slotProps" />
       </template>
-      <slot v-if="slots.header" />
-      <UTabs
-        v-else
-        :model-value="props.modelValue"
-        :items="props.items"
-        :unmount-on-hide="props.unmountOnHide"
-        variant="link"
-        :ui="{
-          root: 'gap-0',
-          list: 'min-w-0 overflow-x-auto overflow-y-hidden border-b-0 bg-muted px-5 shadow-[inset_0_-1px_0_var(--ui-border)]',
-          indicator: '!bottom-0',
-          content: 'mt-0 p-5 space-y-6',
-        }"
-        @update:model-value="value => emit('update:modelValue', value)"
-      >
-        <template v-for="(_, name) in slots" #[name]="slotProps">
-          <slot :name="name" v-bind="slotProps" />
-        </template>
-      </UTabs>
-    </UCard>
-  </UTheme>
+    </UTabs>
+  </UCard>
 </template>

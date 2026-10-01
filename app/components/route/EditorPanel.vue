@@ -53,7 +53,7 @@ const editorTabs = [
 const editorTabUi = computed(() => props.embedded ? {
   root: 'w-full items-start',
   list: 'w-fit min-w-0 gap-1 rounded-[var(--radius-control)] border-0 bg-muted p-1',
-  trigger: 'h-9 grow-0 rounded-[var(--radius-subcontrol)] px-3 text-xs data-[state=active]:bg-default data-[state=active]:shadow-xs',
+  trigger: 'h-9 grow-0 rounded-[var(--radius-subcontrol)] px-3 text-xs data-[state=active]:shadow-xs',
   leadingIcon: 'size-4',
   indicator: 'hidden',
 } : props.showTabDivider ? undefined : { list: 'border-b-0', indicator: '!bottom-0' })

@@ -711,21 +711,30 @@ export default defineAppConfig({
     tabs: {
       slots: {
         root: "min-w-0",
-        list: "relative flex min-w-max gap-0 overflow-visible bg-transparent p-0",
-        indicator: "absolute !-bottom-px !h-0.5 !w-[calc(var(--reka-tabs-indicator-size)-1rem)] !translate-x-[calc(var(--reka-tabs-indicator-position)+0.5rem)] rounded-full !bg-[var(--md-primary)]",
-        trigger: "relative flex h-12 cursor-pointer items-center gap-2 rounded-none px-4 text-sm font-medium text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)] data-[state=active]:!text-[var(--md-primary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--theme-focus-ring-strong)]",
+        list: "relative flex min-w-0",
+        indicator: "absolute",
+        trigger: "relative flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--theme-focus-ring-strong)]",
         leadingIcon: "h-5 w-5 shrink-0",
         label: "truncate",
         trailingBadge: "ml-0 rounded-md bg-[var(--state-warning-soft-bg)] px-1.5 py-0.5 text-xs font-semibold text-[var(--state-warning-soft-text)] ring-1 ring-inset ring-[var(--state-warning-outline-border)]",
         content: "mt-4",
+      },
+      variants: {
+        variant: {
+          pill: {
+            list: "max-w-full gap-1 overflow-x-auto overflow-y-hidden rounded-[var(--radius-control)] bg-elevated p-1",
+            indicator: "rounded-[var(--radius-subcontrol)] shadow-xs",
+            trigger: "h-10 shrink-0 rounded-[var(--radius-subcontrol)] px-4",
+          },
+        },
       },
       compoundVariants: [
         {
           orientation: "horizontal",
           variant: "link",
           class: {
-            list: "border-b border-default mb-0 gap-6",
-            trigger: "!px-0",
+            list: "border-b border-default mb-0 gap-6 bg-transparent p-0",
+            trigger: "h-12 rounded-none !px-0",
             indicator: "!-bottom-px !h-px !w-[var(--reka-tabs-indicator-size)] !translate-x-[var(--reka-tabs-indicator-position)]",
           },
         },
@@ -733,16 +742,16 @@ export default defineAppConfig({
           color: "primary",
           variant: "pill",
           class: {
-            indicator: "bg-[var(--action-primary-bg)]",
-            trigger: "data-[state=active]:text-[var(--action-primary-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--theme-focus-ring-strong)]",
+            indicator: "bg-primary",
+            trigger: "data-[state=active]:bg-primary data-[state=active]:text-inverted in-[[data-slot=list]:not(:has([data-slot=indicator]))]:data-[state=active]:before:bg-primary in-[[data-slot=list]:not(:has([data-slot=indicator]))]:data-[state=active]:before:rounded-[var(--radius-subcontrol)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--theme-focus-ring-strong)]",
           },
         },
         {
           color: "primary",
           variant: "link",
           class: {
-            indicator: "bg-[var(--text-primary)]",
-            trigger: "data-[state=active]:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--theme-focus-ring-strong)]",
+            indicator: "bg-[var(--md-primary)]",
+            trigger: "data-[state=active]:text-[var(--md-primary)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--theme-focus-ring-strong)]",
           },
         },
       ],
