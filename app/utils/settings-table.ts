@@ -7,7 +7,7 @@ export function settingsTextColumn(key: string, header: string): ColumnDef<Recor
     cell: ({ getValue }) => {
       const value = getValue()
       const text = value == null || value === '' ? '_' : String(value)
-      return h('span', { class: 'block truncate', title: text === '_' ? undefined : text }, text)
+      return h('span', { class: 'inline-block max-w-[28rem] align-middle truncate', title: text === '_' ? undefined : text }, text)
     },
   }
 }

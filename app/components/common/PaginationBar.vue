@@ -85,7 +85,7 @@ const miniUi = computed(() => ({
     v-bind="$attrs"
     :class="[
       'eapp-pagination',
-      '-mx-4 px-4 sm:-mx-6 sm:px-6',
+      '-mx-3 px-3 sm:-mx-3 sm:px-3 md:-mx-6 md:px-6',
       'border-t border-[color-mix(in_srgb,var(--shell-main-border)_60%,transparent)] bg-[var(--shell-main-bg)] py-3',
       mainRootClass,
     ]"

@@ -193,7 +193,7 @@ const booleanOuterClass = computed(() => {
   const custom = fieldConfig.value.booleanWrapperClass;
   const defaults =
     isMobile.value || isTablet.value
-      ? "flex w-full min-w-0 flex-col gap-2 py-3"
+      ? "flex w-full min-w-0 flex-col gap-1.5 py-2 md:gap-2 md:py-3"
       : "flex w-full min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3 sm:justify-start";
   return [fpClass, custom ?? defaults];
 });
@@ -207,7 +207,7 @@ const nonBooleanFieldAttrs = computed(() => {
 const nonBooleanOuterClass = computed(() => {
   const fpClass = fieldProps.value.class;
   const extra = fieldConfig.value.fieldWrapperClass;
-  return ["space-y-2 w-full min-w-0", fpClass, extra];
+  return ["space-y-1.5 md:space-y-2 w-full min-w-0", fpClass, extra];
 });
 </script>
 

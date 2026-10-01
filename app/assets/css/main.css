@@ -518,6 +518,12 @@ button:focus-visible,
   padding: 1.25rem;
 }
 
+@media (max-width: 767px) {
+  .eapp-shell-main .eapp-form-region {
+    padding: 0.75rem;
+  }
+}
+
 .eapp-shell-main .eapp-form-region .eapp-form-region,
 .eapp-tabbed-panel .eapp-form-region {
   border: 0;

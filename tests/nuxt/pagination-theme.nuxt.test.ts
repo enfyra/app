@@ -62,9 +62,15 @@ describe('table pagination theme boundary', () => {
     expect(pagers).toHaveLength(1)
     const root = pagers[0]!.get('[data-slot="root"]')
     expect(root.classes()).toContain('eapp-table-pagination-controls')
-    expect(root.classes()).toContain('border-t')
-    expect(root.classes()).toContain('md:border-t-0')
-    expect(root.get('[data-slot="list"]').classes()).toContain('flex-wrap')
+    expect(root.classes()).not.toContain('border-t')
+    const scroller = root.element.parentElement!
+    expect(scroller.classList.contains('overflow-x-auto')).toBe(true)
+    const separator = scroller.parentElement!
+    expect(separator.classList.contains('border-t')).toBe(true)
+    expect(separator.classList.contains('md:border-t-0')).toBe(true)
+    expect(separator.classList.contains('-mx-3')).toBe(true)
+    expect(root.get('[data-slot="list"]').classes()).toContain('flex-nowrap')
+    expect(root.get('[data-slot="list"]').classes()).not.toContain('flex-wrap')
     expect(root.get('[data-slot="list"]').classes()).toContain('justify-center')
     expect(root.get('[data-slot="list"]').classes()).toContain('md:justify-end')
   })

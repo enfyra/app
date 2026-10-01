@@ -61,16 +61,19 @@ function loadMore() {
     <div v-if="isCursor" class="col-span-2 flex w-full justify-center md:col-span-1 md:col-start-2 md:row-start-1">
       <UButton label="Load more" icon="lucide:chevron-down" color="neutral" variant="outline" size="sm" :loading="loading" :disabled="!hasMore || loading" @click="loadMore" />
     </div>
-    <UPagination
-      v-else-if="hasPagination"
-      v-model:page="page"
-      :items-per-page="itemsPerPage"
-      :total="total"
-      :to="to"
-      :sibling-count="2"
-      size="sm"
-      :ui="{ root: 'eapp-table-pagination-controls col-span-2 min-w-0 w-full justify-self-end border-t border-default pt-3 md:w-auto md:col-auto md:border-t-0 md:pt-0', list: 'w-full flex-wrap justify-center md:justify-end', item: 'min-w-8' }"
-    />
+    <div v-else-if="hasPagination" class="col-span-2 min-w-0 -mx-3 border-t border-default px-3 pt-3 md:col-auto md:mx-0 md:border-t-0 md:px-0 md:pt-0">
+      <div class="min-w-0 max-w-full overflow-x-auto">
+        <UPagination
+          v-model:page="page"
+          :items-per-page="itemsPerPage"
+          :total="total"
+          :to="to"
+          :sibling-count="2"
+          size="sm"
+          :ui="{ root: 'eapp-table-pagination-controls min-w-max w-fit mx-auto md:mx-0', list: 'w-max flex-nowrap justify-center md:justify-end', item: 'min-w-8 shrink-0' }"
+        />
+      </div>
+    </div>
   </div>
   <Teleport v-if="floating && !isCursor" to="body">
     <Transition name="mini-pagination">

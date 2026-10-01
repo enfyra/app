@@ -8,6 +8,7 @@ const props = defineProps<{
 const { confirm } = useConfirm();
 const table = useModel(props, "modelValue");
 const expandedIndexCoverage = ref<string[]>([]);
+const addButtonClass = "relative size-8 p-0 pointer-coarse:before:absolute pointer-coarse:before:-inset-1.5 pointer-coarse:before:content-['']";
 
 function addUniqueGroup() {
   if (!table.value.uniques) table.value.uniques = [];
@@ -138,7 +139,8 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           icon="lucide:plus"
           aria-label="Add unique constraint"
           size="sm"
-          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
+          square
+          :class="addButtonClass"
           color="primary"
           @click="addUniqueGroup()"
           :disabled="table.isSystem"
@@ -182,7 +184,8 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           icon="i-lucide:plus"
           aria-label="Add field to unique constraint"
           size="sm"
-          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
+          square
+          :class="addButtonClass"
           @click="addFieldToGroup(table.uniques, gIndex)"
           :disabled="table.isSystem || !canAddFieldToGroup(group)"
         />
@@ -207,7 +210,8 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           icon="lucide:plus"
           aria-label="Add index"
           size="sm"
-          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
+          square
+          :class="addButtonClass"
           color="primary"
           @click="addIndexGroup()"
           :disabled="table.isSystem"
@@ -255,7 +259,8 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           icon="i-lucide:plus"
           aria-label="Add field to index"
           size="sm"
-          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
+          square
+          :class="addButtonClass"
           @click="addFieldToGroup(table.indexes, gIndex)"
           :disabled="table.isSystem || !canAddFieldToGroup(group)"
         />

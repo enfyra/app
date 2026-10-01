@@ -74,7 +74,7 @@ const setting = ref<Record<string, any>>({});
 const generalFormSections = [
   {
     id: "project",
-    class: "border-b border-[var(--border-subtle)] pb-6",
+    class: "border-b border-[var(--border-subtle)] pb-4 md:pb-6",
     fields: ["projectName", "projectFavicon", "projectDescription",  "isInit"],
 
   },

@@ -70,10 +70,12 @@ defineExpose({
 
 <template>
   <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
-    <div v-if="slots.toolbar || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default px-4 py-3">
-      <div v-if="slots.toolbar" class="flex flex-wrap items-center gap-3">
+    <div v-if="slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default px-3 py-3 md:px-4">
+      <div v-if="slots.toolbar" class="flex min-w-0 flex-1 flex-wrap items-center gap-3">
         <slot name="toolbar" :table-api="tableRef?.tableApi" />
       </div>
+      <div v-if="slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length)" class="flex min-h-8 shrink-0 items-center">
+      <slot name="toolbar-actions" :table-api="tableRef?.tableApi">
       <UDropdownMenu
         v-if="props.showColumnVisibility && visibilityItems.length"
         :items="visibilityItems"
@@ -82,6 +84,8 @@ defineExpose({
       >
         <UButton type="button" label="Columns" icon="lucide:columns-3" color="neutral" variant="outline" size="sm" aria-label="Choose visible columns" />
       </UDropdownMenu>
+      </slot>
+      </div>
     </div>
     <component :is="menuWrapper" :items="props.contextMenuItems ? menuItems : undefined">
       <UTable
@@ -109,7 +113,7 @@ defineExpose({
         </template>
       </UTable>
     </component>
-    <div v-if="slots.footer || props.paginationConfig" class="space-y-3 border-t border-default px-4 py-3 text-sm text-muted">
+    <div v-if="slots.footer || props.paginationConfig" class="space-y-3 border-t border-default px-3 py-3 text-sm text-muted md:px-4">
       <slot name="footer" :table-api="tableRef?.tableApi" />
       <DataTablePagination
         v-if="props.paginationConfig"

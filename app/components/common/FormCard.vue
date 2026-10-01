@@ -2,7 +2,7 @@
   <section :class="[className, bordered ? 'eapp-form-region' : undefined]">
     <div
       v-if="title || description || $slots.header"
-      class="mb-6"
+      class="mb-4 md:mb-6"
     >
       <slot name="header">
         <h3
