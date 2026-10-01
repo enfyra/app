@@ -11,6 +11,7 @@ const { sidebarCollections } = useDataCollectionPreferences();
 const { hasMenuPermission } = usePermissions();
 const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
+const accountSheetOpen = useState('account-sheet-open', () => false);
 const { getFileUrl } = useFileUrl();
 const showMenuSkeleton = ref(false);
 const { getMenuNotification } = useMenuNotificationRegistry();
@@ -280,6 +281,7 @@ onUnmounted(() => {
   <USidebar
     v-model:open="sidebarVisible"
     variant="inset"
+    :menu="{ dismissible: !accountSheetOpen }"
     collapsible="icon"
     class="eapp-sidebar"
     :style="{ '--sidebar-width': 'var(--shell-sidebar-width)' }"

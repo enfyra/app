@@ -23,6 +23,7 @@ const emit = defineEmits<{
 const { getId } = useDatabase();
 const isDndUpdating = useState('menu-dnd-updating', () => false);
 const isMenuDragActive = useState('menu-dnd-drag-active', () => false);
+const { isDesktop } = useScreen();
 
 function buildChildren(parentId: string | number | null, allMenus: MenuDefinition[]): MenuTreeItem[] {
   if (!parentId) return [];
@@ -241,7 +242,7 @@ function handleDragEnd() {
         <draggable
           v-model="menuTreeItems"
           :animation="200"
-          :disabled="isDndUpdating"
+          :disabled="isDndUpdating || !isDesktop"
           handle=".drag-handle"
           ghost-class="ghost-item"
           chosen-class="chosen-item"
@@ -359,6 +360,20 @@ function handleDragEnd() {
 
 .dragging-item {
   opacity: 0.5;
+}
+
+@media (max-width: 1023px) {
+  .menu-preview {
+    padding: 12px;
+  }
+
+  .menu-preview-header {
+    padding: 0 0 10px;
+  }
+
+  .menu-root-drop-zone {
+    gap: 4px;
+  }
 }
 
 .menu-visual-editor :deep(.sortable-ghost) {

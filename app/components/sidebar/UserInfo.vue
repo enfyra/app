@@ -1,18 +1,24 @@
 <script setup lang="ts">
 import { unref, type ComputedRef, type Ref } from 'vue';
 import type { DropdownMenuItem } from '@nuxt/ui';
+import { UDropdownMenu } from '#components';
 import type { AccountPanelItem } from '~/types/ui';
 
 interface AccountMenuItem extends DropdownMenuItem {
   slot?: `account-${string}`;
   swatch?: string;
   children?: AccountMenuItem[];
+  accountPanelItem?: AccountPanelItem;
 }
 
 const props = defineProps<{ collapsed?: boolean }>();
 const { me, logout } = useAuth();
 const { confirm } = useConfirm();
 const router = useRouter();
+const route = useRoute();
+const { isDesktop } = useScreen();
+const mobileOpen = useState('account-sheet-open', () => false);
+const mobilePath = ref<number[]>([]);
 const { enfyraVersion } = useSchema();
 const { checkPermissionCondition } = usePermissions();
 const { $primaryColor } = useNuxtApp();
@@ -96,6 +102,31 @@ const menuItems = computed<AccountMenuItem[][]>(() => {
     items.filter(item => (item.order ?? 0) >= 30).map(toMenuItem),
   ].filter(group => group.length);
 });
+const mobilePage = computed(() => {
+  let groups = menuItems.value;
+  let parent: AccountMenuItem | undefined;
+  for (const index of mobilePath.value) {
+    parent = groups.flat()[index];
+    if (!parent || parent.disabled) return { groups: menuItems.value, parent: undefined };
+    groups = [parent.children ?? []];
+  }
+  return { groups, parent };
+});
+watch(mobileOpen, () => { mobilePath.value = []; });
+watch(isDesktop, () => { mobileOpen.value = false; });
+watch(() => route.path, () => { mobileOpen.value = false; });
+onUnmounted(() => { mobileOpen.value = false; });
+
+async function activateMobileItem(item: AccountMenuItem, event: Event) {
+  if (item.disabled) return;
+  if (item.children?.length || item.accountPanelItem?.contentComponent) {
+    mobilePath.value.push(mobilePage.value.groups.flat().indexOf(item));
+    if (item.accountPanelItem?.contentComponent) return item.onSelect?.(event);
+    return;
+  }
+  if (item.type === 'checkbox') item.onUpdateChecked?.(!item.checked);
+  return item.onSelect?.(event);
+}
 async function handleLogout() {
   const ok = await confirm({ content: 'Are you sure you want to logout?' });
   if (ok) await logout();
@@ -104,7 +135,10 @@ async function handleLogout() {
 
 <template>
   <div class="w-full shrink-0">
-    <UDropdownMenu :items="menuItems" :content="{ align: 'center', side: collapsed ? 'right' : 'top', sideOffset: 8 }" :ui="{ content: 'min-w-60 w-(--reka-popper-anchor-width)' }">
+    <component
+      :is="isDesktop ? UDropdownMenu : 'div'"
+      v-bind="isDesktop ? { items: menuItems, content: { align: 'center', side: collapsed ? 'right' : 'top', sideOffset: 8 }, ui: { content: 'min-w-60 w-(--reka-popper-anchor-width)' } } : {}"
+    >
       <UButton
         color="primary"
         variant="soft"
@@ -114,6 +148,9 @@ async function handleLogout() {
         class="w-full"
         :class="collapsed ? 'justify-center px-2' : 'justify-start'"
         :ui="{ trailingIcon: 'ms-auto' }"
+        :aria-haspopup="isDesktop ? undefined : 'dialog'"
+        :aria-expanded="isDesktop ? undefined : mobileOpen"
+        @click="!isDesktop && (mobileOpen = true)"
       >
         <UAvatar :text="userInitial" size="xs" class="bg-primary/10 text-primary" />
         <span v-if="!collapsed" class="min-w-0 flex-1 truncate text-left">{{ userLabel }}</span>
@@ -134,7 +171,62 @@ async function handleLogout() {
           <component v-if="item.contentComponent && resolveValue(item.expanded)" :is="item.contentComponent" v-bind="item.contentProps" :class="item.contentClass" />
         </div>
       </template>
-    </UDropdownMenu>
+    </component>
+    <CommonDrawer v-if="!isDesktop" v-model="mobileOpen" direction="bottom" title="Account menu">
+      <template #header>
+        <div class="flex min-w-0 items-center gap-3">
+          <UButton v-if="mobilePath.length" icon="lucide:arrow-left" aria-label="Back to account menu" color="neutral" variant="ghost" class="shrink-0 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]" @click="mobilePath.pop()" />
+          <div class="min-w-0">
+            <h2 class="font-semibold">{{ mobilePage.parent?.label || 'Account' }}</h2>
+            <p v-if="!mobilePath.length" class="break-all text-sm text-muted">{{ userLabel }}</p>
+          </div>
+        </div>
+      </template>
+      <template #body>
+        <component
+          v-if="mobilePage.parent?.accountPanelItem?.contentComponent"
+          :is="mobilePage.parent.accountPanelItem.contentComponent"
+          v-bind="mobilePage.parent.accountPanelItem.contentProps"
+          :class="mobilePage.parent.accountPanelItem.contentClass"
+        />
+        <div v-else>
+          <template v-for="(group, groupIndex) in mobilePage.groups" :key="groupIndex">
+            <USeparator v-if="groupIndex" />
+            <div class="py-1">
+              <template v-for="(item, index) in group" :key="index">
+                <component v-if="item.accountPanelItem?.component" :is="item.accountPanelItem.component" v-bind="item.accountPanelItem.props" />
+                <USeparator v-else-if="item.type === 'separator'" />
+                <p v-else-if="item.type === 'label'" class="px-3 py-2 text-sm font-medium text-muted">{{ item.label }}</p>
+                <UButton
+                  v-else
+                  :disabled="item.disabled"
+                  :to="item.to"
+                  :href="item.href"
+                  :target="item.target"
+                  :color="item.color || (item.accountPanelItem?.id === 'logout' ? 'error' : 'neutral')"
+                  :variant="item.checked ? 'soft' : 'ghost'"
+                  :loading-auto="true"
+                  class="w-full justify-start gap-3 px-2 py-2 text-left pointer-coarse:min-h-[44px]"
+                  :class="item.checked ? 'text-primary' : undefined"
+                  :aria-pressed="item.type === 'checkbox' ? !!item.checked : undefined"
+                  @click="event => activateMobileItem(item, event)"
+                >
+                  <span v-if="item.swatch" class="size-5 shrink-0 rounded-full" :style="{ backgroundColor: item.swatch }" />
+                  <UIcon v-else-if="item.icon" :name="item.icon" class="size-5 shrink-0 text-muted" />
+                  <span class="min-w-0 flex-1">
+                    <span class="block">{{ item.label }}</span>
+                    <span v-if="item.description" class="block text-sm font-normal text-muted">{{ item.description }}</span>
+                  </span>
+                  <UBadge v-if="item.badge !== undefined" :label="String(item.badge)" color="neutral" variant="soft" size="xs" />
+                  <UIcon v-if="item.children?.length || item.accountPanelItem?.contentComponent" name="lucide:chevron-right" class="size-5 shrink-0 text-muted" />
+                  <UIcon v-else-if="item.checked" name="lucide:check" class="size-5 shrink-0 text-primary" />
+                </UButton>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+    </CommonDrawer>
     <div v-if="!collapsed && enfyraVersionLabel" class="mt-3 flex items-center justify-center gap-1.5 px-1 text-[11px] font-medium leading-5 text-muted">
       <span>Powered by Enfyra</span>
       <UBadge :label="enfyraVersionLabel" color="neutral" variant="subtle" size="xs" />
