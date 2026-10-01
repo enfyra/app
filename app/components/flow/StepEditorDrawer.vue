@@ -37,18 +37,17 @@
     </template>
 
     <template #body>
-      <div class="flex h-full min-h-0 flex-col">
-        <div class="px-4 pt-4">
+      <CommonTabbedPanel class="h-full min-h-0" body-class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-4">
+        <template #header>
           <UTabs
             v-model="activeTab"
             :items="tabs"
             :content="false"
             variant="link"
-            :ui="{ indicator: '!-bottom-px' }"
           />
-        </div>
+        </template>
 
-        <div class="min-h-0 flex-1 overflow-y-auto p-4">
+        <div>
           <section v-if="activeTab === 'setup'" class="space-y-5">
             <div class="space-y-2">
               <div class="text-sm font-semibold text-[var(--text-primary)]">Step type</div>
@@ -232,7 +231,7 @@
             </div>
           </section>
         </div>
-      </div>
+      </CommonTabbedPanel>
     </template>
   </CommonDrawer>
 </template>

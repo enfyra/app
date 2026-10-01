@@ -21,7 +21,6 @@ const tableUi = computed(() => ({
   td: ['max-w-0 overflow-hidden text-ellipsis', props.compact ? 'px-3 py-2' : ''].filter(Boolean).join(' '),
 }))
 const hasPagination = computed(() => props.total > props.pageLimit && props.pageLimit > 0)
-const tableScope = shallowRef<HTMLElement | null>(null)
 const { getId } = useDatabase()
 const { buildActionsColumn } = useDataTableColumns()
 const idColumn: ColumnDef<Record<string, any>> = {
@@ -101,22 +100,20 @@ const columns = computed(() => {
 </script>
 
 <template>
-  <div ref="tableScope" class="eapp-page-constrained-wide min-w-0 space-y-4">
-    <DataTable :data="data" :columns="columns" :loading="loading" :ui="tableUi" :show-column-visibility="false" @row-click="row => emit('row-click', row)">
+  <div class="w-full min-w-0 space-y-4">
+    <DataTable
+      v-model:page="page"
+      :data="data"
+      :columns="columns"
+      :loading="loading || paginationLoading"
+      :ui="tableUi"
+      :show-column-visibility="false"
+      :pagination-config="pageSizeKey || hasPagination ? { total, itemsPerPage: pageLimit, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), to } : undefined"
+      @row-click="row => emit('row-click', row)"
+      @page-size-change="size => emit('page-size-change', size)"
+    >
       <template v-for="(_, name) in $slots" #[name]="slotData">
         <slot :name="name" v-bind="slotData" />
-      </template>
-      <template v-if="pageSizeKey || hasPagination" #footer>
-        <DataTablePagination
-          v-model:page="page"
-          :total="total"
-          :items-per-page="pageLimit"
-          :loading="paginationLoading"
-          :show-page-size="Boolean(pageSizeKey)"
-          :scope="tableScope"
-          :to="to"
-          @page-size-change="size => emit('page-size-change', size)"
-        />
       </template>
     </DataTable>
   </div>

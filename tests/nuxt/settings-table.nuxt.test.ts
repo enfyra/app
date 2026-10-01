@@ -31,13 +31,14 @@ describe('Settings table', () => {
     expect(footer.text()).toContain('1–10 / 24')
     expect(footer.find('nav[data-slot="root"]').exists()).toBe(true)
     expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('grid')
-    expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('sm:flex')
+    expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('md:flex')
     expect(wrapper.get('.eapp-settings-pagination nav[data-slot="root"]').classes()).toContain('justify-self-end')
     expect(wrapper.get('.eapp-settings-pagination nav[data-slot="root"]').classes()).toContain('border-t')
     expect(wrapper.find('[aria-label="Choose visible columns"]').exists()).toBe(false)
     expect(document.body.querySelector('.eapp-pagination-mini')).not.toBeNull()
     expect((document.body.querySelector('.eapp-pagination-mini') as HTMLElement).style.display).toBe('none')
-    expect(wrapper.find('[class*=eapp-page-constrained-wide]').exists()).toBe(true)
+    expect(wrapper.classes()).toContain('w-full')
+    expect(wrapper.find('[class*=eapp-page-constrained-wide]').exists()).toBe(false)
   })
 
   it('reserves short ID and control widths so route content gets the remaining space', async () => {

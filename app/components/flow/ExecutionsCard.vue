@@ -1,71 +1,54 @@
 <script setup lang="ts">
-import { getExecutionStatusColor, getExecutionStatusDotClass } from "~/utils/flow.constants";
+import { h } from 'vue';
+import { UBadge } from '#components';
+import type { ColumnDef } from '@tanstack/vue-table';
+import { getExecutionStatusColor } from '~/utils/flow.constants';
 
-defineProps<{
+const props = withDefaults(defineProps<{
   executions: any[];
   hasMore: boolean;
   loading: boolean;
-}>();
+  showTitle?: boolean;
+}>(), { showTitle: true });
 
 const emit = defineEmits<{
   refresh: [];
   loadMore: [];
   open: [execution: any];
 }>();
+const { getId } = useDatabase();
+const columns: ColumnDef<Record<string, any>>[] = [
+  { id: 'id', header: 'ID', enableSorting: false, accessorFn: execution => getId(execution) },
+  {
+    accessorKey: 'status', header: 'Status', enableSorting: false,
+    cell: ({ getValue }) => h(UBadge, { label: String(getValue()), color: getExecutionStatusColor(String(getValue())), variant: 'soft' }),
+  },
+  { accessorKey: 'startedAt', header: 'Started', enableSorting: false, cell: ({ getValue }) => formatTime(getValue() as string | null) },
+  { accessorKey: 'completedAt', header: 'Completed', enableSorting: false, cell: ({ getValue }) => formatTime(getValue() as string | null) },
+  { accessorKey: 'duration', header: 'Duration', enableSorting: false, cell: ({ getValue }) => getValue() == null ? '_' : `${getValue()} ms` },
+];
 
-function formatTime(d: string | null) {
-  if (!d) return "-";
-  return new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+function formatTime(value: string | null) {
+  if (!value) return '_';
+  return new Date(value).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 </script>
 
 <template>
-  <CommonFormCard>
-    <template #header>
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Recent Executions</h3>
-        <UButton
-          icon="i-lucide-refresh-cw"
-          size="sm"
-          variant="solid"
-          color="neutral"
-          :loading="loading"
-          @click="emit('refresh')"
-        >
-          Reload
-        </UButton>
-      </div>
-    </template>
-    <div v-if="executions.length > 0" class="space-y-2 p-4">
-      <div
-        v-for="exec in executions"
-        :key="exec.id"
-        class="flex items-center justify-between p-3 bg-[var(--surface-muted)] rounded-lg text-sm cursor-pointer hover:bg-[var(--surface-muted)] transition-colors"
-        @click="emit('open', exec)"
-        tabindex="0"
-        role="button"
-        :aria-label="`Open ${exec.status} execution from ${formatTime(exec.startedAt)}`"
-        @keydown.enter.prevent="emit('open', exec)"
-        @keydown.space.prevent="emit('open', exec)"
-      >
-        <div class="flex items-center gap-3">
-          <span class="w-2 h-2 rounded-full flex-shrink-0" :class="getExecutionStatusDotClass(exec.status)" />
-          <UBadge :color="getExecutionStatusColor(exec.status)" variant="soft" size="xs">{{ exec.status }}</UBadge>
-          <span class="text-[var(--text-tertiary)] text-xs">{{ formatTime(exec.startedAt) }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span v-if="exec.duration" class="text-[var(--text-quaternary)] text-xs font-mono">{{ exec.duration }}ms</span>
-          <UIcon name="i-lucide-chevron-right" class="w-4 h-4 text-[var(--text-quaternary)]" />
-        </div>
-      </div>
+  <section class="space-y-4">
+    <div class="flex items-center justify-end" :class="{ 'justify-between': props.showTitle }">
+      <h3 v-if="props.showTitle" class="text-lg font-semibold text-default">Recent Executions</h3>
+      <UButton icon="lucide:refresh-cw" size="sm" color="neutral" variant="outline" label="Reload" :loading="loading" @click="emit('refresh')" />
     </div>
-    <div v-if="hasMore && executions.length > 0" class="px-4 pb-4">
-      <UButton variant="ghost" color="neutral" block :loading="loading" @click="emit('loadMore')">
-        Load More
-      </UButton>
-    </div>
-    <p v-else-if="executions.length === 0" class="text-sm text-[var(--text-quaternary)] text-center py-8">
-      No executions yet. Click "Run Now" to trigger this flow.
-    </p>
-  </CommonFormCard>
+    <DataTable
+      :data="executions"
+      :columns="columns"
+      :loading="loading"
+      :show-column-visibility="false"
+      :get-row-id="execution => String(getId(execution))"
+      :pagination-config="{ mode: 'cursor', itemsPerPage: 10, hasMore, loading, loadedCount: executions.length, showPageSize: false }"
+      @load-more="emit('loadMore')"
+      @row-click="execution => emit('open', execution)"
+    />
+  </section>
 </template>

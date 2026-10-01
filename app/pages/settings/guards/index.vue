@@ -51,7 +51,7 @@ registerPageHeader({
 const showFilterDrawer = ref(false);
 const activeType = ref<'route' | 'graphql'>('route');
 const switchingType = ref(false);
-const suppressListTransition = ref(false);
+let typeChangeSequence = 0;
 const filtersByType = reactive<Record<'route' | 'graphql', FilterGroup>>({
   route: createEmptyFilter(),
   graphql: createEmptyFilter(),
@@ -134,10 +134,6 @@ const operationGuardCount = computed(() => guardsData.value.filter((guard: any) 
 const total = computed(() => apiData.value?.meta?.filterCount ?? 0);
 const isListLoading = computed(() => loading.value || switchingType.value || guardsRefreshing.value);
 const isPageLoading = computed(() => showInitialLoading.value || isListLoading.value);
-const listStateKey = computed(() => {
-  if (isPageLoading.value) return `${activeType.value}:loading`;
-  return `${activeType.value}:${guardsData.value.length > 0 ? 'items' : 'empty'}`;
-});
 const summaryCards = computed(() => {
   if (activeType.value === 'graphql') {
     return [
@@ -253,27 +249,14 @@ async function handleTypeChange(value: string | number) {
   const nextType = value === 'graphql' ? 'graphql' : 'route';
   if (nextType === activeType.value) return;
 
-  suppressListTransition.value = true;
+  const sequence = ++typeChangeSequence;
   switchingType.value = true;
   activeType.value = nextType;
   page.value = 1;
   try {
-    await nextTick();
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     await fetchGuards();
-    if (guardsRefreshing.value) {
-      await new Promise<void>((resolve) => {
-        const stop = watch(guardsRefreshing, (refreshing) => {
-          if (refreshing) return;
-          stop();
-          resolve();
-        });
-      });
-    }
   } finally {
-    switchingType.value = false;
-    await nextTick();
-    suppressListTransition.value = false;
+    if (sequence === typeChangeSequence) switchingType.value = false;
   }
 }
 
@@ -533,7 +516,8 @@ async function deleteGuard(guard: any) {
 
 <template>
   <div class="space-y-6">
-    <div class="overflow-x-auto overflow-y-hidden">
+    <CommonTabbedPanel>
+      <template #header>
       <UTabs
         :model-value="activeType"
         :items="guardTabItems"
@@ -541,13 +525,13 @@ async function deleteGuard(guard: any) {
         variant="link"
         @update:model-value="handleTypeChange"
       />
-    </div>
+      </template>
 
     <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
       <div
         v-for="card in summaryCards"
         :key="card.label"
-        class="surface-card rounded-lg p-4"
+        class="eapp-bordered-region p-4"
       >
         <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-quaternary)]">
           {{ card.label }}
@@ -569,29 +553,24 @@ async function deleteGuard(guard: any) {
       @clear="clearFilters"
     />
 
-    <div class="guard-list-stage grid min-h-[22rem] grid-cols-[minmax(0,1fr)]">
-      <Transition name="loading-fade" mode="out-in" :css="!suppressListTransition">
-        <div
-          :key="listStateKey"
-          class="col-start-1 row-start-1 min-w-0"
-        >
-          <DataTableSettingsTable
-            v-model:page="page"
-            :data="isPageLoading ? [] : guardsData"
-            :columns="columns"
-            :actions="getRowActions"
-            :loading="isPageLoading"
-            :total="total"
-            :page-limit="pageLimit"
-            page-size-key="guards"
-            :pagination-loading="loading"
-            :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-            @page-size-change="setPageSize"
-            @row-click="guard => navigateTo(`/settings/guards/${getId(guard)}`)"
-          />
-        </div>
-      </Transition>
+    <div class="guard-list-stage min-h-[22rem] min-w-0">
+      <DataTableSettingsTable
+        v-model:page="page"
+        :data="switchingType || showInitialLoading ? [] : guardsData"
+        :columns="columns"
+        :actions="getRowActions"
+        :loading="isPageLoading"
+        :total="total"
+        :page-limit="pageLimit"
+        page-size-key="guards"
+        :pagination-loading="loading"
+        :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+        @page-size-change="setPageSize"
+        @row-click="guard => navigateTo(`/settings/guards/${getId(guard)}`)"
+      />
     </div>
+
+    </CommonTabbedPanel>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"

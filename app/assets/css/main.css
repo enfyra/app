@@ -133,11 +133,13 @@ button:focus-visible,
   .eapp-page-constrained {
     width: 100%;
     max-width: 1000px;
+    margin-inline: auto;
   }
 
   .eapp-page-constrained-wide {
     width: 100%;
     max-width: 1200px;
+    margin-inline: auto;
   }
 }
 
@@ -232,14 +234,7 @@ button:focus-visible,
 }
 
 .eapp-modal-surface {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
   border-radius: var(--radius-card);
-}
-
-.dark .eapp-modal-surface {
-  border-color: var(--card-border);
 }
 
 .eapp-resource-list {
@@ -505,8 +500,39 @@ button:focus-visible,
   box-shadow: var(--card-shadow-hover);
 }
 
+.eapp-shell-main :is(.surface-card, .surface-card-hover, .eapp-surface-card, .eapp-resource-list, .eapp-resource-list-contained),
+.dark .eapp-shell-main :is(.surface-card, .surface-card-hover, .eapp-surface-card, .eapp-resource-list, .eapp-resource-list-contained),
+.eapp-modal-body :is(.surface-card, .surface-card-hover, .eapp-surface-card, .eapp-resource-list, .eapp-resource-list-contained) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-inline: 0;
+}
+
+.eapp-shell-main .eapp-form-region {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--radius-card);
+  background: transparent;
+  box-shadow: none;
+  padding: 1.25rem;
+}
+
+.eapp-shell-main .eapp-form-region .eapp-form-region,
+.eapp-tabbed-panel .eapp-form-region {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+
 .eapp-radius-card {
   border-radius: var(--radius-card);
+}
+
+.eapp-bordered-region {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--radius-card);
+  box-shadow: none;
 }
 
 .eapp-radius-panel {
@@ -608,7 +634,7 @@ button:focus-visible,
   border-bottom-left-radius: var(--radius-panel);
 }
 
-:where(.eapp-pagination-controls) :where([data-slot="item"], [data-slot="first"], [data-slot="prev"], [data-slot="next"], [data-slot="last"]) {
+:where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where([data-slot="item"], [data-slot="first"], [data-slot="prev"], [data-slot="next"], [data-slot="last"]) {
   aspect-ratio: 1;
   width: 2rem;
   min-width: 2rem;
@@ -623,7 +649,7 @@ button:focus-visible,
   }
 }
 
-:where(.eapp-pagination-controls) :where(a, button) {
+:where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where(a, button) {
   border-color: var(--pagination-border) !important;
   background: var(--pagination-bg) !important;
   color: var(--pagination-text) !important;
@@ -638,21 +664,21 @@ button:focus-visible,
 /* Hover feedback is pointer-only: on touch, the sticky emulated `:hover` left the
    last-tapped page button looking selected. */
 @media (hover: hover) and (pointer: fine) {
-  :where(.eapp-pagination-controls) :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
+  :where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
     border-color: var(--pagination-border-hover) !important;
     background: var(--pagination-bg-hover) !important;
     color: var(--pagination-text-hover) !important;
   }
 }
 
-:where(.eapp-pagination-controls) :where([aria-current="page"]) {
+:where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where([aria-current="page"]) {
   border-color: var(--pagination-active-border) !important;
   background: var(--pagination-active-bg) !important;
   color: var(--pagination-active-text) !important;
   box-shadow: var(--pagination-active-shadow) !important;
 }
 
-:where(.eapp-pagination-controls) :where(button:disabled:not([aria-current="page"]), a[aria-disabled="true"]:not([aria-current="page"]), [data-disabled="true"]:not([aria-current="page"])) {
+:where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where(button:disabled:not([aria-current="page"]), a[aria-disabled="true"]:not([aria-current="page"]), [data-disabled="true"]:not([aria-current="page"])) {
   border-color: var(--pagination-disabled-border) !important;
   background: var(--pagination-disabled-bg) !important;
   color: var(--pagination-disabled-text) !important;

@@ -4,7 +4,10 @@
       <UInput v-model="search" placeholder="Search routes..." icon="i-lucide-search" size="sm" class="flex-1" />
     </div>
 
-    <UTabs v-model="activeScope" :items="routeTabItems" :content="false" variant="link" />
+    <CommonTabbedPanel>
+      <template #header>
+        <UTabs v-model="activeScope" :items="routeTabItems" :content="false" variant="link" />
+      </template>
     <DataTableSettingsTable
       v-model:page="page"
       :data="visibleRoutes"
@@ -18,6 +21,8 @@
       @page-size-change="setPageSize"
       @row-click="openTest"
     />
+
+    </CommonTabbedPanel>
 
     <RouteApiTestModal
       v-model="showTestModal"

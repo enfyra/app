@@ -12,7 +12,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
 <template>
   <div class="surface-card rounded-lg p-4">
     <div class="mb-3 font-medium text-[var(--text-primary)]">Request/API Metrics</div>
-    <div class="overflow-x-auto rounded-lg border border-[var(--border-default)]">
+    <div class="eapp-bordered-region overflow-x-auto">
       <table class="w-full min-w-[760px] text-sm">
         <thead class="border-b border-[var(--border-default)] text-left text-xs text-[var(--text-tertiary)]">
           <tr>

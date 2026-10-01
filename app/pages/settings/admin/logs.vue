@@ -149,7 +149,7 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
 <template>
   <div class="w-full min-w-0 eapp-page-constrained space-y-6 overflow-hidden pb-10">
     <div v-if="canRead(path)" class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      <div v-for="(metric, index) in summaryMetrics" :key="metric.label" class="surface-card rounded-lg p-4">
+      <div v-for="(metric, index) in summaryMetrics" :key="metric.label" class="eapp-bordered-region p-4">
         <div class="text-xs font-medium text-[var(--text-tertiary)]">{{ metric.label }}</div>
         <div v-if="listLoading" class="mt-2 h-7 w-20 animate-pulse rounded eapp-surface-muted" />
         <div v-else class="mt-2 text-2xl font-semibold" :class="index === 1 && kind === 'system' && visibleVolume > 0 ? 'text-[var(--danger-color)]' : 'text-[var(--text-primary)]'">
@@ -160,7 +160,10 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
       </div>
     </div>
 
-    <UTabs v-model="kind" :items="tabs" :content="false" variant="link" />
+    <CommonTabbedPanel>
+      <template #header>
+        <UTabs v-model="kind" :items="tabs" :content="false" variant="link" />
+      </template>
 
     <section v-if="canRead(path)" class="surface-card rounded-lg p-4">
       <div class="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -217,6 +220,8 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
     </section>
 
     <CommonEmptyState v-if="!canRead(path)" title="Access denied" description="A route read permission is required to view these logs." icon="lucide:lock" />
+    </CommonTabbedPanel>
+
     <CommonDrawer v-model="detailOpen" :cancel-action="{ label: 'Close' }">
       <template #header>
         <div class="flex items-center gap-2 text-base font-semibold">

@@ -21,6 +21,8 @@ const props = defineProps<{
 }>()
 
 const notify = useNotify()
+const { register: registerHeaderActions } = useHeaderActionRegistry()
+const { checkPermissionCondition } = usePermissions()
 const { confirm } = useConfirm()
 const { getId, getIdFieldName } = useDatabase()
 const idField = getIdFieldName()
@@ -227,6 +229,16 @@ async function saveGraphqlConfig() {
   }
 }
 
+registerHeaderActions({
+  id: 'save-graphql-access',
+  label: computed(() => config.value ? 'Save' : 'Enable GraphQL'),
+  icon: 'lucide:save', variant: 'solid', color: 'primary', order: 999,
+  show: computed(() => checkPermissionCondition({ or: [{ route: '/enfyra_graphql', methods: [config.value ? 'PATCH' : 'POST'] }] })),
+  loading: savingConfig,
+  disabled: computed(() => loading.value || savingConfig.value || (!enabled.value && !config.value)),
+  onClick: saveGraphqlConfig,
+})
+
 async function savePermissionForm() {
   const hasRole = permissionForm.value.role != null
   const hasUsers = permissionForm.value.allowedUsers.length > 0
@@ -349,7 +361,7 @@ watch(() => props.tableId, async () => {
               <label
                 v-for="operation in operations"
                 :key="operation.id"
-                class="surface-card flex cursor-pointer items-start gap-3 rounded-xl p-4"
+                class="eapp-bordered-region flex cursor-pointer items-start gap-3 p-4"
               >
                 <UCheckbox
                   :model-value="publicOperationIds.some((id) => String(id) === String(getId(operation)))"
@@ -363,22 +375,6 @@ watch(() => props.tableId, async () => {
             </div>
           </div>
 
-          <div class="flex justify-end">
-            <PermissionGate
-              :condition="config
-                ? { or: [{ route: '/enfyra_graphql', methods: ['PATCH'] }] }
-                : { or: [{ route: '/enfyra_graphql', methods: ['POST'] }] }"
-            >
-              <UButton
-                icon="lucide:save"
-                :loading="savingConfig"
-                :disabled="!enabled && !config"
-                @click="saveGraphqlConfig"
-              >
-                {{ config ? 'Save GraphQL Access' : 'Enable GraphQL' }}
-              </UButton>
-            </PermissionGate>
-          </div>
         </div>
       </CommonFormCard>
 
@@ -396,7 +392,7 @@ watch(() => props.tableId, async () => {
             </div>
 
             <div v-if="permissions.length" class="space-y-2">
-              <div v-for="permission in permissions" :key="getId(permission)" class="surface-card rounded-xl p-4">
+              <div v-for="permission in permissions" :key="getId(permission)" class="eapp-bordered-region p-4">
                 <div class="flex items-start justify-between gap-4">
                   <button class="min-w-0 flex-1 text-left" type="button" @click="openEditPermission(permission)">
                     <div class="flex flex-wrap items-center gap-2">
@@ -488,7 +484,7 @@ watch(() => props.tableId, async () => {
                   <div class="text-sm font-semibold text-[var(--text-primary)]">Private operations</div>
                   <div class="text-xs text-[var(--text-tertiary)]">Public operations are excluded and cannot be granted here.</div>
                 </div>
-                <label v-for="operation in privateOperations" :key="operation.id" class="surface-card flex cursor-pointer items-start gap-3 rounded-xl p-3">
+                <label v-for="operation in privateOperations" :key="operation.id" class="eapp-bordered-region flex cursor-pointer items-start gap-3 p-3">
                   <UCheckbox
                     :model-value="isSelected(permissionForm.operations, operation)"
                     @update:model-value="(checked) => permissionForm.operations = toggleRelation(permissionForm.operations, operation, checked === true)"

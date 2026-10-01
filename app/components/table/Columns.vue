@@ -742,7 +742,7 @@ watch(
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'" v-if="currentColumn">
           
           <div
-            :class="(isMobile || isTablet) ? 'surface-card rounded-lg p-3' : 'surface-card rounded-xl p-6'"
+            class="space-y-5"
           >
             <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
               <UIcon name="lucide:edit-3" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />

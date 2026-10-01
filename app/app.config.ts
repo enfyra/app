@@ -28,13 +28,6 @@ export default defineAppConfig({
         },
       },
     },
-    pagination: {
-      slots: {
-        root: 'eapp-pagination-controls w-full border-t border-default pt-3 md:border-t-0 md:pt-0',
-        item: 'min-w-8',
-        list: 'w-full flex-wrap justify-end'
-      }
-    },
     skeleton: {
       base: "skeleton-gradient skeleton-pulse-slow",
     },
@@ -526,8 +519,10 @@ export default defineAppConfig({
       },
     },
     modal: {
+      variants: { fullscreen: { false: { content: 'rounded-[var(--radius-card)]' } } },
       slots: {
         overlay: 'bg-black/20 backdrop-blur-[2px]',
+        body: 'eapp-modal-body',
       },
     },
     switch: {
@@ -715,7 +710,7 @@ export default defineAppConfig({
     tabs: {
       slots: {
         root: "min-w-0",
-        list: "relative flex min-w-max gap-0 overflow-visible border-b-0 bg-transparent p-0",
+        list: "relative flex min-w-max gap-0 overflow-visible bg-transparent p-0",
         indicator: "absolute !-bottom-px !h-0.5 !w-[calc(var(--reka-tabs-indicator-size)-1rem)] !translate-x-[calc(var(--reka-tabs-indicator-position)+0.5rem)] rounded-full !bg-[var(--md-primary)]",
         trigger: "relative flex h-12 cursor-pointer items-center gap-2 rounded-none px-4 text-sm font-medium text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)] data-[state=active]:!text-[var(--md-primary)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--theme-focus-ring-strong)]",
         leadingIcon: "h-5 w-5 shrink-0",
@@ -728,8 +723,9 @@ export default defineAppConfig({
           orientation: "horizontal",
           variant: "link",
           class: {
-            list: "border-b-0 mb-0",
-            indicator: "!bottom-0",
+            list: "border-b border-default mb-0 gap-6",
+            trigger: "!px-0",
+            indicator: "!-bottom-px !h-px !w-[var(--reka-tabs-indicator-size)] !translate-x-[var(--reka-tabs-indicator-position)]",
           },
         },
         {

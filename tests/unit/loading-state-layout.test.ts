@@ -15,18 +15,19 @@ function readRepoFile(path: string) {
 }
 
 describe('loading state layout', () => {
-  it('does not render table rows alongside the initial loading skeleton', () => {
+  it('delegates table loading to Nuxt UI and suppresses empty feedback while pending', () => {
     const dataTable = readAppFile('components/data-table/DataTable.vue')
 
-    expect(dataTable).toContain(':data="showInitialLoading ? [] : props.data"')
-    expect(dataTable).toContain('v-if="!slots.loading" #loading')
+    expect(dataTable).toContain(':data="props.data"')
+    expect(dataTable).toContain(':loading="props.loading"')
+    expect(dataTable).toContain('v-if="!props.loading" variant="naked"')
+    expect(dataTable).not.toContain('USkeleton')
   })
 
   it('uses out-in transitions for loading/content swaps where content must not overlap', () => {
     const loadingTransitions = [
       'pages/data/[table]/index.vue',
       'components/guard/RouteGuardSection.vue',
-      'pages/settings/guards/index.vue',
       'components/permission/PermissionManager.vue',
       'components/file/FileView.vue',
       'components/folder/FolderView.vue',
@@ -40,7 +41,7 @@ describe('loading state layout', () => {
     expect(readAppFile('components/dynamic/PageComponent.vue')).toContain('<Transition name="fade" mode="out-in">')
     for (const path of ['pages/settings/routes/index.vue', 'pages/settings/api-tester/index.vue', 'pages/settings/methods/index.vue']) {
       expect(readAppFile(path)).toContain('<DataTableSettingsTable')
-      expect(readAppFile(path)).toMatch(/:loading="(?:showInitialLoading|showInitialLoading \|\| routeLoading)"/)
+      expect(readAppFile(path)).toMatch(/:loading="showInitialLoading(?: \|\| (?:routeLoading|loading))?"/)
     }
   })
 

@@ -25,7 +25,7 @@ export function useMiniBarVisibility(target: Ref<HTMLElement | null>, scope?: Re
         ([record]) => {
           if (record) isMainOffscreen.value = !record.isIntersecting;
         },
-        { rootMargin: `0px 0px ${HANDOFF_GAP_PX}px 0px`, threshold: 0 },
+        { root: el.closest('.eapp-shell-main > [data-slot="body"]'), rootMargin: `0px 0px ${HANDOFF_GAP_PX}px 0px`, threshold: 0 },
       );
       observer.observe(el);
 
@@ -39,7 +39,7 @@ export function useMiniBarVisibility(target: Ref<HTMLElement | null>, scope?: Re
       if (!el) return;
       const observer = new IntersectionObserver(([record]) => {
         if (record) isScopeVisible.value = record.isIntersecting;
-      });
+      }, { root: el.closest('.eapp-shell-main > [data-slot="body"]') });
       observer.observe(el);
       onCleanup(() => {
         observer.disconnect();

@@ -21,12 +21,16 @@ const props = withDefaults(defineProps<{
   showEmptyState?: boolean
   canUpdateRoute?: boolean
   syncQuery?: boolean
+  showTabDivider?: boolean
+  embedded?: boolean
 }>(), {
   externalApiTest: false,
   showMainTableCard: false,
   showEmptyState: true,
   canUpdateRoute: true,
   syncQuery: false,
+  showTabDivider: true,
+  embedded: false,
 })
 
 const emit = defineEmits<{
@@ -46,6 +50,13 @@ const editorTabs = [
   { label: 'Execution', value: 'execution', icon: 'lucide:workflow' },
   { label: 'Access', value: 'access', icon: 'lucide:shield-check' },
 ]
+const editorTabUi = computed(() => props.embedded ? {
+  root: 'w-full items-start',
+  list: 'w-fit min-w-0 gap-1 rounded-[var(--radius-control)] border-0 bg-muted p-1',
+  trigger: 'h-9 grow-0 rounded-[var(--radius-subcontrol)] px-3 text-xs data-[state=active]:bg-default data-[state=active]:shadow-xs',
+  leadingIcon: 'size-4',
+  indicator: 'hidden',
+} : props.showTabDivider ? undefined : { list: 'border-b-0', indicator: '!bottom-0' })
 const { routes, loadRoutes } = useRoutes()
 const { registerDataMenuItemsFromRoutes } = useMenuRegistry()
 const ROUTE_EDITOR_FIELDS = [
@@ -485,7 +496,7 @@ registerHeaderActions([
     variant: 'outline',
     color: 'warning',
     order: 1,
-    show: computed(() => props.syncQuery !== true && hasFormChanges.value),
+    show: computed(() => activeEditorTab.value === 'overview' && hasFormChanges.value),
     disabled: computed(() => routeLoading.value || updateLoading.value || !hasFormChanges.value),
     onClick: handleReset,
   },
@@ -496,7 +507,7 @@ registerHeaderActions([
     variant: 'solid',
     color: 'primary',
     order: 999,
-    show: computed(() => props.syncQuery !== true && !!routeData.value?.data?.[0] && props.canUpdateRoute !== false),
+    show: computed(() => activeEditorTab.value === 'overview' && !!routeData.value?.data?.[0] && props.canUpdateRoute !== false),
     loading: computed(() => updateLoading.value),
     disabled: computed(() => routeLoading.value || !routeId.value || !hasFormChanges.value),
     onClick: updateRoute,
@@ -823,19 +834,29 @@ watch(showEditHookDrawer, (isOpen) => {
 
 <template>
   <div class="space-y-6">
-    <div v-if="routeData?.data?.[0] || routeLoading" class="overflow-x-auto overflow-y-hidden">
-      <UTabs v-model="activeEditorTab" :items="editorTabs" :content="false" variant="link" />
-    </div>
+    <CommonTabbedPanel :framed="!props.embedded">
+      <template #header>
+      <div v-if="routeData?.data?.[0] || routeLoading">
+      <UTabs
+        v-model="activeEditorTab"
+        :items="editorTabs"
+        :content="false"
+        :variant="props.embedded ? 'pill' : 'link'"
+        :size="props.embedded ? 'sm' : 'md'"
+        :ui="editorTabUi"
+      />
+      </div>
+      </template>
 
     <template v-if="activeEditorTab === 'overview'">
-    <CommonFormCard v-if="showMainTableCard && mainTableInfo">
+    <CommonFormCard v-if="showMainTableCard && mainTableInfo" :bordered="false">
       <template #header>
         <div class="flex items-center gap-2">
           <UIcon name="lucide:database" class="w-5 h-5 text-primary-600 dark:text-primary-400" />
           <h3 class="text-lg font-semibold text-[var(--text-primary)]">Main Table</h3>
         </div>
       </template>
-      <div class="p-4 rounded-lg border border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/20">
+      <div class="eapp-bordered-region p-4">
         <div class="flex flex-col md:flex-row md:items-center gap-3">
           <div class="flex items-center gap-3 min-w-0 flex-1">
             <div class="w-12 h-12 shrink-0 rounded-lg bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
@@ -873,32 +894,11 @@ watch(showEditHookDrawer, (isOpen) => {
           :loading="routeLoading"
         />
 
-        <div class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6">
-          <UButton
-            v-if="hasFormChanges"
-            label="Reset"
-            icon="lucide:rotate-ccw"
-            variant="outline"
-            color="warning"
-            :disabled="!hasFormChanges"
-            @click="handleReset"
-          />
-          <UButton
-            v-if="canUpdateRoute !== false"
-            label="Save"
-            icon="lucide:save"
-            variant="solid"
-            color="primary"
-            type="submit"
-            :loading="updateLoading"
-            :disabled="!hasFormChanges"
-          />
-        </div>
       </UForm>
     </CommonFormCard>
     </template>
 
-    <CommonFormCard v-if="activeEditorTab === 'methods' && methodConfigs.length" title="Methods" description="Toggle a method to enable it, or select its row for more settings.">
+    <CommonFormCard v-if="activeEditorTab === 'methods' && methodConfigs.length" :bordered="false" title="Methods" description="Toggle a method to enable it, or select its row for more settings.">
       <DataTable
         :data="methodConfigs"
         :columns="methodConfigColumns"
@@ -1047,6 +1047,8 @@ watch(showEditHookDrawer, (isOpen) => {
       icon="lucide:route"
       size="sm"
     />
+
+    </CommonTabbedPanel>
 
     <RouteCreateHandlerDrawer
       v-model="showCreateHandlerDrawer"

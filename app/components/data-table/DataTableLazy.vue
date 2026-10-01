@@ -6,7 +6,6 @@ defineOptions({
 });
 
 const props = withDefaults(defineProps<DataTableProps>(), {
-  skeletonRows: 5,
   showColumnVisibility: true,
 });
 

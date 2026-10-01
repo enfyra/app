@@ -45,11 +45,12 @@ describe('pagination layout', () => {
       'components/common/ResourceListFrame.vue',
       'pages/storage/management/index.vue',
       'pages/storage/management/folder/[id].vue',
-      'pages/collections/index.vue',
     ]
     const frameSites = [
       'pages/packages/app.vue',
       'pages/packages/backend.vue',
+      'pages/storage/config/index.vue',
+      'pages/collections/index.vue',
     ]
 
     // The frame used to paint its pagination as a nested card while every direct
@@ -73,18 +74,21 @@ describe('pagination layout', () => {
     const settingsTable = readAppFile('components/data-table/SettingsTable.vue')
     const tablePagination = readAppFile('components/data-table/Pagination.vue')
     const dataPage = readAppFile('pages/data/[table]/index.vue')
-    expect(tablePagination).toContain('useMiniBarVisibility(paginationFooter, tableScope)')
-    expect(tablePagination).toContain('eapp-pagination-mini fixed inset-x-3 bottom-3')
+    expect(tablePagination).toContain('useMiniBarVisibility(floatingTarget, tableScope)')
+    expect(tablePagination).toContain('floating: true')
+    expect(tablePagination).toContain('v-if="floating && !isCursor"')
     expect(tablePagination).toContain('ref="paginationFooter"')
-    expect(settingsTable).toContain('ref="tableScope"')
-    expect(settingsTable).toContain('<DataTablePagination')
-    expect(dataPage.match(/<template #footer>[\s\S]*?<\/template>/)?.[0]).toContain('<DataTablePagination')
+    expect(settingsTable).toContain(':pagination-config=')
+    expect(settingsTable).not.toContain('<DataTablePagination')
+    expect(dataPage).toContain(':pagination-config=')
+    expect(dataPage).not.toContain('<DataTablePagination')
     expect(dataPage).not.toContain('<CommonPaginationBar')
 
     // Pages that hand the pagination to the frame must not pass the same knobs.
     for (const site of frameSites) {
       const source = readAppFile(site)
-      expect(source).toContain('<CommonResourceListFrame')
+      expect(source).toContain('<DataTableSettingsTable')
+      expect(source).not.toContain('<CommonResourceListFrame')
       for (const prop of ['pagination-align', 'pagination-color', 'pagination-active-color', 'pagination-show-range', 'pagination-ui']) {
         expect(source, `${site} should not pass ${prop}`).not.toContain(prop)
       }
@@ -106,6 +110,10 @@ describe('pagination layout', () => {
     expect(pagination).toContain('const showMini = computed(() => hasPagination.value && isMiniVisible.value)')
     expect(pagination).toContain('<Teleport to="body">')
     expect(pagination).toContain('eapp-pagination-mini fixed inset-x-3 bottom-3')
+    const miniBar = pagination.match(/class="eapp-pagination eapp-pagination-mini[^"]*"/)?.[0]
+    expect(miniBar).not.toContain('flex-wrap')
+    expect(pagination).toContain("list: 'flex-nowrap gap-0.5 md:gap-1'")
+    expect(pagination).toContain('class="min-w-0 flex-1 overflow-x-auto"')
 
     // The handoff must be driven by an observer on the main bar, with a reserve
     // band so the mini bar retires before the main bar reaches the fold.
@@ -195,7 +203,7 @@ describe('pagination layout', () => {
 
   it('gates pagination hover feedback to fine pointers', () => {
     const css = readAppFile('assets/css/main.css')
-    const selector = ':where(.eapp-pagination-controls) :where(a, button):hover'
+    const selector = ':where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where(a, button):hover'
 
     // Touch leaves an emulated `:hover` on the last-tapped button, which read as
     // a second selected page. Hover feedback is pointer-only.

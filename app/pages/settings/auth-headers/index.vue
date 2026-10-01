@@ -20,7 +20,7 @@
         :data="headers"
         :columns="columns"
         :actions="getRowActions"
-        :loading="showInitialLoading"
+        :loading="showInitialLoading || loading"
         @row-click="header => canUpdate && openEdit(header as AuthHeaderRecord)"
       />
     </div>

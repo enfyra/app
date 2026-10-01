@@ -6,7 +6,7 @@
     v-model:open="isMenuOpen"
     placeholder="Type to search table..."
     size="sm"
-    :ui="{ base: '!min-h-9 !px-2.5 !py-1.5 !text-xs' }"
+    :ui="{ base: '!min-h-9 !py-1.5 !text-xs' }"
     class="w-full"
     by="value"
     :loading="isLoading"

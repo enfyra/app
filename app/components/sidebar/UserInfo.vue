@@ -1,196 +1,101 @@
 <script setup lang="ts">
-import { defineComponent, h, resolveComponent } from "vue";
-import type { ComputedRef, Ref } from "vue";
+import { unref, type ComputedRef, type Ref } from 'vue';
+import type { DropdownMenuItem } from '@nuxt/ui';
+import type { AccountPanelItem } from '~/types/ui';
 
-import ThemeAccountPanelItem from "~/components/sidebar/ThemeAccountPanelItem.vue";
-import type { AccountPanelItem } from "~/types/ui";
+interface AccountMenuItem extends DropdownMenuItem {
+  slot?: `account-${string}`;
+  swatch?: string;
+  children?: AccountMenuItem[];
+}
 
-const props = defineProps<{
-  collapsed?: boolean;
-}>();
-
+const props = defineProps<{ collapsed?: boolean }>();
 const { me, logout } = useAuth();
 const { confirm } = useConfirm();
 const router = useRouter();
 const { enfyraVersion } = useSchema();
-
-const ACCOUNT_PANEL_OPEN_STORAGE_KEY = "enfyra.account-panel.open";
-
-const isOpen = ref(false);
-const userEmail = computed(() => me.value?.email || '');
-
-const userInitial = computed(() => {
-  const email = userEmail.value;
-  if (!email) return '?';
-  return email.charAt(0).toUpperCase();
-});
+const { checkPermissionCondition } = usePermissions();
+const { $primaryColor } = useNuxtApp();
+const colorMode = useColorMode();
+const { accountPanelItems, register } = useAccountPanelRegistry();
+const userLabel = computed(() => me.value?.email || 'Account');
+const userInitial = computed(() => userLabel.value.charAt(0).toUpperCase());
 const enfyraVersionLabel = computed(() => {
   const version = enfyraVersion.value?.trim();
-  if (!version) return null;
-  return version.startsWith("v") ? version : `v${version}`;
+  return version ? version.startsWith('v') ? version : `v${version}` : null;
 });
-
-const panelGridClass = computed(() => (isOpen.value ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'));
-const { accountPanelItems, register } = useAccountPanelRegistry();
-
-const accountPanelButtonClass = "eapp-account-panel-row eapp-button-neutral-ghost flex w-full cursor-pointer items-center gap-2 px-2.5 py-2 text-left text-sm font-bold transition-colors";
-
-const ProfileAccountPanelItem = defineComponent({
-  name: "ProfileAccountPanelItem",
-  setup() {
-    const UButton = resolveComponent("UButton");
-    const activate = () => router.push("/me");
-
-    return () => h(
-      UButton,
-      {
-        block: true,
-        color: "neutral",
-        variant: "ghost",
-        icon: "lucide:user",
-        label: "Profile",
-        class: "eapp-account-panel-row justify-start font-bold",
-        onClick: activate,
-      },
-    );
-  },
-});
-
-const LogoutAccountPanelItem = defineComponent({
-  name: "LogoutAccountPanelItem",
-  setup() {
-    const UButton = resolveComponent("UButton");
-
-    return () => h(
-      UButton,
-      {
-        block: true,
-        color: "error",
-        variant: "solid",
-        icon: "lucide:log-out",
-        label: "Logout",
-        class: "eapp-account-panel-row justify-start font-bold",
-        onClick: handleLogout,
-      },
-    );
-  },
-});
-
+const appearanceItems = computed<AccountMenuItem[]>(() => [
+  { label: 'Light', icon: 'lucide:sun', value: 'light' },
+  { label: 'Dark', icon: 'lucide:moon', value: 'dark' },
+  { label: 'System', icon: 'lucide:monitor', value: 'system' },
+].map(item => ({
+  label: item.label,
+  icon: item.icon,
+  type: 'checkbox',
+  checked: colorMode.preference === item.value,
+  onSelect: event => event.preventDefault(),
+  onUpdateChecked: () => { colorMode.preference = item.value; },
+})));
+const accentItems = computed<AccountMenuItem[]>(() => $primaryColor.colors.map(color => ({
+  label: color.label,
+  type: 'checkbox',
+  checked: $primaryColor.current.value === color.value,
+  icon: 'lucide:circle',
+  ui: { itemLeadingIcon: 'fill-current' },
+  swatch: color.swatch,
+  onSelect: event => event.preventDefault(),
+  onUpdateChecked: () => $primaryColor.set(color.value),
+})));
 register([
-  { id: "profile", order: 10, component: ProfileAccountPanelItem },
-  { id: "theme", order: 20, component: ThemeAccountPanelItem },
-  { id: "logout", order: 100, component: LogoutAccountPanelItem },
+  { id: 'profile', order: 10, label: 'Profile', icon: 'lucide:user', onClick: () => router.push('/me') },
+  { id: 'theme', order: 20, label: 'Appearance', icon: 'lucide:sun-moon', children: appearanceItems },
+  { id: 'accent', order: 21, label: 'Accent', icon: 'lucide:palette', children: accentItems },
+  { id: 'logout', order: 100, label: 'Log out', icon: 'lucide:log-out', onClick: handleLogout },
 ]);
-
-const visibleAccountPanelItems = computed(() => accountPanelItems.value.filter((item) => {
-  const showValue = item.show === undefined
-    ? true
-    : isRef(item.show)
-      ? unref(item.show)
-      : item.show;
-  return Boolean(showValue);
-}));
-
-const accountPanelTriggerBadge = computed(() => {
-  let numericTotal = 0;
-  let hasNumericBadge = false;
-  let fallbackBadge: string | number | null = null;
-
-  for (const item of visibleAccountPanelItems.value) {
-    const badge = getAccountPanelBadge(item);
-    if (badge === undefined || badge === null || badge === "") continue;
-
-    const numericBadge = typeof badge === "number"
-      ? badge
-      : typeof badge === "string" && badge.trim() !== "" && !Number.isNaN(Number(badge))
-        ? Number(badge)
-        : null;
-
-    if (numericBadge !== null) {
-      numericTotal += numericBadge;
-      hasNumericBadge = true;
-      continue;
-    }
-
-    fallbackBadge ??= badge;
+const visibleAccountPanelItems = computed(() => accountPanelItems.value.filter(item =>
+  (item.show === undefined || unref(item.show)) && (!item.permission || checkPermissionCondition(item.permission)),
+));
+function resolveValue<T>(value: T | Ref<T> | Readonly<Ref<T>> | ComputedRef<T> | undefined): T | undefined {
+  return unref(value);
+}
+function itemBadge(item: AccountPanelItem) {
+  return resolveValue(item.count) ?? resolveValue(item.badge);
+}
+const triggerBadge = computed(() => {
+  const badges = visibleAccountPanelItems.value.map(itemBadge).filter(value => value !== undefined && value !== null && value !== '');
+  const numbers = badges.filter(value => String(value).trim() !== '' && !Number.isNaN(Number(value)));
+  if (numbers.length) {
+    const total = numbers.reduce<number>((sum, value) => sum + Number(value), 0);
+    return total > 99 ? '99+' : total || undefined;
   }
-
-  if (hasNumericBadge) return numericTotal > 99 ? "99+" : numericTotal;
-  return fallbackBadge;
+  return badges[0];
 });
-
-const hasAccountPanelTriggerBadge = computed(() => {
-  const badge = accountPanelTriggerBadge.value;
-  return badge !== undefined && badge !== null && badge !== "";
+function toMenuItem(item: AccountPanelItem): AccountMenuItem {
+  return {
+    type: item.component ? 'label' : undefined,
+    label: resolveValue(item.label),
+    description: resolveValue(item.description),
+    icon: resolveValue(item.icon),
+    disabled: resolveValue(item.disabled),
+    children: resolveValue(item.children) as AccountMenuItem[] | undefined,
+    slot: item.component || item.contentComponent ? `account-${item.id}` : undefined,
+    accountPanelItem: item,
+    badge: itemBadge(item) ?? undefined,
+    onSelect: event => {
+      if (item.disabled && unref(item.disabled)) return;
+      if (item.contentComponent || item.onToggle) event.preventDefault();
+      return item.onClick ? item.onClick() : item.onToggle?.();
+    },
+  };
+}
+const menuItems = computed<AccountMenuItem[][]>(() => {
+  const items = visibleAccountPanelItems.value;
+  return [
+    items.filter(item => (item.order ?? 0) < 20).map(toMenuItem),
+    items.filter(item => (item.order ?? 0) >= 20 && (item.order ?? 0) < 30).map(toMenuItem),
+    items.filter(item => (item.order ?? 0) >= 30).map(toMenuItem),
+  ].filter(group => group.length);
 });
-
-watch(
-  () => props.collapsed,
-  (collapsed) => {
-    if (collapsed) isOpen.value = false;
-  },
-);
-
-onMounted(() => {
-  if (props.collapsed) return;
-  isOpen.value = localStorage.getItem(ACCOUNT_PANEL_OPEN_STORAGE_KEY) === "true";
-});
-
-function handleAccountPanelItemClick(item: AccountPanelItem) {
-  if (item.disabled && unref(item.disabled)) return;
-  if (item.onClick) {
-    item.onClick();
-    return;
-  }
-  if (item.onToggle) {
-    item.onToggle();
-    return;
-  }
-}
-
-function resolveAccountPanelValue<T>(value: T | Ref<T> | Readonly<Ref<T>> | ComputedRef<T> | undefined): T | undefined {
-  return isRef(value) ? unref(value) : value;
-}
-
-function handleAccountPanelItemKeydown(event: KeyboardEvent, item: AccountPanelItem) {
-  if (event.key !== "Enter" && event.key !== " ") return;
-  event.preventDefault();
-  handleAccountPanelItemClick(item);
-}
-
-function accountPanelBadgeClass(item: AccountPanelItem) {
-  const color = resolveAccountPanelValue(item.badgeColor) || "neutral";
-  const base = "ml-auto shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold";
-  if (color === "error") return `${base} bg-[var(--state-danger-soft-bg)] text-[var(--state-danger-soft-text)]`;
-  if (color === "warning") return `${base} bg-[var(--state-warning-soft-bg)] text-[var(--state-warning-soft-text)]`;
-  if (color === "success") return `${base} bg-[var(--state-success-soft-bg)] text-[var(--state-success-soft-text)]`;
-  if (color === "info") return `${base} bg-[var(--state-info-soft-bg)] text-[var(--state-info-soft-text)]`;
-  if (color === "primary") return `${base} bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]`;
-  return `${base} bg-[var(--surface-muted)] text-[var(--text-tertiary)]`;
-}
-
-function getAccountPanelBadge(item: AccountPanelItem) {
-  return resolveAccountPanelValue(item.count) ?? resolveAccountPanelValue(item.badge);
-}
-
-function hasAccountPanelBadge(item: AccountPanelItem) {
-  const badge = getAccountPanelBadge(item);
-  return badge !== undefined && badge !== null && badge !== "";
-}
-
-function accountPanelTriggerBadgeClass() {
-  return "absolute right-1 top-1 z-10 min-w-5 rounded-full bg-[var(--state-primary-soft-bg)] px-1.5 py-0.5 text-center text-[11px] font-bold leading-none text-[var(--state-primary-soft-text)] ring-2 ring-[var(--block-base)]";
-}
-
-function togglePanel() {
-  if (props.collapsed) {
-    router.push('/me');
-    return;
-  }
-  isOpen.value = !isOpen.value;
-  localStorage.setItem(ACCOUNT_PANEL_OPEN_STORAGE_KEY, String(isOpen.value));
-}
-
 async function handleLogout() {
   const ok = await confirm({ content: 'Are you sure you want to logout?' });
   if (ok) await logout();
@@ -199,127 +104,40 @@ async function handleLogout() {
 
 <template>
   <div class="w-full shrink-0">
-    <button
-      v-if="collapsed"
-      type="button"
-      class="eapp-account-panel-collapsed-trigger relative flex w-full cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-[var(--card-border)] bg-[var(--block-base)] p-2 shadow-[var(--shadow-sm)] transition-colors"
-      aria-label="Open profile"
-      @click="togglePanel"
-    >
-      <UAvatar :text="userInitial" size="xs" class="!bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] ring-1 ring-inset ring-[var(--state-primary-outline-border)]" />
-      <span
-        v-if="hasAccountPanelTriggerBadge"
-        :class="accountPanelTriggerBadgeClass()"
+    <UDropdownMenu :items="menuItems" :content="{ align: 'center', side: collapsed ? 'right' : 'top', sideOffset: 8 }" :ui="{ content: 'min-w-60 w-(--reka-popper-anchor-width)' }">
+      <UButton
+        color="primary"
+        variant="soft"
+        size="lg"
+        :aria-label="collapsed ? 'Open account menu' : userLabel"
+        :trailing-icon="collapsed ? undefined : 'lucide:chevrons-up-down'"
+        class="w-full"
+        :class="collapsed ? 'justify-center px-2' : 'justify-start'"
+        :ui="{ trailingIcon: 'ms-auto' }"
       >
-        {{ accountPanelTriggerBadge }}
-      </span>
-    </button>
-
-    <div
-      v-else
-      class="overflow-hidden rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--block-base)] shadow-[var(--shadow-sm)]"
-    >
-      <div
-        role="button"
-        tabindex="0"
-        class="eapp-button-neutral-ghost flex w-full cursor-pointer items-center gap-3 p-3 text-left transition-colors"
-        :class="isOpen ? 'rounded-t-[var(--radius-card)] rounded-b-none' : 'rounded-[var(--radius-card)]'"
-        :aria-expanded="isOpen"
-        @click="togglePanel"
-        @keydown.enter.prevent="togglePanel"
-        @keydown.space.prevent="togglePanel"
-      >
-        <UAvatar :text="userInitial" size="xs" class="!bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] ring-1 ring-inset ring-[var(--state-primary-outline-border)]" />
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-bold truncate text-[var(--text-secondary)] leading-tight">{{ userEmail || 'No user' }}</p>
-          <p class="text-xs truncate font-semibold text-[var(--text-tertiary)] leading-tight">Account</p>
+        <UAvatar :text="userInitial" size="xs" class="bg-primary/10 text-primary" />
+        <span v-if="!collapsed" class="min-w-0 flex-1 truncate text-left">{{ userLabel }}</span>
+        <UBadge v-if="triggerBadge !== undefined" :label="String(triggerBadge)" size="xs" variant="soft" />
+      </UButton>
+      <template #item-label="{ item }">
+        <span>{{ item.label }}</span>
+        <UBadge v-if="item.badge !== undefined" :label="String(item.badge)" color="neutral" variant="soft" size="xs" class="ms-2" />
+      </template>
+      <template #item-leading="{ item, ui }">
+        <span v-if="item.swatch" class="size-4 shrink-0 rounded-full" :style="{ backgroundColor: item.swatch }" />
+        <UIcon v-else-if="item.icon" :name="item.icon" :class="ui.itemLeadingIcon({ color: item.color })" />
+      </template>
+      <template v-for="item in visibleAccountPanelItems.filter(item => item.component || item.contentComponent)" :key="item.id" #[`account-${item.id}`]>
+        <component v-if="item.component" :is="item.component" v-bind="item.props" />
+        <div v-else class="w-full">
+          <span>{{ resolveValue(item.label) }}</span>
+          <component v-if="item.contentComponent && resolveValue(item.expanded)" :is="item.contentComponent" v-bind="item.contentProps" :class="item.contentClass" />
         </div>
-        <span
-          v-if="!isOpen && hasAccountPanelTriggerBadge"
-          class="shrink-0 rounded-full bg-[var(--state-primary-soft-bg)] px-2 py-0.5 text-xs font-bold text-[var(--state-primary-soft-text)]"
-        >
-          {{ accountPanelTriggerBadge }}
-        </span>
-        <UIcon name="lucide:chevrons-up-down" class="w-4 h-4 text-[var(--text-tertiary)] shrink-0" />
-      </div>
-
-      <div
-        class="grid overflow-hidden transition-[grid-template-rows,opacity] duration-[var(--duration-emphasized)] ease-[var(--ease-spring)]"
-        :class="panelGridClass"
-      >
-        <div class="min-h-0 overflow-hidden">
-          <div class="border-t border-[var(--card-border)]">
-          <div class="p-2 space-y-1">
-            <template v-for="item in visibleAccountPanelItems" :key="item.id">
-              <PermissionGate :condition="item.permission">
-                <component
-                  v-if="item.component"
-                  :is="item.component"
-                  v-bind="item.props"
-                />
-                <div
-                  v-else
-                  role="button"
-                  tabindex="0"
-                  :class="[
-                    accountPanelButtonClass,
-                    item.class,
-                    item.disabled && unref(item.disabled) ? 'cursor-not-allowed opacity-50' : '',
-                  ]"
-                  @click="handleAccountPanelItemClick(item)"
-                  @keydown="handleAccountPanelItemKeydown($event, item)"
-                >
-                  <UIcon
-                    v-if="item.icon"
-                    :name="resolveAccountPanelValue(item.icon)"
-                    :class="item.iconClass || 'h-5 w-5 shrink-0 text-[var(--text-tertiary)]'"
-                  />
-                  <span class="min-w-0 flex-1">
-                    <span :class="item.labelClass || 'block truncate'">
-                      {{ resolveAccountPanelValue(item.label) }}
-                    </span>
-                    <span
-                      v-if="resolveAccountPanelValue(item.description)"
-                      class="mt-0.5 block truncate text-xs font-normal text-[var(--text-tertiary)]"
-                    >
-                      {{ resolveAccountPanelValue(item.description) }}
-                    </span>
-                  </span>
-                  <span
-                    v-if="hasAccountPanelBadge(item)"
-                    :class="accountPanelBadgeClass(item)"
-                  >
-                    {{ getAccountPanelBadge(item) }}
-                  </span>
-                  <UIcon
-                    v-if="item.trailingIcon || item.contentComponent || item.onToggle"
-                    :name="item.trailingIcon ? resolveAccountPanelValue(item.trailingIcon) : resolveAccountPanelValue(item.expanded) ? 'lucide:chevron-up' : 'lucide:chevron-right'"
-                    class="h-4 w-4 shrink-0 text-[var(--text-tertiary)]"
-                  />
-                </div>
-                <component
-                  v-if="!item.component && item.contentComponent && resolveAccountPanelValue(item.expanded)"
-                  :is="item.contentComponent"
-                  v-bind="item.contentProps"
-                  :class="item.contentClass || 'mx-1 mb-1 overflow-hidden rounded-[var(--radius-subcontrol)] border border-[var(--border-default)] bg-[var(--surface-default)]'"
-                />
-              </PermissionGate>
-            </template>
-          </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <div
-      v-if="!collapsed && enfyraVersionLabel"
-      class="mt-3 flex items-center justify-center gap-1.5 px-1 text-[11px] font-medium leading-5 text-[var(--text-tertiary)]"
-    >
+      </template>
+    </UDropdownMenu>
+    <div v-if="!collapsed && enfyraVersionLabel" class="mt-3 flex items-center justify-center gap-1.5 px-1 text-[11px] font-medium leading-5 text-muted">
       <span>Powered by Enfyra</span>
-      <span class="rounded-[var(--radius-subcontrol)] border border-[var(--border-default)] bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10px] font-bold leading-4 text-[var(--text-secondary)]">
-        {{ enfyraVersionLabel }}
-      </span>
+      <UBadge :label="enfyraVersionLabel" color="neutral" variant="subtle" size="xs" />
     </div>
   </div>
 </template>

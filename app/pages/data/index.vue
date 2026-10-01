@@ -100,7 +100,7 @@ registerPageHeader({
     />
 
     <div v-if="isLoading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-      <div v-for="i in 8" :key="i" class="surface-card rounded-[var(--radius-card)] p-4">
+      <div v-for="i in 8" :key="i" class="eapp-bordered-region p-4">
         <div class="flex items-start gap-3">
           <div class="w-10 h-10 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
           <div class="flex-1 space-y-2 pt-1">

@@ -13,7 +13,6 @@ const { schemas, schemaReady, getColumnFields } = useSchema(tableName);
 const total = ref(1);
 const page = ref(1);
 const pageLimit = useSettingsPageSize(`data:${tableName.value}`);
-const tableScope = shallowRef<HTMLElement | null>(null);
 const data = ref([]);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
@@ -401,36 +400,25 @@ registerHeaderActions([
       <FilterActiveSummary :count="activeFilterCount" @clear="clearFilters" />
     </div>
 
-    <div ref="tableScope" class="min-w-0">
+    <div class="min-w-0">
       <DataTableLazy
+        v-model:page="page"
         :data="data"
         :columns="columns"
         :loading="tableLoading"
         :get-row-id="(row: Record<string, any>) => String(getId(row))"
         v-model:row-selection="rowSelection"
         v-model:column-visibility="columnVisibility"
-        :skeleton-rows="pageLimit"
+        :pagination-config="{ itemsPerPage: pageLimit, total, loading, showPageSize: true, to: (p) => ({ path: route.path, query: { ...route.query, page: p } }) }"
+        @page-size-change="setPageSize"
         @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
       >
         <template #toolbar>
           <span class="text-sm font-medium text-highlighted">{{ tableName }}</span>
           <UBadge color="neutral" variant="subtle" :label="`${total.toLocaleString()} records`" />
         </template>
-        <template #footer>
-          <DataTablePagination
-            v-model:page="page"
-            :items-per-page="pageLimit"
-            :total="total"
-            :loading="loading"
-            :show-page-size="true"
-            :scope="tableScope"
-            :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-            @page-size-change="setPageSize"
-          >
-            <template v-if="selectedRows.length" #summary>
-              <span class="ml-2">{{ selectedRows.length }} selected</span>
-            </template>
-          </DataTablePagination>
+        <template v-if="selectedRows.length" #pagination-summary>
+          <span>{{ selectedRows.length }} selected</span>
         </template>
       </DataTableLazy>
     </div>

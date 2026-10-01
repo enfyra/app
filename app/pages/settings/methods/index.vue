@@ -363,7 +363,7 @@ watch(
       :data="methods"
       :columns="columns"
       :actions="getRowActions"
-      :loading="showInitialLoading"
+      :loading="showInitialLoading || loading"
       @row-click="method => openEdit(method as MethodRecord)"
     />
 

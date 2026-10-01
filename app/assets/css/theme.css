@@ -111,6 +111,7 @@
     --theme-focus-ring: color-mix(in srgb, var(--md-primary) 34%, transparent);
     --theme-focus-ring-strong: color-mix(in srgb, var(--md-primary) 47%, transparent);
     --radius-card: 18px;
+    --radius-shell: var(--radius-card);
     --radius-panel: 14px;
     --radius-control: 12px;
     --radius-subcontrol: 8px;
@@ -247,8 +248,8 @@
     --card-accent-soft: color-mix(in srgb, var(--md-primary) 4%, transparent);
     --card-border: var(--md-outline-variant);
     --card-border-hover: var(--md-outline);
-    --card-shadow: 0 12px 32px color-mix(in srgb, var(--md-shadow) 8%, transparent);
-    --card-shadow-hover: 0 16px 40px color-mix(in srgb, var(--md-shadow) 11%, transparent);
+    --card-shadow: var(--shadow-xs);
+    --card-shadow-hover: var(--shadow-sm);
     --pagination-bg: var(--md-surface-container);
     --pagination-bg-hover: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface-container));
     --pagination-border: var(--md-outline-variant);
@@ -263,12 +264,17 @@
     --pagination-disabled-border: var(--md-outline-variant);
     --pagination-disabled-text: var(--text-disabled);
 
-    --shell-sidebar-bg: var(--md-surface);
+    --shell-inset: 1.5rem;
+    --ui-container: 80rem;
+    --shell-sidebar-width: 16rem;
+    --shell-sidebar-inset: calc(var(--shell-inset) + 0.75rem);
+    --shell-bg: var(--md-surface);
+    --shell-sidebar-bg: var(--shell-bg);
     --shell-sidebar-border: var(--md-outline-variant);
-    --shell-main-bg: var(--md-surface);
+    --shell-main-bg: var(--surface-default);
     --shell-main-border: var(--md-outline-variant);
-    --shell-mobile-content-bg: var(--md-background);
-    --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 5%, transparent), transparent 28rem), var(--md-background);
+    --shell-mobile-content-bg: var(--shell-main-bg);
+    --shell-content-bg: var(--shell-main-bg);
     --nav-item-text: var(--md-on-surface-variant);
     --nav-item-hover-bg: color-mix(in srgb, var(--md-primary) 12%, var(--md-surface));
     --nav-item-hover-text: var(--md-on-surface);
@@ -278,7 +284,7 @@
     --nav-item-active-ring: color-mix(in srgb, var(--md-primary) 26%, transparent);
     --nav-item-active-rail: var(--md-primary);
     --nav-item-active-shadow: 0 10px 22px color-mix(in srgb, var(--md-shadow) 50%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 20%, transparent);
-    --nav-child-border: var(--md-outline-variant);
+    --nav-child-border: color-mix(in srgb, var(--md-outline-variant) 60%, transparent);
     --nav-count-bg: color-mix(in srgb, var(--md-primary) 8%, var(--md-surface-container));
     --nav-count-active-bg: var(--md-primary-container);
     --nav-count-active-text: var(--md-on-primary-container);
@@ -473,10 +479,7 @@
      primary tint, so the runtime accent is visible without turning surfaces black. */
   --bg-app: color-mix(in srgb, var(--md-primary) 2%, #17171b);
   --surface-chrome: color-mix(in srgb, var(--md-primary) 1%, #1b1b20);
-  --shell-sidebar-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
-  --shell-main-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
-  --shell-mobile-content-bg: color-mix(in srgb, var(--md-primary) 0.5%, #17171b);
-  --shell-content-bg: radial-gradient(circle at top left, color-mix(in srgb, var(--md-primary) 1.5%, transparent), transparent 28rem), color-mix(in srgb, var(--md-primary) 0.5%, #17171b);
+  --shell-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
   --flow-surface-bg: color-mix(in srgb, var(--md-primary) 1%, #19191d);
   --flow-surface-border: color-mix(in srgb, var(--md-outline) 58%, transparent);
   --flow-edge: color-mix(in srgb, var(--text-secondary) 58%, transparent);

@@ -51,7 +51,7 @@
           >
             <div
               @click="editPermission(permission)"
-              class="surface-card rounded-lg p-3 cursor-pointer hover:bg-[var(--surface-muted)] transition-colors"
+              class="eapp-bordered-region p-3 cursor-pointer hover:bg-[var(--surface-muted)] transition-colors"
               tabindex="0"
               role="button"
               :aria-label="`Edit ${permission.description || 'permission'}`"
@@ -128,7 +128,7 @@
 
           <div
             v-if="!checkPermissionCondition({ or: [{ route: `/${permissionTableName}`, methods: ['PATCH'] }] })"
-            class="surface-card rounded-lg p-3 opacity-60"
+            class="eapp-bordered-region p-3 opacity-60"
           >
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-2 min-w-0">
@@ -223,7 +223,6 @@
         </template>
 
         <template #body>
-          <div class="surface-card rounded-lg p-4">
             <FormEditorLazy
               v-model="permissionForm"
               v-model:errors="permissionErrors"
@@ -232,7 +231,6 @@
               :excluded="[props.currentFieldId?.field as string]"
               :field-map="fieldMap"
             />
-          </div>
         </template>
       </CommonDrawer>
 

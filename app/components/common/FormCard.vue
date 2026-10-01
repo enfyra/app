@@ -1,5 +1,5 @@
 <template>
-  <UiModernCard variant="form" :size="size" :borderless="!bordered" :class="className">
+  <section :class="[className, bordered ? 'eapp-form-region' : undefined]">
     <div
       v-if="title || description || $slots.header"
       class="mb-6"
@@ -21,7 +21,7 @@
     </div>
 
     <slot />
-  </UiModernCard>
+  </section>
 </template>
 
 <script setup lang="ts">

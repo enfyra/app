@@ -388,6 +388,13 @@ const { isMobile, isTablet } = useScreen();
           />
         </div>
       </div>
+      <FormRelationCreateDrawer
+        v-model="showCreateDrawer"
+        :relation-meta="props.relationMeta"
+        :selected="draftSelected"
+        @created="() => refreshRecords({ reset: true })"
+        @update:selected="draftSelected = normalizeRelationIds($event)"
+      />
     </template>
 
     <template #footer>
@@ -404,14 +411,6 @@ const { isMobile, isTablet } = useScreen();
       </div>
     </template>
   </CommonDrawer>
-
-  <FormRelationCreateDrawer
-    v-model="showCreateDrawer"
-    :relation-meta="props.relationMeta"
-    :selected="draftSelected"
-    @created="() => refreshRecords({ reset: true })"
-    @update:selected="draftSelected = normalizeRelationIds($event)"
-  />
 
   <FilterDrawerLazy v-model="showFilterDrawer" :table-name="targetTableName" :current-filter="currentFilter" @apply="handleFilterApply" />
 

@@ -1,3 +1,4 @@
+import { flushPromises } from '@vue/test-utils'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -26,33 +27,34 @@ describe('collapsed sidebar navigation', () => {
 })
 
 describe('SidebarUserInfo', () => {
-  it('expands account actions inline instead of rendering a dropdown menu', async () => {
+  it('uses native Appearance and Accent submenus and preserves registered notification rows', async () => {
     const { me } = useAuth()
     me.value = { id: 'user-1', email: 'dothinh115@gmail.com' } as any
-    useState<string | null>('enfyra:version', () => null).value = null
-
-    const wrapper = await mountSuspended(SidebarUserInfo, {
-      route: '/data/cloud_email_senders',
-      props: { collapsed: false },
-    })
-
-    expect(wrapper.findComponent({ name: 'UDropdownMenu' }).exists()).toBe(false)
-    expect(wrapper.get('[role="button"][aria-expanded="false"]')).toBeTruthy()
-    expect(wrapper.html()).toContain('grid-rows-[0fr]')
-
-    await wrapper.get('[role="button"][aria-expanded="false"]').trigger('click')
-
-    expect(wrapper.get('[role="button"][aria-expanded="true"]')).toBeTruthy()
-    expect(wrapper.findAll('[role="button"][aria-expanded]').length).toBe(1)
-    expect(wrapper.html()).toContain('grid-rows-[1fr]')
-    expect(wrapper.text()).toContain('dothinh115@gmail.com')
-    expect(wrapper.text().match(/dothinh115@gmail\.com/g)?.length).toBe(1)
-    expect(wrapper.text().match(/Account/g)?.length).toBe(1)
-    expect(wrapper.text()).toContain('Account')
-    expect(wrapper.text()).toContain('Profile')
-    expect(wrapper.text()).toContain('Appearance')
-    expect(wrapper.text()).toContain('Accent')
-    expect(wrapper.text()).toContain('Logout')
+    const registry = useAccountPanelRegistry()
+    registry.clear()
+    const activate = vi.fn()
+    registry.register({ id: 'notifications', order: 40, label: 'Notifications', count: 3, onClick: activate })
+    const wrapper = await mountSuspended(SidebarUserInfo, { route: '/dashboard', props: { collapsed: false } })
+    try {
+      const dropdown = wrapper.findComponent({ name: 'UDropdownMenu' })
+      expect(dropdown.exists()).toBe(true)
+      const items = dropdown.props('items').flat()
+      expect(items.map((item: any) => item.label)).toEqual(['Profile', 'Appearance', 'Accent', 'Notifications', 'Log out'])
+      const appearance = items.find((item: any) => item.label === 'Appearance')
+      expect(appearance.children.map((item: any) => item.label)).toEqual(['Light', 'Dark', 'System'])
+      expect(items.find((item: any) => item.label === 'Accent').children.length).toBeGreaterThan(0)
+      items.find((item: any) => item.label === 'Notifications').onSelect(new Event('select'))
+      expect(activate).toHaveBeenCalledOnce()
+      expect(wrapper.text()).toContain('3')
+      expect(wrapper.text()).not.toContain('Account')
+      await wrapper.setProps({ collapsed: true })
+      expect(wrapper.findComponent({ name: 'UDropdownMenu' }).exists()).toBe(true)
+      expect(wrapper.find('button[aria-label="Open account menu"]').exists()).toBe(true)
+      await flushPromises()
+    } finally {
+      wrapper.unmount()
+      registry.clear()
+    }
   })
 
   it('renders the Enfyra version from metadata below the account panel', async () => {
@@ -69,5 +71,6 @@ describe('SidebarUserInfo', () => {
 
     expect(wrapper.text()).toContain('Powered by Enfyra')
     expect(wrapper.text()).toContain('v2.2.8-patch-1')
+    wrapper.unmount()
   })
 })

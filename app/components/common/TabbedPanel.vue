@@ -1,0 +1,53 @@
+<script setup lang="ts">
+import type { TabsItem } from '@nuxt/ui';
+
+defineOptions({ inheritAttrs: false });
+const props = withDefaults(defineProps<{
+  modelValue?: string | number;
+  items?: TabsItem[];
+  unmountOnHide?: boolean;
+  bodyClass?: string;
+  framed?: boolean;
+}>(), { unmountOnHide: false, items: () => [], framed: true });
+const emit = defineEmits<{ 'update:modelValue': [value: string | number] }>();
+const slots = useSlots();
+const tabHeaderUi = { list: 'border-b-0 mb-0', indicator: '!bottom-0' };
+const panelUi = computed(() => ({
+  root: props.framed
+    ? 'eapp-tabbed-panel flex min-w-0 min-h-0 flex-col overflow-hidden rounded-[var(--radius-card)] bg-transparent ring ring-default divide-y-0 shadow-none'
+    : 'eapp-tabbed-panel flex min-w-0 min-h-0 flex-col rounded-none border-0 bg-transparent ring-0 divide-y-0 shadow-none',
+  header: props.framed
+    ? 'bg-muted px-5 sm:px-5 py-0 shadow-[inset_0_-1px_0_var(--ui-border)]'
+    : 'bg-transparent p-0 sm:p-0 shadow-none',
+  body: props.bodyClass || (!props.framed ? 'p-0 sm:p-0 pt-5 sm:pt-5 space-y-6' : slots.header ? 'p-5 sm:p-5 space-y-6' : 'p-0 sm:p-0'),
+}));
+</script>
+
+<template>
+  <UTheme :ui="{ tabs: tabHeaderUi }">
+    <UCard v-bind="$attrs" :ui="panelUi">
+      <template v-if="slots.header" #header>
+        <slot name="header" />
+      </template>
+      <slot v-if="slots.header" />
+      <UTabs
+        v-else
+        :model-value="props.modelValue"
+        :items="props.items"
+        :unmount-on-hide="props.unmountOnHide"
+        variant="link"
+        :ui="{
+          root: 'gap-0',
+          list: 'min-w-0 overflow-x-auto overflow-y-hidden border-b-0 bg-muted px-5 shadow-[inset_0_-1px_0_var(--ui-border)]',
+          indicator: '!bottom-0',
+          content: 'mt-0 p-5 space-y-6',
+        }"
+        @update:model-value="value => emit('update:modelValue', value)"
+      >
+        <template v-for="(_, name) in slots" #[name]="slotProps">
+          <slot :name="name" v-bind="slotProps" />
+        </template>
+      </UTabs>
+    </UCard>
+  </UTheme>
+</template>

@@ -1,8 +1,7 @@
 <template>
   <div
     :class="[
-      'relative group overflow-hidden cursor-pointer h-full flex flex-col surface-card-hover',
-      (isMobile || isTablet) ? 'p-2' : 'p-4',
+      'relative group cursor-pointer h-full flex flex-col',
       topBadge ? 'pt-6' : '',
       contentLoading ? 'pointer-events-none cursor-wait' : '',
       cardClass,
@@ -231,7 +230,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   iconColor: "primary",
   statsLayout: "list",
-  cardClass: "",
+  cardClass: "eapp-bordered-region p-4",
   contentLoading: false,
 });
 

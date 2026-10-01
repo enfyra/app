@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useScrollLock } from '@vueuse/core';
 import type { NavigationMenuItem } from '@nuxt/ui';
 import { selectSidebarCollections } from '~/utils/sidebar-collection-items';
 
@@ -249,7 +248,7 @@ const navigationMenuUi = computed(() => ({
   linkLeadingIcon: 'size-5 shrink-0',
   linkLabel: !sidebarVisible.value ? 'sr-only' : 'truncate',
   content: !sidebarVisible.value ? 'w-56 rounded-[var(--radius-panel)] border border-[var(--card-border)] bg-[var(--card-bg)] p-2 shadow-[var(--shadow-md)]' : undefined,
-  childList: !sidebarVisible.value ? 'w-full space-y-1' : undefined,
+  childList: !sidebarVisible.value ? 'w-full space-y-1' : 'border-[var(--nav-child-border)]',
   childLink: 'min-h-8 items-center rounded-[var(--radius-subcontrol)] px-2.5 py-1.5 !text-xs',
 }));
 
@@ -260,13 +259,6 @@ const componentGroups = computed(() => {
 const bottomGroups = computed(() => {
   return visibleGroups.value.filter(g => g.position === 'bottom');
 });
-
-const isMobile = computed(() => width.value < 1024);
-const documentScrollLocked = useScrollLock(import.meta.client ? document.documentElement : null);
-
-watch([isMobile, sidebarVisible], ([mobile, visible]) => {
-  documentScrollLocked.value = mobile && visible;
-}, { immediate: true });
 
 const renderExpandedSidebarContent = computed(() => sidebarVisible.value);
 const showExpandedSidebarLabels = computed(() => sidebarVisible.value);
@@ -285,72 +277,74 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative sticky top-0 h-svh self-start">
-    <USidebar
-      v-model:open="sidebarVisible"
-      variant="sidebar"
-      collapsible="icon"
-      class="eapp-sidebar"
-      :style="{ '--sidebar-width': '256px' }"
-      :ui="{
-        gap: '!duration-[120ms]',
-        container: 'h-full !z-[99999] !duration-[140ms]',
-        inner: '!bg-[var(--shell-sidebar-bg)] !border-r !border-[var(--shell-sidebar-border)] !divide-transparent shadow-none',
-       header: 'px-3.5 pb-2.5 pt-4 group-data-[state=collapsed]/sidebar:px-2',
-        body: 'flex min-h-0 flex-1 flex-col gap-4 !overflow-y-auto border-0 px-3.5 group-data-[state=collapsed]/sidebar:px-2',
-        footer: 'flex min-h-0 w-full flex-col gap-1.5 overflow-y-auto p-0 px-3.5 pb-5 max-lg:pb-4 group-data-[state=collapsed]/sidebar:px-2',
-      }"
-    >
-      <template #title>
-        <div
-          class="flex min-w-0 items-center overflow-hidden"
-          :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
-        >
-          <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
-            <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
-            <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
-          </div>
-          <div v-if="renderExpandedSidebarContent" class="min-w-0 flex-1 transition-opacity duration-[var(--duration-instant)]" :class="{ 'opacity-0': !showExpandedSidebarLabels }">
-            <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
-            <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
-          </div>
+  <USidebar
+    v-model:open="sidebarVisible"
+    variant="inset"
+    collapsible="icon"
+    class="eapp-sidebar"
+    :style="{ '--sidebar-width': 'var(--shell-sidebar-width)' }"
+    :ui="{
+      container: 'py-[var(--shell-sidebar-inset)]',
+      inner: '!bg-[var(--shell-sidebar-bg)] !border-0 !divide-transparent shadow-none',
+      header: 'px-3.5 pb-2.5 pt-4 lg:py-0 group-data-[state=collapsed]/sidebar:px-2',
+      body: 'scrollbar-hide overflow-x-hidden border-0 px-3.5 group-data-[state=collapsed]/sidebar:px-2',
+      footer: 'flex min-h-0 w-full flex-col gap-1.5 overflow-x-hidden overflow-y-auto border-t border-[var(--nav-child-border)] px-3.5 pt-3 pb-4 lg:pb-0 group-data-[state=collapsed]/sidebar:px-2',
+    }"
+  >
+    <template #title>
+      <div
+        class="flex min-w-0 items-center overflow-hidden"
+        :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
+      >
+        <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
+          <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
+          <UIcon v-else name="lucide:blocks" class="h-5 w-5" />
         </div>
-      </template>
-      <template #description />
-
-      <template #default>
-        <div v-for="group in componentGroups" :key="group.id" class="mb-3">
-          <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
+        <div v-if="renderExpandedSidebarContent" class="min-w-0 flex-1 transition-opacity duration-[var(--duration-instant)]" :class="{ 'opacity-0': !showExpandedSidebarLabels }">
+          <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
+          <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
         </div>
+      </div>
+    </template>
+    <template #description />
 
-        <nav class="app-sidebar-nav" aria-label="Main navigation" @pointerover="prefetchMenuIntent" @pointerout="cancelPrefetchIntent" @focusin="prefetchMenuIntent" @focusout="cancelPrefetchIntent">
-          <div class="sidebar-menu-stack">
-          <Transition name="sidebar-menu-loading">
+    <template #default>
+      <div v-for="group in componentGroups" :key="group.id" class="mb-3">
+        <component v-if="renderExpandedSidebarContent" :is="group.component" v-bind="group.componentProps || {}" />
+      </div>
+
+      <nav class="app-sidebar-nav" aria-label="Main navigation" @pointerover="prefetchMenuIntent" @pointerout="cancelPrefetchIntent" @focusin="prefetchMenuIntent" @focusout="cancelPrefetchIntent">
+        <div class="sidebar-menu-stack">
+        <Transition name="sidebar-menu-loading">
+          <div
+            v-if="showMenuSkeleton"
+            key="menu-skeleton"
+            class="app-sidebar-menu-skeleton"
+            :class="{ collapsed: !renderExpandedSidebarContent }"
+            aria-label="Loading navigation"
+          >
             <div
-              v-if="showMenuSkeleton"
-              key="menu-skeleton"
-              class="app-sidebar-menu-skeleton"
-              :class="{ collapsed: !renderExpandedSidebarContent }"
-              aria-label="Loading navigation"
+              v-for="i in 7"
+              :key="i"
+              class="app-sidebar-menu-skeleton-row"
             >
+              <div class="app-sidebar-menu-skeleton-icon skeleton-gradient skeleton-pulse-slow" />
               <div
-                v-for="i in 7"
-                :key="i"
-                class="app-sidebar-menu-skeleton-row"
-              >
-                <div class="app-sidebar-menu-skeleton-icon skeleton-gradient skeleton-pulse-slow" />
-                <div
-                  v-if="renderExpandedSidebarContent"
-                  class="app-sidebar-menu-skeleton-label skeleton-gradient skeleton-pulse-slow"
-                  :style="{ width: `${64 + (i % 4) * 12}%` }"
-                />
-              </div>
+                v-if="renderExpandedSidebarContent"
+                class="app-sidebar-menu-skeleton-label skeleton-gradient skeleton-pulse-slow"
+                :style="{ width: `${64 + (i % 4) * 12}%` }"
+              />
             </div>
+          </div>
 
-            <div v-else key="menu-tree" class="app-sidebar-menu-tree">
+          <div v-else key="menu-tree" class="app-sidebar-menu-tree">
+            <template v-for="(group, groupIndex) in nativeNavigationItems" :key="groupIndex">
+              <USeparator
+                v-if="groupIndex > 0 && (group.some(item => item.children?.length) || nativeNavigationItems[groupIndex - 1]?.some(item => item.children?.length))"
+                class="-mx-3.5 w-auto"
+                :ui="{ border: 'border-[var(--nav-child-border)]' }"
+              />
               <UNavigationMenu
-                v-for="(group, groupIndex) in nativeNavigationItems"
-                :key="groupIndex"
                 :items="group"
                 :model-value="groupOpenValues(group)"
                 @update:model-value="value => updateGroupOpenValues(group, value)"
@@ -363,25 +357,25 @@ onUnmounted(() => {
                 highlight
                 :ui="navigationMenuUi"
               />
-            </div>
-          </Transition>
+            </template>
           </div>
-        </nav>
-      </template>
+        </Transition>
+        </div>
+      </nav>
+    </template>
 
-      <template #footer>
-        <template v-for="group in bottomGroups" :key="group.id" >
-          <PermissionGate :condition="group.permission as any">
-            <component
-              v-if="group.component"
-              :is="group.component"
-              v-bind="{ ...(group.componentProps || {}), collapsed: !renderExpandedSidebarContent }"
-            />
-          </PermissionGate>
-        </template>
+    <template #footer>
+      <template v-for="group in bottomGroups" :key="group.id" >
+        <PermissionGate :condition="group.permission as any">
+          <component
+            v-if="group.component"
+            :is="group.component"
+            v-bind="{ ...(group.componentProps || {}), collapsed: !renderExpandedSidebarContent }"
+          />
+        </PermissionGate>
       </template>
-    </USidebar>
-  </div>
+    </template>
+  </USidebar>
 </template>
 
 <style scoped>
@@ -443,11 +437,13 @@ onUnmounted(() => {
   border-radius: var(--radius-pill);
 }
 
-.eapp-sidebar:deep([data-slot="container"]) {
-  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+.eapp-sidebar:deep([data-slot="footer"]) {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
-.eapp-sidebar:deep([data-slot="footer"]) {
-  padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+@media (min-width: 1024px) {
+  .eapp-sidebar:deep([data-slot="footer"]) {
+    padding-bottom: max(0px, calc(env(safe-area-inset-bottom) - var(--shell-sidebar-inset)));
+  }
 }
 </style>

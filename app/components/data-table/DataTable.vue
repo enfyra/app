@@ -5,7 +5,6 @@ import type { DataTableProps } from '~/types/ui'
 
 const props = withDefaults(defineProps<DataTableProps>(), {
   loading: false,
-  skeletonRows: 5,
   showColumnVisibility: true,
 })
 
@@ -16,7 +15,7 @@ const emit = defineEmits<{
 }>()
 
 const slots = useSlots()
-const wrapperKeys = new Set(['contextMenuItems', 'skeletonRows', 'showColumnVisibility', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page'])
+const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page'])
 const tableOptions = computed(() => Object.fromEntries(Object.entries(props).filter(([key]) => !wrapperKeys.has(key))))
 const tableRef = useTemplateRef<{ tableApi?: Table<Record<string, any>>; tableRef?: HTMLElement }>('tableRef')
 const page = defineModel<number>('page', { default: 1 })
@@ -26,7 +25,6 @@ const columnVisibility = defineModel<VisibilityState>('columnVisibility', { defa
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
 const menuItems = ref<any[]>([])
 const menuWrapper = computed(() => props.contextMenuItems ? UContextMenu : 'div')
-const showInitialLoading = computed(() => props.loading && props.data.length === 0)
 const visibilityItems = computed(() => tableRef.value?.tableApi?.getAllColumns()
   .filter(column => column.getCanHide())
   .map(column => ({
@@ -69,7 +67,7 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-lg border border-default bg-default">
+  <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default">
     <div v-if="slots.toolbar || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default px-4 py-3">
       <div v-if="slots.toolbar" class="flex flex-wrap items-center gap-3">
         <slot name="toolbar" :table-api="tableRef?.tableApi" />
@@ -82,7 +80,7 @@ defineExpose({
       <UTable
         ref="tableRef"
         v-bind="{ ...tableOptions, ...$attrs }"
-        :data="showInitialLoading ? [] : props.data"
+        :data="props.data"
         :columns="columns"
         :loading="props.loading"
         :watch-options="props.watchOptions ?? { deep: false }"
@@ -97,12 +95,10 @@ defineExpose({
           <slot :name="name" v-bind="slotData" />
         </template>
         <template v-if="!slots.loading" #loading>
-          <div class="space-y-3 p-4" aria-label="Loading table">
-            <USkeleton v-for="index in props.skeletonRows" :key="index" class="h-9 w-full" />
-          </div>
+          <span role="status" class="sr-only">Loading records...</span>
         </template>
         <template v-if="!slots.empty" #empty>
-          <CommonEmptyState v-if="!showInitialLoading" variant="naked" title="No data available" description="There are no records to display" icon="lucide:database" size="sm" />
+          <CommonEmptyState v-if="!props.loading" variant="naked" title="No data available" description="There are no records to display" icon="lucide:database" size="sm" />
         </template>
       </UTable>
     </component>
@@ -116,7 +112,11 @@ defineExpose({
         :scope="tableScope"
         @load-more="emit('load-more')"
         @page-size-change="size => emit('page-size-change', size)"
-      />
+      >
+        <template v-if="slots['pagination-summary']" #summary>
+          <slot name="pagination-summary" :table-api="tableRef?.tableApi" />
+        </template>
+      </DataTablePagination>
     </div>
   </div>
 </template>

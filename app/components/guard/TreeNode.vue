@@ -4,7 +4,7 @@
       :class="[
         'relative rounded-xl border transition-colors transition-border-color',
         depth === 0
-          ? 'border-[var(--border-default)] surface-card p-4'
+          ? 'eapp-bordered-region p-4'
           : 'border-transparent bg-[var(--surface-muted)] p-3',
       ]"
     >

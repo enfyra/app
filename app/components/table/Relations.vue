@@ -488,7 +488,7 @@ async function removeRelation(index: number) {
 
       <template #body>
         <div :class="(isMobile || isTablet) ? 'space-y-3' : 'space-y-6'" v-if="currentRelation">
-          <div :class="(isMobile || isTablet) ? 'surface-card rounded-lg p-3' : 'surface-card rounded-xl p-6'">
+          <div class="space-y-5">
             <div :class="(isMobile || isTablet) ? 'flex items-center gap-1.5 mb-3' : 'flex items-center gap-2 mb-4'">
               <UIcon name="lucide:git-branch" class="text-info" :size="(isMobile || isTablet) ? '16' : '18'" />
               <h3 :class="(isMobile || isTablet) ? 'text-sm font-semibold text-foreground' : 'text-lg font-semibold text-foreground'">

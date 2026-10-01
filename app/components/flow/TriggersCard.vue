@@ -1,8 +1,8 @@
 <template>
   <CommonFormCard>
     <template #header>
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Triggers</h3>
+      <div class="flex items-center justify-between" :class="{ 'justify-end': !props.showTitle }">
+        <h3 v-if="props.showTitle" class="text-lg font-semibold text-[var(--text-primary)]">Triggers</h3>
         <UPopover v-model:open="addOpen">
           <UButton icon="lucide:plus" size="sm" variant="solid" color="primary" label="Add Trigger" />
           <template #content>
@@ -59,7 +59,12 @@
       </div>
     </div>
 
-    <UModal v-model:open="editorOpen" :title="editorTitle">
+    <CommonModal
+      v-model:open="editorOpen"
+      :cancel-action="{ label: 'Cancel', onClick: () => { editorOpen = false; } }"
+      :primary-action="{ label: 'Save', loading: saving, onClick: saveTrigger }"
+    >
+      <template #header>{{ editorTitle }}</template>
       <template #body>
         <div class="space-y-4">
           <template v-if="editorForm.type === 'schedule'">
@@ -88,7 +93,7 @@
                 v-model:search-term="tzSearchTerm"
                 placeholder="Search timezone..."
                 size="sm"
-                :ui="{ base: '!min-h-9 !px-2.5 !py-1.5 !text-xs' }"
+                :ui="{ base: '!min-h-9 !py-1.5 !text-xs' }"
                 class="w-full"
                 by="value"
                 :filter="true"
@@ -130,7 +135,7 @@
                 v-model:open="routeMenuOpen"
                 placeholder="Search route..."
                 size="sm"
-                :ui="{ base: '!min-h-9 !px-2.5 !py-1.5 !text-xs' }"
+                :ui="{ base: '!min-h-9 !py-1.5 !text-xs' }"
                 class="w-full"
                 by="value"
                 :loading="routesLoading"
@@ -157,13 +162,7 @@
           </template>
         </div>
       </template>
-      <template #footer>
-        <div class="flex justify-end gap-2">
-          <UButton label="Cancel" variant="ghost" size="sm" @click="editorOpen = false" />
-          <UButton label="Save" variant="solid" color="primary" size="sm" :loading="saving" @click="saveTrigger" />
-        </div>
-      </template>
-    </UModal>
+    </CommonModal>
   </CommonFormCard>
 </template>
 
@@ -171,10 +170,11 @@
 import type { FlowTrigger, TriggerType, TableEventType } from '~/types/flow';
 import { getTriggerColor } from '~/utils/flow.constants';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   flowId: string | number;
   triggers: FlowTrigger[];
-}>();
+  showTitle?: boolean;
+}>(), { showTitle: true });
 
 const emit = defineEmits<{
   refresh: [];

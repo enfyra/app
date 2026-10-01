@@ -80,24 +80,15 @@ describe('compositing cost guard', () => {
     expect(theme).toContain('--block-base: #242429')
   })
 
-  it('keeps the layout header opaque with no filter in the scroll path', () => {
+  it('keeps the native dashboard header opaque and outside the body scroll path', () => {
     const layout = readAppFile('layouts/default.vue')
-    const header = layout.match(/<header[\s\S]*?>/)
-    expect(header, 'layout header should exist').not.toBeNull()
+    const header = layout.match(/<UDashboardNavbar[\s\S]*?>/)
 
-    // A translucent sticky header over scrolling content re-filters its backdrop
-    // every frame, which is the per-frame cost this contract removes.
-    expect(header![0]).toContain('sticky top-0')
-    expect(header![0]).toContain('bg-[var(--shell-main-bg)]')
-    expect(header![0]).not.toMatch(/backdrop-blur/)
-    expect(header![0]).not.toMatch(/bg-transparent/)
-
-    // Desktop keeps the layer hint, but mobile leaves sticky compositing to the
-    // browser so visual-viewport changes do not force another promoted layer.
-    const headerClasses = header![0].match(/class="([^"]*)"/)?.[1]?.split(/\s+/) ?? []
-    expect(headerClasses).toContain('lg:will-change-transform')
-    expect(headerClasses).not.toContain('will-change-transform')
-    expect(layout).not.toMatch(/<header[\s\S]*?(?:fixed|absolute)[\s\S]*?<\/header>/)
+    expect(header).not.toBeNull()
+    expect(header![0]).toContain('bg-default')
+    expect(header![0]).not.toContain('backdrop-blur')
+    expect(layout).not.toContain('will-change-transform')
+    expect(layout).not.toContain('eapp-shell-header::before')
   })
 
   it('never gates a scrollbar rule on a universal hover selector', () => {
@@ -113,31 +104,19 @@ describe('compositing cost guard', () => {
     expect(scrollbars).not.toContain('*:not(:hover)')
   })
 
-  it('paints the shell canvas once on a viewport-fixed layer', () => {
+  it('keeps the canvas theme-tinted and the native main surface neutral', () => {
     const layout = readAppFile('layouts/default.vue')
-
-    // The root element must stay transparent so the scroll path does not stack
-    // opaque paints.
-    expect(layout).not.toMatch(/.app-workspace\s*\{[^}]*background/)
-    expect(layout).not.toMatch(/:style="\{ background: 'transparent' \}"/)
-
-    // The canvas lives on a viewport-fixed layer, not on the document-height
-    // root: a gradient on the root scrolls with the content and re-paints the
-    // newly exposed band every frame.
-    const canvas = layout.match(/\.eapp-shell-canvas \{[\s\S]*?\}/)?.[0]
-    expect(canvas, 'shell canvas rule should exist').toBeDefined()
-    expect(canvas).toContain('position: fixed')
-    expect(canvas).toContain('inset: 0')
-    expect(canvas).toContain('background: var(--shell-mobile-content-bg)')
-    expect(canvas).toContain('pointer-events: none')
-    expect(layout).toContain('@media (min-width: 1024px)')
-    expect(layout).toContain('background: var(--shell-content-bg)')
-    expect(layout).toContain('<div class="eapp-shell-canvas" aria-hidden="true"></div>')
-    expect(layout).not.toMatch(/style="background: var\(--shell-content-bg\)/)
-
     const theme = readAppFile('assets/css/theme.css')
-    expect(theme).toContain('--shell-mobile-content-bg: var(--md-background)')
-    expect(theme).toContain('--shell-mobile-content-bg: color-mix(in srgb, var(--md-primary) 0.5%, #17171b)')
+
+    expect(layout).toContain('<UDashboardGroup')
+    expect(layout).toContain('bg-[var(--shell-bg)]')
+    expect(layout).toContain('bg-default')
+    expect(layout).not.toContain('eapp-shell-canvas')
+    expect(theme).toContain('--shell-bg: var(--md-surface)')
+    expect(theme).toContain('--shell-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b)')
+    expect(theme).toContain('--shell-sidebar-bg: var(--shell-bg)')
+    expect(theme).toContain('--shell-main-bg: var(--surface-default)')
+    expect(theme).not.toMatch(/--shell-[\w-]+:\s*radial-gradient/)
   })
 
   it('never animates opacity on an element that carries a blur', () => {

@@ -64,12 +64,15 @@ const mainRootClass = computed(() =>
 );
 
 const mainUi = computed(() => ({
+  root: 'min-w-0',
+  list: 'flex-wrap',
+  item: 'min-w-8',
   ...props.ui,
 }));
 
 const miniUi = computed(() => ({
-  root: 'md:w-auto',
-  list: 'flex-wrap gap-0.5 md:gap-1',
+  root: 'min-w-max w-fit',
+  list: 'flex-nowrap gap-0.5 md:gap-1',
   item: '!min-w-7 md:!min-w-8',
   ...props.ui,
 }));
@@ -123,21 +126,23 @@ const miniUi = computed(() => ({
     <Transition name="mini-pagination">
       <div
         v-show="showMini"
-        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 bottom-3 z-30 mx-auto flex flex-wrap max-w-md items-center justify-between gap-3 rounded-[var(--radius-panel)] px-3 py-1.5 md:max-w-lg md:gap-4 md:px-4 md:py-2.5"
+        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-md items-center justify-between gap-2 rounded-[var(--radius-panel)] px-3 py-1.5 md:max-w-lg md:gap-4 md:px-4 md:py-2.5"
       >
-        <UPagination
-          v-model:page="page"
-          :size="miniSize"
-          :items-per-page="itemsPerPage"
-          :total="total"
-          :show-edges="showEdges"
-          :sibling-count="siblingCount"
-          :to="to"
-          :color="color"
-          :active-color="activeColor"
-          :active-variant="activeVariant"
-          :ui="miniUi"
-        />
+        <div class="min-w-0 flex-1 overflow-x-auto">
+          <UPagination
+            v-model:page="page"
+            :size="miniSize"
+            :items-per-page="itemsPerPage"
+            :total="total"
+            :show-edges="showEdges"
+            :sibling-count="siblingCount"
+            :to="to"
+            :color="color"
+            :active-color="activeColor"
+            :active-variant="activeVariant"
+            :ui="miniUi"
+          />
+        </div>
 
         <p v-if="showRange" class="shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--text-tertiary)] md:text-sm">
           <span class="sr-only">Showing {{ pageStart }} to {{ pageEnd }} of {{ total }} results</span>

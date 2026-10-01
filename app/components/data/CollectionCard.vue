@@ -24,7 +24,7 @@ defineEmits<{
 
 <template>
   <article
-    class="surface-card-hover group relative flex flex-col p-4 cursor-pointer"
+    class="eapp-bordered-region group relative flex cursor-pointer flex-col p-4 hover:bg-elevated"
     :class="pinned ? 'ring-1 ring-[var(--state-primary-outline-border)]' : ''"
     @click="$emit('open', item)"
   >

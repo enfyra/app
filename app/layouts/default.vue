@@ -1,9 +1,10 @@
 <template>
-  <div class="flex min-h-svh text-sm" style="color: var(--text-primary);">
-    <div class="eapp-shell-canvas" aria-hidden="true"></div>
-
+  <UDashboardGroup
+    :persistent="false"
+    class="bg-[var(--shell-bg)] text-sm text-[var(--text-primary)] lg:py-[var(--shell-inset)] lg:pe-[var(--shell-inset)]"
+  >
     <a
-      href="#main-content"
+      href="#dashboard-panel-workspace"
       class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-[var(--action-primary-bg)] focus:text-[var(--action-primary-text)] focus:px-4 focus:py-2 focus:rounded-xl"
     >
       Skip to main content
@@ -11,57 +12,25 @@
 
     <SidebarUnifiedSidebar />
 
-    <main
-      id="main-content"
-      tabindex="-1"
-      class="relative flex min-w-0 flex-1 flex-col"
-    >
-      <header
-        class="sticky top-0 flex w-full z-50 lg:will-change-transform max-lg:border-b max-lg:border-[color-mix(in_srgb,var(--shell-main-border)_60%,transparent)] bg-[var(--shell-main-bg)]"
+    <UTheme :ui="pageSurfaceUi" :props="{ pageCard: { variant: 'outline' } }">
+      <UDashboardPanel
+        id="workspace"
+        role="main"
+        tabindex="-1"
+        class="eapp-shell-main overflow-hidden bg-default lg:rounded-[var(--radius-shell)] lg:border lg:border-default lg:shadow-sm"
+        :ui="{ root: 'min-h-0' }"
       >
-        <div class="flex flex-col items-center justify-between grow lg:flex-row">
-          <div class="flex items-center justify-between w-full gap-2 sm:gap-4 lg:justify-normal lg:border-b-0 h-16">
-            <div class="flex flex-1 items-center justify-between gap-4 px-4 lg:px-6">
-              <LayoutHeader />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <Transition name="metadata-banner">
-        <div
-          v-if="showReloadBanner"
-          key="metadata-banner"
-          class="pointer-events-none fixed right-4 top-[72px] z-[60] max-w-[min(420px,calc(100vw-2rem))] lg:right-6"
-        >
-          <div
-            class="pointer-events-auto flex items-center gap-2 rounded-full border bg-[var(--surface-default)]/90 px-3 py-2 text-sm font-semibold shadow-[var(--shadow-md)] backdrop-blur-xl"
-            :class="reloadFailureMessage ? 'border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] text-[var(--state-danger-soft-text)]' : 'border-[var(--card-border)] text-[var(--text-secondary)]'"
+        <template #header>
+          <UDashboardNavbar
+            as="header"
+            :toggle="false"
+            class="bg-default"
+            :ui="{ left: 'flex-1', right: 'hidden' }"
           >
-            <UIcon
-              :name="reloadFailureMessage ? 'lucide:circle-alert' : isReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
-              class="h-4 w-4 shrink-0"
-              :class="reloadFailureMessage ? 'text-[var(--state-danger-soft-text)]' : 'text-[var(--state-primary-soft-text)]'"
-            />
-            <span class="truncate">{{ bannerTitle }}</span>
-            <UButton
-              v-if="!isReloading"
-              icon="lucide:x"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              aria-label="Dismiss reload status"
-              class="-mr-1 h-6 w-6 rounded-full p-0"
-              @click="dismissReloadBanner"
-            />
-          </div>
-        </div>
-      </Transition>
-
-      <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
-
-      <section class="relative flex-1 app-workspace">
-        <div class="relative flex flex-col flex-1 min-h-full gap-4 px-5 py-4 lg:px-6">
+            <template #left>
+              <LayoutHeader />
+            </template>
+          </UDashboardNavbar>
           <CommonPageHeader
             v-if="hasPageHeader"
             :title="pageHeader!.title"
@@ -72,14 +41,51 @@
             :leading-icon="pageHeader?.leadingIcon"
             :hide-leading-icon="pageHeader?.hideLeadingIcon"
           />
-          <div class="grid min-w-0 w-full flex-1 route-stack">
-            <slot />
-          </div>
+          <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" />
+        </template>
+
+        <template #body>
+          <section ref="workspaceContent" class="relative flex flex-1 flex-col gap-4 app-workspace">
+            <UContainer class="grid min-w-0 w-full flex-1 route-stack px-0 sm:px-0 lg:px-0">
+              <slot />
+            </UContainer>
+            <CommonRouteLoading :show="routeLoadingVisible" message="Navigating..." />
+          </section>
+        </template>
+      </UDashboardPanel>
+    </UTheme>
+
+    <Transition name="metadata-banner">
+      <div
+        v-if="showReloadBanner"
+        key="metadata-banner"
+        class="pointer-events-none fixed right-4 top-[72px] z-[60] max-w-[min(420px,calc(100vw-2rem))] lg:right-10 lg:top-[calc(var(--shell-inset)+72px)]"
+      >
+        <div
+          class="pointer-events-auto flex items-center gap-2 rounded-full border bg-[var(--surface-default)]/90 px-3 py-2 text-sm font-semibold shadow-[var(--shadow-md)] backdrop-blur-xl"
+          :class="reloadFailureMessage ? 'border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] text-[var(--state-danger-soft-text)]' : 'border-[var(--card-border)] text-[var(--text-secondary)]'"
+        >
+          <UIcon
+            :name="reloadFailureMessage ? 'lucide:circle-alert' : isReloading ? 'lucide:loader-circle' : 'lucide:check-circle'"
+            class="h-4 w-4 shrink-0"
+            :class="reloadFailureMessage ? 'text-[var(--state-danger-soft-text)]' : 'text-[var(--state-primary-soft-text)]'"
+          />
+          <span class="truncate">{{ bannerTitle }}</span>
+          <UButton
+            v-if="!isReloading"
+            icon="lucide:x"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            aria-label="Dismiss reload status"
+            class="-mr-1 h-6 w-6 rounded-full p-0"
+            @click="dismissReloadBanner"
+          />
         </div>
-        <CommonRouteLoading :show="routeLoadingVisible" message="Navigating..." />
-      </section>
-    </main>
-  </div>
+      </div>
+    </Transition>
+
+  </UDashboardGroup>
 
   <div id="others-overlay"></div>
 
@@ -98,6 +104,19 @@ import {
   dismissReloadBanner,
 } from '~/composables/shared/useAdminSocket';
 
+const pageSurfaceUi = {
+  card: {
+    root: 'rounded-[var(--radius-card)] border-0 bg-transparent ring ring-default shadow-none',
+    header: 'px-4 sm:px-6',
+    body: 'px-4 sm:px-6',
+    footer: 'px-4 sm:px-6',
+  },
+  pageCard: {
+    root: 'rounded-[var(--radius-card)] border-0 bg-transparent ring ring-default shadow-none',
+    container: 'p-4 sm:p-6',
+  },
+};
+
 const { markInitialReady } = useInitialLoading();
 const { loadRoutes } = useRoutes();
 const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
@@ -112,11 +131,13 @@ const route = useRoute();
 const { width } = useScreen();
 const { subHeaderActions } = useSubHeaderActionRegistry();
 const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
-useWorkspaceScroll();
+const workspaceContent = useTemplateRef<HTMLElement>('workspaceContent');
+const workspaceScroll = computed(() => workspaceContent.value?.parentElement ?? null);
+useWorkspaceScroll(workspaceScroll);
 
 watch(() => route.path, async () => {
   await nextTick();
-  document.getElementById('main-content')?.focus({ preventScroll: true });
+  document.getElementById('dashboard-panel-workspace')?.focus({ preventScroll: true });
 });
 
 await useInitialData();
@@ -151,26 +172,11 @@ const bannerTitle = computed(() => {
 </script>
 
 <style scoped>
-/* Single canvas painter for the shell. It is viewport-fixed rather than sized to
-   the document: a gradient on a document-height element scrolls with the content
-   and re-paints the newly exposed band every frame. Fixed, it paints once. */
-.eapp-shell-canvas {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: var(--shell-mobile-content-bg);
-}
-
-@media (min-width: 1024px) {
-  .eapp-shell-canvas {
-    background: var(--shell-content-bg);
-  }
-}
-
 .route-stack > * {
   grid-area: 1 / 1;
   min-width: 0;
+  width: 100%;
+  justify-self: center;
 }
 
 .route-stack {

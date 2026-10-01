@@ -247,7 +247,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
     <div
       v-for="i in 5"
       :key="i"
-      class="eapp-surface-card eapp-radius-subcontrol border eapp-divider space-y-3 p-4"
+      class="space-y-3 py-2"
     >
       
       <div
@@ -261,7 +261,7 @@ const shimmerClass = computed(() => props.shimmer ? 'skeleton-shimmer' : '');
       ></div>
     </div>
 
-    <div class="eapp-surface-card eapp-radius-subcontrol border eapp-divider flex gap-3 p-4">
+    <div class="flex gap-3 py-2">
       <div
         class="h-10 w-24 rounded-[var(--radius-control)] skeleton-primary"
         :class="[animationClass, shimmerClass]"

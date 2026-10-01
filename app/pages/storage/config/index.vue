@@ -1,52 +1,32 @@
 <template>
-  <CommonResourceListFrame
+  <DataTableSettingsTable
     v-model:page="page"
-    root-class="storage-config-page"
-    :loading="showInitialLoading"
-    :has-items="storageConfigs.length > 0"
-    empty-title="No storage configurations found"
-    empty-description="No storage configurations have been created yet"
-    empty-icon="lucide:hard-drive"
-    empty-size="lg"
+    :data="storageConfigs"
+    :columns="columns"
+    :actions="getRowActions"
+    :loading="showInitialLoading || storageConfigsRefreshing"
     :total="total"
-    :items-per-page="limit"
+    :page-limit="limit"
+    page-size-key="storage-config"
     :pagination-loading="loading"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+    @page-size-change="setPageSize"
+    @row-click="config => navigateTo(`/storage/config/${getId(config)}`)"
   >
-    <CommonResourceListItem
-      v-for="config in storageConfigs"
-      :key="getId(config)"
-      :title="config.name"
-      :description="config.description || 'No description provided'"
-      :icon="getStorageIcon(config)"
-      icon-color="primary"
-      :loading="storageConfigsRefreshing"
-      :to="`/storage/config/${getId(config)}`"
-      :stats="[
-        {
-          label: 'Type',
-          component: 'UBadge',
-          props: { variant: 'soft', color: getStorageBadgeColor(config) },
-          value: config.type || config.driver || 'Local Storage',
-        },
-        {
-          label: 'Status',
-          component: 'UBadge',
-          props: { variant: 'soft', color: config.isEnabled ? 'success' : 'neutral' },
-          value: config.isEnabled ? 'Active' : 'Inactive',
-        },
-      ]"
-      :header-actions="getHeaderActions(config)"
-      :actions="getActions(config)"
-    />
-  </CommonResourceListFrame>
+    <template #empty>
+      <CommonEmptyState variant="naked" title="No storage configurations found" description="No storage configurations have been created yet" icon="lucide:hard-drive" size="sm" />
+    </template>
+  </DataTableSettingsTable>
 </template>
 
 <script setup lang="ts">
+import type { ColumnDef } from '@tanstack/vue-table';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const page = ref(1);
-const limit = 10;
+const limit = useSettingsPageSize('storage-config');
 
 const notify = useNotify();
 const { confirm } = useConfirm();
@@ -56,6 +36,7 @@ const { getId } = useDatabase();
 const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
 
 const route = useRoute();
+const router = useRouter();
 const { registerPageHeader } = usePageHeaderRegistry();
 const STORAGE_CONFIG_LIST_FIELDS = [
   "id",
@@ -78,7 +59,7 @@ const {
 } = useApi(() => "/enfyra_storage_config", {
   query: computed(() => ({
     fields: STORAGE_CONFIG_LIST_FIELDS,
-    limit,
+    limit: limit.value,
     page: page.value,
     meta: "*",
     sort: ["id"].join(","),
@@ -122,69 +103,31 @@ registerHeaderActions([
   },
 ]);
 
-function getStorageIcon(config: any) {
-  const storageType = config.type || "Local Storage";
-  const iconMap: Record<string, string> = {
-    "Amazon S3": "lucide:cloud",
-    "Google Cloud Storage": "lucide:cloud",
-    "Cloudflare R2": "lucide:cloud",
-    "Local Storage": "lucide:hard-drive",
-  };
-  return iconMap[storageType] || "lucide:database";
-}
+const columns: ColumnDef<Record<string, any>>[] = [
+  settingsTextColumn('name', 'Name'),
+  settingsTextColumn('description', 'Description'),
+  { id: 'type', header: 'Type', enableSorting: false, accessorFn: config => config.type || config.driver || 'Local Storage' },
+  settingsStatusColumn(),
+];
 
-function getStorageBadgeColor(config: any) {
-  const storageType = config.type || "Local Storage";
-  const colorMap: Record<string, "primary" | "info" | "warning" | "neutral"> = {
-    "Amazon S3": "primary",
-    "Google Cloud Storage": "info",
-    "Cloudflare R2": "warning",
-    "Local Storage": "neutral",
-  };
-  return colorMap[storageType] || "neutral";
+async function setPageSize(size: number) {
+  if (page.value !== 1) await router.replace({ query: { ...route.query, page: undefined } });
+  limit.value = size;
 }
 
 function isConfigLoading(config: any) {
   return getConfigLoader(String(getId(config))).isLoading.value;
 }
 
-function getHeaderActions(config: any) {
-  if (!checkPermissionCondition({ or: [{ route: "/enfyra_storage_config", methods: ["PATCH"] }] })) {
-    return [];
+function getRowActions(config: Record<string, any>): DataTableRowAction[] {
+  const actions: DataTableRowAction[] = [];
+  if (checkPermissionCondition({ or: [{ route: '/enfyra_storage_config', methods: ['PATCH'] }] })) {
+    actions.push({ label: config.isEnabled ? 'Disable' : 'Enable', icon: 'lucide:power', disabled: isConfigLoading(config), onSelect: () => toggleConfigStatus(config) });
   }
-
-  return [
-    {
-      component: "USwitch",
-      props: {
-        "model-value": config.isEnabled,
-        loading: isConfigLoading(config),
-      },
-      onClick: (event?: Event) => event?.stopPropagation(),
-      onUpdate: () => toggleConfigStatus(config),
-    },
-  ];
-}
-
-function getActions(config: any) {
-  if (!checkPermissionCondition({ or: [{ route: "/enfyra_storage_config", methods: ["DELETE"] }] })) {
-    return [];
+  if (checkPermissionCondition({ or: [{ route: '/enfyra_storage_config', methods: ['DELETE'] }] })) {
+    actions.push({ label: 'Delete', icon: 'lucide:trash-2', color: 'error', disabled: isConfigLoading(config), onSelect: () => deleteConfig(config) });
   }
-
-  return [
-    {
-      label: "Delete",
-      props: {
-        icon: "i-lucide-trash-2",
-        variant: "ghost",
-        color: "error",
-        size: "xs",
-      },
-      onClick: () => {
-        deleteConfig(config);
-      },
-    },
-  ];
+  return actions;
 }
 
 const toggleConfigStatus = async (config: any) => {
@@ -261,9 +204,9 @@ const deleteConfig = async (config: any) => {
 };
 
 watch(
-  () => route.query.page,
-  async (newVal) => {
-    page.value = newVal ? Number(newVal) : 1;
+  () => [route.query.page, limit.value],
+  async ([newVal]) => {
+    page.value = Math.max(1, Number(newVal) || 1);
     await fetchStorageConfigs();
   },
   { immediate: true }

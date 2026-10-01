@@ -60,7 +60,7 @@ const folderIconColor = computed(() => {
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-3 mb-2">
                 <h2
-                  class="text-3xl font-semibold text-white truncate"
+                  class="text-xl font-semibold text-default truncate"
                   style="letter-spacing: -0.02em"
                 >
                   {{ selectedFolder.name }}
@@ -88,7 +88,7 @@ const folderIconColor = computed(() => {
             </div>
           </div>
 
-          <div class="p-5 rounded-xl bg-[var(--surface-muted)]">
+          <div class="border-t border-default pt-4">
             <div class="flex items-start gap-3">
               <UIcon
                 name="lucide:file-text"
@@ -113,7 +113,7 @@ const folderIconColor = computed(() => {
 
           <div class="grid grid-cols-2 gap-4">
             
-            <div class="p-5 rounded-xl bg-[var(--surface-muted)]">
+            <div class="border-t border-default pt-4">
               <div class="flex items-start gap-3">
                 <UIcon
                   name="lucide:calendar"
@@ -134,7 +134,7 @@ const folderIconColor = computed(() => {
               </div>
             </div>
 
-            <div class="p-5 rounded-xl bg-[var(--surface-muted)]">
+            <div class="border-t border-default pt-4">
               <div class="flex items-start gap-3">
                 <UIcon
                   name="lucide:clock"
@@ -156,7 +156,7 @@ const folderIconColor = computed(() => {
             </div>
           </div>
 
-          <div class="p-5 rounded-xl bg-[var(--surface-muted)] space-y-4">
+          <div class="border-t border-default pt-4 space-y-4">
             <div
               class="text-xs eapp-text-tertiary uppercase mb-4"
               style="letter-spacing: 0.05em; font-weight: 500"

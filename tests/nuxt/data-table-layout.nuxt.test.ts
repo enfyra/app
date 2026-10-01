@@ -37,6 +37,26 @@ describe('DataTable layout', () => {
     expect(wrapper.get('[data-slot="root"]').classes()).toContain('eapp-table-scroll')
   })
 
+  it('keeps one native scrollable table at phone width without a card fallback', async () => {
+    const originalWidth = window.innerWidth
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 })
+    window.dispatchEvent(new Event('resize'))
+    try {
+      const wrapper = await mountSuspended(DataTable, {
+        props: { data: [{ id: 1, name: 'Phone row' }], columns: [{ accessorKey: 'name', header: 'Name' }] },
+      })
+      expect(wrapper.findAll('table')).toHaveLength(1)
+      expect(wrapper.findAll('tbody tr')).toHaveLength(1)
+      expect(wrapper.get('.eapp-table-scroll').classes()).toContain('overflow-x-auto')
+      expect(wrapper.find('dl').exists()).toBe(false)
+      expect(wrapper.find('.surface-card').exists()).toBe(false)
+      wrapper.unmount()
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth })
+      window.dispatchEvent(new Event('resize'))
+    }
+  })
+
   it('reads the declared visibility prop in its template', async () => {
     const { readFileSync } = await import('node:fs')
     const { resolve } = await import('node:path')

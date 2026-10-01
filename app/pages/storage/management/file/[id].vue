@@ -326,7 +326,7 @@ function getFileIconAndColor(mimetype: string): {
 <template>
   <div class="grid w-full min-w-0 gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)]">
     <aside class="min-w-0 space-y-4 xl:sticky xl:top-6 xl:self-start">
-      <div class="surface-card min-w-0 overflow-hidden">
+      <div class="eapp-bordered-region min-w-0 overflow-hidden">
         <div class="border-b border-[var(--border-default)] px-5 py-4">
           <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">

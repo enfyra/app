@@ -8,6 +8,7 @@ const props = withDefaults(defineProps<TablePaginationProps>(), {
   showPageSize: false,
   loadedCount: 0,
   hasMore: false,
+  floating: true,
 })
 const page = defineModel<number>('page', { default: 1 })
 const emit = defineEmits<{
@@ -23,11 +24,12 @@ const rangeLabel = computed(() => isCursor.value
   ? `${props.loadedCount} loaded`
   : props.total > 0 ? `${pageStart.value}–${pageEnd.value} / ${props.total}` : '0 results')
 const paginationFooter = shallowRef<HTMLElement | null>(null)
-const tableScope = computed(() => props.scope ?? null)
-const { isMiniVisible } = useMiniBarVisibility(paginationFooter, tableScope)
+const floatingTarget = computed(() => props.floating && !isCursor.value ? paginationFooter.value : null)
+const tableScope = computed(() => props.floating && !isCursor.value ? props.scope ?? null : null)
+const { isMiniVisible } = useMiniBarVisibility(floatingTarget, tableScope)
 const { active: showLoading } = useDeferredBusy(() => props.loading)
 const { isMobile } = useScreen()
-const showMiniPagination = computed(() => !isCursor.value && hasPagination.value && isMiniVisible.value)
+const showMiniPagination = computed(() => props.floating && !isCursor.value && hasPagination.value && isMiniVisible.value)
 const miniPaginationSize = computed(() => isMobile.value ? 'xs' : 'sm')
 
 function setPageSize(value: string | number) {
@@ -43,10 +45,11 @@ function loadMore() {
 </script>
 
 <template>
-  <div ref="paginationFooter" class="eapp-settings-pagination grid grid-cols-2 items-center gap-x-2 gap-y-3 md:gap-3" :class="isCursor ? 'md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]' : 'md:flex md:flex-wrap md:justify-between'" aria-label="Table pagination" :aria-busy="loading">
-    <div class="min-w-0 text-xs tabular-nums text-muted">
-      <span class="whitespace-nowrap">{{ rangeLabel }}</span>
+  <div ref="paginationFooter" class="eapp-settings-pagination grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-3 md:gap-3" :class="isCursor ? 'md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]' : 'md:flex md:flex-wrap md:justify-between'" aria-label="Table pagination" :aria-busy="loading">
+    <div class="flex min-w-0 items-center gap-3 whitespace-nowrap text-xs tabular-nums text-muted">
       <slot name="summary" />
+      <span v-if="$slots.summary" aria-hidden="true">·</span>
+      <span>{{ rangeLabel }}</span>
     </div>
     <div class="flex items-center justify-end gap-3" :class="isCursor ? 'md:col-start-3 md:row-start-1' : 'md:ml-auto'">
       <label v-if="showPageSize" class="flex items-center gap-2 whitespace-nowrap text-xs text-muted">
@@ -66,14 +69,16 @@ function loadMore() {
       :to="to"
       :sibling-count="2"
       size="sm"
-      :ui="{ root: 'col-span-2 justify-self-end md:w-auto md:col-auto' }"
+      :ui="{ root: 'eapp-table-pagination-controls col-span-2 min-w-0 w-full justify-self-end border-t border-default pt-3 md:w-auto md:col-auto md:border-t-0 md:pt-0', list: 'w-full flex-wrap justify-center md:justify-end', item: 'min-w-8' }"
     />
   </div>
-  <Teleport v-if="!isCursor" to="body">
+  <Teleport v-if="floating && !isCursor" to="body">
     <Transition name="mini-pagination">
-      <div v-show="showMiniPagination" class="eapp-pagination eapp-pagination-mini fixed inset-x-3 bottom-3 z-30 mx-auto flex flex-wrap max-w-md items-center justify-between gap-3 rounded-[var(--radius-panel)] px-3 py-1.5 md:max-w-lg md:px-4 md:py-2.5">
-        <UPagination v-model:page="page" :size="miniPaginationSize" :items-per-page="itemsPerPage" :total="total" :to="to" :ui="{ root: 'md:w-auto' }" />
-        <span class="shrink-0 whitespace-nowrap text-xs tabular-nums text-muted">{{ rangeLabel }}</span>
+      <div v-show="showMiniPagination" class="eapp-pagination eapp-pagination-mini fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-md items-center gap-2 rounded-[var(--radius-panel)] px-3 py-1.5 md:max-w-lg md:gap-4 md:px-4 md:py-2.5">
+        <div class="min-w-0 flex-1 overflow-x-auto">
+          <UPagination v-model:page="page" :size="miniPaginationSize" :items-per-page="itemsPerPage" :total="total" :to="to" :ui="{ root: 'eapp-table-pagination-controls min-w-max w-fit', list: 'flex-nowrap gap-0.5 md:gap-1', item: 'min-w-7 md:min-w-8' }" />
+        </div>
+        <span class="shrink-0 whitespace-nowrap text-xs tabular-nums text-muted md:text-sm">{{ rangeLabel }}</span>
       </div>
     </Transition>
   </Teleport>

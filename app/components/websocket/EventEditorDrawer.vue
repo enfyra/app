@@ -273,7 +273,7 @@ $ctx.$socket.reply('event:received', data);`;
           @has-changed="(hasChanged) => (hasFormChanges = hasChanged || createSnapshot() !== initialSnapshot)"
         />
 
-        <div class="surface-card rounded-xl p-4 space-y-4">
+        <div class="space-y-4 border-t border-default pt-5">
           <div>
             <h3 class="text-base font-semibold text-[var(--text-primary)]">Event Handler Script</h3>
             <p class="text-sm text-[var(--text-secondary)]">

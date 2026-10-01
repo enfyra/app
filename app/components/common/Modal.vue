@@ -56,13 +56,9 @@ watch(
   { immediate: true, flush: 'sync' },
 );
 
-const { isMobile, isTablet } = useScreen();
-
 const mergedUi = computed(() => ({
   ...props.ui,
   content: ['eapp-modal-surface', props.ui?.content].filter(Boolean).join(' '),
-  header: ['pb-0', props.ui?.header].filter(Boolean).join(' '),
-  body: ['pt-4', props.ui?.body].filter(Boolean).join(' '),
 }));
 
 function close() {
@@ -100,11 +96,6 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
       :handle="props.handle"
       :class="props.class"
       :ui="mergedUi"
-      :close="{
-        color: 'error',
-        variant: 'soft',
-        size: (isMobile || isTablet) ? 'lg' : 'xl',
-      }"
     >
       <template #title>
         <div v-if="hasTitle" class="flex items-center justify-between w-full" @click.stop>
@@ -125,7 +116,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
         </div>
       </template>
 
-      <template #footer>
+      <template v-if="hasFooter" #footer>
         <div v-if="hasFooter" class="w-full" @click.stop>
           <slot name="footer" />
           <div v-if="!slots.footer && hasManagedFooter" class="flex w-full items-center justify-between gap-3">

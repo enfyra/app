@@ -6,6 +6,7 @@ export interface TablePaginationProps {
   showPageSize?: boolean
   loadedCount?: number
   hasMore?: boolean
+  floating?: boolean
   scope?: HTMLElement | null
   to?: (page: number) => any
 }

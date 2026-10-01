@@ -28,29 +28,7 @@
             :loading="loading"
           />
 
-          <div
-            class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t border-[var(--border-subtle)] pt-6"
-          >
-            <UButton
-              v-if="hasFormChanges"
-              label="Reset"
-              icon="lucide:rotate-ccw"
-              variant="outline"
-              color="warning"
-              :disabled="!hasFormChanges"
-              @click="handleReset"
-            />
-            <UButton
-              v-if="canUpdateGateway"
-              label="Save"
-              icon="lucide:save"
-              variant="solid"
-              color="primary"
-              type="submit"
-              :loading="updateLoading"
-              :disabled="!hasFormChanges"
-            />
-          </div>
+
         </UForm>
       </CommonFormCard>
     </div>
@@ -239,6 +217,28 @@ const canUpdateGateway = computed(() =>
 );
 
 registerHeaderActions([
+  {
+    id: 'reset-websockets-settings',
+    label: 'Reset',
+    icon: 'lucide:rotate-ccw',
+    variant: 'outline',
+    color: 'warning',
+    order: 998,
+    show: computed(() => hasFormChanges.value),
+    disabled: computed(() => updateLoading.value),
+    onClick: handleReset,
+  },
+  {
+    id: 'save-websockets-settings',
+    label: 'Save',
+    icon: 'lucide:save',
+    color: 'primary',
+    order: 999,
+    show: canUpdateGateway,
+    loading: computed(() => updateLoading.value),
+    disabled: computed(() => !hasFormChanges.value || updateLoading.value),
+    onClick: updateGateway,
+  },
   {
     id: "delete-websocket",
     label: "Delete",

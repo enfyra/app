@@ -290,7 +290,7 @@ registerSubHeaderActions([
 </script>
 
 <template>
-  <div class="surface-card overflow-hidden rounded-xl">
+  <div class="eapp-bordered-region overflow-hidden">
     <div
       class="flex flex-col gap-4 border-b border-[var(--border-default)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
     >
