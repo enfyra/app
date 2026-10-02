@@ -43,8 +43,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleShortcut));
 </script>
 
 <template>
-  <div class="flex min-w-0 flex-wrap items-center gap-3">
-    <div ref="searchRef" class="min-w-0 w-full sm:w-80">
+  <div class="flex w-full min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+    <div ref="searchRef" class="min-w-0 w-full lg:flex-1">
       <UInput
         id="collection-search"
         :model-value="modelValue"
@@ -62,8 +62,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleShortcut));
         </template>
       </UInput>
     </div>
-    <div class="flex flex-wrap items-center gap-3">
-      <span class="text-xs text-[var(--text-tertiary)]">
+    <div class="flex min-w-0 items-center justify-between gap-3 lg:shrink-0 lg:justify-end">
+      <span class="shrink-0 whitespace-nowrap text-xs text-[var(--text-tertiary)]">
         <template v-if="loading">Loading…</template>
         <template v-else-if="hasSearch"><strong class="text-[var(--text-primary)]">{{ matchCount }}</strong> {{ matchCount === 1 ? 'match' : 'matches' }}</template>
         <template v-else><strong class="text-[var(--text-primary)]">{{ total }}</strong> collections</template>

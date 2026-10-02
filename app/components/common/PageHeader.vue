@@ -55,7 +55,7 @@ function handlePageHeaderActionClick(action: HeaderAction) {
     :title="title"
     :description="description"
     :ui="{
-      root: 'px-3 py-3 md:px-6 md:py-4',
+      root: 'border-0 p-0',
       container: !isDesktop ? `grid items-center ${hasLinks ? 'grid-cols-[minmax(0,1fr)_auto] gap-x-3' : 'grid-cols-1'}` : undefined,
       title: 'col-start-1 row-start-1 min-w-0 flex-1 text-lg leading-6 lg:text-2xl lg:leading-8',
       wrapper: !isDesktop ? 'contents' : undefined,

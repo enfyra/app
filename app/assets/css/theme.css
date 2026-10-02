@@ -268,7 +268,7 @@
     --shell-inset: 1.5rem;
     --shell-mobile-inset: 0.75rem;
     --shell-overlay-inset: var(--shell-mobile-inset);
-    --ui-container: 80rem;
+    --ui-container: 75rem;
     --shell-sidebar-width: 16rem;
     --shell-sidebar-inset: calc(var(--shell-inset) + 0.75rem);
     --shell-bg: var(--md-surface);

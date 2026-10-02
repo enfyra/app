@@ -31,24 +31,25 @@
               <LayoutHeader />
             </template>
           </UDashboardNavbar>
-          <CommonPageHeader
-            v-if="hasPageHeader"
-            class="bg-[var(--shell-main-bg)]"
-            :title="pageHeader!.title"
-            :description="pageHeader?.description"
-            :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
-            :variant="pageHeader?.variant"
-            :gradient="pageHeader?.gradient"
-            :leading-icon="pageHeader?.leadingIcon"
-            :hide-leading-icon="pageHeader?.hideLeadingIcon"
-          />
-          <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions" class="bg-[var(--shell-main-bg)]" />
         </template>
 
         <template #body>
           <section ref="workspaceContent" class="relative flex flex-1 flex-col gap-4 app-workspace">
-            <UContainer class="grid min-w-0 w-full flex-1 route-stack px-0 sm:px-0 lg:px-0">
-              <slot />
+            <UContainer class="flex min-w-0 w-full flex-1 flex-col gap-4 px-0 sm:px-0 lg:px-0">
+              <CommonPageHeader
+                v-if="hasPageHeader"
+                :title="pageHeader!.title"
+                :description="pageHeader?.description"
+                :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
+                :variant="pageHeader?.variant"
+                :gradient="pageHeader?.gradient"
+                :leading-icon="pageHeader?.leadingIcon"
+                :hide-leading-icon="pageHeader?.hideLeadingIcon"
+              />
+              <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions" :ui="{ root: 'border-0 px-0' }" />
+              <div class="grid min-w-0 w-full flex-1 route-stack">
+                <slot />
+              </div>
             </UContainer>
             <CommonRouteLoading :show="routeLoadingVisible" message="Navigating..." />
           </section>
