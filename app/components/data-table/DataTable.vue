@@ -11,7 +11,6 @@ const props = withDefaults(defineProps<DataTableProps>(), {
 
 const emit = defineEmits<{
   'row-click': [row: Record<string, any>]
-  'load-more': []
   'page-size-change': [size: number]
 }>()
 
@@ -119,9 +118,8 @@ defineExpose({
         v-if="props.paginationConfig"
         v-bind="props.paginationConfig"
         v-model:page="page"
-        :loaded-count="props.paginationConfig.loadedCount ?? props.data.length"
+        :row-count="props.paginationConfig.rowCount ?? props.data.length"
         :scope="tableScope"
-        @load-more="emit('load-more')"
         @page-size-change="size => emit('page-size-change', size)"
       >
         <template v-if="slots['pagination-summary']" #summary>

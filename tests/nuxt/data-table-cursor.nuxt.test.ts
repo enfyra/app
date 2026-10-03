@@ -1,6 +1,6 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { UPagination, USelect } from '#components'
 import DataTable from '~/components/data-table/DataTable.vue'
 import DataTableLazy from '~/components/data-table/DataTableLazy.vue'
@@ -11,22 +11,33 @@ afterEach(() => { mounted.splice(0).forEach(wrapper => wrapper.unmount()) })
 const props = {
   data: [{ id: 1, name: 'First' }],
   columns: [{ accessorKey: 'name', header: 'Name' }],
-  paginationConfig: { mode: 'cursor' as const, itemsPerPage: 10, showPageSize: true, hasMore: true },
+  paginationConfig: { mode: 'cursor' as const, itemsPerPage: 10, showPageSize: true, hasNextPage: true },
 }
 
 describe('DataTable cursor footer', () => {
-  it('keeps the count and page-size selector while replacing numbered pagination with Load more', async () => {
+  it('keeps the count and page-size selector while showing Previous and Next instead of numbered pagination', async () => {
     const wrapper = await mountSuspended(DataTable, { props })
     mounted.push(wrapper)
-    expect(wrapper.text()).toContain('1 loaded')
+    expect(wrapper.text()).toContain('1–1')
     expect(wrapper.text()).toContain('Rows per page')
+    expect(wrapper.findAll('button').find(button => button.text() === 'Previous')!.attributes('disabled')).toBeDefined()
     expect(wrapper.findComponent(UPagination).exists()).toBe(false)
-    const button = wrapper.findAll('button').find(button => button.text() === 'Load more')!
+    const button = wrapper.findAll('button').find(button => button.text() === 'Next')!
     expect(button.exists()).toBe(true)
     await button.trigger('click')
-    expect(wrapper.emitted('load-more')).toHaveLength(1)
+    expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
+    await wrapper.setProps({ page: 2 })
+    await wrapper.findAll('button').find(button => button.text() === 'Previous')!.trigger('click')
+    expect(wrapper.emitted('update:page')?.[1]).toEqual([1])
     const footer = wrapper.get('[aria-label="Table pagination"]')
-    expect(footer.classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]')
+    expect(footer.classes()).toContain('md:justify-between')
+    const cursorControls = button.element.parentElement!
+    expect(cursorControls.classList.contains('mx-auto')).toBe(true)
+    expect(cursorControls.classList.contains('md:mx-0')).toBe(true)
+    const separator = cursorControls.parentElement!.parentElement!
+    expect(separator.classList.contains('col-span-2')).toBe(true)
+    expect(separator.classList.contains('md:col-auto')).toBe(true)
+    expect(separator.classList.contains('md:border-t-0')).toBe(true)
     wrapper.findComponent(USelect).vm.$emit('update:modelValue', 20)
     expect(wrapper.emitted('page-size-change')?.[0]).toEqual([20])
   })
@@ -39,20 +50,19 @@ describe('DataTable cursor footer', () => {
     mounted.push(wrapper)
     expect(wrapper.get('[aria-label="Table pagination"]').classes()).toContain('md:justify-between')
     const pager = wrapper.findComponent(UPagination)
-    expect(pager.classes()).toContain('justify-self-end')
     await pager.get('[aria-label="Next Page"]').trigger('click')
     expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
     expect(wrapper.findAll('button').some(button => button.text() === 'Load more')).toBe(false)
   })
 
-  it('prevents duplicate loads while pending and stops loading after cursor exhaustion', async () => {
+  it('blocks cursor navigation while pending and disables Next at the end', async () => {
     const wrapper = await mountSuspended(DataTable, { props: { ...props, paginationConfig: { ...props.paginationConfig, loading: true } } })
     mounted.push(wrapper)
-    const button = () => wrapper.findAll('button').find(button => button.text() === 'Load more')!
+    const button = () => wrapper.findAll('button').find(button => button.text() === 'Next')!
     expect(button().attributes('disabled')).toBeDefined()
     await button().trigger('click')
-    expect(wrapper.emitted('load-more')).toBeUndefined()
-    await wrapper.setProps({ paginationConfig: { ...props.paginationConfig, hasMore: false } })
+    expect(wrapper.emitted('update:page')).toBeUndefined()
+    await wrapper.setProps({ paginationConfig: { ...props.paginationConfig, hasNextPage: false } })
     expect(button().attributes('disabled')).toBeDefined()
     expect(wrapper.findAll('tbody tr')).toHaveLength(1)
   })
@@ -62,8 +72,41 @@ describe('DataTable cursor footer', () => {
     mounted.push(wrapper)
     await flushPromises()
     expect(wrapper.text()).toContain('Custom summary')
-    const button = wrapper.findAll('button').find(button => button.text() === 'Load more')!
+    const button = wrapper.findAll('button').find(button => button.text() === 'Next')!
     await button.trigger('click')
-    expect(wrapper.emitted('load-more')).toHaveLength(1)
+    expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
+  })
+
+  it('shows only the supplied cursor page and permits returning from the last page', async () => {
+    const wrapper = await mountSuspended(DataTable, { props })
+    mounted.push(wrapper)
+    await wrapper.setProps({
+      page: 2,
+      data: [{ id: 2, name: 'Second' }],
+      paginationConfig: { ...props.paginationConfig, hasNextPage: false },
+    })
+    expect(wrapper.get('tbody').text()).toContain('Second')
+    expect(wrapper.get('tbody').text()).not.toContain('First')
+    expect(wrapper.text()).toContain('11–11')
+    expect(wrapper.findAll('button').find(button => button.text() === 'Next')!.attributes('disabled')).toBeDefined()
+    await wrapper.findAll('button').find(button => button.text() === 'Previous')!.trigger('click')
+    expect(wrapper.emitted('update:page')?.[0]).toEqual([1])
+  })
+
+  it('forwards the declared pagination contract without warnings across mode changes', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const paginationConfig = { mode: 'cursor' as const, itemsPerPage: 10, hasNextPage: true }
+      const wrapper = await mountSuspended(DataTable, { props: { ...props, paginationConfig } })
+      mounted.push(wrapper)
+      expect(wrapper.text()).toContain('1–1')
+      await wrapper.findAll('button').find(button => button.text() === 'Next')!.trigger('click')
+      expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
+      await wrapper.setProps({ paginationConfig: { ...paginationConfig, mode: 'offset', total: 105 } })
+      expect(wrapper.findComponent(UPagination).exists()).toBe(true)
+      expect(warn.mock.calls.map(args => args.join(' ')).join('\n')).not.toContain('Extraneous non-props attributes')
+    } finally {
+      warn.mockRestore()
+    }
   })
 })

@@ -9,14 +9,18 @@ const mounted: { unmount: () => void }[] = []
 afterEach(() => { mounted.splice(0).forEach(wrapper => wrapper.unmount()) })
 
 describe('table pagination theme boundary', () => {
-  it('does not draw a separate border above cursor Load more', async () => {
-    const wrapper = await mountSuspended(TablePagination, { props: { mode: 'cursor', itemsPerPage: 10, loadedCount: 10, hasMore: true } })
+  it('uses the numbered pager position and mobile separator for cursor navigation', async () => {
+    const wrapper = await mountSuspended(TablePagination, { props: { mode: 'cursor', itemsPerPage: 10, rowCount: 10, hasNextPage: true } })
     mounted.push(wrapper)
-    const button = wrapper.get('button')
-    expect(button.text()).toContain('Load more')
+    const button = wrapper.findAll('button').find(button => button.text() === 'Next')!
+    expect(button.text()).toContain('Next')
     expect(button.element.parentElement!.classList.contains('border-t')).toBe(false)
+    const separator = button.element.parentElement!.parentElement!.parentElement!
+    expect(separator.classList.contains('border-t')).toBe(true)
+    expect(separator.classList.contains('md:border-t-0')).toBe(true)
+    expect(wrapper.get('[aria-label="Table pagination"]').classes()).toContain('md:justify-between')
     await button.trigger('click')
-    expect(wrapper.emitted('load-more')).toHaveLength(1)
+    expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
   })
 
   it('renders selection and range together in the pagination summary', async () => {
