@@ -45,7 +45,7 @@ function setCursorPage(direction: -1 | 1) {
 </script>
 
 <template>
-  <div ref="paginationFooter" class="eapp-settings-pagination grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-3 md:flex md:flex-wrap md:justify-between md:gap-3" aria-label="Table pagination" :aria-busy="loading">
+  <div ref="paginationFooter" class="eapp-settings-pagination grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)] md:gap-3" aria-label="Table pagination" :aria-busy="loading">
     <div class="flex min-w-0 items-center gap-3 whitespace-nowrap text-xs tabular-nums text-muted">
       <slot name="summary" />
       <span v-if="$slots.summary" aria-hidden="true">·</span>

@@ -30,7 +30,7 @@ describe('DataTable cursor footer', () => {
     await wrapper.findAll('button').find(button => button.text() === 'Previous')!.trigger('click')
     expect(wrapper.emitted('update:page')?.[1]).toEqual([1])
     const footer = wrapper.get('[aria-label="Table pagination"]')
-    expect(footer.classes()).toContain('md:justify-between')
+    expect(footer.classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
     const cursorControls = button.element.parentElement!
     expect(cursorControls.classList.contains('mx-auto')).toBe(true)
     expect(cursorControls.classList.contains('md:mx-0')).toBe(true)
@@ -48,7 +48,7 @@ describe('DataTable cursor footer', () => {
       paginationConfig: { total: 105, itemsPerPage: 10, showPageSize: true },
     } })
     mounted.push(wrapper)
-    expect(wrapper.get('[aria-label="Table pagination"]').classes()).toContain('md:justify-between')
+    expect(wrapper.get('[aria-label="Table pagination"]').classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
     const pager = wrapper.findComponent(UPagination)
     await pager.get('[aria-label="Next Page"]').trigger('click')
     expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
