@@ -107,6 +107,20 @@ describe('DataTable native loading', () => {
     } finally { wrapper.unmount() }
   })
 
+  it('suppresses caller cell slots so skeleton bars replace custom cell templates', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: { data: [], loading: true, columns, paginationConfig: { itemsPerPage: 3, total: 30 } },
+      slots: { 'name-cell': ({ row }: any) => h('span', { class: 'custom-cell' }, row.original.name) },
+    })
+    try {
+      expect(wrapper.findAll('tbody tr')).toHaveLength(3)
+      expect(wrapper.findAll('tbody tr .eapp-table-skeleton')).toHaveLength(3)
+      expect(wrapper.find('.custom-cell').exists()).toBe(false)
+      await wrapper.setProps({ loading: false, data: [{ name: 'Ready' }] })
+      expect(wrapper.get('.custom-cell').text()).toBe('Ready')
+    } finally { wrapper.unmount() }
+  })
+
   it('preserves an explicitly supplied native loading slot instead of skeletons', async () => {
     const wrapper = await mountSuspended(DataTable, {
       props: { data: [], columns, loading: true },

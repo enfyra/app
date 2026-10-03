@@ -56,7 +56,7 @@ function setCursorPage(direction: -1 | 1) {
         <USelect :model-value="itemsPerPage" :items="pageSizes" value-key="value" size="sm" class="w-18" aria-label="Rows per page" @update:model-value="setPageSize" />
       </label>
     </div>
-    <div v-if="isCursor || hasPagination" class="col-span-2 min-w-0 -mx-3 border-t border-default px-3 pt-3 md:col-auto md:mx-0 md:border-t-0 md:px-0 md:pt-0">
+    <div v-if="isCursor || hasPagination" class="min-w-0 border-default max-md:col-span-2 max-md:-mx-3 max-md:border-t max-md:px-3 max-md:pt-3">
       <div class="min-w-0 max-w-full overflow-x-auto">
         <div v-if="isCursor" class="mx-auto flex w-fit min-w-max gap-2 md:mx-0">
           <UButton label="Previous" icon="lucide:chevron-left" color="neutral" variant="outline" size="sm" class="h-8" :disabled="page <= 1 || loading" @click="setCursorPage(-1)" />

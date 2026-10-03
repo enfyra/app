@@ -36,8 +36,9 @@ describe('Settings table', () => {
     expect(pager.get('[data-slot="list"]').classes()).toContain('flex-nowrap')
     const scroller = pager.element.parentElement!
     expect(scroller.classList.contains('overflow-x-auto')).toBe(true)
-    expect(scroller.parentElement!.classList.contains('border-t')).toBe(true)
-    expect(scroller.parentElement!.classList.contains('-mx-3')).toBe(true)
+    expect(scroller.parentElement!.classList.contains('border-t')).toBe(false)
+    expect(scroller.parentElement!.classList.contains('max-md:border-t')).toBe(true)
+    expect(scroller.parentElement!.classList.contains('max-md:-mx-3')).toBe(true)
     expect(wrapper.find('[aria-label="Choose visible columns"]').exists()).toBe(false)
     expect(document.body.querySelector('.eapp-pagination-mini')).not.toBeNull()
     expect((document.body.querySelector('.eapp-pagination-mini') as HTMLElement).style.display).toBe('none')

@@ -56,10 +56,14 @@ const columns = computed<ColumnDef<Record<string, any>>[]>(() => props.columns.m
 }))
 
 const SKELETON_BAR_WIDTHS = ['w-4/5', 'w-3/5', 'w-2/3', 'w-1/2']
-const skeletonActive = computed(() => props.loading && !props.data.length && !slots.loading)
+const skeletonActive = computed(() => props.loading && !props.data.length && !slots.loading && columns.value.length > 0)
 const skeletonRowCount = computed(() => Math.max(1, Math.floor(props.paginationConfig?.itemsPerPage || 10)))
 const skeletonRows = computed(() => Array.from({ length: skeletonRowCount.value }, () => ({ __eappSkeletonRow: true })))
 const tableData = computed(() => skeletonActive.value ? skeletonRows.value : props.data)
+const forwardedSlotNames = computed(() => {
+  const names = Object.keys(slots)
+  return skeletonActive.value ? names.filter(name => !name.endsWith('-cell')) : names
+})
 const tableColumns = computed<ColumnDef<Record<string, any>>[]>(() => {
   if (!skeletonActive.value) return columns.value
   return columns.value.map((column, index) => ({
@@ -128,7 +132,7 @@ defineExpose({
         :on-select="(event, row) => { if (row.original?.__eappSkeletonRow) return; props.onSelect?.(event, row); emit('row-click', row.original) }"
         :on-contextmenu="props.contextMenuItems || props.onContextmenu ? onContextmenu : undefined"
       >
-        <template v-for="(_, name) in slots" #[name]="slotData">
+        <template v-for="name in forwardedSlotNames" #[name]="slotData">
           <slot :name="name" v-bind="slotData" />
         </template>
         <template v-if="!slots.loading" #loading>

@@ -35,9 +35,10 @@ describe('DataTable cursor footer', () => {
     expect(cursorControls.classList.contains('mx-auto')).toBe(true)
     expect(cursorControls.classList.contains('md:mx-0')).toBe(true)
     const separator = cursorControls.parentElement!.parentElement!
-    expect(separator.classList.contains('col-span-2')).toBe(true)
-    expect(separator.classList.contains('md:col-auto')).toBe(true)
-    expect(separator.classList.contains('md:border-t-0')).toBe(true)
+    expect(separator.classList.contains('max-md:col-span-2')).toBe(true)
+    expect(separator.classList.contains('col-span-2')).toBe(false)
+    expect(separator.classList.contains('max-md:border-t')).toBe(true)
+    expect(separator.classList.contains('border-t')).toBe(false)
     wrapper.findComponent(USelect).vm.$emit('update:modelValue', 20)
     expect(wrapper.emitted('page-size-change')?.[0]).toEqual([20])
   })
