@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { UContextMenu } from '#components'
+import { UButton, UContextMenu } from '#components'
+import { FlexRender } from '@tanstack/vue-table'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import type { ColumnDef, RowSelectionState, SortingState, Table, VisibilityState } from '@tanstack/vue-table'
 import type { DataTableProps } from '~/types/ui'
@@ -54,7 +55,32 @@ const columns = computed<ColumnDef<Record<string, any>>[]>(() => props.columns.m
   } as ColumnDef<Record<string, any>>
 }))
 
+const SKELETON_BAR_WIDTHS = ['w-4/5', 'w-3/5', 'w-2/3', 'w-1/2']
+const skeletonActive = computed(() => props.loading && !props.data.length && !slots.loading)
+const skeletonRowCount = computed(() => Math.max(1, Math.floor(props.paginationConfig?.itemsPerPage || 10)))
+const skeletonRows = computed(() => Array.from({ length: skeletonRowCount.value }, () => ({ __eappSkeletonRow: true })))
+const tableData = computed(() => skeletonActive.value ? skeletonRows.value : props.data)
+const tableColumns = computed<ColumnDef<Record<string, any>>[]>(() => {
+  if (!skeletonActive.value) return columns.value
+  return columns.value.map((column, index) => ({
+    ...column,
+    cell: (ctx: any) => {
+      if (ctx.row?.original?.__eappSkeletonRow !== true) return column.cell ? h(FlexRender, { render: column.cell, props: ctx }) : ctx.getValue()
+      if (ctx.column.id === '__actions') {
+        return h('div', { class: 'invisible pointer-events-none flex items-center justify-center' }, [
+          h(UButton, { icon: 'lucide:ellipsis-vertical', size: 'lg', variant: 'ghost', color: 'neutral', tabindex: -1, 'aria-hidden': true }),
+        ])
+      }
+      return h('div', {
+        'class': ['eapp-table-skeleton h-5 max-w-48 animate-pulse rounded-md bg-elevated', SKELETON_BAR_WIDTHS[index % SKELETON_BAR_WIDTHS.length]!],
+        'aria-hidden': true,
+      })
+    },
+  }) as ColumnDef<Record<string, any>>)
+})
+
 function onContextmenu(event: Event, row: { original: Record<string, any> }) {
+  if (row.original?.__eappSkeletonRow) return
   menuItems.value = props.contextMenuItems?.(row.original) ?? []
   if (!menuItems.value.length && props.contextMenuItems) event.preventDefault()
   if (Array.isArray(props.onContextmenu)) props.onContextmenu.forEach((handler) => handler(event, row as any))
@@ -69,6 +95,7 @@ defineExpose({
 
 <template>
   <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
+    <span v-if="skeletonActive" role="status" class="sr-only">Loading records...</span>
     <div v-if="slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default px-3 py-3 md:px-4">
       <div v-if="slots.toolbar" class="flex min-w-0 flex-1 flex-wrap items-center gap-3">
         <slot name="toolbar" :table-api="tableRef?.tableApi" />
@@ -90,15 +117,15 @@ defineExpose({
       <UTable
         ref="tableRef"
         v-bind="{ ...tableOptions, ...$attrs }"
-        :data="props.data"
-        :columns="columns"
+        :data="tableData"
+        :columns="tableColumns"
         :loading="props.loading"
         :watch-options="props.watchOptions ?? { deep: false }"
         :ui="{ ...props.ui, root: ['eapp-table-scroll overflow-x-auto', props.ui?.root].filter(Boolean).join(' '), base: ['w-full min-w-max', props.ui?.base].filter(Boolean).join(' '), tr: ['data-[selectable=true]:cursor-pointer', props.ui?.tr].filter(Boolean).join(' ') }"
         v-model:sorting="sorting"
         v-model:column-visibility="columnVisibility"
         v-model:row-selection="rowSelection"
-        :on-select="(event, row) => { props.onSelect?.(event, row); emit('row-click', row.original) }"
+        :on-select="(event, row) => { if (row.original?.__eappSkeletonRow) return; props.onSelect?.(event, row); emit('row-click', row.original) }"
         :on-contextmenu="props.contextMenuItems || props.onContextmenu ? onContextmenu : undefined"
       >
         <template v-for="(_, name) in slots" #[name]="slotData">

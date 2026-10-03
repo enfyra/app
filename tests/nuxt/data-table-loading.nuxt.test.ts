@@ -9,22 +9,49 @@ import SettingsTable from '~/components/data-table/SettingsTable.vue'
 const columns = [{ accessorKey: 'name', header: 'Name' }]
 
 describe('DataTable native loading', () => {
-  it('uses the native header progress without row skeletons or premature empty feedback', async () => {
+  it('renders header progress plus one skeleton row per page slot on first load', async () => {
     const wrapper = await mountSuspended(DataTable, { props: {
       data: [], columns, loading: true,
-      paginationConfig: { itemsPerPage: 10, total: 100 },
+      paginationConfig: { itemsPerPage: 5, total: 100 },
     } })
     try {
       expect(wrapper.get('thead').classes()).toContain('after:bg-primary')
+      expect(wrapper.findAll('tbody tr')).toHaveLength(5)
+      expect(wrapper.findAll('tbody tr .eapp-table-skeleton')).toHaveLength(5)
       expect(wrapper.find('[aria-label="Loading table"]').exists()).toBe(false)
-      expect(wrapper.find('[data-slot="skeleton"]').exists()).toBe(false)
       expect(wrapper.text()).not.toContain('No data available')
-      expect(wrapper.text()).not.toContain('No data')
-      await wrapper.setProps({ paginationConfig: { itemsPerPage: 100, total: 100 } })
-      expect(wrapper.findAll('tbody tr')).toHaveLength(1)
+      expect(wrapper.find('[role="status"]').exists()).toBe(true)
       await wrapper.setProps({ loading: false })
       expect(wrapper.get('thead').classes()).not.toContain('after:bg-primary')
+      expect(wrapper.findAll('tbody tr')).toHaveLength(1)
+      expect(wrapper.find('.eapp-table-skeleton').exists()).toBe(false)
       expect(wrapper.text()).toContain('No data available')
+    } finally { wrapper.unmount() }
+  })
+
+  it('defaults the skeleton row count to ten without a pagination config', async () => {
+    const wrapper = await mountSuspended(DataTable, { props: { data: [], columns, loading: true } })
+    try {
+      expect(wrapper.findAll('tbody tr')).toHaveLength(10)
+      expect(wrapper.findAll('tbody tr .eapp-table-skeleton')).toHaveLength(10)
+    } finally { wrapper.unmount() }
+  })
+
+  it('keeps one skeleton cell per column and an invisible action replica for exact row height', async () => {
+    const wrapper = await mountSuspended(DataTable, { props: {
+      data: [], loading: true,
+      columns: [...columns, { id: '__actions', header: '' }],
+      paginationConfig: { itemsPerPage: 3, total: 30 },
+    } })
+    try {
+      const rows = wrapper.findAll('tbody tr')
+      expect(rows).toHaveLength(3)
+      for (const row of rows) {
+        expect(row.findAll('td')).toHaveLength(2)
+        expect(row.findAll('.eapp-table-skeleton')).toHaveLength(1)
+        expect(row.find('td:last-child .invisible').exists()).toBe(true)
+        expect(row.find('td:last-child .eapp-table-skeleton').exists()).toBe(false)
+      }
     } finally { wrapper.unmount() }
   })
 
@@ -37,6 +64,7 @@ describe('DataTable native loading', () => {
       expect(wrapper.get('thead').classes()).toContain('after:bg-primary')
       expect(wrapper.text()).toContain('Retained row')
       expect(wrapper.find('[data-slot="loading"]').exists()).toBe(false)
+      expect(wrapper.find('.eapp-table-skeleton').exists()).toBe(false)
       await wrapper.setProps({ loading: false, data: [{ id: 1, name: 'Updated row' }] })
       expect(wrapper.text()).toContain('Updated row')
     } finally { wrapper.unmount() }
@@ -47,6 +75,8 @@ describe('DataTable native loading', () => {
     try {
       await flushPromises()
       expect(wrapper.get('thead').classes()).toContain('after:bg-primary')
+      expect(wrapper.findAll('tbody tr')).toHaveLength(10)
+      expect(wrapper.findAll('tbody tr .eapp-table-skeleton')).toHaveLength(10)
       expect(wrapper.find('[aria-label="Loading table"]').exists()).toBe(false)
       expect(wrapper.text()).not.toContain('No data')
     } finally { wrapper.unmount() }
@@ -56,6 +86,8 @@ describe('DataTable native loading', () => {
     const wrapper = await mountSuspended(SettingsTable, { props: { data: [], columns, loading: true } })
     try {
       expect(wrapper.get('thead').classes()).toContain('after:bg-primary')
+      expect(wrapper.findAll('tbody tr')).toHaveLength(10)
+      expect(wrapper.get('tbody tr').findAll('td')).toHaveLength(2)
       expect(wrapper.find('[aria-label="Loading table"]').exists()).toBe(false)
       expect(wrapper.text()).not.toContain('No data')
     } finally { wrapper.unmount() }
@@ -68,19 +100,21 @@ describe('DataTable native loading', () => {
       await wrapper.setProps({ paginationLoading: true })
       expect(wrapper.get('thead').classes()).toContain('after:bg-primary')
       expect(wrapper.get('tbody tr').element).toBe(row)
+      expect(wrapper.find('.eapp-table-skeleton').exists()).toBe(false)
       expect(wrapper.find('[aria-label="Table pagination"]').exists()).toBe(false)
       await wrapper.setProps({ paginationLoading: false })
       expect(wrapper.get('thead').classes()).not.toContain('after:bg-primary')
     } finally { wrapper.unmount() }
   })
 
-  it('preserves an explicitly supplied native loading slot', async () => {
+  it('preserves an explicitly supplied native loading slot instead of skeletons', async () => {
     const wrapper = await mountSuspended(DataTable, {
       props: { data: [], columns, loading: true },
       slots: { loading: () => h('span', 'Custom loading') },
     })
     try {
       expect(wrapper.get('[data-slot="loading"]').text()).toBe('Custom loading')
+      expect(wrapper.find('.eapp-table-skeleton').exists()).toBe(false)
       await wrapper.setProps({ data: [{ name: 'Ready' }] })
       expect(wrapper.find('[data-slot="loading"]').exists()).toBe(false)
       expect(wrapper.text()).toContain('Ready')

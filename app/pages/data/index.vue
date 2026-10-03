@@ -24,7 +24,7 @@ const searchQuery = ref('');
 const sortBy = ref<SortMode>('name');
 const initialLoading = ref(true);
 const page = ref(1);
-const pageSize = useSettingsPageSize('data-directory', 20);
+const pageSize = useSettingsPageSize('data-directory');
 const columns: ColumnDef<CollectionItem>[] = [
   { accessorKey: 'label', header: 'Collection', enableSorting: false, meta: { style: { th: { width: '28%' }, td: { width: '28%' } } } },
   { accessorKey: 'apiPath', header: 'API path', enableSorting: false, meta: { style: { th: { width: '24%' }, td: { width: '24%' } } } },

@@ -28,7 +28,6 @@ const canFloat = computed(() => props.floating && (!isCursor.value || isMobile.v
 const floatingTarget = computed(() => canFloat.value ? paginationFooter.value : null)
 const tableScope = computed(() => canFloat.value ? props.scope ?? null : null)
 const { isMiniVisible } = useMiniBarVisibility(floatingTarget, tableScope)
-const { active: showLoading } = useDeferredBusy(() => props.loading)
 const showMiniPagination = computed(() => canFloat.value && (isCursor.value ? page.value > 1 || props.hasNextPage : hasPagination.value) && isMiniVisible.value)
 const miniPaginationSize = computed(() => isMobile.value ? 'xs' : 'sm')
 
@@ -56,7 +55,6 @@ function setCursorPage(direction: -1 | 1) {
         Rows per page
         <USelect :model-value="itemsPerPage" :items="pageSizes" value-key="value" size="sm" class="w-18" aria-label="Rows per page" @update:model-value="setPageSize" />
       </label>
-      <UIcon v-if="showLoading" name="lucide:loader-circle" class="size-4 animate-spin text-muted" aria-label="Loading page" />
     </div>
     <div v-if="isCursor || hasPagination" class="col-span-2 min-w-0 -mx-3 border-t border-default px-3 pt-3 md:col-auto md:mx-0 md:border-t-0 md:px-0 md:pt-0">
       <div class="min-w-0 max-w-full overflow-x-auto">

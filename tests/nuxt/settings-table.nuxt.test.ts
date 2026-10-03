@@ -31,7 +31,7 @@ describe('Settings table', () => {
     expect(footer.text()).toContain('1–10 / 24')
     expect(footer.find('nav[data-slot="root"]').exists()).toBe(true)
     expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('grid')
-    expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('md:flex')
+    expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
     const pager = wrapper.get('.eapp-settings-pagination nav[data-slot="root"]')
     expect(pager.get('[data-slot="list"]').classes()).toContain('flex-nowrap')
     const scroller = pager.element.parentElement!
