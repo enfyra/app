@@ -37,7 +37,7 @@ const idColumn: ColumnDef<Record<string, any>> = {
 }
 function hasColumnContent(column: ColumnDef<Record<string, any>>, key: string) {
   return props.data.some((row, index) => {
-    const value = column.accessorFn
+    const value = 'accessorFn' in column && column.accessorFn
       ? column.accessorFn(row, index)
       : 'accessorKey' in column && column.accessorKey
         ? String(column.accessorKey).split('.').reduce((current, part) => current?.[part], row as any)
