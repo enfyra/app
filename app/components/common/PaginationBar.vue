@@ -9,6 +9,7 @@ const props = withDefaults(defineProps<{
   total: number;
   itemsPerPage: number;
   loading?: boolean;
+  floating?: boolean;
   showRange?: boolean;
   showEdges?: boolean;
   siblingCount?: number;
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<{
   ui?: Record<string, string>;
 }>(), {
   loading: false,
+  floating: true,
   showRange: true,
   showEdges: true,
   siblingCount: 1,
@@ -55,7 +57,7 @@ const pageStart = computed(() => {
 
 const pageEnd = computed(() => Math.min((page.value || 1) * props.itemsPerPage, props.total));
 const hasPagination = computed(() => props.total > props.itemsPerPage);
-const showMini = computed(() => hasPagination.value && isMiniVisible.value);
+const showMini = computed(() => props.floating && hasPagination.value && isMiniVisible.value);
 
 const mainRootClass = computed(() =>
   props.align === 'center'
@@ -85,7 +87,7 @@ const miniUi = computed(() => ({
     v-bind="$attrs"
     :class="[
       'eapp-pagination',
-      '-mx-4 px-4 sm:-mx-6 sm:px-6',
+      '-mx-3 px-3 sm:-mx-3 sm:px-3 md:-mx-6 md:px-6',
       'border-t border-[color-mix(in_srgb,var(--shell-main-border)_60%,transparent)] bg-[var(--shell-main-bg)] py-3',
       mainRootClass,
     ]"

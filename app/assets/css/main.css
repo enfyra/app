@@ -130,15 +130,10 @@ button:focus-visible,
 @source inline("hover:{bg,text,border}-{primary,success,warning,error,info}/{5,10,20}");
 
 @layer components {
-  .eapp-page-constrained {
-    width: 100%;
-    max-width: 1000px;
-    margin-inline: auto;
-  }
-
+  .eapp-page-constrained,
   .eapp-page-constrained-wide {
     width: 100%;
-    max-width: 1200px;
+    max-width: var(--ui-container);
     margin-inline: auto;
   }
 }
@@ -516,6 +511,12 @@ button:focus-visible,
   background: var(--surface-default);
   box-shadow: none;
   padding: 1.25rem;
+}
+
+@media (max-width: 767px) {
+  .eapp-shell-main .eapp-form-region {
+    padding: 0.75rem;
+  }
 }
 
 .eapp-shell-main .eapp-form-region .eapp-form-region,

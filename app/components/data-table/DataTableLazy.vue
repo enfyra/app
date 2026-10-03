@@ -11,7 +11,6 @@ const props = withDefaults(defineProps<DataTableProps>(), {
 
 const emit = defineEmits<{
   "row-click": [row: any];
-  "load-more": [];
   "page-size-change": [size: number];
   "update:rowSelection": [selection: Record<string, boolean>];
 }>();
@@ -35,7 +34,6 @@ const DataTable = defineAsyncComponent(() => import("./DataTable.vue"));
         v-model:column-visibility="columnVisibility"
         v-model:page="page"
         @row-click="(row) => emit('row-click', row)"
-        @load-more="emit('load-more')"
         @page-size-change="size => emit('page-size-change', size)"
       >
         <template v-for="(_, name) in $slots" #[name]="slotData">

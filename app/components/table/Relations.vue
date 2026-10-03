@@ -19,7 +19,7 @@ const currentRelation = ref<any>(null);
 const relationErrors = ref<Record<number, Record<string, string>>>({});
 
 const { ensureSchema, generateEmptyForm, validate } = useSchema("enfyra_relation");
-const { isMobile, isTablet } = useScreen();
+const { isMobile, isTablet, isDesktop } = useScreen();
 
 const currentTableName = computed(() => {
   if (!props.tableId) return "";
@@ -312,125 +312,193 @@ async function removeRelation(index: number) {
   if (!ok) return;
   relations.value.splice(index, 1);
 }
+function getMobileRelationActions(rel: any, index: number) {
+  return [
+    { label: 'Edit relation', icon: 'lucide:pencil', onClick: () => editRelation(rel, index) },
+    ...(getId(rel) && !isInverseRelation(rel) ? [{
+      label: rel.isPublished ? 'Unpublish relation' : 'Publish relation',
+      icon: rel.isPublished ? 'lucide:eye-off' : 'lucide:eye',
+      onClick: () => { rel.isPublished = !rel.isPublished; },
+    }] : []),
+    { label: `Field permissions (${getPermCount(rel)})`, icon: 'lucide:shield', onClick: () => handleShieldClick(rel, index) },
+  ];
+}
 </script>
 
 <template>
   <div class="space-y-2 mt-6">
-    <div class="flex items-center gap-2 text-lg font-semibold text-muted">
-      <UIcon name="lucide:git-branch" class="w-5 h-5" />
-      Relations
+    <div class="flex items-center justify-between gap-3">
+      <h3 class="flex items-center gap-2 text-base font-semibold text-highlighted lg:text-lg">
+        <UIcon name="lucide:git-branch" class="size-5 text-muted" />
+        Relations
+      </h3>
+      <UButton
+        v-if="!isDesktop"
+        icon="lucide:plus"
+        label="Add Relation"
+        size="sm"
+        class="relative h-8 pointer-coarse:before:absolute pointer-coarse:before:-inset-y-1.5 pointer-coarse:before:inset-x-0 pointer-coarse:before:content-['']"
+        loading-auto
+        @click="openNewRelationModal()"
+      />
     </div>
-
-    <div
-      v-for="(rel, index) in relations"
-      :key="rel.id ?? index"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
-      @click="editRelation(rel, index)"
-      tabindex="0"
-      role="button"
-      :aria-label="`Edit relation ${rel.propertyName || 'Unnamed'}`"
-      @keydown.enter.prevent="editRelation(rel, index)"
-      @keydown.space.prevent="editRelation(rel, index)"
-    >
-      <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
-        <UIcon name="lucide:link" class="w-4 h-4 text-muted-foreground shrink-0" />
-        <span class="text-sm font-medium truncate flex-1 min-w-0" :title="rel.propertyName || 'Unnamed'">
-          {{ rel.propertyName || "Unnamed" }}
+    <div v-if="!isDesktop && relations.length" class="divide-y divide-default overflow-hidden rounded-[var(--radius-control)] border border-default bg-default">
+      <TableSchemaFieldItem
+        v-for="(rel, index) in relations"
+        :key="rel.id ?? index"
+        :name="rel.propertyName || 'Unnamed'"
+        icon="lucide:link"
+        :actions="getMobileRelationActions(rel, index)"
+        :delete-action="{
+          label: `Delete relation ${rel.propertyName || 'Unnamed'}`,
+          icon: 'lucide:trash',
+          disabled: !!rel.isSystem,
+          onClick: () => removeRelation(index),
+        }"
+        @edit="editRelation(rel, index)"
+      >
+        <span class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <UBadge v-if="rel.type" size="xs" color="neutral" variant="soft" :label="rel.type" />
+          <UBadge v-if="isInverseRelation(rel)" size="xs" color="neutral" variant="soft" label="inverse" />
+          <UBadge v-else-if="getId(rel) && !rel.isPublished" size="xs" color="warning" variant="soft" label="Unpublished" />
+          <span v-if="rel.isNullable">nullable</span>
         </span>
-      </div>
+        <span v-if="rel.targetTable || rel.targetTableName" class="flex min-w-0 items-start gap-1.5">
+          <UIcon name="lucide:arrow-right" class="size-3.5 shrink-0" />
+          <span class="min-w-0 line-clamp-2 font-mono [overflow-wrap:anywhere]" :title="resolveTargetTableName(rel) ?? 'Unknown'">{{ resolveTargetTableName(rel) ?? 'Unknown' }}</span>
+        </span>
+        <span v-if="getPermCount(rel)" class="block">{{ getPermCount(rel) }} permissions</span>
+      </TableSchemaFieldItem>
+    </div>
+    <template v-if="isDesktop">
+      <div
+        v-for="(rel, index) in relations"
+        :key="rel.id ?? index"
+        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
+        @click="editRelation(rel, index)"
+        tabindex="0"
+        role="button"
+        :aria-label="`Edit relation ${rel.propertyName || 'Unnamed'}`"
+        @keydown.enter.prevent="editRelation(rel, index)"
+        @keydown.space.prevent="editRelation(rel, index)"
+      >
+        <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
+          <UIcon name="lucide:link" class="w-4 h-4 text-muted-foreground shrink-0" />
+          <span class="text-sm font-medium truncate flex-1 min-w-0" :title="rel.propertyName || 'Unnamed'">
+            {{ rel.propertyName || "Unnamed" }}
+          </span>
+        </div>
 
-      <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
-        <UBadge v-if="isInverseRelation(rel)" size="xs" variant="soft" color="warning">inverse</UBadge>
-        <UBadge size="xs" color="info" v-if="rel.type">{{ rel.type }}</UBadge>
-        <UBadge size="xs" color="info" v-if="rel.targetTable || rel.targetTableName">
-          →
-          {{ resolveTargetTableName(rel) ?? 'Unknown' }}
-        </UBadge>
-        <UBadge size="xs" color="info" v-if="rel.isNullable">nullable</UBadge>
-      </div>
+        <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
+          <UBadge v-if="isInverseRelation(rel)" size="xs" variant="soft" color="warning">inverse</UBadge>
+          <UBadge size="xs" color="info" v-if="rel.type">{{ rel.type }}</UBadge>
+          <UBadge size="xs" color="info" v-if="rel.targetTable || rel.targetTableName">
+            →
+            {{ resolveTargetTableName(rel) ?? 'Unknown' }}
+          </UBadge>
+          <UBadge size="xs" color="info" v-if="rel.isNullable">nullable</UBadge>
+        </div>
 
-      <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
-        <UTooltip
-          v-if="getId(rel) && !isInverseRelation(rel)"
-          :text="rel.isPublished ? 'Published' : 'Unpublished'"
-          :delay-duration="0"
-          :disabled="tooltipsDisabled"
-        >
-          <UButton
-            :icon="rel.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
-            :aria-label="rel.isPublished ? 'Unpublish relation' : 'Publish relation'"
-            :color="rel.isPublished ? 'success' : 'neutral'"
-            variant="ghost"
-            size="xs"
-            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
-            @click.stop="rel.isPublished = !rel.isPublished"
-          />
-        </UTooltip>
-        <UTooltip
-          :text="`Field permissions (${getPermCount(rel)})`"
-          :delay-duration="0"
-          :disabled="tooltipsDisabled"
-        >
-          <UChip
-            :text="String(getPermCount(rel))"
-            size="md"
-            color="secondary"
-            :show="true"
+        <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
+          <UTooltip
+            v-if="getId(rel) && !isInverseRelation(rel)"
+            :text="rel.isPublished ? 'Published' : 'Unpublished'"
+            :delay-duration="0"
+            :disabled="tooltipsDisabled"
           >
             <UButton
-              icon="lucide:shield"
-              aria-label="Field permissions"
-              color="secondary"
+              :icon="rel.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
+              :aria-label="rel.isPublished ? 'Unpublish relation' : 'Publish relation'"
+              :color="rel.isPublished ? 'success' : 'neutral'"
               variant="ghost"
               size="xs"
               class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
-              @click.stop="handleShieldClick(rel, index)"
+              @click.stop="rel.isPublished = !rel.isPublished"
             />
-          </UChip>
-        </UTooltip>
+          </UTooltip>
+          <UTooltip
+            :text="`Field permissions (${getPermCount(rel)})`"
+            :delay-duration="0"
+            :disabled="tooltipsDisabled"
+          >
+            <UChip
+              :text="String(getPermCount(rel))"
+              size="md"
+              color="secondary"
+              :show="true"
+            >
+              <UButton
+                icon="lucide:shield"
+                aria-label="Field permissions"
+                color="secondary"
+                variant="ghost"
+                size="xs"
+                class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
+                @click.stop="handleShieldClick(rel, index)"
+              />
+            </UChip>
+          </UTooltip>
+          <UButton
+            icon="lucide:trash"
+            aria-label="Delete relation"
+            color="error"
+            variant="ghost"
+            size="xs"
+            :disabled="rel.isSystem"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
+            @click.stop="removeRelation(index)"
+          />
+        </div>
+      </div>
+    </template>
+
+    <div v-if="!isDesktop && incomingRelations.length" class="divide-y divide-default overflow-hidden rounded-[var(--radius-control)] border border-dashed border-default bg-default">
+      <TableSchemaFieldItem
+        v-for="incoming in incomingRelations"
+        :key="incoming.id"
+        :name="`${incoming.sourceTableName ?? 'unknown'}.${incoming.propertyName}`"
+        icon="lucide:arrow-down-left"
+        :editable="false"
+        :actions="[{ label: 'Create inverse relation', icon: 'lucide:plus', onClick: () => openInverseModal(incoming) }]"
+      >
+        <span class="flex flex-wrap items-center gap-2">
+          <UBadge size="xs" variant="soft" color="neutral" :label="incoming.type" />
+          <span>incoming</span>
+        </span>
+      </TableSchemaFieldItem>
+    </div>
+    <template v-if="isDesktop">
+      <div
+        v-for="incoming in incomingRelations"
+        :key="'incoming-' + incoming.id"
+        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-dashed border-[var(--border-default)] opacity-60 hover:opacity-100 transition"
+      >
+        <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
+          <UIcon name="lucide:arrow-down-left" class="w-4 h-4 text-muted-foreground shrink-0" />
+          <span
+            class="text-sm text-muted-foreground truncate flex-1 min-w-0"
+            :title="`${incoming.sourceTableName ?? 'unknown'}.${incoming.propertyName}`"
+          >
+            {{ incoming.sourceTableName ?? 'unknown' }}.{{ incoming.propertyName }}
+          </span>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
+          <UBadge size="xs" variant="soft" color="neutral">{{ incoming.type }}</UBadge>
+          <UBadge size="xs" variant="soft" color="neutral">incoming</UBadge>
+        </div>
         <UButton
-          icon="lucide:trash"
-          aria-label="Delete relation"
-          color="error"
-          variant="ghost"
+          icon="lucide:plus"
+          label="Create Inverse"
+          color="primary"
+          variant="soft"
           size="xs"
-          :disabled="rel.isSystem"
-          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
-          @click.stop="removeRelation(index)"
+          class="shrink-0 order-2 lg:order-3"
+          @click.stop="openInverseModal(incoming)"
         />
       </div>
-    </div>
+    </template>
 
-    <div
-      v-for="incoming in incomingRelations"
-      :key="'incoming-' + incoming.id"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-dashed border-[var(--border-default)] opacity-60 hover:opacity-100 transition"
-    >
-      <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
-        <UIcon name="lucide:arrow-down-left" class="w-4 h-4 text-muted-foreground shrink-0" />
-        <span
-          class="text-sm text-muted-foreground truncate flex-1 min-w-0"
-          :title="`${incoming.sourceTableName ?? 'unknown'}.${incoming.propertyName}`"
-        >
-          {{ incoming.sourceTableName ?? 'unknown' }}.{{ incoming.propertyName }}
-        </span>
-      </div>
-      <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
-        <UBadge size="xs" variant="soft" color="neutral">{{ incoming.type }}</UBadge>
-        <UBadge size="xs" variant="soft" color="neutral">incoming</UBadge>
-      </div>
-      <UButton
-        icon="lucide:plus"
-        label="Create Inverse"
-        color="primary"
-        variant="soft"
-        size="xs"
-        class="shrink-0 order-2 lg:order-3"
-        @click.stop="openInverseModal(incoming)"
-      />
-    </div>
-
-    <div class="flex justify-end pt-2">
+    <div v-if="isDesktop" class="flex justify-end pt-2">
       <UButton
         icon="lucide:plus"
         label="Add Relation"
@@ -438,7 +506,7 @@ async function removeRelation(index: number) {
         class="relative z-10"
         color="primary"
         variant="solid"
-        :size="(isMobile || isTablet) ? 'sm' : 'md'"
+        size="md"
       />
     </div>
   </div>

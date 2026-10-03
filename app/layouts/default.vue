@@ -1,7 +1,7 @@
 <template>
   <UDashboardGroup
     :persistent="false"
-    class="bg-[var(--shell-bg)] text-sm text-[var(--text-primary)] lg:py-[var(--shell-inset)] lg:pe-[var(--shell-inset)]"
+    class="bg-[var(--shell-bg)] text-sm text-[var(--text-primary)] p-[var(--shell-mobile-inset)] lg:ps-0 lg:py-[var(--shell-inset)] lg:pe-[var(--shell-inset)]"
   >
     <a
       href="#dashboard-panel-workspace"
@@ -17,7 +17,7 @@
         id="workspace"
         role="main"
         tabindex="-1"
-        class="eapp-shell-main overflow-hidden bg-[var(--shell-main-bg)] lg:rounded-[var(--radius-shell)] lg:border lg:border-default lg:shadow-sm"
+        class="eapp-shell-main overflow-hidden bg-[var(--shell-main-bg)] rounded-[var(--radius-shell)] border border-default shadow-sm"
         :ui="{ root: 'min-h-0' }"
       >
         <template #header>
@@ -31,24 +31,25 @@
               <LayoutHeader />
             </template>
           </UDashboardNavbar>
-          <CommonPageHeader
-            v-if="hasPageHeader"
-            class="bg-[var(--shell-main-bg)]"
-            :title="pageHeader!.title"
-            :description="pageHeader?.description"
-            :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
-            :variant="pageHeader?.variant"
-            :gradient="pageHeader?.gradient"
-            :leading-icon="pageHeader?.leadingIcon"
-            :hide-leading-icon="pageHeader?.hideLeadingIcon"
-          />
-          <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions && width >= 1024" class="bg-[var(--shell-main-bg)]" />
         </template>
 
         <template #body>
           <section ref="workspaceContent" class="relative flex flex-1 flex-col gap-4 app-workspace">
-            <UContainer class="grid min-w-0 w-full flex-1 route-stack px-0 sm:px-0 lg:px-0">
-              <slot />
+            <UContainer class="flex min-w-0 w-full flex-1 flex-col gap-4 px-0 sm:px-0 lg:px-0">
+              <CommonPageHeader
+                v-if="hasPageHeader"
+                :title="pageHeader!.title"
+                :description="pageHeader?.description"
+                :stats="pageHeader?.stats ? [...pageHeader.stats] : undefined"
+                :variant="pageHeader?.variant"
+                :gradient="pageHeader?.gradient"
+                :leading-icon="pageHeader?.leadingIcon"
+                :hide-leading-icon="pageHeader?.hideLeadingIcon"
+              />
+              <LayoutSubHeader v-if="!hasPageHeader && hasSubHeaderActions" :ui="{ root: 'border-0 px-0' }" />
+              <div class="grid min-w-0 w-full flex-1 route-stack">
+                <slot />
+              </div>
             </UContainer>
             <CommonRouteLoading :show="routeLoadingVisible" message="Navigating..." />
           </section>
@@ -108,13 +109,13 @@ import {
 const pageSurfaceUi = {
   card: {
     root: 'rounded-[var(--radius-card)] border border-default bg-default ring-0 shadow-none',
-    header: 'px-4 sm:px-6',
-    body: 'px-4 sm:px-6',
-    footer: 'px-4 sm:px-6',
+    header: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
+    body: 'p-3 sm:p-3 md:p-6',
+    footer: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
   },
   pageCard: {
     root: 'rounded-[var(--radius-card)] border border-default bg-default ring-0 shadow-none',
-    container: 'p-4 sm:p-6',
+    container: 'p-3 md:p-6',
   },
 };
 
@@ -129,8 +130,7 @@ useAdminSocket();
 
 const { routeLoadingVisible } = useGlobalState();
 const route = useRoute();
-const { width } = useScreen();
-const { subHeaderActions } = useSubHeaderActionRegistry();
+const { visibleActions: subHeaderActions } = useSubHeaderActionPresentation();
 const { pageHeader, hasPageHeader } = usePageHeaderRegistry();
 const workspaceContent = useTemplateRef<HTMLElement>('workspaceContent');
 const workspaceScroll = computed(() => workspaceContent.value?.parentElement ?? null);

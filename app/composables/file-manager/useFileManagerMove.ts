@@ -1,14 +1,10 @@
+import { useFileManagerMoveState } from './useFileManagerMoveState';
 
 export function useFileManagerMove() {
-  const moveState = useState("file-manager:move:state", () => ({
-    moveMode: false as boolean,
-    sourceFolderId: null as string | null,
-    selectedItems: [] as string[],
-    selectedFileIds: [] as string[],
-    selectedFolderIds: [] as string[],
-  }));
+  const moveState = useFileManagerMoveState();
   
   const route = useRoute();
+  const { getId } = useDatabase();
   const { confirm } = useConfirm();
   const notify = useNotify();
 
@@ -37,16 +33,16 @@ export function useFileManagerMove() {
     if (selectedItems.length === 0) return;
     
     if (!moveState.value.sourceFolderId) {
-      moveState.value.sourceFolderId = parentId || (route.params.id as string);
+      moveState.value.sourceFolderId = parentId || (route.params.id as string | undefined) || null;
     }
     
     moveState.value.selectedItems = [...selectedItems];
     
     moveState.value.selectedFolderIds = selectedItems.filter((id) =>
-      folders.find((f) => f.id === id)
+      folders.find((f) => String(getId(f)) === String(id))
     );
     moveState.value.selectedFileIds = selectedItems.filter((id) =>
-      files.find((f) => f.id === id)
+      files.find((f) => String(getId(f)) === String(id))
     );
     
     moveState.value.moveMode = true;
@@ -62,7 +58,7 @@ export function useFileManagerMove() {
   }
 
   function isMoveHereDisabled(parentId?: string): boolean {
-    const currentFolderId = parentId || (route.params.id as string | undefined);
+    const currentFolderId = parentId || (route.params.id as string | undefined) || null;
     return !moveState.value.moveMode || currentFolderId === moveState.value.sourceFolderId;
   }
 

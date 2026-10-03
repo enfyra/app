@@ -9,14 +9,42 @@ const mounted: { unmount: () => void }[] = []
 afterEach(() => { mounted.splice(0).forEach(wrapper => wrapper.unmount()) })
 
 describe('table pagination theme boundary', () => {
-  it('does not draw a separate border above cursor Load more', async () => {
-    const wrapper = await mountSuspended(TablePagination, { props: { mode: 'cursor', itemsPerPage: 10, loadedCount: 10, hasMore: true } })
+  it('keeps desktop range, page size and cursor controls on one footer row', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: {
+        data: Array.from({ length: 20 }, (_, index) => ({ id: index + 1 })),
+        columns: [{ accessorKey: 'id', header: 'ID' }],
+        page: 1,
+        paginationConfig: { mode: 'cursor', itemsPerPage: 20, showPageSize: true, hasNextPage: true, floating: false },
+      },
+    })
     mounted.push(wrapper)
-    const button = wrapper.get('button')
-    expect(button.text()).toContain('Load more')
+    const footer = wrapper.get('[aria-label="Table pagination"]')
+    expect(footer.text()).toContain('1–20')
+    expect(footer.find('[aria-label="Rows per page"]').exists()).toBe(true)
+    expect(footer.findAll('button').some(button => button.text() === 'Next')).toBe(true)
+    expect(footer.classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
+    expect(footer.classes()).not.toContain('md:flex-wrap')
+    expect(footer.classes()).toContain('grid')
+  })
+
+  it('uses the numbered pager position and mobile separator for cursor navigation', async () => {
+    const wrapper = await mountSuspended(TablePagination, { props: { mode: 'cursor', itemsPerPage: 10, rowCount: 10, hasNextPage: true } })
+    mounted.push(wrapper)
+    const button = wrapper.findAll('button').find(button => button.text() === 'Next')!
+    expect(button.text()).toContain('Next')
     expect(button.element.parentElement!.classList.contains('border-t')).toBe(false)
+    const separator = button.element.parentElement!.parentElement!.parentElement!
+    expect(separator.classList.contains('border-t')).toBe(false)
+    expect(separator.classList.contains('max-md:border-t')).toBe(true)
+    expect(separator.classList.contains('max-md:pt-3')).toBe(true)
+    expect(separator.classList.contains('max-md:px-3')).toBe(true)
+    expect(separator.classList.contains('md:border-t-0')).toBe(false)
+    const footer = wrapper.get('[aria-label="Table pagination"]')
+    expect(footer.classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
+    expect(footer.classes()).not.toContain('md:flex-wrap')
     await button.trigger('click')
-    expect(wrapper.emitted('load-more')).toHaveLength(1)
+    expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
   })
 
   it('renders selection and range together in the pagination summary', async () => {
@@ -62,11 +90,24 @@ describe('table pagination theme boundary', () => {
     expect(pagers).toHaveLength(1)
     const root = pagers[0]!.get('[data-slot="root"]')
     expect(root.classes()).toContain('eapp-table-pagination-controls')
-    expect(root.classes()).toContain('border-t')
-    expect(root.classes()).toContain('md:border-t-0')
-    expect(root.get('[data-slot="list"]').classes()).toContain('flex-wrap')
+    expect(root.classes()).not.toContain('border-t')
+    const scroller = root.element.parentElement!
+    expect(scroller.classList.contains('overflow-x-auto')).toBe(true)
+    const separator = scroller.parentElement!
+    expect(separator.classList.contains('border-t')).toBe(false)
+    expect(separator.classList.contains('max-md:border-t')).toBe(true)
+    expect(separator.classList.contains('max-md:pt-3')).toBe(true)
+    expect(separator.classList.contains('max-md:px-3')).toBe(true)
+    expect(separator.classList.contains('md:border-t-0')).toBe(false)
+    expect(separator.classList.contains('max-md:-mx-3')).toBe(true)
+    expect(separator.classList.contains('max-md:col-span-2')).toBe(true)
+    expect(root.get('[data-slot="list"]').classes()).toContain('flex-nowrap')
+    expect(root.get('[data-slot="list"]').classes()).not.toContain('flex-wrap')
     expect(root.get('[data-slot="list"]').classes()).toContain('justify-center')
     expect(root.get('[data-slot="list"]').classes()).toContain('md:justify-end')
+    const footer = wrapper.get('[aria-label="Table pagination"]')
+    expect(footer.classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
+    expect(footer.classes()).not.toContain('md:flex-wrap')
   })
 
   it('shows the table mini pager only while its footer is off screen and its table is visible', async () => {

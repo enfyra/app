@@ -124,6 +124,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFileManagerMoveState } from '~/composables/file-manager/useFileManagerMoveState';
 interface Props {
   file: FileItem & {
     displayName: string;
@@ -160,7 +161,7 @@ const emit = defineEmits<{
   "view-file-details": [file: any];
 }>();
 
-const { moveState } = useFileManagerMove();
+const moveState = useFileManagerMoveState();
 const { checkPermissionCondition } = usePermissions();
 
 const canDeleteFile = checkPermissionCondition({

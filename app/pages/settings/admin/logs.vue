@@ -19,7 +19,7 @@ const timeWindows = [
   { label: 'Last 30 days', value: 720 },
 ];
 const page = ref(1);
-const pageLimit = useSettingsPageSize('server-logs', 20);
+const pageLimit = useSettingsPageSize('server-logs');
 const selected = ref<RuntimeLogRow | null>(null);
 const detailOpen = ref(false);
 const path = computed(() => kind.value === 'system' ? '/enfyra_system_error' : '/enfyra_user_log');

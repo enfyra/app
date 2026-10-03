@@ -266,7 +266,9 @@
     --pagination-disabled-text: var(--text-disabled);
 
     --shell-inset: 1.5rem;
-    --ui-container: 80rem;
+    --shell-mobile-inset: 0.75rem;
+    --shell-overlay-inset: var(--shell-mobile-inset);
+    --ui-container: 75rem;
     --shell-sidebar-width: 16rem;
     --shell-sidebar-inset: calc(var(--shell-inset) + 0.75rem);
     --shell-bg: var(--md-surface);
@@ -434,6 +436,18 @@
   --ui-color-info-800: color-mix(in srgb, var(--info-color) 62%, var(--info-on-surface)) !important;
   --ui-color-info-900: var(--info-on-surface) !important;
   --ui-color-info-950: color-mix(in srgb, var(--info-on-surface) 82%, var(--info-color)) !important;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --shell-mobile-inset: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --shell-overlay-inset: var(--shell-inset);
+  }
 }
 
 :root {

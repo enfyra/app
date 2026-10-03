@@ -61,7 +61,7 @@ describe('DataTable layout', () => {
     const { readFileSync } = await import('node:fs')
     const { resolve } = await import('node:path')
     const source = readFileSync(resolve(process.cwd(), 'app/components/data-table/DataTable.vue'), 'utf8')
-    expect(source).toContain('slots.toolbar || props.showColumnVisibility')
+    expect(source).toContain("slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility")
     expect(source).toContain('props.showColumnVisibility && visibilityItems.length')
   })
 

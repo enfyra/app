@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useFileManagerMoveState } from '~/composables/file-manager/useFileManagerMoveState';
 import { UIcon, UBadge } from "#components";
 import { createSelectionColumn } from '~/utils/data-table-selection';
 import type { RowSelectionState } from '@tanstack/vue-table';
@@ -27,7 +28,7 @@ const emit = defineEmits<{
   "refresh-files": [];
 }>();
 
-const { moveState } = useFileManagerMove();
+const moveState = useFileManagerMoveState();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
@@ -344,6 +345,7 @@ function getContextMenuItems(file: any) {
           :columns="fileColumns"
           :loading="false"
           :get-row-id="(file: any) => String(getId(file))"
+          :enable-row-selection="!moveState.moveMode"
           v-model:row-selection="rowSelection"
           :context-menu-items="
             !isSelectionMode && !moveState.moveMode

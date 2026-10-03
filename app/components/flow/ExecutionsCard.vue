@@ -6,14 +6,15 @@ import { getExecutionStatusColor } from '~/utils/flow.constants';
 
 const props = withDefaults(defineProps<{
   executions: any[];
-  hasMore: boolean;
+  page?: number;
+  hasNextPage: boolean;
   loading: boolean;
   showTitle?: boolean;
-}>(), { showTitle: true });
+}>(), { showTitle: true, page: 1 });
 
 const emit = defineEmits<{
   refresh: [];
-  loadMore: [];
+  'update:page': [page: number];
   open: [execution: any];
 }>();
 const { getId } = useDatabase();
@@ -46,8 +47,9 @@ function formatTime(value: string | null) {
       :loading="loading"
       :show-column-visibility="false"
       :get-row-id="execution => String(getId(execution))"
-      :pagination-config="{ mode: 'cursor', itemsPerPage: 10, hasMore, loading, loadedCount: executions.length, showPageSize: false }"
-      @load-more="emit('loadMore')"
+      :page="page"
+      :pagination-config="{ mode: 'cursor', itemsPerPage: 10, hasNextPage, loading, showPageSize: false }"
+      @update:page="page => emit('update:page', page)"
       @row-click="execution => emit('open', execution)"
     />
   </section>

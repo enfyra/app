@@ -92,10 +92,11 @@
           <FlowExecutionsCard
             :show-title="false"
             :executions="executions"
-            :has-more="hasMoreExecs"
-            :loading="execLoading"
+            :page="executionPage"
+            :has-next-page="hasNextExecutionPage"
+            :loading="execLoading || executionPaginationLoading"
             @refresh="refreshExecutions"
-            @load-more="loadMoreExecutions"
+            @update:page="setExecutionPage"
             @open="openExecution"
           />
         </template>
@@ -321,49 +322,40 @@ async function loadFlow() {
 
 const EXEC_LIMIT = 10;
 const EXEC_FIELDS = 'id,status,startedAt,completedAt,duration,currentStep';
-const allExecutions = ref<any[]>([]);
-const hasMoreExecs = ref(true);
-const execCursor = ref<number | null>(null);
-
-const { executeWithResult: fetchExecApi } = useApi(
-  () => {
-    const filter: any = { flow: { _eq: flowId.value } };
-    if (execCursor.value) filter.id = { _lt: execCursor.value };
-    return `/enfyra_flow_execution?filter=${JSON.stringify(filter)}&sort=-id&limit=${EXEC_LIMIT}&fields=${EXEC_FIELDS}`;
-  },
+const latestExecution = ref<Record<string, any> | null>(null);
+const { executeWithResult: fetchExecApi } = useApi<{ data: Record<string, any>[] }>(
+  '/enfyra_flow_execution',
   { errorContext: "Fetch Executions" }
 );
+const {
+  data: executions,
+  page: executionPage,
+  hasNextPage: hasNextExecutionPage,
+  loading: executionPaginationLoading,
+  setPage: setExecutionPage,
+  reset: resetExecutionPages,
+} = useCursorPagination<Record<string, any>, string | number>({
+  itemsPerPage: EXEC_LIMIT,
+  scope: flowId,
+  getCursor: getId,
+  async fetchPage(cursor, limit) {
+    const filter: Record<string, any> = { flow: { _eq: flowId.value } };
+    if (cursor !== null) filter.id = { _lt: cursor };
+    const result = await fetchExecApi({ query: { filter: JSON.stringify(filter), sort: '-id', limit, fields: EXEC_FIELDS } });
+    return result.ok ? result.data.data : null;
+  },
+});
 
 async function fetchExecutions() {
-  execCursor.value = null;
-  allExecutions.value = [];
-  hasMoreExecs.value = true;
-  const result = await fetchExecApi();
-  if (!result.ok) return;
-  const items = (result.data as any)?.data || [];
-  allExecutions.value = items;
-  hasMoreExecs.value = items.length >= EXEC_LIMIT;
-  if (items.length > 0) execCursor.value = items[items.length - 1].id;
+  const loaded = await resetExecutionPages();
+  if (loaded) latestExecution.value = executions.value[0] ?? null;
+  return loaded;
 }
-
-async function loadMoreExecutions() {
-  if (!hasMoreExecs.value || execLoading.value) return;
-  execLoading.value = true;
-    const result = await fetchExecApi();
-    if (!result.ok) return;
-    const items = (result.data as any)?.data || [];
-  allExecutions.value = [...allExecutions.value, ...items];
-  hasMoreExecs.value = items.length >= EXEC_LIMIT;
-  if (items.length > 0) execCursor.value = items[items.length - 1].id;
-  execLoading.value = false;
-}
-
-const executions = computed(() => allExecutions.value);
 
 const latestExecDetail = ref<any>(null);
 const { executeWithResult: fetchLatestExecDetail } = useApi(
   () => {
-    const latest = allExecutions.value[0];
+    const latest = latestExecution.value;
     if (!latest) return '/enfyra_flow_execution?limit=0';
     const filter = buildFlowExecutionDetailFilter(
       flowId.value,
@@ -459,6 +451,7 @@ async function loadFlowPage() {
   editingStepId.value = null;
   selectedExec.value = null;
   latestExecDetail.value = null;
+  latestExecution.value = null;
   flowData.value = null;
   const flowResult = await loadFlow();
   if (!flowResult.ok || run !== flowPageLoadRun) return;
@@ -926,8 +919,7 @@ function onFlowExecution(data: { flowId?: string | number; status: string; [key:
 async function refreshExecutions() {
   execLoading.value = true;
   try {
-    await fetchExecutions();
-    await refreshExecOverlay();
+    if (await fetchExecutions()) await refreshExecOverlay();
   } finally {
     execLoading.value = false;
   }

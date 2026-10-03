@@ -381,7 +381,7 @@ function getArrayEnumTypeMap(currentType: string, options: any[]) {
   };
 }
 
-const { isMobile, isTablet } = useScreen();
+const { isMobile, isTablet, isDesktop } = useScreen();
 
 function getDefaultValueType(columnType: string) {
   switch (columnType) {
@@ -569,124 +569,178 @@ watch(
   },
   { deep: true }
 );
+function getMobileColumnActions(column: any, index: number) {
+  return [
+    { label: 'Edit column', icon: 'lucide:pencil', onClick: () => editColumn(column, index) },
+    ...(!isPrimaryColumn(column) ? [
+      {
+        label: column.isPublished ? 'Unpublish column' : 'Publish column',
+        icon: column.isPublished ? 'lucide:eye-off' : 'lucide:eye',
+        onClick: () => toggleColumnPublished(column),
+      },
+      { label: `Field permissions (${getPermCount(column)})`, icon: 'lucide:shield', onClick: () => handleShieldClick(column, index) },
+      { label: `Validation rules (${getRuleCount(column)})`, icon: 'lucide:ruler', onClick: () => handleRuleClick(column, index) },
+    ] : []),
+  ];
+}
 </script>
 
 <template>
   <div class="space-y-2">
-    <div class="flex items-center gap-2 text-lg font-semibold text-muted">
-      <UIcon name="lucide:columns" class="w-5 h-5" />
-      Columns
+    <div class="flex items-center justify-between gap-3">
+      <h3 class="flex items-center gap-2 text-base font-semibold text-highlighted lg:text-lg">
+        <UIcon name="lucide:columns" class="size-5 text-muted" />
+        Columns
+      </h3>
+      <UButton
+        v-if="!isDesktop"
+        icon="lucide:plus"
+        label="Add Column"
+        size="sm"
+        class="relative h-8 pointer-coarse:before:absolute pointer-coarse:before:-inset-y-1.5 pointer-coarse:before:inset-x-0 pointer-coarse:before:content-['']"
+        loading-auto
+        @click="addNewColumn()"
+      />
     </div>
-    <div
-      v-for="(column, index) in displayColumns"
-      :key="column.id ?? index"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
-      @click="editColumn(column, index)"
-      tabindex="0"
-      role="button"
-      :aria-label="`Edit column ${column.name || 'Unnamed'}`"
-      @keydown.enter.prevent="editColumn(column, index)"
-      @keydown.space.prevent="editColumn(column, index)"
-    >
-      <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
-        <UIcon name="lucide:type" class="w-4 h-4 text-muted-foreground shrink-0" />
-        <span class="text-sm font-medium truncate flex-1 min-w-0" :title="column.name || 'Unnamed'">
-          {{ column.name || "Unnamed" }}
+    <div v-if="!isDesktop && displayColumns.length" class="divide-y divide-default overflow-hidden rounded-[var(--radius-control)] border border-default bg-default">
+      <TableSchemaFieldItem
+        v-for="(column, index) in displayColumns"
+        :key="column.id ?? index"
+        :name="column.name || 'Unnamed'"
+        :icon="isPrimaryColumn(column) ? 'lucide:key-round' : 'lucide:type'"
+        :actions="getMobileColumnActions(column, index)"
+        :delete-action="{
+          label: `Delete column ${column.name || 'Unnamed'}`,
+          icon: 'lucide:trash',
+          disabled: !!(column.isSystem || column.isPrimary),
+          onClick: () => removeColumn(index),
+        }"
+        @edit="editColumn(column, index)"
+      >
+        <span class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <UBadge v-if="column.type" size="xs" color="neutral" variant="soft" :label="column.type" />
+          <UBadge v-if="isPrimaryColumn(column)" size="xs" color="neutral" variant="soft" label="Primary key" />
+          <UBadge v-else-if="!column.isPublished" size="xs" color="warning" variant="soft" label="Unpublished" />
+          <span v-if="column.isNullable">nullable</span>
         </span>
-      </div>
+        <span v-if="getPermCount(column) || getRuleCount(column)" class="flex flex-wrap gap-x-3 gap-y-1">
+          <span v-if="getPermCount(column)">{{ getPermCount(column) }} permissions</span>
+          <span v-if="getRuleCount(column)">{{ getRuleCount(column) }} rules</span>
+        </span>
+      </TableSchemaFieldItem>
+    </div>
+    <template v-if="isDesktop">
+      <div
+        v-for="(column, index) in displayColumns"
+        :key="column.id ?? index"
+        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
+        @click="editColumn(column, index)"
+        tabindex="0"
+        role="button"
+        :aria-label="`Edit column ${column.name || 'Unnamed'}`"
+        @keydown.enter.prevent="editColumn(column, index)"
+        @keydown.space.prevent="editColumn(column, index)"
+      >
+        <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
+          <UIcon name="lucide:type" class="w-4 h-4 text-muted-foreground shrink-0" />
+          <span class="text-sm font-medium truncate flex-1 min-w-0" :title="column.name || 'Unnamed'">
+            {{ column.name || "Unnamed" }}
+          </span>
+        </div>
 
-      <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
-        <UBadge size="xs" color="info" v-if="column.type">
-          {{ column.type }}
-        </UBadge>
-        <UBadge size="xs" color="info" v-if="column.isNullable"
-          >nullable</UBadge
-        >
-      </div>
+        <div class="flex flex-wrap items-center gap-1.5 basis-full lg:basis-auto order-3 lg:order-2 [&>*]:whitespace-nowrap">
+          <UBadge size="xs" color="info" v-if="column.type">
+            {{ column.type }}
+          </UBadge>
+          <UBadge size="xs" color="info" v-if="column.isNullable"
+            >nullable</UBadge
+          >
+        </div>
 
-      <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
-        <UTooltip
-          v-if="!isPrimaryColumn(column)"
-          :text="column.isPublished ? 'Published' : 'Unpublished'"
-          :delay-duration="0"
-          :disabled="tooltipsDisabled"
-        >
+        <div class="flex items-center gap-1 shrink-0 order-2 lg:order-3">
+          <UTooltip
+            v-if="!isPrimaryColumn(column)"
+            :text="column.isPublished ? 'Published' : 'Unpublished'"
+            :delay-duration="0"
+            :disabled="tooltipsDisabled"
+          >
+            <UButton
+              :icon="column.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
+              :aria-label="column.isPublished ? 'Unpublish column' : 'Publish column'"
+              :color="column.isPublished ? 'success' : 'neutral'"
+              variant="ghost"
+              size="xs"
+              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
+              @click.stop="toggleColumnPublished(column)"
+            />
+          </UTooltip>
+          <UTooltip
+            v-if="!isPrimaryColumn(column)"
+            :text="`Field permissions (${getPermCount(column)})`"
+            :delay-duration="0"
+            :disabled="tooltipsDisabled"
+          >
+            <UChip
+              :text="String(getPermCount(column))"
+              size="md"
+              color="secondary"
+              :show="true"
+            >
+              <UButton
+                icon="lucide:shield"
+                aria-label="Field permissions"
+                color="secondary"
+                variant="ghost"
+                size="xs"
+                class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
+                @click.stop="handleShieldClick(column, index)"
+              />
+            </UChip>
+          </UTooltip>
+          <UTooltip
+            v-if="!isPrimaryColumn(column)"
+            :text="`Validation rules (${getRuleCount(column)})`"
+            :delay-duration="0"
+            :disabled="tooltipsDisabled"
+          >
+            <UChip
+              :text="String(getRuleCount(column))"
+              size="md"
+              color="info"
+              :show="true"
+            >
+              <UButton
+                icon="lucide:ruler"
+                aria-label="Validation rules"
+                color="info"
+                variant="ghost"
+                size="xs"
+                class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
+                @click.stop="handleRuleClick(column, index)"
+              />
+            </UChip>
+          </UTooltip>
           <UButton
-            :icon="column.isPublished ? 'lucide:eye' : 'lucide:eye-off'"
-            :aria-label="column.isPublished ? 'Unpublish column' : 'Publish column'"
-            :color="column.isPublished ? 'success' : 'neutral'"
+            icon="lucide:trash"
+            aria-label="Delete column"
+            color="error"
             variant="ghost"
             size="xs"
-            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
-            @click.stop="toggleColumnPublished(column)"
+            :disabled="column.isSystem || column.isPrimary"
+            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
+            @click.stop="removeColumn(index)"
           />
-        </UTooltip>
-        <UTooltip
-          v-if="!isPrimaryColumn(column)"
-          :text="`Field permissions (${getPermCount(column)})`"
-          :delay-duration="0"
-          :disabled="tooltipsDisabled"
-        >
-          <UChip
-            :text="String(getPermCount(column))"
-            size="md"
-            color="secondary"
-            :show="true"
-          >
-            <UButton
-              icon="lucide:shield"
-              aria-label="Field permissions"
-              color="secondary"
-              variant="ghost"
-              size="xs"
-              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
-              @click.stop="handleShieldClick(column, index)"
-            />
-          </UChip>
-        </UTooltip>
-        <UTooltip
-          v-if="!isPrimaryColumn(column)"
-          :text="`Validation rules (${getRuleCount(column)})`"
-          :delay-duration="0"
-          :disabled="tooltipsDisabled"
-        >
-          <UChip
-            :text="String(getRuleCount(column))"
-            size="md"
-            color="info"
-            :show="true"
-          >
-            <UButton
-              icon="lucide:ruler"
-              aria-label="Validation rules"
-              color="info"
-              variant="ghost"
-              size="xs"
-              class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-pointer"
-              @click.stop="handleRuleClick(column, index)"
-            />
-          </UChip>
-        </UTooltip>
-        <UButton
-          icon="lucide:trash"
-          aria-label="Delete column"
-          color="error"
-          variant="ghost"
-          size="xs"
-          :disabled="column.isSystem || column.isPrimary"
-          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] cursor-not-allowed enabled:cursor-pointer"
-          @click.stop="removeColumn(index)"
-        />
+        </div>
       </div>
-    </div>
+    </template>
 
-    <div class="flex justify-end pt-2">
+    <div v-if="isDesktop" class="flex justify-end pt-2">
       <UButton
         icon="lucide:plus"
         label="Add Column"
         :loading-auto="true"
         @click="addNewColumn()"
-        :size="(isMobile || isTablet) ? 'sm' : 'md'"
+        size="md"
       />
     </div>
   </div>
