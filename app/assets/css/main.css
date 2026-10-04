@@ -387,12 +387,13 @@ button:focus-visible,
   border: 1px solid var(--card-border);
   background: var(--card-bg);
   box-shadow: var(--card-shadow-hover);
-  padding-bottom: max(0.375rem, env(safe-area-inset-bottom));
+  bottom: calc(var(--shell-mobile-inset) + 0.75rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0.25rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .eapp-pagination-mini {
-    padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+    bottom: calc(var(--shell-inset) + 0.75rem);
   }
 }
 

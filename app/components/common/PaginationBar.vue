@@ -34,10 +34,8 @@ const props = withDefaults(defineProps<{
 const mainBar = shallowRef<HTMLElement | null>(null);
 const { isMiniVisible } = useMiniBarVisibility(mainBar);
 
-// The mini bar is the only pagination on screen once the main bar scrolls away, so
-// on desktop it stands in at the main bar's own scale instead of staying phone-sized.
-const { isMobile } = useScreen();
-const miniSize = computed(() => (isMobile.value ? 'xs' : 'sm'));
+// The mini bar floats over the shell frame, so it stays compact at every viewport.
+const miniSize = 'xs';
 
 // Loading is reported by the chip only, and deferred so a quick fetch shows no
 // chip instead of blinking one.
@@ -74,8 +72,8 @@ const mainUi = computed(() => ({
 
 const miniUi = computed(() => ({
   root: 'min-w-max w-fit',
-  list: 'flex-nowrap gap-0.5 md:gap-1',
-  item: '!min-w-7 md:!min-w-8',
+  list: 'flex-nowrap gap-0.5',
+  item: '!min-w-7',
   ...props.ui,
 }));
 </script>
@@ -128,7 +126,7 @@ const miniUi = computed(() => ({
     <Transition name="mini-pagination">
       <div
         v-show="showMini"
-        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-md items-center justify-between gap-2 rounded-[var(--radius-panel)] px-3 py-1.5 md:max-w-lg md:gap-4 md:px-4 md:py-2.5"
+        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 z-30 mx-auto flex w-fit max-w-[calc(100%-1.5rem)] items-center justify-between gap-1.5 rounded-[var(--radius-panel)] px-2 py-1 md:gap-2 md:px-2.5"
       >
         <div class="min-w-0 flex-1 overflow-x-auto">
           <UPagination
@@ -146,7 +144,7 @@ const miniUi = computed(() => ({
           />
         </div>
 
-        <p v-if="showRange" class="shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--text-tertiary)] md:text-sm">
+        <p v-if="showRange" class="shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--text-tertiary)]">
           <span class="sr-only">Showing {{ pageStart }} to {{ pageEnd }} of {{ total }} results</span>
           <span aria-hidden="true">
             <span class="text-[var(--text-secondary)]">{{ pageStart }}-{{ pageEnd }}</span>

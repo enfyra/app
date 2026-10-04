@@ -24,8 +24,7 @@ describe('pagination layout', () => {
     expect(pagination).not.toContain('sticky bottom-')
     expect(pagination).toContain("'eapp-pagination',")
     expect(pagination).toContain('bg-[var(--shell-main-bg)]')
-    expect(pagination).toContain('-mx-4 px-4')
-    expect(pagination).toContain('sm:-mx-6 sm:px-6')
+    expect(pagination).toContain('-mx-3 px-3 sm:-mx-3 sm:px-3 md:-mx-6 md:px-6')
     expect(pagination).toContain('v-bind="$attrs"')
     expect(pagination).toContain('inheritAttrs: false')
 
@@ -76,7 +75,7 @@ describe('pagination layout', () => {
     const dataPage = readAppFile('pages/data/[table]/index.vue')
     expect(tablePagination).toContain('useMiniBarVisibility(floatingTarget, tableScope)')
     expect(tablePagination).toContain('floating: true')
-    expect(tablePagination).toContain('v-if="floating && !isCursor"')
+    expect(tablePagination).toContain('Teleport v-if="canFloat"')
     expect(tablePagination).toContain('ref="paginationFooter"')
     expect(settingsTable).toContain(':pagination-config=')
     expect(settingsTable).not.toContain('<DataTablePagination')
@@ -107,12 +106,14 @@ describe('pagination layout', () => {
 
     expect(pagination).toContain('ref="mainBar"')
     expect(pagination).toContain('useMiniBarVisibility(mainBar)')
-    expect(pagination).toContain('const showMini = computed(() => hasPagination.value && isMiniVisible.value)')
+    expect(pagination).toContain('const showMini = computed(() => props.floating && hasPagination.value && isMiniVisible.value)')
     expect(pagination).toContain('<Teleport to="body">')
-    expect(pagination).toContain('eapp-pagination-mini fixed inset-x-3 bottom-3')
+    expect(pagination).toContain('eapp-pagination-mini fixed inset-x-3 z-30')
+    expect(pagination).not.toContain('bottom-3')
     const miniBar = pagination.match(/class="eapp-pagination eapp-pagination-mini[^"]*"/)?.[0]
     expect(miniBar).not.toContain('flex-wrap')
-    expect(pagination).toContain("list: 'flex-nowrap gap-0.5 md:gap-1'")
+    expect(miniBar).toContain('w-fit')
+    expect(pagination).toContain("list: 'flex-nowrap gap-0.5'")
     expect(pagination).toContain('class="min-w-0 flex-1 overflow-x-auto"')
 
     // The handoff must be driven by an observer on the main bar, with a reserve
@@ -128,25 +129,28 @@ describe('pagination layout', () => {
     expect(pagination).toContain('rounded-[var(--radius-panel)]')
     expect(miniRule).toContain('border: 1px solid var(--card-border)')
     expect(miniRule).toContain('box-shadow: var(--card-shadow-hover)')
-    expect(miniRule).toContain('env(safe-area-inset-bottom)')
+    expect(miniRule).toContain('var(--shell-mobile-inset)')
+    expect(css).toContain('bottom: calc(var(--shell-inset) + 0.75rem)')
 
     // Over moving content a blur would re-run every frame.
     expect(miniRule).not.toContain('backdrop-filter')
   })
 
-  it('sizes the mini bar controls below the main bar controls on mobile only', () => {
+  it('keeps the floating mini bar compact at every viewport', () => {
     const pagination = readAppFile('components/common/PaginationBar.vue')
+    const tablePagination = readAppFile('components/data-table/Pagination.vue')
 
     const mainSize = pagination.match(/<UPagination\s[\s\S]*?\/>/)
     expect(mainSize, 'main pagination should render').not.toBeNull()
     expect(mainSize![0]).toContain('size="sm"')
 
-    // The mini bar is the only pagination on screen once the main bar is scrolled
-    // away, so on desktop it stands in at the main bar's own scale. It drops to the
-    // smaller control size only below `md`, the app's 768px mobile threshold.
-    expect(pagination).toContain("const miniSize = computed(() => (isMobile.value ? 'xs' : 'sm'))")
+    // The mini bar floats over the shell frame, so it stays compact instead of
+    // growing to the main bar's desktop scale and covering the frame edge.
+    expect(pagination).toContain("const miniSize = 'xs'")
     expect(pagination).toContain(':size="miniSize"')
-    expect(pagination).not.toMatch(/size="xs"/)
+    expect(tablePagination).toContain("const miniPaginationSize = 'xs'")
+    expect(tablePagination).not.toContain('bottom-3')
+    expect(tablePagination).toContain('size="xs"')
   })
 
   it('keeps all controls visible on mobile in main and mini pagers', () => {
@@ -155,7 +159,7 @@ describe('pagination layout', () => {
       expect(pagination).not.toContain('max-md:!hidden')
       expect(pagination).not.toContain('EDGE_CONTROL_UI')
       expect(pagination).not.toMatch(/:show-controls/)
-      expect(pagination).toContain('flex-wrap')
+      if (path === 'components/common/PaginationBar.vue') expect(pagination).toContain('flex-wrap')
       expect(pagination).not.toContain(':sibling-count="isMobile ? 1 : 2"')
     }
     const pagination = readAppFile('components/common/PaginationBar.vue')
