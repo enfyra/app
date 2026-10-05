@@ -521,7 +521,7 @@ button:focus-visible,
 }
 
 .eapp-shell-main .eapp-form-region .eapp-form-region,
-.eapp-tabbed-panel .eapp-form-region {
+.eapp-panel .eapp-form-region {
   border: 0;
   border-radius: 0;
   background: transparent;

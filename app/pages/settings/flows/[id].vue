@@ -37,7 +37,7 @@
         </CommonFormCard>
       </template>
 
-      <CommonTabbedPanel v-else-if="flow" v-model="activeEditorTab" :items="flowTabs" :unmount-on-hide="false">
+      <CommonPanel v-else-if="flow" v-model="activeEditorTab" :sections="flowSections">
         <template #settings>
           <CommonFormCard>
             <UForm :state="editForm" @submit="saveFlowSettings">
@@ -100,7 +100,7 @@
             @open="openExecution"
           />
         </template>
-      </CommonTabbedPanel>
+      </CommonPanel>
     </div>
 
     <CommonEmptyState v-else title="Flow not found" icon="lucide:workflow" size="lg" />
@@ -169,11 +169,11 @@ const activeEditorTab = computed({
     void router.push({ query: { ...route.query, tab } });
   },
 });
-const flowTabs = [
-  { label: 'Settings', value: 'settings', slot: 'settings', icon: 'lucide:settings-2' },
-  { label: 'Steps', value: 'steps', slot: 'steps', icon: 'lucide:workflow' },
-  { label: 'Triggers', value: 'triggers', slot: 'triggers', icon: 'lucide:zap' },
-  { label: 'History', value: 'history', slot: 'history', icon: 'lucide:history' },
+const flowSections = [
+  { label: 'Settings', value: 'settings', icon: 'lucide:settings-2' },
+  { label: 'Steps', value: 'steps', icon: 'lucide:workflow' },
+  { label: 'Triggers', value: 'triggers', icon: 'lucide:zap' },
+  { label: 'History', value: 'history', icon: 'lucide:history' },
 ];
 const notify = useNotify();
 const { confirm } = useConfirm();

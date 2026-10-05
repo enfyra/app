@@ -99,15 +99,15 @@ const {
 
 const route = useRoute();
 const router = useRouter();
-const profileTabs = [
-  { label: 'Profile', value: 'profile', slot: 'profile', icon: 'lucide:user' },
-  { label: 'Password', value: 'password', slot: 'password', icon: 'lucide:key-round' },
-  { label: 'API Tokens', value: 'api-tokens', slot: 'api-tokens', icon: 'lucide:key' },
+const profileSections = [
+  { label: 'Profile', value: 'profile', icon: 'lucide:user' },
+  { label: 'Password', value: 'password', icon: 'lucide:key-round' },
+  { label: 'API Tokens', value: 'api-tokens', icon: 'lucide:key' },
 ];
 const activeTab = computed({
-  get: () => profileTabs.some(tab => tab.value === route.query.tab) ? String(route.query.tab) : 'profile',
+  get: () => profileSections.some(section => section.value === route.query.tab) ? String(route.query.tab) : 'profile',
   set: (value: string | number) => {
-    void router.push({ query: { ...route.query, tab: profileTabs.some(tab => tab.value === value) ? value : 'profile' } });
+    void router.push({ query: { ...route.query, tab: profileSections.some(section => section.value === value) ? value : 'profile' } });
   },
 });
 
@@ -209,7 +209,7 @@ onMounted(() => {
       icon="lucide:user-x"
       size="sm"
     />
-    <CommonTabbedPanel v-else v-model="activeTab" :items="profileTabs">
+    <CommonPanel v-else v-model="activeTab" :sections="profileSections">
       <template #profile>
         <CommonFormCard :bordered="false">
           <UForm :state="form" @submit="saveProfile">
@@ -265,6 +265,6 @@ onMounted(() => {
       <template #api-tokens>
         <ProfileApiTokensTable :active="activeTab === 'api-tokens'" />
       </template>
-    </CommonTabbedPanel>
+    </CommonPanel>
   </div>
 </template>

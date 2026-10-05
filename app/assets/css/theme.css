@@ -514,6 +514,13 @@
   --action-danger-bg-hover: var(--danger-surface-hover);
   --action-danger-bg-active: var(--danger-surface-active);
   --action-danger-text: var(--md-on-error-container);
+  --action-neutral-solid-bg: var(--md-surface-container-highest);
+  --action-neutral-solid-bg-hover: color-mix(in srgb, var(--md-primary) 14%, var(--md-surface-container-highest));
+  --action-neutral-solid-bg-active: color-mix(in srgb, var(--md-primary) 20%, var(--md-surface-container-highest));
+  --action-neutral-solid-text: var(--md-on-surface);
+  --action-neutral-outline-bg: var(--md-surface-container-high);
+  --action-neutral-outline-bg-hover: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface-container-high));
+  --action-neutral-outline-bg-active: color-mix(in srgb, var(--md-primary) 16%, var(--md-surface-container-high));
 
   /* Dark separates canvas, frame, and cards by lightness while staying clear of
      near-black. Accent stays on actions and selected states. */

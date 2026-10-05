@@ -1,7 +1,10 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
-      <CommonFormCard>
+      <CommonPanel :sections="[{ value: 'route' }]">
+        <template #route-header><h2 class="text-sm font-medium">Route</h2></template>
+        <template #route>
+<CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
           <FormEditorLazy
             v-model="createForm"
@@ -13,6 +16,8 @@
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>

@@ -1,6 +1,9 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'configuration' }]">
+        <template #configuration-header><h2 class="text-sm font-medium">Configuration</h2></template>
+        <template #configuration>
       <CommonFormCard>
         <UForm :state="form" @submit="updateConfig">
           <FormEditorLazy
@@ -15,6 +18,8 @@
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
     <CommonEmptyState
       v-if="!loading && !configData?.data?.[0]"

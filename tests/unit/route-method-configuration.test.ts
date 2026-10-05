@@ -110,15 +110,15 @@ describe('route method settings presentation', () => {
     expect(panel).not.toMatch(/code budget/i)
   })
 
-  it('uses flat secondary pills only for embedded collection routes', () => {
+  it('uses the shared panel and keeps embedded collection routes unframed', () => {
     const collection = readFileSync(join(appDir, 'pages/collections/[table].vue'), 'utf8')
-    const tabs = panel.match(/<UTabs[\s\S]*?\/>/)?.[0]
-    expect(tabs).toContain(":variant=\"props.embedded ? 'pill' : 'link'\"")
+    expect(panel).toContain('<CommonPanel')
+    expect(panel).toContain(':sections="editorSections"')
     expect(panel).toContain(':framed="!props.embedded"')
     expect(panel).toContain('embedded: false')
     expect(collection).toContain(':embedded="true"')
     expect(panel).not.toContain('route-editor-navigation')
-    expect(collection).toContain('<CommonTabbedPanel>')
+    expect(collection).toContain('<CommonPanel')
     expect(collection).toContain('class="collection-route-panel"')
     expect(collection).not.toContain('class="collection-route-panel border-t')
   })

@@ -1,6 +1,9 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained-wide space-y-6">
+      <CommonPanel :sections="[{ value: 'guard' }]">
+        <template #guard-header><h2 class="text-sm font-medium">Guard</h2></template>
+        <template #guard>
       <CommonFormCard>
         <UForm :state="form" @submit="updateGuard">
           <FormEditorLazy
@@ -18,6 +21,8 @@
 
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
 
       <CommonFormCard>
         <template #header>

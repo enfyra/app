@@ -16,6 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const slots = useSlots()
+const { isMobile } = useScreen()
 const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection'])
 const tableOptions = computed(() => Object.fromEntries(Object.entries(props).filter(([key]) => !wrapperKeys.has(key))))
 const tableRef = useTemplateRef<{ tableApi?: Table<Record<string, any>>; tableRef?: HTMLElement }>('tableRef')
@@ -100,21 +101,20 @@ defineExpose({
 <template>
   <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
     <span v-if="skeletonActive" role="status" class="sr-only">Loading records...</span>
-    <div v-if="slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default px-3 py-3 md:px-4">
-      <div v-if="slots.toolbar" class="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+    <div v-if="slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-muted px-3 py-3 md:px-4">
+      <div class="flex min-w-0 w-full flex-1 basis-full flex-wrap items-center gap-3 md:w-auto md:basis-auto">
         <slot name="toolbar" :table-api="tableRef?.tableApi" />
       </div>
-      <div v-if="slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length)" class="flex min-h-8 shrink-0 items-center">
-      <slot name="toolbar-actions" :table-api="tableRef?.tableApi">
-      <UDropdownMenu
-        v-if="props.showColumnVisibility && visibilityItems.length"
-        :items="visibilityItems"
-        :content="{ align: 'end' }"
-        :ui="{ item: 'cursor-pointer pointer-coarse:min-h-[44px]' }"
-      >
-        <UButton type="button" label="Columns" icon="lucide:columns-3" color="neutral" variant="outline" size="sm" aria-label="Choose visible columns" />
-      </UDropdownMenu>
-      </slot>
+      <div v-if="slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length)" class="ml-auto flex min-h-8 shrink-0 items-center justify-end gap-2">
+        <slot name="toolbar-actions" :table-api="tableRef?.tableApi" />
+        <UDropdownMenu
+          v-if="props.showColumnVisibility && visibilityItems.length"
+          :items="visibilityItems"
+          :content="{ align: 'end' }"
+          :ui="{ item: 'cursor-pointer pointer-coarse:min-h-[44px]' }"
+        >
+          <UButton type="button" :label="isMobile ? undefined : 'Columns'" icon="lucide:columns-3" color="neutral" variant="outline" size="sm" aria-label="Choose visible columns" />
+        </UDropdownMenu>
       </div>
     </div>
     <component :is="menuWrapper" :items="props.contextMenuItems ? menuItems : undefined">

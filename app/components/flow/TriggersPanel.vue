@@ -1,5 +1,5 @@
 <template>
-  <CommonFormCard>
+  <CommonFormCard :bordered="false" class="eapp-bordered-region p-4 md:p-5">
     <template #header>
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">

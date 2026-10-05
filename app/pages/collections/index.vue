@@ -209,27 +209,11 @@ watch(
     >
       <template #toolbar>
         <div class="flex w-full min-w-0 items-center gap-2 lg:gap-3">
-          <UInput
+          <CommonSearchField
             v-model="searchQuery"
-            icon="lucide:search"
             placeholder="Search collections…"
-            aria-label="Search collections by table name"
-            size="sm"
-            class="min-w-0 flex-1 lg:w-72 lg:flex-none"
-            :ui="{ base: '!h-8 !py-0', trailing: 'pe-1' }"
-          >
-            <template v-if="searchQuery" #trailing>
-              <UButton
-                icon="lucide:x"
-                aria-label="Clear search"
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                class="size-6 p-0"
-                @click="searchQuery = ''"
-              />
-            </template>
-          </UInput>
+            label="Search collections by table name"
+          />
           <USelect
             v-model="visibilityScope"
             :items="visibilityOptions"

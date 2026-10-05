@@ -15,7 +15,7 @@ const props = defineProps<{
 const sizeClass = computed(() => {
   const map = {
     sm: {
-      root: "min-h-40 px-5 py-8",
+      root: "min-h-24 px-5 py-6",
       icon: "h-10 w-10",
       iconGlyph: "h-5 w-5",
       title: "text-sm",

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { h } from 'vue';
+import type { ColumnDef } from '@tanstack/vue-table';
+import { UButton } from '#components';
 import { fmtDateTime, fmtMs } from '~/utils/runtime-monitor/format';
 import {
   metricTextClass,
@@ -11,7 +14,32 @@ import type { RuntimeFlowFailedJobRow, RuntimeFlowRow } from '~/types/runtime-mo
 
 type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
 
-defineProps<{ runtime: RuntimeMetricsViewModel }>();
+const props = defineProps<{ runtime: RuntimeMetricsViewModel }>();
+const flowColumns: ColumnDef<RuntimeFlowRow>[] = [
+  { id: 'flow', header: 'Flow', cell: ({ row }) => row.original.flowName },
+  { id: 'running', header: 'Running', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => String(row.original.running) },
+  { id: 'completed', header: 'Completed', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => String(row.original.completed) },
+  { id: 'failed', header: 'Failed', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => h('span', { class: metricTextClass(row.original.failed > 0 ? 'error' : 'ok') }, String(row.original.failed)) },
+  { id: 'p95', header: 'p95', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => fmtMs(row.original.p95Ms) },
+  { id: 'failedSteps', header: 'Failed steps', cell: ({ row }) => h('span', { class: 'text-xs text-[var(--text-tertiary)]' }, failedStepLabels(row.original)) },
+  { id: 'slowSteps', header: 'Slow steps', cell: ({ row }) => h('span', { class: 'text-xs text-[var(--text-tertiary)]' }, slowStepLabels(row.original)) },
+];
+const failedJobColumns: ColumnDef<RuntimeFlowFailedJobRow>[] = [
+  { id: 'target', header: 'Debug target', cell: ({ row }) => {
+    const to = flowDebugTo(row.original);
+    return h('div', { class: 'flex min-w-0 items-center gap-2' }, [
+      to ? h(UButton, { to, icon: 'lucide:external-link', size: 'xs', variant: 'soft', color: 'primary' }) : null,
+      h('div', { class: 'min-w-0' }, [
+        h('div', { class: 'truncate font-medium', title: debugTarget(row.original) }, debugTarget(row.original)),
+        h('div', { class: 'truncate text-xs text-[var(--text-tertiary)]', title: row.original.name || '-' }, shortText(row.original.name || '-', 28, 8)),
+      ]),
+    ]);
+  } },
+  { id: 'source', header: 'Triggered by', cell: ({ row }) => h('div', { class: 'min-w-0' }, [h('div', { class: 'truncate font-medium', title: flowSourceLabel(row.original) }, flowSourceLabel(row.original)), h('div', { class: 'truncate text-xs text-[var(--text-tertiary)]' }, row.original.sourceStepKey ? `step ${row.original.sourceStepKey}` : `job #${shortText(row.original.id, 10, 4)}`)]) },
+  { id: 'reason', header: 'Reason', cell: ({ row }) => h('span', { class: 'block max-w-[360px] truncate text-xs text-[var(--text-tertiary)]', title: row.original.failedReason || '-' }, row.original.failedReason || '-') },
+  { id: 'attempts', header: 'Attempts', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => String(row.original.attemptsMade) },
+  { id: 'failedAt', header: 'Failed at', cell: ({ row }) => h('span', { class: 'text-xs text-[var(--text-tertiary)]' }, fmtDateTime(row.original.finishedOn ? new Date(row.original.finishedOn) : row.original.timestamp ? new Date(row.original.timestamp) : null)) },
+];
 
 function flowDebugTo(job: RuntimeFlowFailedJobRow) {
   const flowId = job.failedStepKey ? job.flowId : (job.sourceFlowId ?? job.flowId);
@@ -43,9 +71,10 @@ function slowStepLabels(row: RuntimeFlowRow) {
 </script>
 
 <template>
-  <div class="surface-card rounded-lg p-4">
+  <div class="space-y-4">
+    <section class="surface-card rounded-lg p-4">
     <div class="mb-3 font-medium text-[var(--text-primary)]">Flow Execution Health</div>
-    <div class="mb-4 grid gap-3">
+    <div class="grid gap-3">
       <div
         v-for="metrics in runtime.instances"
         :key="`flow-${metrics.instance.id}`"
@@ -81,101 +110,15 @@ function slowStepLabels(row: RuntimeFlowRow) {
         </div>
       </div>
     </div>
+    </section>
 
-    <div class="eapp-bordered-region overflow-x-auto">
-      <table class="w-full min-w-[780px] text-sm">
-        <thead class="border-b border-[var(--border-default)] text-left text-xs text-[var(--text-tertiary)]">
-          <tr>
-            <th class="px-3 py-2">Flow</th>
-            <th class="px-3 py-2 text-right">Running</th>
-            <th class="px-3 py-2 text-right">Completed</th>
-            <th class="px-3 py-2 text-right">Failed</th>
-            <th class="px-3 py-2 text-right">p95</th>
-            <th class="px-3 py-2">Failed steps</th>
-            <th class="px-3 py-2">Slow steps</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border-default)]">
-          <tr v-for="row in runtime.flowRows" :key="row.flowId">
-            <td class="px-3 py-2 font-medium">{{ row.flowName }}</td>
-            <td class="px-3 py-2 text-right">{{ row.running }}</td>
-            <td class="px-3 py-2 text-right">{{ row.completed }}</td>
-            <td class="px-3 py-2 text-right" :class="metricTextClass(row.failed > 0 ? 'error' : 'ok')">
-              {{ row.failed }}
-            </td>
-            <td class="px-3 py-2 text-right">{{ fmtMs(row.p95Ms) }}</td>
-            <td class="px-3 py-2 text-xs text-[var(--text-tertiary)]">
-              {{ failedStepLabels(row) }}
-            </td>
-            <td class="px-3 py-2 text-xs text-[var(--text-tertiary)]">
-              {{ slowStepLabels(row) }}
-            </td>
-          </tr>
-          <tr v-if="runtime.flowRows.length === 0">
-            <td colspan="7" class="px-3 py-8 text-center text-[var(--text-tertiary)]">
-              No flow executions recorded yet
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="mt-4 overflow-x-auto rounded-lg border border-[var(--border-default)]">
-      <table class="w-full min-w-[860px] text-sm">
-        <thead class="border-b border-[var(--border-default)] text-left text-xs text-[var(--text-tertiary)]">
-          <tr>
-            <th class="px-3 py-2">Debug target</th>
-            <th class="px-3 py-2">Triggered by</th>
-            <th class="px-3 py-2">Reason</th>
-            <th class="px-3 py-2 text-right">Attempts</th>
-            <th class="px-3 py-2">Failed at</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border-default)]">
-          <tr v-for="job in runtime.flowFailedJobRows" :key="`${job.instanceId}-${job.id}`">
-            <td class="px-3 py-2">
-              <div class="flex min-w-0 items-center gap-2">
-                <UButton
-                  v-if="flowDebugTo(job)"
-                  :to="flowDebugTo(job)"
-                  icon="lucide:external-link"
-                  size="xs"
-                  variant="soft"
-                  color="primary"
-                />
-                <div class="min-w-0">
-                  <div class="truncate font-medium text-[var(--text-primary)]" :title="debugTarget(job)">
-                    {{ debugTarget(job) }}
-                  </div>
-                  <div class="truncate text-xs text-[var(--text-tertiary)]" :title="job.name || '-'">
-                    {{ shortText(job.name || '-', 28, 8) }}
-                  </div>
-                </div>
-              </div>
-            </td>
-            <td class="px-3 py-2">
-              <div class="truncate font-medium text-[var(--text-primary)]" :title="flowSourceLabel(job)">
-                {{ flowSourceLabel(job) }}
-              </div>
-              <div class="truncate text-xs text-[var(--text-tertiary)]" :title="job.sourceStepKey || ''">
-                {{ job.sourceStepKey ? `step ${job.sourceStepKey}` : `job #${shortText(job.id, 10, 4)}` }}
-              </div>
-            </td>
-            <td class="max-w-[360px] truncate px-3 py-2 text-xs text-[var(--text-tertiary)]" :title="job.failedReason || '-'">
-              {{ job.failedReason || '-' }}
-            </td>
-            <td class="px-3 py-2 text-right">{{ job.attemptsMade }}</td>
-            <td class="px-3 py-2 text-xs text-[var(--text-tertiary)]">
-              {{ fmtDateTime(job.finishedOn ? new Date(job.finishedOn) : job.timestamp ? new Date(job.timestamp) : null) }}
-            </td>
-          </tr>
-          <tr v-if="runtime.flowFailedJobRows.length === 0">
-            <td colspan="5" class="px-3 py-8 text-center text-[var(--text-tertiary)]">
-              No retained failed queue jobs
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <DataTable :data="props.runtime.flowRows" :columns="flowColumns">
+      <template #toolbar><h3 class="text-sm font-medium">Flow executions</h3></template>
+      <template #empty><CommonEmptyState variant="naked" title="No flow executions recorded yet" icon="lucide:workflow" size="sm" /></template>
+    </DataTable>
+    <DataTable :data="props.runtime.flowFailedJobRows" :columns="failedJobColumns">
+      <template #toolbar><h3 class="text-sm font-medium">Failed queue jobs</h3></template>
+      <template #empty><CommonEmptyState variant="naked" title="No retained failed queue jobs" icon="lucide:circle-alert" size="sm" /></template>
+    </DataTable>
   </div>
 </template>

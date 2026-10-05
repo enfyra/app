@@ -37,18 +37,9 @@
     </template>
 
     <template #body>
-      <CommonTabbedPanel class="h-full min-h-0" body-class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-4">
-        <template #header>
-          <UTabs
-            v-model="activeTab"
-            :items="tabs"
-            :content="false"
-            variant="link"
-          />
-        </template>
-
-        <div>
-          <section v-if="activeTab === 'setup'" class="space-y-5">
+      <CommonPanel v-model="activeTab" :sections="stepSections" class="h-full min-h-0" body-class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-4">
+        <template #setup>
+          <section class="space-y-5">
             <div class="space-y-2">
               <div class="text-sm font-semibold text-[var(--text-primary)]">Step type</div>
               <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
@@ -130,8 +121,9 @@
               />
             </div>
           </section>
-
-          <section v-else-if="activeTab === 'behavior'" class="grid gap-4 lg:grid-cols-2">
+        </template>
+        <template #behavior>
+          <section class="grid gap-4 lg:grid-cols-2">
             <div class="rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-default)] p-4">
               <div class="mb-4">
                 <div class="text-sm font-semibold text-[var(--text-primary)]">Runtime behavior</div>
@@ -170,8 +162,9 @@
               <CommonEmptyState v-else variant="naked" icon="lucide:git-branch" title="No condition steps" description="Create a condition step before attaching branch children." />
             </div>
           </section>
-
-          <section v-else class="grid min-h-full gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        </template>
+        <template #test>
+          <section class="grid min-h-full gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
             <div class="rounded-[var(--radius-card)] border border-[var(--border-default)] bg-[var(--surface-default)] p-4">
               <div class="mb-4">
                 <div class="text-sm font-semibold text-[var(--text-primary)]">Test input</div>
@@ -230,8 +223,8 @@
               </div>
             </div>
           </section>
-        </div>
-      </CommonTabbedPanel>
+        </template>
+      </CommonPanel>
     </template>
   </CommonDrawer>
 </template>
@@ -276,10 +269,10 @@ const emit = defineEmits<{
 
 const activeTab = ref<StepEditorTab>('setup');
 
-const tabs = [
-  { label: 'Setup', value: 'setup' as const, icon: 'lucide:settings-2' },
-  { label: 'Behavior', value: 'behavior' as const, icon: 'lucide:sliders-horizontal' },
-  { label: 'Test', value: 'test' as const, icon: 'lucide:flask-conical' },
+const stepSections = [
+  { label: 'Setup', value: 'setup', icon: 'lucide:settings-2' },
+  { label: 'Behavior', value: 'behavior', icon: 'lucide:sliders-horizontal' },
+  { label: 'Test', value: 'test', icon: 'lucide:flask-conical' },
 ];
 
 const branchOptions = [

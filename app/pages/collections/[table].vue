@@ -198,7 +198,7 @@ const showSchemaViewer = ref(false);
 const showRouteApiTest = ref(false);
 
 const activeTab = ref((route.query.tab as string) || 'schema')
-const tabItems = [
+const collectionSections = [
   { label: 'Schema', icon: 'i-lucide-table-2', value: 'schema' },
   { label: 'Routes', icon: 'i-lucide-route', value: 'routes' },
   { label: 'GraphQL', icon: 'i-lucide-braces', value: 'graphql' },
@@ -797,18 +797,12 @@ onMounted(async () => {
     </CommonModal>
 
     <div class="eapp-page-constrained">
-      <CommonTabbedPanel>
-        <template #header>
-          <UTabs v-model="activeTab" :items="tabItems" :content="false" variant="link" />
-        </template>
-
-      <CommonFormCard v-if="showInitialLoading">
-        <CommonDetailFormSkeleton />
-      </CommonFormCard>
-
-      <template v-else-if="table">
-        <UForm v-show="activeTab === 'schema'" @submit.prevent="save" :state="table">
-          <div>
+      <CommonPanel v-model="activeTab" :sections="collectionSections">
+        <template #schema>
+          <CommonFormCard v-if="showInitialLoading">
+            <CommonDetailFormSkeleton />
+          </CommonFormCard>
+          <UForm v-else-if="table" @submit.prevent="save" :state="table">
             <CommonFormCard>
               <TableForm v-model="table" @save="save">
                 <div class="space-y-6">
@@ -830,39 +824,43 @@ onMounted(async () => {
                 </div>
               </TableForm>
             </CommonFormCard>
-          </div>
-        </UForm>
-
-        <GraphqlAccessEditor
-          v-if="activeTab === 'graphql'"
-          :table-id="getId(table)"
-          :table-name="String(table.name)"
-        />
-
-        <div v-if="activeTab === 'routes'" class="collection-route-panel">
-          <RouteEditorPanel
-            :embedded="true"
-            :table-name="String(route.params.table ?? '')"
-            :external-api-test="showRouteApiTest"
-            @close-api-test="showRouteApiTest = false"
+          </UForm>
+          <CommonEmptyState
+            v-else
+            title="Table not found"
+            description="The requested table could not be loaded"
+            icon="lucide:database"
+            size="sm"
           />
-        </div>
+        </template>
 
-        <FlowTriggersPanel
-          v-if="activeTab === 'triggers'"
-          mode="table"
-          :table-id="getId(table)"
-        />
-      </template>
+        <template #graphql>
+          <GraphqlAccessEditor
+            v-if="table"
+            :table-id="getId(table)"
+            :table-name="String(table.name)"
+          />
+        </template>
 
-      <CommonEmptyState
-        v-else
-        title="Table not found"
-        description="The requested table could not be loaded"
-        icon="lucide:database"
-        size="sm"
-      />
-      </CommonTabbedPanel>
+        <template #routes>
+          <div class="collection-route-panel">
+            <RouteEditorPanel
+              :embedded="true"
+              :table-name="String(route.params.table ?? '')"
+              :external-api-test="showRouteApiTest"
+              @close-api-test="showRouteApiTest = false"
+            />
+          </div>
+        </template>
+
+        <template #triggers>
+          <FlowTriggersPanel
+            v-if="table"
+            mode="table"
+            :table-id="getId(table)"
+          />
+        </template>
+      </CommonPanel>
     </div>
 
     <CollectionSchemaViewerModal

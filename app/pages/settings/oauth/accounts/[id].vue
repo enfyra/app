@@ -1,7 +1,10 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
-      <CommonFormCard>
+      <CommonPanel :sections="[{ value: 'account' }]">
+        <template #account-header><h2 class="text-sm font-medium">Account</h2></template>
+        <template #account>
+<CommonFormCard>
         <UForm :state="form">
           <FormEditorLazy
             v-model="form"
@@ -13,6 +16,8 @@
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
 
     <CommonEmptyState

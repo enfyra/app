@@ -2,7 +2,10 @@
   <div class="eapp-page-constrained space-y-6">
     <div class="space-y-6">
       <div class="eapp-page-constrained">
-        <CommonFormCard>
+        <CommonPanel :sections="[{ value: 'bootstrap' }]">
+        <template #bootstrap-header><h2 class="text-sm font-medium">Bootstrap</h2></template>
+        <template #bootstrap>
+<CommonFormCard>
           <UForm :state="form" @submit="save">
             <FormEditorLazy
               ref="formEditorRef"
@@ -15,6 +18,8 @@
             />
           </UForm>
         </CommonFormCard>
+        </template>
+      </CommonPanel>
       </div>
     </div>
 

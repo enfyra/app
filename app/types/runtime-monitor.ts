@@ -89,6 +89,9 @@ export type RedisAdminKeyDetail = RedisAdminKeySummary & {
 };
 
 export type RedisAdminKeysResponse = {
+  sessionId: string;
+  page: number;
+  hasNextPage: boolean;
   cursor: string;
   count: number;
   keys: RedisAdminKeySummary[];

@@ -1,14 +1,25 @@
 <script setup lang="ts">
+import { h } from 'vue';
+import type { ColumnDef } from '@tanstack/vue-table';
 import { fmtMs } from '~/utils/runtime-monitor/format';
-import {
-  metricTextClass,
-} from '~/utils/runtime-monitor/core';
+import { metricTextClass } from '~/utils/runtime-monitor/core';
 import { databaseSeverity } from '~/utils/runtime-monitor/severity';
 import { databaseWarnings } from '~/utils/runtime-monitor/warnings';
 
 type RuntimeMetricsViewModel = ReturnType<typeof useRuntimeMetrics>;
 
-defineProps<{ runtime: RuntimeMetricsViewModel }>();
+type DatabaseRow = RuntimeMetricsViewModel['databaseRows'][number];
+const props = defineProps<{ runtime: RuntimeMetricsViewModel }>();
+const columns: ColumnDef<DatabaseRow>[] = [
+  { id: 'context', header: 'Context', cell: ({ row }) => row.original.context },
+  { id: 'operation', header: 'Operation', cell: ({ row }) => h('div', { class: 'min-w-0' }, [h('span', { class: 'font-medium' }, row.original.op), h('span', { class: 'ml-2 text-[var(--text-tertiary)]' }, row.original.table)]) },
+  { id: 'count', header: 'Count', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => String(row.original.count) },
+  { id: 'slow', header: 'Slow', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => h('span', { class: metricTextClass(row.original.slow > 0 ? 'warning' : 'ok') }, String(row.original.slow)) },
+  { id: 'errors', header: 'Errors', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => h('span', { class: metricTextClass(row.original.errors > 0 ? 'error' : 'ok') }, String(row.original.errors)) },
+  { id: 'pool', header: 'Pool timeout', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => h('span', { class: metricTextClass(row.original.poolAcquireTimeouts > 0 ? 'error' : 'ok') }, String(row.original.poolAcquireTimeouts)) },
+  { id: 'p95', header: 'p95', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => fmtMs(row.original.p95Ms) },
+  { id: 'p99', header: 'p99', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => fmtMs(row.original.p99Ms) },
+];
 </script>
 
 <template>
@@ -46,47 +57,9 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
       </div>
     </div>
 
-    <div class="eapp-bordered-region overflow-x-auto">
-      <table class="w-full min-w-[760px] text-sm">
-        <thead class="border-b border-[var(--border-default)] text-left text-xs text-[var(--text-tertiary)]">
-          <tr>
-            <th class="px-3 py-2">Context</th>
-            <th class="px-3 py-2">Operation</th>
-            <th class="px-3 py-2 text-right">Count</th>
-            <th class="px-3 py-2 text-right">Slow</th>
-            <th class="px-3 py-2 text-right">Errors</th>
-            <th class="px-3 py-2 text-right">Pool timeout</th>
-            <th class="px-3 py-2 text-right">p95</th>
-            <th class="px-3 py-2 text-right">p99</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border-default)]">
-          <tr v-for="row in runtime.databaseRows" :key="`${row.context}:${row.op}:${row.table}`">
-            <td class="px-3 py-2 text-[var(--text-tertiary)]">{{ row.context }}</td>
-            <td class="px-3 py-2">
-              <span class="font-medium">{{ row.op }}</span>
-              <span class="ml-2 text-[var(--text-tertiary)]">{{ row.table }}</span>
-            </td>
-            <td class="px-3 py-2 text-right">{{ row.count }}</td>
-            <td class="px-3 py-2 text-right" :class="metricTextClass(row.slow > 0 ? 'warning' : 'ok')">
-              {{ row.slow }}
-            </td>
-            <td class="px-3 py-2 text-right" :class="metricTextClass(row.errors > 0 ? 'error' : 'ok')">
-              {{ row.errors }}
-            </td>
-            <td class="px-3 py-2 text-right" :class="metricTextClass(row.poolAcquireTimeouts > 0 ? 'error' : 'ok')">
-              {{ row.poolAcquireTimeouts }}
-            </td>
-            <td class="px-3 py-2 text-right">{{ fmtMs(row.p95Ms) }}</td>
-            <td class="px-3 py-2 text-right">{{ fmtMs(row.p99Ms) }}</td>
-          </tr>
-          <tr v-if="runtime.databaseRows.length === 0">
-            <td colspan="8" class="px-3 py-8 text-center text-[var(--text-tertiary)]">
-              No query metrics yet
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <DataTable :data="props.runtime.databaseRows" :columns="columns">
+      <template #toolbar><h2 class="text-sm font-medium">Query metrics</h2></template>
+      <template #empty><CommonEmptyState variant="naked" title="No query metrics yet" icon="lucide:database" size="sm" /></template>
+    </DataTable>
   </div>
 </template>

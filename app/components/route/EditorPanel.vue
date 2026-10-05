@@ -44,19 +44,12 @@ const idField = getIdFieldName()
 const currentPageRoute = useRoute()
 const router = useRouter()
 const activeEditorTab = ref<'overview' | 'methods' | 'execution' | 'access'>('overview')
-const editorTabs = [
+const editorSections = [
   { label: 'Overview', value: 'overview', icon: 'lucide:settings-2' },
   { label: 'Methods', value: 'methods', icon: 'lucide:list-filter' },
   { label: 'Execution', value: 'execution', icon: 'lucide:workflow' },
   { label: 'Access', value: 'access', icon: 'lucide:shield-check' },
 ]
-const editorTabUi = computed(() => props.embedded ? {
-  root: 'w-full items-start',
-  list: 'w-fit min-w-0 gap-1 rounded-[var(--radius-control)] border-0 bg-muted p-1',
-  trigger: 'h-9 grow-0 rounded-[var(--radius-subcontrol)] px-3 text-xs data-[state=active]:shadow-xs',
-  leadingIcon: 'size-4',
-  indicator: 'hidden',
-} : props.showTabDivider ? undefined : { list: 'border-b-0', indicator: '!bottom-0' })
 const { routes, loadRoutes } = useRoutes()
 const { registerDataMenuItemsFromRoutes } = useMenuRegistry()
 const ROUTE_EDITOR_FIELDS = [
@@ -834,21 +827,8 @@ watch(showEditHookDrawer, (isOpen) => {
 
 <template>
   <div class="space-y-6">
-    <CommonTabbedPanel :framed="!props.embedded">
-      <template #header>
-      <div v-if="routeData?.data?.[0] || routeLoading">
-      <UTabs
-        v-model="activeEditorTab"
-        :items="editorTabs"
-        :content="false"
-        :variant="props.embedded ? 'pill' : 'link'"
-        :size="props.embedded ? 'sm' : 'md'"
-        :ui="editorTabUi"
-      />
-      </div>
-      </template>
-
-    <template v-if="activeEditorTab === 'overview'">
+    <CommonPanel v-if="routeData?.data?.[0] || routeLoading" v-model="activeEditorTab" :sections="editorSections" :framed="!props.embedded">
+      <template #overview>
     <CommonFormCard v-if="showMainTableCard && mainTableInfo" :bordered="false">
       <template #header>
         <div class="flex items-center gap-2">
@@ -896,9 +876,9 @@ watch(showEditHookDrawer, (isOpen) => {
 
       </UForm>
     </CommonFormCard>
-    </template>
-
-    <CommonFormCard v-if="activeEditorTab === 'methods' && methodConfigs.length" :bordered="false" title="Methods" description="Toggle a method to enable it, or select its row for more settings.">
+      </template>
+      <template #methods>
+    <CommonFormCard v-if="methodConfigs.length" :bordered="false" title="Methods" description="Toggle a method to enable it, or select its row for more settings.">
       <DataTable
         :data="methodConfigs"
         :columns="methodConfigColumns"
@@ -929,7 +909,6 @@ watch(showEditHookDrawer, (isOpen) => {
         </template>
       </DataTable>
     </CommonFormCard>
-
     <CommonDrawer
       :model-value="methodConfigDrawerOpen"
       :handle="false"
@@ -993,9 +972,10 @@ watch(showEditHookDrawer, (isOpen) => {
         </CommonFormCard>
       </template>
     </CommonDrawer>
-
+      </template>
+      <template #execution>
     <RouteExecutionFlowVisualization
-      v-if="activeEditorTab === 'execution' && routeData?.data?.[0]"
+      v-if="routeData?.data?.[0]"
       :route-data="routeData"
       :available-methods="availableMethodStrings"
       :handlers="displayHandlers"
@@ -1017,21 +997,22 @@ watch(showEditHookDrawer, (isOpen) => {
     />
 
     <FlowTriggersPanel
-      v-if="activeEditorTab === 'execution' && routeId"
+      v-if="routeId"
       mode="route"
       :route-id="routeId"
       :available-methods="availableMethodStrings"
     />
-
+      </template>
+      <template #access>
     <GuardRouteGuardSection
-      v-if="activeEditorTab === 'access' && routeId"
+      v-if="routeId"
       :guards="routeGuards"
       :global-guards="globalGuards"
       :loading="guardsLoading"
       @create-guard="openCreateGuardDrawer"
     />
 
-    <CommonFormCard v-if="activeEditorTab === 'access' && routeId">
+    <CommonFormCard v-if="routeId">
       <PermissionManager
         table-name="enfyra_route_permission"
         :current-field-id="{ field: 'route', value: routeId }"
@@ -1039,6 +1020,8 @@ watch(showEditHookDrawer, (isOpen) => {
         title="Route Permissions"
       />
     </CommonFormCard>
+      </template>
+    </CommonPanel>
 
     <CommonEmptyState
       v-if="showEmptyState !== false && !routeLoading && !routeData?.data?.[0]"
@@ -1047,8 +1030,6 @@ watch(showEditHookDrawer, (isOpen) => {
       icon="lucide:route"
       size="sm"
     />
-
-    </CommonTabbedPanel>
 
     <RouteCreateHandlerDrawer
       v-model="showCreateHandlerDrawer"

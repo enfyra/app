@@ -233,6 +233,9 @@ function groupOpenValues(group: NavigationMenuItem[]): string[] {
 
 function updateGroupOpenValues(group: NavigationMenuItem[], values: string | string[] | undefined) {
   const opened = new Set(Array.isArray(values) ? values : values ? [values] : []);
+  for (const item of group) {
+    if (item.children?.some(child => child.active) || item.active) opened.add(String(item.value));
+  }
   openMenuKeys.value = {
     ...openMenuKeys.value,
     ...Object.fromEntries(group.filter(item => item.children?.length).map(item => [String(item.value), opened.has(String(item.value))])),

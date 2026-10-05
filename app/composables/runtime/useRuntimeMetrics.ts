@@ -252,6 +252,9 @@ export function useRuntimeMetrics() {
   );
   const redisKeys = ref<RedisAdminKeySummary[]>([]);
   const redisKeysCursor = ref('0');
+  const redisKeysPage = ref(1);
+  const redisKeysSessionId = ref('');
+  const redisKeysHasNextPage = ref(false);
   const redisKeysPattern = ref('*');
   const redisKeysFilter = ref<RedisAdminKeyFilter>('all');
   const redisKeysPendingCount = ref(0);
@@ -278,26 +281,25 @@ export function useRuntimeMetrics() {
     }
   }
 
-  async function scanRedisKeys(options: { reset?: boolean } = {}) {
-    const reset = options.reset !== false;
+  async function scanRedisKeys(options: { reset?: boolean; page?: number } = {}) {
+    const reset = options.reset !== false && options.page == null;
+    const page = reset ? 1 : Math.max(1, options.page ?? redisKeysPage.value);
     redisKeysPendingCount.value++;
     if (!reset) redisKeysLoadMorePendingCount.value++;
     try {
       redisError.value = null;
       const result = await adminSocket.loadRedisKeys({
-        cursor: reset ? '0' : redisKeysCursor.value,
+        sessionId: reset ? undefined : redisKeysSessionId.value,
+        page,
         pattern: redisKeysPattern.value || '*',
         count: 10,
         filter: redisKeysFilter.value,
       });
+      redisKeysSessionId.value = result.sessionId;
       redisKeysCursor.value = result.cursor;
-      if (reset) {
-        redisKeys.value = result.keys;
-      } else {
-        const byKey = new Map(redisKeys.value.map((item) => [item.key, item]));
-        for (const key of result.keys) byKey.set(key.key, key);
-        redisKeys.value = [...byKey.values()];
-      }
+      redisKeysPage.value = result.page;
+      redisKeysHasNextPage.value = result.hasNextPage;
+      redisKeys.value = result.keys;
       return result;
     } catch (error) {
       redisError.value = errorMessage(error);
@@ -387,6 +389,9 @@ export function useRuntimeMetrics() {
   function setRedisKeysFilter(filter: RedisAdminKeyFilter, options: { resetPattern?: boolean } = {}) {
     redisKeysFilter.value = filter;
     redisKeysCursor.value = '0';
+    redisKeysPage.value = 1;
+    redisKeysSessionId.value = '';
+    redisKeysHasNextPage.value = false;
     if (options.resetPattern !== false) redisKeysPattern.value = '*';
     void scanRedisKeys({ reset: true });
   }
@@ -538,6 +543,8 @@ export function useRuntimeMetrics() {
     redisOverviewUpdatedAt: redisAdminOverviewUpdatedAt,
     redisKeys,
     redisKeysCursor,
+    redisKeysPage,
+    redisKeysHasNextPage,
     redisKeysPattern,
     redisKeysFilter,
     redisKeysPending,

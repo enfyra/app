@@ -310,7 +310,7 @@ export function useAdminSocket() {
     return overview;
   }
 
-  function loadRedisKeys(payload: { cursor?: string; pattern?: string; count?: number; filter?: RedisAdminKeyFilter }) {
+  function loadRedisKeys(payload: { sessionId?: string; page?: number; cursor?: string; pattern?: string; count?: number; filter?: RedisAdminKeyFilter }) {
     return redisRequest<RedisAdminKeysResponse>('$system:redis:keys:list', payload);
   }
 

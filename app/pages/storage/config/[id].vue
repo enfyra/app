@@ -1,7 +1,10 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
-      <CommonFormCard>
+      <CommonPanel :sections="[{ value: 'storage' }]">
+        <template #storage-header><h2 class="text-sm font-medium">Storage</h2></template>
+        <template #storage>
+<CommonFormCard>
         <UForm :state="form" @submit="updateConfig">
           <FormEditorLazy
             ref="formEditorRef"
@@ -16,6 +19,8 @@
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
     <CommonEmptyState
       v-if="!loading && !configData?.data?.[0]"

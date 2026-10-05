@@ -94,7 +94,7 @@ import {
   DynamicWidgetComponent,
   FilterDrawer,
   DataTable,
-  CommonTabbedPanel,
+  CommonPanel,
   NuxtLink,
 } from "#components";
 
@@ -118,7 +118,7 @@ export const availableComponents = {
   UProgress: markRaw(UProgress),
   UTable: markRaw(UTable),
   DataTable: markRaw(DataTable),
-  TabbedPanel: markRaw(CommonTabbedPanel),
+  Panel: markRaw(CommonPanel),
   UPagination: markRaw(UPagination),
   UBreadcrumb: markRaw(UBreadcrumb),
   UTabs: markRaw(UTabs),

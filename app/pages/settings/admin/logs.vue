@@ -24,7 +24,7 @@ const selected = ref<RuntimeLogRow | null>(null);
 const detailOpen = ref(false);
 const path = computed(() => kind.value === 'system' ? '/enfyra_system_error' : '/enfyra_user_log');
 const canRead = (target: string) => !!me.value?.isRootAdmin || checkPermissionCondition({ or: [{ route: target, methods: ['GET'] }] });
-const tabs = computed(() => [
+const logSections = computed(() => [
   { label: 'System errors', value: 'system', icon: 'lucide:bug', disabled: !canRead('/enfyra_system_error') },
   { label: 'User logs', value: 'user', icon: 'lucide:terminal', disabled: !canRead('/enfyra_user_log') },
 ]);
@@ -160,11 +160,8 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
       </div>
     </div>
 
-    <CommonTabbedPanel>
-      <template #header>
-        <UTabs v-model="kind" :items="tabs" :content="false" variant="link" />
-      </template>
-
+    <CommonPanel v-model="kind" :sections="logSections">
+      <template v-for="section in logSections" :key="section.value" #[section.value]>
     <section v-if="canRead(path)" class="surface-card rounded-lg p-4">
       <div class="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div class="min-w-0">
@@ -220,7 +217,8 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
     </section>
 
     <CommonEmptyState v-if="!canRead(path)" title="Access denied" description="A route read permission is required to view these logs." icon="lucide:lock" />
-    </CommonTabbedPanel>
+      </template>
+    </CommonPanel>
 
     <CommonDrawer v-model="detailOpen" :cancel-action="{ label: 'Close' }">
       <template #header>

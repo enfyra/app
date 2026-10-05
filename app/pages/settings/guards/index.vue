@@ -65,7 +65,7 @@ const currentFilter = computed<FilterGroup>({
 const activeFilterFields = computed(() => getGuardFilterFields(activeType.value));
 const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 
-const guardTabItems = computed(() => [
+const guardSections = computed(() => [
   {
     label: 'Route Guards',
     value: 'route',
@@ -516,17 +516,8 @@ async function deleteGuard(guard: any) {
 
 <template>
   <div class="space-y-6">
-    <CommonTabbedPanel>
-      <template #header>
-      <UTabs
-        :model-value="activeType"
-        :items="guardTabItems"
-        :content="false"
-        variant="link"
-        @update:model-value="handleTypeChange"
-      />
-      </template>
-
+    <CommonPanel :model-value="activeType" :sections="guardSections" @update:model-value="handleTypeChange">
+      <template v-for="section in guardSections" :key="section.value" #[section.value]>
     <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
       <div
         v-for="card in summaryCards"
@@ -570,7 +561,8 @@ async function deleteGuard(guard: any) {
       />
     </div>
 
-    </CommonTabbedPanel>
+      </template>
+    </CommonPanel>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"

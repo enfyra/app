@@ -1,5 +1,5 @@
 <template>
-  <CommonFormCard v-if="routeData">
+  <CommonFormCard v-if="routeData" :bordered="false" class="eapp-bordered-region p-4 md:p-5">
     <template #header>
       <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div class="min-w-0">

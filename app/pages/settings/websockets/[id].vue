@@ -1,6 +1,8 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
+      <CommonPanel v-model="activeSection" :sections="websocketSections">
+        <template #gateway>
       <CommonFormCard>
         <UForm :state="form" @submit="updateGateway">
           <FormEditorLazy
@@ -31,6 +33,16 @@
 
         </UForm>
       </CommonFormCard>
+        </template>
+        <template #events>
+      <DataTableSettingsTable
+        :data="events"
+        :columns="eventColumns"
+        :actions="getEventActions"
+        @row-click="handleEditEvent"
+      />
+        </template>
+      </CommonPanel>
     </div>
 
     <WebsocketConnectionHandlerTestModal
@@ -42,27 +54,6 @@
       :timeout-ms="Number(form?.connectionHandlerTimeout || 5000)"
     />
 
-    <div class="eapp-page-constrained">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Event Handlers</h3>
-        <UButton
-          icon="lucide:plus"
-          size="sm"
-          color="primary"
-          variant="solid"
-          @click="handleCreateEvent"
-        >
-          Create Event
-        </UButton>
-      </div>
-
-      <DataTableSettingsTable
-        :data="events"
-        :columns="eventColumns"
-        :actions="getEventActions"
-        @row-click="handleEditEvent"
-      />
-    </div>
 
     <WebsocketEventEditorDrawer
       v-if="gatewayId"
@@ -107,6 +98,11 @@ const WEBSOCKET_EVENT_LIST_FIELDS = [
   "isEnabled",
 ].join(",");
 
+const activeSection = ref('gateway');
+const websocketSections = [
+  { label: 'Gateway', value: 'gateway', icon: 'lucide:radio-tower' },
+  { label: 'Events', value: 'events', icon: 'lucide:zap' },
+];
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
@@ -224,7 +220,7 @@ registerHeaderActions([
     variant: 'outline',
     color: 'warning',
     order: 998,
-    show: computed(() => hasFormChanges.value),
+    show: computed(() => activeSection.value === 'gateway' && hasFormChanges.value),
     disabled: computed(() => updateLoading.value),
     onClick: handleReset,
   },
@@ -234,7 +230,7 @@ registerHeaderActions([
     icon: 'lucide:save',
     color: 'primary',
     order: 999,
-    show: canUpdateGateway,
+    show: computed(() => activeSection.value === 'gateway' && canUpdateGateway.value),
     loading: computed(() => updateLoading.value),
     disabled: computed(() => !hasFormChanges.value || updateLoading.value),
     onClick: updateGateway,
@@ -249,6 +245,7 @@ registerHeaderActions([
     order: 2,
     onClick: deleteGateway,
     loading: computed(() => deleteLoading.value),
+    show: computed(() => activeSection.value === 'gateway'),
     disabled: computed(() => gatewayData.value?.data?.[0]?.isSystem ?? false),
     permission: {
       and: [
@@ -258,6 +255,19 @@ registerHeaderActions([
         },
       ],
     },
+  },
+]);
+
+registerHeaderActions([
+  {
+    id: 'create-websocket-event',
+    label: 'Create Event',
+    icon: 'lucide:plus',
+    variant: 'solid',
+    color: 'primary',
+    order: 10,
+    show: computed(() => activeSection.value === 'events'),
+    onClick: handleCreateEvent,
   },
 ]);
 

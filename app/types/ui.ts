@@ -110,6 +110,14 @@ export interface HeaderAction {
   order?: number;
 }
 
+export interface PanelSection {
+  value: string;
+  label?: string;
+  icon?: string;
+  badge?: string | number | { label?: string | number; color?: string; variant?: string };
+  disabled?: boolean;
+}
+
 export interface DialogFooterAction {
   label: string;
   icon?: string;
