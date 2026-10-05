@@ -97,10 +97,10 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
     :title="props.title"
     :inset="true"
     :nested="props.nested"
-    :style="props.zIndex ? { zIndex: props.zIndex } : undefined"
     :ui="{
+      overlay: 'z-[1000]',
       container: props.direction === 'bottom' ? '!h-auto max-h-[85dvh] !gap-0 !p-3 !pb-[max(0.75rem,env(safe-area-inset-bottom))]' : 'h-full min-h-0 p-3 md:p-4',
-      content: `overflow-hidden bg-[var(--surface-default)] ${props.direction === 'bottom' ? '' : props.fullWidth ? 'w-[calc(100%-2*var(--shell-overlay-inset))]' : '!w-[36rem]'}`,
+      content: `z-[1000] overflow-hidden bg-[var(--surface-default)] ${props.direction === 'bottom' ? '' : props.fullWidth ? 'w-[calc(100%-2*var(--shell-overlay-inset))]' : '!w-[36rem]'}`,
       header: `${props.direction === 'bottom' ? '!pt-0 !pb-3' : 'pt-0 pb-2'} flex items-center justify-between flex-shrink-0`,
       body: `flex-1 overflow-y-auto min-h-0 custom-scrollbar ${props.direction === 'bottom' ? '!p-0' : ''}`,
       footer: 'mb-2 md:mb-4',

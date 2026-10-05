@@ -53,6 +53,7 @@ describe('SidebarUserInfo', () => {
       expect(dropdown.exists()).toBe(true)
       const items = dropdown.props('items').flat()
       expect(items.map((item: any) => item.label)).toEqual(['Profile', 'Appearance', 'Accent', 'Notifications', 'Log out'])
+      expect(items.find((item: any) => item.label === 'Log out').color).toBe('error')
       const appearance = items.find((item: any) => item.label === 'Appearance')
       expect(appearance.children.map((item: any) => item.label)).toEqual(['Light', 'Dark', 'System'])
       expect(items.find((item: any) => item.label === 'Accent').children.length).toBeGreaterThan(0)
