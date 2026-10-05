@@ -92,7 +92,7 @@ export default defineAppConfig({
     },
     dropdownMenu: {
       slots: {
-        item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75',
+        item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75 data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]',
 
       },
       compoundVariants: [
@@ -827,6 +827,7 @@ export default defineAppConfig({
           "group relative w-full flex items-center select-none outline-none",
           "before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)]",
           "data-disabled:cursor-not-allowed data-disabled:opacity-75",
+          "data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]",
           "data-[state=open]:text-highlighted transition-colors before:transition-colors",
           "p-1.5 text-sm gap-1.5",
         ].join(" "),

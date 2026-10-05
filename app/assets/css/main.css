@@ -680,6 +680,25 @@ button:focus-visible,
   }
 }
 
+/*
+ * Nuxt UI soft/subtle primary is a pastel alpha tint. Over dark surfaces that
+ * reads as mud, so dark follows the Material tonal pattern instead: container
+ * fill with on-container content, lifted on hover, faded when disabled.
+ */
+.dark .bg-primary\/10 {
+  background-color: var(--md-primary-container);
+}
+
+.dark .bg-primary\/10:hover,
+.dark .bg-primary\/10:active {
+  background-color: color-mix(in srgb, var(--md-primary) 18%, var(--md-primary-container));
+}
+
+.dark .bg-primary\/10:disabled,
+.dark .bg-primary\/10[aria-disabled="true"] {
+  background-color: color-mix(in srgb, var(--md-primary-container) 45%, transparent);
+}
+
 :where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where([aria-current="page"]) {
   border-color: var(--pagination-active-border) !important;
   background: var(--pagination-active-bg) !important;
@@ -1202,7 +1221,7 @@ button:focus-visible,
 }
 
 .eapp-button-neutral-soft:active:not(:disabled):not([aria-disabled="true"]) {
-  background: color-mix(in srgb, var(--md-on-surface) 16%, var(--md-surface)) !important;
+  background: color-mix(in srgb, var(--md-primary) 22%, var(--md-surface)) !important;
 }
 
 .eapp-button-neutral-soft:disabled,

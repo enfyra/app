@@ -77,7 +77,7 @@ describe('compositing cost guard', () => {
     const theme = readAppFile('assets/css/theme.css')
     expect(theme).toContain('--card-bg: var(--block-base)')
     expect(theme).toContain('--block-base: #ffffff')
-    expect(theme).toContain('--block-base: #2c2c35')
+    expect(theme).toContain('--block-base: #26262c')
   })
 
   it('keeps the native dashboard header opaque and outside the body scroll path', () => {
@@ -113,7 +113,7 @@ describe('compositing cost guard', () => {
     expect(layout).toContain('bg-default')
     expect(layout).not.toContain('eapp-shell-canvas')
     expect(theme).toContain('--shell-bg: var(--md-surface)')
-    expect(theme).toContain('--shell-bg: #07070a')
+    expect(theme).toContain('--shell-bg: #17171b')
     expect(theme).toContain('--shell-sidebar-bg: var(--shell-bg)')
     expect(theme).toContain('--shell-main-bg: var(--surface-workspace)')
     expect(theme).not.toMatch(/--shell-[\w-]+:\s*radial-gradient/)

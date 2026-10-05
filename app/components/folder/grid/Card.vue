@@ -4,7 +4,7 @@
   >
     <UContextMenu :items="getContextMenuItems()" :disabled="isFolderDisabled">
       <div
-        class="eapp-bordered-region relative cursor-pointer overflow-hidden hover:bg-elevated"
+        class="eapp-bordered-region relative cursor-pointer overflow-hidden hover:bg-[var(--menu-item-hover-bg)]"
         :class="{
           '!border-[var(--state-primary-soft-border)]': props.selectedItems.includes(props.folder.id),
         }"
