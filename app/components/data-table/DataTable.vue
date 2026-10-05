@@ -101,8 +101,8 @@ defineExpose({
 <template>
   <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
     <span v-if="skeletonActive" role="status" class="sr-only">Loading records...</span>
-    <div v-if="slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-muted px-3 py-3 md:px-4">
-      <div class="flex min-w-0 w-full flex-1 basis-full flex-wrap items-center gap-3 md:w-auto md:basis-auto">
+    <div v-if="slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-muted px-3 py-3 md:flex-nowrap md:px-4">
+      <div class="flex min-w-0 w-full flex-1 basis-full flex-wrap items-center gap-3 md:w-auto md:basis-0">
         <slot name="toolbar" :table-api="tableRef?.tableApi" />
       </div>
       <div v-if="slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length)" class="ml-auto flex min-h-8 shrink-0 items-center justify-end gap-2">

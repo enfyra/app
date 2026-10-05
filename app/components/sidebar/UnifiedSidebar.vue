@@ -232,7 +232,9 @@ function groupOpenValues(group: NavigationMenuItem[]): string[] {
 }
 
 function updateGroupOpenValues(group: NavigationMenuItem[], values: string | string[] | undefined) {
-  const opened = new Set(Array.isArray(values) ? values : values ? [values] : []);
+  const nextValues = Array.isArray(values) ? values : values ? [values] : [];
+  if (!nextValues.length && document.querySelector('[data-slot="childLink"]:active')) return;
+  const opened = new Set(nextValues);
   for (const item of group) {
     if (item.children?.some(child => child.active) || item.active) opened.add(String(item.value));
   }
