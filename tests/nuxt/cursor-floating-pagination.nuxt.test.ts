@@ -38,7 +38,7 @@ function observePagination() {
   }
 }
 
-describe('mobile cursor floating pagination', () => {
+describe('cursor floating pagination', () => {
   it('shares page navigation, range and pending state with the main footer', async () => {
     const { observers, notify } = observePagination()
     const wrapper = await mountSuspended(DataTable, { props })
@@ -54,14 +54,15 @@ describe('mobile cursor floating pagination', () => {
     expect(mini.style.display).not.toBe('none')
     expect(mini.textContent).toContain('11–12')
     const buttons = () => Array.from(mini.querySelectorAll('button'))
-    buttons().find(button => button.textContent?.includes('Next'))!.click()
+    expect(buttons().every(button => !button.textContent?.trim())).toBe(true)
+    buttons().find(button => button.getAttribute('aria-label') === 'Next')!.click()
     await nextTick()
     expect(wrapper.emitted('update:page')?.[0]).toEqual([3])
     await wrapper.setProps({ page: 3, paginationConfig: { ...props.paginationConfig, loading: true } })
     expect(buttons().every(button => button.disabled)).toBe(true)
     await wrapper.setProps({ paginationConfig: { ...props.paginationConfig, hasNextPage: false } })
-    expect(buttons().find(button => button.textContent?.includes('Next'))!.disabled).toBe(true)
-    buttons().find(button => button.textContent?.includes('Previous'))!.click()
+    expect(buttons().find(button => button.getAttribute('aria-label') === 'Next')!.disabled).toBe(true)
+    buttons().find(button => button.getAttribute('aria-label') === 'Previous')!.click()
     await nextTick()
     expect(wrapper.emitted('update:page')?.[1]).toEqual([2])
     notify(footer, true)
@@ -73,18 +74,19 @@ describe('mobile cursor floating pagination', () => {
     expect(mini.style.display).toBe('none')
   })
 
-  it('does not mount the cursor floating pager on desktop or when disabled', async () => {
+  it('mounts the cursor floating pager on desktop and still honors floating=false', async () => {
     const { observers } = observePagination()
     viewport.mobile = false
     const desktop = await mountSuspended(DataTable, { props })
     mounted.push(desktop)
-    expect(document.body.querySelector('[aria-label="Floating table pagination"]')).toBeNull()
-    expect(observers).toHaveLength(0)
+    expect(document.body.querySelector('[aria-label="Floating table pagination"]')).not.toBeNull()
+    expect(observers).toHaveLength(2)
+    mounted.pop()!.unmount()
     viewport.mobile = true
     const disabled = await mountSuspended(DataTable, { props: { ...props, paginationConfig: { ...props.paginationConfig, floating: false } } })
     mounted.push(disabled)
     expect(document.body.querySelector('[aria-label="Floating table pagination"]')).toBeNull()
-    expect(observers).toHaveLength(0)
+    expect(observers).toHaveLength(2)
   })
 
   it('keeps Previous available on the final page', async () => {
@@ -97,7 +99,7 @@ describe('mobile cursor floating pagination', () => {
     await nextTick()
     const mini = document.body.querySelector<HTMLElement>('[aria-label="Floating table pagination"]')!
     expect(mini.style.display).not.toBe('none')
-    const previous = Array.from(mini.querySelectorAll('button')).find(button => button.textContent?.includes('Previous'))!
+    const previous = Array.from(mini.querySelectorAll('button')).find(button => button.getAttribute('aria-label') === 'Previous')!
     expect(previous.disabled).toBe(false)
     previous.click()
     await nextTick()

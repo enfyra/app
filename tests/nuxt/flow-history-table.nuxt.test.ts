@@ -20,7 +20,7 @@ describe('Flow history table', () => {
     expect(wrapper.findComponent(UPagination).exists()).toBe(false)
     await wrapper.get('tbody tr').trigger('click')
     expect(wrapper.emitted('open')?.[0]).toEqual([first])
-    await wrapper.findAll('button').find(button => button.text() === 'Next')!.trigger('click')
+    await wrapper.get('button[aria-label="Next"]').trigger('click')
     expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
     await wrapper.findAll('button').find(button => button.text() === 'Reload')!.trigger('click')
     expect(wrapper.emitted('refresh')).toHaveLength(1)
@@ -29,7 +29,7 @@ describe('Flow history table', () => {
   it('blocks duplicate loads and keeps the current page when the cursor is exhausted', async () => {
     const wrapper = await mountSuspended(ExecutionsCard, { props: { executions: [first], hasNextPage: true, loading: true } })
     mounted.push(wrapper)
-    const load = () => wrapper.findAll('button').find(button => button.text() === 'Next')!
+    const load = () => wrapper.get('button[aria-label="Next"]')
     expect(load().attributes('disabled')).toBeDefined()
     await load().trigger('click')
     expect(wrapper.emitted('update:page')).toBeUndefined()
@@ -38,7 +38,7 @@ describe('Flow history table', () => {
     expect(wrapper.text()).toContain('11–12')
     expect(wrapper.text()).toContain('failed')
     expect(load().attributes('disabled')).toBeDefined()
-    await wrapper.findAll('button').find(button => button.text() === 'Previous')!.trigger('click')
+    await wrapper.get('button[aria-label="Previous"]').trigger('click')
     expect(wrapper.emitted('update:page')?.[0]).toEqual([1])
   })
 })

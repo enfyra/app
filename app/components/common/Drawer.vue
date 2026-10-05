@@ -120,7 +120,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
           :color="props.direction === 'bottom' ? 'neutral' : 'error'"
           :variant="props.direction === 'bottom' ? 'ghost' : 'soft'"
           size="md"
-          class="relative !h-9 !w-9 !p-0 !rounded-[var(--radius-subcontrol)] shrink-0 pointer-coarse:before:absolute pointer-coarse:before:-inset-1 pointer-coarse:before:content-['']"
+          class="relative !h-9 !w-9 !p-0 shrink-0 pointer-coarse:before:absolute pointer-coarse:before:-inset-1 pointer-coarse:before:content-['']"
           @click.stop.prevent="close"
         />
       </div>

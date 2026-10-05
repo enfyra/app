@@ -10,6 +10,14 @@
 @import "./vue-flow.css";
 @import "prosemirror-tables/style/tables.css";
 
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
 .rich-text-editor .ProseMirror table {
   margin-block: 0.75rem;
 }
@@ -199,9 +207,11 @@ button:focus-visible,
     background-color var(--duration-base) var(--ease-standard);
 }
 
-.eapp-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover {
-  border-color: var(--card-border-hover);
-  box-shadow: var(--card-shadow-hover);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover {
+    border-color: var(--card-border-hover);
+    box-shadow: var(--card-shadow-hover);
+  }
 }
 
 .eapp-divider {
@@ -308,8 +318,10 @@ button:focus-visible,
   border-bottom: 0;
 }
 
-.eapp-resource-list-item:hover {
-  background: color-mix(in srgb, var(--md-primary) 4%, var(--surface-muted));
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-resource-list-item:hover {
+    background: color-mix(in srgb, var(--md-primary) 4%, var(--surface-muted));
+  }
 }
 
 .eapp-resource-list-item:focus-visible {
@@ -324,8 +336,10 @@ button:focus-visible,
     var(--surface-default);
 }
 
-.dark .eapp-resource-list-item:hover {
-  background: color-mix(in srgb, var(--md-primary) 5%, var(--surface-muted));
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .dark .eapp-resource-list-item:hover {
+    background: color-mix(in srgb, var(--md-primary) 5%, var(--surface-muted));
+  }
 }
 
 .eapp-resource-list-item-active::before {
@@ -384,6 +398,7 @@ button:focus-visible,
  * track the bar's `py` at each breakpoint, so raise both together.
  */
 .eapp-pagination-mini {
+  width: 84%;
   border: 1px solid var(--card-border);
   background: var(--card-bg);
   box-shadow: var(--card-shadow-hover);
@@ -393,6 +408,11 @@ button:focus-visible,
 
 @media (min-width: 1024px) {
   .eapp-pagination-mini {
+    width: min(calc(var(--pagination-workspace-width, 100vw) * 0.5), 32rem);
+    left: var(--pagination-workspace-center, 50%);
+    right: auto;
+    margin-inline: 0;
+    translate: -50% 0;
     bottom: calc(var(--shell-inset) + 0.75rem);
   }
 }
@@ -486,14 +506,18 @@ button:focus-visible,
   border-color: var(--card-border);
 }
 
-.surface-card-hover:hover {
-  border-color: var(--card-border-hover);
-  box-shadow: var(--card-shadow-hover);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .surface-card-hover:hover {
+    border-color: var(--card-border-hover);
+    box-shadow: var(--card-shadow-hover);
+  }
 }
 
-.dark .surface-card-hover:hover {
-  border-color: var(--card-border-hover);
-  box-shadow: var(--card-shadow-hover);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .dark .surface-card-hover:hover {
+    border-color: var(--card-border-hover);
+    box-shadow: var(--card-shadow-hover);
+  }
 }
 
 .eapp-shell-main :is(.surface-card, .surface-card-hover, .eapp-surface-card, .eapp-resource-list, .eapp-resource-list-contained),
@@ -608,7 +632,7 @@ button:focus-visible,
 }
 
 .rounded-md {
-  border-radius: var(--radius-subcontrol);
+  border-radius: var(--radius-control);
 }
 
 .rounded-lg {
@@ -673,10 +697,12 @@ button:focus-visible,
 /* Hover feedback is pointer-only: on touch, the sticky emulated `:hover` left the
    last-tapped page button looking selected. */
 @media (hover: hover) and (pointer: fine) {
-  :where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
-    border-color: var(--pagination-border-hover) !important;
-    background: var(--pagination-bg-hover) !important;
-    color: var(--pagination-text-hover) !important;
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+    :where(.eapp-table-pagination-controls, .eapp-pagination > [data-slot="root"], .eapp-pagination > div > [data-slot="root"]) :where(a, button):hover:not(:disabled):not([aria-disabled="true"]):not([aria-current="page"]) {
+      border-color: var(--pagination-border-hover) !important;
+      background: var(--pagination-bg-hover) !important;
+      color: var(--pagination-text-hover) !important;
+    }
   }
 }
 
@@ -689,9 +715,14 @@ button:focus-visible,
   background-color: var(--md-primary-container);
 }
 
-.dark .bg-primary\/10:hover,
 .dark .bg-primary\/10:active {
   background-color: color-mix(in srgb, var(--md-primary) 18%, var(--md-primary-container));
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .dark .bg-primary\/10:hover {
+    background-color: color-mix(in srgb, var(--md-primary) 18%, var(--md-primary-container));
+  }
 }
 
 .dark .bg-primary\/10:disabled,
@@ -732,12 +763,14 @@ button:focus-visible,
     box-shadow var(--duration-fast) var(--ease-standard);
 }
 
-.eapp-accent-soft-hover:hover,
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-accent-soft-hover:hover,
 .eapp-identity-soft-hover:hover,
 .eapp-primary-soft-hover:hover {
-  border-color: var(--border-accent);
-  background: var(--state-primary-soft-bg-hover);
-  color: var(--badge-primary-soft-text);
+    border-color: var(--border-accent);
+    background: var(--state-primary-soft-bg-hover);
+    color: var(--badge-primary-soft-text);
+  }
 }
 
 .eapp-accent-solid,
@@ -878,29 +911,33 @@ button:focus-visible,
     box-shadow var(--duration-fast) var(--ease-standard);
 }
 
-.eapp-identity-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover,
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-identity-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover,
 .eapp-primary-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover {
-  border-color: color-mix(in srgb, var(--brand-500) 16%, var(--card-border-hover));
-  background:
+    border-color: color-mix(in srgb, var(--brand-500) 16%, var(--card-border-hover));
+    background:
     linear-gradient(
       0deg,
       color-mix(in srgb, var(--brand-500) 5%, transparent),
       color-mix(in srgb, var(--brand-500) 5%, transparent)
     ),
     var(--card-bg);
-  box-shadow: var(--card-shadow-hover);
+    box-shadow: var(--card-shadow-hover);
+  }
 }
 
-.dark .eapp-identity-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover,
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .dark .eapp-identity-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover,
 .dark .eapp-primary-surface-hover:not(:is(.eapp-accent-soft, .eapp-identity-soft, .eapp-primary-soft, .eapp-primary-subtle, .eapp-identity-surface, .eapp-primary-surface)):hover {
-  border-color: color-mix(in srgb, var(--brand-400) 18%, var(--card-border-hover));
-  background:
+    border-color: color-mix(in srgb, var(--brand-400) 18%, var(--card-border-hover));
+    background:
     linear-gradient(
       0deg,
       color-mix(in srgb, var(--brand-400) 8%, transparent),
       color-mix(in srgb, var(--brand-400) 8%, transparent)
     ),
     var(--card-bg);
+  }
 }
 
 .eapp-button-primary-solid,
@@ -968,14 +1005,16 @@ button:focus-visible,
   --eapp-button-disabled-ring: var(--action-neutral-border);
 }
 
-.eapp-button-primary-solid:hover:not(:disabled):not([aria-disabled="true"]),
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-button-primary-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-neutral-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-success-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-warning-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-info-solid:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-danger-solid:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--eapp-button-bg-hover) !important;
-  filter: brightness(0.92);
+    background: var(--eapp-button-bg-hover) !important;
+    filter: brightness(0.92);
+  }
 }
 
 .eapp-button-primary-solid:active:not(:disabled):not([aria-disabled="true"]),
@@ -1011,9 +1050,11 @@ button:focus-visible,
   color: var(--action-secondary-text) !important;
   box-shadow: var(--shadow-xs) !important;
 }
-.eapp-button-secondary-solid:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--action-secondary-bg-hover) !important;
-  filter: brightness(0.92);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-button-secondary-solid:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--action-secondary-bg-hover) !important;
+    filter: brightness(0.92);
+  }
 }
 .eapp-button-secondary-solid:active:not(:disabled):not([aria-disabled="true"]) {
   background: var(--action-secondary-bg-active) !important;
@@ -1089,13 +1130,15 @@ button:focus-visible,
   --eapp-button-ghost-text: var(--danger-ghost-text);
 }
 
-.eapp-button-primary-soft:hover:not(:disabled):not([aria-disabled="true"]),
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-button-primary-soft:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-secondary-soft:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-success-soft:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-warning-soft:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-info-soft:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-danger-soft:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--eapp-button-soft-bg-hover) !important;
+    background: var(--eapp-button-soft-bg-hover) !important;
+  }
 }
 
 .eapp-button-primary-soft:disabled,
@@ -1169,15 +1212,17 @@ button:focus-visible,
   --eapp-button-outline-ring: var(--state-danger-outline-border);
 }
 
-.eapp-button-primary-outline:hover:not(:disabled):not([aria-disabled="true"]),
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-button-primary-outline:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-secondary-outline:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-neutral-outline:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-success-outline:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-warning-outline:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-info-outline:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-danger-outline:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: color-mix(in srgb, var(--eapp-button-outline-text) 8%, var(--eapp-button-outline-bg)) !important;
-  color: var(--eapp-button-outline-text) !important;
+    background: color-mix(in srgb, var(--eapp-button-outline-text) 8%, var(--eapp-button-outline-bg)) !important;
+    color: var(--eapp-button-outline-text) !important;
+  }
 }
 
 .eapp-button-primary-outline:active:not(:disabled):not([aria-disabled="true"]),
@@ -1215,9 +1260,11 @@ button:focus-visible,
   box-shadow: inset 0 0 0 1px var(--state-neutral-outline-border) !important;
 }
 
-.eapp-button-neutral-soft:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: var(--state-neutral-soft-bg-hover) !important;
-  color: var(--text-primary) !important;
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-button-neutral-soft:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--state-neutral-soft-bg-hover) !important;
+    color: var(--text-primary) !important;
+  }
 }
 
 .eapp-button-neutral-soft:active:not(:disabled):not([aria-disabled="true"]) {
@@ -1246,14 +1293,16 @@ button:focus-visible,
   --eapp-button-ghost-text: var(--action-neutral-text);
 }
 
-.eapp-button-primary-ghost:hover:not(:disabled):not([aria-disabled="true"]),
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-button-primary-ghost:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-success-ghost:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-warning-ghost:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-info-ghost:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-danger-ghost:hover:not(:disabled):not([aria-disabled="true"]),
 .eapp-button-neutral-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
-  background: color-mix(in srgb, var(--eapp-button-ghost-text) 8%, transparent) !important;
-  color: var(--eapp-button-ghost-text) !important;
+    background: color-mix(in srgb, var(--eapp-button-ghost-text) 8%, transparent) !important;
+    color: var(--eapp-button-ghost-text) !important;
+  }
 }
 
 .eapp-button-primary-ghost:active:not(:disabled):not([aria-disabled="true"]),
@@ -1286,9 +1335,11 @@ button:focus-visible,
   color: var(--action-neutral-text);
 }
 
-.eapp-account-panel-collapsed-trigger:hover {
-  border-color: var(--card-border-hover);
-  background: color-mix(in srgb, var(--action-neutral-text) 8%, var(--block-base));
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .eapp-account-panel-collapsed-trigger:hover {
+    border-color: var(--card-border-hover);
+    background: color-mix(in srgb, var(--action-neutral-text) 8%, var(--block-base));
+  }
 }
 
 .eapp-account-panel-row {
@@ -1375,12 +1426,16 @@ button:focus-visible,
   box-shadow: var(--shadow-lg);
 }
 
-.card-float:hover {
-  box-shadow: var(--shadow-xl), 0 0 50px color-mix(in srgb, var(--brand-500) 15%, transparent);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .card-float:hover {
+    box-shadow: var(--shadow-xl), 0 0 50px color-mix(in srgb, var(--brand-500) 15%, transparent);
+  }
 }
 
-.dark .card-float:hover {
-  box-shadow: var(--shadow-xl);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .dark .card-float:hover {
+    box-shadow: var(--shadow-xl);
+  }
 }
 
 .card-float-primary {
@@ -1388,8 +1443,10 @@ button:focus-visible,
   transition: box-shadow var(--duration-emphasized) var(--ease-smooth);
 }
 
-.card-float-primary:hover {
-  box-shadow: var(--shadow-primary-lg), 0 0 30px color-mix(in srgb, var(--brand-500) 20%, transparent);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .card-float-primary:hover {
+    box-shadow: var(--shadow-primary-lg), 0 0 30px color-mix(in srgb, var(--brand-500) 20%, transparent);
+  }
 }
 
 .card-static {
@@ -1397,8 +1454,10 @@ button:focus-visible,
   transition: box-shadow var(--duration-emphasized) var(--ease-smooth);
 }
 
-.card-static:hover {
-  box-shadow: var(--shadow-xl);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .card-static:hover {
+    box-shadow: var(--shadow-xl);
+  }
 }
 
 .text-gradient-primary {
@@ -1608,8 +1667,10 @@ button:focus-visible,
   transition: transform var(--duration-base) var(--ease-smooth);
 }
 
-.magnetic-hover:hover {
-  transform: scale(1.02);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .magnetic-hover:hover {
+    transform: scale(1.02);
+  }
 }
 
 .menu-item {
@@ -1644,14 +1705,18 @@ button:focus-visible,
   color: var(--text-tertiary);
 }
 
-.menu-item-inactive:hover {
-  background: color-mix(in srgb, var(--brand-500) 8%, transparent);
-  color: var(--brand-700);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .menu-item-inactive:hover {
+    background: color-mix(in srgb, var(--brand-500) 8%, transparent);
+    color: var(--brand-700);
+  }
 }
 
-.dark .menu-item-inactive:hover {
-  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  color: var(--brand-400);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .dark .menu-item-inactive:hover {
+    background: color-mix(in srgb, var(--brand-500) 10%, transparent);
+    color: var(--brand-400);
+  }
 }
 
 .menu-item-icon {
@@ -1710,14 +1775,18 @@ button:focus-visible,
   color: var(--text-tertiary);
 }
 
-.menu-dropdown-item-inactive:hover {
-  background: color-mix(in srgb, var(--brand-500) 8%, transparent);
-  color: var(--brand-700);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .menu-dropdown-item-inactive:hover {
+    background: color-mix(in srgb, var(--brand-500) 8%, transparent);
+    color: var(--brand-700);
+  }
 }
 
-.dark .menu-dropdown-item-inactive:hover {
-  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  color: var(--brand-400);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+  .dark .menu-dropdown-item-inactive:hover {
+    background: color-mix(in srgb, var(--brand-500) 10%, transparent);
+    color: var(--brand-400);
+  }
 }
 
 .no-scrollbar {
@@ -1909,12 +1978,19 @@ button:focus-visible,
     transition: none !important;
   }
 
-  .magnetic-hover:hover {
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+    .magnetic-hover:hover {
+      transform: none !important;
+    }
+  }
+
+  .active\:scale-\[0\.99\]:active {
     transform: none !important;
   }
 
-  .hover\:-translate-y-px:hover,
-  .active\:scale-\[0\.99\]:active {
-    transform: none !important;
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px){
+    .hover\:-translate-y-px:hover {
+      transform: none !important;
+    }
   }
 }

@@ -93,9 +93,11 @@ const rootClasses = computed(() => [
   color: var(--text-secondary) !important;
 }
 
-.active-filter-summary__clear:hover {
-  color: var(--text-primary) !important;
-  background: color-mix(in srgb, var(--ui-primary) 12%, transparent) !important;
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .active-filter-summary__clear:hover {
+    color: var(--text-primary) !important;
+    background: color-mix(in srgb, var(--ui-primary) 12%, transparent) !important;
+  }
 }
 
 :global(.dark) .active-filter-summary--banner {

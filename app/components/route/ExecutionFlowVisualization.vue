@@ -606,10 +606,16 @@ function toggleHook(hook: any, type: HookType, enabled: boolean) {
   transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 
-.route-execution-empty:hover,
 .route-execution-empty:focus-visible {
   border-color: var(--execution-stage-accent);
   background: var(--execution-stage-soft);
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .route-execution-empty:hover {
+    border-color: var(--execution-stage-accent);
+    background: var(--execution-stage-soft);
+  }
 }
 
 .route-execution-connector {

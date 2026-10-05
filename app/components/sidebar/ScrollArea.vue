@@ -27,8 +27,10 @@ defineProps<{ collapsed?: boolean }>();
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .sidebar-scroll-track:hover .sidebar-scroll-thumb {
-    background: color-mix(in srgb, var(--md-primary) 30%, transparent);
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+    .sidebar-scroll-track:hover .sidebar-scroll-thumb {
+      background: color-mix(in srgb, var(--md-primary) 30%, transparent);
+    }
   }
 }
 </style>

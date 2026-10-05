@@ -410,13 +410,17 @@ watch(() => props.tableName, () => { activeTab.value = 'structure'; });
   min-height: 24px;
 }
 
-.schema-json :deep(.vjs-tree-node:hover) {
-  background: transparent;
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .schema-json :deep(.vjs-tree-node:hover) {
+    background: transparent;
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .schema-json :deep(.vjs-tree-node:hover) {
-    background: var(--surface-nested);
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+    .schema-json :deep(.vjs-tree-node:hover) {
+      background: var(--surface-nested);
+    }
   }
 }
 </style>

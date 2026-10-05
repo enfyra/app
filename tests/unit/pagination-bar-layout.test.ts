@@ -112,7 +112,10 @@ describe('pagination layout', () => {
     expect(pagination).not.toContain('bottom-3')
     const miniBar = pagination.match(/class="eapp-pagination eapp-pagination-mini[^"]*"/)?.[0]
     expect(miniBar).not.toContain('flex-wrap')
-    expect(miniBar).toContain('w-fit')
+    expect(miniBar).not.toContain('w-fit')
+    const tablePagination = readAppFile('components/data-table/Pagination.vue')
+    const tableMiniBar = tablePagination.match(/class="eapp-pagination eapp-pagination-mini[^"]*"/)?.[0]
+    expect(tableMiniBar).not.toContain('w-fit')
     expect(pagination).toContain("list: 'flex-nowrap gap-0.5'")
     expect(pagination).toContain('class="min-w-0 flex-1 overflow-x-auto"')
 
@@ -126,11 +129,14 @@ describe('pagination layout', () => {
 
     const miniRule = css.match(/\.eapp-pagination-mini \{[^}]*\}/)?.[0]
     expect(miniRule, 'mini pagination rule should exist').toBeDefined()
+    expect(miniRule).toContain('width: 84%')
     expect(pagination).toContain('rounded-[var(--radius-panel)]')
     expect(miniRule).toContain('border: 1px solid var(--card-border)')
     expect(miniRule).toContain('box-shadow: var(--card-shadow-hover)')
     expect(miniRule).toContain('var(--shell-mobile-inset)')
     expect(css).toContain('bottom: calc(var(--shell-inset) + 0.75rem)')
+    expect(css).toContain('width: min(calc(var(--pagination-workspace-width, 100vw) * 0.5), 32rem)')
+    expect(css).toContain('left: var(--pagination-workspace-center, 50%)')
 
     // Over moving content a blur would re-run every frame.
     expect(miniRule).not.toContain('backdrop-filter')

@@ -12,7 +12,6 @@ const circularButtonClassPatterns = [
 
 export function getHeaderActionButtonClass(
   action: Pick<HeaderAction, "class">,
-  options: { compact?: boolean } = {},
 ) {
   const actionClass = action.class
     ?.split(/\s+/)
@@ -22,9 +21,7 @@ export function getHeaderActionButtonClass(
   return [
     actionClass,
     "!h-9",
-    options.compact
-      ? "!rounded-[var(--radius-subcontrol)]"
-      : "!rounded-[var(--radius-control)]",
+    "!rounded-[var(--radius-control)]",
   ]
     .filter(Boolean)
     .join(" ");

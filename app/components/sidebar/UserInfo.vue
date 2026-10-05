@@ -95,11 +95,12 @@ function toMenuItem(item: AccountPanelItem): AccountMenuItem {
   };
 }
 const menuItems = computed<AccountMenuItem[][]>(() => {
-  const items = visibleAccountPanelItems.value;
+  const items = visibleAccountPanelItems.value.filter(item => item.id !== 'logout');
   return [
     items.filter(item => (item.order ?? 0) < 20).map(toMenuItem),
     items.filter(item => (item.order ?? 0) >= 20 && (item.order ?? 0) < 30).map(toMenuItem),
     items.filter(item => (item.order ?? 0) >= 30).map(toMenuItem),
+    visibleAccountPanelItems.value.filter(item => item.id === 'logout').map(toMenuItem),
   ].filter(group => group.length);
 });
 const mobilePage = computed(() => {

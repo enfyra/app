@@ -22,7 +22,7 @@ describe('table pagination theme boundary', () => {
     const footer = wrapper.get('[aria-label="Table pagination"]')
     expect(footer.text()).toContain('1–20')
     expect(footer.find('[aria-label="Rows per page"]').exists()).toBe(true)
-    expect(footer.findAll('button').some(button => button.text() === 'Next')).toBe(true)
+    expect(footer.find('button[aria-label="Next"]').exists()).toBe(true)
     expect(footer.classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
     expect(footer.classes()).not.toContain('md:flex-wrap')
     expect(footer.classes()).toContain('grid')
@@ -31,8 +31,8 @@ describe('table pagination theme boundary', () => {
   it('uses the numbered pager position and mobile separator for cursor navigation', async () => {
     const wrapper = await mountSuspended(TablePagination, { props: { mode: 'cursor', itemsPerPage: 10, rowCount: 10, hasNextPage: true } })
     mounted.push(wrapper)
-    const button = wrapper.findAll('button').find(button => button.text() === 'Next')!
-    expect(button.text()).toContain('Next')
+    const button = wrapper.get('button[aria-label="Next"]')
+    expect(button.text()).toBe('')
     expect(button.element.parentElement!.classList.contains('border-t')).toBe(false)
     const separator = button.element.parentElement!.parentElement!.parentElement!
     expect(separator.classList.contains('border-t')).toBe(false)
@@ -59,7 +59,8 @@ describe('table pagination theme boundary', () => {
     mounted.push(wrapper)
     const summary = wrapper.get('[aria-label="Table pagination"] > div:first-child')
     expect(summary.text()).toContain('10 selected')
-    expect(summary.text()).toContain('1–10 / 24')
+    expect(summary.text()).toContain('1–10')
+    expect(summary.text()).not.toContain('/ 24')
   })
 
   it('leaves raw UPagination free of table footer layout and styling', async () => {
@@ -174,6 +175,6 @@ describe('table pagination theme boundary', () => {
     expect(bar.classList.contains('flex')).toBe(true)
     expect(bar.classList.contains('flex-wrap')).toBe(false)
     expect(bar.firstElementChild).toBe(scroller)
-    expect(bar.lastElementChild?.textContent).toContain('1–20 / 105')
+    expect(bar.lastElementChild?.textContent).toContain('1–20')
   })
 })

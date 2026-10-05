@@ -436,9 +436,11 @@ watch(isOpen, (newValue) => {
   transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
 }
 
-.upload-drop-zone:hover {
-  border-color: var(--border-accent);
-  background: color-mix(in srgb, var(--state-primary-soft-bg) 36%, transparent);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .upload-drop-zone:hover {
+    border-color: var(--border-accent);
+    background: color-mix(in srgb, var(--state-primary-soft-bg) 36%, transparent);
+  }
 }
 
 .upload-drop-zone-active {
@@ -452,10 +454,16 @@ watch(isOpen, (newValue) => {
   background: var(--state-danger-soft-bg);
 }
 
-.upload-drop-zone-error:hover,
 .upload-drop-zone-error.upload-drop-zone-active {
   border-color: var(--state-danger-outline-border);
   background: var(--state-danger-soft-bg);
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .upload-drop-zone-error:hover {
+    border-color: var(--state-danger-outline-border);
+    background: var(--state-danger-soft-bg);
+  }
 }
 
 .upload-file-row {

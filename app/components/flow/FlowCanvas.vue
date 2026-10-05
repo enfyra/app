@@ -342,8 +342,10 @@ watch(() => nodes.value.length, async () => {
   transition: stroke var(--duration-base) var(--ease-standard);
 }
 
-.flow-canvas-wrapper :deep(.vue-flow__edge:hover .vue-flow__edge-path) {
-  stroke-width: 2.5;
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .flow-canvas-wrapper :deep(.vue-flow__edge:hover .vue-flow__edge-path) {
+    stroke-width: 2.5;
+  }
 }
 
 .flow-canvas-wrapper :deep(.vue-flow__minimap) {
@@ -374,9 +376,11 @@ watch(() => nodes.value.length, async () => {
     color var(--duration-fast) var(--ease-standard) !important;
 }
 
-.flow-canvas-wrapper :deep(.vue-flow__controls-button:hover) {
-  background: var(--surface-muted) !important;
-  color: var(--text-primary) !important;
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .flow-canvas-wrapper :deep(.vue-flow__controls-button:hover) {
+    background: var(--surface-muted) !important;
+    color: var(--text-primary) !important;
+  }
 }
 
 .flow-canvas-wrapper :deep(.vue-flow__controls-button:last-child) {

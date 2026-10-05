@@ -35,7 +35,7 @@ const { isMobile, isTablet } = useScreen();
         :size="(isMobile || isTablet) ? 'sm' : 'xs'"
         :disabled="!canGoPrevious || loading"
         title="Previous records"
-        :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
+        :class="(isMobile || isTablet) ? '!aspect-square' : ''"
         color="primary"
         @click="previous"
       >
@@ -46,7 +46,7 @@ const { isMobile, isTablet } = useScreen();
         :size="(isMobile || isTablet) ? 'sm' : 'xs'"
         :disabled="!canGoNext || loading"
         title="Next records"
-        :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
+        :class="(isMobile || isTablet) ? '!aspect-square' : ''"
         color="primary"
         @click="next"
       >
@@ -58,7 +58,7 @@ const { isMobile, isTablet } = useScreen();
       color="primary"
       :size="(isMobile || isTablet) ? 'sm' : 'sm'"
       :disabled="disabled"
-      :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square' : ''"
+      :class="(isMobile || isTablet) ? '!aspect-square' : ''"
       @click="apply"
     >
       <span v-if="!isMobile && !isTablet">Apply</span>

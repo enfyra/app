@@ -69,8 +69,10 @@
   color: #ffffff !important;
 }
 
-.dark .cm-tooltip-autocomplete > ul > li:hover:not([aria-selected="true"]) {
-  background-color: #2a2d2e !important;
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .dark .cm-tooltip-autocomplete > ul > li:hover:not([aria-selected="true"]) {
+    background-color: #2a2d2e !important;
+  }
 }
 
 .dark .cm-completionIcon {
@@ -114,8 +116,10 @@
   color: #ffffff !important;
 }
 
-.cm-tooltip-autocomplete > ul > li:hover:not([aria-selected="true"]) {
-  background-color: #f6f8fa !important;
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .cm-tooltip-autocomplete > ul > li:hover:not([aria-selected="true"]) {
+    background-color: #f6f8fa !important;
+  }
 }
 
 .cm-completionIcon {

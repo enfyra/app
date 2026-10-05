@@ -639,6 +639,21 @@ function handleDragEnd() {
     border-color: var(--card-border-hover);
     background: var(--state-primary-soft-bg);
   }
+
+  :global(.dark) .menu-editor-row.is-editable:hover {
+    border-color: var(--action-primary-bg);
+    background: var(--action-primary-bg);
+  }
+
+  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-title,
+  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-drag,
+  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-chevron {
+    color: var(--action-primary-text);
+  }
+
+  :global(.dark) .menu-editor-row.is-editable:hover :deep(button[aria-label="Menu actions"]) {
+    color: var(--action-primary-text) !important;
+  }
 }
 
 .menu-editor-row.is-moving {
@@ -914,11 +929,6 @@ function handleDragEnd() {
 
   .menu-row-extension {
     flex-basis: 100%;
-  }
-
-  .menu-row-actions :deep(button[aria-label="Menu actions"]:hover) {
-    background: transparent !important;
-    box-shadow: none;
   }
 }
 

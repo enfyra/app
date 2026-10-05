@@ -301,7 +301,7 @@ function finishPermissionSession() {
           variant="ghost"
           color="neutral"
           size="sm"
-          class="!rounded-[var(--radius-subcontrol)] !aspect-square -ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
+          class="!aspect-square -ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="cancelForm"
         />
         <UIcon
@@ -391,7 +391,7 @@ function finishPermissionSession() {
                   variant="ghost"
                   color="error"
                   size="xs"
-                  class="!rounded-[var(--radius-subcontrol)] !aspect-square pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] flex-shrink-0"
+                  class="!aspect-square pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px] flex-shrink-0"
                   @click.stop="quickDeleteFieldPerm(it)"
                 />
               </div>

@@ -71,7 +71,6 @@
             color="primary"
             variant="solid"
             size="md"
-            class="rounded-[var(--radius-subcontrol)]"
             :loading="creating"
             :disabled="!newOrigin.trim() || creating"
             @click="addOrigin"

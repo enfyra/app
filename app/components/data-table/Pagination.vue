@@ -19,15 +19,11 @@ const isCursor = computed(() => props.mode === 'cursor')
 const hasPagination = computed(() => props.total > props.itemsPerPage && props.itemsPerPage > 0)
 const pageStart = computed(() => (isCursor.value ? props.rowCount > 0 : props.total > 0) ? (page.value - 1) * props.itemsPerPage + 1 : 0)
 const pageEnd = computed(() => isCursor.value ? props.rowCount > 0 ? pageStart.value + props.rowCount - 1 : 0 : Math.min(page.value * props.itemsPerPage, props.total))
-const rangeLabel = computed(() => isCursor.value
-  ? props.rowCount > 0 ? `${pageStart.value}–${pageEnd.value}` : '0 results'
-  : props.total > 0 ? `${pageStart.value}–${pageEnd.value} / ${props.total}` : '0 results')
 const paginationFooter = shallowRef<HTMLElement | null>(null)
-const { isMobile } = useScreen()
-const canFloat = computed(() => props.floating && (!isCursor.value || isMobile.value))
+const canFloat = computed(() => props.floating)
 const floatingTarget = computed(() => canFloat.value ? paginationFooter.value : null)
 const tableScope = computed(() => canFloat.value ? props.scope ?? null : null)
-const { isMiniVisible } = useMiniBarVisibility(floatingTarget, tableScope)
+const { isMiniVisible, miniStyle } = useMiniBarVisibility(floatingTarget, tableScope)
 const showMiniPagination = computed(() => canFloat.value && (isCursor.value ? page.value > 1 || props.hasNextPage : hasPagination.value) && isMiniVisible.value)
 const miniPaginationSize = 'xs'
 
@@ -48,7 +44,7 @@ function setCursorPage(direction: -1 | 1) {
     <div class="flex min-w-0 items-center gap-3 whitespace-nowrap text-xs tabular-nums text-muted">
       <slot name="summary" />
       <span v-if="$slots.summary" aria-hidden="true">·</span>
-      <span>{{ rangeLabel }}</span>
+      <CommonPaginationRange :start="pageStart" :end="pageEnd" />
     </div>
     <div class="flex items-center justify-end gap-3 md:ml-auto">
       <label v-if="showPageSize" class="flex items-center gap-2 whitespace-nowrap text-xs text-muted">
@@ -59,8 +55,8 @@ function setCursorPage(direction: -1 | 1) {
     <div v-if="isCursor || hasPagination" class="min-w-0 border-default max-md:col-span-2 max-md:-mx-3 max-md:border-t max-md:px-3 max-md:pt-3">
       <div class="min-w-0 max-w-full overflow-x-auto">
         <div v-if="isCursor" class="mx-auto flex w-fit min-w-max gap-2 md:mx-0">
-          <UButton label="Previous" icon="lucide:chevron-left" color="neutral" variant="outline" size="sm" class="h-8" :disabled="page <= 1 || loading" @click="setCursorPage(-1)" />
-          <UButton label="Next" trailing-icon="lucide:chevron-right" color="neutral" variant="outline" size="sm" class="h-8" :disabled="!hasNextPage || loading" @click="setCursorPage(1)" />
+          <UButton aria-label="Previous" icon="lucide:chevron-left" color="neutral" variant="outline" size="sm" class="size-8 justify-center !p-0" :disabled="page <= 1 || loading" @click="setCursorPage(-1)" />
+          <UButton aria-label="Next" icon="lucide:chevron-right" color="neutral" variant="outline" size="sm" class="size-8 justify-center !p-0" :disabled="!hasNextPage || loading" @click="setCursorPage(1)" />
         </div>
         <UPagination
           v-else
@@ -77,15 +73,15 @@ function setCursorPage(direction: -1 | 1) {
   </div>
   <Teleport v-if="canFloat" to="body">
     <Transition name="mini-pagination">
-      <div v-show="showMiniPagination" class="eapp-pagination eapp-pagination-mini fixed inset-x-3 z-10 mx-auto flex w-fit max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-[var(--radius-panel)] px-2 py-1 md:gap-2 md:px-2.5" aria-label="Floating table pagination" :aria-busy="loading">
+      <div v-show="showMiniPagination" :style="miniStyle" class="eapp-pagination eapp-pagination-mini fixed inset-x-3 z-10 mx-auto flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-[var(--radius-panel)] px-2 py-1 md:gap-2 md:px-2.5" aria-label="Floating table pagination" :aria-busy="loading">
         <div class="min-w-0 flex-1 overflow-x-auto">
           <div v-if="isCursor" class="flex w-max gap-1.5">
-            <UButton label="Previous" icon="lucide:chevron-left" color="neutral" variant="outline" size="xs" :disabled="page <= 1 || loading" @click="setCursorPage(-1)" />
-            <UButton label="Next" trailing-icon="lucide:chevron-right" color="neutral" variant="outline" size="xs" :disabled="!hasNextPage || loading" @click="setCursorPage(1)" />
+            <UButton aria-label="Previous" icon="lucide:chevron-left" color="neutral" variant="outline" size="xs" class="size-7 justify-center !p-0" :disabled="page <= 1 || loading" @click="setCursorPage(-1)" />
+            <UButton aria-label="Next" icon="lucide:chevron-right" color="neutral" variant="outline" size="xs" class="size-7 justify-center !p-0" :disabled="!hasNextPage || loading" @click="setCursorPage(1)" />
           </div>
           <UPagination v-else v-model:page="page" :size="miniPaginationSize" :items-per-page="itemsPerPage" :total="total" :to="to" :ui="{ root: 'eapp-table-pagination-controls min-w-max w-fit', list: 'flex-nowrap gap-0.5', item: '!min-w-7' }" />
         </div>
-        <span class="shrink-0 whitespace-nowrap text-xs tabular-nums text-muted">{{ rangeLabel }}</span>
+        <CommonPaginationRange :start="pageStart" :end="pageEnd" />
       </div>
     </Transition>
   </Teleport>

@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'vue';
+
 /*
  * Safety gap, in px, between the fold and the point where the main bar counts as
  * back on screen. The main bar always re-enters from below, so growing the root
@@ -14,12 +16,25 @@ const HANDOFF_GAP_PX = 12;
 export function useMiniBarVisibility(target: Ref<HTMLElement | null>, scope?: Ref<HTMLElement | null>) {
   const isMainOffscreen = ref(false);
   const isScopeVisible = ref(false);
+  const miniStyle = shallowRef<CSSProperties>({});
   const isMiniVisible = computed(() => isMainOffscreen.value && (!scope || isScopeVisible.value));
 
   if (import.meta.client && typeof IntersectionObserver !== "undefined") {
     watchPostEffect((onCleanup) => {
       const el = target.value;
       if (!el) return;
+      const workspace = el.closest<HTMLElement>('.eapp-shell-main');
+      const updateGeometry = () => {
+        const bounds = workspace?.getBoundingClientRect();
+        miniStyle.value = bounds?.width ? {
+          '--pagination-workspace-center': `${bounds.left + bounds.width / 2}px`,
+          '--pagination-workspace-width': `${bounds.width}px`,
+        } : {};
+      };
+      updateGeometry();
+      const resizeObserver = workspace && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(updateGeometry) : null;
+      if (workspace) resizeObserver?.observe(workspace);
 
       const observer = new IntersectionObserver(
         ([record]) => {
@@ -31,6 +46,8 @@ export function useMiniBarVisibility(target: Ref<HTMLElement | null>, scope?: Re
 
       onCleanup(() => {
         observer.disconnect();
+        resizeObserver?.disconnect();
+        miniStyle.value = {};
         isMainOffscreen.value = false;
       });
     });
@@ -48,5 +65,5 @@ export function useMiniBarVisibility(target: Ref<HTMLElement | null>, scope?: Re
     });
   }
 
-  return { isMiniVisible };
+  return { isMiniVisible, miniStyle };
 }

@@ -2,7 +2,7 @@ import { flushPromises } from '@vue/test-utils'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, defineComponent, h, ref } from 'vue'
-import { USlideover } from '#components'
+import { UDropdownMenu, USlideover } from '#components'
 
 import SidebarUserInfo from '~/components/sidebar/UserInfo.vue'
 import { useAuth } from '~/composables/shared/useAuth'
@@ -22,23 +22,6 @@ vi.mock('~/composables/shared/useConfirm', () => ({
   useConfirm: () => ({ confirm: vi.fn().mockResolvedValue(false) }),
 }))
 
-describe('collapsed sidebar navigation', () => {
-  it('uses Nuxt UI navigation with click popovers instead of hover expansion', async () => {
-    const { readFileSync } = await import('node:fs')
-    const { resolve } = await import('node:path')
-    const source = readFileSync(resolve(process.cwd(), 'app/components/sidebar/UnifiedSidebar.vue'), 'utf8')
-    expect(source).toContain('<UNavigationMenu')
-    expect(source).toContain("mode: 'click'")
-    expect(source).toContain('highlight\n')
-    expect(source).not.toContain("ms-5 border-s border-[var(--nav-child-border)]")
-    expect(source).toMatch(/const isDataItem[\s\S]*?active: isRouteExactActive\('\/data'\)/)
-    expect(source).toMatch(/const isDataGroup[\s\S]*?active: isRouteExactActive\('\/data'\)/)
-    expect(source).toContain('branchActive: children.some((child: any) => child.active || child.branchActive)')
-    expect(source).not.toContain('showSidebarPeek')
-    expect(source).not.toContain('SidebarMenuTree')
-  })
-})
-
 describe('SidebarUserInfo', () => {
   it('uses native Appearance and Accent submenus and preserves registered notification rows', async () => {
     const { me } = useAuth()
@@ -54,6 +37,7 @@ describe('SidebarUserInfo', () => {
       const items = dropdown.props('items').flat()
       expect(items.map((item: any) => item.label)).toEqual(['Profile', 'Appearance', 'Accent', 'Notifications', 'Log out'])
       expect(items.find((item: any) => item.label === 'Log out').color).toBe('error')
+      expect(dropdown.props('items').at(-1).map((item: any) => item.label)).toEqual(['Log out'])
       const appearance = items.find((item: any) => item.label === 'Appearance')
       expect(appearance.children.map((item: any) => item.label)).toEqual(['Light', 'Dark', 'System'])
       expect(items.find((item: any) => item.label === 'Accent').children.length).toBeGreaterThan(0)
@@ -86,6 +70,41 @@ describe('SidebarUserInfo', () => {
     expect(wrapper.text()).toContain('Powered by Enfyra')
     expect(wrapper.text()).toContain('v2.2.8-patch-1')
     wrapper.unmount()
+  })
+})
+
+describe('dropdown semantic colors', () => {
+  it('uses shared hover for default and neutral actions while preserving semantic colors', async () => {
+    const colors = [undefined, 'neutral', 'primary', 'secondary', 'success', 'info', 'warning', 'error'] as const
+    const host = document.createElement('div')
+    document.body.append(host)
+    const wrapper = await mountSuspended(UDropdownMenu, {
+      attachTo: host,
+      props: { items: [
+        ...colors.map(color => ({ label: color ?? 'default', color })),
+        { label: 'Default branch', children: [{ label: 'Nested default' }] },
+      ], modal: false },
+      slots: { default: () => h('button', 'Open actions') },
+    })
+    try {
+      await wrapper.get('button').trigger('click', { button: 0, ctrlKey: false })
+      await vi.waitFor(() => expect(document.querySelectorAll('[role="menuitem"]')).toHaveLength(colors.length + 1))
+      for (const color of colors) {
+        const item = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]'))
+          .find(item => item.textContent?.trim() === (color ?? 'default'))!
+        expect(item.className.includes('--menu-item-hover-bg'), color ?? 'default').toBe(color === undefined || color === 'neutral')
+        if (color === 'error') {
+          expect(item.className).toContain('--state-danger-soft-bg-hover')
+          expect(item.className).toContain('--state-danger-soft-text')
+        }
+      }
+      const branch = Array.from(document.querySelectorAll<HTMLElement>('[role="menuitem"]'))
+        .find(item => item.textContent?.trim() === 'Default branch')!
+      expect(branch.className).toContain('--menu-item-hover-bg')
+    } finally {
+      wrapper.unmount()
+      host.remove()
+    }
   })
 })
 

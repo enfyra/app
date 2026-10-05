@@ -19,7 +19,7 @@ function submit() {
 </script>
 
 <template>
-  <form class="min-w-0 w-full basis-full md:max-w-sm md:flex-1 md:basis-auto" @submit.prevent="submit">
+  <form class="eapp-search-field min-w-0 w-full md:max-w-sm md:flex-1" @submit.prevent="submit">
     <UFieldGroup class="w-full" :ui="{ base: 'w-full rounded-[var(--radius-control)]' }">
       <UInput
         v-model="model"

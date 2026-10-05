@@ -28,7 +28,7 @@ describe('Settings table', () => {
     expect(wrapper.get('table[data-slot="base"]').classes()).toContain('!min-w-full')
     const footer = wrapper.get('.border-t.border-default.px-3.py-3')
     expect(footer.text()).toContain('Rows per page')
-    expect(footer.text()).toContain('1–10 / 24')
+    expect(footer.text()).toContain('1–10')
     expect(footer.find('nav[data-slot="root"]').exists()).toBe(true)
     expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('grid')
     expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')

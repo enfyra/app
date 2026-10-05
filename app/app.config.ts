@@ -92,10 +92,21 @@ export default defineAppConfig({
     },
     dropdownMenu: {
       slots: {
-        item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75 data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]',
-
+        item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75',
       },
       compoundVariants: [
+        {
+          color: undefined,
+          class: {
+            item: "data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]",
+          },
+        },
+        {
+          color: "neutral",
+          class: {
+            item: "data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]",
+          },
+        },
         {
           color: "error",
           active: false,
@@ -122,7 +133,7 @@ export default defineAppConfig({
           "cursor-pointer",
           "whitespace-nowrap",
           "shrink-0",
-          "rounded-[var(--radius-control)]",
+          "!rounded-[var(--radius-control)]",
           "text-sm font-medium",
           "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
           "active:!transition-none",
