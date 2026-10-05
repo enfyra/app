@@ -90,8 +90,11 @@ export default defineAppConfig({
         },
       },
     },
+    popover: { slots: { content: 'z-[60]' } },
+    tooltip: { slots: { content: 'z-[60]' } },
     dropdownMenu: {
       slots: {
+        content: 'z-[60]',
         item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75',
       },
       compoundVariants: [
@@ -377,6 +380,7 @@ export default defineAppConfig({
     },
     select: {
       slots: {
+        content: 'z-[60]',
         base: [
           "h-11 w-full rounded-[var(--radius-control)] border border-[var(--control-border)]",
           "!bg-[var(--control-bg)]",
@@ -424,6 +428,7 @@ export default defineAppConfig({
     },
     selectMenu: {
       slots: {
+        content: 'z-[60]',
         base: [
           "h-11 w-full rounded-[var(--radius-control)] border border-[var(--control-border)]",
           "!bg-[var(--control-bg)]",
@@ -458,6 +463,7 @@ export default defineAppConfig({
     },
     inputMenu: {
       slots: {
+        content: 'z-[60]',
         item: [
           "data-highlighted:not-data-disabled:!text-[var(--text-primary)]",
           "data-highlighted:not-data-disabled:before:!bg-[var(--state-primary-soft-bg)]",
@@ -535,6 +541,8 @@ export default defineAppConfig({
     },
     drawer: {
       slots: {
+        overlay: 'z-50',
+        content: 'z-50',
         root: "bg-[var(--surface-default)] border-l border-[var(--border-default)]",
         header: "border-b border-[var(--border-default)] py-4",
         body: "flex-1 pb-4",
@@ -548,6 +556,7 @@ export default defineAppConfig({
       ],
     },
     slideover: {
+      slots: { overlay: 'z-50', content: 'z-50' },
       compoundVariants: [
         { side: 'left', inset: true, class: { content: 'inset-y-[var(--shell-overlay-inset)] left-[var(--shell-overlay-inset)] w-[calc(100%-2*var(--shell-overlay-inset))] rounded-[var(--radius-shell)]' } },
         { side: 'right', inset: true, class: { content: 'inset-y-[var(--shell-overlay-inset)] right-[var(--shell-overlay-inset)] w-[calc(100%-2*var(--shell-overlay-inset))] rounded-[var(--radius-shell)]' } },
@@ -558,7 +567,8 @@ export default defineAppConfig({
     modal: {
       variants: { fullscreen: { false: { content: 'rounded-[var(--radius-card)]' } } },
       slots: {
-        overlay: 'bg-black/20 backdrop-blur-[2px]',
+        overlay: 'z-50 bg-black/20 backdrop-blur-[2px]',
+        content: 'z-50',
         header: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
         body: 'eapp-modal-body p-3 sm:p-3 md:p-6',
         footer: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
@@ -834,6 +844,7 @@ export default defineAppConfig({
     },
     contextMenu: {
       slots: {
+        content: 'z-[60]',
         item: [
           "group relative w-full flex items-center select-none outline-none",
           "before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)]",
