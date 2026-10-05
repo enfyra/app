@@ -108,7 +108,7 @@ describe('pagination layout', () => {
     expect(pagination).toContain('useMiniBarVisibility(mainBar)')
     expect(pagination).toContain('const showMini = computed(() => props.floating && hasPagination.value && isMiniVisible.value)')
     expect(pagination).toContain('<Teleport to="body">')
-    expect(pagination).toContain('eapp-pagination-mini fixed inset-x-3 z-30')
+    expect(pagination).toContain('eapp-pagination-mini fixed inset-x-3 z-10')
     expect(pagination).not.toContain('bottom-3')
     const miniBar = pagination.match(/class="eapp-pagination eapp-pagination-mini[^"]*"/)?.[0]
     expect(miniBar).not.toContain('flex-wrap')

@@ -126,7 +126,7 @@ const miniUi = computed(() => ({
     <Transition name="mini-pagination">
       <div
         v-show="showMini"
-        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 z-30 mx-auto flex w-fit max-w-[calc(100%-1.5rem)] items-center justify-between gap-1.5 rounded-[var(--radius-panel)] px-2 py-1 md:gap-2 md:px-2.5"
+        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 z-10 mx-auto flex w-fit max-w-[calc(100%-1.5rem)] items-center justify-between gap-1.5 rounded-[var(--radius-panel)] px-2 py-1 md:gap-2 md:px-2.5"
       >
         <div class="min-w-0 flex-1 overflow-x-auto">
           <UPagination

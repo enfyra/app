@@ -77,7 +77,7 @@ function setCursorPage(direction: -1 | 1) {
   </div>
   <Teleport v-if="canFloat" to="body">
     <Transition name="mini-pagination">
-      <div v-show="showMiniPagination" class="eapp-pagination eapp-pagination-mini fixed inset-x-3 z-30 mx-auto flex w-fit max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-[var(--radius-panel)] px-2 py-1 md:gap-2 md:px-2.5" aria-label="Floating table pagination" :aria-busy="loading">
+      <div v-show="showMiniPagination" class="eapp-pagination eapp-pagination-mini fixed inset-x-3 z-10 mx-auto flex w-fit max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-[var(--radius-panel)] px-2 py-1 md:gap-2 md:px-2.5" aria-label="Floating table pagination" :aria-busy="loading">
         <div class="min-w-0 flex-1 overflow-x-auto">
           <div v-if="isCursor" class="flex w-max gap-1.5">
             <UButton label="Previous" icon="lucide:chevron-left" color="neutral" variant="outline" size="xs" :disabled="page <= 1 || loading" @click="setCursorPage(-1)" />
