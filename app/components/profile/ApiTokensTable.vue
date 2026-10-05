@@ -53,7 +53,7 @@ const {
 
 const apiTokens = computed(() => apiTokenData.value?.data || []);
 const page = ref(1);
-const pageLimit = useSettingsPageSize('me-api-tokens', 20);
+const pageLimit = useSettingsPageSize('me-api-tokens');
 const pageTokens = computed(() => apiTokens.value.slice((page.value - 1) * pageLimit.value, page.value * pageLimit.value));
 const revokingTokenId = ref<string | null>(null);
 const tokenColumns: TableColumn<ApiTokenRecord>[] = [

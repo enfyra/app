@@ -24,16 +24,21 @@ describe('Settings table', () => {
     expect(wrapper.get('tbody').text()).toContain('First')
     expect(wrapper.get('tbody button')).toBeTruthy()
     expect(wrapper.get('tbody td').classes()).toContain('py-2')
-    expect(wrapper.get('table[data-slot="base"]').classes()).toContain('table-fixed')
-    expect(wrapper.get('table[data-slot="base"]').classes()).toContain('!min-w-[640px]')
-    const footer = wrapper.get('.border-t.border-default.px-4.py-3')
+    expect(wrapper.get('table[data-slot="base"]').classes()).toContain('table-auto')
+    expect(wrapper.get('table[data-slot="base"]').classes()).toContain('!min-w-full')
+    const footer = wrapper.get('.border-t.border-default.px-3.py-3')
     expect(footer.text()).toContain('Rows per page')
-    expect(footer.text()).toContain('1–10 / 24')
+    expect(footer.text()).toContain('1–10')
     expect(footer.find('nav[data-slot="root"]').exists()).toBe(true)
     expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('grid')
-    expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('md:flex')
-    expect(wrapper.get('.eapp-settings-pagination nav[data-slot="root"]').classes()).toContain('justify-self-end')
-    expect(wrapper.get('.eapp-settings-pagination nav[data-slot="root"]').classes()).toContain('border-t')
+    expect(wrapper.get('.eapp-settings-pagination').classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
+    const pager = wrapper.get('.eapp-settings-pagination nav[data-slot="root"]')
+    expect(pager.get('[data-slot="list"]').classes()).toContain('flex-nowrap')
+    const scroller = pager.element.parentElement!
+    expect(scroller.classList.contains('overflow-x-auto')).toBe(true)
+    expect(scroller.parentElement!.classList.contains('border-t')).toBe(false)
+    expect(scroller.parentElement!.classList.contains('max-md:border-t')).toBe(true)
+    expect(scroller.parentElement!.classList.contains('max-md:-mx-3')).toBe(true)
     expect(wrapper.find('[aria-label="Choose visible columns"]').exists()).toBe(false)
     expect(document.body.querySelector('.eapp-pagination-mini')).not.toBeNull()
     expect((document.body.querySelector('.eapp-pagination-mini') as HTMLElement).style.display).toBe('none')
@@ -41,7 +46,7 @@ describe('Settings table', () => {
     expect(wrapper.find('[class*=eapp-page-constrained-wide]').exists()).toBe(false)
   })
 
-  it('reserves short ID and control widths so route content gets the remaining space', async () => {
+  it('uses intrinsic ID and control widths so route content gets the remaining space', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
         data: [{ id: 1376, path: '/long-route', mainTable: { name: 'long_table' }, isEnabled: true }],
@@ -57,18 +62,13 @@ describe('Settings table', () => {
     })
     await flushPromises()
     const headers = wrapper.findAll('thead th')
-    const idWidth = Number.parseInt((headers[0]!.element as HTMLElement).style.width)
-    const statusWidth = Number.parseInt((headers[5]!.element as HTMLElement).style.width)
-    const actionWidth = Number.parseInt((headers[6]!.element as HTMLElement).style.width)
-    expect(idWidth).toBeGreaterThan(55)
-    expect(idWidth).toBeLessThan(120)
-    expect(statusWidth).toBeGreaterThan(80)
-    expect(statusWidth).toBeLessThan(150)
-    expect(actionWidth).toBeLessThan(80)
+    expect((headers[0]!.element as HTMLElement).style.width).toBe('1px')
+    expect((headers[5]!.element as HTMLElement).style.width).toBe('')
+    expect((headers[6]!.element as HTMLElement).style.width).toBe('56px')
     expect((headers[1]!.element as HTMLElement).style.width).toBe('')
-    expect((headers[2]!.element as HTMLElement).style.width).toBe('200px')
-    expect((headers[3]!.element as HTMLElement).style.width).toBe('200px')
-    expect(wrapper.get('table[data-slot="base"]').classes()).toContain('!min-w-[1200px]')
+    expect((headers[2]!.element as HTMLElement).style.width).toBe('1px')
+    expect((headers[3]!.element as HTMLElement).style.width).toBe('1px')
+    expect(wrapper.get('table[data-slot="base"]').classes()).toContain('table-auto')
   })
 
   it('shows Mongo IDs from the row data', async () => {
@@ -91,7 +91,23 @@ describe('Settings table', () => {
       },
     })
     await flushPromises()
-    expect((wrapper.get('thead th').element as HTMLElement).style.width).toBe('224px')
+    expect((wrapper.get('thead th').element as HTMLElement).style.width).toBe('1px')
+    expect(wrapper.get('tbody td span').classes()).toContain('max-w-56')
+  })
+
+  it('lets an empty description stay compact and expand when it has content', async () => {
+    const wrapper = await mountSuspended(SettingsTable, {
+      props: {
+        data: [{ id: 1492, name: 'Collection', description: '' }, { id: 1491, name: 'Another', description: null }],
+        columns: [{ accessorKey: 'name', header: 'Collection' }, { accessorKey: 'description', header: 'Description' }],
+      },
+    })
+    await flushPromises()
+    expect((wrapper.findAll('thead th')[2]!.element as HTMLElement).style.width).toBe('1px')
+    await wrapper.setProps({ data: [{ id: 1492, name: 'Collection', description: 'Customer data and preferences' }] })
+    await flushPromises()
+    expect((wrapper.findAll('thead th')[2]!.element as HTMLElement).style.width).toBe('')
+    expect(wrapper.get('tbody').text()).toContain('Customer data and preferences')
   })
 
   it('keeps the ellipsis when every row action is disabled', async () => {

@@ -20,8 +20,10 @@
   background-clip: content-box;
 }
 
-*::-webkit-scrollbar-thumb:hover {
-  background-color: var(--border-strong);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--border-strong);
+  }
 }
 
 /* Scrollbar thumbs stay visible on every scroller. Do not gate this on a
@@ -55,12 +57,16 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .eapp-sidebar-scroll:hover {
-    scrollbar-color: color-mix(in srgb, var(--md-primary) 30%, transparent) transparent;
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+    .eapp-sidebar-scroll:hover {
+      scrollbar-color: color-mix(in srgb, var(--md-primary) 30%, transparent) transparent;
+    }
   }
 
-  .eapp-sidebar-scroll::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in srgb, var(--md-primary) 30%, transparent);
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+    .eapp-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+      background-color: color-mix(in srgb, var(--md-primary) 30%, transparent);
+    }
   }
 }
 

@@ -116,7 +116,6 @@ function getDetailPath(id: RelationId): string | null {
       variant="outline"
       color="primary"
       @click="showModal = true"
-      class="!rounded-[var(--radius-subcontrol)]"
     />
   </div>
 
@@ -149,13 +148,17 @@ function getDetailPath(id: RelationId): string | null {
   color: var(--badge-primary-soft-text);
 }
 
-.relation-inline-chip-action-primary:hover {
-  background: color-mix(in srgb, var(--md-primary) 28%, var(--state-primary-soft-bg-hover));
-  color: var(--badge-primary-soft-text);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .relation-inline-chip-action-primary:hover {
+    background: color-mix(in srgb, var(--md-primary) 28%, var(--state-primary-soft-bg-hover));
+    color: var(--badge-primary-soft-text);
+  }
 }
 
-.relation-inline-chip-action-danger:hover {
-  background: var(--state-danger-soft-bg-hover);
-  color: var(--state-danger-soft-text);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .relation-inline-chip-action-danger:hover {
+    background: var(--state-danger-soft-bg-hover);
+    color: var(--state-danger-soft-text);
+  }
 }
 </style>

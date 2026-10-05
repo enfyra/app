@@ -60,9 +60,6 @@ watch(
   { immediate: true, flush: 'sync' },
 );
 
-const { isMobile, isTablet } = useScreen();
-
-
 function close() {
   isOpen.value = false;
 }
@@ -100,10 +97,10 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
     :title="props.title"
     :inset="true"
     :nested="props.nested"
-    :style="props.zIndex ? { zIndex: props.zIndex } : undefined"
     :ui="{
-      container: props.direction === 'bottom' ? '!h-auto max-h-[85dvh] !gap-0 !p-3 !pb-[max(0.75rem,env(safe-area-inset-bottom))]' : 'h-[100dvh]',
-      content: `overflow-hidden bg-[var(--surface-default)] ${props.direction === 'bottom' ? '' : props.fullWidth ? 'w-full' : '!w-[36rem] !max-w-[calc(100%-2rem)]'}`,
+      overlay: 'z-[1000]',
+      container: props.direction === 'bottom' ? '!h-auto max-h-[85dvh] !gap-0 !p-3 !pb-[max(0.75rem,env(safe-area-inset-bottom))]' : 'h-full min-h-0 p-3 md:p-4',
+      content: `z-[1000] overflow-hidden bg-[var(--surface-default)] ${props.direction === 'bottom' ? '' : props.fullWidth ? 'w-[calc(100%-2*var(--shell-overlay-inset))]' : '!w-[36rem]'}`,
       header: `${props.direction === 'bottom' ? '!pt-0 !pb-3' : 'pt-0 pb-2'} flex items-center justify-between flex-shrink-0`,
       body: `flex-1 overflow-y-auto min-h-0 custom-scrollbar ${props.direction === 'bottom' ? '!p-0' : ''}`,
       footer: 'mb-2 md:mb-4',
@@ -122,8 +119,8 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
           aria-label="Close"
           :color="props.direction === 'bottom' ? 'neutral' : 'error'"
           :variant="props.direction === 'bottom' ? 'ghost' : 'soft'"
-          :size="(isMobile || isTablet) ? 'lg' : 'xl'"
-          :class="(isMobile || isTablet) ? '!rounded-[var(--radius-subcontrol)] !aspect-square min-h-[44px] min-w-[44px] flex-shrink-0' : 'min-h-[44px] min-w-[44px] flex-shrink-0'"
+          size="md"
+          class="relative !h-9 !w-9 !p-0 shrink-0 pointer-coarse:before:absolute pointer-coarse:before:-inset-1 pointer-coarse:before:content-['']"
           @click.stop.prevent="close"
         />
       </div>

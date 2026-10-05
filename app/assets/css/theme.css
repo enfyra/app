@@ -202,7 +202,8 @@
     --state-info-description-text: var(--info-on-surface);
 
     --state-neutral-soft-bg: var(--surface-muted);
-    --state-neutral-soft-bg-hover: color-mix(in srgb, var(--md-on-surface) 12%, var(--md-surface));
+    --state-neutral-soft-bg-hover: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface));
+    --menu-item-hover-bg: color-mix(in srgb, var(--md-primary) 10%, var(--surface-default));
     --state-neutral-soft-text: var(--text-secondary);
     --state-neutral-outline-border: var(--border-default);
 
@@ -266,7 +267,9 @@
     --pagination-disabled-text: var(--text-disabled);
 
     --shell-inset: 1.5rem;
-    --ui-container: 80rem;
+    --shell-mobile-inset: 0.75rem;
+    --shell-overlay-inset: var(--shell-mobile-inset);
+    --ui-container: 75rem;
     --shell-sidebar-width: 16rem;
     --shell-sidebar-inset: calc(var(--shell-inset) + 0.75rem);
     --shell-bg: var(--md-surface);
@@ -436,6 +439,18 @@
   --ui-color-info-950: color-mix(in srgb, var(--info-on-surface) 82%, var(--info-color)) !important;
 }
 
+@media (min-width: 768px) {
+  :root {
+    --shell-mobile-inset: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --shell-overlay-inset: var(--shell-inset);
+  }
+}
+
 :root {
   --ui-bg: var(--surface-default) !important;
   --ui-bg-muted: var(--surface-muted) !important;
@@ -456,13 +471,36 @@
 }
 
 .dark {
-  --block-base: #242429;
-  --block-low: #2a2a30;
-  --block-muted: #313138;
-  --block-high: #3a3a42;
-  --surface-workspace: color-mix(in srgb, var(--md-primary) 1%, #1d1d22);
-  --card-border: color-mix(in srgb, var(--md-outline-variant) 72%, var(--block-base));
-  --card-border-hover: color-mix(in srgb, var(--md-outline) 72%, var(--block-base));
+  --block-base: #26262c;
+  --block-low: #2e2e35;
+  --block-muted: #37373f;
+  --block-high: #414149;
+  --surface-workspace: #1d1d22;
+  --card-border: color-mix(in srgb, #ffffff 16%, var(--block-base));
+  --card-border-hover: color-mix(in srgb, var(--md-primary) 42%, var(--card-border));
+  --shell-main-border: color-mix(in srgb, #ffffff 18%, var(--surface-workspace));
+  --text-tertiary: color-mix(in srgb, var(--md-on-surface-variant) 80%, var(--md-surface));
+  --menu-item-hover-bg: color-mix(in srgb, var(--md-primary) 16%, var(--block-base));
+  --state-neutral-soft-bg-hover: color-mix(in srgb, var(--md-primary) 16%, var(--block-base));
+  --nav-item-active-bg: var(--md-primary-container);
+  --nav-item-active-bg-hover: color-mix(in srgb, var(--md-primary) 18%, var(--md-primary-container));
+  --nav-item-active-text: var(--md-on-primary-container);
+  --nav-item-active-ring: color-mix(in srgb, var(--md-primary) 34%, transparent);
+  --nav-count-active-bg: var(--md-primary-container);
+  --nav-count-active-text: var(--md-on-primary-container);
+  --state-primary-soft-bg: var(--md-primary-container);
+  --state-primary-soft-bg-hover: color-mix(in srgb, var(--md-primary) 18%, var(--md-primary-container));
+  --state-primary-soft-text: var(--md-on-primary-container);
+  --state-primary-title-text: var(--md-on-primary-container);
+  --state-primary-description-text: color-mix(in srgb, var(--md-on-primary-container) 78%, var(--md-primary-container));
+  --badge-primary-soft-bg: var(--md-primary-container);
+  --badge-primary-soft-text: var(--md-on-primary-container);
+  --badge-primary-soft-border: color-mix(in srgb, var(--md-primary) 36%, transparent);
+  --pagination-active-bg: var(--md-primary);
+  --pagination-active-border: var(--md-primary);
+  --pagination-active-text: var(--md-on-primary);
+  --shadow-sm: 0 8px 18px rgb(0 0 0 / 36%);
+  --shadow-md: 0 14px 28px rgb(0 0 0 / 42%);
 
   --danger-surface: color-mix(in srgb, var(--md-primary) var(--status-theme-tint), var(--md-error-container));
   --danger-surface-hover: color-mix(in srgb, var(--md-error) 16%, var(--md-error-container));
@@ -476,13 +514,20 @@
   --action-danger-bg-hover: var(--danger-surface-hover);
   --action-danger-bg-active: var(--danger-surface-active);
   --action-danger-text: var(--md-on-error-container);
+  --action-neutral-solid-bg: var(--md-surface-container-highest);
+  --action-neutral-solid-bg-hover: color-mix(in srgb, var(--md-primary) 14%, var(--md-surface-container-highest));
+  --action-neutral-solid-bg-active: color-mix(in srgb, var(--md-primary) 20%, var(--md-surface-container-highest));
+  --action-neutral-solid-text: var(--md-on-surface);
+  --action-neutral-outline-bg: var(--md-surface-container-high);
+  --action-neutral-outline-bg-hover: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface-container-high));
+  --action-neutral-outline-bg-active: color-mix(in srgb, var(--md-primary) 16%, var(--md-surface-container-high));
 
-  /* Dark theme keeps neutral blocks crisp while the app canvas carries a quiet
-     primary tint, so the runtime accent is visible without turning surfaces black. */
-  --bg-app: color-mix(in srgb, var(--md-primary) 2%, #17171b);
-  --surface-chrome: color-mix(in srgb, var(--md-primary) 1%, #1b1b20);
-  --shell-bg: color-mix(in srgb, var(--md-primary) 1%, #17171b);
-  --flow-surface-bg: color-mix(in srgb, var(--md-primary) 1%, #19191d);
+  /* Dark separates canvas, frame, and cards by lightness while staying clear of
+     near-black. Accent stays on actions and selected states. */
+  --bg-app: #17171b;
+  --surface-chrome: #1a1a1f;
+  --shell-bg: #17171b;
+  --flow-surface-bg: #1a1a1f;
   --flow-surface-border: color-mix(in srgb, var(--md-outline) 58%, transparent);
   --flow-edge: color-mix(in srgb, var(--text-secondary) 58%, transparent);
   --flow-node-bg: color-mix(in srgb, var(--text-primary) 5%, var(--block-low));

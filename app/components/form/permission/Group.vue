@@ -23,7 +23,7 @@
         
         <div
           v-if="isPermission(item)"
-          class="flex items-center justify-between p-3 border border-muted rounded-lg lg:hover:bg-muted/50 cursor-pointer transition-colors"
+          class="flex items-center justify-between p-3 border border-muted rounded-lg lg:hover:bg-[var(--menu-item-hover-bg)] cursor-pointer transition-colors"
           @click="editPermission(Number(index), item)"
           tabindex="0"
           role="button"

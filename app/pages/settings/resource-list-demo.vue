@@ -281,8 +281,10 @@ const cardExamples = [
   border-bottom: 0;
 }
 
-.resource-demo-row:hover {
-  background: var(--surface-nested);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .resource-demo-row:hover {
+    background: var(--surface-nested);
+  }
 }
 
 .resource-demo-row-active {
@@ -356,8 +358,10 @@ const cardExamples = [
   border-bottom: 0;
 }
 
-.resource-demo-table-row:hover {
-  background: var(--surface-muted);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .resource-demo-table-row:hover {
+    background: var(--surface-muted);
+  }
 }
 
 .cards-demo-region {

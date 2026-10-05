@@ -5,14 +5,19 @@ import { UCard, UTabs } from '#components'
 import { useAppConfig } from '#imports'
 import { tv } from '@nuxt/ui/utils/tv'
 import tabsTheme from '#build/ui/tabs'
-import TabbedPanel from '~/components/common/TabbedPanel.vue'
+import Panel from '~/components/common/Panel.vue'
 import { availableComponents } from '~/composables/dynamic/registry'
 
-describe('Shared tabbed panel', () => {
-  it('retains native tab events and mounted draft content inside one frame', async () => {
+const sections = [
+  { label: 'One', value: 'one', icon: 'lucide:settings-2' },
+  { label: 'Two', value: 'two', icon: 'lucide:globe' },
+]
+
+describe('Shared panel', () => {
+  it('keeps hidden section drafts mounted and emits the selected section', async () => {
     const draftValue = ref('original')
-    const wrapper = await mountSuspended(availableComponents.TabbedPanel, {
-      props: { modelValue: 'one', items: [{ label: 'One', value: 'one', slot: 'one' }, { label: 'Two', value: 'two', slot: 'two' }] },
+    const wrapper = await mountSuspended(availableComponents.Panel, {
+      props: { modelValue: 'one', sections },
       slots: {
         one: () => h('input', { 'aria-label': 'Draft', value: draftValue.value, onInput: (event: Event) => { draftValue.value = (event.target as HTMLInputElement).value } }),
         two: '<p>Second panel</p>',
@@ -22,8 +27,7 @@ describe('Shared tabbed panel', () => {
       expect(wrapper.findComponent(UCard).exists()).toBe(true)
       const draft = wrapper.get('input[aria-label="Draft"]')
       await draft.setValue('unsaved')
-      const tabs = wrapper.findComponent(UTabs)
-      await tabs.findAll('[role="tab"]').find(tab => tab.text() === 'Two')!.trigger('keydown', { key: 'Enter' })
+      await wrapper.findComponent(UTabs).findAll('[role="tab"]').find(tab => tab.text().includes('Two'))!.trigger('keydown', { key: 'Enter' })
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['two'])
       await wrapper.setProps({ modelValue: 'two' })
       expect(wrapper.get('input[aria-label="Draft"]').element).toBe(draft.element)
@@ -32,37 +36,48 @@ describe('Shared tabbed panel', () => {
     } finally { wrapper.unmount() }
   })
 
-  it('puts an external native tab strip in the Card header and keeps the content in its body', async () => {
-    const wrapper = await mountSuspended(TabbedPanel, {
-      slots: { header: '<div role="tablist">External tabs</div>', default: '<p>Panel contents</p>' },
+  it('hides the tab strip for one unlabeled section and gives its header the top muted surface', async () => {
+    const wrapper = await mountSuspended(Panel, {
+      props: { sections: [{ value: 'records' }] },
+      slots: { 'records-header': '<h2>Records</h2>', records: '<p>Rows</p>', footer: '<button>Next</button>' },
     })
     try {
-      expect(wrapper.get('[data-slot="header"]').text()).toBe('External tabs')
-      expect(wrapper.get('[data-slot="body"]').text()).toBe('Panel contents')
-      expect(wrapper.findAll('[role="tablist"]')).toHaveLength(1)
+      expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
+      expect(wrapper.get('[data-slot="header"]').text()).toBe('Records')
+      expect(wrapper.get('[data-slot="header"] > div').classes()).toContain('bg-muted')
+      expect(wrapper.get('[data-slot="footer"]').text()).toBe('Next')
+    } finally { wrapper.unmount() }
+  })
+
+  it('puts the active section header below the muted tab strip without another muted surface', async () => {
+    const wrapper = await mountSuspended(Panel, {
+      props: { modelValue: 'one', sections },
+      slots: { 'one-header': '<div>Section tools</div>', one: '<p>First</p>' },
+    })
+    try {
+      const header = wrapper.get('[data-slot="header"]')
+      expect(header.find('[role="tablist"]').exists()).toBe(true)
+      expect(header.text()).toContain('Section tools')
+      expect(header.classes()).not.toContain('bg-muted')
     } finally { wrapper.unmount() }
   })
 
   it('keeps pill navigation independent of the header underline and uses theme roles', async () => {
     const items = [{ label: 'Overview', value: 'overview' }, { label: 'Usage', value: 'usage' }]
     expect(availableComponents.UTabs).toBe(UTabs)
-    const wrapper = await mountSuspended(TabbedPanel, {
+    const wrapper = await mountSuspended(Panel, {
+      props: { sections },
       slots: {
-        header: () => h(UTabs, { modelValue: 'overview', items, variant: 'link', content: false }),
-        default: () => h(availableComponents.UTabs, { modelValue: 'overview', items, variant: 'pill', color: 'primary', content: false }),
+        one: () => h(availableComponents.UTabs, { modelValue: 'overview', items, variant: 'pill', color: 'primary', content: false }),
       },
     })
     try {
       const pill = wrapper.findAllComponents(UTabs)[1]!
       const ui = tv({ extend: tabsTheme, ...(useAppConfig().ui.tabs as unknown as typeof tabsTheme) })({ variant: 'pill', color: 'primary', orientation: 'horizontal' })
       expect(pill.get('[data-slot="list"]').classes()).toContain('bg-elevated')
-      expect(pill.get('[data-slot="list"]').classes()).toContain('max-w-full')
-      expect(pill.get('[data-slot="list"]').classes()).toContain('overflow-x-auto')
       expect(pill.get('[data-slot="list"]').classes()).not.toContain('border-b-0')
       expect(ui.indicator()).toContain('bg-primary')
       expect(ui.indicator()).not.toContain('!bottom-0')
-      expect(ui.indicator()).not.toContain('!h-0.5')
-      expect(pill.get('[data-slot="trigger"]').classes()).toContain('data-[state=active]:bg-primary')
       expect(pill.get('[data-slot="trigger"]').classes()).toContain('data-[state=active]:text-inverted')
     } finally { wrapper.unmount() }
   })

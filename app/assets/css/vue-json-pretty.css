@@ -3,11 +3,16 @@
   color: var(--text-primary) !important;
 }
 
-.vjs-tree .vjs-tree-node:hover,
 .vjs-tree .vjs-tree-node.is-highlight,
-.vjs-tree .vjs-tree-node.dark:hover,
 .vjs-tree .vjs-tree-node.dark.is-highlight {
   background: transparent !important;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .vjs-tree .vjs-tree-node:hover,
+.vjs-tree .vjs-tree-node.dark:hover {
+    background: transparent !important;
+  }
 }
 
 .vjs-tree .vjs-key {

@@ -298,7 +298,7 @@ export const VUE_COMPONENT_COMPLETIONS = [
   { label: 'UAvatar', type: 'class', detail: 'Nuxt UI: avatar' },
   { label: 'UPagination', type: 'class', detail: 'Nuxt UI: pagination' },
   { label: 'UTabs', type: 'class', detail: 'Nuxt UI: tabs' },
-  { label: 'TabbedPanel', type: 'class', detail: 'Enfyra: shared tab header and content frame' },
+  { label: 'Panel', type: 'class', detail: 'Enfyra: shared framed panel with optional section tabs, headers, and footer' },
   { label: 'UIcon', type: 'class', detail: 'Nuxt UI: icon' },
   {
     label: 'DataTable-example',

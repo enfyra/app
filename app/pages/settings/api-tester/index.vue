@@ -1,13 +1,11 @@
 <template>
   <div class="space-y-6">
     <div class="flex flex-col sm:flex-row gap-3">
-      <UInput v-model="search" placeholder="Search routes..." icon="i-lucide-search" size="sm" class="flex-1" />
+      <CommonSearchField v-model="search" placeholder="Search routes..." label="Search routes" />
     </div>
 
-    <CommonTabbedPanel>
-      <template #header>
-        <UTabs v-model="activeScope" :items="routeTabItems" :content="false" variant="link" />
-      </template>
+    <CommonPanel v-model="activeScope" :sections="routeSections">
+      <template v-for="section in routeSections" :key="section.value" #[section.value]>
     <DataTableSettingsTable
       v-model:page="page"
       :data="visibleRoutes"
@@ -22,7 +20,8 @@
       @row-click="openTest"
     />
 
-    </CommonTabbedPanel>
+      </template>
+    </CommonPanel>
 
     <RouteApiTestModal
       v-model="showTestModal"
@@ -143,7 +142,7 @@ const columns: ColumnDef<Record<string, any>>[] = [
   settingsStatusColumn(),
 ];
 
-const routeTabItems = computed(() => [
+const routeSections = computed(() => [
   {
     label: 'Your Routes',
     value: 'custom',

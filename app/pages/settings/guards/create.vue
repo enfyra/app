@@ -1,7 +1,10 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
-      <CommonFormCard>
+      <CommonPanel :sections="[{ value: 'guard' }]">
+        <template #guard-header><h2 class="text-sm font-medium">Guard</h2></template>
+        <template #guard>
+<CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
           <FormEditorLazy
             v-model="createForm"
@@ -14,6 +17,8 @@
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>

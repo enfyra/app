@@ -61,7 +61,7 @@
               <div
                 v-for="route in routes"
                 :key="route.id"
-                class="flex items-center justify-between p-3 border border-muted rounded-lg lg:hover:bg-muted/20 cursor-pointer transition-colors"
+                class="flex items-center justify-between p-3 border border-muted rounded-lg lg:hover:bg-[var(--menu-item-hover-bg)] cursor-pointer transition-colors"
                 @click="selectRoute(route)"
                 tabindex="0"
                 role="button"

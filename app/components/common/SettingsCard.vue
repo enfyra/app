@@ -165,7 +165,7 @@
           :key="action.label"
           v-bind="{
             ...resolveProps(action.props),
-            ...((isMobile || isTablet) ? { size: 'xs', class: '!rounded-[var(--radius-subcontrol)] !aspect-square' } : {})
+            ...((isMobile || isTablet) ? { size: 'xs', class: '!aspect-square' } : {})
           }"
           :to="action.to"
           :loading-auto="true"

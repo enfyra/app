@@ -173,8 +173,6 @@ const isBooleanField = computed(() => {
   return ["boolean", "bool"].includes(field?.type ?? "") || configType === "boolean";
 });
 
-const { isMobile, isTablet } = useScreen();
-
 const effectiveErrors = computed(() => {
   if (props.uniqueCheckStatus === 'invalid') {
     return { ...props.errors, [props.keyName]: props.uniqueCheckMessage || 'Value already exists' };
@@ -191,10 +189,7 @@ const booleanFieldAttrs = computed(() => {
 const booleanOuterClass = computed(() => {
   const fpClass = fieldProps.value.class;
   const custom = fieldConfig.value.booleanWrapperClass;
-  const defaults =
-    isMobile.value || isTablet.value
-      ? "flex w-full min-w-0 flex-col gap-2 py-3"
-      : "flex w-full min-w-0 flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3 sm:justify-start";
+  const defaults = "flex w-full min-w-0 items-center gap-3 py-1";
   return [fpClass, custom ?? defaults];
 });
 
@@ -207,7 +202,7 @@ const nonBooleanFieldAttrs = computed(() => {
 const nonBooleanOuterClass = computed(() => {
   const fpClass = fieldProps.value.class;
   const extra = fieldConfig.value.fieldWrapperClass;
-  return ["space-y-2 w-full min-w-0", fpClass, extra];
+  return ["space-y-1.5 md:space-y-2 w-full min-w-0", fpClass, extra];
 });
 </script>
 
@@ -219,25 +214,6 @@ const nonBooleanOuterClass = computed(() => {
     v-bind="booleanFieldAttrs"
     :class="booleanOuterClass"
   >
-    <div
-      v-if="!fieldConfig.hideLabel"
-      class="min-w-0 w-full space-y-0.5 sm:flex-1"
-    >
-      <label
-        :for="fieldId"
-        class="text-sm font-medium"
-        :style="{ color: 'var(--text-primary)' }"
-      >
-        {{ displayLabel }}
-      </label>
-      <p
-        v-if="displayDescription"
-        class="text-xs"
-        :style="{ color: 'var(--text-tertiary)' }"
-        v-html="displayDescription"
-      />
-    </div>
-
     <div class="shrink-0">
       <FormFieldRenderer
         :key-name="keyName"
@@ -252,6 +228,25 @@ const nonBooleanOuterClass = computed(() => {
         :loading="props.loading"
       />
     </div>
+    <div
+      v-if="!fieldConfig.hideLabel"
+      class="min-w-0 flex-1 space-y-0.5 [overflow-wrap:anywhere]"
+    >
+      <label
+        :for="fieldId"
+        class="cursor-pointer text-sm font-medium"
+        :style="{ color: 'var(--text-primary)' }"
+      >
+        {{ displayLabel }}
+      </label>
+      <p
+        v-if="displayDescription"
+        class="text-xs"
+        :style="{ color: 'var(--text-tertiary)' }"
+        v-html="displayDescription"
+      />
+    </div>
+
   </div>
 
   <div v-else v-bind="nonBooleanFieldAttrs" :class="nonBooleanOuterClass">

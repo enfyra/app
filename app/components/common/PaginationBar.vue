@@ -9,6 +9,7 @@ const props = withDefaults(defineProps<{
   total: number;
   itemsPerPage: number;
   loading?: boolean;
+  floating?: boolean;
   showRange?: boolean;
   showEdges?: boolean;
   siblingCount?: number;
@@ -20,6 +21,7 @@ const props = withDefaults(defineProps<{
   ui?: Record<string, string>;
 }>(), {
   loading: false,
+  floating: true,
   showRange: true,
   showEdges: true,
   siblingCount: 1,
@@ -30,12 +32,10 @@ const props = withDefaults(defineProps<{
 });
 
 const mainBar = shallowRef<HTMLElement | null>(null);
-const { isMiniVisible } = useMiniBarVisibility(mainBar);
+const { isMiniVisible, miniStyle } = useMiniBarVisibility(mainBar);
 
-// The mini bar is the only pagination on screen once the main bar scrolls away, so
-// on desktop it stands in at the main bar's own scale instead of staying phone-sized.
-const { isMobile } = useScreen();
-const miniSize = computed(() => (isMobile.value ? 'xs' : 'sm'));
+// The mini bar floats over the shell frame, so it stays compact at every viewport.
+const miniSize = 'xs';
 
 // Loading is reported by the chip only, and deferred so a quick fetch shows no
 // chip instead of blinking one.
@@ -55,7 +55,7 @@ const pageStart = computed(() => {
 
 const pageEnd = computed(() => Math.min((page.value || 1) * props.itemsPerPage, props.total));
 const hasPagination = computed(() => props.total > props.itemsPerPage);
-const showMini = computed(() => hasPagination.value && isMiniVisible.value);
+const showMini = computed(() => props.floating && hasPagination.value && isMiniVisible.value);
 
 const mainRootClass = computed(() =>
   props.align === 'center'
@@ -72,8 +72,8 @@ const mainUi = computed(() => ({
 
 const miniUi = computed(() => ({
   root: 'min-w-max w-fit',
-  list: 'flex-nowrap gap-0.5 md:gap-1',
-  item: '!min-w-7 md:!min-w-8',
+  list: 'flex-nowrap gap-0.5',
+  item: '!min-w-7',
   ...props.ui,
 }));
 </script>
@@ -85,7 +85,7 @@ const miniUi = computed(() => ({
     v-bind="$attrs"
     :class="[
       'eapp-pagination',
-      '-mx-4 px-4 sm:-mx-6 sm:px-6',
+      '-mx-3 px-3 sm:-mx-3 sm:px-3 md:-mx-6 md:px-6',
       'border-t border-[color-mix(in_srgb,var(--shell-main-border)_60%,transparent)] bg-[var(--shell-main-bg)] py-3',
       mainRootClass,
     ]"
@@ -113,20 +113,15 @@ const miniUi = computed(() => ({
       </div>
     </div>
 
-    <p v-if="showRange" class="shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--text-tertiary)]">
-      <span class="sr-only">Showing {{ pageStart }} to {{ pageEnd }} of {{ total }} results</span>
-      <span aria-hidden="true">
-        <span class="text-[var(--text-secondary)]">{{ pageStart }}-{{ pageEnd }}</span>
-        <span class="px-1 text-[var(--text-quaternary)]">/</span>{{ total }}
-      </span>
-    </p>
+    <CommonPaginationRange v-if="showRange" :start="pageStart" :end="pageEnd" />
   </div>
 
   <Teleport to="body">
     <Transition name="mini-pagination">
       <div
         v-show="showMini"
-        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 bottom-3 z-30 mx-auto flex max-w-md items-center justify-between gap-2 rounded-[var(--radius-panel)] px-3 py-1.5 md:max-w-lg md:gap-4 md:px-4 md:py-2.5"
+        :style="miniStyle"
+        class="eapp-pagination eapp-pagination-mini fixed inset-x-3 z-10 mx-auto flex max-w-[calc(100%-1.5rem)] items-center justify-between gap-1.5 rounded-[var(--radius-panel)] px-2 py-1 md:gap-2 md:px-2.5"
       >
         <div class="min-w-0 flex-1 overflow-x-auto">
           <UPagination
@@ -144,13 +139,7 @@ const miniUi = computed(() => ({
           />
         </div>
 
-        <p v-if="showRange" class="shrink-0 whitespace-nowrap text-xs tabular-nums text-[var(--text-tertiary)] md:text-sm">
-          <span class="sr-only">Showing {{ pageStart }} to {{ pageEnd }} of {{ total }} results</span>
-          <span aria-hidden="true">
-            <span class="text-[var(--text-secondary)]">{{ pageStart }}-{{ pageEnd }}</span>
-            <span class="px-1 text-[var(--text-quaternary)]">/</span>{{ total }}
-          </span>
-        </p>
+        <CommonPaginationRange v-if="showRange" :start="pageStart" :end="pageEnd" />
       </div>
     </Transition>
   </Teleport>

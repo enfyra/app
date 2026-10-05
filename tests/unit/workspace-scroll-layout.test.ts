@@ -44,8 +44,8 @@ describe('native Nuxt UI dashboard shell', () => {
     expect(theme).toContain('--shell-inset: 1.5rem')
     expect(layout).toContain('lg:py-[var(--shell-inset)]')
     expect(layout).toContain('lg:pe-[var(--shell-inset)]')
-    expect(layout).toContain('lg:rounded-[var(--radius-shell)]')
-    expect(layout).toContain('lg:border-default')
+    expect(layout).toContain('rounded-[var(--radius-shell)]')
+    expect(layout).toContain('border border-default')
     expect(theme).toContain('--shell-sidebar-inset: calc(var(--shell-inset) + 0.75rem)')
     expect(sidebar).toContain('variant="inset"')
     expect(sidebar).toContain("container: 'py-[var(--shell-sidebar-inset)]'")
@@ -53,15 +53,23 @@ describe('native Nuxt UI dashboard shell', () => {
     expect(sidebar).not.toContain('sticky top-0')
   })
 
-  it('keeps the page header outside the native scrolling body as a full-width header section', () => {
+  it('scrolls the page heading and contextual tools above the route content inside the native body', () => {
     const layout = readAppFile('layouts/default.vue')
     const pageHeader = readAppFile('components/common/PageHeader.vue')
     const headerPosition = layout.indexOf('<CommonPageHeader')
     const bodyPosition = layout.indexOf('<template #body>')
+    const containerPosition = layout.indexOf('<UContainer')
+    const toolsPosition = layout.indexOf('<LayoutSubHeader')
+    const contentPosition = layout.indexOf('<slot />')
 
     expect(headerPosition).toBeGreaterThan(0)
-    expect(headerPosition).toBeLessThan(bodyPosition)
+    expect(headerPosition).toBeGreaterThan(bodyPosition)
+    expect(headerPosition).toBeGreaterThan(containerPosition)
+    expect(headerPosition).toBeLessThan(contentPosition)
+    expect(toolsPosition).toBeGreaterThan(bodyPosition)
+    expect(toolsPosition).toBeLessThan(contentPosition)
     expect(pageHeader).toContain('<UPageHeader')
+    expect(pageHeader).toContain("root: 'border-0 p-0'")
     expect(pageHeader).not.toContain('page-header-shell')
     expect(pageHeader).not.toContain('box-shadow')
     expect(pageHeader).not.toContain('<style')
@@ -73,6 +81,19 @@ describe('native Nuxt UI dashboard shell', () => {
     expect(visibility.match(/root: el.closest/g)).toHaveLength(2)
     expect(visibility).toContain('.eapp-shell-main > [data-slot="body"]')
     expect(visibility).toContain('observer.disconnect()')
+  })
+
+  it('shares one maximum width between the heading, forms and table pages', () => {
+    const theme = readAppFile('assets/css/theme.css')
+    const css = readAppFile('assets/css/main.css')
+    const layout = readAppFile('layouts/default.vue')
+
+    expect(theme).toContain('--ui-container: 75rem')
+    expect(css).toMatch(/\.eapp-page-constrained,\s*\.eapp-page-constrained-wide\s*\{[^}]*max-width: var\(--ui-container\)/)
+    expect(css).not.toContain('max-width: 1000px')
+    expect(css).not.toContain('max-width: 1200px')
+    expect(layout.indexOf('<CommonPageHeader')).toBeGreaterThan(layout.indexOf('<UContainer'))
+    expect(layout.indexOf('<slot />')).toBeLessThan(layout.indexOf('</UContainer>'))
   })
 
   it('delegates mobile menu scroll locking to Nuxt UI', () => {

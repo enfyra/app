@@ -1,6 +1,6 @@
 <template>
   <UDashboardToolbar
-    :class="hasRightActions ? 'justify-between' : 'justify-start'"
+    :class="hasRightActions || (!isDesktop && menuActions.length) ? 'justify-between' : 'justify-start'"
   >
 
     <div class="flex items-center gap-1.5 md:gap-3">
@@ -80,12 +80,15 @@
         </PermissionGate>
       </template>
 
+      <LayoutSubHeaderMenu v-if="!isDesktop" />
       <slot name="actions" />
     </div>
   </UDashboardToolbar>
 </template>
 
 <script setup lang="ts">
+import type { HeaderAction } from '~/types/ui';
+
 interface Props {
   accentPosition?: 'top' | 'bottom';
 }
@@ -95,29 +98,13 @@ withDefaults(defineProps<Props>(), {
 });
 
 const { isMobile, isTablet } = useScreen();
-const { subHeaderActions } = useSubHeaderActionRegistry();
-
-const leftActions = computed(() => {
-  return subHeaderActions.value.filter((a) => {
-    const showValue =
-      a.show === undefined ? true : isRef(a.show) ? unref(a.show) : a.show;
-    return a && a.side === "left" && showValue;
-  });
-});
-
-const rightActions = computed(() => {
-  return subHeaderActions.value.filter((a) => {
-    const showValue =
-      a.show === undefined ? true : isRef(a.show) ? unref(a.show) : a.show;
-    return a && a.side === "right" && showValue;
-  });
-});
+const { isDesktop, menuActions, leftActions, rightActions, runAction } = useSubHeaderActionPresentation();
 
 const hasRightActions = computed(() => {
   return rightActions.value.length > 0;
 });
 
-function handleSubHeaderActionClick(action: any) {
-  return action.onClick?.();
+function handleSubHeaderActionClick(action: HeaderAction) {
+  return runAction(action);
 }
 </script>

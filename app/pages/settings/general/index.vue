@@ -13,9 +13,9 @@ const activeTab = computed({
     void router.push({ query: { ...route.query, tab: value === 'cors' ? 'cors' : 'general' } });
   },
 });
-const settingsTabs = [
-  { label: 'General', value: 'general', slot: 'general', icon: 'lucide:settings-2' },
-  { label: 'CORS', value: 'cors', slot: 'cors', icon: 'lucide:globe' },
+const settingsSections = [
+  { label: 'General', value: 'general', icon: 'lucide:settings-2' },
+  { label: 'CORS', value: 'cors', icon: 'lucide:globe' },
 ];
 
 const { validateForm } = useFormValidation("enfyra_setting");
@@ -74,7 +74,7 @@ const setting = ref<Record<string, any>>({});
 const generalFormSections = [
   {
     id: "project",
-    class: "border-b border-[var(--border-subtle)] pb-6",
+    class: "border-b border-[var(--border-subtle)] pb-4 md:pb-6",
     fields: ["projectName", "projectFavicon", "projectDescription",  "isInit"],
 
   },
@@ -174,7 +174,7 @@ onMounted(() => {
 
 <template>
   <div class="general-settings-page eapp-page-constrained">
-    <CommonTabbedPanel v-model="activeTab" :items="settingsTabs" :unmount-on-hide="false">
+    <CommonPanel v-model="activeTab" :sections="settingsSections">
       <template #general>
         <CommonFormCard class="general-settings-section-inner">
           <CommonLoadingState
@@ -210,7 +210,7 @@ onMounted(() => {
           <CommonCorsOriginList />
         </CommonFormCard>
       </template>
-    </CommonTabbedPanel>
+    </CommonPanel>
   </div>
 </template>
 

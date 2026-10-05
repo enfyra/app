@@ -38,6 +38,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFileManagerMoveState } from '~/composables/file-manager/useFileManagerMoveState';
 interface Props {
   folders: any[];
   emptyTitle?: string;
@@ -70,7 +71,7 @@ const transformedFolders = computed(() => {
   });
 });
 
-const { moveState } = useFileManagerMove();
+const moveState = useFileManagerMoveState();
 
 function isFolderDisabled(folderId: string) {
   return !!(

@@ -1,72 +1,49 @@
 <template>
-  <div class="space-y-4">
-    <div v-if="schemaLoading || !schemaData" class="flex items-center justify-center h-64">
-      <div class="text-center">
-        <UIcon
-          v-if="schemaLoading"
-          name="lucide:loader-2"
-          class="w-12 h-12 eapp-text-quaternary mx-auto mb-2 animate-spin"
-        />
-        <UIcon
-          v-else
-          name="lucide:database-zap"
-          class="w-12 h-12 eapp-text-quaternary mx-auto mb-2"
-        />
-        <p class="text-[var(--text-tertiary)]">
-          {{ schemaLoading ? 'Loading schema...' : 'No schema data available' }}
-        </p>
-      </div>
-    </div>
-
+  <div class="min-w-0 space-y-4">
+    <CommonLoadingState v-if="schemaLoading" title="Loading schema…" context="modal" />
+    <CommonEmptyState
+      v-else-if="!schemaData"
+      title="No schema available"
+      icon="lucide:database"
+      variant="naked"
+      size="sm"
+    />
     <template v-else>
-      <CollectionSchemaViewerSection
-        title="Schema Structure"
-        icon="lucide:layers"
-        tile="info"
-      >
-        <VueJsonPretty :data="schemaStructure" :show-length="true" :show-line="false" :deep="4" />
-      </CollectionSchemaViewerSection>
-
-      <CollectionSchemaViewerSection
-        title="Example POST Request"
-        icon="lucide:code"
-        tile="success"
-      >
-        <VueJsonPretty :data="examplePayload" :show-length="true" :show-line="false" :deep="3" />
-      </CollectionSchemaViewerSection>
-
-      <CollectionSchemaViewerSection
-        title="Example PATCH Request"
-        icon="lucide:pencil"
-        tile="warning"
-        hint="Only send fields you want to update"
-      >
-        <VueJsonPretty :data="examplePatchPayload" :show-length="true" :show-line="false" :deep="3" />
-      </CollectionSchemaViewerSection>
-
-      <CollectionSchemaViewerSection
-        v-if="validationRules.length > 0"
-        title="Validation Rules"
-        icon="lucide:shield-check"
-        tile="primary"
-      >
-        <VueJsonPretty :data="validationRules" :show-length="true" :show-line="false" :deep="3" />
-      </CollectionSchemaViewerSection>
-
-      <CollectionSchemaViewerSection
-        v-if="relations.length > 0"
-        title="Relations"
-        icon="lucide:git-branch"
-        tile="primary"
-      >
-        <VueJsonPretty :data="relations" :show-length="true" :show-line="false" :deep="2" />
-      </CollectionSchemaViewerSection>
+      <UTabs v-model="activeTab" :items="tabs" variant="link" color="primary" :content="false" />
+      <div class="flex min-w-0 items-center justify-between gap-3">
+        <div class="min-w-0">
+          <h3 class="text-sm font-medium text-highlighted">{{ activeSection.title }}</h3>
+          <p class="mt-1 text-xs text-muted">{{ activeSection.hint }}</p>
+        </div>
+        <UButton
+          :icon="copied ? 'lucide:check' : 'lucide:copy'"
+          :label="copied ? 'Copied' : 'Copy JSON'"
+          color="neutral"
+          variant="outline"
+          size="xs"
+          class="relative pointer-coarse:before:absolute pointer-coarse:before:-inset-y-2 pointer-coarse:before:inset-x-0 pointer-coarse:before:content-['']"
+          loading-auto
+          @click="copy(activeJson)"
+        />
+      </div>
+      <div class="min-w-0 overflow-x-auto rounded-[var(--radius-control)] border border-default bg-muted p-3 sm:p-4">
+        <VueJsonPretty
+          :key="activeTab"
+          class="schema-json min-w-max"
+          :data="activeSection.data"
+          :theme="colorMode.value === 'dark' ? 'dark' : 'light'"
+          :show-length="true"
+          :show-line="false"
+          :deep="activeTab === 'structure' ? 1 : 3"
+        />
+      </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import VueJsonPretty from "vue-json-pretty";
+import { useClipboard } from '@vueuse/core';
 import "vue-json-pretty/lib/styles.css";
 import { getTargetTableName } from "~/utils/schema";
 
@@ -76,6 +53,9 @@ interface Props {
 
 const props = defineProps<Props>();
 const { isMongoDB } = useDatabase();
+const colorMode = useColorMode();
+const activeTab = ref('structure');
+const { copy, copied } = useClipboard({ legacy: true });
 
 const {
   schemas: allSchemas,
@@ -386,4 +366,61 @@ const relations = computed(() => {
       };
     });
 });
+const sections = computed(() => [
+  {
+    value: 'structure', label: 'Fields', icon: 'lucide:table-2',
+    title: 'Field definitions',
+    hint: `${Object.keys(schemaStructure.value).length} fields · Expand a field to inspect its definition.`,
+    data: schemaStructure.value,
+  },
+  {
+    value: 'post', label: 'POST', icon: 'lucide:plus',
+    title: 'Create a record', hint: 'Example request body for creating a record.', data: examplePayload.value,
+  },
+  {
+    value: 'patch', label: 'PATCH', icon: 'lucide:pencil',
+    title: 'Update a record', hint: 'Send only the fields you want to update.', data: examplePatchPayload.value,
+  },
+  ...(validationRules.value.length ? [{
+    value: 'rules', label: 'Rules', icon: 'lucide:shield-check',
+    title: 'Validation rules', hint: 'Required fields, formats and allowed values.', data: validationRules.value,
+  }] : []),
+  ...(relations.value.length ? [{
+    value: 'relations', label: 'Relations', icon: 'lucide:git-branch',
+    title: 'Related collections', hint: 'Relation types, targets and nullability.', data: relations.value,
+  }] : []),
+]);
+const tabs = computed(() => sections.value.map(({ value, label, icon }) => ({ value, label, icon })));
+const activeSection = computed(() => sections.value.find(section => section.value === activeTab.value) || sections.value[0]!);
+const activeJson = computed(() => JSON.stringify(activeSection.value.data, null, 2));
+
+watch(tabs, items => {
+  if (!items.some(item => item.value === activeTab.value)) activeTab.value = 'structure';
+});
+watch(() => props.tableName, () => { activeTab.value = 'structure'; });
 </script>
+
+<style scoped>
+.schema-json :deep(.vjs-value) {
+  white-space: pre;
+  word-break: normal;
+}
+
+.schema-json :deep(.vjs-tree-node) {
+  min-height: 24px;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .schema-json :deep(.vjs-tree-node:hover) {
+    background: transparent;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  @media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+    .schema-json :deep(.vjs-tree-node:hover) {
+      background: var(--surface-nested);
+    }
+  }
+}
+</style>

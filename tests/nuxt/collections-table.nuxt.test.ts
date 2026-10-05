@@ -53,7 +53,7 @@ describe('Collections table', () => {
   it('uses the filtered count and resets the URL page when changing page size', async () => {
     const wrapper = await mountSuspended(CollectionsPage, { route: '/collections?page=2&search=probe&scope=all' })
     await flushPromises()
-    expect(wrapper.get('.eapp-settings-pagination').text()).toContain('11–12 / 12')
+    expect(wrapper.get('.eapp-settings-pagination').text()).toContain('11–12')
     wrapper.getComponent(SettingsTable).vm.$emit('page-size-change', 20)
     await expect.poll(() => mocks.request.mock.calls[0]![0].query.value.limit).toBe(20)
     expect(useRouter().currentRoute.value.query).toMatchObject({ search: 'probe', scope: 'all' })

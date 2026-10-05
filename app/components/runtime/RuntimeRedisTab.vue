@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { h } from 'vue';
+import type { ColumnDef } from '@tanstack/vue-table';
+import { UBadge, UButton } from '#components';
 import type { RedisAdminKeyFilter, RedisAdminKeySummary, RedisAdminSystemKind, RedisAdminValueType } from '~/types/runtime-monitor';
 import { shortText } from '~/utils/runtime-monitor/core';
 import { fmtBytes, fmtNumber, fmtSec } from '~/utils/runtime-monitor/format';
@@ -27,6 +30,7 @@ type KeyEditorState = {
 
 const props = defineProps<{ runtime: RuntimeMetricsViewModel }>();
 
+const { isMobile } = useScreen();
 const notify = useNotify();
 const { confirm } = useConfirm();
 
@@ -48,7 +52,7 @@ const selected = computed(() => props.runtime.redisSelectedDetail);
 const redisSeverity = computed(() => overview.value?.health?.severity ?? 'ok');
 const redisWarnings = computed(() => overview.value?.health?.warnings ?? []);
 const canModifySelected = computed(() => selected.value?.modifiable !== false);
-const canLoadMore = computed(() => props.runtime.redisKeysCursor !== '0');
+const canLoadMore = computed(() => props.runtime.redisKeysHasNextPage);
 const selectedLocked = computed(() => selected.value ? !canModifySelected.value : false);
 const keyEditorDialogOpen = computed({
   get: () => keyEditorOpen.value,
@@ -255,6 +259,28 @@ function emptyKeysLabel() {
   if (props.runtime.redisKeysPending) return 'Scanning keys...';
   return 'No keys match this pattern/filter';
 }
+
+const redisKeyColumns: ColumnDef<RedisAdminKeySummary>[] = [
+  { id: 'key', header: 'Key', cell: ({ row }) => h('div', { class: 'min-w-0 max-w-[420px]' }, [
+    h('div', { class: 'flex min-w-0 items-center gap-2' }, [
+      h('div', { class: 'truncate font-mono text-xs', title: row.original.key }, row.original.key),
+      h(UButton, { icon: copiedKey.value === row.original.key ? 'lucide:check' : 'lucide:copy', size: 'xs', color: 'neutral', variant: 'ghost', 'aria-label': 'Copy key', onClick: (event: Event) => { event.stopPropagation(); void copyKey(row.original.key); } }),
+    ]),
+    h('div', { class: 'mt-1 flex flex-wrap gap-1' }, [
+      h(UBadge, { color: 'neutral', variant: 'soft', size: 'xs' }, () => row.original.type),
+      h(UBadge, { color: 'neutral', variant: 'soft', size: 'xs' }, () => ttlLabel(row.original.ttlSeconds)),
+      row.original.systemKind ? h(UBadge, { color: systemKindColor(row.original.systemKind), variant: 'soft', size: 'xs' }, () => systemKindLabel(row.original.systemKind!)) : null,
+    ]),
+  ]) },
+  { id: 'size', header: 'Size', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => String(row.original.size ?? '-') },
+  { id: 'memory', header: 'Memory', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => fmtBytes(row.original.memoryBytes) },
+  { id: 'owner', header: 'Owner', cell: ({ row }) => h(UBadge, { color: ownerColor(row.original), variant: 'soft' }, () => ownerLabel(row.original)) },
+  { id: 'actions', header: 'Actions', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => h(UButton, { size: 'xs', variant: 'soft', color: 'neutral', icon: keyActionIcon(row.original), loading: loadingEditKey.value === row.original.key, onClick: (event: Event) => { event.stopPropagation(); void openEditKey(row.original); } }, () => keyActionLabel(row.original)) },
+];
+const redisKeysPage = computed({
+  get: () => props.runtime.redisKeysPage,
+  set: (page: number) => { void props.runtime.scanRedisKeys({ reset: false, page }); },
+});
 
 function parseJsonLike(value: string) {
   try {
@@ -569,184 +595,33 @@ function openCreateKey() {
       </div>
     </section>
 
-    <section class="surface-card min-w-0 rounded-lg p-4">
-      <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div class="font-medium text-[var(--text-primary)]">Key Browser</div>
-          <div class="mt-1 text-xs text-[var(--text-tertiary)]">Redis SCAN MATCH glob</div>
-        </div>
-        <div class="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] gap-2 sm:w-auto sm:grid-cols-[16rem_auto_auto]">
-          <UInput v-model="runtime.redisKeysPattern" icon="i-lucide-search" size="sm" class="min-w-0" placeholder="MATCH glob, e.g. * or *cache*" @keyup.enter="runtime.scanRedisKeys({ reset: true })" />
-          <UButton size="sm" icon="lucide:scan-search" :loading="runtime.redisKeysPending" class="min-w-0" @click="runtime.scanRedisKeys({ reset: true })">
-            Scan
-          </UButton>
-          <UButton size="sm" icon="lucide:plus" color="neutral" variant="soft" @click="openCreateKey">
-            Create
-          </UButton>
-        </div>
-      </div>
-      <div v-if="keyFilterOptions.length > 0" class="mb-3 flex flex-wrap gap-2">
-        <UButton
-          v-for="filter in keyFilterOptions"
-          :key="filter.value"
-          size="xs"
-          :color="filter.color"
-          :icon="runtime.redisKeysFilter === filter.value ? 'lucide:check' : undefined"
-          :variant="runtime.redisKeysFilter === filter.value ? 'solid' : 'soft'"
-          @click="setKeyFilter(filter.value)"
-        >
-          {{ filter.label }}
-          <span v-if="filter.count != null" class="ml-1 text-[0.7rem] opacity-80">{{ fmtNumber(filter.count) }}</span>
-        </UButton>
-      </div>
-
-      <div class="space-y-2 md:hidden">
-        <div
-          v-for="row in visibleRedisKeys"
-          :key="row.key"
-          class="w-full rounded-lg border border-[var(--border-default)] p-3 text-left hover:bg-[var(--surface-muted)]"
-          :class="runtime.redisSelectedKey === row.key ? 'bg-[var(--state-primary-soft-bg)]' : ''"
-        >
-          <div class="flex min-w-0 items-start justify-between gap-2">
-            <div class="min-w-0">
-              <div class="truncate font-mono text-xs text-[var(--text-primary)]" :title="row.key">{{ row.key }}</div>
-              <div class="mt-1 flex flex-wrap gap-1">
-                <UBadge color="neutral" variant="soft" size="xs">{{ row.type }}</UBadge>
-                <UBadge v-if="row.systemKind" :color="systemKindColor(row.systemKind)" variant="soft" size="xs">
-                  {{ systemKindLabel(row.systemKind) }}
-                </UBadge>
-                <UBadge :color="ownerColor(row)" variant="soft" size="xs">
-                  {{ ownerLabel(row) }}
-                </UBadge>
-              </div>
-            </div>
-            <div class="flex shrink-0 items-center gap-1">
-              <UButton
-                size="xs"
-                variant="soft"
-                color="neutral"
-                :icon="keyActionIcon(row)"
-                :loading="loadingEditKey === row.key"
-                @click="openEditKey(row)"
-              >
-                {{ keyActionLabel(row) }}
-              </UButton>
-              <button
-                type="button"
-                class="shrink-0 text-[var(--text-quaternary)] hover:text-[var(--text-primary)]"
-                :class="copiedKey === row.key ? 'eapp-status-success-text' : ''"
-                title="Copy key"
-                @click="copyKey(row.key)"
-              >
-                <UIcon :name="copiedKey === row.key ? 'lucide:check' : 'lucide:copy'" class="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          <div class="mt-3 grid grid-cols-3 gap-2 text-xs text-[var(--text-tertiary)]">
-            <div>
-              <div class="text-[10px] uppercase text-[var(--text-quaternary)]">TTL</div>
-              <div class="mt-0.5 truncate">{{ ttlLabel(row.ttlSeconds) }}</div>
-            </div>
-            <div class="text-right">
-              <div class="text-[10px] uppercase text-[var(--text-quaternary)]">Size</div>
-              <div class="mt-0.5">{{ row.size ?? '-' }}</div>
-            </div>
-            <div class="text-right">
-              <div class="text-[10px] uppercase text-[var(--text-quaternary)]">Memory</div>
-              <div class="mt-0.5">{{ fmtBytes(row.memoryBytes) }}</div>
-            </div>
-          </div>
-          <div v-if="row.reason" class="mt-2 truncate text-xs text-[var(--text-tertiary)]">{{ row.reason }}</div>
-        </div>
-        <div v-if="visibleRedisKeys.length === 0" class="rounded-lg border border-[var(--border-default)] px-3 py-8 text-center text-sm text-[var(--text-tertiary)]">
-          {{ emptyKeysLabel() }}
-        </div>
-      </div>
-
-      <div class="hidden max-h-[min(520px,65vh)] overflow-auto rounded-lg border border-[var(--border-default)] md:block">
-        <table class="w-full min-w-[720px] text-sm">
-          <thead class="sticky top-0 z-10 border-b border-[var(--border-default)] bg-[var(--surface-card)] text-left text-xs text-[var(--text-tertiary)]">
-            <tr>
-              <th class="px-3 py-2">Key</th>
-              <th class="px-3 py-2 text-right">Size</th>
-              <th class="px-3 py-2 text-right">Memory</th>
-              <th class="px-3 py-2">Owner</th>
-              <th class="px-3 py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[var(--border-default)]">
-            <tr
-              v-for="row in visibleRedisKeys"
-              :key="row.key"
-              class="hover:bg-[var(--surface-muted)]"
-              :class="runtime.redisSelectedKey === row.key ? 'bg-[var(--state-primary-soft-bg)]' : ''"
-            >
-              <td class="max-w-[420px] px-3 py-2">
-                <div class="flex min-w-0 items-center gap-2">
-                  <div class="truncate font-mono text-xs text-[var(--text-primary)]" :title="row.key">
-                    {{ row.key }}
-                  </div>
-                  <button
-                    type="button"
-                    class="shrink-0 text-[var(--text-quaternary)] hover:text-[var(--text-primary)]"
-                    :class="copiedKey === row.key ? 'eapp-status-success-text' : ''"
-                    title="Copy key"
-                    @click="copyKey(row.key)"
-                  >
-                    <UIcon :name="copiedKey === row.key ? 'lucide:check' : 'lucide:copy'" class="h-4 w-4" />
-                  </button>
-                </div>
-                <div class="mt-0.5 flex flex-wrap gap-1">
-                  <UBadge color="neutral" variant="soft" size="xs">{{ row.type }}</UBadge>
-                  <UBadge color="neutral" variant="soft" size="xs">{{ ttlLabel(row.ttlSeconds) }}</UBadge>
-                  <UBadge v-if="row.systemKind" :color="systemKindColor(row.systemKind)" variant="soft" size="xs">
-                    {{ systemKindLabel(row.systemKind) }}
-                  </UBadge>
-                </div>
-              </td>
-              <td class="px-3 py-2 text-right">{{ row.size ?? '-' }}</td>
-              <td class="px-3 py-2 text-right">{{ fmtBytes(row.memoryBytes) }}</td>
-              <td class="px-3 py-2">
-                <UBadge :color="ownerColor(row)" variant="soft">
-                  {{ ownerLabel(row) }}
-                </UBadge>
-              </td>
-              <td class="px-3 py-2 text-right">
-                <UButton
-                  size="xs"
-                  variant="soft"
-                  color="neutral"
-                  :icon="keyActionIcon(row)"
-                  :loading="loadingEditKey === row.key"
-                  @click="openEditKey(row)"
-                >
-                  {{ keyActionLabel(row) }}
-                </UButton>
-              </td>
-            </tr>
-            <tr v-if="visibleRedisKeys.length === 0">
-              <td colspan="5" class="px-3 py-8 text-center text-[var(--text-tertiary)]">
-                {{ emptyKeysLabel() }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="mt-3 flex justify-end">
-        <UButton
-          size="sm"
-          variant="soft"
-          color="neutral"
-          icon="lucide:chevrons-right"
-          :disabled="!canLoadMore || runtime.redisKeysPending"
-          :loading="runtime.redisKeysLoadMorePending"
-          @click="runtime.scanRedisKeys({ reset: false })"
-        >
-          Load next keys
-        </UButton>
-      </div>
-    </section>
+    <DataTable
+        v-model:page="redisKeysPage"
+        :data="visibleRedisKeys"
+        :columns="redisKeyColumns"
+        :loading="runtime.redisKeysPending"
+        :pagination-config="{ mode: 'cursor', itemsPerPage: 10, hasNextPage: canLoadMore, loading: runtime.redisKeysPending, floating: false }"
+        @row-click="row => runtime.selectRedisKey(row.key)"
+      >
+        <template #toolbar>
+          <CommonSearchField v-model="runtime.redisKeysPattern" placeholder="Redis SCAN MATCH glob, e.g. * or *cache*" label="Redis key pattern" button-label="Scan" :loading="runtime.redisKeysPending" @search="runtime.scanRedisKeys({ reset: true })" />
+        </template>
+        <template #toolbar-actions>
+          <USelect
+            v-if="keyFilterOptions.length"
+            :model-value="runtime.redisKeysFilter"
+            :items="keyFilterOptions.map(filter => ({ label: filter.count == null ? filter.label : `${filter.label} ${fmtNumber(filter.count)}`, value: filter.value }))"
+            value-key="value"
+            size="sm"
+            class="w-40"
+            :ui="{ base: '!h-8 !min-h-8 !py-0' }"
+            aria-label="Redis key filter"
+            @update:model-value="value => setKeyFilter(value)"
+          />
+          <UButton size="sm" icon="lucide:plus" color="neutral" variant="outline" :label="isMobile ? undefined : 'Create'" aria-label="Create Redis key" @click="openCreateKey" />
+        </template>
+        <template #empty><CommonEmptyState variant="naked" :title="emptyKeysLabel()" icon="lucide:key-round" size="sm" /></template>
+      </DataTable>
 
     <CommonModal
       v-model:open="keyEditorDialogOpen"

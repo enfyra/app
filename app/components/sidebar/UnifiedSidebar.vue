@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from '@nuxt/ui';
+import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui';
+import { UDropdownMenu, UTooltip } from '#components';
 import { selectSidebarCollections } from '~/utils/sidebar-collection-items';
 
 const route = useRoute();
@@ -24,19 +25,16 @@ if (import.meta.client) {
   if (saved !== null && width.value >= 1024) {
     sidebarVisible.value = saved === 'true';
   }
+  try {
+    const savedKeys = localStorage.getItem('sidebar-menu-open-keys');
+    if (savedKeys) openMenuKeys.value = JSON.parse(savedKeys);
+  } catch {}
 }
 
 watch(sidebarVisible, (val) => {
   if (import.meta.client && width.value >= 1024) {
     localStorage.setItem('sidebar-open', String(val));
   }
-});
-
-onMounted(() => {
-  try {
-    const saved = localStorage.getItem('sidebar-menu-open-keys');
-    if (saved) openMenuKeys.value = JSON.parse(saved);
-  } catch {}
 });
 
 watch(openMenuKeys, (value) => {
@@ -212,7 +210,11 @@ function toNavigationItem(item: any): NavigationMenuItem {
     icon: item.icon,
     value: key,
     ...(item.to && !hasChildren ? { to: item.to } : {}),
-    ...(hasChildren ? { children, type: 'trigger' as const, defaultOpen: Boolean(item.active || item.branchActive) } : {}),
+    ...(hasChildren ? {
+      children,
+      defaultOpen: openMenuKeys.value[key] ?? Boolean(item.active || item.branchActive),
+      onClick: (event: MouseEvent) => rememberBranchState(key, event),
+    } : {}),
     active: item.active,
     badge: menuBadge(item),
     ...(isDataParent && item.loading && !hasChildren ? { disabled: true } : {}),
@@ -227,31 +229,44 @@ function prefetchMenuIntent(event: Event) {
 }
 
 function groupOpenValues(group: NavigationMenuItem[]): string[] {
-  return group.filter(item => item.children?.length && (openMenuKeys.value[String(item.value)] ?? item.defaultOpen))
+  return group.filter(item => item.children?.length && item.defaultOpen)
     .map(item => String(item.value));
 }
 
-function updateGroupOpenValues(group: NavigationMenuItem[], values: string | string[] | undefined) {
-  const opened = new Set(Array.isArray(values) ? values : values ? [values] : []);
-  openMenuKeys.value = {
-    ...openMenuKeys.value,
-    ...Object.fromEntries(group.filter(item => item.children?.length).map(item => [String(item.value), opened.has(String(item.value))])),
+function rememberBranchState(key: string, event: Event) {
+  const trigger = event.currentTarget;
+  if (!(trigger instanceof HTMLElement) || trigger.tagName !== 'BUTTON') return;
+  void nextTick(() => {
+    openMenuKeys.value = {
+      ...openMenuKeys.value,
+      [key]: trigger.getAttribute('aria-expanded') === 'true',
+    };
+  });
+}
+
+function toCollapsedMenuItem(item: NavigationMenuItem): DropdownMenuItem {
+  return {
+    label: item.label,
+    icon: item.icon,
+    disabled: item.disabled,
+    badge: item.badge,
+    ...(item.children?.length
+      ? { children: item.children.map(toCollapsedMenuItem) }
+      : { to: item.to }),
+    ...(item.active ? { class: '!text-[var(--text-primary)] before:!bg-[var(--menu-item-hover-bg)]' } : {}),
   };
 }
 
 const nativeNavigationItems = computed<NavigationMenuItem[][]>(() => navigationItems.value.map(group => group.map(toNavigationItem)));
-const navigationMenuUi = computed(() => ({
+const navigationMenuUi = {
   root: 'w-full',
   list: 'gap-1',
-  link: !sidebarVisible.value
-    ? 'mx-auto !size-9 justify-center !rounded-[var(--radius-control)] !p-0 !text-xs'
-    : 'min-h-9 rounded-[var(--radius-control)] px-2.5 py-1.5 !text-[13px]',
+  link: 'min-h-9 rounded-[var(--radius-control)] px-2.5 py-1.5 !text-[13px]',
   linkLeadingIcon: 'size-5 shrink-0',
-  linkLabel: !sidebarVisible.value ? 'sr-only' : 'truncate',
-  content: !sidebarVisible.value ? 'w-56 rounded-[var(--radius-panel)] border border-[var(--card-border)] bg-[var(--card-bg)] p-2 shadow-[var(--shadow-md)]' : undefined,
-  childList: !sidebarVisible.value ? 'w-full space-y-1' : 'border-[var(--nav-child-border)]',
+  linkLabel: 'truncate',
+  childList: 'border-[var(--nav-child-border)]',
   childLink: 'min-h-8 items-center rounded-[var(--radius-subcontrol)] px-2.5 py-1.5 !text-xs',
-}));
+};
 
 const componentGroups = computed(() => {
   return visibleGroups.value.filter(g => g.position !== 'bottom' && g.component);
@@ -281,7 +296,7 @@ onUnmounted(() => {
   <USidebar
     v-model:open="sidebarVisible"
     variant="inset"
-    :menu="{ dismissible: !accountSheetOpen }"
+    :menu="{ dismissible: !accountSheetOpen, ui: { overlay: 'z-40', content: 'z-40 max-w-none' } }"
     collapsible="icon"
     class="eapp-sidebar"
     :style="{ '--sidebar-width': 'var(--shell-sidebar-width)' }"
@@ -348,18 +363,45 @@ onUnmounted(() => {
                     :ui="{ border: 'border-[var(--nav-child-border)]' }"
                   />
                   <UNavigationMenu
+                    v-if="renderExpandedSidebarContent"
                     :items="group"
-                    :model-value="groupOpenValues(group)"
-                    @update:model-value="value => updateGroupOpenValues(group, value)"
+                    :default-value="groupOpenValues(group)"
+                    type="multiple"
+                    :unmount-on-hide="false"
                     orientation="vertical"
-                    :collapsed="!renderExpandedSidebarContent"
-                    tooltip
-                    :popover="{ mode: 'click', content: { side: 'right', align: 'start', sideOffset: 8, collisionPadding: 8 } }"
                     variant="pill"
                     color="neutral"
                     highlight
                     :ui="navigationMenuUi"
                   />
+                  <ul v-else class="flex flex-col gap-1">
+                    <li v-for="item in group" :key="String(item.value)" class="flex justify-center">
+                      <component
+                        :is="item.children?.length ? UDropdownMenu : UTooltip"
+                        v-bind="item.children?.length ? {
+                          items: [{ label: item.label, type: 'label' }, ...item.children.map(toCollapsedMenuItem)],
+                          content: { side: 'right', align: 'start', sideOffset: 8, collisionPadding: 8 },
+                          modal: false,
+                          ui: { content: 'w-60', item: 'min-h-9 cursor-pointer pointer-coarse:min-h-[44px]' },
+                        } : { text: item.label, content: { side: 'right' } }"
+                      >
+                        <UButton
+                          :icon="item.icon"
+                          color="neutral"
+                          variant="ghost"
+                          :aria-label="item.label"
+                          :disabled="item.disabled"
+                          :to="item.children?.length ? undefined : item.to"
+                          class="mx-auto !size-9 justify-center !p-0"
+                          :class="item.active ? '!text-[var(--nav-item-hover-text)] !bg-[var(--nav-item-hover-bg)]' : undefined"
+                        />
+                        <template #item-label="{ item: child }">
+                          <span>{{ child.label }}</span>
+                          <UBadge v-if="child.badge" v-bind="child.badge" size="xs" class="ms-2" />
+                        </template>
+                      </component>
+                    </li>
+                  </ul>
                 </template>
               </div>
             </Transition>

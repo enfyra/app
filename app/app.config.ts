@@ -1,5 +1,15 @@
 export default defineAppConfig({
   ui: {
+    dashboardNavbar: {
+      slots: {
+        root: 'h-14 px-3 sm:px-3 md:h-(--ui-header-height) md:px-6',
+      },
+    },
+    dashboardPanel: {
+      slots: {
+        body: 'p-3 sm:p-3 md:p-6',
+      },
+    },
     empty: {
       slots: {
         title: "text-pretty font-medium text-[var(--text-primary)]",
@@ -83,9 +93,20 @@ export default defineAppConfig({
     dropdownMenu: {
       slots: {
         item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75',
-
       },
       compoundVariants: [
+        {
+          color: undefined,
+          class: {
+            item: "data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]",
+          },
+        },
+        {
+          color: "neutral",
+          class: {
+            item: "data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]",
+          },
+        },
         {
           color: "error",
           active: false,
@@ -112,7 +133,7 @@ export default defineAppConfig({
           "cursor-pointer",
           "whitespace-nowrap",
           "shrink-0",
-          "rounded-[var(--radius-control)]",
+          "!rounded-[var(--radius-control)]",
           "text-sm font-medium",
           "transition-colors transition-shadow transition-opacity duration-[var(--duration-base)]",
           "active:!transition-none",
@@ -503,7 +524,8 @@ export default defineAppConfig({
     table: {
       slots: {
         base: "relative",
-        td: "text-[var(--text-primary)]",
+        th: "px-3 py-3 md:px-4 md:py-3.5",
+        td: "px-3 py-3 md:p-4 text-[var(--text-primary)]",
       },
     },
     card: {
@@ -518,12 +540,28 @@ export default defineAppConfig({
         body: "flex-1 pb-4",
         footer: "border-t border-[var(--border-default)] py-4",
       },
+      compoundVariants: [
+        { direction: 'bottom', inset: true, class: { content: 'inset-x-[var(--shell-overlay-inset)] bottom-[var(--shell-overlay-inset)] rounded-[var(--radius-shell)]' } },
+        { direction: 'top', inset: true, class: { content: 'inset-x-[var(--shell-overlay-inset)] top-[var(--shell-overlay-inset)] rounded-[var(--radius-shell)]' } },
+        { direction: 'right', inset: true, class: { content: 'inset-y-[var(--shell-overlay-inset)] right-[var(--shell-overlay-inset)] max-w-[calc(100%-2*var(--shell-overlay-inset))] rounded-[var(--radius-shell)]' } },
+        { direction: 'left', inset: true, class: { content: 'inset-y-[var(--shell-overlay-inset)] left-[var(--shell-overlay-inset)] max-w-[calc(100%-2*var(--shell-overlay-inset))] rounded-[var(--radius-shell)]' } },
+      ],
+    },
+    slideover: {
+      compoundVariants: [
+        { side: 'left', inset: true, class: { content: 'inset-y-[var(--shell-overlay-inset)] left-[var(--shell-overlay-inset)] w-[calc(100%-2*var(--shell-overlay-inset))] rounded-[var(--radius-shell)]' } },
+        { side: 'right', inset: true, class: { content: 'inset-y-[var(--shell-overlay-inset)] right-[var(--shell-overlay-inset)] w-[calc(100%-2*var(--shell-overlay-inset))] rounded-[var(--radius-shell)]' } },
+        { side: 'top', inset: true, class: { content: 'inset-x-[var(--shell-overlay-inset)] top-[var(--shell-overlay-inset)] max-h-[calc(100%-2*var(--shell-overlay-inset))] rounded-[var(--radius-shell)]' } },
+        { side: 'bottom', inset: true, class: { content: 'inset-x-[var(--shell-overlay-inset)] bottom-[var(--shell-overlay-inset)] max-h-[calc(100%-2*var(--shell-overlay-inset))] rounded-[var(--radius-shell)]' } },
+      ],
     },
     modal: {
       variants: { fullscreen: { false: { content: 'rounded-[var(--radius-card)]' } } },
       slots: {
         overlay: 'bg-black/20 backdrop-blur-[2px]',
-        body: 'eapp-modal-body',
+        header: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
+        body: 'eapp-modal-body p-3 sm:p-3 md:p-6',
+        footer: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
       },
     },
     switch: {
@@ -733,9 +771,10 @@ export default defineAppConfig({
           orientation: "horizontal",
           variant: "link",
           class: {
-            list: "border-b border-default mb-0 gap-6 bg-transparent p-0",
-            trigger: "h-12 rounded-none !px-0",
-            indicator: "!-bottom-px !h-px !w-[var(--reka-tabs-indicator-size)] !translate-x-[var(--reka-tabs-indicator-position)]",
+            list: "max-w-full overflow-x-auto overflow-y-hidden border-b-0 shadow-[inset_0_-1px_0_var(--ui-border)] mb-0 gap-6 bg-transparent p-0",
+            trigger: "h-12 shrink-0 whitespace-nowrap rounded-none !px-0 in-[[data-slot=list]:not(:has([data-slot=indicator]))]:data-[state=active]:after:bottom-0",
+            label: "!overflow-visible !text-clip",
+            indicator: "!bottom-0 !h-px !w-[var(--reka-tabs-indicator-size)] !translate-x-[var(--reka-tabs-indicator-position)]",
           },
         },
         {
@@ -799,6 +838,7 @@ export default defineAppConfig({
           "group relative w-full flex items-center select-none outline-none",
           "before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)]",
           "data-disabled:cursor-not-allowed data-disabled:opacity-75",
+          "data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]",
           "data-[state=open]:text-highlighted transition-colors before:transition-colors",
           "p-1.5 text-sm gap-1.5",
         ].join(" "),

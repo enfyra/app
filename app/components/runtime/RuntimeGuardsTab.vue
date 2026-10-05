@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { h } from 'vue';
+import type { ColumnDef } from '@tanstack/vue-table';
+
 type GuardAlert = {
   id: number;
   scope: 'ip' | 'user' | 'route';
@@ -64,6 +67,16 @@ function timeAgo(iso: string): string {
   return `${hours}h ago`;
 }
 
+const columns: ColumnDef<GuardAlert>[] = [
+  { id: 'time', header: 'Time', cell: ({ row }) => h('span', { class: 'whitespace-nowrap text-[var(--text-tertiary)]' }, timeAgo(row.original.createdAt)) },
+  { id: 'scope', header: 'Scope', cell: ({ row }) => h('span', { class: ['font-medium', scopeColor[row.original.scope]] }, row.original.scope) },
+  { id: 'subject', header: 'Subject', cell: ({ row }) => h('span', { class: 'font-mono text-xs' }, row.original.scopeKey) },
+  { id: 'route', header: 'Route', cell: ({ row }) => h('span', { class: 'text-xs' }, row.original.routePath) },
+  { id: 'method', header: 'Method', cell: ({ row }) => h('span', { class: 'rounded bg-[var(--surface-nested)] px-1.5 py-0.5 text-xs font-medium' }, row.original.method) },
+  { id: 'error', header: 'Error', cell: ({ row }) => h('span', { class: ['rounded-full px-2 py-0.5 text-xs font-medium', errorCodeBadge[row.original.errorCode] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'] }, row.original.errorCode) },
+  { id: 'guard', header: 'Guard', cell: ({ row }) => h('span', { class: 'text-xs text-[var(--text-secondary)]' }, row.original.guardName) },
+];
+
 onMounted(() => {
   execute();
 });
@@ -110,55 +123,10 @@ onMounted(() => {
         </button>
       </div>
 
-      <div v-if="pending && alerts.length === 0" class="py-8 text-center text-sm text-[var(--text-tertiary)]">
-        Loading...
-      </div>
-
-      <div v-else-if="alerts.length === 0" class="py-8 text-center text-sm text-[var(--text-tertiary)]">
-        No guard rejections recorded
-      </div>
-
-      <div v-else class="overflow-x-auto">
-        <table class="w-full min-w-[900px] text-sm">
-          <thead>
-            <tr class="border-b border-[var(--border-subtle)] text-left text-xs text-[var(--text-tertiary)]">
-              <th class="pb-2 pr-3 font-medium">Time</th>
-              <th class="pb-2 pr-3 font-medium">Scope</th>
-              <th class="pb-2 pr-3 font-medium">Subject</th>
-              <th class="pb-2 pr-3 font-medium">Route</th>
-              <th class="pb-2 pr-3 font-medium">Method</th>
-              <th class="pb-2 pr-3 font-medium">Error</th>
-              <th class="pb-2 font-medium">Guard</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="alert in alerts"
-              :key="alert.id"
-              class="border-b border-[var(--border-subtle)] last:border-0"
-            >
-              <td class="py-2 pr-3 whitespace-nowrap text-[var(--text-tertiary)]">{{ timeAgo(alert.createdAt) }}</td>
-              <td class="py-2 pr-3">
-                <span class="font-medium" :class="scopeColor[alert.scope]">{{ alert.scope }}</span>
-              </td>
-              <td class="py-2 pr-3 font-mono text-xs">{{ alert.scopeKey }}</td>
-              <td class="py-2 pr-3 text-xs">{{ alert.routePath }}</td>
-              <td class="py-2 pr-3">
-                <span class="rounded bg-[var(--surface-nested)] px-1.5 py-0.5 text-xs font-medium">{{ alert.method }}</span>
-              </td>
-              <td class="py-2 pr-3">
-                <span
-                  class="rounded-full px-2 py-0.5 text-xs font-medium"
-                  :class="errorCodeBadge[alert.errorCode] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'"
-                >
-                  {{ alert.errorCode }}
-                </span>
-              </td>
-              <td class="py-2 text-xs text-[var(--text-secondary)]">{{ alert.guardName }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <DataTable :data="alerts" :columns="columns" :loading="pending">
+        <template #toolbar><h2 class="text-sm font-medium">Recent rejections</h2></template>
+        <template #empty><CommonEmptyState variant="naked" title="No guard rejections recorded" icon="lucide:shield" size="sm" /></template>
+      </DataTable>
     </section>
   </CommonAnimatedGrid>
 </template>

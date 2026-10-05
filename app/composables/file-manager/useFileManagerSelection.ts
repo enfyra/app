@@ -16,6 +16,11 @@ export function useFileManagerSelection() {
     isSelectionMode.value = false;
   }
 
+  function toggleSelectionMode() {
+    if (isSelectionMode.value) clearSelection();
+    else isSelectionMode.value = true;
+  }
+
   function selectAllItems(allItems: any[]) {
     selectedItems.value = allItems.map(item => item.id);
   }
@@ -31,6 +36,7 @@ export function useFileManagerSelection() {
     selectedItems,
     toggleItemSelection,
     clearSelection,
+    toggleSelectionMode,
     selectAllItems,
     deselectAllItems,
     hasSelection,

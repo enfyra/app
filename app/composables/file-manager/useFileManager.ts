@@ -1,3 +1,4 @@
+import type { FileManagerDeleteResult } from '~/types/file-manager';
 
 export function useFileManager(parentFilter?: any) {
   const apiCall = parentFilter
@@ -17,7 +18,7 @@ export function useFileManager(parentFilter?: any) {
   const { confirm } = useConfirm();
   const { getId } = useDatabase();
 
-  const { execute: deleteFolderApi, error: deleteFolderError } = useApi(
+  const { execute: deleteFolderApi, executeWithResult: deleteFolderWithResult, error: deleteFolderError } = useApi(
     () => "/enfyra_folder",
     {
       method: "delete",
@@ -25,7 +26,7 @@ export function useFileManager(parentFilter?: any) {
     }
   );
 
-  const { execute: deleteFileApi, error: deleteFileError } = useApi(
+  const { execute: deleteFileApi, executeWithResult: deleteFileWithResult, error: deleteFileError } = useApi(
     () => "/enfyra_file",
     {
       method: "delete",
@@ -170,6 +171,45 @@ export function useFileManager(parentFilter?: any) {
     }
   }
 
+  async function deleteSelectedItems(folderList: any[], fileIds: string[]): Promise<FileManagerDeleteResult> {
+    const result: FileManagerDeleteResult = { cancelled: true, failed: false, deletedFolderIds: [], deletedFileIds: [] };
+    const folderIds = [...new Set(folderList.map(folder => String(getId(folder))))];
+    const selectedFileIds = [...new Set(fileIds.map(String))];
+    const total = folderIds.length + selectedFileIds.length;
+    if (total === 0) return result;
+    const confirmed = await confirm({
+      title: 'Delete selected items',
+      content: `Delete ${folderIds.length} folder(s) and ${selectedFileIds.length} file(s)? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return result;
+    result.cancelled = false;
+
+    for (const id of folderIds) {
+      const response = await deleteFolderWithResult({ id });
+      if (!response.ok) {
+        result.failed = true;
+        break;
+      }
+      result.deletedFolderIds.push(id);
+    }
+    if (!result.failed) {
+      for (const id of selectedFileIds) {
+        const response = await deleteFileWithResult({ id });
+        if (!response.ok) {
+          result.failed = true;
+          break;
+        }
+        result.deletedFileIds.push(id);
+      }
+    }
+    const deleted = result.deletedFolderIds.length + result.deletedFileIds.length;
+    if (result.failed) notify.warning('Delete incomplete', `${deleted} item(s) deleted. Remaining items are still selected.`);
+    else notify.success('Success', `${deleted} item(s) deleted successfully!`);
+    return result;
+  }
+
   return {
     folders,
     pending,
@@ -180,5 +220,6 @@ export function useFileManager(parentFilter?: any) {
     deleteSelectedFolders,
     deleteFile,
     deleteSelectedFiles,
+    deleteSelectedItems,
   };
 }

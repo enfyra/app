@@ -104,9 +104,18 @@ export interface HeaderAction {
   props?: Record<string, any>;
   key?: string;
   side?: "left" | "right";
+  mobileDisplay?: "inline" | "menu";
   global?: boolean;
   show?: boolean | Ref<boolean> | Readonly<Ref<boolean>> | ComputedRef<boolean>;
   order?: number;
+}
+
+export interface PanelSection {
+  value: string;
+  label?: string;
+  icon?: string;
+  badge?: string | number | { label?: string | number; color?: string; variant?: string };
+  disabled?: boolean;
 }
 
 export interface DialogFooterAction {

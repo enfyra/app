@@ -1,10 +1,8 @@
 <script setup lang="ts">
-const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import { defineComponent, h } from "vue";
+import { h } from "vue";
 import { UBadge } from "#components";
 import type { ColumnDef } from "@tanstack/vue-table";
-import CommonSystemVisibilityControl from "~/components/common/SystemVisibilityControl.vue";
 import type { SystemVisibilityMode } from "~/types/ui";
 import { settingsDateColumn, settingsTextColumn } from "~/utils/settings-table";
 
@@ -32,6 +30,11 @@ const COLLECTION_LIST_FIELDS = [
 const searchQuery = ref(typeof route.query.search === "string" ? route.query.search : "");
 const visibilityScope = ref<SystemVisibilityMode>(getVisibilityScope(route.query.scope, route.query.system));
 const router = useRouter();
+const visibilityOptions = [
+  { label: 'Custom', value: 'custom' as const },
+  { label: 'System', value: 'system' as const },
+  { label: 'All', value: 'all' as const },
+];
 
 function getVisibilityScope(scope: unknown, system: unknown): SystemVisibilityMode {
   if (scope === "custom" || scope === "system" || scope === "all") return scope;
@@ -90,63 +93,6 @@ watch(
   },
 );
 
-const SearchInput = defineComponent({
-  setup() {
-    const UInput = resolveComponent("UInput");
-    const UIcon = resolveComponent("UIcon");
-
-    return () =>
-      h("div", { class: "relative flex h-9 items-center" }, [
-        h(UInput, {
-          modelValue: searchQuery.value,
-          "onUpdate:modelValue": (val: string) => (searchQuery.value = val),
-          placeholder: "Search by table name...",
-          icon: "lucide:search",
-          size: "md",
-          ui: { base: "!h-9 !py-0" },
-          class: "w-full lg:w-64",
-        }),
-        searchQuery.value
-          ? h("button", {
-              class: "absolute right-1 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-quaternary)] hover:text-[var(--text-tertiary)] cursor-pointer",
-              "aria-label": "Clear search",
-              type: "button",
-              onClick: () => {
-                searchQuery.value = "";
-              },
-            }, [
-              h(UIcon, { name: "lucide:x", class: "w-4 h-4" }),
-            ])
-          : null,
-      ]);
-  },
-});
-
-registerSubHeaderActions([
-  {
-    id: "toggle-system-collections",
-    component: CommonSystemVisibilityControl,
-    get props() {
-      return {
-        modelValue: visibilityScope.value,
-        label: "Tables",
-        "onUpdate:modelValue": (value: SystemVisibilityMode) => {
-          visibilityScope.value = value;
-          page.value = 1;
-        },
-      };
-    },
-    side: "right",
-    order: 0,
-  },
-  {
-    id: "search-collections",
-    component: SearchInput,
-    side: "right",
-    order: 1,
-  },
-]);
-
 const {
   data: apiData,
   pending: loading,
@@ -191,7 +137,6 @@ const columns: ColumnDef<Record<string, any>>[] = [
     header: 'Fields',
     enableSorting: false,
     accessorFn: collection => (collection.columns?.length ?? 0) + (collection.relations?.length ?? 0),
-    meta: { style: { th: { width: '88px' }, td: { width: '88px' } } },
   },
   {
     id: 'apiPath',
@@ -199,7 +144,6 @@ const columns: ColumnDef<Record<string, any>>[] = [
     enableSorting: false,
     accessorFn: collection => collection.name ? `/${collection.name}` : '_',
     cell: ({ getValue }) => h('span', { class: 'block truncate font-mono', title: String(getValue()) }, String(getValue())),
-    meta: { style: { th: { width: '240px' }, td: { width: '240px' } } },
   },
   {
     accessorKey: 'isSystem',
@@ -263,6 +207,23 @@ watch(
       @page-size-change="setPageSize"
       @row-click="collection => navigateTo(`/collections/${collection.name}`)"
     >
+      <template #toolbar>
+        <div class="flex w-full min-w-0 items-center gap-2 lg:gap-3">
+          <CommonSearchField
+            v-model="searchQuery"
+            placeholder="Search collections…"
+            label="Search collections by table name"
+          />
+          <USelect
+            v-model="visibilityScope"
+            :items="visibilityOptions"
+            aria-label="Collection type"
+            size="sm"
+            class="w-26 shrink-0"
+            @update:model-value="page = 1"
+          />
+        </div>
+      </template>
       <template #empty>
         <CommonEmptyState
           variant="naked"

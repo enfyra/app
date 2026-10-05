@@ -194,6 +194,9 @@ onMounted(() => {
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'user' }]">
+        <template #user-header><h2 class="text-sm font-medium">User</h2></template>
+        <template #user>
       <CommonFormCard>
         <UForm :state="form" @submit="saveUser">
           <FormEditorLazy
@@ -207,6 +210,8 @@ onMounted(() => {
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
 
     <CommonEmptyState

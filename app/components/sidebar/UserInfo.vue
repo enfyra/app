@@ -25,7 +25,6 @@ const { $primaryColor } = useNuxtApp();
 const colorMode = useColorMode();
 const { accountPanelItems, register } = useAccountPanelRegistry();
 const userLabel = computed(() => me.value?.email || 'Account');
-const userInitial = computed(() => userLabel.value.charAt(0).toUpperCase());
 const enfyraVersionLabel = computed(() => {
   const version = enfyraVersion.value?.trim();
   return version ? version.startsWith('v') ? version : `v${version}` : null;
@@ -82,6 +81,7 @@ function toMenuItem(item: AccountPanelItem): AccountMenuItem {
     label: resolveValue(item.label),
     description: resolveValue(item.description),
     icon: resolveValue(item.icon),
+    color: item.id === 'logout' ? 'error' : undefined,
     disabled: resolveValue(item.disabled),
     children: resolveValue(item.children) as AccountMenuItem[] | undefined,
     slot: item.component || item.contentComponent ? `account-${item.id}` : undefined,
@@ -95,11 +95,12 @@ function toMenuItem(item: AccountPanelItem): AccountMenuItem {
   };
 }
 const menuItems = computed<AccountMenuItem[][]>(() => {
-  const items = visibleAccountPanelItems.value;
+  const items = visibleAccountPanelItems.value.filter(item => item.id !== 'logout');
   return [
     items.filter(item => (item.order ?? 0) < 20).map(toMenuItem),
     items.filter(item => (item.order ?? 0) >= 20 && (item.order ?? 0) < 30).map(toMenuItem),
     items.filter(item => (item.order ?? 0) >= 30).map(toMenuItem),
+    visibleAccountPanelItems.value.filter(item => item.id === 'logout').map(toMenuItem),
   ].filter(group => group.length);
 });
 const mobilePage = computed(() => {
@@ -144,6 +145,7 @@ async function handleLogout() {
         variant="soft"
         size="lg"
         :aria-label="collapsed ? 'Open account menu' : userLabel"
+        :icon="collapsed ? 'lucide:circle-user' : undefined"
         :trailing-icon="collapsed ? undefined : 'lucide:chevrons-up-down'"
         class="w-full"
         :class="collapsed ? 'justify-center px-2' : 'justify-start'"
@@ -152,7 +154,6 @@ async function handleLogout() {
         :aria-expanded="isDesktop ? undefined : mobileOpen"
         @click="!isDesktop && (mobileOpen = true)"
       >
-        <UAvatar :text="userInitial" size="xs" class="bg-primary/10 text-primary" />
         <span v-if="!collapsed" class="min-w-0 flex-1 truncate text-left">{{ userLabel }}</span>
         <UBadge v-if="triggerBadge !== undefined" :label="String(triggerBadge)" size="xs" variant="soft" />
       </UButton>

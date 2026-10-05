@@ -1,7 +1,10 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
-      <CommonFormCard>
+      <CommonPanel :sections="[{ value: 'extension' }]">
+        <template #extension-header><h2 class="text-sm font-medium">Extension</h2></template>
+        <template #extension>
+<CommonFormCard>
         <UForm :state="form" @submit="updateExtension">
           <FormEditorLazy
             ref="formEditorRef"
@@ -17,6 +20,8 @@
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
     <CommonEmptyState
       v-if="!loading && !extensionData?.data?.[0]"

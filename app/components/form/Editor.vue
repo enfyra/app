@@ -25,7 +25,7 @@
   </div>
   <div
     v-else
-    class="space-y-10"
+    class="space-y-6 md:space-y-10"
   >
     <div
       v-for="block in sectionBlocks"
@@ -171,8 +171,8 @@ const defaultSectionHeadingClass =
 
 const layoutClass = computed(() =>
   props.layout === 'grid'
-    ? 'grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5'
-    : 'space-y-5',
+    ? 'grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4 md:gap-x-6 md:gap-y-5'
+    : 'space-y-4 md:space-y-5',
 );
 
 function fieldRowClass(field: { fieldType?: string }) {

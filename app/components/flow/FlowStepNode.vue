@@ -212,11 +212,13 @@ const badges = computed(() => {
     box-shadow var(--duration-base) var(--ease-standard);
 }
 
-.flow-add-node:hover .flow-add-btn {
-  border-color: var(--md-primary);
-  color: var(--md-primary);
-  background: color-mix(in srgb, var(--md-primary) 6%, var(--surface-default));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 12%, transparent);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .flow-add-node:hover .flow-add-btn {
+    border-color: var(--md-primary);
+    color: var(--md-primary);
+    background: color-mix(in srgb, var(--md-primary) 6%, var(--surface-default));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-primary) 12%, transparent);
+  }
 }
 
 .flow-add-node:focus-visible {
@@ -236,8 +238,10 @@ const badges = computed(() => {
   transition: color var(--duration-base) var(--ease-standard);
 }
 
-.flow-add-node:hover .flow-add-label {
-  color: var(--md-primary);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .flow-add-node:hover .flow-add-label {
+    color: var(--md-primary);
+  }
 }
 
 .flow-trigger-node {
@@ -251,11 +255,18 @@ const badges = computed(() => {
     box-shadow var(--duration-base) var(--ease-standard);
 }
 
-.flow-trigger-node:hover,
 .flow-trigger-node:focus-visible {
   border-color: var(--md-primary);
   box-shadow: var(--shadow-sm);
   outline: none;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .flow-trigger-node:hover {
+    border-color: var(--md-primary);
+    box-shadow: var(--shadow-sm);
+    outline: none;
+  }
 }
 
 .flow-trigger-icon {
@@ -283,11 +294,18 @@ const badges = computed(() => {
     box-shadow var(--duration-base) var(--ease-standard);
 }
 
-.flow-step-card:hover,
 .flow-step-card:focus-visible {
   border-color: color-mix(in srgb, var(--md-primary) 50%, var(--border-default));
   box-shadow: var(--shadow-sm);
   outline: none;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .flow-step-card:hover {
+    border-color: color-mix(in srgb, var(--md-primary) 50%, var(--border-default));
+    box-shadow: var(--shadow-sm);
+    outline: none;
+  }
 }
 
 .flow-step-selected {
@@ -425,9 +443,11 @@ const badges = computed(() => {
     color var(--duration-fast) var(--ease-standard);
 }
 
-.flow-reorder-btn:hover:not(:disabled) {
-  background: var(--surface-muted);
-  color: var(--text-secondary);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .flow-reorder-btn:hover:not(:disabled) {
+    background: var(--surface-muted);
+    color: var(--text-secondary);
+  }
 }
 
 .flow-step-card:focus-within .flow-reorder-actions {

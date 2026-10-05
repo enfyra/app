@@ -2,6 +2,9 @@
   <div class="space-y-6">
     <div class="space-y-6">
       <div class="eapp-page-constrained">
+        <CommonPanel :sections="[{ value: 'role' }]">
+          <template #role-header><h2 class="text-sm font-medium">Role</h2></template>
+          <template #role>
         <CommonFormCard>
           <UForm :state="form" @submit="save">
             <FormEditorLazy
@@ -15,6 +18,8 @@
             />
           </UForm>
         </CommonFormCard>
+          </template>
+        </CommonPanel>
       </div>
     </div>
 

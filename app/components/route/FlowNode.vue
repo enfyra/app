@@ -157,10 +157,16 @@ function handleClick() {
   background: var(--execution-node-accent);
 }
 
-.route-execution-node:hover,
 .route-execution-node:focus-within {
   border-color: color-mix(in srgb, var(--execution-node-accent) 55%, var(--border-default));
   box-shadow: var(--shadow-sm);
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .route-execution-node:hover {
+    border-color: color-mix(in srgb, var(--execution-node-accent) 55%, var(--border-default));
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 .route-execution-node-prehook {

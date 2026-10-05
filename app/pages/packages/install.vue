@@ -303,9 +303,11 @@ async function handleCreate() {
   transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
 }
 
-.package-type-card:hover {
-  border-color: var(--border-accent);
-  background: color-mix(in srgb, var(--state-primary-soft-bg) 28%, var(--card-bg));
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .package-type-card:hover {
+    border-color: var(--border-accent);
+    background: color-mix(in srgb, var(--state-primary-soft-bg) 28%, var(--card-bg));
+  }
 }
 
 .package-type-card-active {
@@ -314,9 +316,11 @@ async function handleCreate() {
   color: var(--badge-primary-soft-text);
 }
 
-.package-type-card-active:hover {
-  border-color: var(--border-accent);
-  background: var(--state-primary-soft-bg-hover);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .package-type-card-active:hover {
+    border-color: var(--border-accent);
+    background: var(--state-primary-soft-bg-hover);
+  }
 }
 
 .package-type-icon {
@@ -331,17 +335,26 @@ async function handleCreate() {
   transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
 }
 
-.package-type-card:hover .package-type-icon {
-  background: var(--state-primary-soft-bg);
-  color: var(--badge-primary-soft-text);
-  box-shadow: inset 0 0 0 1px var(--badge-primary-soft-border);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .package-type-card:hover .package-type-icon {
+    background: var(--state-primary-soft-bg);
+    color: var(--badge-primary-soft-text);
+    box-shadow: inset 0 0 0 1px var(--badge-primary-soft-border);
+  }
 }
 
-.package-type-icon-active,
-.package-type-card-active:hover .package-type-icon-active {
+.package-type-icon-active {
   background: var(--action-primary-bg);
   color: var(--action-primary-text);
   box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .package-type-card-active:hover .package-type-icon-active {
+    background: var(--action-primary-bg);
+    color: var(--action-primary-text);
+    box-shadow: none;
+  }
 }
 
 .package-type-description {

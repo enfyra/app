@@ -372,8 +372,10 @@ onMounted(() => {
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
-.mcp-setup-fallback-link:hover {
-  background: var(--surface-muted);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .mcp-setup-fallback-link:hover {
+    background: var(--surface-muted);
+  }
 }
 
 .mcp-setup-dashboard-link {
@@ -390,8 +392,10 @@ onMounted(() => {
   transition: opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
 }
 
-.mcp-setup-dashboard-link:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
+  .mcp-setup-dashboard-link:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
 }
 </style>

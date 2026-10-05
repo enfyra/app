@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+import FileManagerToolbar from './FileManagerToolbar.vue';
+import FileManagerActions from './FileManagerActions.vue';
 interface Props {
   parentId?: string;
   folders?: any[];
@@ -17,6 +18,7 @@ interface Emits {
   refreshFiles: [];
   createFolder: [];
   createFile: [];
+  contextChange: [active: boolean];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -33,8 +35,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>();
 
-const { viewMode, toggleViewMode } = useFileManagerViewMode();
-const { isSelectionMode, selectedItems, toggleItemSelection, clearSelection } =
+const { viewMode, setViewMode } = useFileManagerViewMode();
+const { isSelectionMode, selectedItems, toggleItemSelection, clearSelection, deselectAllItems, toggleSelectionMode } =
   useFileManagerSelection();
 const {
   isMoveMode,
@@ -46,13 +48,18 @@ const {
   handleMoveHere,
   clearFileManagerState,
 } = useFileManagerMove();
-const { deleteSelectedFolders, deleteSelectedFiles } = useFileManager();
+const { deleteSelectedItems } = useFileManager();
 const { getId } = useDatabase();
 
 function handleFolderClick(folder: any) {
+  if (isBusy.value) return;
+  if (isSelectionMode.value && !isMoveMode.value) {
+    handleToggleItemSelection(String(getId(folder)));
+    return;
+  }
   if (
     moveState.value.moveMode &&
-    (moveState.value.selectedFolderIds || []).includes(getId(folder))
+    (moveState.value.selectedFolderIds || []).includes(String(getId(folder)))
   ) {
     const notify = useNotify();
     notify.warning("Cannot navigate", "You cannot move a folder into itself.");
@@ -62,6 +69,11 @@ function handleFolderClick(folder: any) {
 }
 
 function handleFileClick(file: any) {
+  if (isBusy.value) return;
+  if (isSelectionMode.value && !isMoveMode.value) {
+    handleToggleItemSelection(String(getId(file)));
+    return;
+  }
   if (moveState.value.moveMode) {
     const notify = useNotify();
     notify.info("Cannot open file", "Cancel move mode to access files.");
@@ -72,13 +84,13 @@ function handleFileClick(file: any) {
 }
 
 function handleToggleItemSelection(itemId: string) {
-  toggleItemSelection(itemId);
+  if (isBusy.value || isMoveMode.value || !canSelect.value) return;
+  toggleItemSelection(String(itemId));
 
   if (
     selectedItems.value.length > 0 &&
     !isSelectionMode.value &&
-    !isMoveMode.value &&
-    viewMode.value === "grid"
+    !isMoveMode.value
   ) {
     isSelectionMode.value = true;
   }
@@ -97,6 +109,7 @@ function clearAllState() {
 }
 
 function handleStartMoveMode() {
+  if (isBusy.value || !canMove.value || selectedItems.value.length === 0) return;
   startMoveMode(
     selectedItems.value,
     props.folders,
@@ -107,6 +120,7 @@ function handleStartMoveMode() {
 }
 
 function handleCancelMoveMode() {
+  if (isBusy.value) return;
   const clearedSelection = cancelMoveMode();
   selectedItems.value = clearedSelection;
 }
@@ -117,7 +131,7 @@ async function handleMoveHereWrapper() {
   );
   if (success) {
     clearSelection();
-    handleCancelMoveMode();
+    cancelMoveMode();
   }
 }
 
@@ -131,195 +145,138 @@ onBeforeRouteLeave((to, from) => {
 });
 
 async function handleBulkDelete() {
-  if (selectedItems.value.length === 0) return;
-
-  const folderIds = selectedItems.value.filter((id) =>
-    props.folders.find((folder) => getId(folder) === id)
-  );
-  const fileIds = selectedItems.value.filter((id) =>
-    props.files.find((file) => getId(file) === id)
-  );
-
-  const folderList = folderIds
-    .map((id) => props.folders.find((f) => getId(f) === id))
-    .filter(Boolean);
-
-  if (folderIds.length > 0) {
-    await deleteSelectedFolders(folderList, () => emit("refreshItems"));
-  }
-
-  if (fileIds.length > 0) {
-    await deleteSelectedFiles(fileIds, () => emit("refreshItems"));
-  }
-
-  selectedItems.value = [];
-  isSelectionMode.value = false;
+  const selected = new Set(selectedItems.value);
+  const folderList = props.folders.filter(folder => selected.has(String(getId(folder))));
+  const fileIds = props.files.filter(file => selected.has(String(getId(file)))).map(file => String(getId(file)));
+  const result = await deleteSelectedItems(folderList, fileIds);
+  if (result.cancelled) return;
+  const deleted = new Set([...result.deletedFolderIds, ...result.deletedFileIds]);
+  selectedItems.value = selectedItems.value.filter(id => !deleted.has(String(id)));
+  if (!result.failed && selectedItems.value.length === 0) clearSelection();
+  emit('refreshItems');
 }
 
-const { isMobile, isTablet } = useScreen();
+const { hasPermission } = usePermissions();
+const operationPending = ref<'delete' | 'move' | null>(null);
+const library = useTemplateRef<HTMLElement>('library');
+const contextActive = computed(() => isSelectionMode.value || selectedItems.value.length > 0 || isMoveMode.value);
+const isBusy = computed(() => operationPending.value !== null || isAnyMovePending.value);
+const loadedIds = computed(() => [...props.folders, ...props.files].map(item => String(getId(item))));
+const visibleFolders = computed(() => props.folders.map(folder => ({ ...folder, id: String(getId(folder)) })));
+const visibleFiles = computed(() => props.files.map(file => ({ ...file, id: String(getId(file)) })));
+const canSelect = computed(() => hasPermission('/enfyra_file', 'DELETE') || hasPermission('/enfyra_folder', 'DELETE') || hasPermission('/enfyra_file', 'PATCH') || hasPermission('/enfyra_folder', 'PATCH'));
+const canUpload = computed(() => props.showCreateButton && hasPermission('/enfyra_file', 'POST'));
+const canCreateFolder = computed(() => props.showCreateButton && hasPermission('/enfyra_folder', 'POST'));
+const canMove = computed(() => canManageSelection('PATCH'));
+const canDelete = computed(() => canManageSelection('DELETE'));
+const moveCount = computed(() => moveState.value.selectedItems.length);
+const canMoveHere = computed(() =>
+  (!moveState.value.selectedFileIds.length || hasPermission('/enfyra_file', 'PATCH')) &&
+  (!moveState.value.selectedFolderIds.length || hasPermission('/enfyra_folder', 'PATCH')),
+);
 
-registerSubHeaderActions([
-  {
-    id: "page-view-mode",
-    icon: computed(() =>
-      viewMode.value === "grid" ? "lucide:layout-list" : "lucide:layout-grid"
-    ),
-    variant: "outline",
-    color: "neutral",
-    size: (isMobile.value || isTablet.value) ? "lg" : "md",
-    class: "cursor-pointer",
-    onClick: toggleViewMode,
-    side: "left",
-  },
-  {
-    id: "toggle-selection",
-    label: computed(() =>
-      isSelectionMode.value ? "Cancel Selection" : "Select Items"
-    ),
-    icon: computed(() =>
-      isSelectionMode.value ? "lucide:x" : "lucide:check-square"
-    ),
-    variant: computed(() => (isSelectionMode.value ? "soft" : "outline")),
-    color: computed(() => (isSelectionMode.value ? "primary" : "neutral")),
-    onClick: () => {
-      isSelectionMode.value = !isSelectionMode.value;
-      if (!isSelectionMode.value) {
-        clearSelection();
-      }
-    },
-    side: "right",
-    show: computed(() => !isMoveMode.value),
-    permission: {
-      and: [
-        {
-          route: "/enfyra_folder",
-          methods: ["DELETE"],
-        },
-        {
-          route: "/enfyra_file",
-          methods: ["DELETE"],
-        },
-      ],
-    },
-  },
-  {
-    id: "bulk-delete",
-    label: "Delete Selected",
-    icon: "lucide:trash-2",
-    variant: "solid",
-    color: "error",
-    onClick: handleBulkDelete,
-    side: "right",
-    show: computed(() => selectedItems.value.length > 0 && !isMoveMode.value),
-  },
-  {
-    id: "start-move",
-    label: "Move",
-    icon: "lucide:arrow-right-left",
-    variant: "solid",
-    color: "info",
-    onClick: handleStartMoveMode,
-    side: "right",
-    show: computed(() => selectedItems.value.length > 0 && !isMoveMode.value),
-  },
-  {
-    id: "move-here",
-    label: computed(() => {
-      const files = moveState.value.selectedFileIds?.length || 0;
-      const folders = moveState.value.selectedFolderIds?.length || 0;
-      const countLabel =
-        files + folders > 0 ? ` (${files} files, ${folders} folders)` : "";
-      return (isAnyMovePending.value ? "Moving..." : "Move here") + countLabel;
-    }),
-    icon: "lucide:folder-input",
-    variant: "solid",
-    color: "primary",
-    loading: computed(() => isAnyMovePending.value),
-    disabled: computed(
-      () => isMoveHereDisabled(props.parentId) || isAnyMovePending.value
-    ),
-    onClick: handleMoveHereWrapper,
-    side: "right",
-    show: computed(() => isMoveMode.value),
-  },
-  {
-    id: "cancel-move",
-    label: "Cancel",
-    icon: "lucide:x",
-    variant: "ghost",
-    color: "secondary",
-    onClick: handleCancelMoveMode,
-    side: "right",
-    show: computed(() => isMoveMode.value),
-  },
-  {
-    id: "select-all",
-    label: computed(() => {
-      const totalCount =
-        (props.folders?.length || 0) + (props.files?.length || 0);
-      const selectedCount = selectedItems.value.length;
-      return selectedCount === totalCount ? "Deselect All" : "Select All";
-    }),
-    icon: computed(() => {
-      const totalCount =
-        (props.folders?.length || 0) + (props.files?.length || 0);
-      return selectedItems.value.length === totalCount
-        ? "lucide:square"
-        : "lucide:check-square";
-    }),
-    color: computed(() => {
-      const totalCount =
-        (props.folders?.length || 0) + (props.files?.length || 0);
-      return selectedItems.value.length === totalCount ? "warning" : "primary";
-    }),
-    onClick: () => {
-      const totalCount =
-        (props.folders?.length || 0) + (props.files?.length || 0);
+watch(contextActive, active => emit('contextChange', active), { immediate: true });
 
-      if (selectedItems.value.length === totalCount) {
-        selectedItems.value = [];
-      } else {
-        const allItems = [...props.folders, ...props.files];
-        selectedItems.value = allItems.map((item) => getId(item));
-      }
-    },
-    side: "right",
-    show: computed(() => isSelectionMode.value),
-  },
-]);
+function clearSelectedItems() {
+  if (!isBusy.value) deselectAllItems();
+}
+
+function exitSelectionMode() {
+  if (!isBusy.value) clearSelection();
+}
+
+function canManageSelection(method: string) {
+  if (selectedItems.value.length === 0) return hasPermission('/enfyra_file', method) || hasPermission('/enfyra_folder', method);
+  return selectedItems.value.every(id => {
+    if (props.folders.some(folder => String(getId(folder)) === String(id))) return hasPermission('/enfyra_folder', method);
+    if (props.files.some(file => String(getId(file)) === String(id))) return hasPermission('/enfyra_file', method);
+    return false;
+  });
+}
+
+function startSelection() {
+  if (!isBusy.value && !isMoveMode.value && canSelect.value) toggleSelectionMode();
+}
+
+function toggleAllLoaded() {
+  if (isBusy.value || isMoveMode.value) return;
+  selectedItems.value = loadedIds.value.every(id => selectedItems.value.includes(id)) ? [] : [...loadedIds.value];
+}
+
+async function deleteSelection() {
+  if (isBusy.value || !canDelete.value) return;
+  operationPending.value = 'delete';
+  try {
+    await handleBulkDelete();
+  } finally {
+    operationPending.value = null;
+  }
+}
+
+async function moveSelectionHere() {
+  if (isBusy.value || !canMoveHere.value) return;
+  operationPending.value = 'move';
+  try {
+    await handleMoveHereWrapper();
+  } finally {
+    operationPending.value = null;
+  }
+}
+
+watch([loadedIds, isBusy], ([ids]) => {
+  if (isMoveMode.value || isBusy.value) return;
+  const loaded = new Set(ids);
+  selectedItems.value = selectedItems.value.filter(id => loaded.has(String(id)));
+});
 </script>
 
 <template>
-  <div class="eapp-bordered-region overflow-hidden">
-    <div
-      class="flex flex-col gap-4 border-b border-[var(--border-default)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
-    >
-      <div class="min-w-0">
-        <p class="text-sm font-medium text-[var(--text-tertiary)]">
-          Library
-        </p>
-        <h2 class="text-xl font-semibold text-[var(--text-primary)]">
-          {{ props.folders.length + props.files.length }} items
-        </h2>
-      </div>
+  <div ref="library" class="eapp-bordered-region overflow-hidden">
+    <FileManagerToolbar
+      :view-mode="viewMode"
+      :folder-count="props.folders.length"
+      :file-count="props.files.length"
+      :move-mode="isMoveMode"
+      :selection-mode="isSelectionMode"
+      :busy="isBusy"
+      :loading="props.foldersLoading || props.filesLoading"
+      :can-upload="canUpload"
+      :can-create-folder="canCreateFolder"
+      :can-select="canSelect"
+      @update:view-mode="setViewMode"
+      @upload="emit('createFile')"
+      @create-folder="emit('createFolder')"
+      @refresh="emit('refreshItems')"
+      @select="startSelection"
+    />
+    <FileManagerActions
+      :anchor="library"
+      :active="contextActive"
+      :selected-count="selectedItems.length"
+      :total-count="loadedIds.length"
+      :move-mode="isMoveMode"
+      :move-count="moveCount"
+      :busy="isBusy"
+      :deleting="operationPending === 'delete'"
+      :moving="operationPending === 'move' || isAnyMovePending"
+      :loading="props.foldersLoading || props.filesLoading"
+      :can-move="canMove"
+      :can-delete="canDelete"
+      :move-here-disabled="!canMoveHere || isMoveHereDisabled(props.parentId)"
+      @clear="clearSelectedItems"
+      @exit-selection="exitSelectionMode"
+      @toggle-all="toggleAllLoaded"
+      @move="handleStartMoveMode"
+      @delete="deleteSelection"
+      @move-here="moveSelectionHere"
+      @cancel-move="handleCancelMoveMode"
+    />
 
-      <div class="flex flex-wrap gap-2">
-        <UBadge variant="subtle" color="primary" size="lg">
-          <UIcon name="lucide:folder" class="mr-1 h-4 w-4" />
-          {{ props.folders.length }} folders
-        </UBadge>
-        <UBadge variant="subtle" color="info" size="lg">
-          <UIcon name="lucide:file" class="mr-1 h-4 w-4" />
-          {{ props.files.length }} files
-        </UBadge>
-      </div>
-    </div>
-
-    <div class="space-y-8 p-5">
+    <div class="space-y-6 p-3 md:space-y-8 md:p-4" :class="contextActive ? 'pb-36 sm:pb-24 md:pb-24' : undefined">
       <section v-if="props.foldersLoading || props.folders.length > 0">
         <div class="mb-4 flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <UIcon name="lucide:folder" class="h-5 w-5 text-primary" />
+            <UIcon name="lucide:folder" class="h-5 w-5 text-muted" />
             <h3 class="text-base font-semibold text-[var(--text-primary)]">
               Folders
             </h3>
@@ -330,7 +287,7 @@ registerSubHeaderActions([
         </div>
 
         <FolderView
-          :folders="props.folders"
+          :folders="visibleFolders"
           :view-mode="viewMode"
           :loading="props.foldersLoading && props.folders.length === 0"
           empty-title="No folders"
@@ -346,7 +303,7 @@ registerSubHeaderActions([
       <section v-if="props.filesLoading || props.files.length > 0">
         <div class="mb-4 flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
-            <UIcon name="lucide:file" class="h-5 w-5 text-info" />
+            <UIcon name="lucide:file" class="h-5 w-5 text-muted" />
             <h3 class="text-base font-semibold text-[var(--text-primary)]">
               Files
             </h3>
@@ -357,7 +314,7 @@ registerSubHeaderActions([
         </div>
 
         <FileView
-          :files="props.files"
+          :files="visibleFiles"
           :view-mode="viewMode"
           :loading="props.filesLoading && props.files.length === 0"
           empty-title="No files"

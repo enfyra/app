@@ -47,3 +47,5 @@ AGENTS.md
 .codex/
 .claude/
 .kilo/
+/enfyra/
+/.tmp/enfyra/
