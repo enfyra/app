@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { VisibilityState } from '@tanstack/vue-table'
 import DataTable from '~/components/data-table/DataTable.vue'
 import DataTableLazy from '~/components/data-table/DataTableLazy.vue'
+import SettingsTable from '~/components/data-table/SettingsTable.vue'
 
 describe('DataTable column picker', () => {
   for (const [name, component] of [['DataTable', DataTable], ['DataTableLazy', DataTableLazy]] as const) {
@@ -68,7 +69,7 @@ describe('DataTable column picker', () => {
     } finally { wrapper.unmount() }
   })
 
-  for (const [name, component] of [['DataTable', DataTable], ['DataTableLazy', DataTableLazy]] as const) {
+  for (const [name, component] of [['DataTable', DataTable], ['DataTableLazy', DataTableLazy], ['SettingsTable', SettingsTable]] as const) {
     it(`${name} updates uncontrolled visibility once per touch or keyboard activation without remounting`, async () => {
       const host = document.createElement('div')
       document.body.append(host)
@@ -76,6 +77,7 @@ describe('DataTable column picker', () => {
         default: () => h(component, {
           data: [{ id: 1, title: 'First', score: 7 }],
           columns: [{ accessorKey: 'id', header: 'ID' }, { accessorKey: 'title', header: 'Title' }, { accessorKey: 'score', header: 'Score' }],
+          ...(name === 'SettingsTable' ? { actions: () => [{ label: 'Delete', onSelect: () => {} }] } : {}),
         }),
       }) })
       const wrapper = await mountSuspended(Host, { attachTo: host })
@@ -85,6 +87,7 @@ describe('DataTable column picker', () => {
         await wrapper.get('[aria-label="Choose visible columns"]').trigger('click', { button: 0, ctrlKey: false })
         const checkbox = () => Array.from(document.querySelectorAll<HTMLElement>('[role="menuitemcheckbox"]')).find(element => element.textContent?.trim() === 'Title')!
         await vi.waitFor(() => expect(checkbox()).toBeDefined())
+        expect(Array.from(document.querySelectorAll('[role="menuitemcheckbox"]')).map(element => element.textContent?.trim())).toEqual(['ID', 'Title', 'Score'])
         const original = checkbox()
         for (let index = 0; index < 12; index++) {
           const target = checkbox()
@@ -99,7 +102,7 @@ describe('DataTable column picker', () => {
           await flushPromises()
           expect(checkbox()).toBe(original)
           expect(checkbox().getAttribute('aria-checked')).toBe(index % 2 === 0 ? 'false' : 'true')
-          expect(wrapper.findAll('th').map(cell => cell.text())).toEqual(index % 2 === 0 ? ['ID', 'Score'] : ['ID', 'Title', 'Score'])
+          expect(wrapper.findAll('th').map(cell => cell.text()).filter(Boolean)).toEqual(index % 2 === 0 ? ['ID', 'Score'] : ['ID', 'Title', 'Score'])
           expect(wrapper.findComponent(DataTable).emitted('update:columnVisibility')).toHaveLength(index + 1)
         }
       } finally {

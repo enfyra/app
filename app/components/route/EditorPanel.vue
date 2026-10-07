@@ -127,7 +127,7 @@ const methodConfigColumns = [
   { id: 'status', header: 'Enabled', accessorFn: (config: any) => config.available, enableSorting: false },
   { id: 'access', header: 'Access', accessorFn: (config: any) => config.available ? config.isPublic ? 'Public' : config.skipRoleGuard ? 'Authenticated · role check skipped' : 'Authenticated' : 'Unavailable' },
   { id: 'timeout', header: 'Timeout', accessorFn: (config: any) => config.timeout },
-  { id: 'actions', header: '', enableSorting: false, cell: () => '', meta: { class: { th: 'w-10', td: 'w-10 text-right' } } },
+  { id: 'actions', header: '', enableSorting: false, enableHiding: false, cell: () => '', meta: { class: { th: 'w-10', td: 'w-10 text-right' } } },
 ]
 
 const availableMethodRecords = computed(() => {
@@ -883,7 +883,6 @@ watch(showEditHookDrawer, (isOpen) => {
         :data="methodConfigs"
         :columns="methodConfigColumns"
         :get-row-id="(config) => String(getId(config))"
-        :show-column-visibility="false"
         @row-click="openMethodConfig"
       >
         <template #method-cell="{ row }">
