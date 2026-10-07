@@ -6,7 +6,6 @@ import { contentColumnStyle } from '~/utils/settings-table-sizing'
 
 const props = withDefaults(defineProps<SettingsTableProps>(), {
   loading: false,
-  total: 0,
   pageLimit: 0,
   paginationLoading: false,
 })
@@ -21,7 +20,10 @@ const tableUi = computed(() => ({
   th: ['whitespace-nowrap', props.compact ? 'px-3 py-2' : ''].filter(Boolean).join(' '),
   td: ['overflow-hidden text-ellipsis', props.compact ? 'px-3 py-2' : ''].filter(Boolean).join(' '),
 }))
-const hasPagination = computed(() => props.total > props.pageLimit && props.pageLimit > 0)
+const total = computed(() => props.total ?? props.data.length)
+const hasPagination = computed(() => total.value > props.pageLimit && props.pageLimit > 0)
+const slots = useSlots()
+const forwardedSlotNames = computed(() => Object.keys(slots).filter(name => name !== 'toolbar'))
 const { getId } = useDatabase()
 const { buildActionsColumn } = useDataTableColumns()
 const idColumn: ColumnDef<Record<string, any>> = {
@@ -32,7 +34,9 @@ const idColumn: ColumnDef<Record<string, any>> = {
   cell: ({ getValue }) => {
     const value = getValue()
     const text = value == null || value === '' ? '_' : String(value)
-    return h('span', { class: 'inline-block max-w-56 align-middle truncate select-text font-mono', title: text === '_' ? undefined : text }, text)
+    const isUuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(text)
+    const display = isUuid ? `${text.slice(0, 8)}…` : text
+    return h('span', { class: 'inline-block max-w-56 align-middle truncate select-text font-mono', title: text === '_' ? undefined : text }, display)
   },
 }
 function hasColumnContent(column: ColumnDef<Record<string, any>>, key: string) {
@@ -92,12 +96,15 @@ const columns = computed(() => {
       :columns="columns"
       :loading="loading || paginationLoading"
       :ui="tableUi"
-      :show-column-visibility="false"
       :pagination-config="pageSizeKey || hasPagination ? { total, itemsPerPage: pageLimit, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), to } : undefined"
       @row-click="row => emit('row-click', row)"
       @page-size-change="size => emit('page-size-change', size)"
     >
-      <template v-for="(_, name) in $slots" #[name]="slotData">
+      <template #toolbar="slotData">
+        <UBadge color="neutral" variant="subtle" :label="`${total.toLocaleString()} records`" aria-live="polite" class="shrink-0" />
+        <slot name="toolbar" v-bind="slotData" />
+      </template>
+      <template v-for="name in forwardedSlotNames" #[name]="slotData">
         <slot :name="name" v-bind="slotData" />
       </template>
     </DataTable>

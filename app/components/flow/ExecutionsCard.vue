@@ -45,7 +45,6 @@ function formatTime(value: string | null) {
       :data="executions"
       :columns="columns"
       :loading="loading"
-      :show-column-visibility="false"
       :get-row-id="execution => String(getId(execution))"
       :page="page"
       :pagination-config="{ mode: 'cursor', itemsPerPage: 10, hasNextPage, loading, showPageSize: false }"

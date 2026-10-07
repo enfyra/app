@@ -92,6 +92,8 @@ describe('route method settings presentation', () => {
     expect(panel).toContain('@row-click="openMethodConfig"')
     expect(panel).toContain('name="lucide:chevron-right"')
     expect(panel).not.toContain('label="Configure"')
+    expect(panel).not.toContain(':show-column-visibility="false"')
+    expect(panel).toContain("id: 'actions', header: '', enableSorting: false, enableHiding: false")
   })
 
   it('keeps the quick toggle separate from the row action', () => {

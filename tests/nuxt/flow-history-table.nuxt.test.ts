@@ -18,6 +18,7 @@ describe('Flow history table', () => {
     expect(wrapper.text()).toContain('1–1')
     expect(wrapper.text()).not.toContain('Recent Executions')
     expect(wrapper.findComponent(UPagination).exists()).toBe(false)
+    expect(wrapper.find('[aria-label="Choose visible columns"]').exists()).toBe(true)
     await wrapper.get('tbody tr').trigger('click')
     expect(wrapper.emitted('open')?.[0]).toEqual([first])
     await wrapper.get('button[aria-label="Next"]').trigger('click')

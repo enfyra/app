@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { MenuDefinition, MenuTreeItem } from '~/types';
 import draggable from 'vuedraggable';
+import { defaultPageId, isDefaultPageAncestor } from '~/utils/default-page';
 
 const props = defineProps<{
   item: MenuTreeItem;
@@ -23,6 +24,9 @@ const emit = defineEmits<{
 const { getId } = useDatabase();
 const { isDesktop } = useScreen();
 const { hasPermission } = usePermissions();
+const { settings } = useGlobalState();
+const isDefaultPage = computed(() => defaultPageId(settings.value.defaultPage) === String(props.item.id));
+const protectsDefaultPage = computed(() => isDefaultPageAncestor(props.item.id, settings.value.defaultPage, props.allMenus ?? []));
 const isDndUpdating = useState('menu-dnd-updating', () => false);
 const isMenuDragActive = useState('menu-dnd-drag-active', () => false);
 const itemLevel = computed(() => props.level || 0);
@@ -172,6 +176,7 @@ const menuItems = computed(() => {
       if (hasPermission('/enfyra_extension', 'DELETE')) {
         items.push({
           label: 'Delete Extension',
+          disabled: isDefaultPage.value,
           icon: 'lucide:trash-2',
           color: 'error',
           onSelect: () => {
@@ -204,6 +209,7 @@ const menuItems = computed(() => {
       },
       {
         label: originalMenu.isEnabled ? 'Disable' : 'Enable',
+        disabled: isDefaultPage.value && originalMenu.isEnabled,
         icon: originalMenu.isEnabled ? 'lucide:toggle-left' : 'lucide:toggle-right',
         onSelect: () => {
           if (originalMenu) emit('toggle-enabled', { menu: originalMenu, enabled: !originalMenu.isEnabled });
@@ -237,6 +243,7 @@ const menuItems = computed(() => {
       if (hasPermission('/enfyra_extension', 'DELETE')) {
         extensionChildren.push({
           label: 'Delete Extension',
+          disabled: isDefaultPage.value,
           icon: 'lucide:trash-2',
           color: 'error',
           onSelect: () => {
@@ -301,6 +308,7 @@ const menuItems = computed(() => {
 
     items.push({
       label: 'Delete',
+      disabled: protectsDefaultPage.value,
       icon: 'lucide:trash-2',
       color: 'error',
       onSelect: () => {
@@ -483,6 +491,7 @@ function handleDragEnd() {
         </div>
 
         <div class="menu-row-meta">
+          <UBadge v-if="isDefaultPage" variant="soft" color="primary" size="xs" title="Change the default page in General Settings before deleting this menu">Default page</UBadge>
           <UBadge variant="soft" :color="typeBadgeColor" size="xs">
             {{ item.isDropdown ? 'Dropdown' : 'Menu' }}
           </UBadge>

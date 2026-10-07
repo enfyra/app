@@ -5,6 +5,90 @@ import { nextTick } from 'vue'
 import SettingsTable from '~/components/data-table/SettingsTable.vue'
 
 describe('Settings table', () => {
+  it('shows only the first UUID group while retaining the full ID for row activation', async () => {
+    const id = '01a0b894-a051-72c8-be8e-f00000000001'
+    const record = { id, name: 'First' }
+    const wrapper = await mountSuspended(SettingsTable, { props: {
+      data: [record], columns: [{ accessorKey: 'name', header: 'Name' }],
+    } })
+    try {
+      await flushPromises()
+      const cell = wrapper.get('tbody td span')
+      expect(cell.text()).toBe('01a0b894…')
+      expect(cell.attributes('title')).toBe(id)
+      await wrapper.get('tbody tr').trigger('click')
+      expect(wrapper.emitted('row-click')?.[0]?.[0]).toEqual(record)
+    } finally { wrapper.unmount() }
+  })
+
+  it('shortens UUIDs in an explicitly declared ID column too', async () => {
+    const id = '01a0b894-a051-72c8-be8e-f00000000001'
+    const wrapper = await mountSuspended(SettingsTable, { props: {
+      data: [{ id }], columns: [{ accessorKey: 'id', header: 'Record ID' }],
+    } })
+    try {
+      await flushPromises()
+      expect(wrapper.get('tbody td span').text()).toBe('01a0b894…')
+      expect(wrapper.get('tbody td span').attributes('title')).toBe(id)
+    } finally { wrapper.unmount() }
+  })
+
+  it('shows the full server total in the toolbar instead of the current page size', async () => {
+    const wrapper = await mountSuspended(SettingsTable, {
+      props: {
+        data: [{ id: 1, name: 'First' }],
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+        total: 236897,
+        pageLimit: 10,
+        pageSizeKey: 'users',
+      },
+    })
+    await flushPromises()
+    const badge = wrapper.get('[aria-live="polite"]')
+    expect(badge.text()).toBe(`${(236897).toLocaleString()} records`)
+    expect(badge.element.closest('.border-b.bg-muted')).not.toBeNull()
+    expect(wrapper.get('.eapp-settings-pagination').text()).toContain('1–10')
+    await wrapper.setProps({ total: 1 })
+    expect(badge.text()).toBe('1 records')
+    await wrapper.setProps({ total: 0, data: [] })
+    expect(badge.text()).toBe('0 records')
+  })
+
+  it('counts all provided rows when the table has no server total', async () => {
+    const wrapper = await mountSuspended(SettingsTable, {
+      props: {
+        data: [{ id: 1 }, { id: 2 }],
+        columns: [{ accessorKey: 'id', header: 'ID' }],
+      },
+    })
+    await flushPromises()
+    expect(wrapper.get('[aria-live="polite"]').text()).toBe('2 records')
+    expect(wrapper.find('.eapp-settings-pagination').exists()).toBe(false)
+    await wrapper.setProps({ data: [] })
+    expect(wrapper.get('[aria-live="polite"]').text()).toBe('0 records')
+  })
+
+  it('keeps caller toolbar content and forwards other slots alongside the total badge', async () => {
+    const wrapper = await mountSuspended(SettingsTable, {
+      props: {
+        data: [{ id: 1, name: 'First' }],
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+        total: 42,
+      },
+      slots: {
+        toolbar: '<input aria-label="Search settings" />',
+        'toolbar-actions': '<button>Refresh settings</button>',
+        'name-cell': '<span>Custom name</span>',
+      },
+    })
+    await flushPromises()
+    expect(wrapper.findAll('[aria-live="polite"]')).toHaveLength(1)
+    expect(wrapper.get('[aria-live="polite"]').text()).toBe('42 records')
+    expect(wrapper.get('input[aria-label="Search settings"]').element.closest('.border-b.bg-muted')).not.toBeNull()
+    expect(wrapper.text()).toContain('Refresh settings')
+    expect(wrapper.get('tbody').text()).toContain('Custom name')
+  })
+
   it('renders server-provided rows and an action menu without missing render bindings', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
@@ -39,7 +123,7 @@ describe('Settings table', () => {
     expect(scroller.parentElement!.classList.contains('border-t')).toBe(false)
     expect(scroller.parentElement!.classList.contains('max-md:border-t')).toBe(true)
     expect(scroller.parentElement!.classList.contains('max-md:-mx-3')).toBe(true)
-    expect(wrapper.find('[aria-label="Choose visible columns"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="Choose visible columns"]').exists()).toBe(true)
     expect(document.body.querySelector('.eapp-pagination-mini')).not.toBeNull()
     expect((document.body.querySelector('.eapp-pagination-mini') as HTMLElement).style.display).toBe('none')
     expect(wrapper.classes()).toContain('w-full')

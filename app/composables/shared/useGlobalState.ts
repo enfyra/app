@@ -46,7 +46,7 @@ export const useGlobalState = () => {
     execute: executeFetchSettings,
   } = useApi(() => "/enfyra_setting", {
     query: {
-      fields: "*",
+      fields: "*,defaultPage.*",
       limit: 0,
     },
     errorContext: "Fetch Settings",
