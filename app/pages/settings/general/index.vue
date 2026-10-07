@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { SettingsDefaultPageSelect } from '#components';
+import { defaultPageId } from '~/utils/default-page';
 const notify = useNotify();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { confirm } = useConfirm();
 const { checkPermissionCondition } = usePermissions();
-const { getIdFieldName } = useDatabase();
+const { getId, getIdFieldName } = useDatabase();
+const { settings: globalSettings } = useGlobalState();
 const errors = ref<Record<string, string>>({});
 const route = useRoute();
 const router = useRouter();
@@ -53,7 +56,7 @@ async function handleReset() {
 
 const canUpdateSetting = computed(() =>
   checkPermissionCondition({
-    and: [{ route: "/setting", methods: ["PATCH"] }],
+    and: [{ route: "/enfyra_setting", methods: ["PATCH"] }],
   })
 );
 
@@ -63,7 +66,7 @@ const {
   execute: loadSetting,
 } = useApi(() => `/enfyra_setting`, {
   query: {
-    fields: "*",
+    fields: "*,defaultPage.*",
     limit: 1,
   },
   errorContext: "Load Settings",
@@ -75,7 +78,7 @@ const generalFormSections = [
   {
     id: "project",
     class: "border-b border-[var(--border-subtle)] pb-4 md:pb-6",
-    fields: ["projectName", "projectFavicon", "projectDescription",  "isInit"],
+    fields: ["projectName", "projectFavicon", "projectDescription", "defaultPage", "isInit"],
 
   },
   {
@@ -85,6 +88,12 @@ const generalFormSections = [
 ];
 
 const fieldMap = {
+  defaultPage: {
+    label: 'Default page',
+    component: markRaw(SettingsDefaultPageSelect),
+    componentProps: { get disabled() { return !canUpdateSetting.value; } },
+    fieldProps: { class: 'md:col-span-2 w-full min-w-0' },
+  },
   isInit: {
     fieldProps: { class: "md:col-span-1 w-full min-w-0" },
   },
@@ -111,9 +120,9 @@ const fieldMap = {
 async function initializeForm() {
   await loadSetting();
   const data = apiData.value?.data?.[0];
-  setting.value = data ? { ...data } : {};
+  setting.value = data ? { ...data, defaultPage: defaultPageId(data.defaultPage) } : {};
   if (data) {
-    formChanges.update(data);
+    formChanges.update(setting.value);
   }
 }
 
@@ -131,7 +140,9 @@ async function handleSaveSetting() {
 
   if (!await validateForm(setting.value, errors)) return;
 
-  await saveSetting({ body: setting.value });
+  const payload = { ...setting.value };
+  delete payload.defaultPageId;
+  await saveSetting({ body: payload });
 
   if (saveError.value) {
     return;
@@ -144,8 +155,9 @@ async function handleSaveSetting() {
   await loadSetting();
   const freshData = apiData.value?.data?.[0];
   if (freshData) {
-    setting.value = { ...freshData };
-    formChanges.update(freshData);
+    setting.value = { ...freshData, defaultPage: defaultPageId(freshData.defaultPage) };
+    globalSettings.value = freshData;
+    formChanges.update(setting.value);
   }
 
   formEditorRef.value?.confirmChanges();
