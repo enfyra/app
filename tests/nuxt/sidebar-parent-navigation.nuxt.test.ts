@@ -27,10 +27,15 @@ const menus = [
   { id: 'collections', label: 'Collections', route: '/collections', parent: 'data', type: 'Menu', isPublic: true, isEnabled: true },
 ]
 
-async function mountSidebar(path = '/dashboard') {
+async function mountSidebar(path = '/dashboard', options: { deferredData?: boolean; savedOpenKeys?: Record<string, boolean> } = {}) {
   localStorage.removeItem('sidebar-menu-open-keys')
   localStorage.removeItem('sidebar-open')
-  useState<any[]>('menu-items', () => []).value = menus.map(item => ({ ...item }))
+  if (options.savedOpenKeys) {
+    localStorage.setItem('sidebar-menu-open-keys', JSON.stringify(options.savedOpenKeys))
+  }
+  useState<any[]>('menu-items', () => []).value = menus
+    .filter(item => !options.deferredData || item.parent !== 'data')
+    .map(item => ({ ...item }))
   useState('screen:width', () => 1440).value = 1440
   useState('global:sidebar:visible', () => true).value = true
   useState<Record<string, boolean>>('sidebar-menu-open-keys', () => ({})).value = {
@@ -151,6 +156,40 @@ describe('sidebar native navigation', () => {
     expect(state(restored, 'OAuth')).toBe('open')
     expect(state(restored, 'Data')).toBe('closed')
     void wrapper
+  })
+
+  it.each([
+    { open: true, path: '/dashboard' },
+    { open: false, path: '/data/orders' },
+  ])('restores saved Data state ($open) when collection routes load after the sidebar mounts', async ({ open, path }) => {
+    const wrapper = await mountSidebar(path, {
+      deferredData: true,
+      savedOpenKeys: { '/data': open },
+    })
+    useMenuRegistry().registerDataMenuItemsFromRoutes([
+      { mainTable: { name: 'orders', alias: 'Orders', isSystem: false } },
+    ])
+    await flushPromises()
+    expect(state(wrapper, 'Data')).toBe(open ? 'open' : 'closed')
+    expect(wrapper.get('a[href="/data/orders"]').isVisible()).toBe(open)
+    expect(JSON.parse(localStorage.getItem('sidebar-menu-open-keys')!)['/data']).toBe(open)
+    await trigger(wrapper, 'Data').trigger('click')
+    await flushPromises()
+    expect(state(wrapper, 'Data')).toBe(open ? 'closed' : 'open')
+    expect(JSON.parse(localStorage.getItem('sidebar-menu-open-keys')!)['/data']).toBe(!open)
+  })
+
+  it('opens the active Data ancestry after deferred routes load when there is no saved choice', async () => {
+    const wrapper = await mountSidebar('/data/orders', {
+      deferredData: true,
+      savedOpenKeys: {},
+    })
+    useMenuRegistry().registerDataMenuItemsFromRoutes([
+      { mainTable: { name: 'orders', alias: 'Orders', isSystem: false } },
+    ])
+    await flushPromises()
+    expect(state(wrapper, 'Data')).toBe('open')
+    expect(wrapper.get('a[href="/data/orders"]').isVisible()).toBe(true)
   })
 
   it('opens OAuth as a native submenu in the collapsed rail instead of an inline accordion', async () => {
