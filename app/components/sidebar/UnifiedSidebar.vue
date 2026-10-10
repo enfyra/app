@@ -213,7 +213,7 @@ function toNavigationItem(item: any): NavigationMenuItem {
     ...(hasChildren ? {
       children,
       defaultOpen: openMenuKeys.value[key] ?? Boolean(item.active || item.branchActive),
-      onClick: (event: MouseEvent) => rememberBranchState(key, event),
+      onClick: () => toggleBranchState(key, Boolean(item.active || item.branchActive)),
     } : {}),
     active: item.active,
     badge: menuBadge(item),
@@ -233,15 +233,11 @@ function groupOpenValues(group: NavigationMenuItem[]): string[] {
     .map(item => String(item.value));
 }
 
-function rememberBranchState(key: string, event: Event) {
-  const trigger = event.currentTarget;
-  if (!(trigger instanceof HTMLElement) || trigger.tagName !== 'BUTTON') return;
-  void nextTick(() => {
-    openMenuKeys.value = {
-      ...openMenuKeys.value,
-      [key]: trigger.getAttribute('aria-expanded') === 'true',
-    };
-  });
+function toggleBranchState(key: string, defaultOpen: boolean) {
+  openMenuKeys.value = {
+    ...openMenuKeys.value,
+    [key]: !(openMenuKeys.value[key] ?? defaultOpen),
+  };
 }
 
 function toCollapsedMenuItem(item: NavigationMenuItem): DropdownMenuItem {
@@ -365,7 +361,7 @@ onUnmounted(() => {
                   <UNavigationMenu
                     v-if="renderExpandedSidebarContent"
                     :items="group"
-                    :default-value="groupOpenValues(group)"
+                    :model-value="groupOpenValues(group)"
                     type="multiple"
                     :unmount-on-hide="false"
                     orientation="vertical"
