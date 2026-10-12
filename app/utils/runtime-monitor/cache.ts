@@ -16,7 +16,6 @@ export const RUNTIME_CACHE_FLOW_LABELS: Record<string, string> = {
   package: 'Packages',
   flow: 'Flows',
   folder: 'Folders',
-  bootstrap: 'Bootstrap scripts',
   all: 'All caches',
 };
 
