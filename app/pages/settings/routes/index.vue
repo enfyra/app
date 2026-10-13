@@ -13,6 +13,7 @@ const page = ref(1);
 const pageLimit = useSettingsPageSize('routes');
 const route = useRoute();
 const router = useRouter();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('path', () => fetchRoutes());
 const tableName = "enfyra_route";
 const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
@@ -115,6 +116,7 @@ const {
     if (filterQuery) {
       conditions.push(filterQuery);
     }
+    if (searchFilter.value) conditions.push(searchFilter.value);
 
     return {
       fields: ROUTE_LIST_FIELDS,
@@ -134,7 +136,7 @@ const {
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => {
   const meta = apiData.value?.meta
-  if (visibilityScope.value === "all" && showCollectionRoutes.value && !hasActiveFilters(currentFilter.value)) {
+  if (visibilityScope.value === "all" && showCollectionRoutes.value && !searchValue.value && !hasActiveFilters(currentFilter.value)) {
     return meta?.totalCount ?? 0
   }
   return meta?.filterCount ?? 0
@@ -244,7 +246,7 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, pageLimit, visibilityScope, showCollectionRoutes], () => { void fetchRoutes(); }, { immediate: true });
+watch([page, pageLimit, visibilityScope, showCollectionRoutes, searchValue], () => { void fetchRoutes(); }, { immediate: true });
 
 const { execute: updateRouteApi, error: updateError } = useApi(
   () => `/enfyra_route`,
@@ -380,7 +382,11 @@ async function deleteRoute(routeItem: any) {
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
       @page-size-change="setPageSize"
       @row-click="routeItem => navigateTo(`/settings/routes/${getId(routeItem)}`)"
-    />
+    >
+      <template #toolbar>
+        <CommonSearchField v-model="searchQuery" placeholder="Search by path" label="Search routes by path" :loading="loading" @search="submitSearch" />
+      </template>
+    </DataTableSettingsTable>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"

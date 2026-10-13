@@ -11,7 +11,11 @@
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     @row-click="account => navigateTo(`/settings/oauth/accounts/${getId(account)}`)"
-  />
+  >
+    <template #toolbar>
+      <CommonSearchField v-model="searchQuery" placeholder="Search by email" label="Search by email" :loading="loading" @search="submitSearch" />
+    </template>
+  </DataTableSettingsTable>
 </template>
 
 <script setup lang="ts">
@@ -20,6 +24,7 @@ import type { ColumnDef } from '@tanstack/vue-table';
 const page = ref(1);
 const pageLimit = useSettingsPageSize('oauth-accounts');
 const route = useRoute();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('user.email', () => fetchAccounts());
 const tableName = "enfyra_oauth_account";
 const OAUTH_ACCOUNT_LIST_FIELDS = [
   "id",
@@ -48,6 +53,7 @@ const {
     limit: pageLimit,
     page: page.value,
     meta: "*",
+    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
     sort: "-createdAt",
   })),
   errorContext: "Fetch OAuth Accounts",
@@ -57,7 +63,7 @@ const {
   items: accounts,
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const total = computed(() => searchValue.value ? apiData.value?.meta?.filterCount ?? 0 : apiData.value?.meta?.totalCount ?? 0);
 
 function getProviderLabel(provider: string) {
   switch (provider) {
@@ -95,5 +101,5 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, pageLimit], () => { void fetchAccounts(); }, { immediate: true });
+watch([page, pageLimit, searchValue], () => { void fetchAccounts(); }, { immediate: true });
 </script>

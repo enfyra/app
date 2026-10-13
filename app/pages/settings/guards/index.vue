@@ -16,6 +16,7 @@ const page = ref(1);
 const pageLimit = useSettingsPageSize('guards');
 const route = useRoute();
 const router = useRouter();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('name', () => fetchGuards());
 const tableName = 'enfyra_guard';
 const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
@@ -108,6 +109,7 @@ const {
     if (filterQuery) {
       conditions.push(filterQuery);
     }
+    if (searchFilter.value) conditions.push(searchFilter.value);
 
     return {
       fields: GUARD_LIST_FIELDS,
@@ -243,7 +245,7 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, pageLimit], () => { void fetchGuards(); }, { immediate: true });
+watch([page, pageLimit, searchValue], () => { void fetchGuards(); }, { immediate: true });
 
 async function handleTypeChange(value: string | number) {
   const nextType = value === 'graphql' ? 'graphql' : 'route';
@@ -558,7 +560,11 @@ async function deleteGuard(guard: any) {
         :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
         @page-size-change="setPageSize"
         @row-click="guard => navigateTo(`/settings/guards/${getId(guard)}`)"
-      />
+      >
+        <template #toolbar>
+          <CommonSearchField v-model="searchQuery" placeholder="Search by name" label="Search guards by name" :loading="loading" @search="submitSearch" />
+        </template>
+      </DataTableSettingsTable>
     </div>
 
       </template>

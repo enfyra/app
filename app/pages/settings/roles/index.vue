@@ -10,6 +10,7 @@ const notify = useNotify();
 const page = ref(1);
 const pageLimit = useSettingsPageSize('roles');
 const route = useRoute();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('name', () => fetchRoles());
 const tableName = "enfyra_role";
 const { confirm } = useConfirm();
 const { getId } = useDatabase();
@@ -38,6 +39,7 @@ const {
     fields: ROLE_LIST_FIELDS,
     sort: "-createdAt",
     meta: "*",
+    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
     page: page.value,
     limit: pageLimit,
   })),
@@ -48,9 +50,7 @@ const {
   items: roles,
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => {
-  return apiData.value?.meta?.totalCount || 0;
-});
+const total = computed(() => searchValue.value ? apiData.value?.meta?.filterCount ?? 0 : apiData.value?.meta?.totalCount ?? 0);
 
 registerHeaderActions({
   id: "create-role",
@@ -115,7 +115,7 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, pageLimit], () => { void fetchRoles(); }, { immediate: true });
+watch([page, pageLimit, searchValue], () => { void fetchRoles(); }, { immediate: true });
 </script>
 
 <template>
@@ -132,5 +132,9 @@ watch([page, pageLimit], () => { void fetchRoles(); }, { immediate: true });
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     @row-click="role => navigateTo(`/settings/roles/${getId(role)}`)"
-  />
+  >
+    <template #toolbar>
+      <CommonSearchField v-model="searchQuery" placeholder="Search by name" label="Search by name" :loading="loading" @search="submitSearch" />
+    </template>
+  </DataTableSettingsTable>
 </template>

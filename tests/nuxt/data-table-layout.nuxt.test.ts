@@ -7,6 +7,44 @@ import DataTable from '~/components/data-table/DataTable.vue'
 import DataTableLazy from '~/components/data-table/DataTableLazy.vue'
 
 describe('DataTable layout', () => {
+  it('orders the optional heading, search and count on the left with Columns last on the right', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: { data: [{ id: 1 }], columns: [{ accessorKey: 'id', header: 'ID' }], headerName: 'Records', recordCount: 64, showRecordCount: true },
+      slots: { toolbar: '<input aria-label="Search records" />', 'toolbar-actions': '<button>Refresh</button>' },
+    })
+    try {
+      await flushPromises()
+      const badge = wrapper.get('[aria-live="polite"]')
+      expect(badge.text()).toBe('64 records')
+      const left = badge.element.parentElement!
+      expect(Array.from(left.children).map(element => element.tagName)).toEqual(['SPAN', 'INPUT', 'SPAN'])
+      expect(left.firstElementChild?.textContent).toBe('Records')
+      const columns = wrapper.get('[aria-label="Choose visible columns"]')
+      const right = columns.element.parentElement!
+      expect(right.firstElementChild?.textContent).toBe('Refresh')
+      expect(right.lastElementChild).toBe(columns.element)
+      await wrapper.setProps({ showRecordCount: false, headerName: undefined })
+      expect(wrapper.find('[aria-live="polite"]').exists()).toBe(false)
+      expect(wrapper.find('input').exists()).toBe(true)
+      expect(right.lastElementChild).toBe(columns.element)
+      await wrapper.setProps({ showRecordCount: true, recordCount: 0 })
+      expect(wrapper.get('[aria-live="polite"]').text()).toBe('0 records')
+    } finally { wrapper.unmount() }
+  })
+
+  it('forwards count and heading props through the lazy table without passing them to UTable', async () => {
+    const wrapper = await mountSuspended(DataTableLazy, {
+      props: { data: [{ id: 1 }, { id: 2 }], columns: [{ accessorKey: 'id', header: 'ID' }], headerName: 'Lazy records', showRecordCount: true },
+    })
+    try {
+      await flushPromises()
+      expect(wrapper.get('[aria-live="polite"]').text()).toBe('2 records')
+      expect(wrapper.text()).toContain('Lazy records')
+      expect(wrapper.get('table').attributes()).not.toHaveProperty('showrecordcount')
+      expect(wrapper.get('table').attributes()).not.toHaveProperty('headername')
+    } finally { wrapper.unmount() }
+  })
+
   it('uses Nuxt UI table layout and keeps identifier columns compact', async () => {
     const wrapper = await mountSuspended(DataTable, {
       route: '/data/cloud_email_senders',

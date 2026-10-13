@@ -8,6 +8,7 @@ const props = withDefaults(defineProps<SettingsTableProps>(), {
   loading: false,
   pageLimit: 0,
   paginationLoading: false,
+  showRecordCount: true,
 })
 
 const page = defineModel<number>('page', { default: 1 })
@@ -95,13 +96,15 @@ const columns = computed(() => {
       :data="data"
       :columns="columns"
       :loading="loading || paginationLoading"
+      :header-name="headerName"
+      :show-record-count="showRecordCount"
+      :record-count="total"
       :ui="tableUi"
       :pagination-config="pageSizeKey || hasPagination ? { total, itemsPerPage: pageLimit, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), to } : undefined"
       @row-click="row => emit('row-click', row)"
       @page-size-change="size => emit('page-size-change', size)"
     >
-      <template #toolbar="slotData">
-        <UBadge color="neutral" variant="subtle" :label="`${total.toLocaleString()} records`" aria-live="polite" class="shrink-0" />
+      <template v-if="slots.toolbar" #toolbar="slotData">
         <slot name="toolbar" v-bind="slotData" />
       </template>
       <template v-for="name in forwardedSlotNames" #[name]="slotData">

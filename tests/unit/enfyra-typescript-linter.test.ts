@@ -7,6 +7,14 @@ import {
 } from '~/utils/editor/enfyraTypeScriptLinter'
 
 describe('lintEnfyraTypeScript', () => {
+  it('accepts shared helper params and named composition', async () => {
+    const diagnostics = await lintEnfyraScript('const query: string = @PARAMS.query; return await @HELPERS.run("1endpoint_web_search", { query });', 'typescript')
+    expect(diagnostics).toEqual([])
+  })
+  it('does not invent helper input for ordinary handler scripts', async () => {
+    const diagnostics = await lintEnfyraTypeScript('return input.query;')
+    expect(diagnostics.some(diagnostic => diagnostic.message.includes("Cannot find name 'input'"))).toBe(true)
+  })
   it('reports TypeScript type errors', async () => {
     const diagnostics = await lintEnfyraTypeScript('const value: string = 1')
 

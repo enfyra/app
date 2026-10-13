@@ -69,6 +69,7 @@ export const useCodeMirrorLazy = () => {
         rectangularSelection: viewModule.rectangularSelection,
         crosshairCursor: viewModule.crosshairCursor,
         Decoration: viewModule.Decoration,
+        EditorState: stateModule.EditorState,
         StateEffect: stateModule.StateEffect,
         StateField: stateModule.StateField,
         Compartment: stateModule.Compartment,

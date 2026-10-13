@@ -12,7 +12,11 @@
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     @row-click="extension => navigateTo(`/settings/extensions/${getId(extension)}`)"
-  />
+  >
+    <template #toolbar>
+      <CommonSearchField v-model="searchQuery" placeholder="Search by name" label="Search by name" :loading="loading" @search="submitSearch" />
+    </template>
+  </DataTableSettingsTable>
 </template>
 
 <script setup lang="ts">
@@ -34,6 +38,7 @@ const { invalidateExtensionCache } = useDynamicComponent();
 const { loadGlobalExtensions } = useGlobalExtensions();
 
 const route = useRoute();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('name', () => fetchExtensions());
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -51,6 +56,7 @@ const {
     limit,
     page: page.value,
     meta: "*",
+    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
     sort: ["id"].join(","),
   })),
   errorContext: "Fetch Extensions",
@@ -61,7 +67,7 @@ const {
   items: extensions,
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const total = computed(() => searchValue.value ? apiData.value?.meta?.filterCount ?? 0 : apiData.value?.meta?.totalCount ?? 0);
 
 
 const { execute: updateExtension, error: updateError } = useApi(
@@ -216,5 +222,5 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, limit], () => { void fetchExtensions(); }, { immediate: true });
+watch([page, limit, searchValue], () => { void fetchExtensions(); }, { immediate: true });
 </script>
