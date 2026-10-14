@@ -1,18 +1,18 @@
 import { createServer, type Server } from 'node:http';
 import { createApp, defineEventHandler, toNodeListener } from 'h3';
-import { Agent, getGlobalDispatcher, setGlobalDispatcher } from 'undici';
+import { Agent, fetch as undiciFetch, getGlobalDispatcher, setGlobalDispatcher } from 'undici';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { proxyToAPI } from '../../app/utils/enfyra/server/proxy';
 
 const servers: Server[] = [];
 const clients: AbortController[] = [];
-const config = { public: { apiUrl: '' } };
+const config = { public: { apiUrl: '' }, apiProxy: { headersTimeout: 650000, bodyTimeout: 650000 } };
 vi.stubGlobal('useRuntimeConfig', () => config);
 let warn: ReturnType<typeof vi.spyOn>;
 let dispatcher: Agent | undefined;
 const previousDispatcher = getGlobalDispatcher();
 const clientDispatcher = new Agent({ headersTimeout: 10_000, bodyTimeout: 10_000 });
-const clientFetch = (url: string, options?: RequestInit) => fetch(url, { ...options, dispatcher: clientDispatcher } as RequestInit);
+const clientFetch = (url: string, options?: RequestInit) => undiciFetch(url, { ...options, dispatcher: clientDispatcher } as Parameters<typeof undiciFetch>[1]);
 
 async function listen(server: Server) {
   servers.push(server);
@@ -28,7 +28,10 @@ function records() {
   return warn.mock.calls.filter(call => call[0] === '[EnfyraProxyDelivery]').map(call => JSON.parse(String(call[1])) as Record<string, any>);
 }
 
-beforeEach(() => { warn = vi.spyOn(console, 'warn').mockImplementation(() => {}); });
+beforeEach(() => {
+  config.apiProxy = { headersTimeout: 650000, bodyTimeout: 650000 };
+  warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+});
 afterAll(() => clientDispatcher.destroy());
 afterEach(async () => {
   clients.splice(0).forEach(client => client.abort());
@@ -57,8 +60,21 @@ describe('private proxy delivery diagnostics', () => {
     expect(records()).toEqual([]);
   });
 
-  it('retains the headers timeout before downstream teardown without a user abort', async () => {
+  it('does not inherit a shorter process-global headers budget', async () => {
     dispatcher = new Agent({ headersTimeout: 50 }); setGlobalDispatcher(dispatcher);
+    config.apiProxy = { headersTimeout: 650000, bodyTimeout: 650000 };
+    config.public.apiUrl = await listen(createServer((_req, res) => {
+      const timer = setTimeout(() => res.end('complete'), 1500);
+      res.once('close', () => clearTimeout(timer));
+    }));
+    const response = await clientFetch((await bridge()) + '/api/v1/chat/completions');
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe('complete');
+    expect(records()).toEqual([]);
+  }, 5000);
+
+  it('retains the headers timeout before downstream teardown without a user abort', async () => {
+    config.apiProxy = { headersTimeout: 50, bodyTimeout: 650000 };
     config.public.apiUrl = await listen(createServer(() => {}));
     const response = await clientFetch((await bridge()) + '/api/v1/chat/completions?private=query', { headers: { authorization: 'Bearer private-credential' } });
     expect(response.status).toBe(502); await response.text();
@@ -68,7 +84,7 @@ describe('private proxy delivery diagnostics', () => {
   });
 
   it('retains source body timeout before pipeline closes the destination', async () => {
-    dispatcher = new Agent({ bodyTimeout: 50 }); setGlobalDispatcher(dispatcher);
+    config.apiProxy = { headersTimeout: 650000, bodyTimeout: 50 };
     config.public.apiUrl = await listen(createServer((_req, res) => { res.writeHead(200); res.write('private-output'); }));
     await expect(clientFetch((await bridge()) + '/api/v1/chat/completions').then(response => response.text())).rejects.toThrow();
     await vi.waitFor(() => expect(records()).toHaveLength(1));

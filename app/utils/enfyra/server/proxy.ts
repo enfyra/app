@@ -2,6 +2,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import { type H3Event, getRequestHeader, proxyRequest } from "h3";
+import { Agent, fetch as undiciFetch } from "undici";
 import { buildForwardedHeaders } from "./forwardedHeaders";
 import { beginProxyDelivery, deliveryHopHeader } from "./proxyDelivery";
 
@@ -11,8 +12,24 @@ export function buildApiProxyTarget(baseUrl: string | undefined, rawPath: string
   return `${base}${path}`;
 }
 
+const dispatchers = new Map<string, Agent>();
+
+function getProxyDispatcher(headersTimeout: number, bodyTimeout: number): Agent {
+  const key = `${headersTimeout}:${bodyTimeout}`;
+  let dispatcher = dispatchers.get(key);
+  if (!dispatcher) {
+    dispatcher = new Agent({ headersTimeout, bodyTimeout });
+    dispatchers.set(key, dispatcher);
+  }
+  return dispatcher;
+}
+
 export async function proxyToAPI(event: H3Event, customPath?: string) {
   const config = useRuntimeConfig();
+  const dispatcher = getProxyDispatcher(
+    Number(config.apiProxy?.headersTimeout) || 650000,
+    Number(config.apiProxy?.bodyTimeout) || 650000,
+  );
   const rawPath = customPath || event.path.replace(/^\/api/, "");
   const targetUrl = buildApiProxyTarget(config.public.apiUrl, rawPath);
 
@@ -53,6 +70,10 @@ export async function proxyToAPI(event: H3Event, customPath?: string) {
     return await proxyRequest(event, targetUrl, {
       headers,
       streamRequest: true,
+      fetch: (input, init) => undiciFetch(String(input), {
+        ...init,
+        dispatcher,
+      } as Parameters<typeof undiciFetch>[1]) as unknown as Promise<Response>,
       fetchOptions: {
         redirect: "manual",
         signal: controller.signal,
