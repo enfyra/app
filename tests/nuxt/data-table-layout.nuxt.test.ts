@@ -157,6 +157,31 @@ describe('DataTable layout', () => {
     expect(wrapper.get('tbody tr:first-child').attributes('data-selected')).toBe('true')
   })
 
+  it('keeps the mobile selection gutter compact without shrinking checkbox touch targets', async () => {
+    const { createSelectionColumn } = await import('~/utils/data-table-selection')
+    const wrapper = await mountSuspended(DataTable, {
+      props: {
+        data: [{ id: 1 }],
+        columns: [createSelectionColumn<Record<string, any>>(), { accessorKey: 'id', header: 'id' }],
+      },
+    })
+    try {
+      for (const cell of [wrapper.get('thead th:first-child'), wrapper.get('tbody td:first-child')]) {
+        expect(cell.classes()).toContain('w-px')
+        expect(cell.classes()).toContain('ps-3')
+        expect(cell.classes()).toContain('pe-1')
+        expect(cell.classes()).toContain('md:w-12')
+        expect(cell.classes()).toContain('md:px-4')
+        expect(cell.classes()).not.toContain('pointer-coarse:w-16')
+      }
+      for (const checkbox of wrapper.findAll('[role="checkbox"]')) {
+        expect(checkbox.classes()).toContain('max-lg:size-7')
+        expect(checkbox.classes()).toContain('pointer-coarse:before:-inset-2')
+      }
+      expect(wrapper.get('tbody td:nth-child(2)').classes()).toContain('px-3')
+    } finally { wrapper.unmount() }
+  })
+
   it('updates a controlled selection model when a checkbox is clicked', async () => {
     const { createSelectionColumn } = await import('~/utils/data-table-selection')
     const Host = defineComponent({

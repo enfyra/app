@@ -7,7 +7,7 @@ export function createSelectionColumn<T>(): ColumnDef<T> {
     size: 48,
     enableSorting: false,
     enableHiding: false,
-    meta: { class: { th: 'w-12 px-3 md:px-4 pointer-coarse:w-16', td: 'w-12 px-3 md:px-4 pointer-coarse:w-16' } },
+    meta: { class: { th: 'w-px ps-3 pe-1 md:w-12 md:px-4', td: 'w-px ps-3 pe-1 md:w-12 md:px-4' } },
     header: ({ table }) => h(UCheckbox, {
       size: 'lg',
       ui: { base: "relative rounded-sm max-lg:size-7 pointer-coarse:size-7 pointer-coarse:before:absolute pointer-coarse:before:-inset-2 pointer-coarse:before:content-['']" },
