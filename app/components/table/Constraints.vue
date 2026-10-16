@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAutomaticIndex } from '~/utils/schema/constraints';
 
 const props = defineProps<{
   modelValue: any;
@@ -8,6 +9,10 @@ const props = defineProps<{
 const { confirm } = useConfirm();
 const table = useModel(props, "modelValue");
 const expandedIndexCoverage = ref<string[]>([]);
+const initialIndexGroups = shallowRef(new WeakSet<string[]>());
+watch(() => props.modelValue, value => {
+  initialIndexGroups.value = new WeakSet(Array.isArray(value?.indexes) ? value.indexes : []);
+}, { immediate: true });
 const addButtonClass = "relative size-8 p-0 pointer-coarse:before:absolute pointer-coarse:before:-inset-1.5 pointer-coarse:before:content-['']";
 
 function addUniqueGroup() {
@@ -119,6 +124,10 @@ function toggleIndexCoverage(group: string[]) {
   expandedIndexCoverage.value = isIndexCoverageExpanded(group)
     ? expandedIndexCoverage.value.filter(item => item !== key)
     : [...expandedIndexCoverage.value, key];
+}
+
+function isManagedIndex(group: string[]): boolean {
+  return initialIndexGroups.value.has(group) && isAutomaticIndex(table.value, group) && getCoveringUniqueConstraints(group).length === 0;
 }
 
 function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redundant' | null {
@@ -238,6 +247,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
         >
           <USelect
             :items="getAvailableFields(group, field)"
+            :disabled="table.isSystem || isManagedIndex(group)"
             v-model="table.indexes[gIndex][fIndex]"
             size="sm"
             class="min-w-[180px]"
@@ -262,7 +272,7 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           square
           :class="addButtonClass"
           @click="addFieldToGroup(table.indexes, gIndex)"
-          :disabled="table.isSystem || !canAddFieldToGroup(group)"
+          :disabled="table.isSystem || isManagedIndex(group) || !canAddFieldToGroup(group)"
         />
         <UButton
           icon="i-lucide:trash"
@@ -272,8 +282,9 @@ function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redund
           size="md"
           class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
           @click="removeIndexGroupConfirm(gIndex)"
-          :disabled="table.isSystem"
+          :disabled="table.isSystem || isManagedIndex(group)"
         />
+        <UBadge v-if="isManagedIndex(group)" color="neutral" variant="soft" size="xs">Automatic</UBadge>
         <button
           v-if="getIndexWarningType(gIndex) === 'redundant'"
           type="button"

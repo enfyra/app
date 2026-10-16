@@ -23,6 +23,7 @@ const props = withDefaults(defineProps<{
   syncQuery?: boolean
   showTabDivider?: boolean
   embedded?: boolean
+  active?: boolean
 }>(), {
   externalApiTest: false,
   showMainTableCard: false,
@@ -31,6 +32,7 @@ const props = withDefaults(defineProps<{
   syncQuery: false,
   showTabDivider: true,
   embedded: false,
+  active: true,
 })
 
 const emit = defineEmits<{
@@ -489,7 +491,7 @@ registerHeaderActions([
     variant: 'outline',
     color: 'warning',
     order: 1,
-    show: computed(() => activeEditorTab.value === 'overview' && hasFormChanges.value),
+    show: computed(() => props.active && activeEditorTab.value === 'overview' && hasFormChanges.value),
     disabled: computed(() => routeLoading.value || updateLoading.value || !hasFormChanges.value),
     onClick: handleReset,
   },
@@ -500,7 +502,7 @@ registerHeaderActions([
     variant: 'solid',
     color: 'primary',
     order: 999,
-    show: computed(() => activeEditorTab.value === 'overview' && !!routeData.value?.data?.[0] && props.canUpdateRoute !== false),
+    show: computed(() => props.active && activeEditorTab.value === 'overview' && !!routeData.value?.data?.[0] && props.canUpdateRoute !== false),
     loading: computed(() => updateLoading.value),
     disabled: computed(() => routeLoading.value || !routeId.value || !hasFormChanges.value),
     onClick: updateRoute,

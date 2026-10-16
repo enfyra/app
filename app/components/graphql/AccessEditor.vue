@@ -15,10 +15,11 @@ type PermissionForm = {
   operations: any[]
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   tableId: string | number
   tableName: string
-}>()
+  active?: boolean
+}>(), { active: true })
 
 const notify = useNotify()
 const { register: registerHeaderActions } = useHeaderActionRegistry()
@@ -233,7 +234,7 @@ registerHeaderActions({
   id: 'save-graphql-access',
   label: computed(() => config.value ? 'Save' : 'Enable GraphQL'),
   icon: 'lucide:save', variant: 'solid', color: 'primary', order: 999,
-  show: computed(() => checkPermissionCondition({ or: [{ route: '/enfyra_graphql', methods: [config.value ? 'PATCH' : 'POST'] }] })),
+  show: computed(() => props.active && checkPermissionCondition({ or: [{ route: '/enfyra_graphql', methods: [config.value ? 'PATCH' : 'POST'] }] })),
   loading: savingConfig,
   disabled: computed(() => loading.value || savingConfig.value || (!enabled.value && !config.value)),
   onClick: saveGraphqlConfig,

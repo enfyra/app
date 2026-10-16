@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { isSchemaMutationPreviewResponse } from '~/utils/schema/schema-confirm';
+import { getRedundantIndexes, schemaConstraintsMatch } from '~/utils/schema/constraints';
 
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -250,6 +251,10 @@ async function initializeForm() {
 }
 
 async function save() {
+  if (getRedundantIndexes(table.value || {}).length > 0) {
+    notify.error('Redundant index', 'Remove indexes already covered by the leading fields of a unique constraint before saving.');
+    return;
+  }
   const isChangingToSingleRecord =
     formChanges.originalData.value?.isSingleRecord === false &&
     table.value?.isSingleRecord === true;
@@ -283,12 +288,13 @@ async function patchTable() {
 }
 
 async function afterPatchSuccess(submittedTable: any = null) {
-  const patchResponse = patchTableData.value?.data?.[0];
-  await fetchTableData();
-  const refreshedTable = tableData.value?.data?.[0];
-  table.value = refreshedTable && typeof refreshedTable === "object"
-    ? refreshedTable
-    : submittedTable || patchResponse || table.value;
+  const response = await fetchTableData();
+  const refreshedTable = response?.data?.[0];
+  if (!refreshedTable || !schemaConstraintsMatch(submittedTable || table.value, refreshedTable)) {
+    notify.error('Save not verified', 'The saved constraints do not match your changes. Your draft has been kept.');
+    return;
+  }
+  table.value = refreshedTable;
 
   notify.success("Success", "Table structure updated!");
 
@@ -839,6 +845,7 @@ onMounted(async () => {
             v-if="table"
             :table-id="getId(table)"
             :table-name="String(table.name)"
+            :active="activeTab === 'graphql'"
           />
         </template>
 
@@ -846,6 +853,7 @@ onMounted(async () => {
           <div class="collection-route-panel">
             <RouteEditorPanel
               :embedded="true"
+              :active="activeTab === 'routes'"
               :table-name="String(route.params.table ?? '')"
               :external-api-test="showRouteApiTest"
               @close-api-test="showRouteApiTest = false"
