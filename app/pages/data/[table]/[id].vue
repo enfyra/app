@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
+import { buildSharedHelperFieldMap } from '~/utils/form/shared-helper';
 import {
   applyMethodColorSuggestion,
   buildMethodDefinitionFieldMap,
@@ -29,7 +30,8 @@ const { registerPageHeader } = usePageHeaderRegistry();
 
 const currentRecord = ref<Record<string, any>>({});
 const fieldMap = computed(() =>
-  tableName === 'enfyra_method' ? buildMethodDefinitionFieldMap() : {},
+  tableName === 'enfyra_method' ? buildMethodDefinitionFieldMap()
+    : tableName === 'enfyra_helper' ? buildSharedHelperFieldMap() : {},
 );
 
 const currentRecordRouteId = computed(() => {

@@ -8,6 +8,7 @@ import type { DataTableProps } from '~/types/ui'
 const props = withDefaults(defineProps<DataTableProps>(), {
   loading: false,
   showColumnVisibility: true,
+  showRecordCount: false,
 })
 
 const emit = defineEmits<{
@@ -17,7 +18,8 @@ const emit = defineEmits<{
 
 const slots = useSlots()
 const { isMobile } = useScreen()
-const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection'])
+const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'headerName', 'showRecordCount', 'recordCount', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection'])
+const recordCount = computed(() => props.recordCount ?? props.paginationConfig?.total ?? props.data.length)
 const tableOptions = computed(() => Object.fromEntries(Object.entries(props).filter(([key]) => !wrapperKeys.has(key))))
 const tableRef = useTemplateRef<{ tableApi?: Table<Record<string, any>>; tableRef?: HTMLElement }>('tableRef')
 const page = defineModel<number>('page', { default: 1 })
@@ -101,9 +103,11 @@ defineExpose({
 <template>
   <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
     <span v-if="skeletonActive" role="status" class="sr-only">Loading records...</span>
-    <div v-if="slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-muted px-3 py-3 md:flex-nowrap md:px-4">
-      <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3 [&_.eapp-search-field]:basis-full md:[&_.eapp-search-field]:basis-auto">
+    <div v-if="props.headerName || props.showRecordCount || slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-muted px-3 py-3 md:flex-nowrap md:px-4 max-md:[&_.eapp-search-field]:order-first max-md:[&_.eapp-search-field]:basis-full max-md:[&_.eapp-search-field]:max-w-none">
+      <div class="contents min-w-0 flex-1 flex-wrap items-center gap-3 md:flex">
+        <span v-if="props.headerName" class="max-w-full truncate text-sm font-semibold text-highlighted" :title="props.headerName">{{ props.headerName }}</span>
         <slot name="toolbar" :table-api="tableRef?.tableApi" />
+        <UBadge v-if="props.showRecordCount" color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" aria-live="polite" class="shrink-0" />
       </div>
       <div v-if="slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length)" class="ml-auto flex min-h-8 shrink-0 items-center justify-end gap-2">
         <slot name="toolbar-actions" :table-api="tableRef?.tableApi" />

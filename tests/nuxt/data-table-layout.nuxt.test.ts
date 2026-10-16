@@ -7,6 +7,44 @@ import DataTable from '~/components/data-table/DataTable.vue'
 import DataTableLazy from '~/components/data-table/DataTableLazy.vue'
 
 describe('DataTable layout', () => {
+  it('orders the optional heading, search and count on the left with Columns last on the right', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: { data: [{ id: 1 }], columns: [{ accessorKey: 'id', header: 'ID' }], headerName: 'Records', recordCount: 64, showRecordCount: true },
+      slots: { toolbar: '<input aria-label="Search records" />', 'toolbar-actions': '<button>Refresh</button>' },
+    })
+    try {
+      await flushPromises()
+      const badge = wrapper.get('[aria-live="polite"]')
+      expect(badge.text()).toBe('64 records')
+      const left = badge.element.parentElement!
+      expect(Array.from(left.children).map(element => element.tagName)).toEqual(['SPAN', 'INPUT', 'SPAN'])
+      expect(left.firstElementChild?.textContent).toBe('Records')
+      const columns = wrapper.get('[aria-label="Choose visible columns"]')
+      const right = columns.element.parentElement!
+      expect(right.firstElementChild?.textContent).toBe('Refresh')
+      expect(right.lastElementChild).toBe(columns.element)
+      await wrapper.setProps({ showRecordCount: false, headerName: undefined })
+      expect(wrapper.find('[aria-live="polite"]').exists()).toBe(false)
+      expect(wrapper.find('input').exists()).toBe(true)
+      expect(right.lastElementChild).toBe(columns.element)
+      await wrapper.setProps({ showRecordCount: true, recordCount: 0 })
+      expect(wrapper.get('[aria-live="polite"]').text()).toBe('0 records')
+    } finally { wrapper.unmount() }
+  })
+
+  it('forwards count and heading props through the lazy table without passing them to UTable', async () => {
+    const wrapper = await mountSuspended(DataTableLazy, {
+      props: { data: [{ id: 1 }, { id: 2 }], columns: [{ accessorKey: 'id', header: 'ID' }], headerName: 'Lazy records', showRecordCount: true },
+    })
+    try {
+      await flushPromises()
+      expect(wrapper.get('[aria-live="polite"]').text()).toBe('2 records')
+      expect(wrapper.text()).toContain('Lazy records')
+      expect(wrapper.get('table').attributes()).not.toHaveProperty('showrecordcount')
+      expect(wrapper.get('table').attributes()).not.toHaveProperty('headername')
+    } finally { wrapper.unmount() }
+  })
+
   it('uses Nuxt UI table layout and keeps identifier columns compact', async () => {
     const wrapper = await mountSuspended(DataTable, {
       route: '/data/cloud_email_senders',
@@ -117,6 +155,31 @@ describe('DataTable layout', () => {
     await checkboxes[1]!.trigger('click')
     await nextTick()
     expect(wrapper.get('tbody tr:first-child').attributes('data-selected')).toBe('true')
+  })
+
+  it('keeps the mobile selection gutter compact without shrinking checkbox touch targets', async () => {
+    const { createSelectionColumn } = await import('~/utils/data-table-selection')
+    const wrapper = await mountSuspended(DataTable, {
+      props: {
+        data: [{ id: 1 }],
+        columns: [createSelectionColumn<Record<string, any>>(), { accessorKey: 'id', header: 'id' }],
+      },
+    })
+    try {
+      for (const cell of [wrapper.get('thead th:first-child'), wrapper.get('tbody td:first-child')]) {
+        expect(cell.classes()).toContain('w-px')
+        expect(cell.classes()).toContain('ps-3')
+        expect(cell.classes()).toContain('pe-1')
+        expect(cell.classes()).toContain('md:w-12')
+        expect(cell.classes()).toContain('md:px-4')
+        expect(cell.classes()).not.toContain('pointer-coarse:w-16')
+      }
+      for (const checkbox of wrapper.findAll('[role="checkbox"]')) {
+        expect(checkbox.classes()).toContain('max-lg:size-7')
+        expect(checkbox.classes()).toContain('pointer-coarse:before:-inset-2')
+      }
+      expect(wrapper.get('tbody td:nth-child(2)').classes()).toContain('px-3')
+    } finally { wrapper.unmount() }
   })
 
   it('updates a controlled selection model when a checkbox is clicked', async () => {

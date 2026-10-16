@@ -19,7 +19,17 @@
       @page-size-change="setPageSize"
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
       @row-click="user => navigateTo(`/settings/users/${getId(user)}`)"
-    />
+    >
+      <template #toolbar>
+        <CommonSearchField
+          v-model="searchQuery"
+          placeholder="Search by email"
+          label="Search users by email"
+          :loading="loading"
+          @search="searchUsers"
+        />
+      </template>
+    </DataTableSettingsTable>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
@@ -44,6 +54,7 @@ const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const route = useRoute();
 const router = useRouter();
+const { searchQuery, searchValue: emailSearch, searchFilter, submitSearch: searchUsers } = useSettingsQuickSearch('email', () => fetchUsers());
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
 const { hasPermission } = usePermissions();
@@ -76,9 +87,10 @@ const {
   execute: fetchUsers,
 } = useApi(() => `/${tableName}`, {
   query: computed(() => {
-    const filterQuery = hasActiveFilters(currentFilter.value)
-      ? buildQuery(currentFilter.value)
-      : {};
+    const conditions: Record<string, unknown>[] = [];
+    const filterQuery = buildQuery(currentFilter.value);
+    if (Object.keys(filterQuery).length > 0) conditions.push(filterQuery);
+    if (searchFilter.value) conditions.push(searchFilter.value);
 
     return {
       limit,
@@ -86,7 +98,7 @@ const {
       fields: USER_LIST_FIELDS,
       sort: "-createdAt",
       meta: "*",
-      ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
+      ...(conditions.length > 0 && { filter: { _and: conditions } }),
     };
   }),
   errorContext: "Fetch Users",
@@ -97,9 +109,9 @@ const {
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() =>
-  hasActiveFilters(currentFilter.value)
-    ? apiData.value?.meta?.filterCount || 0
-    : apiData.value?.meta?.totalCount || 0,
+  emailSearch.value || hasActiveFilters(currentFilter.value)
+    ? apiData.value?.meta?.filterCount ?? 0
+    : apiData.value?.meta?.totalCount ?? 0,
 );
 
 const filterLabel = computed(() => {
@@ -253,5 +265,5 @@ async function setPageSize(size: number) {
 watch(() => route.query.page, newVal => {
   page.value = Math.max(1, Number(newVal) || 1);
 }, { immediate: true });
-watch([page, limit], () => { void fetchUsers(); }, { immediate: true });
+watch([page, limit, emailSearch], () => { void fetchUsers(); }, { immediate: true });
 </script>

@@ -208,7 +208,7 @@ watch(
       @row-click="collection => navigateTo(`/collections/${collection.name}`)"
     >
       <template #toolbar>
-        <div class="flex w-full min-w-0 items-center gap-2 lg:gap-3">
+        <div class="contents">
           <CommonSearchField
             v-model="searchQuery"
             placeholder="Search collections…"

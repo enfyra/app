@@ -28,6 +28,7 @@ const props = defineProps<{
   enfyraAutocomplete?: boolean | 'vue';
   error?: string;
   testRun?: boolean | TestRunConfig;
+  readonly?: boolean;
 }>();
 
 defineOptions({
@@ -84,7 +85,7 @@ const { initCodeMirror, codeMirrorModules } = useCodeMirrorLazy()
 
 const { themeCompartment, themeExtensions, customHighlightStyle } = useCodeMirrorTheme(currentHeight, codeMirrorModules, colorMode);
 
-const { editorRef, createEditor, recreateEditor, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
+const { editorRef, createEditor, reconfigureEditor, recreateEditor, destroyEditor, editorView, updateEditorSize } = useCodeMirrorEditor({
   modelValue: toRef(props, "modelValue"),
   emit,
   codeMirrorModules: codeMirrorModules
@@ -367,6 +368,10 @@ const extensions = computed(() => {
   }
   
   const exts = [...setup]
+  if (codeMirrorModules.value.EditorView && codeMirrorModules.value.EditorState) {
+    exts.push(codeMirrorModules.value.EditorView.editable.of(!props.readonly))
+    exts.push(codeMirrorModules.value.EditorState.readOnly.of(!!props.readonly))
+  }
   
   if (languageExtension.value) {
     exts.push(languageExtension.value)
@@ -473,6 +478,10 @@ onUnmounted(() => {
   if (containerRef.value) {
     containerRef.value.style.pointerEvents = "";
   }
+});
+
+watch(() => props.readonly, () => {
+  reconfigureEditor(extensions.value);
 });
 
 watch(() => props.language, async () => {

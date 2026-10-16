@@ -9,6 +9,7 @@
       :error="props.error"
       :enfyra-autocomplete="props.enfyraAutocomplete"
       :test-run="props.testRun"
+      :readonly="props.readonly"
       @update:model-value="(value) => $emit('update:modelValue', value)"
       @diagnostics="(diags) => $emit('diagnostics', diags)"
     />
@@ -36,6 +37,7 @@ const props = defineProps<{
   error?: string;
   enfyraAutocomplete?: boolean | 'vue';
   testRun?: boolean | Record<string, any>;
+  readonly?: boolean;
 }>();
 
 defineEmits<{

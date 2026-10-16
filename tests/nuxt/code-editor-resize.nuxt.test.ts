@@ -1,7 +1,8 @@
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { EditorView } from '@codemirror/view'
-import { StateEffect } from '@codemirror/state'
+import { EditorState, StateEffect } from '@codemirror/state'
 import { javascript } from '@codemirror/lang-javascript'
+import { deleteCharBackward } from '@codemirror/commands'
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
@@ -15,6 +16,31 @@ mockNuxtImport('useColorMode', () => () => ref(theme.value))
 import CodeEditor from '~/components/form/CodeEditor.vue'
 
 describe('CodeMirror resize', () => {
+  it('toggles readonly on the existing editor without losing source or selection', async () => {
+    const source = 'return input;';
+    const wrapper = await mountSuspended(CodeEditor, { props: { modelValue: source, language: 'javascript', readonly: true, testRun: false }, global: { stubs: { CommonDrawer: true } } });
+    try {
+      await expect.poll(() => wrapper.find('.cm-content').exists(), { timeout: 5000 }).toBe(true);
+      const view = EditorView.findFromDOM(wrapper.get('.cm-editor').element as HTMLElement)!;
+      expect(view.state.facet(EditorState.readOnly)).toBe(true);
+      expect(view.state.facet(EditorView.editable)).toBe(false);
+      expect(deleteCharBackward(view)).toBe(false);
+      view.dispatch({ selection: { anchor: 3 } });
+      await wrapper.setProps({ readonly: false });
+      expect(EditorView.findFromDOM(wrapper.get('.cm-editor').element as HTMLElement)).toBe(view);
+      expect(view.state.facet(EditorState.readOnly)).toBe(false);
+      expect(view.state.facet(EditorView.editable)).toBe(true);
+      expect(view.state.doc.toString()).toBe(source);
+      expect(view.state.selection.main.anchor).toBe(3);
+      expect(deleteCharBackward(view)).toBe(true);
+      await nextTick();
+      expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toBe(view.state.doc.toString());
+      await wrapper.setProps({ readonly: true });
+      expect(view.state.facet(EditorState.readOnly)).toBe(true);
+      expect(deleteCharBackward(view)).toBe(false);
+    } finally { wrapper.unmount(); }
+  }, 10000);
+
   it.each(['light', 'dark'])('keeps native token and template colors after dragging in %s mode', async mode => {
     theme.value = mode
     const source = 'const count = 42;\nconst label = "hello";\nconst user = @USER;'

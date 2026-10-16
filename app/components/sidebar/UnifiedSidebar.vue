@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui';
 import { UDropdownMenu, UTooltip } from '#components';
+import { useMediaQuery } from '@vueuse/core';
 import { selectSidebarCollections } from '~/utils/sidebar-collection-items';
 
 const route = useRoute();
-const router = useRouter();
+const isMobileSidebar = useMediaQuery('(max-width: 1023px)');
 const { menuGroups } = useMenuRegistry();
 const { menuDefinitionsPending } = useMenuApi();
 const { routesLoading, routesFetched } = useRoutes();
 const { sidebarCollections } = useDataCollectionPreferences();
 const { hasMenuPermission } = usePermissions();
-const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const accountSheetOpen = useState('account-sheet-open', () => false);
 const { getFileUrl } = useFileUrl();
@@ -22,18 +22,16 @@ let menuSkeletonTimer: ReturnType<typeof setTimeout> | null = null;
 
 if (import.meta.client) {
   const saved = localStorage.getItem('sidebar-open');
-  if (saved !== null && width.value >= 1024) {
-    sidebarVisible.value = saved === 'true';
-  }
+  if (saved !== null) sidebarVisible.value = saved === 'true';
   try {
     const savedKeys = localStorage.getItem('sidebar-menu-open-keys');
     if (savedKeys) openMenuKeys.value = JSON.parse(savedKeys);
   } catch {}
 }
 
-watch(sidebarVisible, (val) => {
-  if (import.meta.client && width.value >= 1024) {
-    localStorage.setItem('sidebar-open', String(val));
+watch(sidebarVisible, (value) => {
+  if (import.meta.client && !isMobileSidebar.value) {
+    localStorage.setItem('sidebar-open', String(value));
   }
 });
 
@@ -186,6 +184,26 @@ const navigationItems = computed(() => {
   return groups;
 });
 
+watch(navigationItems, (groups) => {
+  const nextOpenKeys = { ...openMenuKeys.value };
+  let changed = false;
+
+  function rememberActiveBranches(items: any[]) {
+    for (const item of items) {
+      if (!item.children?.length) continue;
+      const key = String(item.to || item.label);
+      if (nextOpenKeys[key] === undefined && (item.active || item.branchActive)) {
+        nextOpenKeys[key] = true;
+        changed = true;
+      }
+      rememberActiveBranches(item.children);
+    }
+  }
+
+  groups.forEach(rememberActiveBranches);
+  if (changed) openMenuKeys.value = nextOpenKeys;
+}, { immediate: true });
+
 function menuBadge(item: any) {
   const notification = getMenuNotification(item);
   const value = item.count ?? notification?.value;
@@ -213,7 +231,7 @@ function toNavigationItem(item: any): NavigationMenuItem {
     ...(hasChildren ? {
       children,
       defaultOpen: openMenuKeys.value[key] ?? Boolean(item.active || item.branchActive),
-      onClick: (event: MouseEvent) => rememberBranchState(key, event),
+      onClick: () => toggleBranchState(key, Boolean(item.active || item.branchActive)),
     } : {}),
     active: item.active,
     badge: menuBadge(item),
@@ -233,15 +251,11 @@ function groupOpenValues(group: NavigationMenuItem[]): string[] {
     .map(item => String(item.value));
 }
 
-function rememberBranchState(key: string, event: Event) {
-  const trigger = event.currentTarget;
-  if (!(trigger instanceof HTMLElement) || trigger.tagName !== 'BUTTON') return;
-  void nextTick(() => {
-    openMenuKeys.value = {
-      ...openMenuKeys.value,
-      [key]: trigger.getAttribute('aria-expanded') === 'true',
-    };
-  });
+function toggleBranchState(key: string, defaultOpen: boolean) {
+  openMenuKeys.value = {
+    ...openMenuKeys.value,
+    [key]: !(openMenuKeys.value[key] ?? defaultOpen),
+  };
 }
 
 function toCollapsedMenuItem(item: NavigationMenuItem): DropdownMenuItem {
@@ -279,10 +293,8 @@ const bottomGroups = computed(() => {
 const renderExpandedSidebarContent = computed(() => sidebarVisible.value);
 const showExpandedSidebarLabels = computed(() => sidebarVisible.value);
 
-router.afterEach(() => {
-  if (width.value < 1024) {
-    setSidebarVisible(false);
-  }
+watch(() => route.path, () => {
+  if (isMobileSidebar.value) setSidebarVisible(false);
 });
 
 onUnmounted(() => {
@@ -296,7 +308,7 @@ onUnmounted(() => {
   <USidebar
     v-model:open="sidebarVisible"
     variant="inset"
-    :menu="{ dismissible: !accountSheetOpen, ui: { overlay: 'z-40', content: 'z-40 max-w-none' } }"
+    :menu="{ dismissible: !accountSheetOpen, ui: { overlay: 'z-40', content: 'z-40 max-w-none !bg-[var(--shell-sidebar-bg)]' } }"
     collapsible="icon"
     class="eapp-sidebar"
     :style="{ '--sidebar-width': 'var(--shell-sidebar-width)' }"
@@ -365,7 +377,7 @@ onUnmounted(() => {
                   <UNavigationMenu
                     v-if="renderExpandedSidebarContent"
                     :items="group"
-                    :default-value="groupOpenValues(group)"
+                    :model-value="groupOpenValues(group)"
                     type="multiple"
                     :unmount-on-hide="false"
                     orientation="vertical"

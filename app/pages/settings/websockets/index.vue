@@ -12,7 +12,11 @@
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     @row-click="gateway => navigateTo(`/settings/websockets/${getId(gateway)}`)"
-  />
+  >
+    <template #toolbar>
+      <CommonSearchField v-model="searchQuery" placeholder="Search by path" label="Search by path" :loading="loading" @search="submitSearch" />
+    </template>
+  </DataTableSettingsTable>
 </template>
 
 <script setup lang="ts">
@@ -42,6 +46,7 @@ const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
 const route = useRoute();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('path', () => fetchGateways());
 const { registerPageHeader } = usePageHeaderRegistry();
 
 registerPageHeader({
@@ -59,6 +64,7 @@ const {
     limit,
     page: page.value,
     meta: "*",
+    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
     sort: ["id"].join(","),
   })),
   errorContext: "Fetch WebSocket Gateways",
@@ -68,7 +74,7 @@ const {
   items: gateways,
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const total = computed(() => searchValue.value ? apiData.value?.meta?.filterCount ?? 0 : apiData.value?.meta?.totalCount ?? 0);
 
 const connectionCounts = ref<Record<string, number>>({});
 
@@ -215,5 +221,5 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, limit], () => { void fetchGateways(); }, { immediate: true });
+watch([page, limit, searchValue], () => { void fetchGateways(); }, { immediate: true });
 </script>

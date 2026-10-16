@@ -8,7 +8,6 @@ export const TABLE_DETAIL_PATH_MAP: Record<string, string> = {
   enfyra_route: "/settings/routes",
   enfyra_extension: "/settings/extensions",
   enfyra_websocket: "/settings/websockets",
-  enfyra_bootstrap_script: "/settings/bootstrap",
   enfyra_oauth_config: "/settings/oauth/config",
   enfyra_oauth_account: "/settings/oauth/accounts",
 

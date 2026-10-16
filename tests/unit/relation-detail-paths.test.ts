@@ -4,6 +4,7 @@ describe('relation detail paths', () => {
   it('resolves mapped table detail paths', () => {
     expect(getDetailPathForTable('enfyra_user', 7)).toBe('/settings/users/7')
     expect(getDetailPathForTable('unknown_table', 7)).toBeNull()
+    expect(getDetailPathForTable('enfyra_bootstrap_script', 7)).toBeNull()
   })
 
   it('resolves custom and id-based relation detail paths', () => {

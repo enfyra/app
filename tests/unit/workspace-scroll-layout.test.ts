@@ -104,15 +104,18 @@ describe('native Nuxt UI dashboard shell', () => {
     expect(sidebar).not.toContain('documentScrollLocked')
   })
 
-  it('keeps the desktop rail collapsed and opens children with the native click popover', () => {
+  it('keeps the desktop rail collapsed and opens children with the native dropdown', () => {
     const sidebar = readAppFile('components/sidebar/UnifiedSidebar.vue')
 
     expect(sidebar).toContain('collapsible="icon"')
     expect(sidebar).toContain('v-model:open="sidebarVisible"')
     expect(sidebar).toContain('<UNavigationMenu')
-    expect(sidebar).toContain("mode: 'click'")
+    expect(sidebar).toContain('item.children?.length ? UDropdownMenu : UTooltip')
     expect(sidebar).not.toContain('@mouseenter="handleSidebarMouseEnter"')
     expect(sidebar).not.toContain('setSidebarVisibleTransient')
-    expect(sidebar).toContain('if (width.value < 1024)')
+    expect(sidebar).toContain("useMediaQuery('(max-width: 1023px)')")
+    expect(sidebar).toContain('if (isMobileSidebar.value) setSidebarVisible(false)')
+    expect(sidebar).toContain('watch(() => route.path')
+    expect(sidebar).not.toContain('router.afterEach')
   })
 })

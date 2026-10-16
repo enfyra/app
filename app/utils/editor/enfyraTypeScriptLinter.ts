@@ -414,7 +414,7 @@ type EnfyraContext = {
   $pkgs: Record<string, any>;
   $cache: Record<string, any>;
   $repos: EnfyraRepos;
-  $helpers: Record<string, any> & { $fetch: (...args: any[]) => Promise<any> };
+  $helpers: Record<string, any> & { $fetch: (...args: any[]) => Promise<any>; run<T = any>(name: string, params?: any): Promise<T> };
   $storage: EnfyraStorage;
   $logs: (...args: any[]) => any;
   $socket: Record<string, any>;
