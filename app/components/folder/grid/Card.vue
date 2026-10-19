@@ -4,9 +4,9 @@
   >
     <UContextMenu :items="getContextMenuItems()" :disabled="isFolderDisabled">
       <div
-        class="eapp-bordered-region relative overflow-hidden transition-[border-color,box-shadow,transform] duration-[var(--duration-base)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--state-primary-outline-border)]"
+        class="eapp-bordered-region relative overflow-hidden transition-[border-color,background-color] duration-[var(--duration-base)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--state-primary-outline-border)]"
         :class="{
-          'cursor-pointer hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)]': !isFolderDisabled,
+          'cursor-pointer hover:border-[var(--border-strong)] hover:bg-[var(--menu-item-hover-bg)]': !isFolderDisabled,
           '!border-[var(--state-primary-outline-border)] !shadow-[0_0_0_1px_var(--state-primary-outline-border)]': props.selectedItems.includes(props.folder.id),
         }"
         :style="{

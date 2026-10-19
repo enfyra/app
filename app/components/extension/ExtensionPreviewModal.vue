@@ -1,7 +1,7 @@
 <template>
   <CommonModal
     v-model:open="isOpen"
-    class="w-full max-w-7xl"
+    class="max-w-7xl"
   >
     <template #header>
       <div class="flex items-center gap-2">
@@ -32,31 +32,44 @@
         </div>
       </div>
 
-      <div v-else-if="previewComponent && isValidComponent" class="extension-preview-container space-y-4">
-        <div v-if="previewPageHeader" class="extension-preview-page-header">
-          <div class="flex items-center gap-3">
-            <div
-              v-if="previewPageHeader.leadingIcon !== '' && !previewPageHeader.hideLeadingIcon"
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]"
-              aria-hidden="true"
-            >
-              <UIcon :name="previewPageHeader.leadingIcon || 'lucide:blocks'" class="h-5 w-5" />
+      <div v-else-if="previewComponent && isValidComponent" class="extension-preview-container flex min-w-0 flex-col gap-4">
+        <UPageHeader
+          v-if="previewPageHeader"
+          :description="previewPageHeader.description"
+          :ui="{
+            root: 'border-0 p-0',
+            title: 'text-lg leading-6 lg:text-2xl lg:leading-8',
+            description: `mt-1 max-w-3xl text-sm leading-5 ${previewHeaderIcon ? 'pl-9' : ''}`,
+          }"
+        >
+          <template #title>
+            <span class="flex min-w-0 items-start gap-3">
+              <UIcon
+                v-if="previewHeaderIcon"
+                :name="previewHeaderIcon"
+                class="size-6 shrink-0 text-primary lg:mt-1"
+                aria-hidden="true"
+              />
+              <span class="min-w-0 flex-1 line-clamp-2 [overflow-wrap:anywhere]">{{ previewPageHeader.title }}</span>
+            </span>
+          </template>
+          <template v-if="previewHeaderActions.length > 0" #links>
+            <div class="flex flex-wrap items-center justify-end gap-2">
+              <UButton
+                v-for="action in previewHeaderActions"
+                :key="action.id"
+                :label="action.label"
+                :icon="action.icon"
+                :variant="action.variant || 'solid'"
+                :color="action.color || 'primary'"
+                :disabled="action.disabled"
+                @click="handlePreviewHeaderActionClick(action)"
+              />
             </div>
-            <div class="min-w-0 flex-1 space-y-1">
-              <h2 class="min-w-0 break-words text-[26px] font-bold tracking-normal text-[var(--text-primary)]">
-                {{ previewPageHeader.title }}
-              </h2>
-              <p
-                v-if="previewPageHeader.description"
-                class="text-sm leading-relaxed text-[var(--text-tertiary)]"
-              >
-                {{ previewPageHeader.description }}
-              </p>
-            </div>
-          </div>
-        </div>
+          </template>
+        </UPageHeader>
 
-        <div v-if="previewHeaderActions.length > 0" class="flex gap-2 justify-end flex-wrap">
+        <div v-if="previewHeaderActions.length > 0 && !previewPageHeader" class="flex flex-wrap items-center justify-end gap-2">
           <UButton
             v-for="action in previewHeaderActions"
             :key="action.id"
@@ -69,11 +82,7 @@
           />
         </div>
 
-        <div class="eapp-bordered-region overflow-hidden">
-          <div class="p-8 min-h-[60vh]">
-            <component :is="previewComponent" v-if="isValidComponent" />
-          </div>
-        </div>
+        <component :is="previewComponent" v-if="isValidComponent" />
       </div>
       
       <div v-else-if="previewComponent && !isValidComponent" class="flex items-center justify-center h-[70vh]">
@@ -117,6 +126,12 @@ const previewComponent = ref<any>(null);
 const previewHeaderActions = ref<any[]>([]);
 const previewSubHeaderActions = ref<any[]>([]);
 const previewPageHeader = ref<any>(null);
+
+const previewHeaderIcon = computed(() => {
+  const header = previewPageHeader.value;
+  if (!header || header.hideLeadingIcon || header.leadingIcon === '') return undefined;
+  return header.leadingIcon || 'lucide:blocks';
+});
 
 const previewLoadingMessage = computed(() => {
   if (previewLoadingPhase.value === "compiling") return "Compiling extension...";
@@ -236,15 +251,5 @@ async function compileAndPreview() {
 <style scoped>
 .extension-preview-container {
   isolation: isolate;
-}
-
-.extension-preview-page-header {
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius-card);
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--brand-500) 5%, transparent), transparent 62%),
-    var(--card-bg);
-  box-shadow: var(--card-shadow);
-  padding: 1rem 1.25rem;
 }
 </style>

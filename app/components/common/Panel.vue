@@ -67,6 +67,7 @@ const activeHasHeader = computed(() =>
 );
 
 const sectionActions = computed(() => activeSection.value?.actions ?? []);
+const hasLeftSectionActions = computed(() => sectionActions.value.some(action => (action.side ?? 'right') === 'left'));
 
 const topIsMuted = computed(() => props.framed && (showTabs.value || activeHasHeader.value));
 const panelUi = computed(() => ({
@@ -75,7 +76,7 @@ const panelUi = computed(() => ({
     : 'eapp-panel flex min-w-0 min-h-0 flex-col rounded-none border-0 bg-transparent ring-0 divide-y-0 shadow-none',
   header: 'p-0 sm:p-0',
   body: ['min-w-0', props.bodyClass || (props.framed ? 'p-3 md:p-5' : '!px-0')].join(' '),
-  footer: 'p-3 md:p-5',
+  footer: 'border-t border-default px-3 py-3 text-sm text-muted md:px-4',
 }));
 
 function selectSection(value: string | number) {
@@ -112,7 +113,10 @@ function selectSection(value: string | number) {
         ]"
       >
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3 max-md:contents">
-          <div class="min-w-0 max-md:order-[-9999] max-md:basis-full md:flex-1">
+          <div
+            class="min-w-0 md:flex-1"
+            :class="hasLeftSectionActions ? 'max-md:order-[-9999] max-md:basis-full' : 'max-md:flex-1'"
+          >
             <slot :name="sectionHeaderName(selectedValue || '')" :section="activeSection">
               <CommonFormHeader
                 v-if="activeSection?.title"
@@ -124,7 +128,7 @@ function selectSection(value: string | number) {
           </div>
           <CommonPanelSectionHeader :actions="sectionActions" side="left" />
           <div
-            v-if="sectionActions.length"
+            v-if="hasLeftSectionActions"
             class="order-[-9998] -mx-3 h-0 basis-[calc(100%+1.5rem)] border-t border-default md:hidden"
             aria-hidden="true"
           />

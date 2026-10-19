@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
 
-    <div class="flex items-center justify-between gap-3">
+    <div v-if="props.showHeader" class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-3 min-w-0">
         <UIcon :name="icon || 'lucide:shield'" class="w-5 h-5 shrink-0" />
         <h3 class="text-lg font-semibold truncate">
@@ -262,9 +262,12 @@ interface Props {
   currentFieldId: { field: string; value: string | number };
   icon?: string;
   title?: string;
+  showHeader?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  showHeader: true,
+});
 
 const showDrawer = ref(false);
 const isEditing = ref(false);
@@ -494,4 +497,6 @@ async function deletePermission(permission: Permission) {
 onMounted(() => {
   fetchPermissions();
 });
+
+defineExpose({ createNewPermission });
 </script>
