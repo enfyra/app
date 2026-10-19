@@ -1,7 +1,7 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import { defineComponent, h, nextTick, ref } from 'vue'
+import { defineComponent, h, nextTick, ref, type Component } from 'vue'
 
 import DataTable from '~/components/data-table/DataTable.vue'
 import DataTableLazy from '~/components/data-table/DataTableLazy.vue'
@@ -16,9 +16,11 @@ describe('DataTable layout', () => {
       await flushPromises()
       const badge = wrapper.get('[aria-live="polite"]')
       expect(badge.text()).toBe('64 records')
-      const left = badge.element.parentElement!
-      expect(Array.from(left.children).map(element => element.tagName)).toEqual(['SPAN', 'INPUT', 'DIV', 'SPAN'])
-      expect(left.firstElementChild?.textContent).toBe('Records')
+      const actionTier = badge.element.parentElement!
+      const toolbar = actionTier.parentElement!
+      expect(toolbar.firstElementChild?.textContent).toBe('Records')
+      expect(toolbar.firstElementChild?.querySelector('input')?.getAttribute('aria-label')).toBe('Search records')
+      expect(actionTier.firstElementChild).toBe(badge.element)
       const columns = wrapper.get('[aria-label="Choose visible columns"]')
       const right = columns.element.parentElement!
       expect(right.firstElementChild?.textContent).toBe('Refresh')
@@ -42,6 +44,63 @@ describe('DataTable layout', () => {
       expect(wrapper.text()).toContain('Lazy records')
       expect(wrapper.get('table').attributes()).not.toHaveProperty('showrecordcount')
       expect(wrapper.get('table').attributes()).not.toHaveProperty('headername')
+    } finally { wrapper.unmount() }
+  })
+
+  it.each([DataTable, DataTableLazy] as Component[])('owns search state and submission without hiding an explicit heading', async component => {
+    const wrapper = await mountSuspended(component, {
+      props: {
+        data: [{ id: 1 }], columns: [{ accessorKey: 'id', header: 'ID' }],
+        searchable: true, search: 'initial', searchPlaceholder: 'Find a row', searchLabel: 'Find records',
+        headerName: 'Records', showRecordCount: true,
+      },
+    })
+    try {
+      await flushPromises()
+      const input = wrapper.get('input[aria-label="Find records"]')
+      expect((input.element as HTMLInputElement).value).toBe('initial')
+      expect(input.attributes('placeholder')).toBe('Find a row')
+      expect(wrapper.get('.eapp-table-title').text()).toBe('Records')
+      await input.setValue('updated')
+      await wrapper.get('form.eapp-search-field').trigger('submit')
+      expect(wrapper.emitted('update:search')?.at(-1)).toEqual(['updated'])
+      expect(wrapper.emitted('search')?.at(-1)).toEqual(['updated'])
+      await wrapper.setProps({ headerName: undefined })
+      expect(wrapper.find('.eapp-table-title').exists()).toBe(false)
+      expect(wrapper.find('form.eapp-search-field').exists()).toBe(true)
+      await wrapper.setProps({ searchable: false, headerName: 'Restored title' })
+      expect(wrapper.find('form.eapp-search-field').exists()).toBe(false)
+      expect(wrapper.get('.eapp-table-title').text()).toBe('Restored title')
+      expect(wrapper.get('table').attributes()).not.toHaveProperty('searchable')
+    } finally { wrapper.unmount() }
+  })
+
+  it.each([DataTable, DataTableLazy] as Component[])('renders only the occupied toolbar tier when Columns is the only control', async component => {
+    const wrapper = await mountSuspended(component, {
+      props: { data: [{ id: 1 }], columns: [{ accessorKey: 'id', header: 'ID' }] },
+    })
+    try {
+      await flushPromises()
+      const toolbar = wrapper.get('[aria-label="Choose visible columns"]').element.closest('.bg-muted')!
+      expect(toolbar.children).toHaveLength(1)
+      expect(toolbar.firstElementChild?.querySelector('[aria-label="Choose visible columns"]')).not.toBeNull()
+      expect(toolbar.classList.contains('py-3')).toBe(true)
+      await wrapper.setProps({ headerName: 'Files' })
+      expect(toolbar.children).toHaveLength(3)
+      expect(toolbar.children[1]?.getAttribute('aria-hidden')).toBe('true')
+      await wrapper.setProps({ headerName: undefined, showColumnVisibility: false })
+      expect(wrapper.find('.bg-muted').exists()).toBe(false)
+    } finally { wrapper.unmount() }
+  })
+
+  it('does not reserve an action tier for a title-only toolbar', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: { data: [{ id: 1 }], columns: [{ accessorKey: 'id', header: 'ID' }], headerName: 'Files', showColumnVisibility: false },
+    })
+    try {
+      const toolbar = wrapper.get('.eapp-table-title').element.parentElement!.parentElement!
+      expect(toolbar.children).toHaveLength(1)
+      expect(toolbar.firstElementChild?.textContent).toBe('Files')
     } finally { wrapper.unmount() }
   })
 
@@ -99,7 +158,7 @@ describe('DataTable layout', () => {
     const { readFileSync } = await import('node:fs')
     const { resolve } = await import('node:path')
     const source = readFileSync(resolve(process.cwd(), 'app/components/data-table/DataTable.vue'), 'utf8')
-    expect(source).toContain("slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility")
+    expect(source).toContain("slots.toolbar || slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length)")
     expect(source).toContain('props.showColumnVisibility && visibilityItems.length')
   })
 

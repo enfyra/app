@@ -30,7 +30,7 @@ async function selectAction(action: HeaderAction) {
       icon="lucide:ellipsis"
       color="neutral"
       variant="outline"
-      size="lg"
+      size="md"
       square
       :class="[getHeaderActionButtonClass({}), '!w-9 relative pointer-coarse:before:absolute pointer-coarse:before:-inset-1 pointer-coarse:before:content-[\'\']']"
       aria-label="More page actions"

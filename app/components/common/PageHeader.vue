@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HeaderAction } from '~/types/ui';
+import { HEADER_ACTION_BUTTON_SIZE } from '~/utils/common/header-action-button';
 
 interface StatCard {
   label: string;
@@ -79,7 +80,7 @@ function handlePageHeaderActionClick(action: HeaderAction) {
           :label="unref(action.label)"
           :variant="unref(action.variant) || 'soft'"
           :color="unref(action.color) || 'neutral'"
-          :size="action.size || 'md'"
+          :size="action.size || HEADER_ACTION_BUTTON_SIZE"
           loading-auto
           :loading="unref(action.loading)"
           :disabled="unref(action.disabled) || unref(action.loading)"
@@ -99,7 +100,7 @@ function handlePageHeaderActionClick(action: HeaderAction) {
           :label="unref(action.label)"
           :variant="unref(action.variant) || 'soft'"
           :color="unref(action.color) || 'neutral'"
-          :size="action.size || 'md'"
+          :size="action.size || HEADER_ACTION_BUTTON_SIZE"
           loading-auto
           :loading="unref(action.loading)"
           :disabled="unref(action.disabled) || unref(action.loading)"

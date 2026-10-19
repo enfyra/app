@@ -88,11 +88,12 @@ describe('Settings table', () => {
     expect(wrapper.get('input[aria-label="Search settings"]').element.closest('.border-b.bg-muted')).not.toBeNull()
     expect(wrapper.text()).toContain('Refresh settings')
     expect(wrapper.get('tbody').text()).toContain('Custom name')
-    const left = wrapper.get('[aria-live="polite"]').element.parentElement!
-    expect(left.textContent).toContain('Settings')
-    expect(left.lastElementChild).toBe(wrapper.get('[aria-live="polite"]').element)
-    expect(left.querySelector('input')).not.toBeNull()
-    expect(left.querySelector('button')).toBeNull()
+    const actionTier = wrapper.get('[aria-live="polite"]').element.parentElement!
+    const titleTier = actionTier.parentElement!.firstElementChild!
+    expect(titleTier.textContent).toContain('Settings')
+    expect(actionTier.firstElementChild).toBe(wrapper.get('[aria-live="polite"]').element)
+    expect(titleTier.querySelector('input')).not.toBeNull()
+    expect(titleTier.querySelector('button')).toBeNull()
     const actions = wrapper.get('[aria-label="Choose visible columns"]').element.parentElement!
     expect(actions.textContent).toContain('Refresh settings')
     expect(actions.lastElementChild).toBe(wrapper.get('[aria-label="Choose visible columns"]').element)

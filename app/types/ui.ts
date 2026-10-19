@@ -40,6 +40,9 @@ export interface DataTableProps extends Omit<TableProps<any>, 'data' | 'columns'
   page?: number;
   reload?: () => unknown | Promise<unknown>;
   reloadLoading?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  searchLabel?: string;
 }
 
 export interface RouteLoadingProps {

@@ -10,9 +10,13 @@ const circularButtonClassPatterns = [
   /^!?rounded-\[9999?\]$/,
 ];
 
+export const HEADER_ACTION_BUTTON_SIZE = "md" as const;
+export const COMPACT_HEADER_ACTION_BUTTON_SIZE = "sm" as const;
+
 export function getHeaderActionButtonClass(
   action: Pick<HeaderAction, "class" | "label">,
   hideLabel = false,
+  compact = false,
 ) {
   const actionClass = action.class
     ?.split(/\s+/)
@@ -21,9 +25,9 @@ export function getHeaderActionButtonClass(
 
   return [
     actionClass,
-    "!h-9",
+    compact ? "!h-8" : "!h-9",
     "!rounded-[var(--radius-control)]",
-    isHeaderActionIconOnly(action, hideLabel) ? "!w-9 !p-0" : "",
+    isHeaderActionIconOnly(action, hideLabel) ? (compact ? "!w-8 !p-0" : "!w-9 !p-0") : "",
   ]
     .filter(Boolean)
     .join(" ");

@@ -67,9 +67,7 @@ const activeHasHeader = computed(() =>
 );
 
 const sectionActions = computed(() => activeSection.value?.actions ?? []);
-const hasLeftSectionActions = computed(() => sectionActions.value.some(action => (action.side ?? 'right') === 'left'));
 
-const topIsMuted = computed(() => props.framed && (showTabs.value || activeHasHeader.value));
 const panelUi = computed(() => ({
   root: props.framed
     ? 'eapp-panel flex min-w-0 min-h-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-default bg-default ring-0 divide-y-0 shadow-none'
@@ -112,11 +110,8 @@ function selectSection(value: string | number) {
           framed && showTabs ? 'border-b border-default' : undefined,
         ]"
       >
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3 max-md:contents">
-          <div
-            class="min-w-0 md:flex-1"
-            :class="hasLeftSectionActions ? 'max-md:order-[-9999] max-md:basis-full' : 'max-md:flex-1'"
-          >
+        <div class="flex w-full min-w-0 flex-col gap-3 md:w-auto md:flex-1 md:flex-row md:flex-nowrap md:items-center">
+          <div class="min-w-0 md:flex-1">
             <slot :name="sectionHeaderName(selectedValue || '')" :section="activeSection">
               <CommonFormHeader
                 v-if="activeSection?.title"
@@ -126,14 +121,16 @@ function selectSection(value: string | number) {
               />
             </slot>
           </div>
-          <CommonPanelSectionHeader :actions="sectionActions" side="left" />
           <div
-            v-if="hasLeftSectionActions"
-            class="order-[-9998] -mx-3 h-0 basis-[calc(100%+1.5rem)] border-t border-default md:hidden"
+            v-if="sectionActions.length"
+            class="-mx-3 h-0 shrink-0 border-t border-default md:hidden"
             aria-hidden="true"
           />
+          <div v-if="sectionActions.length" class="flex w-full min-w-0 items-center justify-end gap-3 md:w-auto md:contents">
+            <CommonPanelSectionHeader :actions="sectionActions" side="left" />
+            <CommonPanelSectionHeader :actions="sectionActions" side="right" />
+          </div>
         </div>
-        <CommonPanelSectionHeader :actions="sectionActions" side="right" />
       </div>
     </template>
 

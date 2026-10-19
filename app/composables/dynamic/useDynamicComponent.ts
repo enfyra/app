@@ -57,7 +57,7 @@ function wrapWithCssLifecycle(
           if (!document.getElementById(styleId)) {
             const s = document.createElement("style");
             s.id = styleId;
-            s.textContent = `@scope ([data-enfyra-extension-scope="${scopeValue}"]) {\n${extensionCss}\n}`;
+            s.textContent = `@layer enfyra-extensions {\n@scope ([data-enfyra-extension-scope="${scopeValue}"]) {\n${extensionCss}\n}\n}`;
             document.head.appendChild(s);
           }
         });

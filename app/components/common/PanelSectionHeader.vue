@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HeaderAction } from '~/types/ui';
+import { COMPACT_HEADER_ACTION_BUTTON_SIZE } from '~/utils/common/header-action-button';
 
 const props = withDefaults(defineProps<{
   actions?: HeaderAction[];
@@ -43,14 +44,14 @@ function runAction(action: HeaderAction) {
           :label="hideLabel ? undefined : unref(action.label)"
           :variant="unref(action.variant) || 'outline'"
           :color="unref(action.color) || 'neutral'"
-          :size="hideLabel ? 'lg' : action.size || 'md'"
+          :size="action.size || COMPACT_HEADER_ACTION_BUTTON_SIZE"
           :loading-auto="true"
           :loading="unref(action.loading)"
           :disabled="unref(action.disabled) || unref(action.loading)"
           :to="unref(action.to)"
           :replace="unref(action.replace)"
           :square="isHeaderActionIconOnly(action, hideLabel)"
-          :class="getHeaderActionButtonClass(action, hideLabel)"
+          :class="getHeaderActionButtonClass(action, hideLabel, true)"
           :aria-label="action.ariaLabel || unref(action.label) || action.id"
           @click="runAction(action)"
         />

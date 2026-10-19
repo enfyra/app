@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import FileManagerToolbar from './FileManagerToolbar.vue';
 import FileManagerActions from './FileManagerActions.vue';
+import type { PanelSection } from '~/types/ui';
 interface Props {
   parentId?: string;
   title?: string;
@@ -160,8 +161,6 @@ async function handleBulkDelete() {
   emit('refreshItems');
 }
 
-const panelSections = computed(() => [{ value: 'library', title: props.title, description: props.description }]);
-
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { hasPermission } = usePermissions();
 const operationPending = ref<'delete' | 'move' | null>(null);
@@ -181,6 +180,31 @@ const canMoveHere = computed(() =>
   (!moveState.value.selectedFileIds.length || hasPermission('/enfyra_file', 'PATCH')) &&
   (!moveState.value.selectedFolderIds.length || hasPermission('/enfyra_folder', 'PATCH')),
 );
+
+const panelSections = computed<PanelSection[]>(() => [{
+  value: 'library',
+  title: props.title,
+  description: props.description,
+  actions: [{
+    id: 'library-tools',
+    component: markRaw(FileManagerToolbar),
+    props: {
+      viewMode: viewMode.value,
+      folderCount: props.folders.length,
+      fileCount: props.files.length,
+      moveMode: isMoveMode.value,
+      selectionMode: isSelectionMode.value,
+      busy: isBusy.value,
+      loading: props.foldersLoading || props.filesLoading,
+      canCreateFolder: canCreateFolder.value,
+      canSelect: canSelect.value,
+      'onUpdate:viewMode': setViewMode,
+      onCreateFolder: () => emit('createFolder'),
+      onRefresh: () => emit('refreshItems'),
+      onSelect: startSelection,
+    },
+  }],
+}]);
 
 watch(contextActive, active => emit('contextChange', active), { immediate: true });
 
@@ -251,25 +275,6 @@ watch([loadedIds, isBusy], ([ids]) => {
 <template>
   <div ref="library" class="min-w-0">
   <CommonPanel :sections="panelSections" body-class="!p-0">
-    <template #library-header>
-    <FileManagerToolbar
-      :title="props.title"
-      :description="props.description"
-      :view-mode="viewMode"
-      :folder-count="props.folders.length"
-      :file-count="props.files.length"
-      :move-mode="isMoveMode"
-      :selection-mode="isSelectionMode"
-      :busy="isBusy"
-      :loading="props.foldersLoading || props.filesLoading"
-      :can-create-folder="canCreateFolder"
-      :can-select="canSelect"
-      @update:view-mode="setViewMode"
-      @create-folder="emit('createFolder')"
-      @refresh="emit('refreshItems')"
-      @select="startSelection"
-    />
-    </template>
     <template #library>
     <FileManagerActions
       :anchor="library"

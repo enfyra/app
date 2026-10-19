@@ -2,8 +2,6 @@
 import type { DropdownMenuItem } from '@nuxt/ui';
 
 const props = defineProps<{
-  title: string;
-  description?: string;
   viewMode: 'grid' | 'list';
   folderCount: number;
   fileCount: number;
@@ -23,6 +21,10 @@ const emit = defineEmits<{
 }>();
 
 const totalCount = computed(() => props.folderCount + props.fileCount);
+const viewOptions = [
+  { value: 'grid' as const, label: 'Grid view', icon: 'lucide:layout-grid' },
+  { value: 'list' as const, label: 'List view', icon: 'lucide:list' },
+];
 const menuItems = computed<DropdownMenuItem[][]>(() => [
   [
     ...(props.canCreateFolder ? [{ label: 'New folder', icon: 'lucide:folder-plus', disabled: props.busy || props.moveMode, onSelect: () => emit('createFolder') }] : []),
@@ -33,24 +35,35 @@ const menuItems = computed<DropdownMenuItem[][]>(() => [
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 md:flex-row md:flex-nowrap md:items-center md:justify-between">
-    <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3">
-      <div class="min-w-0 max-md:basis-full">
-        <h2 class="truncate text-sm font-medium text-highlighted" :title="title">{{ title }}</h2>
-        <p class="mt-0.5 truncate text-xs text-muted" :title="description">{{ description }}</p>
-      </div>
+  <div class="flex min-h-8 shrink-0 items-center justify-end gap-2">
+    <div
+      class="flex h-8 items-center gap-0.5 rounded-[var(--radius-control)] border border-[var(--control-border)] bg-[var(--control-bg)] p-0.5"
+      role="group"
+      aria-label="File view"
+    >
+      <button
+        v-for="option in viewOptions"
+        :key="option.value"
+        type="button"
+        :aria-label="option.label"
+        :aria-pressed="viewMode === option.value"
+        :disabled="busy"
+        :class="[
+          'flex size-7 items-center justify-center rounded-[var(--radius-subcontrol)] transition-colors duration-[var(--duration-fast)]',
+          'disabled:cursor-not-allowed disabled:opacity-60',
+          viewMode === option.value
+            ? 'bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]'
+            : 'text-[var(--text-tertiary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]',
+        ]"
+        @click="emit('update:viewMode', option.value)"
+      >
+        <UIcon :name="option.icon" class="size-4" />
+      </button>
     </div>
-
-    <div class="flex min-h-8 shrink-0 items-center justify-between gap-2 md:ml-auto md:justify-end">
-      <div class="flex items-center gap-1.5" role="group" aria-label="File view">
-        <UButton icon="lucide:layout-grid" aria-label="Grid view" :aria-pressed="viewMode === 'grid'" color="neutral" :variant="viewMode === 'grid' ? 'soft' : 'outline'" size="sm" :disabled="busy" square @click="emit('update:viewMode', 'grid')" />
-        <UButton icon="lucide:layout-list" aria-label="List view" :aria-pressed="viewMode === 'list'" color="neutral" :variant="viewMode === 'list' ? 'soft' : 'outline'" size="sm" :disabled="busy" square @click="emit('update:viewMode', 'list')" />
-      </div>
-      <div class="flex items-center gap-2">
-        <UDropdownMenu :items="menuItems" :content="{ align: 'end' }" :ui="{ item: 'pointer-coarse:min-h-[44px]' }">
-          <UButton icon="lucide:ellipsis" aria-label="Library actions" color="neutral" variant="outline" size="sm" square />
-        </UDropdownMenu>
-      </div>
+    <div class="flex items-center gap-2">
+      <UDropdownMenu :items="menuItems" :content="{ align: 'end' }" :ui="{ item: 'pointer-coarse:min-h-[44px]' }">
+        <UButton icon="lucide:ellipsis" aria-label="Library actions" color="neutral" variant="outline" size="sm" square />
+      </UDropdownMenu>
     </div>
   </div>
 </template>

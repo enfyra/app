@@ -6,9 +6,10 @@ import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(fileURLToPath(new URL('../../app/components/data-table/DataTable.vue', import.meta.url)), 'utf8')
 const toolbarClasses = source.match(/<div v-if="props.headerName[^\n]+class="([^"]+)"/)![1]!.split(' ')
-const leftClasses = source.match(/<div class="([^"]+)">\s*<span v-if="props.headerName"/)![1]!.split(' ')
-const actionsClasses = source.match(/<div v-if="slots\['toolbar-actions'\][^\n]+class="([^"]+)"/)![1]!.split(' ')
-const dividerClasses = source.match(/<div v-if="\(props\.headerName \|\| slots\.toolbar\)[^\n]+class="([^"]+)"/)![1]!.split(' ')
+const titleTierClasses = source.match(/<div v-if="props.headerName[^\n]+class="([^"]+)">\s*<span v-if="props\.headerName"/)![1]!.split(' ')
+const actionTierClasses = source.match(/<div v-if="props.showRecordCount[^\n]+class="([^"]+)">\s*<UBadge v-if="props\.showRecordCount"/)![1]!.split(' ')
+const actionClusterClasses = source.match(/<div v-if="slots\['toolbar-actions'\][^\n]+class="([^"]+)"/)![1]!.split(' ')
+const dividerClasses = source.match(/<div v-if="\(props\.headerName \|\| props\.searchable \|\| slots\.toolbar\)[^\n]+class="([^"]+)"/)![1]!.split(' ')
 const theme = '@theme { --breakpoint-md: 48rem; --spacing: 0.25rem; } @tailwind utilities;'
 
 function appliesAtWidth(node: Node, width: number) {
@@ -36,29 +37,34 @@ async function declarations(classes: string[], width: number, search: boolean) {
 }
 
 describe('DataTable mobile search layout', () => {
-  it.each([390, 767, 768, 1280])('keeps Search full-width and alone on the first tier below md at %ipx', async width => {
+  it.each([390, 767, 768, 1280])('keeps the table-owned Search full-width on the first tier below md at %ipx', async width => {
     const search = await declarations(toolbarClasses, width, true)
-    const divider = await declarations(dividerClasses, width, false)
     expect(search.get('flex-basis')).toBe(width < 768 ? '100%' : undefined)
-    expect(search.get('order')).toBe(width < 768 ? '-9999' : undefined)
-    expect(divider.get('flex-basis')).toBe('calc(100% + 1.5rem)')
+    expect(search.get('max-width')).toBe(width < 768 ? 'none' : undefined)
+  })
+
+  it.each([390, 767, 768, 1280])('stacks the two tiers and merges the action clusters below md at %ipx', async width => {
+    const titleTier = await declarations(titleTierClasses, width, false)
+    const actionTier = await declarations(actionTierClasses, width, false)
+    const actions = await declarations(actionClusterClasses, width, false)
+    expect(titleTier.get('width')).toBe(width < 768 ? '100%' : 'auto')
+    expect(actionTier.get('width')).toBe(width < 768 ? '100%' : 'auto')
+    expect(actionTier.get('display')).toBe(width < 768 ? 'flex' : 'contents')
+    expect(actions.get('margin-left')).toBe('auto')
+  })
+
+  it.each([390, 767, 768, 1280])('renders the tier divider full-bleed below md at %ipx', async width => {
+    const divider = await declarations(dividerClasses, width, false)
+    expect(divider.get('width')).toBe('calc(100% + 1.5rem)')
     expect(divider.get('border-top-width')).toBe('1px')
     expect(divider.get('display')).toBe(width < 768 ? undefined : 'none')
     expect(divider.get('margin-inline')).toBe('calc(var(--spacing) * -3)')
   })
 
-  it.each([390, 767, 768, 1280])('merges both clusters into the second tier below md at %ipx', async width => {
-    const left = await declarations(leftClasses, width, false)
-    const actions = await declarations(actionsClasses, width, false)
-    expect(left.get('display')).toBe(width < 768 ? 'contents' : 'flex')
-    expect(actions.get('margin-left')).toBe('auto')
-  })
-
-  it('keeps the title on its own mobile tier and hides it when the toolbar has a search field', () => {
-    const titleClasses = source.match(/<span v-if="props\.headerName" class="([^"]+)"/)![1]!.split(' ')
-    expect(titleClasses).toContain('max-md:basis-full')
-    expect(titleClasses).toContain('max-md:order-[-9999]')
-    expect(toolbarClasses.some(value => value.includes(':has(.eapp-search-field)') && value.includes('.eapp-table-title')))
-      .toBe(true)
+  it('keeps headerName visible independently of searchable', () => {
+    expect(toolbarClasses.some(value => value.includes('.eapp-table-title') && value.includes('hidden')))
+      .toBe(false)
+    expect(source).toContain('v-if="props.headerName"')
+    expect(source).toContain('v-if="props.searchable"')
   })
 })

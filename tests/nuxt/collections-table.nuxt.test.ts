@@ -38,7 +38,7 @@ describe('Collections table', () => {
     for (const label of ['ID', 'Collection', 'Description', 'Fields', 'API path', 'Type', 'Created']) expect(headers).toContain(label)
     const count = wrapper.get('[aria-live="polite"]')
     expect(count.text()).toBe('12 records')
-    expect(count.element.parentElement!.lastElementChild).toBe(count.element)
+    expect(count.element.parentElement!.firstElementChild).toBe(count.element)
     const filters = wrapper.get('form.eapp-search-field').element.parentElement!
     expect(filters.classList.contains('w-full')).toBe(false)
     expect(filters.classList.contains('flex-1')).toBe(false)

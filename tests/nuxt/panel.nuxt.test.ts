@@ -1,11 +1,12 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
-import { h, ref } from 'vue'
+import { defineComponent, h, markRaw, ref } from 'vue'
 import { UCard, UTabs } from '#components'
 import { useAppConfig } from '#imports'
 import { tv } from '@nuxt/ui/utils/tv'
 import tabsTheme from '#build/ui/tabs'
 import Panel from '~/components/common/Panel.vue'
+import FileManagerToolbar from '~/components/file/FileManagerToolbar.vue'
 import { availableComponents } from '~/composables/dynamic/registry'
 
 const sections = [
@@ -59,6 +60,56 @@ describe('Shared panel', () => {
       expect(header.find('[role="tablist"]').exists()).toBe(true)
       expect(header.text()).toContain('Section tools')
       expect(header.classes()).not.toContain('bg-muted')
+    } finally { wrapper.unmount() }
+  })
+
+  it('keeps custom section actions in the shared bordered mobile tier', async () => {
+    const tools = markRaw(defineComponent({ setup: () => () => [h('button', 'Grid/List'), h('button', 'Library menu')] }))
+    const wrapper = await mountSuspended(Panel, {
+      props: { sections: [{ value: 'library', title: 'File Manager', description: 'Manage files', actions: [{ id: 'library-tools', component: tools }] }] },
+      slots: { library: '<p>Files</p>' },
+    })
+    try {
+      const header = wrapper.get('[data-slot="header"]')
+      expect(header.text()).toContain('File Manager')
+      expect(header.text()).toContain('Grid/List')
+      expect(header.text()).toContain('Library menu')
+      const divider = header.get('[aria-hidden="true"].border-t')
+      expect(divider.classes()).toContain('-mx-3')
+      expect(divider.classes()).toContain('md:hidden')
+      const actions = header.get('button').element.parentElement!
+      expect(actions.classList.contains('ml-auto')).toBe(true)
+      expect(actions.parentElement!.classList.contains('justify-end')).toBe(true)
+      expect(actions.parentElement!.classList.contains('w-full')).toBe(true)
+    } finally { wrapper.unmount() }
+  })
+
+  it('keeps File Manager view mode and menu together in one action cluster', async () => {
+    const wrapper = await mountSuspended(FileManagerToolbar, {
+      props: { viewMode: 'grid', folderCount: 0, fileCount: 2, moveMode: false, selectionMode: false, busy: false, loading: false, canCreateFolder: true, canSelect: true },
+    })
+    try {
+      expect(wrapper.find('h2').exists()).toBe(false)
+      expect(wrapper.classes()).toContain('justify-end')
+      expect(wrapper.classes()).not.toContain('justify-between')
+      expect(wrapper.get('[aria-label="Grid view"]').attributes('aria-pressed')).toBe('true')
+      await wrapper.get('[aria-label="List view"]').trigger('click')
+      expect(wrapper.emitted('update:viewMode')).toEqual([['list']])
+      await wrapper.setProps({ viewMode: 'list' })
+      expect(wrapper.get('[aria-label="List view"]').attributes('aria-pressed')).toBe('true')
+      expect(wrapper.find('[aria-label="Library actions"]').exists()).toBe(true)
+    } finally { wrapper.unmount() }
+  })
+
+  it('does not create an empty action row for a heading-only section', async () => {
+    const wrapper = await mountSuspended(Panel, {
+      props: { sections: [{ value: 'library', title: 'File Manager' }] },
+      slots: { library: '<p>Files</p>' },
+    })
+    try {
+      const stack = wrapper.get('[data-slot="header"] > div > div')
+      expect(stack.element.children).toHaveLength(1)
+      expect(stack.text()).toBe('File Manager')
     } finally { wrapper.unmount() }
   })
 
