@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+import type { HeaderAction } from '~/types/ui';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const route = useRoute();
@@ -8,7 +8,6 @@ const { confirm } = useConfirm();
 const { updateFileTimestamp } = useGlobalState();
 const { getPreviewUrl } = useFileUrl();
 const fileId = route.params.id as string;
-const { registerPageHeader } = usePageHeaderRegistry();
 const { getIdFieldName } = useDatabase();
 
 const {
@@ -28,16 +27,6 @@ const {
   }),
   errorContext: "Fetch File",
 });
-
-watch(() => file.value?.data?.[0]?.filename, (filename) => {
-  if (filename) {
-    registerPageHeader({
-      title: filename,
-      description: "View and edit file information",
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -148,14 +137,13 @@ registerHeaderActions([
   },
 ]);
 
-registerSubHeaderActions([
+const panelActions: HeaderAction[] = [
   {
     id: "replace-file",
     label: "Replace File",
     icon: "lucide:upload",
     variant: "outline",
     color: "secondary",
-    size: "md",
     onClick: () => (showReplaceModal.value = true),
     permission: {
       and: [
@@ -165,6 +153,24 @@ registerSubHeaderActions([
         },
       ],
     },
+  },
+];
+
+const activeTab = ref<'details' | 'permissions'>('details');
+
+const panelSections = computed(() => [
+  {
+    value: 'details',
+    label: 'Details',
+    icon: 'lucide:file-text',
+    title: pageTitle.value,
+    description: 'View and edit file information',
+    actions: panelActions,
+  },
+  {
+    value: 'permissions',
+    label: 'Permissions',
+    icon: 'lucide:shield',
   },
 ]);
 
@@ -324,19 +330,15 @@ function getFileIconAndColor(mimetype: string): {
 </script>
 
 <template>
+  <div class="eapp-page-constrained">
+    <CommonPanel v-model="activeTab" :sections="panelSections">
+      <template #details>
   <div class="grid w-full min-w-0 gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)]">
     <aside class="min-w-0 space-y-4 xl:sticky xl:top-6 xl:self-start">
       <div class="eapp-bordered-region min-w-0 overflow-hidden">
         <div class="border-b border-[var(--border-default)] px-5 py-4">
           <div class="flex items-center justify-between gap-3">
-            <div class="min-w-0">
-              <p class="text-sm font-medium text-[var(--text-tertiary)]">
-                Preview
-              </p>
-              <h2 class="truncate text-lg font-semibold text-[var(--text-primary)]">
-                {{ pageTitle }}
-              </h2>
-            </div>
+            <p class="text-sm font-medium text-[var(--text-secondary)]">Preview</p>
             <UBadge variant="subtle" color="neutral" size="sm">
               {{ storageName }}
             </UBadge>
@@ -392,7 +394,7 @@ function getFileIconAndColor(mimetype: string): {
     </aside>
 
     <div class="min-w-0 space-y-6">
-      <div class="surface-card min-w-0 p-6">
+      <CommonFormCard>
         <div class="mb-5 flex items-center gap-3">
           <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
             <UIcon name="lucide:edit-3" class="h-5 w-5 text-primary" />
@@ -424,17 +426,19 @@ function getFileIconAndColor(mimetype: string): {
             :loading="pending"
           />
         </UForm>
-      </div>
-
-      <div class="surface-card min-w-0 p-6">
+      </CommonFormCard>
+    </div>
+  </div>
+      </template>
+      <template #permissions>
         <PermissionManager
           table-name="enfyra_file_permission"
           :current-field-id="{ field: 'file', value: fileId }"
           icon="lucide:shield"
           title="File Permissions"
         />
-      </div>
-    </div>
+      </template>
+    </CommonPanel>
 
     <LazyCommonUploadModal
       v-if="showReplaceModal"

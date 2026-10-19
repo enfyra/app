@@ -510,10 +510,10 @@
   --danger-border-soft: color-mix(in srgb, var(--md-error) 30%, transparent);
   --danger-ring: color-mix(in srgb, var(--md-error) 24%, transparent);
   --danger-ghost-text: var(--md-error);
-  --action-danger-bg: var(--danger-surface);
-  --action-danger-bg-hover: var(--danger-surface-hover);
-  --action-danger-bg-active: var(--danger-surface-active);
-  --action-danger-text: var(--md-on-error-container);
+  --action-danger-bg: var(--md-error);
+  --action-danger-bg-hover: color-mix(in srgb, var(--md-error) 84%, var(--md-on-error));
+  --action-danger-bg-active: color-mix(in srgb, var(--md-error) 72%, var(--md-on-error));
+  --action-danger-text: var(--md-on-error);
   --action-neutral-solid-bg: var(--md-surface-container-highest);
   --action-neutral-solid-bg-hover: color-mix(in srgb, var(--md-primary) 14%, var(--md-surface-container-highest));
   --action-neutral-solid-bg-active: color-mix(in srgb, var(--md-primary) 20%, var(--md-surface-container-highest));

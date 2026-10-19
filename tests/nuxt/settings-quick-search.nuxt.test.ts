@@ -18,7 +18,7 @@ mockNuxtImport('usePermissions', () => () => ({ hasPermission: () => false, chec
 mockNuxtImport('useDatabase', () => () => ({ getId: (row: any) => row?.id ?? row?._id, getIdFieldName: () => 'id' }))
 mockNuxtImport('useKeyedLoaders', () => () => ({ getLoader: () => ({ isLoading: ref(false) }) }))
 mockNuxtImport('useRoutes', () => () => ({ routes: ref([]), loadRoutes: vi.fn() }))
-mockNuxtImport('useMenuRegistry', () => () => ({ registerDataMenuItemsFromRoutes: vi.fn() }))
+mockNuxtImport('useMenuRegistry', () => () => ({ registerDataMenuItemsFromRoutes: vi.fn(), findMenuIconForPath: () => undefined }))
 mockNuxtImport('useMenuApi', () => () => ({ fetchMenuDefinitions: vi.fn() }))
 mockNuxtImport('useDynamicComponent', () => () => ({ invalidateExtensionCache: vi.fn() }))
 mockNuxtImport('useGlobalExtensions', () => () => ({ loadGlobalExtensions: vi.fn() }))

@@ -60,7 +60,15 @@ function hasSectionHeader(value?: string) {
   return !!value && !!slots[sectionHeaderName(value)];
 }
 
-const topIsMuted = computed(() => props.framed && (showTabs.value || hasSectionHeader(selectedValue.value)));
+const activeHasHeader = computed(() =>
+  hasSectionHeader(selectedValue.value)
+  || !!activeSection.value?.title
+  || !!activeSection.value?.actions?.length,
+);
+
+const sectionActions = computed(() => activeSection.value?.actions ?? []);
+
+const topIsMuted = computed(() => props.framed && (showTabs.value || activeHasHeader.value));
 const panelUi = computed(() => ({
   root: props.framed
     ? 'eapp-panel flex min-w-0 min-h-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-default bg-default ring-0 divide-y-0 shadow-none'
@@ -77,7 +85,7 @@ function selectSection(value: string | number) {
 
 <template>
   <UCard v-bind="$attrs" :ui="panelUi">
-    <template v-if="showTabs || hasSectionHeader(selectedValue)" #header>
+    <template v-if="showTabs || activeHasHeader" #header>
       <div v-if="showTabs" :class="framed ? 'bg-muted shadow-[inset_0_-1px_0_var(--ui-border)]' : undefined">
         <UTheme :ui="{ tabs: tabHeaderUi }">
           <UTabs
@@ -96,14 +104,32 @@ function selectSection(value: string | number) {
         </UTheme>
       </div>
       <div
-        v-if="hasSectionHeader(selectedValue)"
+        v-if="activeHasHeader"
         :class="[
-          'px-3 py-3 md:px-5',
+          'flex flex-wrap items-center gap-3 px-3 py-3 md:flex-nowrap md:px-5',
           framed && !showTabs ? 'bg-muted shadow-[inset_0_-1px_0_var(--ui-border)]' : undefined,
           framed && showTabs ? 'border-b border-default' : undefined,
         ]"
       >
-        <slot :name="sectionHeaderName(selectedValue || '')" :section="activeSection" />
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3 max-md:contents">
+          <div class="min-w-0 max-md:order-[-9999] max-md:basis-full md:flex-1">
+            <slot :name="sectionHeaderName(selectedValue || '')" :section="activeSection">
+              <CommonFormHeader
+                v-if="activeSection?.title"
+                :title="activeSection.title"
+                :description="activeSection.description"
+                :icon="activeSection.icon"
+              />
+            </slot>
+          </div>
+          <CommonPanelSectionHeader :actions="sectionActions" side="left" />
+          <div
+            v-if="sectionActions.length"
+            class="order-[-9998] -mx-3 h-0 basis-[calc(100%+1.5rem)] border-t border-default md:hidden"
+            aria-hidden="true"
+          />
+        </div>
+        <CommonPanelSectionHeader :actions="sectionActions" side="right" />
       </div>
     </template>
 

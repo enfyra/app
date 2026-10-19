@@ -1,4 +1,6 @@
 <template>
+  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+    <template #list>
   <DataTableSettingsTable
     v-model:page="page"
     :data="accounts"
@@ -16,7 +18,10 @@
       <CommonSearchField v-model="searchQuery" placeholder="Search by email" label="Search by email" :loading="loading" @search="submitSearch" />
     </template>
   </DataTableSettingsTable>
+    </template>
+  </CommonPanel>
 </template>
+
 
 <script setup lang="ts">
 import type { ColumnDef } from '@tanstack/vue-table';
@@ -36,12 +41,8 @@ const OAUTH_ACCOUNT_LIST_FIELDS = [
 ].join(",");
 
 const { getId } = useDatabase();
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "OAuth Accounts",
-  gradient: "blue",
-});
+
 
 const {
   data: apiData,
@@ -102,4 +103,5 @@ async function setPageSize(size: number) {
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
 watch([page, pageLimit, searchValue], () => { void fetchAccounts(); }, { immediate: true });
+const listSections = [{ value: 'list', title: 'OAuth Accounts' }];
 </script>

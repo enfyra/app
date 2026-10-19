@@ -17,8 +17,7 @@ const emit = defineEmits<{
 }>()
 
 const slots = useSlots()
-const { isMobile } = useScreen()
-const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'headerName', 'showRecordCount', 'recordCount', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection'])
+const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'headerName', 'showRecordCount', 'recordCount', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection', 'reload', 'reloadLoading'])
 const recordCount = computed(() => props.recordCount ?? props.paginationConfig?.total ?? props.data.length)
 const tableOptions = computed(() => Object.fromEntries(Object.entries(props).filter(([key]) => !wrapperKeys.has(key))))
 const tableRef = useTemplateRef<{ tableApi?: Table<Record<string, any>>; tableRef?: HTMLElement }>('tableRef')
@@ -101,15 +100,16 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="tableScope" class="min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
+  <div ref="tableScope" class="eapp-data-table min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
     <span v-if="skeletonActive" role="status" class="sr-only">Loading records...</span>
-    <div v-if="props.headerName || props.showRecordCount || slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility" class="flex flex-wrap items-center justify-between gap-3 border-b border-default bg-muted px-3 py-3 md:flex-nowrap md:px-4 max-md:[&_.eapp-search-field]:order-first max-md:[&_.eapp-search-field]:basis-full max-md:[&_.eapp-search-field]:max-w-none">
-      <div class="contents min-w-0 flex-1 flex-wrap items-center gap-3 md:flex">
-        <span v-if="props.headerName" class="max-w-full truncate text-sm font-semibold text-highlighted" :title="props.headerName">{{ props.headerName }}</span>
+    <div v-if="props.headerName || props.showRecordCount || slots.toolbar || slots['toolbar-actions'] || props.showColumnVisibility || props.reload" class="flex flex-wrap items-center gap-3 border-b border-default bg-muted px-3 py-3 md:flex-nowrap md:justify-between md:px-4 max-md:[&:has(.eapp-search-field)_.eapp-table-title]:hidden max-md:[&_.eapp-search-field]:order-first max-md:[&_.eapp-search-field]:basis-full max-md:[&_.eapp-search-field]:max-w-none">
+      <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3 max-md:contents">
+        <span v-if="props.headerName" class="eapp-table-title max-w-full truncate text-sm font-semibold text-highlighted max-md:order-[-9999] max-md:basis-full" :title="props.headerName">{{ props.headerName }}</span>
         <slot name="toolbar" :table-api="tableRef?.tableApi" />
+        <div v-if="(props.headerName || slots.toolbar) && (slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length) || props.reload || props.showRecordCount)" class="order-[-9998] -mx-3 h-0 basis-[calc(100%+1.5rem)] border-t border-default md:hidden" aria-hidden="true" />
         <UBadge v-if="props.showRecordCount" color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" aria-live="polite" class="shrink-0" />
       </div>
-      <div v-if="slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length)" class="ml-auto flex min-h-8 shrink-0 items-center justify-end gap-2">
+      <div v-if="slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length) || props.reload" class="ml-auto flex min-h-8 shrink-0 items-center justify-end gap-2">
         <slot name="toolbar-actions" :table-api="tableRef?.tableApi" />
         <UDropdownMenu
           v-if="props.showColumnVisibility && visibilityItems.length"
@@ -117,8 +117,20 @@ defineExpose({
           :content="{ align: 'end' }"
           :ui="{ item: 'cursor-pointer pointer-coarse:min-h-[44px]' }"
         >
-          <UButton type="button" :label="isMobile ? undefined : 'Columns'" icon="lucide:columns-3" color="neutral" variant="outline" size="sm" aria-label="Choose visible columns" />
+          <UButton type="button" icon="lucide:columns-3" color="neutral" variant="outline" size="sm" square aria-label="Choose visible columns" />
         </UDropdownMenu>
+        <UButton
+          v-if="props.reload"
+          type="button"
+          icon="lucide:refresh-cw"
+          color="neutral"
+          variant="outline"
+          size="sm"
+          square
+          aria-label="Reload records"
+          :loading="props.reloadLoading ?? props.loading"
+          @click="props.reload?.()"
+        />
       </div>
     </div>
     <component :is="menuWrapper" :items="props.contextMenuItems ? menuItems : undefined">

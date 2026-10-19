@@ -21,12 +21,7 @@ const fieldMap = computed(() =>
 );
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: `Create New ${route.params.table} Record`,
-  gradient: "cyan",
-});
 
 onMounted(async () => {
   await Promise.all([ensureRoutesLoaded(), ensureSchema()]);
@@ -105,6 +100,11 @@ async function handleCreate() {
   <div class="space-y-6">
     
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'record' }]">
+        <template #record-header>
+          <CommonFormHeader :title="`Create New ${route.params.table} Record`" />
+        </template>
+        <template #record>
       <CommonFormCard>
         <UForm :state="newRecord" @submit="handleCreate">
           <FormEditorLazy
@@ -116,6 +116,8 @@ async function handleCreate() {
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>

@@ -1,4 +1,6 @@
 <template>
+  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+    <template #list>
   <DataTableSettingsTable
     v-model:page="page"
     :data="configs"
@@ -13,7 +15,10 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     @row-click="config => navigateTo(`/settings/oauth/config/${getId(config)}`)"
   />
+    </template>
+  </CommonPanel>
 </template>
+
 
 <script setup lang="ts">
 import type { ColumnDef } from '@tanstack/vue-table';
@@ -39,7 +44,6 @@ const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
 const route = useRoute();
-const { registerPageHeader } = usePageHeaderRegistry();
 const OAUTH_CONFIG_LIST_FIELDS = [
   "id",
   "provider",
@@ -48,10 +52,7 @@ const OAUTH_CONFIG_LIST_FIELDS = [
   "isEnabled",
 ].join(",");
 
-registerPageHeader({
-  title: "OAuth Configuration",
-  gradient: "blue",
-});
+
 
 const {
   data: apiData,
@@ -183,4 +184,5 @@ async function setPageSize(size: number) {
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
 watch([page, limit], () => { void fetchConfigs(); }, { immediate: true });
+const listSections = [{ value: 'list', title: 'OAuth Configuration' }];
 </script>

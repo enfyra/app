@@ -5,12 +5,12 @@
       :disabled="moveState.moveMode"
     >
       <div
-        class="eapp-bordered-region relative cursor-pointer overflow-hidden hover:bg-[var(--menu-item-hover-bg)]"
+        class="eapp-bordered-region relative overflow-hidden transition-[border-color,box-shadow,transform] duration-[var(--duration-base)] hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--state-primary-outline-border)]"
         :class="{
-          '!border-[var(--state-primary-soft-border)]': selectedItems.includes(file.id),
+          'cursor-pointer': !moveState.moveMode,
+          '!border-[var(--state-primary-outline-border)] !shadow-[0_0_0_1px_var(--state-primary-outline-border)]': selectedItems.includes(file.id),
         }"
         :style="{
-          borderWidth: selectedItems.includes(file.id) ? '2px' : '1px',
           opacity: moveState.moveMode ? '0.6' : '1',
           cursor: moveState.moveMode ? 'not-allowed' : 'pointer',
         }"
@@ -42,7 +42,7 @@
           </div>
 
           <div
-            class="pointer-events-none absolute inset-0 bg-[var(--surface-default)]/0 transition-colors duration-[var(--duration-base)] group-hover:bg-[var(--surface-default)]/10"
+            class="pointer-events-none absolute inset-0 bg-[var(--surface-default)]/0 transition-colors duration-[var(--duration-base)] group-hover:bg-[var(--surface-default)]/[0.06]"
           />
 
           <div

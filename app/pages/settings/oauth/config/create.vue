@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'configuration' }]">
-        <template #configuration-header><h2 class="text-sm font-medium">Configuration</h2></template>
+        <template #configuration-header><CommonFormHeader :title="'Add OAuth Provider'" /></template>
         <template #configuration>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">

@@ -138,11 +138,6 @@ const pageId = computed(() => {
 
 const showConnTestModal = ref(false);
 
-registerPageHeader({
-  title: "WebSocket Gateway",
-  gradient: "cyan",
-});
-
 const {
   data: gatewayData,
   pending: loading,
@@ -158,6 +153,19 @@ const {
 });
 
 const gatewayId = computed(() => pageId.value || getId(gatewayData.value?.data?.[0]));
+
+watch(
+  () => gatewayData.value?.data?.[0]?.path,
+  (path) => {
+    if (path) {
+      registerPageHeader({
+        title: `WebSocket Gateway: ${path}`,
+        gradient: "cyan",
+      });
+    }
+  },
+  { immediate: true },
+);
 
 const { data: eventsData, execute: fetchEvents } = useApi(() => "/enfyra_websocket_event", {
   query: computed(() => ({
@@ -259,6 +267,15 @@ registerHeaderActions([
 ]);
 
 registerHeaderActions([
+  useReloadAction({
+    reload: async () => {
+      await fetchGatewayDetail();
+      formEditorRef.value?.confirmChanges?.();
+      hasFormChanges.value = false;
+    },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => activeSection.value === 'gateway' && hasFormChanges.value,
+  }),
   {
     id: 'create-websocket-event',
     label: 'Create Event',

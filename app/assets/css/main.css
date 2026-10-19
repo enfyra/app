@@ -552,6 +552,11 @@ button:focus-visible,
   padding: 0;
 }
 
+.eapp-panel .eapp-data-table {
+  border: 0;
+  border-radius: 0;
+}
+
 .eapp-radius-card {
   border-radius: var(--radius-card);
 }

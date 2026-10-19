@@ -3,6 +3,8 @@ import FileManagerToolbar from './FileManagerToolbar.vue';
 import FileManagerActions from './FileManagerActions.vue';
 interface Props {
   parentId?: string;
+  title?: string;
+  description?: string;
   folders?: any[];
   files?: any[];
   foldersLoading?: boolean;
@@ -31,6 +33,8 @@ const props = withDefaults(defineProps<Props>(), {
     "This folder is empty. Create folders or upload files to get started.",
   showCreateButton: true,
   parentId: undefined,
+  title: 'Library',
+  description: undefined,
 });
 
 const emit = defineEmits<Emits>();
@@ -156,6 +160,9 @@ async function handleBulkDelete() {
   emit('refreshItems');
 }
 
+const panelSections = computed(() => [{ value: 'library', title: props.title, description: props.description }]);
+
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { hasPermission } = usePermissions();
 const operationPending = ref<'delete' | 'move' | null>(null);
 const library = useTemplateRef<HTMLElement>('library');
@@ -176,6 +183,17 @@ const canMoveHere = computed(() =>
 );
 
 watch(contextActive, active => emit('contextChange', active), { immediate: true });
+
+registerHeaderActions([{
+  id: 'upload-file',
+  label: 'Upload',
+  icon: 'lucide:upload',
+  variant: 'solid',
+  color: 'primary',
+  order: 10,
+  show: computed(() => canUpload.value && !isBusy.value && !isMoveMode.value),
+  onClick: () => emit('createFile'),
+}]);
 
 function clearSelectedItems() {
   if (!isBusy.value) deselectAllItems();
@@ -231,8 +249,12 @@ watch([loadedIds, isBusy], ([ids]) => {
 </script>
 
 <template>
-  <div ref="library" class="eapp-bordered-region overflow-hidden">
+  <div ref="library" class="min-w-0">
+  <CommonPanel :sections="panelSections" body-class="!p-0">
+    <template #library-header>
     <FileManagerToolbar
+      :title="props.title"
+      :description="props.description"
       :view-mode="viewMode"
       :folder-count="props.folders.length"
       :file-count="props.files.length"
@@ -240,15 +262,15 @@ watch([loadedIds, isBusy], ([ids]) => {
       :selection-mode="isSelectionMode"
       :busy="isBusy"
       :loading="props.foldersLoading || props.filesLoading"
-      :can-upload="canUpload"
       :can-create-folder="canCreateFolder"
       :can-select="canSelect"
       @update:view-mode="setViewMode"
-      @upload="emit('createFile')"
       @create-folder="emit('createFolder')"
       @refresh="emit('refreshItems')"
       @select="startSelection"
     />
+    </template>
+    <template #library>
     <FileManagerActions
       :anchor="library"
       :active="contextActive"
@@ -272,7 +294,7 @@ watch([loadedIds, isBusy], ([ids]) => {
       @cancel-move="handleCancelMoveMode"
     />
 
-    <div class="space-y-6 p-3 md:space-y-8 md:p-4" :class="contextActive ? 'pb-36 sm:pb-24 md:pb-24' : undefined">
+    <div class="p-3 md:p-4" :class="contextActive ? 'pb-36 sm:pb-24 md:pb-24' : undefined">
       <section v-if="props.foldersLoading || props.folders.length > 0">
         <div class="mb-4 flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
@@ -300,7 +322,10 @@ watch([loadedIds, isBusy], ([ids]) => {
         />
       </section>
 
-      <section v-if="props.filesLoading || props.files.length > 0">
+      <section
+        v-if="props.filesLoading || props.files.length > 0"
+        class="mt-6 border-t border-default pt-6 md:mt-8 md:pt-8"
+      >
         <div class="mb-4 flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <UIcon name="lucide:file" class="h-5 w-5 text-muted" />
@@ -345,5 +370,10 @@ watch([loadedIds, isBusy], ([ids]) => {
         />
       </div>
     </div>
+    </template>
+    <template #footer>
+      <p class="text-xs text-muted">{{ props.folders.length }} folders · {{ props.files.length }} files</p>
+    </template>
+  </CommonPanel>
   </div>
 </template>

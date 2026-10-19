@@ -121,19 +121,14 @@ async function handleRefreshItems() {
   }
 }
 
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "File Manager",
-  description: "Organize your files and documents efficiently",
-  gradient: "cyan",
-});
 </script>
 
 <template>
   <div class="space-y-8">
     
     <FileManager
+      title="File Manager"
+      description="Organize your files and documents efficiently"
       :folders="folders"
       :files="files"
       :folders-loading="rootPending"

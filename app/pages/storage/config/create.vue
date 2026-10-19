@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'storage' }]">
-        <template #storage-header><h2 class="text-sm font-medium">Storage</h2></template>
+        <template #storage-header><CommonFormHeader :title="'Create Storage Configuration'" /></template>
         <template #storage>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">

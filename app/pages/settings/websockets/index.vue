@@ -1,4 +1,6 @@
 <template>
+  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+    <template #list>
   <DataTableSettingsTable
     v-model:page="page"
     :data="gateways"
@@ -17,7 +19,10 @@
       <CommonSearchField v-model="searchQuery" placeholder="Search by path" label="Search by path" :loading="loading" @search="submitSearch" />
     </template>
   </DataTableSettingsTable>
+    </template>
+  </CommonPanel>
 </template>
+
 
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -47,12 +52,8 @@ const { getId } = useDatabase();
 
 const route = useRoute();
 const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('path', () => fetchGateways());
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "WebSocket Manager",
-  gradient: "cyan",
-});
+
 
 const {
   data: apiData,
@@ -222,4 +223,5 @@ async function setPageSize(size: number) {
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
 watch([page, limit, searchValue], () => { void fetchGateways(); }, { immediate: true });
+const listSections = [{ value: 'list', title: 'WebSocket Manager' }];
 </script>

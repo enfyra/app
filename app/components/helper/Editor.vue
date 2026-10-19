@@ -30,6 +30,13 @@ watch(() => [form.value.name, ready.value], () => registerPageHeader({
   gradient: 'purple',
 }), { immediate: true });
 registerHeaderActions([
+  ...(props.mode === 'update' ? [useReloadAction({
+    reload: async () => {
+      await load();
+    },
+    loading: busy,
+    hasUnsavedChanges: () => dirty.value,
+  })] : []),
   { id: 'helper-reset', label: 'Reset', icon: 'lucide:rotate-ccw', variant: 'outline', color: 'neutral', onClick: reset, show: dirty, disabled: busy, order: 1 },
   { id: 'helper-delete', label: 'Delete', icon: 'lucide:trash-2', variant: 'outline', color: 'error', onClick: deleteHelper, show: computed(() => props.mode === 'update' && canDelete.value), loading: deleting, disabled: computed(() => !ready.value || busy.value && !deleting.value), permission: { and: [{ route: '/enfyra_helper', methods: ['DELETE'] }] }, order: 2 },
   { id: 'helper-save', label: props.mode === 'create' ? 'Create Helper' : 'Save', icon: 'lucide:save', variant: 'solid', color: 'primary', onClick: save, loading: saving, disabled: computed(() => !ready.value || busy.value && !saving.value || props.mode === 'update' && !dirty.value), permission: writePermission, order: 999 },

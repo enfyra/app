@@ -101,6 +101,8 @@ const columns = computed(() => {
       :record-count="total"
       :ui="tableUi"
       :pagination-config="pageSizeKey || hasPagination ? { total, itemsPerPage: pageLimit, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), to } : undefined"
+      :reload="reload"
+      :reload-loading="reloadLoading"
       @row-click="row => emit('row-click', row)"
       @page-size-change="size => emit('page-size-change', size)"
     >

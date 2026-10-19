@@ -231,6 +231,10 @@ function syncDrawersFromQuery() {
 }
 
 registerHeaderActions([
+  useReloadAction({
+    reload: () => refreshMenus(),
+    loading: pageMenusLoading,
+  }),
   {
     id: "create-menu",
     label: "Create Menu",

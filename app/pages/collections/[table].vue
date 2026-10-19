@@ -123,6 +123,15 @@ const {
 });
 
 registerHeaderActions([
+  useReloadAction({
+    reload: async () => {
+      await initializeForm();
+      if (activeTab.value === 'schema') formChanges.update(table.value);
+    },
+    loading: computed(() => schemaLoading.value || loading.value),
+    show: computed(() => activeTab.value === 'schema'),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
   {
     id: "reset-table",
     label: "Reset",

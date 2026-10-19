@@ -9,6 +9,8 @@
       variant="soft"
     />
 
+    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+      <template #list>
     <DataTableSettingsTable
       v-model:page="page"
       :data="packages"
@@ -26,6 +28,8 @@
         <CommonEmptyState variant="naked" title="No server packages installed" description="Install packages to enhance your handlers and hooks" icon="lucide:server" size="sm" />
       </template>
     </DataTableSettingsTable>
+      </template>
+    </CommonPanel>
   </div>
 </template>
 
@@ -80,12 +84,7 @@ const pendingBannerTitle = computed(() => {
   return `${ops.length} package operations in progress...`;
 });
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "Server Packages",
-  gradient: "none",
-});
 
 registerHeaderActions({
   id: "create-server-package",
@@ -203,4 +202,5 @@ onUnmounted(() => {
     }
   }
 });
+const listSections = [{ value: 'list', title: 'Server Packages' }];
 </script>

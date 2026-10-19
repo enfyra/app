@@ -37,7 +37,7 @@
           :replace="unref(action.replace)"
           :aria-label="action.ariaLabel || (isRef(action.label) ? unref(action.label) : action.label) || action.id"
           :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
-          :class="getHeaderActionButtonClass(action)"
+          :class="getHeaderActionButtonClass(action, isMobile || isTablet)"
           @click="handleActionClick(action)"
           class="cursor-pointer"
         />

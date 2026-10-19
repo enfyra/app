@@ -484,6 +484,16 @@ async function handleReset() {
 }
 
 registerHeaderActions([
+  useReloadAction({
+    reload: async () => {
+      await fetchRoute()
+      formChanges.update(routeData.value?.data?.[0] ?? {})
+      hasFormChanges.value = false
+    },
+    loading: computed(() => routeLoading.value),
+    show: computed(() => props.active),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
   {
     id: 'reset-route',
     label: 'Reset',

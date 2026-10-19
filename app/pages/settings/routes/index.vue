@@ -18,7 +18,6 @@ const tableName = "enfyra_route";
 const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { getLoader: getRouteLoader } = useKeyedLoaders();
-const { registerPageHeader } = usePageHeaderRegistry();
 const { routes: cachedRoutes, loadRoutes } = useRoutes();
 const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
 const ROUTE_LIST_FIELDS = [
@@ -39,10 +38,6 @@ const ROUTE_LIST_FIELDS = [
   "publicMethods.textColor",
 ].join(",");
 
-registerPageHeader({
-  title: "Route Manager",
-  gradient: "cyan",
-});
 
 const { getId } = useDatabase();
 
@@ -359,6 +354,7 @@ async function deleteRoute(routeItem: any) {
   }
 }
 
+const listSections = [{ value: 'list', title: 'Route Manager' }];
 </script>
 
 <template>
@@ -369,7 +365,9 @@ async function deleteRoute(routeItem: any) {
       @clear="clearFilters"
     />
 
-    <DataTableSettingsTable
+    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+      <template #list>
+  <DataTableSettingsTable
       v-model:page="page"
       :data="routesData"
       :columns="columns"
@@ -386,7 +384,9 @@ async function deleteRoute(routeItem: any) {
       <template #toolbar>
         <CommonSearchField v-model="searchQuery" placeholder="Search by path" label="Search routes by path" :loading="loading" @search="submitSearch" />
       </template>
-    </DataTableSettingsTable>
+  </DataTableSettingsTable>
+      </template>
+    </CommonPanel>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"

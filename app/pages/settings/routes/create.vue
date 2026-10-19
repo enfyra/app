@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'route' }]">
-        <template #route-header><h2 class="text-sm font-medium">Route</h2></template>
+        <template #route-header><CommonFormHeader :title="'Create New Route'" /></template>
         <template #route>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">

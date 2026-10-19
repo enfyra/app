@@ -1,4 +1,6 @@
 <template>
+  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+    <template #list>
   <DataTableSettingsTable
     v-model:page="page"
     :data="storageConfigs"
@@ -17,7 +19,10 @@
       <CommonEmptyState variant="naked" title="No storage configurations found" description="No storage configurations have been created yet" icon="lucide:hard-drive" size="sm" />
     </template>
   </DataTableSettingsTable>
+    </template>
+  </CommonPanel>
 </template>
+
 
 <script setup lang="ts">
 import type { ColumnDef } from '@tanstack/vue-table';
@@ -37,7 +42,6 @@ const { fetchStorageConfigs: fetchGlobalStorageConfigs } = useGlobalState();
 
 const route = useRoute();
 const router = useRouter();
-const { registerPageHeader } = usePageHeaderRegistry();
 const STORAGE_CONFIG_LIST_FIELDS = [
   "id",
   "name",
@@ -47,10 +51,7 @@ const STORAGE_CONFIG_LIST_FIELDS = [
   "isEnabled",
 ].join(",");
 
-registerPageHeader({
-  title: "Storage Configuration",
-  gradient: "blue",
-});
+
 
 const {
   data: apiData,
@@ -211,4 +212,5 @@ watch(
   },
   { immediate: true }
 );
+const listSections = [{ value: 'list', title: 'Storage Configuration' }];
 </script>

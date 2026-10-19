@@ -179,6 +179,14 @@ registerHeaderActions([
   },
 ]);
 
+registerHeaderActions(
+  useReloadAction({
+    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
+);
+
 onMounted(() => {
   initializeForm();
 });

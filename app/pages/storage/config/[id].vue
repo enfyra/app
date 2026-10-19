@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'storage' }]">
-        <template #storage-header><h2 class="text-sm font-medium">Storage</h2></template>
+        <template #storage-header><CommonFormHeader :title="configData?.data?.[0]?.name ? `Storage: ${configData.data[0].name}` : 'Storage'" /></template>
         <template #storage>
 <CommonFormCard>
         <UForm :state="form" @submit="updateConfig">
@@ -50,7 +50,6 @@ const tableName = "enfyra_storage_config";
 
 const { getIncludeFields } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -195,15 +194,6 @@ const {
   errorContext: "Delete Storage Configuration",
 });
 
-watch(() => configData.value?.data?.[0]?.name, (name) => {
-  if (name) {
-    registerPageHeader({
-      title: `Storage: ${name}`,
-      gradient: "blue",
-    });
-  }
-}, { immediate: true });
-
 async function updateConfig() {
   if (!form.value) return;
 
@@ -266,6 +256,14 @@ async function initializeForm() {
     formChanges.update(data);
   }
 }
+
+registerHeaderActions(
+  useReloadAction({
+    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
+);
 
 onMounted(() => {
   initializeForm();

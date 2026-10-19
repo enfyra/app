@@ -16,4 +16,6 @@ export interface SettingsTableProps {
   pageSizeKey?: string
   paginationLoading?: boolean
   to?: (page: number) => any
+  reload?: () => unknown | Promise<unknown>
+  reloadLoading?: boolean
 }

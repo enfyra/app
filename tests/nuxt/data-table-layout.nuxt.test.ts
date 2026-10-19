@@ -17,7 +17,7 @@ describe('DataTable layout', () => {
       const badge = wrapper.get('[aria-live="polite"]')
       expect(badge.text()).toBe('64 records')
       const left = badge.element.parentElement!
-      expect(Array.from(left.children).map(element => element.tagName)).toEqual(['SPAN', 'INPUT', 'SPAN'])
+      expect(Array.from(left.children).map(element => element.tagName)).toEqual(['SPAN', 'INPUT', 'DIV', 'SPAN'])
       expect(left.firstElementChild?.textContent).toBe('Records')
       const columns = wrapper.get('[aria-label="Choose visible columns"]')
       const right = columns.element.parentElement!
@@ -116,7 +116,7 @@ describe('DataTable layout', () => {
     })
     await flushPromises()
     await nextTick()
-    expect(wrapper.text()).toContain('Columns')
+    expect(wrapper.find('[aria-label="Choose visible columns"]').exists()).toBe(true)
   })
 
   it('shows native hideable columns by default and honors a controlled visibility state', async () => {
@@ -131,11 +131,11 @@ describe('DataTable layout', () => {
       },
     })
     await flushPromises()
-    expect(wrapper.text()).toContain('Columns')
+    expect(wrapper.find('[aria-label="Choose visible columns"]').exists()).toBe(true)
     expect(wrapper.findAll('thead th')).toHaveLength(1)
     expect(wrapper.get('thead').text()).toContain('ID')
     await wrapper.setProps({ showColumnVisibility: false })
-    expect(wrapper.text()).not.toContain('Columns')
+    expect(wrapper.find('[aria-label="Choose visible columns"]').exists()).toBe(false)
   })
 
   it('uses UTable row selection with a visible large checkbox column', async () => {

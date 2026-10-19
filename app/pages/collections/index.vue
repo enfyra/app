@@ -10,12 +10,7 @@ const page = ref(1);
 const pageLimit = useSettingsPageSize('collections');
 const route = useRoute();
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "Collections",
-  gradient: "purple",
-});
 
 const COLLECTION_LIST_FIELDS = [
   "id",
@@ -190,11 +185,14 @@ watch(
   { immediate: true }
 );
 
+const listSections = [{ value: 'list', title: 'Collections' }];
 </script>
 
 <template>
   <div class="space-y-6">
-    <DataTableSettingsTable
+    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+      <template #list>
+  <DataTableSettingsTable
       v-model:page="page"
       :data="displayedCollections"
       :columns="columns"
@@ -233,6 +231,8 @@ watch(
           size="sm"
         />
       </template>
-    </DataTableSettingsTable>
+  </DataTableSettingsTable>
+      </template>
+    </CommonPanel>
   </div>
 </template>

@@ -22,13 +22,8 @@ const ROLE_LIST_FIELDS = [
   "createdAt",
 ].join(",");
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "Role Manager",
-  variant: "default",
-  gradient: "purple",
-});
+
 
 const {
   data: apiData,
@@ -116,9 +111,12 @@ async function setPageSize(size: number) {
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
 watch([page, pageLimit, searchValue], () => { void fetchRoles(); }, { immediate: true });
+const listSections = [{ value: 'list', title: 'Role Manager' }];
 </script>
 
 <template>
+  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+    <template #list>
   <DataTableSettingsTable
     v-model:page="page"
     :data="roles"
@@ -137,4 +135,7 @@ watch([page, pageLimit, searchValue], () => { void fetchRoles(); }, { immediate:
       <CommonSearchField v-model="searchQuery" placeholder="Search by name" label="Search by name" :loading="loading" @search="submitSearch" />
     </template>
   </DataTableSettingsTable>
+    </template>
+  </CommonPanel>
 </template>
+

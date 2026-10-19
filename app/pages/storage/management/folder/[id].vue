@@ -9,7 +9,6 @@ const { getIdFieldName } = useDatabase();
 const folderPage = ref(Number(route.query.folderPage) || 1);
 const filePage = ref(Number(route.query.filePage) || 1);
 const pageLimit = 20;
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const { getIncludeFields: getFileFields } = useSchema("enfyra_file");
 
@@ -79,15 +78,7 @@ const {
   errorContext: "Load Files",
 });
 
-watch(() => folder.value?.data?.[0]?.name, (name) => {
-  if (name) {
-    registerPageHeader({
-      title: `${name} - Files Manager`,
-      description: "Manage files and subfolders in this directory",
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
+const pageTitle = computed(() => folder.value?.data?.[0]?.name ? `${folder.value.data[0].name} - Files Manager` : 'Files Manager');
 
 const folders = computed(() => childFolders.value?.data || []);
 const folderTotal = computed(() => childFolders.value?.meta?.filterCount || 0);
@@ -168,6 +159,8 @@ watch(
   <div class="space-y-8">
     
     <FileManager
+      :title="pageTitle"
+      description="Manage files and subfolders in this directory"
       :parent-id="route.params.id as string"
       :folders="folders"
       :files="files"

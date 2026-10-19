@@ -11,7 +11,8 @@ const circularButtonClassPatterns = [
 ];
 
 export function getHeaderActionButtonClass(
-  action: Pick<HeaderAction, "class">,
+  action: Pick<HeaderAction, "class" | "label">,
+  hideLabel = false,
 ) {
   const actionClass = action.class
     ?.split(/\s+/)
@@ -22,6 +23,7 @@ export function getHeaderActionButtonClass(
     actionClass,
     "!h-9",
     "!rounded-[var(--radius-control)]",
+    isHeaderActionIconOnly(action, hideLabel) ? "!w-9 !p-0" : "",
   ]
     .filter(Boolean)
     .join(" ");

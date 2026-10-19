@@ -6,7 +6,9 @@
       @clear="clearFilters"
     />
 
-    <DataTableSettingsTable
+    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+      <template #list>
+  <DataTableSettingsTable
       v-model:page="page"
       :data="users"
       :columns="columns"
@@ -29,7 +31,9 @@
           @search="searchUsers"
         />
       </template>
-    </DataTableSettingsTable>
+  </DataTableSettingsTable>
+      </template>
+    </CommonPanel>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
@@ -73,13 +77,7 @@ const USER_LIST_FIELDS = [
   "roles.name",
 ].join(",");
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "User Manager",
-  variant: "default",
-  gradient: "blue",
-});
 
 const {
   data: apiData,
@@ -266,4 +264,5 @@ watch(() => route.query.page, newVal => {
   page.value = Math.max(1, Number(newVal) || 1);
 }, { immediate: true });
 watch([page, limit, emailSearch], () => { void fetchUsers(); }, { immediate: true });
+const listSections = [{ value: 'list', title: 'User Manager' }];
 </script>

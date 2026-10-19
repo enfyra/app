@@ -21,12 +21,6 @@ const table = reactive<any>({
   uniques: [],
   indexes: [],
 });
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Create New Table",
-  gradient: "purple",
-});
 
 const constraintFieldNames = computed<string[]>(() => {
   const fkSet = new Set<string>(
@@ -211,6 +205,9 @@ onMounted(() => {
 <template>
   <div class="relative">
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'table' }]">
+        <template #table-header><CommonFormHeader title="Create New Table" /></template>
+        <template #table>
       <CommonFormCard>
         <TableForm v-model="table" :new="true">
           <template #tableName>
@@ -250,6 +247,8 @@ onMounted(() => {
           </div>
         </TableForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>

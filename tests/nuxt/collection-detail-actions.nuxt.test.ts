@@ -51,7 +51,7 @@ describe('collection detail actions', () => {
     } } })
     try {
       await flushPromises()
-      expect(visible().map(action => action.id)).toEqual(['delete-table', 'save-table'])
+      expect(visible().map(action => action.id)).toEqual(['reload-page', 'delete-table', 'save-table'])
       await wrapper.getComponent({ name: 'CommonPanel' }).vm.$emit('update:modelValue', 'routes')
       await flushPromises()
       expect(unref(mocks.actions.get('route-save').show)).toBe(true)

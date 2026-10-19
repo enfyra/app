@@ -36,7 +36,7 @@
             :loading="unref(action.loading)"
             :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
             @click="handleSubHeaderActionClick(action)"
-            :class="getHeaderActionButtonClass(action)"
+            :class="getHeaderActionButtonClass(action, isMobile || isTablet)"
           />
         </PermissionGate>
       </template>
@@ -75,7 +75,7 @@
             :loading="unref(action.loading)"
             :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
             @click="handleSubHeaderActionClick(action)"
-            :class="getHeaderActionButtonClass(action)"
+            :class="getHeaderActionButtonClass(action, isMobile || isTablet)"
           />
         </PermissionGate>
       </template>

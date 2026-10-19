@@ -1,6 +1,9 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'install' }]">
+        <template #install-header><CommonFormHeader title="Install Package" /></template>
+        <template #install>
       <CommonFormCard>
         <div class="mb-8">
           <div class="flex items-center justify-between mb-4">
@@ -163,6 +166,8 @@
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>
@@ -210,13 +215,6 @@ registerHeaderActions({
       },
     ],
   },
-});
-
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Install Package",
-  gradient: "blue",
 });
 
 onMounted(async () => {

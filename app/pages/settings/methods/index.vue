@@ -32,14 +32,8 @@ const notify = useNotify();
 const route = useRoute();
 const router = useRouter();
 const { confirm } = useConfirm();
-const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
 
-registerPageHeader({
-  title: 'Method Manager',
-  description: 'Manage route methods and their badge colors.',
-  gradient: 'purple',
-});
 
 const drawerOpen = ref(false);
 const mode = ref<'create' | 'edit'>('create');
@@ -355,17 +349,22 @@ watch(
     }
   },
 );
+const listSections = [{ value: 'list', title: 'Method Manager', description: 'Manage route methods and their badge colors.' }];
 </script>
 
 <template>
   <div class="space-y-6">
-    <DataTableSettingsTable
+    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+      <template #list>
+  <DataTableSettingsTable
       :data="methods"
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading || loading"
       @row-click="method => openEdit(method as MethodRecord)"
     />
+      </template>
+    </CommonPanel>
 
     <CommonDrawer
       :model-value="drawerOpen"
@@ -398,7 +397,7 @@ watch(
 
       <template #body>
         <div class="space-y-6">
-          <section class="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-nested)] p-4">
+          <section class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-nested)] p-4">
             <div class="mb-3 flex items-center justify-between gap-3">
               <div>
                 <h3 class="text-sm font-semibold text-[var(--text-primary)]">Method</h3>
@@ -420,7 +419,7 @@ watch(
                 type="button"
                 :disabled="!canEditMethodName"
                 class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 font-mono text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
-                :class="isMethodSelected(method) ? 'border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]' : 'border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]'"
+                :class="isMethodSelected(method) ? 'border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]' : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)]'"
                 @click="selectMethod(method)"
               >
                 {{ method }}
@@ -460,7 +459,7 @@ watch(
             </p>
           </section>
 
-          <section class="rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-nested)] p-4">
+          <section class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-nested)] p-4">
             <h3 class="mb-3 text-sm font-semibold text-[var(--text-primary)]">Colors</h3>
             <MethodColorPairPicker
               v-model:button-color="form.buttonColor"
@@ -481,12 +480,12 @@ watch(
             class="rounded-xl border border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] p-4"
           >
             <div class="flex items-center gap-3">
-              <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--state-danger-outline-border)]/20 text-[var(--state-danger-soft-text)]">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--state-danger-outline-border)]/25 text-[var(--state-danger-soft-text)] ring-1 ring-inset ring-[var(--state-danger-outline-border)]">
                 <UIcon name="lucide:trash-2" class="size-4" />
               </span>
               <div class="min-w-0 flex-1">
                 <h3 class="text-sm font-semibold text-[var(--state-danger-soft-text)]">Danger zone</h3>
-                <p class="text-xs text-[var(--state-danger-soft-text)]/80">
+                <p class="text-xs text-[var(--state-danger-soft-text)]">
                   Permanently delete this method. This cannot be undone.
                 </p>
               </div>
@@ -495,6 +494,7 @@ watch(
                 variant="solid"
                 size="sm"
                 icon="lucide:trash-2"
+                class="shrink-0"
                 :disabled="form.isSystem"
                 :title="form.isSystem ? 'System methods cannot be deleted' : ''"
                 @click="deleteMethod({ id: form.id ?? undefined, name: form.name, isSystem: form.isSystem })"

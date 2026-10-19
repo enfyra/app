@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'user' }]">
-        <template #user-header><h2 class="text-sm font-medium">User</h2></template>
+        <template #user-header><CommonFormHeader :title="'Create New User'" /></template>
         <template #user>
 <CommonFormCard>
         <UForm :state="form" @submit="handleCreate">

@@ -299,14 +299,23 @@ watch(() => stepForm.value.type, () => {
   if (stepErrors.value.type) stepErrors.value.type = '';
 });
 
-registerPageHeader({ title: "Flow Editor", gradient: "purple" });
-
 const { data: flowData, executeWithResult: fetchFlow } = useApi(
   () => `/enfyra_flow?filter={"${getIdFieldName()}":{"_eq":"${flowId.value}"}}&fields=${FLOW_DETAIL_FIELDS}&limit=1`,
   { errorContext: "Fetch Flow" }
 );
 
 const flow = computed(() => flowData.value?.data?.[0] || null);
+
+watch(
+  () => flow.value?.name,
+  (name) => {
+    if (name) {
+      registerPageHeader({ title: `Flow: ${name}`, gradient: "purple" });
+    }
+  },
+  { immediate: true },
+);
+
 const flowLoadSettled = ref(false);
 const showInitialLoading = computed(() => !isMounted.value || (!flow.value && !flowLoadSettled.value));
 const steps = computed(() => {
@@ -420,6 +429,14 @@ const { executeWithResult: triggerFlowApi } = useApi(
 
 
 registerHeaderActions([
+  useReloadAction({
+    reload: async () => {
+      await loadFlow();
+      await fetchExecutions();
+    },
+    loading: computed(() => saveFlowPending.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
   {
     id: "trigger-flow",
     label: "Run Now",

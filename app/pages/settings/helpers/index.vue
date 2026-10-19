@@ -11,7 +11,6 @@ const { getId } = useDatabase();
 const { checkPermissionCondition } = usePermissions();
 const { confirm } = useConfirm();
 const notify = useNotify();
-const { registerPageHeader } = usePageHeaderRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(Math.max(1, Number(route.query.page) || 1));
 const limit = useSettingsPageSize('helpers');
@@ -36,7 +35,6 @@ const columns: ColumnDef<Record<string, any>>[] = [
   settingsStatusColumn(),
   settingsDateColumn('updatedAt', 'Updated'),
 ];
-registerPageHeader({ title: 'Helpers', description: 'Write reusable code once and call it by name from handlers, hooks and flows.', gradient: 'purple' });
 registerHeaderActions([
   { id: 'helpers-refresh', label: 'Refresh', icon: 'lucide:refresh-cw', variant: 'outline', color: 'neutral', onClick: () => loadHelpers(), loading, disabled: computed(() => !!mutatingId.value) },
   { id: 'helpers-create', label: 'Create Helper', icon: 'lucide:plus', variant: 'solid', color: 'primary', to: '/settings/helpers/create', permission: { and: [{ route: '/enfyra_helper', methods: ['POST'] }] }, order: 999 },
@@ -102,12 +100,15 @@ watch(() => [route.query.page, route.query.search, route.query.status, limit.val
   void loadHelpers(Math.max(1, Number(route.query.page) || 1));
 }, { immediate: true });
 onBeforeUnmount(() => { active = false; generation++; cancel(); });
+const listSections = [{ value: 'list', title: 'Helpers', description: 'Write reusable code once and call it by name from handlers, hooks and flows.' }];
 </script>
 
 <template>
   <div class="min-w-0 space-y-4">
     <UAlert v-if="loadFailed" color="error" variant="soft" title="Helpers could not be loaded" description="Check your access or refresh to try again." />
-    <DataTableSettingsTable :page="page" :data="rows" :columns="columns" :actions="actions" :loading="loading" :pagination-loading="loading" :total="total" :page-limit="limit" page-size-key="helpers" :to="p => ({ path: route.path, query: { ...route.query, page: p } })" @update:page="changePage" @page-size-change="changePageSize" @row-click="helper => navigateTo(`/settings/helpers/${encodeURIComponent(String(getId(helper)))}`)">
+    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+      <template #list>
+  <DataTableSettingsTable :page="page" :data="rows" :columns="columns" :actions="actions" :loading="loading" :pagination-loading="loading" :total="total" :page-limit="limit" page-size-key="helpers" :to="p => ({ path: route.path, query: { ...route.query, page: p } })" @update:page="changePage" @page-size-change="changePageSize" @row-click="helper => navigateTo(`/settings/helpers/${encodeURIComponent(String(getId(helper)))}`)">
       <template #toolbar>
         <div class="contents">
           <CommonSearchField v-model="search" placeholder="Search by name" label="Search helpers by name" :loading="loading" @search="searchHelpers" />
@@ -117,6 +118,8 @@ onBeforeUnmount(() => { active = false; generation++; cancel(); });
       <template #empty>
         <CommonEmptyState title="No helpers found" description="Create a helper to share code across your scripts, or change the search filters." icon="lucide:code" variant="naked" />
       </template>
-    </DataTableSettingsTable>
+  </DataTableSettingsTable>
+      </template>
+    </CommonPanel>
   </div>
 </template>

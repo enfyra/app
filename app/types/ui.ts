@@ -38,6 +38,8 @@ export interface DataTableProps extends Omit<TableProps<any>, 'data' | 'columns'
   recordCount?: number;
   paginationConfig?: DataTablePaginationConfig;
   page?: number;
+  reload?: () => unknown | Promise<unknown>;
+  reloadLoading?: boolean;
 }
 
 export interface RouteLoadingProps {
@@ -116,9 +118,12 @@ export interface HeaderAction {
 export interface PanelSection {
   value: string;
   label?: string;
+  title?: string;
+  description?: string;
   icon?: string;
   badge?: string | number | { label?: string | number; color?: string; variant?: string };
   disabled?: boolean;
+  actions?: HeaderAction[];
 }
 
 export interface DialogFooterAction {

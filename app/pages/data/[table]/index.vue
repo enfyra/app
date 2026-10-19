@@ -1,5 +1,4 @@
 <script setup lang="ts">
-const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { createSelectionColumn } from '~/utils/data-table-selection';
 import { resolveTableCellDisplay } from '~/utils/data-table-cell-formatter';
@@ -8,7 +7,6 @@ import type { RowSelectionState, VisibilityState } from '@tanstack/vue-table';
 
 const route = useRoute();
 const router = useRouter();
-const { isDesktop } = useScreen();
 const tableName = computed(() => route.params.table as string);
 const { schemas, schemaReady, getColumnFields } = useSchema(tableName);
 const total = ref(1);
@@ -24,7 +22,6 @@ const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const schema = computed(() => schemas.value[tableName.value]);
 const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
@@ -61,15 +58,6 @@ watch([schemaReady, tableName, isSingleRecord], async ([ready]) => {
 onMounted(async () => {
   await ensureRoutesLoaded();
 });
-
-watch(() => schemas.value[tableName.value]?.name || tableName.value, (name) => {
-  if (name) {
-    registerPageHeader({
-      title: name,
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
 
 const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 
@@ -164,10 +152,6 @@ const rowSelection = ref<RowSelectionState>({});
 const canDeleteSelection = computed(() => checkPermissionCondition({
   and: [{ route: getRouteForTableName(tableName.value), methods: ['DELETE'] }],
 }));
-function clearSelection() {
-  rowSelection.value = {};
-  handleSelectionChange([]);
-}
 watch(rowSelection, (selection) => {
   const selected = new Set(Object.keys(selection).filter((id) => selection[id]));
   handleSelectionChange(data.value.filter((row) => selected.has(String(getId(row)))));
@@ -180,32 +164,6 @@ watch(data, (rows) => {
   handleSelectionChange(rows.filter((row) => selected.has(String(getId(row)))));
 });
 
-
-registerSubHeaderActions([
-  {
-    id: "bulk-delete-selected",
-    component: DataTableBulkActions,
-    props: {
-      get count() { return selectedRows.value.length; },
-      onClear: clearSelection,
-      onDelete: () => handleBulkDelete(selectedRows.value),
-    },
-    side: "right",
-    show: computed(
-      () => isDesktop.value && selectedRows.value.length > 0 && !isSingleRecord.value
-    ),
-    permission: {
-      and: [
-        {
-          get route() {
-            return getRouteForTableName(tableName.value);
-          },
-          methods: ["DELETE"],
-        },
-      ],
-    },
-  },
-]);
 
 const { buildActionsColumn } = useDataTableColumns();
 
@@ -419,22 +377,21 @@ registerHeaderActions([
         v-model:row-selection="rowSelection"
         v-model:column-visibility="columnVisibility"
         :pagination-config="{ itemsPerPage: pageLimit, total, loading, showPageSize: true, to: (p) => ({ path: route.path, query: { ...route.query, page: p } }) }"
+        :reload="fetchData"
+        :reload-loading="loading"
+        :header-name="tableName"
+        show-record-count
+        :record-count="total"
         @page-size-change="setPageSize"
         @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
       >
-        <template #toolbar>
-          <span v-if="isDesktop" class="text-sm font-medium text-highlighted">{{ tableName }}</span>
-          <UBadge color="neutral" variant="subtle" :label="!isDesktop && selectedRows.length ? `${selectedRows.length} selected` : `${total.toLocaleString()} records`" aria-live="polite" />
-        </template>
-        <template v-if="!isDesktop && selectedRows.length && canDeleteSelection" #toolbar-actions>
+        <template v-if="selectedRows.length && canDeleteSelection" #toolbar-actions>
           <DataTableBulkActions
-            compact
             :count="selectedRows.length"
-            :on-clear="clearSelection"
             :on-delete="() => handleBulkDelete(selectedRows)"
           />
         </template>
-        <template v-if="selectedRows.length && isDesktop" #pagination-summary>
+        <template v-if="selectedRows.length" #pagination-summary>
           <span>{{ selectedRows.length }} selected</span>
         </template>
       </DataTableLazy>

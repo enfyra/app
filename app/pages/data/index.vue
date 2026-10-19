@@ -14,8 +14,7 @@ interface CollectionItem {
 
 type SortMode = 'name' | 'recent';
 
-const { registerPageHeader } = usePageHeaderRegistry();
-const { routes, routesLoading, ensureRoutesLoaded } = useRoutes();
+const { routes, routesLoading, ensureRoutesLoaded, loadRoutes } = useRoutes();
 const { checkPermissionCondition } = usePermissions();
 const { prefs, isPinned, togglePin, addRecent } = useDataCollectionPreferences();
 const router = useRouter();
@@ -99,16 +98,22 @@ onMounted(async () => {
   try { await ensureRoutesLoaded(); } finally { initialLoading.value = false; }
 });
 
-registerPageHeader({
-  title: 'Collections',
-  description: 'Browse, search, and manage your data collections.',
-  variant: 'minimal',
-  gradient: 'cyan',
-});
+async function reloadCatalog() {
+  initialLoading.value = true;
+  try {
+    await loadRoutes();
+  } finally {
+    initialLoading.value = false;
+  }
+}
+
+const listSections = [{ value: 'list', title: 'Collections', description: 'Browse, search, and manage your data collections.' }];
 </script>
 
 <template>
   <div class="min-w-0 w-full">
+    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+      <template #list>
     <DataTable
       v-model:page="page"
       :data="pageRows"
@@ -117,6 +122,8 @@ registerPageHeader({
       :show-column-visibility="false"
       :get-row-id="item => item.tableName"
       :pagination-config="{ total: visible.length, itemsPerPage: pageSize, showPageSize: true, loading: isLoading }"
+      :reload="reloadCatalog"
+      :reload-loading="isLoading"
       :ui="{ base: 'table-fixed !min-w-[900px]', th: 'px-4 py-3', td: 'max-w-0 overflow-hidden px-4 py-3' }"
       @page-size-change="pageSize = $event"
       @row-click="open($event as CollectionItem)"
@@ -158,5 +165,7 @@ registerPageHeader({
         <CommonEmptyState variant="naked" :title="hasSearch ? 'No collections found' : 'No collections'" :description="hasSearch ? 'Try a collection name, table name, or API path.' : 'No enabled non-system collections are visible to your current role.'" :icon="hasSearch ? 'lucide:search-x' : 'lucide:database-zap'" size="sm" />
       </template>
     </DataTable>
+      </template>
+    </CommonPanel>
   </div>
 </template>

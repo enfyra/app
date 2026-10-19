@@ -1,4 +1,6 @@
 <template>
+  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
+    <template #list>
   <DataTableSettingsTable
     v-model:page="page"
     :data="packages"
@@ -16,7 +18,10 @@
       <CommonEmptyState variant="naked" title="No packages installed" description="Install your first app package" icon="lucide:package" size="sm" />
     </template>
   </DataTableSettingsTable>
+    </template>
+  </CommonPanel>
 </template>
+
 
 <script setup lang="ts">
 import { settingsDateColumn, settingsTextColumn } from "~/utils/settings-table";
@@ -43,12 +48,8 @@ const PACKAGE_LIST_FIELDS = [
   "createdAt",
 ].join(",");
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "App Packages",
-  gradient: "none",
-});
+
 
 registerHeaderActions({
   id: "create-package",
@@ -116,4 +117,5 @@ onUnmounted(() => {
     $adminSocket.off('$system:package:uninstalled');
   }
 });
+const listSections = [{ value: 'list', title: 'App Packages' }];
 </script>

@@ -195,6 +195,14 @@ async function saveProfile() {
   }
 }
 
+registerHeaderActions(
+  useReloadAction({
+    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
+);
+
 onMounted(() => {
   initializeForm();
 });

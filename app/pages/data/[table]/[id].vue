@@ -26,9 +26,13 @@ const formEditorRegistry = useFormEditorRegistry();
 const formChanges = useFormChanges();
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const currentRecord = ref<Record<string, any>>({});
+
+const recordTitle = computed(() => {
+  const id = getId(currentRecord.value);
+  return id ? `${tableName}: ${id}` : tableName;
+});
 const fieldMap = computed(() =>
   tableName === 'enfyra_method' ? buildMethodDefinitionFieldMap()
     : tableName === 'enfyra_helper' ? buildSharedHelperFieldMap() : {},
@@ -44,15 +48,6 @@ onMounted(async () => {
   await ensureRoutesLoaded();
   await initializeForm();
 });
-
-watch(() => getId(currentRecord.value), (id) => {
-  if (id) {
-    registerPageHeader({
-      title: `${route.params.table}: ${id}`,
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
 
 const {
   data: apiData,
@@ -163,6 +158,15 @@ async function handleReset() {
 }
 
 registerHeaderActions([
+  useReloadAction({
+    reload: async () => {
+      await initializeForm();
+      formEditorRegistry.value?.confirmChanges();
+      hasFormChanges.value = false;
+    },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
   {
     id: "reset-data-entry",
     label: "Reset",
@@ -221,6 +225,9 @@ registerHeaderActions([
   <div class="space-y-6">
     
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'record' }]">
+        <template #record-header><CommonFormHeader :title="recordTitle" /></template>
+        <template #record>
       <CommonFormCard>
         <FormEditorLazy
           :table-name="(route.params.table as string)"
@@ -233,6 +240,8 @@ registerHeaderActions([
           :current-record-id="currentRecordRouteId"
         />
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>
