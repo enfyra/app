@@ -290,6 +290,7 @@ onBeforeUnmount(() => {
   <div class="space-y-4">
     <p class="text-sm text-muted">Create long-lived tokens for MCP servers and external API clients.</p>
     <DataTable
+      header-name="API tokens"
       v-model:page="page"
       :data="pageTokens"
       :columns="tokenColumns"

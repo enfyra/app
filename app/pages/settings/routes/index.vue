@@ -354,7 +354,6 @@ async function deleteRoute(routeItem: any) {
   }
 }
 
-const listSections = [{ value: 'list', title: 'Route Manager' }];
 </script>
 
 <template>
@@ -365,9 +364,8 @@ const listSections = [{ value: 'list', title: 'Route Manager' }];
       @clear="clearFilters"
     />
 
-    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-      <template #list>
   <DataTableSettingsTable
+      header-name="Route Manager"
       v-model:page="page"
       :data="routesData"
       :columns="columns"
@@ -378,15 +376,15 @@ const listSections = [{ value: 'list', title: 'Route Manager' }];
       page-size-key="routes"
       :pagination-loading="loading"
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by path"
+      search-label="Search by path"
+      @search="submitSearch"
       @page-size-change="setPageSize"
       @row-click="routeItem => navigateTo(`/settings/routes/${getId(routeItem)}`)"
     >
-      <template #toolbar>
-        <CommonSearchField v-model="searchQuery" placeholder="Search by path" label="Search routes by path" :loading="loading" @search="submitSearch" />
-      </template>
   </DataTableSettingsTable>
-      </template>
-    </CommonPanel>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"

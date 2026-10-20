@@ -6,9 +6,8 @@
       @clear="clearFilters"
     />
 
-    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-      <template #list>
   <DataTableSettingsTable
+      header-name="User Manager"
       v-model:page="page"
       :data="users"
       :columns="columns"
@@ -20,20 +19,14 @@
       :pagination-loading="loading"
       @page-size-change="setPageSize"
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by email"
+      search-label="Search users by email"
+      @search="searchUsers"
       @row-click="user => navigateTo(`/settings/users/${getId(user)}`)"
     >
-      <template #toolbar>
-        <CommonSearchField
-          v-model="searchQuery"
-          placeholder="Search by email"
-          label="Search users by email"
-          :loading="loading"
-          @search="searchUsers"
-        />
-      </template>
   </DataTableSettingsTable>
-      </template>
-    </CommonPanel>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
@@ -264,5 +257,4 @@ watch(() => route.query.page, newVal => {
   page.value = Math.max(1, Number(newVal) || 1);
 }, { immediate: true });
 watch([page, limit, emailSearch], () => { void fetchUsers(); }, { immediate: true });
-const listSections = [{ value: 'list', title: 'User Manager' }];
 </script>

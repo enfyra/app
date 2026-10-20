@@ -9,6 +9,7 @@ describe('Settings table', () => {
     const id = '01a0b894-a051-72c8-be8e-f00000000001'
     const record = { id, name: 'First' }
     const wrapper = await mountSuspended(SettingsTable, { props: {
+      headerName: 'Records',
       data: [record], columns: [{ accessorKey: 'name', header: 'Name' }],
     } })
     try {
@@ -24,6 +25,7 @@ describe('Settings table', () => {
   it('shortens UUIDs in an explicitly declared ID column too', async () => {
     const id = '01a0b894-a051-72c8-be8e-f00000000001'
     const wrapper = await mountSuspended(SettingsTable, { props: {
+      headerName: 'Records',
       data: [{ id }], columns: [{ accessorKey: 'id', header: 'Record ID' }],
     } })
     try {
@@ -36,6 +38,7 @@ describe('Settings table', () => {
   it('shows the full server total in the toolbar instead of the current page size', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Records',
         data: [{ id: 1, name: 'First' }],
         columns: [{ accessorKey: 'name', header: 'Name' }],
         total: 236897,
@@ -57,6 +60,7 @@ describe('Settings table', () => {
   it('counts all provided rows when the table has no server total', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Records',
         data: [{ id: 1 }, { id: 2 }],
         columns: [{ accessorKey: 'id', header: 'ID' }],
       },
@@ -71,10 +75,10 @@ describe('Settings table', () => {
   it('keeps caller toolbar content and forwards other slots alongside the total badge', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Settings',
         data: [{ id: 1, name: 'First' }],
         columns: [{ accessorKey: 'name', header: 'Name' }],
         total: 42,
-        headerName: 'Settings',
       },
       slots: {
         toolbar: '<input aria-label="Search settings" />',
@@ -83,28 +87,25 @@ describe('Settings table', () => {
       },
     })
     await flushPromises()
-    expect(wrapper.findAll('[aria-live="polite"]')).toHaveLength(1)
-    expect(wrapper.get('[aria-live="polite"]').text()).toBe('42 records')
-    expect(wrapper.get('input[aria-label="Search settings"]').element.closest('.border-b.bg-muted')).not.toBeNull()
+    const count = wrapper.get('[aria-live="polite"]')
+    expect(count.text()).toBe('42 records')
+    expect(wrapper.get('.eapp-table-title').text()).toBe('Settings')
+    expect(wrapper.get('.eapp-table-title').element.parentElement!.contains(count.element)).toBe(true)
     expect(wrapper.text()).toContain('Refresh settings')
     expect(wrapper.get('tbody').text()).toContain('Custom name')
-    const actionTier = wrapper.get('[aria-live="polite"]').element.parentElement!
-    const titleTier = actionTier.parentElement!.firstElementChild!
-    expect(titleTier.textContent).toContain('Settings')
-    expect(actionTier.firstElementChild).toBe(wrapper.get('[aria-live="polite"]').element)
-    expect(titleTier.querySelector('input')).not.toBeNull()
-    expect(titleTier.querySelector('button')).toBeNull()
     const actions = wrapper.get('[aria-label="Choose visible columns"]').element.parentElement!
     expect(actions.textContent).toContain('Refresh settings')
+    expect(wrapper.find('input[aria-label="Search settings"]').exists()).toBe(true)
     expect(actions.lastElementChild).toBe(wrapper.get('[aria-label="Choose visible columns"]').element)
-    await wrapper.setProps({ showRecordCount: false })
-    expect(wrapper.find('[aria-live="polite"]').exists()).toBe(false)
+    await wrapper.setProps({ total: 0 })
+    expect(wrapper.get('[aria-live="polite"]').text()).toBe('0 records')
     expect(wrapper.find('input[aria-label="Search settings"]').exists()).toBe(true)
   })
 
   it('renders server-provided rows and an action menu without missing render bindings', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Records',
         data: [{ id: 1, name: 'First', isEnabled: true }],
         columns: [{ accessorKey: 'name', header: 'Name' }],
         actions: () => [{ label: 'Disable', icon: 'lucide:power', onSelect: () => {} }],
@@ -146,6 +147,7 @@ describe('Settings table', () => {
   it('uses intrinsic ID and control widths so route content gets the remaining space', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Records',
         data: [{ id: 1376, path: '/long-route', mainTable: { name: 'long_table' }, isEnabled: true }],
         columns: [
           { accessorKey: 'path', header: 'Route' },
@@ -171,6 +173,7 @@ describe('Settings table', () => {
   it('shows Mongo IDs from the row data', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Records',
         data: [{ _id: '507f1f77bcf86cd799439011', name: 'Mongo row' }],
         columns: [{ accessorKey: 'name', header: 'Name' }],
       },
@@ -183,6 +186,7 @@ describe('Settings table', () => {
   it('gives a long Mongo ID room without stretching numeric IDs elsewhere', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Records',
         data: [{ _id: '507f1f77bcf86cd799439011', name: 'Mongo row' }],
         columns: [{ accessorKey: 'name', header: 'Name' }],
       },
@@ -195,6 +199,7 @@ describe('Settings table', () => {
   it('lets an empty description stay compact and expand when it has content', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Records',
         data: [{ id: 1492, name: 'Collection', description: '' }, { id: 1491, name: 'Another', description: null }],
         columns: [{ accessorKey: 'name', header: 'Collection' }, { accessorKey: 'description', header: 'Description' }],
       },
@@ -210,6 +215,7 @@ describe('Settings table', () => {
   it('keeps the ellipsis when every row action is disabled', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Records',
         data: [{ id: 4, name: 'Collection route' }],
         columns: [{ accessorKey: 'name', header: 'Route' }],
         actions: () => [
@@ -230,6 +236,7 @@ describe('Settings table', () => {
   it('does not duplicate an explicit ID column', async () => {
     const wrapper = await mountSuspended(SettingsTable, {
       props: {
+        headerName: 'Records',
         data: [{ id: 1, name: 'First' }],
         columns: [{ accessorKey: 'id', header: 'Record ID' }, { accessorKey: 'name', header: 'Name' }],
       },

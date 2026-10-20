@@ -349,22 +349,19 @@ watch(
     }
   },
 );
-const listSections = [{ value: 'list', title: 'Method Manager', description: 'Manage route methods and their badge colors.' }];
 </script>
 
 <template>
   <div class="space-y-6">
-    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-      <template #list>
   <DataTableSettingsTable
+      header-name="Method Manager"
+      header-description="Manage route methods and their badge colors."
       :data="methods"
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading || loading"
       @row-click="method => openEdit(method as MethodRecord)"
     />
-      </template>
-    </CommonPanel>
 
     <CommonDrawer
       :model-value="drawerOpen"

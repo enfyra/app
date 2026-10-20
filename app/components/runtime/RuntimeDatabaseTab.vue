@@ -57,8 +57,7 @@ const columns: ColumnDef<DatabaseRow>[] = [
       </div>
     </div>
 
-    <DataTable :data="props.runtime.databaseRows" :columns="columns">
-      <template #toolbar><h2 class="text-sm font-medium">Query metrics</h2></template>
+    <DataTable header-name="Query metrics" :data="props.runtime.databaseRows" :columns="columns">
       <template #empty><CommonEmptyState variant="naked" title="No query metrics yet" icon="lucide:database" size="sm" /></template>
     </DataTable>
   </div>

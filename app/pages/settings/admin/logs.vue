@@ -201,6 +201,7 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
 
       <UAlert v-if="error" color="error" title="Could not load logs" :description="error.message" />
       <DataTableSettingsTable
+        header-name="Logs"
         v-model:page="page"
         :data="items"
         :columns="columns"

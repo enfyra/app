@@ -596,6 +596,7 @@ function openCreateKey() {
     </section>
 
     <DataTable
+        header-name="Redis keys"
         v-model:page="redisKeysPage"
         :data="visibleRedisKeys"
         :columns="redisKeyColumns"

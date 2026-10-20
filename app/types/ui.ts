@@ -33,8 +33,8 @@ export interface DataTableProps extends Omit<TableProps<any>, 'data' | 'columns'
   rowSelection?: RowSelectionState;
   pagination?: PaginationState;
   showColumnVisibility?: boolean;
-  headerName?: string;
-  showRecordCount?: boolean;
+  headerName: string;
+  headerDescription?: string;
   recordCount?: number;
   paginationConfig?: DataTablePaginationConfig;
   page?: number;

@@ -8,7 +8,6 @@ import type { DataTableProps } from '~/types/ui'
 const props = withDefaults(defineProps<DataTableProps>(), {
   loading: false,
   showColumnVisibility: true,
-  showRecordCount: false,
 })
 
 const emit = defineEmits<{
@@ -18,7 +17,7 @@ const emit = defineEmits<{
 }>()
 
 const slots = useSlots()
-const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'headerName', 'showRecordCount', 'recordCount', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection', 'reload', 'reloadLoading', 'searchable', 'searchPlaceholder', 'searchLabel', 'search'])
+const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'headerName', 'headerDescription', 'recordCount', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection', 'reload', 'reloadLoading', 'searchable', 'searchPlaceholder', 'searchLabel', 'search'])
 const search = defineModel<string>('search', { default: '' })
 const recordCount = computed(() => props.recordCount ?? props.paginationConfig?.total ?? props.data.length)
 const tableOptions = computed(() => Object.fromEntries(Object.entries(props).filter(([key]) => !wrapperKeys.has(key))))
@@ -30,6 +29,7 @@ const columnVisibility = defineModel<VisibilityState>('columnVisibility', { defa
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
 const menuItems = ref<any[]>([])
 const menuWrapper = computed(() => props.contextMenuItems ? UContextMenu : 'div')
+const hasActionTier = () => !!slots.toolbar || !!slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.value.length > 0) || !!props.reload
 const visibilityItems = computed<DropdownMenuItem[]>(() => tableRef.value?.tableApi?.getAllColumns()
   .filter(column => column.getCanHide())
   .map(column => ({
@@ -104,45 +104,53 @@ defineExpose({
 <template>
   <div ref="tableScope" class="eapp-data-table min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
     <span v-if="skeletonActive" role="status" class="sr-only">Loading records...</span>
-    <div v-if="props.headerName || props.showRecordCount || props.searchable || slots.toolbar || slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length) || props.reload" class="flex flex-wrap items-center gap-3 border-b border-default bg-muted px-3 py-3 md:flex-nowrap md:justify-between md:px-4 max-md:[&_.eapp-search-field]:basis-full max-md:[&_.eapp-search-field]:max-w-none">
-      <div v-if="props.headerName || props.searchable || slots.toolbar" class="flex w-full min-w-0 flex-wrap items-center gap-3 md:w-auto md:flex-1 md:flex-nowrap">
-        <span v-if="props.headerName" class="eapp-table-title max-w-full truncate text-sm font-semibold text-highlighted" :title="props.headerName">{{ props.headerName }}</span>
+    <div class="flex flex-col border-b border-default bg-muted">
+      <div class="flex flex-wrap items-center md:flex-nowrap">
+        <div class="flex min-h-11 min-w-0 flex-1 items-center px-3 py-2 md:min-h-14 md:px-4 md:py-3">
+          <div class="min-w-0">
+            <div class="flex min-w-0 items-center gap-3">
+              <span class="eapp-table-title min-w-0 truncate text-sm font-semibold text-highlighted" :title="props.headerName">{{ props.headerName }}</span>
+              <UBadge color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" aria-live="polite" class="hidden shrink-0 md:inline-flex" />
+            </div>
+            <span v-if="props.headerDescription" class="mt-0.5 block max-w-full truncate text-xs text-muted" :title="props.headerDescription">{{ props.headerDescription }}</span>
+          </div>
+        </div>
+        <div class="flex min-h-11 w-full min-w-0 items-center gap-2 border-t border-default px-3 py-2 md:min-h-14 md:w-auto md:border-t-0 md:px-4 md:py-3" :class="hasActionTier() ? undefined : 'md:hidden'">
+          <UBadge color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" class="shrink-0 md:hidden" aria-hidden="true" />
+          <div v-if="hasActionTier()" class="ml-auto flex min-h-8 min-w-0 items-center justify-end gap-2">
+            <slot name="toolbar" :table-api="tableRef?.tableApi" />
+            <slot name="toolbar-actions" :table-api="tableRef?.tableApi" />
+            <UDropdownMenu
+              v-if="props.showColumnVisibility && visibilityItems.length"
+              :items="visibilityItems"
+              :content="{ align: 'end' }"
+              :ui="{ item: 'cursor-pointer pointer-coarse:min-h-[44px]' }"
+            >
+              <UButton type="button" icon="lucide:columns-3" color="neutral" variant="outline" size="sm" square aria-label="Choose visible columns" />
+            </UDropdownMenu>
+            <UButton
+              v-if="props.reload"
+              type="button"
+              icon="lucide:refresh-cw"
+              color="neutral"
+              variant="outline"
+              size="sm"
+              square
+              aria-label="Reload records"
+              :loading="props.reloadLoading ?? props.loading"
+              @click="props.reload?.()"
+            />
+          </div>
+        </div>
+      </div>
+      <div v-if="props.searchable" class="flex min-h-11 min-w-0 items-center border-t border-default px-3 py-2 md:min-h-14 md:px-4 md:py-3">
         <CommonSearchField
-          v-if="props.searchable"
           v-model="search"
           :placeholder="props.searchPlaceholder || 'Search records'"
           :label="props.searchLabel || props.searchPlaceholder || 'Search records'"
           :loading="props.loading"
           @search="value => emit('search', value)"
         />
-        <slot name="toolbar" :table-api="tableRef?.tableApi" />
-      </div>
-      <div v-if="(props.headerName || props.searchable || slots.toolbar) && (slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length) || props.reload || props.showRecordCount)" class="-mx-3 h-0 w-[calc(100%+1.5rem)] shrink-0 border-t border-default md:hidden" aria-hidden="true" />
-      <div v-if="props.showRecordCount || slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length) || props.reload" class="flex w-full min-w-0 items-center gap-3 md:w-auto md:contents">
-        <UBadge v-if="props.showRecordCount" color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" aria-live="polite" class="shrink-0" />
-        <div v-if="slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.length) || props.reload" class="ml-auto flex min-h-8 shrink-0 items-center justify-end gap-2">
-          <slot name="toolbar-actions" :table-api="tableRef?.tableApi" />
-          <UDropdownMenu
-            v-if="props.showColumnVisibility && visibilityItems.length"
-            :items="visibilityItems"
-            :content="{ align: 'end' }"
-            :ui="{ item: 'cursor-pointer pointer-coarse:min-h-[44px]' }"
-          >
-            <UButton type="button" icon="lucide:columns-3" color="neutral" variant="outline" size="sm" square aria-label="Choose visible columns" />
-          </UDropdownMenu>
-          <UButton
-            v-if="props.reload"
-            type="button"
-            icon="lucide:refresh-cw"
-            color="neutral"
-            variant="outline"
-            size="sm"
-            square
-            aria-label="Reload records"
-            :loading="props.reloadLoading ?? props.loading"
-            @click="props.reload?.()"
-          />
-        </div>
       </div>
     </div>
     <component :is="menuWrapper" :items="props.contextMenuItems ? menuItems : undefined">

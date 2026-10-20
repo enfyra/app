@@ -1,7 +1,6 @@
 <template>
-  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-    <template #list>
   <DataTableSettingsTable
+      header-name="WebSocket Manager"
     v-model:page="page"
     :data="gateways"
     :columns="columns"
@@ -13,14 +12,14 @@
     :pagination-loading="loading"
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by path"
+      search-label="Search by path"
+      @search="submitSearch"
     @row-click="gateway => navigateTo(`/settings/websockets/${getId(gateway)}`)"
   >
-    <template #toolbar>
-      <CommonSearchField v-model="searchQuery" placeholder="Search by path" label="Search by path" :loading="loading" @search="submitSearch" />
-    </template>
   </DataTableSettingsTable>
-    </template>
-  </CommonPanel>
 </template>
 
 
@@ -223,5 +222,4 @@ async function setPageSize(size: number) {
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
 watch([page, limit, searchValue], () => { void fetchGateways(); }, { immediate: true });
-const listSections = [{ value: 'list', title: 'WebSocket Manager' }];
 </script>

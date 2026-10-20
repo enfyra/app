@@ -11,6 +11,7 @@ const columns = [{ accessorKey: 'name', header: 'Name' }]
 describe('DataTable native loading', () => {
   it('renders header progress plus one skeleton row per page slot on first load', async () => {
     const wrapper = await mountSuspended(DataTable, { props: {
+      headerName: 'Records',
       data: [], columns, loading: true,
       paginationConfig: { itemsPerPage: 5, total: 100 },
     } })
@@ -30,7 +31,8 @@ describe('DataTable native loading', () => {
   })
 
   it('defaults the skeleton row count to ten without a pagination config', async () => {
-    const wrapper = await mountSuspended(DataTable, { props: { data: [], columns, loading: true } })
+    const wrapper = await mountSuspended(DataTable, { props: {
+    headerName: 'Records', data: [], columns, loading: true } })
     try {
       expect(wrapper.findAll('tbody tr')).toHaveLength(10)
       expect(wrapper.findAll('tbody tr .eapp-table-skeleton')).toHaveLength(10)
@@ -39,6 +41,7 @@ describe('DataTable native loading', () => {
 
   it('keeps one skeleton cell per column and an invisible action replica for exact row height', async () => {
     const wrapper = await mountSuspended(DataTable, { props: {
+      headerName: 'Records',
       data: [], loading: true,
       columns: [...columns, { id: '__actions', header: '' }],
       paginationConfig: { itemsPerPage: 3, total: 30 },
@@ -56,7 +59,8 @@ describe('DataTable native loading', () => {
   })
 
   it('keeps existing native rows mounted during refresh', async () => {
-    const wrapper = await mountSuspended(DataTable, { props: { data: [{ id: 1, name: 'Retained row' }], columns } })
+    const wrapper = await mountSuspended(DataTable, { props: {
+    headerName: 'Records', data: [{ id: 1, name: 'Retained row' }], columns } })
     try {
       const row = wrapper.get('tbody tr').element
       await wrapper.setProps({ loading: true })
@@ -71,7 +75,8 @@ describe('DataTable native loading', () => {
   })
 
   it('gives the lazy /data adapter the same native loading treatment', async () => {
-    const wrapper = await mountSuspended(DataTableLazy, { props: { data: [], columns, loading: true } })
+    const wrapper = await mountSuspended(DataTableLazy, { props: {
+    headerName: 'Records', data: [], columns, loading: true } })
     try {
       await flushPromises()
       expect(wrapper.get('thead').classes()).toContain('after:bg-primary')
@@ -83,7 +88,8 @@ describe('DataTable native loading', () => {
   })
 
   it('gives the settings adapter the same native loading treatment', async () => {
-    const wrapper = await mountSuspended(SettingsTable, { props: { data: [], columns, loading: true } })
+    const wrapper = await mountSuspended(SettingsTable, { props: {
+    headerName: 'Records', data: [], columns, loading: true } })
     try {
       expect(wrapper.get('thead').classes()).toContain('after:bg-primary')
       expect(wrapper.findAll('tbody tr')).toHaveLength(10)
@@ -94,7 +100,8 @@ describe('DataTable native loading', () => {
   })
 
   it('shows native progress for settings pagination refreshes even without a visible footer', async () => {
-    const wrapper = await mountSuspended(SettingsTable, { props: { data: [{ id: 1, name: 'Retained row' }], columns, pageLimit: 20 } })
+    const wrapper = await mountSuspended(SettingsTable, { props: {
+    headerName: 'Records', data: [{ id: 1, name: 'Retained row' }], columns, pageLimit: 20 } })
     try {
       const row = wrapper.get('tbody tr').element
       await wrapper.setProps({ paginationLoading: true })
@@ -109,7 +116,8 @@ describe('DataTable native loading', () => {
 
   it('suppresses caller cell slots so skeleton bars replace custom cell templates', async () => {
     const wrapper = await mountSuspended(DataTable, {
-      props: { data: [], loading: true, columns, paginationConfig: { itemsPerPage: 3, total: 30 } },
+      props: {
+      headerName: 'Records', data: [], loading: true, columns, paginationConfig: { itemsPerPage: 3, total: 30 } },
       slots: { 'name-cell': ({ row }: any) => h('span', { class: 'custom-cell' }, row.original.name) },
     })
     try {
@@ -123,7 +131,8 @@ describe('DataTable native loading', () => {
 
   it('preserves an explicitly supplied native loading slot instead of skeletons', async () => {
     const wrapper = await mountSuspended(DataTable, {
-      props: { data: [], columns, loading: true },
+      props: {
+      headerName: 'Records', data: [], columns, loading: true },
       slots: { loading: () => h('span', 'Custom loading') },
     })
     try {

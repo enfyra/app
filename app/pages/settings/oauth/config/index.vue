@@ -1,7 +1,6 @@
 <template>
-  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-    <template #list>
   <DataTableSettingsTable
+      header-name="OAuth Configuration"
     v-model:page="page"
     :data="configs"
     :columns="columns"
@@ -15,8 +14,6 @@
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
     @row-click="config => navigateTo(`/settings/oauth/config/${getId(config)}`)"
   />
-    </template>
-  </CommonPanel>
 </template>
 
 
@@ -184,5 +181,4 @@ async function setPageSize(size: number) {
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
 watch([page, limit], () => { void fetchConfigs(); }, { immediate: true });
-const listSections = [{ value: 'list', title: 'OAuth Configuration' }];
 </script>

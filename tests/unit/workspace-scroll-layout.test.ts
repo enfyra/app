@@ -46,7 +46,7 @@ describe('native Nuxt UI dashboard shell', () => {
     expect(layout).toContain('lg:pe-[var(--shell-inset)]')
     expect(layout).toContain('rounded-[var(--radius-shell)]')
     expect(layout).toContain('border border-default')
-    expect(theme).toContain('--shell-sidebar-inset: calc(var(--shell-inset) + 0.75rem)')
+    expect(theme).toContain('--shell-sidebar-inset: calc(var(--shell-inset) + 1.875rem)')
     expect(sidebar).toContain('variant="inset"')
     expect(sidebar).toContain("container: 'py-[var(--shell-sidebar-inset)]'")
     expect(sidebar).not.toContain('!border-r')

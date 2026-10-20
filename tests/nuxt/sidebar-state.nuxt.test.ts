@@ -225,6 +225,15 @@ describe('sidebar active colors', () => {
     expect(link.classList.contains('before:!bg-[var(--nav-item-active-bg)]')).toBe(false)
   })
 
+  it('separates the brand cluster from the menu with the group divider', async () => {
+    const wrapper = await mountSidebar('/dashboard')
+    const header = wrapper.get('[data-slot="header"]')
+    const border = header.get('[data-slot="border"]')
+    expect(border.classes()).toContain('border-[var(--nav-child-border)]')
+    expect(header.element.contains(border.element)).toBe(true)
+    expect(wrapper.get('.sidebar-scroll-area').element.contains(border.element)).toBe(false)
+  })
+
   it('matches the mobile menu surface to the desktop sidebar', async () => {
     await mountSidebar('/dashboard', { width: 900 })
     useState('global:sidebar:visible').value = true
@@ -232,5 +241,6 @@ describe('sidebar active colors', () => {
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]')
     expect(dialog).not.toBeNull()
     expect(dialog!.classList.contains('!bg-[var(--shell-sidebar-bg)]')).toBe(true)
+    expect(dialog!.classList.contains('!divide-transparent')).toBe(true)
   })
 })

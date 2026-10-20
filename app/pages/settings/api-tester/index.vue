@@ -3,6 +3,7 @@
     <CommonPanel v-model="activeScope" :sections="routeSections">
       <template v-for="section in routeSections" :key="section.value" #[section.value]>
     <DataTableSettingsTable
+      header-name="Routes"
       v-model:page="page"
       :data="visibleRoutes"
       :columns="columns"
@@ -14,10 +15,12 @@
       :pagination-loading="routeLoading"
       @page-size-change="setPageSize"
       @row-click="openTest"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by path"
+      search-label="Search routes by path"
+      @search="submitSearch"
     >
-      <template #toolbar>
-        <CommonSearchField v-model="searchQuery" placeholder="Search by path" label="Search routes by path" :loading="routeLoading" @search="submitSearch" />
-      </template>
     </DataTableSettingsTable>
 
       </template>

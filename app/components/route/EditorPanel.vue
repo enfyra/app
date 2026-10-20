@@ -892,6 +892,7 @@ watch(showEditHookDrawer, (isOpen) => {
       <template #methods>
     <CommonFormCard v-if="methodConfigs.length" :bordered="false" title="Methods" description="Toggle a method to enable it, or select its row for more settings.">
       <DataTable
+        header-name="Methods"
         :data="methodConfigs"
         :columns="methodConfigColumns"
         :get-row-id="(config) => String(getId(config))"

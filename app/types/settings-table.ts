@@ -10,8 +10,11 @@ export interface SettingsTableProps {
   compact?: boolean
   actions?: (row: Record<string, any>) => DataTableRowAction[]
   total?: number
-  headerName?: string
-  showRecordCount?: boolean
+  headerName: string
+  headerDescription?: string
+  searchable?: boolean
+  searchPlaceholder?: string
+  searchLabel?: string
   pageLimit?: number
   pageSizeKey?: string
   paginationLoading?: boolean

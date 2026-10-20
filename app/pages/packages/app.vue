@@ -1,7 +1,6 @@
 <template>
-  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-    <template #list>
   <DataTableSettingsTable
+      header-name="App Packages"
     v-model:page="page"
     :data="packages"
     :columns="columns"
@@ -18,8 +17,6 @@
       <CommonEmptyState variant="naked" title="No packages installed" description="Install your first app package" icon="lucide:package" size="sm" />
     </template>
   </DataTableSettingsTable>
-    </template>
-  </CommonPanel>
 </template>
 
 
@@ -117,5 +114,4 @@ onUnmounted(() => {
     $adminSocket.off('$system:package:uninstalled');
   }
 });
-const listSections = [{ value: 'list', title: 'App Packages' }];
 </script>

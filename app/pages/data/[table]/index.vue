@@ -380,8 +380,6 @@ registerHeaderActions([
         :reload="fetchData"
         :reload-loading="loading"
         :header-name="tableName"
-        show-record-count
-        :record-count="total"
         @page-size-change="setPageSize"
         @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
       >

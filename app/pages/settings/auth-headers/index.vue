@@ -17,6 +17,7 @@
       </div>
 
       <DataTableSettingsTable
+        header-name="Authentication headers"
         :data="headers"
         :columns="columns"
         :actions="getRowActions"

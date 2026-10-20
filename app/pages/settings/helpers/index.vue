@@ -100,26 +100,20 @@ watch(() => [route.query.page, route.query.search, route.query.status, limit.val
   void loadHelpers(Math.max(1, Number(route.query.page) || 1));
 }, { immediate: true });
 onBeforeUnmount(() => { active = false; generation++; cancel(); });
-const listSections = [{ value: 'list', title: 'Helpers', description: 'Write reusable code once and call it by name from handlers, hooks and flows.' }];
 </script>
 
 <template>
   <div class="min-w-0 space-y-4">
     <UAlert v-if="loadFailed" color="error" variant="soft" title="Helpers could not be loaded" description="Check your access or refresh to try again." />
-    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-      <template #list>
-  <DataTableSettingsTable :page="page" :data="rows" :columns="columns" :actions="actions" :loading="loading" :pagination-loading="loading" :total="total" :page-limit="limit" page-size-key="helpers" :to="p => ({ path: route.path, query: { ...route.query, page: p } })" @update:page="changePage" @page-size-change="changePageSize" @row-click="helper => navigateTo(`/settings/helpers/${encodeURIComponent(String(getId(helper)))}`)">
-      <template #toolbar>
-        <div class="contents">
-          <CommonSearchField v-model="search" placeholder="Search by name" label="Search helpers by name" :loading="loading" @search="searchHelpers" />
-          <USelect :model-value="scope" :items="[{ label: 'All statuses', value: 'all' }, { label: 'Enabled', value: 'enabled' }, { label: 'Disabled', value: 'disabled' }]" size="sm" aria-label="Helper status" class="w-36 shrink-0" @update:model-value="setScope" />
-        </div>
+  <DataTableSettingsTable
+      header-name="Helpers"
+      header-description="Write reusable code once and call it by name from handlers, hooks and flows." :page="page" :data="rows" :columns="columns" :actions="actions" :loading="loading" :pagination-loading="loading" :total="total" :page-limit="limit" page-size-key="helpers" :to="p => ({ path: route.path, query: { ...route.query, page: p } })" @update:page="changePage" @page-size-change="changePageSize" @row-click="helper => navigateTo(`/settings/helpers/${encodeURIComponent(String(getId(helper)))}`)" searchable v-model:search="search" search-placeholder="Search by name" search-label="Search helpers by name" @search="searchHelpers">
+      <template #toolbar-actions>
+        <USelect :model-value="scope" :items="[{ label: 'All statuses', value: 'all' }, { label: 'Enabled', value: 'enabled' }, { label: 'Disabled', value: 'disabled' }]" size="sm" aria-label="Helper status" class="w-36 shrink-0" @update:model-value="setScope" />
       </template>
       <template #empty>
         <CommonEmptyState title="No helpers found" description="Create a helper to share code across your scripts, or change the search filters." icon="lucide:code" variant="naked" />
       </template>
   </DataTableSettingsTable>
-      </template>
-    </CommonPanel>
   </div>
 </template>

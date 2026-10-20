@@ -112,12 +112,10 @@ function slowStepLabels(row: RuntimeFlowRow) {
     </div>
     </section>
 
-    <DataTable :data="props.runtime.flowRows" :columns="flowColumns">
-      <template #toolbar><h3 class="text-sm font-medium">Flow executions</h3></template>
+    <DataTable header-name="Flow executions" :data="props.runtime.flowRows" :columns="flowColumns">
       <template #empty><CommonEmptyState variant="naked" title="No flow executions recorded yet" icon="lucide:workflow" size="sm" /></template>
     </DataTable>
-    <DataTable :data="props.runtime.flowFailedJobRows" :columns="failedJobColumns">
-      <template #toolbar><h3 class="text-sm font-medium">Failed queue jobs</h3></template>
+    <DataTable header-name="Failed queue jobs" :data="props.runtime.flowFailedJobRows" :columns="failedJobColumns">
       <template #empty><CommonEmptyState variant="naked" title="No retained failed queue jobs" icon="lucide:circle-alert" size="sm" /></template>
     </DataTable>
   </div>

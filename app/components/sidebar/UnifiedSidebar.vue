@@ -308,22 +308,22 @@ onUnmounted(() => {
   <USidebar
     v-model:open="sidebarVisible"
     variant="inset"
-    :menu="{ dismissible: !accountSheetOpen, ui: { overlay: 'z-40', content: 'z-40 max-w-none !bg-[var(--shell-sidebar-bg)]' } }"
+    :menu="{ dismissible: !accountSheetOpen, ui: { overlay: 'z-40', content: 'z-40 max-w-none !bg-[var(--shell-sidebar-bg)] !divide-transparent' } }"
     collapsible="icon"
     class="eapp-sidebar"
     :style="{ '--sidebar-width': 'var(--shell-sidebar-width)' }"
     :ui="{
       container: 'py-[var(--shell-sidebar-inset)]',
       inner: '!bg-[var(--shell-sidebar-bg)] !border-0 !divide-transparent shadow-none',
-      header: 'px-3.5 pb-2.5 pt-4 lg:py-0 group-data-[state=collapsed]/sidebar:px-2',
+      header: '!min-h-0 flex-col items-stretch gap-0 px-0 py-0',
       body: '!overflow-hidden border-0 p-0',
       footer: 'eapp-sidebar-scroll flex min-h-0 w-full flex-col gap-1.5 overflow-x-hidden overflow-y-auto border-t border-[var(--nav-child-border)] px-3.5 pt-3 pb-4 lg:pb-0 group-data-[state=collapsed]/sidebar:px-2',
     }"
   >
-    <template #title>
+    <template #header="{ close }">
       <div
-        class="flex min-w-0 items-center overflow-hidden"
-        :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
+        class="flex w-full min-w-0 items-center overflow-hidden px-3.5 pb-3 pt-4 lg:min-h-14 lg:py-0 group-data-[state=collapsed]/sidebar:px-2"
+        :class="!renderExpandedSidebarContent ? 'justify-center gap-0' : 'gap-3'"
       >
         <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
           <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
@@ -333,9 +333,20 @@ onUnmounted(() => {
           <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
           <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
         </div>
+        <UButton
+          v-if="isMobileSidebar"
+          icon="lucide:x"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          square
+          aria-label="Close navigation"
+          class="shrink-0"
+          @click="close"
+        />
       </div>
+      <USeparator class="mb-3 w-full lg:mb-2" :ui="{ border: 'border-[var(--nav-child-border)]' }" />
     </template>
-    <template #description />
 
     <template #default>
       <SidebarScrollArea :collapsed="!renderExpandedSidebarContent">

@@ -1,7 +1,6 @@
 <template>
-  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-    <template #list>
   <DataTableSettingsTable
+      header-name="Storage Configuration"
     v-model:page="page"
     :data="storageConfigs"
     :columns="columns"
@@ -19,8 +18,6 @@
       <CommonEmptyState variant="naked" title="No storage configurations found" description="No storage configurations have been created yet" icon="lucide:hard-drive" size="sm" />
     </template>
   </DataTableSettingsTable>
-    </template>
-  </CommonPanel>
 </template>
 
 
@@ -212,5 +209,4 @@ watch(
   },
   { immediate: true }
 );
-const listSections = [{ value: 'list', title: 'Storage Configuration' }];
 </script>

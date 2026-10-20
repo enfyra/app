@@ -111,13 +111,11 @@ async function setPageSize(size: number) {
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
 watch([page, pageLimit, searchValue], () => { void fetchRoles(); }, { immediate: true });
-const listSections = [{ value: 'list', title: 'Role Manager' }];
 </script>
 
 <template>
-  <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-    <template #list>
   <DataTableSettingsTable
+      header-name="Role Manager"
     v-model:page="page"
     :data="roles"
     :columns="columns"
@@ -129,13 +127,13 @@ const listSections = [{ value: 'list', title: 'Role Manager' }];
     :pagination-loading="loading"
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by name"
+      search-label="Search by name"
+      @search="submitSearch"
     @row-click="role => navigateTo(`/settings/roles/${getId(role)}`)"
   >
-    <template #toolbar>
-      <CommonSearchField v-model="searchQuery" placeholder="Search by name" label="Search by name" :loading="loading" @search="submitSearch" />
-    </template>
   </DataTableSettingsTable>
-    </template>
-  </CommonPanel>
 </template>
 

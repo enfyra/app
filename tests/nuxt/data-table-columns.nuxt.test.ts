@@ -14,6 +14,7 @@ describe('DataTable column picker', () => {
       const visibility = ref<VisibilityState>({})
       const Host = defineComponent({ setup: () => () => h(UTheme, { props: { dropdownMenu: { modal: false } } }, {
         default: () => h(component, {
+          headerName: 'Records',
           data: [{ id: 1, title: 'First', score: 7 }],
           columns: [
             { accessorKey: 'id', header: 'ID', enableHiding: false },
@@ -61,6 +62,7 @@ describe('DataTable column picker', () => {
 
   it('uses the native dropdown checkbox menu', async () => {
     const wrapper = await mountSuspended(DataTable, { props: {
+      headerName: 'Records',
       data: [{ title: 'First' }], columns: [{ accessorKey: 'title', header: 'Title' }],
     } })
     try {
@@ -75,6 +77,7 @@ describe('DataTable column picker', () => {
       document.body.append(host)
       const Host = defineComponent({ setup: () => () => h(UTheme, { props: { dropdownMenu: { modal: false } } }, {
         default: () => h(component, {
+          headerName: 'Records',
           data: [{ id: 1, title: 'First', score: 7 }],
           columns: [{ accessorKey: 'id', header: 'ID' }, { accessorKey: 'title', header: 'Title' }, { accessorKey: 'score', header: 'Score' }],
           ...(name === 'SettingsTable' ? { actions: () => [{ label: 'Delete', onSelect: () => {} }] } : {}),

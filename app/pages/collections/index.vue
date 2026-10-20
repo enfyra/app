@@ -185,14 +185,12 @@ watch(
   { immediate: true }
 );
 
-const listSections = [{ value: 'list', title: 'Collections' }];
 </script>
 
 <template>
   <div class="space-y-6">
-    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-      <template #list>
   <DataTableSettingsTable
+      header-name="Collections"
       v-model:page="page"
       :data="displayedCollections"
       :columns="columns"
@@ -204,23 +202,21 @@ const listSections = [{ value: 'list', title: 'Collections' }];
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
       @page-size-change="setPageSize"
       @row-click="collection => navigateTo(`/collections/${collection.name}`)"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search collections…"
+      search-label="Search collections by table name"
+      @search="page = 1"
     >
-      <template #toolbar>
-        <div class="contents">
-          <CommonSearchField
-            v-model="searchQuery"
-            placeholder="Search collections…"
-            label="Search collections by table name"
-          />
-          <USelect
-            v-model="visibilityScope"
-            :items="visibilityOptions"
-            aria-label="Collection type"
-            size="sm"
-            class="w-26 shrink-0"
-            @update:model-value="page = 1"
-          />
-        </div>
+      <template #toolbar-actions>
+        <USelect
+          v-model="visibilityScope"
+          :items="visibilityOptions"
+          aria-label="Collection type"
+          size="sm"
+          class="w-26 shrink-0"
+          @update:model-value="page = 1"
+        />
       </template>
       <template #empty>
         <CommonEmptyState
@@ -232,7 +228,5 @@ const listSections = [{ value: 'list', title: 'Collections' }];
         />
       </template>
   </DataTableSettingsTable>
-      </template>
-    </CommonPanel>
   </div>
 </template>

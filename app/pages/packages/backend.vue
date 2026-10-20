@@ -9,9 +9,8 @@
       variant="soft"
     />
 
-    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-      <template #list>
     <DataTableSettingsTable
+      header-name="Server Packages"
       v-model:page="page"
       :data="packages"
       :columns="columns"
@@ -28,8 +27,6 @@
         <CommonEmptyState variant="naked" title="No server packages installed" description="Install packages to enhance your handlers and hooks" icon="lucide:server" size="sm" />
       </template>
     </DataTableSettingsTable>
-      </template>
-    </CommonPanel>
   </div>
 </template>
 
@@ -202,5 +199,4 @@ onUnmounted(() => {
     }
   }
 });
-const listSections = [{ value: 'list', title: 'Server Packages' }];
 </script>

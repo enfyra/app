@@ -107,14 +107,13 @@ async function reloadCatalog() {
   }
 }
 
-const listSections = [{ value: 'list', title: 'Collections', description: 'Browse, search, and manage your data collections.' }];
 </script>
 
 <template>
   <div class="min-w-0 w-full">
-    <CommonPanel :sections="listSections" body-class="!p-0" class="self-start">
-      <template #list>
     <DataTable
+      header-name="Collections"
+      header-description="Browse, search, and manage your data collections."
       v-model:page="page"
       :data="pageRows"
       :columns="columns"
@@ -127,9 +126,14 @@ const listSections = [{ value: 'list', title: 'Collections', description: 'Brows
       :ui="{ base: 'table-fixed !min-w-[900px]', th: 'px-4 py-3', td: 'max-w-0 overflow-hidden px-4 py-3' }"
       @page-size-change="pageSize = $event"
       @row-click="open($event as CollectionItem)"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search collections, tables, or /api/path…"
+      search-label="Search collections, tables, or API path"
     >
-      <template #toolbar>
-        <DataDirectorySearchBar v-model="searchQuery" v-model:sort-by="sortBy" :total="catalog.length" :match-count="filtered.length" :loading="isLoading" :has-search="hasSearch" />
+      <template #toolbar-actions>
+        <UButton icon="lucide:arrow-down-a-z" :color="sortBy === 'name' ? 'primary' : 'neutral'" :variant="sortBy === 'name' ? 'soft' : 'ghost'" size="xs" :aria-pressed="sortBy === 'name'" aria-label="Sort A to Z" @click="sortBy = 'name'">A–Z</UButton>
+        <UButton icon="lucide:history" :color="sortBy === 'recent' ? 'primary' : 'neutral'" :variant="sortBy === 'recent' ? 'soft' : 'ghost'" size="xs" :aria-pressed="sortBy === 'recent'" aria-label="Sort by recent" @click="sortBy = 'recent'">Recent</UButton>
       </template>
       <template #label-cell="{ row }">
         <div class="flex min-w-0 items-center gap-3">
@@ -165,7 +169,5 @@ const listSections = [{ value: 'list', title: 'Collections', description: 'Brows
         <CommonEmptyState variant="naked" :title="hasSearch ? 'No collections found' : 'No collections'" :description="hasSearch ? 'Try a collection name, table name, or API path.' : 'No enabled non-system collections are visible to your current role.'" :icon="hasSearch ? 'lucide:search-x' : 'lucide:database-zap'" size="sm" />
       </template>
     </DataTable>
-      </template>
-    </CommonPanel>
   </div>
 </template>

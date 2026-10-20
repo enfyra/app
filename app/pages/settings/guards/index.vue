@@ -548,6 +548,7 @@ async function deleteGuard(guard: any) {
 
     <div class="guard-list-stage min-h-[22rem] min-w-0">
       <DataTableSettingsTable
+        header-name="Guards"
         v-model:page="page"
         :data="switchingType || showInitialLoading ? [] : guardsData"
         :columns="columns"
@@ -558,12 +559,14 @@ async function deleteGuard(guard: any) {
         page-size-key="guards"
         :pagination-loading="loading"
         :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by name"
+      search-label="Search by name"
+      @search="submitSearch"
         @page-size-change="setPageSize"
         @row-click="guard => navigateTo(`/settings/guards/${getId(guard)}`)"
       >
-        <template #toolbar>
-          <CommonSearchField v-model="searchQuery" placeholder="Search by name" label="Search guards by name" :loading="loading" @search="submitSearch" />
-        </template>
       </DataTableSettingsTable>
     </div>
 

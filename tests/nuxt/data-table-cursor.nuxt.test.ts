@@ -9,6 +9,7 @@ const mounted: { unmount: () => void }[] = []
 afterEach(() => { mounted.splice(0).forEach(wrapper => wrapper.unmount()) })
 
 const props = {
+  headerName: 'Records',
   data: [{ id: 1, name: 'First' }],
   columns: [{ accessorKey: 'name', header: 'Name' }],
   paginationConfig: { mode: 'cursor' as const, itemsPerPage: 10, showPageSize: true, hasNextPage: true },

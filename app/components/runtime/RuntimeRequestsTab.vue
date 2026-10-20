@@ -21,8 +21,7 @@ const columns: ColumnDef<RequestRow>[] = [
 </script>
 
 <template>
-  <DataTable :data="props.runtime.requestRows" :columns="columns">
-    <template #toolbar><h2 class="text-sm font-medium text-[var(--text-primary)]">Request/API Metrics</h2></template>
+  <DataTable header-name="Request/API Metrics" :data="props.runtime.requestRows" :columns="columns">
     <template #empty><CommonEmptyState variant="naked" title="No request metrics yet" icon="lucide:activity" size="sm" /></template>
   </DataTable>
 </template>

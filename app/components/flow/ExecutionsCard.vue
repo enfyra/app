@@ -42,6 +42,7 @@ function formatTime(value: string | null) {
       <UButton icon="lucide:refresh-cw" size="sm" color="neutral" variant="outline" label="Reload" :loading="loading" @click="emit('refresh')" />
     </div>
     <DataTable
+      header-name="Executions"
       :data="executions"
       :columns="columns"
       :loading="loading"

@@ -36,6 +36,7 @@
         </template>
         <template #events>
       <DataTableSettingsTable
+        header-name="Events"
         :data="events"
         :columns="eventColumns"
         :actions="getEventActions"

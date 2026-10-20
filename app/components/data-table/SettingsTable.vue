@@ -8,13 +8,14 @@ const props = withDefaults(defineProps<SettingsTableProps>(), {
   loading: false,
   pageLimit: 0,
   paginationLoading: false,
-  showRecordCount: true,
 })
 
 const page = defineModel<number>('page', { default: 1 })
+const search = defineModel<string>('search', { default: '' })
 const emit = defineEmits<{
   'row-click': [row: Record<string, any>]
   'page-size-change': [size: number]
+  'search': [value: string]
 }>()
 const tableUi = computed(() => ({
   base: 'table-auto !min-w-full',
@@ -97,12 +98,17 @@ const columns = computed(() => {
       :columns="columns"
       :loading="loading || paginationLoading"
       :header-name="headerName"
-      :show-record-count="showRecordCount"
+      :header-description="headerDescription"
       :record-count="total"
+      :searchable="searchable"
+      :search-placeholder="searchPlaceholder"
+      :search-label="searchLabel"
       :ui="tableUi"
       :pagination-config="pageSizeKey || hasPagination ? { total, itemsPerPage: pageLimit, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), to } : undefined"
       :reload="reload"
       :reload-loading="reloadLoading"
+      v-model:search="search"
+      @search="value => emit('search', value)"
       @row-click="row => emit('row-click', row)"
       @page-size-change="size => emit('page-size-change', size)"
     >

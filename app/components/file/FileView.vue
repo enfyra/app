@@ -341,6 +341,7 @@ function getContextMenuItems(file: any) {
 
         <DataTableLazy
           v-else-if="viewMode === 'list'"
+          header-name="Files"
           :data="transformedFiles"
           :columns="fileColumns"
           :loading="false"
