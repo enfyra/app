@@ -63,7 +63,12 @@ function hasSectionHeader(value?: string) {
 const activeHasHeader = computed(() =>
   hasSectionHeader(selectedValue.value)
   || !!activeSection.value?.title
+  || !!activeSection.value?.description
   || !!activeSection.value?.actions?.length,
+);
+
+const sectionHeaderTitle = computed(() =>
+  activeSection.value?.title || activeSection.value?.label || activeSection.value?.value,
 );
 
 const sectionActions = computed(() => activeSection.value?.actions ?? []);
@@ -114,10 +119,10 @@ function selectSection(value: string | number) {
           <div class="min-w-0 md:flex-1">
             <slot :name="sectionHeaderName(selectedValue || '')" :section="activeSection">
               <CommonFormHeader
-                v-if="activeSection?.title"
-                :title="activeSection.title"
-                :description="activeSection.description"
-                :icon="activeSection.icon"
+                v-if="sectionHeaderTitle"
+                :title="sectionHeaderTitle"
+                :description="activeSection?.description"
+                :icon="activeSection?.icon"
               />
             </slot>
           </div>
