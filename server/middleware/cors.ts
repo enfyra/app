@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getRequestHeader, setHeader, setResponseStatus } from "h3";
+import { createError, defineEventHandler, getRequestHeader, setHeader, setResponseStatus, type H3Event } from "h3";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -101,18 +101,41 @@ export function getCorsOrigins(): string[] {
 /**
  * The one CORS contract, shared with ESV and the WebSocket bridge.
  *
- * - No Origin header: allowed.
+ * - No Origin header: allowed without CORS.
+ * - Same origin as the request's public host: allowed without CORS.
  * - Allow-list not loaded yet: denied, so a cold cache never grants access.
- * - Allow-list loaded and empty: every origin is allowed.
- * - Allow-list loaded and non-empty: the origin must be listed.
+ * - Allow-list loaded: only a listed origin is granted, and the echoed value is
+ *   the configured entry rather than the raw header.
  */
 export function evaluateCorsOrigin(
   origin: string | undefined,
+  publicHost: string | undefined,
   cors: { loaded: boolean; origins: string[] },
-): boolean {
-  if (!origin) return true;
-  if (!cors.loaded) return false;
-  return cors.origins.length === 0 || cors.origins.includes(origin);
+): { allowed: boolean; corsOrigin: string | null } {
+  if (!origin) return { allowed: true, corsOrigin: null };
+  if (isSameHost(origin, publicHost)) {
+    return { allowed: true, corsOrigin: null };
+  }
+  if (!cors.loaded) return { allowed: false, corsOrigin: null };
+  const corsOrigin = cors.origins.find((entry) => entry === origin) ?? null;
+  return corsOrigin
+    ? { allowed: true, corsOrigin }
+    : { allowed: false, corsOrigin: null };
+}
+
+function isSameHost(origin: string, publicHost: string | undefined): boolean {
+  if (!publicHost) return false;
+  try {
+    return new URL(origin).host.toLowerCase() === publicHost.toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+function publicHostOf(event: H3Event): string | undefined {
+  const forwarded = getRequestHeader(event, 'x-forwarded-host');
+  const raw = forwarded || getRequestHeader(event, 'host');
+  return typeof raw === 'string' ? raw.split(',')[0]?.trim() : undefined;
 }
 
 export default defineEventHandler(async (event) => {
@@ -128,14 +151,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const corsCache = await getValidatedOrigins();
-  const allowed = evaluateCorsOrigin(origin, corsCache);
+  const decision = evaluateCorsOrigin(origin, publicHostOf(event), corsCache);
   const isPreflight =
     event.method === 'OPTIONS' &&
     getRequestHeader(event, 'access-control-request-method') !== undefined;
 
-  event.context.corsOrigin = { origin, allowed };
+  event.context.corsOrigin = decision;
 
-  if (!allowed) {
+  if (!decision.allowed) {
     console.warn('[CORS] Not allowed:', origin, 'in', corsCache.origins);
     if (isPreflight || !SAFE_METHODS.has(event.method)) {
       setResponseStatus(event, 403);
@@ -144,8 +167,12 @@ export default defineEventHandler(async (event) => {
     return;
   }
 
+  if (!decision.corsOrigin) {
+    return;
+  }
+
   const requestedHeaders = getRequestHeader(event, 'access-control-request-headers');
-  setHeader(event, 'Access-Control-Allow-Origin', origin);
+  setHeader(event, 'Access-Control-Allow-Origin', decision.corsOrigin);
   setHeader(event, 'Access-Control-Allow-Credentials', 'true');
   setHeader(event, 'Vary', 'Origin');
 

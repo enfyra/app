@@ -40,27 +40,54 @@ describe('CORS origin cache', () => {
 });
 
 describe('CORS origin decision', () => {
-  it('allows a request without an Origin header', () => {
-    expect(evaluateCorsOrigin(undefined, { loaded: false, origins: [] })).toBe(
-      true,
-    );
+  it('allows a request without an Origin header and grants no CORS', () => {
+    expect(
+      evaluateCorsOrigin(undefined, 'api.test', { loaded: false, origins: [] }),
+    ).toEqual({ allowed: true, corsOrigin: null });
+  });
+
+  it('treats the request host as same-origin and grants no CORS', () => {
+    expect(
+      evaluateCorsOrigin('https://api.test', 'api.test', {
+        loaded: true,
+        origins: ['https://a.test'],
+      }),
+    ).toEqual({ allowed: true, corsOrigin: null });
   });
 
   it('denies a cross-origin request while the allow-list is not loaded', () => {
     expect(
-      evaluateCorsOrigin('https://a.test', { loaded: false, origins: [] }),
-    ).toBe(false);
+      evaluateCorsOrigin('https://a.test', 'api.test', {
+        loaded: false,
+        origins: [],
+      }),
+    ).toEqual({ allowed: false, corsOrigin: null });
   });
 
-  it('allows every origin when the loaded allow-list is empty', () => {
+  it('denies cross-origin when the loaded allow-list has no entries', () => {
     expect(
-      evaluateCorsOrigin('https://a.test', { loaded: true, origins: [] }),
-    ).toBe(true);
+      evaluateCorsOrigin('https://a.test', 'api.test', {
+        loaded: true,
+        origins: [],
+      }),
+    ).toEqual({ allowed: false, corsOrigin: null });
   });
 
-  it('allows only listed origins once the allow-list has entries', () => {
-    const policy = { loaded: true, origins: ['https://a.test'] };
-    expect(evaluateCorsOrigin('https://a.test', policy)).toBe(true);
-    expect(evaluateCorsOrigin('https://b.test', policy)).toBe(false);
+  it('echoes the configured entry for a listed origin', () => {
+    expect(
+      evaluateCorsOrigin('https://a.test', 'api.test', {
+        loaded: true,
+        origins: ['https://a.test'],
+      }),
+    ).toEqual({ allowed: true, corsOrigin: 'https://a.test' });
+  });
+
+  it('denies an origin that is not listed', () => {
+    expect(
+      evaluateCorsOrigin('https://b.test', 'api.test', {
+        loaded: true,
+        origins: ['https://a.test'],
+      }),
+    ).toEqual({ allowed: false, corsOrigin: null });
   });
 });

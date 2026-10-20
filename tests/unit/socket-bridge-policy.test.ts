@@ -14,13 +14,13 @@ describe("socket bridge policy", () => {
     ).toBe(false);
   });
 
-  it("supports the loaded empty allow-all contract", () => {
+  it("denies cross-origin when the loaded allowlist has no entries", () => {
     expect(
       isSocketBridgeOriginAllowed("https://app.example.com", {
         loaded: true,
         origins: [],
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       isSocketBridgeOriginAllowed("https://evil.example.com", {
         loaded: true,

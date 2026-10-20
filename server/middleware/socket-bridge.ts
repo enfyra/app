@@ -188,7 +188,16 @@ function startBridge(
 function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
   engine = new EngineServer({
     cors: {
-      origin: true,
+      origin: (origin, callback) => {
+        void getValidatedOrigins()
+          .then((cors) => {
+            callback(
+              null,
+              isSocketBridgeOriginAllowed(origin, cors) ? origin : false,
+            );
+          })
+          .catch(() => callback(null, false));
+      },
       credentials: true,
     },
     allowRequest: (req, callback) => {

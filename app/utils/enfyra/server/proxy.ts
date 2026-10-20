@@ -25,10 +25,10 @@ function applyBridgeCorsDecision(event: H3Event): void {
     event.node.res.removeHeader(name);
   }
   const decision = event.context.corsOrigin as
-    | { origin: string; allowed: boolean }
+    | { allowed: boolean; corsOrigin: string | null }
     | undefined;
-  if (!decision?.allowed) return;
-  event.node.res.setHeader("Access-Control-Allow-Origin", decision.origin);
+  if (!decision?.corsOrigin) return;
+  event.node.res.setHeader("Access-Control-Allow-Origin", decision.corsOrigin);
   event.node.res.setHeader("Access-Control-Allow-Credentials", "true");
   event.node.res.setHeader("Vary", "Origin");
 }

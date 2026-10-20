@@ -4,7 +4,7 @@ export function isSocketBridgeOriginAllowed(
 ) {
   if (!origin) return true;
   if (!cors.loaded) return false;
-  return cors.origins.length === 0 || cors.origins.includes(origin);
+  return cors.origins.includes(origin);
 }
 
 export class SocketBridgeBuffer {
