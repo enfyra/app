@@ -1,4 +1,6 @@
-import { defineEventHandler, getRequestHeader, setHeader } from "h3";
+import { createError, defineEventHandler, getRequestHeader, setHeader, setResponseStatus } from "h3";
+
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 interface CorsCache {
   origins: string[];
@@ -96,41 +98,62 @@ export function getCorsOrigins(): string[] {
   return cachedCorsData.origins;
 }
 
+/**
+ * The one CORS contract, shared with ESV and the WebSocket bridge.
+ *
+ * - No Origin header: allowed.
+ * - Allow-list not loaded yet: denied, so a cold cache never grants access.
+ * - Allow-list loaded and empty: every origin is allowed.
+ * - Allow-list loaded and non-empty: the origin must be listed.
+ */
+export function evaluateCorsOrigin(
+  origin: string | undefined,
+  cors: { loaded: boolean; origins: string[] },
+): boolean {
+  if (!origin) return true;
+  if (!cors.loaded) return false;
+  return cors.origins.length === 0 || cors.origins.includes(origin);
+}
+
 export default defineEventHandler(async (event) => {
   const url = event.node.req.url || '';
-  
+
   if (!url.includes('/api/')) {
     return;
   }
-  
+
   const origin = getRequestHeader(event, 'origin');
-  const requestedHeaders = getRequestHeader(event, 'access-control-request-headers');
-  const allowedHeaders = requestedHeaders || DEFAULT_ALLOWED_HEADERS;
-  
   if (!origin) {
     return;
   }
-  
+
   const corsCache = await getValidatedOrigins();
-  if (!corsCache.loaded) {
+  const allowed = evaluateCorsOrigin(origin, corsCache);
+  const isPreflight =
+    event.method === 'OPTIONS' &&
+    getRequestHeader(event, 'access-control-request-method') !== undefined;
+
+  event.context.corsOrigin = { origin, allowed };
+
+  if (!allowed) {
+    console.warn('[CORS] Not allowed:', origin, 'in', corsCache.origins);
+    if (isPreflight || !SAFE_METHODS.has(event.method)) {
+      setResponseStatus(event, 403);
+      return createError({ statusCode: 403, statusMessage: 'Request origin is not allowed' });
+    }
     return;
   }
-  const allowedOrigins = corsCache.origins;
-  
-  if (allowedOrigins.length === 0) {
-    setHeader(event, 'Access-Control-Allow-Origin', origin);
-    setHeader(event, 'Access-Control-Allow-Credentials', 'true');
+
+  const requestedHeaders = getRequestHeader(event, 'access-control-request-headers');
+  setHeader(event, 'Access-Control-Allow-Origin', origin);
+  setHeader(event, 'Access-Control-Allow-Credentials', 'true');
+  setHeader(event, 'Vary', 'Origin');
+
+  if (isPreflight) {
     setHeader(event, 'Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    setHeader(event, 'Access-Control-Allow-Headers', allowedHeaders);
-    return;
-  }
-  
-  if (allowedOrigins.includes(origin)) {
-    setHeader(event, 'Access-Control-Allow-Origin', origin);
-    setHeader(event, 'Access-Control-Allow-Credentials', 'true');
-    setHeader(event, 'Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    setHeader(event, 'Access-Control-Allow-Headers', allowedHeaders);
-  } else {
-    console.warn('[CORS] Not allowed:', origin, 'in', allowedOrigins);
+    setHeader(event, 'Access-Control-Allow-Headers', requestedHeaders || DEFAULT_ALLOWED_HEADERS);
+    setHeader(event, 'Access-Control-Max-Age', 600);
+    setResponseStatus(event, 204);
+    return '';
   }
 });

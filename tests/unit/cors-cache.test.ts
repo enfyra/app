@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   clearCorsCache,
+  evaluateCorsOrigin,
   getValidatedOrigins,
   initCorsCache,
 } from '../../server/middleware/cors';
@@ -35,5 +36,31 @@ describe('CORS origin cache', () => {
     const cache = await getValidatedOrigins();
     expect(cache.loaded).toBe(true);
     expect(cache.origins).toEqual([]);
+  });
+});
+
+describe('CORS origin decision', () => {
+  it('allows a request without an Origin header', () => {
+    expect(evaluateCorsOrigin(undefined, { loaded: false, origins: [] })).toBe(
+      true,
+    );
+  });
+
+  it('denies a cross-origin request while the allow-list is not loaded', () => {
+    expect(
+      evaluateCorsOrigin('https://a.test', { loaded: false, origins: [] }),
+    ).toBe(false);
+  });
+
+  it('allows every origin when the loaded allow-list is empty', () => {
+    expect(
+      evaluateCorsOrigin('https://a.test', { loaded: true, origins: [] }),
+    ).toBe(true);
+  });
+
+  it('allows only listed origins once the allow-list has entries', () => {
+    const policy = { loaded: true, origins: ['https://a.test'] };
+    expect(evaluateCorsOrigin('https://a.test', policy)).toBe(true);
+    expect(evaluateCorsOrigin('https://b.test', policy)).toBe(false);
   });
 });

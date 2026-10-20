@@ -6,6 +6,33 @@ import { Agent, fetch as undiciFetch } from "undici";
 import { buildForwardedHeaders } from "./forwardedHeaders";
 import { beginProxyDelivery, deliveryHopHeader } from "./proxyDelivery";
 
+const CORS_RESPONSE_HEADERS = [
+  "access-control-allow-origin",
+  "access-control-allow-credentials",
+  "access-control-allow-methods",
+  "access-control-allow-headers",
+  "access-control-expose-headers",
+  "access-control-max-age",
+];
+
+/**
+ * The bridge owns the CORS decision. Upstream ESV applies the same contract,
+ * but its headers must not overwrite the bridge's own verdict — otherwise the
+ * answer would depend on which hop set the header last.
+ */
+function applyBridgeCorsDecision(event: H3Event): void {
+  for (const name of CORS_RESPONSE_HEADERS) {
+    event.node.res.removeHeader(name);
+  }
+  const decision = event.context.corsOrigin as
+    | { origin: string; allowed: boolean }
+    | undefined;
+  if (!decision?.allowed) return;
+  event.node.res.setHeader("Access-Control-Allow-Origin", decision.origin);
+  event.node.res.setHeader("Access-Control-Allow-Credentials", "true");
+  event.node.res.setHeader("Vary", "Origin");
+}
+
 export function buildApiProxyTarget(baseUrl: string | undefined, rawPath: string): string {
   const base = (baseUrl || "").replace(/\/+$/, "");
   const path = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
@@ -80,6 +107,7 @@ export async function proxyToAPI(event: H3Event, customPath?: string) {
       },
       onResponse: async (_event, response) => {
         event.node.res.removeHeader(deliveryHopHeader);
+        applyBridgeCorsDecision(event);
         delivery.snapshot.upstreamStatusCode = response.status;
         delivery.mark('upstream_headers');
         if (response.body) {
