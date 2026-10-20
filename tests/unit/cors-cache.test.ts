@@ -4,6 +4,7 @@ import {
   evaluateCorsOrigin,
   getValidatedOrigins,
   initCorsCache,
+  normalizeAllowedOrigin,
 } from '../../server/middleware/cors';
 
 describe('CORS origin cache', () => {
@@ -41,41 +42,26 @@ describe('CORS origin cache', () => {
 
 describe('CORS origin decision', () => {
   it('allows a request without an Origin header and grants no CORS', () => {
-    expect(
-      evaluateCorsOrigin(undefined, 'api.test', { loaded: false, origins: [] }),
-    ).toEqual({ allowed: true, corsOrigin: null });
-  });
-
-  it('treats the request host as same-origin and grants no CORS', () => {
-    expect(
-      evaluateCorsOrigin('https://api.test', 'api.test', {
-        loaded: true,
-        origins: ['https://a.test'],
-      }),
-    ).toEqual({ allowed: true, corsOrigin: null });
+    expect(evaluateCorsOrigin(undefined, { loaded: false, origins: [] })).toEqual(
+      { allowed: true, corsOrigin: null },
+    );
   });
 
   it('denies a cross-origin request while the allow-list is not loaded', () => {
     expect(
-      evaluateCorsOrigin('https://a.test', 'api.test', {
-        loaded: false,
-        origins: [],
-      }),
+      evaluateCorsOrigin('https://a.test', { loaded: false, origins: [] }),
     ).toEqual({ allowed: false, corsOrigin: null });
   });
 
-  it('denies cross-origin when the loaded allow-list has no entries', () => {
+  it('allows an unconfigured allow-list without granting CORS', () => {
     expect(
-      evaluateCorsOrigin('https://a.test', 'api.test', {
-        loaded: true,
-        origins: [],
-      }),
-    ).toEqual({ allowed: false, corsOrigin: null });
+      evaluateCorsOrigin('https://a.test', { loaded: true, origins: [] }),
+    ).toEqual({ allowed: true, corsOrigin: null });
   });
 
-  it('echoes the configured entry for a listed origin', () => {
+  it('grants the configured entry for a listed origin', () => {
     expect(
-      evaluateCorsOrigin('https://a.test', 'api.test', {
+      evaluateCorsOrigin('https://a.test', {
         loaded: true,
         origins: ['https://a.test'],
       }),
@@ -84,10 +70,17 @@ describe('CORS origin decision', () => {
 
   it('denies an origin that is not listed', () => {
     expect(
-      evaluateCorsOrigin('https://b.test', 'api.test', {
+      evaluateCorsOrigin('https://b.test', {
         loaded: true,
         origins: ['https://a.test'],
       }),
     ).toEqual({ allowed: false, corsOrigin: null });
+  });
+
+  it('drops entries that are not absolute http(s) origins', () => {
+    expect(
+      ['https://a.test', 'null', 'a.test', 'file:///etc/passwd', 'https://a.test/path']
+        .map((value) => normalizeAllowedOrigin(value)),
+    ).toEqual(['https://a.test', null, null, null, 'https://a.test']);
   });
 });

@@ -191,10 +191,11 @@ function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
       origin: (origin, callback) => {
         void getValidatedOrigins()
           .then((cors) => {
-            callback(
-              null,
-              isSocketBridgeOriginAllowed(origin, cors) ? origin : false,
-            );
+            const granted =
+              origin && cors.loaded && cors.origins.includes(origin)
+                ? origin
+                : false;
+            callback(null, granted);
           })
           .catch(() => callback(null, false));
       },

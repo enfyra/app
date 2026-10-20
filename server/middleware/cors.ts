@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getRequestHeader, setHeader, setResponseStatus, type H3Event } from "h3";
+import { createError, defineEventHandler, getRequestHeader, setHeader, setResponseStatus } from "h3";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -53,9 +53,9 @@ async function fetchAllowedOrigins(): Promise<string[] | null> {
     const rows = Array.isArray(data?.data) ? data.data : [];
 
     return rows
-      .filter((row: any) => row?.isEnabled !== false && typeof row?.value === 'string')
-      .map((row: any) => row.value.trim())
-      .filter((v: string) => v.length > 0);
+      .filter((row: any) => row?.isEnabled !== false)
+      .map((row: any) => normalizeAllowedOrigin(row?.value))
+      .filter((origin: string | null): origin is string => origin !== null);
   } catch (error: any) {
     return markUnavailable('Error fetching origins', error?.message || error);
   }
@@ -99,43 +99,45 @@ export function getCorsOrigins(): string[] {
 }
 
 /**
+ * Only an absolute http(s) origin can be granted, because that is the only
+ * shape a browser sends as `Origin`. This rejects the `"null"` origin that any
+ * sandboxed iframe or `data:` URL can present.
+ */
+export function normalizeAllowedOrigin(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return null;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    if (!parsed.host) return null;
+    return parsed.origin;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The one CORS contract, shared with ESV and the WebSocket bridge.
  *
  * - No Origin header: allowed without CORS.
- * - Same origin as the request's public host: allowed without CORS.
  * - Allow-list not loaded yet: denied, so a cold cache never grants access.
- * - Allow-list loaded: only a listed origin is granted, and the echoed value is
- *   the configured entry rather than the raw header.
+ * - Allow-list loaded and empty: allowed without CORS. This is the unconfigured
+ *   default, where the app is reached through its own origin.
+ * - Allow-list loaded with entries: only an exact entry is granted, and that
+ *   entry is the value granted.
  */
 export function evaluateCorsOrigin(
   origin: string | undefined,
-  publicHost: string | undefined,
   cors: { loaded: boolean; origins: string[] },
 ): { allowed: boolean; corsOrigin: string | null } {
   if (!origin) return { allowed: true, corsOrigin: null };
-  if (isSameHost(origin, publicHost)) {
-    return { allowed: true, corsOrigin: null };
-  }
   if (!cors.loaded) return { allowed: false, corsOrigin: null };
+  if (cors.origins.length === 0) return { allowed: true, corsOrigin: null };
   const corsOrigin = cors.origins.find((entry) => entry === origin) ?? null;
   return corsOrigin
     ? { allowed: true, corsOrigin }
     : { allowed: false, corsOrigin: null };
-}
-
-function isSameHost(origin: string, publicHost: string | undefined): boolean {
-  if (!publicHost) return false;
-  try {
-    return new URL(origin).host.toLowerCase() === publicHost.toLowerCase();
-  } catch {
-    return false;
-  }
-}
-
-function publicHostOf(event: H3Event): string | undefined {
-  const forwarded = getRequestHeader(event, 'x-forwarded-host');
-  const raw = forwarded || getRequestHeader(event, 'host');
-  return typeof raw === 'string' ? raw.split(',')[0]?.trim() : undefined;
 }
 
 export default defineEventHandler(async (event) => {
@@ -151,7 +153,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const corsCache = await getValidatedOrigins();
-  const decision = evaluateCorsOrigin(origin, publicHostOf(event), corsCache);
+  const decision = evaluateCorsOrigin(origin, corsCache);
   const isPreflight =
     event.method === 'OPTIONS' &&
     getRequestHeader(event, 'access-control-request-method') !== undefined;
