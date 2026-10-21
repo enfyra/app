@@ -7,6 +7,7 @@ import CommonModal from '~/components/common/Modal.vue'
 const UModalStub = defineComponent({
   props: {
     open: { type: Boolean, default: false },
+    close: { type: [Boolean, Object], default: true },
   },
   emits: ['update:open'],
   setup(props, { emit, slots }) {
@@ -84,6 +85,29 @@ describe('CommonModal', () => {
     second.unmount()
     await nextTick()
     expect(document.documentElement.style.overflow).toBe(initialOverflow)
+  })
+
+  it('renders the shared danger-toned close control through the native close slot', async () => {
+    const wrapper = await mountSuspended(CommonModal, {
+      route: '/login',
+      props: { open: true },
+      slots: {
+        header: () => 'Title',
+        body: () => 'Body',
+      },
+      global: {
+        stubs: {
+          UModal: UModalStub,
+        },
+      },
+    })
+
+    expect(wrapper.getComponent(UModalStub).props('close')).toEqual({
+      color: 'error',
+      variant: 'soft',
+      size: 'md',
+      class: '!h-9 !w-9 !p-0',
+    })
   })
 
   it('defaults closed when modelValue is omitted', async () => {

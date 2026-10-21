@@ -96,6 +96,7 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
       :handle="props.handle"
       :class="props.class"
       :ui="mergedUi"
+      :close="{ color: 'error', variant: 'soft', size: 'md', class: '!h-9 !w-9 !p-0' }"
     >
       <template #title>
         <div v-if="hasTitle" class="flex items-center justify-between w-full" @click.stop>

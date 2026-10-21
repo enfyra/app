@@ -92,6 +92,7 @@
   <div id="others-overlay"></div>
 
   <CommonGlobalConfirm />
+  <CommonCodeVersionModal />
   <DynamicGlobalExtensionsHost />
   <FolderDetailModal />
 </template>

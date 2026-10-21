@@ -8,6 +8,8 @@ const props = withDefaults(defineProps<SettingsTableProps>(), {
   loading: false,
   pageLimit: 0,
   paginationLoading: false,
+  paginationMode: 'offset',
+  hasNextPage: false,
 })
 
 const page = defineModel<number>('page', { default: 1 })
@@ -104,7 +106,7 @@ const columns = computed(() => {
       :search-placeholder="searchPlaceholder"
       :search-label="searchLabel"
       :ui="tableUi"
-      :pagination-config="pageSizeKey || hasPagination ? { total, itemsPerPage: pageLimit, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), to } : undefined"
+      :pagination-config="paginationMode === 'cursor' ? { mode: 'cursor', itemsPerPage: pageLimit, rowCount: data.length, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), hasNextPage } : pageSizeKey || hasPagination ? { total, itemsPerPage: pageLimit, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), to } : undefined"
       :reload="reload"
       :reload-loading="reloadLoading"
       v-model:search="search"

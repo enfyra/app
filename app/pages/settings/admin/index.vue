@@ -21,8 +21,15 @@ const adminTools = computed(() => {
       title: 'Server Logs',
       description: 'Trace system errors and user script logs by correlation ID.',
       icon: 'lucide:file-search',
-      to: '/settings/admin/logs',
+      to: '/settings/logs',
       visible: canReadLogs,
+    },
+    {
+      title: 'Audit',
+      description: 'Review code revisions and restore an earlier revision as a new version.',
+      icon: 'lucide:history',
+      to: '/settings/audit',
+      visible: isRootAdmin || checkPermissionCondition({ and: [{ route: '/enfyra_audit', methods: ['GET'] }] }),
     },
     {
       title: 'Runtime Monitor',

@@ -20,6 +20,7 @@ const slots = useSlots()
 const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'headerName', 'headerDescription', 'recordCount', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection', 'reload', 'reloadLoading', 'searchable', 'searchPlaceholder', 'searchLabel', 'search'])
 const search = defineModel<string>('search', { default: '' })
 const recordCount = computed(() => props.recordCount ?? props.paginationConfig?.total ?? props.data.length)
+const showRecordCount = computed(() => props.paginationConfig?.mode !== 'cursor')
 const tableOptions = computed(() => Object.fromEntries(Object.entries(props).filter(([key]) => !wrapperKeys.has(key))))
 const tableRef = useTemplateRef<{ tableApi?: Table<Record<string, any>>; tableRef?: HTMLElement }>('tableRef')
 const page = defineModel<number>('page', { default: 1 })
@@ -110,13 +111,13 @@ defineExpose({
           <div class="min-w-0">
             <div class="flex min-w-0 items-center gap-3">
               <span class="eapp-table-title min-w-0 truncate text-sm font-semibold text-highlighted" :title="props.headerName">{{ props.headerName }}</span>
-              <UBadge color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" aria-live="polite" class="hidden shrink-0 md:inline-flex" />
+              <UBadge v-if="showRecordCount" color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" aria-live="polite" class="hidden shrink-0 md:inline-flex" />
             </div>
             <span v-if="props.headerDescription" class="mt-0.5 block max-w-full truncate text-xs text-muted" :title="props.headerDescription">{{ props.headerDescription }}</span>
           </div>
         </div>
         <div class="flex min-h-11 w-full min-w-0 items-center gap-2 border-t border-default px-3 py-2 md:min-h-14 md:w-auto md:border-t-0 md:px-4 md:py-3" :class="hasActionTier() ? undefined : 'md:hidden'">
-          <UBadge color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" class="shrink-0 md:hidden" aria-hidden="true" />
+          <UBadge v-if="showRecordCount" color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" class="shrink-0 md:hidden" aria-hidden="true" />
           <div v-if="hasActionTier()" class="ml-auto flex min-h-8 min-w-0 items-center justify-end gap-2">
             <slot name="toolbar" :table-api="tableRef?.tableApi" />
             <slot name="toolbar-actions" :table-api="tableRef?.tableApi" />

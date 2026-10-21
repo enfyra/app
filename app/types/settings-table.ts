@@ -18,6 +18,8 @@ export interface SettingsTableProps {
   pageLimit?: number
   pageSizeKey?: string
   paginationLoading?: boolean
+  paginationMode?: 'offset' | 'cursor'
+  hasNextPage?: boolean
   to?: (page: number) => any
   reload?: () => unknown | Promise<unknown>
   reloadLoading?: boolean

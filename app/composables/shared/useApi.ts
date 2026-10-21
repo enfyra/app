@@ -1,4 +1,5 @@
 import type { ApiError, ApiExecutionResult } from "~/types/api";
+import { prepareCodeUpdate } from '~/utils/code-version';
 import {
   assertValidApiIdentifiers,
   buildApiPath,
@@ -166,6 +167,8 @@ function isAbortError(error: any): boolean {
 
 export function useApi<T = any>(url: string | (() => string), options: any = {}) {
   const notify = useNotify();
+  const codeVersion = useCodeVersion();
+  const { getIdFieldName } = useDatabase();
   const { method = "get", body, query, errorContext, onError, disableErrorPage } = options;
 
   const data = ref<T | null>(null);
@@ -278,8 +281,17 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         return { ok: true, data: responses as T };
       }
 
+      const prepareUpdateBody = async (path: string) => {
+        if (String(method).toLowerCase() !== 'patch') return finalBody;
+        return prepareCodeUpdate(path, finalBody, (readPath, readOptions) => $fetch(readPath, { ...readOptions, headers: finalHeaders, signal: currentController.signal }), details => codeVersion.confirm(details, currentController.signal), getIdFieldName());
+      };
+
       // Handle batch operations with ids
       if (isBatchOperation && executeOpts?.ids && executeOpts.ids.length > 0) {
+        const preparedBodies = new Map<string | number, unknown>();
+        for (const id of executeOpts.ids) {
+          preparedBodies.set(id, await prepareUpdateBody(buildApiPath(finalPath, id)));
+        }
         const responses = await runBoundedApiBatch(
           executeOpts.ids,
           async (id) => {
@@ -288,7 +300,7 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
             try {
               return await $fetch<T>(fullPath, {
                 method: method as any,
-                body: finalBody ? toRaw(finalBody) : undefined,
+                body: preparedBodies.get(id) ? toRaw(preparedBodies.get(id)) as any : undefined,
                 headers: finalHeaders,
                 query: finalQuery,
                 signal: currentController.signal,
@@ -316,10 +328,12 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         : finalPath;
 
       lastAttemptedPath = fullPath;
+      const preparedBody = await prepareUpdateBody(fullPath);
+      if (currentController.signal.aborted) throw new DOMException('Request cancelled', 'AbortError');
 
       const response = await $fetch<T>(fullPath, {
         method: method as any,
-        body: finalBody ? toRaw(finalBody) : undefined,
+        body: preparedBody ? toRaw(preparedBody) : undefined,
         headers: finalHeaders,
         query: finalQuery,
         signal: currentController.signal,
@@ -332,6 +346,11 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
       status.value = "success";
       return { ok: true, data: response };
     } catch (err) {
+      if (err instanceof DOMException && err.message === 'Version confirmation cancelled') {
+        error.value = { message: 'Save cancelled' };
+        status.value = 'idle';
+        return { ok: false, error: null, aborted: true };
+      }
       if (
         !canCommit() ||
         isAbortError(err) ||
