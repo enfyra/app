@@ -133,6 +133,8 @@ function systemKindLabel(kind?: RedisAdminSystemKind) {
       return 'runtime cache';
     case 'user_cache':
       return 'user cache';
+    case 'user_cache_lock':
+      return 'user cache lock';
     case 'bullmq':
       return 'BullMQ';
     case 'socket_io':
@@ -156,6 +158,8 @@ function systemKindColor(kind?: RedisAdminSystemKind) {
       return 'primary';
     case 'user_cache':
       return 'success';
+    case 'user_cache_lock':
+      return 'neutral';
     case 'bullmq':
       return 'warning';
     case 'socket_io':
@@ -193,7 +197,7 @@ function groupDescription(group: { systemKind?: RedisAdminSystemKind; system?: b
     case 'runtime_cache':
       return 'Shared runtime definition snapshots';
     case 'user_cache':
-      return '$cache data created by handlers and flows';
+      return '$cache data and distributed locks created by handlers and flows';
     case 'bullmq':
       return 'Queue state and retained jobs';
     case 'socket_io':
@@ -233,6 +237,7 @@ function inferSystemKindFromKey(key: string): RedisAdminSystemKind | undefined {
   if (key.startsWith('coord:sql:pool:')) return 'sql_pool_coordination';
   if (key.startsWith('rl:')) return 'rate_limit';
   if (key.startsWith('runtime_cache:')) return 'runtime_cache';
+  if (key.startsWith('user_cache_lock:')) return 'user_cache_lock';
   if (key.startsWith('user_cache:') || key.startsWith('user_cache_meta:')) return 'user_cache';
 }
 
@@ -242,6 +247,7 @@ function matchesKeyFilter(key: RedisAdminKeySummary, filter: RedisAdminKeyFilter
   if (systemKind === 'sql_pool_coordination' && filter !== 'sql_pool_coordination') return false;
   if (filter === 'all') return true;
   if (filter === 'custom') return !key.isSystem && !systemKind;
+  if (filter === 'user_cache') return systemKind === 'user_cache' || systemKind === 'user_cache_lock';
   return systemKind === filter;
 }
 

@@ -45,6 +45,7 @@ export type RedisAdminSystemMark = {
 export type RedisAdminSystemKind =
   | 'runtime_cache'
   | 'user_cache'
+  | 'user_cache_lock'
   | 'bullmq'
   | 'socket_io'
   | 'runtime_monitor'
