@@ -3,6 +3,7 @@
       header-name="WebSocket Manager"
     v-model:page="page"
     :data="gateways"
+    :bulk-action="bulkDelete"
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
@@ -191,6 +192,14 @@ const { execute: deleteGatewayApi, error: deleteError } = useApi(
     errorContext: "Delete WebSocket Gateway",
   }
 );
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_websocket',
+  title: 'Delete WebSocket Gateways',
+  isEligible: gateway => !gateway.isSystem,
+  isBusy: () => gateways.value.some(item => getGatewayLoader(String(getId(item) ?? '')).isLoading.value),
+  refresh: () => fetchGateways(),
+});
 
 const deleteGateway = async (gateway: any) => {
   const isConfirmed = await confirm({

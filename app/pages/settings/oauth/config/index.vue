@@ -3,6 +3,7 @@
       header-name="OAuth Configuration"
     v-model:page="page"
     :data="configs"
+    :bulk-action="bulkDelete"
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
@@ -100,6 +101,14 @@ registerHeaderActions([
     },
   },
 ]);
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_oauth_config',
+  title: 'Delete OAuth Providers',
+  warning: 'Users will no longer be able to sign in through these provider configurations.',
+  isBusy: () => configs.value.some(item => getConfigLoader(String(getId(item) ?? '')).isLoading.value),
+  refresh: () => fetchConfigs(),
+});
 
 function getProviderLabel(provider: string) {
   switch (provider) {

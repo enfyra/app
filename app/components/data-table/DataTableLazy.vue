@@ -13,13 +13,11 @@ const emit = defineEmits<{
   "row-click": [row: any];
   "page-size-change": [size: number];
   "search": [value: string];
-  "update:rowSelection": [selection: Record<string, boolean>];
+  "update:selectedRows": [rows: Record<string, any>[]];
+  "update:selectedRowIds": [ids: (string | number)[]];
 }>();
 
-const rowSelection = computed({
-  get: () => props.rowSelection ?? {},
-  set: (selection: Record<string, boolean>) => emit('update:rowSelection', selection),
-});
+const rowSelection = defineModel<Record<string, boolean>>('rowSelection', { default: () => ({}) });
 const search = defineModel<string>('search', { default: '' });
 const page = defineModel<number>('page', { default: 1 });
 const columnVisibility = defineModel<Record<string, boolean>>('columnVisibility', { default: () => ({}) });
@@ -39,6 +37,8 @@ const DataTable = defineAsyncComponent(() => import("./DataTable.vue"));
         @search="value => emit('search', value)"
         @row-click="(row) => emit('row-click', row)"
         @page-size-change="size => emit('page-size-change', size)"
+        @update:selected-rows="rows => emit('update:selectedRows', rows)"
+        @update:selected-row-ids="ids => emit('update:selectedRowIds', ids)"
       >
         <template v-for="(_, name) in $slots" #[name]="slotData">
           <slot :name="name" v-bind="slotData" />

@@ -1,3 +1,7 @@
+export interface SelectionColumnOptions {
+  multiple?: boolean;
+}
+
 export interface DataTableColumnConfig {
   id: string;
   accessorKey?: string;

@@ -1,5 +1,17 @@
 export type RuntimeSeverity = 'ok' | 'warning' | 'error';
 
+export type RuntimeMetricsClusterPayload = {
+  intervalMs: number;
+  instances: RuntimeMetricsPayload[];
+};
+
+export type RuntimeMetricsPollingOptions = {
+  load: (signal: AbortSignal) => Promise<RuntimeMetricsClusterPayload>;
+  onSample: (sample: RuntimeMetricsClusterPayload) => void;
+  onError: (error: unknown) => void;
+  onSchedule: (nextAt: number | null) => void;
+};
+
 export type RuntimeHealthStatus = {
   severity: RuntimeSeverity;
   messages: string[];

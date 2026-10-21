@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/vue-table'
 import type { DataTableRowAction } from './data-table-columns'
+import type { SettingsBulkAction } from './settings-bulk-action'
 
 export type SettingsTableCellStyle<Context> = string | Record<string, string> | ((context: Context) => string | Record<string, string>)
 
@@ -23,4 +24,7 @@ export interface SettingsTableProps {
   to?: (page: number) => any
   reload?: () => unknown | Promise<unknown>
   reloadLoading?: boolean
+  enableRowSelection?: boolean
+  bulkAction?: SettingsBulkAction
+  selectionDisabled?: boolean
 }

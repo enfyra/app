@@ -1,21 +1,15 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   hasActiveFilters: boolean;
   filterCount: number;
-  disabled?: boolean;
 }>();
 
 const emit = defineEmits<{
   "open-filter": [];
-  "open-create": [];
 }>();
 
 function openFilterDrawer() {
   emit("open-filter");
-}
-
-function openCreateDrawer() {
-  emit("open-create");
 }
 
 const { isMobile, isTablet } = useScreen();
@@ -32,18 +26,6 @@ const { isMobile, isTablet } = useScreen();
       :class="(isMobile || isTablet) ? '!aspect-square' : ''"
     >
       <span v-if="!isMobile && !isTablet">{{ hasActiveFilters ? `Filtered (${filterCount})` : "Filter" }}</span>
-    </UButton>
-
-    <UButton
-      icon="lucide:plus"
-      variant="soft"
-      color="primary"
-      :size="(isMobile || isTablet) ? 'xs' : 'sm'"
-      @click="openCreateDrawer"
-      :disabled="disabled"
-      :class="(isMobile || isTablet) ? '!aspect-square' : ''"
-    >
-      <span v-if="!isMobile && !isTablet">Add New</span>
     </UButton>
   </div>
 </template>

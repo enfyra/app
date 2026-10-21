@@ -1,9 +1,8 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import { createSelectionColumn } from '~/utils/data-table-selection';
 import { resolveTableCellDisplay } from '~/utils/data-table-cell-formatter';
 import { DataTableBulkActions, UBadge } from '#components';
-import type { RowSelectionState, VisibilityState } from '@tanstack/vue-table';
+import type { VisibilityState } from '@tanstack/vue-table';
 
 const route = useRoute();
 const router = useRouter();
@@ -148,21 +147,9 @@ const {
   handleSelectionChange,
 } = useDataTableActions(tableName, fetchData, data);
 
-const rowSelection = ref<RowSelectionState>({});
 const canDeleteSelection = computed(() => checkPermissionCondition({
   and: [{ route: getRouteForTableName(tableName.value), methods: ['DELETE'] }],
 }));
-watch(rowSelection, (selection) => {
-  const selected = new Set(Object.keys(selection).filter((id) => selection[id]));
-  handleSelectionChange(data.value.filter((row) => selected.has(String(getId(row)))));
-});
-watch(data, (rows) => {
-  const visible = new Set(rows.map((row) => String(getId(row))));
-  const retained = Object.keys(rowSelection.value).filter((id) => rowSelection.value[id] && visible.has(id));
-  if (retained.length !== Object.keys(rowSelection.value).length) rowSelection.value = Object.fromEntries(retained.map((id) => [id, true]));
-  const selected = new Set(retained);
-  handleSelectionChange(rows.filter((row) => selected.has(String(getId(row)))));
-});
 
 
 const { buildActionsColumn } = useDataTableColumns();
@@ -242,7 +229,7 @@ const columns = computed(() => {
 
   const actionsColumn = buildActionsColumn(actionsConfig);
 
-  return [createSelectionColumn<Record<string, any>>(), ...dataColumns, actionsColumn];
+  return [...dataColumns, actionsColumn];
 });
 
 watch(
@@ -282,7 +269,7 @@ async function clearFilters() {
 watch(tableName, () => {
   total.value = 1;
   currentFilter.value = createEmptyFilter();
-  rowSelection.value = {};
+  handleSelectionChange([]);
 });
 
 watch(() => route.query.page, value => {
@@ -369,18 +356,19 @@ registerHeaderActions([
 
     <div class="min-w-0">
       <DataTableLazy
+        :key="tableName"
         v-model:page="page"
         :data="data"
         :columns="columns"
         :loading="tableLoading"
-        :get-row-id="(row: Record<string, any>) => String(getId(row))"
-        v-model:row-selection="rowSelection"
+        enable-row-selection
         v-model:column-visibility="columnVisibility"
         :pagination-config="{ itemsPerPage: pageLimit, total, loading, showPageSize: true, to: (p) => ({ path: route.path, query: { ...route.query, page: p } }) }"
         :reload="fetchData"
         :reload-loading="loading"
         :header-name="tableName"
         @page-size-change="setPageSize"
+        @update:selected-rows="handleSelectionChange"
         @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
       >
         <template v-if="selectedRows.length && canDeleteSelection" #toolbar-actions>

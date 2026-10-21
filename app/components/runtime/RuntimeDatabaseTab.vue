@@ -14,7 +14,7 @@ const columns: ColumnDef<DatabaseRow>[] = [
   { id: 'context', header: 'Context', cell: ({ row }) => row.original.context },
   { id: 'operation', header: 'Operation', cell: ({ row }) => h('div', { class: 'min-w-0' }, [h('span', { class: 'font-medium' }, row.original.op), h('span', { class: 'ml-2 text-[var(--text-tertiary)]' }, row.original.table)]) },
   { id: 'count', header: 'Count', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => String(row.original.count) },
-  { id: 'slow', header: 'Slow', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => h('span', { class: metricTextClass(row.original.slow > 0 ? 'warning' : 'ok') }, String(row.original.slow)) },
+  { id: 'slow', header: 'Slow', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => String(row.original.slow) },
   { id: 'errors', header: 'Errors', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => h('span', { class: metricTextClass(row.original.errors > 0 ? 'error' : 'ok') }, String(row.original.errors)) },
   { id: 'pool', header: 'Pool timeout', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => h('span', { class: metricTextClass(row.original.poolAcquireTimeouts > 0 ? 'error' : 'ok') }, String(row.original.poolAcquireTimeouts)) },
   { id: 'p95', header: 'p95', meta: { class: { th: 'text-right', td: 'text-right' } }, cell: ({ row }) => fmtMs(row.original.p95Ms) },
@@ -24,7 +24,7 @@ const columns: ColumnDef<DatabaseRow>[] = [
 
 <template>
   <div class="surface-card rounded-lg p-4">
-    <div class="mb-3 font-medium text-[var(--text-primary)]">Query/DB Slow Path</div>
+    <div class="mb-3 font-medium text-[var(--text-primary)]">Database health</div>
     <div class="mb-4 grid gap-3">
       <div
         v-for="metrics in runtime.instances"

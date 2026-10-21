@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { resolveRelationDetailPath } from '~/utils/relation-detail-paths';
-import { buildRelationSearchFilter, getRelationId } from '~/utils/relation-records';
-import type { RelationId } from '~/types/relation';
+import { h } from 'vue'
+import { UBadge, UButton } from '#components'
+import type { ColumnDef } from '@tanstack/vue-table'
+import type { DataTablePaginationConfig } from '~/types/table-pagination'
+import { resolveTableCellDisplay } from '~/utils/data-table-cell-formatter'
+import { resolveRelationDetailPath } from '~/utils/relation-detail-paths'
+import { getRelationId } from '~/utils/relation-records'
+import type { RelationId } from '~/types/relation'
 
 const props = defineProps<{
   relationMeta: any;
@@ -25,13 +30,11 @@ const isDrawerOpen = computed({
 
 const draftSelected = ref<RelationId[]>(normalizeRelationIds(props.selectedIds));
 const confirmedSelected = ref<RelationId[]>(normalizeRelationIds(props.selectedIds));
-const showAllConfirmed = ref(false);
+const showAllSelected = ref(false);
 const normalRecords = ref<any[]>([]);
 const normalLoading = ref(false);
-const showCreateDrawer = ref(false);
+const recordTotal = ref<number>();
 const showFilterDrawer = ref(false);
-const searchQuery = ref("");
-const searchDebounced = ref("");
 const normalPointer = ref<any>(null);
 const pointerHistory = ref<any[]>([]);
 const hasMoreNormal = ref(true);
@@ -43,13 +46,12 @@ const activeFilterCount = computed(() => countActiveFilters(currentFilter.value)
 const targetTableName = computed(() => props.relationMeta?.targetTableName || "");
 const targetRoute = computed(() => `/${targetTableName.value}`);
 const { definition, getColumnFields } = useSchema(targetTableName);
-const { isMounted } = useMounted();
 
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 let activeRequestController: AbortController | null = null;
 let activeRequestTimer: ReturnType<typeof setTimeout> | null = null;
 
 const idField = computed(() => getIdFieldName());
+
 function normalizeRelationIds(items: unknown[]): RelationId[] {
   const seen = new Set<string>();
   return items.reduce<RelationId[]>((ids, item) => {
@@ -64,7 +66,7 @@ function normalizeRelationIds(items: unknown[]): RelationId[] {
 const draftSelectedIds = computed(() => normalizeRelationIds(draftSelected.value));
 const confirmedIds = computed(() => normalizeRelationIds(confirmedSelected.value));
 const selectedVisibleIds = computed(() => (
-  showAllConfirmed.value
+  showAllSelected.value
     ? draftSelectedIds.value
     : draftSelectedIds.value.slice(0, SELECTED_PREVIEW_LIMIT)
 ));
@@ -77,24 +79,36 @@ const hasPendingSelectionChanges = computed(() => {
 });
 const loading = computed(() => normalLoading.value);
 const canLoadMore = computed(() => hasMoreNormal.value && !loading.value);
+const hasActiveFilter = computed(() => hasActiveFilters(currentFilter.value));
+
+const paginationConfig = computed<DataTablePaginationConfig>(() => ({
+  mode: 'cursor',
+  itemsPerPage: LIST_LIMIT,
+  total: recordTotal.value,
+  loading: loading.value,
+  hasNextPage: hasMoreNormal.value,
+  showPageSize: false,
+  floating: false,
+}));
+
+const cursorPage = computed({
+  get: () => pointerHistory.value.length + 1,
+  set: (target: number) => {
+    if (target > pointerHistory.value.length + 1) void loadMore();
+    else if (target < pointerHistory.value.length + 1) void loadPrevious();
+  },
+});
 
 function getBaseFilter(): Record<string, any> | null {
   return hasActiveFilters(currentFilter.value) ? buildQuery(currentFilter.value) : null;
 }
 
 function getNormalFilter(pointer = normalPointer.value): Record<string, any> {
-  const conditions: Record<string, any>[] = [];
   const baseFilter = getBaseFilter();
-  if (baseFilter && Object.keys(baseFilter).length > 0) conditions.push(baseFilter);
-  const searchFilter = buildRelationSearchFilter(searchDebounced.value, definition.value, idField.value);
-  if (searchFilter) conditions.push(searchFilter);
-  if (pointer !== null && pointer !== undefined) {
-    conditions.push({ [idField.value]: { _lt: pointer } });
-  }
-
-  if (conditions.length === 0) return {};
-  if (conditions.length === 1) return conditions[0] ?? {};
-  return { _and: conditions };
+  if (pointer === null || pointer === undefined) return baseFilter ?? {};
+  const pointerCondition = { [idField.value]: { _lt: pointer } };
+  if (!baseFilter || Object.keys(baseFilter).length === 0) return pointerCondition;
+  return { _and: [baseFilter, pointerCondition] };
 }
 
 async function fetchRecords(query: Record<string, any>, signal: AbortSignal) {
@@ -115,6 +129,7 @@ async function refreshRecords({ reset = false } = {}) {
     requestSequence.value += 1;
     cancelActiveRequest();
     normalLoading.value = false;
+    recordTotal.value = undefined;
     loadError.value = null;
     return;
   }
@@ -122,6 +137,7 @@ async function refreshRecords({ reset = false } = {}) {
     normalPointer.value = null;
     pointerHistory.value = [];
     normalRecords.value = [];
+    recordTotal.value = undefined;
     hasMoreNormal.value = true;
   }
 
@@ -141,8 +157,10 @@ async function refreshRecords({ reset = false } = {}) {
     const fields = await getColumnFields();
     if (sequence !== requestSequence.value) return;
 
+    const includeTotal = normalPointer.value === null || normalPointer.value === undefined;
     const normalQuery = {
       fields,
+      ...(includeTotal ? { meta: 'filterCount' } : {}),
       filter: getNormalFilter(reset ? null : normalPointer.value),
       sort: `-${idField.value}`,
       limit: LIST_LIMIT + 1,
@@ -153,6 +171,10 @@ async function refreshRecords({ reset = false } = {}) {
     const normalData = normalResponse?.data || [];
     normalRecords.value = normalData.slice(0, LIST_LIMIT);
     hasMoreNormal.value = normalData.length > LIST_LIMIT;
+    if (includeTotal) {
+      const total = normalResponse?.meta?.filterCount;
+      recordTotal.value = typeof total === 'number' && Number.isFinite(total) && total >= 0 ? total : undefined;
+    }
   } catch {
     if (sequence !== requestSequence.value) return;
     normalRecords.value = [];
@@ -191,22 +213,8 @@ async function loadPrevious() {
   await refreshRecords();
 }
 
-function toggle(item: any) {
-  if (props.disabled) return;
-  const id = getRelationId(item, getId);
-  if (id === null || id === undefined) return;
-
-  const isCurrentlySelected = draftSelectedIds.value.some((selectedId) => String(selectedId) === String(id));
-  if (isCurrentlySelected) {
-    removeSelection(id);
-    return;
-  }
-
-  const nextSelection = props.multiple ? [...draftSelectedIds.value, id] : [id];
-  draftSelected.value = nextSelection;
-}
-
 function removeSelection(id: RelationId) {
+  if (props.disabled) return;
   draftSelected.value = draftSelectedIds.value.filter((selectedId) => String(selectedId) !== String(id));
 }
 
@@ -231,37 +239,86 @@ function getDetailPath(item: any): string | null {
   return itemId ? `/data/${targetTableName.value}/${itemId}` : null;
 }
 
+const detailColumn = computed<ColumnDef<Record<string, any>> | null>(() => {
+  if (!targetTableName.value) return null;
+  return {
+    id: '__actions',
+    header: '',
+    enableSorting: false,
+    enableHiding: false,
+    size: 44,
+    minSize: 44,
+    maxSize: 44,
+    cell: ({ row }) => {
+      const path = getDetailPath(row.original);
+      if (!path) return null;
+      return h(UButton, {
+        to: path,
+        icon: 'lucide:external-link',
+        size: 'xs',
+        variant: 'ghost',
+        color: 'neutral',
+        title: 'Navigate to detail page',
+        onClick: (event: Event) => event.stopPropagation(),
+      });
+    },
+  };
+});
+
+
+const columns = computed<ColumnDef<Record<string, any>>[]>(() => {
+  const fields = definition.value
+    .filter((field) => field.fieldType === 'column' && !!field.name && field.metadataAccess?.read !== false)
+    .sort((a, b) => {
+      const aName = a.name?.toLowerCase() || '';
+      const bName = b.name?.toLowerCase() || '';
+      if (aName === 'id' || aName === '_id') return -1;
+      if (bName === 'id' || bName === '_id') return 1;
+      const aKey = a.createdAt ? new Date(a.createdAt).getTime() : (a.id ?? Number.MAX_SAFE_INTEGER);
+      const bKey = b.createdAt ? new Date(b.createdAt).getTime() : (b.id ?? Number.MAX_SAFE_INTEGER);
+      return aKey - bKey;
+    });
+
+  const source = fields.length > 0
+    ? fields
+    : [{ name: idField.value, label: 'ID', metadata: null }];
+
+  const dataColumns = source.map((field) => {
+    const name = field.name as string;
+    const isId = ['id', '_id'].includes(name.toLowerCase());
+    return {
+      id: name,
+      accessorKey: name,
+      header: field.label || name,
+      enableSorting: false,
+      ...(isId ? { size: 84, minSize: 84, maxSize: 220 } : {}),
+      cell: ({ getValue }: { getValue: () => unknown }) => {
+        const value = getValue();
+        if ('type' in field && field.type === 'code' && typeof field.metadata?.tableCell?.formatter !== 'string') return value == null || value === '' ? '_' : 'Code';
+        const display = resolveTableCellDisplay(field.metadata ?? {}, value);
+        return display.color
+          ? h(UBadge, { label: display.text, color: display.color, variant: display.variant ?? 'soft' })
+          : display.text;
+      },
+    } as ColumnDef<Record<string, any>>;
+  });
+
+  return [...dataColumns, ...(detailColumn.value ? [detailColumn.value] : [])];
+});
+
 async function handleFilterApply(filter: FilterGroup) {
   currentFilter.value = filter;
   await refreshRecords({ reset: true });
 }
 
-const hasSearchOrFilters = computed(() => searchDebounced.value.trim() !== "" || hasActiveFilters(currentFilter.value));
-
-function clearSearch() {
-  searchQuery.value = "";
-  searchDebounced.value = "";
-  void refreshRecords({ reset: true });
-}
-
-function clearAllFilters() {
-  searchQuery.value = "";
-  searchDebounced.value = "";
+function clearFilter() {
   currentFilter.value = createEmptyFilter();
   void refreshRecords({ reset: true });
 }
 
-function showAllConfirmedRecords() {
-  showAllConfirmed.value = true;
+function showAllSelectedRecords() {
+  showAllSelected.value = true;
 }
-
-watch(searchQuery, (newVal) => {
-  if (searchTimeout) clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    searchDebounced.value = newVal;
-    void refreshRecords({ reset: true });
-  }, 300);
-});
 
 watch(() => props.selectedIds, () => {
   draftSelected.value = normalizeRelationIds(props.selectedIds);
@@ -272,16 +329,13 @@ watch(() => props.selectedIds, () => {
 watch(() => props.open, (open) => {
   if (!open) return;
   draftSelected.value = [...confirmedSelected.value];
-  showAllConfirmed.value = false;
-  searchQuery.value = "";
-  searchDebounced.value = "";
+  showAllSelected.value = false;
   void refreshRecords({ reset: true });
 });
 
 onBeforeUnmount(() => {
   requestSequence.value += 1;
   cancelActiveRequest();
-  if (searchTimeout) clearTimeout(searchTimeout);
 });
 
 const { isMobile, isTablet } = useScreen();
@@ -297,19 +351,6 @@ const { isMobile, isTablet } = useScreen();
 
     <template #body>
       <div class="space-y-3">
-        <div class="flex min-h-8 items-center justify-between gap-3">
-          <p class="min-w-0 truncate text-sm text-muted-foreground">
-            {{ targetTableName || 'Unknown' }} records
-          </p>
-          <FormRelationActions
-            :has-active-filters="hasActiveFilters(currentFilter)"
-            :filter-count="activeFilterCount"
-            :disabled="props.disabled"
-            @open-filter="showFilterDrawer = true"
-            @open-create="showCreateDrawer = true"
-          />
-        </div>
-
         <div class="flex min-h-11 flex-wrap items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] px-3 py-1.5">
           <div class="flex h-7 items-center gap-2 text-sm font-semibold" :class="draftSelectedIds.length > 0 ? 'text-foreground' : 'text-muted-foreground'">
             <UIcon :name="draftSelectedIds.length > 0 ? 'lucide:check-circle-2' : 'lucide:circle'" class="h-4 w-4" :class="draftSelectedIds.length > 0 ? 'text-primary-500' : ''" />
@@ -333,7 +374,7 @@ const { isMobile, isTablet } = useScreen();
               size="sm"
               variant="ghost"
               color="primary"
-              @click="showAllConfirmedRecords"
+              @click="showAllSelectedRecords"
             >
               +{{ selectedOverflowCount }}
             </UButton>
@@ -344,74 +385,78 @@ const { isMobile, isTablet } = useScreen();
           </template>
         </div>
 
-        <div class="relative">
-          <UInput v-model="searchQuery" :placeholder="`Search ${targetTableName || 'records'}...`" size="sm" class="w-full">
-            <template #leading><UIcon name="lucide:search" class="text-muted-foreground" /></template>
-            <template #trailing><UButton v-if="searchQuery" icon="lucide:x" size="xs" variant="ghost" color="neutral" @click="clearSearch" /></template>
-          </UInput>
+        <DataTable
+          :data="normalRecords"
+          :columns="columns"
+          :loading="loading"
+          :header-name="targetTableName || 'Records'"
+          enable-row-selection
+          :row-selection-mode="props.multiple ? 'multiple' : 'single'"
+          :selection-disabled="props.disabled"
+          select-on-row-click
+          :selected-row-ids="draftSelectedIds"
+          v-model:page="cursorPage"
+          :pagination-config="paginationConfig"
+          :reload="() => refreshRecords({ reset: true })"
+          :reload-loading="loading"
+          @update:selected-row-ids="draftSelected = normalizeRelationIds($event)"
+        >
+          <template #toolbar>
+            <div v-if="hasActiveFilter" class="flex min-w-0 items-center gap-2">
+              <FilterActiveSummary :count="activeFilterCount" variant="inline" :clearable="false" />
+              <UButton size="xs" variant="ghost" color="error" @click="clearFilter">Clear filter</UButton>
+            </div>
+          </template>
 
-          <div v-if="hasSearchOrFilters" class="mt-2 flex items-center gap-2">
-            <UBadge v-if="searchDebounced" variant="soft" color="info" size="xs">Search: "{{ searchDebounced }}"</UBadge>
-            <FilterActiveSummary v-if="hasActiveFilters(currentFilter)" :count="activeFilterCount" variant="inline" :clearable="false" />
-            <UButton size="xs" variant="ghost" color="error" @click="clearAllFilters">Clear all</UButton>
-          </div>
-        </div>
+          <template #toolbar-actions>
+            <FormRelationActions
+              :has-active-filters="hasActiveFilter"
+              :filter-count="activeFilterCount"
+              @open-filter="showFilterDrawer = true"
+            />
+          </template>
 
-        <div class="overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--surface-default)]">
-          <CommonLoadingState v-if="!isMounted || loading" type="list" context="inline" size="md" />
-          <CommonEmptyState
-            v-else-if="loadError"
-            variant="naked"
-            title="Unable to load relations"
-            :description="loadError"
-            icon="lucide:circle-alert"
-            size="sm"
-            :action="{ label: 'Retry', onClick: () => refreshRecords({ reset: true }), icon: 'lucide:refresh-cw' }"
-          />
-          <CommonEmptyState
-            v-else-if="normalRecords.length === 0"
-            variant="naked"
-            :title="hasSearchOrFilters ? 'No results found' : 'No relations available'"
-            :description="hasSearchOrFilters ? 'Try adjusting your search or filters' : 'No relations have been created yet'"
-            icon="lucide:database"
-            size="sm"
-            :action="hasSearchOrFilters ? { label: 'Clear filters', onClick: clearAllFilters, icon: 'lucide:x' } : undefined"
-          />
-          <FormRelationList
-            v-else
-            :data="normalRecords"
-            :selected="draftSelected"
-            :multiple="props.multiple"
-            :disabled="props.disabled"
-            :get-detail-path="getDetailPath"
-            @toggle="toggle"
-          />
-        </div>
+          <template #empty>
+            <CommonEmptyState
+              v-if="loadError"
+              variant="naked"
+              title="Unable to load relations"
+              :description="loadError"
+              icon="lucide:circle-alert"
+              size="sm"
+              :action="{ label: 'Retry', onClick: () => refreshRecords({ reset: true }), icon: 'lucide:refresh-cw' }"
+            />
+            <CommonEmptyState
+              v-else
+              variant="naked"
+              :title="hasActiveFilter ? 'No results found' : 'No relations available'"
+              :description="hasActiveFilter ? 'Try adjusting your filter' : 'No relations have been created yet'"
+              icon="lucide:database"
+              size="sm"
+              :action="hasActiveFilter ? { label: 'Clear filter', onClick: clearFilter, icon: 'lucide:x' } : undefined"
+            />
+          </template>
+        </DataTable>
       </div>
-      <FormRelationCreateDrawer
-        v-model="showCreateDrawer"
-        :relation-meta="props.relationMeta"
-        :selected="draftSelected"
-        @created="() => refreshRecords({ reset: true })"
-        @update:selected="draftSelected = normalizeRelationIds($event)"
-      />
     </template>
 
     <template #footer>
-      <div class="pt-1">
-        <FormRelationPagination
-          :can-go-previous="pointerHistory.length > 0"
-          :can-go-next="canLoadMore"
-          :loading="loading"
+      <div class="flex items-center justify-between gap-3">
+        <span class="min-w-0 truncate text-xs text-muted-foreground">
+          {{ draftSelectedIds.length }} selected
+        </span>
+        <UButton
+          icon="lucide:check"
+          color="primary"
+          size="sm"
           :disabled="props.disabled || !hasPendingSelectionChanges"
-          @previous="loadPrevious"
-          @next="loadMore"
-          @apply="apply"
-        />
+          @click="apply"
+        >
+          Apply
+        </UButton>
       </div>
     </template>
   </CommonDrawer>
 
   <FilterDrawerLazy v-model="showFilterDrawer" :table-name="targetTableName" :current-filter="currentFilter" @apply="handleFilterApply" />
-
 </template>

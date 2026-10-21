@@ -38,6 +38,7 @@
       <DataTableSettingsTable
         header-name="Events"
         :data="events"
+        :bulk-action="bulkDeleteEvents"
         :columns="eventColumns"
         :actions="getEventActions"
         @row-click="handleEditEvent"
@@ -416,6 +417,13 @@ async function toggleEventStatus(event: any) {
     togglingEventId.value = null;
   }
 }
+
+const bulkDeleteEvents = useSettingsBulkDelete({
+  path: '/enfyra_websocket_event',
+  title: 'Delete WebSocket Events',
+  isBusy: () => togglingEventId.value !== null,
+  refresh: () => fetchEvents(),
+});
 
 async function deleteEvent(event: any) {
   const eventId = getId(event);

@@ -3,6 +3,7 @@
       header-name="Flow Manager"
     v-model:page="page"
     :data="flows"
+    :bulk-action="bulkDelete"
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
@@ -148,6 +149,14 @@ const { execute: deleteFlowApi, error: deleteError } = useApi(
   () => `/enfyra_flow`,
   { method: "delete", errorContext: "Delete Flow" }
 );
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_flow',
+  title: 'Delete Flows',
+  isEligible: flow => !flow.isSystem,
+  isBusy: () => flows.value.some(item => getFlowLoader(String(getId(item) ?? '')).isLoading.value),
+  refresh: () => fetchFlows(),
+});
 
 const deleteFlow = async (flow: any) => {
   const isConfirmed = await confirm({

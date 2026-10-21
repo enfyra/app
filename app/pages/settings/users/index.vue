@@ -10,6 +10,7 @@
       header-name="User Manager"
       v-model:page="page"
       :data="users"
+      :bulk-action="bulkDelete"
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading"
@@ -204,6 +205,13 @@ function getRowActions(user: Record<string, any>): DataTableRowAction[] {
   if (!hasPermission('/enfyra_user', 'DELETE') || user.isRootAdmin) return [];
   return [{ label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteUser(user) }];
 }
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_user',
+  title: 'Delete Users',
+  isEligible: user => !user.isRootAdmin,
+  refresh: () => fetchUsers(),
+});
 
 async function deleteUser(user: any) {
   

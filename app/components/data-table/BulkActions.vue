@@ -2,12 +2,14 @@
 const props = defineProps<{
   count: number;
   onDelete: () => unknown;
+  label?: string;
+  loading?: boolean;
 }>();
 
 const pending = ref(false);
 
 async function deleteSelected() {
-  if (pending.value || props.count < 1) return;
+  if (pending.value || props.loading || props.count < 1) return;
   pending.value = true;
   try {
     await props.onDelete();
@@ -25,9 +27,9 @@ async function deleteSelected() {
       variant="outline"
       size="sm"
       square
-      aria-label="Delete selected records"
-      :loading="pending"
-      :disabled="pending || count < 1"
+      :aria-label="label || 'Delete selected records'"
+      :loading="pending || loading"
+      :disabled="pending || loading || count < 1"
       @click="deleteSelected"
     />
   </div>

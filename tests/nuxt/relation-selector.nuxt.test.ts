@@ -15,9 +15,9 @@ mockNuxtImport('useDatabase', () => () => ({
 
 mockNuxtImport('useFilterQuery', () => () => ({
   createEmptyFilter: () => ({}),
-  buildQuery: () => ({}),
-  hasActiveFilters: () => false,
-  countActiveFilters: () => 0,
+  buildQuery: (filter: { query?: Record<string, unknown> }) => filter.query ?? {},
+  hasActiveFilters: (filter: { query?: Record<string, unknown> }) => !!filter.query,
+  countActiveFilters: (filter: { query?: Record<string, unknown> }) => filter.query ? 1 : 0,
 }))
 
 mockNuxtImport('useMounted', () => () => ({ isMounted: ref(true) }))
@@ -33,11 +33,15 @@ mockNuxtImport('useScreen', () => () => ({ isMobile: ref(false), isTablet: ref(f
 mockNuxtImport('useAuthFetch', () => mocks.useAuthFetch)
 
 import RelationSelector from '~/components/form/relation/Selector.vue'
-import RelationCreateDrawer from '~/components/form/relation/CreateDrawer.vue'
 
 const DrawerStub = defineComponent({
   props: { modelValue: Boolean },
   template: '<div><slot name="body" /><slot name="footer" /></div>',
+})
+
+const DataTableStub = defineComponent({
+  props: { loading: Boolean },
+  template: '<div><div v-if="loading" data-testid="relation-loading" /><slot v-else name="empty" /></div>',
 })
 
 describe('FormRelationSelector', () => {
@@ -47,8 +51,8 @@ describe('FormRelationSelector', () => {
     mocks.getColumnFields.mockResolvedValue('id,name')
   })
 
-  it('keeps record creation inside the real relation drawer context', async () => {
-    mocks.useAuthFetch.mockResolvedValue({ data: [], meta: {} })
+  it('only offers existing records and filtering in the real relation drawer', async () => {
+    mocks.useAuthFetch.mockResolvedValue({ data: [], meta: { filterCount: 0 } })
     const wrapper = await mountSuspended(RelationSelector, {
       props: {
         relationMeta: { propertyName: 'users', targetTableName: 'users', type: 'many-to-many' },
@@ -56,25 +60,87 @@ describe('FormRelationSelector', () => {
         open: false,
       },
       global: { stubs: {
-        FormRelationActions: defineComponent({
-          emits: ['open-create'],
-          template: '<button data-testid="create-related" @click="$emit(\'open-create\')">Add New</button>',
-        }),
         FormEditorLazy: defineComponent({ template: '<div data-testid="new-record-form" />' }),
-        CommonUnsavedChangesModal: true,
         FilterDrawerLazy: true,
       } },
     })
-    expect(wrapper.findComponent(RelationCreateDrawer).exists()).toBe(false)
-    await wrapper.setProps({ open: true })
-    await flushPromises()
-    const createButton = document.body.querySelector<HTMLButtonElement>('[data-testid="create-related"]')
-    expect(createButton).not.toBeNull()
-    createButton!.click()
-    await flushPromises()
-    expect(wrapper.findComponent(RelationCreateDrawer).exists()).toBe(true)
-    expect(document.body.querySelector('[data-testid="new-record-form"]')).not.toBeNull()
-    wrapper.unmount()
+    try {
+      await wrapper.setProps({ open: true })
+      await flushPromises()
+      const buttons = [...document.body.querySelectorAll('button')]
+      expect(buttons.some(button => button.textContent?.trim() === 'Filter')).toBe(true)
+      expect(buttons.some(button => /Add New|Create Record/.test(button.textContent ?? ''))).toBe(false)
+      expect(document.body.querySelector('[data-testid="new-record-form"]')).toBeNull()
+      expect(document.body.textContent).toContain('0 records')
+    } finally { wrapper.unmount() }
+  })
+
+  it('uses shared checkbox selection across cursor pages and applies ids only without quick search', async () => {
+    mocks.useAuthFetch
+      .mockResolvedValueOnce({ data: Array.from({ length: 11 }, (_, index) => ({ id: 20 - index })), meta: { filterCount: 27 } })
+      .mockResolvedValueOnce({ data: [{ id: 10 }] })
+      .mockResolvedValue({ data: [] })
+    const wrapper = await mountSuspended(RelationSelector, {
+      props: {
+        relationMeta: { propertyName: 'users', targetTableName: 'users', type: 'many-to-many' },
+        selectedIds: [99],
+        multiple: true,
+        open: false,
+      },
+      global: { stubs: {
+        CommonDrawer: DrawerStub,
+        FilterDrawerLazy: true,
+      } },
+    })
+    try {
+      await wrapper.setProps({ open: true })
+      await flushPromises()
+      expect(wrapper.find('input').exists()).toBe(false)
+      await wrapper.get('tbody [aria-label="Select row 1"]').trigger('click')
+      await flushPromises()
+      await wrapper.get('[aria-label="Next"]').trigger('click')
+      await flushPromises()
+      expect(mocks.useAuthFetch.mock.calls[0]?.[1].query).toMatchObject({ sort: '-id', limit: 11 })
+      expect(mocks.useAuthFetch.mock.calls[1]?.[1].query).toMatchObject({ filter: { id: { _lt: 11 } } })
+      expect(mocks.useAuthFetch.mock.calls[0]?.[1].query.meta).toBe('filterCount')
+      expect(mocks.useAuthFetch.mock.calls[1]?.[1].query).not.toHaveProperty('meta')
+      expect(wrapper.text()).toContain('27 records')
+      const apply = wrapper.findAll('button').find(button => button.text() === 'Apply')!
+      await apply.trigger('click')
+      expect(new Set(wrapper.emitted('apply')?.at(-1)?.[0] as (string | number)[])).toEqual(new Set([99, 20]))
+    } finally { wrapper.unmount() }
+  })
+
+  it('refreshes the filter total independently of the cursor boundary', async () => {
+    mocks.useAuthFetch
+      .mockResolvedValueOnce({ data: Array.from({ length: 11 }, (_, index) => ({ id: 20 - index })), meta: { filterCount: 27 } })
+      .mockResolvedValueOnce({ data: [{ id: 10 }], meta: { filterCount: 1 } })
+      .mockResolvedValueOnce({ data: [{ id: 8 }], meta: { filterCount: 1 } })
+    const FilterStub = defineComponent({ emits: ['apply'], template: '<div />' })
+    const wrapper = await mountSuspended(RelationSelector, {
+      props: {
+        relationMeta: { propertyName: 'users', targetTableName: 'users', type: 'many-to-many' },
+        selectedIds: [],
+        multiple: true,
+        open: false,
+      },
+      global: { stubs: { CommonDrawer: DrawerStub, FilterDrawerLazy: FilterStub } },
+    })
+    try {
+      await wrapper.setProps({ open: true })
+      await flushPromises()
+      expect(wrapper.text()).toContain('27 records')
+      await wrapper.get('[aria-label="Next"]').trigger('click')
+      await flushPromises()
+      expect(wrapper.text()).toContain('27 records')
+      wrapper.getComponent(FilterStub).vm.$emit('apply', { query: { name: { _eq: 'Alice' } } })
+      await flushPromises()
+      expect(mocks.useAuthFetch.mock.calls[2]?.[1].query).toMatchObject({
+        filter: { name: { _eq: 'Alice' } },
+        meta: 'filterCount',
+      })
+      expect(wrapper.text()).toContain('1 records')
+    } finally { wrapper.unmount() }
   })
 
   it('leaves loading and shows a retry state when relation records fail to load', async () => {
@@ -97,15 +163,10 @@ describe('FormRelationSelector', () => {
             props: { title: String, description: String },
             template: '<div data-testid="relation-empty">{{ title }} {{ description }}</div>',
           }),
-          CommonLoadingState: defineComponent({
-            template: '<div data-testid="relation-loading" />',
-          }),
+          DataTable: DataTableStub,
           FilterDrawerLazy: true,
           FormRelationActions: true,
-          FormRelationCreateDrawer: true,
-          FormRelationList: true,
-          FormRelationPagination: true,
-        },
+          },
       },
     })
 
@@ -142,15 +203,10 @@ describe('FormRelationSelector', () => {
               props: { title: String, description: String },
               template: '<div data-testid="relation-empty">{{ title }} {{ description }}</div>',
             }),
-            CommonLoadingState: defineComponent({
-              template: '<div data-testid="relation-loading" />',
-            }),
+            DataTable: DataTableStub,
             FilterDrawerLazy: true,
             FormRelationActions: true,
-            FormRelationCreateDrawer: true,
-            FormRelationList: true,
-            FormRelationPagination: true,
-          },
+              },
         },
       })
 

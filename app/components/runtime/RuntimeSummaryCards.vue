@@ -39,8 +39,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
     <div class="eapp-bordered-region p-4">
       <div class="text-xs font-medium text-[var(--text-tertiary)]">Heap</div>
       <div
-        class="mt-2 text-2xl font-semibold"
-        :class="metricTextClass(runtime.totals.heapLimitMb > 0 && runtime.totals.heapUsedMb / runtime.totals.heapLimitMb >= 0.9 ? 'error' : runtime.totals.heapLimitMb > 0 && runtime.totals.heapUsedMb / runtime.totals.heapLimitMb >= 0.75 ? 'warning' : 'ok')"
+        class="mt-2 text-2xl font-semibold text-[var(--text-primary)]"
       >
         {{ fmtMb(runtime.totals.heapUsedMb) }}
       </div>
@@ -52,8 +51,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
     <div class="eapp-bordered-region p-4">
       <div class="text-xs font-medium text-[var(--text-tertiary)]">Event Loop</div>
       <div
-        class="mt-2 text-2xl font-semibold"
-        :class="metricTextClass(runtime.totals.maxEventLoopLagMs >= 200 ? 'error' : runtime.totals.maxEventLoopLagMs >= 50 ? 'warning' : 'ok')"
+        class="mt-2 text-2xl font-semibold text-[var(--text-primary)]"
       >
         {{ fmtMs(runtime.totals.maxEventLoopLagMs) }}
       </div>

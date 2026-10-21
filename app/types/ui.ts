@@ -38,6 +38,11 @@ export interface DataTableProps extends Omit<TableProps<any>, 'data' | 'columns'
   recordCount?: number;
   paginationConfig?: DataTablePaginationConfig;
   page?: number;
+  enableRowSelection?: boolean;
+  rowSelectionMode?: "multiple" | "single";
+  selectedRowIds?: (string | number)[];
+  selectionDisabled?: boolean;
+  selectOnRowClick?: boolean;
   reload?: () => unknown | Promise<unknown>;
   reloadLoading?: boolean;
   searchable?: boolean;

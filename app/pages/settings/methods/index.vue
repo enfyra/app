@@ -260,6 +260,21 @@ function isMethodSelected(method: string) {
   return currentMethodLabel.value === method;
 }
 
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_method',
+  title: 'Delete Methods',
+  isEligible: method => !method.isSystem,
+  isBusy: () => saving.value,
+  refresh: () => fetchMethods(),
+  onDeleted: async (deleted) => {
+    if (deleted.some(method => getId(method) === form.id)) {
+      resetForm();
+      snapshotForm();
+      await closeDrawer(true);
+    }
+  },
+});
+
 async function deleteMethod(method: MethodRecord) {
   if (method.isSystem) {
     notify.error('Cannot Delete', 'System methods cannot be deleted.');
@@ -357,6 +372,7 @@ watch(
       header-name="Method Manager"
       header-description="Manage route methods and their badge colors."
       :data="methods"
+      :bulk-action="bulkDelete"
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading || loading"

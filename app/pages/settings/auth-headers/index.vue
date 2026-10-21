@@ -19,6 +19,7 @@
       <DataTableSettingsTable
         header-name="Authentication headers"
         :data="headers"
+        :bulk-action="bulkDelete"
         :columns="columns"
         :actions="getRowActions"
         :loading="showInitialLoading || loading"
@@ -438,6 +439,15 @@ async function moveHeader(index: number, direction: -1 | 1) {
     moving.value = false;
   }
 }
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_auth_header',
+  title: 'Delete Authentication Headers',
+  warning: 'Requests using these headers will stop authenticating after deletion.',
+  isEligible: header => !header.isSystem,
+  isBusy: () => saving.value || togglingHeaderId.value !== null,
+  refresh: () => fetchHeaders(),
+});
 
 async function deleteHeader(header: AuthHeaderRecord) {
   if (header.isSystem || !canDelete.value) return;

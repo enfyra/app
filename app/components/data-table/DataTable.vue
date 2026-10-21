@@ -1,23 +1,27 @@
 <script setup lang="ts">
 import { UButton, UContextMenu } from '#components'
-import { FlexRender } from '@tanstack/vue-table'
+import { FlexRender, type ColumnDef, type Row, type RowSelectionState, type SortingState, type Table, type VisibilityState } from '@tanstack/vue-table'
 import type { DropdownMenuItem } from '@nuxt/ui'
-import type { ColumnDef, RowSelectionState, SortingState, Table, VisibilityState } from '@tanstack/vue-table'
 import type { DataTableProps } from '~/types/ui'
+import { createSelectionColumn } from '~/utils/data-table-selection'
 
 const props = withDefaults(defineProps<DataTableProps>(), {
   loading: false,
   showColumnVisibility: true,
+  enableRowSelection: false,
+  rowSelectionMode: 'multiple',
 })
 
 const emit = defineEmits<{
   'row-click': [row: Record<string, any>]
   'page-size-change': [size: number]
   'search': [value: string]
+  'update:selectedRows': [rows: Record<string, any>[]]
+  'update:selectedRowIds': [ids: (string | number)[]]
 }>()
 
 const slots = useSlots()
-const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'headerName', 'headerDescription', 'recordCount', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection', 'reload', 'reloadLoading', 'searchable', 'searchPlaceholder', 'searchLabel', 'search'])
+const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'enableRowSelection', 'rowSelectionMode', 'selectedRowIds', 'selectionDisabled', 'selectOnRowClick', 'headerName', 'headerDescription', 'recordCount', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection', 'rowSelectionOptions', 'reload', 'reloadLoading', 'searchable', 'searchPlaceholder', 'searchLabel', 'search'])
 const search = defineModel<string>('search', { default: '' })
 const explicitTotal = computed(() => {
   if (typeof props.recordCount === 'number') return props.recordCount
@@ -33,6 +37,68 @@ const tableScope = shallowRef<HTMLElement | null>(null)
 const sorting = defineModel<SortingState>('sorting', { default: () => [] })
 const columnVisibility = defineModel<VisibilityState>('columnVisibility', { default: () => ({}) })
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
+const rowSelectionOptions = computed(() => ({
+  ...(props.rowSelectionOptions ?? {}),
+  ...(props.enableRowSelection
+    ? { enableRowSelection: (row: Row<Record<string, any>>) => {
+        const eligibility = props.rowSelectionOptions?.enableRowSelection
+        return !props.selectionDisabled && !row.original.__eappSkeletonRow
+          && (typeof eligibility === 'function' ? eligibility(row) : eligibility !== false)
+      }, enableMultiRowSelection: props.rowSelectionMode !== 'single' }
+    : {}),
+}))
+const selectionIdByKey = new Map<string, string | number>()
+function rowIdOf(row: Record<string, any>, index = 0): string | number | undefined {
+  return props.getRowId ? props.getRowId(row, index) : (row?.id ?? row?._id)
+}
+function rowKeyOf(row: Record<string, any>, index = 0): string {
+  if (row.__eappSkeletonRow) return `skeleton:${index}`
+  return String(rowIdOf(row, index) ?? index)
+}
+const isSelectionControlled = computed(() => Array.isArray(props.selectedRowIds))
+const selectedKeys = computed(() => Object.entries(rowSelection.value)
+  .filter(([, selected]) => selected)
+  .map(([key]) => key))
+const selectedRows = computed(() => {
+  if (!props.enableRowSelection) return []
+  const keys = new Set(selectedKeys.value)
+  return props.data.filter((row) => !row?.__eappSkeletonRow && keys.has(rowKeyOf(row)))
+})
+const selectedRowIdValues = computed(() => {
+  if (!props.enableRowSelection) return []
+  const idByKey = new Map(props.data.map((row) => [rowKeyOf(row), rowIdOf(row)]))
+  return selectedKeys.value.map((key) => idByKey.get(key) ?? selectionIdByKey.get(key) ?? key)
+})
+
+watch(() => props.selectedRowIds, (ids) => {
+  if (!Array.isArray(ids)) return
+  selectionIdByKey.clear()
+  for (const id of ids) selectionIdByKey.set(String(id), id)
+  const next = Object.fromEntries(ids.map((id) => [String(id), true]))
+  const current = selectedKeys.value
+  const nextKeys = Object.keys(next)
+  if (current.length === nextKeys.length && nextKeys.every((key) => rowSelection.value[key])) return
+  rowSelection.value = next
+}, { immediate: true })
+
+let lastEmittedSelection: string | null = null
+watch([selectedRowIdValues, () => props.data], () => {
+  if (!props.enableRowSelection) return
+  const ids = selectedRowIdValues.value
+  const signature = ids.map((id) => `${typeof id}:${String(id)}`).join('\u0000')
+  if (signature === lastEmittedSelection) return
+  lastEmittedSelection = signature
+  emit('update:selectedRowIds', ids)
+  emit('update:selectedRows', selectedRows.value)
+}, { flush: 'post' })
+
+watch(() => props.data, (rows) => {
+  if (!props.enableRowSelection || isSelectionControlled.value) return
+  const visible = new Set(rows.map((row) => rowKeyOf(row)))
+  const retained = selectedKeys.value.filter((key) => visible.has(key))
+  if (retained.length === selectedKeys.value.length) return
+  rowSelection.value = Object.fromEntries(retained.map((key) => [key, true]))
+})
 const menuItems = ref<any[]>([])
 const menuWrapper = computed(() => props.contextMenuItems ? UContextMenu : 'div')
 const hasActionTier = () => !!slots.toolbar || !!slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.value.length > 0) || !!props.reload
@@ -75,8 +141,11 @@ const forwardedSlotNames = computed(() => {
   return skeletonActive.value ? names.filter(name => !name.endsWith('-cell')) : names
 })
 const tableColumns = computed<ColumnDef<Record<string, any>>[]>(() => {
-  if (!skeletonActive.value) return columns.value
-  return columns.value.map((column, index) => ({
+  const source = props.enableRowSelection
+    ? [createSelectionColumn<Record<string, any>>({ multiple: props.rowSelectionMode !== 'single' }), ...columns.value]
+    : columns.value
+  if (!skeletonActive.value) return source
+  return source.map((column, index) => ({
     ...column,
     cell: (ctx: any) => {
       if (ctx.row?.original?.__eappSkeletonRow !== true) return column.cell ? h(FlexRender, { render: column.cell, props: ctx }) : ctx.getValue()
@@ -92,6 +161,13 @@ const tableColumns = computed<ColumnDef<Record<string, any>>[]>(() => {
     },
   }) as ColumnDef<Record<string, any>>)
 })
+
+function onRowSelect(event: Event, row: Row<Record<string, any>>) {
+  if (row.original.__eappSkeletonRow) return
+  if (props.enableRowSelection && props.selectOnRowClick && row.getCanSelect()) row.toggleSelected()
+  props.onSelect?.(event, row)
+  emit('row-click', row.original)
+}
 
 function onContextmenu(event: Event, row: { original: Record<string, any> }) {
   if (row.original?.__eappSkeletonRow) return
@@ -164,6 +240,7 @@ defineExpose({
         ref="tableRef"
         v-bind="{ ...tableOptions, ...$attrs }"
         :data="tableData"
+        :get-row-id="rowKeyOf"
         :columns="tableColumns"
         :loading="props.loading"
         :watch-options="props.watchOptions ?? { deep: false }"
@@ -171,7 +248,8 @@ defineExpose({
         v-model:sorting="sorting"
         v-model:column-visibility="columnVisibility"
         v-model:row-selection="rowSelection"
-        :on-select="(event, row) => { if (row.original?.__eappSkeletonRow) return; props.onSelect?.(event, row); emit('row-click', row.original) }"
+        :row-selection-options="rowSelectionOptions"
+        :on-select="onRowSelect"
         :on-contextmenu="props.contextMenuItems || props.onContextmenu ? onContextmenu : undefined"
       >
         <template v-for="name in forwardedSlotNames" #[name]="slotData">
@@ -185,7 +263,7 @@ defineExpose({
         </template>
       </UTable>
     </component>
-    <div v-if="slots.footer || props.paginationConfig" class="space-y-3 border-t border-default px-3 py-3 text-sm text-muted md:px-4">
+    <div v-if="slots.footer || props.paginationConfig || slots['pagination-summary']" class="space-y-3 border-t border-default px-3 py-3 text-sm text-muted md:px-4">
       <slot name="footer" :table-api="tableRef?.tableApi" />
       <DataTablePagination
         v-if="props.paginationConfig"
@@ -199,6 +277,9 @@ defineExpose({
           <slot name="pagination-summary" :table-api="tableRef?.tableApi" />
         </template>
       </DataTablePagination>
+      <div v-else-if="slots['pagination-summary']" class="flex min-h-8 items-center">
+        <slot name="pagination-summary" :table-api="tableRef?.tableApi" />
+      </div>
     </div>
   </div>
 </template>

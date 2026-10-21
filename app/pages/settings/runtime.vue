@@ -60,10 +60,18 @@ registerPageHeader({
   <div v-if="hasPermission" class="w-full min-w-0 eapp-page-constrained space-y-6 overflow-hidden pb-10">
     <RuntimeSummaryCards :runtime="runtime" />
 
+    <UAlert
+      v-if="runtime.metricsError"
+      color="warning"
+      variant="soft"
+      title="Runtime metrics unavailable"
+      :description="runtime.metricsError"
+    />
+
     <CommonEmptyState
       v-if="runtime.instances.length === 0"
       title="No runtime metrics"
-      description="The admin websocket has not received a runtime sample yet."
+      description="Waiting for a runtime snapshot from the admin websocket."
       icon="lucide:activity"
       size="md"
     />

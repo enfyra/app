@@ -7,25 +7,29 @@ import SettingsTable from '~/components/data-table/SettingsTable.vue'
 import SearchField from '~/components/common/SearchField.vue'
 import { FILTER_OPERATORS } from '~/utils/common/filter/filter-operators'
 
-const state = vi.hoisted(() => ({ requests: [] as any[], data: undefined as any }))
+const state = vi.hoisted(() => ({
+  requests: [] as any[], data: undefined as any, allowed: false,
+  remove: vi.fn(), confirm: vi.fn(), loadRoutes: vi.fn(), registerMenus: vi.fn(),
+  fetchMenus: vi.fn(), invalidateExtension: vi.fn(), loadExtensions: vi.fn(),
+}))
 mockNuxtImport('useHeaderActionRegistry', () => () => ({ register: vi.fn() }))
 mockNuxtImport('useSubHeaderActionRegistry', () => () => ({ register: vi.fn() }))
 mockNuxtImport('usePageHeaderRegistry', () => () => ({ registerPageHeader: vi.fn() }))
 mockNuxtImport('useSettingsPageSize', () => () => ref(10))
 mockNuxtImport('useNotify', () => () => ({ success: vi.fn(), error: vi.fn() }))
-mockNuxtImport('useConfirm', () => () => ({ confirm: vi.fn() }))
-mockNuxtImport('usePermissions', () => () => ({ hasPermission: () => false, checkPermissionCondition: () => false }))
+mockNuxtImport('useConfirm', () => () => ({ confirm: state.confirm }))
+mockNuxtImport('usePermissions', () => () => ({ hasPermission: () => state.allowed, checkPermissionCondition: () => state.allowed }))
 mockNuxtImport('useDatabase', () => () => ({ getId: (row: any) => row?.id ?? row?._id, getIdFieldName: () => 'id' }))
 mockNuxtImport('useKeyedLoaders', () => () => ({ getLoader: () => ({ isLoading: ref(false) }) }))
-mockNuxtImport('useRoutes', () => () => ({ routes: ref([]), loadRoutes: vi.fn() }))
-mockNuxtImport('useMenuRegistry', () => () => ({ registerDataMenuItemsFromRoutes: vi.fn(), findMenuIconForPath: () => undefined }))
-mockNuxtImport('useMenuApi', () => () => ({ fetchMenuDefinitions: vi.fn() }))
-mockNuxtImport('useDynamicComponent', () => () => ({ invalidateExtensionCache: vi.fn() }))
-mockNuxtImport('useGlobalExtensions', () => () => ({ loadGlobalExtensions: vi.fn() }))
+mockNuxtImport('useRoutes', () => () => ({ routes: ref([]), loadRoutes: state.loadRoutes }))
+mockNuxtImport('useMenuRegistry', () => () => ({ registerDataMenuItemsFromRoutes: state.registerMenus, findMenuIconForPath: () => undefined }))
+mockNuxtImport('useMenuApi', () => () => ({ fetchMenuDefinitions: state.fetchMenus }))
+mockNuxtImport('useDynamicComponent', () => () => ({ invalidateExtensionCache: state.invalidateExtension }))
+mockNuxtImport('useGlobalExtensions', () => () => ({ loadGlobalExtensions: state.loadExtensions }))
 mockNuxtImport('useApi', () => (url: string | (() => string), options: any) => {
   const execute = vi.fn().mockResolvedValue(state.data.value)
   state.requests.push({ url: typeof url === 'function' ? url() : url, options, execute })
-  return { data: state.data, pending: ref(false), error: ref(null), execute }
+  return { data: state.data, pending: ref(false), error: ref(null), execute, executeWithResult: state.remove }
 })
 
 import RolesPage from '~/pages/settings/roles/index.vue'
@@ -47,6 +51,10 @@ const cases = [
 ]
 let wrapper: Awaited<ReturnType<typeof mountSuspended>> | undefined
 beforeEach(() => {
+  vi.clearAllMocks()
+  state.allowed = false
+  state.confirm.mockResolvedValue(true)
+  state.remove.mockResolvedValue({ ok: true })
   state.requests = []
   state.data = ref({ data: [], meta: { totalCount: 90, filterCount: 2 } })
 })
@@ -107,6 +115,56 @@ describe.each(cases)('$path quick search', entry => {
     await expect.poll(() => useRouter().currentRoute.value.query).toEqual({ keep: 'value' })
     expect(unref(request(entry).options.query).filter).toEqual(entry.base.length ? { _and: entry.base } : undefined)
     expect(page.getComponent(SettingsTable).props('total')).toBe(entry.base.length ? 0 : 90)
+  })
+})
+
+describe('management bulk policies', () => {
+  it('never allows system or collection routes and refreshes the global route/menu state', async () => {
+    state.allowed = true
+    state.data.value.data = [
+      { id: 1, path: '/system', isSystem: true },
+      { id: 2, path: '/records', mainTable: { id: 100 } },
+      { id: 3, path: '/custom', isSystem: false, mainTable: null },
+    ]
+    const page = await mountPage(cases[1]!)
+    const action = page.getComponent(SettingsTable).props('bulkAction')!
+    expect(action.isEligible!(state.data.value.data[0])).toBe(false)
+    expect(action.isEligible!(state.data.value.data[1])).toBe(false)
+    expect(await action.execute(state.data.value.data)).toEqual([3])
+    expect(state.remove).toHaveBeenCalledExactlyOnceWith({ id: 3 })
+    expect(request(cases[1]!).execute).toHaveBeenCalledTimes(2)
+    expect(state.loadRoutes).toHaveBeenCalledOnce()
+    expect(state.registerMenus).toHaveBeenCalledOnce()
+  })
+
+  it('refreshes extension menus, cache and globals for confirmed deletions', async () => {
+    state.allowed = true
+    const record = { id: 3, name: 'Custom', extensionId: 'custom', menu: { path: '/custom' } }
+    state.data.value.data = [{ id: 1, isSystem: true }, record]
+    const page = await mountPage(cases[4]!)
+    const action = page.getComponent(SettingsTable).props('bulkAction')!
+    expect(await action.execute(state.data.value.data)).toEqual([3])
+    expect(state.remove).toHaveBeenCalledExactlyOnceWith({ id: 3 })
+    expect(state.invalidateExtension).toHaveBeenCalledWith({ reason: 'deleted', id: 3, extensionId: 'custom', path: '/custom' })
+    expect(state.fetchMenus).toHaveBeenCalledOnce()
+    expect(state.loadExtensions).toHaveBeenCalledWith({ forceReload: true })
+  })
+
+  it.each([0, 3, 5])('preserves system protection for management page %i', async index => {
+    state.allowed = true
+    const page = await mountPage(cases[index]!)
+    const action = page.getComponent(SettingsTable).props('bulkAction')!
+    expect(await action.execute([{ id: 1, isSystem: true }, { id: 2, isSystem: false }])).toEqual([2])
+    expect(state.remove).toHaveBeenCalledExactlyOnceWith({ id: 2 })
+  })
+
+  it('keeps OAuth account inspection free of destructive actions even for privileged users', async () => {
+    state.allowed = true
+    state.data.value.data = [{ id: 1, provider: 'google', user: { email: 'test@example.invalid' } }]
+    const page = await mountPage(cases[6]!)
+    expect(page.getComponent(SettingsTable).props('bulkAction')).toBeUndefined()
+    expect(page.find('tbody [role="checkbox"]').exists()).toBe(false)
+    expect(state.requests.some(item => item.options.method === 'delete')).toBe(false)
   })
 })
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { h } from 'vue'
 import type { ColumnDef } from '@tanstack/vue-table'
+import { DataTableBulkActions } from '#components'
 import type { SettingsTableProps } from '~/types/settings-table'
 import { contentColumnStyle } from '~/utils/settings-table-sizing'
 
@@ -18,6 +19,7 @@ const emit = defineEmits<{
   'row-click': [row: Record<string, any>]
   'page-size-change': [size: number]
   'search': [value: string]
+  'update:selectedRows': [rows: Record<string, any>[]]
 }>()
 const tableUi = computed(() => ({
   base: 'table-auto !min-w-full',
@@ -27,8 +29,40 @@ const tableUi = computed(() => ({
 const total = computed(() => props.total ?? props.data.length)
 const hasPagination = computed(() => total.value > props.pageLimit && props.pageLimit > 0)
 const slots = useSlots()
-const forwardedSlotNames = computed(() => Object.keys(slots).filter(name => name !== 'toolbar'))
+const forwardedSlotNames = computed(() => Object.keys(slots).filter(name => !['toolbar', 'toolbar-actions', 'pagination-summary'].includes(name)))
 const { getId } = useDatabase()
+const selectedRowIds = defineModel<(string | number)[]>('selectedRowIds', { default: () => [] })
+const selectionEnabled = computed(() => props.enableRowSelection || !!props.bulkAction?.enabled)
+const selectedRows = computed(() => {
+  const ids = new Set(selectedRowIds.value.map(String))
+  return props.data.filter(row => ids.has(String(getId(row))))
+})
+const rowSelectionOptions = computed(() => ({
+  enableRowSelection: (row: { original: Record<string, any> }) => props.bulkAction?.isEligible?.(row.original) ?? true,
+}))
+const bulkActionsVisible = computed(() => props.bulkAction?.enabled && selectedRows.value.length > 0)
+
+watch([() => props.data, selectionEnabled, () => props.bulkAction?.isEligible], () => {
+  const eligible = new Set(props.data
+    .filter(row => props.bulkAction?.isEligible?.(row) ?? true)
+    .map(row => String(getId(row))))
+  const retained = selectionEnabled.value ? selectedRowIds.value.filter(id => eligible.has(String(id))) : []
+  if (retained.length !== selectedRowIds.value.length) selectedRowIds.value = retained
+})
+
+let lastSelectedRows: Record<string, any>[] = []
+watch(selectedRows, rows => {
+  if (rows.length === lastSelectedRows.length && rows.every((row, index) => row === lastSelectedRows[index])) return
+  lastSelectedRows = rows
+  emit('update:selectedRows', rows)
+}, { flush: 'post' })
+
+async function handleBulkDelete() {
+  const action = props.bulkAction
+  if (!action?.enabled || action.pending || props.selectionDisabled) return
+  const completed = new Set((await action.execute(selectedRows.value)).map(String))
+  if (completed.size) selectedRowIds.value = selectedRowIds.value.filter(id => !completed.has(String(id)))
+}
 const { buildActionsColumn } = useDataTableColumns()
 const idColumn: ColumnDef<Record<string, any>> = {
   id: 'id',
@@ -81,7 +115,7 @@ const columns = computed(() => {
   if (props.actions) {
     const width = 56
     result.push({
-      ...buildActionsColumn({ actions: props.actions }),
+      ...buildActionsColumn({ actions: row => (props.actions?.(row) ?? []).map(action => ({ ...action, disabled: props.bulkAction?.pending || action.disabled })) }),
       meta: { style: {
         th: { width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` },
         td: { width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` },
@@ -109,6 +143,10 @@ const columns = computed(() => {
       :pagination-config="paginationMode === 'cursor' ? { mode: 'cursor', itemsPerPage: pageLimit, rowCount: data.length, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), hasNextPage, total: props.total } : pageSizeKey || hasPagination ? { total, itemsPerPage: pageLimit, loading: paginationLoading, showPageSize: Boolean(pageSizeKey), to } : undefined"
       :reload="reload"
       :reload-loading="reloadLoading"
+      :enable-row-selection="selectionEnabled"
+      :selection-disabled="selectionDisabled || bulkAction?.pending"
+      :row-selection-options="rowSelectionOptions"
+      v-model:selected-row-ids="selectedRowIds"
       v-model:search="search"
       @search="value => emit('search', value)"
       @row-click="row => emit('row-click', row)"
@@ -116,6 +154,14 @@ const columns = computed(() => {
     >
       <template v-if="slots.toolbar" #toolbar="slotData">
         <slot name="toolbar" v-bind="slotData" />
+      </template>
+      <template v-if="slots['toolbar-actions'] || bulkActionsVisible" #toolbar-actions="slotData">
+        <slot name="toolbar-actions" v-bind="slotData" />
+        <DataTableBulkActions v-if="bulkActionsVisible" :count="selectedRows.length" :on-delete="handleBulkDelete" :label="bulkAction?.label" :loading="bulkAction?.pending" />
+      </template>
+      <template v-if="selectedRows.length || slots['pagination-summary']" #pagination-summary="slotData">
+        <span v-if="selectedRows.length">{{ selectedRows.length }} selected</span>
+        <slot name="pagination-summary" v-bind="slotData" />
       </template>
       <template v-for="name in forwardedSlotNames" #[name]="slotData">
         <slot :name="name" v-bind="slotData" />

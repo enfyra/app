@@ -3,6 +3,7 @@
       header-name="Storage Configuration"
     v-model:page="page"
     :data="storageConfigs"
+    :bulk-action="bulkDelete"
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading || storageConfigsRefreshing"
@@ -177,6 +178,14 @@ const { execute: deleteConfigApi, error: deleteError } = useApi(
     errorContext: "Delete Storage Configuration",
   }
 );
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_storage_config',
+  title: 'Delete Storage Configurations',
+  isBusy: () => storageConfigs.value.some(item => getConfigLoader(String(getId(item))).isLoading.value),
+  refresh: () => fetchStorageConfigs(),
+  onDeleted: () => fetchGlobalStorageConfigs(),
+});
 
 const deleteConfig = async (config: any) => {
   const isConfirmed = await confirm({

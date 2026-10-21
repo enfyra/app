@@ -73,6 +73,13 @@ const { execute: deleteRoleApi, error: deleteError } = useApi(
   }
 );
 
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_role',
+  title: 'Delete Roles',
+  isEligible: role => !role.isSystem,
+  refresh: () => fetchRoles(),
+});
+
 async function deleteRole(id: string) {
   const ok = await confirm({
     title: "Are you sure?",
@@ -118,6 +125,7 @@ watch([page, pageLimit, searchValue], () => { void fetchRoles(); }, { immediate:
       header-name="Role Manager"
     v-model:page="page"
     :data="roles"
+    :bulk-action="bulkDelete"
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"

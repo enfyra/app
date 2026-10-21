@@ -3,6 +3,7 @@
       header-name="Extension Manager"
     v-model:page="page"
     :data="extensions"
+    :bulk-action="bulkDelete"
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
@@ -186,6 +187,21 @@ const { execute: deleteExtensionApi, error: deleteError } = useApi(
     errorContext: "Delete Extension",
   }
 );
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_extension',
+  title: 'Delete Extensions',
+  isEligible: extension => !extension.isSystem,
+  isBusy: () => extensions.value.some(item => getExtensionLoader(String(getId(item) ?? '')).isLoading.value),
+  refresh: () => fetchExtensions(),
+  onDeleted: async (deleted) => {
+    for (const extension of deleted) {
+      invalidateExtensionCache({ reason: 'deleted', id: getId(extension), extensionId: extension.extensionId, path: extension.menu?.path ?? null });
+    }
+    await fetchMenuDefinitions();
+    await loadGlobalExtensions({ forceReload: true });
+  },
+});
 
 const deleteExtension = async (extension: ExtensionDefinition) => {
   const isConfirmed = await confirm({

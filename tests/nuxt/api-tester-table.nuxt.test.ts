@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 }))
 
 mockNuxtImport('useApi', () => (_path: string, options: any) => {
-  mocks.query = options.query
+  if (options?.query) mocks.query = options.query
   return {
     data: ref({ data: [{ id: 1, path: '/enfyra_route', isSystem: true, isEnabled: true, description: 'Route', availableMethods: [{ name: 'GET' }] }], meta: { filterCount: 34 } }),
     pending: ref(false),
@@ -39,6 +39,8 @@ describe('API Tester route table', () => {
     expect(unref(mocks.query).meta).toBe('filterCount')
     expect(wrapper.get('tbody').text()).toContain('/enfyra_route')
     expect(wrapper.get('tbody td').classes()).toContain('py-2')
+    expect(wrapper.find('tbody [role="checkbox"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="Delete selected records"]').exists()).toBe(false)
     wrapper.unmount()
   })
 

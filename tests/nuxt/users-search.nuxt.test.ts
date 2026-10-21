@@ -7,17 +7,17 @@ import SettingsTable from '~/components/data-table/SettingsTable.vue'
 import SearchField from '~/components/common/SearchField.vue'
 import { FILTER_OPERATORS } from '~/utils/common/filter/filter-operators'
 
-const mocks = vi.hoisted(() => ({ request: vi.fn(), fetch: vi.fn(), data: undefined as any }))
+const mocks = vi.hoisted(() => ({ request: vi.fn(), fetch: vi.fn(), remove: vi.fn(), confirm: vi.fn(), allowed: false, data: undefined as any }))
 mockNuxtImport('useHeaderActionRegistry', () => () => ({ register: vi.fn() }))
 mockNuxtImport('usePageHeaderRegistry', () => () => ({ registerPageHeader: vi.fn() }))
 mockNuxtImport('useSettingsPageSize', () => () => ref(10))
-mockNuxtImport('useConfirm', () => () => ({ confirm: vi.fn() }))
+mockNuxtImport('useConfirm', () => () => ({ confirm: mocks.confirm }))
 mockNuxtImport('useNotify', () => () => ({ success: vi.fn(), error: vi.fn() }))
-mockNuxtImport('usePermissions', () => () => ({ hasPermission: () => false }))
+mockNuxtImport('usePermissions', () => () => ({ hasPermission: () => mocks.allowed, checkPermissionCondition: () => mocks.allowed }))
 mockNuxtImport('useDatabase', () => () => ({ getId: (row: Record<string, unknown>) => row.id ?? row._id, getIdFieldName: () => 'id' }))
 mockNuxtImport('useApi', () => (_url: unknown, options: any) => {
   mocks.request(options)
-  return { data: mocks.data, pending: ref(false), execute: () => mocks.fetch(options.query.value) }
+  return { data: mocks.data, pending: ref(false), execute: () => mocks.fetch(options.query.value), executeWithResult: mocks.remove }
 })
 
 import UsersPage from '~/pages/settings/users/index.vue'
@@ -25,6 +25,9 @@ import UsersPage from '~/pages/settings/users/index.vue'
 let wrapper: Awaited<ReturnType<typeof mountSuspended>> | undefined
 beforeEach(() => {
   vi.clearAllMocks()
+  mocks.allowed = false
+  mocks.remove.mockResolvedValue({ ok: true })
+  mocks.confirm.mockResolvedValue(true)
   mocks.data = ref({ data: [{ id: 1, name: 'Example', email: 'example@test.invalid', roles: [] }], meta: { totalCount: 90, filterCount: 2 } })
   mocks.fetch.mockResolvedValue(mocks.data.value)
 })
@@ -41,6 +44,16 @@ function query() {
 }
 
 describe('Users email search', () => {
+  it('never includes root administrators in a bulk delete', async () => {
+    mocks.allowed = true
+    const page = await mountUsers()
+    const action = page.getComponent(SettingsTable).props('bulkAction')!
+    expect(await action.execute([{ id: 1, isRootAdmin: true }, { id: 2, isRootAdmin: false }])).toEqual([2])
+    expect(mocks.remove).toHaveBeenCalledExactlyOnceWith({ id: 2 })
+    expect(mocks.fetch).toHaveBeenCalledTimes(2)
+  })
+
+
   it('renders the shared search field without filtering before submission', async () => {
     const page = await mountUsers()
     expect(page.getComponent(SearchField).props('label')).toBe('Search users by email')

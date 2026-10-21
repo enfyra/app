@@ -496,6 +496,14 @@ async function toggleEnabled(guard: any) {
   }
 }
 
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_guard',
+  title: 'Delete Guards',
+  warning: 'All child guards and rules will also be deleted. This action cannot be undone.',
+  isBusy: () => togglingGuardId.value !== null,
+  refresh: () => fetchGuards(),
+});
+
 async function deleteGuard(guard: any) {
   const isConfirmed = await confirm({
     title: 'Delete Guard',
@@ -551,6 +559,7 @@ async function deleteGuard(guard: any) {
         header-name="Guards"
         v-model:page="page"
         :data="switchingType || showInitialLoading ? [] : guardsData"
+        :bulk-action="bulkDelete"
         :columns="columns"
         :actions="getRowActions"
         :loading="isPageLoading"

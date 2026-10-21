@@ -329,6 +329,18 @@ async function toggleEnabled(routeItem: any) {
   notify.success("Success", `Route ${newEnabled ? "enabled" : "disabled"} successfully`);
 }
 
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_route',
+  title: 'Delete Routes',
+  isEligible: canMutateRoute,
+  isBusy: () => routesData.value.some(item => getRouteLoader(getId(item)).isLoading.value),
+  refresh: async () => {
+    await fetchRoutes();
+    await loadRoutes();
+    registerDataMenuItemsFromRoutes(cachedRoutes.value);
+  },
+});
+
 async function deleteRoute(routeItem: any) {
   if (!canMutateRoute(routeItem)) return;
   const isConfirmed = await confirm({
@@ -368,6 +380,7 @@ async function deleteRoute(routeItem: any) {
       header-name="Route Manager"
       v-model:page="page"
       :data="routesData"
+      :bulk-action="bulkDelete"
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading"

@@ -373,4 +373,159 @@ describe('DataTable layout', () => {
     await nextTick()
     expect(wrapper.emitted('update:rowSelection')?.at(-1)?.[0]).toEqual({ '1': true })
   })
+
+  it('retains internal selection through the lazy wrapper after its parent uses the emitted list', async () => {
+    const Host = defineComponent({
+      setup() {
+        const selected = ref<Record<string, any>[]>([])
+        const rows = ref([{ id: 2, name: 'First' }, { id: 1, name: 'Second' }])
+        return () => h('section', [
+          h('output', `${selected.value.length} selected`),
+          h(DataTableLazy, {
+            headerName: 'Records',
+            data: rows.value,
+            columns: [{ accessorKey: 'name', header: 'Name' }],
+            getRowId: (row: Record<string, any>) => String(row.id),
+            enableRowSelection: true,
+            'onUpdate:selectedRows': (value: Record<string, any>[]) => { selected.value = value },
+          }),
+        ])
+      },
+    })
+    const wrapper = await mountSuspended(Host)
+    try {
+      await flushPromises()
+      const rowCheckbox = () => wrapper.get('tbody [aria-label="Select row 1"]')
+      await rowCheckbox().trigger('click')
+      await flushPromises()
+      expect(rowCheckbox().attributes('data-state')).toBe('checked')
+      expect(wrapper.get('output').text()).toBe('1 selected')
+      await rowCheckbox().trigger('click')
+      await flushPromises()
+      expect(rowCheckbox().attributes('data-state')).toBe('unchecked')
+      expect(wrapper.get('output').text()).toBe('0 selected')
+    } finally { wrapper.unmount() }
+  })
+
+  it('adds the selection column itself when row selection is enabled and emits the selected rows', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: {
+        headerName: 'Records',
+        data: [{ id: 2, name: 'First' }, { id: 1, name: 'Second' }],
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+        getRowId: (row: Record<string, any>) => String(row.id),
+        enableRowSelection: true,
+      },
+    })
+    try {
+      await flushPromises()
+      const boxes = wrapper.findAll('[role="checkbox"]')
+      expect(boxes).toHaveLength(3)
+      for (const box of boxes) expect(box.attributes('disabled')).toBeUndefined()
+      await boxes[2]!.trigger('click')
+      await nextTick()
+      expect(wrapper.emitted('update:selectedRowIds')?.at(-1)?.[0]).toEqual(['1'])
+      expect(wrapper.emitted('update:selectedRows')?.at(-1)?.[0]).toEqual([{ id: 1, name: 'Second' }])
+    } finally { wrapper.unmount() }
+  })
+
+  it('uses logical ids without a caller-built row identity and retains controlled ids across pages', async () => {
+    const selected = ref<(string | number)[]>([40])
+    const rows = ref([{ id: 2, name: 'First' }])
+    let selectionEvents = 0
+    const Host = defineComponent({
+      setup() {
+        return () => h(DataTableLazy, {
+          headerName: 'Records',
+          data: rows.value,
+          columns: [{ accessorKey: 'name', header: 'Name' }],
+          enableRowSelection: true,
+          selectedRowIds: selected.value,
+          'onUpdate:selectedRowIds': (ids: (string | number)[]) => {
+            selectionEvents += 1
+            selected.value = ids
+          },
+        })
+      },
+    })
+    const wrapper = await mountSuspended(Host)
+    try {
+      await flushPromises()
+      await wrapper.get('tbody [role="checkbox"]').trigger('click')
+      await flushPromises()
+      expect(new Set(selected.value)).toEqual(new Set([40, 2]))
+      expect(wrapper.get('tbody [role="checkbox"]').attributes('data-state')).toBe('checked')
+      rows.value = [{ id: 40, name: 'Another page' }]
+      await flushPromises()
+      expect(wrapper.get('tbody [role="checkbox"]').attributes('data-state')).toBe('checked')
+      expect(new Set(selected.value)).toEqual(new Set([40, 2]))
+      expect(selectionEvents).toBeLessThan(5)
+    } finally { wrapper.unmount() }
+  })
+
+  it('applies an external selected row id list to the checkbox state', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: {
+        headerName: 'Records',
+        data: [{ id: 2, name: 'First' }, { id: 1, name: 'Second' }],
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+        getRowId: (row: Record<string, any>) => String(row.id),
+        enableRowSelection: true,
+        selectedRowIds: [1],
+      },
+    })
+    try {
+      await flushPromises()
+      await nextTick()
+      const states = wrapper.findAll('[role="checkbox"]').map((checkbox) => checkbox.attributes('data-state'))
+      expect(states).toEqual(['indeterminate', 'unchecked', 'checked'])
+    } finally { wrapper.unmount() }
+  })
+
+  it('owns opt-in row-click selection and blocks disabled selection', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: {
+        headerName: 'Records',
+        data: [{ id: 2, name: 'First' }],
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+        enableRowSelection: true,
+        selectOnRowClick: true,
+        selectionDisabled: true,
+      },
+    })
+    try {
+      await flushPromises()
+      expect(wrapper.get('tbody [role="checkbox"]').attributes('disabled')).toBeDefined()
+      await wrapper.get('tbody tr').trigger('click')
+      await flushPromises()
+      expect(wrapper.get('tbody [role="checkbox"]').attributes('data-state')).toBe('unchecked')
+      await wrapper.setProps({ selectionDisabled: false })
+      await wrapper.get('tbody tr').trigger('click')
+      await flushPromises()
+      expect(wrapper.get('tbody [role="checkbox"]').attributes('data-state')).toBe('checked')
+      expect(wrapper.emitted('update:selectedRowIds')?.at(-1)?.[0]).toEqual([2])
+    } finally { wrapper.unmount() }
+  })
+
+  it('keeps a single-selection table to one checked row', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: {
+        headerName: 'Records',
+        data: [{ id: 2, name: 'First' }, { id: 1, name: 'Second' }],
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+        getRowId: (row: Record<string, any>) => String(row.id),
+        enableRowSelection: true,
+        rowSelectionMode: 'single',
+      },
+    })
+    try {
+      await flushPromises()
+      expect(wrapper.findAll('[role="checkbox"]')).toHaveLength(2)
+      await wrapper.findAll('[role="checkbox"]')[0]!.trigger('click')
+      await nextTick()
+      await wrapper.findAll('[role="checkbox"]')[1]!.trigger('click')
+      await nextTick()
+      expect(wrapper.emitted('update:selectedRowIds')?.at(-1)?.[0]).toEqual(['1'])
+    } finally { wrapper.unmount() }
+  })
 })
