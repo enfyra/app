@@ -19,5 +19,6 @@ export interface CursorPaginationOptions<T, Cursor> {
   itemsPerPage: MaybeRefOrGetter<number>
   getCursor: (row: T) => Cursor
   fetchPage: (cursor: Cursor | null, limit: number) => Promise<T[] | null>
+  total?: MaybeRefOrGetter<number | undefined>
   scope?: MaybeRefOrGetter<unknown>
 }

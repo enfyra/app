@@ -93,6 +93,7 @@
             :show-title="false"
             :executions="executions"
             :page="executionPage"
+            :total="executionTotal"
             :has-next-page="hasNextExecutionPage"
             :loading="execLoading || executionPaginationLoading"
             @refresh="refreshExecutions"
@@ -114,7 +115,6 @@
       :saving="savingStep"
       :testing="testing"
       :has-errors="hasStepErrors"
-      :has-config-errors="hasStepConfigErrors"
       :step-type-options="stepTypeOptions"
       :error-options="errorOptions"
       :condition-step-options="conditionStepOptions"
@@ -146,13 +146,13 @@
 import {
   buildFlowExecutionDetailFilter,
   resolveRouteIdentifier,
+  validateConditionSource,
 } from "~/utils/flow-editor";
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import type { FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS } from '~/utils/flow.constants';
 import {
   normalizeScriptContract,
-  stripLegacyScriptFields,
 } from '~/utils/script-contract';
 
 definePageMeta({ layout: "default", title: "Flow Editor" });
@@ -216,7 +216,6 @@ const FLOW_DETAIL_FIELDS = [
   "steps.key",
   "steps.stepOrder",
   "steps.type",
-  "steps.config",
   "steps.scriptLanguage",
   "steps.timeout",
   "steps.onError",
@@ -231,7 +230,6 @@ const FLOW_STEP_EDITOR_FIELDS = [
   "key",
   "stepOrder",
   "type",
-  "config",
   "sourceCode",
   "scriptLanguage",
   "compiledCode",
@@ -266,7 +264,6 @@ const stepForm = ref<FlowStepEditorForm>({
   key: '',
   stepOrder: 0,
   type: 'script' as StepType,
-  configJson: '',
   sourceCode: null as string | null,
   scriptLanguage: 'typescript' as 'javascript' | 'typescript',
   compiledCode: null as string | null,
@@ -280,23 +277,13 @@ const stepForm = ref<FlowStepEditorForm>({
 const hasStepErrors = computed(() =>
   Object.values(stepErrors.value).some((message) => Boolean(message)),
 );
-const hasStepConfigErrors = computed(() =>
-  Boolean(stepErrors.value.config || stepErrors.value.sourceCode || stepErrors.value.scriptLanguage),
-);
-
-function cleanStepConfig(config: any): Record<string, any> {
-  return stripLegacyScriptFields(config);
-}
-
-function parseStepConfigJson(raw: string): Record<string, any> {
-  return raw ? JSON.parse(raw) : {};
-}
 
 watch(() => stepForm.value.key, () => {
   if (stepErrors.value.key) stepErrors.value.key = '';
 });
 watch(() => stepForm.value.type, () => {
   if (stepErrors.value.type) stepErrors.value.type = '';
+  if (stepErrors.value.sourceCode) stepErrors.value.sourceCode = '';
 });
 
 const { data: flowData, executeWithResult: fetchFlow } = useApi(
@@ -332,10 +319,21 @@ async function loadFlow() {
 const EXEC_LIMIT = 10;
 const EXEC_FIELDS = 'id,status,startedAt,completedAt,duration,currentStep';
 const latestExecution = ref<Record<string, any> | null>(null);
-const { executeWithResult: fetchExecApi } = useApi<{ data: Record<string, any>[] }>(
+const executionTotal = ref<number | undefined>(undefined);
+const { executeWithResult: fetchExecApi } = useApi<{ data: Record<string, any>[]; meta?: { filterCount?: number } }>(
   '/enfyra_flow_execution',
   { errorContext: "Fetch Executions" }
 );
+const { executeWithResult: countExecApi } = useApi<{ meta?: { filterCount?: number } }>(
+  '/enfyra_flow_execution',
+  { errorContext: "Count Executions" }
+);
+async function fetchExecutionTotal() {
+  const result = await countExecApi({
+    query: { filter: JSON.stringify({ flow: { _eq: flowId.value } }), limit: 0, meta: 'filterCount' },
+  });
+  executionTotal.value = result.ok ? result.data.meta?.filterCount : undefined;
+}
 const {
   data: executions,
   page: executionPage,
@@ -346,6 +344,7 @@ const {
 } = useCursorPagination<Record<string, any>, string | number>({
   itemsPerPage: EXEC_LIMIT,
   scope: flowId,
+  total: executionTotal,
   getCursor: getId,
   async fetchPage(cursor, limit) {
     const filter: Record<string, any> = { flow: { _eq: flowId.value } };
@@ -357,7 +356,10 @@ const {
 
 async function fetchExecutions() {
   const loaded = await resetExecutionPages();
-  if (loaded) latestExecution.value = executions.value[0] ?? null;
+  if (loaded) {
+    latestExecution.value = executions.value[0] ?? null;
+    void fetchExecutionTotal();
+  }
   return loaded;
 }
 
@@ -634,18 +636,15 @@ async function onSelectStep(step: any | null) {
     return;
   }
   step = stepDetail;
-  const rawConfig = step.config && typeof step.config === 'object' ? step.config : {};
-  const config = cleanStepConfig(rawConfig);
   const scriptContract = normalizeScriptContract({
-    sourceCode: step.sourceCode ?? rawConfig.sourceCode ?? rawConfig.code ?? null,
-    scriptLanguage: step.scriptLanguage ?? rawConfig.scriptLanguage,
-    compiledCode: step.compiledCode ?? rawConfig.compiledCode ?? null,
+    sourceCode: step.sourceCode ?? null,
+    scriptLanguage: step.scriptLanguage,
+    compiledCode: step.compiledCode ?? null,
   });
   stepForm.value = {
     key: step.key,
     stepOrder: step.stepOrder,
     type: step.type,
-    configJson: Object.keys(config).length ? JSON.stringify(config, null, 2) : '',
     sourceCode: scriptContract.sourceCode,
     scriptLanguage: scriptContract.scriptLanguage,
     compiledCode: scriptContract.compiledCode,
@@ -676,7 +675,6 @@ function openCreateStep(context?: { parentId?: any; branch?: string; afterOrder?
     key: '',
     stepOrder: nextOrder,
     type: 'script',
-    configJson: '',
     sourceCode: null,
     scriptLanguage: 'typescript',
     compiledCode: null,
@@ -743,12 +741,13 @@ async function copyTestValue(value: any) {
 }
 
 async function testCurrentStep() {
-  let config;
-  try {
-    config = cleanStepConfig(parseStepConfigJson(stepForm.value.configJson));
-  } catch {
-    notify.error("Error", "Invalid JSON in config");
-    return;
+  if (stepForm.value.type === 'condition') {
+    const conditionError = validateConditionSource(stepForm.value.sourceCode);
+    if (conditionError) {
+      stepErrors.value.sourceCode = conditionError;
+      testResult.value = { success: false, error: conditionError, duration: 0 };
+      return;
+    }
   }
   testing.value = true;
   testResult.value = null;
@@ -774,7 +773,6 @@ async function testCurrentStep() {
         flowId: flowId.value,
         key: stepForm.value.key,
         type: stepForm.value.type,
-        config,
         sourceCode: stepForm.value.sourceCode,
         scriptLanguage: stepForm.value.scriptLanguage,
         compiledCode: stepForm.value.compiledCode,
@@ -827,19 +825,15 @@ async function saveStep() {
     stepErrors.value.type = 'Type is required';
     hasError = true;
   }
-
-  let config;
-  try {
-    config = cleanStepConfig(parseStepConfigJson(stepForm.value.configJson));
-  } catch {
-    stepErrors.value.config = 'Invalid JSON';
-    hasError = true;
-    config = {};
+  if (stepForm.value.type === 'condition') {
+    const conditionError = validateConditionSource(stepForm.value.sourceCode);
+    if (conditionError) {
+      stepErrors.value.sourceCode = conditionError;
+      hasError = true;
+    }
   }
 
-  if (hasStepErrors.value) {
-    return;
-  }
+  if (hasStepErrors.value) return;
   if (hasError) return;
 
   savingStep.value = true;
@@ -848,7 +842,6 @@ async function saveStep() {
       key: stepForm.value.key,
       stepOrder: stepForm.value.stepOrder,
       type: stepForm.value.type,
-      config,
       sourceCode: stepForm.value.sourceCode,
       scriptLanguage: stepForm.value.scriptLanguage,
       compiledCode: stepForm.value.compiledCode,

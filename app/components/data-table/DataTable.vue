@@ -19,8 +19,13 @@ const emit = defineEmits<{
 const slots = useSlots()
 const wrapperKeys = new Set(['contextMenuItems', 'showColumnVisibility', 'headerName', 'headerDescription', 'recordCount', 'onSelect', 'onContextmenu', 'class', 'ui', 'data', 'columns', 'loading', 'watchOptions', 'paginationConfig', 'page', 'sorting', 'columnVisibility', 'rowSelection', 'reload', 'reloadLoading', 'searchable', 'searchPlaceholder', 'searchLabel', 'search'])
 const search = defineModel<string>('search', { default: '' })
-const recordCount = computed(() => props.recordCount ?? props.paginationConfig?.total ?? props.data.length)
-const showRecordCount = computed(() => props.paginationConfig?.mode !== 'cursor')
+const explicitTotal = computed(() => {
+  if (typeof props.recordCount === 'number') return props.recordCount
+  const total = props.paginationConfig?.total
+  return typeof total === 'number' && total >= 0 ? total : undefined
+})
+const recordCount = computed(() => explicitTotal.value ?? props.data.length)
+const showRecordCount = computed(() => props.paginationConfig?.mode !== 'cursor' || explicitTotal.value !== undefined)
 const tableOptions = computed(() => Object.fromEntries(Object.entries(props).filter(([key]) => !wrapperKeys.has(key))))
 const tableRef = useTemplateRef<{ tableApi?: Table<Record<string, any>>; tableRef?: HTMLElement }>('tableRef')
 const page = defineModel<number>('page', { default: 1 })

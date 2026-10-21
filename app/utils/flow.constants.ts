@@ -5,12 +5,6 @@ export type BadgeColor = 'error' | 'info' | 'success' | 'primary' | 'warning' | 
 export const STEP_TYPE_OPTIONS: { label: string; value: StepType }[] = [
   { label: 'Script', value: 'script' },
   { label: 'Condition', value: 'condition' },
-  { label: 'Query', value: 'query' },
-  { label: 'Delete Record', value: 'delete' },
-  { label: 'HTTP Request', value: 'http' },
-  { label: 'Trigger Flow', value: 'trigger_flow' },
-  { label: 'Sleep', value: 'sleep' },
-  { label: 'Log', value: 'log' },
 ];
 
 export const ERROR_OPTIONS: { label: string; value: StepErrorHandling }[] = [
@@ -22,23 +16,11 @@ export const ERROR_OPTIONS: { label: string; value: StepErrorHandling }[] = [
 export const STEP_TYPE_COLOR_MAP: Record<string, BadgeColor> = {
   script: 'primary',
   condition: 'warning',
-  query: 'info',
-  delete: 'error',
-  http: 'secondary',
-  trigger_flow: 'info',
-  sleep: 'neutral',
-  log: 'neutral',
 };
 
 export const STEP_TYPE_ICON_MAP: Record<string, string> = {
   script: 'lucide:code',
   condition: 'lucide:git-branch',
-  query: 'lucide:search',
-  delete: 'lucide:trash-2',
-  http: 'lucide:globe',
-  trigger_flow: 'lucide:workflow',
-  sleep: 'lucide:clock',
-  log: 'lucide:file-text',
   trigger: 'lucide:play',
   add: 'lucide:plus',
 };

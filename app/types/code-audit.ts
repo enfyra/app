@@ -25,5 +25,5 @@ export interface CodeAuditRecord {
 
 export interface CodeAuditResponse {
   data: CodeAuditRecord[];
-  meta?: { filterCount?: number };
+  meta?: { filterCount?: number; totalCount?: number };
 }

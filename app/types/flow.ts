@@ -1,4 +1,4 @@
-export type StepType = 'script' | 'condition' | 'query' | 'delete' | 'http' | 'trigger_flow' | 'sleep' | 'log';
+export type StepType = 'script' | 'condition';
 export type StepErrorHandling = 'stop' | 'skip' | 'retry';
 export type TriggerType = 'schedule' | 'event' | 'webhook';
 export type TableEventType = 'create' | 'update' | 'delete';
@@ -22,7 +22,6 @@ export interface FlowStep {
   key: string;
   stepOrder: number;
   type: StepType | string;
-  config?: Record<string, any>;
   sourceCode?: string | null;
   scriptLanguage?: 'javascript' | 'typescript' | string | null;
   compiledCode?: string | null;
@@ -39,7 +38,6 @@ export interface FlowStepEditorForm {
   key: string;
   stepOrder: number;
   type: StepType;
-  configJson: string;
   sourceCode: string | null;
   scriptLanguage: 'javascript' | 'typescript';
   compiledCode: string | null;
@@ -65,7 +63,6 @@ export interface StepNodeData {
   stepId?: string | number;
   label: string;
   stepType: StepNodeType;
-  config?: Record<string, any>;
   sourceCode?: string | null;
   timeout?: number;
   onError?: StepErrorHandling;

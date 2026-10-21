@@ -38,7 +38,7 @@ describe('DataTable layout', () => {
     } finally { wrapper.unmount() }
   })
 
-  it('hides the record count in cursor pagination mode', async () => {
+  it('hides the record count in cursor pagination mode without a server total', async () => {
     const wrapper = await mountSuspended(DataTable, {
       props: {
         headerName: 'Records',
@@ -51,6 +51,22 @@ describe('DataTable layout', () => {
       await flushPromises()
       expect(wrapper.find('[aria-live="polite"]').exists()).toBe(false)
       expect(wrapper.text()).not.toContain('records')
+      expect(wrapper.find('[aria-label="Next"]').exists()).toBe(true)
+    } finally { wrapper.unmount() }
+  })
+
+  it('shows the total record count in cursor pagination mode when the server supplies one', async () => {
+    const wrapper = await mountSuspended(DataTable, {
+      props: {
+        headerName: 'Records',
+        data: [{ id: 1 }, { id: 2 }],
+        columns: [{ accessorKey: 'id', header: 'ID' }],
+        paginationConfig: { mode: 'cursor', itemsPerPage: 10, rowCount: 2, total: 128, hasNextPage: true },
+      },
+    })
+    try {
+      await flushPromises()
+      expect(wrapper.get('[aria-live="polite"]').text()).toBe('128 records')
       expect(wrapper.find('[aria-label="Next"]').exists()).toBe(true)
     } finally { wrapper.unmount() }
   })

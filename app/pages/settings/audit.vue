@@ -48,7 +48,7 @@ const previousFields = computed(() => {
   const previous = selected.value?.previous;
   if (!previous || typeof previous !== 'object') return [];
   return Object.entries(previous)
-    .filter(([key]) => !['id', '_id', 'createdAt', 'updatedAt', 'version', sourceField.value].includes(key))
+    .filter(([key]) => !['id', '_id', 'createdAt', 'updatedAt', 'version', 'config', sourceField.value].includes(key))
     .map(([key, value]) => ({
       key,
       value: value === null || value === undefined ? '_' : typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value),
@@ -67,6 +67,7 @@ const tableMenuItems = computed<DropdownMenuItem[]>(() => [
   })),
 ]);
 const listFields = 'id,tableName,recordId,action,fromVersion,toVersion,restoredFrom,changedByEmail,changedBySource,createdAt';
+const total = ref<number | undefined>(undefined);
 let inspectionGeneration = 0;
 let active = true;
 
@@ -86,8 +87,10 @@ const {
     if (tableName.value) filter.tableName = { _eq: tableName.value };
     if (recordId.value) filter.recordId = { _eq: recordId.value };
     if (cursor !== null) filter[getIdFieldName()] = { _lt: cursor };
-    const result = await readHistory({ query: { fields: listFields, filter: Object.keys(filter).length ? filter : undefined, sort: '-id', limit: pageLimit } });
-    return result.ok ? result.data.data : null;
+    const result = await readHistory({ query: { fields: listFields, filter: Object.keys(filter).length ? filter : undefined, sort: '-id', limit: pageLimit, meta: 'filterCount' } });
+    if (!result.ok) return null;
+    total.value = result.data.meta?.filterCount;
+    return result.data.data;
   },
 });
 
@@ -148,6 +151,7 @@ onBeforeUnmount(() => { active = false; inspectionGeneration++; cancel(); });
         :data="rows"
         :columns="columns"
         :loading="loading"
+        :total="total"
         :reload="reload"
         :reload-loading="loading"
         :page-limit="limit"

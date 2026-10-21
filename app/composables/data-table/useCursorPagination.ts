@@ -1,4 +1,4 @@
-import { ref, shallowRef, toValue, watch } from 'vue'
+import { computed, ref, shallowRef, toValue, watch } from 'vue'
 import type { CursorPaginationOptions } from '~/types/table-pagination'
 
 export function useCursorPagination<T, Cursor>(options: CursorPaginationOptions<T, Cursor>) {
@@ -6,6 +6,7 @@ export function useCursorPagination<T, Cursor>(options: CursorPaginationOptions<
   const data = shallowRef<T[]>([])
   const hasNextPage = ref(false)
   const loading = ref(false)
+  const total = computed(() => options.total === undefined ? undefined : toValue(options.total))
   let cursors: (Cursor | null)[] = [null]
   let requestId = 0
 
@@ -53,6 +54,7 @@ export function useCursorPagination<T, Cursor>(options: CursorPaginationOptions<
   return {
     page,
     data,
+    total,
     hasNextPage,
     loading,
     setPage: (targetPage: number) => fetchPage(targetPage),

@@ -24,15 +24,3 @@ export function normalizeScriptContract<T extends ScriptContractFields>(
     compiledCode: record.compiledCode ?? null,
   };
 }
-
-export function stripLegacyScriptFields<T extends Record<string, any>>(
-  config: T | null | undefined,
-): Record<string, any> {
-  if (!config || typeof config !== 'object' || Array.isArray(config)) return {};
-  const cleaned = { ...config };
-  delete cleaned.sourceCode;
-  delete cleaned.scriptLanguage;
-  delete cleaned.compiledCode;
-  delete cleaned.code;
-  return cleaned;
-}

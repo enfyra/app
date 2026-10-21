@@ -132,7 +132,6 @@ function makeStepNode(step: any, x: number, y: number, isFirst = false, isLast =
       stepId: step.id,
       label: step.key,
       stepType: step.type,
-      config: step.config,
       timeout: step.timeout,
       onError: step.onError,
       retryAttempts: step.retryAttempts,

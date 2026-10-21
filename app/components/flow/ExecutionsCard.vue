@@ -7,6 +7,7 @@ import { getExecutionStatusColor } from '~/utils/flow.constants';
 const props = withDefaults(defineProps<{
   executions: any[];
   page?: number;
+  total?: number;
   hasNextPage: boolean;
   loading: boolean;
   showTitle?: boolean;
@@ -48,7 +49,8 @@ function formatTime(value: string | null) {
       :loading="loading"
       :get-row-id="execution => String(getId(execution))"
       :page="page"
-      :pagination-config="{ mode: 'cursor', itemsPerPage: 10, hasNextPage, loading, showPageSize: false }"
+      :record-count="total"
+      :pagination-config="{ mode: 'cursor', itemsPerPage: 10, total, hasNextPage, loading, showPageSize: false }"
       @update:page="page => emit('update:page', page)"
       @row-click="execution => emit('open', execution)"
     />
