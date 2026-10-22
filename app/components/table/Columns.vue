@@ -129,6 +129,14 @@ const ruleModalTarget = computed(() => {
   };
 });
 
+const nullableBeforeUnpublish = new WeakMap<object, { value: boolean | undefined; present: boolean }>();
+
+function preservePublicationDraft(source: any, target: any) {
+  const previous = nullableBeforeUnpublish.get(toRaw(source));
+  if (previous) nullableBeforeUnpublish.set(toRaw(target), previous);
+  return target;
+}
+
 const activeRules = computed<any[]>({
   get: () => {
     const col = columns.value?.[ruleModalIndex.value];
@@ -138,7 +146,7 @@ const activeRules = computed<any[]>({
     const idx = ruleModalIndex.value;
     if (idx < 0 || !columns.value?.[idx]) return;
     const nextCols = columns.value.slice();
-    nextCols[idx] = { ...nextCols[idx], rules: next };
+    nextCols[idx] = preservePublicationDraft(nextCols[idx], { ...nextCols[idx], rules: next });
     columns.value = nextCols;
   },
 });
@@ -152,7 +160,7 @@ const activePerms = computed<any[]>({
     const idx = permModalIndex.value;
     if (idx < 0 || !columns.value?.[idx]) return;
     const nextCols = columns.value.slice();
-    nextCols[idx] = { ...nextCols[idx], fieldPermissions: next };
+    nextCols[idx] = preservePublicationDraft(nextCols[idx], { ...nextCols[idx], fieldPermissions: next });
     columns.value = nextCols;
   },
 });
@@ -219,8 +227,24 @@ function normalizeColumnForDatabase(column: any): any {
 }
 
 function toggleColumnPublished(column: any) {
-  column.isPublished = !column.isPublished;
-  normalizeColumnPublication(column);
+  const key = toRaw(column);
+  if (column.isPublished) {
+    nullableBeforeUnpublish.set(key, {
+      value: column.isNullable,
+      present: Object.hasOwn(column, 'isNullable'),
+    });
+    column.isPublished = false;
+    normalizeColumnPublication(column);
+    return;
+  }
+
+  column.isPublished = true;
+  const previous = nullableBeforeUnpublish.get(key);
+  if (previous) {
+    if (previous.present) column.isNullable = previous.value;
+    else delete column.isNullable;
+    nullableBeforeUnpublish.delete(key);
+  }
 }
 
 function isPrimaryColumn(column: any): boolean {
@@ -301,7 +325,7 @@ async function saveColumn() {
   if (isNew.value) {
     columns.value.push(newCol);
   } else if (editingIndex.value != null) {
-    columns.value.splice(editingIndex.value, 1, newCol);
+    columns.value.splice(editingIndex.value, 1, preservePublicationDraft(columns.value[editingIndex.value], newCol));
   }
 
   formEditorRef.value?.confirmChanges();
@@ -602,7 +626,7 @@ function getMobileColumnActions(column: any, index: number) {
         @click="addNewColumn()"
       />
     </div>
-    <div v-if="!isDesktop && displayColumns.length" class="divide-y divide-default overflow-hidden rounded-[var(--radius-control)] border border-default bg-default">
+    <div v-if="!isDesktop && displayColumns.length" class="divide-y divide-[var(--control-border)] overflow-hidden rounded-[var(--radius-control)] border border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs">
       <TableSchemaFieldItem
         v-for="(column, index) in displayColumns"
         :key="column.id ?? index"
@@ -633,7 +657,7 @@ function getMobileColumnActions(column: any, index: number) {
       <div
         v-for="(column, index) in displayColumns"
         :key="column.id ?? index"
-        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
+        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-[var(--radius-control)] border border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs transition cursor-pointer"
         @click="editColumn(column, index)"
         tabindex="0"
         role="button"

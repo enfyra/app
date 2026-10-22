@@ -342,7 +342,7 @@ function getMobileRelationActions(rel: any, index: number) {
         @click="openNewRelationModal()"
       />
     </div>
-    <div v-if="!isDesktop && relations.length" class="divide-y divide-default overflow-hidden rounded-[var(--radius-control)] border border-default bg-default">
+    <div v-if="!isDesktop && relations.length" class="divide-y divide-[var(--control-border)] overflow-hidden rounded-[var(--radius-control)] border border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs">
       <TableSchemaFieldItem
         v-for="(rel, index) in relations"
         :key="rel.id ?? index"
@@ -374,7 +374,7 @@ function getMobileRelationActions(rel: any, index: number) {
       <div
         v-for="(rel, index) in relations"
         :key="rel.id ?? index"
-        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-[var(--border-default)] hover:bg-[var(--surface-muted)] transition cursor-pointer"
+        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-[var(--radius-control)] border border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs transition cursor-pointer"
         @click="editRelation(rel, index)"
         tabindex="0"
         role="button"
@@ -452,7 +452,7 @@ function getMobileRelationActions(rel: any, index: number) {
       </div>
     </template>
 
-    <div v-if="!isDesktop && incomingRelations.length" class="divide-y divide-default overflow-hidden rounded-[var(--radius-control)] border border-dashed border-default bg-default">
+    <div v-if="!isDesktop && incomingRelations.length" class="divide-y divide-[var(--control-border)] overflow-hidden rounded-[var(--radius-control)] border border-dashed border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs">
       <TableSchemaFieldItem
         v-for="incoming in incomingRelations"
         :key="incoming.id"
@@ -471,7 +471,7 @@ function getMobileRelationActions(rel: any, index: number) {
       <div
         v-for="incoming in incomingRelations"
         :key="'incoming-' + incoming.id"
-        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-lg border border-dashed border-[var(--border-default)] opacity-60 hover:opacity-100 transition"
+        class="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 rounded-[var(--radius-control)] border border-dashed border-[var(--control-border)] bg-[var(--control-bg)] shadow-theme-xs transition"
       >
         <div class="flex items-center gap-2 min-w-0 flex-1 order-1">
           <UIcon name="lucide:arrow-down-left" class="w-4 h-4 text-muted-foreground shrink-0" />
