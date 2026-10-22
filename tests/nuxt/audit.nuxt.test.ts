@@ -16,7 +16,7 @@ mockNuxtImport('useApi', () => (url: unknown) => ({ executeWithResult: typeof ur
 
 import CodeHistory from '~/pages/settings/audit.vue';
 
-const TableStub = defineComponent({ name: 'HistoryTableStub', props: { data: Array, page: Number, searchable: Boolean, search: String, searchLabel: String, reload: Function, reloadLoading: Boolean, paginationMode: String, hasNextPage: Boolean }, emits: ['row-click', 'update:search', 'search', 'update:page'], template: '<div><slot name="toolbar-actions" />{{ JSON.stringify(data) }}</div>' });
+const TableStub = defineComponent({ name: 'HistoryTableStub', props: { data: Array, page: Number, total: Number, searchable: Boolean, search: String, searchLabel: String, reload: Function, reloadLoading: Boolean, paginationMode: String, hasNextPage: Boolean }, emits: ['row-click', 'update:search', 'search', 'update:page'], template: '<div><slot name="toolbar-actions" />{{ JSON.stringify(data) }}</div>' });
 const DrawerStub = defineComponent({ name: 'HistoryDrawerStub', props: ['modelValue', 'primaryAction'], template: '<div><slot name="header" /><slot name="body" /></div>' });
 const EditorStub = defineComponent({ name: 'HistoryEditorStub', props: { modelValue: String }, template: '<pre>{{ modelValue }}</pre>' });
 let wrapper: Awaited<ReturnType<typeof mountSuspended>> | undefined;
@@ -76,6 +76,20 @@ describe('Audit page', () => {
     expect(state.history).toHaveBeenCalledOnce();
     expect(state.history.mock.calls[0]![0].query.filter).toMatchObject({ id: { _lt: 81 } });
     expect(table.props('page')).toBe(2);
+  });
+  it('keeps the population count from the first page while paging', async () => {
+    const firstPage = Array.from({ length: 21 }, (_, index) => revision(100 - index));
+    state.history.mockResolvedValueOnce({ ok: true, data: { data: firstPage, meta: { filterCount: 109 } } });
+    state.history.mockResolvedValueOnce({ ok: true, data: { data: [revision(79), revision(78)], meta: { filterCount: 2 } } });
+    const page = await mountPage();
+    const table = page.getComponent(TableStub);
+    expect(table.props('total')).toBe(109);
+    expect(state.history.mock.calls[0]![0].query.meta).toBe('filterCount');
+    state.history.mockClear();
+    table.vm.$emit('update:page', 2);
+    await flushPromises();
+    expect(state.history.mock.calls[0]![0].query.meta).toBeUndefined();
+    expect(table.props('total')).toBe(109);
   });
   it('uses the table-owned exact-ID search, toolbar selector and reload', async () => {
     const page = await mountPage();

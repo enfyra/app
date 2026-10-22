@@ -88,9 +88,10 @@ const {
     if (tableName.value) filter.tableName = { _eq: tableName.value };
     if (recordId.value) filter.recordId = { _eq: recordId.value };
     if (cursor !== null) filter[getIdFieldName()] = { _lt: cursor };
-    const result = await readHistory({ query: { fields: listFields, filter: Object.keys(filter).length ? filter : undefined, sort: '-id', limit: pageLimit, meta: 'filterCount' } });
+    const countsPopulation = cursor === null;
+    const result = await readHistory({ query: { fields: listFields, filter: Object.keys(filter).length ? filter : undefined, sort: '-id', limit: pageLimit, ...(countsPopulation ? { meta: 'filterCount' } : {}) } });
     if (!result.ok) return null;
-    total.value = result.data.meta?.filterCount;
+    if (countsPopulation) total.value = result.data.meta?.filterCount;
     return result.data.data;
   },
 });
