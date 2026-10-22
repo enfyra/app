@@ -308,7 +308,7 @@ onUnmounted(() => {
   <USidebar
     v-model:open="sidebarVisible"
     variant="inset"
-    :menu="{ dismissible: !accountSheetOpen, ui: { overlay: 'z-40', content: 'z-40 max-w-none !bg-[var(--shell-sidebar-bg)] !divide-transparent' } }"
+    :menu="{ dismissible: !accountSheetOpen, ui: { overlay: 'z-40', content: 'z-40 max-w-none !bg-[var(--shell-sidebar-bg)] !divide-transparent !ring-1 !ring-inset !ring-[var(--border-default)] !shadow-[var(--shadow-md)]' } }"
     collapsible="icon"
     class="eapp-sidebar"
     :style="{ '--sidebar-width': 'var(--shell-sidebar-width)' }"

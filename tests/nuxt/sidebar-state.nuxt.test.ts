@@ -243,4 +243,16 @@ describe('sidebar active colors', () => {
     expect(dialog!.classList.contains('!bg-[var(--shell-sidebar-bg)]')).toBe(true)
     expect(dialog!.classList.contains('!divide-transparent')).toBe(true)
   })
+
+  it('frames the mobile menu with the main frame border and shadow', async () => {
+    await mountSidebar('/dashboard', { width: 900 })
+    useState('global:sidebar:visible').value = true
+    await flushPromises()
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]')
+    expect(dialog).not.toBeNull()
+    expect(dialog!.classList.contains('!ring-1')).toBe(true)
+    expect(dialog!.classList.contains('!ring-inset')).toBe(true)
+    expect(dialog!.classList.contains('!ring-[var(--border-default)]')).toBe(true)
+    expect(dialog!.classList.contains('!shadow-[var(--shadow-md)]')).toBe(true)
+  })
 })

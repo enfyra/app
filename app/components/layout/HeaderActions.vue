@@ -21,10 +21,7 @@
               : action.label
           "
           :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
-          :variant="
-            (isRef(action.variant) ? unref(action.variant) : action.variant) ||
-            'solid'
-          "
+          :variant="resolveHeaderActionVariant(action, { fallback: 'solid', hideLabel: isMobile || isTablet, shaped: !isDesktop })"
           :color="
             (isRef(action.color) ? unref(action.color) : action.color) ||
             'primary'
@@ -51,7 +48,7 @@ import type { HeaderAction } from "~/types";
 
 const route = useRoute();
 const { headerActions } = useHeaderActionRegistry();
-const { isMobile, isTablet } = useScreen();
+const { isMobile, isTablet, isDesktop } = useScreen();
 
 const visibleActions = computed(() => {
   const filtered = headerActions.value.filter((action) => {

@@ -17,11 +17,7 @@
             v-else
             :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
             :label="(isMobile || isTablet) ? undefined : (isRef(action.label) ? unref(action.label) : action.label)"
-            :variant="
-              (isRef(action.variant)
-                ? unref(action.variant)
-                : action.variant) || 'soft'
-            "
+            :variant="resolveHeaderActionVariant(action, { fallback: 'soft', hideLabel: isMobile || isTablet, shaped: !isDesktop })"
             :color="
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'
@@ -56,11 +52,7 @@
             v-else
             :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
             :label="(isMobile || isTablet) ? undefined : (isRef(action.label) ? unref(action.label) : action.label)"
-            :variant="
-              (isRef(action.variant)
-                ? unref(action.variant)
-                : action.variant) || 'soft'
-            "
+            :variant="resolveHeaderActionVariant(action, { fallback: 'soft', hideLabel: isMobile || isTablet, shaped: !isDesktop })"
             :color="
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'

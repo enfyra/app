@@ -62,17 +62,14 @@ export interface PermissionGateProps {
   condition?: PermissionCondition;
 }
 
+export type HeaderActionVariant = "solid" | "outline" | "ghost" | "soft";
+
 export interface HeaderAction {
   id: string;
   label?: string | ComputedRef<string>;
   ariaLabel?: string;
   icon?: string | ComputedRef<string>;
-  variant?:
-    | "solid"
-    | "outline"
-    | "ghost"
-    | "soft"
-    | ComputedRef<"solid" | "outline" | "ghost" | "soft">;
+  variant?: HeaderActionVariant | ComputedRef<HeaderActionVariant>;
   color?:
     | "primary"
     | "secondary"

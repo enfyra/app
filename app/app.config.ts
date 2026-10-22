@@ -2,7 +2,7 @@ export default defineAppConfig({
   ui: {
     dashboardNavbar: {
       slots: {
-        root: 'h-14 px-3 sm:px-3 md:h-(--ui-header-height) md:px-6',
+        root: 'h-14 px-2 sm:px-3 md:h-(--ui-header-height) md:px-6',
       },
     },
     dashboardPanel: {
@@ -569,9 +569,9 @@ export default defineAppConfig({
       slots: {
         overlay: 'z-50 bg-black/20 backdrop-blur-[2px]',
         content: 'z-50',
-        header: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
-        body: 'eapp-modal-body p-3 sm:p-3 md:p-6',
-        footer: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
+        header: 'shrink-0 px-3 py-3 sm:px-3 md:px-6 md:py-4',
+        body: 'eapp-modal-body min-h-0 p-3 sm:p-3 md:p-6',
+        footer: 'shrink-0 px-3 py-3 sm:px-3 md:px-6 md:py-4',
       },
     },
     switch: {

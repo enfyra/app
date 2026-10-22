@@ -1,40 +1,66 @@
 <script setup lang="ts">
 import { humanizeIdentifier } from "~/utils/form/humanize-label";
 
-const props = defineProps<{
+interface BreadcrumbItem {
+  label: string;
+  to?: string;
   icon?: string;
-  iconMap?: Record<string, string>;
-  labelMap?: Record<string, string>;
-  defaultSegmentIcon?: string;
-}>();
+}
 
+const { isDesktop } = useScreen();
 const route = useRoute();
 
-const items = computed(() => {
-  const pathParts = route.path.split("/").filter(Boolean);
+const trail = ref<HTMLElement | null>(null);
 
-  const home = {
-    label: "Home",
-    icon: props.icon || "lucide:home",
-    to: "/",
-  };
+const items = computed<BreadcrumbItem[]>(() => {
+  const parts = route.path.split("/").filter(Boolean);
 
-  const segments = pathParts.map((seg, i) => {
-    const label = props.labelMap?.[seg] || humanizeIdentifier(seg);
-    const to = "/" + pathParts.slice(0, i + 1).join("/");
-    const isLast = i === pathParts.length - 1;
+  const segments = parts.map((part, index) => {
+    const isLast = index === parts.length - 1;
     return {
-      label,
-      ...(isLast ? {} : { to }),
+      label: humanizeIdentifier(decodeURIComponent(part)),
+      ...(isLast ? {} : { to: "/" + parts.slice(0, index + 1).join("/") }),
     };
   });
 
-  return [home, ...segments];
+  return [{ label: "Home", icon: "lucide:home", to: "/" }, ...segments];
+});
+
+const scrollUi = {
+  root: "min-w-max",
+  list: "flex-nowrap gap-0.5",
+  item: "shrink-0",
+  link: "text-xs gap-1",
+  linkLeadingIcon: "size-3.5",
+  linkLabel: "whitespace-nowrap",
+  separatorIcon: "size-3",
+};
+
+async function revealTrailEnd() {
+  await nextTick();
+  trail.value?.scrollTo({ left: trail.value.scrollWidth });
+}
+
+watch(() => route.path, () => {
+  if (!isDesktop.value) void revealTrailEnd();
+}, { flush: "post" });
+
+watch(isDesktop, (desktop) => {
+  if (!desktop) void revealTrailEnd();
+}, { flush: "post" });
+
+onMounted(() => {
+  if (!isDesktop.value) void revealTrailEnd();
 });
 </script>
 
 <template>
-  <nav class="hidden md:block">
-    <UBreadcrumb :items="items" />
-  </nav>
+  <div class="min-w-0 flex-1 pe-3">
+    <div
+      ref="trail"
+      class="no-scrollbar overflow-x-auto overscroll-x-contain"
+    >
+      <UBreadcrumb :items="items" :ui="isDesktop ? undefined : scrollUi" />
+    </div>
+  </div>
 </template>

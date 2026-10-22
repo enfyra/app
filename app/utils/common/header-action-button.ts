@@ -1,5 +1,5 @@
 import { isRef, unref } from "vue";
-import type { HeaderAction } from "~/types";
+import type { HeaderAction, HeaderActionVariant } from "~/types";
 
 const circularButtonClassPatterns = [
   /^!?rounded-full$/,
@@ -39,4 +39,18 @@ export function isHeaderActionIconOnly(action: Pick<HeaderAction, "label">, hide
   }
   const label = isRef(action.label) ? unref(action.label) : action.label;
   return !label;
+}
+
+export function resolveHeaderActionVariant(
+  action: Pick<HeaderAction, "variant" | "label">,
+  options: { fallback: HeaderActionVariant; hideLabel?: boolean; shaped?: boolean },
+): HeaderActionVariant {
+  const variant =
+    (isRef(action.variant) ? unref(action.variant) : action.variant) || options.fallback;
+
+  if (options.shaped && variant === "ghost" && isHeaderActionIconOnly(action, options.hideLabel)) {
+    return "outline";
+  }
+
+  return variant;
 }
