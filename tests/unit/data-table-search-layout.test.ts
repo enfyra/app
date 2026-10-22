@@ -5,11 +5,11 @@ import { compile } from 'tailwindcss'
 import { describe, expect, it } from 'vitest'
 
 const source = readFileSync(fileURLToPath(new URL('../../app/components/data-table/DataTable.vue', import.meta.url)), 'utf8')
-const toolbarClasses = source.match(/<div class="(flex flex-col border-b border-default bg-muted)"/)![1]!.split(' ')
+const toolbarClasses = source.match(/<div class="(eapp-table-toolbar flex flex-col border-b border-\[var\(--border-structural\)\] bg-\[var\(--surface-header\)\])"/)![1]!.split(' ')
 const headerRowClasses = source.match(/<div class="(flex flex-wrap items-center md:flex-nowrap)"/)![1]!.split(' ')
 const titleTierClasses = source.match(/<div class="(flex min-h-11 min-w-0 flex-1 items-center px-3 py-2 md:min-h-14 md:px-4 md:py-3)"/)![1]!.split(' ')
-const actionTierClasses = source.match(/<div class="(flex min-h-11 w-full min-w-0 items-center gap-2 border-t border-default px-3 py-2 md:min-h-14 md:w-auto md:border-t-0 md:px-4 md:py-3)"/)![1]!.split(' ')
-const actionStateClasses = [...source.match(/<div class="flex min-h-11 w-full min-w-0 items-center gap-2 border-t border-default px-3 py-2 md:min-h-14 md:w-auto md:border-t-0 md:px-4 md:py-3" :class="([^"]+)"/)![1]!.matchAll(/'([^']+)'/g)].map(match => match[1]!.split(' '))
+const actionTierClasses = source.match(/<div class="(flex min-h-11 w-full min-w-0 items-center gap-2 border-t border-\[var\(--border-structural\)\] px-3 py-2 md:min-h-14 md:w-auto md:border-t-0 md:px-4 md:py-3)"/)![1]!.split(' ')
+const actionStateClasses = [...source.match(/<div class="flex min-h-11 w-full min-w-0 items-center gap-2 border-t border-\[var\(--border-structural\)\] px-3 py-2 md:min-h-14 md:w-auto md:border-t-0 md:px-4 md:py-3" :class="([^"]+)"/)![1]!.matchAll(/'([^']+)'/g)].map(match => match[1]!.split(' '))
 const searchRowClasses = source.match(/<div v-if="props.searchable" class="([^"]+)"/)![1]!.split(' ')
 const desktopCountClasses = source.match(/aria-live="polite" class="([^"]+)"/)![1]!.split(' ')
 const mobileCountClasses = source.match(/class="([^"]+)" aria-hidden="true"/)![1]!.split(' ')
@@ -78,7 +78,7 @@ describe('DataTable toolbar layout', () => {
   })
 
   it('keeps search on its own full-width row below the header', () => {
-    expect(source).toContain('<div v-if="props.searchable" class="flex min-h-11 min-w-0 items-center border-t border-default px-3 py-2 md:min-h-14 md:px-4 md:py-3">')
+    expect(source).toContain('<div v-if="props.searchable" class="flex min-h-11 min-w-0 items-center border-t border-[var(--border-structural)] px-3 py-2 md:min-h-14 md:px-4 md:py-3">')
     expect(source).toContain('v-model="search"')
     expect(source).toContain('@search="value => emit(\'search\', value)"')
   })

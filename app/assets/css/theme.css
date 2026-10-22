@@ -86,6 +86,7 @@
     --surface-workspace: color-mix(in srgb, var(--md-primary-container) 2%, color-mix(in srgb, var(--block-base) 99%, #808080));
     --surface-overlay: color-mix(in srgb, var(--md-scrim) 45%, transparent);
     --surface-header: var(--block-muted);
+    --border-structural: color-mix(in srgb, var(--md-outline) 45%, var(--surface-default));
 
     --bg-surface: var(--surface-default);
     --bg-elevated: var(--surface-default);
@@ -331,11 +332,11 @@
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-    --table-header-bg: var(--block-muted);
+    --table-header-bg: var(--surface-header);
     --table-header-color: var(--md-on-surface);
-    --table-header-border: var(--md-outline-variant);
+    --table-header-border: var(--border-structural);
     --table-header-hover-bg: var(--md-surface-container-high);
-    --table-cell-border: var(--md-outline-variant);
+    --table-cell-border: var(--border-structural);
     --table-cell-color: var(--md-on-surface-variant);
     --caret-color: var(--md-on-surface);
     --prose-placeholder: var(--text-tertiary);
@@ -476,6 +477,15 @@
   --block-muted: #37373f;
   --block-high: #414149;
   --surface-workspace: #1d1d22;
+  /* Toolbar/tab-strip surfaces sit half a step above the card instead of a full
+     ramp step. `--border-structural` is the single border color for table and
+     panel chrome — frame, tier dividers, thead separator and row dividers — so
+     no two of them disagree. It is an opaque outline mix rather than a
+     translucent one so the rendered color is identical no matter which surface
+     sits behind it, and the alpha rises in dark mode because the same mix on a
+     near-black card loses too much contrast. */
+  --surface-header: #303037;
+  --border-structural: color-mix(in srgb, var(--md-outline) 58%, var(--surface-default));
   --card-border: color-mix(in srgb, #ffffff 16%, var(--block-base));
   --card-border-hover: color-mix(in srgb, var(--md-primary) 42%, var(--card-border));
   --shell-main-border: color-mix(in srgb, #ffffff 18%, var(--surface-workspace));

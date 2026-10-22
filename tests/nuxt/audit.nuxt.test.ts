@@ -11,12 +11,12 @@ mockNuxtImport('useNotify', () => () => ({ success: state.notify, error: state.n
 mockNuxtImport('useCodeVersion', () => () => ({ confirm: state.confirm }));
 mockNuxtImport('usePermissions', () => () => ({ checkPermissionCondition: (condition: any) => condition.and.some((item: any) => item.methods.includes('PATCH')) ? state.canPatch : state.canRead }));
 mockNuxtImport('useSettingsPageSize', () => () => ref(20));
-mockNuxtImport('useDatabase', () => () => ({ getId: (record: any) => record.id ?? record._id, createIdFilter: (id: unknown) => ({ id: { _eq: id } }) }));
+mockNuxtImport('useDatabase', () => () => ({ getId: (record: any) => record.id ?? record._id, getIdFieldName: () => 'id', createIdFilter: (id: unknown) => ({ id: { _eq: id } }) }));
 mockNuxtImport('useApi', () => (url: unknown) => ({ executeWithResult: typeof url === 'function' ? state.current : url === '/admin/code-audit/revert' ? state.restore : url === '/enfyra_audit' ? (options: any) => options.query.fields.includes('previous') ? state.entry(options) : state.history(options) : state.history, pending: ref(false), cancel: state.cancel }));
 
 import CodeHistory from '~/pages/settings/audit.vue';
 
-const TableStub = defineComponent({ name: 'HistoryTableStub', props: { data: Array, page: Number, searchable: Boolean, search: String, searchLabel: String, reload: Function, reloadLoading: Boolean, paginationMode: String, hasNextPage: Boolean }, emits: ['row-click', 'update:search', 'search'], template: '<div><slot name="toolbar-actions" />{{ JSON.stringify(data) }}</div>' });
+const TableStub = defineComponent({ name: 'HistoryTableStub', props: { data: Array, page: Number, searchable: Boolean, search: String, searchLabel: String, reload: Function, reloadLoading: Boolean, paginationMode: String, hasNextPage: Boolean }, emits: ['row-click', 'update:search', 'search', 'update:page'], template: '<div><slot name="toolbar-actions" />{{ JSON.stringify(data) }}</div>' });
 const DrawerStub = defineComponent({ name: 'HistoryDrawerStub', props: ['modelValue', 'primaryAction'], template: '<div><slot name="header" /><slot name="body" /></div>' });
 const EditorStub = defineComponent({ name: 'HistoryEditorStub', props: { modelValue: String }, template: '<pre>{{ modelValue }}</pre>' });
 let wrapper: Awaited<ReturnType<typeof mountSuspended>> | undefined;
@@ -62,6 +62,20 @@ describe('Audit page', () => {
     await expect.poll(() => useRouter().currentRoute.value.query.table).toBe(VERSIONED_CODE_TABLES[2]);
     await flushPromises();
     expect(state.history.mock.calls.at(-1)![0].query.filter).toEqual({ tableName: { _eq: VERSIONED_CODE_TABLES[2] } });
+  });
+  it('loads the next cursor page when the paginator advances', async () => {
+    const firstPage = Array.from({ length: 21 }, (_, index) => revision(100 - index));
+    state.history.mockResolvedValueOnce({ ok: true, data: { data: firstPage, meta: { filterCount: 21 } } });
+    const page = await mountPage();
+    const table = page.getComponent(TableStub);
+    expect(table.props('hasNextPage')).toBe(true);
+    expect(table.props('page')).toBe(1);
+    state.history.mockClear();
+    table.vm.$emit('update:page', 2);
+    await flushPromises();
+    expect(state.history).toHaveBeenCalledOnce();
+    expect(state.history.mock.calls[0]![0].query.filter).toMatchObject({ id: { _lt: 81 } });
+    expect(table.props('page')).toBe(2);
   });
   it('uses the table-owned exact-ID search, toolbar selector and reload', async () => {
     const page = await mountPage();

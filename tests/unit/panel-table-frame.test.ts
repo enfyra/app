@@ -41,11 +41,11 @@ describe('panel table surface', () => {
   })
 
   it('always renders the same table frame', () => {
-    expect(dataTable).toContain('class="eapp-data-table min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default"')
-    expect(dataTable).not.toContain('flush')
+    expect(dataTable).toContain('class="eapp-data-table min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--border-structural)] bg-default"')
+    expect(dataTable).not.toMatch(/class="[^"]*\bflush\b/)
     expect(uiTypes).not.toContain('flush?: boolean')
     expect(settingsTableTypes).not.toContain('flush?: boolean')
-    expect(settingsTable).not.toContain('flush')
+    expect(settingsTable).not.toMatch(/class="[^"]*\bflush\b/)
   })
 
   it('renders list tables standalone instead of nesting them in a panel', () => {

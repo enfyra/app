@@ -139,7 +139,7 @@ describe('DataTable layout', () => {
       await flushPromises()
       const title = wrapper.get('.eapp-table-title').element
       const search = wrapper.get('form.eapp-search-field').element
-      const toolbar = title.closest('.bg-muted')!
+      const toolbar = title.closest('.eapp-table-toolbar')!
       expect(toolbar.children).toHaveLength(2)
       expect(toolbar.children[0]?.contains(title)).toBe(true)
       expect(toolbar.children[1]?.contains(search)).toBe(true)

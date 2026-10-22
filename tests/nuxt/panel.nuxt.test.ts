@@ -37,7 +37,7 @@ describe('Shared panel', () => {
     } finally { wrapper.unmount() }
   })
 
-  it('hides the tab strip for one unlabeled section and gives its header the top muted surface', async () => {
+  it('hides the tab strip for one unlabeled section and gives its header the top header surface', async () => {
     const wrapper = await mountSuspended(Panel, {
       props: { sections: [{ value: 'records' }] },
       slots: { 'records-header': '<h2>Records</h2>', records: '<p>Rows</p>', footer: '<button>Next</button>' },
@@ -45,12 +45,12 @@ describe('Shared panel', () => {
     try {
       expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
       expect(wrapper.get('[data-slot="header"]').text()).toBe('Records')
-      expect(wrapper.get('[data-slot="header"] > div').classes()).toContain('bg-muted')
+      expect(wrapper.get('[data-slot="header"] > div').classes()).toContain('eapp-panel-header-tier')
       expect(wrapper.get('[data-slot="footer"]').text()).toBe('Next')
     } finally { wrapper.unmount() }
   })
 
-  it('puts the active section header below the muted tab strip without another muted surface', async () => {
+  it('puts the active section header below the header-surface tab strip without another tinted surface', async () => {
     const wrapper = await mountSuspended(Panel, {
       props: { modelValue: 'one', sections },
       slots: { 'one-header': '<div>Section tools</div>', one: '<p>First</p>' },
@@ -59,7 +59,7 @@ describe('Shared panel', () => {
       const header = wrapper.get('[data-slot="header"]')
       expect(header.find('[role="tablist"]').exists()).toBe(true)
       expect(header.text()).toContain('Section tools')
-      expect(header.classes()).not.toContain('bg-muted')
+      expect(header.classes()).not.toContain('eapp-panel-header-tier')
     } finally { wrapper.unmount() }
   })
 

@@ -184,9 +184,9 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="tableScope" class="eapp-data-table min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-default bg-default">
+  <div ref="tableScope" class="eapp-data-table min-w-0 w-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--border-structural)] bg-default">
     <span v-if="skeletonActive" role="status" class="sr-only">Loading records...</span>
-    <div class="flex flex-col border-b border-default bg-muted">
+    <div class="eapp-table-toolbar flex flex-col border-b border-[var(--border-structural)] bg-[var(--surface-header)]">
       <div class="flex flex-wrap items-center md:flex-nowrap">
         <div class="flex min-h-11 min-w-0 flex-1 items-center px-3 py-2 md:min-h-14 md:px-4 md:py-3">
           <div class="min-w-0">
@@ -197,7 +197,7 @@ defineExpose({
             <span v-if="props.headerDescription" class="mt-0.5 block max-w-full truncate text-xs text-muted" :title="props.headerDescription">{{ props.headerDescription }}</span>
           </div>
         </div>
-        <div class="flex min-h-11 w-full min-w-0 items-center gap-2 border-t border-default px-3 py-2 md:min-h-14 md:w-auto md:border-t-0 md:px-4 md:py-3" :class="hasActionTier() ? undefined : 'md:hidden'">
+        <div class="flex min-h-11 w-full min-w-0 items-center gap-2 border-t border-[var(--border-structural)] px-3 py-2 md:min-h-14 md:w-auto md:border-t-0 md:px-4 md:py-3" :class="hasActionTier() ? undefined : 'md:hidden'">
           <UBadge v-if="showRecordCount" color="neutral" variant="subtle" :label="`${recordCount.toLocaleString()} records`" class="shrink-0 md:hidden" aria-hidden="true" />
           <div v-if="hasActionTier()" class="ml-auto flex min-h-8 min-w-0 items-center justify-end gap-2">
             <slot name="toolbar" :table-api="tableRef?.tableApi" />
@@ -225,7 +225,7 @@ defineExpose({
           </div>
         </div>
       </div>
-      <div v-if="props.searchable" class="flex min-h-11 min-w-0 items-center border-t border-default px-3 py-2 md:min-h-14 md:px-4 md:py-3">
+      <div v-if="props.searchable" class="flex min-h-11 min-w-0 items-center border-t border-[var(--border-structural)] px-3 py-2 md:min-h-14 md:px-4 md:py-3">
         <CommonSearchField
           v-model="search"
           :placeholder="props.searchPlaceholder || 'Search records'"
@@ -263,7 +263,7 @@ defineExpose({
         </template>
       </UTable>
     </component>
-    <div v-if="slots.footer || props.paginationConfig || slots['pagination-summary']" class="space-y-3 border-t border-default px-3 py-3 text-sm text-muted md:px-4">
+    <div v-if="slots.footer || props.paginationConfig || slots['pagination-summary']" class="eapp-table-footer space-y-3 border-t border-[var(--border-structural)] px-3 py-3 text-sm text-muted md:px-4">
       <slot name="footer" :table-api="tableRef?.tableApi" />
       <DataTablePagination
         v-if="props.paginationConfig"
@@ -288,6 +288,12 @@ defineExpose({
 :deep(.eapp-table-scroll) {
   scrollbar-color: var(--ui-border-accented) var(--ui-bg);
   scrollbar-width: thin;
+}
+:deep(.eapp-table-scroll) tbody > :not(:last-child) {
+  border-color: var(--border-structural);
+}
+:deep(.eapp-table-scroll) tr[data-slot='separator'] {
+  background-color: var(--border-structural);
 }
 :deep(.eapp-table-scroll::-webkit-scrollbar) {
   height: 8px;

@@ -75,11 +75,11 @@ const sectionActions = computed(() => activeSection.value?.actions ?? []);
 
 const panelUi = computed(() => ({
   root: props.framed
-    ? 'eapp-panel flex min-w-0 min-h-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-default bg-default ring-0 divide-y-0 shadow-none'
+    ? 'eapp-panel flex min-w-0 min-h-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--border-structural)] bg-default ring-0 divide-y-0 shadow-none'
     : 'eapp-panel flex min-w-0 min-h-0 flex-col rounded-none border-0 bg-transparent ring-0 divide-y-0 shadow-none',
   header: 'p-0 sm:p-0',
   body: ['min-w-0', props.bodyClass || (props.framed ? 'p-3 md:p-5' : '!px-0')].join(' '),
-  footer: 'border-t border-default px-3 py-3 text-sm text-muted md:px-4',
+  footer: 'border-t border-[var(--border-structural)] px-3 py-3 text-sm text-muted md:px-4',
 }));
 
 function selectSection(value: string | number) {
@@ -90,7 +90,7 @@ function selectSection(value: string | number) {
 <template>
   <UCard v-bind="$attrs" :ui="panelUi">
     <template v-if="showTabs || activeHasHeader" #header>
-      <div v-if="showTabs" :class="framed ? 'bg-muted shadow-[inset_0_-1px_0_var(--ui-border)]' : undefined">
+      <div v-if="showTabs" :class="framed ? 'eapp-panel-header-tier bg-[var(--surface-header)] shadow-[inset_0_-1px_0_var(--border-structural)]' : undefined">
         <UTheme :ui="{ tabs: tabHeaderUi }">
           <UTabs
             :model-value="selectedValue"
@@ -111,8 +111,8 @@ function selectSection(value: string | number) {
         v-if="activeHasHeader"
         :class="[
           'flex flex-wrap items-center gap-3 px-3 py-3 md:flex-nowrap md:px-5',
-          framed && !showTabs ? 'bg-muted shadow-[inset_0_-1px_0_var(--ui-border)]' : undefined,
-          framed && showTabs ? 'border-b border-default' : undefined,
+          framed && !showTabs ? 'eapp-panel-header-tier bg-[var(--surface-header)] shadow-[inset_0_-1px_0_var(--border-structural)]' : undefined,
+          framed && showTabs ? 'border-b border-[var(--border-structural)]' : undefined,
         ]"
       >
         <div class="flex w-full min-w-0 flex-col gap-3 md:w-auto md:flex-1 md:flex-row md:flex-nowrap md:items-center">
@@ -128,7 +128,7 @@ function selectSection(value: string | number) {
           </div>
           <div
             v-if="sectionActions.length"
-            class="-mx-3 h-0 shrink-0 border-t border-default md:hidden"
+            class="-mx-3 h-0 shrink-0 border-t border-[var(--border-structural)] md:hidden"
             aria-hidden="true"
           />
           <div v-if="sectionActions.length" class="flex w-full min-w-0 items-center justify-end gap-3 md:w-auto md:contents">

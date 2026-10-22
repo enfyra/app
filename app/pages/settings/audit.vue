@@ -76,6 +76,7 @@ const {
   data: rows,
   hasNextPage,
   loading,
+  setPage,
   reset: reload,
 } = useCursorPagination<CodeAuditRecord, string | number>({
   itemsPerPage: limit,
@@ -143,7 +144,7 @@ onBeforeUnmount(() => { active = false; inspectionGeneration++; cancel(); });
     <template v-else>
       <DataTableSettingsTable
         v-model:search="recordId"
-        v-model:page="page"
+        :page="page"
         header-name="Audit"
         searchable
         search-label="Exact record ID"
@@ -158,6 +159,7 @@ onBeforeUnmount(() => { active = false; inspectionGeneration++; cancel(); });
         page-size-key="audit"
         pagination-mode="cursor"
         :has-next-page="hasNextPage"
+        @update:page="setPage"
         @search="applyFilter"
         @page-size-change="value => { limit = value; }"
         @row-click="inspect"
