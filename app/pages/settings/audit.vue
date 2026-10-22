@@ -96,6 +96,21 @@ const {
   },
 });
 
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_audit',
+  title: 'Delete audit entries',
+  warning: 'Deleted revisions can no longer be reviewed or restored.',
+  isEligible: row => getId(row) !== null && getId(row) !== undefined,
+  isBusy: () => restoring.value,
+  refresh: () => reload(),
+  onDeleted: async (deleted) => {
+    if (selected.value && deleted.some(entry => String(getId(entry)) === String(getId(selected.value)))) {
+      detailsOpen.value = false;
+      selected.value = null;
+    }
+  },
+});
+
 async function applyFilter() {
   recordId.value = recordId.value.trim();
   if (recordId.value === String(route.query.recordId || '')) {
@@ -160,6 +175,7 @@ onBeforeUnmount(() => { active = false; inspectionGeneration++; cancel(); });
         page-size-key="audit"
         pagination-mode="cursor"
         :has-next-page="hasNextPage"
+        :bulk-action="bulkDelete"
         @update:page="setPage"
         @search="applyFilter"
         @page-size-change="value => { limit = value; }"

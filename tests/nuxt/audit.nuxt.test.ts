@@ -5,18 +5,19 @@ import { defineComponent, ref } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { VERSIONED_CODE_TABLES } from '~/utils/code-version';
 
-const state = vi.hoisted(() => ({ history: vi.fn(), entry: vi.fn(), current: vi.fn(), restore: vi.fn(), cancel: vi.fn(), confirm: vi.fn(), notify: vi.fn(), canRead: true, canPatch: true }));
+const state = vi.hoisted(() => ({ history: vi.fn(), entry: vi.fn(), current: vi.fn(), restore: vi.fn(), remove: vi.fn(), cancel: vi.fn(), confirm: vi.fn(), confirmDelete: vi.fn(), notify: vi.fn(), canRead: true, canPatch: true, canDelete: true }));
 mockNuxtImport('usePageHeaderRegistry', () => () => ({ registerPageHeader: vi.fn() }));
 mockNuxtImport('useNotify', () => () => ({ success: state.notify, error: state.notify }));
 mockNuxtImport('useCodeVersion', () => () => ({ confirm: state.confirm }));
-mockNuxtImport('usePermissions', () => () => ({ checkPermissionCondition: (condition: any) => condition.and.some((item: any) => item.methods.includes('PATCH')) ? state.canPatch : state.canRead }));
+mockNuxtImport('useConfirm', () => () => ({ confirm: state.confirmDelete }));
+mockNuxtImport('usePermissions', () => () => ({ checkPermissionCondition: (condition: any) => condition.and.some((item: any) => item.methods.includes('DELETE')) ? state.canDelete : condition.and.some((item: any) => item.methods.includes('PATCH')) ? state.canPatch : state.canRead }));
 mockNuxtImport('useSettingsPageSize', () => () => ref(20));
 mockNuxtImport('useDatabase', () => () => ({ getId: (record: any) => record.id ?? record._id, getIdFieldName: () => 'id', createIdFilter: (id: unknown) => ({ id: { _eq: id } }) }));
-mockNuxtImport('useApi', () => (url: unknown) => ({ executeWithResult: typeof url === 'function' ? state.current : url === '/admin/code-audit/revert' ? state.restore : url === '/enfyra_audit' ? (options: any) => options.query.fields.includes('previous') ? state.entry(options) : state.history(options) : state.history, pending: ref(false), cancel: state.cancel }));
+mockNuxtImport('useApi', () => (url: unknown, options?: any) => ({ executeWithResult: options?.method === 'delete' ? state.remove : typeof url === 'function' ? state.current : url === '/admin/code-audit/revert' ? state.restore : url === '/enfyra_audit' ? (opts: any) => opts.query.fields.includes('previous') ? state.entry(opts) : state.history(opts) : state.history, pending: ref(false), cancel: state.cancel }));
 
 import CodeHistory from '~/pages/settings/audit.vue';
 
-const TableStub = defineComponent({ name: 'HistoryTableStub', props: { data: Array, page: Number, total: Number, searchable: Boolean, search: String, searchLabel: String, reload: Function, reloadLoading: Boolean, paginationMode: String, hasNextPage: Boolean }, emits: ['row-click', 'update:search', 'search', 'update:page'], template: '<div><slot name="toolbar-actions" />{{ JSON.stringify(data) }}</div>' });
+const TableStub = defineComponent({ name: 'HistoryTableStub', props: { data: Array, page: Number, total: Number, bulkAction: Object, searchable: Boolean, search: String, searchLabel: String, reload: Function, reloadLoading: Boolean, paginationMode: String, hasNextPage: Boolean }, emits: ['row-click', 'update:search', 'search', 'update:page'], template: '<div><slot name="toolbar-actions" />{{ JSON.stringify(data) }}</div>' });
 const DrawerStub = defineComponent({ name: 'HistoryDrawerStub', props: ['modelValue', 'primaryAction'], template: '<div><slot name="header" /><slot name="body" /></div>' });
 const EditorStub = defineComponent({ name: 'HistoryEditorStub', props: { modelValue: String }, template: '<pre>{{ modelValue }}</pre>' });
 let wrapper: Awaited<ReturnType<typeof mountSuspended>> | undefined;
@@ -26,11 +27,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   state.canRead = true;
   state.canPatch = true;
+  state.canDelete = true;
   state.history.mockResolvedValue({ ok: true, data: { data: [revision(2)], meta: { filterCount: 1 } } });
   state.entry.mockImplementation(({ query }: any) => Promise.resolve({ ok: true, data: { data: [revision(query.filter.id._eq)] } }));
   state.current.mockResolvedValue({ ok: true, data: { data: [{ version: '3.0.1' }] } });
   state.restore.mockResolvedValue({ ok: true });
+  state.remove.mockResolvedValue({ ok: true });
   state.confirm.mockResolvedValue('4.0.0');
+  state.confirmDelete.mockResolvedValue(true);
 });
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; });
 async function mountPage() {
@@ -183,5 +187,24 @@ describe('Audit page', () => {
     await flushPromises();
     expect(page.getComponent(DrawerStub).props('primaryAction')).toBe(false);
     expect(state.restore).not.toHaveBeenCalled();
+  });
+  it('prunes selected audit entries through the shared bulk delete', async () => {
+    const page = await mountPage();
+    const table = page.getComponent(TableStub);
+    const bulkAction = table.props('bulkAction') as any;
+    expect(bulkAction.enabled).toBe(true);
+    state.history.mockClear();
+    const deleted = await bulkAction.execute([revision(2), revision(3)]);
+    expect(state.confirmDelete).toHaveBeenCalledOnce();
+    expect(state.remove).toHaveBeenCalledTimes(2);
+    expect(deleted).toEqual([2, 3]);
+    expect(state.history).toHaveBeenCalledOnce();
+    expect(state.notify).toHaveBeenCalledOnce();
+  });
+  it('disables bulk delete without DELETE permission on the audit route', async () => {
+    state.canDelete = false;
+    const page = await mountPage();
+    const bulkAction = page.getComponent(TableStub).props('bulkAction') as any;
+    expect(bulkAction.enabled).toBe(false);
   });
 });
