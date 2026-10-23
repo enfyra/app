@@ -121,7 +121,7 @@ import {
   applyFieldPositions,
   sortDefinitionFieldsByKey,
 } from '~/utils/form/field-order';
-import { FORM_EDITOR_VIRTUAL_EMIT_KEY } from '~/utils/form/form-editor-context';
+import { FORM_EDITOR_VIRTUAL_EMIT_KEY, FORM_EDITOR_DRAFT_ERROR_KEY } from '~/utils/form/form-editor-context';
 import type {
   FormEditorSection,
   FormEditorVirtualEmitPayload,
@@ -255,6 +255,11 @@ function handleVirtualFieldEmit(payload: FormEditorVirtualEmitPayload) {
 }
 
 provide(FORM_EDITOR_VIRTUAL_EMIT_KEY, handleVirtualFieldEmit);
+const draftErrors = ref<Record<string, string>>({});
+provide(FORM_EDITOR_DRAFT_ERROR_KEY, (key, error) => {
+  if (error) draftErrors.value[key] = error;
+  else delete draftErrors.value[key];
+});
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
 
@@ -585,7 +590,7 @@ function confirmChanges() {
 }
 
 onMounted(() => {
-  formEditorRegistry.value = { validateAllUniqueFields, confirmChanges, getUniqueFieldsNeedingCheck };
+  formEditorRegistry.value = { validateAllUniqueFields, confirmChanges, getUniqueFieldsNeedingCheck, getDraftErrors: () => ({ ...draftErrors.value }) };
 });
 
 onUnmounted(() => {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { buildSharedHelperFieldMap } from '~/utils/form/shared-helper';
+import { buildRecordEditQuery, changedRecordFields } from '~/utils/form/record-update';
 import {
   applyMethodColorSuggestion,
   buildMethodDefinitionFieldMap,
@@ -11,7 +12,7 @@ const route = useRoute();
 
 const notify = useNotify();
 const tableName = route.params.table as string;
-const { schemas, useFormChanges } = useSchema(tableName);
+const { schemas, definition, ensureSchema, useFormChanges } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { getId, getIdFieldName } = useDatabase();
 const updateErrors = ref<Record<string, string>>({});
@@ -55,7 +56,7 @@ const {
   execute: fetchRecord,
 } = useApi(() => getRouteForTableName(tableName), {
   query: computed(() => ({
-    fields: "*",
+    ...buildRecordEditQuery(definition.value, getIdFieldName()),
     filter: {
       [getIdFieldName()]: {
         _eq: route.params.id,
@@ -66,6 +67,7 @@ const {
 });
 
 async function initializeForm() {
+  await ensureSchema();
   await fetchRecord();
   const data = apiData.value?.data?.[0];
   if (data) {
@@ -85,7 +87,7 @@ async function handleUpdate() {
 
   await updateRecord({
     id: route.params.id as string,
-    body: currentRecord.value,
+    body: changedRecordFields(formChanges.originalData.value, currentRecord.value),
   });
 
   if (updateError.value) {

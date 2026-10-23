@@ -243,6 +243,8 @@
 </template>
 
 <script setup lang="ts">
+import OperationSelector from './OperationSelector.vue';
+
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { getId, getIdFieldName } = useDatabase();
@@ -285,28 +287,40 @@ const permissionTableName = computed(() => props.tableName);
 
 const { ensureSchema, generateEmptyForm } = useSchema(permissionTableName);
 
-const fieldMap = {
-  methods: { type: 'methods-selector' },
-};
+const isRoutePermission = computed(() => permissionTableName.value === 'enfyra_route_permission');
+const fieldMap = computed(() => isRoutePermission.value ? {
+  routeMethodConfigs: {
+    component: markRaw(OperationSelector),
+    label: 'Route operations',
+    componentProps: { routeId: props.currentFieldId.value },
+  },
+} : {});
 
 const {
   data: permissionsData,
   pending: loading,
   execute: fetchPermissions,
 } = useApi(() => `/${permissionTableName.value}`, {
-  query: {
+  query: () => ({
+    fields: isRoutePermission.value
+      ? '*,role.id,role.name,allowedUsers.id,routeMethodConfigs.id,routeMethodConfigs.available,routeMethodConfigs.method.name'
+      : '*',
+    limit: 0,
+    deep: {
+      allowedUsers: { limit: 0 },
+      ...(isRoutePermission.value && { routeMethodConfigs: { limit: 0 } }),
+    },
     filter: {
       [props.currentFieldId.field]: {
         [getIdFieldName()]: { _eq: props.currentFieldId.value },
       },
     },
-  },
+  }),
   errorContext: "Fetch Permissions",
 });
 
 const {
-  error: createError,
-  execute: createPermission,
+  executeWithResult: createPermission,
   pending: creating,
 } = useApi(() => `/${permissionTableName.value}`, {
   method: "post",
@@ -314,8 +328,7 @@ const {
 });
 
 const {
-  error: updateError,
-  execute: updatePermission,
+  executeWithResult: updatePermission,
   pending: updating,
 } = useApi(() => `/${permissionTableName.value}`, {
   method: "patch",
@@ -360,7 +373,7 @@ async function createNewPermission() {
   permissionForm.value = generateEmptyForm();
 
   permissionForm.value[props.currentFieldId.field] = {
-    id: props.currentFieldId.value,
+    [getIdFieldName()]: props.currentFieldId.value,
   };
 
   formChanges.update(permissionForm.value);
@@ -372,7 +385,7 @@ async function createNewPermission() {
 function editPermission(permission: Permission) {
   isEditing.value = true;
   currentPermission.value = permission;
-  permissionForm.value = { ...permission };
+  permissionForm.value = JSON.parse(JSON.stringify(permission));
   formChanges.update(permission);
   hasFormChanges.value = false;
   permissionErrors.value = {};
@@ -380,11 +393,9 @@ function editPermission(permission: Permission) {
 }
 
 function getPermissionMethods(permission: Permission): string[] {
-  if (!Array.isArray(permission.methods)) return [];
-
-  return permission.methods
-    .map((item: any) => typeof item === "string" ? item : item?.name)
-    .filter((method: any): method is string => typeof method === "string" && method.trim().length > 0);
+  return (Array.isArray(permission.routeMethodConfigs) ? permission.routeMethodConfigs : [])
+    .map((operation: any) => typeof operation.method === 'string' ? operation.method : operation.method?.name)
+    .filter((method: unknown): method is string => typeof method === 'string' && method.length > 0);
 }
 
 function handleHasChanged(value: boolean) {
@@ -443,18 +454,18 @@ async function savePermission() {
   }
 
   if (wasEditing && currentPermission.value) {
-    await updatePermission({
+    const result = await updatePermission({
       body: permissionForm.value,
       id: getId(currentPermission.value),
     });
 
-    if (updateError.value) return;
+    if (!result.ok) return;
   } else {
-    await createPermission({
+    const result = await createPermission({
       body: permissionForm.value,
     });
 
-    if (createError.value) return;
+    if (!result.ok) return;
   }
 
   formChanges.update(permissionForm.value);
@@ -480,9 +491,9 @@ async function deletePermission(permission: Permission) {
 
   if (!confirmed) return;
 
-  deleting.value = permission.id;
+  deleting.value = getId(permission);
   try {
-    await deletePermissionApi({ id: permission.id });
+    await deletePermissionApi({ id: getId(permission) });
 
     if (deleteError.value) return;
 

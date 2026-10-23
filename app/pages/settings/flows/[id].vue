@@ -643,6 +643,7 @@ async function onSelectStep(step: any | null) {
   });
   stepForm.value = {
     key: step.key,
+    isEnabled: step.isEnabled !== false,
     stepOrder: step.stepOrder,
     type: step.type,
     sourceCode: scriptContract.sourceCode,
@@ -848,7 +849,7 @@ async function saveStep() {
       timeout: stepForm.value.timeout || 5000,
       onError: stepForm.value.onError || 'stop',
       retryAttempts: stepForm.value.retryAttempts || 0,
-      isEnabled: true,
+      isEnabled: stepForm.value.isEnabled !== false,
       parent: stepForm.value.parentId ? { id: stepForm.value.parentId } : null,
       branch: stepForm.value.parentId ? stepForm.value.branch : null,
     };

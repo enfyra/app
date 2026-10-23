@@ -3,6 +3,7 @@ import type { User, LoginPayload, OAuthProvider } from "~/types";
 import { $fetch } from "ofetch";
 import { normalizeUrl, getAppUrl } from "~/utils/api/url";
 import { resolveOAuthRedirectTarget } from "~/utils/auth";
+import { DEFAULT_ME_DEEP } from '~/utils/common/constants';
 
 const me = ref<User | null>(null);
 const isLoading = ref<boolean>(false);
@@ -74,7 +75,7 @@ export function useAuth() {
     isLoading.value = true;
 
     try {
-      const queryParams: any = {};
+      const queryParams: any = { deep: DEFAULT_ME_DEEP };
 
       if (options?.fields && options.fields.length > 0) {
         queryParams.fields = options.fields.join(",");

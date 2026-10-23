@@ -340,14 +340,12 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const hookType = ref<"pre" | "post">("pre");
 
   const {
-    error: createPreHookError,
-    execute: executeCreatePreHook,
+    executeWithResult: executeCreatePreHook,
     pending: createPreHookLoading,
   } = useApi(() => "/enfyra_pre_hook", { method: "post", errorContext: "Create Pre-Hook" });
 
   const {
-    error: createPostHookError,
-    execute: executeCreatePostHook,
+    executeWithResult: executeCreatePostHook,
     pending: createPostHookLoading,
   } = useApi(() => "/enfyra_post_hook", { method: "post", errorContext: "Create Post-Hook" });
 
@@ -383,12 +381,14 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const {
     error: updatePreHookError,
     execute: executeUpdatePreHook,
+    executeWithResult: shiftPreHook,
     pending: updatePreHookLoading,
   } = useApi(() => "/enfyra_pre_hook", { method: "patch", errorContext: "Update Pre-Hook" });
 
   const {
     error: updatePostHookError,
     execute: executeUpdatePostHook,
+    executeWithResult: shiftPostHook,
     pending: updatePostHookLoading,
   } = useApi(() => "/enfyra_post_hook", { method: "patch", errorContext: "Update Post-Hook" });
 
@@ -415,21 +415,23 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
       const toShift = localHooks
         .filter((h: any) => !h.isGlobal && (Number(h.priority) || 0) >= targetPriority)
         .sort((a: any, b: any) => (Number(b.priority) || 0) - (Number(a.priority) || 0));
-      const patch = isPreHook ? executeUpdatePreHook : executeUpdatePostHook;
+      const patch = isPreHook ? shiftPreHook : shiftPostHook;
       for (const h of toShift) {
-        await patch({
+        const result = await patch({
           id: getId(h),
           body: { priority: (Number(h.priority) || 0) + 1 },
         });
+        if (!result.ok) {
+          await refreshRouteWorkflows();
+          return;
+        }
       }
     }
 
-    if (isPreHook) {
-      await executeCreatePreHook({ body: hookForm.value });
-      if (createPreHookError.value) return;
-    } else {
-      await executeCreatePostHook({ body: hookForm.value });
-      if (createPostHookError.value) return;
+    const created = await (isPreHook ? executeCreatePreHook : executeCreatePostHook)({ body: hookForm.value });
+    if (!created.ok) {
+      await refreshRouteWorkflows();
+      return;
     }
 
     showCreateHookDrawer.value = false;

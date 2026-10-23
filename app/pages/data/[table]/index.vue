@@ -2,7 +2,7 @@
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { resolveTableCellDisplay } from '~/utils/data-table-cell-formatter';
 import { DataTableBulkActions, UBadge } from '#components';
-import type { VisibilityState } from '@tanstack/vue-table';
+import type { SortingState, VisibilityState } from '@tanstack/vue-table';
 
 const route = useRoute();
 const router = useRouter();
@@ -10,6 +10,11 @@ const tableName = computed(() => route.params.table as string);
 const { schemas, schemaReady, getColumnFields } = useSchema(tableName);
 const total = ref(1);
 const page = ref(1);
+const sorting = ref<SortingState>([{ id: 'createdAt', desc: true }]);
+watch(sorting, () => {
+  page.value = 1;
+  if (route.query.page) void router.replace({ query: { ...route.query, page: undefined } });
+});
 const pageLimit = useSettingsPageSize(`data:${tableName.value}`);
 const data = ref([]);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
@@ -87,7 +92,7 @@ const {
       limit: pageLimit.value,
       page: page.value,
       fields: getColumnFields(),
-      sort: "-createdAt",
+      sort: sorting.value.map(item => `${item.desc ? '-' : ''}${item.id}`).join(',') || '-createdAt',
       meta: "*",
       ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
     };
@@ -267,6 +272,7 @@ async function clearFilters() {
 }
 
 watch(tableName, () => {
+  sorting.value = [{ id: 'createdAt', desc: true }];
   total.value = 1;
   currentFilter.value = createEmptyFilter();
   handleSelectionChange([]);
@@ -276,7 +282,7 @@ watch(() => route.query.page, value => {
   page.value = Math.max(1, Number(value) || 1);
 }, { immediate: true });
 
-watch([page, pageLimit, tableName, isSingleRecord, schemaReady], () => {
+watch([page, pageLimit, tableName, isSingleRecord, schemaReady, sorting], () => {
   if (schemaReady.value && !isSingleRecord.value) void fetchData();
 }, { immediate: true });
 
@@ -358,6 +364,8 @@ registerHeaderActions([
       <DataTableLazy
         :key="tableName"
         v-model:page="page"
+        v-model:sorting="sorting"
+        :sorting-options="{ manualSorting: true }"
         :data="data"
         :columns="columns"
         :loading="tableLoading"

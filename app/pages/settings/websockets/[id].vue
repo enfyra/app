@@ -310,21 +310,17 @@ async function fetchGatewayDetail() {
   await Promise.all([fetchGateway(), fetchEvents()]);
 }
 
-watch(
-  [() => gatewayData.value, () => eventsData.value, () => route.params.id],
-  () => {
-    if (gatewayData.value?.data?.[0]) {
-      const data = gatewayData.value.data[0];
-      gateway.value = data;
-      form.value = { ...data };
-      formChanges.update(data);
-    }
-    if (eventsData.value?.data) {
-      events.value = eventsData.value.data;
-    }
-  },
-  { immediate: true }
-);
+watch(gatewayData, value => {
+  const data = value?.data?.[0];
+  if (!data) return;
+  gateway.value = data;
+  form.value = { ...data };
+  formChanges.update(data);
+}, { immediate: true });
+
+watch(eventsData, value => {
+  if (value?.data) events.value = value.data;
+}, { immediate: true });
 
 onMounted(async () => {
   await fetchGatewayDetail();

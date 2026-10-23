@@ -36,6 +36,7 @@ export interface FlowStep {
 
 export interface FlowStepEditorForm {
   key: string;
+  isEnabled?: boolean;
   stepOrder: number;
   type: StepType;
   sourceCode: string | null;

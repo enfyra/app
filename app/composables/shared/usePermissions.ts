@@ -37,61 +37,28 @@ export function usePermissions() {
       return true;
     }
 
-    const normalizedRoutePath = routePath.startsWith("/")
-      ? routePath
-      : `/${routePath}`;
-
-    if (me.value.allowedRoutePermissions) {
-      const { getId } = useDatabase();
-      const myId = getId(me.value);
-      const directPermissions = asRelationArray(me.value.allowedRoutePermissions).filter(
-        (permission: any) =>
-          permission.route?.path === normalizedRoutePath &&
-          permission.isEnabled &&
-          asRelationArray(permission.allowedUsers).some(
-            (user: unknown) => relationId(user) === String(myId)
-          )
+    const normalizedRoutePath = (routePath.startsWith('/') ? routePath : `/${routePath}`).toLowerCase();
+    const myId = relationId(me.value);
+    const roles = asRelationArray(me.value.roles);
+    const roleIds = new Set(roles.map(relationId).filter(id => id !== null));
+    const matchesOperation = (permission: any) =>
+      permission?.isEnabled !== false &&
+      permission?.route?.isEnabled !== false &&
+      permission?.route?.path?.toLowerCase() === normalizedRoutePath &&
+      asRelationArray(permission.routeMethodConfigs).some((operation: any) =>
+        operation?.available === true && methodName(operation.method) === method.toUpperCase(),
       );
+    const matchesUser = (permission: any) => myId !== null &&
+      asRelationArray(permission.allowedUsers).some(user => relationId(user) === myId);
 
-      if (directPermissions.length > 0) {
-        const hasDirectMethodPermission = directPermissions.some((permission: any) => {
-          return asRelationArray(permission.methods).some(
-            (methodObj: unknown) => methodName(methodObj) === method.toUpperCase()
-          );
-        });
-
-        return hasDirectMethodPermission;
-      }
-    }
-
-    const routePermissions = asRelationArray(me.value.roles).flatMap((role: any) =>
-      asRelationArray(role?.routePermissions)
-    ).filter(
-      (permission: any) =>
-        permission.route?.path === normalizedRoutePath && permission.isEnabled
+    return asRelationArray(me.value.allowedRoutePermissions).some(permission =>
+      matchesOperation(permission) && (matchesUser(permission) || roleIds.has(relationId(permission.role) ?? '')),
+    ) || roles.some(role =>
+      asRelationArray(role?.routePermissions).some(permission =>
+        matchesOperation(permission) &&
+        (matchesUser(permission) || roleIds.has(relationId(permission.role) ?? '')),
+      ),
     );
-
-    if (!routePermissions.length) return false;
-
-    const hasMethodPermission = routePermissions.some((permission: any) =>
-      asRelationArray(permission.methods).some(
-        (methodObj: unknown) => methodName(methodObj) === method.toUpperCase()
-      )
-    );
-
-    if (hasMethodPermission) {
-      const { getId } = useDatabase();
-      const myId = getId(me.value);
-      return routePermissions.some((permission: any) => {
-        const allowedUsers = asRelationArray(permission.allowedUsers);
-        if (allowedUsers.length === 0) {
-          return true;
-        }
-        return allowedUsers.some((userId: unknown) => relationId(userId) === String(myId));
-      });
-    }
-
-    return false;
   };
 
   const normalizeMethod = (method: string): string => method.toUpperCase();

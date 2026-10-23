@@ -3,7 +3,7 @@ import { flushPromises } from '@vue/test-utils'
 import { computed, defineComponent, h, ref, unref } from 'vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mocks = vi.hoisted(() => ({ actions: new Map<string, any>(), notify: vi.fn(), writes: vi.fn() }))
+const mocks = vi.hoisted(() => ({ actions: new Map<string, any>(), notify: vi.fn(), writes: vi.fn(), query: null as any }))
 const fixture = { id: 42, name: 'example', isSystem: false, columns: [], relations: [], uniques: [['user', 'discount']], indexes: [['user']] }
 mockNuxtImport('useHeaderActionRegistry', () => () => ({ register: (items: any) => {
   for (const item of Array.isArray(items) ? items : [items]) mocks.actions.set(item.id, item)
@@ -21,7 +21,7 @@ mockNuxtImport('useApi', () => (_url: any, options: any) => {
   const data = ref<any>(null)
   return { data, pending: ref(false), error: ref(null), execute: vi.fn(async (args: any) => {
     if (options.method) { mocks.writes(args); data.value = { data: [{ id: 42 }] } }
-    else data.value = { data: [JSON.parse(JSON.stringify(fixture))] }
+    else { mocks.query = await options.query(); data.value = { data: [JSON.parse(JSON.stringify(fixture))] } }
     return data.value
   }) }
 })
@@ -59,6 +59,22 @@ describe('collection detail actions', () => {
       expect(wrapper.findComponent({ name: 'GraphqlAccessEditor' }).exists()).toBe(true)
     } finally { wrapper.unmount() }
   })
+
+  it('loads every editable nested policy and rule collection without default page truncation', async () => {
+    const wrapper = await mountSuspended(CollectionDetail, { route: '/collections/example', global: { stubs: {
+      TableForm: { template: '<div><slot /></div>' }, TableColumns: true, TableRelations: true, TableConstraints: true,
+      RouteEditorPanel: true, GraphqlAccessEditor: true, FlowTriggersPanel: true,
+    } } });
+    try {
+      await flushPromises();
+      expect(mocks.query.deep.columns).toEqual({ limit: 0, deep: {
+        rules: { limit: 0 }, fieldPermissions: { limit: 0, deep: { allowedUsers: { limit: 0 } } },
+      } });
+      expect(mocks.query.deep.relations).toEqual({ limit: 0, deep: {
+        fieldPermissions: { limit: 0, deep: { allowedUsers: { limit: 0 } } },
+      } });
+    } finally { wrapper.unmount(); }
+  });
 
   it('does not report success when refreshed constraints differ from the submitted removal', async () => {
     const wrapper = await mountSuspended(CollectionDetail, { route: '/collections/example', global: { stubs: {

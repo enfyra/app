@@ -52,6 +52,9 @@ export function createCorsOriginProxyHandler({ method, path }: ProxyOptions) {
         ?.authorization || getRequestHeader(event, 'authorization');
     if (authHeader) headers['Authorization'] = authHeader;
 
+    const pat = getRequestHeader(event, 'x-enfyra-pat');
+    if (pat) headers['x-enfyra-pat'] = pat;
+
     const cookie = getRequestHeader(event, 'cookie');
     if (cookie) headers['cookie'] = cookie;
 

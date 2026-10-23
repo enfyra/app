@@ -30,9 +30,9 @@ export const useMenuApi = () => {
   });
 
   const wrappedFetchMenuDefinitions = async (options: FetchMenuDefinitionsOptions = {}) => {
-    const includeExtensions = options.includeExtensions === true;
+    const includeExtensions = options.includeExtensions === true || sharedMenuDefinitionsWithExtensions.value !== null;
     const showSidebarSkeleton = options.showSidebarSkeleton !== false;
-    menuDefinitionFields.value = options.includeExtensions
+    menuDefinitionFields.value = includeExtensions
       ? MENU_DEFINITION_FIELDS_WITH_EXTENSIONS
       : MENU_DEFINITION_FIELDS;
 

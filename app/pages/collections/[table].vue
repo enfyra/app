@@ -90,9 +90,16 @@ const {
     deep: {
       columns: {
         limit: 0,
+        deep: {
+          rules: { limit: 0 },
+          fieldPermissions: { limit: 0, deep: { allowedUsers: { limit: 0 } } },
+        },
       },
       relations: {
         limit: 0,
+        deep: {
+          fieldPermissions: { limit: 0, deep: { allowedUsers: { limit: 0 } } },
+        },
       },
     },
   }),
