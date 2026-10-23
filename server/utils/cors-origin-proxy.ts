@@ -17,7 +17,7 @@ type ProxyOptions = {
 export function createCorsOriginProxyHandler({ method, path }: ProxyOptions) {
   return defineEventHandler(async (event) => {
     const config = useRuntimeConfig();
-    const apiUrl = (config.public as any).apiUrl;
+    const apiUrl = config.public.apiUrl;
 
     if (!apiUrl) {
       throw createError({ statusCode: 500, message: 'API URL not configured' });

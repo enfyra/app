@@ -1,17 +1,17 @@
-export interface SettingsBulkAction {
+export interface SettingsBulkAction<TRow = Record<string, unknown>> {
   label: string
   enabled: boolean
   pending: boolean
-  isEligible?: (row: Record<string, any>) => boolean
-  execute: (rows: Record<string, any>[]) => Promise<(string | number)[]>
+  isEligible?: (row: TRow) => boolean
+  execute: (rows: TRow[]) => Promise<(string | number)[]>
 }
 
-export interface SettingsBulkDeleteOptions {
+export interface SettingsBulkDeleteOptions<TRow = Record<string, unknown>> {
   path: string
   title: string
   warning?: string
-  isEligible?: (row: Record<string, any>) => boolean
+  isEligible?: (row: TRow) => boolean
   isBusy?: () => boolean
   refresh: () => unknown | Promise<unknown>
-  onDeleted?: (rows: Record<string, any>[]) => unknown | Promise<unknown>
+  onDeleted?: (rows: TRow[]) => unknown | Promise<unknown>
 }

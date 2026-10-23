@@ -1,8 +1,8 @@
 import { h } from 'vue'
 import { UBadge } from '#components'
-import type { ColumnDef } from '@tanstack/vue-table'
+import type { SettingsTableValueColumn } from '~/types/settings-table'
 
-export function settingsTextColumn(key: string, header: string): ColumnDef<Record<string, any>> {
+export function settingsTextColumn<TRow = Record<string, unknown>>(key: string, header: string): SettingsTableValueColumn<TRow> {
   return { accessorKey: key, header, enableSorting: false,
     cell: ({ getValue }) => {
       const value = getValue()
@@ -12,7 +12,7 @@ export function settingsTextColumn(key: string, header: string): ColumnDef<Recor
   }
 }
 
-export function settingsStatusColumn(key = 'isEnabled', header = 'Status'): ColumnDef<Record<string, any>> {
+export function settingsStatusColumn<TRow = Record<string, unknown>>(key = 'isEnabled', header = 'Status'): SettingsTableValueColumn<TRow> {
   return { accessorKey: key, header, enableSorting: false,
     cell: ({ getValue }) => h(UBadge, {
       label: getValue() ? 'Enabled' : 'Disabled',
@@ -22,7 +22,7 @@ export function settingsStatusColumn(key = 'isEnabled', header = 'Status'): Colu
   }
 }
 
-export function settingsDateColumn(key = 'createdAt', header = 'Created'): ColumnDef<Record<string, any>> {
+export function settingsDateColumn<TRow = Record<string, unknown>>(key = 'createdAt', header = 'Created'): SettingsTableValueColumn<TRow> {
   return { accessorKey: key, header, enableSorting: false,
     cell: ({ getValue }) => {
       const value = getValue()

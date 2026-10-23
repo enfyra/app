@@ -343,7 +343,7 @@ async function handleLogin() {
     : route.query.redirect;
   const res = await login({ ...form, redirect: redirect || undefined });
   if (res.ok) {
-    await completeLogin((res.data as any)?.redirect);
+    await completeLogin(res.data.redirect);
     return;
   }
   loginError.value = res.message;
@@ -362,7 +362,7 @@ async function handleDemoLogin() {
         : route.query.redirect || undefined,
     });
     if (res.ok) {
-      await completeLogin((res.data as any)?.redirect);
+      await completeLogin(res.data.redirect);
       return;
     }
     const hint = "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.";

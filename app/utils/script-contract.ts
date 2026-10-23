@@ -1,4 +1,5 @@
 import type {
+  NormalizedScriptContract,
   ScriptContractFields,
   ScriptLanguage,
 } from '~/types/script-contract';
@@ -9,11 +10,7 @@ export function normalizeScriptLanguage(value: unknown): ScriptLanguage {
 
 export function normalizeScriptContract<T extends ScriptContractFields>(
   record: T,
-): T & {
-  sourceCode: string | null;
-  scriptLanguage: ScriptLanguage;
-  compiledCode: string | null;
-} {
+): NormalizedScriptContract<T> {
   return {
     ...record,
     sourceCode:

@@ -6,7 +6,7 @@ import { useNotify } from '../shared/useNotify'
 import { usePermissions } from '../shared/usePermissions'
 import type { SettingsBulkAction, SettingsBulkDeleteOptions } from '~/types/settings-bulk-action'
 
-export function useSettingsBulkDelete(options: SettingsBulkDeleteOptions) {
+export function useSettingsBulkDelete<TRow = Record<string, unknown>>(options: SettingsBulkDeleteOptions<TRow>) {
   const { getId } = useDatabase()
   const { checkPermissionCondition } = usePermissions()
   const { confirm } = useConfirm()
@@ -16,12 +16,12 @@ export function useSettingsBulkDelete(options: SettingsBulkDeleteOptions) {
   let active = true
   if (getCurrentScope()) onScopeDispose(() => { active = false })
   const canDelete = () => checkPermissionCondition({ and: [{ route: options.path, methods: ['DELETE'] }] })
-  const isEligible = (row: Record<string, any>) => {
+  const isEligible = (row: TRow) => {
     const id = getId(row)
     return id !== null && id !== undefined && id !== '' && (options.isEligible?.(row) ?? true)
   }
 
-  async function execute(selected: Record<string, any>[]) {
+  async function execute(selected: TRow[]): Promise<(string | number)[]> {
     if (!active || pending.value || !canDelete() || options.isBusy?.()) return []
     const unique = new Set<string>()
     const rows = selected.filter(row => {
@@ -34,7 +34,7 @@ export function useSettingsBulkDelete(options: SettingsBulkDeleteOptions) {
     if (!rows.length) return []
 
     pending.value = true
-    const deleted: Record<string, any>[] = []
+    const deleted: TRow[] = []
     let attempted = false
     let refreshFailed = false
     try {
@@ -80,7 +80,7 @@ export function useSettingsBulkDelete(options: SettingsBulkDeleteOptions) {
     }
   }
 
-  return computed<SettingsBulkAction>(() => ({
+  return computed<SettingsBulkAction<TRow>>(() => ({
     label: 'Delete selected records',
     enabled: canDelete(),
     pending: pending.value,

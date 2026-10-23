@@ -239,6 +239,7 @@ function inferSystemKindFromKey(key: string): RedisAdminSystemKind | undefined {
   if (key.startsWith('runtime_cache:')) return 'runtime_cache';
   if (key.startsWith('user_cache_lock:')) return 'user_cache_lock';
   if (key.startsWith('user_cache:') || key.startsWith('user_cache_meta:')) return 'user_cache';
+  return undefined;
 }
 
 function matchesKeyFilter(key: RedisAdminKeySummary, filter: RedisAdminKeyFilter) {

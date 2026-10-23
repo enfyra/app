@@ -149,7 +149,7 @@ import {
   validateConditionSource,
 } from "~/utils/flow-editor";
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import type { FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
+import type { FlowStepAddContext, FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS } from '~/utils/flow.constants';
 import {
   normalizeScriptContract,
@@ -270,8 +270,8 @@ const stepForm = ref<FlowStepEditorForm>({
   timeout: 5000,
   onError: 'stop' as StepErrorHandling,
   retryAttempts: 0,
-  parentId: null as any,
-  branch: undefined as string | undefined,
+  parentId: null,
+  branch: undefined,
 });
 
 const hasStepErrors = computed(() =>
@@ -659,7 +659,7 @@ async function onSelectStep(step: any | null) {
   stepDrawerOpen.value = true;
 }
 
-function openCreateStep(context?: { parentId?: any; branch?: string; afterOrder?: number }) {
+function openCreateStep(context?: FlowStepAddContext) {
   testResult.value = null;
   stepErrors.value = {};
   editingStepId.value = null;

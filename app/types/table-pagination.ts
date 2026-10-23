@@ -1,3 +1,4 @@
+import type { PaginationProps } from '@nuxt/ui'
 import type { MaybeRefOrGetter } from 'vue'
 
 export interface TablePaginationProps {
@@ -10,7 +11,7 @@ export interface TablePaginationProps {
   hasNextPage?: boolean
   floating?: boolean
   scope?: HTMLElement | null
-  to?: (page: number) => any
+  to?: PaginationProps['to']
 }
 
 export type DataTablePaginationConfig = Omit<TablePaginationProps, 'scope'>

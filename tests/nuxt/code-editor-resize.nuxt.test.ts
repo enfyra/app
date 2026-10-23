@@ -94,10 +94,12 @@ describe('CodeMirror resize', () => {
       const initial = highlightedText()
       wrapper.element.setAttribute('style', 'height:600px')
       editor!.updateEditorSize()
-      editor!.editorView.value.dispatch({})
+      const view = editor!.editorView.value
+      expect(view).not.toBeNull()
+      view!.dispatch({})
       await nextTick()
       expect(highlightedText()).toEqual(initial)
-      expect(editor!.editorView.value.state.doc.toString()).toContain('const count = 42;')
+      expect(view!.state.doc.toString()).toContain('const count = 42;')
     } finally { wrapper.unmount() }
   })
 })

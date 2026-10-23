@@ -16,7 +16,7 @@ watch(sorting, () => {
   if (route.query.page) void router.replace({ query: { ...route.query, page: undefined } });
 });
 const pageLimit = useSettingsPageSize(`data:${tableName.value}`);
-const data = ref([]);
+const data = ref<Record<string, unknown>[]>([]);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();

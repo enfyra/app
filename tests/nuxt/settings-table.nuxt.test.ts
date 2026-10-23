@@ -2,6 +2,7 @@ import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
+import type { ColumnDef } from '@tanstack/vue-table'
 import SettingsTable from '~/components/data-table/SettingsTable.vue'
 
 describe('Settings table', () => {
@@ -145,17 +146,19 @@ describe('Settings table', () => {
   })
 
   it('uses intrinsic ID and control widths so route content gets the remaining space', async () => {
-    const wrapper = await mountSuspended(SettingsTable, {
+    const data = [{ id: 1376, path: '/long-route', mainTable: { name: 'long_table' }, isEnabled: true }]
+    const columns: ColumnDef<(typeof data)[number]>[] = [
+      { accessorKey: 'path', header: 'Route' },
+      { id: 'table', header: 'Table', cell: ({ row }) => row.original.mainTable.name },
+      { id: 'methods', header: 'Methods' },
+      { id: 'publicMethods', header: 'Public' },
+      { accessorKey: 'isEnabled', header: 'Status' },
+    ]
+    const wrapper = await mountSuspended(SettingsTable<(typeof data)[number]>, {
       props: {
         headerName: 'Records',
-        data: [{ id: 1376, path: '/long-route', mainTable: { name: 'long_table' }, isEnabled: true }],
-        columns: [
-          { accessorKey: 'path', header: 'Route' },
-          { id: 'table', header: 'Table', cell: ({ row }) => row.original.mainTable.name },
-          { id: 'methods', header: 'Methods' },
-          { id: 'publicMethods', header: 'Public' },
-          { accessorKey: 'isEnabled', header: 'Status' },
-        ],
+        data,
+        columns,
         actions: () => [{ label: 'Delete', icon: 'lucide:trash-2', onSelect: () => {} }],
       },
     })

@@ -1,4 +1,4 @@
-export function ensureString(value: any): string {
+export function ensureString(value: unknown): string {
   if (value === null || value === undefined) {
     return "";
   }
@@ -7,7 +7,7 @@ export function ensureString(value: any): string {
   }
   if (typeof value === "object") {
     try {
-      return JSON.stringify(value, null, 2);
+      return JSON.stringify(value, null, 2) ?? "";
     } catch {
       return "";
     }
@@ -15,7 +15,7 @@ export function ensureString(value: any): string {
   return String(value);
 }
 
-export function ensureBoolean(value: any): boolean {
+export function ensureBoolean(value: unknown): boolean {
   if (typeof value === "boolean") {
     return value;
   }
@@ -25,7 +25,7 @@ export function ensureBoolean(value: any): boolean {
   return Boolean(value);
 }
 
-export function ensureNumber(value: any): number {
+export function ensureNumber(value: unknown): number {
   if (typeof value === "number" && !isNaN(value)) {
     return value;
   }
@@ -36,7 +36,7 @@ export function ensureNumber(value: any): number {
   return isNaN(num) ? 0 : num;
 }
 
-export function ensureNotNull(value: any): any {
+export function ensureNotNull<T>(value: T): NonNullable<T> | null {
   return value !== null && value !== undefined ? value : null;
 }
 

@@ -1,5 +1,7 @@
+import type { CodeMirrorModules } from '~/types/code-editor-runtime';
+
 export const useCodeMirrorLazy = () => {
-  const codeMirrorModules = shallowRef<any>(null)
+  const codeMirrorModules = shallowRef<CodeMirrorModules | null>(null)
   const loading = ref(false)
   const initialized = ref(false)
 

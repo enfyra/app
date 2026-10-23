@@ -3,8 +3,8 @@ export interface ApiError {
   status?: number;
   statusMessage?: string;
   url?: string;
-  data?: any;
-  response?: any;
+  data?: unknown;
+  response?: unknown;
 }
 
 export type ApiExecutionResult<T> =

@@ -18,8 +18,11 @@ export function normalizeUrl(...segments: (string | undefined | null)[]): string
 }
 
 export function getAppUrl(): string {
-  if (process.client && typeof window !== 'undefined') {
-    return window.location.origin;
+  if (process.client && 'location' in globalThis) {
+    const location = globalThis.location;
+    if (location && typeof location === 'object' && 'origin' in location && typeof location.origin === 'string') {
+      return location.origin;
+    }
   }
   
   if (process.server) {

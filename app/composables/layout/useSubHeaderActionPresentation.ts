@@ -26,6 +26,7 @@ export function useSubHeaderActionPresentation() {
     if (action.submit) return action.submit();
     const to = unref(action.to);
     if (to) return navigateTo(to, { replace: unref(action.replace) });
+    return undefined;
   }
 
   return { isDesktop, visibleActions, menuActions, inlineActions, leftActions, rightActions, hasConditionalActions, runAction };

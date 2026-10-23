@@ -209,7 +209,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from '~/utils/flow.constants';
-import type { FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
+import type { BranchType, FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
 import { getStepTypeColor, getStepTypeIcon } from '~/utils/flow.constants';
 
 type StepEditorTab = 'setup' | 'behavior' | 'test';
@@ -224,7 +224,7 @@ const props = defineProps<{
   errors: Record<string, string>;
   stepTypeOptions: { label: string; value: StepType }[];
   errorOptions: { label: string; value: StepErrorHandling }[];
-  conditionStepOptions: { label: string; value: any }[];
+  conditionStepOptions: { label: string; value: string | number | null }[];
   conditionLabel?: string;
   testPayloadJson: string;
   testResult: any;
@@ -252,7 +252,7 @@ const stepSections = [
   { label: 'Test', value: 'test', icon: 'lucide:flask-conical' },
 ];
 
-const branchOptions = [
+const branchOptions: { label: string; value: NonNullable<BranchType> }[] = [
   { label: 'Condition is True', value: 'true' },
   { label: 'Condition is False', value: 'false' },
 ];

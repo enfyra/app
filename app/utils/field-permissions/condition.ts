@@ -1,10 +1,13 @@
-export type FieldPermissionCondition = Record<string, any> | null;
+import type {
+  FieldPermissionConditionParseResult,
+  FieldPermissionConditionValidationResult,
+} from '~/types/field-permission-condition';
 
-function isPlainObject(value: any): value is Record<string, any> {
+function isPlainObject(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-function validateNode(node: any, path: string[]): string[] {
+function validateNode(node: unknown, path: string[]): string[] {
   if (node == null) return [];
 
   if (Array.isArray(node)) {
@@ -80,25 +83,19 @@ function validateNode(node: any, path: string[]): string[] {
   return errors;
 }
 
-export function parseConditionJson(input: string): {
-  condition: FieldPermissionCondition;
-  error: string | null;
-} {
+export function parseConditionJson(input: string): FieldPermissionConditionParseResult {
   const trimmed = (input || "").trim();
   if (!trimmed) return { condition: null, error: null };
 
   try {
-    const parsed = JSON.parse(trimmed);
+    const parsed: unknown = JSON.parse(trimmed);
     return { condition: parsed, error: null };
   } catch {
     return { condition: null, error: "Condition must be valid JSON" };
   }
 }
 
-export function validateFieldPermissionCondition(condition: FieldPermissionCondition): {
-  ok: boolean;
-  errors: string[];
-} {
+export function validateFieldPermissionCondition(condition: unknown): FieldPermissionConditionValidationResult {
   const errors = validateNode(condition, []);
-  return { ok: errors.length === 0, errors };
+  return errors.length === 0 ? { ok: true, errors: [] } : { ok: false, errors };
 }

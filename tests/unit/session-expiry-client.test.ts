@@ -29,6 +29,15 @@ describe("client session expiry", () => {
     navigateTo.mockResolvedValue(undefined);
   });
 
+  it.each([null, "network failure", { statusCode: 503 }, { statusCode: "401" }])("does not expire a session for non-auth failures: %s", async failure => {
+    fetchMock.mockRejectedValue(failure);
+
+    await expect(useAuthFetch("/api/enfyra_user")).rejects.toBe(failure);
+
+    expect(navigateTo).not.toHaveBeenCalled();
+    expect(me.value).toEqual({ id: "user-1" });
+  });
+
   it("redirects once when concurrent protected requests receive 401", async () => {
     fetchMock.mockRejectedValue({ statusCode: 401 });
 

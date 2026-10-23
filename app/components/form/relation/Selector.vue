@@ -3,20 +3,24 @@ import { h } from 'vue'
 import { UBadge, UButton } from '#components'
 import type { ColumnDef } from '@tanstack/vue-table'
 import type { DataTablePaginationConfig } from '~/types/table-pagination'
+import type { TableDefinitionColumn } from '~/types/database'
 import { resolveTableCellDisplay } from '~/utils/data-table-cell-formatter'
 import { resolveRelationDetailPath } from '~/utils/relation-detail-paths'
 import { getRelationId } from '~/utils/relation-records'
-import type { RelationId } from '~/types/relation'
+import type { RelationId, RelationRecord, RelationRecordsResponse, RelationSelectionMetadata } from '~/types/relation'
 
 const props = defineProps<{
-  relationMeta: any;
+  relationMeta: RelationSelectionMetadata;
   selectedIds: RelationId[];
   multiple?: boolean;
   disabled?: boolean;
   open?: boolean;
 }>();
 
-const emit = defineEmits(["apply", "update:open"]);
+const emit = defineEmits<{
+  apply: [ids: RelationId[]];
+  'update:open': [open: boolean];
+}>();
 const { getId, getIdFieldName } = useDatabase();
 
 const LIST_LIMIT = 10;
@@ -31,12 +35,12 @@ const isDrawerOpen = computed({
 const draftSelected = ref<RelationId[]>(normalizeRelationIds(props.selectedIds));
 const confirmedSelected = ref<RelationId[]>(normalizeRelationIds(props.selectedIds));
 const showAllSelected = ref(false);
-const normalRecords = ref<any[]>([]);
+const normalRecords = ref<RelationRecord[]>([]);
 const normalLoading = ref(false);
 const recordTotal = ref<number>();
 const showFilterDrawer = ref(false);
-const normalPointer = ref<any>(null);
-const pointerHistory = ref<any[]>([]);
+const normalPointer = ref<RelationId | null>(null);
+const pointerHistory = ref<(RelationId | null)[]>([]);
 const hasMoreNormal = ref(true);
 const requestSequence = ref(0);
 const loadError = ref<string | null>(null);
@@ -99,11 +103,11 @@ const cursorPage = computed({
   },
 });
 
-function getBaseFilter(): Record<string, any> | null {
+function getBaseFilter(): Record<string, unknown> | null {
   return hasActiveFilters(currentFilter.value) ? buildQuery(currentFilter.value) : null;
 }
 
-function getNormalFilter(pointer = normalPointer.value): Record<string, any> {
+function getNormalFilter(pointer = normalPointer.value): Record<string, unknown> {
   const baseFilter = getBaseFilter();
   if (pointer === null || pointer === undefined) return baseFilter ?? {};
   const pointerCondition = { [idField.value]: { _lt: pointer } };
@@ -111,8 +115,8 @@ function getNormalFilter(pointer = normalPointer.value): Record<string, any> {
   return { _and: [baseFilter, pointerCondition] };
 }
 
-async function fetchRecords(query: Record<string, any>, signal: AbortSignal) {
-  return await useAuthFetch<any>(`/api${targetRoute.value}`, { query, signal });
+async function fetchRecords(query: Record<string, unknown>, signal: AbortSignal) {
+  return await useAuthFetch<RelationRecordsResponse>(`/api${targetRoute.value}`, { query, signal });
 }
 
 function cancelActiveRequest() {
@@ -198,7 +202,7 @@ async function refreshRecords({ reset = false } = {}) {
 
 async function loadMore() {
   if (!canLoadMore.value || normalRecords.value.length === 0) return;
-  const nextPointer = getId(normalRecords.value[normalRecords.value.length - 1]);
+  const nextPointer = getRelationId(normalRecords.value[normalRecords.value.length - 1], getId);
   if (nextPointer === null || nextPointer === undefined) return;
 
   pointerHistory.value = [...pointerHistory.value, normalPointer.value];
@@ -231,7 +235,7 @@ function commitSelection(nextSelection: unknown[]) {
   void refreshRecords({ reset: true });
 }
 
-function getDetailPath(item: any): string | null {
+function getDetailPath(item: RelationRecord): string | null {
   if (!targetTableName.value) return null;
   const url = resolveRelationDetailPath(targetTableName.value, item);
   if (url) return url;
@@ -239,7 +243,7 @@ function getDetailPath(item: any): string | null {
   return itemId ? `/data/${targetTableName.value}/${itemId}` : null;
 }
 
-const detailColumn = computed<ColumnDef<Record<string, any>> | null>(() => {
+const detailColumn = computed<ColumnDef<RelationRecord> | null>(() => {
   if (!targetTableName.value) return null;
   return {
     id: '__actions',
@@ -266,9 +270,9 @@ const detailColumn = computed<ColumnDef<Record<string, any>> | null>(() => {
 });
 
 
-const columns = computed<ColumnDef<Record<string, any>>[]>(() => {
+const columns = computed<ColumnDef<RelationRecord>[]>(() => {
   const fields = definition.value
-    .filter((field) => field.fieldType === 'column' && !!field.name && field.metadataAccess?.read !== false)
+    .filter((field): field is TableDefinitionColumn & { name: string } => field.fieldType === 'column' && !!field.name && field.metadataAccess?.read !== false)
     .sort((a, b) => {
       const aName = a.name?.toLowerCase() || '';
       const bName = b.name?.toLowerCase() || '';
@@ -283,8 +287,8 @@ const columns = computed<ColumnDef<Record<string, any>>[]>(() => {
     ? fields
     : [{ name: idField.value, label: 'ID', metadata: null }];
 
-  const dataColumns = source.map((field) => {
-    const name = field.name as string;
+  const dataColumns = source.map((field): ColumnDef<RelationRecord> => {
+    const name = field.name;
     const isId = ['id', '_id'].includes(name.toLowerCase());
     return {
       id: name,
@@ -300,7 +304,7 @@ const columns = computed<ColumnDef<Record<string, any>>[]>(() => {
           ? h(UBadge, { label: display.text, color: display.color, variant: display.variant ?? 'soft' })
           : display.text;
       },
-    } as ColumnDef<Record<string, any>>;
+    };
   });
 
   return [...dataColumns, ...(detailColumn.value ? [detailColumn.value] : [])];

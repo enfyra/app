@@ -21,11 +21,12 @@ const visibleActions = computed(() => props.actions.filter(action =>
 ));
 
 function runAction(action: HeaderAction) {
-  if (unref(action.disabled) || unref(action.loading)) return;
+  if (unref(action.disabled) || unref(action.loading)) return undefined;
   if (action.submit) return action.submit();
   if (action.onClick) return action.onClick();
   const to = unref(action.to);
   if (to) return navigateTo(to, { replace: unref(action.replace) });
+  return undefined;
 }
 </script>
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FormEditorActions, FormEditorLazyActions } from '~/types/form-validation';
 import type {
   FormEditorSection,
   FormEditorVirtualEmitPayload,
@@ -49,7 +50,7 @@ const emit = defineEmits<{
   virtualFieldEmit: [payload: FormEditorVirtualEmitPayload];
 }>();
 
-const formEditorRef = ref();
+const formEditorRef = ref<FormEditorActions | null>(null);
 
 const FormEditor = defineAsyncComponent(() => import("./Editor.vue"));
 
@@ -58,12 +59,13 @@ defineExpose({
     formEditorRef.value?.confirmChanges();
   },
   validateAllUniqueFields: () => {
-    return formEditorRef.value?.validateAllUniqueFields?.();
+    return formEditorRef.value?.validateAllUniqueFields();
   },
   getUniqueFieldsNeedingCheck: () => {
-    return formEditorRef.value?.getUniqueFieldsNeedingCheck?.() || [];
+    return formEditorRef.value?.getUniqueFieldsNeedingCheck() || [];
   },
-});
+  getDraftErrors: () => formEditorRef.value?.getDraftErrors?.() ?? {},
+} satisfies FormEditorLazyActions);
 </script>
 
 <template>

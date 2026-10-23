@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { TablePaginationProps } from '~/types/table-pagination';
+
 type PaginationColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral';
 
 defineOptions({ inheritAttrs: false });
@@ -17,7 +19,7 @@ const props = withDefaults(defineProps<{
   color?: PaginationColor;
   activeColor?: PaginationColor;
   activeVariant?: 'solid' | 'outline' | 'soft' | 'subtle' | 'ghost' | 'link';
-  to?: (page: number) => any;
+  to?: TablePaginationProps['to'];
   ui?: Record<string, string>;
 }>(), {
   loading: false,

@@ -17,6 +17,12 @@ export interface FlowTrigger {
 
 export type BranchType = 'true' | 'false' | null;
 
+export interface FlowStepAddContext {
+  parentId?: string | number | null;
+  branch?: NonNullable<BranchType>;
+  afterOrder?: number;
+}
+
 export interface FlowStep {
   id: string | number;
   key: string;
@@ -45,8 +51,8 @@ export interface FlowStepEditorForm {
   timeout: number;
   onError: StepErrorHandling;
   retryAttempts: number;
-  parentId: any;
-  branch?: string;
+  parentId: string | number | null;
+  branch?: NonNullable<BranchType>;
 }
 
 export interface FlowDefinition {
@@ -72,7 +78,7 @@ export interface StepNodeData {
   branch?: BranchType;
   parentId?: string | number | null;
   triggerInfo?: string;
-  _addContext?: { parentId?: any; branch?: string; afterOrder?: number };
+  _addContext?: FlowStepAddContext;
   execStatus?: 'completed' | 'failed' | 'running' | 'skipped' | null;
   execError?: string | null;
   isFirst?: boolean;

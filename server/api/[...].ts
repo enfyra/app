@@ -14,6 +14,7 @@ import { createOAuthBrowserBinding } from "../utils/oauth-browser-state";
 import { proxyToAPI } from "~/utils/enfyra/server/proxy";
 import { buildForwardedHeaders } from "~/utils/enfyra/server/forwardedHeaders";
 import finalizeOAuthCookies from './auth/set-cookies.get';
+import { getApiErrorRecord } from '~/utils/api/error';
 
 const OAUTH_PROVIDERS = ["google", "facebook", "github"];
 const OAUTH_INIT_PATTERN = new RegExp(`^/auth/(${OAUTH_PROVIDERS.join("|")})/?$`, 'i');
@@ -25,7 +26,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const config = useRuntimeConfig();
-  const apiUrl = (config.public as any).apiUrl;
+  const apiUrl = config.public.apiUrl;
   const fullUrl = event.node?.req?.url || event.path || "";
   const [path, queryString] = fullUrl.split("?");
 
@@ -65,10 +66,11 @@ export default defineEventHandler(async (event) => {
       );
       cookieBridgePrefix = requireValidCookieBridgePrefix(query.cookieBridgePrefix);
       state = requireValidOAuthState(query.state);
-    } catch (err: any) {
-      const message = err?.statusMessage || err?.message || "OAuth validation failed";
+    } catch (err: unknown) {
+      const failure = getApiErrorRecord(err);
+      const message = failure?.statusMessage || failure?.message || "OAuth validation failed";
       const loginUrl = new URL("/login", getRequestURL(event).origin);
-      loginUrl.searchParams.set("error", message);
+      loginUrl.searchParams.set("error", String(message));
       if (typeof query.redirect === "string" && query.redirect.length > 0) {
         loginUrl.searchParams.set("redirect", query.redirect);
       }

@@ -27,6 +27,7 @@
 <script setup lang="ts">
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
+import type { ExtensionDefinition } from '~/types/extensions';
 import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
 
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -112,7 +113,7 @@ function getExtensionTypeLabel(type: string) {
   }
 }
 
-const columns: ColumnDef<Record<string, any>>[] = [
+const columns: ColumnDef<ExtensionDefinition>[] = [
   settingsTextColumn('name', 'Extension'),
   settingsTextColumn('description', 'Description'),
   { accessorKey: 'type', header: 'Type', enableSorting: false, cell: ({ getValue }) => getExtensionTypeLabel(String(getValue())) },
@@ -120,16 +121,16 @@ const columns: ColumnDef<Record<string, any>>[] = [
   settingsStatusColumn(),
 ];
 
-function getRowActions(extension: Record<string, any>): DataTableRowAction[] {
+function getRowActions(extension: ExtensionDefinition): DataTableRowAction<ExtensionDefinition>[] {
   return [
     ...(checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['PATCH'] }] }) ? [{
       label: extension.isEnabled ? 'Disable' : 'Enable', icon: extension.isEnabled ? 'lucide:power-off' : 'lucide:power',
       disabled: getExtensionLoader(String(getId(extension) ?? '')).isLoading.value,
-      onSelect: () => toggleExtensionStatus(extension as ExtensionDefinition),
+      onSelect: () => toggleExtensionStatus(extension),
     }] : []),
     ...(checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['DELETE'] }] }) && !extension.isSystem ? [{
       label: 'Delete', icon: 'lucide:trash-2', color: 'error',
-      onSelect: () => deleteExtension(extension as ExtensionDefinition),
+      onSelect: () => deleteExtension(extension),
     }] : []),
   ];
 }
@@ -188,7 +189,7 @@ const { execute: deleteExtensionApi, error: deleteError } = useApi(
   }
 );
 
-const bulkDelete = useSettingsBulkDelete({
+const bulkDelete = useSettingsBulkDelete<ExtensionDefinition>({
   path: '/enfyra_extension',
   title: 'Delete Extensions',
   isEligible: extension => !extension.isSystem,

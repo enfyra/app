@@ -1,4 +1,5 @@
-import { $fetch } from "ofetch";
+import { $fetch, type FetchOptions, type MappedResponseType, type ResponseType } from "ofetch";
+import { getApiErrorStatus } from "~/utils/api/error";
 
 let sessionRedirect: Promise<unknown> | null = null;
 
@@ -21,13 +22,14 @@ export function redirectToLoginOnce() {
     });
 }
 
-export async function useAuthFetch<T>(url: string, options?: any): Promise<T> {
+export async function useAuthFetch<T = unknown, R extends ResponseType = "json">(
+  url: string,
+  options?: FetchOptions<R>,
+): Promise<MappedResponseType<R, T>> {
   try {
-    return await $fetch<T>(url, options);
-  } catch (error: any) {
-    const status =
-      error?.statusCode ?? error?.status ?? error?.response?.status;
-    if (status === 401) {
+    return await $fetch<T, R>(url, options);
+  } catch (error: unknown) {
+    if (getApiErrorStatus(error) === 401) {
       redirectToLoginOnce();
     }
     throw error;

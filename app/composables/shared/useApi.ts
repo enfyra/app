@@ -1,4 +1,5 @@
 import type { ApiError, ApiExecutionResult } from "~/types/api";
+import { getApiErrorEnvelope, getApiErrorRecord, normalizeApiError } from "~/utils/api/error";
 import { prepareCodeUpdate } from '~/utils/code-version';
 import {
   assertValidApiIdentifiers,
@@ -21,21 +22,26 @@ interface ExecuteOptions {
 }
 
 function formatSchemaIndexConflict(apiError: ApiError): string | null {
-  const envelope = apiError.data?.error ?? apiError.data;
+  const envelope = getApiErrorEnvelope(apiError.data);
+  const details = getApiErrorRecord(envelope?.details);
   if (
     envelope?.code !== 'SCHEMA_INDEX_OVER_UNIQUE_FIELD'
-    && envelope?.details?.code !== 'SCHEMA_INDEX_OVER_UNIQUE_FIELD'
+    && details?.code !== 'SCHEMA_INDEX_OVER_UNIQUE_FIELD'
   ) return null;
 
-  const conflicts = envelope.details?.conflicts;
+  const conflicts = details?.conflicts;
   if (!Array.isArray(conflicts) || conflicts.length === 0) return null;
 
   return conflicts
-    .map((conflict: any) => {
+    .map((value: unknown) => {
+      const conflict = getApiErrorRecord(value);
       const index = Array.isArray(conflict?.index) ? conflict.index.join(', ') : '';
       const uniques = Array.isArray(conflict?.uniqueConstraints)
         ? conflict.uniqueConstraints
-          .map((constraint: any) => Array.isArray(constraint?.fields) ? constraint.fields.join(', ') : '')
+          .map((value: unknown) => {
+            const constraint = getApiErrorRecord(value);
+            return Array.isArray(constraint?.fields) ? constraint.fields.join(', ') : '';
+          })
           .filter(Boolean)
         : [];
       if (!index || uniques.length === 0) return null;
@@ -76,65 +82,13 @@ async function resolveApiQueryValue(value: any, invokeGetter = false): Promise<a
 }
 
 function handleError(
-  error: any,
+  error: unknown,
   context?: string,
   customHandler?: (error: ApiError, context?: string) => void,
   requestMeta?: { method?: string; path?: string }
 ): ApiError {
-  const status =
-    error?.statusCode ??
-    error?.status ??
-    error?.response?.status;
-  const statusMessage =
-    error?.statusMessage ??
-    error?.response?.statusText;
-  const requestUrl =
-    (typeof error?.request === "string" && error.request) ||
-    (typeof error?.url === "string" && error.url) ||
-    requestMeta?.path ||
-    (typeof error?.response?.url === "string" && error.response.url);
-
-  const data =
-    error?.data ??
-    error?.response?._data ??
-    error?.response?.data;
-
-  const errorEnvelope =
-    data && typeof data === "object" && data !== null
-      ? ((data as { error?: unknown }).error ?? data)
-      : undefined;
-  const dataMessage =
-    errorEnvelope &&
-    typeof errorEnvelope === "object" &&
-    "message" in errorEnvelope
-      ? (errorEnvelope as { message?: unknown }).message
-      : undefined;
-
-  let message: string;
-  const candidate =
-    (typeof error?.message === "string" ? error.message : undefined) ??
-    dataMessage ??
-    (typeof data === "string" ? data : undefined) ??
-    statusMessage;
-
-  if (Array.isArray(candidate)) {
-    message = candidate.join(". ");
-  } else if (typeof candidate === "string" && candidate.length > 0) {
-    message = candidate;
-  } else if (candidate != null && typeof candidate !== "string") {
-    message = String(candidate);
-  } else {
-    message = statusMessage || "Request failed";
-  }
-
-  const apiError: ApiError = {
-    message,
-    status,
-    statusMessage,
-    url: requestUrl,
-    data,
-    response: error?.response || error,
-  };
+  const apiError = normalizeApiError(error, requestMeta?.path);
+  const { message, status, statusMessage, url: requestUrl } = apiError;
 
   if (customHandler) {
     customHandler(apiError, context);
@@ -161,8 +115,9 @@ export function shouldNavigateToErrorPage(apiError: ApiError, method: string): b
   return false;
 }
 
-function isAbortError(error: any): boolean {
-  return error?.name === "AbortError" || error?.cause?.name === "AbortError";
+function isAbortError(error: unknown): boolean {
+  const failure = getApiErrorRecord(error);
+  return failure?.name === "AbortError" || getApiErrorRecord(failure?.cause)?.name === "AbortError";
 }
 
 export function useApi<T = any>(url: string | (() => string), options: any = {}) {
@@ -400,11 +355,9 @@ export function useApi<T = any>(url: string | (() => string), options: any = {})
         return { ok: false, error: apiError, aborted: false };
       }
       if (!handled) {
-        const envelope = apiError?.data?.error ?? apiError?.data;
-        let errorMessage = envelope?.message || apiError?.message || "An error occurred";
-        if (Array.isArray(errorMessage)) {
-          errorMessage = errorMessage.join(". ");
-        }
+        const envelope = getApiErrorEnvelope(apiError.data);
+        const message = envelope?.message || apiError.message || "An error occurred";
+        const errorMessage = Array.isArray(message) ? message.join(". ") : String(message);
         const schemaConflict = formatSchemaIndexConflict(apiError);
         notify.error(
           schemaConflict ? "Schema constraint conflict" : "Error",

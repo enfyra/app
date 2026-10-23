@@ -22,6 +22,15 @@ export interface RoutePermission {
   route: { id: string; path: string; isEnabled?: boolean };
 }
 
+export interface LoginResponse {
+  data?: User[];
+  redirect?: string;
+}
+
+export interface UserResponse {
+  data?: User[];
+}
+
 export interface LoginPayload {
   email: string;
   password: string;

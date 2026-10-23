@@ -1,11 +1,11 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="TRow extends object">
 import { h } from 'vue'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { DataTableBulkActions } from '#components'
 import type { SettingsTableProps } from '~/types/settings-table'
 import { contentColumnStyle } from '~/utils/settings-table-sizing'
 
-const props = withDefaults(defineProps<SettingsTableProps>(), {
+const props = withDefaults(defineProps<SettingsTableProps<TRow>>(), {
   loading: false,
   pageLimit: 0,
   paginationLoading: false,
@@ -16,10 +16,10 @@ const props = withDefaults(defineProps<SettingsTableProps>(), {
 const page = defineModel<number>('page', { default: 1 })
 const search = defineModel<string>('search', { default: '' })
 const emit = defineEmits<{
-  'row-click': [row: Record<string, any>]
+  'row-click': [row: TRow]
   'page-size-change': [size: number]
   'search': [value: string]
-  'update:selectedRows': [rows: Record<string, any>[]]
+  'update:selectedRows': [rows: TRow[]]
 }>()
 const tableUi = computed(() => ({
   base: 'table-auto !min-w-full',
@@ -38,7 +38,7 @@ const selectedRows = computed(() => {
   return props.data.filter(row => ids.has(String(getId(row))))
 })
 const rowSelectionOptions = computed(() => ({
-  enableRowSelection: (row: { original: Record<string, any> }) => props.bulkAction?.isEligible?.(row.original) ?? true,
+  enableRowSelection: (row: { original: TRow }) => props.bulkAction?.isEligible?.(row.original) ?? true,
 }))
 const bulkActionsVisible = computed(() => props.bulkAction?.enabled && selectedRows.value.length > 0)
 
@@ -50,7 +50,7 @@ watch([() => props.data, selectionEnabled, () => props.bulkAction?.isEligible], 
   if (retained.length !== selectedRowIds.value.length) selectedRowIds.value = retained
 })
 
-let lastSelectedRows: Record<string, any>[] = []
+let lastSelectedRows: TRow[] = []
 watch(selectedRows, rows => {
   if (rows.length === lastSelectedRows.length && rows.every((row, index) => row === lastSelectedRows[index])) return
   lastSelectedRows = rows
@@ -63,8 +63,12 @@ async function handleBulkDelete() {
   const completed = new Set((await action.execute(selectedRows.value)).map(String))
   if (completed.size) selectedRowIds.value = selectedRowIds.value.filter(id => !completed.has(String(id)))
 }
-const { buildActionsColumn } = useDataTableColumns()
-const idColumn: ColumnDef<Record<string, any>> = {
+function handleRowClick(row: Record<string, unknown>) {
+  const record = props.data.find(item => item === row)
+  if (record) emit('row-click', record)
+}
+const { buildActionsColumn } = useDataTableColumns<TRow>()
+const idColumn: ColumnDef<TRow> = {
   id: 'id',
   accessorFn: row => getId(row),
   header: 'ID',
@@ -77,25 +81,28 @@ const idColumn: ColumnDef<Record<string, any>> = {
     return h('span', { class: 'inline-block max-w-56 align-middle truncate select-text font-mono', title: text === '_' ? undefined : text }, display)
   },
 }
-function hasColumnContent(column: ColumnDef<Record<string, any>>, key: string) {
+function columnValueAtPath(row: unknown, path: string): unknown {
+  return path.split('.').reduce<unknown>((current, part) => current == null ? undefined : Reflect.get(Object(current), part), row)
+}
+function hasColumnContent(column: ColumnDef<TRow>, key: string) {
   return props.data.some((row, index) => {
     const value = 'accessorFn' in column && column.accessorFn
       ? column.accessorFn(row, index)
       : 'accessorKey' in column && column.accessorKey
-        ? String(column.accessorKey).split('.').reduce((current, part) => current?.[part], row as any)
-        : row[key];
+        ? columnValueAtPath(row, String(column.accessorKey))
+        : columnValueAtPath(row, key);
     return value !== null && value !== undefined &&
       (typeof value !== 'string' || value.trim() !== '') &&
       (!Array.isArray(value) || value.length > 0);
   });
 }
 
-const columns = computed(() => {
+const columns = computed<ColumnDef<TRow>[]>(() => {
   const hasIdColumn = props.columns.some(column =>
     ('accessorKey' in column && (column.accessorKey === 'id' || column.accessorKey === '_id'))
     || column.id === 'id' || column.id === '_id')
   const source = hasIdColumn ? props.columns : [idColumn, ...props.columns]
-  const result = source.map(column => {
+  const result = source.map<ColumnDef<TRow>>(column => {
     const key = String(column.id ?? ('accessorKey' in column ? column.accessorKey : '') ?? '')
     const isId = key === 'id' || key === '_id';
     const sizedColumn = isId && !column.cell ? { ...column, cell: idColumn.cell } : column;
@@ -110,7 +117,7 @@ const columns = computed(() => {
           td: contentColumnStyle(column.meta?.style?.td, compact),
         },
       },
-    } as ColumnDef<Record<string, any>>;
+    };
   })
   if (props.actions) {
     const width = 56
@@ -120,7 +127,7 @@ const columns = computed(() => {
         th: { width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` },
         td: { width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` },
       } },
-    } as ColumnDef<Record<string, any>>)
+    })
   }
   return result
 })
@@ -149,7 +156,7 @@ const columns = computed(() => {
       v-model:selected-row-ids="selectedRowIds"
       v-model:search="search"
       @search="value => emit('search', value)"
-      @row-click="row => emit('row-click', row)"
+      @row-click="handleRowClick"
       @page-size-change="size => emit('page-size-change', size)"
     >
       <template v-if="slots.toolbar" #toolbar="slotData">

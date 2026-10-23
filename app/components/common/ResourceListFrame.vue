@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResourceListSize } from "~/types/resource-list";
+import type { TablePaginationProps } from '~/types/table-pagination';
 
 const page = defineModel<number>("page", { default: 1 });
 
@@ -24,7 +25,7 @@ const props = withDefaults(defineProps<{
   itemsPerPage?: number;
   paginationClass?: string;
   paginationLoading?: boolean;
-  to?: (page: number) => any;
+  to?: TablePaginationProps['to'];
 }>(), {
   variant: "contained",
   rootClass: "space-y-6",

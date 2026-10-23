@@ -38,6 +38,7 @@ async function runAction(action: FieldAction, kind: 'menu' | 'delete' = 'menu') 
 
 function runDeleteAction() {
   if (props.deleteAction) return runAction(props.deleteAction, 'delete');
+  return undefined;
 }
 </script>
 

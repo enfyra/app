@@ -1,10 +1,11 @@
 import type { ColumnDef } from "@tanstack/vue-table";
-import { UBadge, UDropdownMenu, UButton, UIcon, UTooltip } from "#components";
-import type { DataTableActionsConfig, DataTableColumnConfig } from '~/types/data-table-columns';
+import { UBadge, UDropdownMenu, UButton, UTooltip } from "#components";
+import type { DropdownMenuItem } from '@nuxt/ui';
+import type { DataTableActionsConfig, DataTableCellFormat, DataTableColumnConfig, DataTableFormatOptions } from '~/types/data-table-columns';
 
-export function useDataTableColumns() {
-  function buildColumn(config: DataTableColumnConfig): ColumnDef<any> {
-    const column: ColumnDef<any> = {
+export function useDataTableColumns<TRow = Record<string, unknown>>() {
+  function buildColumn<T = TRow>(config: DataTableColumnConfig<T>): ColumnDef<T> {
+    const column: ColumnDef<T> = {
       id: config.id,
       accessorKey: config.accessorKey || config.id,
       header: config.header,
@@ -17,24 +18,17 @@ export function useDataTableColumns() {
     if (config.minWidth) column.minSize = config.minWidth;
     if (config.maxWidth) column.maxSize = config.maxWidth;
 
+    const format = config.format;
     if (config.cell) {
       column.cell = config.cell;
-    } else if (config.format) {
-      column.cell = ({ getValue, row }) => {
-        const value = getValue();
-        return formatCellValue(
-          value,
-          row.original,
-          config.format!,
-          config.formatOptions
-        );
-      };
+    } else if (format) {
+      column.cell = ({ getValue, row }) => formatCellValue(getValue(), row.original, format, config.formatOptions);
     }
 
     return column;
   }
 
-  function buildActionsColumn(config: DataTableActionsConfig): ColumnDef<any> {
+  function buildActionsColumn<T = TRow>(config: DataTableActionsConfig<T>): ColumnDef<T> {
     return {
       id: "__actions",
       header: "",
@@ -51,6 +45,15 @@ export function useDataTableColumns() {
         const actions = availableActions.filter(
           (action) => !action.show || action.show(row.original)
         );
+        const items: DropdownMenuItem[] = actions.map((action) => ({
+          ...action,
+          color: 'neutral',
+          ui: action.color === 'error' ? {
+            item: 'text-error data-highlighted:text-error',
+            itemLeadingIcon: 'text-error group-data-highlighted:text-error',
+          } : undefined,
+          onSelect: () => action.onSelect(row.original),
+        }));
 
         return h(
           "div",
@@ -61,18 +64,8 @@ export function useDataTableColumns() {
           [
             actions.length > 0 &&
               h(
-                UDropdownMenu as any,
-                {
-                  items: actions.map((action) => ({
-                    ...action,
-                    color: 'neutral',
-                    ui: action.color === 'error' ? {
-                      item: 'text-error data-highlighted:text-error',
-                      itemLeadingIcon: 'text-error group-data-highlighted:text-error',
-                    } : undefined,
-                    onSelect: () => action.onSelect(row.original),
-                  })),
-                },
+                UDropdownMenu,
+                { items },
                 {
                   default: () =>
                     h(UButton, {
@@ -89,11 +82,11 @@ export function useDataTableColumns() {
     };
   }
 
-  function formatCellValue(
-    value: any,
-    row: any,
-    format: string,
-    options?: any,
+  function formatCellValue<T = TRow>(
+    value: unknown,
+    row: T,
+    format: DataTableCellFormat,
+    options?: DataTableFormatOptions<T>,
   ) {
     if (value === null || value === undefined) {
       return h("span", { class: "text-[var(--text-quaternary)] select-none" }, "—");
@@ -102,7 +95,7 @@ export function useDataTableColumns() {
     switch (format) {
       case "date":
         return h("span", { class: "text-[var(--text-secondary)] tabular-nums" },
-          new Date(value).toLocaleDateString("en-US", options?.dateFormat || { month: "short", day: "numeric", year: "numeric" })
+          toDate(value).toLocaleDateString("en-US", options?.dateFormat || { month: "short", day: "numeric", year: "numeric" })
         );
 
       case "datetime":
@@ -110,7 +103,7 @@ export function useDataTableColumns() {
 
       case "currency":
         return h("span", { class: "tabular-nums font-medium" },
-          new Intl.NumberFormat("en-US", { style: "currency", currency: options?.currency || "USD" }).format(value)
+          new Intl.NumberFormat("en-US", { style: "currency", currency: options?.currency || "USD" }).format(typeof value === 'bigint' ? value : Number(value))
         );
 
       case "filesize":
@@ -146,7 +139,12 @@ export function useDataTableColumns() {
     }
   }
 
-  function renderBoolean(value: any) {
+  function toDate(value: unknown) {
+    if (value instanceof Date) return new Date(value.getTime());
+    return typeof value === 'string' ? new Date(value) : new Date(Number(value));
+  }
+
+  function renderBoolean(value: unknown) {
     const isTrue = Boolean(value);
     return h("span", {
       class: [
@@ -166,7 +164,7 @@ export function useDataTableColumns() {
     ]);
   }
 
-  function renderId(value: any) {
+  function renderId(value: unknown) {
     const str = String(value);
     const display = str.length > 12 ? `${str.slice(0, 8)}…${str.slice(-4)}` : str;
     return h(UTooltip, { text: str }, {
@@ -176,8 +174,8 @@ export function useDataTableColumns() {
     });
   }
 
-  function renderDatetime(value: any) {
-    const date = new Date(value);
+  function renderDatetime(value: unknown) {
+    const date = toDate(value);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMin = Math.floor(diffMs / 60000);
@@ -203,10 +201,10 @@ export function useDataTableColumns() {
     });
   }
 
-  function renderJson(value: any) {
+  function renderJson(value: unknown) {
     let str: string;
     try {
-      str = typeof value === "string" ? value : JSON.stringify(value);
+      str = typeof value === "string" ? value : JSON.stringify(value) ?? String(value);
     } catch {
       str = String(value);
     }
@@ -218,7 +216,7 @@ export function useDataTableColumns() {
     });
   }
 
-  function renderLongText(value: any) {
+  function renderLongText(value: unknown) {
     const str = String(value);
     if (str.length <= 60) return h("span", { class: "text-[var(--text-primary)]" }, str);
     return h(UTooltip, { text: str }, {

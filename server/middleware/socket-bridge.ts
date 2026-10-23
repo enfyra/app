@@ -243,7 +243,13 @@ function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
     let relay: ((data: string | Buffer) => void) | null = null;
     let browserClosed = false;
 
-    browserSocket.on('message', (data: string | Buffer) => {
+    browserSocket.on('message', (data: unknown) => {
+      if (typeof data !== 'string' && !Buffer.isBuffer(data)) {
+        browserClosed = true;
+        pendingBrowser.clear();
+        try { browserSocket.close(); } catch {}
+        return;
+      }
       if (relay) relay(data);
       else if (!pendingBrowser.push(data)) {
         browserClosed = true;
@@ -306,4 +312,5 @@ export default defineEventHandler((event) => {
       event.node.res.on('close', resolve);
     });
   }
+  return undefined;
 });

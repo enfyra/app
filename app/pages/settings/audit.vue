@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui';
+import type { ColumnDef } from '@tanstack/vue-table';
 import type { CodeAuditRecord, CodeAuditResponse } from '~/types/code-audit';
 import { VERSIONED_CODE_TABLES, nextCodeVersion } from '~/utils/code-version';
 import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
@@ -55,7 +56,7 @@ const previousFields = computed(() => {
       multiline: typeof value === 'object' && value !== null,
     }));
 });
-const columns = [settingsTextColumn('tableName', 'Table'), settingsTextColumn('recordId', 'Record'), settingsTextColumn('action', 'Action'), settingsTextColumn('fromVersion', 'From'), settingsTextColumn('toVersion', 'To'), settingsTextColumn('changedByEmail', 'Changed by'), settingsTextColumn('changedBySource', 'Credential'), settingsDateColumn()];
+const columns: ColumnDef<CodeAuditRecord>[] = [settingsTextColumn('tableName', 'Table'), settingsTextColumn('recordId', 'Record'), settingsTextColumn('action', 'Action'), settingsTextColumn('fromVersion', 'From'), settingsTextColumn('toVersion', 'To'), settingsTextColumn('changedByEmail', 'Changed by'), settingsTextColumn('changedBySource', 'Credential'), settingsDateColumn()];
 const tableLabel = computed(() => tableName.value || 'All');
 const tableMenuItems = computed<DropdownMenuItem[]>(() => [
   { label: 'All', type: 'checkbox' as const, checked: !tableName.value, onUpdateChecked: () => changeTable('') },
@@ -96,7 +97,7 @@ const {
   },
 });
 
-const bulkDelete = useSettingsBulkDelete({
+const bulkDelete = useSettingsBulkDelete<CodeAuditRecord>({
   path: '/enfyra_audit',
   title: 'Delete audit entries',
   warning: 'Deleted revisions can no longer be reviewed or restored.',
@@ -122,7 +123,7 @@ async function applyFilter() {
 async function changeTable(value: string) {
   await router.push({ path: route.path, query: { ...route.query, table: value || undefined } });
 }
-async function inspect(row: Record<string, any>) {
+async function inspect(row: CodeAuditRecord) {
   if (!canRead.value || restoring.value) return;
   const token = ++inspectionGeneration;
   const result = await readEntry({ query: { fields: `${listFields},previous`, filter: createIdFilter(getId(row)), limit: 1 } });

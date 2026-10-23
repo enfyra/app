@@ -76,12 +76,16 @@ describe('DataTable column picker', () => {
       const host = document.createElement('div')
       document.body.append(host)
       const Host = defineComponent({ setup: () => () => h(UTheme, { props: { dropdownMenu: { modal: false } } }, {
-        default: () => h(component, {
-          headerName: 'Records',
-          data: [{ id: 1, title: 'First', score: 7 }],
-          columns: [{ accessorKey: 'id', header: 'ID' }, { accessorKey: 'title', header: 'Title' }, { accessorKey: 'score', header: 'Score' }],
-          ...(name === 'SettingsTable' ? { actions: () => [{ label: 'Delete', onSelect: () => {} }] } : {}),
-        }),
+        default: () => {
+          const props = {
+            headerName: 'Records',
+            data: [{ id: 1, title: 'First', score: 7 }],
+            columns: [{ accessorKey: 'id', header: 'ID' }, { accessorKey: 'title', header: 'Title' }, { accessorKey: 'score', header: 'Score' }],
+          }
+          return component === SettingsTable
+            ? h(SettingsTable<(typeof props.data)[number]>, { ...props, actions: () => [{ label: 'Delete', icon: 'lucide:trash-2', onSelect: () => {} }] })
+            : component === DataTableLazy ? h(DataTableLazy, props) : h(DataTable, props)
+        },
       }) })
       const wrapper = await mountSuspended(Host, { attachTo: host })
       try {

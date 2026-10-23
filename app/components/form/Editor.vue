@@ -122,6 +122,7 @@ import {
   sortDefinitionFieldsByKey,
 } from '~/utils/form/field-order';
 import { FORM_EDITOR_VIRTUAL_EMIT_KEY, FORM_EDITOR_DRAFT_ERROR_KEY } from '~/utils/form/form-editor-context';
+import type { FormEditorActions } from '~/types/form-validation';
 import type {
   FormEditorSection,
   FormEditorVirtualEmitPayload,
@@ -243,7 +244,6 @@ const extendedColumnMap = computed(() => {
     if (!k) continue;
     m.set(k, {
       ...vf,
-      fieldType: vf.fieldType || "column",
       isVirtual: true,
     });
   }
@@ -339,13 +339,12 @@ const filteredFormFields = computed(() => {
     defKeys.add(k);
     fields.push({
       ...vf,
-      fieldType: vf.fieldType || "column",
       isVirtual: true,
-    } as FormEditorVirtualField);
+    });
   }
 
   if (effectiveIncludesKeys.value.length > 0) {
-    fields = fields.filter((field: any) => {
+    fields = fields.filter((field) => {
       const key = field.name || field.propertyName;
       return key && effectiveIncludesKeys.value.includes(key);
     });
@@ -603,5 +602,6 @@ defineExpose({
   confirmChanges,
   getUniqueFieldsNeedingCheck,
   validateAllUniqueFields,
-});
+  getDraftErrors: () => ({ ...draftErrors.value }),
+} satisfies FormEditorActions);
 </script>

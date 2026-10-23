@@ -31,6 +31,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "start": "node .output/server/index.mjs",
+    "typecheck": "nuxi typecheck && yarn typecheck:server && yarn typecheck:contracts",
+    "typecheck:server": "vue-tsc --noEmit --pretty false --project tsconfig.server.json",
+    "typecheck:contracts": "vue-tsc --noEmit --pretty false --project tsconfig.type-tests.json",
     "test": "vitest",
     "test:run": "vitest run",
     "test:transport": "vitest run --config vitest.transport.config.ts"

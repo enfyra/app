@@ -38,8 +38,10 @@
 </template>
 
 <script setup lang="ts">
+import type { FileLibraryRecord } from '~/types/file';
+
 interface Props {
-  files: FileItem[];
+  files: FileLibraryRecord[];
   loading?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;

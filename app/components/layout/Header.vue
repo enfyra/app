@@ -40,6 +40,8 @@
 </template>
 
 <script setup lang="ts">
+import type { HeaderAction } from "~/types/ui";
+
 const { isMobile, isDesktop } = useScreen();
 const { headerActions } = useHeaderActionRegistry();
 
@@ -55,7 +57,7 @@ const leftActions = computed(() => {
   });
 });
 
-function handleHeaderActionClick(action: any) {
+function handleHeaderActionClick(action: HeaderAction) {
   return action.onClick?.();
 }
 </script>

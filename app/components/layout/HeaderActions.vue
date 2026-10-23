@@ -100,5 +100,6 @@ const handleActionClick = (action: HeaderAction) => {
   if (action.onClick) {
     return action.onClick();
   }
+  return undefined;
 };
 </script>

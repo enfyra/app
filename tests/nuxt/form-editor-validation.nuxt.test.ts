@@ -15,6 +15,7 @@ mockNuxtImport('useSchema', () => () => {
 });
 mockNuxtImport('useUniqueCheck', () => () => ({ isFieldInUnique: () => false, getCheckStatus: () => ({ status: 'idle' }), checkUnique: vi.fn(), resetCheck: vi.fn() }));
 import Editor from '~/components/form/Editor.vue';
+import EditorLazy from '~/components/form/EditorLazy.vue';
 import { useFormValidation } from '~/composables/form/useFormValidation';
 const Code = defineComponent({ name: 'FormCodeEditorLazy', props: ['modelValue'], emits: ['update:modelValue'], template: '<div />' });
 it('blocks parent Save for an invalid editor draft and unblocks after correction', async () => {
@@ -37,5 +38,22 @@ it('blocks parent Save for an invalid editor draft and unblocks after correction
     code.vm.$emit('update:modelValue', '{"fixed":true}');
     await flushPromises();
     expect(await validateForm!(record.value, errors)).toBe(true);
+  } finally { wrapper.unmount(); state.registry.value = null; }
+});
+
+it('forwards draft errors through the typed lazy editor handle', async () => {
+  const wrapper = await mountSuspended(EditorLazy, {
+    props: { modelValue: { id: 1, payload: { old: true } }, errors: {}, tableName: 'orders' },
+    global: { stubs: { FormCodeEditorLazy: Code } },
+  });
+  try {
+    await flushPromises();
+    const code = wrapper.getComponent(Code);
+    code.vm.$emit('update:modelValue', '{invalid');
+    await flushPromises();
+    expect(wrapper.vm.getDraftErrors()).toEqual({ payload: 'Invalid JSON' });
+    code.vm.$emit('update:modelValue', '{"fixed":true}');
+    await flushPromises();
+    expect(wrapper.vm.getDraftErrors()).toEqual({});
   } finally { wrapper.unmount(); state.registry.value = null; }
 });

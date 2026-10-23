@@ -1,5 +1,5 @@
 import type { DropdownMenuItem } from "@nuxt/ui";
-import type { ComputedRef, Ref } from "vue";
+import type { Component, ComputedRef, Ref } from "vue";
 import type { TableProps } from "@nuxt/ui/components/Table.vue";
 import type { PaginationState, RowSelectionState } from "@tanstack/vue-table";
 import type { PermissionCondition } from "./permissions";
@@ -110,8 +110,8 @@ export interface HeaderAction {
   showOn?: string[];
   hideOn?: string[];
   class?: string;
-  component?: string | any;
-  props?: Record<string, any>;
+  component?: string | Component;
+  props?: Record<string, unknown>;
   key?: string;
   side?: "left" | "right";
   mobileDisplay?: "inline" | "menu";
@@ -162,11 +162,11 @@ export interface AccountPanelItem {
     | "success"
     | ComputedRef<"primary" | "neutral" | "info" | "error" | "warning" | "success">;
   trailingIcon?: string | ComputedRef<string>;
-  component?: string | any;
-  contentComponent?: string | any;
-  contentProps?: Record<string, any>;
+  component?: string | Component;
+  contentComponent?: string | Component;
+  contentProps?: Record<string, unknown>;
   contentClass?: string;
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
   permission?: PermissionCondition;
   disabled?:
     | boolean

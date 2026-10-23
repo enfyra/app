@@ -1,10 +1,11 @@
+import { shallowRef, type MaybeRefOrGetter, type Ref } from 'vue';
 
-export function useDataTableActions(
+export function useDataTableActions<TRow>(
   tableName: MaybeRefOrGetter<string>,
   fetchData: () => Promise<void>,
-  data: Ref<any[]>
+  data: Ref<TRow[]>
 ) {
-  const selectedRows = ref<any[]>([]);
+  const selectedRows = shallowRef<TRow[]>([]);
   const isSelectionMode = ref(false);
 
   const notify = useNotify();
@@ -46,7 +47,7 @@ export function useDataTableActions(
     });
   }
 
-  function handleSelectionChange(rows: any[]) {
+  function handleSelectionChange(rows: TRow[]) {
     selectedRows.value = rows;
 
     if (isSelectionMode.value && data.value.length === 0) {
@@ -59,7 +60,7 @@ export function useDataTableActions(
     isSelectionMode.value = false;
   }
 
-  async function handleBulkDelete(rows: any[]) {
+  async function handleBulkDelete(rows: TRow[]) {
     const result = await confirm({
       title: "Delete Records",
       content: `Are you sure you want to delete ${rows.length} record(s)?`,

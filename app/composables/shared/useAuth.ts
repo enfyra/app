@@ -1,5 +1,6 @@
 import { ref, computed } from "vue";
-import type { User, LoginPayload, OAuthProvider } from "~/types";
+import type { User, LoginPayload, LoginResponse, OAuthProvider, UserResponse } from "~/types/auth";
+import { getApiErrorRecord, getApiErrorStatus } from "~/utils/api/error";
 import { $fetch } from "ofetch";
 import { normalizeUrl, getAppUrl } from "~/utils/api/url";
 import { resolveOAuthRedirectTarget } from "~/utils/auth";
@@ -15,22 +16,24 @@ export function useAuth() {
     isLoading.value = true;
 
     try {
-      const response = await $fetch("/login", {
+      const response = await $fetch<LoginResponse>("/login", {
         method: "POST",
         body: payload,
         baseURL: baseUrl,
       });
 
-      me.value = (response as any)?.data?.[0] || null;
+      me.value = response?.data?.[0] || null;
       return { ok: true as const, data: response };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[Auth] Login error:", error);
-      const data = error?.data ?? error?.response?._data;
+      const failure = getApiErrorRecord(error);
+      const response = getApiErrorRecord(failure?.response);
+      const data = getApiErrorRecord(failure?.data ?? response?._data);
       const raw =
         data?.statusMessage ??
         data?.message ??
-        error?.statusMessage ??
-        error?.message;
+        failure?.statusMessage ??
+        failure?.message;
       const message = Array.isArray(raw)
         ? raw.join(". ")
         : typeof raw === "string" && raw.length > 0
@@ -39,8 +42,8 @@ export function useAuth() {
       return {
         ok: false as const,
         message,
-        statusCode: error?.statusCode ?? data?.statusCode,
-        code: data?.data?.code ?? data?.code,
+        statusCode: failure?.statusCode ?? data?.statusCode,
+        code: getApiErrorRecord(data?.data)?.code ?? data?.code,
       };
     } finally {
       isLoading.value = false;
@@ -75,23 +78,23 @@ export function useAuth() {
     isLoading.value = true;
 
     try {
-      const queryParams: any = { deep: DEFAULT_ME_DEEP };
+      const queryParams: { deep: typeof DEFAULT_ME_DEEP; fields?: string } = { deep: DEFAULT_ME_DEEP };
 
       if (options?.fields && options.fields.length > 0) {
         queryParams.fields = options.fields.join(",");
       }
 
-      const response = await useAuthFetch("/me", {
+      const response = await useAuthFetch<UserResponse>("/me", {
         method: "GET",
         query: queryParams,
         baseURL: baseUrl,
       });
 
-      me.value = (response as any)?.data?.[0] || null;
+      me.value = response?.data?.[0] || null;
       return me.value ? 'authenticated' as const : 'unauthenticated' as const;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (!options?.silent) console.error("[Auth] Fetch user error:", error);
-      const statusCode = error?.statusCode ?? error?.status ?? error?.response?.status;
+      const statusCode = getApiErrorStatus(error);
       if (statusCode === 401) {
         me.value = null;
         return 'unauthenticated' as const;
