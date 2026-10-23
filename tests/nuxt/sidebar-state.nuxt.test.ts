@@ -11,9 +11,10 @@ const queries: { media: MediaQueryList; change: Set<(event: MediaQueryListEvent)
 const originalWidth = window.innerWidth
 
 function queryMatches(query: string, width: number) {
-  const maximum = query.match(/max-width:\s*(\d+)px/)
-  const minimum = query.match(/min-width:\s*(\d+)px/)
-  return Boolean(maximum || minimum) && (!maximum || width <= Number(maximum[1])) && (!minimum || width >= Number(minimum[1]))
+  const maximum = query.match(/max-width:\s*([\d.]+)(px|rem)/)
+  const minimum = query.match(/min-width:\s*([\d.]+)(px|rem)/)
+  const pixels = (match: RegExpMatchArray) => Number(match[1]) * (match[2] === 'rem' ? 16 : 1)
+  return Boolean(maximum || minimum) && (!maximum || width <= pixels(maximum)) && (!minimum || width >= pixels(minimum))
 }
 
 beforeEach(() => {
@@ -138,8 +139,7 @@ describe('sidebar expansion persistence', () => {
     expect(localStorage.getItem('sidebar-open')).toBe(String(desktopOpen))
     const visible = useState<boolean>('global:sidebar:visible')
     visible.value = true
-    await flushPromises()
-    expect(document.querySelector('[role="dialog"]')).not.toBeNull()
+    await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull())
     visible.value = false
     await flushPromises()
     expect(localStorage.getItem('sidebar-open')).toBe(String(desktopOpen))
