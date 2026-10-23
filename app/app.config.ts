@@ -97,13 +97,15 @@ export default defineAppConfig({
         content: 'z-[60]',
         item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75',
       },
-      compoundVariants: [
-        {
-          color: undefined,
-          class: {
+      defaultVariants: { color: 'default' },
+      variants: {
+        color: {
+          default: {
             item: "data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]",
           },
         },
+      },
+      compoundVariants: [
         {
           color: "neutral",
           class: {
@@ -543,7 +545,6 @@ export default defineAppConfig({
       slots: {
         overlay: 'z-50',
         content: 'z-50',
-        root: "bg-[var(--surface-default)] border-l border-[var(--border-default)]",
         header: "border-b border-[var(--border-default)] py-4",
         body: "flex-1 pb-4",
         footer: "border-t border-[var(--border-default)] py-4",

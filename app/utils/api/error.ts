@@ -45,11 +45,12 @@ export function normalizeApiError(error: unknown, requestPath?: string): ApiErro
     requestPath ||
     (typeof response?.url === "string" && response.url);
 
+  const status = getApiErrorStatus(error);
   return {
     message,
-    status: getApiErrorStatus(error),
-    statusMessage: typeof statusMessage === "string" ? statusMessage : undefined,
-    url: typeof requestUrl === "string" ? requestUrl : undefined,
+    ...(status !== undefined ? { status } : {}),
+    ...(typeof statusMessage === "string" ? { statusMessage } : {}),
+    ...(typeof requestUrl === "string" ? { url: requestUrl } : {}),
     data,
     response: failure?.response || error,
   };

@@ -53,7 +53,7 @@ describe('DataTable cursor footer', () => {
     mounted.push(wrapper)
     expect(wrapper.get('[aria-label="Table pagination"]').classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
     const pager = wrapper.findComponent(UPagination)
-    await pager.get('[aria-label="Next Page"]').trigger('click')
+    await pager.get('button[data-slot="next"]').trigger('click')
     expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
     expect(wrapper.findAll('button').some(button => button.text() === 'Load more')).toBe(false)
   })

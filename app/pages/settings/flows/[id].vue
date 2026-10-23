@@ -93,7 +93,7 @@
             :show-title="false"
             :executions="executions"
             :page="executionPage"
-            :total="executionTotal"
+            v-bind="executionTotal === undefined ? {} : { total: executionTotal }"
             :has-next-page="hasNextExecutionPage"
             :loading="execLoading || executionPaginationLoading"
             @refresh="refreshExecutions"
@@ -118,7 +118,7 @@
       :step-type-options="stepTypeOptions"
       :error-options="errorOptions"
       :condition-step-options="conditionStepOptions"
-      :condition-label="stepForm.parentId ? getConditionLabel(stepForm.parentId) : undefined"
+      v-bind="stepForm.parentId ? { conditionLabel: getConditionLabel(stepForm.parentId) } : {}"
       :test-result="testResult"
       @close="closeStepDrawer"
       @save="saveStep"
@@ -143,13 +143,14 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureFlowDetail, FeatureFlowExecution } from '~/types/feature-api';
 import {
   buildFlowExecutionDetailFilter,
   resolveRouteIdentifier,
   validateConditionSource,
 } from "~/utils/flow-editor";
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import type { FlowStepAddContext, FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
+import type { FlowStep, FlowStepAddContext, FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS } from '~/utils/flow.constants';
 import {
   normalizeScriptContract,
@@ -271,7 +272,6 @@ const stepForm = ref<FlowStepEditorForm>({
   onError: 'stop' as StepErrorHandling,
   retryAttempts: 0,
   parentId: null,
-  branch: undefined,
 });
 
 const hasStepErrors = computed(() =>
@@ -286,7 +286,7 @@ watch(() => stepForm.value.type, () => {
   if (stepErrors.value.sourceCode) stepErrors.value.sourceCode = '';
 });
 
-const { data: flowData, executeWithResult: fetchFlow } = useApi(
+const { data: flowData, executeWithResult: fetchFlow } = useApi<FeatureCollection<FeatureFlowDetail>>(
   () => `/enfyra_flow?filter={"${getIdFieldName()}":{"_eq":"${flowId.value}"}}&fields=${FLOW_DETAIL_FIELDS}&limit=1`,
   { errorContext: "Fetch Flow" }
 );
@@ -364,7 +364,7 @@ async function fetchExecutions() {
 }
 
 const latestExecDetail = ref<any>(null);
-const { executeWithResult: fetchLatestExecDetail } = useApi(
+const { executeWithResult: fetchLatestExecDetail } = useApi<FeatureCollection<FeatureFlowExecution>>(
   () => {
     const latest = latestExecution.value;
     if (!latest) return '/enfyra_flow_execution?limit=0';
@@ -400,7 +400,7 @@ const latestExecOverlay = computed(() => {
 async function refreshExecOverlay() {
   const result = await fetchLatestExecDetail();
   if (!result.ok) return;
-  latestExecDetail.value = (result.data as any)?.data?.[0] || null;
+  latestExecDetail.value = result.data.data[0] || null;
 }
 
 const { executeWithResult: updateFlowApi, pending: saveFlowPending } = useApi(() => `/enfyra_flow`, { method: "patch", errorContext: "Update Flow" });
@@ -416,7 +416,7 @@ const {
   executeWithResult: updateStepWithResult,
 } = useApi(() => `/enfyra_flow_step`, { method: "patch", errorContext: "Update Step" });
 const { executeWithResult: deleteStepApi } = useApi(() => `/enfyra_flow_step`, { method: "delete", errorContext: "Delete Step" });
-const { executeWithResult: fetchStepDetail } = useApi(
+const { executeWithResult: fetchStepDetail } = useApi<FeatureCollection<FlowStep>>(
   () => `/enfyra_flow_step?filter={"${getIdFieldName()}":{"_eq":"${editingStepId.value}"}}&fields=${FLOW_STEP_EDITOR_FIELDS}&limit=1`,
   { errorContext: "Fetch Flow Step", immediate: false }
 );
@@ -630,7 +630,7 @@ async function onSelectStep(step: any | null) {
   ) {
     return;
   }
-  const stepDetail = (stepDetailResult.data as any)?.data?.[0];
+  const stepDetail = stepDetailResult.data.data[0];
   if (!stepDetail || String(getId(stepDetail)) !== String(requestedStepId)) {
     notify.error("Error", "Unable to load the full step details");
     return;
@@ -653,7 +653,7 @@ async function onSelectStep(step: any | null) {
     onError: step.onError || 'stop',
     retryAttempts: step.retryAttempts || 0,
     parentId: step.parentId || step.parent?.id || null,
-    branch: step.branch || undefined,
+    ...(step.branch ? { branch: step.branch } : {}),
   };
   stepFormSnapshot.value = JSON.stringify(stepForm.value);
   stepDrawerOpen.value = true;
@@ -683,7 +683,7 @@ function openCreateStep(context?: FlowStepAddContext) {
     onError: 'stop',
     retryAttempts: 0,
     parentId: context?.parentId || null,
-    branch: context?.branch || undefined,
+    ...(context?.branch ? { branch: context.branch } : {}),
   };
   stepFormSnapshot.value = JSON.stringify(stepForm.value);
   stepDrawerOpen.value = true;
@@ -708,6 +708,7 @@ async function handleMoveStep(stepId: any, direction: number) {
   const swapIdx = currentIdx + direction;
   if (swapIdx < 0 || swapIdx >= group.length) return;
   const swap = group[swapIdx];
+  if (!swap) return;
   const currentOrder = current.stepOrder;
   const swapOrder = swap.stepOrder;
   const currentId = getId(current);
@@ -936,7 +937,7 @@ async function refreshExecutions() {
   }
 }
 
-const { executeWithResult: fetchExecDetail } = useApi(
+const { executeWithResult: fetchExecDetail } = useApi<FeatureCollection<FeatureFlowExecution>>(
   () => {
     const filter = buildFlowExecutionDetailFilter(
       flowId.value,
@@ -968,7 +969,7 @@ async function openExecution(exec: any) {
     flowId.value !== requestedFlowId ||
     String(getId(selectedExec.value)) !== String(requestedExecutionId)
   ) return;
-  const detail = (result.data as any)?.data?.[0];
+  const detail = result.data.data[0];
   const detailFlowId = getId(detail?.flow) ?? detail?.flow;
   if (
     !detail ||

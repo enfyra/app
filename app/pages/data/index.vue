@@ -2,7 +2,7 @@
 import { useDataCollectionPreferences } from '~/composables/menu/useDataCollectionPreferences';
 import type { ColumnDef } from '@tanstack/vue-table';
 
-interface CollectionItem {
+type CollectionItem = {
   tableName: string;
   label: string;
   icon: string;
@@ -37,17 +37,19 @@ const hasSearch = computed(() => normalizedSearch.value.length > 0);
 const isLoading = computed(() => initialLoading.value || routesLoading.value);
 
 const catalog = computed<CollectionItem[]>(() =>
-  routes.value
-    .filter((r: any) => r.mainTable && r.isEnabled !== false && !r.mainTable.isSystem && checkPermissionCondition({ or: [{ route: r.path, methods: ['GET'] }] }))
-    .map((r: any) => ({
-      tableName: String(r.mainTable.name),
-      label: String(r.mainTable.alias || r.mainTable.name),
-      icon: String(r.mainTable.icon || 'lucide:database'),
-      routePath: `/data/${r.mainTable.name}`,
-      apiPath: String(r.path),
-      description: String(r.mainTable.description || ''),
-      isSingleRecord: Boolean(r.mainTable.isSingleRecord),
-    })),
+  routes.value.flatMap(route => {
+    const table = route.mainTable;
+    if (!table || route.isEnabled === false || table.isSystem || !checkPermissionCondition({ or: [{ route: route.path, methods: ['GET'] }] })) return [];
+    return [{
+      tableName: table.name,
+      label: table.alias || table.name,
+      icon: 'lucide:database',
+      routePath: `/data/${table.name}`,
+      apiPath: route.path,
+      description: table.description || '',
+      isSingleRecord: Boolean(table.isSingleRecord),
+    }];
+  }),
 );
 
 function compare(a: CollectionItem, b: CollectionItem) {
@@ -125,7 +127,7 @@ async function reloadCatalog() {
       :reload-loading="isLoading"
       :ui="{ base: 'table-fixed !min-w-[900px]', th: 'px-4 py-3', td: 'max-w-0 overflow-hidden px-4 py-3' }"
       @page-size-change="pageSize = $event"
-      @row-click="open($event as CollectionItem)"
+      @row-click="open"
       searchable
       v-model:search="searchQuery"
       search-placeholder="Search collections, tables, or /api/path…"
@@ -162,7 +164,7 @@ async function reloadCatalog() {
           size="xs"
           :aria-label="`${isPinned(row.original.tableName) ? 'Unpin' : 'Pin'} ${row.original.label}`"
           :aria-pressed="isPinned(row.original.tableName)"
-          @click.stop="pin(row.original as CollectionItem)"
+          @click.stop="pin(row.original)"
         />
       </template>
       <template #empty>

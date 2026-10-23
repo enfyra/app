@@ -626,7 +626,7 @@ function openCreateKey() {
             aria-label="Redis key filter"
             @update:model-value="value => setKeyFilter(value)"
           />
-          <UButton size="sm" icon="lucide:plus" color="neutral" variant="outline" :label="isMobile ? undefined : 'Create'" aria-label="Create Redis key" @click="openCreateKey" />
+          <UButton size="sm" icon="lucide:plus" color="neutral" variant="outline" v-bind="isMobile ? {} : { label: 'Create' }" aria-label="Create Redis key" @click="openCreateKey" />
         </template>
         <template #empty><CommonEmptyState variant="naked" :title="emptyKeysLabel()" icon="lucide:key-round" size="sm" /></template>
       </DataTable>

@@ -12,7 +12,7 @@
             <div class="w-64 space-y-2.5 p-3 text-sm">
               <UFormField label="Flow">
                 <UInputMenu
-                  :model-value="selectedFlowItem"
+                  v-bind="selectedFlowItem === undefined ? {} : { modelValue: selectedFlowItem }"
                   :items="flowItems"
                   v-model:search-term="flowSearchTerm"
                   v-model:open="flowMenuOpen"
@@ -99,6 +99,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureAttachedFlowTrigger, FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 import type { TableEventType } from '~/types/flow';
 import { getTriggerColor } from '~/utils/flow.constants';
 
@@ -133,7 +134,7 @@ const entityFilter = computed(() =>
   JSON.stringify({ [filterKey]: { id: { _eq: props.mode === 'route' ? props.routeId : props.tableId } } })
 );
 
-const { data: triggerData, execute: fetchTriggers, pending: loadingTriggers } = useApi(
+const { data: triggerData, execute: fetchTriggers, pending: loadingTriggers } = useApi<FeatureCollection<FeatureAttachedFlowTrigger>>(
   () => `/enfyra_flow_trigger?filter=${entityFilter.value}&fields=id,type,isEnabled,config,tableEvent,flow.id,flow.name&limit=100`,
   { errorContext: 'Fetch Flow Triggers' }
 );
@@ -145,7 +146,7 @@ const flowMenuOpen = ref(false);
 const flows = ref<any[]>([]);
 let flowDebounce: ReturnType<typeof setTimeout> | null = null;
 
-const { execute: fetchFlows, pending: flowsLoading } = useApi(
+const { execute: fetchFlows, pending: flowsLoading } = useApi<FeatureCollection<FeatureIdentity & { name: string }>>(
   () => {
     const params = new URLSearchParams({ fields: 'id,name', limit: '20', sort: 'name' });
     if (flowSearchTerm.value) {
@@ -222,8 +223,8 @@ async function toggleTrigger(t: any, enabled: boolean) {
     await patchTrigger({ body: { isEnabled: enabled }, id: t.id });
     if (error.value) return;
     if (triggerData.value?.data) {
-      const idx = triggerData.value.data.findIndex((item: any) => item.id === t.id);
-      if (idx !== -1) triggerData.value.data[idx].isEnabled = enabled;
+      const trigger = triggerData.value.data.find(item => item.id === t.id);
+      if (trigger) trigger.isEnabled = enabled;
     }
   } finally {
     togglingId.value = null;

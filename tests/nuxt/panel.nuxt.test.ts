@@ -1,6 +1,7 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h, markRaw, ref } from 'vue'
+import type { TabsItem } from '@nuxt/ui'
 import { UCard, UTabs } from '#components'
 import { useAppConfig } from '#imports'
 import { tv } from '@nuxt/ui/utils/tv'
@@ -15,6 +16,37 @@ const sections = [
 ]
 
 describe('Shared panel', () => {
+  it('omits absent native badge and tab options and preserves explicit disabled false', async () => {
+    const wrapper = await mountSuspended(Panel, {
+      props: { sections: [
+        { value: 'one', label: 'One', badge: { color: 'unsupported', variant: 'unsupported' } },
+        { value: 'two', label: 'Two', disabled: false },
+      ] },
+    })
+    try {
+      const props: unknown = wrapper.getComponent(UTabs<TabsItem>).props()
+      expect(props).toMatchObject({
+        modelValue: 'one',
+        items: [
+          { label: 'One', value: 'one', icon: undefined, badge: {}, slot: 'one' },
+          { label: 'Two', value: 'two', icon: undefined, disabled: false, slot: 'two' },
+        ],
+      })
+      if (!props || typeof props !== 'object' || !('items' in props) || !Array.isArray(props.items)) throw new Error('Expected native tab items')
+      expect(Object.hasOwn(props.items[0] ?? {}, 'disabled')).toBe(false)
+      expect(Object.hasOwn(props.items[1] ?? {}, 'badge')).toBe(false)
+    } finally { wrapper.unmount() }
+  })
+
+  it('preserves native tab defaults when the registered sections become empty', async () => {
+    const wrapper = await mountSuspended(Panel, { props: { sections } })
+    try {
+      expect(wrapper.getComponent(UTabs<TabsItem>).props()).toMatchObject({ modelValue: 'one' })
+      await wrapper.setProps({ sections: [] })
+      expect(wrapper.findComponent(UTabs).exists()).toBe(false)
+    } finally { wrapper.unmount() }
+  })
+
   it('keeps hidden section drafts mounted and emits the selected section', async () => {
     const draftValue = ref('original')
     const wrapper = await mountSuspended(availableComponents.Panel, {

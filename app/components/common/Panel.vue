@@ -30,20 +30,25 @@ function panelBadge(badge: PanelSection['badge']): TabsItem['badge'] {
   if (!badge || typeof badge !== 'object') return badge;
   const colors = ['error', 'info', 'success', 'primary', 'secondary', 'warning', 'neutral'] as const;
   const variants = ['outline', 'solid', 'soft', 'subtle'] as const;
+  const color = colors.find(item => item === badge.color);
+  const variant = variants.find(item => item === badge.variant);
   return {
-    label: badge.label,
-    color: colors.find(item => item === badge.color),
-    variant: variants.find(item => item === badge.variant),
+    ...(badge.label === undefined ? {} : { label: badge.label }),
+    ...(color === undefined ? {} : { color }),
+    ...(variant === undefined ? {} : { variant }),
   } satisfies BadgeProps;
 }
-const tabItems = computed<TabsItem[]>(() => normalizedSections.value.map(section => ({
-  label: section.label || section.value,
-  value: section.value,
-  icon: section.icon,
-  badge: panelBadge(section.badge),
-  disabled: section.disabled,
-  slot: section.value,
-})));
+const tabItems = computed<TabsItem[]>(() => normalizedSections.value.map(section => {
+  const badge = panelBadge(section.badge);
+  return {
+    label: section.label || section.value,
+    value: section.value,
+    icon: section.icon,
+    ...(badge === undefined ? {} : { badge }),
+    ...(section.disabled === undefined ? {} : { disabled: section.disabled }),
+    slot: section.value,
+  };
+}));
 const selectedValue = computed(() => {
   const requested = props.modelValue == null ? '' : String(props.modelValue);
   return normalizedSections.value.some(section => section.value === requested)
@@ -93,13 +98,13 @@ function selectSection(value: string | number) {
       <div v-if="showTabs" :class="framed ? 'eapp-panel-header-tier bg-[var(--surface-header)] shadow-[inset_0_-1px_0_var(--border-structural)]' : undefined">
         <UTheme :ui="{ tabs: tabHeaderUi }">
           <UTabs
-            :model-value="selectedValue"
+            v-bind="selectedValue === undefined ? {} : { modelValue: selectedValue }"
             :items="tabItems"
             :content="false"
             variant="link"
             :ui="{
               root: 'gap-0',
-              content: props.framed ? undefined : '!mt-0 !p-0',
+              ...(props.framed ? {} : { content: '!mt-0 !p-0' }),
               list: ['min-w-0 overflow-x-auto overflow-y-hidden border-b-0 bg-transparent shadow-none', props.framed ? 'px-3 md:px-5' : 'px-0'].join(' '),
               indicator: '!bottom-0',
             }"

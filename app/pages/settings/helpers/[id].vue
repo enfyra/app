@@ -4,5 +4,5 @@ const id = computed(() => Array.isArray(route.params.id) ? route.params.id[0] : 
 </script>
 
 <template>
-  <HelperEditor mode="update" :id="id" />
+  <HelperEditor mode="update" v-bind="id === undefined ? {} : { id }" />
 </template>

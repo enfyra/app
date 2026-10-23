@@ -4,6 +4,7 @@ import { h } from "vue";
 import { UBadge } from "#components";
 import type { ColumnDef } from "@tanstack/vue-table";
 import type { SystemVisibilityMode } from "~/types/ui";
+import type { FormApiListResponse, FormCollectionListRecord } from '~/types/form-api';
 import { settingsDateColumn, settingsTextColumn } from "~/utils/settings-table";
 
 const page = ref(1);
@@ -92,7 +93,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchCollections,
-} = useApi(() => "/enfyra_table", {
+} = useApi<FormApiListResponse<FormCollectionListRecord>>(() => "/enfyra_table", {
   query: computed(() => {
     const conditions: any[] = [];
     if (visibilityScope.value === "custom") {

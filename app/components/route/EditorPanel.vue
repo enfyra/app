@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureGuard, FeatureIdentity, FeatureRoute } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildGuardBodyFromTemplate,
@@ -107,7 +108,7 @@ const {
   data: routeData,
   pending: routeLoading,
   execute: fetchRoute,
-} = useApi(() => '/enfyra_route', {
+} = useApi<FeatureCollection<FeatureRoute>>(() => '/enfyra_route', {
   query: computed(() => ({
     fields: ROUTE_EDITOR_FIELDS,
     deep: { methodConfigs: { limit: 0, deep: { fileFields: { limit: 0 } } } },
@@ -571,7 +572,7 @@ const {
   data: routeGuardsData,
   pending: routeGuardsLoading,
   execute: fetchRouteGuards,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureGuard>>(() => '/enfyra_guard', {
   query: computed(() => ({
     fields: ROUTE_GUARD_SUMMARY_FIELDS,
     filter: routeId.value
@@ -587,7 +588,7 @@ const {
   data: globalGuardsData,
   pending: globalGuardsLoading,
   execute: fetchGlobalGuards,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureGuard>>(() => '/enfyra_guard', {
   query: computed(() => ({
     fields: ROUTE_GUARD_SUMMARY_FIELDS,
     filter: { _and: [{ isGlobal: { _eq: true } }, { parent: { _is_null: true } }] },
@@ -612,7 +613,7 @@ const {
   error: createGuardError,
   execute: executeCreateGuard,
   pending: createGuardLoading,
-} = useApi(() => '/enfyra_guard', { method: 'post', errorContext: 'Create Guard' })
+} = useApi<FeatureCollection<FeatureIdentity>>(() => '/enfyra_guard', { method: 'post', errorContext: 'Create Guard' })
 
 const {
   error: createGuardRuleError,
@@ -857,7 +858,7 @@ watch(showEditHookDrawer, (isOpen) => {
             <div class="min-w-0">
               <p class="text-sm text-[var(--text-tertiary)] mb-1">This route is the main route for table:</p>
               <h4 class="text-base font-semibold text-[var(--text-primary)]">
-                {{ mainTableInfo.name || mainTableInfo.tableName || 'Unknown Table' }}
+                {{ mainTableInfo.name || ('tableName' in mainTableInfo ? mainTableInfo.tableName : undefined) || 'Unknown Table' }}
               </h4>
               <p v-if="mainTableInfo.description" class="text-xs text-[var(--text-tertiary)] mt-1">
                 {{ mainTableInfo.description }}
@@ -880,7 +881,7 @@ watch(showEditHookDrawer, (isOpen) => {
           @has-changed="(hasChanged: boolean) => hasFormChanges = hasChanged"
           table-name="enfyra_route"
           mode="update"
-          :current-record-id="routeId"
+          v-bind="routeId === undefined ? {} : { currentRecordId: routeId }"
           :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards', 'methodConfigs', 'availableMethods', 'publicMethods', 'skipRoleGuardMethods']"
           :field-map="typeMap"
           :loading="routeLoading"
@@ -1048,7 +1049,7 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model:form="handlerForm"
       v-model:errors="handlerErrors"
       :loading="createHandlerLoading"
-      :route-id="routeId"
+      v-bind="routeId === undefined ? {} : { routeId }"
       :route-path="routePath"
       :allowed-methods="handlerAvailableMethods"
       :lock-method="handlerLockedMethod"
@@ -1062,7 +1063,7 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model:errors="hookErrors"
       :loading="createHookLoading"
       :hook-type="hookType"
-      :route-id="routeId"
+      v-bind="routeId === undefined ? {} : { routeId }"
       :route-path="routePath"
       :allowed-methods="availableMethodStrings"
       :lock-method="hookLockedMethod"
@@ -1075,7 +1076,7 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model:form="editHandlerForm"
       v-model:errors="editHandlerErrors"
       :loading="updateHandlerLoading"
-      :route-id="routeId"
+      v-bind="routeId === undefined ? {} : { routeId }"
       :route-path="routePath"
       :allowed-methods="availableMethodStrings"
       :lock-method="true"
@@ -1089,7 +1090,7 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model:errors="editHookErrors"
       :loading="updateHookLoading"
       :hook-type="editHookType"
-      :route-id="routeId"
+      v-bind="routeId === undefined ? {} : { routeId }"
       :route-path="routePath"
       :allowed-methods="availableMethodStrings"
       :lock-method="true"

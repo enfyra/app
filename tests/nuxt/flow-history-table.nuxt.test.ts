@@ -27,6 +27,24 @@ describe('Flow history table', () => {
     expect(wrapper.emitted('refresh')).toHaveLength(1)
   })
 
+  it('omits unknown totals and retains an explicitly empty execution count', async () => {
+    const wrapper = await mountSuspended(ExecutionsCard, { props: { executions: [], hasNextPage: false, loading: false } })
+    mounted.push(wrapper)
+    const table = wrapper.findComponent({ name: 'DataTable' })
+    function tableProps() {
+      const value: unknown = table.props()
+      if (!value || typeof value !== 'object' || !('paginationConfig' in value) || !('recordCount' in value)) {
+        throw new Error('Expected execution table pagination props')
+      }
+      return value
+    }
+    expect(tableProps().paginationConfig).not.toHaveProperty('total')
+    expect(tableProps().recordCount).toBeUndefined()
+    await wrapper.setProps({ total: 0 })
+    expect(tableProps().paginationConfig).toHaveProperty('total', 0)
+    expect(tableProps().recordCount).toBe(0)
+  })
+
   it('blocks duplicate loads and keeps the current page when the cursor is exhausted', async () => {
     const wrapper = await mountSuspended(ExecutionsCard, { props: { executions: [first], hasNextPage: true, loading: true } })
     mounted.push(wrapper)

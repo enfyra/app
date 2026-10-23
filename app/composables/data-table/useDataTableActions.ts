@@ -26,6 +26,15 @@ export function useDataTableActions<TRow>(
     }
   );
 
+  const { executeWithResult: executeBulkDelete } = useApi(
+    () => `/${toValue(tableName)}`,
+    {
+      method: 'delete',
+      batch: true,
+      errorContext: 'Delete Records',
+    }
+  );
+
   async function handleDelete(id: string) {
     const result = await confirm({
       title: "Delete Record",
@@ -73,9 +82,13 @@ export function useDataTableActions<TRow>(
     const deleteLoader = createLoader();
 
     await deleteLoader.withLoading(async () => {
-      const ids = rows.map((row) => getId(row));
+      const ids = rows.map(row => {
+        const id: unknown = getId(row);
+        if (typeof id !== 'string' && typeof id !== 'number') throw new Error('Selected record has no valid identifier');
+        return id;
+      });
 
-      const outcome = await executeDelete({ ids });
+      const outcome = await executeBulkDelete({ ids });
       if (!outcome.ok) return;
 
       notify.success("Success", `${rows.length} record(s) deleted successfully`);

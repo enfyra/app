@@ -5,7 +5,7 @@ import { buildSharedHelperFieldMap } from '~/utils/form/shared-helper';
 import type { SharedHelperEditorOptions } from '~/types/shared-helper';
 
 const props = defineProps<SharedHelperEditorOptions>();
-const { form, errors, ready, loadFailed, saving, deleting, testing, dirty, busy, canWrite, canDelete, canTest, invocation, testInput, testInputError, testResult, load, save, reset, deleteHelper, runTest } = useSharedHelperEditor(props);
+const { form, errors, ready, loadFailed, saving, deleting, testing, dirty, busy, canWrite, canDelete, canTest, invocation, testInput, testInputError, testResult, load, save, reset, deleteHelper, runTest } = useSharedHelperEditor(() => ({ mode: props.mode, ...(props.id === undefined ? {} : { id: props.id }) }));
 const tab = ref('editor');
 const sections = computed(() => [
   { value: 'editor', label: 'Editor', icon: 'lucide:code' },
@@ -65,7 +65,7 @@ async function copyValue(value: unknown) {
         </div>
         <CommonFormCard v-else :bordered="false">
           <UForm :state="form" @submit="save">
-            <FormEditorLazy v-model="form" v-model:errors="errors" table-name="enfyra_helper" :mode="props.mode" :current-record-id="props.id" :includes="['name', 'description', 'isEnabled', 'scriptLanguage', 'sourceCode']" :field-map="fieldMap" :sections="formSections" />
+            <FormEditorLazy v-model="form" v-model:errors="errors" table-name="enfyra_helper" :mode="props.mode" v-bind="props.id === undefined ? {} : { currentRecordId: props.id }" :includes="['name', 'description', 'isEnabled', 'scriptLanguage', 'sourceCode']" :field-map="fieldMap" :sections="formSections" />
           </UForm>
         </CommonFormCard>
       </template>

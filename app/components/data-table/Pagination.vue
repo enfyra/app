@@ -63,7 +63,7 @@ function setCursorPage(direction: -1 | 1) {
           v-model:page="page"
           :items-per-page="itemsPerPage"
           :total="total"
-          :to="to"
+          v-bind="to ? { to } : {}"
           :sibling-count="2"
           size="sm"
           :ui="{ root: 'eapp-table-pagination-controls min-w-max w-fit mx-auto md:mx-0', list: 'w-max flex-nowrap justify-center md:justify-end', item: 'min-w-8 shrink-0' }"
@@ -79,7 +79,7 @@ function setCursorPage(direction: -1 | 1) {
             <UButton aria-label="Previous" icon="lucide:chevron-left" color="neutral" variant="outline" size="xs" class="size-7 justify-center !p-0" :disabled="page <= 1 || loading" @click="setCursorPage(-1)" />
             <UButton aria-label="Next" icon="lucide:chevron-right" color="neutral" variant="outline" size="xs" class="size-7 justify-center !p-0" :disabled="!hasNextPage || loading" @click="setCursorPage(1)" />
           </div>
-          <UPagination v-else v-model:page="page" :size="miniPaginationSize" :items-per-page="itemsPerPage" :total="total" :to="to" :ui="{ root: 'eapp-table-pagination-controls min-w-max w-fit', list: 'flex-nowrap gap-0.5', item: '!min-w-7' }" />
+          <UPagination v-else v-model:page="page" :size="miniPaginationSize" :items-per-page="itemsPerPage" :total="total" v-bind="to ? { to } : {}" :ui="{ root: 'eapp-table-pagination-controls min-w-max w-fit', list: 'flex-nowrap gap-0.5', item: '!min-w-7' }" />
         </div>
         <CommonPaginationRange :start="pageStart" :end="pageEnd" />
       </div>

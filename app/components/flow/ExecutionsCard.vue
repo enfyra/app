@@ -49,8 +49,8 @@ function formatTime(value: string | null) {
       :loading="loading"
       :get-row-id="execution => String(getId(execution))"
       :page="page"
-      :record-count="total"
-      :pagination-config="{ mode: 'cursor', itemsPerPage: 10, total, hasNextPage, loading, showPageSize: false }"
+      v-bind="total === undefined ? {} : { recordCount: total }"
+      :pagination-config="{ mode: 'cursor', itemsPerPage: 10, ...(total === undefined ? {} : { total }), hasNextPage, loading, showPageSize: false }"
       @update:page="page => emit('update:page', page)"
       @row-click="execution => emit('open', execution)"
     />

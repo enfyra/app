@@ -181,7 +181,7 @@
       v-model:errors="ruleErrors"
       :loading="createRuleLoading"
       :guard-position="rootPosition"
-      :guard-type="rootGuard?.type"
+      v-bind="rootGuard?.type === undefined ? {} : { guardType: rootGuard.type }"
       @save="saveRule"
       @cancel="showCreateRuleDrawer = false"
     />
@@ -192,7 +192,7 @@
       v-model:errors="editRuleErrors"
       :loading="updateRuleLoading"
       :guard-position="rootPosition"
-      :guard-type="rootGuard?.type"
+      v-bind="rootGuard?.type === undefined ? {} : { guardType: rootGuard.type }"
       @save="saveEditRule"
       @cancel="showEditRuleDrawer = false"
     />
@@ -219,6 +219,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureEditableRecord, FeatureGuard } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import draggable from 'vuedraggable';
 
@@ -337,7 +338,7 @@ const {
   data: guardData,
   pending: loading,
   execute: fetchGuard,
-} = useApi(`/${tableName}`, {
+} = useApi<FeatureCollection<FeatureGuard>>(`/${tableName}`, {
   query: {
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: route.params.id } },
@@ -401,7 +402,7 @@ const {
   data: descendantsData,
   pending: descendantsLoading,
   execute: fetchDescendants,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureGuard>>(() => '/enfyra_guard', {
   query: computed(() => ({
     fields: getIncludeFields(),
     filter: { parent: { _is_null: false } },
@@ -415,7 +416,7 @@ const {
   data: rulesData,
   pending: rulesLoading,
   execute: fetchRules,
-} = useApi(() => '/enfyra_guard_rule', {
+} = useApi<FeatureCollection<FeatureEditableRecord>>(() => '/enfyra_guard_rule', {
   query: computed(() => ({
     fields: '*,guard,users.id',
     sort: ['priority'],

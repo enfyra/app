@@ -62,7 +62,7 @@
               <h3 class="text-sm font-semibold text-[var(--text-primary)]">Header mapping</h3>
               <p class="mt-1 text-xs text-[var(--text-secondary)]">Header names are normalized to lowercase before matching. The same key may have PAT and JWT mappings; priority decides which verifier runs first.</p>
             </div>
-            <UFormField label="Header key" :error="headerKeyError || undefined">
+            <UFormField label="Header key" v-bind="headerKeyError ? { error: headerKeyError } : {}">
               <UInput
                 v-model="form.headerKey"
                 class="w-full font-mono"
@@ -385,7 +385,7 @@ async function saveHeader() {
     };
     const response = mode.value === 'create'
       ? await createHeader({ body })
-      : await updateHeader({ id: form.id || undefined, body });
+      : await updateHeader({ ...(form.id ? { id: form.id } : {}), body });
     if (!response) return;
     notify.success('Saved', 'Authentication header mapping saved.');
     await fetchHeaders();

@@ -12,8 +12,7 @@
 
         <UButton
           v-else
-          :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
-          :label="isRef(action.label) ? unref(action.label) : action.label"
+          v-bind="getHeaderActionButtonProps(action)"
           :variant="resolveHeaderActionVariant(action, { fallback: 'soft', shaped: !isDesktop })"
           :color="
             (isRef(action.color) ? unref(action.color) : action.color) ||
@@ -21,12 +20,6 @@
           "
           :size="action.size || (isMobile ? 'sm' : 'md')"
           :loading-auto="true"
-          :loading="unref(action.loading)"
-          :disabled="
-            (typeof action.disabled === 'boolean'
-              ? action.disabled
-              : unref(action.disabled)) || unref(action.loading)
-          "
           :square="isHeaderActionIconOnly(action)"
           @click="handleHeaderActionClick(action)"
           :class="getHeaderActionButtonClass(action)"

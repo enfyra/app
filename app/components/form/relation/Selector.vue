@@ -88,7 +88,7 @@ const hasActiveFilter = computed(() => hasActiveFilters(currentFilter.value));
 const paginationConfig = computed<DataTablePaginationConfig>(() => ({
   mode: 'cursor',
   itemsPerPage: LIST_LIMIT,
-  total: recordTotal.value,
+  ...(recordTotal.value === undefined ? {} : { total: recordTotal.value }),
   loading: loading.value,
   hasNextPage: hasMoreNormal.value,
   showPageSize: false,
@@ -437,7 +437,7 @@ const { isMobile, isTablet } = useScreen();
               :description="hasActiveFilter ? 'Try adjusting your filter' : 'No relations have been created yet'"
               icon="lucide:database"
               size="sm"
-              :action="hasActiveFilter ? { label: 'Clear filter', onClick: clearFilter, icon: 'lucide:x' } : undefined"
+              v-bind="hasActiveFilter ? { action: { label: 'Clear filter', onClick: clearFilter, icon: 'lucide:x' } } : {}"
             />
           </template>
         </DataTable>

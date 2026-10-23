@@ -34,6 +34,9 @@ export function useFileManager(parentFilter?: any) {
     }
   );
 
+  const { execute: deleteFolderBatch, error: deleteFolderBatchError } = useApi('/enfyra_folder', { method: 'delete', batch: true, errorContext: 'Delete Folders' });
+  const { execute: deleteFileBatch, error: deleteFileBatchError } = useApi('/enfyra_file', { method: 'delete', batch: true, errorContext: 'Delete Files' });
+
   function showFolderDetail(folder: any) {
     const showDetailModal = useState("folder-detail-modal", () => false);
     const selectedFolder = useState<any>("folder-selected", () => null);
@@ -107,9 +110,9 @@ export function useFileManager(parentFilter?: any) {
     });
 
     if (isConfirmed) {
-      await deleteFolderApi({ ids: folderIds });
+      await deleteFolderBatch({ ids: folderIds });
 
-      if (deleteFolderError.value) {
+      if (deleteFolderBatchError.value) {
         return;
       }
 
@@ -157,9 +160,9 @@ export function useFileManager(parentFilter?: any) {
     });
 
     if (isConfirmed) {
-      await deleteFileApi({ ids: fileIds });
+      await deleteFileBatch({ ids: fileIds });
 
-      if (deleteFileError.value) {
+      if (deleteFileBatchError.value) {
         return;
       }
 

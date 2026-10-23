@@ -1,4 +1,4 @@
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, h, nextTick, type Component } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import CommonDrawer from '~/components/common/Drawer.vue'
@@ -54,6 +54,24 @@ const UButtonStub = defineComponent({
         slots.default?.() ?? '',
       )
   },
+})
+
+describe('managed footer forwarding', () => {
+  const overlays: [string, Component][] = [['drawer', CommonDrawer], ['modal', CommonModal]]
+  for (const [name, component] of overlays) {
+    it(`omits absent native action props in ${name}`, async () => {
+      const wrapper = await mountSuspended(component, {
+        route: '/login',
+        props: { modelValue: true, open: true, primaryAction: { label: 'Save' } },
+        slots: { body: () => 'Body' },
+        global: { stubs: { UDrawer: UDrawerStub, UModal: UModalStub, UButton: UButtonStub } },
+      })
+      try {
+        const attrs = wrapper.getComponent(UButtonStub).vm.$attrs
+        for (const key of ['icon', 'loading', 'disabled', 'form']) expect(Object.hasOwn(attrs, key)).toBe(false)
+      } finally { wrapper.unmount() }
+    })
+  }
 })
 
 describe('CommonModal', () => {

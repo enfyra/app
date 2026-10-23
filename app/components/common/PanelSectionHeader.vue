@@ -25,7 +25,8 @@ function runAction(action: HeaderAction) {
   if (action.submit) return action.submit();
   if (action.onClick) return action.onClick();
   const to = unref(action.to);
-  if (to) return navigateTo(to, { replace: unref(action.replace) });
+  const replace = unref(action.replace);
+  if (to) return navigateTo(to, replace === undefined ? {} : { replace });
   return undefined;
 }
 </script>
@@ -37,20 +38,15 @@ function runAction(action: HeaderAction) {
     :class="side === 'right' ? 'ml-auto' : undefined"
   >
     <template v-for="action in visibleActions" :key="action.key || action.id">
-      <PermissionGate :condition="action.permission">
+      <PermissionGate v-bind="action.permission === undefined ? {} : { condition: action.permission }">
         <component :is="action.component" v-if="action.component" v-bind="action.props" />
         <UButton
           v-else
-          :icon="unref(action.icon)"
-          :label="hideLabel ? undefined : unref(action.label)"
+          v-bind="{ ...getHeaderActionButtonProps(action, hideLabel), ...getHeaderActionLinkProps(action) }"
           :variant="unref(action.variant) || 'outline'"
           :color="unref(action.color) || 'neutral'"
           :size="action.size || COMPACT_HEADER_ACTION_BUTTON_SIZE"
           :loading-auto="true"
-          :loading="unref(action.loading)"
-          :disabled="unref(action.disabled) || unref(action.loading)"
-          :to="unref(action.to)"
-          :replace="unref(action.replace)"
           :square="isHeaderActionIconOnly(action, hideLabel)"
           :class="getHeaderActionButtonClass(action, hideLabel, true)"
           :aria-label="action.ariaLabel || unref(action.label) || action.id"

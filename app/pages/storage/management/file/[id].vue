@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureFileDetail } from '~/types/feature-api';
 import type { HeaderAction } from '~/types/ui';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
@@ -14,7 +15,7 @@ const {
   data: file,
   pending,
   execute,
-} = useApi(`/enfyra_file`, {
+} = useApi<FeatureCollection<FeatureFileDetail>>(`/enfyra_file`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {

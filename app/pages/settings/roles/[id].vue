@@ -34,6 +34,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellListResponse, ShellRoleRecord } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
@@ -126,7 +128,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRole,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellRoleRecord>>(() => `/${tableName}`, {
   query: computed(() => ({
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: id } },

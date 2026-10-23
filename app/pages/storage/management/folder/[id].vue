@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureFolder } from '~/types/feature-api';
+import type { FileLibraryRecord } from '~/types/file';
 import { useFileManagerUpload } from '~/composables/file-manager/useFileManagerUpload';
 const route = useRoute();
 const router = useRouter();
@@ -15,7 +17,7 @@ const { getIncludeFields: getFileFields } = useSchema("enfyra_file");
 const {
   data: folder,
   execute: fetchFolder,
-} = useApi(() => `/enfyra_folder`, {
+} = useApi<FeatureCollection<FeatureFolder>>(() => `/enfyra_folder`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
@@ -33,7 +35,7 @@ const {
   data: childFolders,
   pending: childFoldersPending,
   execute: fetchChildFolders,
-} = useApi(() => `/enfyra_folder`, {
+} = useApi<FeatureCollection<FeatureFolder>>(() => `/enfyra_folder`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
@@ -57,7 +59,7 @@ const {
   data: folderFiles,
   pending: filesPending,
   execute: fetchFiles,
-} = useApi(() => `/enfyra_file`, {
+} = useApi<FeatureCollection<FileLibraryRecord>>(() => `/enfyra_file`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
@@ -224,7 +226,8 @@ watch(
             Storage Location
           </label>
           <USelectMenu
-            v-model="selectedStorage"
+            v-bind="selectedStorage === undefined ? {} : { modelValue: selectedStorage }"
+            @update:model-value="selectedStorage = $event"
             :items="storageOptions"
             placeholder="Select storage (optional)"
             size="lg"

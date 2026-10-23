@@ -366,13 +366,11 @@ export function useCodeMirrorExtensions(codeMirrorModules?: CodeMirrorModuleSour
       m.crosshairCursor(),
       m.bracketMatching(),
       m.closeBrackets(),
-      m.autocompletion({
-        override: enfyraAutocomplete === 'vue'
-          ? [vueCompletionSource()]
-          : enfyraAutocomplete
-            ? [enfyraCompletionSource()]
-            : undefined,
-      }),
+      m.autocompletion(enfyraAutocomplete === 'vue'
+        ? { override: [vueCompletionSource()] }
+        : enfyraAutocomplete
+          ? { override: [enfyraCompletionSource()] }
+          : {}),
       m.highlightSelectionMatches(),
       m.indentUnit.of("  "),
       createLinter(language, onDiagnostics),

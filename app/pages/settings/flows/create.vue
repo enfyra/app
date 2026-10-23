@@ -24,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
@@ -70,7 +71,7 @@ const {
   error: createError,
   execute: executeCreateFlow,
   pending: createLoading,
-} = useApi(() => `/enfyra_flow`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/enfyra_flow`, {
   method: "post",
   errorContext: "Create Flow",
 });

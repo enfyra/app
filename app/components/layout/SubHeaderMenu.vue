@@ -56,7 +56,7 @@ async function selectAction(action: HeaderAction) {
               variant="ghost"
               class="w-full justify-start whitespace-normal px-0 py-2 pointer-coarse:min-h-[44px]"
               :ui="{ label: 'text-left' }"
-              :disabled="!!pending || unref(action.disabled) || unref(action.loading)"
+              :disabled="!!(pending || unref(action.disabled) || unref(action.loading))"
               :loading="unref(action.loading) || pending === action.id"
               loading-auto
               @click="selectAction(action)"

@@ -7,6 +7,36 @@ import DataTable from '~/components/data-table/DataTable.vue'
 import DataTableLazy from '~/components/data-table/DataTableLazy.vue'
 
 describe('DataTable layout', () => {
+  it('resolves positional row identities consistently for real-row selection', async () => {
+    const wrapper = await mountSuspended(DataTable<{ name: string }>, { props: {
+      headerName: 'Records', data: [{ name: 'First' }, { name: 'Second' }],
+      columns: [{ accessorKey: 'name', header: 'Name' }], enableRowSelection: true,
+      getRowId: (_row, index) => `position:${index}`,
+    } })
+    try {
+      await wrapper.get('tbody [aria-label="Select row 2"]').trigger('click')
+      await flushPromises()
+      expect(wrapper.emitted('update:selectedRowIds')?.at(-1)?.[0]).toEqual(['position:1'])
+      expect(wrapper.emitted('update:selectedRows')?.at(-1)?.[0]).toEqual([{ name: 'Second' }])
+    } finally { wrapper.unmount() }
+  })
+
+  it('forwards native sorting state and callbacks through the lazy generic wrapper', async () => {
+    const wrapper = await mountSuspended(DataTableLazy<{ id: number; name: string }>, { props: {
+      headerName: 'Records', data: [{ id: 1, name: 'B' }, { id: 2, name: 'A' }],
+      columns: [{ accessorKey: 'name', header: 'Name', enableSorting: true }],
+      sorting: [{ id: 'name', desc: false }],
+    } })
+    try {
+      await flushPromises()
+      expect(wrapper.get('thead th').attributes('aria-sort')).toBe('ascending')
+      expect(wrapper.findAll('tbody tr').map(row => row.text())).toEqual(['A', 'B'])
+      await wrapper.get('thead th').trigger('click')
+      await flushPromises()
+      expect(wrapper.emitted('update:sorting')?.at(-1)?.[0]).toEqual([{ id: 'name', desc: true }])
+    } finally { wrapper.unmount() }
+  })
+
   it('renders the heading with the record count beside it and the action cluster on the right', async () => {
     const wrapper = await mountSuspended(DataTable, {
       props: {

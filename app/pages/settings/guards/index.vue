@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureGuard, FeatureIdentity, FeatureRouteOption, FeatureTableOption } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildGuardBodyFromTemplate,
@@ -96,7 +97,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchGuards,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureGuard>>(() => '/enfyra_guard', {
   query: computed(() => {
     const conditions: any[] = [
       { parent: { _is_null: true } },
@@ -266,7 +267,7 @@ const {
   data: routesData,
   pending: routesLoading,
   execute: fetchRoutes,
-} = useApi(() => '/enfyra_route', {
+} = useApi<FeatureCollection<FeatureRouteOption>>(() => '/enfyra_route', {
   query: {
     fields: GUARD_ROUTE_OPTION_FIELDS,
     sort: 'path',
@@ -287,7 +288,7 @@ const {
   data: tablesData,
   pending: tablesLoading,
   execute: fetchTables,
-} = useApi(() => '/enfyra_table', {
+} = useApi<FeatureCollection<FeatureTableOption>>(() => '/enfyra_table', {
   query: {
     fields: 'id,name,alias',
     sort: 'name',
@@ -332,7 +333,7 @@ const {
   error: createGuardError,
   execute: createGuardApi,
   pending: createGuardLoading,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => '/enfyra_guard', {
   method: 'post',
   errorContext: 'Create Guard',
 });
@@ -413,7 +414,7 @@ async function createGuardFromTemplate() {
       scope: createScope.value,
       idField,
       routeId: selectedRouteId.value,
-      routePath: routeItem?.path,
+      ...(routeItem?.path === undefined ? {} : { routePath: routeItem.path }),
       tableId: selectedTableId.value,
       gqlOperation: template.targetType === 'graphql' ? template.gqlOperation ?? null : null,
     }),
@@ -467,12 +468,8 @@ async function toggleEnabled(guard: any) {
   togglingGuardId.value = getId(guard);
 
   if (apiData.value?.data) {
-    const idx = apiData.value.data.findIndex(
-      (g: any) => getId(g) === getId(guard),
-    );
-    if (idx !== -1) {
-      apiData.value.data[idx].isEnabled = newEnabled;
-    }
+    const current = apiData.value.data.find(g => getId(g) === getId(guard));
+    if (current) current.isEnabled = newEnabled;
   }
 
   try {
@@ -480,12 +477,8 @@ async function toggleEnabled(guard: any) {
 
     if (updateError.value) {
       if (apiData.value?.data) {
-        const idx = apiData.value.data.findIndex(
-          (g: any) => getId(g) === getId(guard),
-        );
-        if (idx !== -1) {
-          apiData.value.data[idx].isEnabled = !newEnabled;
-        }
+        const current = apiData.value.data.find(g => getId(g) === getId(guard));
+        if (current) current.isEnabled = !newEnabled;
       }
       return;
     }

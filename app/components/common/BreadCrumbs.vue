@@ -60,7 +60,7 @@ onMounted(() => {
       ref="trail"
       class="no-scrollbar overflow-x-auto overscroll-x-contain"
     >
-      <UBreadcrumb :items="items" :ui="isDesktop ? undefined : scrollUi" />
+      <UBreadcrumb :items="items" v-bind="isDesktop ? {} : { ui: scrollUi }" />
     </div>
   </div>
 </template>

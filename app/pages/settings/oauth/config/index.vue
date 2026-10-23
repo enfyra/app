@@ -21,18 +21,10 @@
 <script setup lang="ts">
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
+import type { ShellListResponse, ShellOAuthConfigRecord } from '~/types/shell-api';
 import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
 
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-interface OAuthConfigDefinition {
-  id?: string;
-  _id?: string;
-  provider: string;
-  description?: string;
-  clientId: string;
-  isEnabled: boolean;
-}
-
 const page = ref(1);
 const limit = useSettingsPageSize('oauth-config');
 
@@ -56,7 +48,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchConfigs,
-} = useApi(() => "/enfyra_oauth_config", {
+} = useApi<ShellListResponse<ShellOAuthConfigRecord>>(() => "/enfyra_oauth_config", {
   query: computed(() => ({
     fields: OAUTH_CONFIG_LIST_FIELDS,
     limit,
@@ -128,32 +120,33 @@ function maskClientId(clientId: string) {
   return clientId.substring(0, 8) + "..." + clientId.substring(clientId.length - 4);
 }
 
-const columns: ColumnDef<Record<string, any>>[] = [
+const columns: ColumnDef<ShellOAuthConfigRecord>[] = [
   { accessorKey: 'provider', header: 'Provider', enableSorting: false, cell: ({ getValue }) => getProviderLabel(String(getValue())) },
-  settingsTextColumn('description', 'Description'),
+  settingsTextColumn<ShellOAuthConfigRecord>('description', 'Description'),
   { accessorKey: 'clientId', header: 'Client ID', enableSorting: false, cell: ({ getValue }) => maskClientId(String(getValue() ?? '')) },
-  settingsStatusColumn(),
+  settingsStatusColumn<ShellOAuthConfigRecord>(),
 ];
 
-function getRowActions(config: Record<string, any>): DataTableRowAction[] {
+function getRowActions(config: ShellOAuthConfigRecord): DataTableRowAction[] {
   if (!checkPermissionCondition({ or: [{ route: '/enfyra_oauth_config', methods: ['PATCH'] }] })) return [];
   return [{
     label: config.isEnabled ? 'Disable' : 'Enable', icon: config.isEnabled ? 'lucide:power-off' : 'lucide:power',
     disabled: getConfigLoader(String(getId(config) ?? '')).isLoading.value,
-    onSelect: () => toggleConfigStatus(config as OAuthConfigDefinition),
+    onSelect: () => toggleConfigStatus(config),
   }];
 }
 
-const toggleConfigStatus = async (config: OAuthConfigDefinition) => {
+const toggleConfigStatus = async (config: ShellOAuthConfigRecord) => {
   const loader = getConfigLoader(String(getId(config) ?? ''));
   const newStatus = !config.isEnabled;
 
   if (apiData.value?.data) {
     const configIndex = apiData.value.data.findIndex(
-      (c: any) => c.id === config.id
+      c => c.id === config.id
     );
     if (configIndex !== -1) {
-      apiData.value.data[configIndex].isEnabled = newStatus;
+      const record = apiData.value.data[configIndex];
+      if (record) record.isEnabled = newStatus;
     }
   }
 
@@ -162,17 +155,18 @@ const toggleConfigStatus = async (config: OAuthConfigDefinition) => {
       body: {
         isEnabled: newStatus,
       },
-      id: config.id,
+      ...(config.id === undefined ? {} : { id: config.id }),
     })
   );
 
   if (updateError.value) {
     if (apiData.value?.data) {
       const configIndex = apiData.value.data.findIndex(
-        (c: any) => c.id === config.id
+        c => c.id === config.id
       );
       if (configIndex !== -1) {
-        apiData.value.data[configIndex].isEnabled = !newStatus;
+        const record = apiData.value.data[configIndex];
+        if (record) record.isEnabled = !newStatus;
       }
     }
     return;

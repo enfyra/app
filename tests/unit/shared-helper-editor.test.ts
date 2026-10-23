@@ -1,4 +1,6 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
+import { reactive } from 'vue';
+import type { SharedHelperEditorOptions } from '../../app/types/shared-helper';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const state = vi.hoisted(() => ({ mounted: [] as Array<() => void>, cleanup: [] as Array<() => void>, leave: undefined as undefined | (() => Promise<boolean>), allowed: true, confirm: vi.fn(), write: vi.fn(), read: vi.fn(), remove: vi.fn(), test: vi.fn(), cancel: vi.fn(), notify: vi.fn(), navigate: vi.fn() }));
@@ -55,6 +57,18 @@ describe('dedicated shared helper editor', () => {
     expect(state.write).toHaveBeenCalledWith({ id: '7', body: { name: 'search', description: '', isEnabled: true, scriptLanguage: 'typescript', sourceCode: 'return @PARAMS.query;' } });
     expect(editor.dirty.value).toBe(false);
     expect(state.read.mock.calls[0][0].query.fields).not.toContain('compiledCode');
+  });
+  it('keeps getter-backed optional ids reactive without forwarding undefined', async () => {
+    const options = reactive<SharedHelperEditorOptions>({ mode: 'update' });
+    const editor = useSharedHelperEditor(() => ({ mode: options.mode, ...(options.id === undefined ? {} : { id: options.id }) }));
+    await editor.load();
+    expect(editor.loadFailed.value).toBe(true);
+    expect(state.read).not.toHaveBeenCalled();
+    options.id = '8';
+    await editor.load();
+    expect(state.read).toHaveBeenLastCalledWith({ id: '8', query: { fields: 'id,name,description,isEnabled,scriptLanguage,sourceCode', limit: 1 } });
+    await editor.deleteHelper();
+    expect(state.remove).toHaveBeenCalledWith({ id: '8' });
   });
   it('preserves the draft after a failed save', async () => {
     const editor = await setup(); editor.form.value.name = 'draft_name';

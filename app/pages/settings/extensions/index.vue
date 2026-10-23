@@ -25,6 +25,7 @@
 
 
 <script setup lang="ts">
+import type { FeatureCollection } from '~/types/feature-api';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
 import type { ExtensionDefinition } from '~/types/extensions';
@@ -52,7 +53,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchExtensions,
-} = useApi(() => "/enfyra_extension", {
+} = useApi<FeatureCollection<ExtensionDefinition>>(() => "/enfyra_extension", {
   query: computed(() => ({
     fields: EXTENSION_LIST_FIELDS,
     limit,
@@ -140,12 +141,8 @@ const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
   const newStatus = !extension.isEnabled;
 
   if (apiData.value?.data) {
-    const extensionIndex = apiData.value.data.findIndex(
-      (e: any) => e.id === extension.id
-    );
-    if (extensionIndex !== -1) {
-      apiData.value.data[extensionIndex].isEnabled = newStatus;
-    }
+    const current = apiData.value.data.find(e => e.id === extension.id);
+    if (current) current.isEnabled = newStatus;
   }
 
   await loader.withLoading(() =>
@@ -153,18 +150,14 @@ const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
       body: {
         isEnabled: newStatus,
       },
-      id: extension.id,
+      ...(extension.id === undefined ? {} : { id: extension.id }),
     })
   );
 
   if (updateError.value) {
     if (apiData.value?.data) {
-      const extensionIndex = apiData.value.data.findIndex(
-        (e: any) => e.id === extension.id
-      );
-      if (extensionIndex !== -1) {
-        apiData.value.data[extensionIndex].isEnabled = !newStatus;
-      }
+      const current = apiData.value.data.find(e => e.id === extension.id);
+      if (current) current.isEnabled = !newStatus;
     }
     return;
   }
@@ -175,7 +168,7 @@ const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
   invalidateExtensionCache({
     reason: "status",
     id: getId(extension),
-    extensionId: extension.extensionId,
+    ...(extension.extensionId === undefined ? {} : { extensionId: extension.extensionId }),
     path: extension.menu?.path ?? null,
   });
   await loadGlobalExtensions({ forceReload: true });
@@ -197,7 +190,7 @@ const bulkDelete = useSettingsBulkDelete<ExtensionDefinition>({
   refresh: () => fetchExtensions(),
   onDeleted: async (deleted) => {
     for (const extension of deleted) {
-      invalidateExtensionCache({ reason: 'deleted', id: getId(extension), extensionId: extension.extensionId, path: extension.menu?.path ?? null });
+      invalidateExtensionCache({ reason: 'deleted', id: getId(extension), ...(extension.extensionId === undefined ? {} : { extensionId: extension.extensionId }), path: extension.menu?.path ?? null });
     }
     await fetchMenuDefinitions();
     await loadGlobalExtensions({ forceReload: true });
@@ -213,7 +206,7 @@ const deleteExtension = async (extension: ExtensionDefinition) => {
   });
 
   if (isConfirmed) {
-    await deleteExtensionApi({ id: extension.id });
+    await deleteExtensionApi(extension.id === undefined ? {} : { id: extension.id });
 
     if (deleteError.value) {
       return;
@@ -224,7 +217,7 @@ const deleteExtension = async (extension: ExtensionDefinition) => {
     invalidateExtensionCache({
       reason: "deleted",
       id: getId(extension),
-      extensionId: extension.extensionId,
+      ...(extension.extensionId === undefined ? {} : { extensionId: extension.extensionId }),
       path: extension.menu?.path ?? null,
     });
     await loadGlobalExtensions({ forceReload: true });

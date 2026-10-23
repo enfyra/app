@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureRoute } from '~/types/feature-api';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { settingsStatusColumn } from '~/utils/settings-table';
 
@@ -81,7 +82,7 @@ function setPageSize(size: number) {
   }
 }
 
-const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi(
+const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi<FeatureCollection<FeatureRoute>>(
   '/enfyra_route',
   {
     query: computed(() => ({

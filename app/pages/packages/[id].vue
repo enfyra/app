@@ -80,6 +80,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeaturePackage } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
@@ -103,7 +104,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadPackage,
-} = useApi("/enfyra_package", {
+} = useApi<FeatureCollection<FeaturePackage>>("/enfyra_package", {
   query: {
     fields: "*",
     filter: {

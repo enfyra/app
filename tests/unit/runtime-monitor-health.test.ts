@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { RuntimeMetricsPayload } from '../../app/types/runtime-monitor';
 import { databaseSeverity, overviewSeverity, workerSeverity, flowSeverity, connectionSeverity } from '../../app/utils/runtime-monitor/severity';
 import { databaseWarnings, overviewWarnings, workerWarnings, flowWarnings, connectionWarnings } from '../../app/utils/runtime-monitor/warnings';
+import { dbPoolRows } from '../../app/utils/runtime-monitor/core';
 
 function metrics() {
   return {
@@ -42,6 +43,17 @@ describe('runtime monitor error-only health', () => {
     expect(databaseWarnings(sample)).toEqual(['2 DB pool acquire timeouts.', '1 DB query error.']);
     expect(workerSeverity(sample)).not.toBe('ok');
     expect(workerWarnings(sample)).toEqual(['1 executor task error.', '1 executor timeout.', '1 executor worker crash.']);
+  });
+
+  it('omits absent pool health while preserving explicit healthy and unhealthy replicas', () => {
+    const sample = metrics();
+    sample.db.pool = { master: { used: 1 }, replicas: [{ healthy: false, pool: { used: 2 } }, { healthy: true, pool: {} }, { pool: {} }] };
+    const rows = dbPoolRows(sample);
+    expect(rows[0]).not.toHaveProperty('healthy');
+    expect(rows[1]).toHaveProperty('healthy', false);
+    expect(rows[2]).toHaveProperty('healthy', true);
+    expect(rows[3]).not.toHaveProperty('healthy');
+    expect(rows[0]?.max).toBeNull();
   });
 
   it('retains failed flow and websocket jobs', () => {

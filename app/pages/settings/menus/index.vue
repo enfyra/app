@@ -476,7 +476,7 @@ async function handleDeleteExtension(menu: MenuDefinition) {
   invalidateExtensionCache({
     reason: "deleted",
     id: extensionId,
-    extensionId: menu.extension.extensionId,
+    ...(menu.extension.extensionId === undefined ? {} : { extensionId: menu.extension.extensionId }),
     path: menu.path ?? null,
   });
 
@@ -537,7 +537,7 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
       const parentMenu = menus.value.find(m => String(getId(m)) === String(newParentId));
       registryMenu.parent = parentMenu ? (parentMenu as any) : String(newParentId) as any;
     } else {
-      registryMenu.parent = undefined;
+      delete registryMenu.parent;
     }
   }
 
@@ -558,7 +558,7 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
         const parentMenu = menus.value.find(m => String(getId(m)) === String(parentId));
         registryMenu.parent = parentMenu ? (parentMenu as any) : String(parentId) as any;
       } else {
-        registryMenu.parent = undefined;
+        delete registryMenu.parent;
       }
     }
     await refreshMenus();

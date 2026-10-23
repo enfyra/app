@@ -15,6 +15,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureRouteHeader } from '~/types/feature-api';
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute()
@@ -43,7 +44,7 @@ const {
   error: routeError,
   pending: loading,
   execute: fetchRoute,
-} = useApi('/enfyra_route', {
+} = useApi<FeatureCollection<FeatureRouteHeader>>('/enfyra_route', {
   query: computed(() => ({
     fields: ROUTE_DETAIL_HEADER_FIELDS,
     filter: { [getIdFieldName()]: { _eq: routeId.value } },

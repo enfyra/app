@@ -1,13 +1,14 @@
+import type { GlobalAppPackage, GlobalSettings, GlobalStorageConfig, RecordListResponse } from '~/types/global-state';
 
 const ROUTE_LOADING_DELAY_MS = 180;
 let routeLoadingDelayTimer: ReturnType<typeof setTimeout> | null = null;
 
 export const useGlobalState = () => {
-  const settings = useState<any>("global:settings", () => {});
-  const storageConfigs = useState<any[]>("global:storage:configs", () => []);
+  const settings = useState<GlobalSettings>("global:settings", () => ({}));
+  const storageConfigs = useState<GlobalStorageConfig[]>("global:storage:configs", () => []);
   const storageConfigsFetched = useState<boolean>("global:storage:configs:fetched", () => false);
-  const appPackages = useState<any[]>("global:app:packages", () => []);
-  const packageCacheState = useState<Map<string, any>>("global:app:packages:cache", () => new Map());
+  const appPackages = useState<GlobalAppPackage[]>("global:app:packages", () => []);
+  const packageCacheState = useState<Map<string, unknown>>("global:app:packages:cache", () => new Map());
   const packageCacheTimestamp = useState<number>("global:app:packages:cache:timestamp", () => 0);
 
   const sidebarVisible = useState<boolean>(
@@ -44,7 +45,7 @@ export const useGlobalState = () => {
   const {
     data: settingsData,
     execute: executeFetchSettings,
-  } = useApi(() => "/enfyra_setting", {
+  } = useApi<RecordListResponse<GlobalSettings>>(() => "/enfyra_setting", {
     query: {
       fields: "*,defaultPage.*",
       limit: 0,
@@ -57,7 +58,7 @@ export const useGlobalState = () => {
     pending: storageConfigsPending,
     error: storageConfigsError,
     execute: executeFetchStorageConfigs,
-  } = useApi(() => "/enfyra_storage_config", {
+  } = useApi<RecordListResponse<GlobalStorageConfig>>(() => "/enfyra_storage_config", {
     query: {
       fields: GLOBAL_STORAGE_CONFIG_FIELDS,
       limit: 0,
@@ -74,7 +75,7 @@ export const useGlobalState = () => {
   const {
     data: appPackagesData,
     execute: executeFetchAppPackages,
-  } = useApi(() => "/enfyra_package", {
+  } = useApi<RecordListResponse<GlobalAppPackage>>(() => "/enfyra_package", {
     query: {
       fields: GLOBAL_APP_PACKAGE_FIELDS,
       limit: 0,

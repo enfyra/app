@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, toValue, watch, type MaybeRefOrGetter } from 'vue';
 import { onBeforeRouteLeave } from 'vue-router';
 import { useApi } from '~/composables/shared/useApi';
 import { useConfirm } from '~/composables/shared/useConfirm';
@@ -7,7 +7,8 @@ import { useNotify } from '~/composables/shared/useNotify';
 import { buildHelperInvocation, buildHelperTestScript, normalizeSharedHelperForm, validateSharedHelperForm } from '~/utils/form/shared-helper';
 import type { SharedHelperEditorOptions, SharedHelperListResponse, SharedHelperTestResponse } from '~/types/shared-helper';
 
-export function useSharedHelperEditor(options: SharedHelperEditorOptions) {
+export function useSharedHelperEditor(optionsSource: MaybeRefOrGetter<SharedHelperEditorOptions>) {
+  const options = computed(() => toValue(optionsSource));
   const { confirm } = useConfirm();
   const notify = useNotify();
   const { checkPermissionCondition } = usePermissions();
@@ -29,14 +30,14 @@ export function useSharedHelperEditor(options: SharedHelperEditorOptions) {
   let active = true;
   let generation = 0;
   let allowLeave = false;
-  const canWrite = computed(() => checkPermissionCondition({ and: [{ route: '/enfyra_helper', methods: [options.mode === 'create' ? 'POST' : 'PATCH'] }] }));
-  const canDelete = computed(() => options.mode === 'update' && checkPermissionCondition({ and: [{ route: '/enfyra_helper', methods: ['DELETE'] }] }));
+  const canWrite = computed(() => checkPermissionCondition({ and: [{ route: '/enfyra_helper', methods: [options.value.mode === 'create' ? 'POST' : 'PATCH'] }] }));
+  const canDelete = computed(() => options.value.mode === 'update' && checkPermissionCondition({ and: [{ route: '/enfyra_helper', methods: ['DELETE'] }] }));
   const canTest = computed(() => canWrite.value && checkPermissionCondition({ and: [{ route: '/admin/test/run', methods: ['POST'] }] }));
   const dirty = computed(() => ready.value && JSON.stringify(form.value) !== original.value);
   const busy = computed(() => saving.value || deleting.value || resetting.value || testing.value);
   const invocation = computed(() => buildHelperInvocation(form.value.name || 'helper_name'));
   const { executeWithResult: fetchRecord, cancel: cancelRead } = useApi<SharedHelperListResponse>('/enfyra_helper', { immediate: false, errorContext: 'Load Helper' });
-  const { executeWithResult: write } = useApi<SharedHelperListResponse>('/enfyra_helper', { method: options.mode === 'create' ? 'post' : 'patch', errorContext: 'Save Helper' });
+  const { executeWithResult: write } = useApi<SharedHelperListResponse>('/enfyra_helper', { method: options.value.mode === 'create' ? 'post' : 'patch', errorContext: 'Save Helper' });
   const { executeWithResult: remove } = useApi('/enfyra_helper', { method: 'delete', errorContext: 'Delete Helper' });
   const { executeWithResult: executeTest, cancel: cancelTest } = useApi<SharedHelperTestResponse>('/admin/test/run', { method: 'post', errorContext: 'Test Helper' });
 
@@ -48,9 +49,9 @@ export function useSharedHelperEditor(options: SharedHelperEditorOptions) {
     try {
       await ensureSchema();
       if (!active || token !== generation) return;
-      if (options.mode === 'update') {
-        if (!options.id) { loadFailed.value = true; return; }
-        const result = await fetchRecord({ id: options.id, query: { fields: 'id,name,description,isEnabled,scriptLanguage,sourceCode', limit: 1 } });
+      if (options.value.mode === 'update') {
+        if (!options.value.id) { loadFailed.value = true; return; }
+        const result = await fetchRecord({ id: options.value.id, query: { fields: 'id,name,description,isEnabled,scriptLanguage,sourceCode', limit: 1 } });
         if (!active || token !== generation) return;
         if (!result.ok || !result.data.data?.[0]) { loadFailed.value = true; return; }
         form.value = normalizeSharedHelperForm(result.data.data[0]);
@@ -63,7 +64,7 @@ export function useSharedHelperEditor(options: SharedHelperEditorOptions) {
   }
 
   async function save() {
-    if (!ready.value || !canWrite.value || busy.value || (options.mode === 'update' && !dirty.value)) return;
+    if (!ready.value || !canWrite.value || busy.value || (options.value.mode === 'update' && !dirty.value)) return;
     saving.value = true;
     try {
       errors.value = {};
@@ -71,16 +72,16 @@ export function useSharedHelperEditor(options: SharedHelperEditorOptions) {
       errors.value = { ...errors.value, ...validateSharedHelperForm(form.value) };
       if (!schemaValid || Object.keys(errors.value).length) return;
       const body = normalizeSharedHelperForm(form.value);
-      const result = await write({ ...(options.mode === 'update' ? { id: options.id } : {}), body });
+      const result = await write({ ...(options.value.mode === 'update' && options.value.id !== undefined ? { id: options.value.id } : {}), body: { ...body } });
       if (!active || !result.ok) return;
       const record = result.data?.data?.[0];
-      const id = options.mode === 'create' ? getId(record) : options.id;
+      const id = options.value.mode === 'create' ? getId(record) : options.value.id;
       if (id == null || String(id) === '') { notify.error('Save incomplete', 'The response did not include the saved helper. Reload before submitting again.'); return; }
       form.value = body;
       original.value = JSON.stringify(body);
       testResult.value = null;
-      notify.success(options.mode === 'create' ? 'Helper created' : 'Helper saved');
-      if (options.mode === 'create') {
+      notify.success(options.value.mode === 'create' ? 'Helper created' : 'Helper saved');
+      if (options.value.mode === 'create') {
         allowLeave = true;
         await navigateTo(`/settings/helpers/${encodeURIComponent(String(id))}`, { replace: true });
       }
@@ -103,7 +104,7 @@ export function useSharedHelperEditor(options: SharedHelperEditorOptions) {
     deleting.value = true;
     try {
       if (!await confirm({ title: 'Delete helper?', content: `Delete "${form.value.name}"? Scripts calling this name will fail. This action cannot be undone.`, confirmText: 'Delete', cancelText: 'Cancel' }) || !active) return;
-      const result = await remove({ id: options.id });
+      const result = await remove(options.value.id === undefined ? {} : { id: options.value.id });
       if (!result.ok || !active) return;
       allowLeave = true;
       notify.success('Helper deleted');

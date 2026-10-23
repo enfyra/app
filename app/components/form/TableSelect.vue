@@ -42,7 +42,7 @@ onMounted(async () => {
 
 <template>
   <UInputMenu
-    :model-value="selectedItem"
+    v-bind="selectedItem === undefined ? {} : { modelValue: selectedItem }"
     :items="items"
     placeholder="Search table..."
     class="w-full"

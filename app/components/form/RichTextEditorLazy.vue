@@ -17,9 +17,11 @@
     <RichTextEditor
       :model-value="modelValue"
       :disabled="disabled"
-      :height="height"
-      :placeholder="placeholder"
-      :editor-config="editorConfig"
+      v-bind="{
+        ...(height === undefined ? {} : { height }),
+        ...(placeholder === undefined ? {} : { placeholder }),
+        ...(editorConfig === undefined ? {} : { editorConfig }),
+      }"
       @update:model-value="$emit('update:modelValue', $event)"
     />
   </ClientOnly>

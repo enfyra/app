@@ -1,14 +1,11 @@
 <script setup lang="ts">
 interface Props {
   title: string;
-  description?: string;
-  icon?: string;
+  description?: string | undefined;
+  icon?: string | undefined;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  description: undefined,
-  icon: undefined,
-});
+const props = defineProps<Props>();
 
 const route = useRoute();
 const { findMenuIconForPath } = useMenuRegistry();

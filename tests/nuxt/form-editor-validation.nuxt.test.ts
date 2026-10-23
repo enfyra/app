@@ -41,6 +41,30 @@ it('blocks parent Save for an invalid editor draft and unblocks after correction
   } finally { wrapper.unmount(); state.registry.value = null; }
 });
 
+it('omits absent lazy editor options and preserves native defaults and nullable drafts', async () => {
+  const record = { id: 1, payload: null, enabled: false, count: 0, rows: [] };
+  const wrapper = await mountSuspended(EditorLazy, {
+    props: { modelValue: record, errors: {}, tableName: 'orders', currentRecordId: null, uniqueLocalSelfKey: null },
+    global: { stubs: { FormCodeEditorLazy: Code } },
+  });
+  try {
+    await flushPromises();
+    const editor = wrapper.getComponent(Editor);
+    const forwarded = editor.vm.$.vnode.props;
+    for (const key of ['excluded', 'includes', 'fieldMap', 'mode', 'sortBy', 'fieldPositions']) {
+      expect(forwarded).not.toHaveProperty(key);
+    }
+    expect(editor.props()).toMatchObject({
+      excluded: [], includes: [], fieldMap: {}, loading: false,
+      currentRecordId: null, uniqueLocalSelfKey: null, modelValue: record,
+    });
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined();
+    await wrapper.setProps({ includes: [], excluded: [], fieldMap: {}, sortBy: '', fieldPositions: {} });
+    await flushPromises();
+    expect(editor.vm.$.vnode.props).toMatchObject({ includes: [], excluded: [], fieldMap: {}, sortBy: '', fieldPositions: {} });
+  } finally { wrapper.unmount(); state.registry.value = null; }
+});
+
 it('forwards draft errors through the typed lazy editor handle', async () => {
   const wrapper = await mountSuspended(EditorLazy, {
     props: { modelValue: { id: 1, payload: { old: true } }, errors: {}, tableName: 'orders' },

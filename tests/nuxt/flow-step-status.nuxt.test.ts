@@ -30,6 +30,8 @@ it('preserves a disabled step through opening, editing and saving', async () => 
     await flushPromises();
     const drawer = wrapper.getComponent(Drawer);
     expect(drawer.props('form').isEnabled).toBe(false);
+    expect(drawer.props('form').parentId).toBeNull();
+    expect(drawer.props('form')).not.toHaveProperty('branch');
     drawer.vm.$emit('save');
     await flushPromises();
     expect(state.write).toHaveBeenCalledWith(expect.objectContaining({ body: expect.objectContaining({ isEnabled: false }) }));

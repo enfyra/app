@@ -32,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellListResponse, ShellOAuthConfigRecord } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildOAuthRedirectUri,
@@ -162,7 +164,7 @@ const {
   data: configData,
   pending: loading,
   execute: executeGetConfig,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellOAuthConfigRecord>>(() => `/${tableName}`, {
   query: {
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: route.params.id } },

@@ -226,7 +226,7 @@ export function useMenuRegistry() {
     const dataParent = menuItems.value.find((item) => item.id === dataParentId);
     const inheritedVisibility = {
       isPublic: dataParent?.isPublic === true,
-      menuPermissions: dataParent?.menuPermissions,
+      ...(dataParent?.menuPermissions === undefined ? {} : { menuPermissions: dataParent.menuPermissions }),
     };
 
     routes.forEach((route: any) => {
@@ -285,7 +285,7 @@ export function useMenuRegistry() {
     const dataParent = menuItems.value.find((item) => item.id === dataParentId);
     const inheritedVisibility = {
       isPublic: dataParent?.isPublic === true,
-      menuPermissions: dataParent?.menuPermissions,
+      ...(dataParent?.menuPermissions === undefined ? {} : { menuPermissions: dataParent.menuPermissions }),
     };
 
     nonSystemTables.forEach((table) => {

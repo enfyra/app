@@ -2,6 +2,7 @@
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { buildSharedHelperFieldMap } from '~/utils/form/shared-helper';
 import { buildRecordEditQuery, changedRecordFields } from '~/utils/form/record-update';
+import type { FormApiListResponse } from '~/types/form-api';
 import {
   applyMethodColorSuggestion,
   buildMethodDefinitionFieldMap,
@@ -54,7 +55,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRecord,
-} = useApi(() => getRouteForTableName(tableName), {
+} = useApi<FormApiListResponse<Record<string, unknown>>>(() => getRouteForTableName(tableName), {
   query: computed(() => ({
     ...buildRecordEditQuery(definition.value, getIdFieldName()),
     filter: {

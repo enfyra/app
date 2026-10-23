@@ -25,7 +25,8 @@ export function useSubHeaderActionPresentation() {
     if (action.onClick) return action.onClick();
     if (action.submit) return action.submit();
     const to = unref(action.to);
-    if (to) return navigateTo(to, { replace: unref(action.replace) });
+    const replace = unref(action.replace);
+    if (to) return navigateTo(to, replace === undefined ? {} : { replace });
     return undefined;
   }
 

@@ -332,11 +332,7 @@ function getContextMenuItems(row: unknown) {
           :enable-row-selection="!moveState.moveMode"
           :selected-row-ids="selectedItems"
           @update:selected-rows="handleSelectionChange"
-          :context-menu-items="
-            !isSelectionMode && !moveState.moveMode
-              ? getContextMenuItems
-              : undefined
-          "
+          v-bind="!isSelectionMode && !moveState.moveMode ? { contextMenuItems: getContextMenuItems } : {}"
           @row-click="handleFileClick"
         />
       </div>

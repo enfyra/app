@@ -2,6 +2,8 @@ import { UCheckbox } from '#components'
 import type { ColumnDef } from '@tanstack/vue-table'
 import type { SelectionColumnOptions } from '~/types/data-table-columns'
 
+export const selectionCheckboxUi = { base: "relative rounded-sm max-lg:size-7 pointer-coarse:size-7 pointer-coarse:before:absolute pointer-coarse:before:-inset-2 pointer-coarse:before:content-['']" }
+
 export function createSelectionColumn<T>(options: SelectionColumnOptions = {}): ColumnDef<T> {
   const multiple = options.multiple !== false
   return {
@@ -13,8 +15,9 @@ export function createSelectionColumn<T>(options: SelectionColumnOptions = {}): 
     header: multiple
       ? ({ table }) => h(UCheckbox, {
         size: 'lg',
-        ui: { base: "relative rounded-sm max-lg:size-7 pointer-coarse:size-7 pointer-coarse:before:absolute pointer-coarse:before:-inset-2 pointer-coarse:before:content-['']" },
+        ui: selectionCheckboxUi,
         onClick: (event: MouseEvent) => event.stopPropagation(),
+        disabled: options.disabled || !table.getRowModel().flatRows.some(row => row.getCanSelect()),
         modelValue: table.getIsAllPageRowsSelected() ? true : table.getIsSomePageRowsSelected() ? 'indeterminate' : false,
         'onUpdate:modelValue': (checked: unknown) => table.toggleAllPageRowsSelected(checked === true),
         'aria-label': 'Select all rows',
@@ -22,7 +25,7 @@ export function createSelectionColumn<T>(options: SelectionColumnOptions = {}): 
       : '',
     cell: ({ row }) => h(UCheckbox, {
       size: 'lg',
-      ui: { base: "relative rounded-sm max-lg:size-7 pointer-coarse:size-7 pointer-coarse:before:absolute pointer-coarse:before:-inset-2 pointer-coarse:before:content-['']" },
+      ui: selectionCheckboxUi,
       onClick: (event: MouseEvent) => event.stopPropagation(),
       modelValue: row.getIsSelected(),
       disabled: !row.getCanSelect(),

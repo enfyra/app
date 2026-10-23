@@ -75,6 +75,39 @@ describe('FormRelationSelector', () => {
     } finally { wrapper.unmount() }
   })
 
+  it('omits an unknown count and inactive empty action while preserving an explicit zero total', async () => {
+    mocks.useAuthFetch.mockResolvedValue({ data: [], meta: { filterCount: 0 } })
+    const TableProbe = defineComponent({
+      props: ['paginationConfig'],
+      template: '<div><slot name="empty" /></div>',
+    })
+    const EmptyProbe = defineComponent({
+      props: ['action'],
+      template: '<div />',
+    })
+    const wrapper = await mountSuspended(RelationSelector, {
+      props: {
+        relationMeta: { propertyName: 'users', targetTableName: 'users', type: 'many-to-many' },
+        selectedIds: [],
+        open: false,
+      },
+      global: { stubs: {
+        CommonDrawer: DrawerStub,
+        DataTable: TableProbe,
+        CommonEmptyState: EmptyProbe,
+        FilterDrawerLazy: true,
+      } },
+    })
+    try {
+      expect(wrapper.getComponent(TableProbe).props('paginationConfig')).not.toHaveProperty('total')
+      expect(wrapper.getComponent(EmptyProbe).vm.$.vnode.props).not.toHaveProperty('action')
+      await wrapper.setProps({ open: true })
+      await flushPromises()
+      expect(wrapper.getComponent(TableProbe).props('paginationConfig')).toHaveProperty('total', 0)
+      expect(wrapper.getComponent(EmptyProbe).vm.$.vnode.props).not.toHaveProperty('action')
+    } finally { wrapper.unmount() }
+  })
+
   it('uses shared checkbox selection across cursor pages and applies ids only without quick search', async () => {
     mocks.useAuthFetch
       .mockResolvedValueOnce({ data: Array.from({ length: 11 }, (_, index) => ({ id: 20 - index })), meta: { filterCount: 27 } })

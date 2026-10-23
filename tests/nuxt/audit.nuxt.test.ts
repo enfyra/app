@@ -175,6 +175,16 @@ describe('Audit page', () => {
     expect(state.restore).toHaveBeenCalledWith({ body: { auditId: 2, version: '4.0.0' } });
     expect(state.notify).toHaveBeenCalledOnce();
   });
+  it('rejects restoration when the current record has no valid version', async () => {
+    state.current.mockResolvedValueOnce({ ok: true, data: { data: [{}] } });
+    const page = await mountPage();
+    page.getComponent(TableStub).vm.$emit('row-click', revision(2));
+    await flushPromises();
+    await page.getComponent(DrawerStub).props('primaryAction').onClick();
+    expect(state.confirm).not.toHaveBeenCalled();
+    expect(state.restore).not.toHaveBeenCalled();
+    expect(state.notify).toHaveBeenCalledWith('Restore failed', 'Cannot read a valid current version. Refresh the record before saving.');
+  });
   it('does not offer restoration without target PATCH permission or for delete entries', async () => {
     const page = await mountPage();
     state.canPatch = false;

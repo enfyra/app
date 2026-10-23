@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ShellListResponse, ShellUserRecord } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
@@ -14,7 +16,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchUser,
-} = useApi(() => "/enfyra_user", {
+} = useApi<ShellListResponse<ShellUserRecord>>(() => "/enfyra_user", {
   query: computed(() => ({
     fields: "*",
     filter: {

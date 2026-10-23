@@ -355,7 +355,7 @@ onBeforeUnmount(() => {
         </div>
         <div v-else class="space-y-5">
           <UForm :state="apiTokenForm" class="space-y-5" @submit="handleCreateApiToken">
-            <UFormField label="Token name" :error="apiTokenErrors.name" required>
+            <UFormField label="Token name" v-bind="apiTokenErrors.name === undefined ? {} : { error: apiTokenErrors.name }" required>
               <UInput
                 v-model="apiTokenForm.name"
                 placeholder="MCP token"
@@ -363,7 +363,7 @@ onBeforeUnmount(() => {
               />
             </UFormField>
 
-            <UFormField label="Expiration" :error="apiTokenErrors.expiresAt" required>
+            <UFormField label="Expiration" v-bind="apiTokenErrors.expiresAt === undefined ? {} : { error: apiTokenErrors.expiresAt }" required>
               <div class="flex flex-wrap gap-2">
                 <UButton
                   v-for="preset in apiTokenExpiryPresets"

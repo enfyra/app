@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureRouteList } from '~/types/feature-api';
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import CommonSystemVisibilityControl from "~/components/common/SystemVisibilityControl.vue";
@@ -94,7 +95,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRoutes,
-} = useApi(() => "/enfyra_route", {
+} = useApi<FeatureCollection<FeatureRouteList>>(() => "/enfyra_route", {
   query: computed(() => {
     const conditions: any[] = [];
     if (visibilityScope.value === "custom") {
@@ -300,12 +301,8 @@ async function toggleEnabled(routeItem: any) {
   const newEnabled = !routeItem.isEnabled;
 
   if (apiData.value?.data) {
-    const routeIndex = apiData.value.data.findIndex(
-      (r: any) => getId(r) === getId(routeItem)
-    );
-    if (routeIndex !== -1) {
-      apiData.value.data[routeIndex].isEnabled = newEnabled;
-    }
+    const current = apiData.value.data.find(r => getId(r) === getId(routeItem));
+    if (current) current.isEnabled = newEnabled;
   }
 
   await updateRouteApi({ id: getId(routeItem), body: { isEnabled: newEnabled } });
@@ -313,12 +310,8 @@ async function toggleEnabled(routeItem: any) {
   if (updateError.value) {
     
     if (apiData.value?.data) {
-      const routeIndex = apiData.value.data.findIndex(
-        (r: any) => getId(r) === getId(routeItem)
-      );
-      if (routeIndex !== -1) {
-        apiData.value.data[routeIndex].isEnabled = !newEnabled;
-      }
+      const current = apiData.value.data.find(r => getId(r) === getId(routeItem));
+      if (current) current.isEnabled = !newEnabled;
     }
     return;
   }

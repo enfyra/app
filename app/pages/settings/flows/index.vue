@@ -25,6 +25,7 @@
 
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureFlowList } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
 import type { ColumnDef } from '@tanstack/vue-table';
@@ -60,7 +61,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchFlows,
-} = useApi(() => "/enfyra_flow", {
+} = useApi<FeatureCollection<FeatureFlowList>>(() => "/enfyra_flow", {
   query: computed(() => ({
     fields: FLOW_LIST_FIELDS,
     limit,
@@ -128,16 +129,16 @@ const toggleFlowStatus = async (flow: any) => {
   const newStatus = !flow.isEnabled;
 
   if (apiData.value?.data) {
-    const idx = apiData.value.data.findIndex((f: any) => f.id === flow.id);
-    if (idx !== -1) apiData.value.data[idx].isEnabled = newStatus;
+    const current = apiData.value.data.find(f => f.id === flow.id);
+    if (current) current.isEnabled = newStatus;
   }
 
   await loader.withLoading(() => updateFlow({ body: { isEnabled: newStatus }, id: flow.id }));
 
   if (updateError.value) {
     if (apiData.value?.data) {
-      const idx = apiData.value.data.findIndex((f: any) => f.id === flow.id);
-      if (idx !== -1) apiData.value.data[idx].isEnabled = !newStatus;
+      const current = apiData.value.data.find(f => f.id === flow.id);
+      if (current) current.isEnabled = !newStatus;
     }
     return;
   }

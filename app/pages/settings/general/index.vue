@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SettingsDefaultPageSelect } from '#components';
 import { defaultPageId } from '~/utils/default-page';
+import type { ShellSettingsResponse } from '~/types/shell-api';
 const notify = useNotify();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { confirm } = useConfirm();
@@ -64,7 +65,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadSetting,
-} = useApi(() => `/enfyra_setting`, {
+} = useApi<ShellSettingsResponse>(() => `/enfyra_setting`, {
   query: {
     fields: "*,defaultPage.*",
     limit: 1,

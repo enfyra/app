@@ -31,6 +31,23 @@ describe('bridge route ownership', () => {
     await response.text();
     expect(upstreamCalls).toBe(0); expect(response.status).toBe(403);
   });
+
+  it.each(['/api/AUTH/%73et-cookies', '/api/auth%2fset-cookies', '/api/%61uth/set-cookies'])('does not proxy the percent-encoded cookie finalizer alias %s', async path => {
+    let upstreamCalls = 0;
+    const apiUrl = await listen(createServer((_req, res) => {
+      upstreamCalls++;
+      res.setHeader('content-type', 'application/json');
+      res.setHeader('set-cookie', 'accessToken=synthetic-access; Path=/; HttpOnly');
+      res.end(JSON.stringify({ accessToken: 'synthetic-access', refreshToken: 'synthetic-refresh', expTime: 9999999999 }));
+    }));
+    vi.stubGlobal('useRuntimeConfig', () => ({ public: { apiUrl } }));
+    const url = await listen(createServer(toNodeListener(createApp().use(api))));
+    const response = await fetch(url + path + '?code=synthetic&redirect=https://app.invalid/return', { redirect: 'manual' });
+    await response.text();
+    expect(upstreamCalls).toBe(0);
+    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(response.status).toBe(403);
+  });
   it('exchanges a matching browser-bound alias through the finalizer and sets auth cookies', async () => {
     let exchangePath = '';
     const apiUrl = await listen(createServer((req, res) => {

@@ -31,7 +31,7 @@ const runtimeSections = computed(() =>
     return {
       ...item,
       label: tabLabel(item.label),
-      badge: count > 0 ? String(count) : undefined,
+      ...(count > 0 ? { badge: String(count) } : {}),
     };
   }),
 );

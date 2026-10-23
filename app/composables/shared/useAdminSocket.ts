@@ -204,7 +204,7 @@ export function useAdminSocket() {
               flow,
               steps: data.steps ?? [flow],
               startedAt: Date.now(),
-              instanceId: data.instanceId,
+              ...(data.instanceId === undefined ? {} : { instanceId: data.instanceId }),
             },
           ];
         }

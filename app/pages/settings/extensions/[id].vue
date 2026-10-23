@@ -57,6 +57,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureExtensionEditor } from '~/types/feature-api';
 import type { PanelSection } from '~/types/ui';
 
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -162,7 +163,7 @@ const {
   data: extensionData,
   pending: loading,
   execute: executeGetExtension,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureExtensionEditor>>(() => `/${tableName}`, {
   query: {
     fields: EXTENSION_EDITOR_FIELDS,
     filter: { [getIdFieldName()]: { _eq: route.params.id } },
@@ -226,7 +227,7 @@ async function updateExtension() {
     invalidateExtensionCache({
       reason: "updated",
       id: route.params.id as string,
-      extensionId: freshData.extensionId,
+      ...(freshData.extensionId === undefined ? {} : { extensionId: freshData.extensionId }),
       path: freshData.menu?.path ?? null,
       updatedAt: freshData.updatedAt,
     });

@@ -4,7 +4,7 @@
     <UAlert
       v-if="pendingOps.size > 0"
       icon="lucide:loader"
-      :title="pendingBannerTitle"
+      v-bind="pendingBannerTitle === undefined ? {} : { title: pendingBannerTitle }"
       color="info"
       variant="soft"
     />
@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeaturePackage } from '~/types/feature-api';
 import { h } from 'vue';
 import { UBadge } from '#components';
 import type { ColumnDef } from '@tanstack/vue-table';
@@ -105,7 +106,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadPackages,
-} = useApi("/enfyra_package", {
+} = useApi<FeatureCollection<FeaturePackage>>("/enfyra_package", {
   query: computed(() => ({
     page: page.value,
     limit: limit.value,

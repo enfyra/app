@@ -3,6 +3,7 @@ const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { resolveTableCellDisplay } from '~/utils/data-table-cell-formatter';
 import { DataTableBulkActions, UBadge } from '#components';
 import type { SortingState, VisibilityState } from '@tanstack/vue-table';
+import type { FormApiListResponse } from '~/types/form-api';
 
 const route = useRoute();
 const router = useRouter();
@@ -33,7 +34,7 @@ const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
 const {
   data: singleRecordData,
   execute: fetchSingleRecord,
-} = useApi(() => getRouteForTableName(tableName.value), {
+} = useApi<FormApiListResponse<Record<string, unknown>>>(() => getRouteForTableName(tableName.value), {
   query: computed(() => ({ limit: 1, fields: getColumnFields() })),
   immediate: false,
   errorContext: "Fetch Single Record",
@@ -82,7 +83,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchData,
-} = useApi(() => getRouteForTableName(tableName.value), {
+} = useApi<FormApiListResponse<Record<string, unknown>>>(() => getRouteForTableName(tableName.value), {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
@@ -97,7 +98,6 @@ const {
       ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
     };
   }),
-  immediate: computed(() => !isSingleRecord.value),
   errorContext: "Fetch Data",
 });
 
@@ -150,7 +150,7 @@ const {
   handleDelete,
   handleBulkDelete,
   handleSelectionChange,
-} = useDataTableActions(tableName, fetchData, data);
+} = useDataTableActions(tableName, async () => { await fetchData(); }, data);
 
 const canDeleteSelection = computed(() => checkPermissionCondition({
   and: [{ route: getRouteForTableName(tableName.value), methods: ['DELETE'] }],

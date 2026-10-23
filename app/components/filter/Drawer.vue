@@ -134,7 +134,7 @@ const { isMobile, isTablet } = useScreen();
             v-model="localFilter"
             :schemas="schemas"
             :table-name="tableName"
-            :allowed-fields="allowedFields"
+            v-bind="allowedFields === undefined ? {} : { allowedFields }"
           />
 
           <FilterPreview

@@ -341,7 +341,7 @@ async function handleLogin() {
   const redirect = Array.isArray(route.query.redirect)
     ? route.query.redirect[0]
     : route.query.redirect;
-  const res = await login({ ...form, redirect: redirect || undefined });
+  const res = await login({ ...form, ...(redirect ? { redirect } : {}) });
   if (res.ok) {
     await completeLogin(res.data.redirect);
     return;
@@ -353,13 +353,14 @@ async function handleDemoLogin() {
   demoLoading.value = true;
   loginError.value = null;
   try {
+    const redirect = Array.isArray(route.query.redirect)
+      ? route.query.redirect[0]
+      : route.query.redirect;
     const res = await login({
       email: DEMO_LOGIN_EMAIL,
       password: DEMO_LOGIN_PASSWORD,
       remember: true,
-      redirect: Array.isArray(route.query.redirect)
-        ? route.query.redirect[0] || undefined
-        : route.query.redirect || undefined,
+      ...(redirect ? { redirect } : {}),
     });
     if (res.ok) {
       await completeLogin(res.data.redirect);

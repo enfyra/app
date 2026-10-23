@@ -5,6 +5,7 @@ import {
   getSelectedMethodIdentities,
 } from '~/utils/form/method-selector';
 import { getMethodColors } from '~/utils/http.constants';
+import type { FormApiListResponse, FormMethodRecord } from '~/types/form-api';
 
 const props = withDefaults(
   defineProps<{
@@ -24,7 +25,7 @@ const emit = defineEmits<{
 
 const { getId } = useDatabase();
 
-const methodsCache = useState<any[]>('methods-cache', () => []);
+const methodsCache = useState<FormMethodRecord[]>('methods-cache', () => []);
 const methodsLoaded = useState<boolean>('methods-loaded', () => false);
 const METHOD_SELECTOR_FIELDS = [
   'id',
@@ -37,7 +38,7 @@ const METHOD_SELECTOR_FIELDS = [
 const {
   data: methodsData,
   execute: fetchMethods,
-} = useApi('/enfyra_method', {
+} = useApi<FormApiListResponse<FormMethodRecord>>('/enfyra_method', {
   query: {
     fields: METHOD_SELECTOR_FIELDS,
     limit: 0,
@@ -62,7 +63,7 @@ const availableMethods = computed(() => {
   const allowed = props.allowedMethods;
   if (Array.isArray(allowed)) {
     const allowedSet = new Set(allowed);
-    list = list.filter((m: any) => m?.name && allowedSet.has(m.name));
+    list = list.filter(m => m.name && allowedSet.has(m.name));
   }
   return list;
 });

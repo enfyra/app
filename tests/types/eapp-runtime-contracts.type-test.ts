@@ -3,6 +3,7 @@ import type { Extension } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import type { CodeMirrorEditorOptions, CodeMirrorModules } from '../../app/types/code-editor-runtime';
 import type { FileLibraryDisplayRow } from '../../app/types/file';
+import type { FeatureCollection, FeatureEditableRecord, FeatureIdentity, FeatureRouteHeader } from '../../app/types/feature-api';
 import type { FlowStepAddContext, FlowStepEditorForm } from '../../app/types/flow';
 import type { NormalizedScriptContract, ScriptContractFields, ScriptLanguage } from '../../app/types/script-contract';
 import { normalizeScriptContract } from '../../app/utils/script-contract';
@@ -35,9 +36,18 @@ export type RuntimeContractAssertions = [
   Assert<Equal<Parameters<CodeMirrorEditorOptions['emit']>[1], Diagnostic[]>>,
   Assert<Rejects<{ invalid: true }, FlowStepEditorForm['parentId']>>,
   Assert<Rejects<'other', FlowStepEditorForm['branch']>>,
+  Assert<Rejects<{ branch: undefined }, Pick<FlowStepEditorForm, 'branch'>>>,
+  Assert<Rejects<{ branch: null }, Pick<FlowStepEditorForm, 'branch'>>>,
+  Assert<Equal<{} extends Pick<FlowStepEditorForm, 'branch'> ? true : false, true>>,
+  Assert<Equal<{ parentId: null } extends Pick<FlowStepEditorForm, 'parentId'> ? true : false, true>>,
   Assert<Rejects<{ branch: 'other' }, FlowStepAddContext>>,
   Assert<Equal<FlowStepEditorForm['type'], 'script' | 'condition'>>,
   Assert<Equal<IsAny<FileLibraryDisplayRow['displayName']>, false>>,
   Assert<Rejects<number, FileLibraryDisplayRow['displayName']>>,
   Assert<Rejects<string, FileLibraryDisplayRow['storageConfig']>>,
+  Assert<Equal<FeatureCollection<FeatureRouteHeader>['data'][number]['path'], string>>,
+  Assert<Rejects<{ data: FeatureIdentity }, FeatureCollection<FeatureIdentity>>>,
+  Assert<Rejects<{ path: number }, FeatureRouteHeader>>,
+  Assert<Equal<FeatureEditableRecord['customValue'], unknown>>,
+  Assert<Rejects<FeatureEditableRecord['customValue'], string>>,
 ];

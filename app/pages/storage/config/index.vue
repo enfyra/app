@@ -23,6 +23,7 @@
 
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureStorageConfig } from '~/types/feature-api';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
 import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
@@ -55,7 +56,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchStorageConfigs,
-} = useApi(() => "/enfyra_storage_config", {
+} = useApi<FeatureCollection<FeatureStorageConfig>>(() => "/enfyra_storage_config", {
   query: computed(() => ({
     fields: STORAGE_CONFIG_LIST_FIELDS,
     limit: limit.value,
@@ -135,12 +136,8 @@ const toggleConfigStatus = async (config: any) => {
   const newStatus = !config.isEnabled;
 
   if (apiData.value?.data) {
-    const configIndex = apiData.value.data.findIndex(
-      (c: any) => getId(c) === configId
-    );
-    if (configIndex !== -1) {
-      apiData.value.data[configIndex].isEnabled = newStatus;
-    }
+    const current = apiData.value.data.find(c => getId(c) === configId);
+    if (current) current.isEnabled = newStatus;
   }
 
   await loader.withLoading(() =>
@@ -154,12 +151,8 @@ const toggleConfigStatus = async (config: any) => {
 
   if (updateError.value) {
     if (apiData.value?.data) {
-      const configIndex = apiData.value.data.findIndex(
-        (c: any) => getId(c) === configId
-      );
-      if (configIndex !== -1) {
-        apiData.value.data[configIndex].isEnabled = !newStatus;
-      }
+      const current = apiData.value.data.find(c => getId(c) === configId);
+      if (current) current.isEnabled = !newStatus;
     }
     return;
   }

@@ -79,7 +79,7 @@ export function dbPoolRows(metrics: RuntimeMetricsPayload): RuntimeDbPoolRow[] {
       idle,
       available,
       max,
-      healthy,
+      ...(healthy === undefined ? {} : { healthy }),
     };
   };
   if (pool.master || Array.isArray(pool.replicas)) {

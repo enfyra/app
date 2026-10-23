@@ -608,7 +608,7 @@ function handleDragEnd() {
           <MenuVisualEditorItem
             :item="child"
             :level="(level || 0) + 1"
-            :all-menus="props.allMenus"
+            v-bind="props.allMenus === undefined ? {} : { allMenus: props.allMenus }"
             @edit-menu="$emit('edit-menu', $event)"
             @delete-menu="$emit('delete-menu', $event)"
             @toggle-enabled="$emit('toggle-enabled', $event)"

@@ -2,7 +2,8 @@
 import type { DropdownMenuItem } from '@nuxt/ui';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { CodeAuditRecord, CodeAuditResponse } from '~/types/code-audit';
-import { VERSIONED_CODE_TABLES, nextCodeVersion } from '~/utils/code-version';
+import type { FeatureCollection } from '~/types/feature-api';
+import { VERSIONED_CODE_TABLES, nextCodeVersion, normalizeCodeVersion } from '~/utils/code-version';
 import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
 import { formatDate } from '~/utils/common/filter/filter-helpers';
 
@@ -23,7 +24,7 @@ registerPageHeader({ title: 'Audit', description: 'Review earlier code revisions
 const { executeWithResult: readHistory, cancel } = useApi<CodeAuditResponse>('/enfyra_audit', { disableErrorPage: true, errorContext: 'Load audit history' });
 const { executeWithResult: readEntry } = useApi<CodeAuditResponse>('/enfyra_audit', { disableErrorPage: true, errorContext: 'Read code revision' });
 const { executeWithResult: restore } = useApi('/admin/code-audit/revert', { method: 'post', disableErrorPage: true, errorContext: 'Restore code revision' });
-const { executeWithResult: readCurrent } = useApi(() => `/${selected.value?.tableName}`, { disableErrorPage: true, errorContext: 'Read current version' });
+const { executeWithResult: readCurrent } = useApi<FeatureCollection<{ version?: unknown }>>(() => `/${selected.value?.tableName}`, { disableErrorPage: true, errorContext: 'Read current version' });
 const canRead = computed(() => checkPermissionCondition({ and: [{ route: '/enfyra_audit', methods: ['GET'] }] }));
 const canRestore = computed(() => !!selected.value && ['update', 'revert'].includes(selected.value.action) && !!selected.value.previous && checkPermissionCondition({ and: [{ route: '/admin/code-audit/revert', methods: ['POST'] }, { route: `/${selected.value.tableName}`, methods: ['PATCH'] }] }));
 const source = computed(() => String(selected.value?.previous?.[selected.value?.tableName === 'enfyra_extension' ? 'code' : 'sourceCode'] ?? ''));
@@ -138,7 +139,7 @@ async function revert() {
   try {
     const current = await readCurrent({ query: { fields: 'version', filter: createIdFilter(entry.recordId), limit: 1 } });
     if (!current.ok || !active) return;
-    const currentVersion = current.data?.data?.[0]?.version;
+    const currentVersion = normalizeCodeVersion(current.data.data[0]?.version);
     const version = await confirm({ tableName: entry.tableName, recordId: entry.recordId, currentVersion, suggestedVersion: nextCodeVersion(currentVersion) });
     if (!version || !active) return;
     const result = await restore({ body: { auditId: getId(entry), version } });
@@ -169,7 +170,7 @@ onBeforeUnmount(() => { active = false; inspectionGeneration++; cancel(); });
         :data="rows"
         :columns="columns"
         :loading="loading"
-        :total="total"
+        v-bind="total === undefined ? {} : { total }"
         :reload="reload"
         :reload-loading="loading"
         :page-limit="limit"

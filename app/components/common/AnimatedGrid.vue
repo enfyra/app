@@ -1,7 +1,7 @@
 <template>
   <TransitionGroup
     v-if="shouldAnimate"
-    :name="transitionName"
+    v-bind="shouldAnimate ? { name: props.name } : {}"
     tag="div"
     :class="['relative', gridClass]"
   >
@@ -30,7 +30,6 @@ const props = withDefaults(defineProps<{
 
 const routeLeaving = ref(false);
 const shouldAnimate = computed(() => props.animate && !props.disabled && !routeLeaving.value);
-const transitionName = computed(() => shouldAnimate.value ? props.name : undefined);
 
 onBeforeRouteLeave(() => {
   routeLeaving.value = true;

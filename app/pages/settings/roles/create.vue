@@ -22,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellCreatedRecordResponse } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 
@@ -39,7 +41,7 @@ const {
   pending: createLoading,
   execute: createRole,
   error: createError,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellCreatedRecordResponse>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Role",
 });

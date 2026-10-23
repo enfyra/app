@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FormApiListResponse, FormCollectionRecord } from '~/types/form-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const {
@@ -147,7 +148,7 @@ const {
   pending: createLoading,
   execute: createTable,
   error: createError,
-} = useApi("/enfyra_table", {
+} = useApi<FormApiListResponse<FormCollectionRecord>>("/enfyra_table", {
   method: "post",
   errorContext: "Create Table",
 });
@@ -213,7 +214,7 @@ onMounted(() => {
           <template #tableName>
             <div class="mb-6">
               <UFormField
-                :error="nameError && nameError !== '' ? nameError : undefined"
+                v-bind="nameError ? { error: nameError } : {}"
                 label="Table Name"
               >
                 <UInput

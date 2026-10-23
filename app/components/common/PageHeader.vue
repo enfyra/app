@@ -9,16 +9,15 @@ interface StatCard {
 
 interface Props {
   title: string;
-  description?: string;
-  stats?: StatCard[];
-  variant?: "default" | "minimal" | "stats-focus";
-  gradient?: "purple" | "blue" | "cyan" | "none";
-  leadingIcon?: string;
-  hideLeadingIcon?: boolean;
+  description?: string | undefined;
+  stats?: StatCard[] | undefined;
+  variant?: "default" | "minimal" | "stats-focus" | undefined;
+  gradient?: "purple" | "blue" | "cyan" | "none" | undefined;
+  leadingIcon?: string | undefined;
+  hideLeadingIcon?: boolean | undefined;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  description: undefined,
   stats: () => [],
   variant: "default",
   gradient: "none",
@@ -54,7 +53,7 @@ function handlePageHeaderActionClick(action: HeaderAction) {
 <template>
   <UPageHeader
     :title="title"
-    :description="description"
+    v-bind="description === undefined ? {} : { description }"
     :ui="{
       root: 'border-0 p-0',
       container: !isDesktop ? `grid items-center ${hasLinks ? 'grid-cols-[minmax(0,1fr)_auto] gap-x-3' : 'grid-cols-1'}` : undefined,
@@ -76,14 +75,11 @@ function handlePageHeaderActionClick(action: HeaderAction) {
         <component v-if="action.component" :is="action.component" v-bind="action.props" />
         <UButton
           v-else
-          :icon="unref(action.icon)"
-          :label="unref(action.label)"
+          v-bind="getHeaderActionButtonProps(action)"
           :variant="unref(action.variant) || 'soft'"
           :color="unref(action.color) || 'neutral'"
           :size="action.size || HEADER_ACTION_BUTTON_SIZE"
           loading-auto
-          :loading="unref(action.loading)"
-          :disabled="unref(action.disabled) || unref(action.loading)"
           :square="isHeaderActionIconOnly(action)"
           :class="getHeaderActionButtonClass(action)"
           :aria-label="action.ariaLabel || unref(action.label) || action.id"
@@ -96,14 +92,11 @@ function handlePageHeaderActionClick(action: HeaderAction) {
         <component v-if="action.component" :is="action.component" v-bind="action.props" />
         <UButton
           v-else
-          :icon="unref(action.icon)"
-          :label="unref(action.label)"
+          v-bind="getHeaderActionButtonProps(action)"
           :variant="unref(action.variant) || 'soft'"
           :color="unref(action.color) || 'neutral'"
           :size="action.size || HEADER_ACTION_BUTTON_SIZE"
           loading-auto
-          :loading="unref(action.loading)"
-          :disabled="unref(action.disabled) || unref(action.loading)"
           :square="isHeaderActionIconOnly(action)"
           :class="getHeaderActionButtonClass(action)"
           :aria-label="action.ariaLabel || unref(action.label) || action.id"

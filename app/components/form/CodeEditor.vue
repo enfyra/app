@@ -78,7 +78,6 @@ const {
   errorContext: "Test Code",
   disableErrorPage: true,
   immediate: false,
-  lazy: true,
 });
 
 const { initCodeMirror, codeMirrorModules } = useCodeMirrorLazy()

@@ -86,9 +86,9 @@ export function useMenuNotificationRegistry() {
 
     if (direct) {
       return {
-        value: direct.value,
+        ...(direct.value === undefined ? {} : { value: direct.value }),
         color: direct.color ?? "primary",
-        title: direct.title,
+        ...(direct.title === undefined ? {} : { title: direct.title }),
       };
     }
 

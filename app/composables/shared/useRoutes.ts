@@ -1,7 +1,10 @@
-let loadRoutesPromise: Promise<any[] | null> | null = null;
+import type { SchemaCollection } from '~/types/database';
+import type { RecordListResponse, RouteCatalogEntry } from '~/types/global-state';
+
+let loadRoutesPromise: Promise<RouteCatalogEntry[] | null> | null = null;
 
 export function useRoutes() {
-  const routes = useState<any[]>('routes:all', () => [])
+  const routes = useState<RouteCatalogEntry[]>('routes:all', () => [])
   const tableRoutesMap = useState<Record<string, string>>('routes:table:map', () => ({}))
   const routesLoading = useState<boolean>('routes:loading', () => false)
   const routesFetched = useState<boolean>('routes:fetched', () => false)
@@ -9,7 +12,7 @@ export function useRoutes() {
   const {
     data: routesData,
     execute: executeRoutes
-  } = useApi(() => '/enfyra_route', {
+  } = useApi<RecordListResponse<RouteCatalogEntry>>(() => '/enfyra_route', {
     query: {
       fields: ['id', 'path', 'isEnabled', 'updatedAt', 'mainTable.id', 'mainTable.name', 'mainTable.isSystem', 'mainTable.alias', 'mainTable.description', 'mainTable.isSingleRecord'].join(','),
       limit: 0,
@@ -51,7 +54,7 @@ export function useRoutes() {
     return loadRoutesPromise
   }
   
-  function getRouteForTableId(tableId: string | number, schemas?: any): string {
+  function getRouteForTableId(tableId: string | number, schemas?: SchemaCollection): string {
     const id = String(tableId)
     if (tableRoutesMap.value[id]) {
       return tableRoutesMap.value[id]
@@ -59,11 +62,11 @@ export function useRoutes() {
     
     if (schemas) {
       const table = Object.values(schemas).find(
-        (schema: any) => {
+        schema => {
           const schemaId = getId(schema);
           return schemaId === id;
         }
-      ) as any
+      )
       
       return table?.name ? `/${table.name}` : `/${id}`
     }
@@ -71,7 +74,7 @@ export function useRoutes() {
     return `/${id}`
   }
   
-  function getRouteForTableName(tableName: string, schemas?: any): string {
+  function getRouteForTableName(tableName: string, schemas?: SchemaCollection): string {
     if (schemas && schemas[tableName]) {
       const table = schemas[tableName]
       const tableId = getId(table);

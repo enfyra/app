@@ -24,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const tableName = 'enfyra_guard';
@@ -113,7 +114,7 @@ const {
   error: createError,
   execute: executeCreate,
   pending: createLoading,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/${tableName}`, {
   method: 'post',
   errorContext: 'Create Guard',
 });
@@ -162,7 +163,7 @@ async function handleCreate() {
 
   notify.success('Guard created successfully');
 
-  await navigateTo(`/settings/guards/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/settings/guards/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
 }

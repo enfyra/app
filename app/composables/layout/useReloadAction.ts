@@ -36,10 +36,10 @@ export function useReloadAction(options: ReloadActionOptions): HeaderAction {
     color: 'neutral',
     size: 'md',
     order: options.order ?? 0,
-    loading: options.loading,
-    disabled: options.disabled,
-    show: options.show,
-    permission: options.permission,
+    ...(options.loading === undefined ? {} : { loading: options.loading }),
+    ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
+    ...(options.show === undefined ? {} : { show: options.show }),
+    ...(options.permission === undefined ? {} : { permission: options.permission }),
     onClick: reload,
   };
 }

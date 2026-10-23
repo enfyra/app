@@ -94,6 +94,22 @@ describe('DynamicPageComponent', () => {
     expect(mocks.beginRouteLoading).not.toHaveBeenCalled()
   })
 
+  it('reports an empty menu response without attempting extension execution', async () => {
+    mocks.cachedMeta = null
+    mocks.cachedComponent = null
+    mocks.menuResponse.value = { data: [] }
+    const wrapper = await mountSuspended(DynamicPageComponent, {
+      route: '/reports',
+      props: { path: 'reports' },
+      global: { stubs: { PermissionGate: defineComponent({ template: '<div><slot /></div>' }) } },
+    })
+    try {
+      expect(wrapper.text()).toContain('No menu found for route: /reports')
+      expect(mocks.loadDynamicComponent).not.toHaveBeenCalled()
+      expect(mocks.endRouteLoading).toHaveBeenCalledOnce()
+    } finally { wrapper.unmount() }
+  })
+
   it('activates and releases the navigation overlay for a cold extension load', async () => {
     const coldMeta = {
       ...mocks.cachedMeta,

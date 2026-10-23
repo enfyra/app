@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureRuntimeMenu } from '~/types/feature-api';
 import { matchMenuRoutePath, normalizeMenuRoutePath } from "~/utils/menu-route-patterns";
 import { EXTENSION_RUNTIME_FIELDS, prefixFields } from "~/utils/extension-fields";
 
@@ -125,7 +126,7 @@ const {
   data: menuResponse,
   error: menuError,
   execute: executeFetchMenu,
-} = useApi(() => "/enfyra_menu", {
+} = useApi<FeatureCollection<FeatureRuntimeMenu>>(() => "/enfyra_menu", {
   query: computed(() => ({
     fields: [
       "*",
@@ -207,14 +208,14 @@ const fetchAndLoadExtension = async (runId: number) => {
       return;
     }
 
-    if (!menuResponse.value?.data || menuResponse.value.data.length === 0) {
+    const menuItem = menuResponse.value?.data[0];
+    if (!menuItem) {
       error.value = `No menu found for route: /${props.path}`;
       return;
     }
 
-    const menuItem = menuResponse.value.data[0];
 
-    if (!menuItem.extension || menuItem.extension.length === 0) {
+    if (!menuItem.extension || (Array.isArray(menuItem.extension) && menuItem.extension.length === 0)) {
       error.value = `No extension found for route: /${props.path}`;
       return;
     }

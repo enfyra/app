@@ -11,7 +11,7 @@ onBeforeUnmount(cancel);
     <template #body>
       <form class="space-y-4" @submit.prevent="accept">
         <p class="text-sm text-muted break-words">{{ input?.tableName }} · {{ input?.recordId }} · Current version {{ input?.currentVersion }}</p>
-        <UFormField label="New version" :error="version && !valid ? `Enter a valid version greater than ${input?.currentVersion}.` : undefined" help="The previous revision is recorded in code history. You can choose a higher major or minor version.">
+        <UFormField label="New version" v-bind="version && !valid ? { error: `Enter a valid version greater than ${input?.currentVersion}.` } : {}" help="The previous revision is recorded in code history. You can choose a higher major or minor version.">
           <UInput v-model="version" autofocus class="w-full" placeholder="1.0.1" />
         </UFormField>
       </form>

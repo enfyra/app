@@ -54,7 +54,7 @@ export const usePageHeaderRegistry = () => {
 
     routeHeaders.value = new Map(routeHeaders.value).set(currentRoute, {
       config,
-      ownerUid,
+      ...(ownerUid === undefined ? {} : { ownerUid }),
     });
 
     if (route.path === currentRoute) {

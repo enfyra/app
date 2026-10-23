@@ -47,7 +47,7 @@ function flowDebugTo(job: RuntimeFlowFailedJobRow) {
   if (!flowId) return undefined;
   return {
     path: `/settings/flows/${flowId}`,
-    query: stepKey ? { editStepKey: stepKey } : undefined,
+    ...(stepKey ? { query: { editStepKey: stepKey } } : {}),
   };
 }
 

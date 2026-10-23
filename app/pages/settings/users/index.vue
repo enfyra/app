@@ -42,6 +42,7 @@ import { h } from 'vue';
 import { UBadge } from '#components';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
+import type { ShellListResponse, ShellUserRecord } from '~/types/shell-api';
 import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
 
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -77,7 +78,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchUsers,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellUserRecord>>(() => `/${tableName}`, {
   query: computed(() => {
     const conditions: Record<string, unknown>[] = [];
     const filterQuery = buildQuery(currentFilter.value);

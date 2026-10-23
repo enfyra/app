@@ -1,11 +1,17 @@
 import type { ColumnDef, Row } from '@tanstack/vue-table'
-import type { Ref } from 'vue'
-import type { DataTableActionsConfig, DataTableColumnConfig, DataTableRowAction } from '../../app/types/data-table-columns'
+import { h, type Ref } from 'vue'
+import type { ComponentProps, ComponentSlots } from 'vue-component-type-helpers'
+import DataTable from '../../app/components/data-table/DataTable.vue'
+import DataTableLazy from '../../app/components/data-table/DataTableLazy.vue'
+import SettingsTable from '../../app/components/data-table/SettingsTable.vue'
+import type { DataTableProps } from '../../app/types/ui'
+import type { DataTableActionsConfig, DataTableColumnConfig, DataTableRowAction, DataTableSlots } from '../../app/types/data-table-columns'
 import type { SettingsBulkAction, SettingsBulkDeleteOptions } from '../../app/types/settings-bulk-action'
 import type { SettingsTableProps } from '../../app/types/settings-table'
 import type { TablePaginationProps } from '../../app/types/table-pagination'
 import { useDataTableColumns } from '../../app/composables/data-table/useDataTableColumns'
 import { useDataTableActions } from '../../app/composables/data-table/useDataTableActions'
+import { useApi } from '../../app/composables/shared/useApi'
 import { useSettingsBulkDelete } from '../../app/composables/data-table/useSettingsBulkDelete'
 import { settingsTextColumn } from '../../app/utils/settings-table'
 import { createSelectionColumn } from '../../app/utils/data-table-selection'
@@ -80,6 +86,80 @@ export function checkSettingsContracts(action: SettingsBulkAction<Item>) {
   // @ts-expect-error Pagination links use the native route target, not arbitrary return values.
   const invalidLink: TablePaginationProps = { itemsPerPage: 10, to: () => 42 }
   return { options, props, unrelatedAction, links, invalidLink }
+}
+
+type IsAny<T> = 0 extends (1 & T) ? true : false
+type Assert<T extends true> = T
+export type DataTableRowIsNotAny = Assert<IsAny<Parameters<NonNullable<DataTableProps<Item>['onSelect']>>[1]['original']> extends false ? true : false>
+export type DataTableColumnIsNotAny = Assert<IsAny<DataTableProps<Item>['columns'][number]> extends false ? true : false>
+export type LazyRowClickIsNotAny = Assert<IsAny<Parameters<NonNullable<ComponentProps<typeof DataTableLazy<Item>>['onRow-click']>>[0]> extends false ? true : false>
+
+export function checkNativeTableContracts(row: Item, columns: ColumnDef<Item>[]) {
+  const props: DataTableProps<Item> = {
+    headerName: 'Items', data: [row], columns,
+    getRowId: (original, index, parent) => `${original.id}:${index}:${parent?.original.name ?? ''}`,
+    getSubRows: original => original.detail ? [original] : [],
+    onSelect: (_event, nativeRow) => {
+      nativeRow.original.name.toUpperCase()
+      // @ts-expect-error Native row callbacks must retain the concrete record shape.
+      nativeRow.original.missing
+    },
+    rowSelectionOptions: { enableRowSelection: nativeRow => nativeRow.original.id > 0 },
+    contextMenuItems: original => [{ label: original.name, onSelect: () => {} }],
+    sortingOptions: { sortingFns: { byName: (first, second) => first.original.name.localeCompare(second.original.name) } },
+  }
+  const componentProps: ComponentProps<typeof DataTable<Item>> = {
+    ...props,
+    'onRow-click': original => original.name.toUpperCase(),
+    'onUpdate:selectedRows': rows => rows.forEach(original => original.name.toUpperCase()),
+  }
+  const lazyProps: ComponentProps<typeof DataTableLazy<Item>> = { ...componentProps }
+  const settingsProps: ComponentProps<typeof SettingsTable<Item>> = { headerName: 'Items', data: [row], columns, 'onRow-click': original => original.name.toUpperCase() }
+  const slots: DataTableSlots<Item> = {
+    'name-cell': ({ row: nativeRow, getValue }) => {
+      const value: unknown = getValue()
+      // @ts-expect-error Cell slot original rows do not accept unrelated fields.
+      nativeRow.original.count
+      // @ts-expect-error Dynamic cell values cannot be assigned without narrowing.
+      const text: string = value
+      return [h('span', `${nativeRow.original.name}:${text}`)]
+    },
+    'name-header': ({ table }) => {
+      // @ts-expect-error Header tables contain real typed records, never placeholder flags.
+      table.options.data[0]?.__eappSkeletonRow
+      return [h('span', table.options.data[0]?.name)]
+    },
+    toolbar: ({ tableApi }) => [h('span', tableApi?.getRowModel().rows[0]?.original.name)],
+  }
+  const lazySlots: ComponentSlots<typeof DataTableLazy<Item>> = slots
+  // @ts-expect-error Placeholder objects cannot be passed as domain records.
+  const placeholders: DataTableProps<Item> = { headerName: 'Items', columns, data: [{ __eappSkeletonRow: true }] }
+  // @ts-expect-error Typed columns cannot be rebound to an unrelated row type.
+  const otherProps: DataTableProps<Other> = props
+  // @ts-expect-error Generic component row-click callbacks reject unrelated record contracts.
+  const wrongCallback: ComponentProps<typeof DataTable<Item>> = { ...props, 'onRow-click': (original: Other) => original.count }
+  return { componentProps, lazyProps, settingsProps, slots, lazySlots, placeholders, otherProps, wrongCallback }
+}
+
+export async function checkSingleAndBatchTableDeletion() {
+  const single = useApi<Item>('/items', { method: 'delete' })
+  const batch = useApi<Item>('/items', { method: 'delete', batch: true })
+  const singleIsNotAny: Assert<IsAny<Awaited<ReturnType<typeof single.execute>>> extends false ? true : false> = true
+  const batchIsNotAny: Assert<IsAny<NonNullable<Awaited<ReturnType<typeof batch.execute>>>[number]> extends false ? true : false> = true
+  const unknownResult = await useApi('/items').execute()
+  // @ts-expect-error Unvalidated responses do not grant unchecked domain record access.
+  unknownResult.name
+  const one: Item | null = await single.execute({ id: 1 })
+  const many: Item[] | null = await batch.execute({ ids: [1, 2] })
+  // @ts-expect-error A default single request does not silently accept ids batches.
+  single.execute({ ids: [1, 2] })
+  // @ts-expect-error Explicit batches require the batch identifier contract.
+  batch.executeWithResult({ id: 1 })
+  // @ts-expect-error Batches cannot execute without ids or files.
+  batch.executeWithResult()
+  // @ts-expect-error Batch results remain arrays, not individual records.
+  const wrong: Item | null = await batch.execute({ ids: [1] })
+  return { one, many, wrong, singleIsNotAny, batchIsNotAny }
 }
 
 export function checkNormalizerContracts(value: Item | null | undefined) {

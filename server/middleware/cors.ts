@@ -141,9 +141,9 @@ export function evaluateCorsOrigin(
 }
 
 export default defineEventHandler(async (event) => {
-  const url = event.node.req.url || '';
+  const url = event.path || event.node.req.url || '';
 
-  if (!url.includes('/api/')) {
+  if (!url.startsWith('/api/')) {
     return;
   }
 

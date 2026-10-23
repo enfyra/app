@@ -68,7 +68,7 @@
             </div>
 
             <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-              <UFormField label="Key" required class="w-full" :error="errors.key">
+              <UFormField label="Key" required class="w-full" v-bind="errors.key === undefined ? {} : { error: errors.key }">
                 <UInput :model-value="form.key" placeholder="e.g. check_user" class="w-full" @update:model-value="updateField('key', $event)" />
                 <template #hint>
                   <span class="text-[10px]">Reference via <code class="rounded bg-[var(--surface-muted)] px-1">@FLOW.{{ form.key || 'key' }}</code></span>
@@ -134,7 +134,7 @@
                   <USelect :model-value="form.parentId" :items="conditionStepOptions" value-key="value" class="w-full" placeholder="None (root level)" @update:model-value="updateField('parentId', $event)" />
                 </UFormField>
                 <UFormField v-if="form.parentId" label="Execute when" class="w-full">
-                  <USelect :model-value="form.branch" :items="branchOptions" value-key="value" class="w-full" @update:model-value="updateField('branch', $event)" />
+                  <USelect v-bind="form.branch === undefined ? {} : { modelValue: form.branch }" :items="branchOptions" value-key="value" class="w-full" @update:model-value="updateField('branch', $event)" />
                 </UFormField>
               </div>
               <CommonEmptyState v-else variant="naked" icon="lucide:git-branch" title="No condition steps" description="Create a condition step before attaching branch children." />

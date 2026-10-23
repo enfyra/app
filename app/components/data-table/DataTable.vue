@@ -1,22 +1,27 @@
-<script setup lang="ts">
-import { UButton, UContextMenu } from '#components'
-import { FlexRender, type ColumnDef, type Row, type RowSelectionState, type SortingState, type Table, type VisibilityState } from '@tanstack/vue-table'
-import type { DropdownMenuItem } from '@nuxt/ui'
+<script setup lang="ts" generic="TRow extends object">
+import { UContextMenu } from '#components'
+import type { CellContext, Column, ColumnDef, HeaderContext, Row, RowSelectionState, SortingState, VisibilityState } from '@tanstack/vue-table'
+import type { ContextMenuItem, DropdownMenuItem } from '@nuxt/ui'
+import type { TableProps } from '@nuxt/ui/components/Table.vue'
+import { tv } from '@nuxt/ui/utils/tv'
+import theme from '#build/ui/table'
 import type { DataTableProps } from '~/types/ui'
-import { createSelectionColumn } from '~/utils/data-table-selection'
+import type { DataTableInstance, DataTableSlots } from '~/types/data-table-columns'
+import { createSelectionColumn, selectionCheckboxUi } from '~/utils/data-table-selection'
 
-const props = withDefaults(defineProps<DataTableProps>(), {
+const props = withDefaults(defineProps<DataTableProps<TRow>>(), {
   loading: false,
   showColumnVisibility: true,
   enableRowSelection: false,
   rowSelectionMode: 'multiple',
 })
 
+defineSlots<DataTableSlots<TRow>>()
 const emit = defineEmits<{
-  'row-click': [row: Record<string, any>]
+  'row-click': [row: TRow]
   'page-size-change': [size: number]
   'search': [value: string]
-  'update:selectedRows': [rows: Record<string, any>[]]
+  'update:selectedRows': [rows: TRow[]]
   'update:selectedRowIds': [ids: (string | number)[]]
 }>()
 
@@ -30,8 +35,15 @@ const explicitTotal = computed(() => {
 })
 const recordCount = computed(() => explicitTotal.value ?? props.data.length)
 const showRecordCount = computed(() => props.paginationConfig?.mode !== 'cursor' || explicitTotal.value !== undefined)
-const tableOptions = computed(() => Object.fromEntries(Object.entries(props).filter(([key]) => !wrapperKeys.has(key))))
-const tableRef = useTemplateRef<{ tableApi?: Table<Record<string, any>>; tableRef?: HTMLElement }>('tableRef')
+const tableOptions = computed(() => {
+  const options: TableProps<TRow> = {}
+  for (const [key, value] of Object.entries(props)) {
+    if (value !== undefined && !wrapperKeys.has(key)) Object.assign(options, { [key]: value })
+  }
+  if (props.contextMenuItems || props.onContextmenu) options.onContextmenu = onContextmenu
+  return options
+})
+const tableRef = useTemplateRef<DataTableInstance<TRow>>('tableRef')
 const page = defineModel<number>('page', { default: 1 })
 const tableScope = shallowRef<HTMLElement | null>(null)
 const sorting = defineModel<SortingState>('sorting', { default: () => [] })
@@ -40,20 +52,21 @@ const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: (
 const rowSelectionOptions = computed(() => ({
   ...(props.rowSelectionOptions ?? {}),
   ...(props.enableRowSelection
-    ? { enableRowSelection: (row: Row<Record<string, any>>) => {
+    ? { enableRowSelection: (row: Row<TRow>) => {
         const eligibility = props.rowSelectionOptions?.enableRowSelection
-        return !props.selectionDisabled && !row.original.__eappSkeletonRow
+        return !props.selectionDisabled
           && (typeof eligibility === 'function' ? eligibility(row) : eligibility !== false)
       }, enableMultiRowSelection: props.rowSelectionMode !== 'single' }
     : {}),
 }))
 const selectionIdByKey = new Map<string, string | number>()
-function rowIdOf(row: Record<string, any>, index = 0): string | number | undefined {
-  return props.getRowId ? props.getRowId(row, index) : (row?.id ?? row?._id)
+function rowIdOf(row: TRow, index = 0, parent?: Row<TRow>): string | number | undefined {
+  if (props.getRowId) return props.getRowId(row, index, parent)
+  const id: unknown = ('id' in row ? row.id : undefined) ?? ('_id' in row ? row._id : undefined)
+  return typeof id === 'string' || typeof id === 'number' ? id : undefined
 }
-function rowKeyOf(row: Record<string, any>, index = 0): string {
-  if (row.__eappSkeletonRow) return `skeleton:${index}`
-  return String(rowIdOf(row, index) ?? index)
+function rowKeyOf(row: TRow, index = 0, parent?: Row<TRow>): string {
+  return String(rowIdOf(row, index, parent) ?? (parent ? `${parent.id}.${index}` : index))
 }
 const isSelectionControlled = computed(() => Array.isArray(props.selectedRowIds))
 const selectedKeys = computed(() => Object.entries(rowSelection.value)
@@ -62,11 +75,11 @@ const selectedKeys = computed(() => Object.entries(rowSelection.value)
 const selectedRows = computed(() => {
   if (!props.enableRowSelection) return []
   const keys = new Set(selectedKeys.value)
-  return props.data.filter((row) => !row?.__eappSkeletonRow && keys.has(rowKeyOf(row)))
+  return props.data.filter((row, index) => keys.has(rowKeyOf(row, index)))
 })
 const selectedRowIdValues = computed(() => {
   if (!props.enableRowSelection) return []
-  const idByKey = new Map(props.data.map((row) => [rowKeyOf(row), rowIdOf(row)]))
+  const idByKey = new Map(props.data.map((row, index) => [rowKeyOf(row, index), rowIdOf(row, index)]))
   return selectedKeys.value.map((key) => idByKey.get(key) ?? selectionIdByKey.get(key) ?? key)
 })
 
@@ -94,12 +107,12 @@ watch([selectedRowIdValues, () => props.data], () => {
 
 watch(() => props.data, (rows) => {
   if (!props.enableRowSelection || isSelectionControlled.value) return
-  const visible = new Set(rows.map((row) => rowKeyOf(row)))
+  const visible = new Set(rows.map((row, index) => rowKeyOf(row, index)))
   const retained = selectedKeys.value.filter((key) => visible.has(key))
   if (retained.length === selectedKeys.value.length) return
   rowSelection.value = Object.fromEntries(retained.map((key) => [key, true]))
 })
-const menuItems = ref<any[]>([])
+const menuItems = shallowRef<ContextMenuItem[]>([])
 const menuWrapper = computed(() => props.contextMenuItems ? UContextMenu : 'div')
 const hasActionTier = () => !!slots.toolbar || !!slots['toolbar-actions'] || (props.showColumnVisibility && visibilityItems.value.length > 0) || !!props.reload
 const visibilityItems = computed<DropdownMenuItem[]>(() => tableRef.value?.tableApi?.getAllColumns()
@@ -113,10 +126,10 @@ const visibilityItems = computed<DropdownMenuItem[]>(() => tableRef.value?.table
     onSelect: (event: Event) => event.preventDefault(),
   })) ?? [])
 
-const columns = computed<ColumnDef<Record<string, any>>[]>(() => props.columns.map((column) => {
+const columns = computed<ColumnDef<TRow>[]>(() => props.columns.map((column) => {
   const id = String(column.id ?? ('accessorKey' in column ? column.accessorKey : '') ?? '')
   const width = column.size
-  if (!['id', '_id'].includes(id.toLowerCase()) || !width) return column as ColumnDef<Record<string, any>>
+  if (!['id', '_id'].includes(id.toLowerCase()) || !width) return column
   return {
     ...column,
     meta: {
@@ -128,53 +141,54 @@ const columns = computed<ColumnDef<Record<string, any>>[]>(() => props.columns.m
         td: { width: `${width}px`, minWidth: `${column.minSize ?? width}px`, maxWidth: `${column.maxSize ?? width}px` },
       },
     },
-  } as ColumnDef<Record<string, any>>
+  }
 }))
 
 const SKELETON_BAR_WIDTHS = ['w-4/5', 'w-3/5', 'w-2/3', 'w-1/2']
 const skeletonActive = computed(() => props.loading && !props.data.length && !slots.loading && columns.value.length > 0)
 const skeletonRowCount = computed(() => Math.max(1, Math.floor(props.paginationConfig?.itemsPerPage || 10)))
-const skeletonRows = computed(() => Array.from({ length: skeletonRowCount.value }, () => ({ __eappSkeletonRow: true })))
-const tableData = computed(() => skeletonActive.value ? skeletonRows.value : props.data)
-const forwardedSlotNames = computed(() => {
-  const names = Object.keys(slots)
-  return skeletonActive.value ? names.filter(name => !name.endsWith('-cell')) : names
-})
-const tableColumns = computed<ColumnDef<Record<string, any>>[]>(() => {
-  const source = props.enableRowSelection
-    ? [createSelectionColumn<Record<string, any>>({ multiple: props.rowSelectionMode !== 'single' }), ...columns.value]
-    : columns.value
-  if (!skeletonActive.value) return source
-  return source.map((column, index) => ({
-    ...column,
-    cell: (ctx: any) => {
-      if (ctx.row?.original?.__eappSkeletonRow !== true) return column.cell ? h(FlexRender, { render: column.cell, props: ctx }) : ctx.getValue()
-      if (ctx.column.id === '__actions') {
-        return h('div', { class: 'invisible pointer-events-none flex items-center justify-center' }, [
-          h(UButton, { icon: 'lucide:ellipsis-vertical', size: 'lg', variant: 'ghost', color: 'neutral', tabindex: -1, 'aria-hidden': true }),
-        ])
-      }
-      return h('div', {
-        'class': ['eapp-table-skeleton h-5 max-w-48 animate-pulse rounded-md bg-elevated', SKELETON_BAR_WIDTHS[index % SKELETON_BAR_WIDTHS.length]!],
-        'aria-hidden': true,
-      })
-    },
-  }) as ColumnDef<Record<string, any>>)
-})
-
-function onRowSelect(event: Event, row: Row<Record<string, any>>) {
-  if (row.original.__eappSkeletonRow) return
+const tableColumns = computed<ColumnDef<TRow>[]>(() => props.enableRowSelection
+  ? [createSelectionColumn<TRow>({ multiple: props.rowSelectionMode !== 'single', disabled: Boolean(skeletonActive.value || props.selectionDisabled) }), ...columns.value]
+  : columns.value)
+const skeletonColumns = computed(() => tableRef.value?.tableApi?.getVisibleLeafColumns() ?? [])
+const { cellSlotNames, columnSlotNames, contentSlotNames } = useDataTableSlots()
+const nativeContentSlotNames = computed(() => contentSlotNames.value.filter(name => name !== 'body-top'))
+const activeCellSlotNames = computed(() => skeletonActive.value ? [] : cellSlotNames.value)
+const appConfig = useAppConfig()
+const nativeUi = computed(() => tv({ extend: theme, ...appConfig.ui?.table })({
+  sticky: props.sticky,
+  loading: props.loading,
+  loadingColor: props.loadingColor,
+  loadingAnimation: props.loadingAnimation,
+}))
+function isHeaderContext(context: CellContext<TRow, unknown> | HeaderContext<TRow, unknown>): context is HeaderContext<TRow, unknown> {
+  return 'header' in context
+}
+function skeletonCellClass(column: Column<TRow>) {
+  const value = column.columnDef.meta?.class?.td
+  return nativeUi.value.td({
+    class: [props.ui?.td, typeof value === 'function' ? undefined : value],
+    pinned: !!column.getIsPinned(),
+  })
+}
+function skeletonCellStyle(column: Column<TRow>) {
+  const pinned = column.getIsPinned()
+  const value = column.columnDef.meta?.style?.td
+  return [
+    pinned === 'left' ? { left: `${column.getStart('left')}px` } : pinned === 'right' ? { right: `${column.getAfter('right')}px` } : {},
+    typeof value === 'function' ? undefined : value,
+  ]
+}
+function onRowSelect(event: Event, row: Row<TRow>) {
   if (props.enableRowSelection && props.selectOnRowClick && row.getCanSelect()) row.toggleSelected()
   props.onSelect?.(event, row)
   emit('row-click', row.original)
 }
-
-function onContextmenu(event: Event, row: { original: Record<string, any> }) {
-  if (row.original?.__eappSkeletonRow) return
+function onContextmenu(event: Event, row: Row<TRow>) {
   menuItems.value = props.contextMenuItems?.(row.original) ?? []
   if (!menuItems.value.length && props.contextMenuItems) event.preventDefault()
-  if (Array.isArray(props.onContextmenu)) props.onContextmenu.forEach((handler) => handler(event, row as any))
-  else props.onContextmenu?.(event, row as any)
+  if (Array.isArray(props.onContextmenu)) props.onContextmenu.forEach(handler => handler(event, row))
+  else props.onContextmenu?.(event, row)
 }
 
 defineExpose({
@@ -235,28 +249,52 @@ defineExpose({
         />
       </div>
     </div>
-    <component :is="menuWrapper" :items="props.contextMenuItems ? menuItems : undefined">
+    <component :is="menuWrapper" v-bind="props.contextMenuItems ? { items: menuItems } : {}">
+      <!-- @vue-generic {TRow} -->
       <UTable
         ref="tableRef"
         v-bind="{ ...tableOptions, ...$attrs }"
-        :data="tableData"
+        :data="props.data"
         :get-row-id="rowKeyOf"
         :columns="tableColumns"
         :loading="props.loading"
         :watch-options="props.watchOptions ?? { deep: false }"
-        :ui="{ ...props.ui, root: ['eapp-table-scroll overflow-x-auto', props.ui?.root].filter(Boolean).join(' '), base: ['w-full min-w-max', props.ui?.base].filter(Boolean).join(' '), tr: ['data-[selectable=true]:cursor-pointer', props.ui?.tr].filter(Boolean).join(' ') }"
+        :ui="{ ...props.ui, root: ['eapp-table-scroll overflow-x-auto', props.ui?.root].filter(Boolean).join(' '), base: ['w-full min-w-max', props.ui?.base].filter(Boolean).join(' '), tbody: [skeletonActive ? 'eapp-table-skeleton-body' : '', props.ui?.tbody].filter(Boolean).join(' '), tr: ['data-[selectable=true]:cursor-pointer', props.ui?.tr].filter(Boolean).join(' ') }"
         v-model:sorting="sorting"
         v-model:column-visibility="columnVisibility"
         v-model:row-selection="rowSelection"
         :row-selection-options="rowSelectionOptions"
         :on-select="onRowSelect"
-        :on-contextmenu="props.contextMenuItems || props.onContextmenu ? onContextmenu : undefined"
       >
-        <template v-for="name in forwardedSlotNames" #[name]="slotData">
+        <template #body-top>
+          <slot name="body-top" />
+          <template v-if="skeletonActive">
+            <tr v-for="rowIndex in skeletonRowCount" :key="rowIndex" data-slot="tr" class="eapp-table-skeleton-row" :class="nativeUi.tr({ class: props.ui?.tr })" aria-hidden="true" inert>
+              <td v-for="(column, columnIndex) in skeletonColumns" :key="column.id" data-slot="td" :data-pinned="column.getIsPinned()" :class="skeletonCellClass(column)" :style="skeletonCellStyle(column)">
+                <div v-if="column.id === '__actions'" class="invisible pointer-events-none flex items-center justify-center">
+                  <UButton icon="lucide:ellipsis-vertical" size="lg" variant="ghost" color="neutral" tabindex="-1" aria-hidden="true" />
+                </div>
+                <UCheckbox v-else-if="column.id === 'select'" size="lg" :ui="selectionCheckboxUi" class="invisible pointer-events-none" :model-value="false" disabled tabindex="-1" aria-hidden="true" />
+                <div v-else class="eapp-table-skeleton h-5 max-w-48 animate-pulse rounded-md bg-elevated" :class="SKELETON_BAR_WIDTHS[columnIndex % SKELETON_BAR_WIDTHS.length]" aria-hidden="true" />
+              </td>
+            </tr>
+          </template>
+        </template>
+        <template v-for="name in activeCellSlotNames" #[name]="slotData">
           <slot :name="name" v-bind="slotData" />
         </template>
+        <template v-for="name in columnSlotNames" #[name]="slotData">
+          <slot v-if="isHeaderContext(slotData)" :name="name" v-bind="slotData" />
+        </template>
+        <template v-for="name in nativeContentSlotNames" #[name]="slotData">
+          <slot :name="name" v-bind="slotData" />
+        </template>
+        <template v-if="slots.expanded" #expanded="slotData">
+          <slot name="expanded" v-bind="slotData" />
+        </template>
         <template v-if="!slots.loading" #loading>
-          <span role="status" class="sr-only">Loading records...</span>
+          <span v-if="skeletonActive" aria-hidden="true" hidden />
+          <span v-else role="status" class="sr-only">Loading records...</span>
         </template>
         <template v-if="!slots.empty" #empty>
           <CommonEmptyState v-if="!props.loading" variant="naked" title="No data available" description="There are no records to display" icon="lucide:database" size="sm" />
@@ -285,6 +323,12 @@ defineExpose({
 </template>
 
 <style scoped>
+:deep(.eapp-table-skeleton-body > tr:has(> [data-slot='loading'])) {
+  display: none;
+}
+:deep(.eapp-table-skeleton-body > .eapp-table-skeleton-row:has(+ tr:last-child > [data-slot='loading'])) {
+  border-bottom-width: 0;
+}
 :deep(.eapp-table-scroll) {
   scrollbar-color: var(--ui-border-accented) var(--ui-bg);
   scrollbar-width: thin;

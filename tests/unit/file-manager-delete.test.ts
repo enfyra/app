@@ -2,6 +2,11 @@ import { ref } from 'vue';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useFileManager } from '../../app/composables/file-manager/useFileManager';
 
+vi.mock('~/composables/shared/useNotify', () => ({ useNotify: () => globalThis.useNotify() }));
+vi.mock('~/composables/shared/useConfirm', () => ({ useConfirm: () => globalThis.useConfirm() }));
+vi.mock('~/composables/shared/useDatabase', () => ({ useDatabase: () => globalThis.useDatabase() }));
+vi.mock('~/composables/shared/useApi', () => ({ useApi: (...args: Parameters<typeof globalThis.useApi>) => globalThis.useApi(...args) }));
+
 afterEach(() => vi.unstubAllGlobals());
 
 function setup(confirmed: boolean, fileSucceeds = true) {
@@ -12,7 +17,7 @@ function setup(confirmed: boolean, fileSucceeds = true) {
   vi.stubGlobal('useConfirm', () => ({ confirm }));
   vi.stubGlobal('useNotify', () => ({ success: vi.fn(), warning: vi.fn() }));
   vi.stubGlobal('useDatabase', () => ({ getId: (record: Record<string, unknown>) => record.id ?? record._id }));
-  vi.stubGlobal('useApi', (url: () => string) => ({ execute: vi.fn(), error: ref(null), executeWithResult: url().includes('folder') ? folderDelete : fileDelete }));
+  vi.stubGlobal('useApi', (url: string | (() => string)) => ({ execute: vi.fn(), error: ref(null), executeWithResult: (typeof url === 'function' ? url() : url).includes('folder') ? folderDelete : fileDelete }));
   return { manager: useFileManager(), confirm, folderDelete, fileDelete };
 }
 

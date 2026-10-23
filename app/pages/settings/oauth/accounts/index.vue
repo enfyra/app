@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
 import type { ColumnDef } from '@tanstack/vue-table';
+import type { ShellListResponse, ShellOAuthAccountRecord } from '~/types/shell-api';
 
 const page = ref(1);
 const pageLimit = useSettingsPageSize('oauth-accounts');
@@ -47,7 +48,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchAccounts,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellOAuthAccountRecord>>(() => `/${tableName}`, {
   query: computed(() => ({
     fields: OAUTH_ACCOUNT_LIST_FIELDS,
     limit: pageLimit,

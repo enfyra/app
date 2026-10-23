@@ -62,7 +62,7 @@
       ['_in', '_not_in'].includes(operator)
     "
     :model-value="modelValue"
-    :items="enumOptions"
+    v-bind="enumOptions === undefined ? {} : { items: enumOptions }"
     multiple
     @update:model-value="emit('update:modelValue', $event)"
     class="w-full min-w-0 min-h-8"
@@ -71,7 +71,7 @@
   <USelect
     v-else-if="fieldType === 'select'"
     :model-value="modelValue"
-    :items="enumOptions"
+    v-bind="enumOptions === undefined ? {} : { items: enumOptions }"
     @update:model-value="emit('update:modelValue', $event)"
     class="w-full min-w-0 min-h-8"
   />

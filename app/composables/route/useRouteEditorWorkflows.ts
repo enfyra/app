@@ -1,4 +1,5 @@
 import { validateRouteHandlerForm, validateRouteHookForm } from "~/utils/route-handler-hook-forms";
+import type { FeatureCollection, FeatureEditableRecord, FeatureRouteHandler, FeatureRouteHook } from '~/types/feature-api';
 
 type MethodObject = { name: string; id?: string };
 
@@ -49,7 +50,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: handlersData,
     pending: handlersLoading,
     execute: fetchHandlers,
-  } = useApi(() => "/enfyra_route_handler", {
+  } = useApi<FeatureCollection<FeatureRouteHandler>>(() => "/enfyra_route_handler", {
     query: computed(() => ({
       fields: ROUTE_HANDLER_WORKFLOW_FIELDS,
       filter: options.routeId.value ? { route: { [getIdFieldName()]: { _eq: options.routeId.value } } } : undefined,
@@ -62,7 +63,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: preHooksData,
     pending: preHooksLoading,
     execute: fetchPreHooks,
-  } = useApi(() => "/enfyra_pre_hook", {
+  } = useApi<FeatureCollection<FeatureRouteHook>>(() => "/enfyra_pre_hook", {
     query: computed(() => ({
       fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: options.routeId.value ? { route: { [getIdFieldName()]: { _eq: options.routeId.value } } } : undefined,
@@ -76,7 +77,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: postHooksData,
     pending: postHooksLoading,
     execute: fetchPostHooks,
-  } = useApi(() => "/enfyra_post_hook", {
+  } = useApi<FeatureCollection<FeatureRouteHook>>(() => "/enfyra_post_hook", {
     query: computed(() => ({
       fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: options.routeId.value ? { route: { [getIdFieldName()]: { _eq: options.routeId.value } } } : undefined,
@@ -90,7 +91,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: globalPreHooksData,
     pending: globalPreHooksLoading,
     execute: fetchGlobalPreHooks,
-  } = useApi(() => "/enfyra_pre_hook", {
+  } = useApi<FeatureCollection<FeatureRouteHook>>(() => "/enfyra_pre_hook", {
     query: computed(() => ({
       fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: { isGlobal: { _eq: true } },
@@ -104,7 +105,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: globalPostHooksData,
     pending: globalPostHooksLoading,
     execute: fetchGlobalPostHooks,
-  } = useApi(() => "/enfyra_post_hook", {
+  } = useApi<FeatureCollection<FeatureRouteHook>>(() => "/enfyra_post_hook", {
     query: computed(() => ({
       fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: { isGlobal: { _eq: true } },
@@ -265,7 +266,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const {
     data: editHandlerData,
     execute: fetchEditHandler,
-  } = useApi(() => "/enfyra_route_handler", {
+  } = useApi<FeatureCollection<FeatureEditableRecord>>(() => "/enfyra_route_handler", {
     query: computed(() => ({
       fields: getHandlerIncludeFields(),
       filter: { [getIdFieldName()]: { _eq: editingHandlerId.value } },
@@ -449,7 +450,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const {
     data: editPreHookData,
     execute: fetchEditPreHook,
-  } = useApi(() => "/enfyra_pre_hook", {
+  } = useApi<FeatureCollection<FeatureEditableRecord>>(() => "/enfyra_pre_hook", {
     query: computed(() => ({
       fields: getPreHookIncludeFields(),
       filter: { [getIdFieldName()]: { _eq: editingHookId.value } },
@@ -461,7 +462,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const {
     data: editPostHookData,
     execute: fetchEditPostHook,
-  } = useApi(() => "/enfyra_post_hook", {
+  } = useApi<FeatureCollection<FeatureEditableRecord>>(() => "/enfyra_post_hook", {
     query: computed(() => ({
       fields: getPostHookIncludeFields(),
       filter: { [getIdFieldName()]: { _eq: editingHookId.value } },

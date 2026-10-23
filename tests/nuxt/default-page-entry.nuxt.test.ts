@@ -38,7 +38,7 @@ describe('Default page entry', () => {
     state.selected = null;
     state.menus.push(
       { id: 'data', label: 'Data', route: '/data', type: 'Dropdown Menu', isEnabled: true, description: 'Browse your collections' },
-      { id: 'general', label: 'General', route: '/settings/general', type: 'Menu', isEnabled: true, parent: state.menus[0] },
+      { id: 'general', label: 'General', route: '/settings/general', type: 'Menu', isEnabled: true, ...(state.menus[0] ? { parent: state.menus[0] } : {}) },
       { id: 'disabled', label: 'Disabled', route: '/disabled', isEnabled: false },
       { id: 'param', label: 'Detail', route: '/notes/:id', isEnabled: true },
       { id: 'external', label: 'External', route: '//example.com', isEnabled: true },

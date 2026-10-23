@@ -5,22 +5,15 @@
       v-for="action in visibleComponentActions"
       :key="action.key || action.id"
     >
-      <PermissionGate :condition="action.permission">
+      <PermissionGate v-bind="action.permission === undefined ? {} : { condition: action.permission }">
         <component :is="action.component" v-bind="action.props" />
       </PermissionGate>
     </template>
 
     <template v-for="action in visibleButtonActions" :key="action.id">
-      <PermissionGate :condition="action.permission">
+      <PermissionGate v-bind="action.permission === undefined ? {} : { condition: action.permission }">
         <UButton
-          :label="
-            (isMobile || isTablet)
-              ? undefined
-              : isRef(action.label)
-              ? unref(action.label)
-              : action.label
-          "
-          :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
+          v-bind="{ ...getHeaderActionButtonProps(action, isMobile || isTablet), ...getHeaderActionLinkProps(action) }"
           :variant="resolveHeaderActionVariant(action, { fallback: 'solid', hideLabel: isMobile || isTablet, shaped: !isDesktop })"
           :color="
             (isRef(action.color) ? unref(action.color) : action.color) ||
@@ -28,10 +21,6 @@
           "
           :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
           :loading-auto="true"
-          :loading="unref(action.loading)"
-          :disabled="unref(action.disabled) || unref(action.loading)"
-          :to="unref(action.to)"
-          :replace="unref(action.replace)"
           :aria-label="action.ariaLabel || (isRef(action.label) ? unref(action.label) : action.label) || action.id"
           :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
           :class="getHeaderActionButtonClass(action, isMobile || isTablet)"

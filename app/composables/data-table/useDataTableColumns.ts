@@ -48,10 +48,10 @@ export function useDataTableColumns<TRow = Record<string, unknown>>() {
         const items: DropdownMenuItem[] = actions.map((action) => ({
           ...action,
           color: 'neutral',
-          ui: action.color === 'error' ? {
+          ...(action.color === 'error' ? { ui: {
             item: 'text-error data-highlighted:text-error',
             itemLeadingIcon: 'text-error group-data-highlighted:text-error',
-          } : undefined,
+          } } : {}),
           onSelect: () => action.onSelect(row.original),
         }));
 

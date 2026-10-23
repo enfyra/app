@@ -13,7 +13,7 @@
             @has-changed="(hasChanged) => hasFormChanges = hasChanged"
             :table-name="tableName"
             :excluded="excludedFields"
-            :includes="includedFields.length > 0 ? includedFields : undefined"
+            v-bind="includedFields.length > 0 ? { includes: includedFields } : {}"
             :field-map="typeMap"
             :loading="loading"
           />
@@ -33,6 +33,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureStorageConfig } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
@@ -165,7 +166,7 @@ const {
   data: configData,
   pending: loading,
   execute: executeGetConfig,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureStorageConfig>>(() => `/${tableName}`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {

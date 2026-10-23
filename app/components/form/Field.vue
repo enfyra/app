@@ -217,10 +217,12 @@ const nonBooleanOuterClass = computed(() => {
     <div class="shrink-0">
       <FormFieldRenderer
         :key-name="keyName"
-        :table-name="tableName"
+        v-bind="{
+          ...(tableName === undefined ? {} : { tableName }),
+          ...(fieldMap === undefined ? {} : { fieldMap }),
+        }"
         :form-data="formData"
         :column-map="columnMap"
-        :field-map="fieldMap"
         :errors="effectiveErrors"
         :field-id="fieldId"
         @update:form-data="updateFormData"
@@ -338,10 +340,12 @@ const nonBooleanOuterClass = computed(() => {
 
     <FormFieldRenderer
       :key-name="keyName"
-      :table-name="tableName"
+      v-bind="{
+        ...(tableName === undefined ? {} : { tableName }),
+        ...(fieldMap === undefined ? {} : { fieldMap }),
+      }"
       :form-data="formData"
       :column-map="columnMap"
-        :field-map="fieldMap"
       :errors="effectiveErrors"
       :field-id="fieldId"
       @update:form-data="updateFormData"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { buildProfileUpdatePayload } from "~/utils/profile-update";
+import type { ShellListResponse, ShellOAuthAccountRecord, ShellProfileResponse } from '~/types/shell-api';
 
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
@@ -26,7 +27,7 @@ const {
   data: apiData,
   pending: loading,
   executeWithResult: fetchMe,
-} = useApi(() => `/me`, {
+} = useApi<ShellProfileResponse>(() => `/me`, {
   query: {
     fields: profileFields,
   },
@@ -41,7 +42,7 @@ const {
   data: oauthData,
   pending: oauthLoading,
   execute: fetchOauthAccounts,
-} = useApi(() => "/me/oauth-accounts", {
+} = useApi<ShellListResponse<ShellOAuthAccountRecord>>(() => "/me/oauth-accounts", {
   errorContext: "Fetch OAuth Accounts",
 });
 
@@ -81,7 +82,7 @@ const fieldMap = computed(() => ({
 async function initializeForm() {
   const result = await fetchMe();
   if (!result.ok) return;
-  const data = (result.data as any)?.data?.[0];
+  const data = result.data.data[0];
   if (data) {
     form.value = { ...data };
     formChanges.update(data);
@@ -92,7 +93,7 @@ async function initializeForm() {
 const {
   executeWithResult: updateProfile,
   pending: updateLoading,
-} = useApi(() => `/me`, {
+} = useApi<ShellProfileResponse>(() => `/me`, {
   method: "patch",
   errorContext: "Update Profile",
 });
@@ -179,7 +180,7 @@ async function saveProfile() {
 
     const refreshResult = await fetchMe();
     const updatedData = refreshResult.ok
-      ? (refreshResult.data as any)?.data?.[0]
+      ? refreshResult.data.data[0]
       : null;
     if (updatedData) {
       form.value = { ...updatedData };

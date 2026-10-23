@@ -1,5 +1,33 @@
 import { isRef, unref } from "vue";
+import type { ButtonProps } from "@nuxt/ui";
 import type { HeaderAction, HeaderActionVariant } from "~/types";
+
+export function getHeaderActionButtonProps(
+  action: Pick<HeaderAction, "icon" | "label" | "loading" | "disabled">,
+  hideLabel = false,
+): Pick<ButtonProps, "icon" | "label" | "loading" | "disabled"> {
+  const icon = unref(action.icon);
+  const label = hideLabel ? undefined : unref(action.label);
+  const loading = unref(action.loading);
+  const disabled = unref(action.disabled) || loading;
+  return {
+    ...(icon === undefined ? {} : { icon }),
+    ...(label === undefined ? {} : { label }),
+    ...(loading === undefined ? {} : { loading }),
+    ...(disabled === undefined ? {} : { disabled }),
+  };
+}
+
+export function getHeaderActionLinkProps(
+  action: Pick<HeaderAction, "to" | "replace">,
+): Pick<ButtonProps, "to" | "replace"> {
+  const to = unref(action.to);
+  const replace = unref(action.replace);
+  return {
+    ...(to === undefined ? {} : { to }),
+    ...(replace === undefined ? {} : { replace }),
+  };
+}
 
 const circularButtonClassPatterns = [
   /^!?rounded-full$/,

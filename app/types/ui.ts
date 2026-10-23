@@ -1,4 +1,4 @@
-import type { DropdownMenuItem } from "@nuxt/ui";
+import type { ContextMenuItem, DropdownMenuItem } from "@nuxt/ui";
 import type { Component, ComputedRef, Ref } from "vue";
 import type { TableProps } from "@nuxt/ui/components/Table.vue";
 import type { PaginationState, RowSelectionState } from "@tanstack/vue-table";
@@ -26,10 +26,10 @@ export interface UploadModalEmits {
   error: [message: string];
 }
 
-export interface DataTableProps extends Omit<TableProps<any>, 'data' | 'columns'> {
-  data: Record<string, any>[];
-  columns: NonNullable<TableProps<any>['columns']>;
-  contextMenuItems?: (row: Record<string, any>) => any[];
+export interface DataTableProps<TRow extends object = Record<string, unknown>> extends Omit<TableProps<TRow>, 'data' | 'columns'> {
+  data: TRow[];
+  columns: NonNullable<TableProps<TRow>['columns']>;
+  contextMenuItems?: (row: TRow) => ContextMenuItem[];
   rowSelection?: RowSelectionState;
   pagination?: PaginationState;
   showColumnVisibility?: boolean;

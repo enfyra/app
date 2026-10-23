@@ -244,7 +244,7 @@ async function saveMethod() {
 
     const response = mode.value === 'create'
       ? await createMethod({ body })
-      : await updateMethod({ id: form.id || undefined, body });
+      : await updateMethod({ ...(form.id ? { id: form.id } : {}), body });
 
     if (!response) return;
     notify.success('Success', `Method ${mode.value === 'create' ? 'created' : 'updated'} successfully.`);
@@ -510,7 +510,7 @@ watch(
                 class="shrink-0"
                 :disabled="form.isSystem"
                 :title="form.isSystem ? 'System methods cannot be deleted' : ''"
-                @click="deleteMethod({ id: form.id ?? undefined, name: form.name, isSystem: form.isSystem })"
+                @click="deleteMethod({ ...(form.id == null ? {} : { id: form.id }), name: form.name, isSystem: form.isSystem })"
               >
                 Delete
               </UButton>

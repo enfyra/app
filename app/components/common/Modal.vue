@@ -83,8 +83,15 @@ function actionVariant(action: DialogFooterAction, fallback: 'solid' | 'outline'
   return action.variant || fallback;
 }
 
-function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['disabled']) {
-  return value == null ? undefined : unref(value);
+function actionButtonProps(action: DialogFooterAction) {
+  const loading = unref(action.loading);
+  const disabled = unref(action.disabled);
+  return {
+    ...(action.icon === undefined ? {} : { icon: action.icon }),
+    ...(loading === undefined ? {} : { loading }),
+    ...(disabled === undefined ? {} : { disabled }),
+    ...(action.form === undefined ? {} : { form: action.form }),
+  };
 }
 
 </script>
@@ -129,12 +136,9 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
                 v-for="action in props.leadingActions"
                 :key="action.label"
                 :label="action.label"
-                :icon="action.icon"
+                v-bind="actionButtonProps(action)"
                 :loading-auto="true"
-                :loading="actionState(action.loading)"
-                :disabled="actionState(action.disabled)"
                 :type="action.type || 'button'"
-                :form="action.form"
                 :variant="actionVariant(action, 'outline')"
                 :color="actionColor(action, 'neutral')"
                 @click="runAction(action)"
@@ -142,12 +146,9 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               <UButton
                 v-if="props.dangerAction"
                 :label="props.dangerAction.label"
-                :icon="props.dangerAction.icon"
+                v-bind="actionButtonProps(props.dangerAction)"
                 :loading-auto="true"
-                :loading="actionState(props.dangerAction.loading)"
-                :disabled="actionState(props.dangerAction.disabled)"
                 :type="props.dangerAction.type || 'button'"
-                :form="props.dangerAction.form"
                 :variant="actionVariant(props.dangerAction, 'solid')"
                 :color="actionColor(props.dangerAction, 'error')"
                 @click="runAction(props.dangerAction)"
@@ -157,12 +158,9 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               <UButton
                 v-if="props.cancelAction"
                 :label="props.cancelAction.label"
-                :icon="props.cancelAction.icon"
+                v-bind="actionButtonProps(props.cancelAction)"
                 :loading-auto="true"
-                :loading="actionState(props.cancelAction.loading)"
-                :disabled="actionState(props.cancelAction.disabled)"
                 :type="props.cancelAction.type || 'button'"
-                :form="props.cancelAction.form"
                 :variant="actionVariant(props.cancelAction, 'outline')"
                 :color="actionColor(props.cancelAction, 'neutral')"
                 @click="runAction(props.cancelAction, true)"
@@ -170,12 +168,9 @@ function actionState(value: DialogFooterAction['loading'] | DialogFooterAction['
               <UButton
                 v-if="props.primaryAction"
                 :label="props.primaryAction.label"
-                :icon="props.primaryAction.icon"
+                v-bind="actionButtonProps(props.primaryAction)"
                 :loading-auto="true"
-                :loading="actionState(props.primaryAction.loading)"
-                :disabled="actionState(props.primaryAction.disabled)"
                 :type="props.primaryAction.type || 'button'"
-                :form="props.primaryAction.form"
                 :variant="actionVariant(props.primaryAction, 'solid')"
                 :color="actionColor(props.primaryAction, 'primary')"
                 @click="runAction(props.primaryAction)"

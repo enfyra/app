@@ -12,7 +12,7 @@
             :errors="createErrors"
             @update:errors="(errors) => (createErrors = errors)"
             :excluded="excludedFields"
-            :includes="includedFields.length > 0 ? includedFields : undefined"
+            v-bind="includedFields.length > 0 ? { includes: includedFields } : {}"
             :field-map="typeMap"
             mode="create"
           />
@@ -25,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
@@ -109,7 +110,7 @@ const {
   error: createError,
   execute: executeCreateConfig,
   pending: createLoading,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Storage Configuration",
 });
@@ -139,7 +140,7 @@ async function handleCreate() {
   notify.success("Storage configuration created successfully");
 
   const { getId } = useDatabase();
-  await navigateTo(`/storage/config/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/storage/config/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
 }

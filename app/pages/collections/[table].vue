@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { isSchemaMutationPreviewResponse } from '~/utils/schema/schema-confirm';
 import { getRedundantIndexes, schemaConstraintsMatch } from '~/utils/schema/constraints';
+import type { FormApiListResponse, FormCollectionRecord, FormSchemaMutationResponse } from '~/types/form-api';
 
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -64,7 +65,7 @@ const {
   data: tableData,
   pending: loading,
   execute: fetchTableData,
-} = useApi(() => "/enfyra_table", {
+} = useApi<FormApiListResponse<FormCollectionRecord>>(() => "/enfyra_table", {
   query: async () => ({
     fields: [
       await getIncludeFields(),
@@ -115,7 +116,7 @@ const {
   pending: saving,
   execute: executePatchTable,
   error: updateError,
-} = useApi(() => `/enfyra_table`, {
+} = useApi<FormSchemaMutationResponse>(() => `/enfyra_table`, {
   method: "patch",
   errorContext: "Update Table",
 });
@@ -124,7 +125,7 @@ const {
   pending: deleting,
   execute: executeDeleteTable,
   error: deleteError,
-} = useApi(() => `/enfyra_table`, {
+} = useApi<FormSchemaMutationResponse>(() => `/enfyra_table`, {
   method: "delete",
   errorContext: "Delete Table",
 });
@@ -352,7 +353,7 @@ async function executeDelete() {
   if (deleteError.value) return;
 
   if (isSchemaMutationPreviewResponse(deletionResponse)) {
-    schemaConfirmDetails.value = deletionResponse.data?.[0];
+    schemaConfirmDetails.value = deletionResponse?.data?.[0];
     schemaConfirmOperation.value = 'delete';
     schemaConfirmModalOpen.value = true;
     return;
@@ -468,7 +469,7 @@ async function onSchemaConfirmSubmit() {
       });
       if (deleteError.value) return;
       if (isSchemaMutationPreviewResponse(confirmationResponse)) {
-        schemaConfirmDetails.value = confirmationResponse.data?.[0];
+        schemaConfirmDetails.value = confirmationResponse?.data?.[0];
         notify.error('Confirmation not applied', 'The schema deletion still requires confirmation.');
         return;
       }
@@ -481,7 +482,7 @@ async function onSchemaConfirmSubmit() {
       return;
     }
     if (isSchemaMutationPreviewResponse(confirmationResponse)) {
-      const preview = (confirmationResponse as any)?.data?.[0];
+      const preview = confirmationResponse?.data?.[0];
       schemaConfirmDetails.value = preview;
       notify.error('Confirmation not applied', 'The schema mutation still requires confirmation.');
       return;

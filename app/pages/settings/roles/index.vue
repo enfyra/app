@@ -3,6 +3,7 @@ import { h } from 'vue';
 import { UBadge } from '#components';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
+import type { ShellListResponse, ShellRoleRecord } from '~/types/shell-api';
 import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
 
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -29,7 +30,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRoles,
-} = useApi(() => "/enfyra_role", {
+} = useApi<ShellListResponse<ShellRoleRecord>>(() => "/enfyra_role", {
   query: computed(() => ({
     fields: ROLE_LIST_FIELDS,
     sort: "-createdAt",

@@ -223,6 +223,7 @@ function toNavigationItem(item: any): NavigationMenuItem {
   const children = isDataParent && item.children?.length ? dataMenuItems(item.children) : item.children?.map(toNavigationItem);
   const key = String(item.to || item.label);
   const hasChildren = Boolean(children?.length);
+  const badge = menuBadge(item);
   return {
     label: item.label,
     icon: item.icon,
@@ -234,7 +235,7 @@ function toNavigationItem(item: any): NavigationMenuItem {
       onClick: () => toggleBranchState(key, Boolean(item.active || item.branchActive)),
     } : {}),
     active: item.active,
-    badge: menuBadge(item),
+    ...(badge === undefined ? {} : { badge }),
     ...(isDataParent && item.loading && !hasChildren ? { disabled: true } : {}),
   };
 }
@@ -260,13 +261,13 @@ function toggleBranchState(key: string, defaultOpen: boolean) {
 
 function toCollapsedMenuItem(item: NavigationMenuItem): DropdownMenuItem {
   return {
-    label: item.label,
+    ...(item.label === undefined ? {} : { label: item.label }),
     icon: item.icon,
-    disabled: item.disabled,
-    badge: item.badge,
+    ...(item.disabled === undefined ? {} : { disabled: item.disabled }),
+    ...(item.badge === undefined ? {} : { badge: item.badge }),
     ...(item.children?.length
       ? { children: item.children.map(toCollapsedMenuItem) }
-      : { to: item.to }),
+      : item.to === undefined ? {} : { to: item.to }),
     ...(item.active ? { class: '!text-[var(--text-primary)] before:!bg-[var(--menu-item-hover-bg)]' } : {}),
   };
 }
@@ -413,8 +414,10 @@ onUnmounted(() => {
                           color="neutral"
                           variant="ghost"
                           :aria-label="item.label"
-                          :disabled="item.disabled"
-                          :to="item.children?.length ? undefined : item.to"
+                          v-bind="{
+                            ...(item.disabled === undefined ? {} : { disabled: item.disabled }),
+                            ...(item.children?.length || item.to === undefined ? {} : { to: item.to }),
+                          }"
                           class="mx-auto !size-9 justify-center !p-0"
                           :class="item.active ? '!text-[var(--nav-item-hover-text)] !bg-[var(--nav-item-hover-bg)]' : undefined"
                         />

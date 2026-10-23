@@ -78,7 +78,7 @@ export function getCombinedOptionsForContext(
         label: `${r.name} → (${targetTableName || "unknown"})`,
         value: r.name,
         fieldCategory: "relation",
-        targetTable: targetTableName ?? undefined,
+        ...(targetTableName === null ? {} : { targetTable: targetTableName }),
       });
     });
 

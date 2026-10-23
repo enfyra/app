@@ -31,6 +31,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellListResponse, ShellOAuthAccountRecord } from '~/types/shell-api';
+
 definePageMeta({
   layout: "default",
   title: "OAuth Account Detail",
@@ -46,7 +48,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchAccount,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellOAuthAccountRecord>>(() => `/${tableName}`, {
   query: computed(() => ({
     fields: "*,user.id,user._id,user.email,user.name",
     filter: { [getIdFieldName()]: { _eq: route.params.id } },

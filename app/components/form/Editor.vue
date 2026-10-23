@@ -5,7 +5,7 @@
   >
     <FormField
       v-for="field in visibleFields"
-      :key="field.name || field.propertyName"
+      v-bind="fieldKeyProps(field)"
       :key-name="(field.name || field.propertyName) as string"
       :table-name="props.tableName"
       :form-data="normalizedModelValue"
@@ -45,7 +45,7 @@
         <div :class="layoutClass">
           <FormField
             v-for="field in block.fields"
-            :key="field.name || field.propertyName"
+            v-bind="fieldKeyProps(field)"
             :key-name="(field.name || field.propertyName) as string"
             :table-name="props.tableName"
             :form-data="normalizedModelValue"
@@ -70,7 +70,7 @@
       >
         <FormField
           v-for="field in block.fields"
-          :key="field.name || field.propertyName"
+          v-bind="fieldKeyProps(field)"
           :key-name="(field.name || field.propertyName) as string"
           :table-name="props.tableName"
           :form-data="normalizedModelValue"
@@ -95,7 +95,7 @@
     >
       <FormField
         v-for="field in orphanSectionFields"
-        :key="field.name || field.propertyName"
+        v-bind="fieldKeyProps(field)"
         :key-name="(field.name || field.propertyName) as string"
         :table-name="props.tableName"
         :form-data="normalizedModelValue"
@@ -129,6 +129,11 @@ import type {
   FormEditorVirtualField,
 } from '~/types/form-editor';
 import { isCreateRecordSystemField } from '~/utils/schema/system-fields';
+
+function fieldKeyProps(field: { name?: string; propertyName?: string }) {
+  const key = field.name || field.propertyName;
+  return key === undefined ? {} : { key };
+}
 
 const props = withDefaults(
   defineProps<{

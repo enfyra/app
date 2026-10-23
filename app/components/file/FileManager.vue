@@ -33,9 +33,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyDescription:
     "This folder is empty. Create folders or upload files to get started.",
   showCreateButton: true,
-  parentId: undefined,
   title: 'Library',
-  description: undefined,
 });
 
 const emit = defineEmits<Emits>();
@@ -184,7 +182,7 @@ const canMoveHere = computed(() =>
 const panelSections = computed<PanelSection[]>(() => [{
   value: 'library',
   title: props.title,
-  description: props.description,
+  ...(props.description === undefined ? {} : { description: props.description }),
   actions: [{
     id: 'library-tools',
     component: markRaw(FileManagerToolbar),

@@ -173,6 +173,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { me } = useAuth();
 const { fetchAppPackages } = useGlobalState();
@@ -193,7 +194,7 @@ const {
   pending: createLoading,
   execute: createPackage,
   error: createError,
-} = useApi(`/${tableName}`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(`/${tableName}`, {
   method: "post",
   errorContext: "Install Package",
 });

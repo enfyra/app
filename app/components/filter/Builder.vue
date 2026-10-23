@@ -17,9 +17,11 @@ function updateFilter(group: typeof props.modelValue) {
     :group="modelValue"
     :schemas="schemas"
     :table-name="tableName"
-    :root-table-name="rootTableName"
+    v-bind="{
+      ...(rootTableName === undefined ? {} : { rootTableName }),
+      ...(allowedFields === undefined ? {} : { allowedFields }),
+    }"
     :readonly="!!readonly"
-    :allowed-fields="allowedFields"
     @update:group="updateFilter"
   />
 </template>

@@ -60,6 +60,22 @@ describe('DataTable column picker', () => {
     })
   }
 
+  it('preserves native functional header contexts and header slots with an empty typed model', async () => {
+    type RecordRow = { id: number; title: string }
+    const header = vi.fn(({ table }: { table: import('@tanstack/vue-table').Table<RecordRow> }) => `Rows: ${table.options.data.length}`)
+    const wrapper = await mountSuspended(DataTable<RecordRow>, {
+      props: { headerName: 'Records', loading: true, data: [], columns: [{ accessorKey: 'id', header }, { accessorKey: 'title', header: 'Title' }] },
+      slots: { 'title-header': ({ table }: import('@tanstack/vue-table').HeaderContext<RecordRow, unknown>) => h('span', { class: 'custom-header' }, `Titles: ${table.options.data.length}`) },
+    })
+    try {
+      expect(wrapper.get('thead').text()).toContain('Rows: 0')
+      expect(wrapper.get('.custom-header').text()).toBe('Titles: 0')
+      expect(header).toHaveBeenCalled()
+      await wrapper.setProps({ data: [{ id: 1, title: 'Ready' }], loading: false })
+      expect(wrapper.get('.custom-header').text()).toBe('Titles: 1')
+    } finally { wrapper.unmount() }
+  })
+
   it('uses the native dropdown checkbox menu', async () => {
     const wrapper = await mountSuspended(DataTable, { props: {
       headerName: 'Records',

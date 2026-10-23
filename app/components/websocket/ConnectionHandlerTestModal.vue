@@ -123,7 +123,6 @@ const {
   method: 'post',
   errorContext: 'Test WebSocket Connection Handler',
   immediate: false,
-  lazy: true,
 });
 
 watch(() => props.modelValue, (open) => {

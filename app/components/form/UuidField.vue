@@ -2,7 +2,7 @@
   <div class="flex items-center gap-2">
     <UInput
       :model-value="modelValue || ''"
-      :placeholder="placeholder"
+      v-bind="placeholder === undefined ? {} : { placeholder }"
       :disabled="disabled"
       class="flex-1 font-mono text-sm"
       readonly

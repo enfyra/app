@@ -25,6 +25,7 @@
 
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureWebsocket } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { h } from 'vue';
 import { UBadge } from '#components';
@@ -59,7 +60,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchGateways,
-} = useApi(() => "/enfyra_websocket", {
+} = useApi<FeatureCollection<FeatureWebsocket>>(() => "/enfyra_websocket", {
   query: computed(() => ({
     fields: WEBSOCKET_LIST_FIELDS,
     limit,
@@ -151,12 +152,8 @@ const toggleGatewayStatus = async (gateway: any) => {
   const newStatus = !gateway.isEnabled;
 
   if (apiData.value?.data) {
-    const gatewayIndex = apiData.value.data.findIndex(
-      (g: any) => getId(g) === id
-    );
-    if (gatewayIndex !== -1) {
-      apiData.value.data[gatewayIndex].isEnabled = newStatus;
-    }
+    const current = apiData.value.data.find(g => getId(g) === id);
+    if (current) current.isEnabled = newStatus;
   }
 
   await loader.withLoading(() =>
@@ -170,12 +167,8 @@ const toggleGatewayStatus = async (gateway: any) => {
 
   if (updateError.value) {
     if (apiData.value?.data) {
-      const gatewayIndex = apiData.value.data.findIndex(
-        (g: any) => getId(g) === id
-      );
-      if (gatewayIndex !== -1) {
-        apiData.value.data[gatewayIndex].isEnabled = !newStatus;
-      }
+      const current = apiData.value.data.find(g => getId(g) === id);
+      if (current) current.isEnabled = !newStatus;
     }
     return;
   }

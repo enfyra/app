@@ -837,9 +837,7 @@ function getMobileColumnActions(column: any, index: number) {
               unique-check-mode="local"
               :unique-local-records="localColumnsWithKeys"
               :unique-local-self-key="localSelfKey"
-              :includes="
-                isPrimaryColumn(currentColumn) ? ['name', 'type'] : undefined
-              "
+              v-bind="isPrimaryColumn(currentColumn) ? { includes: ['name', 'type'] } : {}"
               :excluded="[
                 'isSystem',
                 'id',

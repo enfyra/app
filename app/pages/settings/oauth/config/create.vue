@@ -24,6 +24,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellCreatedRecordResponse } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildOAuthRedirectUri,
@@ -100,7 +102,7 @@ const {
   error: createError,
   execute: executeCreateConfig,
   pending: createLoading,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellCreatedRecordResponse>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create OAuth Config",
 });
@@ -143,7 +145,7 @@ async function handleCreate() {
   notify.success("OAuth provider configured successfully");
 
   const { getId } = useDatabase();
-  await navigateTo(`/settings/oauth/config/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/settings/oauth/config/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
 }

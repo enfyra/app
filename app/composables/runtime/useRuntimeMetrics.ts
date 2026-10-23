@@ -231,7 +231,7 @@ export function useRuntimeMetrics() {
     return instances.value.map((metrics) => ({
       instanceId: metrics.instance.id,
       sampledAt: metrics.sampledAt,
-      app: metrics.app,
+      ...(metrics.app === undefined ? {} : { app: metrics.app }),
     }));
   });
 
@@ -313,7 +313,7 @@ export function useRuntimeMetrics() {
     try {
       redisError.value = null;
       const result = await adminSocket.loadRedisKeys({
-        sessionId: reset ? undefined : redisKeysSessionId.value,
+        ...(reset ? {} : { sessionId: redisKeysSessionId.value }),
         page,
         pattern: redisKeysPattern.value || '*',
         count: 10,
@@ -368,9 +368,7 @@ export function useRuntimeMetrics() {
   async function saveRedisKey(input: RedisAdminSetKeyInput) {
     redisWritePending.value = true;
     try {
-      const response = await redisSetApi.execute({ body: input }) as
-        | { success: boolean; data: RedisAdminKeyDetail }
-        | null;
+      const response = await redisSetApi.execute({ body: input });
       if (response?.data) redisSelectedDetail.value = response.data;
       await refreshRedisAfterWrite(input.key);
       return response?.data ?? null;
@@ -382,9 +380,7 @@ export function useRuntimeMetrics() {
   async function deleteRedisKey(key: string) {
     redisWritePending.value = true;
     try {
-      const response = await redisDeleteApi.execute({ query: { key } }) as
-        | { success: boolean; data: { deleted: number } }
-        | null;
+      const response = await redisDeleteApi.execute({ query: { key } });
       await refreshRedisAfterWrite(key, true);
       return response?.data ?? null;
     } finally {
@@ -395,9 +391,7 @@ export function useRuntimeMetrics() {
   async function updateRedisKeyTtl(key: string, ttlSeconds: number | null) {
     redisWritePending.value = true;
     try {
-      const response = await redisTtlApi.execute({ body: { key, ttlSeconds } }) as
-        | { success: boolean; data: RedisAdminKeySummary }
-        | null;
+      const response = await redisTtlApi.execute({ body: { key, ttlSeconds } });
       await refreshRedisAfterWrite(key);
       return response?.data ?? null;
     } finally {

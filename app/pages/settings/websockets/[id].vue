@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureWebsocket, FeatureWebsocketEvent } from '~/types/feature-api';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
 import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
@@ -144,7 +145,7 @@ const {
   data: gatewayData,
   pending: loading,
   execute: fetchGateway,
-} = useApi(() => `/enfyra_websocket`, {
+} = useApi<FeatureCollection<FeatureWebsocket>>(() => `/enfyra_websocket`, {
   query: computed(() => ({
     fields: ["*"].join(","),
     filter:
@@ -169,7 +170,7 @@ watch(
   { immediate: true },
 );
 
-const { data: eventsData, execute: fetchEvents } = useApi(() => "/enfyra_websocket_event", {
+const { data: eventsData, execute: fetchEvents } = useApi<FeatureCollection<FeatureWebsocketEvent>>(() => "/enfyra_websocket_event", {
   query: computed(() => ({
     fields: WEBSOCKET_EVENT_LIST_FIELDS,
     limit: 0,
@@ -406,8 +407,8 @@ async function toggleEventStatus(event: any) {
     notify.success("Success", `Event has been ${event.isEnabled ? 'disabled' : 'enabled'}.`);
 
     if (eventsData.value?.data) {
-      const idx = eventsData.value.data.findIndex((e: any) => getId(e) === eventId);
-      if (idx !== -1) eventsData.value.data[idx].isEnabled = !event.isEnabled;
+      const current = eventsData.value.data.find(e => getId(e) === eventId);
+      if (current) current.isEnabled = !event.isEnabled;
     }
   } finally {
     togglingEventId.value = null;

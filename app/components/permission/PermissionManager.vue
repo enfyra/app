@@ -42,7 +42,7 @@
       >
         <div
           v-for="permission in permissions"
-          :key="permission.id"
+          :key="getId(permission)"
         >
           <PermissionGate
             :condition="{
@@ -244,20 +244,13 @@
 
 <script setup lang="ts">
 import OperationSelector from './OperationSelector.vue';
+import type { FormApiListResponse, FormPermissionRecord as Permission } from '~/types/form-api';
 
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { getId, getIdFieldName } = useDatabase();
 const { checkPermissionCondition } = usePermissions();
 const { isMounted } = useMounted();
-
-interface Permission {
-  id: string;
-  name: string;
-  description?: string;
-  isEnabled: boolean;
-  [key: string]: any;
-}
 
 interface Props {
   tableName: string;
@@ -300,7 +293,7 @@ const {
   data: permissionsData,
   pending: loading,
   execute: fetchPermissions,
-} = useApi(() => `/${permissionTableName.value}`, {
+} = useApi<FormApiListResponse<Permission>>(() => `/${permissionTableName.value}`, {
   query: () => ({
     fields: isRoutePermission.value
       ? '*,role.id,role.name,allowedUsers.id,routeMethodConfigs.id,routeMethodConfigs.available,routeMethodConfigs.method.name'
@@ -394,7 +387,7 @@ function editPermission(permission: Permission) {
 
 function getPermissionMethods(permission: Permission): string[] {
   return (Array.isArray(permission.routeMethodConfigs) ? permission.routeMethodConfigs : [])
-    .map((operation: any) => typeof operation.method === 'string' ? operation.method : operation.method?.name)
+    .map(operation => typeof operation.method === 'string' ? operation.method : operation.method?.name)
     .filter((method: unknown): method is string => typeof method === 'string' && method.length > 0);
 }
 

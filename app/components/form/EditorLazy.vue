@@ -50,6 +50,20 @@ const emit = defineEmits<{
   virtualFieldEmit: [payload: FormEditorVirtualEmitPayload];
 }>();
 
+const forwardedProps = computed(() => {
+  const { excluded, includes, fieldMap, loading, mode, sortBy, fieldPositions, ...rest } = props;
+  return {
+    ...rest,
+    ...(excluded === undefined ? {} : { excluded }),
+    ...(includes === undefined ? {} : { includes }),
+    ...(fieldMap === undefined ? {} : { fieldMap }),
+    ...(loading === undefined ? {} : { loading }),
+    ...(mode === undefined ? {} : { mode }),
+    ...(sortBy === undefined ? {} : { sortBy }),
+    ...(fieldPositions === undefined ? {} : { fieldPositions }),
+  };
+});
+
 const formEditorRef = ref<FormEditorActions | null>(null);
 
 const FormEditor = defineAsyncComponent(() => import("./Editor.vue"));
@@ -72,7 +86,7 @@ defineExpose({
   <Suspense>
     <FormEditor
       ref="formEditorRef"
-      v-bind="props"
+      v-bind="forwardedProps"
       @update:model-value="(value) => emit('update:modelValue', value)"
       @update:errors="(errors) => emit('update:errors', errors)"
       @has-changed="(hasChanged) => emit('hasChanged', hasChanged)"

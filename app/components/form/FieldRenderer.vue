@@ -778,7 +778,7 @@ function getComponentType(): string {
     <div v-else class="field-input w-full min-w-0">
       <UFormField
         class="block w-full min-w-0"
-        :error="['simple-json', 'json'].includes(getComponentType()) ? undefined : errorMessage"
+        v-bind="['simple-json', 'json'].includes(getComponentType()) || errorMessage === undefined ? {} : { error: errorMessage }"
       >
         <div
           class="w-full min-w-0"
