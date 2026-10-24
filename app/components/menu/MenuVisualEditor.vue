@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { MenuDefinition, MenuTreeItem } from '~/types';
 import draggable from 'vuedraggable';
+import { compareMenuOrder } from '~/utils/menu-order';
 
 const props = defineProps<{
   menus: MenuDefinition[];
@@ -39,7 +40,7 @@ function buildChildren(parentId: string | number | null, allMenus: MenuDefinitio
       isDropdown: menu.type === 'Dropdown Menu',
       children: buildChildren(getId(menu), allMenus)
     }))
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
+    .sort(compareMenuOrder);
   
   return children;
 }
@@ -58,7 +59,7 @@ const menuTree = computed<MenuTreeItem[]>(() => {
       isDropdown: menu.type === 'Dropdown Menu',
       children: buildChildren(getId(menu), allMenus)
     }))
-    .sort((a, b) => (a.order || 0) - (b.order || 0));
+    .sort(compareMenuOrder);
   
   return rootMenus;
 });
@@ -101,27 +102,36 @@ function handleMoveToRoot() {
 
 function handleRootReorder() {
   const updatedMenus: MenuDefinition[] = [];
+  let hasOrderOrParentChange = false;
   
-  menuTreeItems.value.forEach((item, index) => {
-    const itemMenuId = getId(item);
-    if (!itemMenuId) return;
-    
-    const originalMenu = props.menus.find(m => String(getId(m)) === String(itemMenuId));
-    if (!originalMenu) return;
+  const candidateUpdates = menuTreeItems.value
+    .map((item, index) => {
+      const itemMenuId = getId(item);
+      if (!itemMenuId) return null;
+      
+      const originalMenu = props.menus.find(m => String(getId(m)) === String(itemMenuId));
+      if (!originalMenu) return null;
 
-    const currentParentId = getId(originalMenu.parent) || null;
-    const nextParentId = null;
-    const currentOrder = originalMenu.order;
-    const nextOrder = index;
+      const currentParentId = getId(originalMenu.parent) || null;
+      const nextParentId = null;
+      const currentOrder = originalMenu.order;
+      const nextOrder = index;
 
-    if (String(currentParentId) !== String(nextParentId) || currentOrder !== nextOrder) {
-      updatedMenus.push({
+      if (String(currentParentId) !== String(nextParentId) || currentOrder !== nextOrder) {
+        hasOrderOrParentChange = true;
+      }
+
+      return {
         ...originalMenu,
         parent: null as any,
         order: nextOrder
-      });
-    }
-  });
+      };
+    })
+    .filter((entry): entry is MenuDefinition => entry !== null);
+
+  if (hasOrderOrParentChange) {
+    updatedMenus.push(...candidateUpdates);
+  }
 
   if (updatedMenus.length > 0) emit('reorder-menus', updatedMenus);
 }

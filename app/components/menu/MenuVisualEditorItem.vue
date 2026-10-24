@@ -98,27 +98,36 @@ function handleChildrenReorder() {
   
   const updatedMenus: MenuDefinition[] = [];
   const allMenus = props.allMenus;
+  let hasOrderOrParentChange = false;
   
-  childrenItems.value.forEach((child: MenuTreeItem, index: number) => {
-    const childMenuId = getId(child);
-    if (!childMenuId) return;
-    
-    const originalMenu = allMenus.find(m => String(getId(m)) === String(childMenuId));
-    if (!originalMenu) return;
+  const candidateUpdates = childrenItems.value
+    .map((child: MenuTreeItem, index: number) => {
+      const childMenuId = getId(child);
+      if (!childMenuId) return null;
+      
+      const originalMenu = allMenus.find(m => String(getId(m)) === String(childMenuId));
+      if (!originalMenu) return null;
 
-    const currentParentId = getId(originalMenu.parent) || null;
-    const nextParentId = parentId;
-    const currentOrder = originalMenu.order;
-    const nextOrder = index;
+      const currentParentId = getId(originalMenu.parent) || null;
+      const nextParentId = parentId;
+      const currentOrder = originalMenu.order;
+      const nextOrder = index;
 
-    if (String(currentParentId) !== String(nextParentId) || currentOrder !== nextOrder) {
-      updatedMenus.push({
+      if (String(currentParentId) !== String(nextParentId) || currentOrder !== nextOrder) {
+        hasOrderOrParentChange = true;
+      }
+
+      return {
         ...originalMenu,
         parent: { id: parentId } as any,
         order: nextOrder
-      });
-    }
-  });
+      };
+    })
+    .filter((entry): entry is MenuDefinition => entry !== null);
+
+  if (hasOrderOrParentChange) {
+    updatedMenus.push(...candidateUpdates);
+  }
 
   if (updatedMenus.length > 0) emit('reorder-menus', updatedMenus);
 }
@@ -579,6 +588,13 @@ function handleDragEnd() {
       v-if="item.isDropdown && isExpanded"
       class="menu-editor-children-wrap"
     >
+      <div
+        v-if="showChildDropHint && !hasChildren"
+        class="menu-child-drop-placeholder pointer-events-none"
+      >
+        <UIcon name="lucide:corner-down-right" class="h-4 w-4" />
+        <span>Drop here to add as child</span>
+      </div>
       <draggable
         v-model="childrenItems"
         :animation="140"
@@ -596,22 +612,6 @@ function handleDragEnd() {
         class="menu-editor-children drop-zone"
         :class="{ 'is-empty': !hasChildren, 'is-dragging-target': showChildDropHint }"
       >
-        <template #header>
-          <div
-            v-if="showChildDropHint && !hasChildren"
-            class="menu-child-drop-placeholder"
-          >
-            <UIcon name="lucide:corner-down-right" class="h-4 w-4" />
-            <span>Drop here to add as child</span>
-          </div>
-          <div
-            v-else-if="showChildDropHint"
-            class="menu-child-drop-inline-hint"
-          >
-            <UIcon name="lucide:corner-down-right" class="h-3.5 w-3.5" />
-            <span>Drop inside {{ item.label }}</span>
-          </div>
-        </template>
         <template #item="{ element: child }">
           <MenuVisualEditorItem
             :item="child"
@@ -837,17 +837,16 @@ function handleDragEnd() {
   box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 38%, transparent);
 }
 
-.menu-child-drop-placeholder,
-.menu-child-drop-inline-hint {
+.menu-child-drop-placeholder {
+  position: absolute;
+  inset: 6px 0 8px 40px;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 8px;
   color: var(--state-primary-soft-text);
   font-weight: 750;
-}
-
-.menu-child-drop-placeholder {
-  min-height: 38px;
+  min-height: 36px;
   border-radius: var(--radius-control);
   background: color-mix(in srgb, var(--md-primary) 6%, var(--md-surface));
   padding: 0 12px;
@@ -855,13 +854,8 @@ function handleDragEnd() {
   box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 44%, transparent);
 }
 
-.menu-child-drop-inline-hint {
-  min-height: 26px;
-  padding: 0 10px;
-  font-size: 12px;
-}
-
 .menu-editor-children-wrap {
+  position: relative;
   animation: menu-children-enter 120ms ease-out;
 }
 

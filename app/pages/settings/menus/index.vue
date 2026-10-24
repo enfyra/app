@@ -633,6 +633,16 @@ async function flushReorderMenus() {
       })
       .filter(Boolean);
 
+    if (menuDefinitions.value?.data) {
+      const updateById = new Map(updates.map((u) => [String(u!.id), u!]));
+      for (const item of menuDefinitions.value.data) {
+        const patch = updateById.get(String(getId(item)));
+        if (!patch) continue;
+        item.order = patch.order;
+        item.parent = patch.parent ? ({ id: patch.parent } as any) : null;
+      }
+    }
+
     const response = await reorderMenusApi({
       body: { updates },
     });
@@ -694,7 +704,7 @@ watch(showExtensionDrawer, async (isOpen, wasOpen) => {
   <div class="eapp-page-constrained space-y-6">
     <MenuVisualEditor
       :menus="menus"
-      :loading="pageMenusLoading"
+      :loading="pageMenusLoading && menus.length === 0"
       @edit-menu="handleEditMenu"
       @delete-menu="deleteMenu"
       @toggle-enabled="toggleEnabled"
