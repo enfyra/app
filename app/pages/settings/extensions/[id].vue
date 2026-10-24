@@ -259,7 +259,7 @@ async function deleteExtension() {
   });
   await loadGlobalExtensions({ forceReload: true });
   await fetchMenuDefinitions();
-  await navigateTo("/settings/extensions");
+  await navigateTo("/settings/menus?tab=extensions");
 }
 
 async function handleUpload(files: File | File[]) {

@@ -165,55 +165,48 @@ function handleDragEnd() {
     class="menu-visual-editor"
     :class="isDndUpdating ? 'pointer-events-none opacity-60 select-none' : ''"
   >
-    <div v-if="props.loading" class="menu-preview-stage" aria-busy="true" aria-label="Loading menu structure">
-      <div class="menu-preview eapp-bordered-region">
-        <div class="menu-preview-header">
-          <div class="space-y-2">
-            <div class="h-3 w-28 rounded skeleton-inline skeleton-pulse-slow" />
-            <div class="h-5 w-36 rounded skeleton-gradient skeleton-pulse-slow" />
+    <div
+      v-if="props.loading"
+      class="menu-root-drop-zone"
+      aria-busy="true"
+      aria-label="Loading menu structure"
+    >
+      <div
+        v-for="row in 4"
+        :key="row"
+        class="menu-visual-skeleton-node"
+      >
+        <div class="menu-visual-skeleton-item">
+          <div class="flex min-w-0 flex-1 items-center gap-3">
+            <span class="h-4 w-4 shrink-0 rounded skeleton-inline skeleton-pulse-slow" />
+            <span class="h-9 w-9 shrink-0 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
+            <span class="min-w-0 flex-1 space-y-2">
+              <span class="block h-4 rounded skeleton-gradient skeleton-pulse-slow" :class="row % 2 ? 'w-36' : 'w-48'" />
+              <span class="block h-3 w-56 max-w-full rounded skeleton-inline skeleton-pulse-slow" />
+            </span>
           </div>
-          <div class="h-6 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+          <div class="hidden items-center gap-2 md:flex">
+            <span class="h-6 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+            <span class="h-8 w-8 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
+          </div>
         </div>
 
-        <div class="menu-root-drop-zone">
+        <div
+          v-if="row === 2"
+          class="menu-visual-skeleton-children"
+        >
           <div
-            v-for="row in 4"
-            :key="row"
-            class="menu-visual-skeleton-node"
+            v-for="child in 2"
+            :key="child"
+            class="menu-visual-skeleton-child"
           >
-            <div class="menu-visual-skeleton-item">
-              <div class="flex min-w-0 flex-1 items-center gap-3">
-                <span class="h-4 w-4 shrink-0 rounded skeleton-inline skeleton-pulse-slow" />
-                <span class="h-9 w-9 shrink-0 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
-                <span class="min-w-0 flex-1 space-y-2">
-                  <span class="block h-4 rounded skeleton-gradient skeleton-pulse-slow" :class="row % 2 ? 'w-36' : 'w-48'" />
-                  <span class="block h-3 w-56 max-w-full rounded skeleton-inline skeleton-pulse-slow" />
-                </span>
-              </div>
-              <div class="hidden items-center gap-2 md:flex">
-                <span class="h-6 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-                <span class="h-8 w-8 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
-              </div>
-            </div>
-
-            <div
-              v-if="row === 2"
-              class="menu-visual-skeleton-children"
-            >
-              <div
-                v-for="child in 2"
-                :key="child"
-                class="menu-visual-skeleton-child"
-              >
-                <span class="h-3.5 w-3.5 shrink-0 rounded skeleton-inline skeleton-pulse-slow" />
-                <span class="h-8 w-8 shrink-0 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
-                <span class="min-w-0 flex-1 space-y-2">
-                  <span class="block h-3.5 w-32 rounded skeleton-gradient skeleton-pulse-slow" />
-                  <span class="block h-3 w-40 max-w-full rounded skeleton-inline skeleton-pulse-slow" />
-                </span>
-                <span class="hidden h-7 w-7 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow md:block" />
-              </div>
-            </div>
+            <span class="h-3.5 w-3.5 shrink-0 rounded skeleton-inline skeleton-pulse-slow" />
+            <span class="h-8 w-8 shrink-0 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
+            <span class="min-w-0 flex-1 space-y-2">
+              <span class="block h-3.5 w-32 rounded skeleton-gradient skeleton-pulse-slow" />
+              <span class="block h-3 w-40 max-w-full rounded skeleton-inline skeleton-pulse-slow" />
+            </span>
+            <span class="hidden h-7 w-7 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow md:block" />
           </div>
         </div>
       </div>
@@ -224,67 +217,55 @@ function handleDragEnd() {
       <p class="text-sm text-[var(--text-tertiary)] mb-4">No menu items available</p>
     </div>
     
-    <div v-else class="menu-preview-stage">
-      <div class="menu-preview eapp-bordered-region">
-        <div class="menu-preview-header">
-          <div>
-            <p class="menu-preview-kicker">Navigation preview</p>
-            <h3 class="menu-preview-title">Menu structure</h3>
-          </div>
-          <UBadge variant="soft" color="neutral" size="sm">
-            {{ menuTreeItems.length }} root
-          </UBadge>
-        </div>
-
-        <div
-          v-if="canMoveToRoot"
-          class="mb-3 rounded-[var(--radius-panel)] border border-[var(--badge-primary-soft-border)] bg-[var(--badge-primary-soft-bg)] p-2 shadow-[inset_2px_0_0_var(--badge-primary-soft-border)]"
+    <div v-else class="space-y-3">
+      <div
+        v-if="canMoveToRoot"
+        class="rounded-[var(--radius-panel)] border border-[var(--badge-primary-soft-border)] bg-[var(--badge-primary-soft-bg)] p-2 shadow-[inset_2px_0_0_var(--badge-primary-soft-border)]"
+      >
+        <UButton
+          size="sm"
+          color="primary"
+          variant="soft"
+          class="w-full"
+          @click="handleMoveToRoot"
         >
-          <UButton
-            size="sm"
-            color="primary"
-            variant="soft"
-            class="w-full"
-            @click="handleMoveToRoot"
-          >
-            <UIcon name="lucide:move" class="w-4 h-4 mr-2" />
-            Move here (Root)
-          </UButton>
-        </div>
-        <draggable
-          v-model="menuTreeItems"
-          :animation="200"
-          :disabled="isDndUpdating || !isDesktop"
-          handle=".drag-handle"
-          ghost-class="ghost-item"
-          chosen-class="chosen-item"
-          drag-class="dragging-item"
-          :group="{ name: 'menu-items', pull: true, put: true }"
-          :move="(event: any) => canDropIntoParent(event, null)"
-          @start="handleDragStart"
-          @end="handleDragEnd"
-          @change="handleRootReorder"
-          item-key="id"
-          class="menu-root-drop-zone"
-        >
-          <template #item="{ element: item }">
-            <MenuVisualEditorItem
-              :item="item"
-              :level="0"
-              :all-menus="menus"
-              @edit-menu="emit('edit-menu', $event)"
-              @delete-menu="emit('delete-menu', $event)"
-              @toggle-enabled="emit('toggle-enabled', $event)"
-              @add-child-menu="emit('add-child-menu', $event)"
-              @edit-extension="emit('edit-extension', $event)"
-              @delete-extension="emit('delete-extension', $event)"
-              @reorder-menus="emit('reorder-menus', $event)"
-              @move-menu="handleMoveMenu"
-              @move-menu-to="emit('move-menu-to', $event)"
-            />
-          </template>
-        </draggable>
+          <UIcon name="lucide:move" class="w-4 h-4 mr-2" />
+          Move here (Root)
+        </UButton>
       </div>
+      <draggable
+        v-model="menuTreeItems"
+        :animation="200"
+        :disabled="isDndUpdating || !isDesktop"
+        handle=".drag-handle"
+        ghost-class="ghost-item"
+        chosen-class="chosen-item"
+        drag-class="dragging-item"
+        :group="{ name: 'menu-items', pull: true, put: true }"
+        :move="(event: any) => canDropIntoParent(event, null)"
+        @start="handleDragStart"
+        @end="handleDragEnd"
+        @change="handleRootReorder"
+        item-key="id"
+        class="menu-root-drop-zone"
+      >
+        <template #item="{ element: item }">
+          <MenuVisualEditorItem
+            :item="item"
+            :level="0"
+            :all-menus="menus"
+            @edit-menu="emit('edit-menu', $event)"
+            @delete-menu="emit('delete-menu', $event)"
+            @toggle-enabled="emit('toggle-enabled', $event)"
+            @add-child-menu="emit('add-child-menu', $event)"
+            @edit-extension="emit('edit-extension', $event)"
+            @delete-extension="emit('delete-extension', $event)"
+            @reorder-menus="emit('reorder-menus', $event)"
+            @move-menu="handleMoveMenu"
+            @move-menu-to="emit('move-menu-to', $event)"
+          />
+        </template>
+      </draggable>
     </div>
   </div>
 </template>
@@ -292,40 +273,6 @@ function handleDragEnd() {
 <style scoped>
 .menu-visual-editor {
   width: 100%;
-}
-
-.menu-preview-stage {
-  width: 100%;
-}
-
-.menu-preview {
-  border-radius: var(--radius-card);
-  padding: 16px 18px 18px;
-}
-
-.menu-preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-  padding: 4px 4px 10px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.menu-preview-kicker {
-  color: var(--text-quaternary);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.menu-preview-title {
-  margin-top: 2px;
-  color: var(--text-primary);
-  font-size: 15px;
-  font-weight: 800;
 }
 
 .menu-root-drop-zone {
@@ -378,14 +325,6 @@ function handleDragEnd() {
 }
 
 @media (max-width: 1023px) {
-  .menu-preview {
-    padding: 12px;
-  }
-
-  .menu-preview-header {
-    padding: 0 0 10px;
-  }
-
   .menu-root-drop-zone {
     gap: 4px;
   }

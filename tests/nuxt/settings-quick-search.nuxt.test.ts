@@ -14,16 +14,16 @@ const state = vi.hoisted(() => ({
 }))
 mockNuxtImport('useHeaderActionRegistry', () => () => ({ register: vi.fn() }))
 mockNuxtImport('useSubHeaderActionRegistry', () => () => ({ register: vi.fn() }))
-mockNuxtImport('usePageHeaderRegistry', () => () => ({ registerPageHeader: vi.fn() }))
+mockNuxtImport('usePageHeaderRegistry', () => () => ({ registerPageHeader: vi.fn(), clearPageHeader: vi.fn() }))
 mockNuxtImport('useSettingsPageSize', () => () => ref(10))
 mockNuxtImport('useNotify', () => () => ({ success: vi.fn(), error: vi.fn() }))
 mockNuxtImport('useConfirm', () => () => ({ confirm: state.confirm }))
 mockNuxtImport('usePermissions', () => () => ({ hasPermission: () => state.allowed, checkPermissionCondition: () => state.allowed }))
 mockNuxtImport('useDatabase', () => () => ({ getId: (row: any) => row?.id ?? row?._id, getIdFieldName: () => 'id' }))
 mockNuxtImport('useKeyedLoaders', () => () => ({ getLoader: () => ({ isLoading: ref(false) }) }))
-mockNuxtImport('useRoutes', () => () => ({ routes: ref([]), loadRoutes: state.loadRoutes }))
-mockNuxtImport('useMenuRegistry', () => () => ({ registerDataMenuItemsFromRoutes: state.registerMenus, findMenuIconForPath: () => undefined }))
-mockNuxtImport('useMenuApi', () => () => ({ fetchMenuDefinitions: state.fetchMenus }))
+mockNuxtImport('useRoutes', () => () => ({ routes: ref([]), loadRoutes: state.loadRoutes, ensureRoutesLoaded: vi.fn() }))
+mockNuxtImport('useMenuRegistry', () => () => ({ menuItems: ref([]), reregisterAllMenus: vi.fn(), registerDataMenuItemsFromRoutes: state.registerMenus, findMenuIconForPath: () => undefined }))
+mockNuxtImport('useMenuApi', () => () => ({ menuDefinitions: ref({ data: [] }), fetchMenuDefinitions: state.fetchMenus }))
 mockNuxtImport('useDynamicComponent', () => () => ({ invalidateExtensionCache: state.invalidateExtension }))
 mockNuxtImport('useGlobalExtensions', () => () => ({ loadGlobalExtensions: state.loadExtensions }))
 mockNuxtImport('useApi', () => (url: string | (() => string), options: any) => {
@@ -36,7 +36,7 @@ import RolesPage from '~/pages/settings/roles/index.vue'
 import RoutesPage from '~/pages/settings/routes/index.vue'
 import GuardsPage from '~/pages/settings/guards/index.vue'
 import FlowsPage from '~/pages/settings/flows/index.vue'
-import ExtensionsPage from '~/pages/settings/extensions/index.vue'
+import MenusPage from '~/pages/settings/menus/index.vue'
 import WebSocketsPage from '~/pages/settings/websockets/index.vue'
 import AccountsPage from '~/pages/settings/oauth/accounts/index.vue'
 
@@ -45,7 +45,7 @@ const cases = [
   { path: 'routes', component: RoutesPage, api: '/enfyra_route', field: 'path', base: [{ isSystem: { _eq: false } }, { mainTable: { _is_null: true } }] },
   { path: 'guards', component: GuardsPage, api: '/enfyra_guard', field: 'name', base: [{ parent: { _is_null: true } }, { type: { _eq: 'route' } }] },
   { path: 'flows', component: FlowsPage, api: '/enfyra_flow', field: 'name', base: [] },
-  { path: 'extensions', component: ExtensionsPage, api: '/enfyra_extension', field: 'name', base: [] },
+  { path: 'menus', component: MenusPage, api: '/enfyra_extension', field: 'name', base: [] },
   { path: 'websockets', component: WebSocketsPage, api: '/enfyra_websocket', field: 'path', base: [] },
   { path: 'oauth/accounts', component: AccountsPage, api: '/enfyra_oauth_account', field: 'user.email', base: [] },
 ]

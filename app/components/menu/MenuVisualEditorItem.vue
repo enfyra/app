@@ -39,7 +39,6 @@ const originalMenu = computed(() => {
 const childrenItems = ref<MenuTreeItem[]>(props.item.children || []);
 const isExpanded = ref(true);
 const hasChildren = computed(() => childrenItems.value.length > 0 || (props.item.children?.length ?? 0) > 0);
-const canEditMenu = computed(() => !isSystemMenu.value);
 
 const rowSubtitle = computed(() => {
   const description = props.item.description?.trim();
@@ -61,21 +60,12 @@ watch(() => props.item.children, (newChildren) => {
   childrenItems.value = newChildren || [];
 }, { deep: true });
 
-function handleItemClick(menu: MenuTreeItem) {
-  const originalMenu = props.allMenus?.find(m => String(getId(m)) === String(menu.id));
-  if (originalMenu) {
-    if (originalMenu.isSystem) {
-      return;
-    }
-    emit('edit-menu', originalMenu);
-  }
-}
-
 function handleIconClick(event: Event) {
-  if (isDesktop.value) return;
+  if (isDesktop.value || !props.item.isDropdown) return;
   event.stopPropagation();
-  if (props.item.isDropdown) isExpanded.value = !isExpanded.value;
-  else if (canEditMenu.value) handleItemClick(props.item);
+  if (hasChildren.value) {
+    isExpanded.value = !isExpanded.value;
+  }
 }
 
 function isDescendant(menuId: string | number, potentialParentId: string | number, allMenus: MenuDefinition[]): boolean {
@@ -438,18 +428,11 @@ function handleDragEnd() {
   <div class="menu-editor-node">
     <div
       :class="[
-        'menu-editor-row group',
+        'menu-editor-row group cursor-default',
         isChildRow ? 'is-child' : '',
-        canEditMenu ? 'is-editable cursor-pointer' : 'cursor-default',
         isMoving ? 'is-moving' : '',
         !item.isEnabled ? 'is-disabled' : ''
       ]"
-      @click="handleItemClick(item)"
-      :tabindex="canEditMenu ? 0 : -1"
-      :role="canEditMenu ? 'button' : undefined"
-      :aria-label="canEditMenu ? `Edit menu ${item.label}` : undefined"
-      @keydown.enter.self.prevent="canEditMenu && handleItemClick(item)"
-      @keydown.space.self.prevent="canEditMenu && handleItemClick(item)"
     >
       <div class="menu-row-lead">
         <button
@@ -481,11 +464,11 @@ function handleDragEnd() {
       </div>
 
       <component
-        :is="isDesktop ? 'span' : 'button'"
-        :type="isDesktop ? undefined : 'button'"
-        :disabled="isDesktop ? undefined : item.isDropdown ? !hasChildren : !canEditMenu"
-        :aria-label="isDesktop ? undefined : item.isDropdown ? `Toggle children of ${item.label}` : `Edit menu ${item.label}`"
-        :aria-expanded="isDesktop || !item.isDropdown ? undefined : isExpanded"
+        :is="!isDesktop && item.isDropdown ? 'button' : 'span'"
+        :type="!isDesktop && item.isDropdown ? 'button' : undefined"
+        :disabled="!isDesktop && item.isDropdown ? !hasChildren : undefined"
+        :aria-label="!isDesktop && item.isDropdown ? `Toggle children of ${item.label}` : undefined"
+        :aria-expanded="!isDesktop && item.isDropdown ? isExpanded : undefined"
         :class="['menu-row-icon accent-tile', iconToneClass]"
         @click="handleIconClick"
       >
@@ -658,29 +641,6 @@ function handleDragEnd() {
   padding: 9px;
   border-radius: var(--radius-control);
   background: var(--surface-muted);
-}
-
-@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
-  .menu-editor-row.is-editable:hover {
-    border-color: var(--card-border-hover);
-    background: var(--state-primary-soft-bg);
-  }
-
-  :global(.dark) .menu-editor-row.is-editable:hover {
-    border-color: var(--action-primary-bg);
-    background: var(--action-primary-bg);
-  }
-
-  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-title,
-  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-subtitle,
-  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-drag,
-  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-chevron {
-    color: var(--action-primary-text);
-  }
-
-  :global(.dark) .menu-editor-row.is-editable:hover :deep(button[aria-label="Menu actions"]) {
-    color: var(--action-primary-text) !important;
-  }
 }
 
 .menu-editor-row.is-moving {

@@ -22,7 +22,6 @@ const listPages = [
   'pages/settings/websockets/index.vue',
   'pages/settings/methods/index.vue',
   'pages/settings/oauth/config/index.vue',
-  'pages/settings/extensions/index.vue',
   'pages/settings/flows/index.vue',
   'pages/data/index.vue',
 ]

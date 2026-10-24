@@ -1,236 +1,28 @@
-<template>
-  <DataTableSettingsTable
-      header-name="Extension Manager"
-    v-model:page="page"
-    :data="extensions"
-    :bulk-action="bulkDelete"
-    :columns="columns"
-    :actions="getRowActions"
-    :loading="showInitialLoading"
-    :total="total"
-    :page-limit="limit"
-    page-size-key="extensions"
-    :pagination-loading="loading"
-    @page-size-change="setPageSize"
-    :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
-      searchable
-      v-model:search="searchQuery"
-      search-placeholder="Search by name"
-      search-label="Search by name"
-      @search="submitSearch"
-    @row-click="extension => navigateTo(`/settings/extensions/${getId(extension)}`)"
-  >
-  </DataTableSettingsTable>
-</template>
-
-
 <script setup lang="ts">
-import type { FeatureCollection } from '~/types/feature-api';
-import type { ColumnDef } from '@tanstack/vue-table';
-import type { DataTableRowAction } from '~/types/data-table-columns';
-import type { ExtensionDefinition } from '~/types/extensions';
-import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
-
-const { register: registerHeaderActions } = useHeaderActionRegistry();
-
-const page = ref(1);
-const limit = useSettingsPageSize('extensions');
-
-const notify = useNotify();
-const { confirm } = useConfirm();
-const { getLoader: getExtensionLoader } = useKeyedLoaders();
-const { checkPermissionCondition } = usePermissions();
-const { getId } = useDatabase();
-const { invalidateExtensionCache } = useDynamicComponent();
-const { loadGlobalExtensions } = useGlobalExtensions();
+definePageMeta({
+  layout: "default",
+});
 
 const route = useRoute();
-const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('name', () => fetchExtensions());
 
-
-
-const {
-  data: apiData,
-  pending: loading,
-  execute: fetchExtensions,
-} = useApi<FeatureCollection<ExtensionDefinition>>(() => "/enfyra_extension", {
-  query: computed(() => ({
-    fields: EXTENSION_LIST_FIELDS,
-    limit,
-    page: page.value,
-    meta: "*",
-    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
-    sort: ["id"].join(","),
-  })),
-  errorContext: "Fetch Extensions",
-});
-const { fetchMenuDefinitions } = useMenuApi();
-
-const {
-  items: extensions,
-  showInitialLoading,
-} = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => searchValue.value ? apiData.value?.meta?.filterCount ?? 0 : apiData.value?.meta?.totalCount ?? 0);
-
-
-const { execute: updateExtension, error: updateError } = useApi(
-  () => `/enfyra_extension`,
-  {
-    method: "patch",
-    errorContext: "Update Extension",
-  }
-);
-
-registerHeaderActions([
-  {
-    id: "create-extension",
-    label: "Create Extension",
-    icon: "lucide:plus",
-    variant: "solid",
-    color: "primary",
-    size: "md",
-            to: "/settings/extensions/create",
-    permission: {
-      and: [
-        {
-          route: "/enfyra_extension",
-          methods: ["POST"],
-        },
-      ],
+onMounted(() => {
+  navigateTo(
+    {
+      path: "/settings/menus",
+      query: { ...route.query, tab: "extensions" },
     },
-  },
-]);
-
-function getExtensionTypeLabel(type: string) {
-  switch (type) {
-    case "page":
-      return "Page";
-    case "widget":
-      return "Widget";
-    case "global":
-      return "Global";
-    default:
-      return "Unknown";
-  }
-}
-
-const columns: ColumnDef<ExtensionDefinition>[] = [
-  settingsTextColumn('name', 'Extension'),
-  settingsTextColumn('description', 'Description'),
-  { accessorKey: 'type', header: 'Type', enableSorting: false, cell: ({ getValue }) => getExtensionTypeLabel(String(getValue())) },
-  { id: 'route', header: 'Route', enableSorting: false, cell: ({ row }) => row.original.menu?.path || '_' },
-  settingsStatusColumn(),
-];
-
-function getRowActions(extension: ExtensionDefinition): DataTableRowAction<ExtensionDefinition>[] {
-  return [
-    ...(checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['PATCH'] }] }) ? [{
-      label: extension.isEnabled ? 'Disable' : 'Enable', icon: extension.isEnabled ? 'lucide:power-off' : 'lucide:power',
-      disabled: getExtensionLoader(String(getId(extension) ?? '')).isLoading.value,
-      onSelect: () => toggleExtensionStatus(extension),
-    }] : []),
-    ...(checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['DELETE'] }] }) && !extension.isSystem ? [{
-      label: 'Delete', icon: 'lucide:trash-2', color: 'error',
-      onSelect: () => deleteExtension(extension),
-    }] : []),
-  ];
-}
-
-const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
-  const loader = getExtensionLoader(String(getId(extension) ?? ''));
-  const newStatus = !extension.isEnabled;
-
-  if (apiData.value?.data) {
-    const current = apiData.value.data.find(e => e.id === extension.id);
-    if (current) current.isEnabled = newStatus;
-  }
-
-  await loader.withLoading(() =>
-    updateExtension({
-      body: {
-        isEnabled: newStatus,
-      },
-      ...(extension.id === undefined ? {} : { id: extension.id }),
-    })
+    { replace: true },
   );
-
-  if (updateError.value) {
-    if (apiData.value?.data) {
-      const current = apiData.value.data.find(e => e.id === extension.id);
-      if (current) current.isEnabled = !newStatus;
-    }
-    return;
-  }
-
-  notify.success("Success", `Extension "${extension.name}" has been ${
-      newStatus ? "activated" : "deactivated"
-    } successfully!`);
-  invalidateExtensionCache({
-    reason: "status",
-    id: getId(extension),
-    ...(extension.extensionId === undefined ? {} : { extensionId: extension.extensionId }),
-    path: extension.menu?.path ?? null,
-  });
-  await loadGlobalExtensions({ forceReload: true });
-};
-
-const { execute: deleteExtensionApi, error: deleteError } = useApi(
-  () => `/enfyra_extension`,
-  {
-    method: "delete",
-    errorContext: "Delete Extension",
-  }
-);
-
-const bulkDelete = useSettingsBulkDelete<ExtensionDefinition>({
-  path: '/enfyra_extension',
-  title: 'Delete Extensions',
-  isEligible: extension => !extension.isSystem,
-  isBusy: () => extensions.value.some(item => getExtensionLoader(String(getId(item) ?? '')).isLoading.value),
-  refresh: () => fetchExtensions(),
-  onDeleted: async (deleted) => {
-    for (const extension of deleted) {
-      invalidateExtensionCache({ reason: 'deleted', id: getId(extension), ...(extension.extensionId === undefined ? {} : { extensionId: extension.extensionId }), path: extension.menu?.path ?? null });
-    }
-    await fetchMenuDefinitions();
-    await loadGlobalExtensions({ forceReload: true });
-  },
 });
-
-const deleteExtension = async (extension: ExtensionDefinition) => {
-  const isConfirmed = await confirm({
-    title: "Delete Extension",
-    content: `Are you sure you want to delete "${extension.description}"? This action cannot be undone.`,
-    confirmText: "Delete",
-    cancelText: "Cancel",
-  });
-
-  if (isConfirmed) {
-    await deleteExtensionApi(extension.id === undefined ? {} : { id: extension.id });
-
-    if (deleteError.value) {
-      return;
-    }
-
-    await fetchExtensions();
-    await fetchMenuDefinitions();
-    invalidateExtensionCache({
-      reason: "deleted",
-      id: getId(extension),
-      ...(extension.extensionId === undefined ? {} : { extensionId: extension.extensionId }),
-      path: extension.menu?.path ?? null,
-    });
-    await loadGlobalExtensions({ forceReload: true });
-
-    notify.success("Success", `Extension "${extension.id}" has been deleted successfully!`);
-  }
-};
-
-async function setPageSize(size: number) {
-  if (page.value !== 1) await navigateTo({ path: route.path, query: { ...route.query, page: undefined } }, { replace: true });
-  limit.value = size;
-}
-
-watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, limit, searchValue], () => { void fetchExtensions(); }, { immediate: true });
 </script>
+
+<template>
+  <div class="flex items-center justify-center min-h-[200px]">
+    <CommonLoadingState
+      title="Redirecting..."
+      description="Loading extension settings"
+      size="sm"
+      type="card"
+    />
+  </div>
+</template>

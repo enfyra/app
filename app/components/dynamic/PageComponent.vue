@@ -41,7 +41,7 @@
           ? {
               label: 'Go to Extension Settings',
               onClick: async () => {
-                await navigateTo('/settings/extensions');
+                await navigateTo('/settings/menus?tab=extensions');
               },
               icon: 'i-heroicons-cog-6-tooth',
             }
@@ -74,7 +74,7 @@
       :action="{
         label: 'Browse Extensions',
         onClick: async () => {
-          await navigateTo('/settings/extensions');
+          await navigateTo('/settings/menus?tab=extensions');
         },
         icon: 'i-heroicons-cog-6-tooth',
       }"
