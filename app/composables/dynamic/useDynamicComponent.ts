@@ -15,7 +15,8 @@ import {
   invalidateExtensionCache,
   isExtensionInvalidationMatch,
   incrementCacheHits,
-  incrementCacheMisses
+  incrementCacheMisses,
+  getExtensionCacheGeneration,
 } from "./cache";
 import {
   setupVueGlobals,
@@ -29,8 +30,9 @@ import {
   findComponentInWindow
 } from "./runtime";
 import type { PreviewState } from "./types";
+import type { ExtensionPreparationOptions } from "~/types/extension-loading";
 
-const componentLoadPromises = new Map<string, Promise<any>>();
+const componentLoadPromises = new Map<string, { promise: Promise<any>; promote: () => void }>();
 
 function buildComponentLoadKey(extensionName: string, updatedAt?: string | Date): string {
   return `${extensionName}:${updatedAt ? new Date(updatedAt).getTime() : "latest"}`;
@@ -81,12 +83,14 @@ function wrapWithCssLifecycle(
 
 export const useDynamicComponent = () => {
   const perf = useExtensionPerf();
+  const nuxtApp = useNuxtApp();
   const loadDynamicComponent = async (
     compiledCode: string,
     extensionName: string,
     updatedAt?: string | Date,
     forceReload = false,
-    originalCode?: string
+    originalCode?: string,
+    options: ExtensionPreparationOptions = {},
   ) => {
     try {
       if (typeof window === "undefined") {
@@ -98,23 +102,37 @@ export const useDynamicComponent = () => {
         return getCachedComponent(extensionName, updatedAt);
       }
 
-      const loadKey = buildComponentLoadKey(extensionName, updatedAt);
+      const generation = getExtensionCacheGeneration();
+      let promoted = false;
+      let resumeForeground!: () => void;
+      const promotion = new Promise<void>(resolve => { resumeForeground = resolve; });
+      const speculative = () => !promoted && Boolean(options.speculative?.());
+      const checkpoint = async () => {
+        if (!promoted) await Promise.race([options.checkpoint?.(), promotion]);
+        if (generation !== getExtensionCacheGeneration()) {
+          throw new DOMException("Extension changed during preparation", "AbortError");
+        }
+      };
+      const loadKey = `${generation}:${buildComponentLoadKey(extensionName, updatedAt)}`;
       const pendingLoad = componentLoadPromises.get(loadKey);
       if (pendingLoad && !forceReload) {
         incrementCacheHits();
-        return pendingLoad;
+        if (!options.speculative?.()) pendingLoad.promote();
+        const component = await pendingLoad.promise;
+        return component;
       }
 
       incrementCacheMisses();
 
       const loadPromise = (async () => {
+        await checkpoint();
         await Promise.all([setupVueGlobals(), getVueRuntime()]);
 
         const g = globalThis as any;
         const composables = getComposablesObject();
         exposeComposables(g, composables);
         exposeVueGlobals(g);
-        exposeExtensionGlobalsToVueApp(useNuxtApp().vueApp, composables);
+        exposeExtensionGlobalsToVueApp(nuxtApp.vueApp, composables);
 
         setupPackagesGlobal(g);
 
@@ -123,13 +141,18 @@ export const useDynamicComponent = () => {
         );
         if (requiredPackages.length > 0) {
           await perf.time("loadDynamic: getPackages", () =>
-            getPackages(requiredPackages)
+            getPackages(requiredPackages, { checkpoint, speculative })
           );
         }
 
+        await checkpoint();
         const component = await perf.time("loadDynamic: executeScript", () =>
           executeScriptInWindow(compiledCode, extensionName)
         );
+        if (generation !== getExtensionCacheGeneration()) {
+          if ((window as any)[extensionName] === component) delete (window as any)[extensionName];
+          throw new DOMException("Extension changed during preparation", "AbortError");
+        }
         findComponentInWindow(extensionName);
 
         if (!component || typeof component !== "object") {
@@ -147,12 +170,15 @@ export const useDynamicComponent = () => {
         return finalComponent;
       })();
 
-      componentLoadPromises.set(loadKey, loadPromise);
+      componentLoadPromises.set(loadKey, {
+        promise: loadPromise,
+        promote: () => { promoted = true; resumeForeground(); },
+      });
 
       try {
         return await loadPromise;
       } finally {
-        componentLoadPromises.delete(loadKey);
+        if (componentLoadPromises.get(loadKey)?.promise === loadPromise) componentLoadPromises.delete(loadKey);
       }
     } catch (error: any) {
       throw new Error(`Failed to load component: ${error?.message || error}`);
@@ -200,7 +226,7 @@ export const useDynamicComponent = () => {
 
       const composables = getComposablesForPreview(previewState);
       exposeComposables(g, composables);
-      exposeExtensionGlobalsToVueApp(useNuxtApp().vueApp, composables);
+      exposeExtensionGlobalsToVueApp(nuxtApp.vueApp, composables);
 
       options?.onLoadingPhase?.("executing");
       const component = await perf.time("preview: executeScript", () =>

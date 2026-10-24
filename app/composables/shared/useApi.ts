@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { useAppActivity } from './useAppActivity';
 import type { ApiBatchComposable, ApiBatchExecuteOptions, ApiBatchOptions, ApiBody, ApiComposable, ApiError, ApiExecutionResult, ApiOptions, ApiQuery, ApiSingleExecuteOptions, ApiTransportContext } from '~/types/api';
 import { getApiErrorEnvelope, getApiErrorRecord, normalizeApiError } from '~/utils/api/error';
 import { prepareCodeUpdate } from '~/utils/code-version';
@@ -105,6 +106,7 @@ function createApi<T, Options extends ApiSingleExecuteOptions | ApiBatchExecuteO
   send: (context: ApiTransportContext, executeOptions?: Options) => Promise<T>,
 ): ApiComposable<T, Options> {
   const notify = useNotify();
+  const { beginRequest } = useAppActivity();
   const codeVersion = useCodeVersion();
   const { getIdFieldName } = useDatabase();
   const { method = 'get', body, query, errorContext, onError, disableErrorPage } = options;
@@ -118,6 +120,7 @@ function createApi<T, Options extends ApiSingleExecuteOptions | ApiBatchExecuteO
 
   const executeRequest = async (executeOptions?: Options): Promise<ApiExecutionResult<T>> => {
     if (cancelPrevious) for (const controller of activeControllers) controller.abort();
+    const endRequest = beginRequest();
     const currentController = new AbortController();
     const hadActiveRequests = activeControllers.size > 0;
     activeControllers.add(currentController);
@@ -178,6 +181,7 @@ function createApi<T, Options extends ApiSingleExecuteOptions | ApiBatchExecuteO
       status.value = 'error';
       return { ok: false, error: apiError, aborted: false };
     } finally {
+      endRequest();
       executeOptions?.signal?.removeEventListener('abort', abortFromExternalSignal);
       activeControllers.delete(currentController);
       if (latestController === currentController) latestController = null;

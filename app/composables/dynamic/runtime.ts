@@ -173,10 +173,11 @@ export async function executeScriptInWindow(compiledCode: string, extensionName:
   script.type = "text/javascript";
 
   document.head.appendChild(script);
+  const component = (window as any)[extensionName];
   await new Promise((resolve) => setTimeout(resolve, 10));
   document.head.removeChild(script);
 
-  return (window as any)[extensionName];
+  return component;
 }
 
 export function findComponentInWindow(extensionName: string): any {

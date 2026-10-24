@@ -7,6 +7,8 @@ import DynamicPageComponent from '~/components/dynamic/PageComponent.vue'
 
 const mocks = vi.hoisted(() => ({
   beginRouteLoading: vi.fn(),
+  beginForeground: vi.fn(),
+  endForeground: vi.fn(),
   cachedComponent: null as any,
   cachedMeta: null as any,
   endRouteLoading: vi.fn(),
@@ -44,10 +46,9 @@ mockNuxtImport('useExtensionPerf', () => () => ({
   time: (_label: string, callback: () => unknown) => callback(),
 }))
 
-mockNuxtImport('useApi', () => () => ({
-  data: mocks.menuResponse,
-  error: mocks.menuError,
-  execute: mocks.executeFetchMenu,
+mockNuxtImport('useExtensionPrefetch', () => () => ({
+  beginForeground: mocks.beginForeground,
+  loadMenuExtension: (...args: unknown[]) => mocks.executeFetchMenu(...args),
 }))
 
 describe('DynamicPageComponent', () => {
@@ -72,8 +73,9 @@ describe('DynamicPageComponent', () => {
         permission: { allowAll: true },
       }],
     })
-    mocks.executeFetchMenu.mockResolvedValue(mocks.menuResponse.value)
+    mocks.executeFetchMenu.mockImplementation(async () => mocks.menuResponse.value?.data?.[0]?.extension ?? null)
     mocks.beginRouteLoading.mockReturnValue(mocks.endRouteLoading)
+    mocks.beginForeground.mockReturnValue(mocks.endForeground)
   })
 
   it('renders a cached extension without activating the navigation overlay', async () => {
@@ -104,10 +106,49 @@ describe('DynamicPageComponent', () => {
       global: { stubs: { PermissionGate: defineComponent({ template: '<div><slot /></div>' }) } },
     })
     try {
-      expect(wrapper.text()).toContain('No menu found for route: /reports')
+      expect(wrapper.text()).toContain('No extension found for route: /reports')
       expect(mocks.loadDynamicComponent).not.toHaveBeenCalled()
       expect(mocks.endRouteLoading).toHaveBeenCalledOnce()
     } finally { wrapper.unmount() }
+  })
+
+  it('restarts an in-flight page when shared metadata invalidation cancels its request', async () => {
+    mocks.cachedMeta = null
+    mocks.cachedComponent = null
+    let rejectOld!: (error: Error) => void
+    mocks.executeFetchMenu.mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectOld = reject }))
+    const wrapper = await mountSuspended(DynamicPageComponent, { route: '/reports', props: { path: 'reports' } })
+    try {
+      await vi.waitFor(() => expect(mocks.executeFetchMenu).toHaveBeenCalledOnce())
+      const extension = { extensionId: 'reports', name: 'Reports', isEnabled: true, compiledCode: 'compiled', updatedAt: '2026-10-23' }
+      mocks.executeFetchMenu.mockResolvedValue(extension)
+      mocks.loadDynamicComponent.mockResolvedValue(markRaw(defineComponent({ template: '<div data-testid="revalidated-page">Ready</div>' })))
+      mocks.extensionCacheInvalidation.value = { token: 1, reason: 'updated', extensionId: 'other-page' }
+      await vi.waitFor(() => expect(mocks.executeFetchMenu).toHaveBeenCalledTimes(2))
+      rejectOld(new DOMException('metadata invalidated', 'AbortError'))
+      await vi.waitFor(() => expect(wrapper.find('[data-testid="revalidated-page"]').exists()).toBe(true))
+      expect(wrapper.text()).not.toContain('Failed to load extension')
+    } finally { wrapper.unmount() }
+  })
+
+  it('uses prefetched code before a slow metadata revalidation', async () => {
+    const warmMeta = { ...mocks.cachedMeta, compiledCode: 'compiled reports' }
+    mocks.cachedComponent = null
+    mocks.cachedMeta = warmMeta
+    const component = markRaw(defineComponent({ template: '<div data-testid="prefetched-page">Ready</div>' }))
+    mocks.loadDynamicComponent.mockResolvedValue(component)
+    let finish!: () => void
+    mocks.executeFetchMenu.mockResolvedValueOnce(warmMeta).mockImplementationOnce(() => new Promise(resolve => {
+      finish = () => resolve(warmMeta)
+    }))
+    const wrapper = await mountSuspended(DynamicPageComponent, { route: '/reports', props: { path: 'reports' } })
+    try {
+      await vi.waitFor(() => expect(wrapper.find('[data-testid="prefetched-page"]').exists()).toBe(true))
+      expect(mocks.executeFetchMenu).toHaveBeenNthCalledWith(1, 'menu-1', false)
+      expect(mocks.executeFetchMenu).toHaveBeenNthCalledWith(2, 'menu-1', true)
+      expect(mocks.endRouteLoading).toHaveBeenCalled()
+      finish()
+    } finally { finish?.(); wrapper.unmount() }
   })
 
   it('activates and releases the navigation overlay for a cold extension load', async () => {

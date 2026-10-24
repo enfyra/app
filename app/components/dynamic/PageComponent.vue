@@ -84,9 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import type { FeatureCollection, FeatureRuntimeMenu } from '~/types/feature-api';
 import { matchMenuRoutePath, normalizeMenuRoutePath } from "~/utils/menu-route-patterns";
-import { EXTENSION_RUNTIME_FIELDS, prefixFields } from "~/utils/extension-fields";
 
 interface Props {
   path: string;
@@ -104,6 +102,7 @@ const {
 } = useDynamicComponent();
 const { beginRouteLoading } = useGlobalState();
 const { findBestMenuMatch } = useMenuRegistry();
+const { loadMenuExtension, beginForeground } = useExtensionPrefetch();
 const perf = useExtensionPerf();
 
 const normalizedPath = computed(() => {
@@ -122,26 +121,7 @@ const loadRunId = ref(0);
 let endRouteLoading: (() => void) | null = null;
 const isDisabledError = computed(() => error.value?.includes("disabled") ?? false);
 
-const {
-  data: menuResponse,
-  error: menuError,
-  execute: executeFetchMenu,
-} = useApi<FeatureCollection<FeatureRuntimeMenu>>(() => "/enfyra_menu", {
-  query: computed(() => ({
-    fields: [
-      "*",
-      prefixFields("extension", EXTENSION_RUNTIME_FIELDS),
-    ].join(","),
-    filter: {
-      _and: [
-        { id: { _eq: matchedMenu.value?.id } },
-        { isEnabled: { _eq: true } },
-      ],
-    },
-  })),
-  errorContext: "Fetch Menu with Extension",
-  immediate: false,
-});
+const foregroundLoads = new Set<() => void>();
 
 const tryLoadFromCache = (): boolean => {
   const cachedMeta = getCachedExtensionMeta(extensionMetaCacheKey.value);
@@ -180,50 +160,43 @@ const loadMatchingExtension = async () => {
     return;
   }
 
-  if (tryLoadFromCache()) {
-    isLoading.value = false;
-    await fetchAndLoadExtension(runId);
-    return;
-  }
-
-  const endLoading = startRouteLoading();
+  const endForeground = beginForeground(extensionMetaCacheKey.value);
+  foregroundLoads.add(endForeground);
+  const cached = tryLoadFromCache();
+  const hadMetadata = Boolean(getCachedExtensionMeta(extensionMetaCacheKey.value));
+  const endLoading = cached ? null : startRouteLoading();
+  if (cached) isLoading.value = false;
   try {
-    await fetchAndLoadExtension(runId);
+    await fetchAndLoadExtension(runId, cached);
+    if (!cached && hadMetadata && isCurrentLoad(runId)) {
+      isLoading.value = false;
+      endLoading?.();
+      await fetchAndLoadExtension(runId, true);
+    }
   } finally {
+    endForeground();
+    foregroundLoads.delete(endForeground);
+    endLoading?.();
     if (isCurrentLoad(runId)) {
-      endLoading();
       if (endRouteLoading === endLoading) endRouteLoading = null;
       isLoading.value = false;
     }
   }
 };
 
-const fetchAndLoadExtension = async (runId: number) => {
+const fetchAndLoadExtension = async (runId: number, refresh = false) => {
   try {
-    await perf.time("Route: fetchMenu", () => executeFetchMenu());
+    const extension = await perf.time("Route: fetchMenu", () => loadMenuExtension(String(matchedMenu.value!.id), refresh));
     if (!isCurrentLoad(runId)) return;
-
-    if (menuError.value) {
-      error.value = `API Error: ${menuError.value}`;
-      return;
-    }
-
-    const menuItem = menuResponse.value?.data[0];
-    if (!menuItem) {
-      error.value = `No menu found for route: /${props.path}`;
-      return;
-    }
-
-
-    if (!menuItem.extension || (Array.isArray(menuItem.extension) && menuItem.extension.length === 0)) {
+    if (!extension) {
+      extensionComponent.value = null;
       error.value = `No extension found for route: /${props.path}`;
       return;
     }
-
-    const extension = menuItem.extension;
     currentExtensionMeta.value = extension;
 
     if (!extension.isEnabled) {
+      extensionComponent.value = null;
       error.value = `Extension "${extension.name}" is currently disabled. Please contact an administrator to enable this extension.`;
       return;
     }
@@ -259,8 +232,7 @@ const fetchAndLoadExtension = async (runId: number) => {
 };
 
 watch(() => extensionCacheInvalidation.value, async (invalidation) => {
-  const runId = ++loadRunId.value;
-  const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(extensionMetaCacheKey.value) || menuResponse.value?.data?.[0]?.extension;
+  const currentExtension = currentExtensionMeta.value || getCachedExtensionMeta(extensionMetaCacheKey.value);
   const invalidationPath = invalidation?.path;
   const matchesPath = invalidationPath != null && (
     String(invalidationPath) === props.path
@@ -268,22 +240,9 @@ watch(() => extensionCacheInvalidation.value, async (invalidation) => {
     || matchMenuRoutePath(String(invalidationPath), normalizedPath.value) != null
     || matchMenuRoutePath(matchedMenuPath.value, String(invalidationPath)) != null
   );
-  if (!matchesPath && !isExtensionInvalidationMatch(currentExtension, invalidation)) return;
+  if (!matchesPath && !isExtensionInvalidationMatch(currentExtension, invalidation) && foregroundLoads.size === 0) return;
 
-  error.value = null;
-  if (!extensionComponent.value) {
-    isLoading.value = true;
-  }
-  const endLoading = startRouteLoading();
-  try {
-    await fetchAndLoadExtension(runId);
-  } finally {
-    if (isCurrentLoad(runId)) {
-      endLoading();
-      if (endRouteLoading === endLoading) endRouteLoading = null;
-      isLoading.value = false;
-    }
-  }
+  await loadMatchingExtension();
 });
 
 const retry = () => {
@@ -314,6 +273,9 @@ onErrorCaptured((err, _instance, info) => {
 });
 
 onBeforeUnmount(() => {
+  loadRunId.value++;
+  for (const endForeground of foregroundLoads) endForeground();
+  foregroundLoads.clear();
   endRouteLoading?.();
 });
 

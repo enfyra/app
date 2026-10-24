@@ -128,6 +128,7 @@ useRouterErrorHandler();
 useMobileMenuAction();
 useNavigationActions();
 useAdminSocket();
+useExtensionWarmup();
 
 const { routeLoadingVisible } = useGlobalState();
 const route = useRoute();
