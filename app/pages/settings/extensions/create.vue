@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'extension' }]">
-        <template #extension-header><h2 class="text-sm font-medium">Extension</h2></template>
+        <template #extension-header><CommonFormHeader :title="'Create New Extension'" /></template>
         <template #extension>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
@@ -49,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
@@ -129,7 +130,7 @@ const {
   error: createError,
   execute: executeCreateExtension,
   pending: createLoading,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Extension",
 });
@@ -161,7 +162,7 @@ async function handleCreate() {
   await loadGlobalExtensions({ forceReload: true });
 
   const { getId } = useDatabase();
-  await navigateTo(`/settings/extensions/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/settings/extensions/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
 }

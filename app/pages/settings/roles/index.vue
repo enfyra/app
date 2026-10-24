@@ -3,6 +3,7 @@ import { h } from 'vue';
 import { UBadge } from '#components';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
+import type { ShellListResponse, ShellRoleRecord } from '~/types/shell-api';
 import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
 
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -10,6 +11,7 @@ const notify = useNotify();
 const page = ref(1);
 const pageLimit = useSettingsPageSize('roles');
 const route = useRoute();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('name', () => fetchRoles());
 const tableName = "enfyra_role";
 const { confirm } = useConfirm();
 const { getId } = useDatabase();
@@ -21,23 +23,19 @@ const ROLE_LIST_FIELDS = [
   "createdAt",
 ].join(",");
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "Role Manager",
-  variant: "default",
-  gradient: "purple",
-});
+
 
 const {
   data: apiData,
   pending: loading,
   execute: fetchRoles,
-} = useApi(() => "/enfyra_role", {
+} = useApi<ShellListResponse<ShellRoleRecord>>(() => "/enfyra_role", {
   query: computed(() => ({
     fields: ROLE_LIST_FIELDS,
     sort: "-createdAt",
     meta: "*",
+    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
     page: page.value,
     limit: pageLimit,
   })),
@@ -48,9 +46,7 @@ const {
   items: roles,
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => {
-  return apiData.value?.meta?.totalCount || 0;
-});
+const total = computed(() => searchValue.value ? apiData.value?.meta?.filterCount ?? 0 : apiData.value?.meta?.totalCount ?? 0);
 
 registerHeaderActions({
   id: "create-role",
@@ -77,6 +73,13 @@ const { execute: deleteRoleApi, error: deleteError } = useApi(
     errorContext: "Delete Role",
   }
 );
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_role',
+  title: 'Delete Roles',
+  isEligible: role => !role.isSystem,
+  refresh: () => fetchRoles(),
+});
 
 async function deleteRole(id: string) {
   const ok = await confirm({
@@ -115,13 +118,15 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, pageLimit], () => { void fetchRoles(); }, { immediate: true });
+watch([page, pageLimit, searchValue], () => { void fetchRoles(); }, { immediate: true });
 </script>
 
 <template>
   <DataTableSettingsTable
+      header-name="Role Manager"
     v-model:page="page"
     :data="roles"
+    :bulk-action="bulkDelete"
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
@@ -131,6 +136,13 @@ watch([page, pageLimit], () => { void fetchRoles(); }, { immediate: true });
     :pagination-loading="loading"
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by name"
+      search-label="Search by name"
+      @search="submitSearch"
     @row-click="role => navigateTo(`/settings/roles/${getId(role)}`)"
-  />
+  >
+  </DataTableSettingsTable>
 </template>
+

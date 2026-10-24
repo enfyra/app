@@ -38,6 +38,7 @@ async function runAction(action: FieldAction, kind: 'menu' | 'delete' = 'menu') 
 
 function runDeleteAction() {
   if (props.deleteAction) return runAction(props.deleteAction, 'delete');
+  return undefined;
 }
 </script>
 
@@ -83,7 +84,7 @@ function runDeleteAction() {
         size="sm"
         square
         class="relative size-8 p-0 pointer-coarse:before:absolute pointer-coarse:before:-inset-1.5 pointer-coarse:before:content-['']"
-        :disabled="!!pending || deleteAction.disabled"
+        :disabled="!!pending || !!deleteAction.disabled"
         :loading="pending === 'delete'"
         loading-auto
         @click="runDeleteAction"
@@ -104,7 +105,7 @@ function runDeleteAction() {
             variant="ghost"
             class="w-full justify-start whitespace-normal px-0 py-2 pointer-coarse:min-h-[44px]"
             :ui="{ label: 'text-left' }"
-            :disabled="!!pending || action.disabled"
+            :disabled="!!pending || !!action.disabled"
             loading-auto
             @click="runAction(action)"
           />

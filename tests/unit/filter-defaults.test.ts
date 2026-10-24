@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getDefaultFilterValue } from '~/utils/common/filter/filter-helpers'
+import { getCombinedOptionsForContext } from '~/utils/common/filter/filter-utils'
 
 describe('filter defaults', () => {
   afterEach(() => {
@@ -22,5 +23,20 @@ describe('filter defaults', () => {
 
   it('does not create defaults for non-date filters', () => {
     expect(getDefaultFilterValue('string', '_eq')).toBeNull()
+  })
+
+  it('omits unresolved relation targets without inventing a selectable table', () => {
+    const options = getCombinedOptionsForContext('records', {
+      records: { definition: [
+        { name: 'unresolved', fieldType: 'relation' },
+        { name: 'owner', fieldType: 'relation', targetTable: { name: 'users' } },
+      ] },
+    })
+
+    expect(options).toEqual([
+      { label: 'unresolved → (unknown)', value: 'unresolved', fieldCategory: 'relation' },
+      { label: 'owner → (users)', value: 'owner', fieldCategory: 'relation', targetTable: 'users' },
+    ])
+    expect(options[0]).not.toHaveProperty('targetTable')
   })
 })

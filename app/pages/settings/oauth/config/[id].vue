@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'configuration' }]">
-        <template #configuration-header><h2 class="text-sm font-medium">Configuration</h2></template>
+        <template #configuration-header><CommonFormHeader :title="configData?.data?.[0]?.provider ? `OAuth: ${getProviderLabel(configData.data[0].provider)}` : 'Configuration'" /></template>
         <template #configuration>
       <CommonFormCard>
         <UForm :state="form" @submit="updateConfig">
@@ -32,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellListResponse, ShellOAuthConfigRecord } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildOAuthRedirectUri,
@@ -53,7 +55,6 @@ const tableName = "enfyra_oauth_config";
 
 const { getIncludeFields } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -163,22 +164,13 @@ const {
   data: configData,
   pending: loading,
   execute: executeGetConfig,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellOAuthConfigRecord>>(() => `/${tableName}`, {
   query: {
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: "Fetch OAuth Config",
 });
-
-watch(() => configData.value?.data?.[0]?.provider, (provider) => {
-  if (provider) {
-    registerPageHeader({
-      title: `OAuth: ${getProviderLabel(provider)}`,
-      gradient: "blue",
-    });
-  }
-}, { immediate: true });
 
 const {
   error: updateError,
@@ -275,6 +267,14 @@ async function initializeForm() {
     hasFormChanges.value = formChanges.checkChanges(form.value);
   }
 }
+
+registerHeaderActions(
+  useReloadAction({
+    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
+);
 
 onMounted(() => {
   appOrigin.value = window.location.origin;

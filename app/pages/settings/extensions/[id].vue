@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'extension' }]">
-        <template #extension-header><h2 class="text-sm font-medium">Extension</h2></template>
+      <CommonPanel :sections="panelSections">
+        <template #extension-header><CommonFormHeader :title="extensionData?.data?.[0]?.name ? `Extension: ${extensionData.data[0].name}` : 'Extension'" /></template>
         <template #extension>
 <CommonFormCard>
         <UForm :state="form" @submit="updateExtension">
@@ -57,6 +57,9 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureExtensionEditor } from '~/types/feature-api';
+import type { PanelSection } from '~/types/ui';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
@@ -74,7 +77,6 @@ const uploadLoading = ref(false);
 const showPreviewModal = ref(false);
 
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 const { fetchMenuDefinitions } = useMenuApi();
 const { invalidateExtensionCache } = useDynamicComponent();
 const { loadGlobalExtensions } = useGlobalExtensions();
@@ -112,35 +114,6 @@ registerHeaderActions([
     disabled: computed(() => !hasFormChanges.value),
     onClick: handleReset,
     show: computed(() => hasFormChanges.value),
-  },
-  {
-    id: "preview-extension",
-    label: "Preview",
-    icon: "lucide:eye",
-    variant: "outline",
-    color: "primary",
-    size: "md",
-    order: 10,
-    onClick: () => (showPreviewModal.value = true),
-    disabled: computed(() => !form.value?.code),
-  },
-  {
-    id: "upload-extension",
-    label: "Upload",
-    icon: "lucide:upload",
-    variant: "outline",
-    color: "secondary",
-    size: "md",
-    order: 11,
-    onClick: () => (showUploadModal.value = true),
-    permission: {
-      and: [
-        {
-          route: "/enfyra_extension",
-          methods: ["PATCH"],
-        },
-      ],
-    },
   },
   {
     id: "delete-extension",
@@ -190,22 +163,13 @@ const {
   data: extensionData,
   pending: loading,
   execute: executeGetExtension,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureExtensionEditor>>(() => `/${tableName}`, {
   query: {
     fields: EXTENSION_EDITOR_FIELDS,
     filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: "Fetch Extension",
 });
-
-watch(() => extensionData.value?.data?.[0]?.name, (name) => {
-  if (name) {
-    registerPageHeader({
-      title: `Extension: ${name}`,
-      gradient: "purple",
-    });
-  }
-}, { immediate: true });
 
 const {
   error: updateError,
@@ -263,7 +227,7 @@ async function updateExtension() {
     invalidateExtensionCache({
       reason: "updated",
       id: route.params.id as string,
-      extensionId: freshData.extensionId,
+      ...(freshData.extensionId === undefined ? {} : { extensionId: freshData.extensionId }),
       path: freshData.menu?.path ?? null,
       updatedAt: freshData.updatedAt,
     });
@@ -295,7 +259,7 @@ async function deleteExtension() {
   });
   await loadGlobalExtensions({ forceReload: true });
   await fetchMenuDefinitions();
-  await navigateTo("/settings/extensions");
+  await navigateTo("/settings/menus?tab=extensions");
 }
 
 async function handleUpload(files: File | File[]) {
@@ -326,6 +290,41 @@ async function initializeForm() {
     formChanges.update(data);
   }
 }
+
+
+const panelSections = [{
+  value: 'extension',
+  actions: [
+    {
+      id: 'preview-extension',
+      label: 'Preview',
+      icon: 'lucide:eye',
+      variant: 'outline',
+      color: 'primary',
+      order: 10,
+      onClick: () => (showPreviewModal.value = true),
+      disabled: computed(() => !form.value?.code),
+    },
+    {
+      id: 'upload-extension',
+      label: 'Upload',
+      icon: 'lucide:upload',
+      variant: 'outline',
+      color: 'secondary',
+      order: 11,
+      onClick: () => (showUploadModal.value = true),
+      permission: { and: [{ route: '/enfyra_extension', methods: ['PATCH'] }] },
+    },
+  ],
+} as PanelSection];
+
+registerHeaderActions(
+  useReloadAction({
+    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
+);
 
 onMounted(() => {
   initializeForm();

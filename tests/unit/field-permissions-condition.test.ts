@@ -13,6 +13,28 @@ describe('field permission condition helpers', () => {
     })
   })
 
+  it('keeps parsed scalar values unvalidated until condition validation', () => {
+    for (const input of ['true', '42', '"not a condition"']) {
+      const parsed = parseConditionJson(input)
+      expect(parsed.error).toBeNull()
+      expect(validateFieldPermissionCondition(parsed.condition)).toEqual({
+        ok: false,
+        errors: ['condition must be an object'],
+      })
+    }
+  })
+
+  it('rejects empty nested groups and preserves dynamic comparison operands', () => {
+    expect(validateFieldPermissionCondition({ _and: [{ _or: [] }] })).toEqual({
+      ok: false,
+      errors: ['_and.0._or must not be empty'],
+    })
+    expect(validateFieldPermissionCondition({ payload: { _eq: { dynamic: ['value', 0, false, null] } } })).toEqual({
+      ok: true,
+      errors: [],
+    })
+  })
+
   it('accepts null and supported @USER.id equality conditions', () => {
     expect(validateFieldPermissionCondition(null)).toEqual({
       ok: true,

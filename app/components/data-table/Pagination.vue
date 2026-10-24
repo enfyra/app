@@ -52,7 +52,7 @@ function setCursorPage(direction: -1 | 1) {
         <USelect :model-value="itemsPerPage" :items="pageSizes" value-key="value" size="sm" class="w-18" aria-label="Rows per page" @update:model-value="setPageSize" />
       </label>
     </div>
-    <div v-if="isCursor || hasPagination" class="min-w-0 border-default max-md:col-span-2 max-md:-mx-3 max-md:border-t max-md:px-3 max-md:pt-3">
+    <div v-if="isCursor || hasPagination" class="min-w-0 border-[var(--border-structural)] max-md:col-span-2 max-md:-mx-3 max-md:border-t max-md:px-3 max-md:pt-3">
       <div class="min-w-0 max-w-full overflow-x-auto">
         <div v-if="isCursor" class="mx-auto flex w-fit min-w-max gap-2 md:mx-0">
           <UButton aria-label="Previous" icon="lucide:chevron-left" color="neutral" variant="outline" size="sm" class="size-8 justify-center !p-0" :disabled="page <= 1 || loading" @click="setCursorPage(-1)" />
@@ -63,7 +63,7 @@ function setCursorPage(direction: -1 | 1) {
           v-model:page="page"
           :items-per-page="itemsPerPage"
           :total="total"
-          :to="to"
+          v-bind="to ? { to } : {}"
           :sibling-count="2"
           size="sm"
           :ui="{ root: 'eapp-table-pagination-controls min-w-max w-fit mx-auto md:mx-0', list: 'w-max flex-nowrap justify-center md:justify-end', item: 'min-w-8 shrink-0' }"
@@ -79,7 +79,7 @@ function setCursorPage(direction: -1 | 1) {
             <UButton aria-label="Previous" icon="lucide:chevron-left" color="neutral" variant="outline" size="xs" class="size-7 justify-center !p-0" :disabled="page <= 1 || loading" @click="setCursorPage(-1)" />
             <UButton aria-label="Next" icon="lucide:chevron-right" color="neutral" variant="outline" size="xs" class="size-7 justify-center !p-0" :disabled="!hasNextPage || loading" @click="setCursorPage(1)" />
           </div>
-          <UPagination v-else v-model:page="page" :size="miniPaginationSize" :items-per-page="itemsPerPage" :total="total" :to="to" :ui="{ root: 'eapp-table-pagination-controls min-w-max w-fit', list: 'flex-nowrap gap-0.5', item: '!min-w-7' }" />
+          <UPagination v-else v-model:page="page" :size="miniPaginationSize" :items-per-page="itemsPerPage" :total="total" v-bind="to ? { to } : {}" :ui="{ root: 'eapp-table-pagination-controls min-w-max w-fit', list: 'flex-nowrap gap-0.5', item: '!min-w-7' }" />
         </div>
         <CommonPaginationRange :start="pageStart" :end="pageEnd" />
       </div>

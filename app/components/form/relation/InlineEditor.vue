@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { getDetailPathForTable } from '~/utils/relation-detail-paths';
 import { getRelationId } from '~/utils/relation-records';
-import type { RelationId } from '~/types/relation';
+import type { RelationId, RelationSelectionMetadata, RelationSelectionValue } from '~/types/relation';
 
 const props = defineProps<{
-  relationMeta: any;
-  modelValue: any;
+  relationMeta: RelationSelectionMetadata;
+  modelValue: unknown;
   disabled?: boolean;
 }>();
 defineOptions({ inheritAttrs: false });
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits<{
+  'update:modelValue': [value: RelationSelectionValue];
+}>();
 const showModal = ref(false);
 const selectedIds = ref<RelationId[]>([]);
 const { getId } = useDatabase();

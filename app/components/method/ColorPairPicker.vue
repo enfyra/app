@@ -90,7 +90,7 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
         :key="preset.label"
         type="button"
         :disabled="disabled"
-        class="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-default)] px-3 py-2 text-left transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+        class="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-default)] px-3 py-2 text-left transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
         :class="selectedPresetLabel === preset.label ? 'method-color-preset-selected' : ''"
         :style="getPresetButtonStyle(preset)"
         @click="choosePreset(preset)"
@@ -152,7 +152,7 @@ function getPresetButtonStyle(preset: (typeof METHOD_COLOR_PRESETS)[number]) {
 
     <div
       v-if="showCustom"
-      class="space-y-4 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-nested)] p-3"
+      class="space-y-4 rounded-lg border border-[var(--border-default)] bg-[var(--surface-nested)] p-3"
     >
       <div
         class="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--surface-muted)] px-3 py-2"

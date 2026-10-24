@@ -12,6 +12,7 @@ describe('table pagination theme boundary', () => {
   it('keeps desktop range, page size and cursor controls on one footer row', async () => {
     const wrapper = await mountSuspended(DataTable, {
       props: {
+        headerName: 'Records',
         data: Array.from({ length: 20 }, (_, index) => ({ id: index + 1 })),
         columns: [{ accessorKey: 'id', header: 'ID' }],
         page: 1,
@@ -50,6 +51,7 @@ describe('table pagination theme boundary', () => {
   it('renders selection and range together in the pagination summary', async () => {
     const wrapper = await mountSuspended(DataTable, {
       props: {
+        headerName: 'Records',
         data: [{ id: 1 }],
         columns: [{ accessorKey: 'id', header: 'ID' }],
         paginationConfig: { total: 24, itemsPerPage: 10, floating: false },
@@ -126,6 +128,7 @@ describe('table pagination theme boundary', () => {
     vi.stubGlobal('IntersectionObserver', Observer)
     try {
       const wrapper = await mountSuspended(DataTable, { props: {
+        headerName: 'Records',
         data: [{ id: 1 }], columns: [{ accessorKey: 'id', header: 'ID' }],
         paginationConfig: { total: 105, itemsPerPage: 10 },
       } })

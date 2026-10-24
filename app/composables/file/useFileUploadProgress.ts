@@ -1,5 +1,6 @@
 import type { Socket } from "socket.io-client";
-import type { FileUploadProgressEvent, FileUploadProgressPhase } from "~/types";
+import type { FileUploadProgressPhase } from "~/types/file-upload-progress";
+import { isFileUploadProgressEvent } from "~/utils/file-management/upload-progress";
 
 const FILE_UPLOAD_PROGRESS_EVENT = "$system:upload:progress";
 
@@ -25,8 +26,8 @@ export function useFileUploadProgress() {
   const segmentWeightPercent = ref(100);
   let adminSocket: Socket | null = null;
 
-  const handleProgress = (event: FileUploadProgressEvent) => {
-    if (!event?.uploadId) return;
+  const handleProgress = (event: unknown) => {
+    if (!isFileUploadProgressEvent(event)) return;
     const rawPercent = Math.min(100, Math.max(0, Math.round(event.percent)));
     if (Object.prototype.hasOwnProperty.call(trackedUploadProgressById.value, event.uploadId)) {
       trackedUploadProgressById.value = {
@@ -45,7 +46,8 @@ export function useFileUploadProgress() {
 
   const ensureListener = () => {
     if (!import.meta.client) return;
-    adminSocket = useAdminSocket().adminSocket as Socket;
+    adminSocket = useAdminSocket().adminSocket;
+    if (!adminSocket) return;
     adminSocket.off(FILE_UPLOAD_PROGRESS_EVENT, handleProgress);
     adminSocket.on(FILE_UPLOAD_PROGRESS_EVENT, handleProgress);
   };

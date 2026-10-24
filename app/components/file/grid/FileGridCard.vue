@@ -5,12 +5,12 @@
       :disabled="moveState.moveMode"
     >
       <div
-        class="eapp-bordered-region relative cursor-pointer overflow-hidden hover:bg-[var(--menu-item-hover-bg)]"
+        class="eapp-bordered-region relative overflow-hidden transition-[border-color,background-color] duration-[var(--duration-base)] hover:border-[var(--border-strong)] hover:bg-[var(--menu-item-hover-bg)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--state-primary-outline-border)]"
         :class="{
-          '!border-[var(--state-primary-soft-border)]': selectedItems.includes(file.id),
+          'cursor-pointer': !moveState.moveMode,
+          '!border-[var(--state-primary-outline-border)] !shadow-[0_0_0_1px_var(--state-primary-outline-border)]': selectedItems.includes(file.id),
         }"
         :style="{
-          borderWidth: selectedItems.includes(file.id) ? '2px' : '1px',
           opacity: moveState.moveMode ? '0.6' : '1',
           cursor: moveState.moveMode ? 'not-allowed' : 'pointer',
         }"
@@ -26,7 +26,7 @@
             v-if="file.isImage"
             :src="file.thumbnailUrl"
             :alt="file.displayName"
-            class="h-full w-full transition-transform duration-[var(--duration-emphasized)] group-hover:scale-[1.03]"
+            class="h-full w-full"
             container-class="h-full w-full"
             object-fit="cover"
             :show-error-text="false"
@@ -34,7 +34,7 @@
 
           <div v-else class="flex h-full items-center justify-center">
             <div
-              class="flex h-20 w-20 items-center justify-center rounded-[var(--radius-panel)] transition-transform duration-[var(--duration-emphasized)] group-hover:scale-105"
+              class="flex h-20 w-20 items-center justify-center rounded-[var(--radius-panel)]"
               :class="file.iconBackground"
             >
               <UIcon :name="file.icon" :class="file.iconColor" size="36" />
@@ -42,7 +42,7 @@
           </div>
 
           <div
-            class="pointer-events-none absolute inset-0 bg-[var(--surface-default)]/0 transition-colors duration-[var(--duration-base)] group-hover:bg-[var(--surface-default)]/10"
+            class="pointer-events-none absolute inset-0 bg-[var(--surface-default)]/0 transition-colors duration-[var(--duration-base)] group-hover:bg-[var(--surface-default)]/[0.06]"
           />
 
           <div

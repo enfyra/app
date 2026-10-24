@@ -7,6 +7,7 @@ import { getExecutionStatusColor } from '~/utils/flow.constants';
 const props = withDefaults(defineProps<{
   executions: any[];
   page?: number;
+  total?: number;
   hasNextPage: boolean;
   loading: boolean;
   showTitle?: boolean;
@@ -42,12 +43,14 @@ function formatTime(value: string | null) {
       <UButton icon="lucide:refresh-cw" size="sm" color="neutral" variant="outline" label="Reload" :loading="loading" @click="emit('refresh')" />
     </div>
     <DataTable
+      header-name="Executions"
       :data="executions"
       :columns="columns"
       :loading="loading"
       :get-row-id="execution => String(getId(execution))"
       :page="page"
-      :pagination-config="{ mode: 'cursor', itemsPerPage: 10, hasNextPage, loading, showPageSize: false }"
+      v-bind="total === undefined ? {} : { recordCount: total }"
+      :pagination-config="{ mode: 'cursor', itemsPerPage: 10, ...(total === undefined ? {} : { total }), hasNextPage, loading, showPageSize: false }"
       @update:page="page => emit('update:page', page)"
       @row-click="execution => emit('open', execution)"
     />

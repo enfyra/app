@@ -2,13 +2,16 @@
   <Suspense>
     <CodeEditor
       v-if="shouldRender"
-      :model-value="props.modelValue"
-      :language="props.language"
-      :height="props.height"
-      :class="props.class"
-      :error="props.error"
-      :enfyra-autocomplete="props.enfyraAutocomplete"
-      :test-run="props.testRun"
+      v-bind="{
+        ...(props.modelValue === undefined ? {} : { modelValue: props.modelValue }),
+        ...(props.language === undefined ? {} : { language: props.language }),
+        ...(props.height === undefined ? {} : { height: props.height }),
+        ...(props.class === undefined ? {} : { class: props.class }),
+        ...(props.error === undefined ? {} : { error: props.error }),
+        ...(props.enfyraAutocomplete === undefined ? {} : { enfyraAutocomplete: props.enfyraAutocomplete }),
+        ...(props.testRun === undefined ? {} : { testRun: props.testRun }),
+      }"
+      :readonly="props.readonly"
       @update:model-value="(value) => $emit('update:modelValue', value)"
       @diagnostics="(diags) => $emit('diagnostics', diags)"
     />
@@ -36,6 +39,7 @@ const props = defineProps<{
   error?: string;
   enfyraAutocomplete?: boolean | 'vue';
   testRun?: boolean | Record<string, any>;
+  readonly?: boolean;
 }>();
 
 defineEmits<{

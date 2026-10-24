@@ -1,6 +1,9 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'package' }]">
+        <template #package-header><CommonFormHeader :title="packageData?.name ? `Package: ${packageData.name}` : 'Package'" /></template>
+        <template #package>
       <CommonFormCard>
         <UAlert
           v-if="isTransitioning"
@@ -70,11 +73,14 @@
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeaturePackage } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
@@ -98,7 +104,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadPackage,
-} = useApi("/enfyra_package", {
+} = useApi<FeatureCollection<FeaturePackage>>("/enfyra_package", {
   query: {
     fields: "*",
     filter: {
@@ -322,16 +328,14 @@ function handlePackageEvent(event: string, data: any) {
   }
 }
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-watch(packageData, (data) => {
-  if (data) {
-    registerPageHeader({
-      title: data.name || 'Package Details',
-      gradient: data.type === 'Server' ? 'cyan' : 'blue',
-    });
-  }
-}, { immediate: true });
+registerHeaderActions(
+  useReloadAction({
+    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
+);
 
 onMounted(() => {
   initializeForm();

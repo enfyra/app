@@ -30,48 +30,42 @@ const protectsDefaultPage = computed(() => isDefaultPageAncestor(props.item.id, 
 const isDndUpdating = useState('menu-dnd-updating', () => false);
 const isMenuDragActive = useState('menu-dnd-drag-active', () => false);
 const itemLevel = computed(() => props.level || 0);
+const isChildRow = computed(() => itemLevel.value > 0);
 
 const originalMenu = computed(() => {
   return props.allMenus?.find(m => String(getId(m)) === String(props.item.id));
 });
 
-const childrenStyle = computed(() => {
-  const parentLevel = props.level || 0;
-  const base = 12 + parentLevel * 14;
-  const guideLeft = isDesktop.value ? base + 66 : 6;
-  return {
-    paddingLeft: isDesktop.value ? '10px' : '12px',
-    '--menu-children-guide-left': `${guideLeft}px`,
-  };
-});
-
 const childrenItems = ref<MenuTreeItem[]>(props.item.children || []);
 const isExpanded = ref(true);
 const hasChildren = computed(() => childrenItems.value.length > 0 || (props.item.children?.length ?? 0) > 0);
-const canEditMenu = computed(() => !isSystemMenu.value);
-const rowStyle = computed(() => ({
-  '--menu-depth': String(itemLevel.value)
-}));
+
+const rowSubtitle = computed(() => {
+  const description = props.item.description?.trim();
+  const path = props.item.path?.trim();
+  if (props.item.isDropdown) {
+    if (description) return description;
+    const count = childrenItems.value.length;
+    return `${count} child ${count === 1 ? 'item' : 'items'}`;
+  }
+  if (path && description && description !== props.item.label) {
+    return `${path} · ${description}`;
+  }
+  if (path) return path;
+  if (description) return description;
+  return 'Navigation item';
+});
 
 watch(() => props.item.children, (newChildren) => {
   childrenItems.value = newChildren || [];
 }, { deep: true });
 
-function handleItemClick(menu: MenuTreeItem) {
-  const originalMenu = props.allMenus?.find(m => String(getId(m)) === String(menu.id));
-  if (originalMenu) {
-    if (originalMenu.isSystem) {
-      return;
-    }
-    emit('edit-menu', originalMenu);
-  }
-}
-
 function handleIconClick(event: Event) {
-  if (isDesktop.value) return;
+  if (isDesktop.value || !props.item.isDropdown) return;
   event.stopPropagation();
-  if (props.item.isDropdown) isExpanded.value = !isExpanded.value;
-  else if (canEditMenu.value) handleItemClick(props.item);
+  if (hasChildren.value) {
+    isExpanded.value = !isExpanded.value;
+  }
 }
 
 function isDescendant(menuId: string | number, potentialParentId: string | number, allMenus: MenuDefinition[]): boolean {
@@ -94,27 +88,36 @@ function handleChildrenReorder() {
   
   const updatedMenus: MenuDefinition[] = [];
   const allMenus = props.allMenus;
+  let hasOrderOrParentChange = false;
   
-  childrenItems.value.forEach((child: MenuTreeItem, index: number) => {
-    const childMenuId = getId(child);
-    if (!childMenuId) return;
-    
-    const originalMenu = allMenus.find(m => String(getId(m)) === String(childMenuId));
-    if (!originalMenu) return;
+  const candidateUpdates = childrenItems.value
+    .map((child: MenuTreeItem, index: number) => {
+      const childMenuId = getId(child);
+      if (!childMenuId) return null;
+      
+      const originalMenu = allMenus.find(m => String(getId(m)) === String(childMenuId));
+      if (!originalMenu) return null;
 
-    const currentParentId = getId(originalMenu.parent) || null;
-    const nextParentId = parentId;
-    const currentOrder = originalMenu.order;
-    const nextOrder = index;
+      const currentParentId = getId(originalMenu.parent) || null;
+      const nextParentId = parentId;
+      const currentOrder = originalMenu.order;
+      const nextOrder = index;
 
-    if (String(currentParentId) !== String(nextParentId) || currentOrder !== nextOrder) {
-      updatedMenus.push({
+      if (String(currentParentId) !== String(nextParentId) || currentOrder !== nextOrder) {
+        hasOrderOrParentChange = true;
+      }
+
+      return {
         ...originalMenu,
         parent: { id: parentId } as any,
         order: nextOrder
-      });
-    }
-  });
+      };
+    })
+    .filter((entry): entry is MenuDefinition => entry !== null);
+
+  if (hasOrderOrParentChange) {
+    updatedMenus.push(...candidateUpdates);
+  }
 
   if (updatedMenus.length > 0) emit('reorder-menus', updatedMenus);
 }
@@ -425,53 +428,47 @@ function handleDragEnd() {
   <div class="menu-editor-node">
     <div
       :class="[
-        'menu-editor-row group',
-        canEditMenu ? 'is-editable cursor-pointer' : 'cursor-default',
+        'menu-editor-row group cursor-default',
+        isChildRow ? 'is-child' : '',
         isMoving ? 'is-moving' : '',
         !item.isEnabled ? 'is-disabled' : ''
       ]"
-      :style="rowStyle"
-      @click="handleItemClick(item)"
-      :tabindex="canEditMenu ? 0 : -1"
-      :role="canEditMenu ? 'button' : undefined"
-      :aria-label="canEditMenu ? `Edit menu ${item.label}` : undefined"
-      @keydown.enter.self.prevent="canEditMenu && handleItemClick(item)"
-      @keydown.space.self.prevent="canEditMenu && handleItemClick(item)"
     >
-      <button
-        type="button"
-        class="menu-row-drag drag-handle"
-        aria-label="Drag menu item"
-        @click.stop
-      >
-        <UIcon name="lucide:grip-vertical" class="h-4 w-4" />
-      </button>
+      <div class="menu-row-lead">
+        <button
+          type="button"
+          class="menu-row-drag drag-handle"
+          aria-label="Drag menu item"
+          @click.stop
+        >
+          <UIcon name="lucide:grip-vertical" :class="isChildRow ? 'h-3.5 w-3.5' : 'h-4 w-4'" />
+        </button>
 
-      <button
-        v-if="item.isDropdown"
-        type="button"
-        class="menu-row-chevron"
-        :class="isExpanded ? 'is-open' : ''"
-        :disabled="!hasChildren"
-        aria-label="Toggle children"
-        @click.stop="isExpanded = !isExpanded"
-      >
-        <UIcon
-          name="lucide:chevron-right"
-          :class="[
-            'h-4 w-4 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-enter)]',
-            isExpanded ? 'rotate-90' : ''
-          ]"
-        />
-      </button>
-      <span v-else class="menu-row-chevron-placeholder" />
+        <button
+          v-if="item.isDropdown"
+          type="button"
+          class="menu-row-chevron"
+          :class="isExpanded ? 'is-open' : ''"
+          :disabled="!hasChildren"
+          aria-label="Toggle children"
+          @click.stop="isExpanded = !isExpanded"
+        >
+          <UIcon
+            name="lucide:chevron-right"
+            :class="[
+              'h-4 w-4 transition-transform duration-[var(--duration-fast)] ease-[var(--ease-enter)]',
+              isExpanded ? 'rotate-90' : ''
+            ]"
+          />
+        </button>
+      </div>
 
       <component
-        :is="isDesktop ? 'span' : 'button'"
-        :type="isDesktop ? undefined : 'button'"
-        :disabled="isDesktop ? undefined : item.isDropdown ? !hasChildren : !canEditMenu"
-        :aria-label="isDesktop ? undefined : item.isDropdown ? `Toggle children of ${item.label}` : `Edit menu ${item.label}`"
-        :aria-expanded="isDesktop || !item.isDropdown ? undefined : isExpanded"
+        :is="!isDesktop && item.isDropdown ? 'button' : 'span'"
+        :type="!isDesktop && item.isDropdown ? 'button' : undefined"
+        :disabled="!isDesktop && item.isDropdown ? !hasChildren : undefined"
+        :aria-label="!isDesktop && item.isDropdown ? `Toggle children of ${item.label}` : undefined"
+        :aria-expanded="!isDesktop && item.isDropdown ? isExpanded : undefined"
         :class="['menu-row-icon accent-tile', iconToneClass]"
         @click="handleIconClick"
       >
@@ -485,11 +482,17 @@ function handleDragEnd() {
           <UIcon
             v-if="isSystemMenu"
             name="lucide:lock"
-            class="h-3.5 w-3.5 text-[var(--text-quaternary)]"
+            class="h-3.5 w-3.5 shrink-0 text-[var(--text-quaternary)]"
             title="System menu - cannot be edited"
           />
         </div>
 
+        <div class="menu-row-subtitle-line">
+          <span class="menu-row-subtitle">{{ rowSubtitle }}</span>
+        </div>
+      </div>
+
+      <div class="menu-row-actions">
         <div class="menu-row-meta">
           <UBadge v-if="isDefaultPage" variant="soft" color="primary" size="xs" title="Change the default page in General Settings before deleting this menu">Default page</UBadge>
           <UBadge variant="soft" :color="typeBadgeColor" size="xs">
@@ -519,9 +522,7 @@ function handleDragEnd() {
             </UBadge>
           </NuxtLink>
         </div>
-      </div>
 
-      <div class="menu-row-actions">
         <UButton
           v-if="canMoveHere"
           size="xs"
@@ -570,6 +571,13 @@ function handleDragEnd() {
       v-if="item.isDropdown && isExpanded"
       class="menu-editor-children-wrap"
     >
+      <div
+        v-if="showChildDropHint && !hasChildren"
+        class="menu-child-drop-placeholder pointer-events-none"
+      >
+        <UIcon name="lucide:corner-down-right" class="h-4 w-4" />
+        <span>Drop here to add as child</span>
+      </div>
       <draggable
         v-model="childrenItems"
         :animation="140"
@@ -586,29 +594,12 @@ function handleDragEnd() {
         item-key="id"
         class="menu-editor-children drop-zone"
         :class="{ 'is-empty': !hasChildren, 'is-dragging-target': showChildDropHint }"
-        :style="childrenStyle"
       >
-        <template #header>
-          <div
-            v-if="showChildDropHint && !hasChildren"
-            class="menu-child-drop-placeholder"
-          >
-            <UIcon name="lucide:corner-down-right" class="h-4 w-4" />
-            <span>Drop here to add as child</span>
-          </div>
-          <div
-            v-else-if="showChildDropHint"
-            class="menu-child-drop-inline-hint"
-          >
-            <UIcon name="lucide:corner-down-right" class="h-3.5 w-3.5" />
-            <span>Drop inside {{ item.label }}</span>
-          </div>
-        </template>
         <template #item="{ element: child }">
           <MenuVisualEditorItem
             :item="child"
             :level="(level || 0) + 1"
-            :all-menus="props.allMenus"
+            v-bind="props.allMenus === undefined ? {} : { allMenus: props.allMenus }"
             @edit-menu="$emit('edit-menu', $event)"
             @delete-menu="$emit('delete-menu', $event)"
             @toggle-enabled="$emit('toggle-enabled', $event)"
@@ -628,41 +619,28 @@ function handleDragEnd() {
 <style scoped>
 .menu-editor-node {
   position: relative;
+  display: grid;
+  gap: 8px;
 }
 
 .menu-editor-row {
   display: grid;
-  grid-template-columns: 18px 24px 40px minmax(220px, 1fr) auto;
+  grid-template-columns: auto 36px minmax(220px, 1fr) auto;
   align-items: center;
   gap: 12px;
-  min-height: 64px;
-  padding: 10px 12px 10px calc(12px + (var(--menu-depth, 0) * 14px));
+  padding: 12px;
   border: 1px solid transparent;
   border-radius: var(--radius-panel);
   background: transparent;
   transition: background-color var(--duration-instant) var(--ease-standard), border-color var(--duration-instant) var(--ease-standard), box-shadow var(--duration-instant) var(--ease-standard);
 }
 
-@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
-  .menu-editor-row.is-editable:hover {
-    border-color: var(--card-border-hover);
-    background: var(--state-primary-soft-bg);
-  }
-
-  :global(.dark) .menu-editor-row.is-editable:hover {
-    border-color: var(--action-primary-bg);
-    background: var(--action-primary-bg);
-  }
-
-  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-title,
-  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-drag,
-  :global(.dark) .menu-editor-row.is-editable:hover .menu-row-chevron {
-    color: var(--action-primary-text);
-  }
-
-  :global(.dark) .menu-editor-row.is-editable:hover :deep(button[aria-label="Menu actions"]) {
-    color: var(--action-primary-text) !important;
-  }
+.menu-editor-row.is-child {
+  grid-template-columns: auto 32px minmax(180px, 1fr) auto;
+  gap: 10px;
+  padding: 9px;
+  border-radius: var(--radius-control);
+  background: var(--surface-muted);
 }
 
 .menu-editor-row.is-moving {
@@ -675,11 +653,17 @@ function handleDragEnd() {
   opacity: 0.68;
 }
 
+.menu-row-lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .menu-row-drag,
 .menu-row-chevron {
   display: inline-flex;
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-subcontrol);
@@ -687,21 +671,13 @@ function handleDragEnd() {
   transition: background-color var(--duration-instant) var(--ease-standard), color var(--duration-instant) var(--ease-standard);
 }
 
+.menu-editor-row.is-child .menu-row-drag {
+  width: 14px;
+  height: 14px;
+}
+
 .menu-row-drag {
-  width: 18px;
   cursor: move;
-  opacity: 0;
-}
-
-.menu-row-drag-placeholder {
-  width: 18px;
-  height: 24px;
-}
-
-@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
-  .menu-editor-row:hover .menu-row-drag {
-    opacity: 1;
-  }
 }
 
 .menu-row-chevron:not(:disabled) {
@@ -720,25 +696,24 @@ function handleDragEnd() {
   opacity: 0.28;
 }
 
-.menu-row-chevron-placeholder {
-  width: 24px;
-  height: 24px;
-}
-
 .menu-row-icon {
   display: inline-flex;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-control);
 }
 
+.menu-editor-row.is-child .menu-row-icon {
+  width: 32px;
+  height: 32px;
+}
+
 .menu-row-main {
-  display: flex;
+  display: grid;
   min-width: 0;
-  align-items: center;
-  gap: 12px;
+  gap: 6px;
 }
 
 .menu-row-title-line {
@@ -751,10 +726,30 @@ function handleDragEnd() {
 .menu-row-title {
   min-width: 0;
   overflow: hidden;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-editor-row.is-child .menu-row-title {
+  font-size: 13.5px;
+}
+
+.menu-row-subtitle-line {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.menu-row-subtitle {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -764,6 +759,7 @@ function handleDragEnd() {
   min-width: 0;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 6px;
 }
 
@@ -771,70 +767,47 @@ function handleDragEnd() {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
 }
 
 .menu-editor-children {
   display: grid;
-  gap: 6px;
-  margin-top: 6px;
-  padding-top: 6px;
-  padding-bottom: 8px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-panel);
+  gap: 8px;
+  margin-left: 28px;
+  border-left: 1px solid var(--border-subtle);
+  padding-left: 12px;
   transition: background-color var(--duration-instant) var(--ease-standard), border-color var(--duration-instant) var(--ease-standard), box-shadow var(--duration-instant) var(--ease-standard);
 }
 
-.menu-editor-children::before {
-  content: "";
-  position: absolute;
-  left: var(--menu-children-guide-left, 12px);
-  top: 2px;
-  bottom: 10px;
-  width: 1px;
-  background: var(--border-subtle);
-  pointer-events: none;
-}
-
-.menu-editor-children.is-empty::before {
+.menu-editor-children.is-empty {
   display: none;
 }
 
-.menu-editor-children.is-dragging-target {
-  border-color: color-mix(in srgb, var(--md-primary) 20%, transparent);
-  background: color-mix(in srgb, var(--md-primary) 3%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 38%, transparent);
-}
-
 .menu-editor-children.is-empty.is-dragging-target {
+  display: grid;
   min-height: 48px;
-}
-
-.menu-child-drop-placeholder,
-.menu-child-drop-inline-hint {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--state-primary-soft-text);
-  font-weight: 750;
+  padding-top: 6px;
+  padding-bottom: 8px;
 }
 
 .menu-child-drop-placeholder {
-  min-height: 38px;
+  position: absolute;
+  inset: 6px 0 8px 40px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  min-height: 36px;
   border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--md-primary) 6%, var(--md-surface));
+  background: var(--surface-muted);
   padding: 0 12px;
   font-size: 13px;
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 44%, transparent);
-}
-
-.menu-child-drop-inline-hint {
-  min-height: 26px;
-  padding: 0 10px;
-  font-size: 12px;
 }
 
 .menu-editor-children-wrap {
+  position: relative;
   animation: menu-children-enter 120ms ease-out;
 }
 
@@ -853,33 +826,9 @@ function handleDragEnd() {
   position: relative;
 }
 
-.drop-zone:has(.sortable-ghost) {
-  border-color: var(--md-primary);
-  background-color: color-mix(in srgb, var(--md-primary) 8%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 30%, transparent);
-}
-
-.menu-editor-node :deep(.sortable-ghost) {
-  min-height: 64px;
-  opacity: 1;
-  border-radius: var(--radius-panel);
-  background: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface));
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 44%, transparent);
-}
-
-.menu-editor-node :deep(.sortable-chosen) {
-  opacity: 1;
-}
-
-.menu-editor-node :deep(.sortable-drag) {
-  opacity: 0.94;
-  border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-md);
-}
-
 @media (pointer: coarse) {
   .menu-editor-row {
-    grid-template-columns: 44px 44px 40px minmax(0, 1fr) auto;
+    grid-template-columns: auto 36px minmax(0, 1fr) auto;
   }
 
   .menu-row-drag,
@@ -896,9 +845,14 @@ function handleDragEnd() {
     padding: 10px 4px;
   }
 
+  .menu-editor-row.is-child {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    padding: 9px;
+  }
+
+  .menu-row-lead,
   .menu-row-drag,
-  .menu-row-chevron,
-  .menu-row-chevron-placeholder {
+  .menu-row-chevron {
     display: none;
   }
 
@@ -907,6 +861,11 @@ function handleDragEnd() {
     width: 36px;
     height: 36px;
     align-self: start;
+  }
+
+  .menu-editor-row.is-child .menu-row-icon {
+    width: 32px;
+    height: 32px;
   }
 
   .menu-row-icon:disabled {
@@ -923,7 +882,7 @@ function handleDragEnd() {
     grid-row: 1;
     align-self: start;
     flex-wrap: wrap;
-    max-width: 64px;
+    max-width: 180px;
   }
 
   .menu-row-meta {
@@ -939,14 +898,20 @@ function handleDragEnd() {
   .menu-row-extension {
     flex-basis: 100%;
   }
+
+  .menu-editor-children {
+    margin-left: 16px;
+  }
 }
 
 @media (pointer: coarse) and (max-width: 1023px) {
-  .menu-editor-row {
+  .menu-editor-row,
+  .menu-editor-row.is-child {
     grid-template-columns: 44px minmax(0, 1fr) auto;
   }
 
-  .menu-row-icon {
+  .menu-row-icon,
+  .menu-editor-row.is-child .menu-row-icon {
     width: 44px;
     height: 44px;
   }

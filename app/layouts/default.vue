@@ -92,6 +92,7 @@
   <div id="others-overlay"></div>
 
   <CommonGlobalConfirm />
+  <CommonCodeVersionModal />
   <DynamicGlobalExtensionsHost />
   <FolderDetailModal />
 </template>
@@ -127,6 +128,7 @@ useRouterErrorHandler();
 useMobileMenuAction();
 useNavigationActions();
 useAdminSocket();
+useExtensionWarmup();
 
 const { routeLoadingVisible } = useGlobalState();
 const route = useRoute();

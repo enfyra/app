@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'flow' }]">
-        <template #flow-header><h2 class="text-sm font-medium">Flow</h2></template>
+        <template #flow-header><CommonFormHeader :title="'Create New Flow'" /></template>
         <template #flow>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
@@ -24,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
@@ -70,7 +71,7 @@ const {
   error: createError,
   execute: executeCreateFlow,
   pending: createLoading,
-} = useApi(() => `/enfyra_flow`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/enfyra_flow`, {
   method: "post",
   errorContext: "Create Flow",
 });

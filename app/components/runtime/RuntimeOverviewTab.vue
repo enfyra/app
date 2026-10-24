@@ -16,9 +16,6 @@ import {
   metricTextClass,
 } from '~/utils/runtime-monitor/core';
 import {
-  eventLoopSeverity,
-  heapSeverity,
-  isolateHeapSeverity,
   overviewSeverity,
 } from '~/utils/runtime-monitor/severity';
 import { overviewWarnings } from '~/utils/runtime-monitor/warnings';
@@ -178,13 +175,13 @@ function runnerRssLabel(metrics: RuntimeMetricsPayload) {
             <div>Runner RSS</div>
             <div class="text-right font-medium">{{ runnerRssLabel(metrics) }}</div>
             <div>Heap</div>
-            <div class="text-right font-medium" :class="metricTextClass(heapSeverity(metrics))">
+            <div class="text-right font-medium">
               {{ fmtMb(metrics.instance.heapUsedMb) }} / {{ fmtMb(metrics.instance.heapTotalMb) }}
             </div>
             <div>Heap avg</div>
             <div class="text-right font-medium">{{ fmtMb(metrics.averages?.heapUsedMb ?? metrics.instance.heapUsedMb) }}</div>
             <div>Isolate heap</div>
-            <div class="text-right font-medium" :class="metricTextClass(isolateHeapSeverity(metrics))">
+            <div class="text-right font-medium">
               {{ fmtPercent(metrics.executor.maxHeapRatio) }}
             </div>
             <div>Isolate avg</div>
@@ -192,7 +189,7 @@ function runnerRssLabel(metrics: RuntimeMetricsPayload) {
               {{ fmtPercent(metrics.averages?.executorMaxHeapRatio ?? metrics.executor.maxHeapRatio) }}
             </div>
             <div>Event loop</div>
-            <div class="text-right font-medium" :class="metricTextClass(eventLoopSeverity(metrics))">
+            <div class="text-right font-medium">
               {{ fmtMs(metrics.instance.eventLoopLagMs) }}
             </div>
             <div>Event loop avg</div>

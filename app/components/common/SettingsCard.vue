@@ -165,12 +165,12 @@
           :key="action.label"
           v-bind="{
             ...resolveProps(action.props),
-            ...((isMobile || isTablet) ? { size: 'xs', class: '!aspect-square' } : {})
+            ...((isMobile || isTablet) ? { size: 'xs', class: '!aspect-square' } : {}),
+            ...(action.to === undefined ? {} : { to: action.to }),
+            ...(action.loading === undefined ? {} : { loading: action.loading }),
+            ...((action.disabled || action.loading) === undefined ? {} : { disabled: action.disabled || action.loading }),
           }"
-          :to="action.to"
           :loading-auto="true"
-          :loading="action.loading"
-          :disabled="action.disabled || action.loading"
           @click="handleActionClick(action)"
           :class="[
             action.onClick || action.to ? 'cursor-pointer' : '',

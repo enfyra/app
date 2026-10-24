@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureFolder } from '~/types/feature-api';
+import type { FileLibraryRecord } from '~/types/file';
 import { useFileManagerUpload } from '~/composables/file-manager/useFileManagerUpload';
 const route = useRoute();
 const router = useRouter();
@@ -9,14 +11,13 @@ const { getIdFieldName } = useDatabase();
 const folderPage = ref(Number(route.query.folderPage) || 1);
 const filePage = ref(Number(route.query.filePage) || 1);
 const pageLimit = 20;
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const { getIncludeFields: getFileFields } = useSchema("enfyra_file");
 
 const {
   data: folder,
   execute: fetchFolder,
-} = useApi(() => `/enfyra_folder`, {
+} = useApi<FeatureCollection<FeatureFolder>>(() => `/enfyra_folder`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
@@ -34,7 +35,7 @@ const {
   data: childFolders,
   pending: childFoldersPending,
   execute: fetchChildFolders,
-} = useApi(() => `/enfyra_folder`, {
+} = useApi<FeatureCollection<FeatureFolder>>(() => `/enfyra_folder`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
@@ -58,7 +59,7 @@ const {
   data: folderFiles,
   pending: filesPending,
   execute: fetchFiles,
-} = useApi(() => `/enfyra_file`, {
+} = useApi<FeatureCollection<FileLibraryRecord>>(() => `/enfyra_file`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
@@ -79,15 +80,7 @@ const {
   errorContext: "Load Files",
 });
 
-watch(() => folder.value?.data?.[0]?.name, (name) => {
-  if (name) {
-    registerPageHeader({
-      title: `${name} - Files Manager`,
-      description: "Manage files and subfolders in this directory",
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
+const pageTitle = computed(() => folder.value?.data?.[0]?.name ? `${folder.value.data[0].name} - Files Manager` : 'Files Manager');
 
 const folders = computed(() => childFolders.value?.data || []);
 const folderTotal = computed(() => childFolders.value?.meta?.filterCount || 0);
@@ -168,6 +161,8 @@ watch(
   <div class="space-y-8">
     
     <FileManager
+      :title="pageTitle"
+      description="Manage files and subfolders in this directory"
       :parent-id="route.params.id as string"
       :folders="folders"
       :files="files"
@@ -231,7 +226,8 @@ watch(
             Storage Location
           </label>
           <USelectMenu
-            v-model="selectedStorage"
+            v-bind="selectedStorage === undefined ? {} : { modelValue: selectedStorage }"
+            @update:model-value="selectedStorage = $event"
             :items="storageOptions"
             placeholder="Select storage (optional)"
             size="lg"

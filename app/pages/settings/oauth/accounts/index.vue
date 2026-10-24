@@ -1,5 +1,6 @@
 <template>
   <DataTableSettingsTable
+      header-name="OAuth Accounts"
     v-model:page="page"
     :data="accounts"
     :columns="columns"
@@ -10,16 +11,25 @@
     :pagination-loading="loading"
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by email"
+      search-label="Search by email"
+      @search="submitSearch"
     @row-click="account => navigateTo(`/settings/oauth/accounts/${getId(account)}`)"
-  />
+  >
+  </DataTableSettingsTable>
 </template>
+
 
 <script setup lang="ts">
 import type { ColumnDef } from '@tanstack/vue-table';
+import type { ShellListResponse, ShellOAuthAccountRecord } from '~/types/shell-api';
 
 const page = ref(1);
 const pageLimit = useSettingsPageSize('oauth-accounts');
 const route = useRoute();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('user.email', () => fetchAccounts());
 const tableName = "enfyra_oauth_account";
 const OAUTH_ACCOUNT_LIST_FIELDS = [
   "id",
@@ -31,23 +41,20 @@ const OAUTH_ACCOUNT_LIST_FIELDS = [
 ].join(",");
 
 const { getId } = useDatabase();
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "OAuth Accounts",
-  gradient: "blue",
-});
+
 
 const {
   data: apiData,
   pending: loading,
   execute: fetchAccounts,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellOAuthAccountRecord>>(() => `/${tableName}`, {
   query: computed(() => ({
     fields: OAUTH_ACCOUNT_LIST_FIELDS,
     limit: pageLimit,
     page: page.value,
     meta: "*",
+    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
     sort: "-createdAt",
   })),
   errorContext: "Fetch OAuth Accounts",
@@ -57,7 +64,7 @@ const {
   items: accounts,
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const total = computed(() => searchValue.value ? apiData.value?.meta?.filterCount ?? 0 : apiData.value?.meta?.totalCount ?? 0);
 
 function getProviderLabel(provider: string) {
   switch (provider) {
@@ -95,5 +102,5 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, pageLimit], () => { void fetchAccounts(); }, { immediate: true });
+watch([page, pageLimit, searchValue], () => { void fetchAccounts(); }, { immediate: true });
 </script>

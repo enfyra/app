@@ -36,6 +36,7 @@ describe('sidebar overlay scrolling', () => {
       expect(track.style.right).toBe('0px')
       expect(wrapper.find('style').text()).toContain('scrollbar-width:none')
       expect(wrapper.get('a').attributes('href')).toBe('/data')
+      expect(wrapper.get('a').element.parentElement?.classList.contains('pb-2')).toBe(true)
       track.dispatchEvent(new WheelEvent('wheel', { deltaY: 40, bubbles: true, cancelable: true }))
       expect(viewport.scrollTop).toBe(40)
       await wrapper.setProps({ collapsed: true })

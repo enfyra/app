@@ -117,9 +117,10 @@
                 :data="getHookNodeData(hook, 'pre', index)"
                 type="prehook"
                 :on-click="() => editHook(hook, 'pre')"
-                :on-delete="hook.isSystem ? undefined : () => deleteHook(hook, 'pre')"
-                :on-insert-after="hook.isGlobal ? undefined : () => emit('createHook', 'pre', group.method, getLocalPriorityAfter(group.preHooks, index))"
-                :on-toggle="hook.isSystem ? undefined : (enabled) => toggleHook(hook, 'pre', enabled)"
+                v-bind="{
+                  ...(hook.isSystem ? {} : { onDelete: () => deleteHook(hook, 'pre'), onToggle: (enabled: boolean) => toggleHook(hook, 'pre', enabled) }),
+                  ...(hook.isGlobal ? {} : { onInsertAfter: () => emit('createHook', 'pre', group.method, getLocalPriorityAfter(group.preHooks, index)) }),
+                }"
               />
             </div>
           </div>
@@ -146,7 +147,7 @@
               :data="getHandlerNodeData(group)"
               type="handler"
               :on-click="() => handleHandlerClick(group)"
-              :on-delete="hasRealHandler(group) ? () => emit('deleteHandler', group.handler) : undefined"
+              v-bind="hasRealHandler(group) ? { onDelete: () => emit('deleteHandler', group.handler) } : {}"
             />
             <button
               v-else
@@ -201,9 +202,10 @@
                 :data="getHookNodeData(hook, 'post', index)"
                 type="posthook"
                 :on-click="() => editHook(hook, 'post')"
-                :on-delete="hook.isSystem ? undefined : () => deleteHook(hook, 'post')"
-                :on-insert-after="hook.isGlobal ? undefined : () => emit('createHook', 'post', group.method, getLocalPriorityAfter(group.postHooks, index))"
-                :on-toggle="hook.isSystem ? undefined : (enabled) => toggleHook(hook, 'post', enabled)"
+                v-bind="{
+                  ...(hook.isSystem ? {} : { onDelete: () => deleteHook(hook, 'post'), onToggle: (enabled: boolean) => toggleHook(hook, 'post', enabled) }),
+                  ...(hook.isGlobal ? {} : { onInsertAfter: () => emit('createHook', 'post', group.method, getLocalPriorityAfter(group.postHooks, index)) }),
+                }"
               />
             </div>
           </div>

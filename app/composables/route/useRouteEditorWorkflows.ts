@@ -1,4 +1,5 @@
 import { validateRouteHandlerForm, validateRouteHookForm } from "~/utils/route-handler-hook-forms";
+import type { FeatureCollection, FeatureEditableRecord, FeatureRouteHandler, FeatureRouteHook } from '~/types/feature-api';
 
 type MethodObject = { name: string; id?: string };
 
@@ -49,7 +50,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: handlersData,
     pending: handlersLoading,
     execute: fetchHandlers,
-  } = useApi(() => "/enfyra_route_handler", {
+  } = useApi<FeatureCollection<FeatureRouteHandler>>(() => "/enfyra_route_handler", {
     query: computed(() => ({
       fields: ROUTE_HANDLER_WORKFLOW_FIELDS,
       filter: options.routeId.value ? { route: { [getIdFieldName()]: { _eq: options.routeId.value } } } : undefined,
@@ -62,7 +63,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: preHooksData,
     pending: preHooksLoading,
     execute: fetchPreHooks,
-  } = useApi(() => "/enfyra_pre_hook", {
+  } = useApi<FeatureCollection<FeatureRouteHook>>(() => "/enfyra_pre_hook", {
     query: computed(() => ({
       fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: options.routeId.value ? { route: { [getIdFieldName()]: { _eq: options.routeId.value } } } : undefined,
@@ -76,7 +77,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: postHooksData,
     pending: postHooksLoading,
     execute: fetchPostHooks,
-  } = useApi(() => "/enfyra_post_hook", {
+  } = useApi<FeatureCollection<FeatureRouteHook>>(() => "/enfyra_post_hook", {
     query: computed(() => ({
       fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: options.routeId.value ? { route: { [getIdFieldName()]: { _eq: options.routeId.value } } } : undefined,
@@ -90,7 +91,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: globalPreHooksData,
     pending: globalPreHooksLoading,
     execute: fetchGlobalPreHooks,
-  } = useApi(() => "/enfyra_pre_hook", {
+  } = useApi<FeatureCollection<FeatureRouteHook>>(() => "/enfyra_pre_hook", {
     query: computed(() => ({
       fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: { isGlobal: { _eq: true } },
@@ -104,7 +105,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     data: globalPostHooksData,
     pending: globalPostHooksLoading,
     execute: fetchGlobalPostHooks,
-  } = useApi(() => "/enfyra_post_hook", {
+  } = useApi<FeatureCollection<FeatureRouteHook>>(() => "/enfyra_post_hook", {
     query: computed(() => ({
       fields: ROUTE_HOOK_WORKFLOW_FIELDS,
       filter: { isGlobal: { _eq: true } },
@@ -265,7 +266,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const {
     data: editHandlerData,
     execute: fetchEditHandler,
-  } = useApi(() => "/enfyra_route_handler", {
+  } = useApi<FeatureCollection<FeatureEditableRecord>>(() => "/enfyra_route_handler", {
     query: computed(() => ({
       fields: getHandlerIncludeFields(),
       filter: { [getIdFieldName()]: { _eq: editingHandlerId.value } },
@@ -340,14 +341,12 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const hookType = ref<"pre" | "post">("pre");
 
   const {
-    error: createPreHookError,
-    execute: executeCreatePreHook,
+    executeWithResult: executeCreatePreHook,
     pending: createPreHookLoading,
   } = useApi(() => "/enfyra_pre_hook", { method: "post", errorContext: "Create Pre-Hook" });
 
   const {
-    error: createPostHookError,
-    execute: executeCreatePostHook,
+    executeWithResult: executeCreatePostHook,
     pending: createPostHookLoading,
   } = useApi(() => "/enfyra_post_hook", { method: "post", errorContext: "Create Post-Hook" });
 
@@ -383,12 +382,14 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const {
     error: updatePreHookError,
     execute: executeUpdatePreHook,
+    executeWithResult: shiftPreHook,
     pending: updatePreHookLoading,
   } = useApi(() => "/enfyra_pre_hook", { method: "patch", errorContext: "Update Pre-Hook" });
 
   const {
     error: updatePostHookError,
     execute: executeUpdatePostHook,
+    executeWithResult: shiftPostHook,
     pending: updatePostHookLoading,
   } = useApi(() => "/enfyra_post_hook", { method: "patch", errorContext: "Update Post-Hook" });
 
@@ -415,21 +416,23 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
       const toShift = localHooks
         .filter((h: any) => !h.isGlobal && (Number(h.priority) || 0) >= targetPriority)
         .sort((a: any, b: any) => (Number(b.priority) || 0) - (Number(a.priority) || 0));
-      const patch = isPreHook ? executeUpdatePreHook : executeUpdatePostHook;
+      const patch = isPreHook ? shiftPreHook : shiftPostHook;
       for (const h of toShift) {
-        await patch({
+        const result = await patch({
           id: getId(h),
           body: { priority: (Number(h.priority) || 0) + 1 },
         });
+        if (!result.ok) {
+          await refreshRouteWorkflows();
+          return;
+        }
       }
     }
 
-    if (isPreHook) {
-      await executeCreatePreHook({ body: hookForm.value });
-      if (createPreHookError.value) return;
-    } else {
-      await executeCreatePostHook({ body: hookForm.value });
-      if (createPostHookError.value) return;
+    const created = await (isPreHook ? executeCreatePreHook : executeCreatePostHook)({ body: hookForm.value });
+    if (!created.ok) {
+      await refreshRouteWorkflows();
+      return;
     }
 
     showCreateHookDrawer.value = false;
@@ -447,7 +450,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const {
     data: editPreHookData,
     execute: fetchEditPreHook,
-  } = useApi(() => "/enfyra_pre_hook", {
+  } = useApi<FeatureCollection<FeatureEditableRecord>>(() => "/enfyra_pre_hook", {
     query: computed(() => ({
       fields: getPreHookIncludeFields(),
       filter: { [getIdFieldName()]: { _eq: editingHookId.value } },
@@ -459,7 +462,7 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
   const {
     data: editPostHookData,
     execute: fetchEditPostHook,
-  } = useApi(() => "/enfyra_post_hook", {
+  } = useApi<FeatureCollection<FeatureEditableRecord>>(() => "/enfyra_post_hook", {
     query: computed(() => ({
       fields: getPostHookIncludeFields(),
       filter: { [getIdFieldName()]: { _eq: editingHookId.value } },

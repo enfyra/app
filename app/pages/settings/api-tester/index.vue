@@ -1,12 +1,9 @@
 <template>
   <div class="space-y-6">
-    <div class="flex flex-col sm:flex-row gap-3">
-      <CommonSearchField v-model="search" placeholder="Search routes..." label="Search routes" />
-    </div>
-
     <CommonPanel v-model="activeScope" :sections="routeSections">
       <template v-for="section in routeSections" :key="section.value" #[section.value]>
     <DataTableSettingsTable
+      header-name="Routes"
       v-model:page="page"
       :data="visibleRoutes"
       :columns="columns"
@@ -18,7 +15,13 @@
       :pagination-loading="routeLoading"
       @page-size-change="setPageSize"
       @row-click="openTest"
-    />
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by path"
+      search-label="Search routes by path"
+      @search="submitSearch"
+    >
+    </DataTableSettingsTable>
 
       </template>
     </CommonPanel>
@@ -37,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureRoute } from '~/types/feature-api';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { settingsStatusColumn } from '~/utils/settings-table';
 
@@ -50,8 +54,7 @@ const { schemas } = useSchema(selectedTableName);
 
 registerPageHeader({ title: "API Tester", gradient: "cyan" });
 
-const search = ref('');
-const debouncedSearch = ref('');
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('path', () => fetchRoutes());
 const pageLimit = useSettingsPageSize('api-tester');
 const route = useRoute();
 const router = useRouter();
@@ -59,12 +62,6 @@ const page = computed({
   get: () => Math.max(1, Number(route.query.page) || 1),
   set: value => { if (value !== page.value) void router.replace({ query: { ...route.query, page: value > 1 ? String(value) : undefined } }); },
 });
-let searchTimer: ReturnType<typeof setTimeout> | undefined;
-watch(search, value => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => { debouncedSearch.value = value.trim(); }, 250);
-});
-onBeforeUnmount(() => clearTimeout(searchTimer));
 
 const routeFields = 'id,path,isEnabled,isSystem,icon,description,mainTable.id,mainTable.name,availableMethods.name,availableMethods.buttonColor,availableMethods.textColor,publicMethods.name,publicMethods.buttonColor,publicMethods.textColor,handlers.method.name';
 type RouteScope = 'custom' | 'system';
@@ -85,17 +82,14 @@ function setPageSize(size: number) {
   }
 }
 
-const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi(
+const { data: routesData, pending: routeLoading, execute: fetchRoutes } = useApi<FeatureCollection<FeatureRoute>>(
   '/enfyra_route',
   {
     query: computed(() => ({
       fields: routeFields,
       filter: { _and: [
         { isSystem: { _eq: activeScope.value === 'system' } },
-        ...(debouncedSearch.value ? [{ _or: [
-          { path: { _contains: debouncedSearch.value } },
-          { description: { _contains: debouncedSearch.value } },
-        ] }] : []),
+        ...(searchFilter.value ? [searchFilter.value] : []),
       ] },
       limit: pageLimit.value,
       page: page.value,
@@ -114,13 +108,7 @@ const total = computed(() => routesData.value?.meta?.filterCount ?? 0);
 const visibleRoutes = computed(() => routeItems.value);
 
 await fetchRoutes();
-watch([activeScope, page, pageLimit, debouncedSearch], (next, previous) => {
-  if (page.value > 1 && next[3] !== previous[3]) {
-    page.value = 1;
-    return;
-  }
-  void fetchRoutes();
-});
+watch([activeScope, page, pageLimit, searchValue], () => { void fetchRoutes(); });
 
 function clippedCell(value: string, width: string) {
   return h('span', { class: `block truncate ${width}`, title: value }, value);

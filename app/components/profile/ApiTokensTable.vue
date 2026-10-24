@@ -66,6 +66,7 @@ const tokenColumns: TableColumn<ApiTokenRecord>[] = [
 ];
 watch(pageLimit, () => { page.value = 1; });
 watch(() => apiTokens.value.length, count => {
+  if (apiTokensLoading.value) return;
   page.value = Math.min(page.value, Math.max(1, Math.ceil(count / pageLimit.value)));
 });
 function setPageSize(size: number) {
@@ -290,6 +291,7 @@ onBeforeUnmount(() => {
   <div class="space-y-4">
     <p class="text-sm text-muted">Create long-lived tokens for MCP servers and external API clients.</p>
     <DataTable
+      header-name="API tokens"
       v-model:page="page"
       :data="pageTokens"
       :columns="tokenColumns"
@@ -354,7 +356,7 @@ onBeforeUnmount(() => {
         </div>
         <div v-else class="space-y-5">
           <UForm :state="apiTokenForm" class="space-y-5" @submit="handleCreateApiToken">
-            <UFormField label="Token name" :error="apiTokenErrors.name" required>
+            <UFormField label="Token name" v-bind="apiTokenErrors.name === undefined ? {} : { error: apiTokenErrors.name }" required>
               <UInput
                 v-model="apiTokenForm.name"
                 placeholder="MCP token"
@@ -362,7 +364,7 @@ onBeforeUnmount(() => {
               />
             </UFormField>
 
-            <UFormField label="Expiration" :error="apiTokenErrors.expiresAt" required>
+            <UFormField label="Expiration" v-bind="apiTokenErrors.expiresAt === undefined ? {} : { error: apiTokenErrors.expiresAt }" required>
               <div class="flex flex-wrap gap-2">
                 <UButton
                   v-for="preset in apiTokenExpiryPresets"

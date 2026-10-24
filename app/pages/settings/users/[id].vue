@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ShellListResponse, ShellUserRecord } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
@@ -9,13 +11,12 @@ const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const {
   data: apiData,
   pending: loading,
   execute: fetchUser,
-} = useApi(() => "/enfyra_user", {
+} = useApi<ShellListResponse<ShellUserRecord>>(() => "/enfyra_user", {
   query: computed(() => ({
     fields: "*",
     filter: {
@@ -26,15 +27,6 @@ const {
   })),
   errorContext: "Fetch User",
 });
-
-watch(() => apiData.value?.data?.[0]?.email, (email) => {
-  if (email) {
-    registerPageHeader({
-      title: email,
-      gradient: "blue",
-    });
-  }
-}, { immediate: true });
 
 const form = ref<Record<string, any>>({});
 
@@ -186,6 +178,14 @@ async function deleteUser() {
   await navigateTo("/settings/users");
 }
 
+registerHeaderActions(
+  useReloadAction({
+    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
+);
+
 onMounted(() => {
   initializeForm();
 });
@@ -195,7 +195,7 @@ onMounted(() => {
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'user' }]">
-        <template #user-header><h2 class="text-sm font-medium">User</h2></template>
+        <template #user-header><CommonFormHeader :title="apiData?.data?.[0]?.email || 'User'" /></template>
         <template #user>
       <CommonFormCard>
         <UForm :state="form" @submit="saveUser">

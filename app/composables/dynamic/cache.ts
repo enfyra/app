@@ -1,19 +1,14 @@
 import type { Ref } from "vue";
+import type { ExtensionCacheInvalidation } from "~/types/extension-loading";
+import type { CacheStats } from "./types";
 
 const extensionCache = new Map<string, any>();
-const maxCacheSize = 50;
 const cacheHits = ref(0);
 const cacheMisses = ref(0);
+let cacheGeneration = 0;
 
-export type ExtensionCacheInvalidationReason = "created" | "updated" | "deleted" | "status";
-
-export interface ExtensionCacheInvalidation {
-  token: number;
-  reason: ExtensionCacheInvalidationReason;
-  id?: string | number | null;
-  extensionId?: string | number | null;
-  path?: string | null;
-  updatedAt?: string | Date | null;
+export function getExtensionCacheGeneration(): number {
+  return cacheGeneration;
 }
 
 export const extensionMetaCache = {
@@ -41,22 +36,13 @@ export const extensionCacheInvalidation = {
 } as Ref<ExtensionCacheInvalidation | null>;
 
 function buildCacheKey(extensionName: string, updatedAt?: string | Date): string {
-  return `${extensionName}:${updatedAt ? new Date(updatedAt).getTime() : Date.now()}`;
+  return `${extensionName}:${updatedAt ? new Date(updatedAt).getTime() : "latest"}`;
 }
 
 function clearOldVersions(extensionId: string): void {
   for (const [key] of extensionCache) {
     if (key.startsWith(`${extensionId}:`)) {
       extensionCache.delete(key);
-    }
-  }
-}
-
-function manageCacheSize(): void {
-  if (extensionCache.size >= maxCacheSize) {
-    const firstKey = extensionCache.keys().next().value;
-    if (firstKey) {
-      extensionCache.delete(firstKey);
     }
   }
 }
@@ -71,19 +57,17 @@ export function isComponentCached(
 
 export function getCachedComponent(
   extensionName: string,
-  updatedAt?: string | Date
+  updatedAt?: string | Date,
 ): any {
-  const cacheKey = buildCacheKey(extensionName, updatedAt);
-  return extensionCache.get(cacheKey) || null;
+  return extensionCache.get(buildCacheKey(extensionName, updatedAt)) || null;
 }
 
 export function setCachedComponent(
   extensionName: string,
   component: any,
-  updatedAt?: string | Date
+  updatedAt?: string | Date,
 ): void {
   clearOldVersions(extensionName);
-  manageCacheSize();
   const cacheKey = buildCacheKey(extensionName, updatedAt);
   extensionCache.set(cacheKey, component);
 }
@@ -151,6 +135,7 @@ export function isExtensionInvalidationMatch(
 export function invalidateExtensionCache(
   invalidation: Omit<ExtensionCacheInvalidation, "token">
 ): void {
+  cacheGeneration++;
   const isGlobalInvalidation =
     invalidation.id == null &&
     invalidation.extensionId == null &&
@@ -186,6 +171,7 @@ export function invalidateExtensionCache(
 }
 
 export function clearCache(extensionId?: string): void {
+  cacheGeneration++;
   if (extensionId) {
     clearOldVersions(extensionId);
   } else {

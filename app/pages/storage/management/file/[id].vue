@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
+import type { FeatureCollection, FeatureFileDetail } from '~/types/feature-api';
+import type { HeaderAction } from '~/types/ui';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const route = useRoute();
@@ -8,14 +9,13 @@ const { confirm } = useConfirm();
 const { updateFileTimestamp } = useGlobalState();
 const { getPreviewUrl } = useFileUrl();
 const fileId = route.params.id as string;
-const { registerPageHeader } = usePageHeaderRegistry();
 const { getIdFieldName } = useDatabase();
 
 const {
   data: file,
   pending,
   execute,
-} = useApi(`/enfyra_file`, {
+} = useApi<FeatureCollection<FeatureFileDetail>>(`/enfyra_file`, {
   query: computed(() => {
     const idField = getIdFieldName();
     return {
@@ -28,16 +28,6 @@ const {
   }),
   errorContext: "Fetch File",
 });
-
-watch(() => file.value?.data?.[0]?.filename, (filename) => {
-  if (filename) {
-    registerPageHeader({
-      title: filename,
-      description: "View and edit file information",
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
@@ -95,6 +85,9 @@ async function handleReset() {
   }
 }
 
+const activeTab = ref<'preview' | 'details' | 'permissions'>('preview');
+const permissionManagerRef = ref<{ createNewPermission?: () => unknown } | null>(null);
+
 registerHeaderActions([
   {
     id: "reset-file",
@@ -134,6 +127,7 @@ registerHeaderActions([
     color: "primary",
     size: "md",
     order: 999,
+    show: computed(() => activeTab.value === 'details'),
     submit: saveFile,
     loading: computed(() => updateLoading.value),
     disabled: computed(() => !hasFormChanges.value),
@@ -148,14 +142,25 @@ registerHeaderActions([
   },
 ]);
 
-registerSubHeaderActions([
+const previewActions: HeaderAction[] = [
+  {
+    id: "copy-file-url",
+    label: "Copy URL",
+    icon: "lucide:copy",
+    variant: "outline",
+    color: "neutral",
+    onClick: copyPublicUrl,
+    show: computed(() => Boolean(publicFileUrl.value)),
+  },
+];
+
+const detailActions: HeaderAction[] = [
   {
     id: "replace-file",
     label: "Replace File",
     icon: "lucide:upload",
     variant: "outline",
     color: "secondary",
-    size: "md",
     onClick: () => (showReplaceModal.value = true),
     permission: {
       and: [
@@ -166,7 +171,93 @@ registerSubHeaderActions([
       ],
     },
   },
+];
+
+const permissionActions: HeaderAction[] = [
+  {
+    id: "add-file-permission",
+    label: "Add Permission",
+    icon: "lucide:plus",
+    variant: "solid",
+    color: "primary",
+    onClick: () => permissionManagerRef.value?.createNewPermission?.(),
+    permission: {
+      or: [{ route: '/enfyra_file_permission', methods: ['POST'] }],
+    },
+  },
+];
+
+const panelSections = computed(() => [
+  {
+    value: 'preview',
+    label: 'Preview',
+    icon: 'lucide:eye',
+    title: pageTitle.value,
+    description: `${fileTypeLabel.value} · ${fileSizeLabel.value}`,
+    actions: previewActions,
+  },
+  {
+    value: 'details',
+    label: 'Details',
+    icon: 'lucide:file-text',
+    title: pageTitle.value,
+    description: 'View and edit file information',
+    actions: detailActions,
+  },
+  {
+    value: 'permissions',
+    label: 'Permissions',
+    icon: 'lucide:shield',
+    title: 'File Permissions',
+    description: 'Who can read, update or delete this file.',
+    actions: permissionActions,
+  },
 ]);
+
+const fileTypeLabel = computed(() => {
+  const mimetype = String(form.value?.mimetype || currentFile.value?.mimetype || '');
+  if (mimetype.startsWith('image/')) return 'Image';
+  if (mimetype.startsWith('video/')) return 'Video';
+  if (mimetype.startsWith('audio/')) return 'Audio';
+  if (mimetype.includes('pdf')) return 'PDF';
+  if (mimetype.includes('zip') || mimetype.includes('gzip') || mimetype.includes('archive')) return 'Archive';
+  if (mimetype.startsWith('text/')) return 'Text';
+  return 'File';
+});
+
+const fileSizeLabel = computed(() => {
+  const bytes = Number(form.value?.filesize ?? currentFile.value?.filesize ?? 0);
+  if (!Number.isFinite(bytes) || bytes <= 0) return '—';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value >= 10 || unit === 0 ? Math.round(value) : value.toFixed(1)} ${units[unit]}`;
+});
+
+const updatedAtLabel = computed(() => {
+  const raw = currentFile.value?.updatedAt || currentFile.value?.createdAt;
+  if (!raw) return '—';
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+});
+
+const previewUrl = computed(() => (isImageFile.value ? getPreviewUrl(fileId) : ''));
+const publicFileUrl = computed(() => currentFile.value?.location || currentFile.value?.url || '');
+
+function openOriginal() {
+  if (previewUrl.value) window.open(previewUrl.value, '_blank');
+}
+
+async function copyPublicUrl() {
+  if (!publicFileUrl.value) return;
+  await navigator.clipboard.writeText(publicFileUrl.value);
+  notify.success('Copied', 'File URL copied to clipboard.');
+}
 
 async function initializeForm() {
   await execute();
@@ -324,117 +415,90 @@ function getFileIconAndColor(mimetype: string): {
 </script>
 
 <template>
-  <div class="grid w-full min-w-0 gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.6fr)]">
-    <aside class="min-w-0 space-y-4 xl:sticky xl:top-6 xl:self-start">
-      <div class="eapp-bordered-region min-w-0 overflow-hidden">
-        <div class="border-b border-[var(--border-default)] px-5 py-4">
-          <div class="flex items-center justify-between gap-3">
-            <div class="min-w-0">
-              <p class="text-sm font-medium text-[var(--text-tertiary)]">
-                Preview
-              </p>
-              <h2 class="truncate text-lg font-semibold text-[var(--text-primary)]">
-                {{ pageTitle }}
-              </h2>
-            </div>
-            <UBadge variant="subtle" color="neutral" size="sm">
-              {{ storageName }}
-            </UBadge>
-          </div>
-        </div>
-
-        <div class="bg-[var(--surface-muted)] p-4">
-          <div
-            v-if="isImageFile"
-            class="flex min-h-[360px] items-center justify-center overflow-hidden rounded-lg bg-[var(--surface-default)]"
-          >
+  <div class="eapp-page-constrained">
+    <CommonPanel v-model="activeTab" :sections="panelSections" class="w-full">
+      <template #preview>
+        <div class="grid w-full min-w-0 gap-4 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+          <div class="eapp-bordered-region flex min-h-[320px] items-center justify-center overflow-hidden bg-[var(--surface-muted)] p-3 sm:min-h-[420px] sm:p-6 lg:min-h-[560px]">
             <CommonLazyImage
-              :src="getPreviewUrl(fileId)"
+              v-if="isImageFile"
+              :src="previewUrl"
               :alt="form.filename"
-              class="h-full max-h-[520px] w-full"
-              container-class="h-full w-full"
+              class="max-h-[520px] w-full"
+              container-class="flex h-full w-full items-center justify-center"
               object-fit="contain"
               loading-area="custom"
-              custom-loading-size="300px"
+              custom-loading-size="280px"
             />
+            <div
+              v-else
+              class="flex items-center justify-center"
+            >
+              <div
+                :class="[fileIcon.background, 'flex size-28 items-center justify-center rounded-[var(--radius-panel)] sm:size-32']"
+              >
+                <UIcon :name="fileIcon.icon" :class="fileIcon.color" size="64" />
+              </div>
+            </div>
           </div>
 
-          <div
-            v-else
-            class="flex min-h-[360px] items-center justify-center rounded-lg bg-[var(--surface-default)]"
-          >
-            <div
-              :class="[
-                fileIcon.background,
-                'flex h-36 w-36 items-center justify-center rounded-3xl',
-              ]"
-            >
-              <UIcon :name="fileIcon.icon" :class="fileIcon.color" size="72" />
+          <div class="eapp-bordered-region flex min-w-0 flex-col divide-y divide-[var(--border-default)]">
+            <dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-3 p-4 text-sm">
+              <dt class="text-[var(--text-tertiary)]">MIME type</dt>
+              <dd class="min-w-0 truncate text-right font-medium text-[var(--text-primary)]" :title="form.mimetype">{{ form.mimetype || '—' }}</dd>
+              <dt class="text-[var(--text-tertiary)]">Size</dt>
+              <dd class="text-right font-medium text-[var(--text-primary)]">{{ fileSizeLabel }}</dd>
+              <dt class="text-[var(--text-tertiary)]">Storage</dt>
+              <dd class="min-w-0 truncate text-right font-medium text-[var(--text-primary)]" :title="storageType">{{ storageType }}</dd>
+              <dt class="text-[var(--text-tertiary)]">Updated</dt>
+              <dd class="text-right font-medium text-[var(--text-primary)]">{{ updatedAtLabel }}</dd>
+            </dl>
+
+            <div v-if="publicFileUrl" class="min-w-0 p-4">
+              <p class="text-xs font-medium uppercase tracking-wide text-[var(--text-tertiary)]">Location</p>
+              <p class="mt-1 break-all font-mono text-xs text-[var(--text-secondary)]">{{ publicFileUrl }}</p>
+            </div>
+
+            <div v-if="isImageFile" class="mt-auto flex flex-wrap items-center gap-2 p-4">
+              <UButton icon="lucide:external-link" size="sm" variant="outline" color="neutral" label="Open original" @click="openOriginal" />
             </div>
           </div>
         </div>
-
-        <div class="grid grid-cols-2 gap-3 border-t border-[var(--border-default)] p-4 text-sm">
-          <div class="rounded-lg bg-[var(--surface-muted)] p-3">
-            <p class="text-xs text-[var(--text-quaternary)]">Type</p>
-            <p class="truncate font-medium text-[var(--text-primary)]">
-              {{ form.mimetype || "Unknown" }}
-            </p>
-          </div>
-          <div class="rounded-lg bg-[var(--surface-muted)] p-3">
-            <p class="text-xs text-[var(--text-quaternary)]">Storage</p>
-            <p class="truncate font-medium text-[var(--text-primary)]">
-              {{ storageType }}
-            </p>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <div class="min-w-0 space-y-6">
-      <div class="surface-card min-w-0 p-6">
-        <div class="mb-5 flex items-center gap-3">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-            <UIcon name="lucide:edit-3" class="h-5 w-5 text-primary" />
-          </div>
-          <div class="min-w-0">
-            <h3 class="text-lg font-semibold text-[var(--text-primary)]">
-              File information
-            </h3>
-            <p class="text-sm text-[var(--text-tertiary)]">
-              Metadata, publishing state, and display fields.
-            </p>
-          </div>
-        </div>
-
-        <UForm :state="form" @submit="saveFile">
-          <FormEditorLazy
-            ref="formEditorRef"
-            v-model="form"
-            v-model:errors="errors"
-            @has-changed="(hasChanged) => hasFormChanges = hasChanged"
-            table-name="enfyra_file"
-            :excluded="[
-              'createdAt',
-              'updatedAt',
-              'permissions',
-              'folder',
-              'storageConfig',
-            ]"
-            :loading="pending"
-          />
-        </UForm>
-      </div>
-
-      <div class="surface-card min-w-0 p-6">
+      </template>
+      <template #details>
+        <CommonFormCard class="w-full">
+          <UForm :state="form" @submit="saveFile">
+            <FormEditorLazy
+              ref="formEditorRef"
+              v-model="form"
+              v-model:errors="errors"
+              @has-changed="(hasChanged) => hasFormChanges = hasChanged"
+              table-name="enfyra_file"
+              :excluded="[
+                'createdAt',
+                'updatedAt',
+                'permissions',
+                'folder',
+                'storageConfig',
+              ]"
+              :loading="pending"
+            />
+          </UForm>
+        </CommonFormCard>
+      </template>
+      <template #permissions>
+        <div class="w-full min-w-0">
         <PermissionManager
+          ref="permissionManagerRef"
           table-name="enfyra_file_permission"
           :current-field-id="{ field: 'file', value: fileId }"
           icon="lucide:shield"
           title="File Permissions"
+          :show-header="false"
         />
-      </div>
-    </div>
+        </div>
+      </template>
+    </CommonPanel>
 
     <LazyCommonUploadModal
       v-if="showReplaceModal"

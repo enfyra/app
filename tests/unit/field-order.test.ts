@@ -2,7 +2,7 @@ import { applyFieldPositions, sortDefinitionFieldsByKey } from '~/utils/form/fie
 
 const makeField = (name: string, extra: Record<string, unknown> = {}) => ({
   name,
-  fieldType: 'string',
+  fieldType: 'column' as const,
   ...extra,
 })
 
@@ -15,7 +15,7 @@ describe('field order helpers', () => {
       makeField('alpha', { sort: 'abc' }),
     ]
 
-    expect(sortDefinitionFieldsByKey(fields as any, 'sort').map((field) => field.name)).toEqual([
+    expect(sortDefinitionFieldsByKey(fields, 'sort').map((field) => field.name)).toEqual([
       'two',
       'ten',
       'alpha',
@@ -27,7 +27,7 @@ describe('field order helpers', () => {
     const fields = [makeField('a'), makeField('b'), makeField('c'), makeField('d')]
 
     expect(
-      applyFieldPositions(fields as any, {
+      applyFieldPositions(fields, {
         c: 0,
         a: 2,
         missing: 1,
@@ -39,7 +39,7 @@ describe('field order helpers', () => {
     const fields = [makeField('first'), makeField('second'), makeField('third')]
 
     expect(
-      applyFieldPositions(fields as any, {
+      applyFieldPositions(fields, {
         third: -5,
         first: 0,
         second: 99,

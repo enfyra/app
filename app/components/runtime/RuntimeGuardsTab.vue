@@ -123,8 +123,7 @@ onMounted(() => {
         </button>
       </div>
 
-      <DataTable :data="alerts" :columns="columns" :loading="pending">
-        <template #toolbar><h2 class="text-sm font-medium">Recent rejections</h2></template>
+      <DataTable header-name="Recent rejections" :data="alerts" :columns="columns" :loading="pending">
         <template #empty><CommonEmptyState variant="naked" title="No guard rejections recorded" icon="lucide:shield" size="sm" /></template>
       </DataTable>
     </section>

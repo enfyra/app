@@ -152,8 +152,8 @@ const gridClass = computed(() => {
         :color="isSelected(option.value) ? getOptionColor(option) : 'neutral'"
         :variant="isSelected(option.value) ? 'solid' : 'outline'"
         :size="size"
-        :disabled="disabled || option.disabled"
-        :icon="option.icon"
+        :disabled="!!disabled || !!option.disabled"
+        v-bind="option.icon === undefined ? {} : { icon: option.icon }"
         class="justify-center"
         @click="selectOption(option)"
       >
@@ -193,8 +193,8 @@ const gridClass = computed(() => {
         :color="isSelected(option.value) ? getOptionColor(option) : 'neutral'"
         :variant="isSelected(option.value) ? 'solid' : 'outline'"
         :size="size"
-        :disabled="disabled || option.disabled"
-        :icon="option.icon"
+        :disabled="!!disabled || !!option.disabled"
+        v-bind="option.icon === undefined ? {} : { icon: option.icon }"
         class="font-medium"
         @click="selectOption(option)"
       >

@@ -6,7 +6,7 @@ import type {
   RedisAdminKeyDetail,
   RedisAdminKeysResponse,
   RedisAdminOverview,
-  RuntimeMetricsPayload,
+  RuntimeMetricsClusterPayload,
 } from '~/types/runtime-monitor';
 import { runtimeCacheFlowLabel } from '~/utils/runtime-monitor/cache';
 
@@ -37,8 +37,6 @@ let socket: Socket | null = null;
 export const activeReloads = ref<ActiveReload[]>([]);
 export const reloadDoneCountdown = ref(0);
 export const reloadFailureMessage = ref<string | null>(null);
-export const runtimeMetricsByInstance = ref<Record<string, RuntimeMetricsPayload>>({});
-export const runtimeMetricsUpdatedAt = ref<number | null>(null);
 export const redisAdminOverview = ref<RedisAdminOverview | null>(null);
 export const redisAdminOverviewUpdatedAt = ref<number | null>(null);
 export const redisAdminKeyChange = ref<any | null>(null);
@@ -206,7 +204,7 @@ export function useAdminSocket() {
               flow,
               steps: data.steps ?? [flow],
               startedAt: Date.now(),
-              instanceId: data.instanceId,
+              ...(data.instanceId === undefined ? {} : { instanceId: data.instanceId }),
             },
           ];
         }
@@ -253,16 +251,6 @@ export function useAdminSocket() {
           startDoneCountdown();
         }
       }
-    });
-
-    socket.on('$system:runtime:metrics', (data: RuntimeMetricsPayload) => {
-      const id = data?.instance?.id;
-      if (!id) return;
-      runtimeMetricsByInstance.value = {
-        ...runtimeMetricsByInstance.value,
-        [id]: data,
-      };
-      runtimeMetricsUpdatedAt.value = Date.now();
     });
 
     socket.on('$system:redis:overview', (data: RedisAdminOverview) => {
@@ -318,13 +306,42 @@ export function useAdminSocket() {
     return redisRequest<RedisAdminKeyDetail>('$system:redis:key:get', payload);
   }
 
+  function loadRuntimeMetrics(signal: AbortSignal) {
+    return new Promise<RuntimeMetricsClusterPayload>((resolve, reject) => {
+      if (!socket?.connected || signal.aborted) {
+        reject(new Error('Admin socket is not connected'));
+        return;
+      }
+      let settled = false;
+      const finish = (error?: Error, data?: RuntimeMetricsClusterPayload) => {
+        if (settled) return;
+        settled = true;
+        signal.removeEventListener('abort', abort);
+        if (error) reject(error);
+        else resolve(data!);
+      };
+      const abort = () => finish(new Error('Runtime metrics request cancelled'));
+      signal.addEventListener('abort', abort, { once: true });
+      socket.timeout(10000).volatile.emit('$system:runtime:metrics:get', {}, (error: Error | null, response?: RedisSocketResponse<RuntimeMetricsClusterPayload>) => {
+        if (error) {
+          finish(new Error('Runtime metrics request timed out'));
+          return;
+        }
+        if (!response?.success || !response.data || !Array.isArray(response.data.instances)) {
+          finish(new Error(response?.error?.message || 'Runtime metrics request failed'));
+          return;
+        }
+        finish(undefined, response.data);
+      });
+    });
+  }
+
   return {
     adminSocket: socket,
     activeReloads,
     isReloading,
     showReloadBanner,
-    runtimeMetricsByInstance,
-    runtimeMetricsUpdatedAt,
+    loadRuntimeMetrics,
     redisAdminOverview,
     redisAdminOverviewUpdatedAt,
     redisAdminKeyChange,

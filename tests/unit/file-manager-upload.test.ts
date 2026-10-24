@@ -2,6 +2,12 @@ import { computed, ref, watch } from 'vue';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useFileManagerUpload } from '../../app/composables/file-manager/useFileManagerUpload';
 
+vi.mock('~/composables/shared/useNotify', () => ({ useNotify: () => globalThis.useNotify() }));
+vi.mock('~/composables/shared/useDatabase', () => ({ useDatabase: () => globalThis.useDatabase() }));
+vi.mock('~/composables/shared/useGlobalState', () => ({ useGlobalState: () => globalThis.useGlobalState() }));
+vi.mock('~/composables/file/useFileUploadProgress', () => ({ useFileUploadProgress: () => globalThis.useFileUploadProgress() }));
+vi.mock('~/composables/shared/useApi', () => ({ useApi: (...args: Parameters<typeof globalThis.useApi>) => globalThis.useApi(...args) }));
+
 afterEach(() => vi.unstubAllGlobals());
 
 describe('shared file-manager upload', () => {

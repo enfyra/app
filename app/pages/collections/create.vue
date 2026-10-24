@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FormApiListResponse, FormCollectionRecord } from '~/types/form-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const {
@@ -20,12 +21,6 @@ const table = reactive<any>({
   relations: [],
   uniques: [],
   indexes: [],
-});
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Create New Table",
-  gradient: "purple",
 });
 
 const constraintFieldNames = computed<string[]>(() => {
@@ -153,7 +148,7 @@ const {
   pending: createLoading,
   execute: createTable,
   error: createError,
-} = useApi("/enfyra_table", {
+} = useApi<FormApiListResponse<FormCollectionRecord>>("/enfyra_table", {
   method: "post",
   errorContext: "Create Table",
 });
@@ -211,12 +206,15 @@ onMounted(() => {
 <template>
   <div class="relative">
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'table' }]">
+        <template #table-header><CommonFormHeader title="Create New Table" /></template>
+        <template #table>
       <CommonFormCard>
         <TableForm v-model="table" :new="true">
           <template #tableName>
             <div class="mb-6">
               <UFormField
-                :error="nameError && nameError !== '' ? nameError : undefined"
+                v-bind="nameError ? { error: nameError } : {}"
                 label="Table Name"
               >
                 <UInput
@@ -250,6 +248,8 @@ onMounted(() => {
           </div>
         </TableForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>

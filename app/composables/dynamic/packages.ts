@@ -6,12 +6,14 @@ import {
   setPackageValue,
 } from "~/utils/dynamic-package-registry";
 
+import type { ExtensionPreparationOptions } from "~/types/extension-loading";
+
 const PERF_ENABLED =
   typeof window !== "undefined" &&
   typeof URLSearchParams !== "undefined" &&
   new URLSearchParams(window.location.search).get("perf") === "1";
 
-const loadingPackages = new Map<string, Promise<any>>();
+const loadingPackages = new Map<string, { promise: Promise<any>; promote: () => void }>();
 let versionCache: Map<string, string> | null = null;
 
 export function getGlobalNameForPackage(packageName: string): string {
@@ -88,9 +90,12 @@ async function loadSinglePackage(
   packageName: string,
   packagesObject: Record<string, any>,
   loadedExternals: string[] = [],
+  options: ExtensionPreparationOptions = {},
 ): Promise<any> {
-  if (loadingPackages.has(packageName)) {
-    return loadingPackages.get(packageName)!;
+  const pending = loadingPackages.get(packageName);
+  if (pending) {
+    if (!options.speculative?.()) pending.promote();
+    return pending.promise;
   }
 
   const existingPackage = getPackageFromObject(packagesObject, packageName);
@@ -98,6 +103,9 @@ async function loadSinglePackage(
     return Promise.resolve(existingPackage);
   }
 
+  let promoted = false;
+  let resumeForeground!: () => void;
+  const promotion = new Promise<void>(resolve => { resumeForeground = resolve; });
   const promise = (async () => {
     assertPackageAliasesAvailable(packagesObject, packageName);
     try {
@@ -117,6 +125,7 @@ async function loadSinglePackage(
       }
 
       const code = await response.text();
+      if (!promoted) await Promise.race([options.checkpoint?.(), promotion]);
       const moduleUrl = URL.createObjectURL(
         new Blob([code], { type: "application/javascript" })
       );
@@ -149,7 +158,7 @@ async function loadSinglePackage(
     }
   })();
 
-  loadingPackages.set(packageName, promise);
+  loadingPackages.set(packageName, { promise, promote: () => { promoted = true; resumeForeground(); } });
   return promise;
 }
 
@@ -229,7 +238,7 @@ export function detectPackages(code: string): string[] {
   return [...new Set(packages)].filter(valid);
 }
 
-export async function getPackages(packageNames?: string[]): Promise<Record<string, any>> {
+export async function getPackages(packageNames?: string[], options: ExtensionPreparationOptions = {}): Promise<Record<string, any>> {
   if (typeof window === "undefined") {
     throw new Error("Packages can only be loaded on client-side");
   }
@@ -258,9 +267,10 @@ export async function getPackages(packageNames?: string[]): Promise<Record<strin
   const loadStart = performance.now();
 
   for (const pkgName of packagesToLoad) {
+    await options.checkpoint?.();
     const loadedExternals = getLoadedExternalNames(packagesObject, versionMap)
       .filter((name) => name !== pkgName);
-    await loadSinglePackage(pkgName, packagesObject, loadedExternals);
+    await loadSinglePackage(pkgName, packagesObject, loadedExternals, options);
   }
 
   if (PERF_ENABLED && import.meta.dev) {

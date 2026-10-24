@@ -5,39 +5,25 @@
       v-for="action in visibleComponentActions"
       :key="action.key || action.id"
     >
-      <PermissionGate :condition="action.permission">
+      <PermissionGate v-bind="action.permission === undefined ? {} : { condition: action.permission }">
         <component :is="action.component" v-bind="action.props" />
       </PermissionGate>
     </template>
 
     <template v-for="action in visibleButtonActions" :key="action.id">
-      <PermissionGate :condition="action.permission">
+      <PermissionGate v-bind="action.permission === undefined ? {} : { condition: action.permission }">
         <UButton
-          :label="
-            (isMobile || isTablet)
-              ? undefined
-              : isRef(action.label)
-              ? unref(action.label)
-              : action.label
-          "
-          :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
-          :variant="
-            (isRef(action.variant) ? unref(action.variant) : action.variant) ||
-            'solid'
-          "
+          v-bind="{ ...getHeaderActionButtonProps(action, isMobile || isTablet), ...getHeaderActionLinkProps(action) }"
+          :variant="resolveHeaderActionVariant(action, { fallback: 'solid', hideLabel: isMobile || isTablet, shaped: !isDesktop })"
           :color="
             (isRef(action.color) ? unref(action.color) : action.color) ||
             'primary'
           "
           :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
           :loading-auto="true"
-          :loading="unref(action.loading)"
-          :disabled="unref(action.disabled) || unref(action.loading)"
-          :to="unref(action.to)"
-          :replace="unref(action.replace)"
           :aria-label="action.ariaLabel || (isRef(action.label) ? unref(action.label) : action.label) || action.id"
           :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
-          :class="getHeaderActionButtonClass(action)"
+          :class="getHeaderActionButtonClass(action, isMobile || isTablet)"
           @click="handleActionClick(action)"
           class="cursor-pointer"
         />
@@ -51,7 +37,7 @@ import type { HeaderAction } from "~/types";
 
 const route = useRoute();
 const { headerActions } = useHeaderActionRegistry();
-const { isMobile, isTablet } = useScreen();
+const { isMobile, isTablet, isDesktop } = useScreen();
 
 const visibleActions = computed(() => {
   const filtered = headerActions.value.filter((action) => {
@@ -103,5 +89,6 @@ const handleActionClick = (action: HeaderAction) => {
   if (action.onClick) {
     return action.onClick();
   }
+  return undefined;
 };
 </script>

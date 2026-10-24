@@ -2,7 +2,7 @@
 import { useDataCollectionPreferences } from '~/composables/menu/useDataCollectionPreferences';
 import type { ColumnDef } from '@tanstack/vue-table';
 
-interface CollectionItem {
+type CollectionItem = {
   tableName: string;
   label: string;
   icon: string;
@@ -14,16 +14,16 @@ interface CollectionItem {
 
 type SortMode = 'name' | 'recent';
 
-const { registerPageHeader } = usePageHeaderRegistry();
-const { routes, routesLoading, ensureRoutesLoaded } = useRoutes();
+const { routes, routesLoading, ensureRoutesLoaded, loadRoutes } = useRoutes();
 const { checkPermissionCondition } = usePermissions();
 const { prefs, isPinned, togglePin, addRecent } = useDataCollectionPreferences();
+const route = useRoute();
 const router = useRouter();
 
 const searchQuery = ref('');
 const sortBy = ref<SortMode>('name');
 const initialLoading = ref(true);
-const page = ref(1);
+const page = ref(Math.max(1, Number(route.query.page) || 1));
 const pageSize = useSettingsPageSize('data-directory');
 const columns: ColumnDef<CollectionItem>[] = [
   { accessorKey: 'label', header: 'Collection', enableSorting: false, meta: { style: { th: { width: '28%' }, td: { width: '28%' } } } },
@@ -38,17 +38,19 @@ const hasSearch = computed(() => normalizedSearch.value.length > 0);
 const isLoading = computed(() => initialLoading.value || routesLoading.value);
 
 const catalog = computed<CollectionItem[]>(() =>
-  routes.value
-    .filter((r: any) => r.mainTable && r.isEnabled !== false && !r.mainTable.isSystem && checkPermissionCondition({ or: [{ route: r.path, methods: ['GET'] }] }))
-    .map((r: any) => ({
-      tableName: String(r.mainTable.name),
-      label: String(r.mainTable.alias || r.mainTable.name),
-      icon: String(r.mainTable.icon || 'lucide:database'),
-      routePath: `/data/${r.mainTable.name}`,
-      apiPath: String(r.path),
-      description: String(r.mainTable.description || ''),
-      isSingleRecord: Boolean(r.mainTable.isSingleRecord),
-    })),
+  routes.value.flatMap(route => {
+    const table = route.mainTable;
+    if (!table || route.isEnabled === false || table.isSystem || !checkPermissionCondition({ or: [{ route: route.path, methods: ['GET'] }] })) return [];
+    return [{
+      tableName: table.name,
+      label: table.alias || table.name,
+      icon: 'lucide:database',
+      routePath: `/data/${table.name}`,
+      apiPath: route.path,
+      description: table.description || '',
+      isSingleRecord: Boolean(table.isSingleRecord),
+    }];
+  }),
 );
 
 function compare(a: CollectionItem, b: CollectionItem) {
@@ -82,6 +84,7 @@ const visible = computed(() => {
 const pageRows = computed(() => visible.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
 watch([searchQuery, sortBy, pageSize], () => { page.value = 1; });
 watch(() => visible.value.length, total => {
+  if (isLoading.value) return;
   page.value = Math.min(page.value, Math.max(1, Math.ceil(total / pageSize.value)));
 });
 
@@ -99,17 +102,22 @@ onMounted(async () => {
   try { await ensureRoutesLoaded(); } finally { initialLoading.value = false; }
 });
 
-registerPageHeader({
-  title: 'Collections',
-  description: 'Browse, search, and manage your data collections.',
-  variant: 'minimal',
-  gradient: 'cyan',
-});
+async function reloadCatalog() {
+  initialLoading.value = true;
+  try {
+    await loadRoutes();
+  } finally {
+    initialLoading.value = false;
+  }
+}
+
 </script>
 
 <template>
   <div class="min-w-0 w-full">
     <DataTable
+      header-name="Collections"
+      header-description="Browse, search, and manage your data collections."
       v-model:page="page"
       :data="pageRows"
       :columns="columns"
@@ -117,12 +125,19 @@ registerPageHeader({
       :show-column-visibility="false"
       :get-row-id="item => item.tableName"
       :pagination-config="{ total: visible.length, itemsPerPage: pageSize, showPageSize: true, loading: isLoading }"
+      :reload="reloadCatalog"
+      :reload-loading="isLoading"
       :ui="{ base: 'table-fixed !min-w-[900px]', th: 'px-4 py-3', td: 'max-w-0 overflow-hidden px-4 py-3' }"
       @page-size-change="pageSize = $event"
-      @row-click="open($event as CollectionItem)"
+      @row-click="open"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search collections, tables, or /api/path…"
+      search-label="Search collections, tables, or API path"
     >
-      <template #toolbar>
-        <DataDirectorySearchBar v-model="searchQuery" v-model:sort-by="sortBy" :total="catalog.length" :match-count="filtered.length" :loading="isLoading" :has-search="hasSearch" />
+      <template #toolbar-actions>
+        <UButton icon="lucide:arrow-down-a-z" :color="sortBy === 'name' ? 'primary' : 'neutral'" :variant="sortBy === 'name' ? 'soft' : 'ghost'" size="xs" :aria-pressed="sortBy === 'name'" aria-label="Sort A to Z" @click="sortBy = 'name'">A–Z</UButton>
+        <UButton icon="lucide:history" :color="sortBy === 'recent' ? 'primary' : 'neutral'" :variant="sortBy === 'recent' ? 'soft' : 'ghost'" size="xs" :aria-pressed="sortBy === 'recent'" aria-label="Sort by recent" @click="sortBy = 'recent'">Recent</UButton>
       </template>
       <template #label-cell="{ row }">
         <div class="flex min-w-0 items-center gap-3">
@@ -151,7 +166,7 @@ registerPageHeader({
           size="xs"
           :aria-label="`${isPinned(row.original.tableName) ? 'Unpin' : 'Pin'} ${row.original.label}`"
           :aria-pressed="isPinned(row.original.tableName)"
-          @click.stop="pin(row.original as CollectionItem)"
+          @click.stop="pin(row.original)"
         />
       </template>
       <template #empty>

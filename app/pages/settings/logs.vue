@@ -18,7 +18,7 @@ const timeWindows = [
   { label: 'Last 7 days', value: 168 },
   { label: 'Last 30 days', value: 720 },
 ];
-const page = ref(1);
+const page = ref(Math.max(1, Number(route.query.page) || 1));
 const pageLimit = useSettingsPageSize('server-logs');
 const selected = ref<RuntimeLogRow | null>(null);
 const detailOpen = ref(false);
@@ -201,6 +201,7 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
 
       <UAlert v-if="error" color="error" title="Could not load logs" :description="error.message" />
       <DataTableSettingsTable
+        header-name="Logs"
         v-model:page="page"
         :data="items"
         :columns="columns"

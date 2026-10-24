@@ -5,7 +5,7 @@
 
     <div class="flex items-center gap-1.5 md:gap-3">
       <template v-for="action in leftActions" :key="action.key || action.id">
-        <PermissionGate :condition="action.permission">
+        <PermissionGate v-bind="action.permission === undefined ? {} : { condition: action.permission }">
 
           <component
             v-if="action.component"
@@ -15,28 +15,17 @@
 
           <UButton
             v-else
-            :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
-            :label="(isMobile || isTablet) ? undefined : (isRef(action.label) ? unref(action.label) : action.label)"
-            :variant="
-              (isRef(action.variant)
-                ? unref(action.variant)
-                : action.variant) || 'soft'
-            "
+            v-bind="getHeaderActionButtonProps(action, isMobile || isTablet)"
+            :variant="resolveHeaderActionVariant(action, { fallback: 'soft', hideLabel: isMobile || isTablet, shaped: !isDesktop })"
             :color="
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'
             "
             :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
             :loading-auto="true"
-            :disabled="
-              (typeof action.disabled === 'boolean'
-                ? action.disabled
-                : unref(action.disabled)) || unref(action.loading)
-            "
-            :loading="unref(action.loading)"
             :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
             @click="handleSubHeaderActionClick(action)"
-            :class="getHeaderActionButtonClass(action)"
+            :class="getHeaderActionButtonClass(action, isMobile || isTablet)"
           />
         </PermissionGate>
       </template>
@@ -44,7 +33,7 @@
 
     <div class="flex items-center gap-2">
       <template v-for="action in rightActions" :key="action.key || action.id">
-        <PermissionGate :condition="action.permission">
+        <PermissionGate v-bind="action.permission === undefined ? {} : { condition: action.permission }">
 
           <component
             v-if="action.component"
@@ -54,28 +43,17 @@
 
           <UButton
             v-else
-            :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
-            :label="(isMobile || isTablet) ? undefined : (isRef(action.label) ? unref(action.label) : action.label)"
-            :variant="
-              (isRef(action.variant)
-                ? unref(action.variant)
-                : action.variant) || 'soft'
-            "
+            v-bind="getHeaderActionButtonProps(action, isMobile || isTablet)"
+            :variant="resolveHeaderActionVariant(action, { fallback: 'soft', hideLabel: isMobile || isTablet, shaped: !isDesktop })"
             :color="
               (isRef(action.color) ? unref(action.color) : action.color) ||
               'neutral'
             "
             :size="(isMobile || isTablet) ? 'lg' : action.size || 'md'"
             :loading-auto="true"
-            :disabled="
-              (typeof action.disabled === 'boolean'
-                ? action.disabled
-                : unref(action.disabled)) || unref(action.loading)
-            "
-            :loading="unref(action.loading)"
             :square="isHeaderActionIconOnly(action, isMobile || isTablet)"
             @click="handleSubHeaderActionClick(action)"
-            :class="getHeaderActionButtonClass(action)"
+            :class="getHeaderActionButtonClass(action, isMobile || isTablet)"
           />
         </PermissionGate>
       </template>

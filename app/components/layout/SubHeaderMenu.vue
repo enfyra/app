@@ -30,7 +30,7 @@ async function selectAction(action: HeaderAction) {
       icon="lucide:ellipsis"
       color="neutral"
       variant="outline"
-      size="lg"
+      size="md"
       square
       :class="[getHeaderActionButtonClass({}), '!w-9 relative pointer-coarse:before:absolute pointer-coarse:before:-inset-1 pointer-coarse:before:content-[\'\']']"
       aria-label="More page actions"
@@ -56,7 +56,7 @@ async function selectAction(action: HeaderAction) {
               variant="ghost"
               class="w-full justify-start whitespace-normal px-0 py-2 pointer-coarse:min-h-[44px]"
               :ui="{ label: 'text-left' }"
-              :disabled="!!pending || unref(action.disabled) || unref(action.loading)"
+              :disabled="!!(pending || unref(action.disabled) || unref(action.loading))"
               :loading="unref(action.loading) || pending === action.id"
               loading-auto
               @click="selectAction(action)"

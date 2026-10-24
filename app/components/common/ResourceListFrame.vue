@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ResourceListSize } from "~/types/resource-list";
+import type { TablePaginationProps } from '~/types/table-pagination';
 
 const page = defineModel<number>("page", { default: 1 });
 
@@ -24,27 +25,24 @@ const props = withDefaults(defineProps<{
   itemsPerPage?: number;
   paginationClass?: string;
   paginationLoading?: boolean;
-  to?: (page: number) => any;
+  to?: TablePaginationProps['to'];
 }>(), {
   variant: "contained",
   rootClass: "space-y-6",
   listClass: "",
   loadingTitle: "Loading...",
-  loadingDescription: undefined,
   loadingSize: "sm",
   loadingType: "resource-list",
   loadingContext: "page",
   skeletonRows: 9,
   itemSize: "md",
   emptyTitle: "No items found",
-  emptyDescription: undefined,
   emptyIcon: "lucide:inbox",
   emptySize: "sm",
   total: 0,
   itemsPerPage: 0,
   paginationClass: "",
   paginationLoading: false,
-  to: undefined,
 });
 
 const showPagination = computed(() =>
@@ -90,7 +88,7 @@ const resourceListClass = computed(() => [
         <CommonLoadingState
           v-else
           :title="loadingTitle"
-          :description="loadingDescription"
+          v-bind="loadingDescription === undefined ? {} : { description: loadingDescription }"
           :size="loadingSize"
           :type="fallbackLoadingType"
           :context="loadingContext"
@@ -110,7 +108,7 @@ const resourceListClass = computed(() => [
           :items-per-page="itemsPerPage"
           :total="total"
           :loading="paginationLoading"
-          :to="to"
+          v-bind="to === undefined ? {} : { to }"
         />
       </div>
     </div>
@@ -119,7 +117,7 @@ const resourceListClass = computed(() => [
       <slot name="empty">
         <CommonEmptyState
           :title="emptyTitle"
-          :description="emptyDescription"
+          v-bind="emptyDescription === undefined ? {} : { description: emptyDescription }"
           :icon="emptyIcon"
           :size="emptySize"
         />

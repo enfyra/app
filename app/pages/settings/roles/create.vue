@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'role' }]">
-        <template #role-header><h2 class="text-sm font-medium">Role</h2></template>
+        <template #role-header><CommonFormHeader :title="'Create New Role'" /></template>
         <template #role>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
@@ -22,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellCreatedRecordResponse } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 
@@ -39,7 +41,7 @@ const {
   pending: createLoading,
   execute: createRole,
   error: createError,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellCreatedRecordResponse>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Role",
 });

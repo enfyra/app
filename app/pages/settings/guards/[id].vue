@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained-wide space-y-6">
       <CommonPanel :sections="[{ value: 'guard' }]">
-        <template #guard-header><h2 class="text-sm font-medium">Guard</h2></template>
+        <template #guard-header><CommonFormHeader :title="guardData?.data?.[0]?.name ? `Guard: ${guardData.data[0].name}` : 'Guard'" /></template>
         <template #guard>
       <CommonFormCard>
         <UForm :state="form" @submit="updateGuard">
@@ -181,7 +181,7 @@
       v-model:errors="ruleErrors"
       :loading="createRuleLoading"
       :guard-position="rootPosition"
-      :guard-type="rootGuard?.type"
+      v-bind="rootGuard?.type === undefined ? {} : { guardType: rootGuard.type }"
       @save="saveRule"
       @cancel="showCreateRuleDrawer = false"
     />
@@ -192,7 +192,7 @@
       v-model:errors="editRuleErrors"
       :loading="updateRuleLoading"
       :guard-position="rootPosition"
-      :guard-type="rootGuard?.type"
+      v-bind="rootGuard?.type === undefined ? {} : { guardType: rootGuard.type }"
       @save="saveEditRule"
       @cancel="showEditRuleDrawer = false"
     />
@@ -219,6 +219,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureEditableRecord, FeatureGuard } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import draggable from 'vuedraggable';
 
@@ -234,7 +235,6 @@ const formEditorRef = ref();
 const { useFormChanges, getIncludeFields } = useSchema(tableName);
 const formChanges = useFormChanges();
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const isGlobalGuardForm = computed(() => form.value?.isGlobal === true);
 const isGraphqlGuardForm = computed(() => form.value?.type === 'graphql');
@@ -280,11 +280,6 @@ const fieldMap = computed(() => ({
     excluded: !isGraphqlGuardForm.value,
   },
 }));
-
-registerPageHeader({
-  title: 'Guard Details',
-  gradient: 'purple',
-});
 
 const guardId = computed(() => route.params.id as string);
 
@@ -343,26 +338,13 @@ const {
   data: guardData,
   pending: loading,
   execute: fetchGuard,
-} = useApi(`/${tableName}`, {
+} = useApi<FeatureCollection<FeatureGuard>>(`/${tableName}`, {
   query: {
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: route.params.id } },
   },
   errorContext: 'Fetch Guard',
 });
-
-watch(
-  () => guardData.value?.data?.[0]?.name,
-  (name) => {
-    if (name) {
-      registerPageHeader({
-        title: `Guard: ${name}`,
-        gradient: 'purple',
-      });
-    }
-  },
-  { immediate: true },
-);
 
 const {
   error: updateError,
@@ -420,7 +402,7 @@ const {
   data: descendantsData,
   pending: descendantsLoading,
   execute: fetchDescendants,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureGuard>>(() => '/enfyra_guard', {
   query: computed(() => ({
     fields: getIncludeFields(),
     filter: { parent: { _is_null: false } },
@@ -434,7 +416,7 @@ const {
   data: rulesData,
   pending: rulesLoading,
   execute: fetchRules,
-} = useApi(() => '/enfyra_guard_rule', {
+} = useApi<FeatureCollection<FeatureEditableRecord>>(() => '/enfyra_guard_rule', {
   query: computed(() => ({
     fields: '*,guard,users.id',
     sort: ['priority'],
@@ -913,6 +895,14 @@ async function handleToggleGuard(guard: any, enabled: boolean) {
     await fetchDescendants();
   }
 }
+
+registerHeaderActions(
+  useReloadAction({
+    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; await Promise.all([fetchDescendants(), fetchRules()]); },
+    loading: computed(() => loading.value || descendantsLoading.value || rulesLoading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
+);
 
 onMounted(async () => {
   await initializeForm();

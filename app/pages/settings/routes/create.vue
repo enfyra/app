@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'route' }]">
-        <template #route-header><h2 class="text-sm font-medium">Route</h2></template>
+        <template #route-header><CommonFormHeader :title="'Create New Route'" /></template>
         <template #route>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
@@ -23,6 +23,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const { routes, loadRoutes } = useRoutes();
@@ -75,7 +76,7 @@ const {
   error: createError,
   execute: executeCreateRoute,
   pending: createLoading,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Route",
 });
@@ -126,7 +127,7 @@ async function handleCreate() {
   const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
   registerDataMenuItemsFromRoutes(routes.value);
 
-  await navigateTo(`/settings/routes/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/settings/routes/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
 }

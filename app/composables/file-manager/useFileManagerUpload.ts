@@ -11,6 +11,7 @@ export function useFileManagerUpload(options: FileManagerUploadOptions) {
   const { trackedUploadProgressById, beginTrackedUploadProgress, getUploadProgressHeaders, resetUploadProgress } = useFileUploadProgress();
   const { executeWithResult: uploadFilesApi, pending: uploadPending } = useApi(() => 'enfyra_file', {
     method: 'post',
+    batch: true,
     errorContext: 'Upload Files',
   });
 

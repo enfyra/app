@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { DialogFooterAction } from '~/types/ui';
+
 const { isVisible, options, onCancel, onConfirm } = useConfirm();
 
 watch(
@@ -24,9 +26,9 @@ const isUnsavedChanges = computed(() => {
   );
 });
 
-const cancelAction = computed(() => ({
+const cancelAction = computed<DialogFooterAction>(() => ({
   label: options.value.cancelText,
-  tone: options.value.cancelText?.toLowerCase() === 'keep editing' ? 'primary' as const : undefined,
+  ...(options.value.cancelText?.toLowerCase() === 'keep editing' ? { tone: 'primary' as const } : {}),
   onClick: onCancel,
 }));
 
@@ -67,7 +69,7 @@ onUnmounted(() => {
     :cancel-action="cancelAction"
     :primary-action="{
       label: options.confirmText,
-      tone: isDestructive ? 'danger' : undefined,
+      ...(isDestructive ? { tone: 'danger' } : {}),
       onClick: onConfirm,
     }"
   >

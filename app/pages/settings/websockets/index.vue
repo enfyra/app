@@ -1,7 +1,9 @@
 <template>
   <DataTableSettingsTable
+      header-name="WebSocket Manager"
     v-model:page="page"
     :data="gateways"
+    :bulk-action="bulkDelete"
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
@@ -11,11 +13,19 @@
     :pagination-loading="loading"
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by path"
+      search-label="Search by path"
+      @search="submitSearch"
     @row-click="gateway => navigateTo(`/settings/websockets/${getId(gateway)}`)"
-  />
+  >
+  </DataTableSettingsTable>
 </template>
 
+
 <script setup lang="ts">
+import type { FeatureCollection, FeatureWebsocket } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { h } from 'vue';
 import { UBadge } from '#components';
@@ -42,23 +52,21 @@ const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 
 const route = useRoute();
-const { registerPageHeader } = usePageHeaderRegistry();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('path', () => fetchGateways());
 
-registerPageHeader({
-  title: "WebSocket Manager",
-  gradient: "cyan",
-});
+
 
 const {
   data: apiData,
   pending: loading,
   execute: fetchGateways,
-} = useApi(() => "/enfyra_websocket", {
+} = useApi<FeatureCollection<FeatureWebsocket>>(() => "/enfyra_websocket", {
   query: computed(() => ({
     fields: WEBSOCKET_LIST_FIELDS,
     limit,
     page: page.value,
     meta: "*",
+    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
     sort: ["id"].join(","),
   })),
   errorContext: "Fetch WebSocket Gateways",
@@ -68,7 +76,7 @@ const {
   items: gateways,
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const total = computed(() => searchValue.value ? apiData.value?.meta?.filterCount ?? 0 : apiData.value?.meta?.totalCount ?? 0);
 
 const connectionCounts = ref<Record<string, number>>({});
 
@@ -144,12 +152,8 @@ const toggleGatewayStatus = async (gateway: any) => {
   const newStatus = !gateway.isEnabled;
 
   if (apiData.value?.data) {
-    const gatewayIndex = apiData.value.data.findIndex(
-      (g: any) => getId(g) === id
-    );
-    if (gatewayIndex !== -1) {
-      apiData.value.data[gatewayIndex].isEnabled = newStatus;
-    }
+    const current = apiData.value.data.find(g => getId(g) === id);
+    if (current) current.isEnabled = newStatus;
   }
 
   await loader.withLoading(() =>
@@ -163,12 +167,8 @@ const toggleGatewayStatus = async (gateway: any) => {
 
   if (updateError.value) {
     if (apiData.value?.data) {
-      const gatewayIndex = apiData.value.data.findIndex(
-        (g: any) => getId(g) === id
-      );
-      if (gatewayIndex !== -1) {
-        apiData.value.data[gatewayIndex].isEnabled = !newStatus;
-      }
+      const current = apiData.value.data.find(g => getId(g) === id);
+      if (current) current.isEnabled = !newStatus;
     }
     return;
   }
@@ -185,6 +185,14 @@ const { execute: deleteGatewayApi, error: deleteError } = useApi(
     errorContext: "Delete WebSocket Gateway",
   }
 );
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_websocket',
+  title: 'Delete WebSocket Gateways',
+  isEligible: gateway => !gateway.isSystem,
+  isBusy: () => gateways.value.some(item => getGatewayLoader(String(getId(item) ?? '')).isLoading.value),
+  refresh: () => fetchGateways(),
+});
 
 const deleteGateway = async (gateway: any) => {
   const isConfirmed = await confirm({
@@ -215,5 +223,5 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, limit], () => { void fetchGateways(); }, { immediate: true });
+watch([page, limit, searchValue], () => { void fetchGateways(); }, { immediate: true });
 </script>

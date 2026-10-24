@@ -164,24 +164,7 @@
 <script setup lang="ts">
 import { debounce } from "lodash-es";
 
-interface NpmPackage {
-  name: string;
-  version: string;
-  description: string;
-  keywords: string[];
-  author: string;
-  date: string;
-  score: number;
-  popularity: number;
-  quality: number;
-  maintenance: number;
-  searchScore: number;
-  links: {
-    npm: string;
-    homepage?: string;
-    repository?: string;
-  };
-}
+import type { FeatureCollection, NpmPackage } from '~/types/feature-api';
 
 interface Props {
   modelValue?: NpmPackage | null;
@@ -233,12 +216,11 @@ const {
   pending: loading,
   execute: executeSearch,
   cancel: cancelSearch,
-} = useApi("/npm-search", {
+} = useApi<FeatureCollection<NpmPackage>>("/npm-search", {
   immediate: false,
   query: computed(() => ({
     q: searchTerm.value,
   })),
-  watch: false,
 });
 
 watch(searchData, (newData) => {

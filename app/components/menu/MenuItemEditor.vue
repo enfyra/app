@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MenuDefinition } from '~/types';
+import type { ShellMenuResponse } from '~/types/shell-api';
 import { EXTENSION_MENU_METADATA_FIELDS, prefixFields } from '~/utils/extension-fields';
 
 const props = defineProps<{
@@ -52,7 +53,7 @@ const {
   data: menuData,
   pending: loading,
   execute: fetchMenu,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellMenuResponse>(() => `/${tableName}`, {
   query: async () => {
     const includeFields = await getIncludeFields();
     if (props.menu) {
@@ -70,7 +71,6 @@ const {
   },
   errorContext: "Fetch Menu",
   immediate: false,
-  lazy: true,
 });
 
 const {

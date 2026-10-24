@@ -17,7 +17,7 @@ type ProxyOptions = {
 export function createCorsOriginProxyHandler({ method, path }: ProxyOptions) {
   return defineEventHandler(async (event) => {
     const config = useRuntimeConfig();
-    const apiUrl = (config.public as any).apiUrl;
+    const apiUrl = config.public.apiUrl;
 
     if (!apiUrl) {
       throw createError({ statusCode: 500, message: 'API URL not configured' });
@@ -51,6 +51,9 @@ export function createCorsOriginProxyHandler({ method, path }: ProxyOptions) {
       (event.context.proxyHeaders as Record<string, string> | undefined)
         ?.authorization || getRequestHeader(event, 'authorization');
     if (authHeader) headers['Authorization'] = authHeader;
+
+    const pat = getRequestHeader(event, 'x-enfyra-pat');
+    if (pat) headers['x-enfyra-pat'] = pat;
 
     const cookie = getRequestHeader(event, 'cookie');
     if (cookie) headers['cookie'] = cookie;

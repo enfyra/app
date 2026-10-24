@@ -1,5 +1,8 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
+import { buildSharedHelperFieldMap } from '~/utils/form/shared-helper';
+import { buildRecordEditQuery, changedRecordFields } from '~/utils/form/record-update';
+import type { FormApiListResponse } from '~/types/form-api';
 import {
   applyMethodColorSuggestion,
   buildMethodDefinitionFieldMap,
@@ -10,7 +13,7 @@ const route = useRoute();
 
 const notify = useNotify();
 const tableName = route.params.table as string;
-const { schemas, useFormChanges } = useSchema(tableName);
+const { schemas, definition, ensureSchema, useFormChanges } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const { getId, getIdFieldName } = useDatabase();
 const updateErrors = ref<Record<string, string>>({});
@@ -25,11 +28,16 @@ const formEditorRegistry = useFormEditorRegistry();
 const formChanges = useFormChanges();
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const currentRecord = ref<Record<string, any>>({});
+
+const recordTitle = computed(() => {
+  const id = getId(currentRecord.value);
+  return id ? `${tableName}: ${id}` : tableName;
+});
 const fieldMap = computed(() =>
-  tableName === 'enfyra_method' ? buildMethodDefinitionFieldMap() : {},
+  tableName === 'enfyra_method' ? buildMethodDefinitionFieldMap()
+    : tableName === 'enfyra_helper' ? buildSharedHelperFieldMap() : {},
 );
 
 const currentRecordRouteId = computed(() => {
@@ -43,22 +51,13 @@ onMounted(async () => {
   await initializeForm();
 });
 
-watch(() => getId(currentRecord.value), (id) => {
-  if (id) {
-    registerPageHeader({
-      title: `${route.params.table}: ${id}`,
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
-
 const {
   data: apiData,
   pending: loading,
   execute: fetchRecord,
-} = useApi(() => getRouteForTableName(tableName), {
+} = useApi<FormApiListResponse<Record<string, unknown>>>(() => getRouteForTableName(tableName), {
   query: computed(() => ({
-    fields: "*",
+    ...buildRecordEditQuery(definition.value, getIdFieldName()),
     filter: {
       [getIdFieldName()]: {
         _eq: route.params.id,
@@ -69,6 +68,7 @@ const {
 });
 
 async function initializeForm() {
+  await ensureSchema();
   await fetchRecord();
   const data = apiData.value?.data?.[0];
   if (data) {
@@ -88,7 +88,7 @@ async function handleUpdate() {
 
   await updateRecord({
     id: route.params.id as string,
-    body: currentRecord.value,
+    body: changedRecordFields(formChanges.originalData.value, currentRecord.value),
   });
 
   if (updateError.value) {
@@ -161,6 +161,15 @@ async function handleReset() {
 }
 
 registerHeaderActions([
+  useReloadAction({
+    reload: async () => {
+      await initializeForm();
+      formEditorRegistry.value?.confirmChanges();
+      hasFormChanges.value = false;
+    },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
   {
     id: "reset-data-entry",
     label: "Reset",
@@ -219,6 +228,9 @@ registerHeaderActions([
   <div class="space-y-6">
     
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'record' }]">
+        <template #record-header><CommonFormHeader :title="recordTitle" /></template>
+        <template #record>
       <CommonFormCard>
         <FormEditorLazy
           :table-name="(route.params.table as string)"
@@ -231,6 +243,8 @@ registerHeaderActions([
           :current-record-id="currentRecordRouteId"
         />
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>

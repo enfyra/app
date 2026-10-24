@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureRouteList } from '~/types/feature-api';
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import CommonSystemVisibilityControl from "~/components/common/SystemVisibilityControl.vue";
@@ -13,11 +14,11 @@ const page = ref(1);
 const pageLimit = useSettingsPageSize('routes');
 const route = useRoute();
 const router = useRouter();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('path', () => fetchRoutes());
 const tableName = "enfyra_route";
 const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { getLoader: getRouteLoader } = useKeyedLoaders();
-const { registerPageHeader } = usePageHeaderRegistry();
 const { routes: cachedRoutes, loadRoutes } = useRoutes();
 const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
 const ROUTE_LIST_FIELDS = [
@@ -38,10 +39,6 @@ const ROUTE_LIST_FIELDS = [
   "publicMethods.textColor",
 ].join(",");
 
-registerPageHeader({
-  title: "Route Manager",
-  gradient: "cyan",
-});
 
 const { getId } = useDatabase();
 
@@ -98,7 +95,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRoutes,
-} = useApi(() => "/enfyra_route", {
+} = useApi<FeatureCollection<FeatureRouteList>>(() => "/enfyra_route", {
   query: computed(() => {
     const conditions: any[] = [];
     if (visibilityScope.value === "custom") {
@@ -115,6 +112,7 @@ const {
     if (filterQuery) {
       conditions.push(filterQuery);
     }
+    if (searchFilter.value) conditions.push(searchFilter.value);
 
     return {
       fields: ROUTE_LIST_FIELDS,
@@ -134,7 +132,7 @@ const {
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() => {
   const meta = apiData.value?.meta
-  if (visibilityScope.value === "all" && showCollectionRoutes.value && !hasActiveFilters(currentFilter.value)) {
+  if (visibilityScope.value === "all" && showCollectionRoutes.value && !searchValue.value && !hasActiveFilters(currentFilter.value)) {
     return meta?.totalCount ?? 0
   }
   return meta?.filterCount ?? 0
@@ -244,7 +242,7 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, pageLimit, visibilityScope, showCollectionRoutes], () => { void fetchRoutes(); }, { immediate: true });
+watch([page, pageLimit, visibilityScope, showCollectionRoutes, searchValue], () => { void fetchRoutes(); }, { immediate: true });
 
 const { execute: updateRouteApi, error: updateError } = useApi(
   () => `/enfyra_route`,
@@ -303,12 +301,8 @@ async function toggleEnabled(routeItem: any) {
   const newEnabled = !routeItem.isEnabled;
 
   if (apiData.value?.data) {
-    const routeIndex = apiData.value.data.findIndex(
-      (r: any) => getId(r) === getId(routeItem)
-    );
-    if (routeIndex !== -1) {
-      apiData.value.data[routeIndex].isEnabled = newEnabled;
-    }
+    const current = apiData.value.data.find(r => getId(r) === getId(routeItem));
+    if (current) current.isEnabled = newEnabled;
   }
 
   await updateRouteApi({ id: getId(routeItem), body: { isEnabled: newEnabled } });
@@ -316,12 +310,8 @@ async function toggleEnabled(routeItem: any) {
   if (updateError.value) {
     
     if (apiData.value?.data) {
-      const routeIndex = apiData.value.data.findIndex(
-        (r: any) => getId(r) === getId(routeItem)
-      );
-      if (routeIndex !== -1) {
-        apiData.value.data[routeIndex].isEnabled = !newEnabled;
-      }
+      const current = apiData.value.data.find(r => getId(r) === getId(routeItem));
+      if (current) current.isEnabled = !newEnabled;
     }
     return;
   }
@@ -331,6 +321,18 @@ async function toggleEnabled(routeItem: any) {
 
   notify.success("Success", `Route ${newEnabled ? "enabled" : "disabled"} successfully`);
 }
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_route',
+  title: 'Delete Routes',
+  isEligible: canMutateRoute,
+  isBusy: () => routesData.value.some(item => getRouteLoader(getId(item)).isLoading.value),
+  refresh: async () => {
+    await fetchRoutes();
+    await loadRoutes();
+    registerDataMenuItemsFromRoutes(cachedRoutes.value);
+  },
+});
 
 async function deleteRoute(routeItem: any) {
   if (!canMutateRoute(routeItem)) return;
@@ -367,9 +369,11 @@ async function deleteRoute(routeItem: any) {
       @clear="clearFilters"
     />
 
-    <DataTableSettingsTable
+  <DataTableSettingsTable
+      header-name="Route Manager"
       v-model:page="page"
       :data="routesData"
+      :bulk-action="bulkDelete"
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading"
@@ -378,9 +382,15 @@ async function deleteRoute(routeItem: any) {
       page-size-key="routes"
       :pagination-loading="loading"
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by path"
+      search-label="Search by path"
+      @search="submitSearch"
       @page-size-change="setPageSize"
       @row-click="routeItem => navigateTo(`/settings/routes/${getId(routeItem)}`)"
-    />
+    >
+  </DataTableSettingsTable>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"

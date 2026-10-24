@@ -359,7 +359,7 @@ const nestedGroupClass = computed(() => [
                 :schemas="schemas"
                 :table-name="tableName"
                 :readonly="!!readonly"
-                :allowed-fields="allowedFields"
+                v-bind="allowedFields === undefined ? {} : { allowedFields }"
                 @update:condition="(condition) => onConditionUpdate(condition, index)"
                 @convert-to-group="(newGroup, idx) => onConvertToGroup(newGroup, idx)"
                 @remove="removeItem"

@@ -11,6 +11,8 @@ import { normalizeUrl } from "~/utils/api/url";
 import { setAuthCookies } from "../utils/auth-cookies";
 import { sanitizeLoginResponse } from "../utils/auth-response";
 import { requireValidPostLoginRedirectUrl } from "../utils/oauth";
+import type { BackendLoginResponse } from "../types/api";
+import { getApiErrorRecord } from "~/utils/api/error";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
@@ -24,7 +26,7 @@ export default defineEventHandler(async (event) => {
       event,
     );
 
-    const response = await $fetch<any>(normalizeUrl(apiUrl, "/auth/login"), {
+    const response = await $fetch<BackendLoginResponse>(normalizeUrl(apiUrl, "/auth/login"), {
       method: "POST",
       body: credentials,
       headers: {
@@ -41,9 +43,13 @@ export default defineEventHandler(async (event) => {
       ...sanitizeLoginResponse(response),
       ...(redirect ? { redirect } : {}),
     };
-  } catch (err: any) {
-    const statusCode = err?.response?.status || err?.statusCode || 401;
-    const errorData = err?.response?._data || err?.data;
+  } catch (err: unknown) {
+    const failure = getApiErrorRecord(err);
+    const response = getApiErrorRecord(failure?.response);
+    const status = response?.status || failure?.statusCode || 401;
+    const statusCode = typeof status === "number" ? status : 401;
+    const errorData = getApiErrorRecord(response?._data || failure?.data);
+    const backendError = getApiErrorRecord(errorData?.error);
 
     let errorMessage = "Authentication failed";
     let errorCode = "AUTHENTICATION_ERROR";
@@ -57,13 +63,13 @@ export default defineEventHandler(async (event) => {
     };
 
     const candidate =
-      pickMessage(errorData?.error?.message) ??
+      pickMessage(backendError?.message) ??
       pickMessage(errorData?.message) ??
-      pickMessage(err?.statusMessage) ??
-      pickMessage(err?.message);
+      pickMessage(failure?.statusMessage) ??
+      pickMessage(failure?.message);
     if (candidate) errorMessage = candidate;
 
-    const code = errorData?.error?.code;
+    const code = backendError?.code;
     if (typeof code === "string" && code.length > 0) errorCode = code;
 
     return sendError(
@@ -73,8 +79,8 @@ export default defineEventHandler(async (event) => {
         statusMessage: errorMessage,
         data: {
           code: errorCode,
-          details: errorData?.error?.details,
-          correlationId: errorData?.error?.correlationId,
+          details: backendError?.details,
+          correlationId: backendError?.correlationId,
         },
       })
     );

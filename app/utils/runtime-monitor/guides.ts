@@ -8,8 +8,9 @@ export const runtimeTabGuides: Record<string, RuntimeGuide> = {
       {
         title: 'Instance And Time',
         items: [
-          ['Instances', 'How many server processes have sent runtime samples to this admin session. In PM2 cluster mode this should match the live instance count.'],
-          ['Sampled at', 'The exact server timestamp when the snapshot was measured. If this is old, the admin socket is stale or the instance stopped emitting.'],
+          ['Instances', 'Active server processes in the latest cluster snapshot requested by this client. In PM2 cluster mode this should match the live instance count.'],
+          ['Sampled at', 'The exact server timestamp when the snapshot was measured. If this is old, the connection is stale or the instance stopped sampling.'],
+          ['Next sample', 'This client requests one cluster snapshot every 2 seconds. Slow requests never overlap; the countdown follows the next client request.'],
           ['Avg since boot', 'Average from this process boot until now. The counters are stored in Redis and reset when that process starts again.'],
           ['PID / Uptime', 'Use PID to match PM2 or OS logs. Uptime tells whether the process has restarted recently.'],
           ['App active', 'Active instance count detected from runtime monitor samples scoped to the current NODE_NAME. This is the source of truth for this app process count.'],
@@ -66,7 +67,7 @@ export const runtimeTabGuides: Record<string, RuntimeGuide> = {
   },
   requests: {
     title: 'Requests Guide',
-    description: 'These numbers show API pressure and slow/erroring routes across live instances.',
+    description: 'These numbers show API traffic and request errors across live instances. Timing metrics are informational.',
     groups: [
       {
         title: 'Route Latency',
@@ -122,14 +123,14 @@ export const runtimeTabGuides: Record<string, RuntimeGuide> = {
   },
   database: {
     title: 'Database Guide',
-    description: 'These metrics show QueryBuilder pressure, slow operations, and DB/query errors.',
+    description: 'These metrics show database activity and query errors. Only failures affect health status; timing metrics are informational.',
     groups: [
       {
         title: 'Query Path',
         items: [
           ['Context', 'Where the query was executed: runtime request, cache reload, data migration, flow, boot, or system code.'],
           ['Operation', 'QueryBuilder operation such as find, insert, update, delete, or raw.'],
-          ['Slow', 'Count of operations slower than the server threshold. Slow query count plus DB pool pending usually means the DB path is the bottleneck.'],
+          ['Slow', 'Informational count of operations exceeding the server threshold. It does not affect health status or issue counts.'],
           ['Errors', 'Query errors captured at the QueryBuilder boundary.'],
           ['Pool timeout', 'Queries that failed while waiting for a DB connection from the pool.'],
           ['p95 / p99', 'Slow-tail query latency per table/operation.'],

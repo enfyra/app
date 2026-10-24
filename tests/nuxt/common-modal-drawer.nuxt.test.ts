@@ -1,4 +1,4 @@
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, h, nextTick, type Component } from 'vue'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import CommonDrawer from '~/components/common/Drawer.vue'
@@ -7,6 +7,7 @@ import CommonModal from '~/components/common/Modal.vue'
 const UModalStub = defineComponent({
   props: {
     open: { type: Boolean, default: false },
+    close: { type: [Boolean, Object], default: true },
   },
   emits: ['update:open'],
   setup(props, { emit, slots }) {
@@ -55,6 +56,24 @@ const UButtonStub = defineComponent({
   },
 })
 
+describe('managed footer forwarding', () => {
+  const overlays: [string, Component][] = [['drawer', CommonDrawer], ['modal', CommonModal]]
+  for (const [name, component] of overlays) {
+    it(`omits absent native action props in ${name}`, async () => {
+      const wrapper = await mountSuspended(component, {
+        route: '/login',
+        props: { modelValue: true, open: true, primaryAction: { label: 'Save' } },
+        slots: { body: () => 'Body' },
+        global: { stubs: { UDrawer: UDrawerStub, UModal: UModalStub, UButton: UButtonStub } },
+      })
+      try {
+        const attrs = wrapper.getComponent(UButtonStub).vm.$attrs
+        for (const key of ['icon', 'loading', 'disabled', 'form']) expect(Object.hasOwn(attrs, key)).toBe(false)
+      } finally { wrapper.unmount() }
+    })
+  }
+})
+
 describe('CommonModal', () => {
   it('locks the document scroll root until the last shared overlay closes', async () => {
     const initialOverflow = document.documentElement.style.overflow
@@ -84,6 +103,29 @@ describe('CommonModal', () => {
     second.unmount()
     await nextTick()
     expect(document.documentElement.style.overflow).toBe(initialOverflow)
+  })
+
+  it('renders the shared danger-toned close control through the native close slot', async () => {
+    const wrapper = await mountSuspended(CommonModal, {
+      route: '/login',
+      props: { open: true },
+      slots: {
+        header: () => 'Title',
+        body: () => 'Body',
+      },
+      global: {
+        stubs: {
+          UModal: UModalStub,
+        },
+      },
+    })
+
+    expect(wrapper.getComponent(UModalStub).props('close')).toEqual({
+      color: 'error',
+      variant: 'soft',
+      size: 'md',
+      class: '!h-9 !w-9 !p-0',
+    })
   })
 
   it('defaults closed when modelValue is omitted', async () => {

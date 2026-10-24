@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui';
 import { UDropdownMenu, UTooltip } from '#components';
+import { useMediaQuery } from '@vueuse/core';
 import { selectSidebarCollections } from '~/utils/sidebar-collection-items';
 
 const route = useRoute();
-const router = useRouter();
+const isMobileSidebar = useMediaQuery('(max-width: 1023px)');
 const { menuGroups } = useMenuRegistry();
 const { menuDefinitionsPending } = useMenuApi();
 const { routesLoading, routesFetched } = useRoutes();
 const { sidebarCollections } = useDataCollectionPreferences();
 const { hasMenuPermission } = usePermissions();
-const { width } = useScreen();
 const { sidebarVisible, setSidebarVisible, settings } = useGlobalState();
 const accountSheetOpen = useState('account-sheet-open', () => false);
 const { getFileUrl } = useFileUrl();
@@ -22,18 +22,16 @@ let menuSkeletonTimer: ReturnType<typeof setTimeout> | null = null;
 
 if (import.meta.client) {
   const saved = localStorage.getItem('sidebar-open');
-  if (saved !== null && width.value >= 1024) {
-    sidebarVisible.value = saved === 'true';
-  }
+  if (saved !== null) sidebarVisible.value = saved === 'true';
   try {
     const savedKeys = localStorage.getItem('sidebar-menu-open-keys');
     if (savedKeys) openMenuKeys.value = JSON.parse(savedKeys);
   } catch {}
 }
 
-watch(sidebarVisible, (val) => {
-  if (import.meta.client && width.value >= 1024) {
-    localStorage.setItem('sidebar-open', String(val));
+watch(sidebarVisible, (value) => {
+  if (import.meta.client && !isMobileSidebar.value) {
+    localStorage.setItem('sidebar-open', String(value));
   }
 });
 
@@ -186,6 +184,26 @@ const navigationItems = computed(() => {
   return groups;
 });
 
+watch(navigationItems, (groups) => {
+  const nextOpenKeys = { ...openMenuKeys.value };
+  let changed = false;
+
+  function rememberActiveBranches(items: any[]) {
+    for (const item of items) {
+      if (!item.children?.length) continue;
+      const key = String(item.to || item.label);
+      if (nextOpenKeys[key] === undefined && (item.active || item.branchActive)) {
+        nextOpenKeys[key] = true;
+        changed = true;
+      }
+      rememberActiveBranches(item.children);
+    }
+  }
+
+  groups.forEach(rememberActiveBranches);
+  if (changed) openMenuKeys.value = nextOpenKeys;
+}, { immediate: true });
+
 function menuBadge(item: any) {
   const notification = getMenuNotification(item);
   const value = item.count ?? notification?.value;
@@ -205,6 +223,7 @@ function toNavigationItem(item: any): NavigationMenuItem {
   const children = isDataParent && item.children?.length ? dataMenuItems(item.children) : item.children?.map(toNavigationItem);
   const key = String(item.to || item.label);
   const hasChildren = Boolean(children?.length);
+  const badge = menuBadge(item);
   return {
     label: item.label,
     icon: item.icon,
@@ -213,10 +232,10 @@ function toNavigationItem(item: any): NavigationMenuItem {
     ...(hasChildren ? {
       children,
       defaultOpen: openMenuKeys.value[key] ?? Boolean(item.active || item.branchActive),
-      onClick: (event: MouseEvent) => rememberBranchState(key, event),
+      onClick: () => toggleBranchState(key, Boolean(item.active || item.branchActive)),
     } : {}),
     active: item.active,
-    badge: menuBadge(item),
+    ...(badge === undefined ? {} : { badge }),
     ...(isDataParent && item.loading && !hasChildren ? { disabled: true } : {}),
   };
 }
@@ -233,26 +252,22 @@ function groupOpenValues(group: NavigationMenuItem[]): string[] {
     .map(item => String(item.value));
 }
 
-function rememberBranchState(key: string, event: Event) {
-  const trigger = event.currentTarget;
-  if (!(trigger instanceof HTMLElement) || trigger.tagName !== 'BUTTON') return;
-  void nextTick(() => {
-    openMenuKeys.value = {
-      ...openMenuKeys.value,
-      [key]: trigger.getAttribute('aria-expanded') === 'true',
-    };
-  });
+function toggleBranchState(key: string, defaultOpen: boolean) {
+  openMenuKeys.value = {
+    ...openMenuKeys.value,
+    [key]: !(openMenuKeys.value[key] ?? defaultOpen),
+  };
 }
 
 function toCollapsedMenuItem(item: NavigationMenuItem): DropdownMenuItem {
   return {
-    label: item.label,
+    ...(item.label === undefined ? {} : { label: item.label }),
     icon: item.icon,
-    disabled: item.disabled,
-    badge: item.badge,
+    ...(item.disabled === undefined ? {} : { disabled: item.disabled }),
+    ...(item.badge === undefined ? {} : { badge: item.badge }),
     ...(item.children?.length
       ? { children: item.children.map(toCollapsedMenuItem) }
-      : { to: item.to }),
+      : item.to === undefined ? {} : { to: item.to }),
     ...(item.active ? { class: '!text-[var(--text-primary)] before:!bg-[var(--menu-item-hover-bg)]' } : {}),
   };
 }
@@ -279,10 +294,8 @@ const bottomGroups = computed(() => {
 const renderExpandedSidebarContent = computed(() => sidebarVisible.value);
 const showExpandedSidebarLabels = computed(() => sidebarVisible.value);
 
-router.afterEach(() => {
-  if (width.value < 1024) {
-    setSidebarVisible(false);
-  }
+watch(() => route.path, () => {
+  if (isMobileSidebar.value) setSidebarVisible(false);
 });
 
 onUnmounted(() => {
@@ -296,22 +309,22 @@ onUnmounted(() => {
   <USidebar
     v-model:open="sidebarVisible"
     variant="inset"
-    :menu="{ dismissible: !accountSheetOpen, ui: { overlay: 'z-40', content: 'z-40 max-w-none' } }"
+    :menu="{ dismissible: !accountSheetOpen, ui: { overlay: 'z-40', content: 'z-40 max-w-none !bg-[var(--shell-sidebar-bg)] !divide-transparent !ring-1 !ring-inset !ring-[var(--border-default)] !shadow-[var(--shadow-md)]' } }"
     collapsible="icon"
     class="eapp-sidebar"
     :style="{ '--sidebar-width': 'var(--shell-sidebar-width)' }"
     :ui="{
       container: 'py-[var(--shell-sidebar-inset)]',
       inner: '!bg-[var(--shell-sidebar-bg)] !border-0 !divide-transparent shadow-none',
-      header: 'px-3.5 pb-2.5 pt-4 lg:py-0 group-data-[state=collapsed]/sidebar:px-2',
+      header: '!min-h-0 flex-col items-stretch gap-0 px-0 py-0',
       body: '!overflow-hidden border-0 p-0',
       footer: 'eapp-sidebar-scroll flex min-h-0 w-full flex-col gap-1.5 overflow-x-hidden overflow-y-auto border-t border-[var(--nav-child-border)] px-3.5 pt-3 pb-4 lg:pb-0 group-data-[state=collapsed]/sidebar:px-2',
     }"
   >
-    <template #title>
+    <template #header="{ close }">
       <div
-        class="flex min-w-0 items-center overflow-hidden"
-        :class="!renderExpandedSidebarContent ? 'w-full justify-center gap-0 px-0' : 'gap-3 px-1.5'"
+        class="flex w-full min-w-0 items-center overflow-hidden px-3.5 pb-3 pt-4 lg:min-h-14 lg:py-0 group-data-[state=collapsed]/sidebar:px-2"
+        :class="!renderExpandedSidebarContent ? 'justify-center gap-0' : 'gap-3'"
       >
         <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">
           <img v-if="faviconUrl" :src="faviconUrl" alt="Favicon" class="w-full h-full object-cover" />
@@ -321,9 +334,20 @@ onUnmounted(() => {
           <p class="m-0 truncate text-[15px] font-bold leading-5 text-[var(--text-primary)]">{{ settings?.projectName || 'Enfyra' }}</p>
           <p class="m-0 mt-0.5 truncate text-xs font-medium leading-4 text-[var(--text-tertiary)]">{{ settings?.projectDescription || 'Control plane' }}</p>
         </div>
+        <UButton
+          v-if="isMobileSidebar"
+          icon="lucide:x"
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          square
+          aria-label="Close navigation"
+          class="shrink-0"
+          @click="close"
+        />
       </div>
+      <USeparator class="mb-3 w-full lg:mb-2" :ui="{ border: 'border-[var(--nav-child-border)]' }" />
     </template>
-    <template #description />
 
     <template #default>
       <SidebarScrollArea :collapsed="!renderExpandedSidebarContent">
@@ -365,7 +389,7 @@ onUnmounted(() => {
                   <UNavigationMenu
                     v-if="renderExpandedSidebarContent"
                     :items="group"
-                    :default-value="groupOpenValues(group)"
+                    :model-value="groupOpenValues(group)"
                     type="multiple"
                     :unmount-on-hide="false"
                     orientation="vertical"
@@ -390,8 +414,10 @@ onUnmounted(() => {
                           color="neutral"
                           variant="ghost"
                           :aria-label="item.label"
-                          :disabled="item.disabled"
-                          :to="item.children?.length ? undefined : item.to"
+                          v-bind="{
+                            ...(item.disabled === undefined ? {} : { disabled: item.disabled }),
+                            ...(item.children?.length || item.to === undefined ? {} : { to: item.to }),
+                          }"
                           class="mx-auto !size-9 justify-center !p-0"
                           :class="item.active ? '!text-[var(--nav-item-hover-text)] !bg-[var(--nav-item-hover-bg)]' : undefined"
                         />

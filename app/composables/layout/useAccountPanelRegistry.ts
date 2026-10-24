@@ -4,7 +4,8 @@ import type { AccountPanelItem } from "~/types/ui";
 const accountPanelItemOwners = new Map<string, number>();
 
 function processAccountPanelItem(item: AccountPanelItem): AccountPanelItem {
-  const processed = Object.create(Object.getPrototypeOf(item));
+  const processed: AccountPanelItem = { id: item.id };
+  Object.setPrototypeOf(processed, Object.getPrototypeOf(item));
 
   for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(item))) {
     Object.defineProperty(processed, key, descriptor);
@@ -13,11 +14,12 @@ function processAccountPanelItem(item: AccountPanelItem): AccountPanelItem {
   const componentKeys: Array<"component" | "contentComponent"> = ["component", "contentComponent"];
 
   for (const key of componentKeys) {
-    if (!processed[key]) continue;
+    const component = processed[key];
+    if (!component) continue;
 
-    if (typeof processed[key] === "string") {
+    if (typeof component === "string") {
       try {
-        const resolved = resolveComponent(processed[key] as any);
+        const resolved = resolveComponent(component);
         if (resolved && typeof resolved !== "string") {
           processed[key] = markRaw(resolved);
         }
@@ -25,7 +27,7 @@ function processAccountPanelItem(item: AccountPanelItem): AccountPanelItem {
         console.warn(`Failed to resolve account panel component: ${processed[key]}`, error);
       }
     } else {
-      processed[key] = markRaw(processed[key]);
+      processed[key] = markRaw(component);
     }
   }
 

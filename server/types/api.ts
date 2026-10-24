@@ -4,6 +4,8 @@ export interface AuthResponse {
   expTime: number;
 }
 
+export type BackendLoginResponse = AuthResponse & Record<string, unknown>;
+
 export interface BackendErrorResponse {
   success: false;
   message: string;

@@ -3,7 +3,7 @@
     <div class="space-y-6">
       <div class="eapp-page-constrained">
         <CommonPanel :sections="[{ value: 'role' }]">
-          <template #role-header><h2 class="text-sm font-medium">Role</h2></template>
+          <template #role-header><CommonFormHeader :title="form.name ? `Role: ${form.name}` : 'Role'" /></template>
           <template #role>
         <CommonFormCard>
           <UForm :state="form" @submit="save">
@@ -34,6 +34,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellListResponse, ShellRoleRecord } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
@@ -126,7 +128,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRole,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellRoleRecord>>(() => `/${tableName}`, {
   query: computed(() => ({
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: id } },
@@ -205,12 +207,13 @@ async function deleteRole() {
   await navigateTo("/settings/roles");
 }
 
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Role Details",
-  gradient: "purple",
-});
+registerHeaderActions(
+  useReloadAction({
+    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+    loading: computed(() => loading.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
+);
 
 onMounted(() => {
   initializeForm();

@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'guard' }]">
-        <template #guard-header><h2 class="text-sm font-medium">Guard</h2></template>
+        <template #guard-header><CommonFormHeader :title="'Create New Guard'" /></template>
         <template #guard>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
@@ -24,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const tableName = 'enfyra_guard';
@@ -113,7 +114,7 @@ const {
   error: createError,
   execute: executeCreate,
   pending: createLoading,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/${tableName}`, {
   method: 'post',
   errorContext: 'Create Guard',
 });
@@ -162,7 +163,7 @@ async function handleCreate() {
 
   notify.success('Guard created successfully');
 
-  await navigateTo(`/settings/guards/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/settings/guards/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
 }

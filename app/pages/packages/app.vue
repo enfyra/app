@@ -1,5 +1,6 @@
 <template>
   <DataTableSettingsTable
+      header-name="App Packages"
     v-model:page="page"
     :data="packages"
     :columns="columns"
@@ -18,7 +19,9 @@
   </DataTableSettingsTable>
 </template>
 
+
 <script setup lang="ts">
+import type { FeatureCollection, FeaturePackage } from '~/types/feature-api';
 import { settingsDateColumn, settingsTextColumn } from "~/utils/settings-table";
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const page = ref(1);
@@ -43,12 +46,8 @@ const PACKAGE_LIST_FIELDS = [
   "createdAt",
 ].join(",");
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "App Packages",
-  gradient: "none",
-});
+
 
 registerHeaderActions({
   id: "create-package",
@@ -72,7 +71,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadPackages,
-} = useApi("/enfyra_package", {
+} = useApi<FeatureCollection<FeaturePackage>>("/enfyra_package", {
   query: computed(() => ({
     page: page.value,
     limit: limit.value,

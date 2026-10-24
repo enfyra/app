@@ -1,6 +1,13 @@
 <script setup lang="ts">
-const { register: registerHeaderActions } = useHeaderActionRegistry();
+import type { ColumnDef } from '@tanstack/vue-table';
 import type { MenuDefinition } from '~/types';
+import type { DataTableRowAction } from '~/types/data-table-columns';
+import type { ExtensionDefinition } from '~/types/extensions';
+import type { FeatureCollection } from '~/types/feature-api';
+import type { PanelSection } from '~/types/ui';
+import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
+
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const notify = useNotify();
 const { confirm } = useConfirm();
@@ -10,9 +17,10 @@ const tableName = "enfyra_menu";
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { routes, ensureRoutesLoaded } = useRoutes();
 const { getId } = useDatabase();
+const { getLoader: getExtensionLoader } = useKeyedLoaders();
+const { checkPermissionCondition } = usePermissions();
 const { invalidateExtensionCache } = useDynamicComponent();
-
-const { registerPageHeader, clearPageHeader } = usePageHeaderRegistry();
+const { loadGlobalExtensions } = useGlobalExtensions();
 
 const { execute: updateMenuApi, error: updateMenuError } = useApi(() => '/enfyra_menu', {
   method: 'patch',
@@ -28,15 +36,201 @@ const pendingReorderMenus = ref<MenuDefinition[]>([]);
 const pageMenusLoading = ref(true);
 let reorderMenusTimer: ReturnType<typeof setTimeout> | null = null;
 
-registerPageHeader({
-  title: "Menu Manager",
-  description: "Configure and manage navigation menus visually",
-  variant: "default",
-  gradient: "purple",
+const panelSections: PanelSection[] = [
+  {
+    label: 'Menus',
+    value: 'menus',
+    icon: 'lucide:menu',
+    title: 'Menu Manager',
+    description: 'Configure and manage navigation menus visually',
+  },
+  {
+    label: 'Extensions',
+    value: 'extensions',
+    icon: 'lucide:puzzle',
+    title: 'Extension Manager',
+    description: 'Manage dynamic pages, widgets, and global shell extensions',
+  },
+];
+
+const activeTab = ref<'menus' | 'extensions'>('menus');
+
+const extensionPage = ref(1);
+const extensionLimit = useSettingsPageSize('extensions');
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('name', () => fetchExtensions());
+
+const {
+  data: extensionsApiData,
+  pending: extensionsLoading,
+  execute: fetchExtensions,
+} = useApi<FeatureCollection<ExtensionDefinition>>(() => "/enfyra_extension", {
+  query: computed(() => ({
+    fields: EXTENSION_LIST_FIELDS,
+    limit: extensionLimit,
+    page: extensionPage.value,
+    meta: "*",
+    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
+    sort: ["id"].join(","),
+  })),
+  errorContext: "Fetch Extensions",
 });
 
+const {
+  items: extensions,
+  showInitialLoading: showExtensionsInitialLoading,
+} = useStableListState(() => extensionsApiData.value?.data, () => extensionsLoading.value);
+const extensionsTotal = computed(() =>
+  searchValue.value
+    ? extensionsApiData.value?.meta?.filterCount ?? 0
+    : extensionsApiData.value?.meta?.totalCount ?? 0,
+);
+
+const { execute: updateExtension, error: updateExtensionError } = useApi(
+  () => `/enfyra_extension`,
+  {
+    method: "patch",
+    errorContext: "Update Extension",
+  },
+);
+
+const { execute: deleteExtensionRecordApi, error: deleteExtensionRecordError } = useApi(
+  () => `/enfyra_extension`,
+  {
+    method: "delete",
+    errorContext: "Delete Extension",
+  },
+);
+
+function getExtensionTypeLabel(type: string) {
+  switch (type) {
+    case "page":
+      return "Page";
+    case "widget":
+      return "Widget";
+    case "global":
+      return "Global";
+    default:
+      return "Unknown";
+  }
+}
+
+const extensionColumns: ColumnDef<ExtensionDefinition>[] = [
+  settingsTextColumn('name', 'Extension'),
+  settingsTextColumn('description', 'Description'),
+  { accessorKey: 'type', header: 'Type', enableSorting: false, cell: ({ getValue }) => getExtensionTypeLabel(String(getValue())) },
+  { id: 'route', header: 'Route', enableSorting: false, cell: ({ row }) => row.original.menu?.path || '_' },
+  settingsStatusColumn(),
+];
+
+function getExtensionRowActions(extension: ExtensionDefinition): DataTableRowAction<ExtensionDefinition>[] {
+  return [
+    ...(checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['PATCH'] }] }) ? [{
+      label: extension.isEnabled ? 'Disable' : 'Enable',
+      icon: extension.isEnabled ? 'lucide:power-off' : 'lucide:power',
+      disabled: getExtensionLoader(String(getId(extension) ?? '')).isLoading.value,
+      onSelect: () => toggleExtensionStatus(extension),
+    }] : []),
+    ...(checkPermissionCondition({ or: [{ route: '/enfyra_extension', methods: ['DELETE'] }] }) && !extension.isSystem ? [{
+      label: 'Delete',
+      icon: 'lucide:trash-2',
+      color: 'error',
+      onSelect: () => deleteExtensionFromList(extension),
+    }] : []),
+  ];
+}
+
+const toggleExtensionStatus = async (extension: ExtensionDefinition) => {
+  const loader = getExtensionLoader(String(getId(extension) ?? ''));
+  const newStatus = !extension.isEnabled;
+
+  if (extensionsApiData.value?.data) {
+    const current = extensionsApiData.value.data.find(e => e.id === extension.id);
+    if (current) current.isEnabled = newStatus;
+  }
+
+  await loader.withLoading(() =>
+    updateExtension({
+      body: {
+        isEnabled: newStatus,
+      },
+      ...(extension.id === undefined ? {} : { id: extension.id }),
+    }),
+  );
+
+  if (updateExtensionError.value) {
+    if (extensionsApiData.value?.data) {
+      const current = extensionsApiData.value.data.find(e => e.id === extension.id);
+      if (current) current.isEnabled = !newStatus;
+    }
+    return;
+  }
+
+  notify.success("Success", `Extension "${extension.name}" has been ${
+    newStatus ? "activated" : "deactivated"
+  } successfully!`);
+  invalidateExtensionCache({
+    reason: "status",
+    id: getId(extension),
+    ...(extension.extensionId === undefined ? {} : { extensionId: extension.extensionId }),
+    path: extension.menu?.path ?? null,
+  });
+  await loadGlobalExtensions({ forceReload: true });
+};
+
+const bulkDeleteExtensions = useSettingsBulkDelete<ExtensionDefinition>({
+  path: '/enfyra_extension',
+  title: 'Delete Extensions',
+  isEligible: extension => !extension.isSystem,
+  isBusy: () => extensions.value.some(item => getExtensionLoader(String(getId(item) ?? '')).isLoading.value),
+  refresh: () => fetchExtensions(),
+  onDeleted: async (deleted) => {
+    for (const extension of deleted) {
+      invalidateExtensionCache({ reason: 'deleted', id: getId(extension), ...(extension.extensionId === undefined ? {} : { extensionId: extension.extensionId }), path: extension.menu?.path ?? null });
+    }
+    await fetchMenuDefinitions();
+    await refreshMenus();
+    await loadGlobalExtensions({ forceReload: true });
+  },
+});
+
+const deleteExtensionFromList = async (extension: ExtensionDefinition) => {
+  const isConfirmed = await confirm({
+    title: "Delete Extension",
+    content: `Are you sure you want to delete "${extension.description}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+
+  if (isConfirmed) {
+    await deleteExtensionRecordApi(extension.id === undefined ? {} : { id: extension.id });
+
+    if (deleteExtensionRecordError.value) {
+      return;
+    }
+
+    await fetchExtensions();
+    await fetchMenuDefinitions();
+    await refreshMenus();
+    invalidateExtensionCache({
+      reason: "deleted",
+      id: getId(extension),
+      ...(extension.extensionId === undefined ? {} : { extensionId: extension.extensionId }),
+      path: extension.menu?.path ?? null,
+    });
+    await loadGlobalExtensions({ forceReload: true });
+
+    notify.success("Success", `Extension "${extension.id}" has been deleted successfully!`);
+  }
+};
+
+async function setExtensionPageSize(size: number) {
+  if (extensionPage.value !== 1) {
+    await navigateTo({ path: route.path, query: { ...route.query, page: undefined } }, { replace: true });
+  }
+  extensionLimit.value = size;
+}
+
 onBeforeUnmount(() => {
-  clearPageHeader();
   if (reorderMenusTimer) {
     clearTimeout(reorderMenusTimer);
     reorderMenusTimer = null;
@@ -50,7 +244,7 @@ onMounted(() => {
 });
 
 const menus = computed(() => {
-  const rawMenus = menuDefinitions.value?.data || [];
+  const rawMenus = menuDefinitions?.value?.data || [];
   return rawMenus
     .map((menu: any) => ({
       ...menu,
@@ -231,6 +425,10 @@ function syncDrawersFromQuery() {
 }
 
 registerHeaderActions([
+  useReloadAction({
+    reload: () => activeTab.value === 'extensions' ? fetchExtensions() : refreshMenus(),
+    loading: computed(() => activeTab.value === 'extensions' ? extensionsLoading.value : pageMenusLoading.value),
+  }),
   {
     id: "create-menu",
     label: "Create Menu",
@@ -238,6 +436,7 @@ registerHeaderActions([
     variant: "solid",
     color: "primary",
     size: "md",
+    show: computed(() => activeTab.value === 'menus'),
     onClick: async () => {
       if (showEditModal.value && menuItemEditorRef.value?.hasFormChanges) {
         const isConfirmed = await confirm({
@@ -262,6 +461,24 @@ registerHeaderActions([
       ],
     },
   },
+  {
+    id: "create-extension",
+    label: "Create Extension",
+    icon: "lucide:plus",
+    variant: "solid",
+    color: "primary",
+    size: "md",
+    to: "/settings/extensions/create",
+    show: computed(() => activeTab.value === 'extensions'),
+    permission: {
+      and: [
+        {
+          route: "/enfyra_extension",
+          methods: ["POST"],
+        },
+      ],
+    },
+  },
 ]);
 
 const { menuItems, reregisterAllMenus, registerDataMenuItemsFromRoutes } = useMenuRegistry();
@@ -270,9 +487,9 @@ async function refreshMenus() {
   const fetchMenusWithExtensions = () => fetchMenuDefinitions({ includeExtensions: true, showSidebarSkeleton: false });
   pageMenusLoading.value = true;
   try {
-    await reregisterAllMenus(fetchMenusWithExtensions as any);
-    await ensureRoutesLoaded();
-    registerDataMenuItemsFromRoutes(routes.value);
+    await reregisterAllMenus?.(fetchMenusWithExtensions as any);
+    await ensureRoutesLoaded?.();
+    registerDataMenuItemsFromRoutes?.(routes.value);
   } finally {
     pageMenusLoading.value = false;
   }
@@ -433,7 +650,7 @@ async function handleEditExtension(menu: MenuDefinition) {
 }
 
 async function handleSaveExtension() {
-  await refreshMenus();
+  await Promise.all([refreshMenus(), fetchExtensions()]);
   showExtensionDrawer.value = false;
   selectedMenuForExtension.value = null;
   await clearDrawerQuery();
@@ -468,11 +685,11 @@ async function handleDeleteExtension(menu: MenuDefinition) {
     return;
   }
 
-  await refreshMenus();
+  await Promise.all([refreshMenus(), fetchExtensions()]);
   invalidateExtensionCache({
     reason: "deleted",
     id: extensionId,
-    extensionId: menu.extension.extensionId,
+    ...(menu.extension.extensionId === undefined ? {} : { extensionId: menu.extension.extensionId }),
     path: menu.path ?? null,
   });
 
@@ -533,7 +750,7 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
       const parentMenu = menus.value.find(m => String(getId(m)) === String(newParentId));
       registryMenu.parent = parentMenu ? (parentMenu as any) : String(newParentId) as any;
     } else {
-      registryMenu.parent = undefined;
+      delete registryMenu.parent;
     }
   }
 
@@ -554,7 +771,7 @@ async function handleMoveMenuTo(payload: { menu: MenuDefinition; newParent: Menu
         const parentMenu = menus.value.find(m => String(getId(m)) === String(parentId));
         registryMenu.parent = parentMenu ? (parentMenu as any) : String(parentId) as any;
       } else {
-        registryMenu.parent = undefined;
+        delete registryMenu.parent;
       }
     }
     await refreshMenus();
@@ -629,6 +846,16 @@ async function flushReorderMenus() {
       })
       .filter(Boolean);
 
+    if (menuDefinitions.value?.data) {
+      const updateById = new Map(updates.map((u) => [String(u!.id), u!]));
+      for (const item of menuDefinitions.value.data) {
+        const patch = updateById.get(String(getId(item)));
+        if (!patch) continue;
+        item.order = patch.order;
+        item.parent = patch.parent ? ({ id: patch.parent } as any) : null;
+      }
+    }
+
     const response = await reorderMenusApi({
       body: { updates },
     });
@@ -662,6 +889,32 @@ async function handleReorderMenus(updatedMenus: MenuDefinition[]) {
   scheduleReorderFlush();
 }
 
+async function handleTabChange(nextTab: string | number) {
+  const normalized = String(nextTab) === 'extensions' ? 'extensions' : 'menus';
+  if (activeTab.value === normalized) return;
+  activeTab.value = normalized;
+  const nextQuery = { ...route.query };
+  if (normalized === 'extensions') {
+    nextQuery.tab = 'extensions';
+  } else {
+    delete nextQuery.tab;
+    delete nextQuery.page;
+    delete nextQuery.search;
+  }
+  await router.replace({ path: route.path, query: nextQuery });
+}
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    activeTab.value = queryValue(tab) === 'extensions' ? 'extensions' : 'menus';
+  },
+  { immediate: true },
+);
+
+watch(() => route.query.page, newVal => { extensionPage.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
+watch([extensionPage, extensionLimit, searchValue], () => { void fetchExtensions(); }, { immediate: true });
+
 watch(
   () => [route.query.menuDrawer, route.query.menuId, route.query.parentMenuId, route.query.extensionDrawer, route.query.extensionMenuId, menus.value.length],
   () => syncDrawersFromQuery(),
@@ -688,32 +941,60 @@ watch(showExtensionDrawer, async (isOpen, wasOpen) => {
 
 <template>
   <div class="eapp-page-constrained space-y-6">
-    <MenuVisualEditor
-      :menus="menus"
-      :loading="pageMenusLoading"
-      @edit-menu="handleEditMenu"
-      @delete-menu="deleteMenu"
-      @toggle-enabled="toggleEnabled"
-      @add-child-menu="handleAddChildMenu"
-      @add-standalone-menu="handleAddStandaloneMenu"
-      @edit-extension="handleEditExtension"
-      @delete-extension="handleDeleteExtension"
-      @reorder-menus="handleReorderMenus"
-      @move-menu-to="handleMoveMenuTo"
+    <CommonPanel :model-value="activeTab" :sections="panelSections" @update:model-value="handleTabChange">
+      <template #menus>
+        <MenuVisualEditor
+          :menus="menus"
+          :loading="pageMenusLoading && menus.length === 0"
+          @edit-menu="handleEditMenu"
+          @delete-menu="deleteMenu"
+          @toggle-enabled="toggleEnabled"
+          @add-child-menu="handleAddChildMenu"
+          @add-standalone-menu="handleAddStandaloneMenu"
+          @edit-extension="handleEditExtension"
+          @delete-extension="handleDeleteExtension"
+          @reorder-menus="handleReorderMenus"
+          @move-menu-to="handleMoveMenuTo"
+        />
+      </template>
+
+      <template #extensions>
+        <DataTableSettingsTable
+          header-name="Extension Manager"
+          v-model:page="extensionPage"
+          :data="extensions"
+          :bulk-action="bulkDeleteExtensions"
+          :columns="extensionColumns"
+          :actions="getExtensionRowActions"
+          :loading="showExtensionsInitialLoading"
+          :total="extensionsTotal"
+          :page-limit="extensionLimit"
+          page-size-key="extensions"
+          :pagination-loading="extensionsLoading"
+          @page-size-change="setExtensionPageSize"
+          :to="(p) => ({ path: route.path, query: { ...route.query, tab: 'extensions', page: p } })"
+          searchable
+          v-model:search="searchQuery"
+          search-placeholder="Search by name"
+          search-label="Search by name"
+          @search="submitSearch"
+          @row-click="extension => navigateTo(`/settings/extensions/${getId(extension)}`)"
+        />
+      </template>
+    </CommonPanel>
+
+    <MenuItemEditor
+      ref="menuItemEditorRef"
+      v-model="showEditModal"
+      :menu="selectedMenu"
+      :all-menus="menus"
+      @save="handleSaveMenu"
     />
 
-      <MenuItemEditor
-        ref="menuItemEditorRef"
-        v-model="showEditModal"
-        :menu="selectedMenu"
-        :all-menus="menus"
-        @save="handleSaveMenu"
-      />
-
-      <ExtensionEditorDrawer
-        v-model="showExtensionDrawer"
-        :menu="selectedMenuForExtension"
-        @save="handleSaveExtension"
-      />
+    <ExtensionEditorDrawer
+      v-model="showExtensionDrawer"
+      :menu="selectedMenuForExtension"
+      @save="handleSaveExtension"
+    />
   </div>
 </template>

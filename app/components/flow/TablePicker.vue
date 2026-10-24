@@ -1,6 +1,6 @@
 <template>
   <UInputMenu
-    :model-value="selectedItem"
+    v-bind="selectedItem === undefined ? {} : { modelValue: selectedItem }"
     :items="tableItems"
     v-model:search-term="searchTerm"
     v-model:open="isMenuOpen"
@@ -29,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureTableOption } from '~/types/feature-api';
 const props = defineProps<{
   modelValue?: string;
   valueKey?: 'id' | 'name';
@@ -40,12 +41,12 @@ const emit = defineEmits<{
 
 const searchTerm = ref('');
 const isMenuOpen = ref(false);
-const tables = ref<any[]>([]);
+const tables = ref<Pick<FeatureTableOption, 'id' | '_id' | 'name'>[]>([]);
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 const selectedItem = computed(() => {
   if (!props.modelValue) return undefined;
-  const match = tables.value.find((t: any) => String(t[props.valueKey || 'name']) === String(props.modelValue));
+  const match = tables.value.find(t => String(t[props.valueKey || 'name']) === String(props.modelValue));
   return match
     ? { label: match.name, value: String(match[props.valueKey || 'name']) }
     : { label: props.modelValue, value: props.modelValue };
@@ -55,7 +56,7 @@ const tableItems = computed(() =>
   tables.value.map((t: any) => ({ label: t.name, value: String(t[props.valueKey || 'name']) }))
 );
 
-const { execute: fetchTables, pending: isLoading, cancel: cancelFetchTables } = useApi(
+const { execute: fetchTables, pending: isLoading, cancel: cancelFetchTables } = useApi<FeatureCollection<Pick<FeatureTableOption, 'id' | '_id' | 'name'>>>(
   () => {
     const params = new URLSearchParams({ fields: 'id,name', limit: '10', sort: 'name' });
     if (searchTerm.value) {

@@ -102,11 +102,11 @@ const fieldMap = computed(() => ({
   },
   sourceCode: getRouteHookSourceCodeFieldConfig({
     hookType: props.hookType,
-    routeId: props.routeId,
-    routePath: props.routePath,
+    ...(props.routeId === undefined ? {} : { routeId: props.routeId }),
+    ...(props.routePath === undefined ? {} : { routePath: props.routePath }),
     hookId: localForm.value?.id ?? localForm.value?._id,
     method: Array.isArray(localForm.value?.methods) ? localForm.value.methods[0] : undefined,
-    availableMethods: props.allowedMethods,
+    ...(props.allowedMethods === undefined ? {} : { availableMethods: props.allowedMethods }),
   }),
 }));
 

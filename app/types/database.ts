@@ -153,12 +153,10 @@ export interface ApiTableListResponse {
   };
 }
 
-export interface TableDefinitionField {
+interface TableDefinitionFieldMetadata {
   name?: string;
   label?: string;
-  fieldType: 'column' | 'relation';
   id?: number;
-  type?: ColumnType | RelationType;
   defaultValue?: any;
   description?: string | null;
   isGenerated?: boolean;
@@ -194,6 +192,18 @@ export interface TableDefinitionField {
     update?: boolean;
   };
 }
+
+export interface TableDefinitionColumn extends TableDefinitionFieldMetadata {
+  fieldType: 'column';
+  type?: ColumnType;
+}
+
+export interface TableDefinitionRelation extends TableDefinitionFieldMetadata {
+  fieldType: 'relation';
+  type?: RelationType;
+}
+
+export type TableDefinitionField = TableDefinitionColumn | TableDefinitionRelation;
 
 export interface TableSchema {
   id: number;

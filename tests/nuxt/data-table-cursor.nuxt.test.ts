@@ -1,5 +1,6 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises } from '@vue/test-utils'
+import { useRouter } from '#app'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { UPagination, USelect } from '#components'
 import DataTable from '~/components/data-table/DataTable.vue'
@@ -9,6 +10,7 @@ const mounted: { unmount: () => void }[] = []
 afterEach(() => { mounted.splice(0).forEach(wrapper => wrapper.unmount()) })
 
 const props = {
+  headerName: 'Records',
   data: [{ id: 1, name: 'First' }],
   columns: [{ accessorKey: 'name', header: 'Name' }],
   paginationConfig: { mode: 'cursor' as const, itemsPerPage: 10, showPageSize: true, hasNextPage: true },
@@ -45,15 +47,23 @@ describe('DataTable cursor footer', () => {
   })
 
   it('keeps numbered pagination on the right and forwards page changes', async () => {
-    const wrapper = await mountSuspended(DataTable, { props: {
-      ...props,
-      paginationConfig: { total: 105, itemsPerPage: 10, showPageSize: true },
-    } })
+    const wrapper = await mountSuspended(DataTable, {
+      route: '/data',
+      props: {
+        ...props,
+        paginationConfig: { total: 105, itemsPerPage: 10, showPageSize: true },
+      },
+    })
     mounted.push(wrapper)
     expect(wrapper.get('[aria-label="Table pagination"]').classes()).toContain('md:grid-cols-[minmax(0,1fr)_auto_minmax(0,max-content)]')
     const pager = wrapper.findComponent(UPagination)
-    await pager.get('[aria-label="Next Page"]').trigger('click')
+    await pager.get('button[data-slot="next"]').trigger('click')
+    await flushPromises()
     expect(wrapper.emitted('update:page')?.[0]).toEqual([2])
+    await expect.poll(() => useRouter().currentRoute.value.query.page).toBe('2')
+    wrapper.findComponent(USelect).vm.$emit('update:modelValue', 20)
+    await flushPromises()
+    await expect.poll(() => useRouter().currentRoute.value.query.page).toBeUndefined()
     expect(wrapper.findAll('button').some(button => button.text() === 'Load more')).toBe(false)
   })
 

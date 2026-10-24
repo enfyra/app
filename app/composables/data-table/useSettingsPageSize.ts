@@ -7,12 +7,12 @@ export function useSettingsPageSize(key: string, fallback = 10) {
   if (import.meta.client) {
     try {
       const saved = Number(localStorage.getItem(storageKey))
-      if (PAGE_SIZES.includes(saved as typeof PAGE_SIZES[number])) size.value = saved
+      if (PAGE_SIZES.some(value => value === saved)) size.value = saved
     } catch {}
   }
 
   watch(size, value => {
-    if (!import.meta.client || !PAGE_SIZES.includes(value as typeof PAGE_SIZES[number])) return
+    if (!import.meta.client || !PAGE_SIZES.some(size => size === value)) return
     try { localStorage.setItem(storageKey, String(value)) } catch {}
   })
 

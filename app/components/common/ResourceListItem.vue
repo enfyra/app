@@ -19,7 +19,7 @@
   >
     <NuxtLink
       v-if="isNavigable && !isLoading"
-      :to="to"
+      v-bind="to === undefined ? {} : { to }"
       :aria-label="`Open ${title}`"
       class="absolute inset-0 z-0 rounded-[inherit] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--theme-focus-ring-strong)]"
     />
@@ -129,11 +129,13 @@
         <UButton
           v-for="action in normalizedActions"
           :key="action.label"
-          v-bind="resolveProps(action.props)"
-          :to="action.to"
+          v-bind="{
+            ...resolveProps(action.props),
+            ...(action.to === undefined ? {} : { to: action.to }),
+            ...(action.loading === undefined ? {} : { loading: action.loading }),
+            ...((action.disabled || action.loading) === undefined ? {} : { disabled: action.disabled || action.loading }),
+          }"
           :loading-auto="true"
-          :loading="action.loading"
-          :disabled="action.disabled || action.loading"
           @click="handleActionClick(action, $event)"
         >
           <span class="hidden sm:inline">{{ action.label }}</span>
@@ -167,23 +169,13 @@ const props = withDefaults(defineProps<{
   size?: ResourceListSize;
   onClick?: () => void;
 }>(), {
-  description: undefined,
-  icon: undefined,
-  avatar: undefined,
   avatarClass: "",
   iconColor: "primary",
-  stats: undefined,
-  actions: undefined,
-  methods: undefined,
-  headerActions: undefined,
-  topBadge: undefined,
   active: false,
   clickable: true,
-  to: undefined,
   itemClass: "",
   loading: false,
   size: "md",
-  onClick: undefined,
 });
 
 const emit = defineEmits<{

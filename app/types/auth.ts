@@ -17,8 +17,18 @@ export interface RoutePermission {
   id: string;
   isEnabled: boolean;
   allowedUsers?: { id: string }[];
-  methods: { id: string; name?: string; method?: string }[];
-  route: { id: string; path: string };
+  role?: { id?: string; _id?: string } | null;
+  routeMethodConfigs: { id?: string; available: boolean; method: string | { id?: string; name?: string } }[];
+  route: { id: string; path: string; isEnabled?: boolean };
+}
+
+export interface LoginResponse {
+  data?: User[];
+  redirect?: string;
+}
+
+export interface UserResponse {
+  data?: User[];
 }
 
 export interface LoginPayload {

@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const apiUrl = (config.public as any).apiUrl;
+  const apiUrl = config.public.apiUrl;
   if (!apiUrl) {
     throw createError({
       statusCode: 500,

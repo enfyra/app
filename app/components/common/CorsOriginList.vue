@@ -82,6 +82,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellCorsOriginRecord, ShellListResponse } from '~/types/shell-api';
+
 interface CorsOrigin {
   id: string | number;
   value: string;
@@ -100,7 +102,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchOrigins,
-} = useApi(() => "/enfyra_cors_origin", {
+} = useApi<ShellListResponse<ShellCorsOriginRecord>>(() => "/enfyra_cors_origin", {
   query: {
     fields: "id,value,isEnabled",
     sort: "value",
@@ -111,7 +113,7 @@ const {
 
 const origins = computed<CorsOrigin[]>(() => {
   const rows = apiData.value?.data || [];
-  return rows.map((r: any) => ({
+  return rows.map(r => ({
     id: getId(r),
     value: r.value,
     isEnabled: r.isEnabled !== false,

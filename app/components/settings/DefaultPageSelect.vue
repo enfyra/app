@@ -33,7 +33,7 @@ onMounted(() => { void reload(); });
 <template>
   <div class="space-y-2">
     <div class="flex items-center gap-2">
-      <USelectMenu v-model="selected" :items="options" value-key="value" :loading="loading" :disabled="disabled || loading" placeholder="No default page" class="w-full" />
+      <USelectMenu v-bind="selected === undefined ? {} : { modelValue: selected }" @update:model-value="selected = $event" :items="options" value-key="value" :loading="loading" :disabled="disabled || loading" placeholder="No default page" class="w-full" />
       <UButton v-if="selected" icon="lucide:x" color="neutral" variant="ghost" :disabled="disabled" aria-label="Clear default page" @click="selected = undefined" />
     </div>
     <p class="text-sm text-muted">Opened after login when no redirect is provided. Choose an enabled menu with a page path. The selected menu cannot be deleted until this setting is changed.</p>

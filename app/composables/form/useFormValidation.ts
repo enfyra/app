@@ -9,9 +9,10 @@ export function useFormValidation(tableName: string) {
   ): Promise<boolean> {
     const result = validate(record);
 
-    if (!result.isValid) {
-      errors.value = result.errors;
-      notify.error("Missing information", "Please fill in all required fields.");
+    const draftErrors = formEditorRegistry.value?.getDraftErrors?.() ?? {};
+    if (!result.isValid || Object.keys(draftErrors).length > 0) {
+      errors.value = { ...result.errors, ...draftErrors };
+      notify.error("Invalid information", "Please correct the highlighted fields before saving.");
       return false;
     }
 

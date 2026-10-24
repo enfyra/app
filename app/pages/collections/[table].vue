@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { isSchemaMutationPreviewResponse } from '~/utils/schema/schema-confirm';
+import { getRedundantIndexes, schemaConstraintsMatch } from '~/utils/schema/constraints';
+import type { FormApiListResponse, FormCollectionRecord, FormSchemaMutationResponse } from '~/types/form-api';
 
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -63,7 +65,7 @@ const {
   data: tableData,
   pending: loading,
   execute: fetchTableData,
-} = useApi(() => "/enfyra_table", {
+} = useApi<FormApiListResponse<FormCollectionRecord>>(() => "/enfyra_table", {
   query: async () => ({
     fields: [
       await getIncludeFields(),
@@ -89,9 +91,16 @@ const {
     deep: {
       columns: {
         limit: 0,
+        deep: {
+          rules: { limit: 0 },
+          fieldPermissions: { limit: 0, deep: { allowedUsers: { limit: 0 } } },
+        },
       },
       relations: {
         limit: 0,
+        deep: {
+          fieldPermissions: { limit: 0, deep: { allowedUsers: { limit: 0 } } },
+        },
       },
     },
   }),
@@ -107,7 +116,7 @@ const {
   pending: saving,
   execute: executePatchTable,
   error: updateError,
-} = useApi(() => `/enfyra_table`, {
+} = useApi<FormSchemaMutationResponse>(() => `/enfyra_table`, {
   method: "patch",
   errorContext: "Update Table",
 });
@@ -116,12 +125,21 @@ const {
   pending: deleting,
   execute: executeDeleteTable,
   error: deleteError,
-} = useApi(() => `/enfyra_table`, {
+} = useApi<FormSchemaMutationResponse>(() => `/enfyra_table`, {
   method: "delete",
   errorContext: "Delete Table",
 });
 
 registerHeaderActions([
+  useReloadAction({
+    reload: async () => {
+      await initializeForm();
+      if (activeTab.value === 'schema') formChanges.update(table.value);
+    },
+    loading: computed(() => schemaLoading.value || loading.value),
+    show: computed(() => activeTab.value === 'schema'),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
   {
     id: "reset-table",
     label: "Reset",
@@ -250,6 +268,10 @@ async function initializeForm() {
 }
 
 async function save() {
+  if (getRedundantIndexes(table.value || {}).length > 0) {
+    notify.error('Redundant index', 'Remove indexes already covered by the leading fields of a unique constraint before saving.');
+    return;
+  }
   const isChangingToSingleRecord =
     formChanges.originalData.value?.isSingleRecord === false &&
     table.value?.isSingleRecord === true;
@@ -283,12 +305,13 @@ async function patchTable() {
 }
 
 async function afterPatchSuccess(submittedTable: any = null) {
-  const patchResponse = patchTableData.value?.data?.[0];
-  await fetchTableData();
-  const refreshedTable = tableData.value?.data?.[0];
-  table.value = refreshedTable && typeof refreshedTable === "object"
-    ? refreshedTable
-    : submittedTable || patchResponse || table.value;
+  const response = await fetchTableData();
+  const refreshedTable = response?.data?.[0];
+  if (!refreshedTable || !schemaConstraintsMatch(submittedTable || table.value, refreshedTable)) {
+    notify.error('Save not verified', 'The saved constraints do not match your changes. Your draft has been kept.');
+    return;
+  }
+  table.value = refreshedTable;
 
   notify.success("Success", "Table structure updated!");
 
@@ -330,7 +353,7 @@ async function executeDelete() {
   if (deleteError.value) return;
 
   if (isSchemaMutationPreviewResponse(deletionResponse)) {
-    schemaConfirmDetails.value = deletionResponse.data?.[0];
+    schemaConfirmDetails.value = deletionResponse?.data?.[0];
     schemaConfirmOperation.value = 'delete';
     schemaConfirmModalOpen.value = true;
     return;
@@ -446,7 +469,7 @@ async function onSchemaConfirmSubmit() {
       });
       if (deleteError.value) return;
       if (isSchemaMutationPreviewResponse(confirmationResponse)) {
-        schemaConfirmDetails.value = confirmationResponse.data?.[0];
+        schemaConfirmDetails.value = confirmationResponse?.data?.[0];
         notify.error('Confirmation not applied', 'The schema deletion still requires confirmation.');
         return;
       }
@@ -459,7 +482,7 @@ async function onSchemaConfirmSubmit() {
       return;
     }
     if (isSchemaMutationPreviewResponse(confirmationResponse)) {
-      const preview = (confirmationResponse as any)?.data?.[0];
+      const preview = confirmationResponse?.data?.[0];
       schemaConfirmDetails.value = preview;
       notify.error('Confirmation not applied', 'The schema mutation still requires confirmation.');
       return;
@@ -839,6 +862,7 @@ onMounted(async () => {
             v-if="table"
             :table-id="getId(table)"
             :table-name="String(table.name)"
+            :active="activeTab === 'graphql'"
           />
         </template>
 
@@ -846,6 +870,7 @@ onMounted(async () => {
           <div class="collection-route-panel">
             <RouteEditorPanel
               :embedded="true"
+              :active="activeTab === 'routes'"
               :table-name="String(route.params.table ?? '')"
               :external-api-test="showRouteApiTest"
               @close-api-test="showRouteApiTest = false"
