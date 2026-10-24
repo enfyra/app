@@ -128,6 +128,10 @@
     --control-disabled-border: var(--md-outline-variant);
     --control-disabled-text: var(--text-disabled);
 
+    --switch-unchecked-bg: color-mix(in srgb, var(--md-outline) 45%, var(--block-high));
+    --switch-unchecked-thumb: var(--block-base);
+    --switch-unchecked-icon: var(--md-on-surface-variant);
+
     --action-primary-bg: var(--md-primary);
     --action-primary-bg-hover: color-mix(in srgb, var(--md-primary) 82%, var(--md-on-primary-container));
     --action-primary-bg-active: color-mix(in srgb, var(--md-primary) 70%, var(--md-on-primary-container));
@@ -531,6 +535,9 @@
   --action-neutral-outline-bg: var(--md-surface-container-high);
   --action-neutral-outline-bg-hover: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface-container-high));
   --action-neutral-outline-bg-active: color-mix(in srgb, var(--md-primary) 16%, var(--md-surface-container-high));
+  --switch-unchecked-bg: color-mix(in srgb, var(--md-outline) 42%, var(--block-high));
+  --switch-unchecked-thumb: var(--md-on-surface);
+  --switch-unchecked-icon: var(--block-base);
 
   /* Dark separates canvas, frame, and cards by lightness while staying clear of
      near-black. Accent stays on actions and selected states. */

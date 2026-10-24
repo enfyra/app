@@ -582,15 +582,15 @@ export default defineAppConfig({
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)] focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "data-[state=checked]:bg-[var(--action-primary-bg)]",
-          "data-[state=unchecked]:bg-[var(--md-surface-container-high)]",
+          "data-[state=unchecked]:bg-[var(--switch-unchecked-bg)]",
         ].join(" "),
         thumb: [
           "pointer-events-none flex h-5 w-5 items-center justify-center rounded-full shadow-lg ring-0 transition-transform duration-[var(--duration-base)] ease-[var(--ease-standard)]",
-          "bg-[var(--md-outline)] group-data-[state=checked]:bg-[var(--md-on-primary)]",
+          "bg-[var(--switch-unchecked-thumb)] group-data-[state=checked]:bg-[var(--md-on-primary)]",
           "data-[state=checked]:translate-x-5",
           "data-[state=unchecked]:translate-x-0",
         ].join(" "),
-        icon: "group-data-[state=unchecked]:text-white",
+        icon: "group-data-[state=unchecked]:text-[var(--switch-unchecked-icon)]",
       },
     },
     checkbox: {
