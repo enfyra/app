@@ -169,19 +169,21 @@ function handleDragEnd() {
           <div
             v-for="row in 4"
             :key="row"
-            class="menu-visual-skeleton-item"
+            class="menu-visual-skeleton-node"
           >
-            <div class="flex min-w-0 flex-1 items-center gap-3">
-              <span class="h-4 w-4 shrink-0 rounded skeleton-inline skeleton-pulse-slow" />
-              <span class="h-9 w-9 shrink-0 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
-              <span class="min-w-0 flex-1 space-y-2">
-                <span class="block h-4 rounded skeleton-gradient skeleton-pulse-slow" :class="row % 2 ? 'w-36' : 'w-48'" />
-                <span class="block h-3 w-56 max-w-full rounded skeleton-inline skeleton-pulse-slow" />
-              </span>
-            </div>
-            <div class="hidden items-center gap-2 md:flex">
-              <span class="h-6 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
-              <span class="h-8 w-8 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
+            <div class="menu-visual-skeleton-item">
+              <div class="flex min-w-0 flex-1 items-center gap-3">
+                <span class="h-4 w-4 shrink-0 rounded skeleton-inline skeleton-pulse-slow" />
+                <span class="h-9 w-9 shrink-0 rounded-[var(--radius-control)] skeleton-gradient skeleton-pulse-slow" />
+                <span class="min-w-0 flex-1 space-y-2">
+                  <span class="block h-4 rounded skeleton-gradient skeleton-pulse-slow" :class="row % 2 ? 'w-36' : 'w-48'" />
+                  <span class="block h-3 w-56 max-w-full rounded skeleton-inline skeleton-pulse-slow" />
+                </span>
+              </div>
+              <div class="hidden items-center gap-2 md:flex">
+                <span class="h-6 w-16 rounded-[var(--radius-pill)] skeleton-inline skeleton-pulse-slow" />
+                <span class="h-8 w-8 rounded-[var(--radius-subcontrol)] skeleton-inline skeleton-pulse-slow" />
+              </div>
             </div>
 
             <div
@@ -321,14 +323,17 @@ function handleDragEnd() {
   gap: 8px;
 }
 
-.menu-visual-skeleton-item {
+.menu-visual-skeleton-node {
   display: grid;
-  gap: 10px;
-  padding: 12px;
+  gap: 8px;
 }
 
-.menu-visual-skeleton-item > :first-child {
+.menu-visual-skeleton-item {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
 }
 
 .menu-visual-skeleton-children {
