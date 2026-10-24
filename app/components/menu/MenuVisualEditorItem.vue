@@ -790,13 +790,6 @@ function handleDragEnd() {
   padding-bottom: 8px;
 }
 
-.menu-editor-children.is-dragging-target {
-  border-radius: var(--radius-panel);
-  border-color: color-mix(in srgb, var(--md-primary) 20%, transparent);
-  background: color-mix(in srgb, var(--md-primary) 3%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 38%, transparent);
-}
-
 .menu-child-drop-placeholder {
   position: absolute;
   inset: 6px 0 8px 40px;
@@ -804,14 +797,13 @@ function handleDragEnd() {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--state-primary-soft-text);
-  font-weight: 750;
+  color: var(--text-tertiary);
+  font-weight: 600;
   min-height: 36px;
   border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--md-primary) 6%, var(--md-surface));
+  background: var(--surface-muted);
   padding: 0 12px;
   font-size: 13px;
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 44%, transparent);
 }
 
 .menu-editor-children-wrap {
@@ -832,30 +824,6 @@ function handleDragEnd() {
 
 .drop-zone {
   position: relative;
-}
-
-.drop-zone:has(.sortable-ghost) {
-  border-color: var(--md-primary);
-  background-color: color-mix(in srgb, var(--md-primary) 8%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-primary) 30%, transparent);
-}
-
-.menu-editor-node :deep(.sortable-ghost) {
-  min-height: 52px;
-  opacity: 1;
-  border-radius: var(--radius-panel);
-  background: color-mix(in srgb, var(--md-primary) 10%, var(--md-surface));
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--md-primary) 44%, transparent);
-}
-
-.menu-editor-node :deep(.sortable-chosen) {
-  opacity: 1;
-}
-
-.menu-editor-node :deep(.sortable-drag) {
-  opacity: 0.94;
-  border-radius: var(--radius-panel);
-  box-shadow: var(--shadow-md);
 }
 
 @media (pointer: coarse) {

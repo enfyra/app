@@ -220,7 +220,7 @@ function handleDragEnd() {
     <div v-else class="space-y-3">
       <div
         v-if="canMoveToRoot"
-        class="rounded-[var(--radius-panel)] border border-[var(--badge-primary-soft-border)] bg-[var(--badge-primary-soft-bg)] p-2 shadow-[inset_2px_0_0_var(--badge-primary-soft-border)]"
+        class="rounded-[var(--radius-panel)] border border-[var(--badge-primary-soft-border)] bg-[var(--badge-primary-soft-bg)] p-2"
       >
         <UButton
           size="sm"
@@ -310,37 +310,25 @@ function handleDragEnd() {
   padding: 9px;
 }
 
-.ghost-item {
-  opacity: 0.5;
-  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--brand-500) 44%, transparent);
+.menu-visual-editor :deep(.ghost-item > .menu-editor-row),
+.menu-visual-editor :deep(.chosen-item > .menu-editor-row),
+.menu-visual-editor :deep(.dragging-item > .menu-editor-row) {
+  background: var(--surface-muted);
 }
 
-.chosen-item {
-  opacity: 0.8;
+.menu-visual-editor :deep(.ghost-item > .menu-editor-row.is-child),
+.menu-visual-editor :deep(.chosen-item > .menu-editor-row.is-child),
+.menu-visual-editor :deep(.dragging-item > .menu-editor-row.is-child) {
+  background: color-mix(in srgb, var(--text-primary) 5%, var(--surface-muted));
 }
 
-.dragging-item {
-  opacity: 0.5;
+.menu-visual-editor :deep(.ghost-item) {
+  opacity: 0.6;
 }
 
 @media (max-width: 1023px) {
   .menu-root-drop-zone {
     gap: 4px;
   }
-}
-
-.menu-visual-editor :deep(.sortable-ghost) {
-  opacity: 0.5;
-  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--brand-500) 44%, transparent);
-}
-
-.menu-visual-editor :deep(.sortable-chosen) {
-  opacity: 0.8;
-}
-
-.menu-visual-editor :deep(.sortable-drag) {
-  opacity: 0.5;
 }
 </style>

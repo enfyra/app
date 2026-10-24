@@ -322,6 +322,79 @@ console.log(isActive, termSlugs.has('cloud-terms'), total, label, loaded, format
 
     expect(diagnostics).toEqual([])
   })
+
+  it('accepts Object.fromEntries, useNotify, full Vue/Nuxt composables, DOM globals, and catch error access in Vue script lang ts', async () => {
+    const source = `<script setup lang="ts">
+import { nextTick, onBeforeUnmount, watchEffect, type Ref } from 'vue'
+
+function decode(value: any): any {
+  if (Array.isArray(value)) return value.map(decode)
+  if (!value || typeof value !== 'object') return value
+  if (value.format === 'columnar-v1' && Array.isArray(value.columns) && Array.isArray(value.rows)) {
+    return value.rows.map((row: any[]) => Object.fromEntries(value.columns.map((column: string, index: number) => [column, decode(row[index])])))
+  }
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, decode(item)]))
+}
+
+const notify = useNotify()
+const menuRegistry = useMenuRegistry()
+const menuNotifications = useMenuNotificationRegistry()
+const menuApi = useMenuApi()
+const mounted = useMounted()
+const colorMode = useColorMode()
+const database = useDatabase()
+const routes = useRoutes()
+const highlight = useHighlight()
+const runtimeConfig = useRuntimeConfig()
+const items = ref([])
+const selected: Ref<string | null> = ref(null)
+const splitLines = (raw: string) => raw.split(',').flatMap((part) => part.split(String.fromCharCode(10))).map((item) => item.trim()).filter(Boolean)
+
+watchEffect(() => {
+  if (mounted.value) {
+    window.localStorage.setItem('theme', colorMode.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  notify.clear()
+})
+
+try {
+  await nextTick()
+  await navigator.clipboard.writeText(JSON.stringify({ items: items.value, selected: selected.value }))
+  await notify.success('Copied', splitLines('a,b').join(', '))
+} catch (error) {
+  const message = error?.data?.message || error?.message || String(error)
+  await notify.error('Failed', message)
+}
+
+console.log(decode, menuRegistry, menuNotifications, menuApi, database, routes, highlight, runtimeConfig)
+</script>`
+    const diagnostics = await lintVueSfcScripts(source)
+
+    expect(diagnostics).toEqual([])
+  })
+
+  it('accepts locked repository mutations, batch repository operations, and stream lifecycle helpers in server scripts', async () => {
+    const diagnostics = await lintEnfyraTypeScript(`
+return await @TRANSACTION.run(async () => {
+  const locked = await @REPOS.main.findLocked({ id: @PARAMS.id, fields: ['id'] })
+  const exists = await #ai_model_token_discount.exists({ id: { _eq: @PARAMS.id } })
+  await #ai_user_model_token_discount.createMany({ data: [{ id: 1 }] })
+  await #ai_user_model_token_discount.updateMany({ filter: { id: { _eq: 1 } }, data: { remainingTokens: 0 } })
+  await #ai_user_model_token_discount.deleteMany({ filter: { id: { _eq: 2 } } })
+  const updated = await #ai_user_model_token_discount.updateLocked({
+    id: @PARAMS.id,
+    fields: ['id'],
+    data: (current: any) => ({ remainingTokens: Number(current?.remainingTokens || 0) }),
+  })
+  return { locked, exists, updated }
+})
+`)
+
+    expect(diagnostics).toEqual([])
+  })
 })
 
 describe('validateEnfyraRequiredReturnScript', () => {
