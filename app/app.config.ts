@@ -471,8 +471,12 @@ export default defineAppConfig({
           "data-highlighted:not-data-disabled:before:!bg-[var(--state-primary-soft-bg)]",
         ].join(" "),
         tagsItem:
-          "!w-auto !min-h-0 !border-0 !shadow-none !ring-0 !rounded-[var(--radius-subcontrol)] !bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] !px-2 !py-0.5 !text-xs !font-medium",
-        tagsInput: "min-w-24 !w-auto !min-h-0 !border-0 !bg-transparent !shadow-none !p-0 !ring-0",
+          "!inline-flex !h-6 !w-auto !min-h-0 !items-center !gap-1.5 !border-0 !shadow-none !ring-0 !rounded-[var(--radius-subcontrol)] !bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] !pl-2 !pr-1 !py-0 !text-xs !leading-none !font-medium",
+        tagsItemText: "inline-flex items-center gap-1 truncate leading-none",
+        tagsItemDelete:
+          "inline-flex size-4 shrink-0 items-center justify-center rounded-[var(--radius-xs)] !bg-[var(--action-danger-bg)] !text-[var(--action-danger-text)] transition-colors hover:!bg-[var(--action-danger-bg-hover)] disabled:pointer-events-none",
+        tagsItemDeleteIcon: "!size-3 shrink-0",
+        tagsInput: "min-w-24 !h-6 !w-auto !min-h-0 !border-0 !bg-transparent !shadow-none !p-0 !ring-0 !text-sm !leading-6",
       },
       variants: {
         multiple: {

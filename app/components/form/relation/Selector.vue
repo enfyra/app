@@ -23,7 +23,7 @@ const emit = defineEmits<{
 }>();
 const { getId, getIdFieldName } = useDatabase();
 
-const LIST_LIMIT = 10;
+const pageLimit = useSettingsPageSize('relation-selector');
 const SELECTED_PREVIEW_LIMIT = 5;
 const RELATION_REQUEST_TIMEOUT_MS = 15_000;
 
@@ -32,15 +32,22 @@ const isDrawerOpen = computed({
   set: (value) => emit("update:open", value),
 });
 
+interface RelationPageCursor {
+  selectedOffset: number;
+  normalPointer: RelationId | null;
+}
+
 const draftSelected = ref<RelationId[]>(normalizeRelationIds(props.selectedIds));
 const confirmedSelected = ref<RelationId[]>(normalizeRelationIds(props.selectedIds));
+const pinnedSelectedIds = ref<RelationId[]>(normalizeRelationIds(props.selectedIds));
 const showAllSelected = ref(false);
 const normalRecords = ref<RelationRecord[]>([]);
 const normalLoading = ref(false);
 const recordTotal = ref<number>();
 const showFilterDrawer = ref(false);
-const normalPointer = ref<RelationId | null>(null);
-const pointerHistory = ref<(RelationId | null)[]>([]);
+const currentCursor = ref<RelationPageCursor>({ selectedOffset: 0, normalPointer: null });
+const nextCursor = ref<RelationPageCursor | null>(null);
+const cursorHistory = ref<RelationPageCursor[]>([]);
 const hasMoreNormal = ref(true);
 const requestSequence = ref(0);
 const loadError = ref<string | null>(null);
@@ -87,19 +94,19 @@ const hasActiveFilter = computed(() => hasActiveFilters(currentFilter.value));
 
 const paginationConfig = computed<DataTablePaginationConfig>(() => ({
   mode: 'cursor',
-  itemsPerPage: LIST_LIMIT,
+  itemsPerPage: pageLimit.value,
   ...(recordTotal.value === undefined ? {} : { total: recordTotal.value }),
   loading: loading.value,
   hasNextPage: hasMoreNormal.value,
-  showPageSize: false,
+  showPageSize: true,
   floating: false,
 }));
 
 const cursorPage = computed({
-  get: () => pointerHistory.value.length + 1,
+  get: () => cursorHistory.value.length + 1,
   set: (target: number) => {
-    if (target > pointerHistory.value.length + 1) void loadMore();
-    else if (target < pointerHistory.value.length + 1) void loadPrevious();
+    if (target > cursorHistory.value.length + 1) void loadMore();
+    else if (target < cursorHistory.value.length + 1) void loadPrevious();
   },
 });
 
@@ -107,12 +114,26 @@ function getBaseFilter(): Record<string, unknown> | null {
   return hasActiveFilters(currentFilter.value) ? buildQuery(currentFilter.value) : null;
 }
 
-function getNormalFilter(pointer = normalPointer.value): Record<string, unknown> {
-  const baseFilter = getBaseFilter();
-  if (pointer === null || pointer === undefined) return baseFilter ?? {};
-  const pointerCondition = { [idField.value]: { _lt: pointer } };
-  if (!baseFilter || Object.keys(baseFilter).length === 0) return pointerCondition;
-  return { _and: [baseFilter, pointerCondition] };
+function combineFilters(filters: (Record<string, unknown> | null | undefined)[]): Record<string, unknown> {
+  const active = filters.filter((filter): filter is Record<string, unknown> => !!filter && Object.keys(filter).length > 0);
+  if (active.length === 0) return {};
+  if (active.length === 1) return active[0]!;
+  return { _and: active };
+}
+
+function getSelectedFilter(ids: RelationId[]): Record<string, unknown> {
+  return combineFilters([
+    getBaseFilter(),
+    { [idField.value]: { _in: ids } },
+  ]);
+}
+
+function getNormalFilter(pointer = currentCursor.value.normalPointer, excludedIds = pinnedSelectedIds.value): Record<string, unknown> {
+  return combineFilters([
+    getBaseFilter(),
+    excludedIds.length > 0 ? { [idField.value]: { _not_in: excludedIds } } : null,
+    pointer !== null && pointer !== undefined ? { [idField.value]: { _lt: pointer } } : null,
+  ]);
 }
 
 async function fetchRecords(query: Record<string, unknown>, signal: AbortSignal) {
@@ -138,13 +159,16 @@ async function refreshRecords({ reset = false } = {}) {
     return;
   }
   if (reset) {
-    normalPointer.value = null;
-    pointerHistory.value = [];
+    pinnedSelectedIds.value = [...draftSelectedIds.value];
+    currentCursor.value = { selectedOffset: 0, normalPointer: null };
+    nextCursor.value = null;
+    cursorHistory.value = [];
     normalRecords.value = [];
     recordTotal.value = undefined;
     hasMoreNormal.value = true;
   }
 
+  const cursor = reset ? { selectedOffset: 0, normalPointer: null } : currentCursor.value;
   const sequence = ++requestSequence.value;
   cancelActiveRequest();
   const controller = new AbortController();
@@ -161,23 +185,70 @@ async function refreshRecords({ reset = false } = {}) {
     const fields = await getColumnFields();
     if (sequence !== requestSequence.value) return;
 
-    const includeTotal = normalPointer.value === null || normalPointer.value === undefined;
+    const pageSize = pageLimit.value;
+    const allSelectedIds = pinnedSelectedIds.value;
+    const includeTotal = cursor.selectedOffset === 0 && (cursor.normalPointer === null || cursor.normalPointer === undefined);
+
+    let selectedRows: RelationRecord[] = [];
+    let nextSelectedOffset = cursor.selectedOffset;
+    if (nextSelectedOffset < allSelectedIds.length) {
+      const selectedSlice = allSelectedIds.slice(nextSelectedOffset, nextSelectedOffset + pageSize);
+      nextSelectedOffset += selectedSlice.length;
+      const selectedResponse = await fetchRecords({
+        fields,
+        filter: getSelectedFilter(selectedSlice),
+        sort: `-${idField.value}`,
+        limit: selectedSlice.length,
+      }, controller.signal);
+      if (sequence !== requestSequence.value) return;
+      const byId = new Map<string, RelationRecord>();
+      for (const row of selectedResponse?.data || []) {
+        const rowId = getRelationId(row, getId);
+        if (rowId !== null) byId.set(String(rowId), row);
+      }
+      selectedRows = selectedSlice
+        .map((id) => byId.get(String(id)))
+        .filter((row): row is RelationRecord => row !== undefined);
+    }
+
+    const remainingSlots = Math.max(0, pageSize - selectedRows.length);
+    if (remainingSlots === 0 && nextSelectedOffset < allSelectedIds.length) {
+      normalRecords.value = selectedRows;
+      hasMoreNormal.value = true;
+      nextCursor.value = { selectedOffset: nextSelectedOffset, normalPointer: null };
+      return;
+    }
+
     const normalQuery = {
       fields,
       ...(includeTotal ? { meta: 'filterCount' } : {}),
-      filter: getNormalFilter(reset ? null : normalPointer.value),
+      filter: getNormalFilter(cursor.normalPointer, allSelectedIds),
       sort: `-${idField.value}`,
-      limit: LIST_LIMIT + 1,
+      limit: remainingSlots + 1,
     };
     const normalResponse = await fetchRecords(normalQuery, controller.signal);
     if (sequence !== requestSequence.value) return;
 
     const normalData = normalResponse?.data || [];
-    normalRecords.value = normalData.slice(0, LIST_LIMIT);
-    hasMoreNormal.value = normalData.length > LIST_LIMIT;
+    const unselectedRows = normalData.slice(0, remainingSlots);
+    const hasNext = normalData.length > remainingSlots;
+    normalRecords.value = [...selectedRows, ...unselectedRows];
+    hasMoreNormal.value = hasNext;
+    if (hasNext) {
+      const lastUnselected = unselectedRows[unselectedRows.length - 1];
+      const nextPointer = lastUnselected ? getRelationId(lastUnselected, getId) : cursor.normalPointer;
+      nextCursor.value = {
+        selectedOffset: allSelectedIds.length,
+        normalPointer: nextPointer ?? null,
+      };
+    } else {
+      nextCursor.value = null;
+    }
     if (includeTotal) {
       const total = normalResponse?.meta?.filterCount;
-      recordTotal.value = typeof total === 'number' && Number.isFinite(total) && total >= 0 ? total : undefined;
+      recordTotal.value = typeof total === 'number' && Number.isFinite(total) && total >= 0
+        ? total + selectedRows.length
+        : undefined;
     }
   } catch {
     if (sequence !== requestSequence.value) return;
@@ -201,25 +272,31 @@ async function refreshRecords({ reset = false } = {}) {
 }
 
 async function loadMore() {
-  if (!canLoadMore.value || normalRecords.value.length === 0) return;
-  const nextPointer = getRelationId(normalRecords.value[normalRecords.value.length - 1], getId);
-  if (nextPointer === null || nextPointer === undefined) return;
-
-  pointerHistory.value = [...pointerHistory.value, normalPointer.value];
-  normalPointer.value = nextPointer;
+  if (!canLoadMore.value || !nextCursor.value) return;
+  cursorHistory.value = [...cursorHistory.value, currentCursor.value];
+  currentCursor.value = nextCursor.value;
   await refreshRecords();
 }
 
 async function loadPrevious() {
-  if (pointerHistory.value.length === 0 || loading.value) return;
-  normalPointer.value = pointerHistory.value[pointerHistory.value.length - 1] ?? null;
-  pointerHistory.value = pointerHistory.value.slice(0, -1);
+  if (cursorHistory.value.length === 0 || loading.value) return;
+  currentCursor.value = cursorHistory.value[cursorHistory.value.length - 1]!;
+  cursorHistory.value = cursorHistory.value.slice(0, -1);
   await refreshRecords();
 }
 
 function removeSelection(id: RelationId) {
   if (props.disabled) return;
   draftSelected.value = draftSelectedIds.value.filter((selectedId) => String(selectedId) !== String(id));
+}
+
+function updateDraftSelection(items: unknown[]) {
+  const nextIds = normalizeRelationIds(items);
+  const nextSet = new Set(nextIds.map(String));
+  const retained = draftSelectedIds.value.filter((id) => nextSet.has(String(id)));
+  const retainedSet = new Set(retained.map(String));
+  const added = nextIds.filter((id) => !retainedSet.has(String(id)));
+  draftSelected.value = [...retained, ...added];
 }
 
 function apply() {
@@ -320,6 +397,12 @@ function clearFilter() {
   void refreshRecords({ reset: true });
 }
 
+function handlePageSizeChange(size: number) {
+  if (size === pageLimit.value) return;
+  pageLimit.value = size;
+  void refreshRecords({ reset: true });
+}
+
 function showAllSelectedRecords() {
   showAllSelected.value = true;
 }
@@ -403,7 +486,8 @@ const { isMobile, isTablet } = useScreen();
           :pagination-config="paginationConfig"
           :reload="() => refreshRecords({ reset: true })"
           :reload-loading="loading"
-          @update:selected-row-ids="draftSelected = normalizeRelationIds($event)"
+          @page-size-change="handlePageSizeChange"
+          @update:selected-row-ids="updateDraftSelection"
         >
           <template #toolbar>
             <div v-if="hasActiveFilter" class="flex min-w-0 items-center gap-2">

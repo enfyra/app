@@ -158,7 +158,7 @@ function getIndexWarningType(groupIndex: number): 'duplicate' | 'redundant' | nu
               @update:model-value="updateGroupFields(group, $event)"
             >
               <template #tags-item-text="{ item, index }">
-                <span v-if="fields.length > 1" class="mr-1 font-mono text-[10px] opacity-60">{{ `${index + 1} ` }}</span>{{ item }}
+                <span v-if="fields.length > 1" class="inline-flex items-center tabular-nums text-[11px] leading-none opacity-65">{{ `${index + 1} ` }}</span><span class="truncate leading-none">{{ item }}</span>
               </template>
             </UInputMenu>
             <UButton

@@ -17,12 +17,13 @@ type SortMode = 'name' | 'recent';
 const { routes, routesLoading, ensureRoutesLoaded, loadRoutes } = useRoutes();
 const { checkPermissionCondition } = usePermissions();
 const { prefs, isPinned, togglePin, addRecent } = useDataCollectionPreferences();
+const route = useRoute();
 const router = useRouter();
 
 const searchQuery = ref('');
 const sortBy = ref<SortMode>('name');
 const initialLoading = ref(true);
-const page = ref(1);
+const page = ref(Math.max(1, Number(route.query.page) || 1));
 const pageSize = useSettingsPageSize('data-directory');
 const columns: ColumnDef<CollectionItem>[] = [
   { accessorKey: 'label', header: 'Collection', enableSorting: false, meta: { style: { th: { width: '28%' }, td: { width: '28%' } } } },
@@ -83,6 +84,7 @@ const visible = computed(() => {
 const pageRows = computed(() => visible.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
 watch([searchQuery, sortBy, pageSize], () => { page.value = 1; });
 watch(() => visible.value.length, total => {
+  if (isLoading.value) return;
   page.value = Math.min(page.value, Math.max(1, Math.ceil(total / pageSize.value)));
 });
 

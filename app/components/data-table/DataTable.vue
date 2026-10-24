@@ -45,6 +45,37 @@ const tableOptions = computed(() => {
 })
 const tableRef = useTemplateRef<DataTableInstance<TRow>>('tableRef')
 const page = defineModel<number>('page', { default: 1 })
+const route = useRoute()
+const router = useRouter()
+const isOffsetPagination = computed(() => Boolean(props.paginationConfig && props.paginationConfig.mode !== 'cursor'))
+
+watch(() => route?.query?.page, (queryPage, previousQueryPage) => {
+  if (!isOffsetPagination.value) return
+  if (queryPage === undefined && previousQueryPage === undefined) return
+  const nextPage = Math.max(1, Math.floor(Number(queryPage) || 1))
+  if (page.value !== nextPage) page.value = nextPage
+}, { immediate: true })
+
+watch(page, (nextPage) => {
+  if (!isOffsetPagination.value || !route) return
+  const normalizedPage = Math.max(1, Math.floor(Number(nextPage) || 1))
+  const currentQueryPage = Math.max(1, Math.floor(Number(route.query?.page) || 1))
+  if (normalizedPage === currentQueryPage && (normalizedPage > 1 || route.query?.page === undefined)) return
+  void router.replace({
+    query: {
+      ...route.query,
+      page: normalizedPage > 1 ? String(normalizedPage) : undefined,
+    },
+  })
+})
+
+function handlePageSizeChange(size: number) {
+  if (isOffsetPagination.value && page.value !== 1) {
+    page.value = 1
+  }
+  emit('page-size-change', size)
+}
+
 const tableScope = shallowRef<HTMLElement | null>(null)
 const sorting = defineModel<SortingState>('sorting', { default: () => [] })
 const columnVisibility = defineModel<VisibilityState>('columnVisibility', { default: () => ({}) })
@@ -309,7 +340,7 @@ defineExpose({
         v-model:page="page"
         :row-count="props.paginationConfig.rowCount ?? props.data.length"
         :scope="tableScope"
-        @page-size-change="size => emit('page-size-change', size)"
+        @page-size-change="handlePageSizeChange"
       >
         <template v-if="slots['pagination-summary']" #summary>
           <slot name="pagination-summary" :table-api="tableRef?.tableApi" />

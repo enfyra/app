@@ -48,6 +48,7 @@ describe('FormRelationSelector', () => {
   beforeEach(() => {
     vi.useRealTimers()
     vi.clearAllMocks()
+    localStorage.removeItem('settings-page-size:relation-selector')
     mocks.getColumnFields.mockResolvedValue('id,name')
   })
 
@@ -110,7 +111,8 @@ describe('FormRelationSelector', () => {
 
   it('uses shared checkbox selection across cursor pages and applies ids only without quick search', async () => {
     mocks.useAuthFetch
-      .mockResolvedValueOnce({ data: Array.from({ length: 11 }, (_, index) => ({ id: 20 - index })), meta: { filterCount: 27 } })
+      .mockResolvedValueOnce({ data: [{ id: 99 }] })
+      .mockResolvedValueOnce({ data: Array.from({ length: 10 }, (_, index) => ({ id: 20 - index })), meta: { filterCount: 26 } })
       .mockResolvedValueOnce({ data: [{ id: 10 }] })
       .mockResolvedValue({ data: [] })
     const wrapper = await mountSuspended(RelationSelector, {
@@ -129,14 +131,17 @@ describe('FormRelationSelector', () => {
       await wrapper.setProps({ open: true })
       await flushPromises()
       expect(wrapper.find('input').exists()).toBe(false)
-      await wrapper.get('tbody [aria-label="Select row 1"]').trigger('click')
+      await wrapper.get('tbody [aria-label="Select row 2"]').trigger('click')
       await flushPromises()
       await wrapper.get('[aria-label="Next"]').trigger('click')
       await flushPromises()
-      expect(mocks.useAuthFetch.mock.calls[0]?.[1].query).toMatchObject({ sort: '-id', limit: 11 })
-      expect(mocks.useAuthFetch.mock.calls[1]?.[1].query).toMatchObject({ filter: { id: { _lt: 11 } } })
-      expect(mocks.useAuthFetch.mock.calls[0]?.[1].query.meta).toBe('filterCount')
-      expect(mocks.useAuthFetch.mock.calls[1]?.[1].query).not.toHaveProperty('meta')
+      expect(mocks.useAuthFetch.mock.calls[0]?.[1].query).toMatchObject({ filter: { id: { _in: [99] } }, sort: '-id', limit: 1 })
+      expect(mocks.useAuthFetch.mock.calls[1]?.[1].query).toMatchObject({ filter: { id: { _not_in: [99] } }, sort: '-id', limit: 10, meta: 'filterCount' })
+      expect(mocks.useAuthFetch.mock.calls[2]?.[1].query).toMatchObject({
+        filter: { _and: [{ id: { _not_in: [99] } }, { id: { _lt: 12 } }] },
+        limit: 11,
+      })
+      expect(mocks.useAuthFetch.mock.calls[2]?.[1].query).not.toHaveProperty('meta')
       expect(wrapper.text()).toContain('27 records')
       const apply = wrapper.findAll('button').find(button => button.text() === 'Apply')!
       await apply.trigger('click')
@@ -173,6 +178,101 @@ describe('FormRelationSelector', () => {
         meta: 'filterCount',
       })
       expect(wrapper.text()).toContain('1 records')
+    } finally { wrapper.unmount() }
+  })
+
+  it('enables the rows-per-page selector and resets cursor pagination when page size changes while preserving draft selections', async () => {
+    mocks.useAuthFetch
+      .mockResolvedValueOnce({ data: [{ id: 99 }] })
+      .mockResolvedValueOnce({ data: Array.from({ length: 10 }, (_, index) => ({ id: 30 - index })), meta: { filterCount: 39 } })
+      .mockResolvedValueOnce({ data: Array.from({ length: 11 }, (_, index) => ({ id: 20 - index })) })
+      .mockResolvedValueOnce({ data: [{ id: 99 }, { id: 30 }] })
+      .mockResolvedValueOnce({ data: Array.from({ length: 19 }, (_, index) => ({ id: 29 - index })), meta: { filterCount: 38 } })
+    const wrapper = await mountSuspended(RelationSelector, {
+      props: {
+        relationMeta: { propertyName: 'users', targetTableName: 'users', type: 'many-to-many' },
+        selectedIds: [99],
+        multiple: true,
+        open: false,
+      },
+      global: { stubs: { CommonDrawer: DrawerStub, FilterDrawerLazy: true } },
+    })
+    try {
+      await wrapper.setProps({ open: true })
+      await flushPromises()
+      expect(wrapper.find('[aria-label="Rows per page"]').exists()).toBe(true)
+      await wrapper.get('tbody [aria-label="Select row 2"]').trigger('click')
+      await flushPromises()
+      await wrapper.get('[aria-label="Next"]').trigger('click')
+      await flushPromises()
+      expect(mocks.useAuthFetch.mock.calls[2]?.[1].query).toMatchObject({
+        filter: { _and: [{ id: { _not_in: [99] } }, { id: { _lt: 22 } }] },
+        limit: 11,
+      })
+
+      wrapper.getComponent({ name: 'DataTable' }).vm.$emit('page-size-change', 20)
+      await flushPromises()
+
+      expect(mocks.useAuthFetch.mock.calls[3]?.[1].query).toMatchObject({
+        filter: { id: { _in: [99, 30] } },
+        limit: 2,
+      })
+      expect(mocks.useAuthFetch.mock.calls[4]?.[1].query).toMatchObject({
+        filter: { id: { _not_in: [99, 30] } },
+        limit: 19,
+        meta: 'filterCount',
+      })
+      expect(localStorage.getItem('settings-page-size:relation-selector')).toBe('20')
+      const apply = wrapper.findAll('button').find(button => button.text() === 'Apply')!
+      await apply.trigger('click')
+      expect(new Set(wrapper.emitted('apply')?.at(-1)?.[0] as (string | number)[])).toEqual(new Set([99, 30]))
+    } finally { wrapper.unmount() }
+  })
+
+  it('paginates selected records in _in slices first when selected count exceeds page size, then fills remaining slots with _not_in', async () => {
+    const selectedIds = Array.from({ length: 12 }, (_, index) => 100 + index)
+    mocks.useAuthFetch
+      .mockResolvedValueOnce({ data: selectedIds.slice(0, 10).map(id => ({ id })) })
+      .mockResolvedValueOnce({ data: selectedIds.slice(10, 12).map(id => ({ id })) })
+      .mockResolvedValueOnce({ data: Array.from({ length: 9 }, (_, index) => ({ id: 50 - index })) })
+      .mockResolvedValueOnce({ data: [{ id: 40 }] })
+    const wrapper = await mountSuspended(RelationSelector, {
+      props: {
+        relationMeta: { propertyName: 'users', targetTableName: 'users', type: 'many-to-many' },
+        selectedIds,
+        multiple: true,
+        open: false,
+      },
+      global: { stubs: { CommonDrawer: DrawerStub, FilterDrawerLazy: true } },
+    })
+    try {
+      await wrapper.setProps({ open: true })
+      await flushPromises()
+      expect(mocks.useAuthFetch).toHaveBeenCalledTimes(1)
+      expect(mocks.useAuthFetch.mock.calls[0]?.[1].query).toMatchObject({
+        filter: { id: { _in: selectedIds.slice(0, 10) } },
+        limit: 10,
+      })
+
+      await wrapper.get('[aria-label="Next"]').trigger('click')
+      await flushPromises()
+      expect(mocks.useAuthFetch).toHaveBeenCalledTimes(3)
+      expect(mocks.useAuthFetch.mock.calls[1]?.[1].query).toMatchObject({
+        filter: { id: { _in: [110, 111] } },
+        limit: 2,
+      })
+      expect(mocks.useAuthFetch.mock.calls[2]?.[1].query).toMatchObject({
+        filter: { id: { _not_in: selectedIds } },
+        limit: 9,
+      })
+
+      await wrapper.get('[aria-label="Next"]').trigger('click')
+      await flushPromises()
+      expect(mocks.useAuthFetch).toHaveBeenCalledTimes(4)
+      expect(mocks.useAuthFetch.mock.calls[3]?.[1].query).toMatchObject({
+        filter: { _and: [{ id: { _not_in: selectedIds } }, { id: { _lt: 43 } }] },
+        limit: 11,
+      })
     } finally { wrapper.unmount() }
   })
 

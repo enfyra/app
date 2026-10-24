@@ -66,6 +66,7 @@ const tokenColumns: TableColumn<ApiTokenRecord>[] = [
 ];
 watch(pageLimit, () => { page.value = 1; });
 watch(() => apiTokens.value.length, count => {
+  if (apiTokensLoading.value) return;
   page.value = Math.min(page.value, Math.max(1, Math.ceil(count / pageLimit.value)));
 });
 function setPageSize(size: number) {
