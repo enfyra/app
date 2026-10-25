@@ -520,6 +520,8 @@ async function saveFlowSettings() {
   await loadFlow();
 }
 
+useUnsavedChangesGuard(() => hasFormChanges.value);
+
 const stepDrawerUpdating = ref(false);
 const execDrawerUpdating = ref(false);
 const stepDrawerHistoryEntry = ref(false);

@@ -139,6 +139,7 @@ async function deleteRecord() {
     return;
   }
 
+  hasFormChanges.value = false;
   notify.success("Record deleted");
   await navigateTo(`/data/${route.params.table}`);
 }
@@ -154,11 +155,15 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     currentRecord.value = formChanges.discardChanges(currentRecord.value);
+    updateErrors.value = {};
     hasFormChanges.value = false;
+    formEditorRegistry.value?.confirmChanges();
     
     notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 registerHeaderActions([
   useReloadAction({

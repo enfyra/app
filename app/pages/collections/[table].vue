@@ -363,9 +363,12 @@ async function executeDelete() {
 }
 
 async function afterDeleteSuccess(_deletedTableName: string) {
+  hasFormChanges.value = false;
   notify.success("Success", "Table deleted!");
   await navigateTo(`/collections`);
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const schemaConfirmTableName = computed(() =>
   String(schemaConfirmDetails.value?.tableName || table.value?.name || ''),

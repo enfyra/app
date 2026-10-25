@@ -34,8 +34,15 @@ const emit = defineEmits<{
 
 const formEditorVirtualEmit = inject(FORM_EDITOR_VIRTUAL_EMIT_KEY, null);
 const setDraftError = inject(FORM_EDITOR_DRAFT_ERROR_KEY, null);
+const jsonDraftText = ref<string | null>(null);
 onBeforeUnmount(() => setDraftError?.(props.keyName, null));
-watch(() => props.formData[props.keyName], () => setDraftError?.(props.keyName, null));
+watch(
+  () => [props.formData, props.formData[props.keyName]],
+  () => {
+    jsonDraftText.value = null;
+    setDraftError?.(props.keyName, null);
+  },
+);
 const { isMongoDB } = useDatabase();
 
 function attachVirtualEmit(
@@ -456,19 +463,21 @@ function getComponentConfigByKey(key: string) {
         component: resolveComponent("FormCodeEditorLazy"),
         componentProps: {
           ...componentPropsBase,
-          modelValue: toJsonEditorString(props.formData[key]),
+          modelValue: jsonDraftText.value ?? toJsonEditorString(props.formData[key]),
           language: "json",
           height: config.height || "300px",
           "onUpdate:modelValue": (val: string) => {
             const parsed = tryParseJsonLike(val);
             const updated = { ...props.errors };
             if (!parsed.ok) {
+              jsonDraftText.value = val;
               updated[key] = "Invalid JSON";
               setDraftError?.(key, 'Invalid JSON');
               updateErrors(updated);
               
               return;
             }
+            jsonDraftText.value = null;
             delete updated[key];
             setDraftError?.(key, null);
             updateErrors(updated);

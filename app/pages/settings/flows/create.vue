@@ -41,14 +41,8 @@ const createErrors = ref<Record<string, string>>({});
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const createFieldMap = computed(() => ({}));
-
-registerPageHeader({
-  title: "Create New Flow",
-  gradient: "purple",
-});
 
 registerHeaderActions([
   {

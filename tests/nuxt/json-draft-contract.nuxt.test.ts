@@ -14,8 +14,14 @@ it('keeps editor-only invalid JSON errors separate from schema errors until corr
   try {
     const editor = wrapper.getComponent(Code);
     editor.vm.$emit('update:modelValue', '{broken');
+    await wrapper.vm.$nextTick();
     expect(drafts.value).toEqual({ payload: 'Invalid JSON' });
     expect(model.value.payload).toEqual({ valid: true });
+    expect(editor.props('modelValue')).toBe('{broken');
+    model.value = { payload: { valid: true } };
+    await wrapper.vm.$nextTick();
+    expect(drafts.value).toEqual({});
+    expect(editor.props('modelValue')).toContain('"valid": true');
     editor.vm.$emit('update:modelValue', '{"valid":false}');
     expect(drafts.value).toEqual({});
     expect(model.value.payload).toEqual({ valid: false });

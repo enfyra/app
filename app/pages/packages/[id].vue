@@ -179,16 +179,15 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
+    errors.value = {};
     hasFormChanges.value = false;
     formEditorRef.value?.confirmChanges();
 
     notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 registerHeaderActions([
   {
@@ -292,6 +291,7 @@ async function handleUninstall() {
 
   if (packageData.value?.type === 'App') {
     await fetchAppPackages();
+    hasFormChanges.value = false;
     notify.success("Success", `Package ${packageData.value?.name} uninstalled successfully`);
     await navigateTo('/packages', { replace: true });
   } else {
@@ -324,6 +324,7 @@ function handlePackageEvent(event: string, data: any) {
       }
     });
   } else if (event === '$system:package:uninstalled') {
+    hasFormChanges.value = false;
     navigateTo('/packages', { replace: true });
   }
 }

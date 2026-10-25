@@ -123,11 +123,15 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
+    errors.value = {};
     hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
 
     notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 registerHeaderActions([
   {

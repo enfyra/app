@@ -98,11 +98,15 @@ async function handleReset() {
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
     syncRedirectUri();
+    errors.value = {};
     hasFormChanges.value = formChanges.checkChanges(form.value);
+    formEditorRef.value?.confirmChanges();
 
     notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 registerHeaderActions([
   {
@@ -252,6 +256,7 @@ async function deleteConfig() {
     return;
   }
 
+  hasFormChanges.value = false;
   notify.success("Success", "OAuth configuration deleted successfully");
   await navigateTo("/settings/oauth/config");
 }

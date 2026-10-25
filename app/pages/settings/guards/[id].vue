@@ -621,10 +621,14 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
+    errors.value = {};
     hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
     notify.success('Reset Complete', 'All changes have been discarded.');
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 async function deleteGuard() {
   const ok = await confirm({
@@ -637,6 +641,7 @@ async function deleteGuard() {
   await executeDeleteGuard({ id: route.params.id as string });
   if (deleteError.value) return;
 
+  hasFormChanges.value = false;
   notify.success('Success', 'Guard deleted successfully');
   await navigateTo('/settings/guards');
 }

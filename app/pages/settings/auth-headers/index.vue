@@ -1,31 +1,24 @@
 <template>
   <div class="eapp-page-constrained-wide w-full">
-    <div class="space-y-5">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p class="text-sm text-[var(--text-secondary)]">
-            Headers are checked from highest priority to lowest priority. PAT mappings use Enfyra API-token verification.
-          </p>
-        </div>
+    <DataTableSettingsTable
+      header-name="Authentication Headers"
+      header-description="Choose which request headers authenticate through native Enfyra PAT or JWT verification. Headers are checked from highest priority to lowest priority."
+      :data="headers"
+      :bulk-action="bulkDelete"
+      :columns="columns"
+      :actions="getRowActions"
+      :loading="showInitialLoading || loading"
+      @row-click="header => canUpdate && openEdit(header as AuthHeaderRecord)"
+    >
+      <template #toolbar-actions>
         <div class="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
           <span class="inline-flex items-center gap-1.5">
             <span class="size-2 rounded-full bg-[var(--state-success-solid-bg)]" />
             {{ activeCount }} active
           </span>
-          <span>{{ headers.length }} total</span>
         </div>
-      </div>
-
-      <DataTableSettingsTable
-        header-name="Authentication headers"
-        :data="headers"
-        :bulk-action="bulkDelete"
-        :columns="columns"
-        :actions="getRowActions"
-        :loading="showInitialLoading || loading"
-        @row-click="header => canUpdate && openEdit(header as AuthHeaderRecord)"
-      />
-    </div>
+      </template>
+    </DataTableSettingsTable>
 
     <CommonDrawer
       v-model="isOpen"
@@ -169,13 +162,6 @@ const { confirm } = useConfirm();
 const { getId } = useDatabase();
 const { checkPermissionCondition } = usePermissions();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: 'Authentication Headers',
-  description: 'Choose which request headers authenticate through native Enfyra PAT or JWT verification.',
-  gradient: 'purple',
-});
 
 const credentialOptions = [
   { label: 'PAT — Enfyra API token', value: 'pat' },

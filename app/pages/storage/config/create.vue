@@ -44,7 +44,6 @@ const createErrors = ref<Record<string, string>>({});
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const typeMap = computed(() => {
   return {
@@ -79,11 +78,6 @@ const includedFields = computed(() => {
     return ['name', 'bucket', 'description', 'type', 'isDefault'];
   }
   return [];
-});
-
-registerPageHeader({
-  title: "Create Storage Configuration",
-  gradient: "blue",
 });
 
 registerHeaderActions({

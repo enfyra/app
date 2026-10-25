@@ -35,7 +35,6 @@ const createErrors = ref<Record<string, string>>({});
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
 
 const fieldMap = {
@@ -43,11 +42,6 @@ const fieldMap = {
   skipRoleGuardMethods: { type: 'methods-selector', allowedMethodsKey: 'availableMethods' },
   availableMethods: { type: 'methods-selector' },
 };
-
-registerPageHeader({
-  title: "Create New Route",
-  gradient: "cyan",
-});
 
 registerHeaderActions([
   {

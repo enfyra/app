@@ -19,8 +19,6 @@ const limit = useSettingsPageSize('audit');
 const selected = ref<CodeAuditRecord | null>(null);
 const detailsOpen = ref(false);
 const restoring = ref(false);
-const { registerPageHeader } = usePageHeaderRegistry();
-registerPageHeader({ title: 'Audit', description: 'Review earlier code revisions and restore one as a new version.' });
 const { executeWithResult: readHistory, cancel } = useApi<CodeAuditResponse>('/enfyra_audit', { disableErrorPage: true, errorContext: 'Load audit history' });
 const { executeWithResult: readEntry } = useApi<CodeAuditResponse>('/enfyra_audit', { disableErrorPage: true, errorContext: 'Read code revision' });
 const { executeWithResult: restore } = useApi('/admin/code-audit/revert', { method: 'post', disableErrorPage: true, errorContext: 'Restore code revision' });
@@ -164,6 +162,7 @@ onBeforeUnmount(() => { active = false; inspectionGeneration++; cancel(); });
         v-model:search="recordId"
         :page="page"
         header-name="Audit"
+        header-description="Review earlier code revisions and restore one as a new version."
         searchable
         search-label="Exact record ID"
         search-placeholder="Search by exact record ID"

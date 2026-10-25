@@ -479,10 +479,14 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value)
+    errors.value = {}
     hasFormChanges.value = false
+    formEditorRef.value?.confirmChanges()
     notify.success("Reset Complete", "All changes have been discarded.")
   }
 }
+
+useUnsavedChangesGuard(() => props.active && hasFormChanges.value && (!routes.value.length || !routeId.value || routes.value.some((r: any) => String(getId(r)) === String(routeId.value))))
 
 registerHeaderActions([
   useReloadAction({

@@ -69,13 +69,7 @@ const showPreviewModal = ref(false);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 const { loadGlobalExtensions } = useGlobalExtensions();
-
-registerPageHeader({
-  title: "Create New Extension",
-  gradient: "purple",
-});
 
 registerHeaderActions([
   {

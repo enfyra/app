@@ -264,6 +264,12 @@ const draftErrors = ref<Record<string, string>>({});
 provide(FORM_EDITOR_DRAFT_ERROR_KEY, (key, error) => {
   if (error) draftErrors.value[key] = error;
   else delete draftErrors.value[key];
+  if (!isConfirming && Object.keys(originalData.value).length > 0) {
+    const hasChanged =
+      formChanges.checkChanges(props.modelValue) ||
+      Object.keys(draftErrors.value).length > 0;
+    emit("hasChanged", hasChanged);
+  }
 });
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
@@ -532,7 +538,9 @@ watch(
       Object.keys(newValue).length > 0 &&
       Object.keys(originalData.value).length > 0
     ) {
-      const hasChanged = formChanges.checkChanges(newValue);
+      const hasChanged =
+        formChanges.checkChanges(newValue) ||
+        Object.keys(draftErrors.value).length > 0;
       emit("hasChanged", hasChanged);
     }
 
@@ -583,6 +591,7 @@ async function validateAllUniqueFields(): Promise<boolean> {
 
 function confirmChanges() {
   isConfirming = true;
+  draftErrors.value = {};
   emit("hasChanged", false);
   nextTick(() => {
     if (props.modelValue && Object.keys(props.modelValue).length > 0) {

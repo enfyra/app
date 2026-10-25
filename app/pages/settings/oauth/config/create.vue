@@ -69,12 +69,6 @@ const fieldMap = computed(() => ({
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Add OAuth Provider",
-  gradient: "blue",
-});
 
 registerHeaderActions([
   {

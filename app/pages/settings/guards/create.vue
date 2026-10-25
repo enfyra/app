@@ -34,7 +34,6 @@ const createErrors = ref<Record<string, string>>({});
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
 
 const isGlobalGuardForm = computed(() => createForm.value?.isGlobal === true);
@@ -81,11 +80,6 @@ const fieldMap = computed(() => ({
     excluded: !isGraphqlGuardForm.value,
   },
 }));
-
-registerPageHeader({
-  title: 'Create New Guard',
-  gradient: 'purple',
-});
 
 registerHeaderActions([
   {

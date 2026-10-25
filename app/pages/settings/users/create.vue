@@ -34,12 +34,6 @@ const errors = ref<Record<string, string>>({});
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Create New User",
-  gradient: "blue",
-});
 
 const {
   data: createData,

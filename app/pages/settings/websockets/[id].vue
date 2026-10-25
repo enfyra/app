@@ -365,10 +365,14 @@ async function handleReset() {
   }
 
   form.value = formChanges.discardChanges(form.value);
+  errors.value = {};
   hasFormChanges.value = false;
+  formEditorRef.value?.confirmChanges?.();
 
   notify.success("Reset Complete", "All changes have been discarded.");
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 async function deleteGateway() {
   const ok = await confirm({
@@ -386,6 +390,7 @@ async function deleteGateway() {
     return;
   }
 
+  hasFormChanges.value = false;
   notify.success("Success", "WebSocket gateway has been deleted successfully");
 
   await navigateTo("/settings/websockets");

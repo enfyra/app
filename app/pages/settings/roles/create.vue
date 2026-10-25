@@ -65,13 +65,6 @@ registerHeaderActions({
   },
 });
 
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Create New Role",
-  gradient: "purple",
-});
-
 onMounted(async () => {
   await ensureSchema();
   createForm.value = generateEmptyForm();
