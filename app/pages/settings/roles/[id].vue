@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div v-if="loading || apiData?.data?.[0]" class="space-y-6">
       <div class="eapp-page-constrained">
-        <CommonPanel :sections="[{ value: 'role' }]">
+        <CommonPanel :sections="roleSections">
           <template #role-header><CommonFormHeader :title="form.name ? `Role: ${form.name}` : 'Role'" /></template>
           <template #role>
         <CommonFormCard>
@@ -215,13 +215,16 @@ async function deleteRole() {
   await navigateTo("/settings/roles");
 }
 
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
-);
+const roleSections = computed(() => [{
+  value: 'role',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(() => {
   initializeForm();

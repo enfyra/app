@@ -93,16 +93,17 @@ useUnsavedChangesGuard(() => hasFormChanges.value);
 const activeTab = ref<'preview' | 'details' | 'permissions'>('preview');
 const permissionManagerRef = ref<{ createNewPermission?: () => unknown } | null>(null);
 
+const reloadFileAction = useReloadAction({
+  reload: async () => {
+    await initializeForm();
+    formEditorRef.value?.confirmChanges();
+    hasFormChanges.value = false;
+  },
+  loading: computed(() => pending.value),
+  hasUnsavedChanges: () => hasFormChanges.value,
+});
+
 registerHeaderActions([
-  useReloadAction({
-    reload: async () => {
-      await initializeForm();
-      formEditorRef.value?.confirmChanges();
-      hasFormChanges.value = false;
-    },
-    loading: computed(() => pending.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
   {
     id: "reset-file",
     label: "Reset",
@@ -157,6 +158,7 @@ registerHeaderActions([
 ]);
 
 const previewActions: HeaderAction[] = [
+  reloadFileAction,
   {
     id: "copy-file-url",
     label: "Copy URL",
@@ -169,6 +171,7 @@ const previewActions: HeaderAction[] = [
 ];
 
 const detailActions: HeaderAction[] = [
+  reloadFileAction,
   {
     id: "replace-file",
     label: "Replace File",
@@ -188,6 +191,7 @@ const detailActions: HeaderAction[] = [
 ];
 
 const permissionActions: HeaderAction[] = [
+  reloadFileAction,
   {
     id: "add-file-permission",
     label: "Add Permission",

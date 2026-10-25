@@ -5,6 +5,8 @@
     :data="packages"
     :columns="columns"
     :loading="showInitialLoading || packagesRefreshing"
+    :reload="() => loadPackages()"
+    :reload-loading="loading"
     :total="total"
     :page-limit="limit"
     page-size-key="app-packages"

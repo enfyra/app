@@ -51,8 +51,10 @@ describe('collection detail actions', () => {
     } } })
     try {
       await flushPromises()
-      expect(visible().map(action => action.id)).toEqual(['reload-page', 'delete-table', 'save-table'])
-      await wrapper.getComponent({ name: 'CommonPanel' }).vm.$emit('update:modelValue', 'routes')
+      expect(visible().map(action => action.id)).toEqual(['delete-table', 'save-table'])
+      const panel = wrapper.getComponent({ name: 'CommonPanel' })
+      expect(panel.props('sections')[0].actions.map((action: any) => action.id)).toEqual(['reload-page'])
+      await panel.vm.$emit('update:modelValue', 'routes')
       await flushPromises()
       expect(unref(mocks.actions.get('route-save').show)).toBe(true)
       expect(unref(mocks.actions.get('graphql-save').show)).toBe(false)

@@ -8,6 +8,8 @@
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading || loading"
+      :reload="() => fetchHeaders()"
+      :reload-loading="loading"
       @row-click="header => canUpdate && openEdit(header as AuthHeaderRecord)"
     >
       <template #toolbar-actions>

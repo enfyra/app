@@ -1,6 +1,6 @@
 <template>
   <div class="w-full min-w-0 space-y-6">
-    <CommonPanel :sections="[{ value: 'welcome' }]">
+    <CommonPanel :sections="[{ value: 'welcome', title: 'Home' }]">
       <template #welcome>
         <div class="flex flex-col gap-5 md:flex-row md:items-start md:gap-6">
           <span class="eapp-accent-soft flex size-12 shrink-0 items-center justify-center rounded-[var(--radius-control)]" aria-hidden="true">
@@ -74,13 +74,5 @@ const settingsPage = computed(() => availablePages.value.find(item => (item.path
 onMounted(() => {
   const destination = initialReady.value && resolveDefaultPage(settings.value.defaultPage, menuItems.value, hasMenuPermission);
   if (destination && route.path === '/') void navigateTo(destination, { replace: true });
-});
-
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Home",
-  gradient: "none",
-  variant: "minimal",
 });
 </script>

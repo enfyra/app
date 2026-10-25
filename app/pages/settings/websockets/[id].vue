@@ -41,6 +41,8 @@
         :bulk-action="bulkDeleteEvents"
         :columns="eventColumns"
         :actions="getEventActions"
+        :reload="fetchGatewayDetail"
+        :reload-loading="loading"
         @row-click="handleEditEvent"
       />
         </template>
@@ -102,10 +104,6 @@ const WEBSOCKET_EVENT_LIST_FIELDS = [
 ].join(",");
 
 const activeSection = ref('gateway');
-const websocketSections = [
-  { label: 'Gateway', value: 'gateway', icon: 'lucide:radio-tower' },
-  { label: 'Events', value: 'events', icon: 'lucide:zap' },
-];
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
@@ -132,7 +130,6 @@ const showEventDrawer = ref(false);
 const selectedEvent = ref<any>(null);
 
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const pageId = computed(() => {
   const id = route.params.id;
@@ -156,19 +153,10 @@ const {
 });
 
 const gatewayId = computed(() => pageId.value || getId(gatewayData.value?.data?.[0]));
-
-watch(
-  () => gatewayData.value?.data?.[0]?.path,
-  (path) => {
-    if (path) {
-      registerPageHeader({
-        title: `WebSocket Gateway: ${path}`,
-        gradient: "cyan",
-      });
-    }
-  },
-  { immediate: true },
-);
+const gatewayTitle = computed(() => {
+  const path = gatewayData.value?.data?.[0]?.path;
+  return path ? `WebSocket Gateway: ${path}` : 'WebSocket Gateway';
+});
 
 const { data: eventsData, execute: fetchEvents } = useApi<FeatureCollection<FeatureWebsocketEvent>>(() => "/enfyra_websocket_event", {
   query: computed(() => ({
@@ -269,16 +257,35 @@ registerHeaderActions([
   },
 ]);
 
+const gatewayReloadAction = useReloadAction({
+  reload: async () => {
+    await fetchGatewayDetail();
+    formEditorRef.value?.confirmChanges?.();
+    hasFormChanges.value = false;
+  },
+  loading: computed(() => loading.value),
+  hasUnsavedChanges: () => activeSection.value === 'gateway' && hasFormChanges.value,
+});
+
+const websocketSections = computed(() => [
+  {
+    label: 'Gateway',
+    value: 'gateway',
+    icon: 'lucide:radio-tower',
+    title: gatewayTitle.value,
+    description: gatewayData.value?.data?.[0]?.description || 'Configure WebSocket gateway path, authentication, and connection handler',
+    actions: [gatewayReloadAction],
+  },
+  {
+    label: 'Events',
+    value: 'events',
+    icon: 'lucide:zap',
+    title: gatewayTitle.value,
+    description: 'Manage WebSocket event listeners and scripts',
+  },
+]);
+
 registerHeaderActions([
-  useReloadAction({
-    reload: async () => {
-      await fetchGatewayDetail();
-      formEditorRef.value?.confirmChanges?.();
-      hasFormChanges.value = false;
-    },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => activeSection.value === 'gateway' && hasFormChanges.value,
-  }),
   {
     id: 'create-websocket-event',
     label: 'Create Event',

@@ -17,21 +17,8 @@ const activeTab = computed({
     void router.push({ query: { ...route.query, tab: value === 'cors' ? 'cors' : 'general' } });
   },
 });
-const settingsSections = [
-  { label: 'General', value: 'general', icon: 'lucide:settings-2' },
-  { label: 'CORS', value: 'cors', icon: 'lucide:globe' },
-];
 
 const { validateForm } = useFormValidation("enfyra_setting");
-
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "General Settings",
-  description: "Configure system-wide settings and preferences",
-  variant: "default",
-  gradient: "cyan",
-});
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -184,13 +171,30 @@ registerHeaderActions([
   },
 ]);
 
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
-);
+const reloadSettingAction = useReloadAction({
+  reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+  loading: computed(() => loading.value),
+  hasUnsavedChanges: () => hasFormChanges.value,
+});
+
+const settingsSections = computed(() => [
+  {
+    label: 'General',
+    value: 'general',
+    icon: 'lucide:settings-2',
+    title: 'General Settings',
+    description: 'Configure system-wide settings and preferences',
+    actions: [reloadSettingAction],
+  },
+  {
+    label: 'CORS',
+    value: 'cors',
+    icon: 'lucide:globe',
+    title: 'CORS Origins',
+    description: 'Configure allowed cross-origin request domains',
+    actions: [reloadSettingAction],
+  },
+]);
 
 onMounted(() => {
   initializeForm();

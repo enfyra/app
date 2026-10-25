@@ -47,12 +47,6 @@ const idField = getIdFieldName()
 const currentPageRoute = useRoute()
 const router = useRouter()
 const activeEditorTab = ref<'overview' | 'methods' | 'execution' | 'access'>('overview')
-const editorSections = [
-  { label: 'Overview', value: 'overview', icon: 'lucide:settings-2' },
-  { label: 'Methods', value: 'methods', icon: 'lucide:list-filter' },
-  { label: 'Execution', value: 'execution', icon: 'lucide:workflow' },
-  { label: 'Access', value: 'access', icon: 'lucide:shield-check' },
-]
 const { routes, loadRoutes } = useRoutes()
 const { registerDataMenuItemsFromRoutes } = useMenuRegistry()
 const ROUTE_EDITOR_FIELDS = [
@@ -488,17 +482,31 @@ async function handleReset() {
 
 useUnsavedChangesGuard(() => props.active && hasFormChanges.value && (!routes.value.length || !routeId.value || routes.value.some((r: any) => String(getId(r)) === String(routeId.value))))
 
+const routeReloadAction = useReloadAction({
+  reload: async () => {
+    await fetchRoute()
+    formChanges.update(routeData.value?.data?.[0] ?? {})
+    hasFormChanges.value = false
+  },
+  loading: computed(() => routeLoading.value),
+  show: computed(() => props.active),
+  hasUnsavedChanges: () => hasFormChanges.value,
+})
+
+const editorSections = computed(() => {
+  const path = routeData.value?.data?.[0]?.path
+  const title = props.embedded ? undefined : (path ? `Route: ${path}` : 'Route Details')
+  const description = routeData.value?.data?.[0]?.description || 'Configure route overview, methods, execution pipeline, and access policies'
+  const headerMeta = title ? { title, description } : {}
+  return [
+    { label: 'Overview', value: 'overview', icon: 'lucide:settings-2', ...headerMeta, actions: [routeReloadAction] },
+    { label: 'Methods', value: 'methods', icon: 'lucide:list-filter', ...headerMeta, actions: [routeReloadAction] },
+    { label: 'Execution', value: 'execution', icon: 'lucide:workflow', ...headerMeta, actions: [routeReloadAction] },
+    { label: 'Access', value: 'access', icon: 'lucide:shield-check', ...headerMeta, actions: [routeReloadAction] },
+  ]
+})
+
 registerHeaderActions([
-  useReloadAction({
-    reload: async () => {
-      await fetchRoute()
-      formChanges.update(routeData.value?.data?.[0] ?? {})
-      hasFormChanges.value = false
-    },
-    loading: computed(() => routeLoading.value),
-    show: computed(() => props.active),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
   {
     id: 'reset-route',
     label: 'Reset',
@@ -896,6 +904,8 @@ watch(showEditHookDrawer, (isOpen) => {
         header-name="Methods"
         :data="methodConfigs"
         :columns="methodConfigColumns"
+        :reload="fetchRoute"
+        :reload-loading="routeLoading"
         :get-row-id="(config) => String(getId(config))"
         @row-click="openMethodConfig"
       >

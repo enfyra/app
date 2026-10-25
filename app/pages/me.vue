@@ -8,14 +8,6 @@ const notify = useNotify();
 const { confirm } = useConfirm();
 const { validateForm } = useFormValidation("enfyra_user");
 
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Account",
-  description: "Manage your profile, password, linked accounts, and API tokens",
-  variant: "default",
-});
-
 const hasFormChanges = ref(false);
 const savingProfile = ref(false);
 const formEditorRef = ref();
@@ -100,15 +92,39 @@ const {
 
 const route = useRoute();
 const router = useRouter();
-const profileSections = [
-  { label: 'Profile', value: 'profile', icon: 'lucide:user' },
-  { label: 'Password', value: 'password', icon: 'lucide:key-round' },
-  { label: 'API Tokens', value: 'api-tokens', icon: 'lucide:key' },
-];
+const reloadProfileAction = useReloadAction({
+  reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+  loading: computed(() => loading.value),
+  hasUnsavedChanges: () => hasFormChanges.value,
+});
+const profileSections = computed(() => [
+  {
+    label: 'Profile',
+    value: 'profile',
+    icon: 'lucide:user',
+    title: 'Profile',
+    description: 'Manage your personal profile and linked accounts',
+    actions: [reloadProfileAction],
+  },
+  {
+    label: 'Password',
+    value: 'password',
+    icon: 'lucide:key-round',
+    title: 'Password',
+    description: 'Update your account password',
+  },
+  {
+    label: 'API Tokens',
+    value: 'api-tokens',
+    icon: 'lucide:key',
+    title: 'API Tokens',
+    description: 'Manage personal access tokens for MCP servers and external API clients',
+  },
+]);
 const activeTab = computed({
-  get: () => profileSections.some(section => section.value === route.query.tab) ? String(route.query.tab) : 'profile',
+  get: () => profileSections.value.some(section => section.value === route.query.tab) ? String(route.query.tab) : 'profile',
   set: (value: string | number) => {
-    void router.push({ query: { ...route.query, tab: profileSections.some(section => section.value === value) ? value : 'profile' } });
+    void router.push({ query: { ...route.query, tab: profileSections.value.some(section => section.value === value) ? value : 'profile' } });
   },
 });
 
@@ -199,14 +215,6 @@ async function saveProfile() {
     savingProfile.value = false;
   }
 }
-
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
-);
 
 onMounted(() => {
   initializeForm();

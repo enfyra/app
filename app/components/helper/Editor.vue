@@ -7,11 +7,32 @@ import type { SharedHelperEditorOptions } from '~/types/shared-helper';
 const props = defineProps<SharedHelperEditorOptions>();
 const { form, errors, ready, loadFailed, saving, deleting, testing, dirty, busy, canWrite, canDelete, canTest, invocation, testInput, testInputError, testResult, load, save, reset, deleteHelper, runTest } = useSharedHelperEditor(() => ({ mode: props.mode, ...(props.id === undefined ? {} : { id: props.id }) }));
 const tab = ref('editor');
-const sections = computed(() => [
-  { value: 'editor', label: 'Editor', icon: 'lucide:code' },
-  { value: 'usage', label: 'Usage', icon: 'lucide:book-open' },
-  ...(canTest.value ? [{ value: 'test', label: 'Test', icon: 'lucide:play' }] : []),
-]);
+const helperReloadAction = useReloadAction({
+  reload: async () => {
+    await load();
+  },
+  loading: busy,
+  hasUnsavedChanges: () => dirty.value,
+});
+const helperTitle = computed(() =>
+  props.mode === 'create'
+    ? 'Create Helper'
+    : ready.value && form.value.name
+      ? `Helper: ${form.value.name}`
+      : 'Helper Editor',
+);
+const sections = computed(() => {
+  const sectionHeader = {
+    title: helperTitle.value,
+    description: 'Reusable code for handlers, hooks and flows.',
+    ...(props.mode === 'update' ? { actions: [helperReloadAction] } : {}),
+  };
+  return [
+    { value: 'editor', label: 'Editor', icon: 'lucide:code', ...sectionHeader },
+    { value: 'usage', label: 'Usage', icon: 'lucide:book-open', ...sectionHeader },
+    ...(canTest.value ? [{ value: 'test', label: 'Test', icon: 'lucide:play', ...sectionHeader }] : []),
+  ];
+});
 const fieldMap = computed(() => {
   const fields = buildSharedHelperFieldMap(!canWrite.value || busy.value);
   return { ...fields, sourceCode: { ...fields.sourceCode, disabled: false, componentProps: { readonly: !canWrite.value || busy.value } } };
@@ -21,22 +42,9 @@ const formSections = [
   { id: 'source', title: 'Implementation', fields: ['sourceCode'] },
 ];
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-const { registerPageHeader } = usePageHeaderRegistry();
 const notify = useNotify();
 const writePermission = { and: [{ route: '/enfyra_helper', methods: [props.mode === 'create' ? 'POST' : 'PATCH'] }] };
-watch(() => [form.value.name, ready.value], () => registerPageHeader({
-  title: props.mode === 'create' ? 'Create Helper' : ready.value ? form.value.name : 'Helper Editor',
-  description: 'Reusable code for handlers, hooks and flows.',
-  gradient: 'purple',
-}), { immediate: true });
 registerHeaderActions([
-  ...(props.mode === 'update' ? [useReloadAction({
-    reload: async () => {
-      await load();
-    },
-    loading: busy,
-    hasUnsavedChanges: () => dirty.value,
-  })] : []),
   { id: 'helper-reset', label: 'Reset', icon: 'lucide:rotate-ccw', variant: 'outline', color: 'warning', onClick: reset, show: computed(() => tab.value === 'editor' && dirty.value), disabled: busy, order: 1 },
   { id: 'helper-delete', label: 'Delete', icon: 'lucide:trash-2', variant: 'outline', color: 'error', onClick: deleteHelper, show: computed(() => props.mode === 'update' && canDelete.value), loading: deleting, disabled: computed(() => !ready.value || busy.value && !deleting.value), permission: { and: [{ route: '/enfyra_helper', methods: ['DELETE'] }] }, order: 2 },
   { id: 'helper-save', label: props.mode === 'create' ? 'Create Helper' : 'Save', icon: 'lucide:save', variant: 'solid', color: 'primary', onClick: save, show: computed(() => tab.value === 'editor'), loading: saving, disabled: computed(() => !ready.value || busy.value && !saving.value || props.mode === 'update' && !dirty.value), permission: writePermission, order: 999 },

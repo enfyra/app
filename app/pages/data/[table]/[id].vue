@@ -175,16 +175,22 @@ async function handleReset() {
 
 useUnsavedChangesGuard(() => hasFormChanges.value);
 
+const recordSections = computed(() => [{
+  value: 'record',
+  actions: [
+    useReloadAction({
+      reload: async () => {
+        await initializeForm();
+        formEditorRegistry.value?.confirmChanges();
+        hasFormChanges.value = false;
+      },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
+
 registerHeaderActions([
-  useReloadAction({
-    reload: async () => {
-      await initializeForm();
-      formEditorRegistry.value?.confirmChanges();
-      hasFormChanges.value = false;
-    },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
   {
     id: "reset-data-entry",
     label: "Reset",
@@ -243,7 +249,7 @@ registerHeaderActions([
   <div class="space-y-6">
     
     <div class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'record' }]">
+      <CommonPanel :sections="recordSections">
         <template #record-header><CommonFormHeader :title="recordTitle" /></template>
         <template #record>
       <CommonFormCard>

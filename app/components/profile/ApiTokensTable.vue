@@ -265,17 +265,6 @@ registerHeaderActions([
     show: computed(() => props.active),
     onClick: openApiTokenModal,
   },
-  {
-    id: 'refresh-api-tokens',
-    label: 'Refresh',
-    icon: 'lucide:refresh-cw',
-    color: 'neutral',
-    variant: 'outline',
-    order: 1,
-    show: computed(() => props.active),
-    loading: apiTokensLoading,
-    onClick: fetchApiTokens,
-  },
 ]);
 
 onMounted(() => {
@@ -289,13 +278,15 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="space-y-4">
-    <p class="text-sm text-muted">Create long-lived tokens for MCP servers and external API clients.</p>
     <DataTable
       header-name="API tokens"
+      header-description="Create long-lived tokens for MCP servers and external API clients."
       v-model:page="page"
       :data="pageTokens"
       :columns="tokenColumns"
       :loading="apiTokensLoading"
+      :reload="fetchApiTokens"
+      :reload-loading="apiTokensLoading"
       :show-column-visibility="false"
       :ui="{ base: 'table-fixed !min-w-[900px]', th: 'px-3 py-3', td: 'max-w-0 overflow-hidden text-ellipsis px-3 py-3' }"
       :pagination-config="{ total: apiTokens.length, itemsPerPage: pageLimit, showPageSize: true }"

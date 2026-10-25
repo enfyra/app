@@ -38,15 +38,14 @@ function formatTime(value: string | null) {
 
 <template>
   <section class="space-y-4">
-    <div class="flex items-center justify-end" :class="{ 'justify-between': props.showTitle }">
-      <h3 v-if="props.showTitle" class="text-lg font-semibold text-default">Recent Executions</h3>
-      <UButton icon="lucide:refresh-cw" size="sm" color="neutral" variant="outline" label="Reload" :loading="loading" @click="emit('refresh')" />
-    </div>
+    <h3 v-if="props.showTitle" class="text-lg font-semibold text-default">Recent Executions</h3>
     <DataTable
       header-name="Executions"
       :data="executions"
       :columns="columns"
       :loading="loading"
+      :reload="() => emit('refresh')"
+      :reload-loading="loading"
       :get-row-id="execution => String(getId(execution))"
       :page="page"
       v-bind="total === undefined ? {} : { recordCount: total }"

@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <div v-if="loading || account" class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'account' }]">
+      <CommonPanel :sections="accountSections">
         <template #account-header><CommonFormHeader :title="account ? `${getProviderLabel(account.provider)} Account` : 'Account'" /></template>
         <template #account>
 <CommonFormCard>
@@ -38,7 +38,6 @@ definePageMeta({
   title: "OAuth Account Detail",
 });
 
-const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 
 const tableName = "enfyra_oauth_account";
@@ -88,12 +87,15 @@ async function initializeForm() {
   }
 }
 
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); },
-    loading: computed(() => loading.value),
-  }),
-);
+const accountSections = computed(() => [{
+  value: 'account',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); },
+      loading: computed(() => loading.value),
+    }),
+  ],
+}]);
 
 onMounted(() => {
   initializeForm();

@@ -7,6 +7,8 @@
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
+    :reload="() => fetchGateways()"
+    :reload-loading="loading"
     :total="total"
     :page-limit="limit"
     page-size-key="websockets"

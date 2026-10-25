@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <div v-if="loading || packageData" class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'package' }]">
+      <CommonPanel :sections="packageSections">
         <template #package-header><CommonFormHeader :title="packageData?.name ? `Package: ${packageData.name}` : 'Package'" /></template>
         <template #package>
       <CommonFormCard>
@@ -346,13 +346,16 @@ function handlePackageEvent(event: string, data: any) {
 }
 
 
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
-);
+const packageSections = computed(() => [{
+  value: 'package',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(() => {
   initializeForm();

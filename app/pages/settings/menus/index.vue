@@ -43,6 +43,12 @@ const panelSections: PanelSection[] = [
     icon: 'lucide:menu',
     title: 'Menu Manager',
     description: 'Configure and manage navigation menus visually',
+    actions: [
+      useReloadAction({
+        reload: () => refreshMenus(),
+        loading: computed(() => pageMenusLoading.value),
+      }),
+    ],
   },
   {
     label: 'Extensions',
@@ -426,10 +432,6 @@ function syncDrawersFromQuery() {
 }
 
 registerHeaderActions([
-  useReloadAction({
-    reload: () => activeTab.value === 'extensions' ? fetchExtensions() : refreshMenus(),
-    loading: computed(() => activeTab.value === 'extensions' ? extensionsLoading.value : pageMenusLoading.value),
-  }),
   {
     id: "create-menu",
     label: "Create Menu",
@@ -968,6 +970,8 @@ watch(showExtensionDrawer, async (isOpen, wasOpen) => {
           :columns="extensionColumns"
           :actions="getExtensionRowActions"
           :loading="showExtensionsInitialLoading"
+          :reload="() => fetchExtensions()"
+          :reload-loading="extensionsLoading"
           :total="extensionsTotal"
           :page-limit="extensionLimit"
           page-size-key="extensions"

@@ -5,7 +5,7 @@ import type { MenuItem } from '~/types/menu';
 
 const state = vi.hoisted(() => ({ allowed: true, selected: 7 as number | null, navigate: vi.fn(), menus: [] as MenuItem[] }));
 mockNuxtImport('useGlobalState', () => () => ({ settings: ref({ defaultPage: state.selected, projectName: 'Example project' }) }));
-mockNuxtImport('useMenuRegistry', () => () => ({ menuItems: ref(state.menus) }));
+mockNuxtImport('useMenuRegistry', () => () => ({ menuItems: ref(state.menus), findMenuIconForPath: () => undefined }));
 mockNuxtImport('usePermissions', () => () => ({ hasMenuPermission: () => state.allowed }));
 mockNuxtImport('useInitialLoading', () => () => ({ initialReady: ref(true) }));
 mockNuxtImport('usePageHeaderRegistry', () => () => ({ registerPageHeader: vi.fn() }));

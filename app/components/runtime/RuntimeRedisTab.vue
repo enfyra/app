@@ -613,6 +613,8 @@ function openCreateKey() {
         :data="visibleRedisKeys"
         :columns="redisKeyColumns"
         :loading="runtime.redisKeysPending"
+        :reload="() => runtime.scanRedisKeys({ reset: true })"
+        :reload-loading="runtime.redisKeysPending"
         :pagination-config="{ mode: 'cursor', itemsPerPage: 10, hasNextPage: canLoadMore, loading: runtime.redisKeysPending, floating: false }"
         @row-click="row => runtime.selectRedisKey(row.key)"
       >

@@ -7,6 +7,8 @@
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
+    :reload="() => fetchConfigs()"
+    :reload-loading="loading"
     :total="total"
     :page-limit="limit"
     page-size-key="oauth-config"

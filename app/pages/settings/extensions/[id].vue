@@ -301,9 +301,14 @@ async function initializeForm() {
 }
 
 
-const panelSections = [{
+const panelSections: PanelSection[] = [{
   value: 'extension',
   actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
     {
       id: 'preview-extension',
       label: 'Preview',
@@ -325,15 +330,7 @@ const panelSections = [{
       permission: { and: [{ route: '/enfyra_extension', methods: ['PATCH'] }] },
     },
   ],
-} as PanelSection];
-
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
-);
+}];
 
 onMounted(() => {
   initializeForm();

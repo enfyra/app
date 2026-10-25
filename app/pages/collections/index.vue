@@ -196,6 +196,8 @@ watch(
       :data="displayedCollections"
       :columns="columns"
       :loading="showInitialLoading || collectionsRefreshing"
+      :reload="() => fetchCollections()"
+      :reload-loading="loading"
       :page-limit="pageLimit"
       :total="total"
       page-size-key="collections"

@@ -172,17 +172,10 @@ const activeEditorTab = computed({
     void router.push({ query: { ...route.query, tab } });
   },
 });
-const flowSections = [
-  { label: 'Settings', value: 'settings', icon: 'lucide:settings-2' },
-  { label: 'Steps', value: 'steps', icon: 'lucide:workflow' },
-  { label: 'Triggers', value: 'triggers', icon: 'lucide:zap' },
-  { label: 'History', value: 'history', icon: 'lucide:history' },
-];
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { isMounted } = useMounted();
 const { getId, getIdFieldName } = useDatabase();
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const flowId = computed(() => resolveRouteIdentifier(route.params.id));
 const { adminSocket } = useAdminSocket();
@@ -295,16 +288,7 @@ const { data: flowData, executeWithResult: fetchFlow } = useApi<FeatureCollectio
 );
 
 const flow = computed(() => flowData.value?.data?.[0] || null);
-
-watch(
-  () => flow.value?.name,
-  (name) => {
-    if (name) {
-      registerPageHeader({ title: `Flow: ${name}`, gradient: "purple" });
-    }
-  },
-  { immediate: true },
-);
+const flowTitle = computed(() => flow.value?.name ? `Flow: ${flow.value.name}` : 'Flow Editor');
 
 const flowLoadSettled = ref(false);
 const showInitialLoading = computed(() => !isMounted.value || (!flow.value && !flowLoadSettled.value));
@@ -439,15 +423,50 @@ const { executeWithResult: triggerFlowApi } = useApi(
 );
 
 
+const flowReloadAction = useReloadAction({
+  reload: async () => {
+    await loadFlow();
+    await fetchExecutions();
+  },
+  loading: computed(() => saveFlowPending.value),
+  hasUnsavedChanges: () => hasFormChanges.value,
+});
+
+const flowSections = computed(() => [
+  {
+    label: 'Settings',
+    value: 'settings',
+    icon: 'lucide:settings-2',
+    title: flowTitle.value,
+    description: flow.value?.description || 'Configure flow metadata, timeout, and execution settings',
+    actions: [flowReloadAction],
+  },
+  {
+    label: 'Steps',
+    value: 'steps',
+    icon: 'lucide:workflow',
+    title: flowTitle.value,
+    description: 'Design and order the steps executed by this flow',
+    actions: [flowReloadAction],
+  },
+  {
+    label: 'Triggers',
+    value: 'triggers',
+    icon: 'lucide:zap',
+    title: flowTitle.value,
+    description: 'Manage schedule, webhook, and table event triggers',
+    actions: [flowReloadAction],
+  },
+  {
+    label: 'History',
+    value: 'history',
+    icon: 'lucide:history',
+    title: flowTitle.value,
+    description: 'Inspect recent flow executions and step logs',
+  },
+]);
+
 registerHeaderActions([
-  useReloadAction({
-    reload: async () => {
-      await loadFlow();
-      await fetchExecutions();
-    },
-    loading: computed(() => saveFlowPending.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
   {
     id: "trigger-flow",
     label: "Run Now",

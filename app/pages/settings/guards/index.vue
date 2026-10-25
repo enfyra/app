@@ -21,7 +21,6 @@ const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuic
 const tableName = 'enfyra_guard';
 const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
-const { registerPageHeader } = usePageHeaderRegistry();
 const { getId, getIdFieldName } = useDatabase();
 const idField = getIdFieldName();
 const GUARD_LIST_FIELDS = [
@@ -45,11 +44,6 @@ const GUARD_ROUTE_OPTION_FIELDS = [
   'path',
 ].join(',');
 
-registerPageHeader({
-  title: 'Guard Manager',
-  gradient: 'purple',
-});
-
 const showFilterDrawer = ref(false);
 const activeType = ref<'route' | 'graphql'>('route');
 const switchingType = ref(false);
@@ -72,11 +66,15 @@ const guardSections = computed(() => [
     label: 'Route Guards',
     value: 'route',
     icon: 'lucide:route',
+    title: 'Guard Manager',
+    description: 'Protect REST endpoints with rate limits and IP rules',
   },
   {
     label: 'GraphQL Guards',
     value: 'graphql',
     icon: 'lucide:braces',
+    title: 'Guard Manager',
+    description: 'Protect GraphQL operations with rate limits and IP rules',
   },
 ]);
 
@@ -557,6 +555,8 @@ async function deleteGuard(guard: any) {
         :columns="columns"
         :actions="getRowActions"
         :loading="isPageLoading"
+        :reload="() => fetchGuards()"
+        :reload-loading="loading"
         :total="total"
         :page-limit="pageLimit"
         page-size-key="guards"

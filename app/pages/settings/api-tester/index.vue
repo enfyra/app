@@ -8,6 +8,8 @@
       :data="visibleRoutes"
       :columns="columns"
       :loading="showInitialLoading || routeLoading"
+      :reload="() => fetchRoutes()"
+      :reload-loading="routeLoading"
       :total="total"
       :page-limit="pageLimit"
       page-size-key="api-tester"
@@ -46,13 +48,10 @@ import { settingsStatusColumn } from '~/utils/settings-table';
 
 definePageMeta({ layout: "default", title: "API Tester" });
 
-const { registerPageHeader } = usePageHeaderRegistry();
 const selectedRoute = ref<any>(null);
 const showTestModal = ref(false);
 const selectedTableName = computed(() => selectedRoute.value?.mainTable?.name || "");
 const { schemas } = useSchema(selectedTableName);
-
-registerPageHeader({ title: "API Tester", gradient: "cyan" });
 
 const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('path', () => fetchRoutes());
 const pageLimit = useSettingsPageSize('api-tester');
@@ -135,11 +134,15 @@ const routeSections = computed(() => [
     label: 'Your Routes',
     value: 'custom',
     icon: 'lucide:route',
+    title: 'API Tester',
+    description: 'Select a custom route to test its endpoints and inspect responses',
   },
   {
     label: 'System Routes',
     value: 'system',
     icon: 'lucide:settings',
+    title: 'API Tester',
+    description: 'Select a system route to test its endpoints and inspect responses',
   },
 ]);
 

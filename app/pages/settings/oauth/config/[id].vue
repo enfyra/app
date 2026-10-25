@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <div v-if="loading || configData?.data?.[0]" class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'configuration' }]">
+      <CommonPanel :sections="configSections">
         <template #configuration-header><CommonFormHeader :title="configData?.data?.[0]?.provider ? `OAuth: ${getProviderLabel(configData.data[0].provider)}` : 'Configuration'" /></template>
         <template #configuration>
       <CommonFormCard>
@@ -278,13 +278,16 @@ async function initializeForm() {
   }
 }
 
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
-);
+const configSections = computed(() => [{
+  value: 'configuration',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(() => {
   appOrigin.value = window.location.origin;

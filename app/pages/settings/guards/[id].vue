@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <div class="eapp-page-constrained-wide space-y-6">
-      <CommonPanel :sections="[{ value: 'guard' }]">
+      <CommonPanel :sections="guardSections">
         <template #guard-header><CommonFormHeader :title="guardData?.data?.[0]?.name ? `Guard: ${guardData.data[0].name}` : 'Guard'" /></template>
         <template #guard>
       <CommonFormCard>
@@ -939,13 +939,16 @@ async function handleToggleGuard(guard: any, enabled: boolean) {
   }
 }
 
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; await Promise.all([fetchDescendants(), fetchRules()]); },
-    loading: computed(() => loading.value || descendantsLoading.value || rulesLoading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
-);
+const guardSections = computed(() => [{
+  value: 'guard',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; await Promise.all([fetchDescendants(), fetchRules()]); },
+      loading: computed(() => loading.value || descendantsLoading.value || rulesLoading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(async () => {
   await initializeForm();

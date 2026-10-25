@@ -53,7 +53,54 @@ describe('panel table surface', () => {
       expect(source, page).not.toContain('CommonPanel')
       expect(source, page).not.toContain('flush')
       expect(source, page).toMatch(/header-name="/)
+      expect(source, page).toContain(':reload=')
+      expect(source, page).toContain(':reload-loading=')
     }
     expect(read('pages/settings/users/index.vue')).toMatch(/<DataTableSettingsTable\n\s+header-name="User Manager"/)
+  })
+
+  it('uses CommonPanel section headers instead of registerPageHeader and places reload on CommonPanel or DataTable', () => {
+    const panelPages = [
+      'pages/index.vue',
+      'pages/me.vue',
+      'pages/collections/[table].vue',
+      'pages/settings/general/index.vue',
+      'pages/settings/flows/[id].vue',
+      'pages/settings/websockets/[id].vue',
+      'pages/settings/routes/[id].vue',
+      'pages/settings/guards/index.vue',
+      'pages/settings/api-tester/index.vue',
+      'pages/settings/logs.vue',
+      'pages/settings/runtime.vue',
+      'components/helper/Editor.vue',
+    ]
+    for (const file of panelPages) {
+      expect(read(file), file).not.toContain('registerPageHeader')
+    }
+
+    const reloadBearingPages = [
+      'pages/data/[table]/[id].vue',
+      'pages/collections/[table].vue',
+      'pages/me.vue',
+      'pages/settings/general/index.vue',
+      'pages/settings/users/[id].vue',
+      'pages/settings/roles/[id].vue',
+      'pages/settings/guards/[id].vue',
+      'pages/settings/extensions/[id].vue',
+      'pages/settings/oauth/config/[id].vue',
+      'pages/settings/oauth/accounts/[id].vue',
+      'pages/storage/config/[id].vue',
+      'pages/storage/management/file/[id].vue',
+      'pages/packages/[id].vue',
+      'pages/settings/flows/[id].vue',
+      'pages/settings/websockets/[id].vue',
+      'pages/settings/menus/index.vue',
+      'components/route/EditorPanel.vue',
+      'components/helper/Editor.vue',
+    ]
+    for (const file of reloadBearingPages) {
+      const source = read(file)
+      expect(source, file).not.toMatch(/registerHeaderActions\(\s*(?:\[\s*)?useReloadAction/)
+    }
   })
 })

@@ -24,7 +24,6 @@ const { confirm } = useConfirm()
 const { routes, loadRoutes } = useRoutes()
 const { retryUntilFresh } = useServerSync()
 const { getId, getIdFieldName } = useDatabase()
-const { registerPageHeader } = usePageHeaderRegistry()
 const ROUTE_DETAIL_HEADER_FIELDS = [
   'id',
   'path',
@@ -33,11 +32,6 @@ const ROUTE_DETAIL_HEADER_FIELDS = [
 
 const routeId = computed(() => String(route.params.id))
 const showApiTestModal = ref(false)
-
-registerPageHeader({
-  title: 'Route Details',
-  gradient: 'purple',
-})
 
 const {
   data: routeData,
@@ -53,15 +47,6 @@ const {
 })
 
 useNotFoundGuard(loading, () => !!routeData.value?.data?.[0], 'Route not found', routeError)
-
-watch(() => routeData.value?.data?.[0]?.path, (path) => {
-  if (path) {
-    registerPageHeader({
-      title: `Route: ${path}`,
-      gradient: 'purple',
-    })
-  }
-}, { immediate: true })
 
 const { checkPermissionCondition } = usePermissions()
 const canUpdateRoute = computed(() =>

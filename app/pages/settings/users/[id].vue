@@ -188,13 +188,16 @@ async function deleteUser() {
   await navigateTo("/settings/users");
 }
 
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
-);
+const userSections = computed(() => [{
+  value: 'user',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(() => {
   initializeForm();
@@ -204,7 +207,7 @@ onMounted(() => {
 <template>
   <div class="space-y-6">
     <div v-if="loading || apiData?.data?.[0]" class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'user' }]">
+      <CommonPanel :sections="userSections">
         <template #user-header><CommonFormHeader :title="apiData?.data?.[0]?.email || 'User'" /></template>
         <template #user>
       <CommonFormCard>

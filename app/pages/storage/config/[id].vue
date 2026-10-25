@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <div v-if="loading || configData?.data?.[0]" class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'storage' }]">
+      <CommonPanel :sections="storageSections">
         <template #storage-header><CommonFormHeader :title="configData?.data?.[0]?.name ? `Storage: ${configData.data[0].name}` : 'Storage'" /></template>
         <template #storage>
 <CommonFormCard>
@@ -266,13 +266,16 @@ async function initializeForm() {
   }
 }
 
-registerHeaderActions(
-  useReloadAction({
-    reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
-    loading: computed(() => loading.value),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
-);
+const storageSections = computed(() => [{
+  value: 'storage',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(() => {
   initializeForm();

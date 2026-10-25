@@ -44,22 +44,10 @@ const constraintFieldNames = computed<string[]>(() => {
 const hasFormChanges = ref(false);
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
-const { registerPageHeader } = usePageHeaderRegistry();
-
-function registerCollectionPageHeader(name: unknown) {
-  registerPageHeader({
-    title: String(name || route.params.table || 'Collection'),
-    gradient: "purple",
-  });
-}
-
-registerCollectionPageHeader(route.params.table);
-
-watch(() => table.value?.name, (name) => {
-  if (name) {
-    registerCollectionPageHeader(name);
-  }
-}, { immediate: true });
+const collectionTitle = computed(() => {
+  const name = table.value?.name || route.params.table;
+  return name ? `Collection: ${name}` : 'Collection';
+});
 
 const {
   data: tableData,
@@ -130,16 +118,17 @@ const {
   errorContext: "Delete Table",
 });
 
+const schemaReloadAction = useReloadAction({
+  reload: async () => {
+    await initializeForm();
+    if (activeTab.value === 'schema') formChanges.update(table.value);
+  },
+  loading: computed(() => schemaLoading.value || loading.value),
+  show: computed(() => activeTab.value === 'schema'),
+  hasUnsavedChanges: () => hasFormChanges.value,
+});
+
 registerHeaderActions([
-  useReloadAction({
-    reload: async () => {
-      await initializeForm();
-      if (activeTab.value === 'schema') formChanges.update(table.value);
-    },
-    loading: computed(() => schemaLoading.value || loading.value),
-    show: computed(() => activeTab.value === 'schema'),
-    hasUnsavedChanges: () => hasFormChanges.value,
-  }),
   {
     id: "reset-table",
     label: "Reset",
@@ -216,12 +205,37 @@ const showSchemaViewer = ref(false);
 const showRouteApiTest = ref(false);
 
 const activeTab = ref((route.query.tab as string) || 'schema')
-const collectionSections = [
-  { label: 'Schema', icon: 'i-lucide-table-2', value: 'schema' },
-  { label: 'Routes', icon: 'i-lucide-route', value: 'routes' },
-  { label: 'GraphQL', icon: 'i-lucide-braces', value: 'graphql' },
-  { label: 'Triggers', icon: 'i-lucide-zap', value: 'triggers' },
-]
+const collectionSections = computed(() => [
+  {
+    label: 'Schema',
+    icon: 'i-lucide-table-2',
+    value: 'schema',
+    title: collectionTitle.value,
+    description: table.value?.description || 'Edit table structure, columns, relations, and constraints',
+    actions: [schemaReloadAction],
+  },
+  {
+    label: 'Routes',
+    icon: 'i-lucide-route',
+    value: 'routes',
+    title: collectionTitle.value,
+    description: 'Configure REST endpoints, method rules, handlers, and hooks',
+  },
+  {
+    label: 'GraphQL',
+    icon: 'i-lucide-braces',
+    value: 'graphql',
+    title: collectionTitle.value,
+    description: 'Configure GraphQL operations and access policies',
+  },
+  {
+    label: 'Triggers',
+    icon: 'i-lucide-zap',
+    value: 'triggers',
+    title: collectionTitle.value,
+    description: 'Manage flows triggered by changes in this collection',
+  },
+])
 
 watch(activeTab, (tab) => {
   const query = { ...route.query, tab }

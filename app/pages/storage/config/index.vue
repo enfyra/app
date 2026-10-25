@@ -7,6 +7,8 @@
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading || storageConfigsRefreshing"
+    :reload="() => fetchStorageConfigs()"
+    :reload-loading="loading"
     :total="total"
     :page-limit="limit"
     page-size-key="storage-config"

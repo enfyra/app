@@ -5,6 +5,8 @@
     :data="accounts"
     :columns="columns"
     :loading="showInitialLoading"
+    :reload="() => fetchAccounts()"
+    :reload-loading="loading"
     :total="total"
     :page-limit="pageLimit"
     page-size-key="oauth-accounts"

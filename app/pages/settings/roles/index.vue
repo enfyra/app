@@ -134,6 +134,8 @@ watch([page, pageLimit, searchValue], () => { void fetchRoles(); }, { immediate:
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
+    :reload="() => fetchRoles()"
+    :reload-loading="loading"
     :total="total"
     :page-limit="pageLimit"
     page-size-key="roles"

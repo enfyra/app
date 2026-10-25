@@ -47,7 +47,8 @@ describe('dedicated Helpers UI', () => {
     expect(query.fields).toBe('id,name,description,isEnabled,scriptLanguage,updatedAt')
     expect(query.sort).toBe('name,id')
     expect(query.meta).toBe('filterCount')
-    expect(state.headers.mock.calls[0]![0].map((action: any) => action.id)).toEqual(['helpers-refresh', 'helpers-create'])
+    expect(state.headers.mock.calls[0]![0].map((action: any) => action.id)).toEqual(['helpers-create'])
+    expect(typeof page.getComponent(SettingsTable).props('reload')).toBe('function')
   })
 
   it('submits only the helper name and keeps status and unrelated URL fields', async () => {

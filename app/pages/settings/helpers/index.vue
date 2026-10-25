@@ -36,7 +36,6 @@ const columns: ColumnDef<Record<string, any>>[] = [
   settingsDateColumn('updatedAt', 'Updated'),
 ];
 registerHeaderActions([
-  { id: 'helpers-refresh', label: 'Refresh', icon: 'lucide:refresh-cw', variant: 'outline', color: 'neutral', onClick: () => loadHelpers(), loading, disabled: computed(() => !!mutatingId.value) },
   { id: 'helpers-create', label: 'Create Helper', icon: 'lucide:plus', variant: 'solid', color: 'primary', to: '/settings/helpers/create', permission: { and: [{ route: '/enfyra_helper', methods: ['POST'] }] }, order: 999 },
 ]);
 
@@ -115,7 +114,7 @@ onBeforeUnmount(() => { active = false; generation++; cancel(); });
     <UAlert v-if="loadFailed" color="error" variant="soft" title="Helpers could not be loaded" description="Check your access or refresh to try again." />
   <DataTableSettingsTable
       header-name="Helpers"
-      header-description="Write reusable code once and call it by name from handlers, hooks and flows." :bulk-action="bulkDelete" :page="page" :data="rows" :columns="columns" :actions="actions" :loading="loading" :pagination-loading="loading" :total="total" :page-limit="limit" page-size-key="helpers" :to="p => ({ path: route.path, query: { ...route.query, page: p } })" @update:page="changePage" @page-size-change="changePageSize" @row-click="helper => navigateTo(`/settings/helpers/${encodeURIComponent(String(getId(helper)))}`)" searchable v-model:search="search" search-placeholder="Search by name" search-label="Search helpers by name" @search="searchHelpers">
+      header-description="Write reusable code once and call it by name from handlers, hooks and flows." :bulk-action="bulkDelete" :page="page" :data="rows" :columns="columns" :actions="actions" :loading="loading" :reload="() => loadHelpers()" :reload-loading="loading" :pagination-loading="loading" :total="total" :page-limit="limit" page-size-key="helpers" :to="p => ({ path: route.path, query: { ...route.query, page: p } })" @update:page="changePage" @page-size-change="changePageSize" @row-click="helper => navigateTo(`/settings/helpers/${encodeURIComponent(String(getId(helper)))}`)" searchable v-model:search="search" search-placeholder="Search by name" search-label="Search helpers by name" @search="searchHelpers">
       <template #toolbar-actions>
         <USelect :model-value="scope" :items="[{ label: 'All statuses', value: 'all' }, { label: 'Enabled', value: 'enabled' }, { label: 'Disabled', value: 'disabled' }]" size="sm" aria-label="Helper status" class="w-36 shrink-0" @update:model-value="setScope" />
       </template>

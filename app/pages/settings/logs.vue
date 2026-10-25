@@ -2,7 +2,6 @@
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { RuntimeLogRow } from '~/types/runtime-log';
 
-const { registerPageHeader } = usePageHeaderRegistry();
 const { checkPermissionCondition } = usePermissions();
 const { me } = useAuth();
 const route = useRoute();
@@ -25,8 +24,22 @@ const detailOpen = ref(false);
 const path = computed(() => kind.value === 'system' ? '/enfyra_system_error' : '/enfyra_user_log');
 const canRead = (target: string) => !!me.value?.isRootAdmin || checkPermissionCondition({ or: [{ route: target, methods: ['GET'] }] });
 const logSections = computed(() => [
-  { label: 'System errors', value: 'system', icon: 'lucide:bug', disabled: !canRead('/enfyra_system_error') },
-  { label: 'User logs', value: 'user', icon: 'lucide:terminal', disabled: !canRead('/enfyra_user_log') },
+  {
+    label: 'System errors',
+    value: 'system',
+    icon: 'lucide:bug',
+    title: 'Server Logs',
+    description: 'Trace system errors and user script logs by correlation ID',
+    disabled: !canRead('/enfyra_system_error'),
+  },
+  {
+    label: 'User logs',
+    value: 'user',
+    icon: 'lucide:terminal',
+    title: 'Server Logs',
+    description: 'Trace system errors and user script logs by correlation ID',
+    disabled: !canRead('/enfyra_user_log'),
+  },
 ]);
 const commonFields = ['id', 'eventId', 'occurredAt', 'correlationId', 'instanceId', 'component', 'sourceKind', 'sourceId', 'statusCode'];
 const filter = ref<Record<string, unknown>>({});
@@ -143,7 +156,6 @@ watch(kind, async () => {
   }
 });
 onMounted(() => { if (!canRead(path.value) && canRead('/enfyra_user_log')) kind.value = 'user'; else void search(); });
-registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and user script logs by correlation ID', variant: 'default', gradient: 'purple' });
 </script>
 
 <template>
@@ -162,77 +174,70 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
 
     <CommonPanel v-model="kind" :sections="logSections">
       <template v-for="section in logSections" :key="section.value" #[section.value]>
-    <section v-if="canRead(path)" class="surface-card rounded-lg p-4">
-      <div class="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div class="min-w-0">
-          <div class="flex items-center gap-2">
-            <h2 class="font-medium text-[var(--text-primary)]">{{ kind === 'system' ? 'Recent system errors' : 'Recent user logs' }}</h2>
-            <UBadge v-if="!listLoading && !error" color="neutral" variant="soft" size="xs">{{ total.toLocaleString() }}</UBadge>
-          </div>
-          <p class="mt-1 text-xs text-[var(--text-tertiary)]">Newest first · retained for 30 days</p>
+        <div v-if="canRead(path)" class="space-y-4">
+          <UAlert v-if="error" color="error" title="Could not load logs" :description="error.message" />
+          <DataTableSettingsTable
+            :header-name="kind === 'system' ? 'Recent system errors' : 'Recent user logs'"
+            header-description="Newest first · retained for 30 days"
+            v-model:page="page"
+            v-model:search="correlationId"
+            searchable
+            search-placeholder="Search by correlation ID…"
+            search-label="Search by correlation ID"
+            :data="items"
+            :columns="columns"
+            :loading="listLoading"
+            :reload="search"
+            :reload-loading="pending"
+            :total="total"
+            :page-limit="pageLimit"
+            page-size-key="server-logs"
+            :pagination-loading="pending"
+            compact
+            @search="search"
+            @page-size-change="setPageSize"
+            @update:page="execute()"
+            @row-click="row => inspect(row as RuntimeLogRow)"
+          >
+            <template #toolbar-actions>
+              <UPopover v-model:open="filtersOpen">
+                <UButton color="neutral" variant="outline" size="sm" icon="lucide:sliders-horizontal">
+                  Filters
+                  <UBadge v-if="component || (kind === 'system' && code)" color="primary" variant="soft" size="xs">{{ Number(!!component) + Number(kind === 'system' && !!code) }}</UBadge>
+                </UButton>
+                <template #content>
+                  <div class="w-72 max-w-[calc(100vw-2rem)] space-y-4 p-4">
+                    <p class="text-sm font-semibold">Filter logs</p>
+                    <UFormField label="Component" :ui="{ label: 'text-xs', container: 'mt-1' }">
+                      <UInput v-model="component" placeholder="e.g. Script" :ui="{ base: 'h-9 px-3 py-1.5' }" class="w-full" @keydown.enter.prevent="search(); filtersOpen = false" />
+                    </UFormField>
+                    <UFormField v-if="kind === 'system'" label="Error code" :ui="{ label: 'text-xs', container: 'mt-1' }">
+                      <UInput v-model="code" placeholder="e.g. HTTP_502" :ui="{ base: 'h-9 px-3 py-1.5' }" class="w-full" @keydown.enter.prevent="search(); filtersOpen = false" />
+                    </UFormField>
+                    <div class="flex items-center gap-2">
+                      <UButton v-if="hasFilters" color="neutral" variant="outline" class="h-9 flex-1 justify-center" @click="resetFilters(); filtersOpen = false">Clear</UButton>
+                      <UButton class="h-9 flex-1 justify-center" :loading="pending" @click="search(); filtersOpen = false">Apply filters</UButton>
+                    </div>
+                  </div>
+                </template>
+              </UPopover>
+              <UButton
+                v-if="hasFilters"
+                type="button"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                icon="lucide:x"
+                @click="resetFilters"
+              >
+                Clear
+              </UButton>
+              <USelect v-model="hours" :items="timeWindows" aria-label="Time window" icon="lucide:clock-3" size="sm" class="w-36 shrink-0" @update:model-value="search" />
+            </template>
+          </DataTableSettingsTable>
         </div>
 
-        <form class="flex min-w-0 flex-wrap items-center gap-2" role="search" @submit.prevent="search">
-      <UInput v-model="correlationId" aria-label="Search by correlation ID" placeholder="Search by correlation ID…" icon="lucide:search" size="sm" :ui="{ base: 'h-9 py-1.5 ps-9 pe-3' }" class="min-w-0 basis-full sm:basis-auto sm:w-72" />
-      <UPopover v-model:open="filtersOpen">
-        <UButton color="neutral" variant="outline" icon="lucide:sliders-horizontal" class="h-9 px-3">
-          Filters
-          <UBadge v-if="component || (kind === 'system' && code)" color="primary" variant="soft" size="xs">{{ Number(!!component) + Number(kind === 'system' && !!code) }}</UBadge>
-        </UButton>
-        <template #content>
-          <div class="w-72 max-w-[calc(100vw-2rem)] space-y-4 p-4">
-            <p class="text-sm font-semibold">Filter logs</p>
-            <UFormField label="Component" :ui="{ label: 'text-xs', container: 'mt-1' }">
-              <UInput v-model="component" placeholder="e.g. Script" :ui="{ base: 'h-9 px-3 py-1.5' }" class="w-full" @keydown.enter.prevent="search(); filtersOpen = false" />
-            </UFormField>
-            <UFormField v-if="kind === 'system'" label="Error code" :ui="{ label: 'text-xs', container: 'mt-1' }">
-              <UInput v-model="code" placeholder="e.g. HTTP_502" :ui="{ base: 'h-9 px-3 py-1.5' }" class="w-full" @keydown.enter.prevent="search(); filtersOpen = false" />
-            </UFormField>
-            <div class="flex items-center gap-2">
-              <UButton v-if="hasFilters" color="neutral" variant="outline" class="h-9 flex-1 justify-center" @click="resetFilters(); filtersOpen = false">Clear</UButton>
-              <UButton class="h-9 flex-1 justify-center" :loading="pending" @click="search(); filtersOpen = false">Apply filters</UButton>
-            </div>
-          </div>
-        </template>
-      </UPopover>
-      <UButton
-        v-if="hasFilters"
-        type="button"
-        color="neutral"
-        variant="ghost"
-        size="sm"
-        icon="lucide:x"
-        class="h-9 px-2.5"
-        @click="resetFilters"
-      >
-        Clear
-      </UButton>
-      <div class="flex min-w-0 items-center gap-2">
-        <USelect v-model="hours" :items="timeWindows" aria-label="Time window" icon="lucide:clock-3" size="sm" :ui="{ base: 'h-9 py-1.5 ps-9 pe-9' }" class="w-40" @update:model-value="search" />
-        <UButton type="submit" icon="lucide:refresh-cw" aria-label="Refresh logs" color="neutral" variant="outline" :loading="pending" class="size-9 justify-center p-0" />
-      </div>
-        </form>
-      </div>
-
-      <UAlert v-if="error" color="error" title="Could not load logs" :description="error.message" />
-      <DataTableSettingsTable
-        header-name="Logs"
-        v-model:page="page"
-        :data="items"
-        :columns="columns"
-        :loading="listLoading"
-        :total="total"
-        :page-limit="pageLimit"
-        page-size-key="server-logs"
-        :pagination-loading="pending"
-        compact
-        @page-size-change="setPageSize"
-        @update:page="execute()"
-        @row-click="row => inspect(row as RuntimeLogRow)"
-      />
-    </section>
-
-    <CommonEmptyState v-if="!canRead(path)" title="Access denied" description="A route read permission is required to view these logs." icon="lucide:lock" />
+        <CommonEmptyState v-if="!canRead(path)" title="Access denied" description="A route read permission is required to view these logs." icon="lucide:lock" />
       </template>
     </CommonPanel>
 

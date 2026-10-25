@@ -10,7 +10,6 @@ import RuntimeWorkersTab from '~/components/runtime/RuntimeWorkersTab.vue';
 import RuntimeConnectionsTab from '~/components/runtime/RuntimeConnectionsTab.vue';
 import RuntimeGuardsTab from '~/components/runtime/RuntimeGuardsTab.vue';
 
-const { registerPageHeader } = usePageHeaderRegistry();
 const { me } = useAuth();
 const runtime = useRuntimeMetrics();
 
@@ -31,6 +30,8 @@ const runtimeSections = computed(() =>
     return {
       ...item,
       label: tabLabel(item.label),
+      title: 'Runtime Monitor',
+      description: 'Live server runtime metrics',
       ...(count > 0 ? { badge: String(count) } : {}),
     };
   }),
@@ -47,13 +48,6 @@ const tabComponents: Record<string, Component> = {
   connections: RuntimeConnectionsTab,
   guards: RuntimeGuardsTab,
 };
-
-registerPageHeader({
-  title: 'Runtime Monitor',
-  description: 'Live server runtime metrics',
-  variant: 'default',
-  gradient: 'purple',
-});
 </script>
 
 <template>

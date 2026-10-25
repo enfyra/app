@@ -111,22 +111,15 @@ onMounted(() => {
     </section>
 
     <!-- Recent alerts table -->
-    <section class="surface-card rounded-lg p-4">
-      <div class="mb-3 flex items-center justify-between">
-        <div class="font-medium text-[var(--text-primary)]">Recent Rejections</div>
-        <button
-          type="button"
-          :disabled="pending"
-          class="text-xs text-[var(--text-tertiary)] lg:hover:text-[var(--text-primary)] disabled:opacity-50 transition-colors"
-          @click="execute()"
-        >
-          Refresh
-        </button>
-      </div>
-
-      <DataTable header-name="Recent rejections" :data="alerts" :columns="columns" :loading="pending">
-        <template #empty><CommonEmptyState variant="naked" title="No guard rejections recorded" icon="lucide:shield" size="sm" /></template>
-      </DataTable>
-    </section>
+    <DataTable
+      header-name="Recent rejections"
+      :data="alerts"
+      :columns="columns"
+      :loading="pending"
+      :reload="() => execute()"
+      :reload-loading="pending"
+    >
+      <template #empty><CommonEmptyState variant="naked" title="No guard rejections recorded" icon="lucide:shield" size="sm" /></template>
+    </DataTable>
   </CommonAnimatedGrid>
 </template>

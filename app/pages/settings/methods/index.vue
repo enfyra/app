@@ -376,6 +376,8 @@ watch(
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading || loading"
+      :reload="() => fetchMethods()"
+      :reload-loading="loading"
       @row-click="method => openEdit(method as MethodRecord)"
     />
 

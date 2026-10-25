@@ -377,6 +377,8 @@ async function deleteRoute(routeItem: any) {
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading"
+      :reload="() => fetchRoutes()"
+      :reload-loading="loading"
       :total="total"
       :page-limit="pageLimit"
       page-size-key="routes"
