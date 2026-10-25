@@ -323,7 +323,7 @@ onUnmounted(() => {
   >
     <template #header="{ close }">
       <div
-        class="flex w-full min-w-0 items-center overflow-hidden px-3.5 pb-3 pt-4 lg:min-h-14 lg:py-0 group-data-[state=collapsed]/sidebar:px-2"
+        class="flex w-full min-w-0 items-center overflow-hidden p-3 lg:min-h-14 lg:px-3.5 lg:py-0 group-data-[state=collapsed]/sidebar:px-2"
         :class="!renderExpandedSidebarContent ? 'justify-center gap-0' : 'gap-3'"
       >
         <div class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-control)] border border-[var(--brand-700)] bg-[var(--nav-item-active-bg)] text-[var(--nav-count-active-text)] shadow-[var(--shadow-md)]">

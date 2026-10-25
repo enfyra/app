@@ -113,7 +113,7 @@
     --theme-focus-ring: color-mix(in srgb, var(--md-primary) 34%, transparent);
     --theme-focus-ring-strong: color-mix(in srgb, var(--md-primary) 47%, transparent);
     --radius-card: 18px;
-    --radius-shell: var(--radius-card);
+    --radius-shell: var(--radius-control);
     --radius-panel: 14px;
     --radius-control: 12px;
     --radius-subcontrol: 8px;
@@ -444,14 +444,9 @@
   --ui-color-info-950: color-mix(in srgb, var(--info-on-surface) 82%, var(--info-color)) !important;
 }
 
-@media (min-width: 768px) {
-  :root {
-    --shell-mobile-inset: 1rem;
-  }
-}
-
 @media (min-width: 1024px) {
   :root {
+    --radius-shell: var(--radius-card);
     --shell-overlay-inset: var(--shell-inset);
   }
 }

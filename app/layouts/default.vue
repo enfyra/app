@@ -1,7 +1,7 @@
 <template>
   <UDashboardGroup
     :persistent="false"
-    class="bg-[var(--shell-bg)] text-sm text-[var(--text-primary)] p-[var(--shell-mobile-inset)] lg:ps-0 lg:py-[var(--shell-inset)] lg:pe-[var(--shell-inset)]"
+    class="bg-[var(--shell-bg)] text-sm text-[var(--text-primary)] lg:ps-0 lg:py-[var(--shell-inset)] lg:pe-[var(--shell-inset)]"
   >
     <a
       href="#dashboard-panel-workspace"
@@ -17,7 +17,7 @@
         id="workspace"
         role="main"
         tabindex="-1"
-        class="eapp-shell-main overflow-hidden bg-[var(--shell-main-bg)] rounded-[var(--radius-shell)] border border-default shadow-sm"
+        class="eapp-shell-main overflow-hidden bg-[var(--shell-main-bg)] lg:rounded-[var(--radius-shell)] lg:border lg:border-default lg:shadow-sm"
         :ui="{ root: 'min-h-0' }"
       >
         <template #header>

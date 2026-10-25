@@ -2,7 +2,7 @@ export default defineAppConfig({
   ui: {
     dashboardNavbar: {
       slots: {
-        root: 'h-14 px-2 sm:px-3 md:h-(--ui-header-height) md:px-6',
+        root: 'h-auto py-3 px-3 sm:px-3 md:px-6 lg:h-(--ui-header-height) lg:py-0',
       },
     },
     dashboardPanel: {

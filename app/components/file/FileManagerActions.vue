@@ -50,7 +50,7 @@ watch([anchor, () => props.active], measureAnchor, { flush: 'post' });
         role="toolbar"
         :aria-label="moveMode ? 'Move selected items' : 'Selected items'"
         :style="{ left: `${bounds.left}px`, width: `${bounds.width}px` }"
-        class="fixed bottom-[calc(var(--shell-overlay-inset)+0.75rem+env(safe-area-inset-bottom))] z-30 flex -translate-x-1/2 flex-col gap-3 rounded-[var(--radius-panel)] border border-default bg-default p-3 text-sm shadow-md sm:flex-row sm:items-center sm:justify-between"
+        class="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] lg:bottom-[calc(var(--shell-inset)+0.75rem+env(safe-area-inset-bottom))] z-30 flex -translate-x-1/2 flex-col gap-3 rounded-[var(--radius-panel)] border border-default bg-default p-3 text-sm shadow-md sm:flex-row sm:items-center sm:justify-between"
       >
         <div class="min-w-0">
           <template v-if="moveMode">
