@@ -50,6 +50,7 @@ watch(() => props.tableId, async (id) => {
 const showInverseModal = ref(false);
 const inverseModalTarget = ref<any>(null);
 const inversePropertyNameInput = ref('');
+const inverseError = ref('');
 
 const metadataInverseRelIds = computed(() => {
   const ids = new Set<string>();
@@ -137,6 +138,7 @@ function getInverseType(type: string): string {
 function openInverseModal(incoming: any) {
   inverseModalTarget.value = incoming;
   inversePropertyNameInput.value = '';
+  inverseError.value = '';
   showInverseModal.value = true;
 }
 
@@ -145,14 +147,22 @@ function confirmCreateInverse() {
   if (!incoming || !inversePropertyNameInput.value?.trim()) return;
   const name = inversePropertyNameInput.value.trim();
   if (!TABLE_NAME_FIELD_REGEX.test(name)) {
-    notify.error("Invalid name", "Property name must be a valid identifier");
+    inverseError.value = "Property name must be a valid identifier";
+    notify.error("Invalid name", inverseError.value);
     return;
   }
-  const exists = relations.value.some((r: any) => r.propertyName === name);
+  const reserved = (props.reservedNames || [])
+    .map((n: any) => String(n ?? '').trim())
+    .filter(Boolean);
+  const exists =
+    relations.value.some((r: any) => r.propertyName === name) ||
+    reserved.includes(name);
   if (exists) {
-    notify.error("Duplicate", "A relation with this name already exists");
+    inverseError.value = "A field or relation with this name already exists";
+    notify.error("Duplicate", inverseError.value);
     return;
   }
+  inverseError.value = '';
   const inverseType = getInverseType(incoming.type);
   const sourceTableId = incoming.sourceTableId ?? incoming.sourceTable?.id ?? incoming.sourceTable;
   relations.value.push({
@@ -212,7 +222,11 @@ function handleShieldClick(_rel: any, index: number) {
 }
 
 async function handleDrawerClose() {
-  if (!hasFormChanges.value) return;
+  if (!currentRelation.value) return;
+  if (!hasFormChanges.value) {
+    discardChanges();
+    return;
+  }
   isEditing.value = true;
   const ok = await confirm({
     title: "Unsaved Changes",
@@ -230,6 +244,7 @@ function discardChanges() {
   isNew.value = false;
   currentRelation.value = null;
   editingIndex.value = null;
+  hasFormChanges.value = false;
 }
 
 function createEmptyRelation(): any {
@@ -250,6 +265,7 @@ async function openNewRelationModal() {
   isNew.value = true;
   editingIndex.value = null;
   currentRelation.value = createEmptyRelation();
+  hasFormChanges.value = false;
 }
 
 function editRelation(rel: any, index: number) {
@@ -257,6 +273,7 @@ function editRelation(rel: any, index: number) {
   isNew.value = false;
   editingIndex.value = index;
   currentRelation.value = { ...toRaw(rel) };
+  hasFormChanges.value = false;
 }
 
 async function saveRelation() {
@@ -299,7 +316,10 @@ async function saveRelation() {
   formEditorRef.value?.confirmChanges();
 
   isEditing.value = false;
+  isNew.value = false;
   currentRelation.value = null;
+  editingIndex.value = null;
+  hasFormChanges.value = false;
 }
 
 async function removeRelation(index: number) {
@@ -635,12 +655,13 @@ function getMobileRelationActions(rel: any, index: number) {
           <p class="text-sm text-[var(--text-secondary)]">
             This will create a <span class="font-semibold">{{ getInverseType(inverseModalTarget.type) }}</span> relation on this table.
           </p>
-          <UFormField label="Property Name" required class="w-full">
+          <UFormField label="Property Name" required v-bind="inverseError ? { error: inverseError } : {}" class="w-full">
             <UInput
               v-model="inversePropertyNameInput"
               placeholder="e.g. orders, comments, children"
               autofocus
               class="w-full"
+              @update:model-value="inverseError = ''"
               @keydown.enter="confirmCreateInverse"
             />
           </UFormField>

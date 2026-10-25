@@ -117,7 +117,6 @@ const formError = computed(() => {
   return methodError.value || colorError.value;
 });
 
-const canSave = computed(() => !saving.value && !formError.value);
 const hasUnsavedChanges = computed(() => (
   form.id !== initialForm.value.id ||
   form.name !== initialForm.value.name ||
@@ -126,6 +125,7 @@ const hasUnsavedChanges = computed(() => (
   form.isSystem !== initialForm.value.isSystem ||
   customMethod.value !== initialForm.value.customMethod
 ));
+const canSave = computed(() => !saving.value && !formError.value && (mode.value === 'create' || hasUnsavedChanges.value));
 
 const visibleMethodOptions = computed(() => {
   if (mode.value === 'edit') return METHOD_OPTIONS;

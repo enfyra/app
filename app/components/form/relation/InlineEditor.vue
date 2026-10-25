@@ -117,6 +117,8 @@ function getDetailPath(id: RelationId): string | null {
       size="md"
       variant="outline"
       color="primary"
+      aria-label="Select relation records"
+      :disabled="props.disabled"
       @click="showModal = true"
     />
   </div>

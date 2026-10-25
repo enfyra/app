@@ -447,9 +447,14 @@ async function deleteKey() {
 }
 
 async function persistSelectedKey() {
-  if (!selected.value || !canModifySelected.value) return;
-  const key = selected.value.key;
-  await props.runtime.updateRedisKeyTtl(key, null);
+  try {
+    if (!selected.value || !canModifySelected.value) return;
+    const key = selected.value.key;
+    await props.runtime.updateRedisKeyTtl(key, null);
+    notify.success('TTL removed', key);
+  } catch (error) {
+    notify.error('TTL update failed', error instanceof Error ? error.message : String(error));
+  }
 }
 
 async function copyKey(key: string) {
@@ -657,7 +662,7 @@ function openCreateKey() {
         <form id="redis-key-editor-form" class="space-y-3" @submit.prevent="saveKey">
           <div>
             <div class="mb-1 text-xs font-medium text-[var(--text-tertiary)]">Key</div>
-            <UInput v-model="formKey" class="w-full font-mono text-xs" :disabled="selectedLocked || runtime.redisWritePending" placeholder="redis:key" />
+            <UInput v-model="formKey" class="w-full font-mono text-xs" :disabled="keyEditorMode === 'edit' || selectedLocked || runtime.redisWritePending" placeholder="redis:key" />
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
             <div>

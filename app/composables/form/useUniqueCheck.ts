@@ -250,8 +250,10 @@ export function useUniqueCheck(
       };
 
       try {
+        const { getRouteForTableName } = useRoutes();
+        const routePath = getRouteForTableName(tableNameRef.value);
         const response = await useAuthFetch<{ data: any[]; meta?: { total?: number } }>(
-          `/api/${tableNameRef.value}`,
+          `/api${routePath.startsWith('/') ? routePath : `/${routePath}`}`,
           {
             query: {
               filter: finalFilter,

@@ -26,6 +26,7 @@
               }
             }"
             @update:errors="(errors) => (createErrors = errors)"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             mode="create"
           />
         </UForm>
@@ -60,6 +61,8 @@ const tableName = "enfyra_websocket";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 const showConnTestModal = ref(false);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
@@ -103,11 +106,14 @@ registerSubHeaderActions([
   },
 ]);
 
+const { getId } = useDatabase();
+
 const {
+  data: createData,
   error: createError,
   execute: executeCreateGateway,
   pending: createLoading,
-} = useApi(() => `/enfyra_websocket`, {
+} = useApi<{ data?: Record<string, any>[] }>(() => `/enfyra_websocket`, {
   method: "post",
   errorContext: "Create WebSocket Gateway",
 });
@@ -131,7 +137,10 @@ async function handleCreate() {
   }
 
   notify.success("Success", `WebSocket gateway "${createForm.value.path}" has been created successfully!`);
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
-  router.push('/settings/websockets');
+  const createdId = getId(createData.value?.data?.[0]);
+  router.push(createdId ? `/settings/websockets/${createdId}` : '/settings/websockets');
 }
 </script>

@@ -13,13 +13,16 @@ export function useDataTableActions<TRow>(
   const { createLoader } = useLoader();
   const { getId } = useDatabase();
   const { hasPermission } = usePermissions();
+  const { getRouteForTableName } = useRoutes();
+
+  const targetRoute = computed(() => getRouteForTableName(toValue(tableName)));
 
   const canDelete = computed(() =>
-    hasPermission(`/${toValue(tableName)}`, 'DELETE')
+    hasPermission(targetRoute.value, 'DELETE')
   );
 
   const { executeWithResult: executeDelete } = useApi(
-    () => `/${toValue(tableName)}`,
+    () => targetRoute.value,
     {
       method: "delete",
       errorContext: "Delete Record",
@@ -27,7 +30,7 @@ export function useDataTableActions<TRow>(
   );
 
   const { executeWithResult: executeBulkDelete } = useApi(
-    () => `/${toValue(tableName)}`,
+    () => targetRoute.value,
     {
       method: 'delete',
       batch: true,

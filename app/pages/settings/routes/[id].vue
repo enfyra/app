@@ -80,9 +80,12 @@ const {
 })
 
 async function deleteRoute() {
+  const routePath = routeData.value?.data?.[0]?.path || 'this route'
   const ok = await confirm({
-    title: 'Are you sure?',
-    content: 'This action cannot be undone.',
+    title: 'Delete Route',
+    content: `Are you sure you want to delete route "${routePath}"? This action cannot be undone.`,
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
   })
   if (!ok) return
 
@@ -132,6 +135,4 @@ registerSubHeaderActions([
     onClick: () => { showApiTestModal.value = true },
   },
 ])
-
-onMounted(fetchRoute)
 </script>

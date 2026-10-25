@@ -54,8 +54,9 @@ const loadError = ref<string | null>(null);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const currentFilter = ref(createEmptyFilter());
 const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
+const { getRouteForTableName } = useRoutes();
 const targetTableName = computed(() => props.relationMeta?.targetTableName || "");
-const targetRoute = computed(() => `/${targetTableName.value}`);
+const targetRoute = computed(() => getRouteForTableName(targetTableName.value));
 const { definition, getColumnFields } = useSchema(targetTableName);
 
 let activeRequestController: AbortController | null = null;
@@ -449,8 +450,9 @@ const { isMobile, isTablet } = useScreen();
               v-for="id in selectedVisibleIds"
               :key="id"
               type="button"
+              :disabled="props.disabled"
               :title="`Remove ${id}`"
-              class="group inline-flex h-7 max-w-52 items-center gap-1 rounded-md border border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)] px-2 font-mono text-sm text-[var(--state-primary-soft-text)] transition-colors hover:bg-[var(--state-primary-soft-bg-hover)]"
+              class="group inline-flex h-7 max-w-52 items-center gap-1 rounded-md border border-[var(--state-primary-outline-border)] bg-[var(--state-primary-soft-bg)] px-2 font-mono text-sm text-[var(--state-primary-soft-text)] transition-colors hover:bg-[var(--state-primary-soft-bg-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               @click="removeSelection(id)"
             >
               <span class="truncate">{{ id }}</span>

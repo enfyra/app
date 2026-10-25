@@ -71,6 +71,7 @@
             color="primary"
             variant="solid"
             size="md"
+            aria-label="Add CORS origin"
             :loading="creating"
             :disabled="!newOrigin.trim() || creating"
             @click="addOrigin"
@@ -165,7 +166,7 @@ async function addOrigin() {
     (o) => o.value.toLowerCase() === normalized.toLowerCase()
   );
   if (exists) {
-    newOrigin.value = "";
+    notify.warning("Duplicate Origin", `Origin "${normalized}" is already in the list.`);
     return;
   }
 
@@ -187,7 +188,7 @@ async function toggleEnabled(origin: CorsOrigin, value: boolean) {
 
   if (updateError.value) return;
 
-notify.success("Success")
+  notify.success("Success", "CORS origin updated.");
   await fetchOrigins();
 }
 

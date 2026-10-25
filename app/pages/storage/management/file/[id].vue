@@ -34,6 +34,7 @@ const errors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
 const { useFormChanges } = useSchema();
+const { validateForm } = useFormValidation("enfyra_file");
 const formChanges = useFormChanges();
 
 const {
@@ -93,6 +94,15 @@ const activeTab = ref<'preview' | 'details' | 'permissions'>('preview');
 const permissionManagerRef = ref<{ createNewPermission?: () => unknown } | null>(null);
 
 registerHeaderActions([
+  useReloadAction({
+    reload: async () => {
+      await initializeForm();
+      formEditorRef.value?.confirmChanges();
+      hasFormChanges.value = false;
+    },
+    loading: computed(() => pending.value),
+    hasUnsavedChanges: () => hasFormChanges.value,
+  }),
   {
     id: "reset-file",
     label: "Reset",
@@ -100,9 +110,9 @@ registerHeaderActions([
     variant: "outline",
     color: "warning",
     order: 1,
-    disabled: computed(() => !hasFormChanges.value),
+    disabled: computed(() => !hasFormChanges.value || updateLoading.value),
     onClick: handleReset,
-    show: computed(() => hasFormChanges.value),
+    show: computed(() => activeTab.value === 'details' && hasFormChanges.value),
   },
   {
     id: "delete-file",
@@ -277,6 +287,8 @@ onMounted(() => {
 });
 
 async function saveFile() {
+  if (!await validateForm(form.value, errors)) return;
+
   await executeUpdateFile({
     id: fileId,
     body: form.value,
@@ -294,15 +306,20 @@ async function saveFile() {
     formChanges.update(freshData);
   }
 
+  errors.value = {};
+  hasFormChanges.value = false;
   notify.success("Success", "File updated successfully!");
 
   formEditorRef.value?.confirmChanges();
 }
 
 async function deleteFile() {
+  const filename = currentFile.value?.filename || "this file";
   const ok = await confirm({
-    title: "Are you sure?",
-    content: "This action cannot be undone.",
+    title: "Delete File",
+    content: `Are you sure you want to delete "${filename}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 
@@ -342,6 +359,8 @@ async function handleReplaceFileSuccess(files: File | File[]) {
   showReplaceModal.value = false;
   resetUploadProgress();
   await initializeForm();
+  hasFormChanges.value = false;
+  formEditorRef.value?.confirmChanges();
 
   updateFileTimestamp(fileId);
 

@@ -13,6 +13,7 @@
             :excluded="excludedFields"
             :field-map="fieldMap"
             @update:errors="(errors) => (createErrors = errors)"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             mode="create"
           />
         </UForm>
@@ -45,6 +46,8 @@ const tableName = "enfyra_oauth_config";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 const appOrigin = ref("");
 const excludedFields = computed(() =>
   createForm.value?.autoSetCookies === true ? ["appCallbackUrl"] : []
@@ -103,10 +106,18 @@ const {
 
 onMounted(async () => {
   await ensureSchema();
-  createForm.value = generateEmptyForm();
-  createForm.value.scriptLanguage ||= "typescript";
+  const initialForm = generateEmptyForm();
+  initialForm.scriptLanguage ||= "typescript";
   appOrigin.value = window.location.origin;
-  syncRedirectUri();
+  const redirectUri = buildOAuthRedirectUri(
+    initialForm.provider,
+    appOrigin.value
+  );
+  if (redirectUri) {
+    initialForm.redirectUri = redirectUri;
+  }
+  createForm.value = initialForm;
+  hasFormChanges.value = false;
 });
 
 watch(
@@ -137,6 +148,8 @@ async function handleCreate() {
   }
 
   notify.success("OAuth provider configured successfully");
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   const { getId } = useDatabase();
   await navigateTo(`/settings/oauth/config/${getId(createData.value?.data[0])}`, {

@@ -233,6 +233,7 @@ async function handleUpload(files: File | File[]) {
   try {
     const content = await file?.text();
     form.value.code = content;
+    hasFormChanges.value = true;
     showUploadModal.value = false;
 
     notify.success("Success", "Extension code uploaded successfully");

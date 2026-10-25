@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="eapp-page-constrained">
+    <div v-if="loading || account" class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'account' }]">
         <template #account-header><CommonFormHeader :title="account ? `${getProviderLabel(account.provider)} Account` : 'Account'" /></template>
         <template #account>
@@ -21,7 +21,7 @@
     </div>
 
     <CommonEmptyState
-      v-if="!loading && !account"
+      v-else
       title="OAuth account not found"
       description="The requested OAuth account could not be loaded"
       icon="lucide:link"

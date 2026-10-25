@@ -14,6 +14,7 @@
             :field-map="fieldMap"
             :sections="guardFormSections"
             mode="create"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
           />
         </UForm>
       </CommonFormCard>
@@ -31,6 +32,8 @@ const tableName = 'enfyra_guard';
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -156,6 +159,8 @@ async function handleCreate() {
   if (createError.value) return;
 
   notify.success('Guard created successfully');
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   await navigateTo(`/settings/guards/${getId(createData.value?.data[0])}`, {
     replace: true,

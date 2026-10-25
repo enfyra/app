@@ -628,13 +628,15 @@ async function handleReset() {
   }
 }
 
-useUnsavedChangesGuard(() => hasFormChanges.value);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 async function deleteGuard() {
+  const guardName = rootGuard.value?.name || 'this guard';
   const ok = await confirm({
-    title: 'Are you sure?',
-    content:
-      'This will delete the guard, all its child guards, and all rules. This action cannot be undone.',
+    title: 'Delete Guard',
+    content: `Are you sure you want to delete guard "${guardName}"? All child guards and rules will also be deleted. This action cannot be undone.`,
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
   });
   if (!ok) return;
 
@@ -642,6 +644,7 @@ async function deleteGuard() {
   if (deleteError.value) return;
 
   hasFormChanges.value = false;
+  allowNextNavigation();
   notify.success('Success', 'Guard deleted successfully');
   await navigateTo('/settings/guards');
 }
@@ -692,6 +695,24 @@ watch(
   },
 );
 
+function validateRuleConfig(type: string, rawConfig: any): string | null {
+  const config = typeof rawConfig === 'object' && rawConfig !== null ? rawConfig : {};
+  if (['rate_limit_by_ip', 'rate_limit_by_user', 'rate_limit_by_route', 'rate_limit_by_operation'].includes(type)) {
+    const maxRequests = Number(config.maxRequests ?? 100);
+    const perSeconds = Number(config.perSeconds ?? 60);
+    if (!Number.isFinite(maxRequests) || maxRequests < 1 || !Number.isFinite(perSeconds) || perSeconds < 1) {
+      return 'Max requests and window seconds must both be at least 1.';
+    }
+  }
+  if (['ip_whitelist', 'ip_blacklist'].includes(type)) {
+    const ips = Array.isArray(config.ips) ? config.ips.map((ip: any) => String(ip || '').trim()).filter(Boolean) : [];
+    if (ips.length === 0) {
+      return 'Please add at least one IP address or CIDR range.';
+    }
+  }
+  return null;
+}
+
 async function saveRule() {
   if (!ruleForm.value.type) {
     notify.error('Validation Error', 'Please select a rule type');
@@ -699,12 +720,18 @@ async function saveRule() {
   }
 
   const body = { ...ruleForm.value };
-  const config = typeof body.config === 'object' ? body.config : {};
-  if (Object.keys(config).length === 0) {
-    body.config = JSON.stringify(getDefaultConfig(body.type));
-  } else if (typeof body.config === 'object') {
-    body.config = JSON.stringify(body.config);
+  const config = typeof body.config === 'object' && body.config !== null && Object.keys(body.config).length > 0
+    ? body.config
+    : getDefaultConfig(body.type);
+  const configError = validateRuleConfig(body.type, config);
+  if (configError) {
+    notify.error('Validation Error', configError);
+    return;
   }
+  if (Array.isArray(config.ips)) {
+    config.ips = config.ips.map((ip: any) => String(ip || '').trim()).filter(Boolean);
+  }
+  body.config = JSON.stringify(config);
 
   await executeCreateRule({ body });
   if (createRuleError.value) return;
@@ -743,7 +770,18 @@ async function saveEditRule() {
   if (!editingRuleId.value) return;
 
   const body = { ...editRuleForm.value };
-  if (typeof body.config === 'object') {
+  if (typeof body.config === 'object' && body.config !== null) {
+    const configError = validateRuleConfig(body.type, body.config);
+    if (configError) {
+      notify.error('Validation Error', configError);
+      return;
+    }
+    if (Array.isArray(body.config.ips)) {
+      body.config = {
+        ...body.config,
+        ips: body.config.ips.map((ip: any) => String(ip || '').trim()).filter(Boolean),
+      };
+    }
     body.config = JSON.stringify(body.config);
   }
 

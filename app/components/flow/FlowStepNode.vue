@@ -92,7 +92,7 @@
           >
             {{ badge.label }}
           </span>
-          <div v-if="showReorder" class="flow-reorder-actions flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+          <div v-if="showReorder" class="flow-reorder-actions flex gap-0.5 ml-auto opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100 transition-opacity">
             <button
               :disabled="disabled || data.isFirst"
               :aria-label="`Move ${data.label} left`"

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="props.modelValue">
     <Suspense>
       <UploadModal
         v-bind="{

@@ -513,6 +513,12 @@ watch(
   { deep: true }
 );
 
+watch(() => route.params.table, (newTable, oldTable) => {
+  if (newTable && newTable !== oldTable) {
+    void initializeForm();
+  }
+});
+
 onMounted(async () => {
   await Promise.all([initializeForm(), loadTableCatalog()]);
 });
@@ -836,9 +842,13 @@ onMounted(async () => {
                     v-model="table"
                     :column-names="constraintFieldNames"
                   />
-                  <TableColumns v-model="table.columns" />
+                  <TableColumns
+                    v-model="table.columns"
+                    :reserved-names="(table.relations || []).map((r: any) => r.propertyName)"
+                  />
                   <TableRelations
                     v-model="table.relations"
+                    :reserved-names="(table.columns || []).map((c: any) => c.name)"
                     :table-id="getId(table)"
                     :table-options="
                       tableCatalog.map((table) => ({

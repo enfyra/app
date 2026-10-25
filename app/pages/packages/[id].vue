@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="eapp-page-constrained">
+    <div v-if="loading || packageData" class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'package' }]">
         <template #package-header><CommonFormHeader :title="packageData?.name ? `Package: ${packageData.name}` : 'Package'" /></template>
         <template #package>
@@ -76,6 +76,14 @@
         </template>
       </CommonPanel>
     </div>
+
+    <CommonEmptyState
+      v-else
+      title="Package not found"
+      description="The requested package could not be loaded"
+      icon="lucide:package-x"
+      size="sm"
+    />
   </div>
 </template>
 
@@ -271,6 +279,14 @@ async function handleUpdate() {
   }
 
   await loadPackage();
+  const data = packageData.value;
+  if (data) {
+    form.value = { ...data };
+    formChanges.update(data);
+    hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
+  }
+  notify.success("Success", "Package update started");
 }
 
 async function handleUninstall() {

@@ -15,6 +15,7 @@
               code: { type: 'code', language: 'vue', height: '400px' },
             }"
             @update:errors="(errors) => (createErrors = errors)"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             mode="create"
           />
         </UForm>
@@ -62,6 +63,8 @@ const tableName = "enfyra_extension";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const showUploadModal = ref(false);
 const uploadLoading = ref(false);
@@ -153,6 +156,8 @@ async function handleCreate() {
   }
 
   notify.success("Extension created successfully");
+  hasFormChanges.value = false;
+  allowNextNavigation();
   await loadGlobalExtensions({ forceReload: true });
 
   const { getId } = useDatabase();

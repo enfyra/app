@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="eapp-page-constrained">
+    <div v-if="loading || configData?.data?.[0]" class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'storage' }]">
         <template #storage-header><CommonFormHeader :title="configData?.data?.[0]?.name ? `Storage: ${configData.data[0].name}` : 'Storage'" /></template>
         <template #storage>
@@ -23,7 +23,7 @@
       </CommonPanel>
     </div>
     <CommonEmptyState
-      v-if="!loading && !configData?.data?.[0]"
+      v-else
       title="Storage configuration not found"
       description="The requested storage configuration could not be loaded"
       icon="lucide:hard-drive"
@@ -235,9 +235,12 @@ async function updateConfig() {
 }
 
 async function deleteConfig() {
+  const configName = configData.value?.data?.[0]?.name || "this storage configuration";
   const ok = await confirm({
-    title: "Are you sure?",
-    content: "This action cannot be undone.",
+    title: "Delete Storage Configuration",
+    content: `Are you sure you want to delete storage configuration "${configName}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 

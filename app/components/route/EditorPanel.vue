@@ -566,10 +566,6 @@ watch(() => props.routeId, async (newRouteId) => {
   await fetchRoute()
 })
 
-onMounted(async () => {
-  await fetchRoute()
-})
-
 // --- Guard Management ---
 
 const {

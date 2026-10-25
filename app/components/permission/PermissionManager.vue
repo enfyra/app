@@ -117,8 +117,8 @@
                       size="xs"
                       class="ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                       @click.stop="deletePermission(permission)"
-                      :loading="deleting === permission.id"
-                      :disabled="deleting === permission.id"
+                      :loading="deleting === getId(permission)"
+                      :disabled="deleting === getId(permission)"
                     />
                   </PermissionGate>
                 </div>
@@ -179,8 +179,8 @@
                     size="xs"
                     class="ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                     @click.stop="deletePermission(permission)"
-                    :loading="deleting === permission.id"
-                    :disabled="deleting === permission.id"
+                    :loading="deleting === getId(permission)"
+                    :disabled="deleting === getId(permission)"
                   />
                 </PermissionGate>
               </div>
@@ -405,8 +405,16 @@ async function handleReset() {
 
   if (isEditing.value && currentPermission.value) {
     permissionForm.value = formChanges.discardChanges(permissionForm.value);
+  } else {
+    permissionForm.value = generateEmptyForm();
+    if (props.currentFieldId) {
+      permissionForm.value[props.currentFieldId.field] = {
+        [getIdFieldName()]: props.currentFieldId.value,
+      };
+    }
   }
   formChanges.update(permissionForm.value);
+  permissionErrors.value = {};
   hasFormChanges.value = false;
 }
 
@@ -466,6 +474,11 @@ async function savePermission() {
   permissionErrors.value = {};
   showDiscardModal.value = false;
   showDrawer.value = false;
+
+  notify.success(
+    wasEditing ? "Permission Updated" : "Permission Created",
+    wasEditing ? "Permission has been updated successfully" : "Permission has been created successfully",
+  );
 
   await fetchPermissions();
 

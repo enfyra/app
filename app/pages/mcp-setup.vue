@@ -47,26 +47,28 @@ async function createAndRedirect() {
     return;
   }
 
-  status.value = 'creating';
+  if (!createdToken.value?.token) {
+    status.value = 'creating';
 
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'unknown';
-  const date = new Date().toISOString().slice(0, 10);
-  const tokenName = `MCP CLI — ${hostname} — ${date}`;
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'unknown';
+    const date = new Date().toISOString().slice(0, 10);
+    const tokenName = `MCP CLI — ${hostname} — ${date}`;
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 90);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 90);
 
-  await createApiToken({
-    body: {
-      name: tokenName,
-      expiresAt: expiresAt.toISOString(),
-    },
-  });
+    await createApiToken({
+      body: {
+        name: tokenName,
+        expiresAt: expiresAt.toISOString(),
+      },
+    });
 
-  if (createError.value || !createdToken.value?.token) {
-    status.value = 'error';
-    errorMessage.value = createError.value?.message || 'Failed to create API token.';
-    return;
+    if (createError.value || !createdToken.value?.token) {
+      status.value = 'error';
+      errorMessage.value = createError.value?.message || 'Failed to create API token.';
+      return;
+    }
   }
 
   status.value = 'sending';
@@ -211,7 +213,7 @@ onMounted(() => {
           </p>
         </div>
 
-        <div class="mcp-setup-status-card">
+        <div class="mcp-setup-status-card" role="status" aria-live="polite">
           <template v-if="status === 'idle' || status === 'creating'">
             <div class="mcp-setup-status-icon creating">
               <UIcon name="lucide:key-round" class="text-2xl" />

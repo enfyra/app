@@ -42,6 +42,7 @@
           <CommonFormCard>
             <UForm :state="editForm" @submit="saveFlowSettings">
               <FormEditorLazy
+                ref="formEditorRef"
                 v-model="editForm"
                 :table-name="'enfyra_flow'"
                 :errors="flowErrors"
@@ -115,6 +116,7 @@
       :saving="savingStep"
       :testing="testing"
       :has-errors="hasStepErrors"
+      :has-changes="hasStepChanges()"
       :step-type-options="stepTypeOptions"
       :error-options="errorOptions"
       :condition-step-options="conditionStepOptions"
@@ -194,6 +196,7 @@ const testPayloadJson = ref('');
 const stepErrors = ref<Record<string, string>>({});
 const flowErrors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
+const formEditorRef = ref();
 const execDrawerOpen = ref(false);
 const selectedExec = ref<any>(null);
 const execLoading = ref(false);
@@ -404,11 +407,17 @@ async function refreshExecOverlay() {
 }
 
 const { executeWithResult: updateFlowApi, pending: saveFlowPending } = useApi(() => `/enfyra_flow`, { method: "patch", errorContext: "Update Flow" });
+const { executeWithResult: deleteFlowApi, pending: deleteFlowPending } = useApi(() => `/enfyra_flow`, { method: "delete", errorContext: "Delete Flow" });
 
 const { checkPermissionCondition } = usePermissions();
 const canUpdateFlow = computed(() =>
   checkPermissionCondition({
     and: [{ route: "/enfyra_flow", methods: ["PATCH"] }],
+  })
+);
+const canDeleteFlow = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: "/enfyra_flow", methods: ["DELETE"] }],
   })
 );
 const { executeWithResult: createStepApi } = useApi(() => `/enfyra_flow_step`, { method: "post", errorContext: "Create Step" });
@@ -450,12 +459,35 @@ registerHeaderActions([
     permission: { and: [{ route: "/enfyra_flow_execution", methods: ["POST"] }] },
   },
   {
+    id: 'reset-flow-settings',
+    label: 'Reset',
+    icon: 'lucide:rotate-ccw',
+    variant: 'outline',
+    color: 'warning',
+    order: 998,
+    show: computed(() => activeEditorTab.value === 'settings' && !!flow.value && canUpdateFlow.value && hasFormChanges.value),
+    onClick: handleResetFlowSettings,
+  },
+  {
     id: 'save-flow-settings', label: 'Save', icon: 'lucide:save', variant: 'solid', color: 'primary', order: 999,
     show: computed(() => activeEditorTab.value === 'settings' && !!flow.value && canUpdateFlow.value),
     loading: saveFlowPending,
     disabled: computed(() => saveFlowPending.value || !hasFormChanges.value),
     onClick: saveFlowSettings,
     permission: { and: [{ route: '/enfyra_flow', methods: ['PATCH'] }] },
+  },
+  {
+    id: 'delete-flow',
+    label: 'Delete',
+    icon: 'lucide:trash',
+    variant: 'solid',
+    color: 'error',
+    order: 1000,
+    show: computed(() => !!flow.value && canDeleteFlow.value),
+    loading: deleteFlowPending,
+    disabled: computed(() => deleteFlowPending.value || Boolean(flow.value?.isSystem)),
+    onClick: deleteFlow,
+    permission: { and: [{ route: '/enfyra_flow', methods: ['DELETE'] }] },
   },
 ]);
 
@@ -518,9 +550,41 @@ async function saveFlowSettings() {
   notify.success("Success", "Flow settings saved!");
   hasFormChanges.value = false;
   await loadFlow();
+  syncEditForm(true);
+  formEditorRef.value?.confirmChanges();
 }
 
-useUnsavedChangesGuard(() => hasFormChanges.value);
+async function handleResetFlowSettings() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) return;
+  syncEditForm(true);
+  flowErrors.value = {};
+  hasFormChanges.value = false;
+  formEditorRef.value?.confirmChanges();
+  notify.success("Reset Complete", "All changes have been discarded.");
+}
+
+async function deleteFlow() {
+  const flowName = flow.value?.name || "this flow";
+  const ok = await confirm({
+    title: "Delete Flow",
+    content: `Are you sure you want to delete flow "${flowName}"? All steps, triggers, and execution history will also be removed. This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+  if (!ok) return;
+  const result = await deleteFlowApi({ id: flowId.value });
+  if (!result.ok) return;
+  hasFormChanges.value = false;
+  allowNextNavigation();
+  notify.success("Success", `Flow "${flowName}" has been deleted.`);
+  await navigateTo("/settings/flows");
+}
+
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const stepDrawerUpdating = ref(false);
 const execDrawerUpdating = ref(false);
@@ -528,6 +592,9 @@ const stepDrawerHistoryEntry = ref(false);
 const execDrawerHistoryEntry = ref(false);
 
 watch(stepDrawerOpen, (isOpen) => {
+  if (!isOpen && testing.value) {
+    cancelTest();
+  }
   if (stepDrawerUpdating.value) return;
   if (isOpen) {
     stepDrawerHistoryEntry.value = true;
@@ -821,7 +888,7 @@ async function saveStep() {
   } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
     stepErrors.value.key = 'Only letters, numbers, underscores. Must start with letter or _';
     hasError = true;
-  } else if (!editingStepId.value && steps.value.some((s: any) => s.key === key)) {
+  } else if (steps.value.some((s: any) => s.key === key && String(getId(s)) !== String(editingStepId.value || ''))) {
     stepErrors.value.key = 'Key already exists';
     hasError = true;
   }
@@ -896,6 +963,12 @@ function duplicateStep() {
   };
   stepFormSnapshot.value = JSON.stringify(stepForm.value);
   testResult.value = null;
+  stepDrawerUpdating.value = true;
+  const q: Record<string, any> = { ...route.query, editStep: 'new' };
+  delete q.editStepKey;
+  void router.replace({ query: q }).finally(() => {
+    stepDrawerUpdating.value = false;
+  });
 }
 
 async function deleteCurrentStep() {

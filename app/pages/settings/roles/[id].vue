@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="space-y-6">
+    <div v-if="loading || apiData?.data?.[0]" class="space-y-6">
       <div class="eapp-page-constrained">
         <CommonPanel :sections="[{ value: 'role' }]">
           <template #role-header><CommonFormHeader :title="form.name ? `Role: ${form.name}` : 'Role'" /></template>
@@ -24,7 +24,7 @@
     </div>
 
     <CommonEmptyState
-      v-if="!loading && !apiData?.data?.[0]"
+      v-else
       title="Role not found"
       description="The requested role could not be loaded"
       icon="lucide:shield-x"
@@ -195,9 +195,12 @@ async function save() {
 }
 
 async function deleteRole() {
+  const roleName = form.value?.name || apiData.value?.data?.[0]?.name || "this role";
   const ok = await confirm({
-    title: "Are you sure?",
-    content: "You cannot go back",
+    title: "Delete Role",
+    content: `Are you sure you want to delete role "${roleName}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 

@@ -34,6 +34,13 @@ const cancelAction = computed<DialogFooterAction>(() => ({
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && isVisible.value) {
+    const active = document.activeElement;
+    if (
+      active instanceof HTMLElement &&
+      (active.tagName === 'BUTTON' || active.tagName === 'A' || active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')
+    ) {
+      return;
+    }
     e.preventDefault();
     onConfirm();
   }

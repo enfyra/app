@@ -81,10 +81,14 @@ const bulkDelete = useSettingsBulkDelete({
   refresh: () => fetchRoles(),
 });
 
-async function deleteRole(id: string) {
+async function deleteRole(role: Record<string, any>) {
+  const id = getId(role);
+  const roleName = role?.name || "this role";
   const ok = await confirm({
-    title: "Are you sure?",
-    content: "You cannot go back",
+    title: "Delete Role",
+    content: `Are you sure you want to delete role "${roleName}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 
@@ -109,7 +113,7 @@ const columns: ColumnDef<Record<string, any>>[] = [
 
 function getRowActions(role: Record<string, any>): DataTableRowAction[] {
   if (role.isSystem) return [];
-  return [{ label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteRole(getId(role)) }];
+  return [{ label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteRole(role) }];
 }
 
 async function setPageSize(size: number) {

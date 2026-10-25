@@ -154,6 +154,9 @@
                 placeholder="Type to search packages (e.g., axios, lodash, dayjs...)"
               />
             </div>
+            <p v-if="errors.name" class="text-xs text-[var(--form-error-text)]">
+              {{ errors.name }}
+            </p>
           </div>
         </div>
 
@@ -163,6 +166,7 @@
             v-model:errors="errors"
             :table-name="tableName"
             :excluded="['type', 'installedBy', 'name', 'status', 'lastError']"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
           />
         </UForm>
       </CommonFormCard>
@@ -185,6 +189,8 @@ const selectedNpmPackage = ref<any>(null);
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value || Boolean(selectedNpmPackage.value));
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -255,10 +261,16 @@ function handlePackageSelect(pkg: any) {
   form.value.name = pkg.name;
   form.value.version = pkg.version;
   form.value.description = pkg.description || "";
+  delete errors.value.name;
 }
 
 function handlePackageClear() {
+  const preservedFlags = form.value.flags;
   initializeForm();
+  if (preservedFlags !== undefined) {
+    form.value.flags = preservedFlags;
+  }
+  form.value.type = packageType.value;
 }
 
 watch(packageType, () => {
@@ -283,6 +295,10 @@ async function handleCreate() {
   if (packageType.value === 'App') {
     await fetchAppPackages();
   }
+
+  hasFormChanges.value = false;
+  selectedNpmPackage.value = null;
+  allowNextNavigation();
 
   await navigateTo(`/packages/${packageId}`, {
     replace: true,

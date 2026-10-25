@@ -13,6 +13,7 @@
             :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards']"
             :field-map="fieldMap"
             mode="create"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
           />
         </UForm>
       </CommonFormCard>
@@ -32,6 +33,8 @@ const tableName = "enfyra_route";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -115,6 +118,8 @@ async function handleCreate() {
   }
 
   notify.success("Route created successfully");
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   await loadRoutes();
 

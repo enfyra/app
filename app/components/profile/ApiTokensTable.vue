@@ -94,7 +94,7 @@ const apiTokenExpiryPresets = [
   { label: "Custom", value: "custom", days: null },
 ];
 
-function todayCalendarDate() {
+function todayCalendarDate(): any {
   const date = new Date();
   return new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
 }
@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
 
     <CommonModal
       v-model:open="apiTokenModalOpen"
-      :cancel-action="!newlyCreatedToken ? { label: 'Close', tone: 'neutral', onClick: () => (apiTokenModalOpen = false) } : false"
+      :cancel-action="{ label: newlyCreatedToken ? 'Done' : 'Close', tone: 'neutral', onClick: () => (apiTokenModalOpen = false) }"
       :primary-action="!newlyCreatedToken
         ? {
           label: 'Create token',
@@ -393,7 +393,7 @@ onBeforeUnmount(() => {
                 </UButton>
                 <template #content="{ close }">
                   <div class="space-y-3 p-3">
-                    <UCalendar v-model="apiTokenCustomCalendarDate" class="w-fit" />
+                    <UCalendar v-model="apiTokenCustomCalendarDate" :min-value="todayCalendarDate()" class="w-fit" />
                     <div class="flex justify-end">
                       <UButton
                         size="sm"

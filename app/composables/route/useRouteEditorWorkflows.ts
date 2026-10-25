@@ -584,6 +584,10 @@ export function useRouteEditorWorkflows(options: RouteEditorWorkflowOptions) {
     await deleteApi({ id: getId(hook) });
     if (deleteError.value) return;
 
+    if (showEditHookDrawer.value && String(editingHookId.value) === String(getId(hook))) {
+      showEditHookDrawer.value = false;
+    }
+
     notify.success("Success", `${isPreHook ? "Pre" : "Post"}-Hook deleted successfully`);
     await refreshRouteWorkflows();
   }

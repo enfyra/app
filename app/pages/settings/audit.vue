@@ -18,6 +18,7 @@ const recordId = ref(String(route.query.recordId || ''));
 const limit = useSettingsPageSize('audit');
 const selected = ref<CodeAuditRecord | null>(null);
 const detailsOpen = ref(false);
+const entryLoading = ref(false);
 const restoring = ref(false);
 const { executeWithResult: readHistory, cancel } = useApi<CodeAuditResponse>('/enfyra_audit', { disableErrorPage: true, errorContext: 'Load audit history' });
 const { executeWithResult: readEntry } = useApi<CodeAuditResponse>('/enfyra_audit', { disableErrorPage: true, errorContext: 'Read code revision' });
@@ -125,10 +126,23 @@ async function changeTable(value: string) {
 async function inspect(row: CodeAuditRecord) {
   if (!canRead.value || restoring.value) return;
   const token = ++inspectionGeneration;
-  const result = await readEntry({ query: { fields: `${listFields},previous`, filter: createIdFilter(getId(row)), limit: 1 } });
-  if (!active || token !== inspectionGeneration || !result.ok || !result.data.data[0]) return;
-  selected.value = result.data.data[0];
+  selected.value = row;
   detailsOpen.value = true;
+  entryLoading.value = true;
+  try {
+    const result = await readEntry({ query: { fields: `${listFields},previous`, filter: createIdFilter(getId(row)), limit: 1 } });
+    if (!active || token !== inspectionGeneration) return;
+    if (!result.ok || !result.data.data[0]) {
+      detailsOpen.value = false;
+      selected.value = null;
+      return;
+    }
+    selected.value = result.data.data[0];
+  } finally {
+    if (token === inspectionGeneration) {
+      entryLoading.value = false;
+    }
+  }
 }
 async function revert() {
   const entry = selected.value;
@@ -209,7 +223,8 @@ onBeforeUnmount(() => { active = false; inspectionGeneration++; cancel(); });
             </dl>
             <section class="space-y-2">
               <h3 class="text-sm font-semibold text-highlighted">Source before this change</h3>
-              <FormCodeEditorLazy v-if="source" :model-value="source" :readonly="true" :language="language" height="220px" />
+              <CommonLoadingState v-if="entryLoading" type="dots" size="sm" />
+              <FormCodeEditorLazy v-else-if="source" :model-value="source" :readonly="true" :language="language" height="220px" />
               <p v-else class="text-sm text-muted">This entry has no earlier source.</p>
             </section>
             <section v-if="previousFields.length" class="space-y-2">

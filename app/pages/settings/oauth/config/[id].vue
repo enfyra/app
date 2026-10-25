@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div class="eapp-page-constrained">
+    <div v-if="loading || configData?.data?.[0]" class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'configuration' }]">
         <template #configuration-header><CommonFormHeader :title="configData?.data?.[0]?.provider ? `OAuth: ${getProviderLabel(configData.data[0].provider)}` : 'Configuration'" /></template>
         <template #configuration>
@@ -22,7 +22,7 @@
       </CommonPanel>
     </div>
     <CommonEmptyState
-      v-if="!loading && !configData?.data?.[0]"
+      v-else
       title="OAuth configuration not found"
       description="The requested OAuth configuration could not be loaded"
       icon="lucide:key"
@@ -169,10 +169,10 @@ const {
   pending: loading,
   execute: executeGetConfig,
 } = useApi<ShellListResponse<ShellOAuthConfigRecord>>(() => `/${tableName}`, {
-  query: {
+  query: computed(() => ({
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: route.params.id } },
-  },
+  })),
   errorContext: "Fetch OAuth Config",
 });
 
@@ -244,9 +244,14 @@ async function updateConfig() {
 }
 
 async function deleteConfig() {
+  const providerLabel = configData.value?.data?.[0]?.provider
+    ? getProviderLabel(configData.value.data[0].provider)
+    : "this OAuth provider";
   const ok = await confirm({
-    title: "Are you sure?",
-    content: "This action cannot be undone. The OAuth provider configuration will be permanently deleted.",
+    title: "Delete OAuth Configuration",
+    content: `Are you sure you want to delete the "${providerLabel}" OAuth configuration? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 

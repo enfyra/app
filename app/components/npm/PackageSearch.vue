@@ -69,6 +69,7 @@
               color="neutral"
               size="xs"
               icon="lucide:x"
+              aria-label="Clear package search"
               :padded="false"
               @click="clearSelection"
               class="opacity-60 hover:opacity-100 transition-opacity"
@@ -126,7 +127,7 @@
                 <UIcon name="lucide:user" class="w-3 h-3" />
                 <span>{{ selectedPackage.author }}</span>
               </div>
-              <div class="flex items-center gap-1">
+              <div v-if="Number.isFinite(selectedPackage.popularity)" class="flex items-center gap-1">
                 <UIcon name="lucide:trending-up" class="w-3 h-3" />
                 <span
                   >{{ Math.round(selectedPackage.popularity * 100) }}%
@@ -142,6 +143,7 @@
               color="neutral"
               size="xs"
               icon="lucide:external-link"
+              aria-label="Open on npm"
               :to="selectedPackage.links?.npm"
               target="_blank"
               class="hover:bg-[var(--surface-muted)]"
@@ -151,6 +153,7 @@
               color="neutral"
               size="xs"
               icon="lucide:x"
+              aria-label="Clear selected package"
               @click="clearSelection"
               class="hover:bg-[var(--surface-muted)]"
             />
@@ -231,6 +234,10 @@ watch(searchData, (newData) => {
 
 watch(searchTerm, (newQuery, oldQuery) => {
   if (newQuery !== oldQuery) {
+    if (selectedPackage.value && newQuery === selectedPackage.value.name) {
+      isMenuOpen.value = false;
+      return;
+    }
     if (newQuery.length >= 2) {
       packages.value = [];
       isMenuOpen.value = false;
@@ -241,6 +248,10 @@ watch(searchTerm, (newQuery, oldQuery) => {
 });
 
 const debouncedSearch = debounce(async (query: string) => {
+  if (selectedPackage.value && query === selectedPackage.value.name) {
+    isMenuOpen.value = false;
+    return;
+  }
   if (query.length < 2) {
     packages.value = [];
     isMenuOpen.value = false;

@@ -188,10 +188,25 @@ registerPageHeader({ title: 'Server Logs', description: 'Trace system errors and
             <UFormField v-if="kind === 'system'" label="Error code" :ui="{ label: 'text-xs', container: 'mt-1' }">
               <UInput v-model="code" placeholder="e.g. HTTP_502" :ui="{ base: 'h-9 px-3 py-1.5' }" class="w-full" @keydown.enter.prevent="search(); filtersOpen = false" />
             </UFormField>
-            <UButton class="h-9 w-full justify-center" :loading="pending" @click="search(); filtersOpen = false">Apply filters</UButton>
+            <div class="flex items-center gap-2">
+              <UButton v-if="hasFilters" color="neutral" variant="outline" class="h-9 flex-1 justify-center" @click="resetFilters(); filtersOpen = false">Clear</UButton>
+              <UButton class="h-9 flex-1 justify-center" :loading="pending" @click="search(); filtersOpen = false">Apply filters</UButton>
+            </div>
           </div>
         </template>
       </UPopover>
+      <UButton
+        v-if="hasFilters"
+        type="button"
+        color="neutral"
+        variant="ghost"
+        size="sm"
+        icon="lucide:x"
+        class="h-9 px-2.5"
+        @click="resetFilters"
+      >
+        Clear
+      </UButton>
       <div class="flex min-w-0 items-center gap-2">
         <USelect v-model="hours" :items="timeWindows" aria-label="Time window" icon="lucide:clock-3" size="sm" :ui="{ base: 'h-9 py-1.5 ps-9 pe-9' }" class="w-40" @update:model-value="search" />
         <UButton type="submit" icon="lucide:refresh-cw" aria-label="Refresh logs" color="neutral" variant="outline" :loading="pending" class="size-9 justify-center p-0" />

@@ -9,7 +9,8 @@ const { validateForm } = useFormValidation("enfyra_user");
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
-const { useFormChanges } = useSchema();
+const { useFormChanges, getIncludeFields } = useSchema("enfyra_user");
+const { getIdFieldName } = useDatabase();
 const formChanges = useFormChanges();
 
 const {
@@ -18,9 +19,9 @@ const {
   execute: fetchUser,
 } = useApi<ShellListResponse<ShellUserRecord>>(() => "/enfyra_user", {
   query: computed(() => ({
-    fields: "*",
+    fields: getIncludeFields(),
     filter: {
-      id: {
+      [getIdFieldName()]: {
         _eq: route.params.id,
       },
     },
@@ -107,6 +108,7 @@ registerHeaderActions([
     size: "md",
     order: 2,
     loading: computed(() => deleteLoading.value),
+    disabled: computed(() => Boolean(apiData.value?.data?.[0]?.isRootAdmin || apiData.value?.data?.[0]?.isSystem)),
     onClick: deleteUser,
     permission: {
       and: [
@@ -168,7 +170,10 @@ async function deleteUser() {
   const user = apiData.value?.data?.[0];
   const userIdentifier = user?.name || user?.username || user?.email || "this user";
   const ok = await confirm({
-    content: `Are you sure you want to delete user "${userIdentifier}"?`,
+    title: "Delete User",
+    content: `Are you sure you want to delete user "${userIdentifier}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 
@@ -198,7 +203,7 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <div class="eapp-page-constrained">
+    <div v-if="loading || apiData?.data?.[0]" class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'user' }]">
         <template #user-header><CommonFormHeader :title="apiData?.data?.[0]?.email || 'User'" /></template>
         <template #user>
@@ -220,7 +225,7 @@ onMounted(() => {
     </div>
 
     <CommonEmptyState
-      v-if="!loading && !apiData?.data?.[0]"
+      v-else
       title="User not found"
       description="The requested user could not be loaded"
       icon="lucide:user-x"

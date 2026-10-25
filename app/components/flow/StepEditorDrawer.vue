@@ -6,7 +6,7 @@
     :danger-action="editing ? { label: 'Delete', icon: 'lucide:trash-2', tone: 'danger', variant: 'soft', onClick: () => emit('delete') } : false"
     :leading-actions="editing ? [{ label: 'Duplicate', icon: 'i-lucide-copy', variant: 'soft', onClick: () => emit('duplicate') }] : []"
     :cancel-action="{ label: 'Cancel', onClick: () => emit('close') }"
-    :primary-action="{ label: editing ? 'Save changes' : 'Create step', loading: saving, disabled: hasErrors, onClick: () => emit('save') }"
+    :primary-action="{ label: editing ? 'Save changes' : 'Create step', loading: saving, disabled: hasErrors || (editing && hasChanges === false), onClick: () => emit('save') }"
   >
     <template #header>
       <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -221,6 +221,7 @@ const props = defineProps<{
   saving: boolean;
   testing: boolean;
   hasErrors: boolean;
+  hasChanges?: boolean;
   errors: Record<string, string>;
   stepTypeOptions: { label: string; value: StepType }[];
   errorOptions: { label: string; value: StepErrorHandling }[];

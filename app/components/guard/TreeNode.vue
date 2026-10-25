@@ -334,6 +334,7 @@ const ruleTypeMap: Record<string, { label: string; icon: string; iconColor: stri
   rate_limit_by_ip: { label: 'Rate Limit (by IP)', icon: 'lucide:gauge', iconColor: 'text-[var(--st-warning)]' },
   rate_limit_by_user: { label: 'Rate Limit (by User)', icon: 'lucide:user-check', iconColor: 'text-[var(--st-info)]' },
   rate_limit_by_route: { label: 'Rate Limit (by Route)', icon: 'lucide:route', iconColor: 'eapp-primary-text' },
+  rate_limit_by_operation: { label: 'Rate Limit (by Operation)', icon: 'lucide:braces', iconColor: 'eapp-primary-text' },
   ip_whitelist: { label: 'IP Whitelist', icon: 'lucide:shield-check', iconColor: 'text-[var(--st-success)]' },
   ip_blacklist: { label: 'IP Blacklist', icon: 'lucide:shield-x', iconColor: 'text-[var(--md-error)]' },
 };

@@ -341,6 +341,7 @@ const {
 const {
   error: createRuleError,
   execute: createRuleApi,
+  pending: createRuleLoading,
 } = useApi(() => '/enfyra_guard_rule', {
   method: 'post',
   errorContext: 'Create Guard Rule',
@@ -592,8 +593,9 @@ async function deleteGuard(guard: any) {
       :cancel-action="{ label: 'Cancel', onClick: closeCreateGuardDrawer }"
       :primary-action="{
         label: 'Create Guard',
-        loading: createGuardLoading,
+        loading: createGuardLoading || createRuleLoading,
         disabled: createGuardLoading
+          || createRuleLoading
           || !selectedTemplate
           || (createScope === 'route' && !selectedRouteId)
           || (createScope === 'graphql' && !selectedTableId),

@@ -40,7 +40,7 @@
           </div>
           <div class="relative w-full group">
             <UInput :model-value="fullUrl" disabled class="w-full font-mono text-[11px]" :title="fullUrl" />
-            <UButton v-if="fullUrl.length > 60" size="xs" variant="ghost" class="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" @click="showFullUrl = !showFullUrl">{{ showFullUrl ? 'Hide' : 'Full' }}</UButton>
+            <UButton v-if="fullUrl.length > 60" size="xs" variant="ghost" class="absolute right-1 top-1/2 -translate-y-1/2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity" @click="showFullUrl = !showFullUrl">{{ showFullUrl ? 'Hide' : 'Full' }}</UButton>
           </div>
           <pre v-if="showFullUrl" class="text-[10px] font-mono text-[var(--text-tertiary)] break-all whitespace-pre-wrap px-1">{{ fullUrl }}</pre>
         </div>
@@ -54,7 +54,7 @@
           <UInput v-model="recordId" placeholder="1" class="w-full font-mono text-xs" />
         </UFormField>
 
-        <div v-if="['POST', 'PATCH'].includes(method)">
+        <div v-if="['POST', 'PUT', 'PATCH'].includes(method)">
           <h4 class="text-xs font-semibold text-[var(--text-tertiary)] mb-2">Request Body</h4>
           <FormCodeEditorLazy v-model="body" language="json" height="160px" class="w-full" />
         </div>
@@ -318,7 +318,7 @@ async function sendRequest() {
     const url = fullUrl.value;
     const opts: RequestInit = { method: method.value, headers: { 'Content-Type': 'application/json' }, signal: controller.signal };
 
-    if (['POST', 'PATCH'].includes(method.value) && body.value?.trim()) {
+    if (['POST', 'PUT', 'PATCH'].includes(method.value) && body.value?.trim()) {
       try {
         JSON.parse(body.value);
         opts.body = body.value;

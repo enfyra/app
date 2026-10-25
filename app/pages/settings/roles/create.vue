@@ -12,6 +12,7 @@
             v-model:errors="createErrors"
             :excluded="['routePermissions']"
             mode="create"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
           />
         </UForm>
       </CommonFormCard>
@@ -31,6 +32,8 @@ const tableName = "enfyra_role";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -80,6 +83,8 @@ async function handleCreate() {
   }
 
   notify.success("Role created successfully");
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   await navigateTo(`/settings/roles/${getId(createData.value?.data[0])}`, {
     replace: true,

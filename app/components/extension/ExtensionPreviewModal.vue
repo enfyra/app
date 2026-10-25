@@ -5,7 +5,7 @@
   >
     <template #header>
       <div class="flex items-center gap-2">
-        <UIcon name="i-heroicons-eye" class="w-5 h-5 text-primary-500" />
+        <UIcon name="lucide:eye" class="w-5 h-5 text-primary-500" />
         <span class="font-semibold">Extension Preview</span>
       </div>
     </template>
@@ -13,7 +13,7 @@
     <template #body>
       <div v-if="previewLoading" class="flex items-center justify-center h-[70vh]">
         <div class="text-center">
-          <UIcon name="i-heroicons-arrow-path" class="w-10 h-10 animate-spin mx-auto mb-4 text-primary-500" />
+          <UIcon name="lucide:loader-2" class="w-10 h-10 animate-spin mx-auto mb-4 text-primary-500" />
           <p class="text-sm text-[var(--text-tertiary)] font-medium">
             {{ previewLoadingMessage }}
           </p>
@@ -23,7 +23,7 @@
       <div v-else-if="previewError" class="flex items-center justify-center h-[70vh]">
         <div class="text-center max-w-md">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--state-danger-soft-bg)] flex items-center justify-center">
-            <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-[var(--md-error)]" />
+            <UIcon name="lucide:triangle-alert" class="w-8 h-8 text-[var(--md-error)]" />
           </div>
           <h4 class="text-lg font-semibold mb-3 text-[var(--text-primary)]">Compilation Error</h4>
           <div class="bg-[var(--state-danger-soft-bg)] border border-[var(--state-danger-outline-border)] rounded-lg p-4">
@@ -88,11 +88,11 @@
       <div v-else-if="previewComponent && !isValidComponent" class="flex items-center justify-center h-[70vh]">
         <div class="text-center max-w-md">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--state-warning-soft-bg)] flex items-center justify-center">
-            <UIcon name="i-heroicons-exclamation-triangle" class="w-8 h-8 text-[var(--st-warning)]" />
+            <UIcon name="lucide:triangle-alert" class="w-8 h-8 text-[var(--st-warning)]" />
           </div>
           <h4 class="text-lg font-semibold mb-3 text-[var(--text-primary)]">Component Render Error</h4>
           <p class="text-sm text-[var(--text-tertiary)]">
-            Component đã được compile nhưng không thể render. Có thể do package dependencies chưa được load đúng cách.
+            The component compiled successfully, but could not be rendered. Check that any external package dependencies are installed and exported properly.
           </p>
         </div>
       </div>
@@ -152,7 +152,7 @@ const isValidComponent = computed(() => {
 const { loadExtensionComponentPreview } = useDynamicComponent();
 const perf = useExtensionPerf();
 
-const { execute: executePreviewApi } = useApi<{
+const { execute: executePreviewApi, error: previewApiError } = useApi<{
   success: boolean;
   compiledCode: string;
   extensionId?: string;
@@ -237,7 +237,7 @@ async function compileAndPreview() {
         throw new Error(`Failed to load component: ${loadError?.message || loadError}`);
       }
     } else {
-      throw new Error('Failed to compile extension');
+      throw new Error(previewApiError.value?.message || 'Failed to compile extension');
     }
   } catch (error: any) {
     previewError.value = error?.data?.message || error?.response?.data?.message || error?.message || 'Failed to compile extension';

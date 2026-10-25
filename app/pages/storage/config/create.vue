@@ -11,6 +11,7 @@
             :table-name="tableName"
             :errors="createErrors"
             @update:errors="(errors) => (createErrors = errors)"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             :excluded="excludedFields"
             v-bind="includedFields.length > 0 ? { includes: includedFields } : {}"
             :field-map="typeMap"
@@ -41,6 +42,8 @@ const tableName = "enfyra_storage_config";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -132,6 +135,8 @@ async function handleCreate() {
   await fetchGlobalStorageConfigs();
 
   notify.success("Storage configuration created successfully");
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   const { getId } = useDatabase();
   await navigateTo(`/storage/config/${getId(createData.value?.data[0])}`, {

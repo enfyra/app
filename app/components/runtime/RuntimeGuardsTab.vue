@@ -93,7 +93,7 @@ onMounted(() => {
       <div class="space-y-2">
         <div
           v-for="entry in grouped.filter(g => g.count > 1)"
-          :key="entry.scopeKey"
+          :key="`${entry.scope}:${entry.scopeKey}`"
           class="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-default)] px-3 py-2"
         >
           <div class="flex items-center gap-2">
@@ -116,7 +116,8 @@ onMounted(() => {
         <div class="font-medium text-[var(--text-primary)]">Recent Rejections</div>
         <button
           type="button"
-          class="text-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+          :disabled="pending"
+          class="text-xs text-[var(--text-tertiary)] lg:hover:text-[var(--text-primary)] disabled:opacity-50 transition-colors"
           @click="execute()"
         >
           Refresh

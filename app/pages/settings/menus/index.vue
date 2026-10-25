@@ -194,9 +194,10 @@ const bulkDeleteExtensions = useSettingsBulkDelete<ExtensionDefinition>({
 });
 
 const deleteExtensionFromList = async (extension: ExtensionDefinition) => {
+  const extensionLabel = extension.name || extension.description || String(extension.id ?? "this extension");
   const isConfirmed = await confirm({
     title: "Delete Extension",
-    content: `Are you sure you want to delete "${extension.description}"? This action cannot be undone.`,
+    content: `Are you sure you want to delete "${extensionLabel}"? This action cannot be undone.`,
     confirmText: "Delete",
     cancelText: "Cancel",
   });
@@ -219,7 +220,7 @@ const deleteExtensionFromList = async (extension: ExtensionDefinition) => {
     });
     await loadGlobalExtensions({ forceReload: true });
 
-    notify.success("Success", `Extension "${extension.id}" has been deleted successfully!`);
+    notify.success("Success", `Extension "${extensionLabel}" has been deleted successfully!`);
   }
 };
 

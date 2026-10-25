@@ -127,6 +127,14 @@ const originalName = ref("");
 const editingLoading = ref(false);
 
 const { checkPermissionCondition } = usePermissions();
+const notify = useNotify();
+const { execute: updateFolder, error: updateFolderError } = useApi(
+  () => `enfyra_folder/${props.folder.id}`,
+  {
+    method: "patch",
+    errorContext: "Update Folder",
+  }
+);
 
 const canDeleteFolder = checkPermissionCondition({
   and: [
@@ -174,28 +182,20 @@ function cancelEdit() {
 
 async function saveEdit() {
   if (!editingName.value.trim()) {
-    console.error("Folder name cannot be empty");
+    notify.error("Validation Error", "Folder name cannot be empty");
     return;
   }
 
   editingLoading.value = true;
 
   try {
-    const { execute: updateFolder, error } = useApi(
-      () => `enfyra_folder/${props.folder.id}`,
-      {
-        method: "patch",
-        errorContext: "Update Folder",
-      }
-    );
-
     await updateFolder({
       body: {
         name: editingName.value.trim(),
       },
     });
 
-    if (error.value) {
+    if (updateFolderError.value) {
       editingLoading.value = false;
       return;
     }
@@ -205,7 +205,6 @@ async function saveEdit() {
     originalName.value = "";
     editingLoading.value = false;
 
-    const notify = useNotify();
     notify.success("Success", "Folder renamed successfully!");
 
     emit("refresh-folders");

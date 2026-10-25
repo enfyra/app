@@ -64,7 +64,7 @@
         class="pointer-events-none fixed right-4 top-[72px] z-[60] max-w-[min(420px,calc(100vw-2rem))] lg:right-10 lg:top-[calc(var(--shell-inset)+72px)]"
       >
         <div
-          class="pointer-events-auto flex items-center gap-2 rounded-full border bg-[var(--surface-default)]/90 px-3 py-2 text-sm font-semibold shadow-[var(--shadow-md)] backdrop-blur-xl"
+          class="pointer-events-auto flex items-center gap-2 rounded-full border bg-[var(--surface-default)] px-3 py-2 text-sm font-semibold shadow-[var(--shadow-md)]"
           :class="reloadFailureMessage ? 'border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] text-[var(--state-danger-soft-text)]' : 'border-[var(--card-border)] text-[var(--text-secondary)]'"
         >
           <UIcon

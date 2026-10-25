@@ -242,9 +242,12 @@ async function updateExtension() {
 }
 
 async function deleteExtension() {
+  const extName = form.value?.name || form.value?.description || "this extension";
   const ok = await confirm({
-    title: "Are you sure?",
-    content: "This action cannot be undone.",
+    title: "Delete Extension",
+    content: `Are you sure you want to delete extension "${extName}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 
@@ -277,6 +280,7 @@ async function handleUpload(files: File | File[]) {
   try {
     const content = await file?.text();
     form.value.code = content;
+    hasFormChanges.value = true;
     showUploadModal.value = false;
 
     notify.success("Success", "Extension code uploaded successfully");

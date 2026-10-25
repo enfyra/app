@@ -90,15 +90,17 @@ export function useFileManagerMove() {
     }
 
     let hasError = false;
+    const { getIdFieldName } = useDatabase();
+    const idField = getIdFieldName();
 
     if (fileIds.length > 0) {
-      const fileBody = destinationId ? { folder: { id: destinationId } } : { folder: null };
+      const fileBody = destinationId ? { folder: { [idField]: destinationId } } : { folder: null };
       await patchFiles({ ids: fileIds, body: fileBody });
       if (patchFilesError.value) hasError = true;
     }
 
     if (folderIds.length > 0 && !hasError) {
-      const folderBody = destinationId ? { parent: { id: destinationId } } : { parent: null };
+      const folderBody = destinationId ? { parent: { [idField]: destinationId } } : { parent: null };
       await patchFolders({ ids: folderIds, body: folderBody });
       if (patchFoldersError.value) hasError = true;
     }

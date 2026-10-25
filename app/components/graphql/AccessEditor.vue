@@ -34,10 +34,40 @@ const idField = getIdFieldName()
 const drawerOpen = ref(false)
 const editingPermission = ref<FormGraphqlPermissionRecord | null>(null)
 const permissionForm = ref<PermissionForm>(emptyPermission())
+const initialPermissionSnapshot = ref('')
 const scopeMode = ref<'role' | 'users'>('role')
 const savingConfig = ref(false)
 const savingPermission = ref(false)
 const deletingPermissionId = ref<string | number | null>(null)
+
+const hasPermissionFormChanges = computed(() =>
+  drawerOpen.value && JSON.stringify(permissionForm.value) !== initialPermissionSnapshot.value,
+)
+
+async function closePermissionDrawer() {
+  if (savingPermission.value) return
+  if (hasPermissionFormChanges.value) {
+    const ok = await confirm({
+      title: 'Discard changes?',
+      content: 'You have unsaved changes. Are you sure you want to close? All changes will be lost.',
+      confirmText: 'Discard',
+      cancelText: 'Keep editing',
+    })
+    if (!ok) return
+  }
+  drawerOpen.value = false
+}
+
+const permissionDrawerOpen = computed({
+  get: () => drawerOpen.value,
+  set: (value: boolean) => {
+    if (value) {
+      drawerOpen.value = true
+      return
+    }
+    void closePermissionDrawer()
+  },
+})
 
 const {
   data: configData,
@@ -168,6 +198,7 @@ function openCreatePermission() {
   editingPermission.value = null
   permissionForm.value = emptyPermission()
   scopeMode.value = 'role'
+  initialPermissionSnapshot.value = JSON.stringify(permissionForm.value)
   drawerOpen.value = true
 }
 
@@ -182,6 +213,7 @@ function openEditPermission(permission: FormGraphqlPermissionRecord) {
     operations: (permission.operations ?? []).map(operation => ({ id: getId(operation) })),
   }
   scopeMode.value = permission.allowedUsers?.length ? 'users' : 'role'
+  initialPermissionSnapshot.value = JSON.stringify(permissionForm.value)
   drawerOpen.value = true
 }
 
@@ -410,6 +442,7 @@ watch(() => props.tableId, async () => {
                   </button>
                   <UButton
                     icon="lucide:trash"
+                    aria-label="Delete GraphQL permission"
                     color="error"
                     variant="ghost"
                     size="xs"
@@ -424,10 +457,10 @@ watch(() => props.tableId, async () => {
         </CommonFormCard>
 
         <CommonDrawer
-          v-model="drawerOpen"
+          v-model="permissionDrawerOpen"
           direction="right"
-          :cancel-action="{ label: 'Cancel', icon: 'lucide:x', onClick: () => (drawerOpen = false) }"
-          :primary-action="{ label: editingPermission ? 'Update' : 'Create', loading: savingPermission, onClick: savePermissionForm }"
+          :cancel-action="{ label: 'Cancel', icon: 'lucide:x', onClick: closePermissionDrawer }"
+          :primary-action="{ label: editingPermission ? 'Update' : 'Create', loading: savingPermission, disabled: savingPermission || Boolean(editingPermission && !hasPermissionFormChanges), onClick: savePermissionForm }"
         >
           <template #header>
             <h2 class="text-lg font-semibold">{{ editingPermission ? 'Edit' : 'Create' }} GraphQL Permission</h2>

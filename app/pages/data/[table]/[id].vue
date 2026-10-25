@@ -46,6 +46,14 @@ const currentRecordRouteId = computed(() => {
   return p ?? null;
 });
 
+watch(() => [route.params.table, route.params.id], ([newTable, newId], [oldTable, oldId]) => {
+  if (newTable !== oldTable || newId !== oldId) {
+    updateErrors.value = {};
+    hasFormChanges.value = false;
+    void initializeForm();
+  }
+});
+
 onMounted(async () => {
   await ensureRoutesLoaded();
   await initializeForm();
@@ -128,8 +136,10 @@ const {
 
 async function deleteRecord() {
   const ok = await confirm({
-    title: "Are you sure?",
-    content: "This action cannot be undone.",
+    title: "Delete Record",
+    content: `Are you sure you want to delete this ${tableName} record? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 

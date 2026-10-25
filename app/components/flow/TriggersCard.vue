@@ -365,13 +365,18 @@ async function saveTrigger() {
       });
       if (triggerError.value) { saving.value = false; return; }
     } else {
+      if (!form.cron?.trim()) {
+        notify.error('Error', 'Please enter a cron expression');
+        saving.value = false;
+        return;
+      }
       const { execute: createTrigger, error: triggerError } = useApi(() => '/enfyra_flow_trigger', { method: 'post', errorContext: 'Create Trigger' });
       await createTrigger({
         body: {
           flow: { [getIdFieldName()]: props.flowId },
           type: 'schedule',
           isEnabled: true,
-          config: { cron: form.cron, timezone: form.timezone },
+          config: { cron: form.cron.trim(), timezone: form.timezone },
         },
       });
       if (triggerError.value) { saving.value = false; return; }

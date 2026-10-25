@@ -249,6 +249,11 @@ watch(
       } else {
         total.value = newData.meta?.totalCount || 0;
       }
+      if (newData.data.length === 0 && total.value > 0 && page.value > 1) {
+        const maxPage = Math.max(1, Math.ceil(total.value / pageLimit.value));
+        page.value = maxPage;
+        void router.replace({ query: { ...route.query, page: maxPage > 1 ? maxPage : undefined } });
+      }
     }
   },
   { immediate: true }

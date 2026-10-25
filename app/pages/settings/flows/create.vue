@@ -13,6 +13,7 @@
             :excluded="['steps', 'triggers']"
             :field-map="createFieldMap"
             @update:errors="(errors) => (createErrors = errors)"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             mode="create"
           />
         </UForm>
@@ -38,6 +39,8 @@ const tableName = "enfyra_flow";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
@@ -87,6 +90,8 @@ async function handleCreate() {
   }
 
   notify.success("Success", `Flow "${createForm.value.name}" has been created successfully!`);
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   const createdId = createData.value?.data?.[0]?.id;
   router.push(createdId ? `/settings/flows/${createdId}` : '/settings/flows');
