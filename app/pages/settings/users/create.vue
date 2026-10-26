@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'user' }]">
-        <template #user-header><h2 class="text-sm font-medium">User</h2></template>
+        <template #user-header><CommonFormHeader :title="'Create New User'" /></template>
         <template #user>
 <CommonFormCard>
         <UForm :state="form" @submit="handleCreate">
@@ -12,6 +12,7 @@
             :table-name="tableName"
             :excluded="['allowedRoutePermissions']"
             mode="create"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
           />
         </UForm>
       </CommonFormCard>
@@ -22,6 +23,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellCreatedRecordResponse } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 
@@ -29,22 +32,18 @@ const tableName = "enfyra_user";
 
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Create New User",
-  gradient: "blue",
-});
 
 const {
   data: createData,
   pending: createLoading,
   execute: createUser,
   error: createError,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellCreatedRecordResponse>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create User",
 });
@@ -83,6 +82,8 @@ async function handleCreate() {
   }
 
   notify.success("User created successfully");
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   const { getId } = useDatabase();
   await navigateTo(`/settings/users/${getId(createData.value?.data[0])}`, {

@@ -71,6 +71,7 @@
             color="primary"
             variant="solid"
             size="md"
+            aria-label="Add CORS origin"
             :loading="creating"
             :disabled="!newOrigin.trim() || creating"
             @click="addOrigin"
@@ -82,6 +83,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellCorsOriginRecord, ShellListResponse } from '~/types/shell-api';
+
 interface CorsOrigin {
   id: string | number;
   value: string;
@@ -100,7 +103,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchOrigins,
-} = useApi(() => "/enfyra_cors_origin", {
+} = useApi<ShellListResponse<ShellCorsOriginRecord>>(() => "/enfyra_cors_origin", {
   query: {
     fields: "id,value,isEnabled",
     sort: "value",
@@ -111,7 +114,7 @@ const {
 
 const origins = computed<CorsOrigin[]>(() => {
   const rows = apiData.value?.data || [];
-  return rows.map((r: any) => ({
+  return rows.map(r => ({
     id: getId(r),
     value: r.value,
     isEnabled: r.isEnabled !== false,
@@ -163,7 +166,7 @@ async function addOrigin() {
     (o) => o.value.toLowerCase() === normalized.toLowerCase()
   );
   if (exists) {
-    newOrigin.value = "";
+    notify.warning("Duplicate Origin", `Origin "${normalized}" is already in the list.`);
     return;
   }
 
@@ -185,7 +188,7 @@ async function toggleEnabled(origin: CorsOrigin, value: boolean) {
 
   if (updateError.value) return;
 
-notify.success("Success")
+  notify.success("Success", "CORS origin updated.");
   await fetchOrigins();
 }
 

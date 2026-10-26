@@ -1,45 +1,48 @@
 <template>
   <div class="space-y-6">
-    
-    <div class="eapp-resource-list">
-      <CommonResourceListItem
-        title="App Packages"
-        description="Manage frontend application packages"
-        icon="lucide:package"
-        icon-color="primary"
-        to="/packages/app"
-      />
+    <CommonPanel :sections="packageSections">
+      <template #packages>
+        <div class="eapp-resource-list">
+          <CommonResourceListItem
+            title="App Packages"
+            description="Manage frontend application packages"
+            icon="lucide:package"
+            icon-color="primary"
+            to="/packages/app"
+          />
 
-      <CommonResourceListItem
-        title="Server Packages"
-        description="Manage server packages"
-        icon="lucide:server"
-        icon-color="primary"
-        to="/packages/backend"
-      />
-    </div>
+          <CommonResourceListItem
+            title="Server Packages"
+            description="Manage server packages"
+            icon="lucide:server"
+            icon-color="primary"
+            to="/packages/backend"
+          />
+        </div>
 
-    <div class="mt-8">
-      <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
-      <div class="flex gap-3">
-        <UButton
-          icon="lucide:plus"
-          label="Install App Package"
-          variant="outline"
-          color="primary"
-          size="md"
-          to="/packages/install?type=app"
-        />
-        <UButton
-          icon="lucide:plus"
-          label="Install Server Package"
-          variant="outline"
-          color="primary"
-          size="md"
-          to="/packages/install?type=server"
-        />
-      </div>
-    </div>
+        <div class="mt-8">
+          <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+          <div class="flex gap-3">
+            <UButton
+              icon="lucide:plus"
+              label="Install App Package"
+              variant="outline"
+              color="primary"
+              size="md"
+              to="/packages/install?type=app"
+            />
+            <UButton
+              icon="lucide:plus"
+              label="Install Server Package"
+              variant="outline"
+              color="primary"
+              size="md"
+              to="/packages/install?type=server"
+            />
+          </div>
+        </div>
+      </template>
+    </CommonPanel>
   </div>
 </template>
 
@@ -48,11 +51,11 @@ definePageMeta({
   layout: "default",
 });
 
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Packages",
-  description: "Manage app and server packages",
-  gradient: "purple",
-});
+const packageSections = [
+  {
+    value: 'packages',
+    title: 'Packages',
+    description: 'Manage app and server packages',
+  },
+];
 </script>

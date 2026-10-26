@@ -2,7 +2,7 @@ export default defineAppConfig({
   ui: {
     dashboardNavbar: {
       slots: {
-        root: 'h-14 px-3 sm:px-3 md:h-(--ui-header-height) md:px-6',
+        root: 'h-auto py-3 px-3 sm:px-3 md:px-6 lg:h-(--ui-header-height) lg:py-0',
       },
     },
     dashboardPanel: {
@@ -97,13 +97,15 @@ export default defineAppConfig({
         content: 'z-[60]',
         item: 'group relative w-full flex items-center select-none outline-none before:absolute before:z-[-1] before:inset-px before:rounded-[var(--radius-subcontrol)] data-disabled:cursor-not-allowed data-disabled:opacity-75',
       },
-      compoundVariants: [
-        {
-          color: undefined,
-          class: {
+      defaultVariants: { color: 'default' },
+      variants: {
+        color: {
+          default: {
             item: "data-highlighted:not-data-disabled:before:!bg-[var(--menu-item-hover-bg)] data-[state=open]:before:!bg-[var(--menu-item-hover-bg)]",
           },
         },
+      },
+      compoundVariants: [
         {
           color: "neutral",
           class: {
@@ -469,8 +471,12 @@ export default defineAppConfig({
           "data-highlighted:not-data-disabled:before:!bg-[var(--state-primary-soft-bg)]",
         ].join(" "),
         tagsItem:
-          "!w-auto !min-h-0 !border-0 !shadow-none !ring-0 !rounded-[var(--radius-subcontrol)] !bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] !px-2 !py-0.5 !text-xs !font-medium",
-        tagsInput: "min-w-24 !w-auto !min-h-0 !border-0 !bg-transparent !shadow-none !p-0 !ring-0",
+          "!inline-flex !h-6 !w-auto !min-h-0 !items-center !gap-1.5 !border-0 !shadow-none !ring-0 !rounded-[var(--radius-subcontrol)] !bg-[var(--state-primary-soft-bg)] !text-[var(--state-primary-soft-text)] !pl-2 !pr-1 !py-0 !text-xs !leading-none !font-medium",
+        tagsItemText: "inline-flex items-center gap-1 truncate leading-none",
+        tagsItemDelete:
+          "inline-flex size-4 shrink-0 items-center justify-center rounded-[var(--radius-xs)] !bg-[var(--action-danger-bg)] !text-[var(--action-danger-text)] transition-colors hover:!bg-[var(--action-danger-bg-hover)] disabled:pointer-events-none",
+        tagsItemDeleteIcon: "!size-3 shrink-0",
+        tagsInput: "min-w-24 !h-6 !w-auto !min-h-0 !border-0 !bg-transparent !shadow-none !p-0 !ring-0 !text-sm !leading-6",
       },
       variants: {
         multiple: {
@@ -543,7 +549,6 @@ export default defineAppConfig({
       slots: {
         overlay: 'z-50',
         content: 'z-50',
-        root: "bg-[var(--surface-default)] border-l border-[var(--border-default)]",
         header: "border-b border-[var(--border-default)] py-4",
         body: "flex-1 pb-4",
         footer: "border-t border-[var(--border-default)] py-4",
@@ -569,9 +574,9 @@ export default defineAppConfig({
       slots: {
         overlay: 'z-50 bg-black/20 backdrop-blur-[2px]',
         content: 'z-50',
-        header: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
-        body: 'eapp-modal-body p-3 sm:p-3 md:p-6',
-        footer: 'px-3 py-3 sm:px-3 md:px-6 md:py-4',
+        header: 'shrink-0 px-3 py-3 sm:px-3 md:px-6 md:py-4',
+        body: 'eapp-modal-body min-h-0 p-3 sm:p-3 md:p-6',
+        footer: 'shrink-0 px-3 py-3 sm:px-3 md:px-6 md:py-4',
       },
     },
     switch: {
@@ -581,15 +586,15 @@ export default defineAppConfig({
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)] focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "data-[state=checked]:bg-[var(--action-primary-bg)]",
-          "data-[state=unchecked]:bg-[var(--md-surface-container-high)]",
+          "data-[state=unchecked]:bg-[var(--switch-unchecked-bg)]",
         ].join(" "),
         thumb: [
           "pointer-events-none flex h-5 w-5 items-center justify-center rounded-full shadow-lg ring-0 transition-transform duration-[var(--duration-base)] ease-[var(--ease-standard)]",
-          "bg-[var(--md-outline)] group-data-[state=checked]:bg-[var(--md-on-primary)]",
+          "bg-[var(--switch-unchecked-thumb)] group-data-[state=checked]:bg-[var(--md-on-primary)]",
           "data-[state=checked]:translate-x-5",
           "data-[state=unchecked]:translate-x-0",
         ].join(" "),
-        icon: "group-data-[state=unchecked]:text-white",
+        icon: "group-data-[state=unchecked]:text-[var(--switch-unchecked-icon)]",
       },
     },
     checkbox: {

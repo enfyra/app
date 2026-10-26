@@ -93,7 +93,7 @@ onMounted(() => {
       <div class="space-y-2">
         <div
           v-for="entry in grouped.filter(g => g.count > 1)"
-          :key="entry.scopeKey"
+          :key="`${entry.scope}:${entry.scopeKey}`"
           class="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-default)] px-3 py-2"
         >
           <div class="flex items-center gap-2">
@@ -111,22 +111,15 @@ onMounted(() => {
     </section>
 
     <!-- Recent alerts table -->
-    <section class="surface-card rounded-lg p-4">
-      <div class="mb-3 flex items-center justify-between">
-        <div class="font-medium text-[var(--text-primary)]">Recent Rejections</div>
-        <button
-          type="button"
-          class="text-xs text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
-          @click="execute()"
-        >
-          Refresh
-        </button>
-      </div>
-
-      <DataTable :data="alerts" :columns="columns" :loading="pending">
-        <template #toolbar><h2 class="text-sm font-medium">Recent rejections</h2></template>
-        <template #empty><CommonEmptyState variant="naked" title="No guard rejections recorded" icon="lucide:shield" size="sm" /></template>
-      </DataTable>
-    </section>
+    <DataTable
+      header-name="Recent rejections"
+      :data="alerts"
+      :columns="columns"
+      :loading="pending"
+      :reload="() => execute()"
+      :reload-loading="pending"
+    >
+      <template #empty><CommonEmptyState variant="naked" title="No guard rejections recorded" icon="lucide:shield" size="sm" /></template>
+    </DataTable>
   </CommonAnimatedGrid>
 </template>

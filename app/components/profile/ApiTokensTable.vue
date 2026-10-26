@@ -66,6 +66,7 @@ const tokenColumns: TableColumn<ApiTokenRecord>[] = [
 ];
 watch(pageLimit, () => { page.value = 1; });
 watch(() => apiTokens.value.length, count => {
+  if (apiTokensLoading.value) return;
   page.value = Math.min(page.value, Math.max(1, Math.ceil(count / pageLimit.value)));
 });
 function setPageSize(size: number) {
@@ -93,7 +94,7 @@ const apiTokenExpiryPresets = [
   { label: "Custom", value: "custom", days: null },
 ];
 
-function todayCalendarDate() {
+function todayCalendarDate(): any {
   const date = new Date();
   return new CalendarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
 }
@@ -264,17 +265,6 @@ registerHeaderActions([
     show: computed(() => props.active),
     onClick: openApiTokenModal,
   },
-  {
-    id: 'refresh-api-tokens',
-    label: 'Refresh',
-    icon: 'lucide:refresh-cw',
-    color: 'neutral',
-    variant: 'outline',
-    order: 1,
-    show: computed(() => props.active),
-    loading: apiTokensLoading,
-    onClick: fetchApiTokens,
-  },
 ]);
 
 onMounted(() => {
@@ -288,12 +278,15 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="space-y-4">
-    <p class="text-sm text-muted">Create long-lived tokens for MCP servers and external API clients.</p>
     <DataTable
+      header-name="API tokens"
+      header-description="Create long-lived tokens for MCP servers and external API clients."
       v-model:page="page"
       :data="pageTokens"
       :columns="tokenColumns"
       :loading="apiTokensLoading"
+      :reload="fetchApiTokens"
+      :reload-loading="apiTokensLoading"
       :show-column-visibility="false"
       :ui="{ base: 'table-fixed !min-w-[900px]', th: 'px-3 py-3', td: 'max-w-0 overflow-hidden text-ellipsis px-3 py-3' }"
       :pagination-config="{ total: apiTokens.length, itemsPerPage: pageLimit, showPageSize: true }"
@@ -312,7 +305,7 @@ onBeforeUnmount(() => {
 
     <CommonModal
       v-model:open="apiTokenModalOpen"
-      :cancel-action="!newlyCreatedToken ? { label: 'Close', tone: 'neutral', onClick: () => (apiTokenModalOpen = false) } : false"
+      :cancel-action="{ label: newlyCreatedToken ? 'Done' : 'Close', tone: 'neutral', onClick: () => (apiTokenModalOpen = false) }"
       :primary-action="!newlyCreatedToken
         ? {
           label: 'Create token',
@@ -354,7 +347,7 @@ onBeforeUnmount(() => {
         </div>
         <div v-else class="space-y-5">
           <UForm :state="apiTokenForm" class="space-y-5" @submit="handleCreateApiToken">
-            <UFormField label="Token name" :error="apiTokenErrors.name" required>
+            <UFormField label="Token name" v-bind="apiTokenErrors.name === undefined ? {} : { error: apiTokenErrors.name }" required>
               <UInput
                 v-model="apiTokenForm.name"
                 placeholder="MCP token"
@@ -362,7 +355,7 @@ onBeforeUnmount(() => {
               />
             </UFormField>
 
-            <UFormField label="Expiration" :error="apiTokenErrors.expiresAt" required>
+            <UFormField label="Expiration" v-bind="apiTokenErrors.expiresAt === undefined ? {} : { error: apiTokenErrors.expiresAt }" required>
               <div class="flex flex-wrap gap-2">
                 <UButton
                   v-for="preset in apiTokenExpiryPresets"
@@ -391,7 +384,7 @@ onBeforeUnmount(() => {
                 </UButton>
                 <template #content="{ close }">
                   <div class="space-y-3 p-3">
-                    <UCalendar v-model="apiTokenCustomCalendarDate" class="w-fit" />
+                    <UCalendar v-model="apiTokenCustomCalendarDate" :min-value="todayCalendarDate()" class="w-fit" />
                     <div class="flex justify-end">
                       <UButton
                         size="sm"

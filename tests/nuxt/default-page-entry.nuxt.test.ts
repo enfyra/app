@@ -5,7 +5,7 @@ import type { MenuItem } from '~/types/menu';
 
 const state = vi.hoisted(() => ({ allowed: true, selected: 7 as number | null, navigate: vi.fn(), menus: [] as MenuItem[] }));
 mockNuxtImport('useGlobalState', () => () => ({ settings: ref({ defaultPage: state.selected, projectName: 'Example project' }) }));
-mockNuxtImport('useMenuRegistry', () => () => ({ menuItems: ref(state.menus) }));
+mockNuxtImport('useMenuRegistry', () => () => ({ menuItems: ref(state.menus), findMenuIconForPath: () => undefined }));
 mockNuxtImport('usePermissions', () => () => ({ hasMenuPermission: () => state.allowed }));
 mockNuxtImport('useInitialLoading', () => () => ({ initialReady: ref(true) }));
 mockNuxtImport('usePageHeaderRegistry', () => () => ({ registerPageHeader: vi.fn() }));
@@ -38,7 +38,7 @@ describe('Default page entry', () => {
     state.selected = null;
     state.menus.push(
       { id: 'data', label: 'Data', route: '/data', type: 'Dropdown Menu', isEnabled: true, description: 'Browse your collections' },
-      { id: 'general', label: 'General', route: '/settings/general', type: 'Menu', isEnabled: true, parent: state.menus[0] },
+      { id: 'general', label: 'General', route: '/settings/general', type: 'Menu', isEnabled: true, ...(state.menus[0] ? { parent: state.menus[0] } : {}) },
       { id: 'disabled', label: 'Disabled', route: '/disabled', isEnabled: false },
       { id: 'param', label: 'Detail', route: '/notes/:id', isEnabled: true },
       { id: 'external', label: 'External', route: '//example.com', isEnabled: true },

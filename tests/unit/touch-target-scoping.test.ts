@@ -54,7 +54,24 @@ describe('touch target scoping', () => {
 
   it('keeps menu editor rows compact on desktop with 44px handles only on coarse pointers', () => {
     const item = readAppFile('components/menu/MenuVisualEditorItem.vue')
-    expect(item).toContain('grid-template-columns: 18px 24px 40px minmax(220px, 1fr) auto;')
+    expect(item).toContain('grid-template-columns: auto 36px minmax(220px, 1fr) auto;')
+    expect(item).toContain('grid-template-columns: auto 32px minmax(180px, 1fr) auto;')
     expect(item).toContain('@media (pointer: coarse)')
+  })
+
+  it('aligns menu visual editor rows and nested children with the skeleton geometry', () => {
+    const editor = readAppFile('components/menu/MenuVisualEditor.vue')
+    const item = readAppFile('components/menu/MenuVisualEditorItem.vue')
+
+    expect(editor).toContain('class="menu-visual-skeleton-node"')
+    expect(editor).toContain('class="menu-visual-skeleton-item"')
+    expect(editor).toContain('.menu-visual-skeleton-children')
+    expect(item).toContain('class="menu-row-lead"')
+    expect(item).toContain('class="menu-row-subtitle"')
+    expect(item).toContain('.menu-editor-row.is-child')
+    expect(item).toContain('background: var(--surface-muted);')
+    expect(item).toContain('margin-left: 28px;')
+    expect(item).toContain('border-left: 1px solid var(--border-subtle);')
+    expect(item).toContain('padding-left: 12px;')
   })
 })

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureEditableRecord } from '~/types/feature-api';
 import { normalizeScriptLanguage } from '~/utils/script-contract';
 import { buildWebsocketEventSavePayload } from '~/utils/websocket-events';
 
@@ -50,7 +51,7 @@ const {
   data: eventData,
   pending: loading,
   execute: fetchEvent,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureEditableRecord>>(() => `/${tableName}`, {
   query: computed(() => {
     if (props.event && getId(props.event)) {
       return {
@@ -64,7 +65,6 @@ const {
   }),
   errorContext: 'Fetch Event',
   immediate: false,
-  lazy: true,
 });
 
 const {
@@ -203,6 +203,9 @@ function confirmDiscard() {
 function updateSourceCode(value: string) {
   form.value.sourceCode = value === '' ? null : value;
   form.value.compiledCode = null;
+  if (errors.value.sourceCode && String(value || '').trim()) {
+    delete errors.value.sourceCode;
+  }
   hasFormChanges.value = createSnapshot() !== initialSnapshot.value;
 }
 
@@ -281,7 +284,7 @@ $ctx.$socket.reply('event:received', data);`;
             </p>
           </div>
 
-          <UFormField label="sourceCode" :error="errors.sourceCode" class="w-full">
+          <UFormField label="Source Code" required v-bind="errors.sourceCode === undefined ? {} : { error: errors.sourceCode }" class="w-full">
             <FormCodeEditorLazy
               :model-value="String(form.sourceCode || '')"
               :language="normalizeScriptLanguage(form.scriptLanguage)"
@@ -296,7 +299,7 @@ $ctx.$socket.reply('event:received', data);`;
             </template>
           </UFormField>
 
-          <UFormField label="scriptLanguage" required class="w-full">
+          <UFormField label="Script Language" required class="w-full">
             <FormEnumPicker
               :model-value="normalizeScriptLanguage(form.scriptLanguage)"
               :options="scriptLanguageOptions"

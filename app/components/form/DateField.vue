@@ -13,6 +13,7 @@
 
     <CommonModal
       v-model:open="showModal"
+      :leading-actions="[{ label: 'Clear', tone: 'neutral', variant: 'ghost', onClick: clearValue }]"
       :primary-action="{ label: 'Apply', onClick: applyValue }"
     >
       <template #header>
@@ -155,6 +156,11 @@ function openModal() {
   }
 
   showModal.value = true;
+}
+
+function clearValue() {
+  emit("update:modelValue", null);
+  showModal.value = false;
 }
 
 function applyValue() {

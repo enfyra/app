@@ -1,21 +1,33 @@
 <template>
   <DataTableSettingsTable
+      header-name="Flow Manager"
     v-model:page="page"
     :data="flows"
+    :bulk-action="bulkDelete"
     :columns="columns"
     :actions="getRowActions"
     :loading="showInitialLoading"
+    :reload="() => fetchFlows()"
+    :reload-loading="loading"
     :total="total"
     :page-limit="limit"
     page-size-key="flows"
     :pagination-loading="loading"
     @page-size-change="setPageSize"
     :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by name"
+      search-label="Search by name"
+      @search="submitSearch"
     @row-click="flow => navigateTo(`/settings/flows/${getId(flow)}`)"
-  />
+  >
+  </DataTableSettingsTable>
 </template>
 
+
 <script setup lang="ts">
+import type { FeatureCollection, FeatureFlowList } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
 import type { ColumnDef } from '@tanstack/vue-table';
@@ -43,23 +55,21 @@ const { getLoader: getFlowLoader } = useKeyedLoaders();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
 const route = useRoute();
-const { registerPageHeader } = usePageHeaderRegistry();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('name', () => fetchFlows());
 
-registerPageHeader({
-  title: "Flow Manager",
-  gradient: "purple",
-});
+
 
 const {
   data: apiData,
   pending: loading,
   execute: fetchFlows,
-} = useApi(() => "/enfyra_flow", {
+} = useApi<FeatureCollection<FeatureFlowList>>(() => "/enfyra_flow", {
   query: computed(() => ({
     fields: FLOW_LIST_FIELDS,
     limit,
     page: page.value,
     meta: "*",
+    ...(searchFilter.value && { filter: { _and: [searchFilter.value] } }),
     sort: ["id"].join(","),
   })),
   errorContext: "Fetch Flows",
@@ -69,7 +79,7 @@ const {
   items: flows,
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
-const total = computed(() => apiData.value?.meta?.totalCount || 0);
+const total = computed(() => searchValue.value ? apiData.value?.meta?.filterCount ?? 0 : apiData.value?.meta?.totalCount ?? 0);
 
 const { execute: updateFlow, error: updateError } = useApi(
   () => `/enfyra_flow`,
@@ -121,16 +131,16 @@ const toggleFlowStatus = async (flow: any) => {
   const newStatus = !flow.isEnabled;
 
   if (apiData.value?.data) {
-    const idx = apiData.value.data.findIndex((f: any) => f.id === flow.id);
-    if (idx !== -1) apiData.value.data[idx].isEnabled = newStatus;
+    const current = apiData.value.data.find(f => f.id === flow.id);
+    if (current) current.isEnabled = newStatus;
   }
 
   await loader.withLoading(() => updateFlow({ body: { isEnabled: newStatus }, id: flow.id }));
 
   if (updateError.value) {
     if (apiData.value?.data) {
-      const idx = apiData.value.data.findIndex((f: any) => f.id === flow.id);
-      if (idx !== -1) apiData.value.data[idx].isEnabled = !newStatus;
+      const current = apiData.value.data.find(f => f.id === flow.id);
+      if (current) current.isEnabled = !newStatus;
     }
     return;
   }
@@ -142,6 +152,14 @@ const { execute: deleteFlowApi, error: deleteError } = useApi(
   () => `/enfyra_flow`,
   { method: "delete", errorContext: "Delete Flow" }
 );
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_flow',
+  title: 'Delete Flows',
+  isEligible: flow => !flow.isSystem,
+  isBusy: () => flows.value.some(item => getFlowLoader(String(getId(item) ?? '')).isLoading.value),
+  refresh: () => fetchFlows(),
+});
 
 const deleteFlow = async (flow: any) => {
   const isConfirmed = await confirm({
@@ -165,5 +183,5 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, limit], () => { void fetchFlows(); }, { immediate: true });
+watch([page, limit, searchValue], () => { void fetchFlows(); }, { immediate: true });
 </script>

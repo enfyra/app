@@ -16,6 +16,8 @@ mockNuxtImport('useRoutes', () => () => ({
     { path: '/private', mainTable: { name: 'private' } },
     { path: '/system', mainTable: { name: 'system', isSystem: true } },
     { path: '/disabled', isEnabled: false, mainTable: { name: 'disabled' } },
+    { path: '/without-table' },
+    { path: '/nullable-table', mainTable: null },
   ]),
 }))
 
@@ -31,7 +33,7 @@ describe('Browse all data directory', () => {
       expect(wrapper.get('thead').text()).toContain('API path')
       expect(wrapper.get('thead').text()).toContain('Description')
       expect(wrapper.findAll('tbody tr')).toHaveLength(2)
-      expect(wrapper.get('tbody').text()).not.toMatch(/private|system|disabled/)
+      expect(wrapper.get('tbody').text()).not.toMatch(/private|system|disabled|without-table|nullable-table/)
       await wrapper.get('tbody tr').trigger('click')
       await expect.poll(() => useRouter().currentRoute.value.path).toBe('/data/alpha')
       expect(useDataCollectionPreferences().prefs.value.recent[0]).toBe('alpha')
@@ -46,11 +48,11 @@ describe('Browse all data directory', () => {
       expect(useRouter().currentRoute.value.path).toBe('/data')
       expect(useDataCollectionPreferences().isPinned('zebra')).toBe(true)
       expect(wrapper.findAll('tbody tr')[0]!.text()).toContain('zebra')
-      await wrapper.get('#collection-search').setValue('/alpha')
+      await wrapper.get('input[aria-label="Search collections, tables, or API path"]').setValue('/alpha')
       expect(wrapper.findAll('tbody tr')).toHaveLength(1)
       expect(wrapper.get('tbody').text()).toContain('Alpha')
       expect(wrapper.get('tbody').text()).toContain('Single')
-      await wrapper.get('#collection-search').setValue('missing')
+      await wrapper.get('input[aria-label="Search collections, tables, or API path"]').setValue('missing')
       expect(wrapper.text()).toContain('No collections found')
     } finally {
       if (useDataCollectionPreferences().isPinned('zebra')) useDataCollectionPreferences().togglePin('zebra')

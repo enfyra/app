@@ -1,6 +1,9 @@
 <template>
   <div class="space-y-6">
-    <div class="eapp-page-constrained">
+    <div v-if="loading || packageData" class="eapp-page-constrained">
+      <CommonPanel :sections="packageSections">
+        <template #package-header><CommonFormHeader :title="packageData?.name ? `Package: ${packageData.name}` : 'Package'" /></template>
+        <template #package>
       <CommonFormCard>
         <UAlert
           v-if="isTransitioning"
@@ -70,11 +73,22 @@
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
+
+    <CommonEmptyState
+      v-else
+      title="Package not found"
+      description="The requested package could not be loaded"
+      icon="lucide:package-x"
+      size="sm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeaturePackage } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
@@ -98,7 +112,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadPackage,
-} = useApi("/enfyra_package", {
+} = useApi<FeatureCollection<FeaturePackage>>("/enfyra_package", {
   query: {
     fields: "*",
     filter: {
@@ -173,16 +187,15 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
+    errors.value = {};
     hasFormChanges.value = false;
     formEditorRef.value?.confirmChanges();
 
     notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
-    notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 registerHeaderActions([
   {
@@ -266,6 +279,14 @@ async function handleUpdate() {
   }
 
   await loadPackage();
+  const data = packageData.value;
+  if (data) {
+    form.value = { ...data };
+    formChanges.update(data);
+    hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
+  }
+  notify.success("Success", "Package update started");
 }
 
 async function handleUninstall() {
@@ -286,6 +307,7 @@ async function handleUninstall() {
 
   if (packageData.value?.type === 'App') {
     await fetchAppPackages();
+    hasFormChanges.value = false;
     notify.success("Success", `Package ${packageData.value?.name} uninstalled successfully`);
     await navigateTo('/packages', { replace: true });
   } else {
@@ -318,20 +340,22 @@ function handlePackageEvent(event: string, data: any) {
       }
     });
   } else if (event === '$system:package:uninstalled') {
+    hasFormChanges.value = false;
     navigateTo('/packages', { replace: true });
   }
 }
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-watch(packageData, (data) => {
-  if (data) {
-    registerPageHeader({
-      title: data.name || 'Package Details',
-      gradient: data.type === 'Server' ? 'cyan' : 'blue',
-    });
-  }
-}, { immediate: true });
+const packageSections = computed(() => [{
+  value: 'package',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(() => {
   initializeForm();

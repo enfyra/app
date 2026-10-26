@@ -7,7 +7,7 @@ defineProps<{ collapsed?: boolean }>();
 <template>
   <ScrollAreaRoot type="auto" class="sidebar-scroll-area min-h-0 w-full flex-1 overflow-hidden">
     <ScrollAreaViewport class="h-full w-full">
-      <div :class="collapsed ? 'px-2' : 'px-3.5'">
+      <div class="pb-2" :class="collapsed ? 'px-2' : 'px-3.5'">
         <slot />
       </div>
     </ScrollAreaViewport>

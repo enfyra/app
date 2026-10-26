@@ -1,4 +1,4 @@
-export type StepType = 'script' | 'condition' | 'query' | 'delete' | 'http' | 'trigger_flow' | 'sleep' | 'log';
+export type StepType = 'script' | 'condition';
 export type StepErrorHandling = 'stop' | 'skip' | 'retry';
 export type TriggerType = 'schedule' | 'event' | 'webhook';
 export type TableEventType = 'create' | 'update' | 'delete';
@@ -17,12 +17,17 @@ export interface FlowTrigger {
 
 export type BranchType = 'true' | 'false' | null;
 
+export interface FlowStepAddContext {
+  parentId?: string | number | null;
+  branch?: NonNullable<BranchType>;
+  afterOrder?: number;
+}
+
 export interface FlowStep {
   id: string | number;
   key: string;
   stepOrder: number;
   type: StepType | string;
-  config?: Record<string, any>;
   sourceCode?: string | null;
   scriptLanguage?: 'javascript' | 'typescript' | string | null;
   compiledCode?: string | null;
@@ -37,17 +42,17 @@ export interface FlowStep {
 
 export interface FlowStepEditorForm {
   key: string;
+  isEnabled?: boolean;
   stepOrder: number;
   type: StepType;
-  configJson: string;
   sourceCode: string | null;
   scriptLanguage: 'javascript' | 'typescript';
   compiledCode: string | null;
   timeout: number;
   onError: StepErrorHandling;
   retryAttempts: number;
-  parentId: any;
-  branch?: string;
+  parentId: string | number | null;
+  branch?: NonNullable<BranchType>;
 }
 
 export interface FlowDefinition {
@@ -65,7 +70,6 @@ export interface StepNodeData {
   stepId?: string | number;
   label: string;
   stepType: StepNodeType;
-  config?: Record<string, any>;
   sourceCode?: string | null;
   timeout?: number;
   onError?: StepErrorHandling;
@@ -74,7 +78,7 @@ export interface StepNodeData {
   branch?: BranchType;
   parentId?: string | number | null;
   triggerInfo?: string;
-  _addContext?: { parentId?: any; branch?: string; afterOrder?: number };
+  _addContext?: FlowStepAddContext;
   execStatus?: 'completed' | 'failed' | 'running' | 'skipped' | null;
   execError?: string | null;
   isFirst?: boolean;

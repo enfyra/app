@@ -6,7 +6,7 @@
     :danger-action="editing ? { label: 'Delete', icon: 'lucide:trash-2', tone: 'danger', variant: 'soft', onClick: () => emit('delete') } : false"
     :leading-actions="editing ? [{ label: 'Duplicate', icon: 'i-lucide-copy', variant: 'soft', onClick: () => emit('duplicate') }] : []"
     :cancel-action="{ label: 'Cancel', onClick: () => emit('close') }"
-    :primary-action="{ label: editing ? 'Save changes' : 'Create step', loading: saving, disabled: hasErrors, onClick: () => emit('save') }"
+    :primary-action="{ label: editing ? 'Save changes' : 'Create step', loading: saving, disabled: hasErrors || (editing && hasChanges === false), onClick: () => emit('save') }"
   >
     <template #header>
       <div class="flex min-w-0 flex-1 items-center gap-3">
@@ -68,7 +68,7 @@
             </div>
 
             <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-              <UFormField label="Key" required class="w-full" :error="errors.key">
+              <UFormField label="Key" required class="w-full" v-bind="errors.key === undefined ? {} : { error: errors.key }">
                 <UInput :model-value="form.key" placeholder="e.g. check_user" class="w-full" @update:model-value="updateField('key', $event)" />
                 <template #hint>
                   <span class="text-[10px]">Reference via <code class="rounded bg-[var(--surface-muted)] px-1">@FLOW.{{ form.key || 'key' }}</code></span>
@@ -80,41 +80,19 @@
               </div>
             </div>
 
-            <div v-if="usesBackendScriptFields" class="space-y-2">
+            <div class="space-y-2">
+              <p
+                v-if="errors.sourceCode"
+                class="rounded-[var(--radius-card)] border border-[var(--control-invalid-border)] bg-[var(--surface-muted)] px-3 py-2 text-xs text-[var(--form-error-text)]"
+                role="alert"
+              >
+                {{ errors.sourceCode }}
+              </p>
               <FlowStepConfigEditor
                 :type="form.type"
-                :config-json="form.configJson"
                 :source-code="form.sourceCode"
                 :script-language="form.scriptLanguage"
                 :errors="errors"
-                @update:config-json="updateConfigJson"
-                @update:source-code="updateSourceCode"
-                @update:script-language="updateScriptLanguage"
-                @update:errors="emit('update:errors', $event)"
-              />
-            </div>
-
-            <div
-              v-else
-              class="rounded-[var(--radius-card)] border bg-[var(--surface-default)] p-4"
-              :class="hasConfigErrors ? 'border-[var(--control-invalid-border)] ring-1 ring-[var(--control-invalid-ring)]' : 'border-[var(--border-default)]'"
-            >
-              <div class="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <div class="text-sm font-semibold text-[var(--text-primary)]">Configuration</div>
-                  <div class="text-xs text-[var(--text-tertiary)]">Main behavior for this step.</div>
-                </div>
-                <UBadge v-if="hasConfigErrors" color="error" variant="outline" size="sm">Needs attention</UBadge>
-              </div>
-              <p v-if="errors.config" class="mb-2 text-xs text-[var(--form-error-text)]">{{ errors.config }}</p>
-              <p v-else-if="errors.sourceCode" class="mb-2 text-xs text-[var(--form-error-text)]">{{ errors.sourceCode }}</p>
-              <FlowStepConfigEditor
-                :type="form.type"
-                :config-json="form.configJson"
-                :source-code="form.sourceCode"
-                :script-language="form.scriptLanguage"
-                :errors="errors"
-                @update:config-json="updateConfigJson"
                 @update:source-code="updateSourceCode"
                 @update:script-language="updateScriptLanguage"
                 @update:errors="emit('update:errors', $event)"
@@ -156,7 +134,7 @@
                   <USelect :model-value="form.parentId" :items="conditionStepOptions" value-key="value" class="w-full" placeholder="None (root level)" @update:model-value="updateField('parentId', $event)" />
                 </UFormField>
                 <UFormField v-if="form.parentId" label="Execute when" class="w-full">
-                  <USelect :model-value="form.branch" :items="branchOptions" value-key="value" class="w-full" @update:model-value="updateField('branch', $event)" />
+                  <USelect v-bind="form.branch === undefined ? {} : { modelValue: form.branch }" :items="branchOptions" value-key="value" class="w-full" @update:model-value="updateField('branch', $event)" />
                 </UFormField>
               </div>
               <CommonEmptyState v-else variant="naked" icon="lucide:git-branch" title="No condition steps" description="Create a condition step before attaching branch children." />
@@ -231,7 +209,7 @@
 
 <script setup lang="ts">
 import type { BadgeColor } from '~/utils/flow.constants';
-import type { FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
+import type { BranchType, FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
 import { getStepTypeColor, getStepTypeIcon } from '~/utils/flow.constants';
 
 type StepEditorTab = 'setup' | 'behavior' | 'test';
@@ -243,11 +221,11 @@ const props = defineProps<{
   saving: boolean;
   testing: boolean;
   hasErrors: boolean;
-  hasConfigErrors: boolean;
+  hasChanges?: boolean;
   errors: Record<string, string>;
   stepTypeOptions: { label: string; value: StepType }[];
   errorOptions: { label: string; value: StepErrorHandling }[];
-  conditionStepOptions: { label: string; value: any }[];
+  conditionStepOptions: { label: string; value: string | number | null }[];
   conditionLabel?: string;
   testPayloadJson: string;
   testResult: any;
@@ -275,20 +253,14 @@ const stepSections = [
   { label: 'Test', value: 'test', icon: 'lucide:flask-conical' },
 ];
 
-const branchOptions = [
+const branchOptions: { label: string; value: NonNullable<BranchType> }[] = [
   { label: 'Condition is True', value: 'true' },
   { label: 'Condition is False', value: 'false' },
 ];
 
 const stepTypeDescriptions: Record<StepType, string> = {
   script: 'Run custom TypeScript or JavaScript.',
-  condition: 'Branch based on a truthy or falsy result.',
-  query: 'Read records from a table.',
-  delete: 'Delete a record by id.',
-  http: 'Call an external HTTP endpoint.',
-  trigger_flow: 'Start another flow asynchronously.',
-  sleep: 'Pause execution for a duration.',
-  log: 'Write a message to execution output.',
+  condition: 'Branch on a boolean result. Must return true or false.',
 };
 
 const drawerOpen = computed({
@@ -312,7 +284,7 @@ watch(
 );
 
 watch(
-  () => [props.errors.key, props.errors.type, props.errors.config, props.errors.sourceCode, props.errors.scriptLanguage],
+  () => [props.errors.key, props.errors.type, props.errors.sourceCode, props.errors.scriptLanguage],
   (messages) => {
     if (messages.some(Boolean)) activeTab.value = 'setup';
   },
@@ -321,7 +293,6 @@ watch(
 const stepTypeLabel = computed(() => props.stepTypeOptions.find(option => option.value === props.form.type)?.label || props.form.type);
 const stepIcon = computed(() => getStepTypeIcon(props.form.type));
 const stepColor = computed<BadgeColor>(() => getStepTypeColor(props.form.type));
-const usesBackendScriptFields = computed(() => props.form.type === 'script' || props.form.type === 'condition');
 
 function updateField<K extends keyof FlowStepEditorForm>(field: K, value: FlowStepEditorForm[K]) {
   emit('update:form', { ...props.form, [field]: value });
@@ -332,14 +303,9 @@ function updateNumberField(field: 'timeout' | 'retryAttempts', value: unknown) {
   updateField(field, Number.isFinite(parsed) ? parsed : 0);
 }
 
-function updateConfigJson(value: string) {
-  emit('update:form', { ...props.form, configJson: value });
-  emit('update:errors', { ...props.errors, config: '' });
-}
-
 function updateSourceCode(value: string | null) {
   emit('update:form', { ...props.form, sourceCode: value, compiledCode: null });
-  emit('update:errors', { ...props.errors, config: '' });
+  emit('update:errors', { ...props.errors, sourceCode: '' });
 }
 
 function updateScriptLanguage(value: 'javascript' | 'typescript') {

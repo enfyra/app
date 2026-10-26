@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { DialogFooterAction } from '~/types/ui';
+
 const { isVisible, options, onCancel, onConfirm } = useConfirm();
 
 watch(
@@ -24,14 +26,21 @@ const isUnsavedChanges = computed(() => {
   );
 });
 
-const cancelAction = computed(() => ({
+const cancelAction = computed<DialogFooterAction>(() => ({
   label: options.value.cancelText,
-  tone: options.value.cancelText?.toLowerCase() === 'keep editing' ? 'primary' as const : undefined,
+  ...(options.value.cancelText?.toLowerCase() === 'keep editing' ? { tone: 'primary' as const } : {}),
   onClick: onCancel,
 }));
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && isVisible.value) {
+    const active = document.activeElement;
+    if (
+      active instanceof HTMLElement &&
+      (active.tagName === 'BUTTON' || active.tagName === 'A' || active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')
+    ) {
+      return;
+    }
     e.preventDefault();
     onConfirm();
   }
@@ -67,7 +76,7 @@ onUnmounted(() => {
     :cancel-action="cancelAction"
     :primary-action="{
       label: options.confirmText,
-      tone: isDestructive ? 'danger' : undefined,
+      ...(isDestructive ? { tone: 'danger' } : {}),
       onClick: onConfirm,
     }"
   >

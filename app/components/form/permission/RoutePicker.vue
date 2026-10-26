@@ -60,7 +60,7 @@
             <div v-else-if="routes.length > 0" class="space-y-2">
               <div
                 v-for="route in routes"
-                :key="route.id"
+                :key="getId(route)"
                 class="flex items-center justify-between p-3 border border-muted rounded-lg lg:hover:bg-[var(--menu-item-hover-bg)] cursor-pointer transition-colors"
                 @click="selectRoute(route)"
                 tabindex="0"
@@ -167,7 +167,10 @@
 </template>
 
 <script setup lang="ts">
+import type { FormApiListResponse, FormRouteRecord } from '~/types/form-api';
+
 const { isMobile, isTablet } = useScreen();
+const { getId } = useDatabase();
 
 const props = defineProps<{
   modelValue: boolean;
@@ -175,7 +178,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   "update:modelValue": [value: boolean];
-  select: [route: any];
+  select: [route: FormRouteRecord];
 }>();
 
 const isOpen = computed({
@@ -210,7 +213,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRoutes,
-} = useApi(() => "/enfyra_route", {
+} = useApi<FormApiListResponse<FormRouteRecord>>(() => "/enfyra_route", {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
@@ -256,7 +259,7 @@ watch(
   }
 );
 
-function selectRoute(route: any) {
+function selectRoute(route: FormRouteRecord) {
   emit("select", route);
   close();
 }

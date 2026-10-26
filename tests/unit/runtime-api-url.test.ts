@@ -1,6 +1,11 @@
 import { resolvePublicApiUrl } from '~/utils/enfyra/runtime/api-url'
 
 describe('resolvePublicApiUrl', () => {
+  it('keeps an absent backend unconfigured for the runtime config fallback', () => {
+    expect(resolvePublicApiUrl({}) ?? '').toBe('')
+    expect(resolvePublicApiUrl({ API_URL: '' }) ?? '').toBe('')
+  })
+
   it('uses the Nuxt runtime override instead of the build-time API_URL default', () => {
     expect(resolvePublicApiUrl({
       API_URL: 'http://build-time-api:1105/',

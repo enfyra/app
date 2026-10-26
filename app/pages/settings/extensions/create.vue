@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'extension' }]">
-        <template #extension-header><h2 class="text-sm font-medium">Extension</h2></template>
+        <template #extension-header><CommonFormHeader :title="'Create New Extension'" /></template>
         <template #extension>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
@@ -15,6 +15,7 @@
               code: { type: 'code', language: 'vue', height: '400px' },
             }"
             @update:errors="(errors) => (createErrors = errors)"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             mode="create"
           />
         </UForm>
@@ -49,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
@@ -61,6 +63,8 @@ const tableName = "enfyra_extension";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const showUploadModal = ref(false);
 const uploadLoading = ref(false);
@@ -68,13 +72,7 @@ const showPreviewModal = ref(false);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 const { loadGlobalExtensions } = useGlobalExtensions();
-
-registerPageHeader({
-  title: "Create New Extension",
-  gradient: "purple",
-});
 
 registerHeaderActions([
   {
@@ -129,7 +127,7 @@ const {
   error: createError,
   execute: executeCreateExtension,
   pending: createLoading,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Extension",
 });
@@ -158,10 +156,12 @@ async function handleCreate() {
   }
 
   notify.success("Extension created successfully");
+  hasFormChanges.value = false;
+  allowNextNavigation();
   await loadGlobalExtensions({ forceReload: true });
 
   const { getId } = useDatabase();
-  await navigateTo(`/settings/extensions/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/settings/extensions/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
 }

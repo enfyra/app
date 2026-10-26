@@ -1,7 +1,7 @@
 <template>
   <div class="flex min-w-0 items-center justify-between w-full">
     
-    <div class="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+    <div class="flex items-center gap-1.5 md:gap-3 min-w-0 flex-1">
       <template v-for="action in leftActions" :key="action.key || action.id">
         
         <component
@@ -12,24 +12,14 @@
 
         <UButton
           v-else
-          :icon="isRef(action.icon) ? unref(action.icon) : action.icon"
-          :label="isRef(action.label) ? unref(action.label) : action.label"
-          :variant="
-            (isRef(action.variant) ? unref(action.variant) : action.variant) ||
-            'soft'
-          "
+          v-bind="getHeaderActionButtonProps(action)"
+          :variant="resolveHeaderActionVariant(action, { fallback: 'soft', shaped: !isDesktop })"
           :color="
             (isRef(action.color) ? unref(action.color) : action.color) ||
             'neutral'
           "
           :size="action.size || (isMobile ? 'sm' : 'md')"
           :loading-auto="true"
-          :loading="unref(action.loading)"
-          :disabled="
-            (typeof action.disabled === 'boolean'
-              ? action.disabled
-              : unref(action.disabled)) || unref(action.loading)
-          "
           :square="isHeaderActionIconOnly(action)"
           @click="handleHeaderActionClick(action)"
           :class="getHeaderActionButtonClass(action)"
@@ -43,7 +33,9 @@
 </template>
 
 <script setup lang="ts">
-const { isMobile } = useScreen();
+import type { HeaderAction } from "~/types/ui";
+
+const { isMobile, isDesktop } = useScreen();
 const { headerActions } = useHeaderActionRegistry();
 
 const leftActions = computed(() => {
@@ -58,7 +50,7 @@ const leftActions = computed(() => {
   });
 });
 
-function handleHeaderActionClick(action: any) {
+function handleHeaderActionClick(action: HeaderAction) {
   return action.onClick?.();
 }
 </script>

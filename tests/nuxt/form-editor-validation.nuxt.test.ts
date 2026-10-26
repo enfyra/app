@@ -1,0 +1,83 @@
+import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime';
+import { flushPromises } from '@vue/test-utils';
+import { defineComponent, h, ref } from 'vue';
+import { expect, it, vi } from 'vitest';
+const state = { registry: ref<any>(null) };
+mockNuxtImport('useFormEditorRegistry', () => () => state.registry);
+mockNuxtImport('usePermissions', () => () => ({ checkPermissionCondition: () => true }));
+mockNuxtImport('useSchema', () => () => {
+  const originalData = ref<any>({});
+  const definition = [{ name: 'payload', type: 'json', fieldType: 'column' }];
+  return { definition: ref(definition), fieldMap: ref(new Map([['payload', definition[0]]])), schema: ref({}),
+    sortFieldsByOrder: (items: any) => items, validate: () => ({ isValid: true, errors: {} }),
+    useFormChanges: () => ({ originalData, update: (data: any) => { originalData.value = JSON.parse(JSON.stringify(data)); }, checkChanges: () => true }),
+  };
+});
+mockNuxtImport('useUniqueCheck', () => () => ({ isFieldInUnique: () => false, getCheckStatus: () => ({ status: 'idle' }), checkUnique: vi.fn(), resetCheck: vi.fn() }));
+import Editor from '~/components/form/Editor.vue';
+import EditorLazy from '~/components/form/EditorLazy.vue';
+import { useFormValidation } from '~/composables/form/useFormValidation';
+const Code = defineComponent({ name: 'FormCodeEditorLazy', props: ['modelValue'], emits: ['update:modelValue'], template: '<div />' });
+it('blocks parent Save for an invalid editor draft and unblocks after correction', async () => {
+  const record = ref({ id: 1, payload: { old: true } });
+  const errors = ref<Record<string, string>>({});
+  let validateForm: ReturnType<typeof useFormValidation>['validateForm'];
+  const wrapper = await mountSuspended(defineComponent({ setup() {
+    ({ validateForm } = useFormValidation('orders'));
+    return () => h(Editor, { modelValue: record.value, errors: errors.value, tableName: 'orders',
+      'onUpdate:modelValue': value => { record.value = value as typeof record.value; }, 'onUpdate:errors': value => { errors.value = value; },
+    });
+  } }), { global: { stubs: { FormCodeEditorLazy: Code } } });
+  try {
+    await flushPromises();
+    const code = wrapper.getComponent(Code);
+    code.vm.$emit('update:modelValue', '{invalid');
+    await flushPromises();
+    expect(await validateForm!(record.value, errors)).toBe(false);
+    expect(errors.value.payload).toBe('Invalid JSON');
+    code.vm.$emit('update:modelValue', '{"fixed":true}');
+    await flushPromises();
+    expect(await validateForm!(record.value, errors)).toBe(true);
+  } finally { wrapper.unmount(); state.registry.value = null; }
+});
+
+it('omits absent lazy editor options and preserves native defaults and nullable drafts', async () => {
+  const record = { id: 1, payload: null, enabled: false, count: 0, rows: [] };
+  const wrapper = await mountSuspended(EditorLazy, {
+    props: { modelValue: record, errors: {}, tableName: 'orders', currentRecordId: null, uniqueLocalSelfKey: null },
+    global: { stubs: { FormCodeEditorLazy: Code } },
+  });
+  try {
+    await flushPromises();
+    const editor = wrapper.getComponent(Editor);
+    const forwarded = editor.vm.$.vnode.props;
+    for (const key of ['excluded', 'includes', 'fieldMap', 'mode', 'sortBy', 'fieldPositions']) {
+      expect(forwarded).not.toHaveProperty(key);
+    }
+    expect(editor.props()).toMatchObject({
+      excluded: [], includes: [], fieldMap: {}, loading: false,
+      currentRecordId: null, uniqueLocalSelfKey: null, modelValue: record,
+    });
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined();
+    await wrapper.setProps({ includes: [], excluded: [], fieldMap: {}, sortBy: '', fieldPositions: {} });
+    await flushPromises();
+    expect(editor.vm.$.vnode.props).toMatchObject({ includes: [], excluded: [], fieldMap: {}, sortBy: '', fieldPositions: {} });
+  } finally { wrapper.unmount(); state.registry.value = null; }
+});
+
+it('forwards draft errors through the typed lazy editor handle', async () => {
+  const wrapper = await mountSuspended(EditorLazy, {
+    props: { modelValue: { id: 1, payload: { old: true } }, errors: {}, tableName: 'orders' },
+    global: { stubs: { FormCodeEditorLazy: Code } },
+  });
+  try {
+    await flushPromises();
+    const code = wrapper.getComponent(Code);
+    code.vm.$emit('update:modelValue', '{invalid');
+    await flushPromises();
+    expect(wrapper.vm.getDraftErrors()).toEqual({ payload: 'Invalid JSON' });
+    code.vm.$emit('update:modelValue', '{"fixed":true}');
+    await flushPromises();
+    expect(wrapper.vm.getDraftErrors()).toEqual({});
+  } finally { wrapper.unmount(); state.registry.value = null; }
+});

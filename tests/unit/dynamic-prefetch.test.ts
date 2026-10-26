@@ -7,8 +7,10 @@ const source = readFileSync(
 );
 
 describe("dynamic extension prefetch", () => {
-  it("caches metadata without executing extension code", () => {
-    expect(source).toContain("setCachedExtensionMeta(cacheKey, extension)");
-    expect(source).not.toContain("loadDynamicComponent(");
+  it("coordinates speculative work without mounting or prefetching page data", () => {
+    expect(source).toContain("createExtensionLoadScheduler");
+    expect(source).toContain("loadDynamicComponent(extension.compiledCode");
+    expect(source).not.toContain("createApp(");
+    expect(source).not.toContain(".mount(");
   });
 });

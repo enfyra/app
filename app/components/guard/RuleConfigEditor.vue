@@ -4,16 +4,18 @@
       <UFormField label="Max Requests" required>
         <UInput
           :model-value="String(localConfig.maxRequests ?? '')"
-          @update:model-value="(v: any) => updateField('maxRequests', Number(v))"
+          @update:model-value="(v: any) => updateField('maxRequests', Math.max(1, Number(v) || 1))"
           type="number"
+          min="1"
           placeholder="100"
         />
       </UFormField>
       <UFormField label="Per Seconds (window)" required>
         <UInput
           :model-value="String(localConfig.perSeconds ?? '')"
-          @update:model-value="(v: any) => updateField('perSeconds', Number(v))"
+          @update:model-value="(v: any) => updateField('perSeconds', Math.max(1, Number(v) || 1))"
           type="number"
+          min="1"
           placeholder="60"
         />
       </UFormField>

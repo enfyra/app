@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { useFileManagerMoveState } from '~/composables/file-manager/useFileManagerMoveState';
 import { UIcon, UBadge } from "#components";
-import { createSelectionColumn } from '~/utils/data-table-selection';
-import type { RowSelectionState } from '@tanstack/vue-table';
+import type { FileLibraryRecord, FileLibraryDisplayRow } from '~/types/file';
 
 interface Props {
-  files: any[];
+  files: FileLibraryRecord[];
   viewMode: "grid" | "list";
   loading?: boolean;
   emptyTitle?: string;
@@ -23,7 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  "file-click": [file: any];
+  "file-click": [file: FileLibraryRecord];
   "toggle-selection": [fileId: string];
   "refresh-files": [];
 }>();
@@ -66,8 +65,8 @@ onBeforeUnmount(() => {
 
 const { getFileUrl } = useFileUrl();
 
-const transformedFiles = computed(() => {
-  return props.files.map((file: any) => ({
+const transformedFiles = computed<FileLibraryDisplayRow[]>(() => {
+  return props.files.map((file) => ({
     ...file,
     assetUrl: getFileUrl(getId(file)),
     displayName: file.filename || file.title || "Untitled",
@@ -75,15 +74,15 @@ const transformedFiles = computed(() => {
   }));
 });
 
-const { buildColumn, buildActionsColumn } = useDataTableColumns();
+const { buildColumn, buildActionsColumn } = useDataTableColumns<FileLibraryDisplayRow>();
 
-function viewFile(file: any) {
+function viewFile(file: FileLibraryDisplayRow) {
   if (file.assetUrl) {
     window.open(file.assetUrl, "_blank");
   }
 }
 
-function downloadFile(file: any) {
+function downloadFile(file: FileLibraryDisplayRow) {
   if (file.assetUrl) {
     const link = document.createElement("a");
     link.href = file.assetUrl;
@@ -92,7 +91,7 @@ function downloadFile(file: any) {
   }
 }
 
-function copyFileUrl(file: any) {
+function copyFileUrl(file: FileLibraryDisplayRow) {
   if (file.assetUrl) {
     navigator.clipboard.writeText(window.location.origin + file.assetUrl);
     const notify = useNotify();
@@ -100,13 +99,12 @@ function copyFileUrl(file: any) {
   }
 }
 
-function deleteFile(file: any) {
+function deleteFile(file: FileLibraryRecord) {
   const { deleteFile } = useFileManager();
   deleteFile(file, () => emit("refresh-files"));
 }
 
 const fileColumns = computed(() => [
-  createSelectionColumn<any>(),
   buildColumn({
     id: "filename",
     header: "Name",
@@ -117,14 +115,14 @@ const fileColumns = computed(() => [
           "div",
           {
             class: `w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-              getFileIconAndColor(file.mimetype || file.type).background
+              getFileIconAndColor(file.mimetype || file.type || "").background
             }`,
           },
           [
             h(UIcon, {
-              name: getFileIconAndColor(file.mimetype || file.type).icon,
+              name: getFileIconAndColor(file.mimetype || file.type || "").icon,
               class: `w-4 h-4 ${
-                getFileIconAndColor(file.mimetype || file.type).color
+                getFileIconAndColor(file.mimetype || file.type || "").color
               }`,
             }),
           ]
@@ -220,7 +218,7 @@ const fileColumns = computed(() => [
               label: "Delete",
               icon: "i-lucide-trash-2",
               color: "error" as const,
-              onSelect: (file: any) => deleteFile(file),
+              onSelect: (file: FileLibraryDisplayRow) => deleteFile(file),
             },
           ]
         : []),
@@ -228,7 +226,7 @@ const fileColumns = computed(() => [
   }),
 ]);
 
-function handleFileClick(file: any) {
+function handleFileClick(file: FileLibraryRecord) {
   emit("file-click", file);
 }
 
@@ -236,19 +234,7 @@ function toggleItemSelection(fileId: string) {
   emit("toggle-selection", fileId);
 }
 
-const rowSelection = ref<RowSelectionState>({});
-watch(() => props.selectedItems, (items) => {
-  const selected = new Set(items.map(String));
-  const next: RowSelectionState = {};
-  for (const file of props.files) {
-    const id = String(getId(file));
-    if (selected.has(id)) next[id] = true;
-  }
-  const keys = Object.keys(next);
-  if (keys.length !== Object.keys(rowSelection.value).length || keys.some((id) => !rowSelection.value[id])) rowSelection.value = next;
-}, { immediate: true });
-
-function handleSelectionChange(selectedRows: any[]) {
+function handleSelectionChange(selectedRows: FileLibraryRecord[]) {
   const selectedIds = new Set(selectedRows.map((row) => String(getId(row))));
   const currentFileSelections = new Set(props.selectedItems.map(String));
 
@@ -258,11 +244,9 @@ function handleSelectionChange(selectedRows: any[]) {
   }
 }
 
-watch(rowSelection, (selection) => {
-  handleSelectionChange(transformedFiles.value.filter((file: any) => selection[String(getId(file))]));
-});
-
-function getContextMenuItems(file: any) {
+function getContextMenuItems(row: unknown) {
+  const file = transformedFiles.value.find(file => file === row);
+  if (!file) return [];
   const menuItems: any = [
     [
       {
@@ -341,17 +325,14 @@ function getContextMenuItems(file: any) {
 
         <DataTableLazy
           v-else-if="viewMode === 'list'"
+          header-name="Files"
           :data="transformedFiles"
           :columns="fileColumns"
           :loading="false"
-          :get-row-id="(file: any) => String(getId(file))"
           :enable-row-selection="!moveState.moveMode"
-          v-model:row-selection="rowSelection"
-          :context-menu-items="
-            !isSelectionMode && !moveState.moveMode
-              ? getContextMenuItems
-              : undefined
-          "
+          :selected-row-ids="selectedItems"
+          @update:selected-rows="handleSelectionChange"
+          v-bind="!isSelectionMode && !moveState.moveMode ? { contextMenuItems: getContextMenuItems } : {}"
           @row-click="handleFileClick"
         />
       </div>

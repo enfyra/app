@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAutomaticIndex } from '~/utils/schema/constraints';
 
 const props = defineProps<{
   modelValue: any;
@@ -8,102 +9,81 @@ const props = defineProps<{
 const { confirm } = useConfirm();
 const table = useModel(props, "modelValue");
 const expandedIndexCoverage = ref<string[]>([]);
-const addButtonClass = "relative size-8 p-0 pointer-coarse:before:absolute pointer-coarse:before:-inset-1.5 pointer-coarse:before:content-['']";
+const initialIndexGroups = shallowRef(new WeakSet<string[]>());
+watch(() => props.modelValue, value => {
+  initialIndexGroups.value = new WeakSet(Array.isArray(value?.indexes) ? value.indexes : []);
+}, { immediate: true });
+const actionClass = "relative h-8 pointer-coarse:before:absolute pointer-coarse:before:-inset-1.5 pointer-coarse:before:content-['']";
 
-function addUniqueGroup() {
-  if (!table.value.uniques) table.value.uniques = [];
-  table.value.uniques.push([""]);
+const automaticIndexes = computed(() => (table.value.indexes as string[][] | undefined)?.filter(isManagedIndex) ?? []);
+const sections = computed(() => [
+  {
+    key: 'uniques' as const,
+    title: 'Unique constraints',
+    label: 'Unique constraint',
+    icon: 'lucide:key-round',
+    addLabel: 'Add unique constraint',
+    empty: 'No unique constraints',
+  },
+  {
+    key: 'indexes' as const,
+    title: 'Indexes',
+    label: 'Index',
+    icon: 'lucide:list-filter',
+    addLabel: 'Add index',
+    empty: 'No custom indexes',
+  },
+].map(section => ({
+  ...section,
+  groups: ((table.value[section.key] ?? []) as string[][])
+    .map((group, groupIndex) => ({
+      group,
+      groupIndex,
+      fields: group.filter(Boolean),
+      warning: section.key === 'uniques'
+        ? (hasDuplicateGroup(table.value.uniques, groupIndex) ? 'duplicate' : null)
+        : getIndexWarningType(groupIndex),
+    }))
+    .filter(({ group }) => section.key === 'uniques' || !isManagedIndex(group)),
+})));
+
+function addGroup(key: 'uniques' | 'indexes') {
+  if (!table.value[key]) table.value[key] = [];
+  table.value[key].push([""]);
 }
 
-function addIndexGroup() {
-  if (!table.value.indexes) table.value.indexes = [];
-  table.value.indexes.push([""]);
+function updateGroupFields(group: string[], fields: string[]) {
+  if (table.value.isSystem || isManagedIndex(group)) return;
+  group.splice(0, group.length, ...(fields.length ? fields : ['']));
 }
 
-function addFieldToGroup(list: string[][], groupIndex: number | string) {
-  const idx = Number(groupIndex);
-  if (!list || !list[idx]) return;
-  list[idx].push("");
-}
-
-function removeGroup(list: string[][], groupIndex: number | string) {
-  const idx = Number(groupIndex);
-  if (!list) return;
-  list.splice(idx, 1);
-}
-
-async function removeUniqueGroupConfirm(groupIndex: number | string) {
-  const idx = Number(groupIndex);
-  const group = table.value?.uniques?.[idx];
+async function removeGroupConfirm(key: 'uniques' | 'indexes', groupIndex: number) {
+  const group = table.value[key]?.[groupIndex];
   const label = Array.isArray(group) ? group.filter(Boolean).join(", ") : "";
+  const kind = key === 'uniques' ? 'unique constraint' : 'index';
   const ok = await confirm({
-    title: "Remove Unique Constraint",
-    content: `Remove this unique constraint${label ? ` (${label})` : ""}? You can still cancel by discarding changes before saving.`,
+    title: key === 'uniques' ? 'Remove Unique Constraint' : 'Remove Index',
+    content: `Remove this ${kind}${label ? ` (${label})` : ""}? You can still cancel by discarding changes before saving.`,
   });
   if (!ok) return;
-  removeGroup(table.value.uniques, idx);
+  table.value[key].splice(groupIndex, 1);
 }
 
-async function removeIndexGroupConfirm(groupIndex: number | string) {
-  const idx = Number(groupIndex);
-  const group = table.value?.indexes?.[idx];
-  const label = Array.isArray(group) ? group.filter(Boolean).join(", ") : "";
-  const ok = await confirm({
-    title: "Remove Index",
-    content: `Remove this index${label ? ` (${label})` : ""}? You can still cancel by discarding changes before saving.`,
-  });
-  if (!ok) return;
-  removeGroup(table.value.indexes, idx);
-}
-
-function removeFieldFromGroup(list: string[][], groupIndex: number | string, fieldIndex: number | string) {
-  const gIdx = Number(groupIndex);
-  const fIdx = Number(fieldIndex);
-  if (!list || !list[gIdx]) return;
-  list[gIdx].splice(fIdx, 1);
-  if (list[gIdx].length === 0) {
-    list.splice(gIdx, 1);
-  }
-}
-
-function getAvailableFields(group: string[], currentField: string): string[] {
-  return props.columnNames.filter((name: string) => currentField === name || !group.includes(name));
-}
-
-function canAddFieldToGroup(group: string[]): boolean {
-  const availableCount = props.columnNames.filter((name: string) => !group.includes(name) || name === '').length;
-  const hasEmptySlot = group.some((f: string) => !f || f === '');
-  return availableCount > 0 && !hasEmptySlot;
-}
-
-function hasDuplicateGroup(list: string[][], groupIndex: number | string, orderMatters = false): boolean {
-  const idx = Number(groupIndex);
+function hasDuplicateGroup(list: string[][], groupIndex: number, orderMatters = false): boolean {
   if (!list) return false;
-  const currentGroup = list[idx];
-  if (!currentGroup || currentGroup.some((f: string) => !f)) return false;
+  const currentGroup = list[groupIndex];
+  if (!currentGroup || currentGroup.some(field => !field)) return false;
 
   const normalize = (group: string[]) => (orderMatters ? group : [...group].sort()).join(',');
   const normalizedCurrent = normalize(currentGroup);
-  return list.some((g: string[], i: number) => {
-    if (i === idx) return false;
-    if (g.some((f: string) => !f)) return false;
-    return normalize(g) === normalizedCurrent;
-  });
+  return list.some((group, index) => index !== groupIndex && group.every(Boolean) && normalize(group) === normalizedCurrent);
 }
 
 function getCoveringUniqueConstraints(indexGroup: string[]): string[][] {
-  if (!indexGroup || indexGroup.some((field: string) => !field)) return [];
-  if (!table.value.uniques) return [];
-  return table.value.uniques.filter((uniqueGroup: string[]) => {
-    if (uniqueGroup.some((f: string) => !f)) return false;
-    return uniqueGroup.length >= indexGroup.length
-      && indexGroup.every((field: string, fieldIndex: number) => uniqueGroup[fieldIndex] === field);
-  });
-}
-
-function isIndexAlreadyUnique(groupIndex: number | string): boolean {
-  const indexGroup = table.value.indexes?.[Number(groupIndex)];
-  return Array.isArray(indexGroup) && getCoveringUniqueConstraints(indexGroup).length > 0;
+  if (!indexGroup || indexGroup.some(field => !field)) return [];
+  return (table.value.uniques ?? []).filter((uniqueGroup: string[]) => uniqueGroup.every(Boolean)
+    && uniqueGroup.length >= indexGroup.length
+    && indexGroup.every((field, fieldIndex) => uniqueGroup[fieldIndex] === field));
 }
 
 function indexCoverageKey(group: string[]): string {
@@ -121,191 +101,134 @@ function toggleIndexCoverage(group: string[]) {
     : [...expandedIndexCoverage.value, key];
 }
 
-function getIndexWarningType(groupIndex: number | string): 'duplicate' | 'redundant' | null {
+function isManagedIndex(group: string[]): boolean {
+  return initialIndexGroups.value.has(group) && isAutomaticIndex(table.value, group) && getCoveringUniqueConstraints(group).length === 0;
+}
+
+function getIndexWarningType(groupIndex: number): 'duplicate' | 'redundant' | null {
   if (hasDuplicateGroup(table.value.indexes, groupIndex, true)) return 'duplicate';
-  if (isIndexAlreadyUnique(groupIndex)) return 'redundant';
+  const group = table.value.indexes?.[groupIndex];
+  if (Array.isArray(group) && getCoveringUniqueConstraints(group).length > 0) return 'redundant';
   return null;
 }
 </script>
 
 <template>
-  <div class="space-y-8">
-
-    <div class="space-y-4">
-      <div class="flex items-center gap-2 text-lg font-semibold text-muted">
-        <UIcon name="lucide:key" class="w-5 h-5" />
-        Unique Constraints
-        <UButton
-          icon="lucide:plus"
-          aria-label="Add unique constraint"
-          size="sm"
-          square
-          :class="addButtonClass"
-          color="primary"
-          @click="addUniqueGroup()"
-          :disabled="table.isSystem"
-        />
-      </div>
-      <div
-        v-for="(group, gIndex) in table.uniques"
-        :key="gIndex"
-        class="flex flex-wrap gap-2 items-center"
-        :class="hasDuplicateGroup(table.uniques, gIndex) ? 'p-2 rounded-lg bg-[var(--state-danger-soft-bg)] border border-[var(--state-danger-outline-border)]' : ''"
-      >
-        <UTooltip v-if="hasDuplicateGroup(table.uniques, gIndex)" text="This combination already exists in another constraint">
-          <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 text-[var(--md-error)]" />
-        </UTooltip>
-
-        <div
-          v-for="(field, fIndex) in group"
-          :key="fIndex"
-          class="flex items-center gap-1"
-        >
-          <USelect
-            :items="getAvailableFields(group, field)"
-            v-model="table.uniques[gIndex][fIndex]"
-            size="sm"
-            class="min-w-[180px]"
-          />
-          <UButton
-            v-if="group.length > 1"
-            icon="i-lucide-x"
-            aria-label="Remove field from unique constraint"
-            size="xs"
-            variant="ghost"
-            color="neutral"
-            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
-            @click="removeFieldFromGroup(table.uniques, gIndex, fIndex)"
-            :disabled="table.isSystem"
-          />
+  <div class="grid min-w-0 items-start gap-6 xl:grid-cols-2 xl:gap-8">
+    <section v-for="section in sections" :key="section.key" :aria-label="section.title" class="min-w-0 space-y-3">
+      <div class="flex min-h-8 items-center justify-between gap-3">
+        <div class="flex min-w-0 items-center gap-2">
+          <h3 class="text-sm font-semibold text-highlighted">{{ section.title }}</h3>
+          <span v-if="section.groups.length" class="text-xs tabular-nums text-dimmed">{{ section.groups.length }}</span>
         </div>
-
         <UButton
-          icon="i-lucide:plus"
-          aria-label="Add field to unique constraint"
-          size="sm"
-          square
-          :class="addButtonClass"
-          @click="addFieldToGroup(table.uniques, gIndex)"
-          :disabled="table.isSystem || !canAddFieldToGroup(group)"
-        />
-        <UButton
-          icon="i-lucide:trash"
-          aria-label="Delete unique constraint"
-          color="error"
-          variant="ghost"
-          size="md"
-          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
-          @click="removeUniqueGroupConfirm(gIndex)"
-          :disabled="table.isSystem"
-        />
-      </div>
-    </div>
-
-    <div class="space-y-4">
-      <div class="flex items-center gap-2 text-lg font-semibold text-muted">
-        <UIcon name="lucide:list" class="w-5 h-5" />
-        Index
-        <UButton
-          icon="lucide:plus"
-          aria-label="Add index"
-          size="sm"
-          square
-          :class="addButtonClass"
-          color="primary"
-          @click="addIndexGroup()"
-          :disabled="table.isSystem"
-        />
-      </div>
-      <div
-        v-for="(group, gIndex) in table.indexes"
-        :key="gIndex"
-        class="flex flex-wrap gap-2 items-center"
-        :class="getIndexWarningType(gIndex) ? 'p-2 rounded-lg border' : ''"
-        :style="getIndexWarningType(gIndex) === 'duplicate' ? 'background: color-mix(in srgb, var(--md-error) 10%, transparent); border-color: color-mix(in srgb, var(--md-error) 30%, transparent);' : getIndexWarningType(gIndex) === 'redundant' ? 'background: color-mix(in srgb, var(--st-warning) 10%, transparent); border-color: color-mix(in srgb, var(--st-warning) 30%, transparent);' : ''"
-      >
-        <UTooltip v-if="getIndexWarningType(gIndex) === 'duplicate'" text="This combination already exists in another index">
-          <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 text-[var(--md-error)]" />
-        </UTooltip>
-        <UTooltip v-else-if="getIndexWarningType(gIndex) === 'redundant'" text="This index is already covered by a Unique constraint - index is created automatically">
-          <UIcon name="i-lucide-info" class="w-4 h-4 text-[var(--st-warning)]" />
-        </UTooltip>
-
-        <div
-          v-for="(field, fIndex) in group"
-          :key="fIndex"
-          class="flex items-center gap-1"
-        >
-          <USelect
-            :items="getAvailableFields(group, field)"
-            v-model="table.indexes[gIndex][fIndex]"
-            size="sm"
-            class="min-w-[180px]"
-          />
-          <UButton
-            v-if="group.length > 1"
-            icon="i-lucide-x"
-            aria-label="Remove field from index"
-            size="xs"
-            variant="ghost"
-            color="neutral"
-            class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
-            @click="removeFieldFromGroup(table.indexes, gIndex, fIndex)"
-            :disabled="table.isSystem"
-          />
-        </div>
-
-        <UButton
-          icon="i-lucide:plus"
-          aria-label="Add field to index"
-          size="sm"
-          square
-          :class="addButtonClass"
-          @click="addFieldToGroup(table.indexes, gIndex)"
-          :disabled="table.isSystem || !canAddFieldToGroup(group)"
-        />
-        <UButton
-          icon="i-lucide:trash"
-          aria-label="Delete index"
-          color="error"
-          variant="ghost"
-          size="md"
-          class="pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
-          @click="removeIndexGroupConfirm(gIndex)"
-          :disabled="table.isSystem"
-        />
-        <button
-          v-if="getIndexWarningType(gIndex) === 'redundant'"
           type="button"
-          class="ml-auto inline-flex items-center gap-1 text-xs font-medium text-[var(--state-warning-soft-text)] hover:text-[var(--state-warning-title-text)]"
-          :aria-expanded="isIndexCoverageExpanded(group)"
-          @click="toggleIndexCoverage(group)"
-        >
-          <span>View coverage</span>
-          <UIcon
-            :name="isIndexCoverageExpanded(group) ? 'lucide:chevron-up' : 'lucide:chevron-down'"
-            class="h-3.5 w-3.5"
-          />
-        </button>
+          icon="lucide:plus"
+          :aria-label="section.addLabel"
+          label="Add"
+          size="sm"
+          color="neutral"
+          variant="ghost"
+          :class="actionClass"
+          :disabled="table.isSystem"
+          @click="addGroup(section.key)"
+        />
+      </div>
+
+      <div class="space-y-3">
+        <p v-if="!section.groups.length" class="py-2 text-xs text-muted">{{ section.empty }}</p>
         <div
-          v-if="getIndexWarningType(gIndex) === 'redundant' && isIndexCoverageExpanded(group)"
-          class="w-full rounded-[var(--radius-subcontrol)] border border-[var(--state-warning-outline-border)] bg-[var(--surface-default)] px-3 py-2 text-xs text-[var(--state-warning-soft-text)]"
+          v-for="({ group, groupIndex, fields, warning }, displayIndex) in section.groups"
+          :key="groupIndex"
+          role="group"
+          :aria-label="`${section.label} ${displayIndex + 1}`"
+          class="min-w-0 space-y-1.5"
         >
-          <p>
-            <code class="font-mono text-[var(--state-warning-title-text)]">{{ group.join(', ') }}</code>
-            is the leading field prefix of these unique constraints, which already create the lookup index:
-          </p>
-          <ul class="mt-1.5 space-y-1">
-            <li
-              v-for="uniqueGroup in getCoveringUniqueConstraints(group)"
-              :key="uniqueGroup.join(',')"
-              class="font-mono text-[var(--state-warning-title-text)]"
+          <div class="flex min-w-0 items-start gap-3">
+            <UInputMenu
+              :model-value="fields"
+              :items="columnNames"
+              multiple
+              :icon="section.icon"
+              :aria-label="`Fields of ${section.label.toLowerCase()} ${displayIndex + 1}`"
+              :disabled="table.isSystem"
+              :placeholder="fields.length ? 'Add field…' : 'Select fields…'"
+              size="sm"
+              class="min-w-0 flex-1"
+              @update:model-value="updateGroupFields(group, $event)"
             >
-              {{ uniqueGroup.join(', ') }}
+              <template #tags-item-text="{ item, index }">
+                <span v-if="fields.length > 1" class="inline-flex items-center tabular-nums text-[11px] leading-none opacity-65">{{ `${index + 1} ` }}</span><span class="truncate leading-none">{{ item }}</span>
+              </template>
+            </UInputMenu>
+            <UButton
+              type="button"
+              icon="lucide:trash-2"
+              :aria-label="`Delete ${section.label.toLowerCase()}`"
+              :title="`Delete ${section.label.toLowerCase()}`"
+              size="sm"
+              square
+              color="error"
+              variant="ghost"
+              :class="[actionClass, 'mt-1.5 size-8 p-0']"
+              :disabled="table.isSystem"
+              @click="removeGroupConfirm(section.key, groupIndex)"
+            />
+          </div>
+
+          <div
+            v-if="warning"
+            class="pr-11 text-xs leading-5"
+            :class="warning === 'duplicate' ? 'text-[var(--state-danger-soft-text)]' : 'text-[var(--state-warning-soft-text)]'"
+          >
+            <div class="flex items-start gap-1.5">
+              <UIcon :name="warning === 'duplicate' ? 'lucide:triangle-alert' : 'lucide:info'" class="mt-0.5 size-3.5 shrink-0" />
+              <p v-if="warning === 'duplicate'">This combination already exists in another {{ section.label.toLowerCase() }}.</p>
+              <div v-else class="min-w-0 flex-1">
+                <p>Covered by a unique constraint. Remove this index before saving.</p>
+                <UButton
+                  type="button"
+                  aria-label="View unique constraint coverage"
+                  :aria-expanded="isIndexCoverageExpanded(group)"
+                  :trailing-icon="isIndexCoverageExpanded(group) ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+                  label="View coverage"
+                  size="xs"
+                  color="warning"
+                  variant="link"
+                  class="px-0"
+                  @click="toggleIndexCoverage(group)"
+                />
+              </div>
+            </div>
+            <div v-if="warning === 'redundant' && isIndexCoverageExpanded(group)" class="space-y-1 pl-5">
+              <p>The leading fields are already indexed by:</p>
+              <ul class="space-y-1">
+                <li v-for="uniqueGroup in getCoveringUniqueConstraints(group)" :key="uniqueGroup.join(',')" class="break-all font-mono">
+                  {{ uniqueGroup.join(', ') }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p v-if="section.key === 'indexes' && section.groups.length" class="text-xs text-muted">Fields are indexed from left to right.</p>
+
+      <details v-if="section.key === 'indexes' && automaticIndexes.length" class="group min-w-0">
+        <summary class="flex min-h-8 cursor-pointer list-none items-center gap-1.5 text-xs text-muted outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring)] pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden">
+          <UIcon name="lucide:chevron-right" class="size-3.5 shrink-0 group-open:rotate-90" />
+          <span>Automatic indexes</span>
+          <span class="tabular-nums text-dimmed">{{ automaticIndexes.length }}</span>
+        </summary>
+        <div class="mt-2 space-y-2">
+          <p class="text-xs leading-5 text-muted">Managed by Enfyra for relations and date/time fields.</p>
+          <ul class="flex min-w-0 flex-wrap gap-2">
+            <li v-for="group in automaticIndexes" :key="indexCoverageKey(group)" class="max-w-full rounded-[var(--radius-subcontrol)] bg-[var(--surface-muted)] px-2 py-1 text-xs text-muted">
+              <code class="break-all">{{ group.join(', ') }}</code>
             </li>
           </ul>
         </div>
-      </div>
-    </div>
+      </details>
+    </section>
   </div>
 </template>

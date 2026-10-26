@@ -1,29 +1,26 @@
 <template>
   <div class="eapp-page-constrained-wide w-full">
-    <div class="space-y-5">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p class="text-sm text-[var(--text-secondary)]">
-            Headers are checked from highest priority to lowest priority. PAT mappings use Enfyra API-token verification.
-          </p>
-        </div>
+    <DataTableSettingsTable
+      header-name="Authentication Headers"
+      header-description="Choose which request headers authenticate through native Enfyra PAT or JWT verification. Headers are checked from highest priority to lowest priority."
+      :data="headers"
+      :bulk-action="bulkDelete"
+      :columns="columns"
+      :actions="getRowActions"
+      :loading="showInitialLoading || loading"
+      :reload="() => fetchHeaders()"
+      :reload-loading="loading"
+      @row-click="header => canUpdate && openEdit(header as AuthHeaderRecord)"
+    >
+      <template #toolbar-actions>
         <div class="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
           <span class="inline-flex items-center gap-1.5">
             <span class="size-2 rounded-full bg-[var(--state-success-solid-bg)]" />
             {{ activeCount }} active
           </span>
-          <span>{{ headers.length }} total</span>
         </div>
-      </div>
-
-      <DataTableSettingsTable
-        :data="headers"
-        :columns="columns"
-        :actions="getRowActions"
-        :loading="showInitialLoading || loading"
-        @row-click="header => canUpdate && openEdit(header as AuthHeaderRecord)"
-      />
-    </div>
+      </template>
+    </DataTableSettingsTable>
 
     <CommonDrawer
       v-model="isOpen"
@@ -60,7 +57,7 @@
               <h3 class="text-sm font-semibold text-[var(--text-primary)]">Header mapping</h3>
               <p class="mt-1 text-xs text-[var(--text-secondary)]">Header names are normalized to lowercase before matching. The same key may have PAT and JWT mappings; priority decides which verifier runs first.</p>
             </div>
-            <UFormField label="Header key" :error="headerKeyError || undefined">
+            <UFormField label="Header key" v-bind="headerKeyError ? { error: headerKeyError } : {}">
               <UInput
                 v-model="form.headerKey"
                 class="w-full font-mono"
@@ -167,13 +164,6 @@ const { confirm } = useConfirm();
 const { getId } = useDatabase();
 const { checkPermissionCondition } = usePermissions();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: 'Authentication Headers',
-  description: 'Choose which request headers authenticate through native Enfyra PAT or JWT verification.',
-  gradient: 'purple',
-});
 
 const credentialOptions = [
   { label: 'PAT — Enfyra API token', value: 'pat' },
@@ -383,7 +373,7 @@ async function saveHeader() {
     };
     const response = mode.value === 'create'
       ? await createHeader({ body })
-      : await updateHeader({ id: form.id || undefined, body });
+      : await updateHeader({ ...(form.id ? { id: form.id } : {}), body });
     if (!response) return;
     notify.success('Saved', 'Authentication header mapping saved.');
     await fetchHeaders();
@@ -437,6 +427,15 @@ async function moveHeader(index: number, direction: -1 | 1) {
     moving.value = false;
   }
 }
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_auth_header',
+  title: 'Delete Authentication Headers',
+  warning: 'Requests using these headers will stop authenticating after deletion.',
+  isEligible: header => !header.isSystem,
+  isBusy: () => saving.value || togglingHeaderId.value !== null,
+  refresh: () => fetchHeaders(),
+});
 
 async function deleteHeader(header: AuthHeaderRecord) {
   if (header.isSystem || !canDelete.value) return;

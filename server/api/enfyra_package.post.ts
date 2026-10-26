@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   try {
     const body = await readBody(event);
     const config = useRuntimeConfig();
-    const apiUrl = (config.public as any).apiUrl;
+    const apiUrl = config.public.apiUrl;
     const headers = buildPackageProxyHeaders(
       getHeader(event, "cookie"),
       event.context.proxyHeaders?.authorization,

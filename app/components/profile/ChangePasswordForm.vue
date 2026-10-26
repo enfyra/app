@@ -95,14 +95,14 @@ registerHeaderActions([
 <template>
   <CommonFormCard :bordered="false" description="Choose a new password with at least 6 characters for your account.">
     <UForm :state="passwordForm" class="grid gap-5 md:grid-cols-2" @submit="handleChangePassword">
-      <UFormField label="New password" :error="passwordErrors.newPassword" required>
+      <UFormField label="New password" v-bind="passwordErrors.newPassword === undefined ? {} : { error: passwordErrors.newPassword }" required>
         <UInput v-model="passwordForm.newPassword" :type="showPassword.new ? 'text' : 'password'" placeholder="Enter new password" class="w-full" autocomplete="new-password">
           <template #trailing>
             <UButton type="button" color="neutral" variant="ghost" size="xs" :icon="showPassword.new ? 'lucide:eye-off' : 'lucide:eye'" :aria-label="showPassword.new ? 'Hide new password' : 'Show new password'" @click="showPassword.new = !showPassword.new" />
           </template>
         </UInput>
       </UFormField>
-      <UFormField label="Confirm new password" :error="passwordErrors.confirmPassword" required>
+      <UFormField label="Confirm new password" v-bind="passwordErrors.confirmPassword === undefined ? {} : { error: passwordErrors.confirmPassword }" required>
         <UInput v-model="passwordForm.confirmPassword" :type="showPassword.confirm ? 'text' : 'password'" placeholder="Confirm new password" class="w-full" autocomplete="new-password">
           <template #trailing>
             <UButton type="button" color="neutral" variant="ghost" size="xs" :icon="showPassword.confirm ? 'lucide:eye-off' : 'lucide:eye'" :aria-label="showPassword.confirm ? 'Hide password confirmation' : 'Show password confirmation'" @click="showPassword.confirm = !showPassword.confirm" />

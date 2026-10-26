@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'route' }]">
-        <template #route-header><h2 class="text-sm font-medium">Route</h2></template>
+        <template #route-header><CommonFormHeader :title="'Create New Route'" /></template>
         <template #route>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
@@ -13,6 +13,7 @@
             :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards']"
             :field-map="fieldMap"
             mode="create"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
           />
         </UForm>
       </CommonFormCard>
@@ -23,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const notify = useNotify();
 const { routes, loadRoutes } = useRoutes();
@@ -31,10 +33,11 @@ const tableName = "enfyra_route";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 const { getId } = useDatabase();
 
 const fieldMap = {
@@ -42,11 +45,6 @@ const fieldMap = {
   skipRoleGuardMethods: { type: 'methods-selector', allowedMethodsKey: 'availableMethods' },
   availableMethods: { type: 'methods-selector' },
 };
-
-registerPageHeader({
-  title: "Create New Route",
-  gradient: "cyan",
-});
 
 registerHeaderActions([
   {
@@ -75,7 +73,7 @@ const {
   error: createError,
   execute: executeCreateRoute,
   pending: createLoading,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create Route",
 });
@@ -120,13 +118,15 @@ async function handleCreate() {
   }
 
   notify.success("Route created successfully");
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   await loadRoutes();
 
   const { registerDataMenuItemsFromRoutes } = useMenuRegistry();
   registerDataMenuItemsFromRoutes(routes.value);
 
-  await navigateTo(`/settings/routes/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/settings/routes/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
 }

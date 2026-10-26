@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'configuration' }]">
-        <template #configuration-header><h2 class="text-sm font-medium">Configuration</h2></template>
+        <template #configuration-header><CommonFormHeader :title="'Add OAuth Provider'" /></template>
         <template #configuration>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
@@ -13,6 +13,7 @@
             :excluded="excludedFields"
             :field-map="fieldMap"
             @update:errors="(errors) => (createErrors = errors)"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             mode="create"
           />
         </UForm>
@@ -24,6 +25,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellCreatedRecordResponse } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildOAuthRedirectUri,
@@ -43,6 +46,8 @@ const tableName = "enfyra_oauth_config";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 const appOrigin = ref("");
 const excludedFields = computed(() =>
   createForm.value?.autoSetCookies === true ? ["appCallbackUrl"] : []
@@ -67,12 +72,6 @@ const fieldMap = computed(() => ({
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Add OAuth Provider",
-  gradient: "blue",
-});
 
 registerHeaderActions([
   {
@@ -100,17 +99,25 @@ const {
   error: createError,
   execute: executeCreateConfig,
   pending: createLoading,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellCreatedRecordResponse>(() => `/${tableName}`, {
   method: "post",
   errorContext: "Create OAuth Config",
 });
 
 onMounted(async () => {
   await ensureSchema();
-  createForm.value = generateEmptyForm();
-  createForm.value.scriptLanguage ||= "typescript";
+  const initialForm = generateEmptyForm();
+  initialForm.scriptLanguage ||= "typescript";
   appOrigin.value = window.location.origin;
-  syncRedirectUri();
+  const redirectUri = buildOAuthRedirectUri(
+    initialForm.provider,
+    appOrigin.value
+  );
+  if (redirectUri) {
+    initialForm.redirectUri = redirectUri;
+  }
+  createForm.value = initialForm;
+  hasFormChanges.value = false;
 });
 
 watch(
@@ -141,9 +148,11 @@ async function handleCreate() {
   }
 
   notify.success("OAuth provider configured successfully");
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   const { getId } = useDatabase();
-  await navigateTo(`/settings/oauth/config/${getId(createData.value.data[0])}`, {
+  await navigateTo(`/settings/oauth/config/${getId(createData.value?.data[0])}`, {
     replace: true,
   });
 }

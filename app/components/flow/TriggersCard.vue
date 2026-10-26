@@ -88,7 +88,7 @@
             </div>
             <UFormField label="Timezone">
               <UInputMenu
-                :model-value="selectedTzItem"
+                v-bind="selectedTzItem === undefined ? {} : { modelValue: selectedTzItem }"
                 :items="timezoneItems"
                 v-model:search-term="tzSearchTerm"
                 placeholder="Search timezone..."
@@ -129,7 +129,7 @@
           <template v-else-if="editorForm.type === 'webhook'">
             <UFormField label="Route path">
               <UInputMenu
-                :model-value="selectedRouteItem"
+                v-bind="selectedRouteItem === undefined ? {} : { modelValue: selectedRouteItem }"
                 :items="routeItems"
                 v-model:search-term="routeSearchTerm"
                 v-model:open="routeMenuOpen"
@@ -167,6 +167,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureTriggerRoute } from '~/types/feature-api';
 import type { FlowTrigger, TriggerType, TableEventType } from '~/types/flow';
 import { getTriggerColor } from '~/utils/flow.constants';
 
@@ -277,7 +278,7 @@ const routes = ref<any[]>([]);
 const selectedRoute = ref<any>(null);
 let routeDebounce: ReturnType<typeof setTimeout> | null = null;
 
-const { execute: fetchRoutes, pending: routesLoading } = useApi(
+const { execute: fetchRoutes, pending: routesLoading } = useApi<FeatureCollection<FeatureTriggerRoute>>(
   () => {
     const params = new URLSearchParams({
       fields: 'id,path,methodConfigs.available,methodConfigs.method.name',
@@ -364,13 +365,18 @@ async function saveTrigger() {
       });
       if (triggerError.value) { saving.value = false; return; }
     } else {
+      if (!form.cron?.trim()) {
+        notify.error('Error', 'Please enter a cron expression');
+        saving.value = false;
+        return;
+      }
       const { execute: createTrigger, error: triggerError } = useApi(() => '/enfyra_flow_trigger', { method: 'post', errorContext: 'Create Trigger' });
       await createTrigger({
         body: {
           flow: { [getIdFieldName()]: props.flowId },
           type: 'schedule',
           isEnabled: true,
-          config: { cron: form.cron, timezone: form.timezone },
+          config: { cron: form.cron.trim(), timezone: form.timezone },
         },
       });
       if (triggerError.value) { saving.value = false; return; }

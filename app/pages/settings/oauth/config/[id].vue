@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
-    <div class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'configuration' }]">
-        <template #configuration-header><h2 class="text-sm font-medium">Configuration</h2></template>
+    <div v-if="loading || configData?.data?.[0]" class="eapp-page-constrained">
+      <CommonPanel :sections="configSections">
+        <template #configuration-header><CommonFormHeader :title="configData?.data?.[0]?.provider ? `OAuth: ${getProviderLabel(configData.data[0].provider)}` : 'Configuration'" /></template>
         <template #configuration>
       <CommonFormCard>
         <UForm :state="form" @submit="updateConfig">
@@ -22,7 +22,7 @@
       </CommonPanel>
     </div>
     <CommonEmptyState
-      v-if="!loading && !configData?.data?.[0]"
+      v-else
       title="OAuth configuration not found"
       description="The requested OAuth configuration could not be loaded"
       icon="lucide:key"
@@ -32,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellListResponse, ShellOAuthConfigRecord } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildOAuthRedirectUri,
@@ -53,7 +55,6 @@ const tableName = "enfyra_oauth_config";
 
 const { getIncludeFields } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -97,11 +98,15 @@ async function handleReset() {
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
     syncRedirectUri();
+    errors.value = {};
     hasFormChanges.value = formChanges.checkChanges(form.value);
+    formEditorRef.value?.confirmChanges();
 
     notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 registerHeaderActions([
   {
@@ -163,22 +168,13 @@ const {
   data: configData,
   pending: loading,
   execute: executeGetConfig,
-} = useApi(() => `/${tableName}`, {
-  query: {
+} = useApi<ShellListResponse<ShellOAuthConfigRecord>>(() => `/${tableName}`, {
+  query: computed(() => ({
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: route.params.id } },
-  },
+  })),
   errorContext: "Fetch OAuth Config",
 });
-
-watch(() => configData.value?.data?.[0]?.provider, (provider) => {
-  if (provider) {
-    registerPageHeader({
-      title: `OAuth: ${getProviderLabel(provider)}`,
-      gradient: "blue",
-    });
-  }
-}, { immediate: true });
 
 const {
   error: updateError,
@@ -248,9 +244,14 @@ async function updateConfig() {
 }
 
 async function deleteConfig() {
+  const providerLabel = configData.value?.data?.[0]?.provider
+    ? getProviderLabel(configData.value.data[0].provider)
+    : "this OAuth provider";
   const ok = await confirm({
-    title: "Are you sure?",
-    content: "This action cannot be undone. The OAuth provider configuration will be permanently deleted.",
+    title: "Delete OAuth Configuration",
+    content: `Are you sure you want to delete the "${providerLabel}" OAuth configuration? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 
@@ -260,6 +261,7 @@ async function deleteConfig() {
     return;
   }
 
+  hasFormChanges.value = false;
   notify.success("Success", "OAuth configuration deleted successfully");
   await navigateTo("/settings/oauth/config");
 }
@@ -275,6 +277,17 @@ async function initializeForm() {
     hasFormChanges.value = formChanges.checkChanges(form.value);
   }
 }
+
+const configSections = computed(() => [{
+  value: 'configuration',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(() => {
   appOrigin.value = window.location.origin;

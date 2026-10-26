@@ -30,9 +30,13 @@ const getColorIndex = computed(() => {
 });
 
 const getSoftIconColor = () => {
-  const colors = ['brand', 'primary', 'warning', 'info'];
-  const color = colors[getColorIndex.value];
-  return `text-${color}-600 dark:text-${color}-400`;
+  const colorClasses = [
+    'text-brand-600 dark:text-brand-400',
+    'text-primary-600 dark:text-primary-400',
+    'text-warning-600 dark:text-warning-400',
+    'text-info-600 dark:text-info-400',
+  ];
+  return colorClasses[getColorIndex.value] || colorClasses[0];
 };
 </script>
 

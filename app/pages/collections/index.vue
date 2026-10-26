@@ -4,18 +4,14 @@ import { h } from "vue";
 import { UBadge } from "#components";
 import type { ColumnDef } from "@tanstack/vue-table";
 import type { SystemVisibilityMode } from "~/types/ui";
+import type { FormApiListResponse, FormCollectionListRecord } from '~/types/form-api';
 import { settingsDateColumn, settingsTextColumn } from "~/utils/settings-table";
 
 const page = ref(1);
 const pageLimit = useSettingsPageSize('collections');
 const route = useRoute();
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "Collections",
-  gradient: "purple",
-});
 
 const COLLECTION_LIST_FIELDS = [
   "id",
@@ -97,7 +93,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchCollections,
-} = useApi(() => "/enfyra_table", {
+} = useApi<FormApiListResponse<FormCollectionListRecord>>(() => "/enfyra_table", {
   query: computed(() => {
     const conditions: any[] = [];
     if (visibilityScope.value === "custom") {
@@ -194,11 +190,14 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <DataTableSettingsTable
+  <DataTableSettingsTable
+      header-name="Collections"
       v-model:page="page"
       :data="displayedCollections"
       :columns="columns"
       :loading="showInitialLoading || collectionsRefreshing"
+      :reload="() => fetchCollections()"
+      :reload-loading="loading"
       :page-limit="pageLimit"
       :total="total"
       page-size-key="collections"
@@ -206,23 +205,21 @@ watch(
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
       @page-size-change="setPageSize"
       @row-click="collection => navigateTo(`/collections/${collection.name}`)"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search collections…"
+      search-label="Search collections by table name"
+      @search="page = 1"
     >
-      <template #toolbar>
-        <div class="flex w-full min-w-0 items-center gap-2 lg:gap-3">
-          <CommonSearchField
-            v-model="searchQuery"
-            placeholder="Search collections…"
-            label="Search collections by table name"
-          />
-          <USelect
-            v-model="visibilityScope"
-            :items="visibilityOptions"
-            aria-label="Collection type"
-            size="sm"
-            class="w-26 shrink-0"
-            @update:model-value="page = 1"
-          />
-        </div>
+      <template #toolbar-actions>
+        <USelect
+          v-model="visibilityScope"
+          :items="visibilityOptions"
+          aria-label="Collection type"
+          size="sm"
+          class="w-26 shrink-0"
+          @update:model-value="page = 1"
+        />
       </template>
       <template #empty>
         <CommonEmptyState
@@ -233,6 +230,6 @@ watch(
           size="sm"
         />
       </template>
-    </DataTableSettingsTable>
+  </DataTableSettingsTable>
   </div>
 </template>

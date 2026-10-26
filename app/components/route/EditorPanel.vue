@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureGuard, FeatureIdentity, FeatureRoute } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildGuardBodyFromTemplate,
@@ -23,6 +24,7 @@ const props = withDefaults(defineProps<{
   syncQuery?: boolean
   showTabDivider?: boolean
   embedded?: boolean
+  active?: boolean
 }>(), {
   externalApiTest: false,
   showMainTableCard: false,
@@ -31,6 +33,7 @@ const props = withDefaults(defineProps<{
   syncQuery: false,
   showTabDivider: true,
   embedded: false,
+  active: true,
 })
 
 const emit = defineEmits<{
@@ -44,12 +47,6 @@ const idField = getIdFieldName()
 const currentPageRoute = useRoute()
 const router = useRouter()
 const activeEditorTab = ref<'overview' | 'methods' | 'execution' | 'access'>('overview')
-const editorSections = [
-  { label: 'Overview', value: 'overview', icon: 'lucide:settings-2' },
-  { label: 'Methods', value: 'methods', icon: 'lucide:list-filter' },
-  { label: 'Execution', value: 'execution', icon: 'lucide:workflow' },
-  { label: 'Access', value: 'access', icon: 'lucide:shield-check' },
-]
 const { routes, loadRoutes } = useRoutes()
 const { registerDataMenuItemsFromRoutes } = useMenuRegistry()
 const ROUTE_EDITOR_FIELDS = [
@@ -105,7 +102,7 @@ const {
   data: routeData,
   pending: routeLoading,
   execute: fetchRoute,
-} = useApi(() => '/enfyra_route', {
+} = useApi<FeatureCollection<FeatureRoute>>(() => '/enfyra_route', {
   query: computed(() => ({
     fields: ROUTE_EDITOR_FIELDS,
     deep: { methodConfigs: { limit: 0, deep: { fileFields: { limit: 0 } } } },
@@ -476,10 +473,38 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value)
+    errors.value = {}
     hasFormChanges.value = false
+    formEditorRef.value?.confirmChanges()
     notify.success("Reset Complete", "All changes have been discarded.")
   }
 }
+
+useUnsavedChangesGuard(() => props.active && hasFormChanges.value && (!routes.value.length || !routeId.value || routes.value.some((r: any) => String(getId(r)) === String(routeId.value))))
+
+const routeReloadAction = useReloadAction({
+  reload: async () => {
+    await fetchRoute()
+    formChanges.update(routeData.value?.data?.[0] ?? {})
+    hasFormChanges.value = false
+  },
+  loading: computed(() => routeLoading.value),
+  show: computed(() => props.active),
+  hasUnsavedChanges: () => hasFormChanges.value,
+})
+
+const editorSections = computed(() => {
+  const path = routeData.value?.data?.[0]?.path
+  const title = props.embedded ? undefined : (path ? `Route: ${path}` : 'Route Details')
+  const description = routeData.value?.data?.[0]?.description || 'Configure route overview, methods, execution pipeline, and access policies'
+  const headerMeta = title ? { title, description } : {}
+  return [
+    { label: 'Overview', value: 'overview', icon: 'lucide:settings-2', ...headerMeta, actions: [routeReloadAction] },
+    { label: 'Methods', value: 'methods', icon: 'lucide:list-filter', ...headerMeta, actions: [routeReloadAction] },
+    { label: 'Execution', value: 'execution', icon: 'lucide:workflow', ...headerMeta, actions: [routeReloadAction] },
+    { label: 'Access', value: 'access', icon: 'lucide:shield-check', ...headerMeta, actions: [routeReloadAction] },
+  ]
+})
 
 registerHeaderActions([
   {
@@ -489,7 +514,7 @@ registerHeaderActions([
     variant: 'outline',
     color: 'warning',
     order: 1,
-    show: computed(() => activeEditorTab.value === 'overview' && hasFormChanges.value),
+    show: computed(() => props.active && activeEditorTab.value === 'overview' && hasFormChanges.value),
     disabled: computed(() => routeLoading.value || updateLoading.value || !hasFormChanges.value),
     onClick: handleReset,
   },
@@ -500,7 +525,7 @@ registerHeaderActions([
     variant: 'solid',
     color: 'primary',
     order: 999,
-    show: computed(() => activeEditorTab.value === 'overview' && !!routeData.value?.data?.[0] && props.canUpdateRoute !== false),
+    show: computed(() => props.active && activeEditorTab.value === 'overview' && !!routeData.value?.data?.[0] && props.canUpdateRoute !== false),
     loading: computed(() => updateLoading.value),
     disabled: computed(() => routeLoading.value || !routeId.value || !hasFormChanges.value),
     onClick: updateRoute,
@@ -549,17 +574,13 @@ watch(() => props.routeId, async (newRouteId) => {
   await fetchRoute()
 })
 
-onMounted(async () => {
-  await fetchRoute()
-})
-
 // --- Guard Management ---
 
 const {
   data: routeGuardsData,
   pending: routeGuardsLoading,
   execute: fetchRouteGuards,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureGuard>>(() => '/enfyra_guard', {
   query: computed(() => ({
     fields: ROUTE_GUARD_SUMMARY_FIELDS,
     filter: routeId.value
@@ -575,7 +596,7 @@ const {
   data: globalGuardsData,
   pending: globalGuardsLoading,
   execute: fetchGlobalGuards,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureGuard>>(() => '/enfyra_guard', {
   query: computed(() => ({
     fields: ROUTE_GUARD_SUMMARY_FIELDS,
     filter: { _and: [{ isGlobal: { _eq: true } }, { parent: { _is_null: true } }] },
@@ -600,7 +621,7 @@ const {
   error: createGuardError,
   execute: executeCreateGuard,
   pending: createGuardLoading,
-} = useApi(() => '/enfyra_guard', { method: 'post', errorContext: 'Create Guard' })
+} = useApi<FeatureCollection<FeatureIdentity>>(() => '/enfyra_guard', { method: 'post', errorContext: 'Create Guard' })
 
 const {
   error: createGuardRuleError,
@@ -845,7 +866,7 @@ watch(showEditHookDrawer, (isOpen) => {
             <div class="min-w-0">
               <p class="text-sm text-[var(--text-tertiary)] mb-1">This route is the main route for table:</p>
               <h4 class="text-base font-semibold text-[var(--text-primary)]">
-                {{ mainTableInfo.name || mainTableInfo.tableName || 'Unknown Table' }}
+                {{ mainTableInfo.name || ('tableName' in mainTableInfo ? mainTableInfo.tableName : undefined) || 'Unknown Table' }}
               </h4>
               <p v-if="mainTableInfo.description" class="text-xs text-[var(--text-tertiary)] mt-1">
                 {{ mainTableInfo.description }}
@@ -868,7 +889,7 @@ watch(showEditHookDrawer, (isOpen) => {
           @has-changed="(hasChanged: boolean) => hasFormChanges = hasChanged"
           table-name="enfyra_route"
           mode="update"
-          :current-record-id="routeId"
+          v-bind="routeId === undefined ? {} : { currentRecordId: routeId }"
           :excluded="['routePermissions', 'mainTable', 'handlers', 'hooks', 'preHooks', 'postHooks', 'guards', 'methodConfigs', 'availableMethods', 'publicMethods', 'skipRoleGuardMethods']"
           :field-map="typeMap"
           :loading="routeLoading"
@@ -880,8 +901,11 @@ watch(showEditHookDrawer, (isOpen) => {
       <template #methods>
     <CommonFormCard v-if="methodConfigs.length" :bordered="false" title="Methods" description="Toggle a method to enable it, or select its row for more settings.">
       <DataTable
+        header-name="Methods"
         :data="methodConfigs"
         :columns="methodConfigColumns"
+        :reload="fetchRoute"
+        :reload-loading="routeLoading"
         :get-row-id="(config) => String(getId(config))"
         @row-click="openMethodConfig"
       >
@@ -1035,7 +1059,7 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model:form="handlerForm"
       v-model:errors="handlerErrors"
       :loading="createHandlerLoading"
-      :route-id="routeId"
+      v-bind="routeId === undefined ? {} : { routeId }"
       :route-path="routePath"
       :allowed-methods="handlerAvailableMethods"
       :lock-method="handlerLockedMethod"
@@ -1049,7 +1073,7 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model:errors="hookErrors"
       :loading="createHookLoading"
       :hook-type="hookType"
-      :route-id="routeId"
+      v-bind="routeId === undefined ? {} : { routeId }"
       :route-path="routePath"
       :allowed-methods="availableMethodStrings"
       :lock-method="hookLockedMethod"
@@ -1062,7 +1086,7 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model:form="editHandlerForm"
       v-model:errors="editHandlerErrors"
       :loading="updateHandlerLoading"
-      :route-id="routeId"
+      v-bind="routeId === undefined ? {} : { routeId }"
       :route-path="routePath"
       :allowed-methods="availableMethodStrings"
       :lock-method="true"
@@ -1076,7 +1100,7 @@ watch(showEditHookDrawer, (isOpen) => {
       v-model:errors="editHookErrors"
       :loading="updateHookLoading"
       :hook-type="editHookType"
-      :route-id="routeId"
+      v-bind="routeId === undefined ? {} : { routeId }"
       :route-path="routePath"
       :allowed-methods="availableMethodStrings"
       :lock-method="true"

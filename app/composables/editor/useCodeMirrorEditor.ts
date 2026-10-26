@@ -1,22 +1,20 @@
-interface UseCodeMirrorEditorOptions {
-  modelValue?: string | Ref<string | undefined>;
-  emit: (event: "update:modelValue" | "diagnostics", ...args: any[]) => void;
-  codeMirrorModules?: any;
-}
+import type { Extension } from '@codemirror/state';
+import type { EditorView } from '@codemirror/view';
+import type { CodeMirrorEditorOptions } from '~/types/code-editor-runtime';
 
-export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
+export function useCodeMirrorEditor(options: CodeMirrorEditorOptions) {
   const { modelValue, emit, codeMirrorModules } = options;
 
   const getModelValue = () => ensureString(isRef(modelValue) ? modelValue.value : modelValue);
   const code = ref(getModelValue());
   const editorRef = ref<HTMLDivElement>();
-  const editorView = shallowRef<any>();
-  let updateListenerExtension: any = null;
-  
+  const editorView = shallowRef<EditorView | null>(null);
+  let updateListenerExtension: Extension | null = null;
+
   const modules = computed(() => {
-    if (!codeMirrorModules) return null
-    return isRef(codeMirrorModules) ? codeMirrorModules.value : codeMirrorModules
-  })
+    if (!codeMirrorModules) return null;
+    return isRef(codeMirrorModules) ? codeMirrorModules.value : codeMirrorModules;
+  });
 
   watch(
     () => getModelValue(),
@@ -29,31 +27,31 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
 
   watch(code, (val, oldVal) => {
     if (val === oldVal) return;
-    emit("update:modelValue", val);
+    emit('update:modelValue', val);
   }, { flush: 'post' });
 
   let keyupHandler: (() => void) | null = null;
 
-  function getEditorExtensions(extensions: any[]) {
+  function getEditorExtensions(extensions: Extension[]) {
     return updateListenerExtension
       ? [...extensions, updateListenerExtension]
       : extensions;
   }
 
-  function reconfigureEditor(extensions: any[]) {
-    const m = modules.value
-    if (!editorView.value || !m?.StateEffect || extensions.length === 0) return
+  function reconfigureEditor(extensions: Extension[]) {
+    const m = modules.value;
+    if (!editorView.value || !m?.StateEffect || extensions.length === 0) return;
     editorView.value.dispatch({
       effects: m.StateEffect.reconfigure.of(getEditorExtensions(extensions)),
     });
     editorView.value.requestMeasure();
   }
 
-  function createEditor(extensions: any[]) {
-    const m = modules.value
-    if (!m?.EditorView || !editorRef.value) return
+  function createEditor(extensions: Extension[]) {
+    const m = modules.value;
+    if (!m?.EditorView || !editorRef.value) return;
 
-    updateListenerExtension = m.EditorView.updateListener.of((update: any) => {
+    updateListenerExtension = m.EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         code.value = update.state.doc.toString();
       }
@@ -65,9 +63,9 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
       parent: editorRef.value,
     });
 
-    if (editorView.value?.dom) {
+    if (editorView.value.dom) {
       keyupHandler = () => {
-        const newCode = editorView.value?.state?.doc?.toString() || '';
+        const newCode = editorView.value?.state.doc.toString() || '';
         if (newCode !== code.value) {
           code.value = newCode;
         }
@@ -82,7 +80,7 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
       }
     }
 
-    editorView.value?.requestMeasure();
+    editorView.value.requestMeasure();
   }
 
   watch(code, (newCode, oldCode) => {
@@ -111,7 +109,7 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     updateListenerExtension = null;
   }
 
-  function recreateEditor(extensions: any[]) {
+  function recreateEditor(extensions: Extension[]) {
     destroyEditor();
     createEditor(extensions);
   }
@@ -121,7 +119,7 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
       if (editorRef.value.parentElement) {
         const parent = editorRef.value.parentElement;
         if (parent.style.height) {
-          editorRef.value.style.height = "100%";
+          editorRef.value.style.height = '100%';
         }
       }
       editorView.value.requestMeasure();
@@ -136,6 +134,6 @@ export function useCodeMirrorEditor(options: UseCodeMirrorEditorOptions) {
     reconfigureEditor,
     recreateEditor,
     destroyEditor,
-    updateEditorSize
+    updateEditorSize,
   };
 }

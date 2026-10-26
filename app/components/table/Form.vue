@@ -42,7 +42,7 @@ const { isMobile, isTablet } = useScreen();
           class="text-sm font-medium"
           :style="{ color: 'var(--text-primary)' }"
         >
-          isSingleRecord
+          Single Record
         </label>
         <p
           class="text-xs"

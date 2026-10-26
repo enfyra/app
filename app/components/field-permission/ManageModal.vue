@@ -122,16 +122,16 @@ function saveFieldPerm() {
   if (body?.condition != null && body.condition !== "") {
     const parsed =
       typeof body.condition === "string" ? parseConditionJson(body.condition) : { condition: body.condition, error: null }
-    if ((parsed as any).error) {
-      notify.error("Validation Error", (parsed as any).error)
+    if (parsed.error !== null) {
+      notify.error("Validation Error", parsed.error)
       return
     }
-    const v = validateFieldPermissionCondition((parsed as any).condition)
+    const v = validateFieldPermissionCondition(parsed.condition)
     if (!v.ok) {
       notify.error("Validation Error", v.errors[0] || "Invalid condition")
       return
     }
-    body.condition = (parsed as any).condition
+    body.condition = parsed.condition
   } else {
     body.condition = null
   }

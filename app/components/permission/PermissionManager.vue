@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
 
-    <div class="flex items-center justify-between gap-3">
+    <div v-if="props.showHeader" class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-3 min-w-0">
         <UIcon :name="icon || 'lucide:shield'" class="w-5 h-5 shrink-0" />
         <h3 class="text-lg font-semibold truncate">
@@ -42,7 +42,7 @@
       >
         <div
           v-for="permission in permissions"
-          :key="permission.id"
+          :key="getId(permission)"
         >
           <PermissionGate
             :condition="{
@@ -117,8 +117,8 @@
                       size="xs"
                       class="ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                       @click.stop="deletePermission(permission)"
-                      :loading="deleting === permission.id"
-                      :disabled="deleting === permission.id"
+                      :loading="deleting === getId(permission)"
+                      :disabled="deleting === getId(permission)"
                     />
                   </PermissionGate>
                 </div>
@@ -179,8 +179,8 @@
                     size="xs"
                     class="ml-1 pointer-coarse:min-h-[44px] pointer-coarse:min-w-[44px]"
                     @click.stop="deletePermission(permission)"
-                    :loading="deleting === permission.id"
-                    :disabled="deleting === permission.id"
+                    :loading="deleting === getId(permission)"
+                    :disabled="deleting === getId(permission)"
                   />
                 </PermissionGate>
               </div>
@@ -243,28 +243,26 @@
 </template>
 
 <script setup lang="ts">
+import OperationSelector from './OperationSelector.vue';
+import type { FormApiListResponse, FormPermissionRecord as Permission } from '~/types/form-api';
+
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { getId, getIdFieldName } = useDatabase();
 const { checkPermissionCondition } = usePermissions();
 const { isMounted } = useMounted();
 
-interface Permission {
-  id: string;
-  name: string;
-  description?: string;
-  isEnabled: boolean;
-  [key: string]: any;
-}
-
 interface Props {
   tableName: string;
   currentFieldId: { field: string; value: string | number };
   icon?: string;
   title?: string;
+  showHeader?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  showHeader: true,
+});
 
 const showDrawer = ref(false);
 const isEditing = ref(false);
@@ -282,28 +280,40 @@ const permissionTableName = computed(() => props.tableName);
 
 const { ensureSchema, generateEmptyForm } = useSchema(permissionTableName);
 
-const fieldMap = {
-  methods: { type: 'methods-selector' },
-};
+const isRoutePermission = computed(() => permissionTableName.value === 'enfyra_route_permission');
+const fieldMap = computed(() => isRoutePermission.value ? {
+  routeMethodConfigs: {
+    component: markRaw(OperationSelector),
+    label: 'Route operations',
+    componentProps: { routeId: props.currentFieldId.value },
+  },
+} : {});
 
 const {
   data: permissionsData,
   pending: loading,
   execute: fetchPermissions,
-} = useApi(() => `/${permissionTableName.value}`, {
-  query: {
+} = useApi<FormApiListResponse<Permission>>(() => `/${permissionTableName.value}`, {
+  query: () => ({
+    fields: isRoutePermission.value
+      ? '*,role.id,role.name,allowedUsers.id,routeMethodConfigs.id,routeMethodConfigs.available,routeMethodConfigs.method.name'
+      : '*',
+    limit: 0,
+    deep: {
+      allowedUsers: { limit: 0 },
+      ...(isRoutePermission.value && { routeMethodConfigs: { limit: 0 } }),
+    },
     filter: {
       [props.currentFieldId.field]: {
         [getIdFieldName()]: { _eq: props.currentFieldId.value },
       },
     },
-  },
+  }),
   errorContext: "Fetch Permissions",
 });
 
 const {
-  error: createError,
-  execute: createPermission,
+  executeWithResult: createPermission,
   pending: creating,
 } = useApi(() => `/${permissionTableName.value}`, {
   method: "post",
@@ -311,8 +321,7 @@ const {
 });
 
 const {
-  error: updateError,
-  execute: updatePermission,
+  executeWithResult: updatePermission,
   pending: updating,
 } = useApi(() => `/${permissionTableName.value}`, {
   method: "patch",
@@ -357,7 +366,7 @@ async function createNewPermission() {
   permissionForm.value = generateEmptyForm();
 
   permissionForm.value[props.currentFieldId.field] = {
-    id: props.currentFieldId.value,
+    [getIdFieldName()]: props.currentFieldId.value,
   };
 
   formChanges.update(permissionForm.value);
@@ -369,7 +378,7 @@ async function createNewPermission() {
 function editPermission(permission: Permission) {
   isEditing.value = true;
   currentPermission.value = permission;
-  permissionForm.value = { ...permission };
+  permissionForm.value = JSON.parse(JSON.stringify(permission));
   formChanges.update(permission);
   hasFormChanges.value = false;
   permissionErrors.value = {};
@@ -377,11 +386,9 @@ function editPermission(permission: Permission) {
 }
 
 function getPermissionMethods(permission: Permission): string[] {
-  if (!Array.isArray(permission.methods)) return [];
-
-  return permission.methods
-    .map((item: any) => typeof item === "string" ? item : item?.name)
-    .filter((method: any): method is string => typeof method === "string" && method.trim().length > 0);
+  return (Array.isArray(permission.routeMethodConfigs) ? permission.routeMethodConfigs : [])
+    .map(operation => typeof operation.method === 'string' ? operation.method : operation.method?.name)
+    .filter((method: unknown): method is string => typeof method === 'string' && method.length > 0);
 }
 
 function handleHasChanged(value: boolean) {
@@ -398,8 +405,16 @@ async function handleReset() {
 
   if (isEditing.value && currentPermission.value) {
     permissionForm.value = formChanges.discardChanges(permissionForm.value);
+  } else {
+    permissionForm.value = generateEmptyForm();
+    if (props.currentFieldId) {
+      permissionForm.value[props.currentFieldId.field] = {
+        [getIdFieldName()]: props.currentFieldId.value,
+      };
+    }
   }
   formChanges.update(permissionForm.value);
+  permissionErrors.value = {};
   hasFormChanges.value = false;
 }
 
@@ -440,18 +455,18 @@ async function savePermission() {
   }
 
   if (wasEditing && currentPermission.value) {
-    await updatePermission({
+    const result = await updatePermission({
       body: permissionForm.value,
       id: getId(currentPermission.value),
     });
 
-    if (updateError.value) return;
+    if (!result.ok) return;
   } else {
-    await createPermission({
+    const result = await createPermission({
       body: permissionForm.value,
     });
 
-    if (createError.value) return;
+    if (!result.ok) return;
   }
 
   formChanges.update(permissionForm.value);
@@ -459,6 +474,11 @@ async function savePermission() {
   permissionErrors.value = {};
   showDiscardModal.value = false;
   showDrawer.value = false;
+
+  notify.success(
+    wasEditing ? "Permission Updated" : "Permission Created",
+    wasEditing ? "Permission has been updated successfully" : "Permission has been created successfully",
+  );
 
   await fetchPermissions();
 
@@ -477,9 +497,9 @@ async function deletePermission(permission: Permission) {
 
   if (!confirmed) return;
 
-  deleting.value = permission.id;
+  deleting.value = getId(permission);
   try {
-    await deletePermissionApi({ id: permission.id });
+    await deletePermissionApi({ id: getId(permission) });
 
     if (deleteError.value) return;
 
@@ -494,4 +514,6 @@ async function deletePermission(permission: Permission) {
 onMounted(() => {
   fetchPermissions();
 });
+
+defineExpose({ createNewPermission });
 </script>

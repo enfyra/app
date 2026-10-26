@@ -33,7 +33,7 @@ import { FlowStepNode } from '#components';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/minimap/dist/style.css';
-import type { FlowStep, FlowDefinition } from '~/types/flow';
+import type { FlowStep, FlowDefinition, FlowStepAddContext } from '~/types/flow';
 import {
   NODE_SPACING_X, CENTER_Y, START_X, BRANCH_OFFSET_Y,
   EDGE_STYLE_DEFAULT, EDGE_STYLE_TRUE, EDGE_STYLE_FALSE,
@@ -59,8 +59,8 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
   selectStep: [step: FlowStep | null];
-  addStep: [context?: { parentId?: any; branch?: string; afterOrder?: number }];
-  moveStep: [stepId: any, direction: number];
+  addStep: [context?: FlowStepAddContext];
+  moveStep: [stepId: string | number, direction: number];
 }>();
 
 const vueFlowRef = ref<any>(null);
@@ -132,7 +132,6 @@ function makeStepNode(step: any, x: number, y: number, isFirst = false, isLast =
       stepId: step.id,
       label: step.key,
       stepType: step.type,
-      config: step.config,
       timeout: step.timeout,
       onError: step.onError,
       retryAttempts: step.retryAttempts,

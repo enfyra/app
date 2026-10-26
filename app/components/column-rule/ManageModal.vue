@@ -11,6 +11,7 @@ type RuleType =
 
 type Rule = {
   id?: string | number
+  _id?: string
   _tmpId?: string
   ruleType: string
   value: any
@@ -64,9 +65,9 @@ function typesForColumn(colType: string): RuleType[] {
 }
 
 function ruleKey(r: Rule): string {
-  if (r.id != null) return `id:${String(r.id)}`
+  if (r.id != null || r._id != null) return `id:${String(r.id ?? r._id)}`
   if (r._tmpId) return `tmp:${r._tmpId}`
-  return `tmp:${Math.random().toString(36).slice(2)}`
+  return `rule:${r.ruleType}`
 }
 
 const usedRuleTypes = computed(() => {
@@ -133,12 +134,11 @@ function cancelForm() {
   viewMode.value = "list"
 }
 
-watch(
-  () => form.value.ruleType,
-  (next, prev) => {
-    if (next !== prev) form.value.value = defaultValueFor(String(next))
-  },
-)
+function changeRuleType(value: RuleType) {
+  if (value === form.value.ruleType) return
+  form.value.ruleType = value
+  form.value.value = defaultValueFor(value)
+}
 
 function toggleEnabled(item: Rule) {
   const list = (rules.value || []).slice()
@@ -202,8 +202,9 @@ function saveRule() {
     const idx = list.findIndex((r) => ruleKey(r) === editingKey.value)
     const existing = idx !== -1 ? list[idx] : null
     if (existing) {
-      next.id = existing.id
-      next._tmpId = existing._tmpId
+      if (existing.id != null) next.id = existing.id
+      if (existing._id != null) next._id = existing._id
+      if (existing._tmpId) next._tmpId = existing._tmpId
       list[idx] = next
     }
   } else {
@@ -378,7 +379,7 @@ watch(open, (isOpen) => {
             :items="availableRuleTypes.map(rt => ({ label: rt.label, value: rt.value, disabled: rt.disabled }))"
             class="w-full"
             :disabled="mode === 'update'"
-            @update:model-value="(v: any) => (form.ruleType = v)"
+            @update:model-value="changeRuleType"
           />
         </div>
 

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import FileManagerToolbar from './FileManagerToolbar.vue';
 import FileManagerActions from './FileManagerActions.vue';
+import type { PanelSection } from '~/types/ui';
 interface Props {
   parentId?: string;
+  title?: string;
+  description?: string;
   folders?: any[];
   files?: any[];
   foldersLoading?: boolean;
@@ -30,7 +33,7 @@ const props = withDefaults(defineProps<Props>(), {
   emptyDescription:
     "This folder is empty. Create folders or upload files to get started.",
   showCreateButton: true,
-  parentId: undefined,
+  title: 'Library',
 });
 
 const emit = defineEmits<Emits>();
@@ -156,6 +159,7 @@ async function handleBulkDelete() {
   emit('refreshItems');
 }
 
+const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { hasPermission } = usePermissions();
 const operationPending = ref<'delete' | 'move' | null>(null);
 const library = useTemplateRef<HTMLElement>('library');
@@ -175,7 +179,43 @@ const canMoveHere = computed(() =>
   (!moveState.value.selectedFolderIds.length || hasPermission('/enfyra_folder', 'PATCH')),
 );
 
+const panelSections = computed<PanelSection[]>(() => [{
+  value: 'library',
+  title: props.title,
+  ...(props.description === undefined ? {} : { description: props.description }),
+  actions: [{
+    id: 'library-tools',
+    component: markRaw(FileManagerToolbar),
+    props: {
+      viewMode: viewMode.value,
+      folderCount: props.folders.length,
+      fileCount: props.files.length,
+      moveMode: isMoveMode.value,
+      selectionMode: isSelectionMode.value,
+      busy: isBusy.value,
+      loading: props.foldersLoading || props.filesLoading,
+      canCreateFolder: canCreateFolder.value,
+      canSelect: canSelect.value,
+      'onUpdate:viewMode': setViewMode,
+      onCreateFolder: () => emit('createFolder'),
+      onRefresh: () => emit('refreshItems'),
+      onSelect: startSelection,
+    },
+  }],
+}]);
+
 watch(contextActive, active => emit('contextChange', active), { immediate: true });
+
+registerHeaderActions([{
+  id: 'upload-file',
+  label: 'Upload',
+  icon: 'lucide:upload',
+  variant: 'solid',
+  color: 'primary',
+  order: 10,
+  show: computed(() => canUpload.value && !isBusy.value && !isMoveMode.value),
+  onClick: () => emit('createFile'),
+}]);
 
 function clearSelectedItems() {
   if (!isBusy.value) deselectAllItems();
@@ -231,24 +271,9 @@ watch([loadedIds, isBusy], ([ids]) => {
 </script>
 
 <template>
-  <div ref="library" class="eapp-bordered-region overflow-hidden">
-    <FileManagerToolbar
-      :view-mode="viewMode"
-      :folder-count="props.folders.length"
-      :file-count="props.files.length"
-      :move-mode="isMoveMode"
-      :selection-mode="isSelectionMode"
-      :busy="isBusy"
-      :loading="props.foldersLoading || props.filesLoading"
-      :can-upload="canUpload"
-      :can-create-folder="canCreateFolder"
-      :can-select="canSelect"
-      @update:view-mode="setViewMode"
-      @upload="emit('createFile')"
-      @create-folder="emit('createFolder')"
-      @refresh="emit('refreshItems')"
-      @select="startSelection"
-    />
+  <div ref="library" class="min-w-0">
+  <CommonPanel :sections="panelSections" body-class="!p-0">
+    <template #library>
     <FileManagerActions
       :anchor="library"
       :active="contextActive"
@@ -272,7 +297,7 @@ watch([loadedIds, isBusy], ([ids]) => {
       @cancel-move="handleCancelMoveMode"
     />
 
-    <div class="space-y-6 p-3 md:space-y-8 md:p-4" :class="contextActive ? 'pb-36 sm:pb-24 md:pb-24' : undefined">
+    <div class="p-3 md:p-4" :class="contextActive ? 'pb-36 sm:pb-24 md:pb-24' : undefined">
       <section v-if="props.foldersLoading || props.folders.length > 0">
         <div class="mb-4 flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
@@ -300,7 +325,10 @@ watch([loadedIds, isBusy], ([ids]) => {
         />
       </section>
 
-      <section v-if="props.filesLoading || props.files.length > 0">
+      <section
+        v-if="props.filesLoading || props.files.length > 0"
+        class="mt-6 border-t border-default pt-6 md:mt-8 md:pt-8"
+      >
         <div class="mb-4 flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <UIcon name="lucide:file" class="h-5 w-5 text-muted" />
@@ -345,5 +373,10 @@ watch([loadedIds, isBusy], ([ids]) => {
         />
       </div>
     </div>
+    </template>
+    <template #footer>
+      <p class="text-xs text-muted">{{ props.folders.length }} folders · {{ props.files.length }} files</p>
+    </template>
+  </CommonPanel>
   </div>
 </template>

@@ -1,5 +1,5 @@
-import type { DropdownMenuItem } from "@nuxt/ui";
-import type { ComputedRef, Ref } from "vue";
+import type { ContextMenuItem, DropdownMenuItem } from "@nuxt/ui";
+import type { Component, ComputedRef, Ref } from "vue";
 import type { TableProps } from "@nuxt/ui/components/Table.vue";
 import type { PaginationState, RowSelectionState } from "@tanstack/vue-table";
 import type { PermissionCondition } from "./permissions";
@@ -26,15 +26,28 @@ export interface UploadModalEmits {
   error: [message: string];
 }
 
-export interface DataTableProps extends Omit<TableProps<any>, 'data' | 'columns'> {
-  data: Record<string, any>[];
-  columns: NonNullable<TableProps<any>['columns']>;
-  contextMenuItems?: (row: Record<string, any>) => any[];
+export interface DataTableProps<TRow extends object = Record<string, unknown>> extends Omit<TableProps<TRow>, 'data' | 'columns'> {
+  data: TRow[];
+  columns: NonNullable<TableProps<TRow>['columns']>;
+  contextMenuItems?: (row: TRow) => ContextMenuItem[];
   rowSelection?: RowSelectionState;
   pagination?: PaginationState;
   showColumnVisibility?: boolean;
+  headerName: string;
+  headerDescription?: string;
+  recordCount?: number;
   paginationConfig?: DataTablePaginationConfig;
   page?: number;
+  enableRowSelection?: boolean;
+  rowSelectionMode?: "multiple" | "single";
+  selectedRowIds?: (string | number)[];
+  selectionDisabled?: boolean;
+  selectOnRowClick?: boolean;
+  reload?: () => unknown | Promise<unknown>;
+  reloadLoading?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+  searchLabel?: string;
 }
 
 export interface RouteLoadingProps {
@@ -49,17 +62,14 @@ export interface PermissionGateProps {
   condition?: PermissionCondition;
 }
 
+export type HeaderActionVariant = "solid" | "outline" | "ghost" | "soft";
+
 export interface HeaderAction {
   id: string;
   label?: string | ComputedRef<string>;
   ariaLabel?: string;
   icon?: string | ComputedRef<string>;
-  variant?:
-    | "solid"
-    | "outline"
-    | "ghost"
-    | "soft"
-    | ComputedRef<"solid" | "outline" | "ghost" | "soft">;
+  variant?: HeaderActionVariant | ComputedRef<HeaderActionVariant>;
   color?:
     | "primary"
     | "secondary"
@@ -100,8 +110,8 @@ export interface HeaderAction {
   showOn?: string[];
   hideOn?: string[];
   class?: string;
-  component?: string | any;
-  props?: Record<string, any>;
+  component?: string | Component;
+  props?: Record<string, unknown>;
   key?: string;
   side?: "left" | "right";
   mobileDisplay?: "inline" | "menu";
@@ -113,9 +123,12 @@ export interface HeaderAction {
 export interface PanelSection {
   value: string;
   label?: string;
+  title?: string;
+  description?: string;
   icon?: string;
   badge?: string | number | { label?: string | number; color?: string; variant?: string };
   disabled?: boolean;
+  actions?: HeaderAction[];
 }
 
 export interface DialogFooterAction {
@@ -149,11 +162,11 @@ export interface AccountPanelItem {
     | "success"
     | ComputedRef<"primary" | "neutral" | "info" | "error" | "warning" | "success">;
   trailingIcon?: string | ComputedRef<string>;
-  component?: string | any;
-  contentComponent?: string | any;
-  contentProps?: Record<string, any>;
+  component?: string | Component;
+  contentComponent?: string | Component;
+  contentProps?: Record<string, unknown>;
   contentClass?: string;
-  props?: Record<string, any>;
+  props?: Record<string, unknown>;
   permission?: PermissionCondition;
   disabled?:
     | boolean

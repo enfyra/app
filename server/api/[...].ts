@@ -13,10 +13,28 @@ import {
 import { createOAuthBrowserBinding } from "../utils/oauth-browser-state";
 import { proxyToAPI } from "~/utils/enfyra/server/proxy";
 import { buildForwardedHeaders } from "~/utils/enfyra/server/forwardedHeaders";
+import finalizeOAuthCookies from './auth/set-cookies.get';
+import { getApiErrorRecord } from '~/utils/api/error';
 
 const OAUTH_PROVIDERS = ["google", "facebook", "github"];
-const OAUTH_INIT_PATTERN = new RegExp(`/auth/(${OAUTH_PROVIDERS.join("|")})/?$`);
-const OAUTH_CALLBACK_PATTERN = new RegExp(`/auth/(${OAUTH_PROVIDERS.join("|")})/callback$`);
+const OAUTH_INIT_PATTERN = new RegExp(`^/auth/(${OAUTH_PROVIDERS.join("|")})/?$`, 'i');
+const OAUTH_CALLBACK_PATTERN = new RegExp(`^/auth/(${OAUTH_PROVIDERS.join("|")})/callback/?$`, 'i');
+
+/**
+ * Route ownership must be decided on the same normalized path the proxy
+ * forwards. Comparing the raw request URL lets percent-encoding and separator
+ * variants reach the backend while skipping the bridge-owned finalizer.
+ */
+function resolveBridgePath(rawUrl: string): string {
+  const path = rawUrl.split("?")[0] || "/";
+  let decoded = path;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    decoded = path;
+  }
+  return decoded.replace(/\\/g, "/").replace(/^\/api(?=\/|$)/i, "") || "/";
+}
 
 export default defineEventHandler(async (event) => {
   if (event.method === "OPTIONS") {
@@ -24,18 +42,22 @@ export default defineEventHandler(async (event) => {
   }
 
   const config = useRuntimeConfig();
-  const apiUrl = (config.public as any).apiUrl;
+  const apiUrl = config.public.apiUrl;
   const fullUrl = event.node?.req?.url || event.path || "";
-  const [path, queryString] = fullUrl.split("?");
+  const [, queryString] = fullUrl.split("?");
 
-  const pathWithoutPrefix = (path || "").replace(/^\/api/, "") || "/";
+  const pathWithoutPrefix = resolveBridgePath(fullUrl);
+  if (/^\/auth\/set-cookies\/?$/i.test(pathWithoutPrefix)) {
+    if (event.method !== 'GET') throw createError({ statusCode: 405, message: 'Method not allowed' });
+    return finalizeOAuthCookies(event);
+  }
   const oauthCallbackMatch = pathWithoutPrefix.match(OAUTH_CALLBACK_PATTERN);
 
   if (event.method === "GET" && oauthCallbackMatch) {
     if (!apiUrl) {
       throw createError({ statusCode: 500, message: "API URL not configured" });
     }
-    const backendPath = pathWithoutPrefix.startsWith("/") ? pathWithoutPrefix : `/${pathWithoutPrefix}`;
+    const backendPath = `/auth/${oauthCallbackMatch[1]!.toLowerCase()}/callback`;
     const backendUrl = `${apiUrl.replace(/\/+$/, "")}${backendPath}${queryString ? `?${queryString}` : ""}`;
     const response = await fetch(backendUrl, { redirect: "manual", headers: buildForwardedHeaders(event.node.req) });
     const location = response.headers.get("location") || response.headers.get("Location");
@@ -45,9 +67,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 502, message: "OAuth callback failed" });
   }
 
-  const oauthMatch = (path || "").match(OAUTH_INIT_PATTERN);
+  const oauthMatch = pathWithoutPrefix.match(OAUTH_INIT_PATTERN);
   if (event.method === "GET" && oauthMatch) {
-    const provider = oauthMatch[1];
+    const provider = oauthMatch[1]!.toLowerCase();
     const query = getQuery(event);
 
     let redirectParam: string;
@@ -60,10 +82,11 @@ export default defineEventHandler(async (event) => {
       );
       cookieBridgePrefix = requireValidCookieBridgePrefix(query.cookieBridgePrefix);
       state = requireValidOAuthState(query.state);
-    } catch (err: any) {
-      const message = err?.statusMessage || err?.message || "OAuth validation failed";
+    } catch (err: unknown) {
+      const failure = getApiErrorRecord(err);
+      const message = failure?.statusMessage || failure?.message || "OAuth validation failed";
       const loginUrl = new URL("/login", getRequestURL(event).origin);
-      loginUrl.searchParams.set("error", message);
+      loginUrl.searchParams.set("error", String(message));
       if (typeof query.redirect === "string" && query.redirect.length > 0) {
         loginUrl.searchParams.set("redirect", query.redirect);
       }

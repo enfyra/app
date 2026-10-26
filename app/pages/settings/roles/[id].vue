@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-6">
-    <div class="space-y-6">
+    <div v-if="loading || apiData?.data?.[0]" class="space-y-6">
       <div class="eapp-page-constrained">
-        <CommonPanel :sections="[{ value: 'role' }]">
-          <template #role-header><h2 class="text-sm font-medium">Role</h2></template>
+        <CommonPanel :sections="roleSections">
+          <template #role-header><CommonFormHeader :title="form.name ? `Role: ${form.name}` : 'Role'" /></template>
           <template #role>
         <CommonFormCard>
           <UForm :state="form" @submit="save">
@@ -24,7 +24,7 @@
     </div>
 
     <CommonEmptyState
-      v-if="!loading && !apiData?.data?.[0]"
+      v-else
       title="Role not found"
       description="The requested role could not be loaded"
       icon="lucide:shield-x"
@@ -34,6 +34,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellListResponse, ShellRoleRecord } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
@@ -59,11 +61,15 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
+    errors.value = {};
     hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
     
     notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 registerHeaderActions([
   {
@@ -126,7 +132,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchRole,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellRoleRecord>>(() => `/${tableName}`, {
   query: computed(() => ({
     fields: getIncludeFields(),
     filter: { [getIdFieldName()]: { _eq: id } },
@@ -189,9 +195,12 @@ async function save() {
 }
 
 async function deleteRole() {
+  const roleName = form.value?.name || apiData.value?.data?.[0]?.name || "this role";
   const ok = await confirm({
-    title: "Are you sure?",
-    content: "You cannot go back",
+    title: "Delete Role",
+    content: `Are you sure you want to delete role "${roleName}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 
@@ -201,16 +210,21 @@ async function deleteRole() {
     return;
   }
 
+  hasFormChanges.value = false;
   notify.success("Success", "Role deleted successfully");
   await navigateTo("/settings/roles");
 }
 
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Role Details",
-  gradient: "purple",
-});
+const roleSections = computed(() => [{
+  value: 'role',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(() => {
   initializeForm();

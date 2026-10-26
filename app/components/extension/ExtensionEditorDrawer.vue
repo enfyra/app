@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureExtensionEditor } from '~/types/feature-api';
 import type { MenuDefinition } from '~/types';
 
 const props = defineProps<{
@@ -45,7 +46,7 @@ const {
   data: extensionData,
   pending: extensionLoading,
   execute: fetchExtension,
-} = useApi(() => `/${tableName}`, {
+} = useApi<FeatureCollection<FeatureExtensionEditor>>(() => `/${tableName}`, {
   query: computed(() => {
     if (props.menu?.extension) {
       const extensionId = getId(props.menu.extension);
@@ -232,6 +233,7 @@ async function handleUpload(files: File | File[]) {
   try {
     const content = await file?.text();
     form.value.code = content;
+    hasFormChanges.value = true;
     showUploadModal.value = false;
 
     notify.success("Success", "Extension code uploaded successfully");

@@ -47,26 +47,28 @@ async function createAndRedirect() {
     return;
   }
 
-  status.value = 'creating';
+  if (!createdToken.value?.token) {
+    status.value = 'creating';
 
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'unknown';
-  const date = new Date().toISOString().slice(0, 10);
-  const tokenName = `MCP CLI — ${hostname} — ${date}`;
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'unknown';
+    const date = new Date().toISOString().slice(0, 10);
+    const tokenName = `MCP CLI — ${hostname} — ${date}`;
 
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 90);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 90);
 
-  await createApiToken({
-    body: {
-      name: tokenName,
-      expiresAt: expiresAt.toISOString(),
-    },
-  });
+    await createApiToken({
+      body: {
+        name: tokenName,
+        expiresAt: expiresAt.toISOString(),
+      },
+    });
 
-  if (createError.value || !createdToken.value?.token) {
-    status.value = 'error';
-    errorMessage.value = createError.value?.message || 'Failed to create API token.';
-    return;
+    if (createError.value || !createdToken.value?.token) {
+      status.value = 'error';
+      errorMessage.value = createError.value?.message || 'Failed to create API token.';
+      return;
+    }
   }
 
   status.value = 'sending';
@@ -135,7 +137,7 @@ onMounted(() => {
     </div>
 
     <div class="mcp-setup-form-panel relative w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8">
-      <div class="absolute right-5 top-5 z-20">
+      <div class="absolute right-5 top-5 z-20 flex items-center gap-2">
         <UButton
           type="button"
           size="lg"
@@ -146,6 +148,52 @@ onMounted(() => {
           :title="themeLabel"
           @click="toggleTheme"
         />
+        <UPopover :content="{ align: 'end', sideOffset: 8 }">
+          <UButton
+            type="button"
+            size="lg"
+            variant="outline"
+            color="neutral"
+            icon="lucide:palette"
+            aria-label="Choose accent color"
+            title="Accent"
+          />
+          <template #content="{ close }">
+            <div class="w-48 space-y-1 p-2">
+              <div class="flex items-center justify-between gap-2 px-1 pb-1">
+                <div class="text-xs font-semibold uppercase tracking-wide text-[var(--text-tertiary)]">Accent</div>
+                <UButton
+                  type="button"
+                  size="xs"
+                  variant="ghost"
+                  color="neutral"
+                  icon="lucide:x"
+                  aria-label="Close accent chooser"
+                  @click="close()"
+                />
+              </div>
+              <button
+                v-for="color in $primaryColor.colors"
+                :key="color.value"
+                type="button"
+                class="flex w-full items-center gap-2 rounded-[var(--radius-subcontrol)] px-2.5 py-2 text-left text-sm font-medium text-[var(--text-secondary)] transition hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--theme-focus-ring-strong)]"
+                :class="$primaryColor.current.value === color.value ? 'bg-[var(--state-primary-soft-bg)] text-[var(--state-primary-soft-text)]' : ''"
+                :aria-label="`Use ${color.label} accent`"
+                :aria-pressed="$primaryColor.current.value === color.value"
+                :title="color.label"
+                @click="$primaryColor.set(color.value)"
+              >
+                <span class="h-4 w-4 shrink-0 rounded-full ring-1 ring-inset ring-[var(--border-default)]" :style="{ backgroundColor: color.swatch }" />
+                <span class="min-w-0 flex-1 truncate">{{ color.label }}</span>
+                <UIcon
+                  v-if="$primaryColor.current.value === color.value"
+                  name="lucide:check"
+                  class="h-4 w-4 shrink-0"
+                />
+              </button>
+            </div>
+          </template>
+        </UPopover>
       </div>
 
       <div class="w-full max-w-md pt-16 lg:pt-0">
@@ -165,7 +213,7 @@ onMounted(() => {
           </p>
         </div>
 
-        <div class="mcp-setup-status-card">
+        <div class="mcp-setup-status-card" role="status" aria-live="polite">
           <template v-if="status === 'idle' || status === 'creating'">
             <div class="mcp-setup-status-icon creating">
               <UIcon name="lucide:key-round" class="text-2xl" />
@@ -210,6 +258,15 @@ onMounted(() => {
               <h3>Connection failed</h3>
               <p>{{ errorMessage }}</p>
             </div>
+            <UButton
+              type="button"
+              color="primary"
+              variant="solid"
+              size="sm"
+              icon="lucide:refresh-cw"
+              label="Try again"
+              @click="createAndRedirect"
+            />
             <NuxtLink to="/me" class="mcp-setup-fallback-link">
               <UIcon name="lucide:external-link" class="size-4" />
               Manage tokens from your profile

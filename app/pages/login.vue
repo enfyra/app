@@ -180,6 +180,8 @@
                 size="lg"
                 class="w-full"
                 id="password"
+                :error="!!error.password"
+                :required="true"
                 autocomplete="current-password"
                 :aria-describedby="error.password ? 'password-error' : undefined"
               />
@@ -338,12 +340,26 @@ function getOAuthProviderLabel(provider: OAuthProvider) {
 
 async function handleLogin() {
   loginError.value = null;
+  if (!form.email) {
+    error.email = "Cannot be empty!";
+  } else if (!emailPattern.test(form.email)) {
+    error.email = "Must be valid format!";
+  } else {
+    error.email = null;
+  }
+  if (!form.password) {
+    error.password = "Cannot be empty!";
+  } else {
+    error.password = null;
+  }
+  if (error.email || error.password) return;
+
   const redirect = Array.isArray(route.query.redirect)
     ? route.query.redirect[0]
     : route.query.redirect;
-  const res = await login({ ...form, redirect: redirect || undefined });
+  const res = await login({ ...form, ...(redirect ? { redirect } : {}) });
   if (res.ok) {
-    await completeLogin((res.data as any)?.redirect);
+    await completeLogin(res.data.redirect);
     return;
   }
   loginError.value = res.message;
@@ -353,16 +369,17 @@ async function handleDemoLogin() {
   demoLoading.value = true;
   loginError.value = null;
   try {
+    const redirect = Array.isArray(route.query.redirect)
+      ? route.query.redirect[0]
+      : route.query.redirect;
     const res = await login({
       email: DEMO_LOGIN_EMAIL,
       password: DEMO_LOGIN_PASSWORD,
       remember: true,
-      redirect: Array.isArray(route.query.redirect)
-        ? route.query.redirect[0] || undefined
-        : route.query.redirect || undefined,
+      ...(redirect ? { redirect } : {}),
     });
     if (res.ok) {
-      await completeLogin((res.data as any)?.redirect);
+      await completeLogin(res.data.redirect);
       return;
     }
     const hint = "Check server ADMIN_EMAIL / ADMIN_PASSWORD match defaults.";

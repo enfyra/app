@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { isSchemaMutationPreviewResponse } from '~/utils/schema/schema-confirm';
+import { getRedundantIndexes, schemaConstraintsMatch } from '~/utils/schema/constraints';
+import type { FormApiListResponse, FormCollectionRecord, FormSchemaMutationResponse } from '~/types/form-api';
 
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -42,28 +44,16 @@ const constraintFieldNames = computed<string[]>(() => {
 const hasFormChanges = ref(false);
 const { useFormChanges } = useSchema();
 const formChanges = useFormChanges();
-const { registerPageHeader } = usePageHeaderRegistry();
-
-function registerCollectionPageHeader(name: unknown) {
-  registerPageHeader({
-    title: String(name || route.params.table || 'Collection'),
-    gradient: "purple",
-  });
-}
-
-registerCollectionPageHeader(route.params.table);
-
-watch(() => table.value?.name, (name) => {
-  if (name) {
-    registerCollectionPageHeader(name);
-  }
-}, { immediate: true });
+const collectionTitle = computed(() => {
+  const name = table.value?.name || route.params.table;
+  return name ? `Collection: ${name}` : 'Collection';
+});
 
 const {
   data: tableData,
   pending: loading,
   execute: fetchTableData,
-} = useApi(() => "/enfyra_table", {
+} = useApi<FormApiListResponse<FormCollectionRecord>>(() => "/enfyra_table", {
   query: async () => ({
     fields: [
       await getIncludeFields(),
@@ -89,9 +79,16 @@ const {
     deep: {
       columns: {
         limit: 0,
+        deep: {
+          rules: { limit: 0 },
+          fieldPermissions: { limit: 0, deep: { allowedUsers: { limit: 0 } } },
+        },
       },
       relations: {
         limit: 0,
+        deep: {
+          fieldPermissions: { limit: 0, deep: { allowedUsers: { limit: 0 } } },
+        },
       },
     },
   }),
@@ -107,7 +104,7 @@ const {
   pending: saving,
   execute: executePatchTable,
   error: updateError,
-} = useApi(() => `/enfyra_table`, {
+} = useApi<FormSchemaMutationResponse>(() => `/enfyra_table`, {
   method: "patch",
   errorContext: "Update Table",
 });
@@ -116,9 +113,19 @@ const {
   pending: deleting,
   execute: executeDeleteTable,
   error: deleteError,
-} = useApi(() => `/enfyra_table`, {
+} = useApi<FormSchemaMutationResponse>(() => `/enfyra_table`, {
   method: "delete",
   errorContext: "Delete Table",
+});
+
+const schemaReloadAction = useReloadAction({
+  reload: async () => {
+    await initializeForm();
+    if (activeTab.value === 'schema') formChanges.update(table.value);
+  },
+  loading: computed(() => schemaLoading.value || loading.value),
+  show: computed(() => activeTab.value === 'schema'),
+  hasUnsavedChanges: () => hasFormChanges.value,
 });
 
 registerHeaderActions([
@@ -198,12 +205,33 @@ const showSchemaViewer = ref(false);
 const showRouteApiTest = ref(false);
 
 const activeTab = ref((route.query.tab as string) || 'schema')
-const collectionSections = [
-  { label: 'Schema', icon: 'i-lucide-table-2', value: 'schema' },
-  { label: 'Routes', icon: 'i-lucide-route', value: 'routes' },
-  { label: 'GraphQL', icon: 'i-lucide-braces', value: 'graphql' },
-  { label: 'Triggers', icon: 'i-lucide-zap', value: 'triggers' },
-]
+const collectionSections = computed(() => [
+  {
+    label: 'Schema',
+    icon: 'i-lucide-table-2',
+    value: 'schema',
+    title: collectionTitle.value,
+    description: table.value?.description || 'Edit table structure, columns, relations, and constraints',
+    actions: [schemaReloadAction],
+  },
+  {
+    label: 'Routes',
+    icon: 'i-lucide-route',
+    value: 'routes',
+  },
+  {
+    label: 'GraphQL',
+    icon: 'i-lucide-braces',
+    value: 'graphql',
+    title: collectionTitle.value,
+    description: 'Configure GraphQL operations and access policies',
+  },
+  {
+    label: 'Triggers',
+    icon: 'i-lucide-zap',
+    value: 'triggers',
+  },
+])
 
 watch(activeTab, (tab) => {
   const query = { ...route.query, tab }
@@ -250,6 +278,10 @@ async function initializeForm() {
 }
 
 async function save() {
+  if (getRedundantIndexes(table.value || {}).length > 0) {
+    notify.error('Redundant index', 'Remove indexes already covered by the leading fields of a unique constraint before saving.');
+    return;
+  }
   const isChangingToSingleRecord =
     formChanges.originalData.value?.isSingleRecord === false &&
     table.value?.isSingleRecord === true;
@@ -283,12 +315,13 @@ async function patchTable() {
 }
 
 async function afterPatchSuccess(submittedTable: any = null) {
-  const patchResponse = patchTableData.value?.data?.[0];
-  await fetchTableData();
-  const refreshedTable = tableData.value?.data?.[0];
-  table.value = refreshedTable && typeof refreshedTable === "object"
-    ? refreshedTable
-    : submittedTable || patchResponse || table.value;
+  const response = await fetchTableData();
+  const refreshedTable = response?.data?.[0];
+  if (!refreshedTable || !schemaConstraintsMatch(submittedTable || table.value, refreshedTable)) {
+    notify.error('Save not verified', 'The saved constraints do not match your changes. Your draft has been kept.');
+    return;
+  }
+  table.value = refreshedTable;
 
   notify.success("Success", "Table structure updated!");
 
@@ -330,7 +363,7 @@ async function executeDelete() {
   if (deleteError.value) return;
 
   if (isSchemaMutationPreviewResponse(deletionResponse)) {
-    schemaConfirmDetails.value = deletionResponse.data?.[0];
+    schemaConfirmDetails.value = deletionResponse?.data?.[0];
     schemaConfirmOperation.value = 'delete';
     schemaConfirmModalOpen.value = true;
     return;
@@ -340,9 +373,12 @@ async function executeDelete() {
 }
 
 async function afterDeleteSuccess(_deletedTableName: string) {
+  hasFormChanges.value = false;
   notify.success("Success", "Table deleted!");
   await navigateTo(`/collections`);
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const schemaConfirmTableName = computed(() =>
   String(schemaConfirmDetails.value?.tableName || table.value?.name || ''),
@@ -446,7 +482,7 @@ async function onSchemaConfirmSubmit() {
       });
       if (deleteError.value) return;
       if (isSchemaMutationPreviewResponse(confirmationResponse)) {
-        schemaConfirmDetails.value = confirmationResponse.data?.[0];
+        schemaConfirmDetails.value = confirmationResponse?.data?.[0];
         notify.error('Confirmation not applied', 'The schema deletion still requires confirmation.');
         return;
       }
@@ -459,7 +495,7 @@ async function onSchemaConfirmSubmit() {
       return;
     }
     if (isSchemaMutationPreviewResponse(confirmationResponse)) {
-      const preview = (confirmationResponse as any)?.data?.[0];
+      const preview = confirmationResponse?.data?.[0];
       schemaConfirmDetails.value = preview;
       notify.error('Confirmation not applied', 'The schema mutation still requires confirmation.');
       return;
@@ -486,6 +522,12 @@ watch(
   },
   { deep: true }
 );
+
+watch(() => route.params.table, (newTable, oldTable) => {
+  if (newTable && newTable !== oldTable) {
+    void initializeForm();
+  }
+});
 
 onMounted(async () => {
   await Promise.all([initializeForm(), loadTableCatalog()]);
@@ -810,9 +852,13 @@ onMounted(async () => {
                     v-model="table"
                     :column-names="constraintFieldNames"
                   />
-                  <TableColumns v-model="table.columns" />
+                  <TableColumns
+                    v-model="table.columns"
+                    :reserved-names="(table.relations || []).map((r: any) => r.propertyName)"
+                  />
                   <TableRelations
                     v-model="table.relations"
+                    :reserved-names="(table.columns || []).map((c: any) => c.name)"
                     :table-id="getId(table)"
                     :table-options="
                       tableCatalog.map((table) => ({
@@ -839,6 +885,7 @@ onMounted(async () => {
             v-if="table"
             :table-id="getId(table)"
             :table-name="String(table.name)"
+            :active="activeTab === 'graphql'"
           />
         </template>
 
@@ -846,6 +893,7 @@ onMounted(async () => {
           <div class="collection-route-panel">
             <RouteEditorPanel
               :embedded="true"
+              :active="activeTab === 'routes'"
               :table-name="String(route.params.table ?? '')"
               :external-api-test="showRouteApiTest"
               @close-api-test="showRouteApiTest = false"

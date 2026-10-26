@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SettingsDefaultPageSelect } from '#components';
 import { defaultPageId } from '~/utils/default-page';
+import type { ShellSettingsResponse } from '~/types/shell-api';
 const notify = useNotify();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const { confirm } = useConfirm();
@@ -16,21 +17,8 @@ const activeTab = computed({
     void router.push({ query: { ...route.query, tab: value === 'cors' ? 'cors' : 'general' } });
   },
 });
-const settingsSections = [
-  { label: 'General', value: 'general', icon: 'lucide:settings-2' },
-  { label: 'CORS', value: 'cors', icon: 'lucide:globe' },
-];
 
 const { validateForm } = useFormValidation("enfyra_setting");
-
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "General Settings",
-  description: "Configure system-wide settings and preferences",
-  variant: "default",
-  gradient: "cyan",
-});
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
@@ -48,11 +36,15 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     setting.value = formChanges.discardChanges(setting.value);
+    errors.value = {};
     hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
     
     notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const canUpdateSetting = computed(() =>
   checkPermissionCondition({
@@ -64,7 +56,7 @@ const {
   data: apiData,
   pending: loading,
   execute: loadSetting,
-} = useApi(() => `/enfyra_setting`, {
+} = useApi<ShellSettingsResponse>(() => `/enfyra_setting`, {
   query: {
     fields: "*,defaultPage.*",
     limit: 1,
@@ -176,6 +168,31 @@ registerHeaderActions([
     loading: saveLoading,
     disabled: computed(() => loading.value || saveLoading.value || !hasFormChanges.value),
     onClick: handleSaveSetting,
+  },
+]);
+
+const reloadSettingAction = useReloadAction({
+  reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+  loading: computed(() => loading.value),
+  hasUnsavedChanges: () => hasFormChanges.value,
+});
+
+const settingsSections = computed(() => [
+  {
+    label: 'General',
+    value: 'general',
+    icon: 'lucide:settings-2',
+    title: 'General Settings',
+    description: 'Configure system-wide settings and preferences',
+    actions: [reloadSettingAction],
+  },
+  {
+    label: 'CORS',
+    value: 'cors',
+    icon: 'lucide:globe',
+    title: 'CORS Origins',
+    description: 'Configure allowed cross-origin request domains',
+    actions: [reloadSettingAction],
   },
 ]);
 

@@ -37,6 +37,8 @@ describe('SidebarUserInfo', () => {
       const items = dropdown.props('items').flat()
       expect(items.map((item: any) => item.label)).toEqual(['Profile', 'Appearance', 'Accent', 'Notifications', 'Log out'])
       expect(items.find((item: any) => item.label === 'Log out').color).toBe('error')
+      expect(Object.hasOwn(items.find((item: any) => item.label === 'Profile'), 'color')).toBe(false)
+      expect(Object.hasOwn(items.find((item: any) => item.label === 'Profile'), 'children')).toBe(false)
       expect(dropdown.props('items').at(-1).map((item: any) => item.label)).toEqual(['Log out'])
       const appearance = items.find((item: any) => item.label === 'Appearance')
       expect(appearance.children.map((item: any) => item.label)).toEqual(['Light', 'Dark', 'System'])
@@ -81,7 +83,7 @@ describe('dropdown semantic colors', () => {
     const wrapper = await mountSuspended(UDropdownMenu, {
       attachTo: host,
       props: { items: [
-        ...colors.map(color => ({ label: color ?? 'default', color })),
+        ...colors.map(color => ({ label: color ?? 'default', ...(color === undefined ? {} : { color }) })),
         { label: 'Default branch', children: [{ label: 'Nested default' }] },
       ], modal: false },
       slots: { default: () => h('button', 'Open actions') },
@@ -193,7 +195,7 @@ describe('mobile account sheet', () => {
     const activate = vi.fn()
     const disabled = vi.fn()
     registry.register({ id: 'tools', order: 40, label: 'Tools', children: [
-      { label: 'Nested', children: [{ label: 'Execute', onSelect: activate }] },
+      { label: 'Nested', children: [[{ label: 'Execute', onSelect: activate }], [{ label: 'Second group', disabled: true }]] },
       { label: 'Unavailable', disabled: true, onSelect: disabled },
     ] })
     const host = document.createElement('div')
@@ -210,6 +212,7 @@ describe('mobile account sheet', () => {
       expect(disabled).not.toHaveBeenCalled()
       button('Nested').click()
       await flushPromises()
+      expect(button('Second group').disabled).toBe(true)
       button('Execute').click()
       await flushPromises()
       expect(activate).toHaveBeenCalledOnce()

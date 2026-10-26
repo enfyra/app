@@ -2,8 +2,6 @@ import {
   redisAdminKeyChange,
   redisAdminOverview,
   redisAdminOverviewUpdatedAt,
-  runtimeMetricsByInstance,
-  runtimeMetricsUpdatedAt,
 } from '~/composables/shared/useAdminSocket';
 import type {
   RedisAdminKeyDetail,
@@ -14,9 +12,11 @@ import type {
   RuntimeAppTelemetryCluster,
   RuntimeClusterStats,
   RuntimeGuide,
+  RuntimeMetricsPayload,
   RuntimeSeverity,
 } from '~/types/runtime-monitor';
 import { runtimeTabGuides } from '~/utils/runtime-monitor/guides';
+import { createRuntimeMetricsPoller, RUNTIME_METRICS_POLL_INTERVAL_MS } from '~/utils/runtime-monitor/polling';
 import { maxSeverity } from '~/utils/runtime-monitor/core';
 import { getRuntimeCacheReloadRows } from '~/utils/runtime-monitor/cache';
 import {
@@ -55,6 +55,25 @@ const BASE_TAB_ITEMS = [
 export function useRuntimeMetrics() {
   const route = useRoute();
   const adminSocket = useAdminSocket();
+  const { me } = useAuth();
+  const runtimeMetricsByInstance = ref<Record<string, RuntimeMetricsPayload>>({});
+  const runtimeMetricsUpdatedAt = ref<number | null>(null);
+  const nextPollAt = ref<number | null>(null);
+  const metricsError = ref<string | null>(null);
+  const poller = createRuntimeMetricsPoller({
+    load: (signal) => adminSocket.loadRuntimeMetrics(signal),
+    onSample: (snapshot) => {
+      runtimeMetricsByInstance.value = Object.fromEntries(
+        snapshot.instances.map((item) => [item.instance.id, item]),
+      );
+      runtimeMetricsUpdatedAt.value = Date.now();
+      metricsError.value = null;
+    },
+    onError: (error) => {
+      metricsError.value = error instanceof Error ? error.message : 'Runtime metrics request failed';
+    },
+    onSchedule: (nextAt) => { nextPollAt.value = nextAt; },
+  });
   const redisSetApi = useApi<{ success: boolean; data: RedisAdminKeyDetail }>(
     '/admin/redis/key',
     { method: 'post', disableErrorPage: true },
@@ -70,17 +89,28 @@ export function useRuntimeMetrics() {
   const activeTab = ref((route.query.tab as string) || 'overview');
   const nowMs = ref(Date.now());
   let clockTimer: ReturnType<typeof setInterval> | null = null;
+  let stopPermissionWatch: (() => void) | undefined;
   if (!BASE_TAB_ITEMS.some((tab) => tab.value === activeTab.value)) {
     activeTab.value = 'overview';
   }
 
   onMounted(() => {
+    stopPermissionWatch = watch(() => !!me.value?.isRootAdmin, (allowed) => {
+      if (allowed) poller.start();
+      else {
+        poller.stop();
+        runtimeMetricsByInstance.value = {};
+        runtimeMetricsUpdatedAt.value = null;
+      }
+    }, { immediate: true, flush: 'sync' });
     clockTimer = setInterval(() => {
       nowMs.value = Date.now();
     }, 250);
   });
 
   onUnmounted(() => {
+    stopPermissionWatch?.();
+    poller.stop();
     if (clockTimer) {
       clearInterval(clockTimer);
       clockTimer = null;
@@ -135,21 +165,15 @@ export function useRuntimeMetrics() {
     return Math.max(0, Math.round((nowMs.value - runtimeMetricsUpdatedAt.value) / 1000));
   });
 
-  const sampleIntervalMs = computed(() => {
-    const intervals = instances.value
-      .map((item) => item.intervalMs)
-      .filter((value) => Number.isFinite(value) && value > 0);
-    return intervals.length > 0 ? Math.max(...intervals) : 2000;
-  });
+  const sampleIntervalMs = computed(() => RUNTIME_METRICS_POLL_INTERVAL_MS);
 
   const nextUpdateMs = computed(() => {
-    if (!runtimeMetricsUpdatedAt.value) return sampleIntervalMs.value;
-    const elapsed = nowMs.value - runtimeMetricsUpdatedAt.value;
-    return Math.max(0, sampleIntervalMs.value - elapsed);
+    if (nextPollAt.value === null) return 0;
+    return Math.max(0, Math.min(sampleIntervalMs.value, nextPollAt.value - nowMs.value));
   });
 
   const nextUpdateLabel = computed(() => {
-    if (!runtimeMetricsUpdatedAt.value) return 'waiting';
+    if (nextPollAt.value === null) return 'sampling';
     if (nextUpdateMs.value <= 0) return 'any moment';
     return `${(nextUpdateMs.value / 1000).toFixed(1)}s`;
   });
@@ -207,7 +231,7 @@ export function useRuntimeMetrics() {
     return instances.value.map((metrics) => ({
       instanceId: metrics.instance.id,
       sampledAt: metrics.sampledAt,
-      app: metrics.app,
+      ...(metrics.app === undefined ? {} : { app: metrics.app }),
     }));
   });
 
@@ -289,7 +313,7 @@ export function useRuntimeMetrics() {
     try {
       redisError.value = null;
       const result = await adminSocket.loadRedisKeys({
-        sessionId: reset ? undefined : redisKeysSessionId.value,
+        ...(reset ? {} : { sessionId: redisKeysSessionId.value }),
         page,
         pattern: redisKeysPattern.value || '*',
         count: 10,
@@ -344,9 +368,7 @@ export function useRuntimeMetrics() {
   async function saveRedisKey(input: RedisAdminSetKeyInput) {
     redisWritePending.value = true;
     try {
-      const response = await redisSetApi.execute({ body: input }) as
-        | { success: boolean; data: RedisAdminKeyDetail }
-        | null;
+      const response = await redisSetApi.execute({ body: input });
       if (response?.data) redisSelectedDetail.value = response.data;
       await refreshRedisAfterWrite(input.key);
       return response?.data ?? null;
@@ -358,9 +380,7 @@ export function useRuntimeMetrics() {
   async function deleteRedisKey(key: string) {
     redisWritePending.value = true;
     try {
-      const response = await redisDeleteApi.execute({ query: { key } }) as
-        | { success: boolean; data: { deleted: number } }
-        | null;
+      const response = await redisDeleteApi.execute({ query: { key } });
       await refreshRedisAfterWrite(key, true);
       return response?.data ?? null;
     } finally {
@@ -371,9 +391,7 @@ export function useRuntimeMetrics() {
   async function updateRedisKeyTtl(key: string, ttlSeconds: number | null) {
     redisWritePending.value = true;
     try {
-      const response = await redisTtlApi.execute({ body: { key, ttlSeconds } }) as
-        | { success: boolean; data: RedisAdminKeySummary }
-        | null;
+      const response = await redisTtlApi.execute({ body: { key, ttlSeconds } });
       await refreshRedisAfterWrite(key);
       return response?.data ?? null;
     } finally {
@@ -431,9 +449,9 @@ export function useRuntimeMetrics() {
   function requestTabSeverity(): RuntimeSeverity {
     return maxSeverity(
       ...requestRows.value.map((row) =>
-        row.status5xx > 0 || row.p99Ms >= 5000
+        row.status5xx > 0
           ? 'error'
-          : row.status4xx > 0 || row.p95Ms >= 1000 || row.p99Ms >= 1000
+          : row.status4xx > 0
             ? 'warning'
             : 'ok',
       ),
@@ -455,9 +473,7 @@ export function useRuntimeMetrics() {
       ...databaseRows.value.map((row) =>
         row.poolAcquireTimeouts > 0 || row.errors > 0
           ? 'error'
-          : row.slow > 0 || row.p95Ms >= 500
-            ? 'warning'
-            : 'ok',
+          : 'ok',
       ),
     );
   }
@@ -490,14 +506,14 @@ export function useRuntimeMetrics() {
       case 'overview':
         return (clusterSeverity() === 'ok' ? 0 : 1) + instances.value.reduce((sum, metrics) => sum + (metrics.health?.overview?.messages ?? overviewWarnings(metrics)).length, 0);
       case 'requests':
-        return requestRows.value.filter((row) => row.status5xx > 0 || row.status4xx > 0 || row.p95Ms >= 1000 || row.p99Ms >= 1000).length;
+        return requestRows.value.filter((row) => row.status5xx > 0 || row.status4xx > 0).length;
       case 'cache':
         return cacheReloadRows.value.filter((row) => row.status === 'failed').length;
       case 'redis':
         return redisAdminOverview.value?.health?.warnings?.length
           || (redisTabSeverity() === 'ok' ? 0 : 1);
       case 'database':
-        return databaseRows.value.filter((row) => row.poolAcquireTimeouts > 0 || row.errors > 0 || row.slow > 0 || row.p95Ms >= 500).length + instances.value.reduce((sum, metrics) => sum + (metrics.health?.database?.messages ?? databaseWarnings(metrics)).length, 0);
+        return databaseRows.value.filter((row) => row.poolAcquireTimeouts > 0 || row.errors > 0).length + instances.value.reduce((sum, metrics) => sum + (metrics.health?.database?.messages ?? databaseWarnings(metrics)).length, 0);
       case 'flows':
         return instances.value.reduce((sum, metrics) => sum + (metrics.health?.flows?.messages ?? flowWarnings(metrics)).length, 0);
       case 'workers':
@@ -523,6 +539,7 @@ export function useRuntimeMetrics() {
 
   return reactive({
     activeTab,
+    metricsError,
     tabItems,
     instances,
     totals,

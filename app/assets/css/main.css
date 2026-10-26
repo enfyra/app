@@ -1,4 +1,5 @@
 @config "../../../tailwind.config.js";
+@layer theme, base, components, enfyra-extensions, utilities;
 @import "tailwindcss";
 @import "@nuxt/ui";
 @import "./theme.css";
@@ -402,7 +403,7 @@ button:focus-visible,
   border: 1px solid var(--card-border);
   background: var(--card-bg);
   box-shadow: var(--card-shadow-hover);
-  bottom: calc(var(--shell-mobile-inset) + 0.75rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
   padding-bottom: 0.25rem;
 }
 

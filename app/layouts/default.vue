@@ -1,7 +1,7 @@
 <template>
   <UDashboardGroup
     :persistent="false"
-    class="bg-[var(--shell-bg)] text-sm text-[var(--text-primary)] p-[var(--shell-mobile-inset)] lg:ps-0 lg:py-[var(--shell-inset)] lg:pe-[var(--shell-inset)]"
+    class="bg-[var(--shell-bg)] text-sm text-[var(--text-primary)] lg:ps-0 lg:py-[var(--shell-inset)] lg:pe-[var(--shell-inset)]"
   >
     <a
       href="#dashboard-panel-workspace"
@@ -17,7 +17,7 @@
         id="workspace"
         role="main"
         tabindex="-1"
-        class="eapp-shell-main overflow-hidden bg-[var(--shell-main-bg)] rounded-[var(--radius-shell)] border border-default shadow-sm"
+        class="eapp-shell-main overflow-hidden bg-[var(--shell-main-bg)] lg:rounded-[var(--radius-shell)] lg:border lg:border-default lg:shadow-sm"
         :ui="{ root: 'min-h-0' }"
       >
         <template #header>
@@ -64,7 +64,7 @@
         class="pointer-events-none fixed right-4 top-[72px] z-[60] max-w-[min(420px,calc(100vw-2rem))] lg:right-10 lg:top-[calc(var(--shell-inset)+72px)]"
       >
         <div
-          class="pointer-events-auto flex items-center gap-2 rounded-full border bg-[var(--surface-default)]/90 px-3 py-2 text-sm font-semibold shadow-[var(--shadow-md)] backdrop-blur-xl"
+          class="pointer-events-auto flex items-center gap-2 rounded-full border bg-[var(--surface-default)] px-3 py-2 text-sm font-semibold shadow-[var(--shadow-md)]"
           :class="reloadFailureMessage ? 'border-[var(--state-danger-outline-border)] bg-[var(--state-danger-soft-bg)] text-[var(--state-danger-soft-text)]' : 'border-[var(--card-border)] text-[var(--text-secondary)]'"
         >
           <UIcon
@@ -92,6 +92,7 @@
   <div id="others-overlay"></div>
 
   <CommonGlobalConfirm />
+  <CommonCodeVersionModal />
   <DynamicGlobalExtensionsHost />
   <FolderDetailModal />
 </template>
@@ -127,6 +128,7 @@ useRouterErrorHandler();
 useMobileMenuAction();
 useNavigationActions();
 useAdminSocket();
+useExtensionWarmup();
 
 const { routeLoadingVisible } = useGlobalState();
 const route = useRoute();

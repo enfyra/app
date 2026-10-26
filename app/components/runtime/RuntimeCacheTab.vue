@@ -122,13 +122,13 @@ async function handleReload(action: (typeof reloadActions)[number]) {
             <div class="font-medium text-[var(--text-primary)]">{{ action.label }}</div>
             <div class="mt-0.5 text-xs text-[var(--text-tertiary)]">{{ action.description }}</div>
             <UButton
-              :loading="loadingMap[action.id]"
-              :disabled="loadingMap[action.id]"
+              :loading="loadingMap[action.id] ?? false"
+              :disabled="loadingMap[action.id] ?? false"
               size="sm"
               :color="action.color"
               variant="soft"
               class="mt-2"
-              :icon="loadingMap[action.id] ? undefined : 'lucide:play'"
+              v-bind="loadingMap[action.id] ? {} : { icon: 'lucide:play' }"
               @click="handleReload(action)"
             >
               {{ loadingMap[action.id] ? 'Starting...' : 'Reload' }}

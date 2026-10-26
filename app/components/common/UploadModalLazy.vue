@@ -1,19 +1,21 @@
 <template>
-  <div>
+  <div v-if="props.modelValue">
     <Suspense>
       <UploadModal
-        :model-value="props.modelValue"
-        :title="props.title"
-        :accept="props.accept"
-        :multiple="props.multiple"
-        :max-size="props.maxSize"
-        :drag-text="props.dragText"
-        :accept-text="props.acceptText"
-        :upload-text="props.uploadText"
-        :uploading-text="props.uploadingText"
-        :loading="props.loading"
-        :upload-progress="props.uploadProgress"
-        :file-progress="props.fileProgress"
+        v-bind="{
+          modelValue: props.modelValue,
+          ...(props.title === undefined ? {} : { title: props.title }),
+          ...(props.accept === undefined ? {} : { accept: props.accept }),
+          multiple: props.multiple,
+          ...(props.maxSize === undefined ? {} : { maxSize: props.maxSize }),
+          ...(props.dragText === undefined ? {} : { dragText: props.dragText }),
+          ...(props.acceptText === undefined ? {} : { acceptText: props.acceptText }),
+          ...(props.uploadText === undefined ? {} : { uploadText: props.uploadText }),
+          ...(props.uploadingText === undefined ? {} : { uploadingText: props.uploadingText }),
+          loading: props.loading,
+          ...(props.uploadProgress === undefined ? {} : { uploadProgress: props.uploadProgress }),
+          ...(props.fileProgress === undefined ? {} : { fileProgress: props.fileProgress }),
+        }"
         @update:model-value="(value) => emit('update:modelValue', value)"
         @upload="(files) => emit('upload', files)"
         @error="(message) => emit('error', message)"

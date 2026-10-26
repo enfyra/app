@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { ShellListResponse, ShellUserRecord } from '~/types/shell-api';
+
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute();
 const notify = useNotify();
@@ -7,34 +9,25 @@ const { validateForm } = useFormValidation("enfyra_user");
 
 const hasFormChanges = ref(false);
 const formEditorRef = ref();
-const { useFormChanges } = useSchema();
+const { useFormChanges, getIncludeFields } = useSchema("enfyra_user");
+const { getIdFieldName } = useDatabase();
 const formChanges = useFormChanges();
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const {
   data: apiData,
   pending: loading,
   execute: fetchUser,
-} = useApi(() => "/enfyra_user", {
+} = useApi<ShellListResponse<ShellUserRecord>>(() => "/enfyra_user", {
   query: computed(() => ({
-    fields: "*",
+    fields: getIncludeFields(),
     filter: {
-      id: {
+      [getIdFieldName()]: {
         _eq: route.params.id,
       },
     },
   })),
   errorContext: "Fetch User",
 });
-
-watch(() => apiData.value?.data?.[0]?.email, (email) => {
-  if (email) {
-    registerPageHeader({
-      title: email,
-      gradient: "blue",
-    });
-  }
-}, { immediate: true });
 
 const form = ref<Record<string, any>>({});
 
@@ -78,11 +71,15 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
+    errors.value = {};
     hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
     
     notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 registerHeaderActions([
   {
@@ -111,6 +108,7 @@ registerHeaderActions([
     size: "md",
     order: 2,
     loading: computed(() => deleteLoading.value),
+    disabled: computed(() => Boolean(apiData.value?.data?.[0]?.isRootAdmin || apiData.value?.data?.[0]?.isSystem)),
     onClick: deleteUser,
     permission: {
       and: [
@@ -172,7 +170,10 @@ async function deleteUser() {
   const user = apiData.value?.data?.[0];
   const userIdentifier = user?.name || user?.username || user?.email || "this user";
   const ok = await confirm({
-    content: `Are you sure you want to delete user "${userIdentifier}"?`,
+    title: "Delete User",
+    content: `Are you sure you want to delete user "${userIdentifier}"? This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
   });
   if (!ok) return;
 
@@ -182,9 +183,21 @@ async function deleteUser() {
     return;
   }
 
+  hasFormChanges.value = false;
   notify.success("User deleted");
   await navigateTo("/settings/users");
 }
+
+const userSections = computed(() => [{
+  value: 'user',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+      loading: computed(() => loading.value),
+      hasUnsavedChanges: () => hasFormChanges.value,
+    }),
+  ],
+}]);
 
 onMounted(() => {
   initializeForm();
@@ -193,9 +206,9 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <div class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'user' }]">
-        <template #user-header><h2 class="text-sm font-medium">User</h2></template>
+    <div v-if="loading || apiData?.data?.[0]" class="eapp-page-constrained">
+      <CommonPanel :sections="userSections">
+        <template #user-header><CommonFormHeader :title="apiData?.data?.[0]?.email || 'User'" /></template>
         <template #user>
       <CommonFormCard>
         <UForm :state="form" @submit="saveUser">
@@ -215,7 +228,7 @@ onMounted(() => {
     </div>
 
     <CommonEmptyState
-      v-if="!loading && !apiData?.data?.[0]"
+      v-else
       title="User not found"
       description="The requested user could not be loaded"
       icon="lucide:user-x"

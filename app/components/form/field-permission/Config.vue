@@ -2,6 +2,8 @@
 import { debounce } from "lodash-es";
 import { switchFieldPermissionScope } from "~/utils/field-permissions/normalize";
 
+import type { FormApiListResponse, FormRoleRecord, FormUserRecord } from '~/types/form-api';
+
 type Mode = "role" | "user";
 
 const props = defineProps<{
@@ -82,9 +84,8 @@ const {
   execute: searchRoles,
   pending: rolesLoading,
   cancel: cancelRoleSearch,
-} = useApi(() => "/enfyra_role", {
+} = useApi<FormApiListResponse<FormRoleRecord>>(() => "/enfyra_role", {
   immediate: false,
-  watch: false,
   query: computed(() => ({
     fields: "id,name",
     limit: 10,
@@ -99,9 +100,8 @@ const {
   execute: searchUsers,
   pending: usersLoading,
   cancel: cancelUserSearch,
-} = useApi(() => "/enfyra_user", {
+} = useApi<FormApiListResponse<FormUserRecord>>(() => "/enfyra_user", {
   immediate: false,
-  watch: false,
   query: computed(() => ({
     fields: "id,name,email",
     limit: 10,
@@ -114,8 +114,8 @@ const {
 watch(
   rolesData,
   (v) => {
-    const data = (v as any)?.data || [];
-    roleItems.value = data.map((r: any) => ({
+    const data = v?.data || [];
+    roleItems.value = data.map(r => ({
       label: r.name || String(getId(r)),
       value: String(getId(r)),
     }));
@@ -126,10 +126,10 @@ watch(
 watch(
   usersData,
   (v) => {
-    const data = (v as any)?.data || [];
-    userItems.value = data.map((u: any) => ({
+    const data = v?.data || [];
+    userItems.value = data.map(u => ({
       label: u.email || u.name || String(getId(u)),
-      description: u.name && u.email ? u.name : undefined,
+      ...(u.name && u.email ? { description: u.name } : {}),
       value: String(getId(u)),
     }));
   },
@@ -366,7 +366,7 @@ async function setMode(next: Mode) {
         :multiple="mode === 'user'"
         :loading="loading"
         :placeholder="mode === 'role' ? 'Search role...' : 'Search user (email)...'"
-        :content="userMenuContent"
+        v-bind="userMenuContent === undefined ? {} : { content: userMenuContent }"
         by="value"
         class="w-full"
       >

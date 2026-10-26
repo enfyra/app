@@ -18,7 +18,7 @@ describe('loading state layout', () => {
   it('delegates table loading to Nuxt UI and suppresses empty feedback while pending', () => {
     const dataTable = readAppFile('components/data-table/DataTable.vue')
 
-    expect(dataTable).toContain(':data="props.data"')
+    expect(dataTable).toContain(':data="tableData"')
     expect(dataTable).toContain(':loading="props.loading"')
     expect(dataTable).toContain('v-if="!props.loading" variant="naked"')
     expect(dataTable).not.toContain('USkeleton')
@@ -82,22 +82,19 @@ describe('loading state layout', () => {
     expect(readRepoFile('nuxt.config.ts')).not.toMatch(/[Rr]eadiness.*process\.env/)
   })
 
-  it('skeletons the relation drawer as rows, not as form cards', () => {
+  it('renders the relation drawer list through DataTable so its loading state matches the table', () => {
     const selector = readAppFile('components/form/relation/Selector.vue')
-    const list = readAppFile('components/form/relation/List.vue')
+    const dataTable = readAppFile('components/data-table/DataTable.vue')
     const skeleton = readAppFile('components/common/loading/Skeleton.vue')
     const loadingState = readAppFile('components/common/LoadingState.vue')
 
-    expect(selector).toContain('type="list" context="inline"')
+    expect(selector).toContain('<DataTable')
+    expect(selector).toContain('enable-row-selection')
+    expect(selector).toContain(':selected-row-ids="draftSelectedIds"')
+    expect(selector).not.toContain('FormRelationList')
+    expect(dataTable).toContain(':loading="props.loading"')
     expect(loadingState).toContain("loadingType === 'list'")
     expect(skeleton).toContain("type === 'list'")
-
-    // Row skeleton must mirror the real row: radio + label + id + two trailing actions.
-    const listTemplate = list.slice(list.indexOf('<template>'))
-    expect(listTemplate).toContain('class="flex min-h-11 items-center min-w-0"')
-    expect(listTemplate).toContain("name=\"lucide:circle\"")
-    expect(listTemplate).toContain('font-mono text-xs text-muted-foreground')
-    expect(listTemplate).toContain('border-l border-[var(--border-default)] px-1.5')
 
     const listSkeleton = skeleton.slice(
       skeleton.indexOf("type === 'list'"),

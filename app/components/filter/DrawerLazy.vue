@@ -5,10 +5,12 @@
         :key="props.historyKey || props.tableName"
         :model-value="props.modelValue"
         :table-name="props.tableName"
-        :current-filter="props.currentFilter"
-        :allowed-fields="props.allowedFields"
-        :history-key="props.historyKey"
-        :title="props.title"
+        v-bind="{
+          ...(props.currentFilter === undefined ? {} : { currentFilter: props.currentFilter }),
+          ...(props.allowedFields === undefined ? {} : { allowedFields: props.allowedFields }),
+          ...(props.historyKey === undefined ? {} : { historyKey: props.historyKey }),
+          ...(props.title === undefined ? {} : { title: props.title }),
+        }"
         @update:model-value="(value) => emit('update:modelValue', value)"
         @apply="(filter) => emit('apply', filter)"
       />

@@ -1,4 +1,4 @@
-import { ref, shallowRef, toValue, watch } from 'vue'
+import { computed, ref, shallowRef, toValue, watch } from 'vue'
 import type { CursorPaginationOptions } from '~/types/table-pagination'
 
 export function useCursorPagination<T, Cursor>(options: CursorPaginationOptions<T, Cursor>) {
@@ -6,6 +6,7 @@ export function useCursorPagination<T, Cursor>(options: CursorPaginationOptions<
   const data = shallowRef<T[]>([])
   const hasNextPage = ref(false)
   const loading = ref(false)
+  const total = computed(() => options.total === undefined ? undefined : toValue(options.total))
   let cursors: (Cursor | null)[] = [null]
   let requestId = 0
 
@@ -23,21 +24,22 @@ export function useCursorPagination<T, Cursor>(options: CursorPaginationOptions<
   async function fetchPage(targetPage: number, reset = false) {
     if (!Number.isInteger(targetPage) || targetPage < 1) return false
     if (!reset && (loading.value || targetPage > cursors.length)) return false
+    const itemsPerPage = Math.max(1, Math.floor(toValue(options.itemsPerPage)))
     const cursor = reset ? null : cursors[targetPage - 1]!
     const run = ++requestId
     const scope = toValue(options.scope)
     loading.value = true
     try {
-      const items = await options.fetchPage(cursor, options.itemsPerPage + 1)
+      const items = await options.fetchPage(cursor, itemsPerPage + 1)
       if (run !== requestId || scope !== toValue(options.scope) || items === null) return false
-      const rows = items.slice(0, options.itemsPerPage)
+      const rows = items.slice(0, itemsPerPage)
       if (targetPage > page.value && rows.length === 0) {
         hasNextPage.value = false
         cursors = cursors.slice(0, page.value)
         return false
       }
       const nextCursors = reset ? [null] : cursors.slice(0, targetPage)
-      const hasNext = items.length > options.itemsPerPage
+      const hasNext = items.length > itemsPerPage
       if (hasNext) nextCursors.push(options.getCursor(rows[rows.length - 1]!))
       cursors = nextCursors
       data.value = rows
@@ -52,6 +54,7 @@ export function useCursorPagination<T, Cursor>(options: CursorPaginationOptions<
   return {
     page,
     data,
+    total,
     hasNextPage,
     loading,
     setPage: (targetPage: number) => fetchPage(targetPage),

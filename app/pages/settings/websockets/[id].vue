@@ -36,9 +36,13 @@
         </template>
         <template #events>
       <DataTableSettingsTable
+        header-name="Events"
         :data="events"
+        :bulk-action="bulkDeleteEvents"
         :columns="eventColumns"
         :actions="getEventActions"
+        :reload="fetchGatewayDetail"
+        :reload-loading="loading"
         @row-click="handleEditEvent"
       />
         </template>
@@ -74,6 +78,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureWebsocket, FeatureWebsocketEvent } from '~/types/feature-api';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
 import { settingsStatusColumn, settingsTextColumn } from '~/utils/settings-table';
@@ -99,10 +104,6 @@ const WEBSOCKET_EVENT_LIST_FIELDS = [
 ].join(",");
 
 const activeSection = ref('gateway');
-const websocketSections = [
-  { label: 'Gateway', value: 'gateway', icon: 'lucide:radio-tower' },
-  { label: 'Events', value: 'events', icon: 'lucide:zap' },
-];
 const form = ref<Record<string, any>>({});
 const errors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
@@ -129,7 +130,6 @@ const showEventDrawer = ref(false);
 const selectedEvent = ref<any>(null);
 
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const pageId = computed(() => {
   const id = route.params.id;
@@ -138,16 +138,11 @@ const pageId = computed(() => {
 
 const showConnTestModal = ref(false);
 
-registerPageHeader({
-  title: "WebSocket Gateway",
-  gradient: "cyan",
-});
-
 const {
   data: gatewayData,
   pending: loading,
   execute: fetchGateway,
-} = useApi(() => `/enfyra_websocket`, {
+} = useApi<FeatureCollection<FeatureWebsocket>>(() => `/enfyra_websocket`, {
   query: computed(() => ({
     fields: ["*"].join(","),
     filter:
@@ -158,8 +153,12 @@ const {
 });
 
 const gatewayId = computed(() => pageId.value || getId(gatewayData.value?.data?.[0]));
+const gatewayTitle = computed(() => {
+  const path = gatewayData.value?.data?.[0]?.path;
+  return path ? `WebSocket Gateway: ${path}` : 'WebSocket Gateway';
+});
 
-const { data: eventsData, execute: fetchEvents } = useApi(() => "/enfyra_websocket_event", {
+const { data: eventsData, execute: fetchEvents } = useApi<FeatureCollection<FeatureWebsocketEvent>>(() => "/enfyra_websocket_event", {
   query: computed(() => ({
     fields: WEBSOCKET_EVENT_LIST_FIELDS,
     limit: 0,
@@ -258,6 +257,34 @@ registerHeaderActions([
   },
 ]);
 
+const gatewayReloadAction = useReloadAction({
+  reload: async () => {
+    await fetchGatewayDetail();
+    formEditorRef.value?.confirmChanges?.();
+    hasFormChanges.value = false;
+  },
+  loading: computed(() => loading.value),
+  hasUnsavedChanges: () => activeSection.value === 'gateway' && hasFormChanges.value,
+});
+
+const websocketSections = computed(() => [
+  {
+    label: 'Gateway',
+    value: 'gateway',
+    icon: 'lucide:radio-tower',
+    title: gatewayTitle.value,
+    description: gatewayData.value?.data?.[0]?.description || 'Configure WebSocket gateway path, authentication, and connection handler',
+    actions: [gatewayReloadAction],
+  },
+  {
+    label: 'Events',
+    value: 'events',
+    icon: 'lucide:zap',
+    title: gatewayTitle.value,
+    description: 'Manage WebSocket event listeners and scripts',
+  },
+]);
+
 registerHeaderActions([
   {
     id: 'create-websocket-event',
@@ -291,21 +318,17 @@ async function fetchGatewayDetail() {
   await Promise.all([fetchGateway(), fetchEvents()]);
 }
 
-watch(
-  [() => gatewayData.value, () => eventsData.value, () => route.params.id],
-  () => {
-    if (gatewayData.value?.data?.[0]) {
-      const data = gatewayData.value.data[0];
-      gateway.value = data;
-      form.value = { ...data };
-      formChanges.update(data);
-    }
-    if (eventsData.value?.data) {
-      events.value = eventsData.value.data;
-    }
-  },
-  { immediate: true }
-);
+watch(gatewayData, value => {
+  const data = value?.data?.[0];
+  if (!data) return;
+  gateway.value = data;
+  form.value = { ...data };
+  formChanges.update(data);
+}, { immediate: true });
+
+watch(eventsData, value => {
+  if (value?.data) events.value = value.data;
+}, { immediate: true });
 
 onMounted(async () => {
   await fetchGatewayDetail();
@@ -349,10 +372,14 @@ async function handleReset() {
   }
 
   form.value = formChanges.discardChanges(form.value);
+  errors.value = {};
   hasFormChanges.value = false;
+  formEditorRef.value?.confirmChanges?.();
 
   notify.success("Reset Complete", "All changes have been discarded.");
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 async function deleteGateway() {
   const ok = await confirm({
@@ -370,6 +397,7 @@ async function deleteGateway() {
     return;
   }
 
+  hasFormChanges.value = false;
   notify.success("Success", "WebSocket gateway has been deleted successfully");
 
   await navigateTo("/settings/websockets");
@@ -391,13 +419,20 @@ async function toggleEventStatus(event: any) {
     notify.success("Success", `Event has been ${event.isEnabled ? 'disabled' : 'enabled'}.`);
 
     if (eventsData.value?.data) {
-      const idx = eventsData.value.data.findIndex((e: any) => getId(e) === eventId);
-      if (idx !== -1) eventsData.value.data[idx].isEnabled = !event.isEnabled;
+      const current = eventsData.value.data.find(e => getId(e) === eventId);
+      if (current) current.isEnabled = !event.isEnabled;
     }
   } finally {
     togglingEventId.value = null;
   }
 }
+
+const bulkDeleteEvents = useSettingsBulkDelete({
+  path: '/enfyra_websocket_event',
+  title: 'Delete WebSocket Events',
+  isBusy: () => togglingEventId.value !== null,
+  refresh: () => fetchEvents(),
+});
 
 async function deleteEvent(event: any) {
   const eventId = getId(event);

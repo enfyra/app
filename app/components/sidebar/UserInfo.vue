@@ -5,9 +5,7 @@ import { UDropdownMenu } from '#components';
 import type { AccountPanelItem } from '~/types/ui';
 
 interface AccountMenuItem extends DropdownMenuItem {
-  slot?: `account-${string}`;
   swatch?: string;
-  children?: AccountMenuItem[];
   accountPanelItem?: AccountPanelItem;
 }
 
@@ -76,17 +74,23 @@ const triggerBadge = computed(() => {
   return badges[0];
 });
 function toMenuItem(item: AccountPanelItem): AccountMenuItem {
+  const label = resolveValue(item.label);
+  const description = resolveValue(item.description);
+  const icon = resolveValue(item.icon);
+  const disabled = resolveValue(item.disabled);
+  const children = resolveValue(item.children);
+  const badge = itemBadge(item);
   return {
-    type: item.component ? 'label' : undefined,
-    label: resolveValue(item.label),
-    description: resolveValue(item.description),
-    icon: resolveValue(item.icon),
-    color: item.id === 'logout' ? 'error' : undefined,
-    disabled: resolveValue(item.disabled),
-    children: resolveValue(item.children) as AccountMenuItem[] | undefined,
-    slot: item.component || item.contentComponent ? `account-${item.id}` : undefined,
+    ...(item.component ? { type: 'label' as const } : {}),
+    ...(label === undefined ? {} : { label }),
+    ...(description === undefined ? {} : { description }),
+    ...(icon === undefined ? {} : { icon }),
+    ...(item.id === 'logout' ? { color: 'error' as const } : {}),
+    ...(disabled === undefined ? {} : { disabled }),
+    ...(children === undefined ? {} : { children }),
+    ...(item.component || item.contentComponent ? { slot: `account-${item.id}` as const } : {}),
     accountPanelItem: item,
-    badge: itemBadge(item) ?? undefined,
+    ...(badge == null ? {} : { badge }),
     onSelect: event => {
       if (item.disabled && unref(item.disabled)) return;
       if (item.contentComponent || item.onToggle) event.preventDefault();
@@ -103,13 +107,23 @@ const menuItems = computed<AccountMenuItem[][]>(() => {
     visibleAccountPanelItems.value.filter(item => item.id === 'logout').map(toMenuItem),
   ].filter(group => group.length);
 });
+function isGroupedMenu(items: NonNullable<DropdownMenuItem['children']>): items is DropdownMenuItem[][] {
+  return Array.isArray(items[0]);
+}
+function buttonColor(item: AccountMenuItem) {
+  const color = item.color;
+  if (color !== undefined && color !== 'default') return color;
+  return item.accountPanelItem?.id === 'logout' ? 'error' : 'neutral';
+}
+
 const mobilePage = computed(() => {
   let groups = menuItems.value;
   let parent: AccountMenuItem | undefined;
   for (const index of mobilePath.value) {
     parent = groups.flat()[index];
     if (!parent || parent.disabled) return { groups: menuItems.value, parent: undefined };
-    groups = [parent.children ?? []];
+    const children = parent.children ?? [];
+    groups = isGroupedMenu(children) ? children : [children];
   }
   return { groups, parent };
 });
@@ -200,11 +214,13 @@ async function handleLogout() {
                 <p v-else-if="item.type === 'label'" class="px-3 py-2 text-sm font-medium text-muted">{{ item.label }}</p>
                 <UButton
                   v-else
-                  :disabled="item.disabled"
-                  :to="item.to"
-                  :href="item.href"
-                  :target="item.target"
-                  :color="item.color || (item.accountPanelItem?.id === 'logout' ? 'error' : 'neutral')"
+                  v-bind="{
+                    ...(item.disabled === undefined ? {} : { disabled: item.disabled }),
+                    ...(item.to === undefined ? {} : { to: item.to }),
+                    ...(item.href === undefined ? {} : { href: item.href }),
+                    ...(item.target === undefined ? {} : { target: item.target }),
+                  }"
+                  :color="buttonColor(item)"
                   :variant="item.checked ? 'soft' : 'ghost'"
                   :loading-auto="true"
                   class="w-full justify-start gap-3 px-2 py-2 text-left pointer-coarse:min-h-[44px]"

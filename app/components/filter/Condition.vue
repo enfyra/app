@@ -85,11 +85,7 @@ const { isMobile, isTablet } = useScreen();
       <div v-if="!readonly" class="filter-condition-field min-w-0">
         <label v-if="isMobile || isTablet" class="text-xs text-[var(--text-tertiary)] mb-1 block">Field</label>
         <USelect
-          :model-value="
-            condition.field.includes('.')
-              ? condition.field.split('.').pop()
-              : condition.field
-          "
+          :model-value="condition.field.slice(condition.field.lastIndexOf('.') + 1)"
           :items="fieldOptions"
           @update:model-value="(val) => onFieldSelectChange(val as string)"
           :placeholder="

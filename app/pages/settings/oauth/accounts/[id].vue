@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
-    <div class="eapp-page-constrained">
-      <CommonPanel :sections="[{ value: 'account' }]">
-        <template #account-header><h2 class="text-sm font-medium">Account</h2></template>
+    <div v-if="loading || account" class="eapp-page-constrained">
+      <CommonPanel :sections="accountSections">
+        <template #account-header><CommonFormHeader :title="account ? `${getProviderLabel(account.provider)} Account` : 'Account'" /></template>
         <template #account>
 <CommonFormCard>
         <UForm :state="form">
@@ -21,7 +21,7 @@
     </div>
 
     <CommonEmptyState
-      v-if="!loading && !account"
+      v-else
       title="OAuth account not found"
       description="The requested OAuth account could not be loaded"
       icon="lucide:link"
@@ -31,13 +31,14 @@
 </template>
 
 <script setup lang="ts">
+import type { ShellListResponse, ShellOAuthAccountRecord } from '~/types/shell-api';
+
 definePageMeta({
   layout: "default",
   title: "OAuth Account Detail",
 });
 
 const route = useRoute();
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const tableName = "enfyra_oauth_account";
 const { getIdFieldName } = useDatabase();
@@ -46,7 +47,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchAccount,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellOAuthAccountRecord>>(() => `/${tableName}`, {
   query: computed(() => ({
     fields: "*,user.id,user._id,user.email,user.name",
     filter: { [getIdFieldName()]: { _eq: route.params.id } },
@@ -69,15 +70,6 @@ const disabledFieldMap = computed(() => {
   return map;
 });
 
-watch(() => account.value?.provider, (provider: string) => {
-  if (provider) {
-    registerPageHeader({
-      title: `${getProviderLabel(provider)} Account`,
-      gradient: "blue",
-    });
-  }
-}, { immediate: true });
-
 function getProviderLabel(provider: string) {
   switch (provider) {
     case "google": return "Google";
@@ -94,6 +86,16 @@ async function initializeForm() {
     form.value = { ...data };
   }
 }
+
+const accountSections = computed(() => [{
+  value: 'account',
+  actions: [
+    useReloadAction({
+      reload: async () => { await initializeForm(); },
+      loading: computed(() => loading.value),
+    }),
+  ],
+}]);
 
 onMounted(() => {
   initializeForm();

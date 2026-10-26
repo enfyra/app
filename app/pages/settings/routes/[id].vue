@@ -15,6 +15,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureRouteHeader } from '~/types/feature-api';
 const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 const route = useRoute()
@@ -23,7 +24,6 @@ const { confirm } = useConfirm()
 const { routes, loadRoutes } = useRoutes()
 const { retryUntilFresh } = useServerSync()
 const { getId, getIdFieldName } = useDatabase()
-const { registerPageHeader } = usePageHeaderRegistry()
 const ROUTE_DETAIL_HEADER_FIELDS = [
   'id',
   'path',
@@ -33,17 +33,12 @@ const ROUTE_DETAIL_HEADER_FIELDS = [
 const routeId = computed(() => String(route.params.id))
 const showApiTestModal = ref(false)
 
-registerPageHeader({
-  title: 'Route Details',
-  gradient: 'purple',
-})
-
 const {
   data: routeData,
   error: routeError,
   pending: loading,
   execute: fetchRoute,
-} = useApi('/enfyra_route', {
+} = useApi<FeatureCollection<FeatureRouteHeader>>('/enfyra_route', {
   query: computed(() => ({
     fields: ROUTE_DETAIL_HEADER_FIELDS,
     filter: { [getIdFieldName()]: { _eq: routeId.value } },
@@ -52,15 +47,6 @@ const {
 })
 
 useNotFoundGuard(loading, () => !!routeData.value?.data?.[0], 'Route not found', routeError)
-
-watch(() => routeData.value?.data?.[0]?.path, (path) => {
-  if (path) {
-    registerPageHeader({
-      title: `Route: ${path}`,
-      gradient: 'purple',
-    })
-  }
-}, { immediate: true })
 
 const { checkPermissionCondition } = usePermissions()
 const canUpdateRoute = computed(() =>
@@ -79,9 +65,12 @@ const {
 })
 
 async function deleteRoute() {
+  const routePath = routeData.value?.data?.[0]?.path || 'this route'
   const ok = await confirm({
-    title: 'Are you sure?',
-    content: 'This action cannot be undone.',
+    title: 'Delete Route',
+    content: `Are you sure you want to delete route "${routePath}"? This action cannot be undone.`,
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
   })
   if (!ok) return
 
@@ -131,6 +120,4 @@ registerSubHeaderActions([
     onClick: () => { showApiTestModal.value = true },
   },
 ])
-
-onMounted(fetchRoute)
 </script>

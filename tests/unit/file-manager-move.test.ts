@@ -2,6 +2,13 @@ import { computed, ref } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useFileManagerMove } from '../../app/composables/file-manager/useFileManagerMove';
 
+vi.mock('#app/composables/state', () => ({ useState: (...args: Parameters<typeof globalThis.useState>) => globalThis.useState(...args) }));
+vi.mock('#app/composables/router', () => ({ useRoute: () => globalThis.useRoute() }));
+vi.mock('~/composables/shared/useNotify', () => ({ useNotify: () => globalThis.useNotify() }));
+vi.mock('~/composables/shared/useConfirm', () => ({ useConfirm: () => globalThis.useConfirm() }));
+vi.mock('~/composables/shared/useDatabase', () => ({ useDatabase: () => globalThis.useDatabase() }));
+vi.mock('~/composables/shared/useApi', () => ({ useApi: (...args: Parameters<typeof globalThis.useApi>) => globalThis.useApi(...args) }));
+
 beforeEach(() => {
   vi.stubGlobal('computed', computed);
   vi.stubGlobal('useState', (_key: string, create: () => unknown) => ref(create()));

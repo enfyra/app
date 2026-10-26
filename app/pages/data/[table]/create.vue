@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { register: registerHeaderActions } = useHeaderActionRegistry();
+import { buildSharedHelperFieldMap } from '~/utils/form/shared-helper';
 import {
   applyMethodColorSuggestion,
   buildMethodDefinitionFieldMap,
@@ -9,29 +10,29 @@ import {
 const route = useRoute();
 const notify = useNotify();
 const newRecord = ref<Record<string, any>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 const tableName = route.params.table as string;
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
 const createErrors = ref<Record<string, string>>({});
 const { getId } = useDatabase();
 const fieldMap = computed(() =>
-  tableName === 'enfyra_method' ? buildMethodDefinitionFieldMap() : {},
+  tableName === 'enfyra_method' ? buildMethodDefinitionFieldMap()
+    : tableName === 'enfyra_helper' ? buildSharedHelperFieldMap() : {},
 );
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: `Create New ${route.params.table} Record`,
-  gradient: "cyan",
-});
 
 onMounted(async () => {
   await Promise.all([ensureRoutesLoaded(), ensureSchema()]);
-  newRecord.value = generateEmptyForm();
+  const initialRecord = generateEmptyForm();
   if (tableName === 'enfyra_method') {
-    applyMethodColorSuggestion(newRecord.value);
+    applyMethodColorSuggestion(initialRecord);
   }
+  newRecord.value = initialRecord;
+  hasFormChanges.value = false;
 });
 
 watch(() => newRecord.value?.name, () => {
@@ -91,6 +92,8 @@ async function handleCreate() {
   }
 
   notify.success("Success", "New record created!");
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   await navigateTo(
     `/data/${route.params.table}/${createdId}`,
@@ -103,6 +106,11 @@ async function handleCreate() {
   <div class="space-y-6">
     
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'record' }]">
+        <template #record-header>
+          <CommonFormHeader :title="`Create New ${route.params.table} Record`" />
+        </template>
+        <template #record>
       <CommonFormCard>
         <UForm :state="newRecord" @submit="handleCreate">
           <FormEditorLazy
@@ -111,9 +119,12 @@ async function handleCreate() {
             v-model="newRecord"
             v-model:errors="createErrors"
             :field-map="fieldMap"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
           />
         </UForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>

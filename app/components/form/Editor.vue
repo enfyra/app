@@ -5,7 +5,7 @@
   >
     <FormField
       v-for="field in visibleFields"
-      :key="field.name || field.propertyName"
+      v-bind="fieldKeyProps(field)"
       :key-name="(field.name || field.propertyName) as string"
       :table-name="props.tableName"
       :form-data="normalizedModelValue"
@@ -45,7 +45,7 @@
         <div :class="layoutClass">
           <FormField
             v-for="field in block.fields"
-            :key="field.name || field.propertyName"
+            v-bind="fieldKeyProps(field)"
             :key-name="(field.name || field.propertyName) as string"
             :table-name="props.tableName"
             :form-data="normalizedModelValue"
@@ -70,7 +70,7 @@
       >
         <FormField
           v-for="field in block.fields"
-          :key="field.name || field.propertyName"
+          v-bind="fieldKeyProps(field)"
           :key-name="(field.name || field.propertyName) as string"
           :table-name="props.tableName"
           :form-data="normalizedModelValue"
@@ -95,7 +95,7 @@
     >
       <FormField
         v-for="field in orphanSectionFields"
-        :key="field.name || field.propertyName"
+        v-bind="fieldKeyProps(field)"
         :key-name="(field.name || field.propertyName) as string"
         :table-name="props.tableName"
         :form-data="normalizedModelValue"
@@ -121,13 +121,19 @@ import {
   applyFieldPositions,
   sortDefinitionFieldsByKey,
 } from '~/utils/form/field-order';
-import { FORM_EDITOR_VIRTUAL_EMIT_KEY } from '~/utils/form/form-editor-context';
+import { FORM_EDITOR_VIRTUAL_EMIT_KEY, FORM_EDITOR_DRAFT_ERROR_KEY } from '~/utils/form/form-editor-context';
+import type { FormEditorActions } from '~/types/form-validation';
 import type {
   FormEditorSection,
   FormEditorVirtualEmitPayload,
   FormEditorVirtualField,
 } from '~/types/form-editor';
 import { isCreateRecordSystemField } from '~/utils/schema/system-fields';
+
+function fieldKeyProps(field: { name?: string; propertyName?: string }) {
+  const key = field.name || field.propertyName;
+  return key === undefined ? {} : { key };
+}
 
 const props = withDefaults(
   defineProps<{
@@ -243,7 +249,6 @@ const extendedColumnMap = computed(() => {
     if (!k) continue;
     m.set(k, {
       ...vf,
-      fieldType: vf.fieldType || "column",
       isVirtual: true,
     });
   }
@@ -255,6 +260,17 @@ function handleVirtualFieldEmit(payload: FormEditorVirtualEmitPayload) {
 }
 
 provide(FORM_EDITOR_VIRTUAL_EMIT_KEY, handleVirtualFieldEmit);
+const draftErrors = ref<Record<string, string>>({});
+provide(FORM_EDITOR_DRAFT_ERROR_KEY, (key, error) => {
+  if (error) draftErrors.value[key] = error;
+  else delete draftErrors.value[key];
+  if (!isConfirming && Object.keys(originalData.value).length > 0) {
+    const hasChanged =
+      formChanges.checkChanges(props.modelValue) ||
+      Object.keys(draftErrors.value).length > 0;
+    emit("hasChanged", hasChanged);
+  }
+});
 const formChanges = useFormChanges();
 const originalData = ref<Record<string, any>>({});
 
@@ -334,13 +350,12 @@ const filteredFormFields = computed(() => {
     defKeys.add(k);
     fields.push({
       ...vf,
-      fieldType: vf.fieldType || "column",
       isVirtual: true,
-    } as FormEditorVirtualField);
+    });
   }
 
   if (effectiveIncludesKeys.value.length > 0) {
-    fields = fields.filter((field: any) => {
+    fields = fields.filter((field) => {
       const key = field.name || field.propertyName;
       return key && effectiveIncludesKeys.value.includes(key);
     });
@@ -523,7 +538,9 @@ watch(
       Object.keys(newValue).length > 0 &&
       Object.keys(originalData.value).length > 0
     ) {
-      const hasChanged = formChanges.checkChanges(newValue);
+      const hasChanged =
+        formChanges.checkChanges(newValue) ||
+        Object.keys(draftErrors.value).length > 0;
       emit("hasChanged", hasChanged);
     }
 
@@ -574,6 +591,7 @@ async function validateAllUniqueFields(): Promise<boolean> {
 
 function confirmChanges() {
   isConfirming = true;
+  draftErrors.value = {};
   emit("hasChanged", false);
   nextTick(() => {
     if (props.modelValue && Object.keys(props.modelValue).length > 0) {
@@ -585,7 +603,7 @@ function confirmChanges() {
 }
 
 onMounted(() => {
-  formEditorRegistry.value = { validateAllUniqueFields, confirmChanges, getUniqueFieldsNeedingCheck };
+  formEditorRegistry.value = { validateAllUniqueFields, confirmChanges, getUniqueFieldsNeedingCheck, getDraftErrors: () => ({ ...draftErrors.value }) };
 });
 
 onUnmounted(() => {
@@ -598,5 +616,6 @@ defineExpose({
   confirmChanges,
   getUniqueFieldsNeedingCheck,
   validateAllUniqueFields,
-});
+  getDraftErrors: () => ({ ...draftErrors.value }),
+} satisfies FormEditorActions);
 </script>

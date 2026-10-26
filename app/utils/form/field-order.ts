@@ -28,24 +28,24 @@ function compareValues(va: unknown, vb: unknown): number {
   return String(va).localeCompare(String(vb));
 }
 
-export function sortDefinitionFieldsByKey(
-  fields: TableDefinitionField[],
+export function sortDefinitionFieldsByKey<T extends TableDefinitionField>(
+  fields: T[],
   sortBy: string,
   sortOrder: 'asc' | 'desc' = 'asc',
-): TableDefinitionField[] {
+): T[] {
   return [...fields].sort((a, b) => {
-    const va = (a as unknown as Record<string, unknown>)[sortBy];
-    const vb = (b as unknown as Record<string, unknown>)[sortBy];
+    const va: unknown = Reflect.get(a, sortBy);
+    const vb: unknown = Reflect.get(b, sortBy);
     const cmp = compareValues(va, vb);
     if (cmp !== 0) return sortOrder === 'asc' ? cmp : -cmp;
     return fieldKey(a).localeCompare(fieldKey(b));
   });
 }
 
-export function applyFieldPositions(
-  fields: TableDefinitionField[],
+export function applyFieldPositions<T extends TableDefinitionField>(
+  fields: T[],
   positions: Record<string, number>,
-): TableDefinitionField[] {
+): T[] {
   const n = fields.length;
   if (n === 0) {
     return fields;
@@ -60,7 +60,7 @@ export function applyFieldPositions(
   }
 
   const floating = fields.filter((f) => !pinnedKeys.has(fieldKey(f)));
-  const slots: (TableDefinitionField | undefined)[] = Array(n).fill(undefined);
+  const slots: (T | undefined)[] = Array(n).fill(undefined);
 
   const pinnedList = [...pinnedKeys]
     .map((k) => {
@@ -111,7 +111,7 @@ export function applyFieldPositions(
     fi++;
   }
 
-  const out = slots.filter(Boolean) as TableDefinitionField[];
+  const out = slots.filter((field): field is T => field !== undefined);
   const seen = new Set(out.map(fieldKey));
   for (const f of fields) {
     const k = fieldKey(f);

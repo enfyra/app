@@ -14,6 +14,7 @@ afterEach(() => {
 })
 
 const props = {
+  headerName: 'Records',
   page: 2,
   data: [{ id: 3 }, { id: 2 }],
   columns: [{ accessorKey: 'id', header: 'ID' }],

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FormEditorActions, FormEditorLazyActions } from '~/types/form-validation';
 import type {
   FormEditorSection,
   FormEditorVirtualEmitPayload,
@@ -49,7 +50,21 @@ const emit = defineEmits<{
   virtualFieldEmit: [payload: FormEditorVirtualEmitPayload];
 }>();
 
-const formEditorRef = ref();
+const forwardedProps = computed(() => {
+  const { excluded, includes, fieldMap, loading, mode, sortBy, fieldPositions, ...rest } = props;
+  return {
+    ...rest,
+    ...(excluded === undefined ? {} : { excluded }),
+    ...(includes === undefined ? {} : { includes }),
+    ...(fieldMap === undefined ? {} : { fieldMap }),
+    ...(loading === undefined ? {} : { loading }),
+    ...(mode === undefined ? {} : { mode }),
+    ...(sortBy === undefined ? {} : { sortBy }),
+    ...(fieldPositions === undefined ? {} : { fieldPositions }),
+  };
+});
+
+const formEditorRef = ref<FormEditorActions | null>(null);
 
 const FormEditor = defineAsyncComponent(() => import("./Editor.vue"));
 
@@ -58,19 +73,20 @@ defineExpose({
     formEditorRef.value?.confirmChanges();
   },
   validateAllUniqueFields: () => {
-    return formEditorRef.value?.validateAllUniqueFields?.();
+    return formEditorRef.value?.validateAllUniqueFields();
   },
   getUniqueFieldsNeedingCheck: () => {
-    return formEditorRef.value?.getUniqueFieldsNeedingCheck?.() || [];
+    return formEditorRef.value?.getUniqueFieldsNeedingCheck() || [];
   },
-});
+  getDraftErrors: () => formEditorRef.value?.getDraftErrors?.() ?? {},
+} satisfies FormEditorLazyActions);
 </script>
 
 <template>
   <Suspense>
     <FormEditor
       ref="formEditorRef"
-      v-bind="props"
+      v-bind="forwardedProps"
       @update:model-value="(value) => emit('update:modelValue', value)"
       @update:errors="(errors) => emit('update:errors', errors)"
       @has-changed="(hasChanged) => emit('hasChanged', hasChanged)"

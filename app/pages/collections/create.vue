@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FormApiListResponse, FormCollectionRecord } from '~/types/form-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const {
@@ -21,12 +22,9 @@ const table = reactive<any>({
   uniques: [],
   indexes: [],
 });
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Create New Table",
-  gradient: "purple",
-});
+const initialTableSnapshot = JSON.stringify(table);
+const hasFormChanges = computed(() => JSON.stringify(table) !== initialTableSnapshot);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const constraintFieldNames = computed<string[]>(() => {
   const fkSet = new Set<string>(
@@ -127,7 +125,9 @@ function validateAll() {
   ];
   const dupNames = allFieldNames.filter((n: string, i: number) => allFieldNames.indexOf(n) !== i);
   if (dupNames.length > 0) {
-    errors.value["fields"] = `Duplicate field name(s): ${Array.from(new Set(dupNames)).join(", ")}`;
+    const duplicateMessage = `Duplicate field name(s): ${Array.from(new Set(dupNames)).join(", ")}`;
+    errors.value["fields"] = duplicateMessage;
+    notify.error("Validation Error", duplicateMessage);
   }
 
   for (const col of table.columns) {
@@ -153,7 +153,7 @@ const {
   pending: createLoading,
   execute: createTable,
   error: createError,
-} = useApi("/enfyra_table", {
+} = useApi<FormApiListResponse<FormCollectionRecord>>("/enfyra_table", {
   method: "post",
   errorContext: "Create Table",
 });
@@ -183,7 +183,12 @@ registerHeaderActions([
 async function save() {
   if (!validateAll()) return;
 
-  const ok = await confirm({ content: "Are u sure?" });
+  const ok = await confirm({
+    title: "Create Table",
+    content: `Are you sure you want to create table "${table.name.trim()}"?`,
+    confirmText: "Create",
+    cancelText: "Cancel",
+  });
   if (!ok) {
     return;
   }
@@ -194,6 +199,7 @@ async function save() {
   if (createError.value) return;
 
   notify.success("Success", "New table created!");
+  allowNextNavigation();
 
   const newTableName = createData.value?.data?.[0]?.name;
   if (newTableName) {
@@ -211,12 +217,15 @@ onMounted(() => {
 <template>
   <div class="relative">
     <div class="eapp-page-constrained">
+      <CommonPanel :sections="[{ value: 'table' }]">
+        <template #table-header><CommonFormHeader title="Create New Table" /></template>
+        <template #table>
       <CommonFormCard>
         <TableForm v-model="table" :new="true">
           <template #tableName>
             <div class="mb-6">
               <UFormField
-                :error="nameError && nameError !== '' ? nameError : undefined"
+                v-bind="nameError ? { error: nameError } : {}"
                 label="Table Name"
               >
                 <UInput
@@ -229,6 +238,13 @@ onMounted(() => {
             </div>
           </template>
           <div class="space-y-6">
+            <UAlert
+              v-if="errors.fields"
+              color="error"
+              variant="soft"
+              icon="lucide:triangle-alert"
+              :description="errors.fields"
+            />
             <TableConstraints
               v-model="table"
               :column-names="constraintFieldNames"
@@ -250,6 +266,8 @@ onMounted(() => {
           </div>
         </TableForm>
       </CommonFormCard>
+        </template>
+      </CommonPanel>
     </div>
   </div>
 </template>

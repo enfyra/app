@@ -4,12 +4,12 @@
   >
     <UContextMenu :items="getContextMenuItems()" :disabled="isFolderDisabled">
       <div
-        class="eapp-bordered-region relative cursor-pointer overflow-hidden hover:bg-[var(--menu-item-hover-bg)]"
+        class="eapp-bordered-region relative overflow-hidden transition-[border-color,background-color] duration-[var(--duration-base)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--state-primary-outline-border)]"
         :class="{
-          '!border-[var(--state-primary-soft-border)]': props.selectedItems.includes(props.folder.id),
+          'cursor-pointer hover:border-[var(--border-strong)] hover:bg-[var(--menu-item-hover-bg)]': !isFolderDisabled,
+          '!border-[var(--state-primary-outline-border)] !shadow-[0_0_0_1px_var(--state-primary-outline-border)]': props.selectedItems.includes(props.folder.id),
         }"
         :style="{
-          borderWidth: props.selectedItems.includes(props.folder.id) ? '2px' : '1px',
           opacity: isFolderDisabled ? '0.6' : '1',
           cursor: isFolderDisabled ? 'not-allowed' : 'pointer'
         }"
@@ -127,6 +127,14 @@ const originalName = ref("");
 const editingLoading = ref(false);
 
 const { checkPermissionCondition } = usePermissions();
+const notify = useNotify();
+const { execute: updateFolder, error: updateFolderError } = useApi(
+  () => `enfyra_folder/${props.folder.id}`,
+  {
+    method: "patch",
+    errorContext: "Update Folder",
+  }
+);
 
 const canDeleteFolder = checkPermissionCondition({
   and: [
@@ -174,28 +182,20 @@ function cancelEdit() {
 
 async function saveEdit() {
   if (!editingName.value.trim()) {
-    console.error("Folder name cannot be empty");
+    notify.error("Validation Error", "Folder name cannot be empty");
     return;
   }
 
   editingLoading.value = true;
 
   try {
-    const { execute: updateFolder, error } = useApi(
-      () => `enfyra_folder/${props.folder.id}`,
-      {
-        method: "patch",
-        errorContext: "Update Folder",
-      }
-    );
-
     await updateFolder({
       body: {
         name: editingName.value.trim(),
       },
     });
 
-    if (error.value) {
+    if (updateFolderError.value) {
       editingLoading.value = false;
       return;
     }
@@ -205,7 +205,6 @@ async function saveEdit() {
     originalName.value = "";
     editingLoading.value = false;
 
-    const notify = useNotify();
     notify.success("Success", "Folder renamed successfully!");
 
     emit("refresh-folders");

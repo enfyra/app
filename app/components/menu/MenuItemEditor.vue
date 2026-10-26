@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MenuDefinition } from '~/types';
+import type { ShellMenuResponse } from '~/types/shell-api';
 import { EXTENSION_MENU_METADATA_FIELDS, prefixFields } from '~/utils/extension-fields';
 
 const props = defineProps<{
@@ -52,7 +53,7 @@ const {
   data: menuData,
   pending: loading,
   execute: fetchMenu,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellMenuResponse>(() => `/${tableName}`, {
   query: async () => {
     const includeFields = await getIncludeFields();
     if (props.menu) {
@@ -70,7 +71,6 @@ const {
   },
   errorContext: "Fetch Menu",
   immediate: false,
-  lazy: true,
 });
 
 const {
@@ -192,6 +192,7 @@ watch(
 watch(
   () => form.value.label,
   async (newLabel) => {
+    if (props.menu && getId(props.menu)) return;
     if (baseParentPath.value && form.value.parent) {
       if (newLabel) {
         const slug = newLabel.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
@@ -327,7 +328,7 @@ async function handleSave() {
 
   if (props.menu && getId(props.menu)) {
     await updateMenu({
-      id: Number(getId(props.menu)),
+      id: getId(props.menu),
       body: buildMenuPayload(),
     });
 

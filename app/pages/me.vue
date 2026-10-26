@@ -1,19 +1,12 @@
 <script setup lang="ts">
 import { buildProfileUpdatePayload } from "~/utils/profile-update";
+import type { ShellListResponse, ShellOAuthAccountRecord, ShellProfileResponse } from '~/types/shell-api';
 
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { validateForm } = useFormValidation("enfyra_user");
-
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "Account",
-  description: "Manage your profile, password, linked accounts, and API tokens",
-  variant: "default",
-});
 
 const hasFormChanges = ref(false);
 const savingProfile = ref(false);
@@ -26,7 +19,7 @@ const {
   data: apiData,
   pending: loading,
   executeWithResult: fetchMe,
-} = useApi(() => `/me`, {
+} = useApi<ShellProfileResponse>(() => `/me`, {
   query: {
     fields: profileFields,
   },
@@ -41,7 +34,7 @@ const {
   data: oauthData,
   pending: oauthLoading,
   execute: fetchOauthAccounts,
-} = useApi(() => "/me/oauth-accounts", {
+} = useApi<ShellListResponse<ShellOAuthAccountRecord>>(() => "/me/oauth-accounts", {
   errorContext: "Fetch OAuth Accounts",
 });
 
@@ -81,7 +74,7 @@ const fieldMap = computed(() => ({
 async function initializeForm() {
   const result = await fetchMe();
   if (!result.ok) return;
-  const data = (result.data as any)?.data?.[0];
+  const data = result.data.data[0];
   if (data) {
     form.value = { ...data };
     formChanges.update(data);
@@ -92,22 +85,44 @@ async function initializeForm() {
 const {
   executeWithResult: updateProfile,
   pending: updateLoading,
-} = useApi(() => `/me`, {
+} = useApi<ShellProfileResponse>(() => `/me`, {
   method: "patch",
   errorContext: "Update Profile",
 });
 
 const route = useRoute();
 const router = useRouter();
-const profileSections = [
-  { label: 'Profile', value: 'profile', icon: 'lucide:user' },
-  { label: 'Password', value: 'password', icon: 'lucide:key-round' },
-  { label: 'API Tokens', value: 'api-tokens', icon: 'lucide:key' },
-];
+const reloadProfileAction = useReloadAction({
+  reload: async () => { await initializeForm(); formEditorRef.value?.confirmChanges(); hasFormChanges.value = false; },
+  loading: computed(() => loading.value),
+  hasUnsavedChanges: () => hasFormChanges.value,
+});
+const profileSections = computed(() => [
+  {
+    label: 'Profile',
+    value: 'profile',
+    icon: 'lucide:user',
+    title: 'Profile',
+    description: 'Manage your personal profile and linked accounts',
+    actions: [reloadProfileAction],
+  },
+  {
+    label: 'Password',
+    value: 'password',
+    icon: 'lucide:key-round',
+    title: 'Password',
+    description: 'Update your account password',
+  },
+  {
+    label: 'API Tokens',
+    value: 'api-tokens',
+    icon: 'lucide:key',
+  },
+]);
 const activeTab = computed({
-  get: () => profileSections.some(section => section.value === route.query.tab) ? String(route.query.tab) : 'profile',
+  get: () => profileSections.value.some(section => section.value === route.query.tab) ? String(route.query.tab) : 'profile',
   set: (value: string | number) => {
-    void router.push({ query: { ...route.query, tab: profileSections.some(section => section.value === value) ? value : 'profile' } });
+    void router.push({ query: { ...route.query, tab: profileSections.value.some(section => section.value === value) ? value : 'profile' } });
   },
 });
 
@@ -122,11 +137,15 @@ async function handleReset() {
 
   if (formChanges.originalData.value) {
     form.value = formChanges.discardChanges(form.value);
+    errors.value = {};
     hasFormChanges.value = false;
+    formEditorRef.value?.confirmChanges();
 
     notify.success("Reset Complete", "All changes have been discarded.");
   }
 }
+
+useUnsavedChangesGuard(() => hasFormChanges.value);
 
 registerHeaderActions([
   {
@@ -179,7 +198,7 @@ async function saveProfile() {
 
     const refreshResult = await fetchMe();
     const updatedData = refreshResult.ok
-      ? (refreshResult.data as any)?.data?.[0]
+      ? refreshResult.data.data[0]
       : null;
     if (updatedData) {
       form.value = { ...updatedData };

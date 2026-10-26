@@ -92,7 +92,7 @@
           >
             {{ badge.label }}
           </span>
-          <div v-if="showReorder" class="flow-reorder-actions flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+          <div v-if="showReorder" class="flow-reorder-actions flex gap-0.5 ml-auto opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:focus-within:opacity-100 transition-opacity">
             <button
               :disabled="disabled || data.isFirst"
               :aria-label="`Move ${data.label} left`"
@@ -155,17 +155,8 @@ const execIcon = computed(() => {
 });
 
 const description = computed(() => {
-  const config = props.data.config || {};
   const t = props.data.stepType;
   if (t === 'trigger') return props.data.triggerInfo || '';
-  if (t === 'add') return '';
-  if (t === 'script' || t === 'condition') return '';
-  if (t === 'query') return `Query ${config.table || ''}`;
-  if (t === 'delete') return `Delete from ${config.table || ''}`;
-  if (t === 'http') return `${config.method || 'GET'} ${(config.url || '').substring(0, 40)}`;
-  if (t === 'trigger_flow') return `Trigger: ${config.flowName || config.flowId || ''}`;
-  if (t === 'sleep') return `Wait ${config.ms || 1000}ms`;
-  if (t === 'log') return (config.message || '').substring(0, 60);
   return '';
 });
 
@@ -379,32 +370,6 @@ const badges = computed(() => {
 .flow-icon-condition {
   color: var(--st-warning);
   background: color-mix(in srgb, var(--st-warning) 10%, var(--surface-default));
-}
-
-.flow-icon-query {
-  color: var(--st-info);
-  background: color-mix(in srgb, var(--st-info) 10%, var(--surface-default));
-}
-
-.flow-icon-delete {
-  color: var(--md-error);
-  background: color-mix(in srgb, var(--md-error) 10%, var(--surface-default));
-}
-
-.flow-icon-http {
-  color: var(--md-secondary);
-  background: color-mix(in srgb, var(--md-secondary) 10%, var(--surface-default));
-}
-
-.flow-icon-trigger_flow {
-  color: var(--st-info);
-  background: color-mix(in srgb, var(--st-info) 10%, var(--surface-default));
-}
-
-.flow-icon-sleep,
-.flow-icon-log {
-  color: var(--text-tertiary);
-  background: color-mix(in srgb, var(--text-primary) 5%, var(--surface-default));
 }
 
 .flow-meta-badge {

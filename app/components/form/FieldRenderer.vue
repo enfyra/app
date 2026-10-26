@@ -12,7 +12,7 @@ import {
 } from "#components";
 
 import FieldLoadingSkeleton from "./FieldLoadingSkeleton.vue";
-import { FORM_EDITOR_VIRTUAL_EMIT_KEY } from "~/utils/form/form-editor-context";
+import { FORM_EDITOR_VIRTUAL_EMIT_KEY, FORM_EDITOR_DRAFT_ERROR_KEY } from "~/utils/form/form-editor-context";
 import type { FormEditorVirtualEmitPayload } from "~/types/form-editor";
 
 const props = defineProps<{
@@ -33,6 +33,16 @@ const emit = defineEmits<{
 }>();
 
 const formEditorVirtualEmit = inject(FORM_EDITOR_VIRTUAL_EMIT_KEY, null);
+const setDraftError = inject(FORM_EDITOR_DRAFT_ERROR_KEY, null);
+const jsonDraftText = ref<string | null>(null);
+onBeforeUnmount(() => setDraftError?.(props.keyName, null));
+watch(
+  () => [props.formData, props.formData[props.keyName]],
+  () => {
+    jsonDraftText.value = null;
+    setDraftError?.(props.keyName, null);
+  },
+);
 const { isMongoDB } = useDatabase();
 
 function attachVirtualEmit(
@@ -432,10 +442,12 @@ function getComponentConfigByKey(key: string) {
               const updated = { ...props.errors };
               if (!parsed.ok) {
                 updated[key] = "Invalid JSON";
+                setDraftError?.(key, 'Invalid JSON');
                 updateErrors(updated);
                 return;
               }
               delete updated[key];
+              setDraftError?.(key, null);
               updateErrors(updated);
               updateFormData(key, parsed.value);
             },
@@ -451,19 +463,23 @@ function getComponentConfigByKey(key: string) {
         component: resolveComponent("FormCodeEditorLazy"),
         componentProps: {
           ...componentPropsBase,
-          modelValue: toJsonEditorString(props.formData[key]),
+          modelValue: jsonDraftText.value ?? toJsonEditorString(props.formData[key]),
           language: "json",
           height: config.height || "300px",
           "onUpdate:modelValue": (val: string) => {
             const parsed = tryParseJsonLike(val);
             const updated = { ...props.errors };
             if (!parsed.ok) {
+              jsonDraftText.value = val;
               updated[key] = "Invalid JSON";
+              setDraftError?.(key, 'Invalid JSON');
               updateErrors(updated);
               
               return;
             }
+            jsonDraftText.value = null;
             delete updated[key];
+            setDraftError?.(key, null);
             updateErrors(updated);
             updateFormData(key, parsed.value);
           },
@@ -720,7 +736,8 @@ function getComponentConfigByKey(key: string) {
         component: UInput,
         componentProps: {
           ...componentPropsBase,
-          type: "number",
+          type: finalType === 'long' ? 'text' : 'number',
+          ...(finalType === 'long' && { inputmode: 'numeric' }),
           modelValue: ensureString(props.formData[key]),
           "onUpdate:modelValue": (val: string) => {
             updateFormData(key, val);
@@ -770,7 +787,7 @@ function getComponentType(): string {
     <div v-else class="field-input w-full min-w-0">
       <UFormField
         class="block w-full min-w-0"
-        :error="['simple-json', 'json'].includes(getComponentType()) ? undefined : errorMessage"
+        v-bind="['simple-json', 'json'].includes(getComponentType()) || errorMessage === undefined ? {} : { error: errorMessage }"
       >
         <div
           class="w-full min-w-0"

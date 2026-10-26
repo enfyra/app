@@ -1,20 +1,23 @@
 <script setup lang="ts">
-const { register: registerSubHeaderActions } = useSubHeaderActionRegistry();
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import { createSelectionColumn } from '~/utils/data-table-selection';
 import { resolveTableCellDisplay } from '~/utils/data-table-cell-formatter';
 import { DataTableBulkActions, UBadge } from '#components';
-import type { RowSelectionState, VisibilityState } from '@tanstack/vue-table';
+import type { SortingState, VisibilityState } from '@tanstack/vue-table';
+import type { FormApiListResponse } from '~/types/form-api';
 
 const route = useRoute();
 const router = useRouter();
-const { isDesktop } = useScreen();
 const tableName = computed(() => route.params.table as string);
 const { schemas, schemaReady, getColumnFields } = useSchema(tableName);
 const total = ref(1);
 const page = ref(1);
+const sorting = ref<SortingState>([{ id: 'createdAt', desc: true }]);
+watch(sorting, () => {
+  page.value = 1;
+  if (route.query.page) void router.replace({ query: { ...route.query, page: undefined } });
+});
 const pageLimit = useSettingsPageSize(`data:${tableName.value}`);
-const data = ref([]);
+const data = ref<Record<string, unknown>[]>([]);
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const { checkPermissionCondition } = usePermissions();
 const { getId } = useDatabase();
@@ -24,7 +27,6 @@ const showFilterDrawer = ref(false);
 const currentFilter = ref(createEmptyFilter());
 
 const { getRouteForTableName, ensureRoutesLoaded } = useRoutes();
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const schema = computed(() => schemas.value[tableName.value]);
 const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
@@ -32,7 +34,7 @@ const isSingleRecord = computed(() => schema.value?.isSingleRecord === true);
 const {
   data: singleRecordData,
   execute: fetchSingleRecord,
-} = useApi(() => getRouteForTableName(tableName.value), {
+} = useApi<FormApiListResponse<Record<string, unknown>>>(() => getRouteForTableName(tableName.value), {
   query: computed(() => ({ limit: 1, fields: getColumnFields() })),
   immediate: false,
   errorContext: "Fetch Single Record",
@@ -62,15 +64,6 @@ onMounted(async () => {
   await ensureRoutesLoaded();
 });
 
-watch(() => schemas.value[tableName.value]?.name || tableName.value, (name) => {
-  if (name) {
-    registerPageHeader({
-      title: name,
-      gradient: "cyan",
-    });
-  }
-}, { immediate: true });
-
 const activeFilterCount = computed(() => countActiveFilters(currentFilter.value));
 
 const filterLabel = computed(() => {
@@ -90,7 +83,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchData,
-} = useApi(() => getRouteForTableName(tableName.value), {
+} = useApi<FormApiListResponse<Record<string, unknown>>>(() => getRouteForTableName(tableName.value), {
   query: computed(() => {
     const filterQuery = hasActiveFilters(currentFilter.value)
       ? buildQuery(currentFilter.value)
@@ -100,12 +93,11 @@ const {
       limit: pageLimit.value,
       page: page.value,
       fields: getColumnFields(),
-      sort: "-createdAt",
+      sort: sorting.value.map(item => `${item.desc ? '-' : ''}${item.id}`).join(',') || '-createdAt',
       meta: "*",
       ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
     };
   }),
-  immediate: computed(() => !isSingleRecord.value),
   errorContext: "Fetch Data",
 });
 
@@ -158,54 +150,12 @@ const {
   handleDelete,
   handleBulkDelete,
   handleSelectionChange,
-} = useDataTableActions(tableName, fetchData, data);
+} = useDataTableActions(tableName, async () => { await fetchData(); }, data);
 
-const rowSelection = ref<RowSelectionState>({});
 const canDeleteSelection = computed(() => checkPermissionCondition({
   and: [{ route: getRouteForTableName(tableName.value), methods: ['DELETE'] }],
 }));
-function clearSelection() {
-  rowSelection.value = {};
-  handleSelectionChange([]);
-}
-watch(rowSelection, (selection) => {
-  const selected = new Set(Object.keys(selection).filter((id) => selection[id]));
-  handleSelectionChange(data.value.filter((row) => selected.has(String(getId(row)))));
-});
-watch(data, (rows) => {
-  const visible = new Set(rows.map((row) => String(getId(row))));
-  const retained = Object.keys(rowSelection.value).filter((id) => rowSelection.value[id] && visible.has(id));
-  if (retained.length !== Object.keys(rowSelection.value).length) rowSelection.value = Object.fromEntries(retained.map((id) => [id, true]));
-  const selected = new Set(retained);
-  handleSelectionChange(rows.filter((row) => selected.has(String(getId(row)))));
-});
 
-
-registerSubHeaderActions([
-  {
-    id: "bulk-delete-selected",
-    component: DataTableBulkActions,
-    props: {
-      get count() { return selectedRows.value.length; },
-      onClear: clearSelection,
-      onDelete: () => handleBulkDelete(selectedRows.value),
-    },
-    side: "right",
-    show: computed(
-      () => isDesktop.value && selectedRows.value.length > 0 && !isSingleRecord.value
-    ),
-    permission: {
-      and: [
-        {
-          get route() {
-            return getRouteForTableName(tableName.value);
-          },
-          methods: ["DELETE"],
-        },
-      ],
-    },
-  },
-]);
 
 const { buildActionsColumn } = useDataTableColumns();
 
@@ -284,7 +234,7 @@ const columns = computed(() => {
 
   const actionsColumn = buildActionsColumn(actionsConfig);
 
-  return [createSelectionColumn<Record<string, any>>(), ...dataColumns, actionsColumn];
+  return [...dataColumns, actionsColumn];
 });
 
 watch(
@@ -298,6 +248,11 @@ watch(
         total.value = newData.meta?.filterCount ?? 0;
       } else {
         total.value = newData.meta?.totalCount || 0;
+      }
+      if (newData.data.length === 0 && total.value > 0 && page.value > 1) {
+        const maxPage = Math.max(1, Math.ceil(total.value / pageLimit.value));
+        page.value = maxPage;
+        void router.replace({ query: { ...route.query, page: maxPage > 1 ? maxPage : undefined } });
       }
     }
   },
@@ -322,16 +277,17 @@ async function clearFilters() {
 }
 
 watch(tableName, () => {
+  sorting.value = [{ id: 'createdAt', desc: true }];
   total.value = 1;
   currentFilter.value = createEmptyFilter();
-  rowSelection.value = {};
+  handleSelectionChange([]);
 });
 
 watch(() => route.query.page, value => {
   page.value = Math.max(1, Number(value) || 1);
 }, { immediate: true });
 
-watch([page, pageLimit, tableName, isSingleRecord, schemaReady], () => {
+watch([page, pageLimit, tableName, isSingleRecord, schemaReady, sorting], () => {
   if (schemaReady.value && !isSingleRecord.value) void fetchData();
 }, { immediate: true });
 
@@ -411,30 +367,30 @@ registerHeaderActions([
 
     <div class="min-w-0">
       <DataTableLazy
+        :key="tableName"
         v-model:page="page"
+        v-model:sorting="sorting"
+        :sorting-options="{ manualSorting: true }"
         :data="data"
         :columns="columns"
         :loading="tableLoading"
-        :get-row-id="(row: Record<string, any>) => String(getId(row))"
-        v-model:row-selection="rowSelection"
+        enable-row-selection
         v-model:column-visibility="columnVisibility"
         :pagination-config="{ itemsPerPage: pageLimit, total, loading, showPageSize: true, to: (p) => ({ path: route.path, query: { ...route.query, page: p } }) }"
+        :reload="fetchData"
+        :reload-loading="loading"
+        :header-name="tableName"
         @page-size-change="setPageSize"
+        @update:selected-rows="handleSelectionChange"
         @row-click="(row: Record<string, any>) => navigateTo(`/data/${tableName}/${getId(row)}`)"
       >
-        <template #toolbar>
-          <span v-if="isDesktop" class="text-sm font-medium text-highlighted">{{ tableName }}</span>
-          <UBadge color="neutral" variant="subtle" :label="!isDesktop && selectedRows.length ? `${selectedRows.length} selected` : `${total.toLocaleString()} records`" aria-live="polite" />
-        </template>
-        <template v-if="!isDesktop && selectedRows.length && canDeleteSelection" #toolbar-actions>
+        <template v-if="selectedRows.length && canDeleteSelection" #toolbar-actions>
           <DataTableBulkActions
-            compact
             :count="selectedRows.length"
-            :on-clear="clearSelection"
             :on-delete="() => handleBulkDelete(selectedRows)"
           />
         </template>
-        <template v-if="selectedRows.length && isDesktop" #pagination-summary>
+        <template v-if="selectedRows.length" #pagination-summary>
           <span>{{ selectedRows.length }} selected</span>
         </template>
       </DataTableLazy>

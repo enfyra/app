@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="eapp-page-constrained">
       <CommonPanel :sections="[{ value: 'flow' }]">
-        <template #flow-header><h2 class="text-sm font-medium">Flow</h2></template>
+        <template #flow-header><CommonFormHeader :title="'Create New Flow'" /></template>
         <template #flow>
 <CommonFormCard>
         <UForm :state="createForm" @submit="handleCreate">
@@ -13,6 +13,7 @@
             :excluded="['steps', 'triggers']"
             :field-map="createFieldMap"
             @update:errors="(errors) => (createErrors = errors)"
+            @has-changed="(hasChanged) => (hasFormChanges = hasChanged)"
             mode="create"
           />
         </UForm>
@@ -24,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureIdentity } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 definePageMeta({
   layout: "default",
@@ -37,17 +39,13 @@ const tableName = "enfyra_flow";
 
 const createForm = ref<Record<string, any>>({});
 const createErrors = ref<Record<string, string>>({});
+const hasFormChanges = ref(false);
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const { ensureSchema, generateEmptyForm } = useSchema(tableName);
 const { validateForm } = useFormValidation(tableName);
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const createFieldMap = computed(() => ({}));
-
-registerPageHeader({
-  title: "Create New Flow",
-  gradient: "purple",
-});
 
 registerHeaderActions([
   {
@@ -70,7 +68,7 @@ const {
   error: createError,
   execute: executeCreateFlow,
   pending: createLoading,
-} = useApi(() => `/enfyra_flow`, {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => `/enfyra_flow`, {
   method: "post",
   errorContext: "Create Flow",
 });
@@ -92,6 +90,8 @@ async function handleCreate() {
   }
 
   notify.success("Success", `Flow "${createForm.value.name}" has been created successfully!`);
+  hasFormChanges.value = false;
+  allowNextNavigation();
 
   const createdId = createData.value?.data?.[0]?.id;
   router.push(createdId ? `/settings/flows/${createdId}` : '/settings/flows');

@@ -1,3 +1,8 @@
+import type { CompletionSource } from '@codemirror/autocomplete';
+import type { Diagnostic } from '@codemirror/lint';
+import type { Extension, Text } from '@codemirror/state';
+import type { Decoration, DecorationSet, EditorView, ViewUpdate } from '@codemirror/view';
+import type { CodeMirrorModuleSource } from '~/types/code-editor-runtime';
 import { ENFYRA_COMPLETIONS, ENFYRA_METHOD_COMPLETIONS, VUE_COMPLETIONS, VUE_COMPONENT_COMPLETIONS, VUE_SFC_TAG_COMPLETIONS, VUE_TEMPLATE_COMPLETIONS } from '~/utils/editor-completions.constants';
 
 type EnfyraTypeScriptLinterModule = typeof import('~/utils/editor/enfyraTypeScriptLinter');
@@ -9,7 +14,7 @@ function loadEnfyraTypeScriptLinter() {
   return enfyraTypeScriptLinterPromise;
 }
 
-export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
+export function useCodeMirrorExtensions(codeMirrorModules?: CodeMirrorModuleSource) {
 
   const modules = computed(() => {
     if (!codeMirrorModules) return null
@@ -17,7 +22,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
   })
 
   const getModules = () => modules.value
-  function isInComment(doc: any, absolutePos: number): boolean {
+  function isInComment(doc: Text, absolutePos: number): boolean {
     const fullText = doc.toString()
     const beforePos = fullText.substring(0, absolutePos)
     
@@ -40,10 +45,10 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     return false
   }
 
-  function buildEnfyraDecorations(view: any): any {
+  function buildEnfyraDecorations(view: EditorView): DecorationSet | null {
     const m = getModules()
     if (!m) return null
-    const builder = new m.RangeSetBuilder()
+    const builder = new m.RangeSetBuilder<Decoration>()
     const doc = view.state.doc
 
     const templateDecoration = m.Decoration.mark({
@@ -86,7 +91,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       }
     })
 
-    const allDecorations: Array<{ from: number; to: number; decoration: any }> = []
+    const allDecorations: Array<{ from: number; to: number; decoration: Decoration }> = []
 
     for (let i = 1; i <= doc.lines; i++) {
       const line = doc.line(i)
@@ -174,27 +179,28 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
   const enfyraSyntaxPlugin = computed(() => {
     const m = getModules()
     if (!m?.ViewPlugin) return null
+    const emptyDecorations = m.Decoration.none
     return m.ViewPlugin.fromClass(class {
-      decorations: any
+      decorations: DecorationSet
 
-      constructor(view: any) {
-        this.decorations = buildEnfyraDecorations(view) || m.Decoration.none
+      constructor(view: EditorView) {
+        this.decorations = buildEnfyraDecorations(view) || emptyDecorations
       }
 
-      update(update: any) {
+      update(update: ViewUpdate) {
         if (update.docChanged || update.viewportChanged) {
-          this.decorations = buildEnfyraDecorations(update.view) || m.Decoration.none
+          this.decorations = buildEnfyraDecorations(update.view) || emptyDecorations
         }
       }
     }, {
-      decorations: (plugin: any) => plugin.decorations
+      decorations: (plugin) => plugin.decorations
     })
   })
 
   const vueIndentService = computed(() => {
     const m = getModules()
     if (!m) return null
-    return m.indentService.of((context: any, pos: number) => {
+    return m.indentService.of((context, pos) => {
     const doc = context.state.doc;
     
     let checkPos = pos - 1;
@@ -262,11 +268,11 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     }
   }
 
-  const createLinter = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void) => {
+  const createLinter = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: Diagnostic[]) => void) => {
     const m = getModules()
-    if (!m) return () => []
-    return m.linter(async (view: any) => {
-      let diagnostics: any[] = [];
+    if (!m) return []
+    return m.linter(async (view) => {
+      let diagnostics: Diagnostic[] = [];
 
       if (language === 'typescript' || language === 'javascript') {
         const { lintEnfyraScript } = await loadEnfyraTypeScriptLinter();
@@ -287,8 +293,8 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     });
   };
 
-  function enfyraCompletionSource() {
-    return (context: any) => {
+  function enfyraCompletionSource(): CompletionSource {
+    return (context) => {
       const before = context.matchBefore(/[@#%][\w.]*/);
       if (!before) {
         const dotBefore = context.matchBefore(/\.\w*/);
@@ -301,8 +307,8 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     };
   }
 
-  function vueCompletionSource() {
-    return (context: any) => {
+  function vueCompletionSource(): CompletionSource {
+    return (context) => {
       const doc = context.state.doc.toString();
       const before = doc.slice(0, context.pos);
       const inTemplate =
@@ -345,11 +351,11 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
     };
   }
 
-  const getBasicSetup = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: any[]) => void, enfyraAutocomplete?: boolean | 'vue') => {
+  const getBasicSetup = (language?: "javascript" | "vue" | "json" | "html" | "typescript", onDiagnostics?: (diags: Diagnostic[]) => void, enfyraAutocomplete?: boolean | 'vue') => {
     const m = getModules()
     if (!m) return []
     
-    const setup = [
+    const setup: Extension[] = [
       m.lineNumbers(),
       m.highlightActiveLine(),
       m.history(),
@@ -360,13 +366,11 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       m.crosshairCursor(),
       m.bracketMatching(),
       m.closeBrackets(),
-      m.autocompletion({
-        override: enfyraAutocomplete === 'vue'
-          ? [vueCompletionSource()]
-          : enfyraAutocomplete
-            ? [enfyraCompletionSource()]
-            : undefined,
-      }),
+      m.autocompletion(enfyraAutocomplete === 'vue'
+        ? { override: [vueCompletionSource()] }
+        : enfyraAutocomplete
+          ? { override: [enfyraCompletionSource()] }
+          : {}),
       m.highlightSelectionMatches(),
       m.indentUnit.of("  "),
       createLinter(language, onDiagnostics),
@@ -374,7 +378,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
       m.keymap.of([
         {
           key: "Enter",
-          run: (view: any) => {
+          run: (view) => {
             const state = view.state;
             const pos = state.selection.main.head;
             const before = state.doc.sliceString(pos - 1, pos);
@@ -425,7 +429,7 @@ export function useCodeMirrorExtensions(codeMirrorModules?: Ref<any> | any) {
         },
         {
           key: "Backspace",
-          run: (view: any) => {
+          run: (view) => {
             const state = view.state;
             const pos = state.selection.main.head;
             const line = state.doc.lineAt(pos);

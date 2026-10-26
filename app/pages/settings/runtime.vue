@@ -10,7 +10,6 @@ import RuntimeWorkersTab from '~/components/runtime/RuntimeWorkersTab.vue';
 import RuntimeConnectionsTab from '~/components/runtime/RuntimeConnectionsTab.vue';
 import RuntimeGuardsTab from '~/components/runtime/RuntimeGuardsTab.vue';
 
-const { registerPageHeader } = usePageHeaderRegistry();
 const { me } = useAuth();
 const runtime = useRuntimeMetrics();
 
@@ -31,7 +30,9 @@ const runtimeSections = computed(() =>
     return {
       ...item,
       label: tabLabel(item.label),
-      badge: count > 0 ? String(count) : undefined,
+      title: 'Runtime Monitor',
+      description: 'Live server runtime metrics',
+      ...(count > 0 ? { badge: String(count) } : {}),
     };
   }),
 );
@@ -47,23 +48,24 @@ const tabComponents: Record<string, Component> = {
   connections: RuntimeConnectionsTab,
   guards: RuntimeGuardsTab,
 };
-
-registerPageHeader({
-  title: 'Runtime Monitor',
-  description: 'Live server runtime metrics',
-  variant: 'default',
-  gradient: 'purple',
-});
 </script>
 
 <template>
   <div v-if="hasPermission" class="w-full min-w-0 eapp-page-constrained space-y-6 overflow-hidden pb-10">
     <RuntimeSummaryCards :runtime="runtime" />
 
+    <UAlert
+      v-if="runtime.metricsError"
+      color="warning"
+      variant="soft"
+      title="Runtime metrics unavailable"
+      :description="runtime.metricsError"
+    />
+
     <CommonEmptyState
       v-if="runtime.instances.length === 0"
       title="No runtime metrics"
-      description="The admin websocket has not received a runtime sample yet."
+      description="Waiting for a runtime snapshot from the admin websocket."
       icon="lucide:activity"
       size="md"
     />

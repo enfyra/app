@@ -19,12 +19,15 @@ describe('Flow table picker', () => {
       expect(input.classes().some(value => /^!p[xs]-/.test(value))).toBe(false)
       expect(wrapper.find('[data-slot="leading"]').exists()).toBe(true)
       const menu = wrapper.findComponent({ name: 'UInputMenu' })
+      expect(menu.props('modelValue')).toBeUndefined()
       menu.vm.$emit('update:open', true)
       await flushPromises()
       expect(menu.props('items')).toEqual([{ label: 'orders', value: '7' }])
       menu.vm.$emit('update:modelValue', { label: 'orders', value: '7' })
       await flushPromises()
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['7'])
+      await wrapper.setProps({ modelValue: '7' })
+      expect(menu.props('modelValue')).toEqual({ label: 'orders', value: '7' })
     } finally {
       wrapper.unmount()
     }

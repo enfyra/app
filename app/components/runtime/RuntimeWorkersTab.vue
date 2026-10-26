@@ -4,11 +4,7 @@ import {
   metricTextClass,
 } from '~/utils/runtime-monitor/core';
 import {
-  executorQueueSeverity,
-  queueWaitSeverity,
-  rotationSeverity,
   taskErrorSeverity,
-  taskLatencySeverity,
   workerSeverity,
 } from '~/utils/runtime-monitor/severity';
 import { workerWarnings } from '~/utils/runtime-monitor/warnings';
@@ -55,7 +51,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
           <div>Workers</div>
           <div class="text-right font-medium">{{ metrics.executor.pool.workers.length }} / {{ metrics.executor.pool.max }}</div>
           <div>Active now / waiting</div>
-          <div class="text-right font-medium" :class="metricTextClass(executorQueueSeverity(metrics))">
+          <div class="text-right font-medium">
             {{ metrics.executor.pool.activeTasks }} / {{ metrics.executor.pool.waitingTasks }}
           </div>
           <div>Active avg / waiting avg</div>
@@ -65,11 +61,11 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
             {{ fmtNumber(metrics.averages?.executorWaitingTasks ?? metrics.executor.pool.waitingTasks, 1) }}
           </div>
           <div>Queue wait p95 / p99</div>
-          <div class="text-right font-medium" :class="metricTextClass(queueWaitSeverity(metrics))">
+          <div class="text-right font-medium">
             {{ fmtMs(metrics.executor.p95QueueWaitMs) }} / {{ fmtMs(metrics.executor.p99QueueWaitMs) }}
           </div>
           <div>Execution p95 / p99</div>
-          <div class="text-right font-medium" :class="metricTextClass(taskLatencySeverity(metrics))">
+          <div class="text-right font-medium">
             {{ fmtMs(metrics.executor.p95TaskMs) }} / {{ fmtMs(metrics.executor.p99TaskMs) }}
           </div>
           <div>Errors / timeouts</div>
@@ -77,7 +73,7 @@ defineProps<{ runtime: RuntimeMetricsViewModel }>();
             {{ metrics.executor.taskErrorTotal }} / {{ metrics.executor.taskTimeoutTotal }}
           </div>
           <div>Rotations</div>
-          <div class="text-right font-medium" :class="metricTextClass(rotationSeverity(metrics))">
+          <div class="text-right font-medium">
             {{ metrics.executor.rotationsTotal }}
           </div>
         </div>

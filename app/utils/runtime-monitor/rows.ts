@@ -79,7 +79,9 @@ export function getRuntimeDatabaseRows(
     }
   }
 
-  return [...map.values()].sort((a, b) => b.p95Ms - a.p95Ms).slice(0, 20);
+  return [...map.values()].sort((a, b) =>
+    (b.errors + b.poolAcquireTimeouts) - (a.errors + a.poolAcquireTimeouts) || b.count - a.count,
+  ).slice(0, 20);
 }
 
 export function getRuntimeFlowRows(

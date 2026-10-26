@@ -79,14 +79,15 @@ function formatTime(d: string | null) {
           <p class="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Steps</p>
           <div v-for="s in execStepTimeline" :key="s.key" class="p-2 rounded-lg border" :class="getStepTimelineClass(s)">
             <div
-              class="flex items-center gap-2 cursor-pointer"
-              tabindex="0"
-              role="button"
-              :aria-label="`${expandedSteps[s.key] ? 'Collapse' : 'Expand'} ${s.key} result`"
+              class="flex items-center gap-2"
+              :class="{ 'cursor-pointer': Boolean(parsedContext[s.key]) }"
+              :tabindex="parsedContext[s.key] ? 0 : undefined"
+              :role="parsedContext[s.key] ? 'button' : undefined"
+              :aria-label="parsedContext[s.key] ? `${expandedSteps[s.key] ? 'Collapse' : 'Expand'} ${s.key} result` : undefined"
               :aria-expanded="parsedContext[s.key] ? Boolean(expandedSteps[s.key]) : undefined"
-              @click="emit('toggleStepResult', s.key)"
-              @keydown.enter.prevent="emit('toggleStepResult', s.key)"
-              @keydown.space.prevent="emit('toggleStepResult', s.key)"
+              @click="parsedContext[s.key] && emit('toggleStepResult', s.key)"
+              @keydown.enter.prevent="parsedContext[s.key] && emit('toggleStepResult', s.key)"
+              @keydown.space.prevent="parsedContext[s.key] && emit('toggleStepResult', s.key)"
             >
               <UIcon :name="getStepTimelineIcon(s)" class="w-3.5 h-3.5 flex-shrink-0" :class="getStepTimelineIconColor(s)" />
               <span class="text-xs font-medium flex-1" :class="s.status === 'skipped' ? 'text-[var(--text-quaternary)]' : ''">{{ s.key }}</span>

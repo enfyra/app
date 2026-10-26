@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureGuard, FeatureIdentity, FeatureRouteOption, FeatureTableOption } from '~/types/feature-api';
 const { register: registerHeaderActions } = useHeaderActionRegistry();
 import {
   buildGuardBodyFromTemplate,
@@ -16,10 +17,10 @@ const page = ref(1);
 const pageLimit = useSettingsPageSize('guards');
 const route = useRoute();
 const router = useRouter();
+const { searchQuery, searchValue, searchFilter, submitSearch } = useSettingsQuickSearch('name', () => fetchGuards());
 const tableName = 'enfyra_guard';
 const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
-const { registerPageHeader } = usePageHeaderRegistry();
 const { getId, getIdFieldName } = useDatabase();
 const idField = getIdFieldName();
 const GUARD_LIST_FIELDS = [
@@ -43,11 +44,6 @@ const GUARD_ROUTE_OPTION_FIELDS = [
   'path',
 ].join(',');
 
-registerPageHeader({
-  title: 'Guard Manager',
-  gradient: 'purple',
-});
-
 const showFilterDrawer = ref(false);
 const activeType = ref<'route' | 'graphql'>('route');
 const switchingType = ref(false);
@@ -70,11 +66,15 @@ const guardSections = computed(() => [
     label: 'Route Guards',
     value: 'route',
     icon: 'lucide:route',
+    title: 'Guard Manager',
+    description: 'Protect REST endpoints with rate limits and IP rules',
   },
   {
     label: 'GraphQL Guards',
     value: 'graphql',
     icon: 'lucide:braces',
+    title: 'Guard Manager',
+    description: 'Protect GraphQL operations with rate limits and IP rules',
   },
 ]);
 
@@ -95,7 +95,7 @@ const {
   data: apiData,
   pending: loading,
   execute: fetchGuards,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureGuard>>(() => '/enfyra_guard', {
   query: computed(() => {
     const conditions: any[] = [
       { parent: { _is_null: true } },
@@ -108,6 +108,7 @@ const {
     if (filterQuery) {
       conditions.push(filterQuery);
     }
+    if (searchFilter.value) conditions.push(searchFilter.value);
 
     return {
       fields: GUARD_LIST_FIELDS,
@@ -243,7 +244,7 @@ async function setPageSize(size: number) {
 }
 
 watch(() => route.query.page, newVal => { page.value = Math.max(1, Number(newVal) || 1); }, { immediate: true });
-watch([page, pageLimit], () => { void fetchGuards(); }, { immediate: true });
+watch([page, pageLimit, searchValue], () => { void fetchGuards(); }, { immediate: true });
 
 async function handleTypeChange(value: string | number) {
   const nextType = value === 'graphql' ? 'graphql' : 'route';
@@ -264,7 +265,7 @@ const {
   data: routesData,
   pending: routesLoading,
   execute: fetchRoutes,
-} = useApi(() => '/enfyra_route', {
+} = useApi<FeatureCollection<FeatureRouteOption>>(() => '/enfyra_route', {
   query: {
     fields: GUARD_ROUTE_OPTION_FIELDS,
     sort: 'path',
@@ -285,7 +286,7 @@ const {
   data: tablesData,
   pending: tablesLoading,
   execute: fetchTables,
-} = useApi(() => '/enfyra_table', {
+} = useApi<FeatureCollection<FeatureTableOption>>(() => '/enfyra_table', {
   query: {
     fields: 'id,name,alias',
     sort: 'name',
@@ -330,7 +331,7 @@ const {
   error: createGuardError,
   execute: createGuardApi,
   pending: createGuardLoading,
-} = useApi(() => '/enfyra_guard', {
+} = useApi<FeatureCollection<FeatureIdentity>>(() => '/enfyra_guard', {
   method: 'post',
   errorContext: 'Create Guard',
 });
@@ -338,6 +339,7 @@ const {
 const {
   error: createRuleError,
   execute: createRuleApi,
+  pending: createRuleLoading,
 } = useApi(() => '/enfyra_guard_rule', {
   method: 'post',
   errorContext: 'Create Guard Rule',
@@ -411,7 +413,7 @@ async function createGuardFromTemplate() {
       scope: createScope.value,
       idField,
       routeId: selectedRouteId.value,
-      routePath: routeItem?.path,
+      ...(routeItem?.path === undefined ? {} : { routePath: routeItem.path }),
       tableId: selectedTableId.value,
       gqlOperation: template.targetType === 'graphql' ? template.gqlOperation ?? null : null,
     }),
@@ -465,12 +467,8 @@ async function toggleEnabled(guard: any) {
   togglingGuardId.value = getId(guard);
 
   if (apiData.value?.data) {
-    const idx = apiData.value.data.findIndex(
-      (g: any) => getId(g) === getId(guard),
-    );
-    if (idx !== -1) {
-      apiData.value.data[idx].isEnabled = newEnabled;
-    }
+    const current = apiData.value.data.find(g => getId(g) === getId(guard));
+    if (current) current.isEnabled = newEnabled;
   }
 
   try {
@@ -478,12 +476,8 @@ async function toggleEnabled(guard: any) {
 
     if (updateError.value) {
       if (apiData.value?.data) {
-        const idx = apiData.value.data.findIndex(
-          (g: any) => getId(g) === getId(guard),
-        );
-        if (idx !== -1) {
-          apiData.value.data[idx].isEnabled = !newEnabled;
-        }
+        const current = apiData.value.data.find(g => getId(g) === getId(guard));
+        if (current) current.isEnabled = !newEnabled;
       }
       return;
     }
@@ -493,6 +487,14 @@ async function toggleEnabled(guard: any) {
     togglingGuardId.value = null;
   }
 }
+
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_guard',
+  title: 'Delete Guards',
+  warning: 'All child guards and rules will also be deleted. This action cannot be undone.',
+  isBusy: () => togglingGuardId.value !== null,
+  refresh: () => fetchGuards(),
+});
 
 async function deleteGuard(guard: any) {
   const isConfirmed = await confirm({
@@ -546,19 +548,29 @@ async function deleteGuard(guard: any) {
 
     <div class="guard-list-stage min-h-[22rem] min-w-0">
       <DataTableSettingsTable
+        header-name="Guards"
         v-model:page="page"
         :data="switchingType || showInitialLoading ? [] : guardsData"
+        :bulk-action="bulkDelete"
         :columns="columns"
         :actions="getRowActions"
         :loading="isPageLoading"
+        :reload="() => fetchGuards()"
+        :reload-loading="loading"
         :total="total"
         :page-limit="pageLimit"
         page-size-key="guards"
         :pagination-loading="loading"
         :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by name"
+      search-label="Search by name"
+      @search="submitSearch"
         @page-size-change="setPageSize"
         @row-click="guard => navigateTo(`/settings/guards/${getId(guard)}`)"
-      />
+      >
+      </DataTableSettingsTable>
     </div>
 
       </template>
@@ -581,8 +593,9 @@ async function deleteGuard(guard: any) {
       :cancel-action="{ label: 'Cancel', onClick: closeCreateGuardDrawer }"
       :primary-action="{
         label: 'Create Guard',
-        loading: createGuardLoading,
+        loading: createGuardLoading || createRuleLoading,
         disabled: createGuardLoading
+          || createRuleLoading
           || !selectedTemplate
           || (createScope === 'route' && !selectedRouteId)
           || (createScope === 'graphql' && !selectedTableId),

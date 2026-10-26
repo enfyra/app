@@ -6,20 +6,30 @@
       @clear="clearFilters"
     />
 
-    <DataTableSettingsTable
+  <DataTableSettingsTable
+      header-name="User Manager"
       v-model:page="page"
       :data="users"
+      :bulk-action="bulkDelete"
       :columns="columns"
       :actions="getRowActions"
       :loading="showInitialLoading"
+      :reload="() => fetchUsers()"
+      :reload-loading="loading"
       :total="total"
       :page-limit="limit"
       page-size-key="users"
       :pagination-loading="loading"
       @page-size-change="setPageSize"
       :to="(p) => ({ path: route.path, query: { ...route.query, page: p } })"
+      searchable
+      v-model:search="searchQuery"
+      search-placeholder="Search by email"
+      search-label="Search users by email"
+      @search="searchUsers"
       @row-click="user => navigateTo(`/settings/users/${getId(user)}`)"
-    />
+    >
+  </DataTableSettingsTable>
 
     <FilterDrawerLazy
       v-model="showFilterDrawer"
@@ -34,6 +44,7 @@ import { h } from 'vue';
 import { UBadge } from '#components';
 import type { ColumnDef } from '@tanstack/vue-table';
 import type { DataTableRowAction } from '~/types/data-table-columns';
+import type { ShellListResponse, ShellUserRecord } from '~/types/shell-api';
 import { settingsDateColumn, settingsTextColumn } from '~/utils/settings-table';
 
 const { register: registerHeaderActions } = useHeaderActionRegistry();
@@ -44,6 +55,7 @@ const { confirm } = useConfirm();
 const { createEmptyFilter, buildQuery, hasActiveFilters, countActiveFilters } = useFilterQuery();
 const route = useRoute();
 const router = useRouter();
+const { searchQuery, searchValue: emailSearch, searchFilter, submitSearch: searchUsers } = useSettingsQuickSearch('email', () => fetchUsers());
 const { isMounted } = useMounted();
 const { getId } = useDatabase();
 const { hasPermission } = usePermissions();
@@ -62,23 +74,18 @@ const USER_LIST_FIELDS = [
   "roles.name",
 ].join(",");
 
-const { registerPageHeader } = usePageHeaderRegistry();
 
-registerPageHeader({
-  title: "User Manager",
-  variant: "default",
-  gradient: "blue",
-});
 
 const {
   data: apiData,
   pending: loading,
   execute: fetchUsers,
-} = useApi(() => `/${tableName}`, {
+} = useApi<ShellListResponse<ShellUserRecord>>(() => `/${tableName}`, {
   query: computed(() => {
-    const filterQuery = hasActiveFilters(currentFilter.value)
-      ? buildQuery(currentFilter.value)
-      : {};
+    const conditions: Record<string, unknown>[] = [];
+    const filterQuery = buildQuery(currentFilter.value);
+    if (Object.keys(filterQuery).length > 0) conditions.push(filterQuery);
+    if (searchFilter.value) conditions.push(searchFilter.value);
 
     return {
       limit,
@@ -86,7 +93,7 @@ const {
       fields: USER_LIST_FIELDS,
       sort: "-createdAt",
       meta: "*",
-      ...(Object.keys(filterQuery).length > 0 && { filter: filterQuery }),
+      ...(conditions.length > 0 && { filter: { _and: conditions } }),
     };
   }),
   errorContext: "Fetch Users",
@@ -97,9 +104,9 @@ const {
   showInitialLoading,
 } = useStableListState(() => apiData.value?.data, () => loading.value);
 const total = computed(() =>
-  hasActiveFilters(currentFilter.value)
-    ? apiData.value?.meta?.filterCount || 0
-    : apiData.value?.meta?.totalCount || 0,
+  emailSearch.value || hasActiveFilters(currentFilter.value)
+    ? apiData.value?.meta?.filterCount ?? 0
+    : apiData.value?.meta?.totalCount ?? 0,
 );
 
 const filterLabel = computed(() => {
@@ -202,6 +209,13 @@ function getRowActions(user: Record<string, any>): DataTableRowAction[] {
   return [{ label: 'Delete', icon: 'lucide:trash-2', color: 'error', onSelect: () => deleteUser(user) }];
 }
 
+const bulkDelete = useSettingsBulkDelete({
+  path: '/enfyra_user',
+  title: 'Delete Users',
+  isEligible: user => !user.isRootAdmin,
+  refresh: () => fetchUsers(),
+});
+
 async function deleteUser(user: any) {
   
   if (user.isRootAdmin) {
@@ -253,5 +267,5 @@ async function setPageSize(size: number) {
 watch(() => route.query.page, newVal => {
   page.value = Math.max(1, Number(newVal) || 1);
 }, { immediate: true });
-watch([page, limit], () => { void fetchUsers(); }, { immediate: true });
+watch([page, limit, emailSearch], () => { void fetchUsers(); }, { immediate: true });
 </script>

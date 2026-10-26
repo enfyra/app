@@ -68,7 +68,7 @@ export function useNotify() {
     const config = notifyConfig[type]
     toast.add({
       title,
-      description,
+      ...(description === undefined ? {} : { description }),
       icon: config.icon,
       color: config.color,
       duration: config.duration,

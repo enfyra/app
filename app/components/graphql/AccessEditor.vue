@@ -1,24 +1,28 @@
 <script setup lang="ts">
-type Operation = {
-  id: string | number
-  name: 'QUERY' | 'CREATE' | 'UPDATE' | 'DELETE'
-  label: string
-  description?: string | null
-}
+import type {
+  FormApiIdentity,
+  FormApiListResponse,
+  FormGraphqlConfigRecord,
+  FormGraphqlOperationRecord,
+  FormGraphqlPermissionRecord,
+  FormRoleRecord,
+  FormUserRecord,
+} from '~/types/form-api'
 
 type PermissionForm = {
   id?: string | number
   description: string
   isEnabled: boolean
-  role: any
-  allowedUsers: any[]
-  operations: any[]
+  role: FormApiIdentity | null
+  allowedUsers: FormApiIdentity[]
+  operations: FormApiIdentity[]
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   tableId: string | number
   tableName: string
-}>()
+  active?: boolean
+}>(), { active: true })
 
 const notify = useNotify()
 const { register: registerHeaderActions } = useHeaderActionRegistry()
@@ -28,20 +32,49 @@ const { getId, getIdFieldName } = useDatabase()
 const idField = getIdFieldName()
 
 const drawerOpen = ref(false)
-const editingPermission = ref<any>(null)
+const editingPermission = ref<FormGraphqlPermissionRecord | null>(null)
 const permissionForm = ref<PermissionForm>(emptyPermission())
+const initialPermissionSnapshot = ref('')
 const scopeMode = ref<'role' | 'users'>('role')
 const savingConfig = ref(false)
 const savingPermission = ref(false)
 const deletingPermissionId = ref<string | number | null>(null)
 
+const hasPermissionFormChanges = computed(() =>
+  drawerOpen.value && JSON.stringify(permissionForm.value) !== initialPermissionSnapshot.value,
+)
+
+async function closePermissionDrawer() {
+  if (savingPermission.value) return
+  if (hasPermissionFormChanges.value) {
+    const ok = await confirm({
+      title: 'Discard changes?',
+      content: 'You have unsaved changes. Are you sure you want to close? All changes will be lost.',
+      confirmText: 'Discard',
+      cancelText: 'Keep editing',
+    })
+    if (!ok) return
+  }
+  drawerOpen.value = false
+}
+
+const permissionDrawerOpen = computed({
+  get: () => drawerOpen.value,
+  set: (value: boolean) => {
+    if (value) {
+      drawerOpen.value = true
+      return
+    }
+    void closePermissionDrawer()
+  },
+})
+
 const {
   data: configData,
   pending: configLoading,
   execute: fetchConfig,
-} = useApi(() => '/enfyra_graphql', {
+} = useApi<FormApiListResponse<FormGraphqlConfigRecord>>(() => '/enfyra_graphql', {
   immediate: false,
-  watch: false,
   query: computed(() => ({
     fields: [
       'id',
@@ -70,59 +103,56 @@ const {
   data: operationsData,
   pending: operationsLoading,
   execute: fetchOperations,
-} = useApi(() => '/enfyra_graphql_operation', {
+} = useApi<FormApiListResponse<FormGraphqlOperationRecord>>(() => '/enfyra_graphql_operation', {
   immediate: false,
-  watch: false,
   query: { fields: 'id,name,label,description,order', sort: 'order', limit: 10 },
   errorContext: 'Fetch GraphQL operations',
 })
 
-const { data: rolesData, execute: fetchRoles } = useApi(() => '/enfyra_role', {
+const { data: rolesData, execute: fetchRoles } = useApi<FormApiListResponse<FormRoleRecord>>(() => '/enfyra_role', {
   immediate: false,
-  watch: false,
   query: { fields: 'id,name', sort: 'name', limit: 1000 },
   errorContext: 'Fetch roles',
 })
 
-const { data: usersData, execute: fetchUsers } = useApi(() => '/enfyra_user', {
+const { data: usersData, execute: fetchUsers } = useApi<FormApiListResponse<FormUserRecord>>(() => '/enfyra_user', {
   immediate: false,
-  watch: false,
   query: { fields: 'id,name,email', sort: 'email', limit: 1000 },
   errorContext: 'Fetch users',
 })
 
 const { error: updateConfigError, execute: updateConfig } = useApi(
   () => '/enfyra_graphql',
-  { method: 'patch', immediate: false, watch: false, errorContext: 'Update GraphQL access' },
+  { method: 'patch', immediate: false, errorContext: 'Update GraphQL access' },
 )
 const { error: createConfigError, execute: createConfig } = useApi(
   () => '/enfyra_graphql',
-  { method: 'post', immediate: false, watch: false, errorContext: 'Create GraphQL access' },
+  { method: 'post', immediate: false, errorContext: 'Create GraphQL access' },
 )
 const { error: createPermissionError, execute: createPermission } = useApi(
   () => '/enfyra_graphql_permission',
-  { method: 'post', immediate: false, watch: false, errorContext: 'Create GraphQL permission' },
+  { method: 'post', immediate: false, errorContext: 'Create GraphQL permission' },
 )
 const { error: updatePermissionError, execute: updatePermission } = useApi(
   () => '/enfyra_graphql_permission',
-  { method: 'patch', immediate: false, watch: false, errorContext: 'Update GraphQL permission' },
+  { method: 'patch', immediate: false, errorContext: 'Update GraphQL permission' },
 )
 const { error: deletePermissionError, execute: deletePermission } = useApi(
   () => '/enfyra_graphql_permission',
-  { method: 'delete', immediate: false, watch: false, errorContext: 'Delete GraphQL permission' },
+  { method: 'delete', immediate: false, errorContext: 'Delete GraphQL permission' },
 )
 
-const config = computed<any>(() => configData.value?.data?.[0] ?? null)
-const operations = computed<Operation[]>(() => operationsData.value?.data ?? [])
-const roles = computed<any[]>(() => rolesData.value?.data ?? [])
-const users = computed<any[]>(() => usersData.value?.data ?? [])
-const permissions = computed<any[]>(() => config.value?.permissions ?? [])
+const config = computed(() => configData.value?.data?.[0] ?? null)
+const operations = computed(() => operationsData.value?.data ?? [])
+const roles = computed(() => rolesData.value?.data ?? [])
+const users = computed(() => usersData.value?.data ?? [])
+const permissions = computed(() => config.value?.permissions ?? [])
 const enabled = ref(false)
 const publicOperationIds = ref<Array<string | number>>([])
 
 watch(config, (value) => {
   enabled.value = value?.isEnabled === true
-  publicOperationIds.value = (value?.publicOperations ?? []).map((item: any) => getId(item))
+  publicOperationIds.value = (value?.publicOperations ?? []).map(item => getId(item))
 }, { immediate: true })
 
 const publicOperationNames = computed(() => new Set(
@@ -147,16 +177,16 @@ function emptyPermission(): PermissionForm {
   }
 }
 
-function isSelected(list: any[], item: any): boolean {
+function isSelected(list: FormApiIdentity[], item: FormApiIdentity): boolean {
   return list.some((selected) => String(getId(selected)) === String(getId(item)))
 }
 
-function toggleRelation(list: any[], item: any, checked: boolean): any[] {
+function toggleRelation(list: FormApiIdentity[], item: FormApiIdentity, checked: boolean): FormApiIdentity[] {
   if (checked) return isSelected(list, item) ? list : [...list, { id: getId(item) }]
   return list.filter((selected) => String(getId(selected)) !== String(getId(item)))
 }
 
-function togglePublicOperation(operation: Operation, checked: boolean) {
+function togglePublicOperation(operation: FormGraphqlOperationRecord, checked: boolean) {
   publicOperationIds.value = toggleRelation(
     publicOperationIds.value.map((id) => ({ id })),
     operation,
@@ -168,20 +198,22 @@ function openCreatePermission() {
   editingPermission.value = null
   permissionForm.value = emptyPermission()
   scopeMode.value = 'role'
+  initialPermissionSnapshot.value = JSON.stringify(permissionForm.value)
   drawerOpen.value = true
 }
 
-function openEditPermission(permission: any) {
+function openEditPermission(permission: FormGraphqlPermissionRecord) {
   editingPermission.value = permission
   permissionForm.value = {
     id: getId(permission),
     description: permission.description ?? '',
     isEnabled: permission.isEnabled !== false,
     role: permission.role ? { id: getId(permission.role) } : null,
-    allowedUsers: (permission.allowedUsers ?? []).map((user: any) => ({ id: getId(user) })),
-    operations: (permission.operations ?? []).map((operation: any) => ({ id: getId(operation) })),
+    allowedUsers: (permission.allowedUsers ?? []).map(user => ({ id: getId(user) })),
+    operations: (permission.operations ?? []).map(operation => ({ id: getId(operation) })),
   }
   scopeMode.value = permission.allowedUsers?.length ? 'users' : 'role'
+  initialPermissionSnapshot.value = JSON.stringify(permissionForm.value)
   drawerOpen.value = true
 }
 
@@ -191,8 +223,8 @@ function setScopeMode(mode: 'role' | 'users') {
   else permissionForm.value.role = null
 }
 
-function operationNames(permission: any): string[] {
-  return (permission.operations ?? []).map((operation: any) => operation.name).filter(Boolean)
+function operationNames(permission: FormGraphqlPermissionRecord): string[] {
+  return (permission.operations ?? []).map(operation => operation.name).filter((name): name is NonNullable<typeof name> => name !== undefined)
 }
 
 async function saveGraphqlConfig() {
@@ -233,7 +265,7 @@ registerHeaderActions({
   id: 'save-graphql-access',
   label: computed(() => config.value ? 'Save' : 'Enable GraphQL'),
   icon: 'lucide:save', variant: 'solid', color: 'primary', order: 999,
-  show: computed(() => checkPermissionCondition({ or: [{ route: '/enfyra_graphql', methods: [config.value ? 'PATCH' : 'POST'] }] })),
+  show: computed(() => props.active && checkPermissionCondition({ or: [{ route: '/enfyra_graphql', methods: [config.value ? 'PATCH' : 'POST'] }] })),
   loading: savingConfig,
   disabled: computed(() => loading.value || savingConfig.value || (!enabled.value && !config.value)),
   onClick: saveGraphqlConfig,
@@ -286,7 +318,7 @@ async function savePermissionForm() {
   }
 }
 
-async function removePermission(permission: any) {
+async function removePermission(permission: FormGraphqlPermissionRecord) {
   const ok = await confirm({
     title: 'Delete GraphQL Permission',
     content: 'This removes authenticated access granted by this permission.',
@@ -360,7 +392,7 @@ watch(() => props.tableId, async () => {
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <label
                 v-for="operation in operations"
-                :key="operation.id"
+                :key="getId(operation)"
                 class="eapp-bordered-region flex cursor-pointer items-start gap-3 p-4"
               >
                 <UCheckbox
@@ -410,6 +442,7 @@ watch(() => props.tableId, async () => {
                   </button>
                   <UButton
                     icon="lucide:trash"
+                    aria-label="Delete GraphQL permission"
                     color="error"
                     variant="ghost"
                     size="xs"
@@ -424,10 +457,10 @@ watch(() => props.tableId, async () => {
         </CommonFormCard>
 
         <CommonDrawer
-          v-model="drawerOpen"
+          v-model="permissionDrawerOpen"
           direction="right"
-          :cancel-action="{ label: 'Cancel', icon: 'lucide:x', onClick: () => (drawerOpen = false) }"
-          :primary-action="{ label: editingPermission ? 'Update' : 'Create', loading: savingPermission, onClick: savePermissionForm }"
+          :cancel-action="{ label: 'Cancel', icon: 'lucide:x', onClick: closePermissionDrawer }"
+          :primary-action="{ label: editingPermission ? 'Update' : 'Create', loading: savingPermission, disabled: savingPermission || Boolean(editingPermission && !hasPermissionFormChanges), onClick: savePermissionForm }"
         >
           <template #header>
             <h2 class="text-lg font-semibold">{{ editingPermission ? 'Edit' : 'Create' }} GraphQL Permission</h2>
@@ -484,7 +517,7 @@ watch(() => props.tableId, async () => {
                   <div class="text-sm font-semibold text-[var(--text-primary)]">Private operations</div>
                   <div class="text-xs text-[var(--text-tertiary)]">Public operations are excluded and cannot be granted here.</div>
                 </div>
-                <label v-for="operation in privateOperations" :key="operation.id" class="eapp-bordered-region flex cursor-pointer items-start gap-3 p-3">
+                <label v-for="operation in privateOperations" :key="getId(operation)" class="eapp-bordered-region flex cursor-pointer items-start gap-3 p-3">
                   <UCheckbox
                     :model-value="isSelected(permissionForm.operations, operation)"
                     @update:model-value="(checked) => permissionForm.operations = toggleRelation(permissionForm.operations, operation, checked === true)"

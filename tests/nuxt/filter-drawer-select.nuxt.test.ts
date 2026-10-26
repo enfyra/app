@@ -7,11 +7,20 @@ import { describe, expect, it, vi } from 'vitest'
 import CommonDrawer from '~/components/common/Drawer.vue'
 import FilterBuilder from '~/components/filter/Builder.vue'
 import FilterDatePicker from '~/components/filter/DatePicker.vue'
+import FilterValueInput from '~/components/filter/ValueInput.vue'
+import TableSelect from '~/components/form/TableSelect.vue'
+import { UInputMenu, USelect } from '#components'
 import UnsavedChangesModal from '~/components/common/UnsavedChangesModal.vue'
 import type { FilterGroup } from '~/utils/common/filter/filter-types'
 
 mockNuxtImport('useSchema', () => () => ({}))
 mockNuxtImport('useScreen', () => () => ({ isMobile: ref(false), isTablet: ref(false) }))
+mockNuxtImport('useTableCatalog', () => () => ({
+  tables: ref([{ id: 'users-id', name: 'users' }]),
+  loadTableCatalog: vi.fn(),
+  loading: ref(false),
+}))
+mockNuxtImport('useDatabase', () => () => ({ getId: (record: { id: string }) => record.id }))
 
 async function zIndex(element: Element) {
   const compiler = await compile('@tailwind utilities;')
@@ -22,6 +31,36 @@ async function zIndex(element: Element) {
 }
 
 describe('filter drawer column selection', () => {
+  it.each(['_eq', '_in'])('preserves the native select model while omitting absent enum items for %s', async (operator) => {
+    const wrapper = await mountSuspended(FilterValueInput, {
+      props: { fieldType: 'select', operator, modelValue: null },
+    })
+    try {
+      const select = wrapper.getComponent(USelect)
+      expect(select.vm.$.vnode.props).not.toHaveProperty('items')
+      expect(select.props()).toHaveProperty('modelValue', null)
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      await wrapper.setProps({ enumOptions: [], modelValue: operator === '_in' ? [] : '' })
+      expect(select.vm.$.vnode.props).toHaveProperty('items', [])
+      expect(select.props()).toHaveProperty('modelValue', operator === '_in' ? [] : '')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    } finally { wrapper.unmount() }
+  })
+
+  it('keeps an unresolved table model omitted and forwards a matching native menu item', async () => {
+    const wrapper = await mountSuspended(TableSelect, { props: { modelValue: null } })
+    try {
+      const menu = wrapper.getComponent(UInputMenu)
+      expect(menu.vm.$.vnode.props).not.toHaveProperty('modelValue')
+      expect(menu.vm.$.vnode.props?.modelValue).toBeUndefined()
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      await wrapper.setProps({ modelValue: 'users-id' })
+      expect(menu.vm.$.vnode.props?.modelValue).toEqual({ label: 'users', value: 'users-id' })
+      menu.vm.$emit('update:modelValue', { label: 'users', value: 'users-id' })
+      expect(wrapper.emitted('update:modelValue')).toEqual([['users-id']])
+    } finally { wrapper.unmount() }
+  })
+
   it.each(['keyboard', 'mouse', 'touch'])('opens the field menu above the drawer and updates the column with %s', async (input) => {
     const filter = ref<FilterGroup>({ id: 'root', operator: 'and', conditions: [] })
     const Host = defineComponent({

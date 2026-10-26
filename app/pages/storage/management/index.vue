@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { FeatureCollection, FeatureFolder } from '~/types/feature-api';
+import type { FileLibraryRecord } from '~/types/file';
 import { useFileManagerUpload } from '~/composables/file-manager/useFileManagerUpload';
 const fileActionsActive = ref(false);
 const showCreateModal = ref(false);
@@ -17,7 +19,7 @@ const {
   data: rootFolders,
   pending: rootPending,
   execute: fetchRootFolders,
-} = useApi(() => `enfyra_folder`, {
+} = useApi<FeatureCollection<FeatureFolder>>(() => `enfyra_folder`, {
   query: computed(() => {
     return {
       limit,
@@ -40,7 +42,7 @@ const {
   data: rootFiles,
   pending: filesPending,
   execute: fetchRootFiles,
-} = useApi(() => `enfyra_file`, {
+} = useApi<FeatureCollection<FileLibraryRecord>>(() => `enfyra_file`, {
   query: computed(() => {
     return {
       fields: getFileFields(),
@@ -121,19 +123,14 @@ async function handleRefreshItems() {
   }
 }
 
-const { registerPageHeader } = usePageHeaderRegistry();
-
-registerPageHeader({
-  title: "File Manager",
-  description: "Organize your files and documents efficiently",
-  gradient: "cyan",
-});
 </script>
 
 <template>
   <div class="space-y-8">
     
     <FileManager
+      title="File Manager"
+      description="Organize your files and documents efficiently"
       :folders="folders"
       :files="files"
       :folders-loading="rootPending"
@@ -196,7 +193,8 @@ registerPageHeader({
             Storage Location
           </label>
           <USelectMenu
-            v-model="selectedStorage"
+            v-bind="selectedStorage === undefined ? {} : { modelValue: selectedStorage }"
+            @update:model-value="selectedStorage = $event"
             :items="storageOptions"
             placeholder="Select storage (optional)"
             size="lg"

@@ -133,7 +133,7 @@ describe('pagination layout', () => {
     expect(pagination).toContain('rounded-[var(--radius-panel)]')
     expect(miniRule).toContain('border: 1px solid var(--card-border)')
     expect(miniRule).toContain('box-shadow: var(--card-shadow-hover)')
-    expect(miniRule).toContain('var(--shell-mobile-inset)')
+    expect(miniRule).toContain('bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px))')
     expect(css).toContain('bottom: calc(var(--shell-inset) + 0.75rem)')
     expect(css).toContain('width: min(calc(var(--pagination-workspace-width, 100vw) * 0.5), 32rem)')
     expect(css).toContain('left: var(--pagination-workspace-center, 50%)')

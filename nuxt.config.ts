@@ -173,8 +173,12 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    apiProxy: {
+      headersTimeout: 650000,
+      bodyTimeout: 650000,
+    },
     public: {
-      apiUrl: resolvePublicApiUrl(process.env),
+      apiUrl: resolvePublicApiUrl(process.env) ?? '',
       demoLoginPrefill: process.env.NUXT_PUBLIC_DEMO_LOGIN_PREFILL === 'true',
     },
   },

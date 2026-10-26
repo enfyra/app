@@ -126,6 +126,7 @@
                 size="sm"
                 square
                 class="upload-file-remove"
+                :aria-label="`Remove ${file.name}`"
                 :disabled="isLoading"
                 @click="removeFile(index)"
               />
@@ -308,6 +309,7 @@ const handleFileSelect = (event: Event) => {
         selectedFiles.value = [firstFile];
       }
     }
+    input.value = "";
   }
 };
 
@@ -381,11 +383,11 @@ const clearFiles = () => {
 
 const removeFile = (index: number) => {
   selectedFiles.value.splice(index, 1);
+  if (fileInput.value) {
+    fileInput.value.value = "";
+  }
   if (selectedFiles.value.length === 0) {
     clearError();
-    if (fileInput.value) {
-      fileInput.value.value = "";
-    }
   }
 };
 

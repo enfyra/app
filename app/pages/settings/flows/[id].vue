@@ -42,6 +42,7 @@
           <CommonFormCard>
             <UForm :state="editForm" @submit="saveFlowSettings">
               <FormEditorLazy
+                ref="formEditorRef"
                 v-model="editForm"
                 :table-name="'enfyra_flow'"
                 :errors="flowErrors"
@@ -57,13 +58,6 @@
         </template>
         <template #steps>
           <CommonFormCard>
-            <template #header>
-              <div class="flex items-center justify-end">
-                <UButton icon="lucide:plus" size="sm" variant="solid" color="primary" @click="() => openCreateStep()">
-                  Add Step
-                </UButton>
-              </div>
-            </template>
             <div class="h-[400px] md:h-[500px] lg:h-[600px]">
               <KeepAlive>
               <FlowCanvas
@@ -93,6 +87,7 @@
             :show-title="false"
             :executions="executions"
             :page="executionPage"
+            v-bind="executionTotal === undefined ? {} : { total: executionTotal }"
             :has-next-page="hasNextExecutionPage"
             :loading="execLoading || executionPaginationLoading"
             @refresh="refreshExecutions"
@@ -114,11 +109,11 @@
       :saving="savingStep"
       :testing="testing"
       :has-errors="hasStepErrors"
-      :has-config-errors="hasStepConfigErrors"
+      :has-changes="hasStepChanges()"
       :step-type-options="stepTypeOptions"
       :error-options="errorOptions"
       :condition-step-options="conditionStepOptions"
-      :condition-label="stepForm.parentId ? getConditionLabel(stepForm.parentId) : undefined"
+      v-bind="stepForm.parentId ? { conditionLabel: getConditionLabel(stepForm.parentId) } : {}"
       :test-result="testResult"
       @close="closeStepDrawer"
       @save="saveStep"
@@ -143,16 +138,17 @@
 </template>
 
 <script setup lang="ts">
+import type { FeatureCollection, FeatureFlowDetail, FeatureFlowExecution } from '~/types/feature-api';
 import {
   buildFlowExecutionDetailFilter,
   resolveRouteIdentifier,
+  validateConditionSource,
 } from "~/utils/flow-editor";
 const { register: registerHeaderActions } = useHeaderActionRegistry();
-import type { FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
+import type { FlowStep, FlowStepAddContext, FlowStepEditorForm, StepErrorHandling, StepType } from '~/types/flow';
 import { STEP_TYPE_OPTIONS, ERROR_OPTIONS } from '~/utils/flow.constants';
 import {
   normalizeScriptContract,
-  stripLegacyScriptFields,
 } from '~/utils/script-contract';
 
 definePageMeta({ layout: "default", title: "Flow Editor" });
@@ -169,17 +165,10 @@ const activeEditorTab = computed({
     void router.push({ query: { ...route.query, tab } });
   },
 });
-const flowSections = [
-  { label: 'Settings', value: 'settings', icon: 'lucide:settings-2' },
-  { label: 'Steps', value: 'steps', icon: 'lucide:workflow' },
-  { label: 'Triggers', value: 'triggers', icon: 'lucide:zap' },
-  { label: 'History', value: 'history', icon: 'lucide:history' },
-];
 const notify = useNotify();
 const { confirm } = useConfirm();
 const { isMounted } = useMounted();
 const { getId, getIdFieldName } = useDatabase();
-const { registerPageHeader } = usePageHeaderRegistry();
 
 const flowId = computed(() => resolveRouteIdentifier(route.params.id));
 const { adminSocket } = useAdminSocket();
@@ -193,6 +182,7 @@ const testPayloadJson = ref('');
 const stepErrors = ref<Record<string, string>>({});
 const flowErrors = ref<Record<string, string>>({});
 const hasFormChanges = ref(false);
+const formEditorRef = ref();
 const execDrawerOpen = ref(false);
 const selectedExec = ref<any>(null);
 const execLoading = ref(false);
@@ -216,7 +206,6 @@ const FLOW_DETAIL_FIELDS = [
   "steps.key",
   "steps.stepOrder",
   "steps.type",
-  "steps.config",
   "steps.scriptLanguage",
   "steps.timeout",
   "steps.onError",
@@ -231,7 +220,6 @@ const FLOW_STEP_EDITOR_FIELDS = [
   "key",
   "stepOrder",
   "type",
-  "config",
   "sourceCode",
   "scriptLanguage",
   "compiledCode",
@@ -266,47 +254,35 @@ const stepForm = ref<FlowStepEditorForm>({
   key: '',
   stepOrder: 0,
   type: 'script' as StepType,
-  configJson: '',
   sourceCode: null as string | null,
   scriptLanguage: 'typescript' as 'javascript' | 'typescript',
   compiledCode: null as string | null,
   timeout: 5000,
   onError: 'stop' as StepErrorHandling,
   retryAttempts: 0,
-  parentId: null as any,
-  branch: undefined as string | undefined,
+  parentId: null,
 });
 
 const hasStepErrors = computed(() =>
   Object.values(stepErrors.value).some((message) => Boolean(message)),
 );
-const hasStepConfigErrors = computed(() =>
-  Boolean(stepErrors.value.config || stepErrors.value.sourceCode || stepErrors.value.scriptLanguage),
-);
-
-function cleanStepConfig(config: any): Record<string, any> {
-  return stripLegacyScriptFields(config);
-}
-
-function parseStepConfigJson(raw: string): Record<string, any> {
-  return raw ? JSON.parse(raw) : {};
-}
 
 watch(() => stepForm.value.key, () => {
   if (stepErrors.value.key) stepErrors.value.key = '';
 });
 watch(() => stepForm.value.type, () => {
   if (stepErrors.value.type) stepErrors.value.type = '';
+  if (stepErrors.value.sourceCode) stepErrors.value.sourceCode = '';
 });
 
-registerPageHeader({ title: "Flow Editor", gradient: "purple" });
-
-const { data: flowData, executeWithResult: fetchFlow } = useApi(
+const { data: flowData, executeWithResult: fetchFlow } = useApi<FeatureCollection<FeatureFlowDetail>>(
   () => `/enfyra_flow?filter={"${getIdFieldName()}":{"_eq":"${flowId.value}"}}&fields=${FLOW_DETAIL_FIELDS}&limit=1`,
   { errorContext: "Fetch Flow" }
 );
 
 const flow = computed(() => flowData.value?.data?.[0] || null);
+const flowTitle = computed(() => flow.value?.name ? `Flow: ${flow.value.name}` : 'Flow Editor');
+
 const flowLoadSettled = ref(false);
 const showInitialLoading = computed(() => !isMounted.value || (!flow.value && !flowLoadSettled.value));
 const steps = computed(() => {
@@ -323,10 +299,21 @@ async function loadFlow() {
 const EXEC_LIMIT = 10;
 const EXEC_FIELDS = 'id,status,startedAt,completedAt,duration,currentStep';
 const latestExecution = ref<Record<string, any> | null>(null);
-const { executeWithResult: fetchExecApi } = useApi<{ data: Record<string, any>[] }>(
+const executionTotal = ref<number | undefined>(undefined);
+const { executeWithResult: fetchExecApi } = useApi<{ data: Record<string, any>[]; meta?: { filterCount?: number } }>(
   '/enfyra_flow_execution',
   { errorContext: "Fetch Executions" }
 );
+const { executeWithResult: countExecApi } = useApi<{ meta?: { filterCount?: number } }>(
+  '/enfyra_flow_execution',
+  { errorContext: "Count Executions" }
+);
+async function fetchExecutionTotal() {
+  const result = await countExecApi({
+    query: { filter: JSON.stringify({ flow: { _eq: flowId.value } }), limit: 0, meta: 'filterCount' },
+  });
+  executionTotal.value = result.ok ? result.data.meta?.filterCount : undefined;
+}
 const {
   data: executions,
   page: executionPage,
@@ -337,6 +324,7 @@ const {
 } = useCursorPagination<Record<string, any>, string | number>({
   itemsPerPage: EXEC_LIMIT,
   scope: flowId,
+  total: executionTotal,
   getCursor: getId,
   async fetchPage(cursor, limit) {
     const filter: Record<string, any> = { flow: { _eq: flowId.value } };
@@ -348,12 +336,15 @@ const {
 
 async function fetchExecutions() {
   const loaded = await resetExecutionPages();
-  if (loaded) latestExecution.value = executions.value[0] ?? null;
+  if (loaded) {
+    latestExecution.value = executions.value[0] ?? null;
+    void fetchExecutionTotal();
+  }
   return loaded;
 }
 
 const latestExecDetail = ref<any>(null);
-const { executeWithResult: fetchLatestExecDetail } = useApi(
+const { executeWithResult: fetchLatestExecDetail } = useApi<FeatureCollection<FeatureFlowExecution>>(
   () => {
     const latest = latestExecution.value;
     if (!latest) return '/enfyra_flow_execution?limit=0';
@@ -389,10 +380,11 @@ const latestExecOverlay = computed(() => {
 async function refreshExecOverlay() {
   const result = await fetchLatestExecDetail();
   if (!result.ok) return;
-  latestExecDetail.value = (result.data as any)?.data?.[0] || null;
+  latestExecDetail.value = result.data.data[0] || null;
 }
 
 const { executeWithResult: updateFlowApi, pending: saveFlowPending } = useApi(() => `/enfyra_flow`, { method: "patch", errorContext: "Update Flow" });
+const { executeWithResult: deleteFlowApi, pending: deleteFlowPending } = useApi(() => `/enfyra_flow`, { method: "delete", errorContext: "Delete Flow" });
 
 const { checkPermissionCondition } = usePermissions();
 const canUpdateFlow = computed(() =>
@@ -400,12 +392,17 @@ const canUpdateFlow = computed(() =>
     and: [{ route: "/enfyra_flow", methods: ["PATCH"] }],
   })
 );
+const canDeleteFlow = computed(() =>
+  checkPermissionCondition({
+    and: [{ route: "/enfyra_flow", methods: ["DELETE"] }],
+  })
+);
 const { executeWithResult: createStepApi } = useApi(() => `/enfyra_flow_step`, { method: "post", errorContext: "Create Step" });
 const {
   executeWithResult: updateStepWithResult,
 } = useApi(() => `/enfyra_flow_step`, { method: "patch", errorContext: "Update Step" });
 const { executeWithResult: deleteStepApi } = useApi(() => `/enfyra_flow_step`, { method: "delete", errorContext: "Delete Step" });
-const { executeWithResult: fetchStepDetail } = useApi(
+const { executeWithResult: fetchStepDetail } = useApi<FeatureCollection<FlowStep>>(
   () => `/enfyra_flow_step?filter={"${getIdFieldName()}":{"_eq":"${editingStepId.value}"}}&fields=${FLOW_STEP_EDITOR_FIELDS}&limit=1`,
   { errorContext: "Fetch Flow Step", immediate: false }
 );
@@ -419,6 +416,57 @@ const { executeWithResult: triggerFlowApi } = useApi(
 );
 
 
+const flowReloadAction = useReloadAction({
+  reload: async () => {
+    await loadFlow();
+    await fetchExecutions();
+  },
+  loading: computed(() => saveFlowPending.value),
+  hasUnsavedChanges: () => hasFormChanges.value,
+});
+
+const flowSections = computed(() => [
+  {
+    label: 'Settings',
+    value: 'settings',
+    icon: 'lucide:settings-2',
+    title: flowTitle.value,
+    description: flow.value?.description || 'Configure flow metadata, timeout, and execution settings',
+    actions: [flowReloadAction],
+  },
+  {
+    label: 'Steps',
+    value: 'steps',
+    icon: 'lucide:workflow',
+    title: flowTitle.value,
+    description: 'Design and order the steps executed by this flow',
+    actions: [
+      flowReloadAction,
+      {
+        id: 'add-flow-step',
+        label: 'Add Step',
+        icon: 'lucide:plus',
+        variant: 'solid' as const,
+        color: 'primary' as const,
+        onClick: () => openCreateStep(),
+      },
+    ],
+  },
+  {
+    label: 'Triggers',
+    value: 'triggers',
+    icon: 'lucide:zap',
+    title: flowTitle.value,
+    description: 'Manage schedule, webhook, and table event triggers',
+    actions: [flowReloadAction],
+  },
+  {
+    label: 'History',
+    value: 'history',
+    icon: 'lucide:history',
+  },
+]);
+
 registerHeaderActions([
   {
     id: "trigger-flow",
@@ -431,12 +479,35 @@ registerHeaderActions([
     permission: { and: [{ route: "/enfyra_flow_execution", methods: ["POST"] }] },
   },
   {
+    id: 'reset-flow-settings',
+    label: 'Reset',
+    icon: 'lucide:rotate-ccw',
+    variant: 'outline',
+    color: 'warning',
+    order: 998,
+    show: computed(() => activeEditorTab.value === 'settings' && !!flow.value && canUpdateFlow.value && hasFormChanges.value),
+    onClick: handleResetFlowSettings,
+  },
+  {
     id: 'save-flow-settings', label: 'Save', icon: 'lucide:save', variant: 'solid', color: 'primary', order: 999,
     show: computed(() => activeEditorTab.value === 'settings' && !!flow.value && canUpdateFlow.value),
     loading: saveFlowPending,
     disabled: computed(() => saveFlowPending.value || !hasFormChanges.value),
     onClick: saveFlowSettings,
     permission: { and: [{ route: '/enfyra_flow', methods: ['PATCH'] }] },
+  },
+  {
+    id: 'delete-flow',
+    label: 'Delete',
+    icon: 'lucide:trash',
+    variant: 'solid',
+    color: 'error',
+    order: 1000,
+    show: computed(() => !!flow.value && canDeleteFlow.value),
+    loading: deleteFlowPending,
+    disabled: computed(() => deleteFlowPending.value || Boolean(flow.value?.isSystem)),
+    onClick: deleteFlow,
+    permission: { and: [{ route: '/enfyra_flow', methods: ['DELETE'] }] },
   },
 ]);
 
@@ -499,7 +570,41 @@ async function saveFlowSettings() {
   notify.success("Success", "Flow settings saved!");
   hasFormChanges.value = false;
   await loadFlow();
+  syncEditForm(true);
+  formEditorRef.value?.confirmChanges();
 }
+
+async function handleResetFlowSettings() {
+  const ok = await confirm({
+    title: "Reset Changes",
+    content: "Are you sure you want to discard all changes? All modifications will be lost.",
+  });
+  if (!ok) return;
+  syncEditForm(true);
+  flowErrors.value = {};
+  hasFormChanges.value = false;
+  formEditorRef.value?.confirmChanges();
+  notify.success("Reset Complete", "All changes have been discarded.");
+}
+
+async function deleteFlow() {
+  const flowName = flow.value?.name || "this flow";
+  const ok = await confirm({
+    title: "Delete Flow",
+    content: `Are you sure you want to delete flow "${flowName}"? All steps, triggers, and execution history will also be removed. This action cannot be undone.`,
+    confirmText: "Delete",
+    cancelText: "Cancel",
+  });
+  if (!ok) return;
+  const result = await deleteFlowApi({ id: flowId.value });
+  if (!result.ok) return;
+  hasFormChanges.value = false;
+  allowNextNavigation();
+  notify.success("Success", `Flow "${flowName}" has been deleted.`);
+  await navigateTo("/settings/flows");
+}
+
+const { allowNextNavigation } = useUnsavedChangesGuard(() => hasFormChanges.value);
 
 const stepDrawerUpdating = ref(false);
 const execDrawerUpdating = ref(false);
@@ -507,6 +612,9 @@ const stepDrawerHistoryEntry = ref(false);
 const execDrawerHistoryEntry = ref(false);
 
 watch(stepDrawerOpen, (isOpen) => {
+  if (!isOpen && testing.value) {
+    cancelTest();
+  }
   if (stepDrawerUpdating.value) return;
   if (isOpen) {
     stepDrawerHistoryEntry.value = true;
@@ -611,24 +719,22 @@ async function onSelectStep(step: any | null) {
   ) {
     return;
   }
-  const stepDetail = (stepDetailResult.data as any)?.data?.[0];
+  const stepDetail = stepDetailResult.data.data[0];
   if (!stepDetail || String(getId(stepDetail)) !== String(requestedStepId)) {
     notify.error("Error", "Unable to load the full step details");
     return;
   }
   step = stepDetail;
-  const rawConfig = step.config && typeof step.config === 'object' ? step.config : {};
-  const config = cleanStepConfig(rawConfig);
   const scriptContract = normalizeScriptContract({
-    sourceCode: step.sourceCode ?? rawConfig.sourceCode ?? rawConfig.code ?? null,
-    scriptLanguage: step.scriptLanguage ?? rawConfig.scriptLanguage,
-    compiledCode: step.compiledCode ?? rawConfig.compiledCode ?? null,
+    sourceCode: step.sourceCode ?? null,
+    scriptLanguage: step.scriptLanguage,
+    compiledCode: step.compiledCode ?? null,
   });
   stepForm.value = {
     key: step.key,
+    isEnabled: step.isEnabled !== false,
     stepOrder: step.stepOrder,
     type: step.type,
-    configJson: Object.keys(config).length ? JSON.stringify(config, null, 2) : '',
     sourceCode: scriptContract.sourceCode,
     scriptLanguage: scriptContract.scriptLanguage,
     compiledCode: scriptContract.compiledCode,
@@ -636,13 +742,13 @@ async function onSelectStep(step: any | null) {
     onError: step.onError || 'stop',
     retryAttempts: step.retryAttempts || 0,
     parentId: step.parentId || step.parent?.id || null,
-    branch: step.branch || undefined,
+    ...(step.branch ? { branch: step.branch } : {}),
   };
   stepFormSnapshot.value = JSON.stringify(stepForm.value);
   stepDrawerOpen.value = true;
 }
 
-function openCreateStep(context?: { parentId?: any; branch?: string; afterOrder?: number }) {
+function openCreateStep(context?: FlowStepAddContext) {
   testResult.value = null;
   stepErrors.value = {};
   editingStepId.value = null;
@@ -659,7 +765,6 @@ function openCreateStep(context?: { parentId?: any; branch?: string; afterOrder?
     key: '',
     stepOrder: nextOrder,
     type: 'script',
-    configJson: '',
     sourceCode: null,
     scriptLanguage: 'typescript',
     compiledCode: null,
@@ -667,7 +772,7 @@ function openCreateStep(context?: { parentId?: any; branch?: string; afterOrder?
     onError: 'stop',
     retryAttempts: 0,
     parentId: context?.parentId || null,
-    branch: context?.branch || undefined,
+    ...(context?.branch ? { branch: context.branch } : {}),
   };
   stepFormSnapshot.value = JSON.stringify(stepForm.value);
   stepDrawerOpen.value = true;
@@ -692,6 +797,7 @@ async function handleMoveStep(stepId: any, direction: number) {
   const swapIdx = currentIdx + direction;
   if (swapIdx < 0 || swapIdx >= group.length) return;
   const swap = group[swapIdx];
+  if (!swap) return;
   const currentOrder = current.stepOrder;
   const swapOrder = swap.stepOrder;
   const currentId = getId(current);
@@ -726,12 +832,13 @@ async function copyTestValue(value: any) {
 }
 
 async function testCurrentStep() {
-  let config;
-  try {
-    config = cleanStepConfig(parseStepConfigJson(stepForm.value.configJson));
-  } catch {
-    notify.error("Error", "Invalid JSON in config");
-    return;
+  if (stepForm.value.type === 'condition') {
+    const conditionError = validateConditionSource(stepForm.value.sourceCode);
+    if (conditionError) {
+      stepErrors.value.sourceCode = conditionError;
+      testResult.value = { success: false, error: conditionError, duration: 0 };
+      return;
+    }
   }
   testing.value = true;
   testResult.value = null;
@@ -757,7 +864,6 @@ async function testCurrentStep() {
         flowId: flowId.value,
         key: stepForm.value.key,
         type: stepForm.value.type,
-        config,
         sourceCode: stepForm.value.sourceCode,
         scriptLanguage: stepForm.value.scriptLanguage,
         compiledCode: stepForm.value.compiledCode,
@@ -802,7 +908,7 @@ async function saveStep() {
   } else if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
     stepErrors.value.key = 'Only letters, numbers, underscores. Must start with letter or _';
     hasError = true;
-  } else if (!editingStepId.value && steps.value.some((s: any) => s.key === key)) {
+  } else if (steps.value.some((s: any) => s.key === key && String(getId(s)) !== String(editingStepId.value || ''))) {
     stepErrors.value.key = 'Key already exists';
     hasError = true;
   }
@@ -810,19 +916,15 @@ async function saveStep() {
     stepErrors.value.type = 'Type is required';
     hasError = true;
   }
-
-  let config;
-  try {
-    config = cleanStepConfig(parseStepConfigJson(stepForm.value.configJson));
-  } catch {
-    stepErrors.value.config = 'Invalid JSON';
-    hasError = true;
-    config = {};
+  if (stepForm.value.type === 'condition') {
+    const conditionError = validateConditionSource(stepForm.value.sourceCode);
+    if (conditionError) {
+      stepErrors.value.sourceCode = conditionError;
+      hasError = true;
+    }
   }
 
-  if (hasStepErrors.value) {
-    return;
-  }
+  if (hasStepErrors.value) return;
   if (hasError) return;
 
   savingStep.value = true;
@@ -831,14 +933,13 @@ async function saveStep() {
       key: stepForm.value.key,
       stepOrder: stepForm.value.stepOrder,
       type: stepForm.value.type,
-      config,
       sourceCode: stepForm.value.sourceCode,
       scriptLanguage: stepForm.value.scriptLanguage,
       compiledCode: stepForm.value.compiledCode,
       timeout: stepForm.value.timeout || 5000,
       onError: stepForm.value.onError || 'stop',
       retryAttempts: stepForm.value.retryAttempts || 0,
-      isEnabled: true,
+      isEnabled: stepForm.value.isEnabled !== false,
       parent: stepForm.value.parentId ? { id: stepForm.value.parentId } : null,
       branch: stepForm.value.parentId ? stepForm.value.branch : null,
     };
@@ -882,6 +983,12 @@ function duplicateStep() {
   };
   stepFormSnapshot.value = JSON.stringify(stepForm.value);
   testResult.value = null;
+  stepDrawerUpdating.value = true;
+  const q: Record<string, any> = { ...route.query, editStep: 'new' };
+  delete q.editStepKey;
+  void router.replace({ query: q }).finally(() => {
+    stepDrawerUpdating.value = false;
+  });
 }
 
 async function deleteCurrentStep() {
@@ -925,7 +1032,7 @@ async function refreshExecutions() {
   }
 }
 
-const { executeWithResult: fetchExecDetail } = useApi(
+const { executeWithResult: fetchExecDetail } = useApi<FeatureCollection<FeatureFlowExecution>>(
   () => {
     const filter = buildFlowExecutionDetailFilter(
       flowId.value,
@@ -957,7 +1064,7 @@ async function openExecution(exec: any) {
     flowId.value !== requestedFlowId ||
     String(getId(selectedExec.value)) !== String(requestedExecutionId)
   ) return;
-  const detail = (result.data as any)?.data?.[0];
+  const detail = result.data.data[0];
   const detailFlowId = getId(detail?.flow) ?? detail?.flow;
   if (
     !detail ||
