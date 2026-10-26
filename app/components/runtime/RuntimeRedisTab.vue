@@ -519,6 +519,7 @@ function openCreateKey() {
             size="sm"
             variant="soft"
             color="neutral"
+            aria-label="Reload Redis namespace"
             :loading="runtime.redisKeysPending"
             @click="refreshRedis"
           />

@@ -58,13 +58,6 @@
         </template>
         <template #steps>
           <CommonFormCard>
-            <template #header>
-              <div class="flex items-center justify-end">
-                <UButton icon="lucide:plus" size="sm" variant="solid" color="primary" @click="() => openCreateStep()">
-                  Add Step
-                </UButton>
-              </div>
-            </template>
             <div class="h-[400px] md:h-[500px] lg:h-[600px]">
               <KeepAlive>
               <FlowCanvas
@@ -447,7 +440,17 @@ const flowSections = computed(() => [
     icon: 'lucide:workflow',
     title: flowTitle.value,
     description: 'Design and order the steps executed by this flow',
-    actions: [flowReloadAction],
+    actions: [
+      flowReloadAction,
+      {
+        id: 'add-flow-step',
+        label: 'Add Step',
+        icon: 'lucide:plus',
+        variant: 'solid' as const,
+        color: 'primary' as const,
+        onClick: () => openCreateStep(),
+      },
+    ],
   },
   {
     label: 'Triggers',
@@ -461,8 +464,6 @@ const flowSections = computed(() => [
     label: 'History',
     value: 'history',
     icon: 'lucide:history',
-    title: flowTitle.value,
-    description: 'Inspect recent flow executions and step logs',
   },
 ]);
 

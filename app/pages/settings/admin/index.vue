@@ -1,14 +1,6 @@
 <script setup lang="ts">
-const { registerPageHeader } = usePageHeaderRegistry();
 const { checkPermissionCondition } = usePermissions();
 const { me } = useAuth();
-
-registerPageHeader({
-  title: 'Admin',
-  description: 'Operational tools for logs and runtime health',
-  variant: 'default',
-  gradient: 'purple',
-});
 
 const adminTools = computed(() => {
   const isRootAdmin = !!me.value?.isRootAdmin;
@@ -40,10 +32,20 @@ const adminTools = computed(() => {
     },
   ].filter((tool) => tool.visible);
 });
+
+const adminSections = [
+  {
+    value: 'admin',
+    title: 'Admin',
+    description: 'Operational tools for logs and runtime health',
+  },
+];
 </script>
 
 <template>
   <div class="eapp-page-constrained space-y-6 lg:px-0">
+    <CommonPanel :sections="adminSections">
+      <template #admin>
     <div v-if="adminTools.length > 0" class="grid gap-3 sm:grid-cols-2">
       <NuxtLink
         v-for="tool in adminTools"
@@ -71,5 +73,7 @@ const adminTools = computed(() => {
       icon="lucide:lock"
       size="md"
     />
+      </template>
+    </CommonPanel>
   </div>
 </template>

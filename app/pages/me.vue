@@ -117,8 +117,6 @@ const profileSections = computed(() => [
     label: 'API Tokens',
     value: 'api-tokens',
     icon: 'lucide:key',
-    title: 'API Tokens',
-    description: 'Manage personal access tokens for MCP servers and external API clients',
   },
 ]);
 const activeTab = computed({

@@ -1,16 +1,8 @@
 <script setup lang="ts">
 import { sortMenuItems } from "~/utils/menu-order";
 
-const { registerPageHeader } = usePageHeaderRegistry();
 const { menuItems } = useMenuRegistry();
 const { hasMenuPermission } = usePermissions();
-
-registerPageHeader({
-  title: "System Settings",
-  description: "Manage your system configuration, users, roles, menus, extensions, and more",
-  variant: "minimal",
-  gradient: "none",
-});
 
 const settingsLinks = computed(() =>
   sortMenuItems(
@@ -27,10 +19,20 @@ const settingsLinks = computed(() =>
     }),
   ),
 );
+
+const settingsSections = [
+  {
+    value: 'settings',
+    title: 'System Settings',
+    description: 'Manage your system configuration, users, roles, menus, extensions, and more',
+  },
+];
 </script>
 
 <template>
   <div class="w-full min-w-0 eapp-page-constrained space-y-6">
+    <CommonPanel :sections="settingsSections">
+      <template #settings>
     <div v-if="settingsLinks.length > 0" class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       <NuxtLink
         v-for="item in settingsLinks"
@@ -54,5 +56,7 @@ const settingsLinks = computed(() =>
       icon="lucide:settings"
       size="lg"
     />
+      </template>
+    </CommonPanel>
   </div>
 </template>

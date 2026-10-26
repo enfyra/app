@@ -63,7 +63,10 @@ describe('panel table surface', () => {
     const panelPages = [
       'pages/index.vue',
       'pages/me.vue',
+      'pages/packages/index.vue',
       'pages/collections/[table].vue',
+      'pages/settings/index.vue',
+      'pages/settings/admin/index.vue',
       'pages/settings/general/index.vue',
       'pages/settings/flows/[id].vue',
       'pages/settings/websockets/[id].vue',

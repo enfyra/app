@@ -218,8 +218,6 @@ const collectionSections = computed(() => [
     label: 'Routes',
     icon: 'i-lucide-route',
     value: 'routes',
-    title: collectionTitle.value,
-    description: 'Configure REST endpoints, method rules, handlers, and hooks',
   },
   {
     label: 'GraphQL',
@@ -232,8 +230,6 @@ const collectionSections = computed(() => [
     label: 'Triggers',
     icon: 'i-lucide-zap',
     value: 'triggers',
-    title: collectionTitle.value,
-    description: 'Manage flows triggered by changes in this collection',
   },
 ])
 
