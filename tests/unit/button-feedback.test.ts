@@ -17,12 +17,12 @@ describe('button feedback', () => {
     expect(config).not.toContain('active:translate-y-px')
   })
 
-  it('reserves desktop and mobile header space for conditional selection actions', () => {
+  it('reserves conditional action space on desktop without an empty mobile row', () => {
     const pageHeader = readAppFile('components/common/PageHeader.vue')
     expect(pageHeader).toContain('hasConditionalActions')
-    expect(pageHeader).toContain('min-h-[88px]')
-    expect(pageHeader).toContain('min-h-[40px]')
-    expect(pageHeader).toContain("'flex-col'")
+    expect(pageHeader).toContain("hasConditionalActions ? 'min-h-10' : undefined")
+    expect(pageHeader).toContain(': menuActions.value.length > 0')
+    expect(pageHeader).toContain('v-if="hasLinks" #links')
   })
 
   it('keeps shared card and list actions pending for their click promise', () => {
@@ -43,15 +43,18 @@ describe('button feedback', () => {
 
     for (const path of actionSurfaces) {
       const content = readAppFile(path)
-      expect(content, `${path} enables automatic loading`).toContain(':loading-auto="true"')
+      expect(content, `${path} enables automatic loading`).toMatch(/(?:loading-auto|:loading-auto="true")/)
     }
 
     const headerActions = readAppFile('components/layout/HeaderActions.vue')
     expect(headerActions).toContain('return action.submit()')
     expect(headerActions).toContain('return action.onClick()')
-
-    for (const path of actionSurfaces.filter((path) => path !== 'components/layout/HeaderActions.vue')) {
-      expect(readAppFile(path), `${path} returns the action result`).toContain('return action.onClick?.()')
+    expect(readAppFile('components/layout/Header.vue')).toContain('return action.onClick?.()')
+    for (const path of ['components/layout/SubHeader.vue', 'components/common/PageHeader.vue']) {
+      expect(readAppFile(path), `${path} returns the action result`).toContain('return runAction(action)')
     }
+    const presentation = readAppFile('composables/layout/useSubHeaderActionPresentation.ts')
+    expect(presentation).toContain('return action.onClick()')
+    expect(presentation).toContain('return action.submit()')
   })
 })
