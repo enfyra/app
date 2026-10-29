@@ -1,4 +1,5 @@
 import { createError, defineEventHandler, getRequestHeader, setHeader, setResponseStatus } from "h3";
+import { isSameAppOrigin } from '~/utils/enfyra/server/requestOrigin';
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -149,7 +150,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const origin = getRequestHeader(event, 'origin');
-  if (!origin) {
+  if (!origin || isSameAppOrigin(event.node.req)) {
     return;
   }
 

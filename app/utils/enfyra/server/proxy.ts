@@ -4,6 +4,7 @@ import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import { type H3Event, getRequestHeader, proxyRequest } from "h3";
 import { Agent, fetch as undiciFetch } from "undici";
 import { buildForwardedHeaders } from "./forwardedHeaders";
+import { isSameAppOrigin } from "./requestOrigin";
 import { beginProxyDelivery, deliveryHopHeader } from "./proxyDelivery";
 
 const CORS_RESPONSE_HEADERS = [
@@ -99,10 +100,15 @@ export async function proxyToAPI(event: H3Event, customPath?: string) {
     return await proxyRequest(event, targetUrl, {
       headers,
       streamRequest: true,
-      fetch: (input, init) => undiciFetch(String(input), {
-        ...init,
-        dispatcher,
-      } as Parameters<typeof undiciFetch>[1]) as unknown as Promise<Response>,
+      fetch: (input, init) => {
+        const upstreamHeaders = new Headers(init?.headers);
+        if (isSameAppOrigin(event.node.req)) upstreamHeaders.delete('origin');
+        return undiciFetch(String(input), {
+          ...init,
+          headers: upstreamHeaders,
+          dispatcher,
+        } as Parameters<typeof undiciFetch>[1]) as unknown as Promise<Response>;
+      },
       fetchOptions: {
         redirect: "manual",
         signal: controller.signal,

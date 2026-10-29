@@ -1,5 +1,6 @@
-import { createError, getRequestURL, type H3Event } from "h3";
+import { createError, type H3Event } from "h3";
 import { getValidatedOrigins } from "../middleware/cors";
+import { getAppRequestOrigin } from '~/utils/enfyra/server/requestOrigin';
 
 const MAX_OAUTH_STATE_LENGTH = 4096;
 
@@ -30,22 +31,16 @@ export async function requireValidRedirectUrl(
     });
   }
 
+  if (event && parsed.origin === getAppRequestOrigin(event.node.req)) {
+    return parsed.toString();
+  }
+
   const corsCache = await getValidatedOrigins();
-  if (corsCache.loaded && corsCache.origins.length > 0) {
-    if (!corsCache.origins.includes(parsed.origin)) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: "Redirect origin is not allowed",
-      });
-    }
-  } else if (event) {
-    const appOrigin = getRequestURL(event).origin;
-    if (parsed.origin !== appOrigin) {
-      throw createError({
-        statusCode: 403,
-        statusMessage: "Redirect origin is not allowed",
-      });
-    }
+  if (!corsCache.loaded || !corsCache.origins.includes(parsed.origin)) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: "Redirect origin is not allowed",
+    });
   }
 
   return parsed.toString();
@@ -67,7 +62,7 @@ export async function requireValidPostLoginRedirectUrl(
 
   let redirect: string;
   try {
-    redirect = new URL(value, getRequestURL(event).origin).toString();
+    redirect = new URL(value, getNuxtAppOrigin(event)).toString();
   } catch {
     throw createError({
       statusCode: 400,
@@ -117,7 +112,11 @@ export function requireValidCookieBridgePrefix(value: unknown) {
 }
 
 export function getNuxtAppOrigin(event: H3Event) {
-  return getRequestURL(event).origin;
+  const origin = getAppRequestOrigin(event.node.req);
+  if (!origin) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid app request origin' });
+  }
+  return origin;
 }
 
 export function buildUrlWithQuery(

@@ -1,14 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearCorsCache } from '../../server/middleware/cors';
 
-vi.mock('h3', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('h3')>();
-  return {
-    ...actual,
-    getRequestURL: vi.fn(() => new URL('https://myapp.com')),
-  };
-});
-
 vi.mock('../../server/middleware/cors', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../server/middleware/cors')>();
   return {
@@ -26,7 +18,9 @@ import {
 
 const mockedGetValidatedOrigins = vi.mocked(getValidatedOrigins);
 
-const mockEvent = {} as any;
+const mockEvent = {
+  node: { req: { headers: { host: 'myapp.com' }, socket: { encrypted: true, remoteAddress: '198.51.100.1' } } },
+} as any;
 
 describe('OAuth redirect origin validation', () => {
   afterEach(() => {
@@ -73,6 +67,14 @@ describe('OAuth redirect origin validation', () => {
     expect(result).toBe('https://myapp.com/login');
   });
 
+  it('keeps same-app login redirects usable with a restrictive external allowlist', async () => {
+    mockedGetValidatedOrigins.mockResolvedValue({
+      origins: ['https://app.example.com'], timestamp: Date.now(), loaded: true,
+    });
+    await expect(requireValidRedirectUrl('https://myapp.com/settings', mockEvent)).resolves.toBe('https://myapp.com/settings');
+    await expect(requireValidPostLoginRedirectUrl('/settings', mockEvent)).resolves.toBe('https://myapp.com/settings');
+  });
+
   it('rejects cross-origin redirect when cors cache not loaded', async () => {
     mockedGetValidatedOrigins.mockResolvedValue({
       origins: [],
@@ -83,6 +85,17 @@ describe('OAuth redirect origin validation', () => {
     await expect(
       requireValidRedirectUrl('https://evil.com/callback', mockEvent)
     ).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it.each([false, true])('does not allow arbitrary redirects without an app request when loaded=%s', async loaded => {
+    mockedGetValidatedOrigins.mockResolvedValue({ origins: [], timestamp: 0, loaded });
+    await expect(requireValidRedirectUrl('https://evil.com/return')).rejects.toMatchObject({ statusCode: 403 });
+  });
+
+  it('does not trust forwarded host for same-app redirect recovery', async () => {
+    mockedGetValidatedOrigins.mockResolvedValue({ origins: [], timestamp: 0, loaded: false });
+    const event = { node: { req: { headers: { host: 'myapp.com', 'x-forwarded-host': 'evil.com', 'x-forwarded-proto': 'https' }, socket: { remoteAddress: '127.0.0.1' } } } } as any;
+    await expect(requireValidRedirectUrl('https://evil.com/return', event)).rejects.toMatchObject({ statusCode: 403 });
   });
 
   it('still rejects invalid protocol regardless of cors state', async () => {
