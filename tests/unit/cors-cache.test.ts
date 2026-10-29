@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import {
   clearCorsCache,
   evaluateCorsOrigin,
@@ -53,10 +54,10 @@ describe('CORS origin decision', () => {
     ).toEqual({ allowed: false, corsOrigin: null });
   });
 
-  it('allows an unconfigured allow-list without granting CORS', () => {
+  it('grants public CORS when the allow-list is empty', () => {
     expect(
       evaluateCorsOrigin('https://a.test', { loaded: true, origins: [] }),
-    ).toEqual({ allowed: true, corsOrigin: null });
+    ).toEqual({ allowed: true, corsOrigin: '*' });
   });
 
   it('grants the configured entry for a listed origin', () => {

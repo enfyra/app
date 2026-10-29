@@ -50,12 +50,15 @@ async function fetchAllowedOrigins(): Promise<string[] | null> {
     }
 
     const data = await response.json();
-    const rows = Array.isArray(data?.data) ? data.data : [];
-
-    return rows
-      .filter((row: any) => row?.isEnabled !== false)
-      .map((row: any) => normalizeAllowedOrigin(row?.value))
-      .filter((origin: string | null): origin is string => origin !== null);
+    if (!Array.isArray(data?.data)) return markUnavailable('Invalid origin list');
+    const origins: string[] = [];
+    for (const row of data.data) {
+      if (row?.isEnabled === false) continue;
+      const origin = normalizeAllowedOrigin(row?.value);
+      if (!origin) return markUnavailable('Invalid enabled origin');
+      origins.push(origin);
+    }
+    return origins;
   } catch (error: any) {
     return markUnavailable('Error fetching origins', error?.message || error);
   }
@@ -68,9 +71,9 @@ export async function getValidatedOrigins(): Promise<CorsCache> {
 
   if (isCacheExpired && !inErrorCooldown) {
     const origins = await fetchAllowedOrigins();
-    if (origins !== null) {
-      cachedCorsData = { origins, timestamp: now, loaded: true };
-    }
+    cachedCorsData = origins === null
+      ? { origins: [], timestamp: 0, loaded: false }
+      : { origins, timestamp: now, loaded: true };
   }
 
   return cachedCorsData;
@@ -122,10 +125,8 @@ export function normalizeAllowedOrigin(value: unknown): string | null {
  *
  * - No Origin header: allowed without CORS.
  * - Allow-list not loaded yet: denied, so a cold cache never grants access.
- * - Allow-list loaded and empty: allowed without CORS. This is the unconfigured
- *   default, where the app is reached through its own origin.
- * - Allow-list loaded with entries: only an exact entry is granted, and that
- *   entry is the value granted.
+ * - Allow-list loaded and empty: grant public CORS without credentials.
+ * - Allow-list loaded with entries: only an exact entry is granted with credentials.
  */
 export function evaluateCorsOrigin(
   origin: string | undefined,
@@ -133,7 +134,7 @@ export function evaluateCorsOrigin(
 ): { allowed: boolean; corsOrigin: string | null } {
   if (!origin) return { allowed: true, corsOrigin: null };
   if (!cors.loaded) return { allowed: false, corsOrigin: null };
-  if (cors.origins.length === 0) return { allowed: true, corsOrigin: null };
+  if (cors.origins.length === 0) return { allowed: true, corsOrigin: '*' };
   const corsOrigin = cors.origins.find((entry) => entry === origin) ?? null;
   return corsOrigin
     ? { allowed: true, corsOrigin }
@@ -175,7 +176,9 @@ export default defineEventHandler(async (event) => {
 
   const requestedHeaders = getRequestHeader(event, 'access-control-request-headers');
   setHeader(event, 'Access-Control-Allow-Origin', decision.corsOrigin);
-  setHeader(event, 'Access-Control-Allow-Credentials', 'true');
+  if (decision.corsOrigin !== '*') {
+    setHeader(event, 'Access-Control-Allow-Credentials', 'true');
+  }
   setHeader(event, 'Vary', 'Origin');
 
   if (isPreflight) {

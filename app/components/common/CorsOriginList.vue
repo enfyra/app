@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <p class="text-xs leading-relaxed text-[var(--text-secondary)]">
       Full origins only (scheme, host, port). Example: https://app.example.com
-      or http://localhost:3000. An empty list allows every origin.
+      or http://localhost:3000. With no enabled origins, every origin is allowed without cross-origin cookies.
     </p>
 
     <CommonLoadingState
@@ -54,7 +54,7 @@
       v-else
       class="rounded-[var(--radius-panel)] border border-dashed border-[var(--border-default)] bg-[var(--surface-muted)]/40 px-4 py-5 text-center text-sm text-[var(--text-tertiary)]"
     >
-      No origins in the list. Any origin will be allowed until you add entries.
+      No origins in the list. Public cross-origin requests are allowed without cookies.
     </div>
 
     <div class="relative">
@@ -161,6 +161,15 @@ function normalizeOrigin(raw: string): string {
 async function addOrigin() {
   const normalized = normalizeOrigin(newOrigin.value);
   if (!normalized || creating.value) return;
+  try {
+    const parsed = new URL(normalized);
+    if ((parsed.protocol !== 'http:' && parsed.protocol !== 'https:') || !parsed.host) {
+      throw new Error('Invalid origin');
+    }
+  } catch {
+    notify.warning('Invalid Origin', 'Enter a complete HTTP or HTTPS origin. Leave the list empty to allow all origins.');
+    return;
+  }
 
   const exists = origins.value.some(
     (o) => o.value.toLowerCase() === normalized.toLowerCase()

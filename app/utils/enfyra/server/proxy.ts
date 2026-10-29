@@ -29,7 +29,9 @@ function applyBridgeCorsDecision(event: H3Event): void {
     | undefined;
   if (!decision?.corsOrigin) return;
   event.node.res.setHeader("Access-Control-Allow-Origin", decision.corsOrigin);
-  event.node.res.setHeader("Access-Control-Allow-Credentials", "true");
+  if (decision.corsOrigin !== "*") {
+    event.node.res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
   event.node.res.setHeader("Vary", "Origin");
 }
 

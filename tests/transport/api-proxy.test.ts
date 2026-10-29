@@ -30,6 +30,23 @@ afterEach(async () => {
 });
 
 describe('API proxy real transport', () => {
+  it('preserves wildcard CORS without upstream credentials on the proxied response', async () => {
+    config.public.apiUrl = await listen(createServer((_req, res) => {
+      res.setHeader('access-control-allow-origin', 'https://other.invalid');
+      res.setHeader('access-control-allow-credentials', 'true');
+      res.end('ok');
+    }));
+    const app = createApp().use(defineEventHandler(event => {
+      event.context.corsOrigin = { allowed: true, corsOrigin: '*' };
+      return proxyToAPI(event);
+    }));
+    const url = await listen(createServer(toNodeListener(app)));
+    const response = await fetch(url + '/api/items', { headers: { origin: 'https://example.invalid' } });
+    expect(response.headers.get('access-control-allow-origin')).toBe('*');
+    expect(response.headers.get('access-control-allow-credentials')).toBeNull();
+    expect(await response.text()).toBe('ok');
+  });
+
   it('appends the transport peer after caller-controlled forwarding headers', async () => {
     config.public.apiUrl = await listen(createServer((req, res) => {
       res.setHeader('content-type', 'application/json');
