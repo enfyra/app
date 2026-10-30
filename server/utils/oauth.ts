@@ -1,5 +1,5 @@
 import { createError, type H3Event } from "h3";
-import { getValidatedOrigins } from "../middleware/cors";
+import { getValidatedAuthOrigins } from './auth-origins';
 import { getAppRequestOrigin } from '~/utils/enfyra/server/requestOrigin';
 
 const MAX_OAUTH_STATE_LENGTH = 4096;
@@ -35,8 +35,8 @@ export async function requireValidRedirectUrl(
     return parsed.toString();
   }
 
-  const corsCache = await getValidatedOrigins();
-  if (!corsCache.loaded || !corsCache.origins.includes(parsed.origin)) {
+  const authOrigins = await getValidatedAuthOrigins();
+  if (!authOrigins.loaded || !authOrigins.origins.includes(parsed.origin)) {
     throw createError({
       statusCode: 403,
       statusMessage: "Redirect origin is not allowed",

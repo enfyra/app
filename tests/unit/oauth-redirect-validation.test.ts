@@ -1,22 +1,21 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clearCorsCache } from '../../server/middleware/cors';
 
-vi.mock('../../server/middleware/cors', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../server/middleware/cors')>();
+vi.mock('../../server/utils/auth-origins', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../server/utils/auth-origins')>();
   return {
     ...actual,
-    getValidatedOrigins: vi.fn(),
+    getValidatedAuthOrigins: vi.fn(),
   };
 });
 
-import { getValidatedOrigins } from '../../server/middleware/cors';
+import { getValidatedAuthOrigins } from '../../server/utils/auth-origins';
 import {
   requireValidOAuthState,
   requireValidPostLoginRedirectUrl,
   requireValidRedirectUrl,
 } from '../../server/utils/oauth';
 
-const mockedGetValidatedOrigins = vi.mocked(getValidatedOrigins);
+const mockedGetValidatedOrigins = vi.mocked(getValidatedAuthOrigins);
 
 const mockEvent = {
   node: { req: { headers: { host: 'myapp.com' }, socket: { encrypted: true, remoteAddress: '198.51.100.1' } } },
@@ -25,14 +24,12 @@ const mockEvent = {
 describe('OAuth redirect origin validation', () => {
   afterEach(() => {
     vi.clearAllMocks();
-    clearCorsCache();
   });
 
-  it('rejects redirect to origin not in cors allowlist', async () => {
+  it('rejects redirect to origin not in auth origin allowlist', async () => {
     mockedGetValidatedOrigins.mockResolvedValue({
       origins: ['https://app.example.com'],
-      timestamp: Date.now(),
-      loaded: true,
+            loaded: true,
     });
 
     await expect(
@@ -40,11 +37,10 @@ describe('OAuth redirect origin validation', () => {
     ).rejects.toMatchObject({ statusCode: 403 });
   });
 
-  it('accepts redirect to origin in cors allowlist', async () => {
+  it('accepts redirect to origin in auth origin allowlist', async () => {
     mockedGetValidatedOrigins.mockResolvedValue({
       origins: ['https://app.example.com'],
-      timestamp: Date.now(),
-      loaded: true,
+            loaded: true,
     });
 
     const result = await requireValidRedirectUrl(
@@ -53,11 +49,10 @@ describe('OAuth redirect origin validation', () => {
     expect(result).toBe('https://app.example.com/dashboard');
   });
 
-  it('falls back to same-origin when cors cache not loaded', async () => {
+  it('falls back to same-origin when auth origin cache not loaded', async () => {
     mockedGetValidatedOrigins.mockResolvedValue({
       origins: [],
-      timestamp: 0,
-      loaded: false,
+            loaded: false,
     });
 
     const result = await requireValidRedirectUrl(
@@ -75,11 +70,10 @@ describe('OAuth redirect origin validation', () => {
     await expect(requireValidPostLoginRedirectUrl('/settings', mockEvent)).resolves.toBe('https://myapp.com/settings');
   });
 
-  it('rejects cross-origin redirect when cors cache not loaded', async () => {
+  it('rejects cross-origin redirect when auth origin cache not loaded', async () => {
     mockedGetValidatedOrigins.mockResolvedValue({
       origins: [],
-      timestamp: 0,
-      loaded: false,
+            loaded: false,
     });
 
     await expect(
@@ -98,11 +92,10 @@ describe('OAuth redirect origin validation', () => {
     await expect(requireValidRedirectUrl('https://evil.com/return', event)).rejects.toMatchObject({ statusCode: 403 });
   });
 
-  it('still rejects invalid protocol regardless of cors state', async () => {
+  it('still rejects invalid protocol regardless of auth origin state', async () => {
     mockedGetValidatedOrigins.mockResolvedValue({
       origins: ['https://app.example.com'],
-      timestamp: Date.now(),
-      loaded: true,
+            loaded: true,
     });
 
     await expect(
@@ -113,8 +106,7 @@ describe('OAuth redirect origin validation', () => {
   it('resolves and validates a relative post-login redirect', async () => {
     mockedGetValidatedOrigins.mockResolvedValue({
       origins: [],
-      timestamp: 0,
-      loaded: false,
+            loaded: false,
     });
 
     await expect(
@@ -125,8 +117,7 @@ describe('OAuth redirect origin validation', () => {
   it('rejects an unsafe post-login redirect protocol', async () => {
     mockedGetValidatedOrigins.mockResolvedValue({
       origins: [],
-      timestamp: 0,
-      loaded: false,
+            loaded: false,
     });
 
     await expect(
@@ -137,8 +128,7 @@ describe('OAuth redirect origin validation', () => {
   it('accepts multiple allowed origins', async () => {
     mockedGetValidatedOrigins.mockResolvedValue({
       origins: ['https://app.example.com', 'https://admin.example.com'],
-      timestamp: Date.now(),
-      loaded: true,
+            loaded: true,
     });
 
     const result = await requireValidRedirectUrl(

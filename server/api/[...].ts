@@ -2,7 +2,6 @@ import {
   createError,
   defineEventHandler,
   getQuery,
-  getRequestURL,
   sendRedirect,
 } from "h3";
 import {
@@ -85,12 +84,11 @@ export default defineEventHandler(async (event) => {
     } catch (err: unknown) {
       const failure = getApiErrorRecord(err);
       const message = failure?.statusMessage || failure?.message || "OAuth validation failed";
-      const loginUrl = new URL("/login", getRequestURL(event).origin);
-      loginUrl.searchParams.set("error", String(message));
+      const loginQuery = new URLSearchParams({ error: String(message) });
       if (typeof query.redirect === "string" && query.redirect.length > 0) {
-        loginUrl.searchParams.set("redirect", query.redirect);
+        loginQuery.set("redirect", query.redirect);
       }
-      return sendRedirect(event, loginUrl.toString(), 302);
+      return sendRedirect(event, `/login?${loginQuery}`, 302);
     }
 
     if (!apiUrl) {
