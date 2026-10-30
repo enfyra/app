@@ -32,7 +32,9 @@ function updateOperator(operator: string) {
 
   if (operator === '_is_null') {
     props.condition.value = null;
-  } else if (props.condition.type === 'date') {
+  } else if (operator === '_in' || operator === '_not_in') {
+    if (!Array.isArray(props.condition.value)) props.condition.value = [];
+  } else if (props.condition.type === 'date' || props.condition.type === 'datetime') {
     const expectsRange = operator === '_between';
     const hasRange = Array.isArray(props.condition.value) && props.condition.value.length === 2;
     const hasSingleValue = typeof props.condition.value === 'string' && props.condition.value.length > 0;

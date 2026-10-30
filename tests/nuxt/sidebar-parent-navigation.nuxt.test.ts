@@ -1,17 +1,35 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { flushPromises, type VueWrapper } from '@vue/test-utils'
 import { UNavigationMenu } from '#components'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent, h, nextTick } from 'vue'
+import { TooltipProvider } from 'reka-ui'
 import UnifiedSidebar from '~/components/sidebar/UnifiedSidebar.vue'
 
 const mounted: { unmount: () => void }[] = []
 const hosts: HTMLElement[] = []
+const originalWidth = window.innerWidth
+beforeEach(() => {
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1440 })
+  vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => {
+    const maximum = query.match(/max-width:\s*([\d.]+)(px|rem)/)
+    const minimum = query.match(/min-width:\s*([\d.]+)(px|rem)/)
+    const pixels = (match: RegExpMatchArray) => Number(match[1]) * (match[2] === 'rem' ? 16 : 1)
+    return {
+      matches: Boolean(maximum || minimum) && (!maximum || window.innerWidth <= pixels(maximum)) && (!minimum || window.innerWidth >= pixels(minimum)),
+      media: query, onchange: null,
+      addListener: vi.fn(), removeListener: vi.fn(),
+      addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn(),
+    } as unknown as MediaQueryList
+  })
+})
 afterEach(() => {
   mounted.splice(0).forEach(wrapper => wrapper.unmount())
   hosts.splice(0).forEach(host => host.remove())
   localStorage.removeItem('sidebar-menu-open-keys')
   localStorage.removeItem('sidebar-open')
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalWidth })
+  vi.restoreAllMocks()
 })
 
 const menus = [
@@ -29,7 +47,7 @@ const menus = [
 
 async function mountSidebar(path = '/dashboard', options: { deferredData?: boolean; savedOpenKeys?: Record<string, boolean> } = {}) {
   localStorage.removeItem('sidebar-menu-open-keys')
-  localStorage.removeItem('sidebar-open')
+  localStorage.setItem('sidebar-open', 'true')
   if (options.savedOpenKeys) {
     localStorage.setItem('sidebar-menu-open-keys', JSON.stringify(options.savedOpenKeys))
   }
@@ -49,7 +67,9 @@ async function mountSidebar(path = '/dashboard', options: { deferredData?: boole
   const host = document.createElement('div')
   document.body.append(host)
   hosts.push(host)
-  const wrapper = await mountSuspended(UnifiedSidebar, { route: path, attachTo: host })
+  const wrapper = await mountSuspended(defineComponent({
+    setup: () => () => h(TooltipProvider, {}, { default: () => h(UnifiedSidebar) }),
+  }), { route: path, attachTo: host })
   mounted.push(wrapper)
   await nextTick()
   await flushPromises()
@@ -149,7 +169,9 @@ describe('sidebar native navigation', () => {
     const host = document.createElement('div')
     document.body.append(host)
     hosts.push(host)
-    const restored = await mountSuspended(UnifiedSidebar, { route: '/dashboard', attachTo: host })
+    const restored = await mountSuspended(defineComponent({
+      setup: () => () => h(TooltipProvider, {}, { default: () => h(UnifiedSidebar) }),
+    }), { route: '/dashboard', attachTo: host })
     mounted.push(restored)
     await flushPromises()
     expect(state(restored, 'Settings')).toBe('open')

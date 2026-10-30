@@ -359,6 +359,12 @@ export default defineAppConfig({
           "disabled:border-[var(--control-disabled-border)] disabled:!bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
         ].join(" "),
       },
+      variants: {
+        variant: {
+          outline: '!ring-0 focus:!ring-3 focus:!ring-[var(--theme-focus-ring)]',
+          subtle: '!ring-0 focus:!ring-3 focus:!ring-[var(--theme-focus-ring)]',
+        },
+      },
     },
     textarea: {
       slots: {
@@ -378,6 +384,12 @@ export default defineAppConfig({
           "disabled:cursor-not-allowed disabled:opacity-100",
           "disabled:border-[var(--control-disabled-border)] disabled:!bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
         ].join(" "),
+      },
+      variants: {
+        variant: {
+          outline: '!ring-0 focus:!ring-3 focus:!ring-[var(--theme-focus-ring)]',
+          subtle: '!ring-0 focus:!ring-3 focus:!ring-[var(--theme-focus-ring)]',
+        },
       },
     },
     select: {
@@ -450,6 +462,12 @@ export default defineAppConfig({
           "data-highlighted:not-data-disabled:before:!bg-[var(--state-primary-soft-bg)]",
         ].join(" "),
       },
+      variants: {
+        variant: {
+          outline: '!ring-0 focus:!ring-3 focus:!ring-[var(--theme-focus-ring)]',
+          subtle: '!ring-0 focus:!ring-3 focus:!ring-[var(--theme-focus-ring)]',
+        },
+      },
       compoundVariants: [
         {
           color: "primary",
@@ -510,6 +528,10 @@ export default defineAppConfig({
               "disabled:border-[var(--control-disabled-border)] disabled:!bg-[var(--control-disabled-bg)] disabled:text-[var(--control-disabled-text)]",
             ].join(" "),
           },
+        },
+        variant: {
+          outline: '!ring-0 focus-within:!ring-3 focus-within:!ring-[var(--theme-focus-ring)]',
+          subtle: '!ring-0 focus-within:!ring-3 focus-within:!ring-[var(--theme-focus-ring)]',
         },
       },
       compoundVariants: [

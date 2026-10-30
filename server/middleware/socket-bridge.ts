@@ -1,4 +1,5 @@
 import type { IncomingMessage } from 'node:http';
+import { isSameAppOrigin } from '~/utils/enfyra/server/requestOrigin';
 import { defineEventHandler } from 'h3';
 import { useRuntimeConfig } from 'nitropack/runtime/internal/config';
 import { Server as EngineServer } from 'engine.io';
@@ -187,21 +188,25 @@ function startBridge(
 
 function initEngine(httpServer: ReturnType<typeof import('net').createServer>) {
   engine = new EngineServer({
-    cors: {
-      origin: (origin, callback) => {
-        void getValidatedOrigins()
-          .then((cors) => {
-            const granted =
-              origin && cors.loaded && cors.origins.includes(origin)
-                ? origin
-                : false;
-            callback(null, granted);
-          })
-          .catch(() => callback(null, false));
-      },
-      credentials: true,
+    cors: (req, callback) => {
+      const request = req as IncomingMessage;
+      const origin = request.headers.origin;
+      if (isSameAppOrigin(request)) {
+        callback(null, { origin: origin ?? false, credentials: true });
+        return;
+      }
+      void getValidatedOrigins()
+        .then(cors => callback(null, {
+          origin: origin && cors.loaded && cors.origins.includes(origin) ? origin : false,
+          credentials: true,
+        }))
+        .catch(() => callback(null, { origin: false }));
     },
     allowRequest: (req, callback) => {
+      if (isSameAppOrigin(req)) {
+        callback(null, true);
+        return;
+      }
       void getValidatedOrigins()
         .then((cors) => {
           callback(

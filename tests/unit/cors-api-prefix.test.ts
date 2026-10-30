@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import corsMiddleware, {
   clearCorsCache,
-  evaluateCorsOrigin,
 } from '../../server/middleware/cors';
 
 function eventFor(path: string, origin: string | undefined, method = 'POST') {
@@ -64,11 +63,12 @@ describe('CORS middleware API prefix ownership', () => {
     expect((asset as any).context.corsOrigin).toBeUndefined();
   });
 
-  it('leaves the loaded-empty default permissive without granting CORS', () => {
+  it('grants wildcard CORS without credentials to an empty allow-list', async () => {
     clearCorsCache([]);
-    expect(evaluateCorsOrigin('https://sibling.invalid', { loaded: true, origins: [] })).toEqual({
-      allowed: true,
-      corsOrigin: null,
-    });
+    const event = eventFor('/api/items', 'https://sibling.invalid', 'GET');
+    await corsMiddleware(event as any);
+    expect(event.context.corsOrigin).toEqual({ allowed: true, corsOrigin: '*' });
+    expect(event.__headers['Access-Control-Allow-Origin']).toBe('*');
+    expect(event.__headers['Access-Control-Allow-Credentials']).toBeUndefined();
   });
 });

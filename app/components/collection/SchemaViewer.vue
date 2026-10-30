@@ -52,7 +52,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const { isMongoDB } = useDatabase();
 const colorMode = useColorMode();
 const activeTab = ref('structure');
 const { copy, copied } = useClipboard({ legacy: true });
@@ -177,9 +176,7 @@ const examplePayload = computed(() => {
         example[fieldName] = true;
         break;
       case "date":
-        example[fieldName] = isMongoDB.value
-          ? new Date().toISOString()
-          : new Date().toISOString().split("T")[0];
+        example[fieldName] = new Date().toISOString().split("T")[0];
         break;
       case "datetime":
       case "timestamp":
