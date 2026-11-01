@@ -569,10 +569,10 @@ watch(() => routeData.value?.data?.[0], async (newRoute) => {
   }
 }, { immediate: true })
 
-watch(() => props.routeId, async (newRouteId) => {
+watch(() => [props.routeId, props.tableName], async ([newRouteId, tableName]) => {
   routeId.value = newRouteId
-  await fetchRoute()
-})
+  if (newRouteId || tableName) await fetchRoute()
+}, { immediate: true })
 
 // --- Guard Management ---
 

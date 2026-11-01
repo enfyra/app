@@ -120,4 +120,6 @@ registerSubHeaderActions([
     onClick: () => { showApiTestModal.value = true },
   },
 ])
+
+watch(routeId, () => { void fetchRoute() }, { immediate: true })
 </script>
