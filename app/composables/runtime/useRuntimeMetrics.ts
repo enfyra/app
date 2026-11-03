@@ -90,14 +90,19 @@ export function useRuntimeMetrics() {
   const nowMs = ref(Date.now());
   let clockTimer: ReturnType<typeof setInterval> | null = null;
   let stopPermissionWatch: (() => void) | undefined;
+  let stopRuntimeSubscription: (() => void) | undefined;
   if (!BASE_TAB_ITEMS.some((tab) => tab.value === activeTab.value)) {
     activeTab.value = 'overview';
   }
 
   onMounted(() => {
     stopPermissionWatch = watch(() => !!me.value?.isRootAdmin, (allowed) => {
-      if (allowed) poller.start();
-      else {
+      if (allowed) {
+        stopRuntimeSubscription ??= adminSocket.subscribeRuntimeMonitor();
+        poller.start();
+      } else {
+        stopRuntimeSubscription?.();
+        stopRuntimeSubscription = undefined;
         poller.stop();
         runtimeMetricsByInstance.value = {};
         runtimeMetricsUpdatedAt.value = null;
@@ -108,8 +113,10 @@ export function useRuntimeMetrics() {
     }, 250);
   });
 
-  onUnmounted(() => {
+  onBeforeUnmount(() => {
     stopPermissionWatch?.();
+    stopRuntimeSubscription?.();
+    stopRuntimeSubscription = undefined;
     poller.stop();
     if (clockTimer) {
       clearInterval(clockTimer);

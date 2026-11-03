@@ -33,6 +33,7 @@ type RedisSocketResponse<T> = {
 };
 
 let socket: Socket | null = null;
+let runtimeMonitorConsumers = 0;
 
 export const activeReloads = ref<ActiveReload[]>([]);
 export const reloadDoneCountdown = ref(0);
@@ -158,6 +159,10 @@ export function useAdminSocket() {
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,
       reconnectionDelayMax: 30_000,
+    });
+
+    socket.on('connect', () => {
+      if (runtimeMonitorConsumers > 0) socket?.emit('$system:runtime:subscribe', {});
     });
 
     const shouldToastConnection = () => {
@@ -306,6 +311,22 @@ export function useAdminSocket() {
     return redisRequest<RedisAdminKeyDetail>('$system:redis:key:get', payload);
   }
 
+  function subscribeRuntimeMonitor() {
+    runtimeMonitorConsumers++;
+    if (runtimeMonitorConsumers === 1 && socket?.connected) {
+      socket.emit('$system:runtime:subscribe', {});
+    }
+    let stopped = false;
+    return () => {
+      if (stopped) return;
+      stopped = true;
+      runtimeMonitorConsumers--;
+      if (runtimeMonitorConsumers === 0 && socket?.connected) {
+        socket.emit('$system:runtime:unsubscribe', {});
+      }
+    };
+  }
+
   function loadRuntimeMetrics(signal: AbortSignal) {
     return new Promise<RuntimeMetricsClusterPayload>((resolve, reject) => {
       if (!socket?.connected || signal.aborted) {
@@ -342,6 +363,7 @@ export function useAdminSocket() {
     isReloading,
     showReloadBanner,
     loadRuntimeMetrics,
+    subscribeRuntimeMonitor,
     redisAdminOverview,
     redisAdminOverviewUpdatedAt,
     redisAdminKeyChange,
