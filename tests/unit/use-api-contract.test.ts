@@ -25,6 +25,20 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('useApi single and batch contracts', () => {
+  it('stays idle until explicitly executed', async () => {
+    fetch.mockResolvedValue({ data: [] });
+    const api = useApi('/records');
+    await Promise.resolve();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(api.data.value).toBeNull();
+    expect(api.pending.value).toBe(false);
+    expect(api.status.value).toBe('idle');
+    await api.execute();
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(api.data.value).toEqual({ data: [] });
+    expect(api.status.value).toBe('success');
+  });
+
   it('preserves single response identity and resolves async query getters', async () => {
     const response = { data: [{ id: 0 }] };
     fetch.mockResolvedValue(response);

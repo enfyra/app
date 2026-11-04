@@ -1,5 +1,6 @@
 import type { IncomingMessage } from 'node:http';
 import { encodeClientContext } from './clientContext';
+import { isSameAppOrigin } from './requestOrigin';
 
 export function buildForwardedHeaders(req: IncomingMessage): Record<string, string> {
   const headers = req?.headers ?? {};
@@ -22,6 +23,7 @@ export function buildForwardedHeaders(req: IncomingMessage): Record<string, stri
     'x-forwarded-for': chain ? `${chain.split(',').slice(-63).join(',')}, ${peer}` : peer,
   };
   for (const name of ['cf-connecting-ip', 'cf-connecting-ipv6', 'user-agent', 'origin', 'referer']) {
+    if (name === 'origin' && isSameAppOrigin(req)) continue;
     if (typeof headers[name] === 'string') forwarded[name] = headers[name];
   }
   return forwarded;

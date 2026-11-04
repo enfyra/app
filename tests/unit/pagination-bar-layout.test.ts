@@ -77,8 +77,9 @@ describe('pagination layout', () => {
     expect(tablePagination).toContain('floating: true')
     expect(tablePagination).toContain('Teleport v-if="canFloat"')
     expect(tablePagination).toContain('ref="paginationFooter"')
-    expect(settingsTable).toContain(':pagination-config=')
-    expect(settingsTable).not.toContain('<DataTablePagination')
+    expect(settingsTable).toContain('{ paginationConfig: paginationConfig.value }')
+    expect(settingsTable).toContain('v-bind="tableProps"')
+    expect(settingsTable).not.toMatch(/<DataTablePagination(?:\s|\/?>)/)
     expect(dataPage).toContain(':pagination-config=')
     expect(dataPage).not.toContain('<DataTablePagination')
     expect(dataPage).not.toContain('<CommonPaginationBar')
@@ -174,7 +175,7 @@ describe('pagination layout', () => {
 
   it('starts Data table fetches from local paging state instead of waiting for route navigation', () => {
     const page = readAppFile('pages/data/[table]/index.vue')
-    expect(page).toContain('watch([page, pageLimit, tableName, isSingleRecord, schemaReady]')
+    expect(page).toContain('watch([page, pageLimit, tableName, isSingleRecord, schemaReady, sorting]')
     expect(page).toContain('if (schemaReady.value && !isSingleRecord.value) void fetchData()')
     expect(page).toContain('watch(() => route.query.page')
     expect(page).not.toContain('() => [route.query.page, tableName.value')

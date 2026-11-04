@@ -189,12 +189,6 @@ async function clearFilters() {
 }
 
 const columns: ColumnDef<Record<string, any>>[] = [
-  { id: 'user', header: 'User', enableSorting: false,
-    cell: ({ row }) => {
-      const label = row.original.name || row.original.email || 'Unnamed User';
-      return h('span', { class: 'block truncate', title: label }, label);
-    },
-  },
   settingsTextColumn('email', 'Email'),
   { id: 'roles', header: 'Roles', enableSorting: false,
     cell: ({ row }) => row.original.roles?.length
