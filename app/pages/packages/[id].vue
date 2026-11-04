@@ -124,6 +124,14 @@ const {
 
 const packageData = computed(() => apiData.value?.data?.[0]);
 
+const packageType = ref<string | undefined>(undefined);
+
+const packageListRoute = computed(() => {
+  if (packageType.value === 'App') return '/packages/app';
+  if (packageType.value === 'Server') return '/packages/backend';
+  return '/packages';
+});
+
 const isTransitioning = computed(() => {
   const s = packageData.value?.status;
   return s === 'installing' || s === 'updating' || s === 'uninstalling';
@@ -254,6 +262,7 @@ registerHeaderActions([
 async function initializeForm() {
   await loadPackage();
   const data = packageData.value;
+  packageType.value = data?.type;
   form.value = data ? { ...data } : {};
   if (data) {
     formChanges.update(data);
@@ -299,20 +308,20 @@ async function handleUninstall() {
 
   if (!isConfirmed) return;
 
+  const packageName = packageData.value?.name;
+
   await removePackage({ id: packageId });
 
   if (deleteError.value) {
     return;
   }
 
-  if (packageData.value?.type === 'App') {
+  hasFormChanges.value = false;
+  if (packageType.value === 'App') {
     await fetchAppPackages();
-    hasFormChanges.value = false;
-    notify.success("Success", `Package ${packageData.value?.name} uninstalled successfully`);
-    await navigateTo('/packages', { replace: true });
-  } else {
-    await loadPackage();
   }
+  notify.success("Success", `Package ${packageName} uninstalled successfully`);
+  await navigateTo(packageListRoute.value, { replace: true });
 }
 
 function handlePackageEvent(event: string, data: any) {
@@ -341,7 +350,7 @@ function handlePackageEvent(event: string, data: any) {
     });
   } else if (event === '$system:package:uninstalled') {
     hasFormChanges.value = false;
-    navigateTo('/packages', { replace: true });
+    navigateTo(packageListRoute.value, { replace: true });
   }
 }
 
