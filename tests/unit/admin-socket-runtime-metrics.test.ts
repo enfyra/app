@@ -12,7 +12,8 @@ mockNuxtImport('useDynamicComponent', () => () => ({}));
 mockNuxtImport('useGlobalExtensions', () => () => ({}));
 
 const { socket, io } = vi.hoisted(() => {
-  const socket = { connected: true, on: vi.fn(), emit: vi.fn(), timeout: vi.fn(), get volatile() { return this; }, io: { on: vi.fn() } };
+  const events = new Map<string, (...args: any[]) => void>();
+  const socket = { connected: true, events, on: vi.fn((name, fn) => events.set(name, fn)), emit: vi.fn(), timeout: vi.fn(), get volatile() { return this; }, io: { on: vi.fn() } };
   socket.timeout.mockReturnValue(socket);
   return { socket, io: vi.fn(() => socket) };
 });
@@ -40,6 +41,35 @@ describe('admin socket runtime snapshot transport', () => {
     await expect(admin.loadRuntimeMetrics(new AbortController().signal)).resolves.toEqual(snapshot);
     expect(socket.emit).toHaveBeenCalledWith('$system:runtime:metrics:get', {}, expect.any(Function));
     expect(socket.on).not.toHaveBeenCalledWith('$system:runtime:metrics', expect.any(Function));
+  });
+
+  it('subscribes only while monitor consumers exist and resubscribes on reconnect', () => {
+    const admin = useAdminSocket();
+    const first = admin.subscribeRuntimeMonitor();
+    const second = admin.subscribeRuntimeMonitor();
+    expect(socket.emit.mock.calls.filter(([name]) => name === '$system:runtime:subscribe')).toHaveLength(1);
+    first();
+    expect(socket.emit).not.toHaveBeenCalledWith('$system:runtime:unsubscribe', {});
+    const reconnect = socket.events.get('connect');
+    reconnect?.();
+    expect(socket.emit.mock.calls.filter(([name]) => name === '$system:runtime:subscribe')).toHaveLength(2);
+    second();
+    expect(socket.emit).toHaveBeenCalledWith('$system:runtime:unsubscribe', {});
+    socket.emit.mockClear();
+    reconnect?.();
+    expect(socket.emit).not.toHaveBeenCalled();
+    second();
+    expect(socket.emit).not.toHaveBeenCalled();
+  });
+
+  it('does not buffer monitor subscription after leaving while disconnected', () => {
+    const admin = useAdminSocket();
+    socket.connected = false;
+    const stop = admin.subscribeRuntimeMonitor();
+    stop();
+    socket.connected = true;
+    socket.events.get('connect')?.();
+    expect(socket.emit).not.toHaveBeenCalled();
   });
 
   it('rejects disconnected requests without buffering an emit for reconnect', async () => {

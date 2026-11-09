@@ -23,10 +23,10 @@ describe('shared table and action feedback', () => {
     }) })
     const wrapper = await mountSuspended(Host)
     mounted.push(wrapper)
-    await wrapper.get('[aria-label="Next Page"]').trigger('click')
+    await wrapper.get('[aria-label="Next page"]').trigger('click')
     expect(page.value).toBe(2)
     expect(wrapper.get('[aria-label="Page 2"]').attributes('aria-current')).toBe('page')
-    expect(wrapper.get('[aria-label="Next Page"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('[aria-label="Next page"]').attributes('disabled')).toBeUndefined()
   })
 
   for (const [name, component, stub] of [

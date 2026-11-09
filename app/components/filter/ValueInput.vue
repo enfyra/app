@@ -22,7 +22,7 @@
   />
 
   <FilterDatePicker
-    v-else-if="fieldType === 'date' && !needsTwoValues(operator)"
+    v-else-if="fieldType === 'date' && !needsTwoValues(operator) && !['_in', '_not_in'].includes(operator)"
     :model-value="modelValue"
     @update:model-value="emit('update:modelValue', $event)"
     mode="single"
@@ -34,6 +34,18 @@
     @update:model-value="emit('update:modelValue', $event)"
     mode="range"
   />
+
+  <FormDateTimeField
+    v-else-if="fieldType === 'datetime' && !needsTwoValues(operator) && !['_in', '_not_in'].includes(operator)"
+    :model-value="modelValue ?? null"
+    @update:model-value="emit('update:modelValue', $event)"
+  />
+
+  <div v-else-if="fieldType === 'datetime' && needsTwoValues(operator)" class="flex flex-wrap items-center gap-2">
+    <FormDateTimeField :model-value="modelValue?.[0] ?? null" @update:model-value="handleRangeUpdate(0, $event)" />
+    <span class="text-xs text-[var(--text-tertiary)]">and</span>
+    <FormDateTimeField :model-value="modelValue?.[1] ?? null" @update:model-value="handleRangeUpdate(1, $event)" />
+  </div>
 
   <div
     v-else-if="fieldType === 'number' && needsTwoValues(operator)"

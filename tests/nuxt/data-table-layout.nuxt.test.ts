@@ -24,14 +24,14 @@ describe('DataTable layout', () => {
   it('forwards native sorting state and callbacks through the lazy generic wrapper', async () => {
     const wrapper = await mountSuspended(DataTableLazy<{ id: number; name: string }>, { props: {
       headerName: 'Records', data: [{ id: 1, name: 'B' }, { id: 2, name: 'A' }],
-      columns: [{ accessorKey: 'name', header: 'Name', enableSorting: true }],
+      columns: [{ accessorKey: 'name', header: ({ column }) => h('button', { onClick: column.getToggleSortingHandler() }, 'Name'), enableSorting: true }],
       sorting: [{ id: 'name', desc: false }],
     } })
     try {
       await flushPromises()
       expect(wrapper.get('thead th').attributes('aria-sort')).toBe('ascending')
       expect(wrapper.findAll('tbody tr').map(row => row.text())).toEqual(['A', 'B'])
-      await wrapper.get('thead th').trigger('click')
+      await wrapper.get('thead th button').trigger('click')
       await flushPromises()
       expect(wrapper.emitted('update:sorting')?.at(-1)?.[0]).toEqual([{ id: 'name', desc: true }])
     } finally { wrapper.unmount() }

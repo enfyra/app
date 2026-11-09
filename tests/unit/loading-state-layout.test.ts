@@ -18,10 +18,11 @@ describe('loading state layout', () => {
   it('delegates table loading to Nuxt UI and suppresses empty feedback while pending', () => {
     const dataTable = readAppFile('components/data-table/DataTable.vue')
 
-    expect(dataTable).toContain(':data="tableData"')
+    expect(dataTable).toContain(':data="props.data"')
     expect(dataTable).toContain(':loading="props.loading"')
     expect(dataTable).toContain('v-if="!props.loading" variant="naked"')
-    expect(dataTable).not.toContain('USkeleton')
+    expect(dataTable).toContain('const skeletonActive = computed(() => props.loading && !props.data.length')
+    expect(dataTable).toContain('v-if="skeletonActive"')
   })
 
   it('uses out-in transitions for loading/content swaps where content must not overlap', () => {

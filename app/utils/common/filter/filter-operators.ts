@@ -24,6 +24,16 @@ export const FILTER_OPERATORS = {
     { value: "_neq", label: "Not equals" },
     { value: "_is_null", label: "Is null" },
   ],
+  datetime: [
+    { value: "_eq", label: "Equals" },
+    { value: "_neq", label: "Not equals" },
+    { value: "_gt", label: "After" },
+    { value: "_gte", label: "On or after" },
+    { value: "_lt", label: "Before" },
+    { value: "_lte", label: "On or before" },
+    { value: "_between", label: "Between" },
+    { value: "_is_null", label: "Is null" },
+  ],
   date: [
     { value: "_eq", label: "Equals" },
     { value: "_neq", label: "Not equals" },
@@ -60,9 +70,10 @@ export function mapDbTypeToFilterType(dbType: string): string {
     case "bool":
       return "boolean";
     case "date":
+      return "date";
     case "datetime":
     case "timestamp":
-      return "date";
+      return "datetime";
     case "enum":
       return "select";
     default:

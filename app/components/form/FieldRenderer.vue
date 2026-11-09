@@ -43,7 +43,6 @@ watch(
     setDraftError?.(props.keyName, null);
   },
 );
-const { isMongoDB } = useDatabase();
 
 function attachVirtualEmit(
   key: string,
@@ -669,28 +668,13 @@ function getComponentConfigByKey(key: string) {
       };
 
     case "date": {
-      if (isMongoDB.value) {
-        return {
-          component: FormDateTimeField,
-          componentProps: {
-            ...componentPropsBase,
-            disabled,
-            modelValue: props.formData[key] ?? null,
-            "onUpdate:modelValue": (val: string | null) => {
-              updateFormData(key, val);
-            },
-            ...(hasError && { error: props.errors[key] }),
-          },
-          fieldProps,
-        };
-      }
       return {
         component: FormDateField,
         componentProps: {
           ...componentPropsBase,
           disabled: disabled,
           modelValue: props.formData[key] ?? null,
-          "onUpdate:modelValue": (val: Date | null) => {
+          "onUpdate:modelValue": (val: string | null) => {
             updateFormData(key, val);
           },
           ...(hasError && { error: props.errors[key] }),

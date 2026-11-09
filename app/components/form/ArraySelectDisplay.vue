@@ -9,7 +9,7 @@
 
     <ul
       v-if="displayArray.length > 0"
-      class="divide-y divide-[var(--border-default)] overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--surface-default)]"
+      class="divide-y divide-[var(--border-default)] overflow-hidden rounded-[var(--radius-control)] border border-[var(--border-default)] bg-[var(--surface-default)]"
     >
       <li
         v-for="(item, index) in displayArray"
@@ -29,6 +29,7 @@
           color="error"
           variant="ghost"
           size="xs"
+          square
           class="shrink-0"
           :aria-label="'Remove ' + item"
           @click="removeItem(index)"
@@ -38,30 +39,28 @@
 
     <div
       v-else
-      class="rounded-lg border border-dashed border-[var(--border-default)] bg-[var(--surface-muted)]/40 px-4 py-5 text-center text-sm text-[var(--text-tertiary)]"
+      class="rounded-[var(--radius-control)] border border-dashed border-[var(--border-default)] bg-[var(--surface-muted)]/40 px-4 py-5 text-center text-sm text-[var(--text-tertiary)]"
     >
       {{ emptyMessage }}
     </div>
 
-    <div v-if="!disabled" class="relative">
+    <div v-if="!disabled" class="flex items-center gap-2">
       <UInput
         v-model="newOption"
         :placeholder="placeholder"
-        :class="['w-full', monospace && 'font-mono text-sm']"
+        :class="['min-w-0 flex-1', monospace && 'font-mono text-sm']"
         @keyup.enter="addOption"
-      >
-        <template #trailing>
-          <UButton
-            icon="i-lucide-plus"
-            color="primary"
-            variant="solid"
-            size="md"
-            class="rounded-md"
-            :disabled="!newOption.trim()"
-            @click="addOption"
-          />
-        </template>
-      </UInput>
+      />
+      <UButton
+        icon="i-lucide-plus"
+        color="primary"
+        variant="solid"
+        size="lg"
+        square
+        class="h-11 w-11 shrink-0 justify-center"
+        :disabled="!newOption.trim()"
+        @click="addOption"
+      />
     </div>
   </div>
 </template>

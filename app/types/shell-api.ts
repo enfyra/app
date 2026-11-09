@@ -47,7 +47,7 @@ export interface ShellOAuthConfigRecord extends ShellRecordIdentity, Record<stri
   isSystem?: boolean;
 }
 
-export interface ShellCorsOriginRecord extends ShellRecordIdentity {
+export interface ShellOriginRecord extends ShellRecordIdentity {
   value: string;
   isEnabled: boolean;
 }
