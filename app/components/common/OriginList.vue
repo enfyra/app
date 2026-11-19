@@ -4,12 +4,9 @@
     <UAlert v-if="loadError" color="error" title="Could not load origins" description="Reload to try again." />
     <CommonLoadingState
       v-else-if="loading && origins.length === 0"
-      :title="`Loading ${label.toLowerCase()} origins…`"
-      description="Fetching origins from the server"
-      size="sm"
-      type="skeleton"
+      type="list"
+      :lines="2"
       context="inline"
-      class="min-h-[8rem]"
     />
     <ul v-else-if="origins.length > 0" class="divide-y divide-[var(--border-default)] overflow-hidden rounded-[var(--radius-control)] border border-[var(--border-default)] bg-[var(--surface-default)]">
       <li v-for="origin in origins" :key="origin.id" class="flex min-h-11 items-center gap-3 px-3 py-2.5">

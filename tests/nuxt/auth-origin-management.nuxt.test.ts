@@ -4,21 +4,21 @@ import { ref } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import OriginList from '~/components/common/OriginList.vue';
 
-const state = vi.hoisted(() => ({ calls: [] as Array<{ path: string; method: string; body?: unknown; id?: string | number }>, fail: false, allowed: true, rows: [] as Array<{ id: number; value: string; isEnabled: boolean }> }));
+const state = vi.hoisted(() => ({ calls: [] as Array<{ path: string; method: string; body?: unknown; id?: string | number }>, fail: false, allowed: true, pending: false, rows: [] as Array<{ id: number; value: string; isEnabled: boolean }> }));
 mockNuxtImport('useNotify', () => () => ({ success: vi.fn(), warning: vi.fn() }));
 mockNuxtImport('useConfirm', () => () => ({ confirm: async () => true }));
 mockNuxtImport('useDatabase', () => () => ({ getId: (row: { id: number }) => row.id }));
 mockNuxtImport('usePermissions', () => () => ({ checkPermissionCondition: () => state.allowed }));
 mockNuxtImport('useApi', () => (path: () => string, options: { method?: string }) => {
   const error = ref<unknown>(null);
-  return { data: ref({ data: state.rows }), pending: ref(false), error, execute: vi.fn(async (input?: { body?: unknown; id?: string | number }) => {
+  return { data: ref({ data: state.rows }), pending: ref(state.pending), error, execute: vi.fn(async (input?: { body?: unknown; id?: string | number }) => {
     state.calls.push({ path: path(), method: options.method ?? 'get', ...(input?.body ? { body: input.body } : {}), ...(input?.id !== undefined ? { id: input.id } : {}) });
     error.value = state.fail && options.method ? new Error('fixture rejection') : null;
     return error.value ? null : { data: [] };
   }) };
 });
 let wrapper: Awaited<ReturnType<typeof mountSuspended>> | undefined;
-beforeEach(() => { state.calls = []; state.fail = false; state.allowed = true; state.rows = []; });
+beforeEach(() => { state.calls = []; state.fail = false; state.allowed = true; state.pending = false; state.rows = []; });
 afterEach(() => wrapper?.unmount());
 
 describe('OAuth Auth Origins management', () => {
@@ -72,6 +72,15 @@ describe('OAuth Auth Origins management', () => {
     await flushPromises();
     expect(wrapper.text()).toContain('Public cross-origin requests are allowed without cookies');
     expect(state.calls.every(call => call.path === '/enfyra_cors_origin')).toBe(true);
+  });
+
+  it('renders a real list skeleton while the first load is pending', async () => {
+    state.pending = true;
+    wrapper = await mountSuspended(OriginList, { props: { kind: 'auth' } });
+    await flushPromises();
+    expect(wrapper.findAll('[class*="skeleton-inline"]').length).toBeGreaterThan(0);
+    expect(wrapper.find('div[role="status"]').classes()).toContain('w-full');
+    expect(wrapper.find('ul').exists()).toBe(false);
   });
 
   it('does not expose creation controls without mutation permission', async () => {
