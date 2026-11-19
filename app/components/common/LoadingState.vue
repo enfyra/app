@@ -5,6 +5,7 @@ const props = withDefaults(defineProps<{
   size?: "sm" | "md" | "lg";
   type?: 'dots' | 'spinner' | 'skeleton' | 'table' | 'form' | 'list' | 'card' | 'folder' | 'file-card' | 'menu';
   context?: 'page' | 'modal' | 'inline' | 'button';
+  lines?: number;
 }>(), {
   size: 'md',
   type: 'dots',
@@ -24,7 +25,7 @@ const loadingType = computed(() => {
   }
 });
 
-const BLOCK_LOADING_TYPES = ['table', 'form', 'list', 'card', 'folder', 'file-card', 'menu'];
+const BLOCK_LOADING_TYPES = ['skeleton', 'table', 'form', 'list', 'card', 'folder', 'file-card', 'menu'];
 const isBlockType = computed(() => BLOCK_LOADING_TYPES.includes(loadingType.value));
 const isEdgeToEdgeType = computed(() => loadingType.value === 'list');
 
@@ -68,7 +69,7 @@ const showTitle = computed(() =>
     <CommonLoadingSkeleton 
       v-else-if="loadingType === 'list'" 
       type="list" 
-      :lines="8"
+      :lines="props.lines ?? 8"
       :animated="true" 
     />
     
@@ -105,7 +106,7 @@ const showTitle = computed(() =>
     <CommonLoadingSkeleton 
       v-else 
       type="text" 
-      :lines="3" 
+      :lines="props.lines ?? 3" 
       :animated="true" 
     />
 
